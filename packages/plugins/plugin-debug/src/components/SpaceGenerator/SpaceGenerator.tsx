@@ -18,10 +18,10 @@ import { getTypename, type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { initializeTable, TableType } from '@dxos/react-ui-table';
-import { Testing } from '@dxos/schema/testing';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
-import { type ObjectGenerator, createGenerator, staticGenerators } from './ObjectGenerator';
+import { DataType } from '@dxos/schema';
+import { createGenerator, staticGenerators, type ObjectGenerator } from './ObjectGenerator';
 import { SchemaTable } from './SchemaTable';
 import { presets } from './presets';
 
@@ -34,7 +34,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const staticTypes = [DocumentType, DiagramType, SheetType, ComputeGraph]; // TODO(burdon): Make extensible.
-  const mutableTypes = [Testing.Organization, Testing.Project, Testing.Contact, Testing.Message];
+  const mutableTypes = [DataType.Organization, DataType.Project, DataType.Person, DataType.Message];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
 

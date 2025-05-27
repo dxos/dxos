@@ -72,10 +72,16 @@ export const createProps = <T extends BaseObject>(
         if (!property.optional || optional || randomBoolean()) {
           const gen = findAnnotation<string>(property.ast, GeneratorAnnotationId);
           const fn = gen && getDeep<() => any>(generator, gen.split('.'));
+          if (gen && !fn) {
+            throw new Error(`Unknown generator: ${gen}`);
+          }
+
           if (fn) {
             obj[property.name] = fn();
+          } else if (property.defaultValue) {
+            obj[property.name] = structuredClone(property.defaultValue);
           } else if (!property.optional) {
-            log.warn('missing generator for required property', { property, schema });
+            throw new Error(`Missing generator for required property: ${property.name}`);
           }
         }
       }
@@ -121,6 +127,7 @@ export const addToDatabase = (db: EchoDatabase) => {
   return <T extends BaseObject>(obj: Live<T>): AnyLiveObject<T> => db.add(obj);
 };
 
+// TODO(burdon): `identity` from effect
 export const noop = (obj: any) => obj;
 
 export const logObject = (message: string) => (obj: any) => log.info(message, { obj });
@@ -155,6 +162,7 @@ export const createObjectPipeline = <T extends BaseObject>(
       const pipeline: Effect.Effect<Live<T>> = Effect.gen(function* () {
         // logObject('before')(obj);
         const withProps = createProps(generator, type, optional)(obj);
+        log.info('after props', { withProps });
         const liveObj = createReactiveObject(type)(withProps);
         // logObject('after')(liveObj);
         return liveObj;
@@ -167,6 +175,7 @@ export const createObjectPipeline = <T extends BaseObject>(
       const pipeline: Effect.Effect<AnyLiveObject<any>, never, never> = Effect.gen(function* () {
         // logObject('before')(obj);
         const withProps = createProps(generator, type, optional)(obj);
+        log.info('after props', { withProps });
         const liveObj = createReactiveObject(type)(withProps);
         const withRefs = yield* Effect.promise(() => createReferences(type, db)(liveObj));
         const dbObj = addToDatabase(db)(withRefs);

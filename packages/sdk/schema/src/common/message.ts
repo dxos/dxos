@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 import { defineObjectMigration } from '@dxos/echo-db';
-import { Expando, ObjectId, Ref, TypedObject } from '@dxos/echo-schema';
+import { Expando, GeneratorAnnotationId, ObjectId, Ref, TypedObject } from '@dxos/echo-schema';
 
 import { Actor } from './actor';
 
@@ -122,12 +122,15 @@ const MessageSchema = Schema.Struct({
   id: ObjectId,
   created: Schema.String.annotations({
     description: 'ISO date string when the message was sent.',
+    [GeneratorAnnotationId]: 'date.iso8601',
   }),
   sender: Schema.mutable(Actor).annotations({
     description: 'Identity of the message sender.',
+    default: {},
   }),
   blocks: Schema.mutable(Schema.Array(MessageContentBlock)).annotations({
     description: 'Contents of the message.',
+    default: [],
   }),
   properties: Schema.optional(
     Schema.mutable(

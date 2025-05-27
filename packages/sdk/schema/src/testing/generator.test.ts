@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { type EchoDatabase, Query } from '@dxos/echo-db';
@@ -11,8 +10,10 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { stripUndefined } from '@dxos/util';
 
-import { type ValueGenerator, createGenerator, type TypeSpec, createObjectFactory } from './generator';
+import { afterEach, beforeEach } from 'vitest';
 import { DataType } from '../common';
+import { type TypeSpec, type ValueGenerator, createGenerator, createObjectFactory } from './generator';
+import { getSnapshot } from '@dxos/echo-schema';
 
 faker.seed(1);
 
@@ -31,6 +32,16 @@ const queryObjects = async (db: EchoDatabase, specs: TypeSpec[]) => {
 };
 
 describe('Generator', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
   // TODO(burdon): Test view creation.
   // TODO(burdon): Type error: https://github.com/dxos/dxos/issues/8324
   test('create object', async ({ expect }) => {
@@ -54,7 +65,6 @@ describe('Generator', () => {
   });
 
   test('generate objects for static schema', async ({ expect }) => {
-    const builder = new EchoTestBuilder();
     const { db } = await builder.createDatabase();
     const createObjects = createObjectFactory(db, generator);
 
@@ -72,7 +82,6 @@ describe('Generator', () => {
   });
 
   test('generate objects for mutable schema with references', async ({ expect }) => {
-    const builder = new EchoTestBuilder();
     const { db } = await builder.createDatabase();
     const createObjects = createObjectFactory(db, generator);
 
@@ -89,5 +98,27 @@ describe('Generator', () => {
 
     await createObjects(spec);
     await queryObjects(db, spec);
+  });
+
+  test('generate message', async () => {
+    const messageGenerator = createGenerator(generator, DataType.Message, { optional: true });
+    const message = messageGenerator.createObject();
+    // console.log(message);
+  });
+
+  test('generate message from stored schema', async () => {
+    try {
+      const { db } = await builder.createDatabase();
+      const [messageSchema] = await db.schemaRegistry.register([DataType.Message]);
+
+      log.info('messageSchema', { json: getSnapshot(messageSchema.jsonSchema) });
+
+      const messageGenerator = createGenerator(generator, messageSchema, { optional: true });
+      const message = messageGenerator.createObject();
+      console.log(message);
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
   });
 });

@@ -129,7 +129,13 @@ const testObjectMutators: TestMutationsMap<TestSchemaType> = {
   },
 };
 
+/**
+ * @deprecated Use generators in schema package.
+ */
 export const createTestObjectGenerator = () => new TestObjectGenerator(testSchemas(), testObjectGenerators);
 
+/**
+ * @deprecated Use generators in schema package.
+ */
 export const createSpaceObjectGenerator = (space: Space) =>
   new SpaceObjectGenerator(space, testSchemas(), testObjectGenerators, testObjectMutators);

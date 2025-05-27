@@ -489,6 +489,75 @@ describe('json-to-effect', () => {
       }
     `);
   });
+
+  // test('generator annotation on object', () => {
+  //   const schema = Schema.Struct({
+  //   });
+  //   const jsonSchema = toJsonSchema(schema);
+  //   expect(jsonSchema).toMatchInlineSnapshot();
+  // });
+
+  test('default annotation ', () => {
+    const schema = Schema.Struct({
+      str: Schema.String.annotations({
+        default: 'foo',
+      }),
+      arr: Schema.Array(Schema.String).annotations({
+        default: [],
+      }),
+      obj: Schema.Struct({
+        foo: Schema.optional(Schema.String),
+      }).annotations({
+        default: {
+          foo: 'bar',
+        },
+      }),
+    });
+    const jsonSchema = toJsonSchema(schema);
+    expect(jsonSchema).toMatchInlineSnapshot(`
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "arr": {
+            "default": [],
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "obj": {
+            "additionalProperties": false,
+            "properties": {
+              "foo": {
+                "type": "string",
+              },
+            },
+            "propertyOrder": [
+              "foo",
+            ],
+            "required": [],
+            "type": "object",
+          },
+          "str": {
+            "default": "foo",
+            "type": "string",
+          },
+        },
+        "propertyOrder": [
+          "str",
+          "arr",
+          "obj",
+        ],
+        "required": [
+          "str",
+          "arr",
+          "obj",
+        ],
+        "type": "object",
+      }
+    `);
+  });
 });
 
 describe('reference', () => {
