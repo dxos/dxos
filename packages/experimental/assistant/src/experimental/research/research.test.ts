@@ -69,6 +69,10 @@ const TYPES = [
 
 const MOCK_SEARCH = true;
 
+// 1. Finding related entities in knowledge graph.
+// 2. Linking them into transcript text
+// 3. Doing external research.
+
 describe('Research', () => {
   test('should generate a research report', { timeout: 1000000 }, async () => {
     const searchTool = MOCK_SEARCH ? createMockExaTool() : createExaTool({ apiKey: EXA_API_KEY });
@@ -91,7 +95,8 @@ describe('Research', () => {
         model: '@anthropic/claude-3-5-sonnet-20241022',
       },
       history: [],
-      prompt: 'Find projects that are in the space of AI and personal knowledge management',
+      prompt:
+        'Find projects that are in the space of AI and personal knowledge management. Project, org, relations between them.',
     });
     const data = sanitizeObjects(TYPES, result as any);
 

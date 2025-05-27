@@ -126,7 +126,6 @@ const MessageSchema = Schema.Struct({
   }),
   sender: Schema.mutable(Actor).annotations({
     description: 'Identity of the message sender.',
-    default: {},
   }),
   blocks: Schema.mutable(Schema.Array(MessageContentBlock)).annotations({
     description: 'Contents of the message.',
