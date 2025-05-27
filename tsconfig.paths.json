@@ -331,6 +331,12 @@
       "@dxos/react-ui-geo": [
         "packages/ui/react-ui-geo/src/index.ts"
       ],
+      "@dxos/react-ui-graph": [
+        "packages/ui/react-ui-graph/src/index.ts"
+      ],
+      "@dxos/react-ui-graph/testing": [
+        "packages/ui/react-ui-graph/src/testing/index.ts"
+      ],
       "@dxos/react-ui-grid": [
         "packages/ui/react-ui-grid/src/index.ts"
       ],

@@ -4,7 +4,7 @@
 
 import { type ColorSememes } from './types';
 
-export const codeMirrorSememes = {
+export const codemirrorSememes = {
   // NOTE: background styles for the main content area must have transparency otherwise they will mask the selection.
   cmCodeblock: {
     light: ['neutral', '500/.1'],

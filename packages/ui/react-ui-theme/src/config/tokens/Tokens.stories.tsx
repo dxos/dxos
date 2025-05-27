@@ -36,6 +36,12 @@ const Swatch = ({ variableName, value, semantic, physical }: TokenAudit<HelicalA
   );
 };
 
+const meta: Meta = {
+  title: 'ui/react-ui-theme/Tokens',
+};
+
+export default meta;
+
 export const Tokens = () => {
   if (typeof colorAudit === 'string') {
     return null;
@@ -86,9 +92,3 @@ export const Tokens = () => {
     </>
   );
 };
-
-const meta: Meta = {
-  title: 'ui/react-ui-theme/Tokens',
-};
-
-export default meta;
