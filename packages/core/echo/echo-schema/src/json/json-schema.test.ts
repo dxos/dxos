@@ -506,11 +506,9 @@ describe('json-to-effect', () => {
         default: [],
       }),
       obj: Schema.Struct({
-        foo: Schema.optional(Schema.String),
-      }).annotations({
-        default: {
-          foo: 'bar',
-        },
+        foo: Schema.optional(Schema.String).annotations({
+          default: 'bar',
+        }),
       }),
     });
     const jsonSchema = toJsonSchema(schema);
@@ -530,6 +528,7 @@ describe('json-to-effect', () => {
             "additionalProperties": false,
             "properties": {
               "foo": {
+                "default": "bar",
                 "type": "string",
               },
             },
