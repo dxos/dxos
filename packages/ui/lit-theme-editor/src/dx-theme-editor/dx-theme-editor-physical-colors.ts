@@ -23,8 +23,8 @@ const isHelicalArcSeries = (o: any): o is ResolvedHelicalArcSeries => {
   return 'keyPoint' in (o ?? {});
 };
 
-@customElement('dx-theme-editor')
-export class DxThemeEditor extends LitElement {
+@customElement('dx-theme-editor-physical-colors')
+export class DxThemeEditorPhysicalColors extends LitElement {
   @state()
   tokenSet: TokenSet = restore();
 

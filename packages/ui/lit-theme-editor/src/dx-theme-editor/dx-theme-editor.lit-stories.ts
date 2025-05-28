@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import './dx-theme-editor.ts';
+import './dx-theme-editor-physical-colors.ts';
 import './dx-theme-editor.pcss';
 import { html } from 'lit';
 
-import { type DxThemeEditorProps } from './dx-theme-editor';
+import { type DxThemeEditorProps } from './dx-theme-editor-physical-colors';
 
 export default {
   title: 'dx-theme-editor',
@@ -14,5 +14,5 @@ export default {
 };
 
 export const Basic = (props: DxThemeEditorProps) => {
-  return html`<dx-theme-editor></dx-theme-editor>`;
+  return html`<dx-theme-editor-physical-colors></dx-theme-editor-physical-colors>`;
 };
