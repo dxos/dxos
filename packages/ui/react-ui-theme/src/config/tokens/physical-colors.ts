@@ -38,23 +38,23 @@ const hueKeyPoint = (hue: number): PhysicalPalette => {
 };
 
 export const huePalettes = {
-  redPalette: hueKeyPoint(0),
-  orangePalette: hueKeyPoint(1),
-  amberPalette: hueKeyPoint(2),
-  yellowPalette: hueKeyPoint(3),
-  limePalette: hueKeyPoint(4),
-  greenPalette: hueKeyPoint(5),
-  emeraldPalette: hueKeyPoint(6),
-  tealPalette: hueKeyPoint(7),
-  cyanPalette: hueKeyPoint(8),
-  skyPalette: hueKeyPoint(9),
-  bluePalette: hueKeyPoint(10),
-  indigoPalette: hueKeyPoint(11),
-  violetPalette: hueKeyPoint(12),
-  purplePalette: hueKeyPoint(13),
-  fuchsiaPalette: hueKeyPoint(14),
-  pinkPalette: hueKeyPoint(15),
-  rosePalette: hueKeyPoint(16),
+  red: hueKeyPoint(0),
+  orange: hueKeyPoint(1),
+  amber: hueKeyPoint(2),
+  yellow: hueKeyPoint(3),
+  lime: hueKeyPoint(4),
+  green: hueKeyPoint(5),
+  emerald: hueKeyPoint(6),
+  teal: hueKeyPoint(7),
+  cyan: hueKeyPoint(8),
+  sky: hueKeyPoint(9),
+  blue: hueKeyPoint(10),
+  indigo: hueKeyPoint(11),
+  violet: hueKeyPoint(12),
+  purple: hueKeyPoint(13),
+  fuchsia: hueKeyPoint(14),
+  pink: hueKeyPoint(15),
+  rose: hueKeyPoint(16),
 };
 
 /**
@@ -70,7 +70,7 @@ export const huePalettes = {
  * https://tailwindcss.com/docs/colors
  */
 const systemPalettes = {
-  neutralPalette: {
+  neutral: {
     keyPoint: [0, 0.01, 260],
     lowerCp: 0,
     upperCp: 0,
@@ -81,7 +81,7 @@ const systemPalettes = {
   } satisfies PhysicalPalette,
 
   // https://oklch.com/#0.5,0.2,260,100 (#0559d2)
-  primaryPalette: {
+  primary: {
     keyPoint: [0.5, 0.2, 260],
     lowerCp: 0.86,
     upperCp: 1,
@@ -100,23 +100,19 @@ const physicalSeries = {
 export const physicalColors: ColorsPhysicalLayer = {
   namespace: 'dx-',
   definitions: {
-    // TODO(thure): Unclear how to fix types here, `extends` is definitely optional for this but TS errors anyway…
     // @ts-ignore
     series: physicalSeries,
-    accompanyingSeries: {
-      reflectiveRelation,
-    },
+    accompanyingSeries: { reflectiveRelation },
   },
   conditions: {
     srgb: [':root'],
     p3: ['@media (color-gamut: p3)', ':root'],
     rec2020: ['@media (color-gamut: rec2020)', ':root'],
   },
-  series: Object.entries(physicalSeries).reduce((acc: ColorsPhysicalLayer['series'], [paletteId]) => {
-    const baseId = paletteId.replace('Palette', '');
-    acc[baseId] = gamuts.reduce((acc: PhysicalSeries<Gamut & string, HelicalArcSeries>, gamut) => {
+  series: Object.entries(physicalSeries).reduce((acc: ColorsPhysicalLayer['series'], [id]) => {
+    acc[id] = gamuts.reduce((acc: PhysicalSeries<Gamut & string, HelicalArcSeries>, gamut) => {
       acc[gamut] = {
-        extends: paletteId,
+        extends: id,
         physicalValueRelation: { extends: 'reflectiveRelation' },
       };
       return acc;
