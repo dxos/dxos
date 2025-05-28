@@ -6,8 +6,7 @@ import md5Hex from 'md5-hex';
 
 import { DeferredTask, Event, scheduleTaskInterval, synchronized } from '@dxos/async';
 import { type Identity } from '@dxos/client/halo';
-import { type Stream } from '@dxos/codec-protobuf';
-import { Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { generateName } from '@dxos/display-name';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -56,7 +55,7 @@ export type CallSwarmSynchronizerParams = { networkService: NetworkService };
 /**
  * Period for peer to reconnect to the call swarm gracefully if connection was lost abruptly.
  */
-const DISCONNECTED_ABRUPT_TIMEOUT = 2_000; // [ms]
+const DISCONNECTED_ABRUPT_TIMEOUT = 10_000; // [ms]
 
 /**
  * Sends and receives state to/from Swarm network.
@@ -73,7 +72,8 @@ export class CallSwarmSynchronizer extends Resource {
   private _deviceKey?: string = undefined;
   private _displayName?: string = undefined;
 
-  private _stream?: Stream<SwarmResponse> = undefined;
+  private _swarmCtx?: Context = undefined;
+
   private _sendStateTask?: DeferredTask = undefined;
 
   constructor({ networkService }: CallSwarmSynchronizerParams) {
@@ -174,29 +174,42 @@ export class CallSwarmSynchronizer extends Resource {
   @synchronized
   async join() {
     invariant(this._state.roomId);
+    invariant(!this._swarmCtx, 'Already joined');
+
+    this._swarmCtx = new Context();
     const topic = getTopic(this._state.roomId);
     log('joining swarm', { topic, peer: { identityKey: this._identityKey, peerKey: this._deviceKey } });
-    this._stream = this._networkService.subscribeSwarmState({ topic });
-    this._stream.subscribe((event) => this._processSwarmEvent(event));
+    const stream = this._networkService.subscribeSwarmState({ topic });
+    stream.subscribe((event) => this._processSwarmEvent(event));
+
+    const cleanup = () => {
+      void stream.close();
+      if (topic && this._identityKey && this._deviceKey) {
+        log('leaving swarm', { topic, peer: { identityKey: this._identityKey, peerKey: this._deviceKey } });
+        void this._networkService
+          .leaveSwarm({
+            topic,
+            peer: { identityKey: this._identityKey, peerKey: this._deviceKey },
+          })
+          .catch((err) => log.catch(err));
+      }
+      window.removeEventListener('beforeunload', cleanup);
+    };
+    window.addEventListener('beforeunload', cleanup);
+    this._swarmCtx.onDispose(cleanup);
 
     this._notifyAndSchedule();
   }
 
   @synchronized
   async leave() {
-    if (!this._state.roomId) {
-      log.warn('leaving room without roomId');
+    if (!this._swarmCtx) {
+      return;
     }
-    const topic = this._state.roomId ? getTopic(this._state.roomId) : undefined;
-    await this._stream?.close();
-    this._stream = undefined;
-    if (topic && this._identityKey && this._deviceKey) {
-      log('leaving swarm', { topic, peer: { identityKey: this._identityKey, peerKey: this._deviceKey } });
-      await this._networkService.leaveSwarm({
-        topic,
-        peer: { identityKey: this._identityKey, peerKey: this._deviceKey },
-      });
-    }
+
+    await this._swarmCtx.dispose();
+    this._swarmCtx = undefined;
+
     this._state.users = undefined;
     this._state.self = undefined;
   }
@@ -247,6 +260,10 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   private _processSwarmEvent(swarmEvent: SwarmResponse) {
+    if (!this._state.joined) {
+      return;
+    }
+
     this._lastSwarmEvent = swarmEvent;
     this._reconcileSwarmStateTask!.schedule();
   }
@@ -300,7 +317,7 @@ export class CallSwarmSynchronizer extends Resource {
       scheduleTaskInterval(
         this._ctx,
         async () => this._reconcileSwarmStateTask!.schedule(),
-        DISCONNECTED_ABRUPT_TIMEOUT / 2,
+        Math.min(DISCONNECTED_ABRUPT_TIMEOUT / 2, 1000),
       );
     }
   }
