@@ -10,6 +10,7 @@ import { debounce } from '@dxos/async';
 
 import { restore, saveAndRender } from './util';
 
+import './dx-range-spinbutton';
 import './dx-theme-editor.pcss';
 
 export type DxThemeEditorSemanticColorsProps = {};
@@ -89,47 +90,6 @@ export class DxThemeEditorSemanticColors extends LitElement {
     this.updateSemanticToken(tokenName, condition, 1, value);
   }
 
-  private renderControlRow(
-    label: string,
-    min: string | number,
-    max: string | number,
-    step: string | number,
-    value: string | number,
-    onInput: (e: Event) => void,
-    headingId: string,
-  ) {
-    const controlId = `${headingId}-${label.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-
-    return html`
-      <div class="control-row">
-        <label class="control-label" id="${controlId}-label" for="${controlId}-range">${label}:</label>
-        <div class="control-inputs">
-          <input
-            id="${controlId}-range"
-            type="range"
-            min="${min}"
-            max="${max}"
-            step="${step}"
-            class="range-input dx-focus-ring"
-            .value=${value.toString()}
-            @input=${onInput}
-            aria-labelledby="${headingId} ${controlId}-label"
-          />
-          <input
-            id="${controlId}-number"
-            type="number"
-            min="${min}"
-            max="${max}"
-            step="${step}"
-            class="number-input dx-focus-ring"
-            .value=${value.toString()}
-            @input=${onInput}
-            aria-labelledby="${headingId} ${controlId}-label"
-          />
-        </div>
-      </div>
-    `;
-  }
 
   private renderTokenControls(tokenName: string, tokenValue: any) {
     const physicalColorSeries = this.getPhysicalColorSeries();
@@ -172,16 +132,15 @@ export class DxThemeEditorSemanticColors extends LitElement {
               )}
             </select>
           </div>
-          ${this.renderControlRow(
-            'Luminosity',
-            0,
-            1000,
-            1,
-            lightLuminosity,
-            (e: Event) =>
-              this.handleLuminosityChange(tokenName, 'light', parseFloat((e.target as HTMLInputElement).value)),
-            lightHeadingId,
-          )}
+          <dx-range-spinbutton
+            label="Luminosity"
+            min="0"
+            max="1000"
+            step="1"
+            .value=${lightLuminosity}
+            headingId=${lightHeadingId}
+            @value-changed=${(e: CustomEvent) => this.handleLuminosityChange(tokenName, 'light', e.detail.value)}
+          ></dx-range-spinbutton>
         </div>
 
         <div class="control-group">
@@ -200,16 +159,15 @@ export class DxThemeEditorSemanticColors extends LitElement {
               )}
             </select>
           </div>
-          ${this.renderControlRow(
-            'Luminosity',
-            0,
-            1000,
-            1,
-            darkLuminosity,
-            (e: Event) =>
-              this.handleLuminosityChange(tokenName, 'dark', parseFloat((e.target as HTMLInputElement).value)),
-            darkHeadingId,
-          )}
+          <dx-range-spinbutton
+            label="Luminosity"
+            min="0"
+            max="1000"
+            step="1"
+            .value=${darkLuminosity}
+            headingId=${darkHeadingId}
+            @value-changed=${(e: CustomEvent) => this.handleLuminosityChange(tokenName, 'dark', e.detail.value)}
+          ></dx-range-spinbutton>
         </div>
       </div>
     `;

@@ -6,13 +6,13 @@ import { cssGradientFromCurve, helicalArcFromConfig } from '@ch-ui/colors';
 import { type ResolvedHelicalArcSeries, type TokenSet } from '@ch-ui/tokens';
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { classMap } from 'lit/directives/class-map.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { debounce } from '@dxos/async';
 
 import { restore, saveAndRender } from './util';
 
+import './dx-range-spinbutton';
 import './dx-theme-editor.pcss';
 
 export type DxThemeEditorPhysicalColorsProps = {};
@@ -69,48 +69,6 @@ export class DxThemeEditorPhysicalColors extends LitElement {
     this.updateSeriesProperty(series, 'torsion', value);
   }
 
-  private renderControlRow(
-    label: string,
-    min: string | number,
-    max: string | number,
-    step: string | number,
-    value: string | number,
-    onInput: (e: Event) => void,
-    headingId: string,
-    variant?: 'reverse-range' | 'reverse-order',
-  ) {
-    const controlId = `${headingId}-${label.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-
-    return html`
-      <div class="control-row">
-        <label class="control-label" id="${controlId}-label" for="${controlId}-range">${label}:</label>
-        <div class="${classMap({ 'control-inputs': true, ...(variant && { [variant]: true }) })}">
-          <input
-            id="${controlId}-range"
-            type="range"
-            min="${min}"
-            max="${max}"
-            step="${step}"
-            class="range-input dx-focus-ring"
-            .value=${value.toString()}
-            @input=${onInput}
-            aria-labelledby="${headingId} ${controlId}-label"
-          />
-          <input
-            id="${controlId}-number"
-            type="number"
-            min="${min}"
-            max="${max}"
-            step="${step}"
-            class="number-input dx-focus-ring"
-            .value=${value.toString()}
-            @input=${onInput}
-            aria-labelledby="${headingId} ${controlId}-label"
-          />
-        </div>
-      </div>
-    `;
-  }
 
   private renderSeriesControls(series: string) {
     const seriesData = this.tokenSet.colors?.physical?.definitions?.series?.[series];
@@ -138,57 +96,56 @@ export class DxThemeEditorPhysicalColors extends LitElement {
         ></div>
         <h3 class="series-title">${series} Series</h3>
 
-        ${this.renderControlRow(
-          'Hue (0-360)',
-          0,
-          360,
-          0.5,
-          keyPoint[2],
-          (e: Event) => this.handleKeyPointChange(series, 2, parseFloat((e.target as HTMLInputElement).value)),
-          keyColorHeadingId,
-        )}
-        ${this.renderControlRow(
-          'Torsion (-180 to 180)',
-          -180,
-          180,
-          0.5,
-          torsion,
-          (e: Event) => this.handleTorsionChange(series, parseFloat((e.target as HTMLInputElement).value)),
-          torsionHeadingId,
-        )}
-        ${this.renderControlRow(
-          'Chroma (0-0.4)',
-          0,
-          0.4,
-          0.0025,
-          keyPoint[1],
-          (e: Event) => this.handleKeyPointChange(series, 1, parseFloat((e.target as HTMLInputElement).value)),
-          keyColorHeadingId,
-        )}
+        <dx-range-spinbutton
+          label="Hue (0-360)"
+          min="0"
+          max="360"
+          step="0.5"
+          .value=${keyPoint[2]}
+          headingId=${keyColorHeadingId}
+          @value-changed=${(e: CustomEvent) => this.handleKeyPointChange(series, 2, e.detail.value)}
+        ></dx-range-spinbutton>
+        <dx-range-spinbutton
+          label="Torsion (-180 to 180)"
+          min="-180"
+          max="180"
+          step="0.5"
+          .value=${torsion}
+          headingId=${torsionHeadingId}
+          variant="torsion"
+          @value-changed=${(e: CustomEvent) => this.handleTorsionChange(series, e.detail.value)}
+        ></dx-range-spinbutton>
+        <dx-range-spinbutton
+          label="Chroma (0-0.4)"
+          min="0"
+          max="0.4"
+          step="0.0025"
+          .value=${keyPoint[1]}
+          headingId=${keyColorHeadingId}
+          @value-changed=${(e: CustomEvent) => this.handleKeyPointChange(series, 1, e.detail.value)}
+        ></dx-range-spinbutton>
 
         <div class="control-group">
-          ${this.renderControlRow(
-            'Dark Control Point (0-1)',
-            0,
-            1,
-            0.01,
-            upperCp,
-            (e: Event) =>
-              this.handleControlPointChange(series, 'upperCp', parseFloat((e.target as HTMLInputElement).value)),
-            controlPointsHeadingId,
-            'reverse-range',
-          )}
-          ${this.renderControlRow(
-            'Light Control Point (0-1)',
-            0,
-            1,
-            0.01,
-            lowerCp,
-            (e: Event) =>
-              this.handleControlPointChange(series, 'lowerCp', parseFloat((e.target as HTMLInputElement).value)),
-            controlPointsHeadingId,
-            'reverse-order',
-          )}
+          <dx-range-spinbutton
+            label="Dark Control Point (0-1)"
+            min="0"
+            max="1"
+            step="0.01"
+            .value=${upperCp}
+            headingId=${controlPointsHeadingId}
+            variant="reverse-range"
+            @value-changed=${(e: CustomEvent) => this.handleControlPointChange(series, 'upperCp', e.detail.value)}
+          ></dx-range-spinbutton>
+          <dx-range-spinbutton
+            label="Light Control Point (0-1)"
+            min="0"
+            max="1"
+            step="0.01"
+            .value=${lowerCp}
+            headingId=${controlPointsHeadingId}
+            variant="reverse-order"
+            @value-changed=${(e: CustomEvent) => this.handleControlPointChange(series, 'lowerCp', e.detail.value)}
+          ></dx-range-spinbutton>
         </div>
       </div>
     `;
