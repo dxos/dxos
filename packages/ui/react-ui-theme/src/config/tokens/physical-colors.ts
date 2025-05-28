@@ -58,7 +58,7 @@ export const huePalettes = {
 };
 
 /**
- * The keyPoint represents the LCH value (Lightness: 0-1, Chroma: 0-1, Hue: 0-360 [0=Red, 120=Green, 240=Blue]).
+ * The keyPoint represents the LCH value (Lightness: 0-1; Chroma: min 0, max 0.08–0.3 depending on hue; Hue: 0-360 [~26=Red, ~141=Green, ~262=Blue]).
  *
  * NOTE: Rebuild the theme and restart the dev server to see changes.
  *
@@ -99,14 +99,22 @@ const physicalSeries = {
 
 export const physicalColors: ColorsPhysicalLayer = {
   namespace: 'dx-',
+  definitions: {
+    // @ts-ignore
+    series: physicalSeries,
+    accompanyingSeries: { reflectiveRelation },
+  },
   conditions: {
     srgb: [':root'],
     p3: ['@media (color-gamut: p3)', ':root'],
     rec2020: ['@media (color-gamut: rec2020)', ':root'],
   },
-  series: Object.entries(physicalSeries).reduce((acc: ColorsPhysicalLayer['series'], [id, arc]) => {
+  series: Object.entries(physicalSeries).reduce((acc: ColorsPhysicalLayer['series'], [id]) => {
     acc[id] = gamuts.reduce((acc: PhysicalSeries<Gamut & string, HelicalArcSeries>, gamut) => {
-      acc[gamut] = { ...arc, physicalValueRelation: reflectiveRelation };
+      acc[gamut] = {
+        extends: id,
+        physicalValueRelation: { extends: 'reflectiveRelation' },
+      };
       return acc;
     }, {});
     return acc;
