@@ -8,7 +8,6 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { combine } from '@dxos/async';
 import { type GraphModel } from '@dxos/graph';
 
-import { defaultStyles } from './styles';
 import {
   createSimulationDrag,
   type AttributesOptions,
@@ -18,6 +17,8 @@ import {
   type LabelOptions,
 } from '../graph';
 import { useSvgContext } from '../hooks';
+
+import '../styles/graph.css';
 
 export type GraphProps = {
   className?: string;
@@ -35,7 +36,7 @@ export type GraphProps = {
  * SVG Graph controller.
  */
 export const Graph = ({
-  className = defaultStyles,
+  className = 'graph',
   model,
   projector: _projector,
   delay,
@@ -64,7 +65,7 @@ export const Graph = ({
       projector,
       renderer,
     };
-  }, []);
+  }, [context, drag]);
 
   useEffect(() => {
     projector.update(model?.graph);
@@ -82,7 +83,7 @@ export const Graph = ({
         unsubscribe?.();
       },
     );
-  }, [projector, model]);
+  }, [projector, renderer, model]);
 
   useEffect(() => {
     void projector.start();

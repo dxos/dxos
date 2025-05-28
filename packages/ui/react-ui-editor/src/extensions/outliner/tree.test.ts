@@ -10,8 +10,7 @@ import { str } from '../../stories';
 import { type Range } from '../../types';
 import { createMarkdownExtensions } from '../markdown';
 
-const doc = str(
-  //
+const lines = [
   '- [ ] 1',
   '- [ ] 2',
   '  - [ ] 2.1',
@@ -21,7 +20,11 @@ const doc = str(
   '    - 2.2.3',
   '  - [ ] 2.3',
   '- [ ] 3',
-);
+];
+
+const getPos = (line: number) => {
+  return lines.slice(0, line).reduce((acc, line) => acc + line.length + 1, 0);
+};
 
 const extensions = [createMarkdownExtensions(), outlinerTree()];
 
@@ -44,7 +47,7 @@ describe('tree (boundary conditions)', () => {
 });
 
 describe('tree (advanced)', () => {
-  const state = EditorState.create({ doc, extensions });
+  const state = EditorState.create({ doc: str(...lines), extensions });
 
   test('traverse', ({ expect }) => {
     const tree = state.facet(treeFacet);
@@ -76,11 +79,13 @@ describe('tree (advanced)', () => {
 
   test('find', ({ expect }) => {
     const tree = state.facet(treeFacet);
+
     expect(tree.find(0)).to.include({ type: 'task' });
-    expect(tree.find(8)).to.include({ type: 'task' });
-    expect(tree.find(8)).toBe(tree.find(10));
-    expect(tree.find(70)).to.include({ type: 'bullet' });
     expect(tree.find(state.doc.length)).to.include({ type: 'task' });
+
+    expect(tree.find(getPos(1))).to.include({ type: 'task' });
+    expect(tree.find(getPos(1))).toBe(tree.find(getPos(1) + 4));
+    expect(tree.find(getPos(5))).to.include({ type: 'bullet' });
   });
 
   test('siblings', ({ expect }) => {
@@ -118,12 +123,17 @@ describe('tree (advanced)', () => {
   test('lastDescendant', ({ expect }) => {
     const tree = state.facet(treeFacet);
     {
-      const item = tree.find(0)!;
+      const item = tree.find(getPos(0))!;
       expect(tree.lastDescendant(item).index).toBe(item.index);
     }
     {
-      const item = tree.find(8)!;
-      const last = tree.find(76)!;
+      const item = tree.find(getPos(1))!;
+      const last = tree.find(getPos(7))!;
+      expect(tree.lastDescendant(item).index).toBe(last.index);
+    }
+    {
+      const item = tree.find(getPos(3))!;
+      const last = tree.find(getPos(6))!;
       expect(tree.lastDescendant(item).index).toBe(last.index);
     }
   });

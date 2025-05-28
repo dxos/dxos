@@ -112,7 +112,7 @@ export class Tree implements Item {
    * Return the last descendant of the item, or the item itself if it has no children.
    */
   lastDescendant(item: Item): Item {
-    return item.children.length > 0 ? this.lastDescendant(item.children[item.children.length - 1]) : item;
+    return item.children.length > 0 ? this.lastDescendant(item.children.at(-1)!) : item;
   }
 }
 
@@ -189,28 +189,32 @@ export const outlinerTree = (options: TreeOptions = {}): Extension => {
     let tree: Tree | undefined;
     let parent: Item | undefined;
     let current: Item | undefined;
-    let prevSiblings: Item[] = []; // Array to track previous siblings at each level.
     let prev: Item | undefined;
-    let index = 0;
+    let level = -1;
+    let index = -1;
+
+    // Array to track previous siblings at each level.
+    const prevSiblings: (Item | undefined)[] = [];
+
     syntaxTree(state).iterate({
       enter: (node) => {
         switch (node.name) {
           case 'Document': {
             tree = new Tree(node.node);
             current = tree;
-            prevSiblings = []; // Reset prevSiblings array.
             break;
           }
           case 'BulletList': {
+            invariant(current);
             parent = current;
             if (current) {
               current.lineRange.to = current.node.from;
             }
+            prevSiblings[++level] = undefined;
             break;
           }
           case 'ListItem': {
             invariant(parent);
-            const level = parent.level + 1;
 
             // Include all content up to the next sibling or the end of the document.
             const nextSibling = node.node.nextSibling ?? node.node.parent?.nextSibling;
@@ -221,7 +225,7 @@ export const outlinerTree = (options: TreeOptions = {}): Extension => {
 
             current = {
               type: 'unknown',
-              index: index++,
+              index: ++index,
               level,
               node: node.node,
               lineRange: docRange,
@@ -273,7 +277,9 @@ export const outlinerTree = (options: TreeOptions = {}): Extension => {
       },
       leave: (node) => {
         if (node.name === 'BulletList') {
-          parent = parent?.parent;
+          invariant(parent);
+          prevSiblings[level--] = undefined;
+          parent = parent.parent;
         }
       },
     });

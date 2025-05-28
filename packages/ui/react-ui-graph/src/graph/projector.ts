@@ -18,7 +18,6 @@ export abstract class Projector<DATA, LAYOUT, OPTIONS extends ProjectorOptions> 
 
   private readonly _options: OPTIONS;
 
-  // prettier-ignore
   constructor(
     // TODO(burdon): Should set by container (not constructor).
     private readonly _context: SVGContext,
