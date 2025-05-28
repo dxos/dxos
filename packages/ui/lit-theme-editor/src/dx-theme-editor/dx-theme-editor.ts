@@ -91,7 +91,7 @@ export class DxThemeEditor extends LitElement {
             min="${min}"
             max="${max}"
             step="${step}"
-            class="range-input"
+            class="range-input dx-focus-ring"
             .value=${value.toString()}
             @input=${onInput}
             aria-labelledby="${headingId} ${controlId}-label"
@@ -102,7 +102,7 @@ export class DxThemeEditor extends LitElement {
             min="${min}"
             max="${max}"
             step="${step}"
-            class="number-input"
+            class="number-input dx-focus-ring"
             .value=${value.toString()}
             @input=${onInput}
             aria-labelledby="${headingId} ${controlId}-label"
