@@ -29,6 +29,15 @@ dx-theme-editor {
 
   .control-inputs {
     display: contents;
+
+    &.reverse-range {
+      .range-input {
+        direction: rtl;
+      }
+    }
+    &.reverse-order {
+      flex-direction: row-reverse;
+    }
   }
 
   .control-group {

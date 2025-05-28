@@ -77,14 +77,14 @@ export class DxThemeEditor extends LitElement {
     value: string | number,
     onInput: (e: Event) => void,
     headingId: string,
-    variant?: 'reverse',
+    variant?: 'reverse-range' | 'reverse-order',
   ) {
     const controlId = `${headingId}-${label.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
 
     return html`
       <div class="control-row">
         <label class="control-label" id="${controlId}-label" for="${controlId}-range">${label}:</label>
-        <div class="${classMap({ 'control-inputs': true, reverse: variant === 'reverse' })}">
+        <div class="${classMap({ 'control-inputs': true, ...(variant && { [variant]: true }) })}">
           <input
             id="${controlId}-range"
             type="range"
@@ -139,22 +139,30 @@ export class DxThemeEditor extends LitElement {
         <h3 class="series-title">${series} Series</h3>
 
         ${this.renderControlRow(
-          'Chroma (0-0.5)',
-          0,
-          0.5,
-          0.0025,
-          keyPoint[1],
-          (e: Event) => this.handleKeyPointChange(series, 1, parseFloat((e.target as HTMLInputElement).value)),
-          keyColorHeadingId,
-          'reverse',
-        )}
-        ${this.renderControlRow(
           'Hue (0-360)',
           0,
           360,
           0.5,
           keyPoint[2],
           (e: Event) => this.handleKeyPointChange(series, 2, parseFloat((e.target as HTMLInputElement).value)),
+          keyColorHeadingId,
+        )}
+        ${this.renderControlRow(
+          'Torsion (-180 to 180)',
+          -180,
+          180,
+          0.5,
+          torsion,
+          (e: Event) => this.handleTorsionChange(series, parseFloat((e.target as HTMLInputElement).value)),
+          torsionHeadingId,
+        )}
+        ${this.renderControlRow(
+          'Chroma (0-0.5)',
+          0,
+          0.5,
+          0.0025,
+          keyPoint[1],
+          (e: Event) => this.handleKeyPointChange(series, 1, parseFloat((e.target as HTMLInputElement).value)),
           keyColorHeadingId,
         )}
 
@@ -168,6 +176,7 @@ export class DxThemeEditor extends LitElement {
             (e: Event) =>
               this.handleControlPointChange(series, 'upperCp', parseFloat((e.target as HTMLInputElement).value)),
             controlPointsHeadingId,
+            'reverse-range',
           )}
           ${this.renderControlRow(
             'Light Control Point (0-1)',
@@ -178,18 +187,9 @@ export class DxThemeEditor extends LitElement {
             (e: Event) =>
               this.handleControlPointChange(series, 'lowerCp', parseFloat((e.target as HTMLInputElement).value)),
             controlPointsHeadingId,
+            'reverse-order',
           )}
         </div>
-
-        ${this.renderControlRow(
-          'Torsion (-180 to 180)',
-          -180,
-          180,
-          0.5,
-          torsion,
-          (e: Event) => this.handleTorsionChange(series, parseFloat((e.target as HTMLInputElement).value)),
-          torsionHeadingId,
-        )}
       </div>
     `;
   }
