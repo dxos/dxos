@@ -172,26 +172,6 @@ const createEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
     .attr('marker-end', () => (options.arrows?.end ? 'url(#marker-arrow-end)' : undefined))
     .attr('class', function () {
       return (select(this.parentNode as any).datum() as GraphLayoutEdge<N>).classes?.path;
-    })
-    .attr('d', (d) => {
-      const { source, target } = d;
-
-      // Get the current position if the node exists.
-      let initSource: Point;
-      let initTarget: Point;
-      const getPoint = (el): Point => [parseFloat(el.attr('cx')), parseFloat(el.attr('cy'))];
-      nodes.selectAll('g.node').each(function (d) {
-        if (options.idAccessor(d) === source.id) {
-          initSource = getPoint(select(this).select('circle'));
-        } else if (options.idAccessor(d) === target.id) {
-          initTarget = getPoint(select(this).select('circle'));
-        }
-      });
-
-      const p1: Point = initSource ?? source.last ?? [source.x, source.y];
-      const p2: Point = initTarget ?? target.last ?? [target.x, target.y];
-
-      return createLine(getCircumferencePoints(p1, p2, source.r, target.r));
     });
 };
 

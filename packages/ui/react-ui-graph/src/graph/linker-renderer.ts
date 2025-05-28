@@ -2,29 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import { line, select } from 'd3';
+import { line } from 'd3';
 
 import { type GraphLayoutNode } from './types';
 import { getCircumferencePoints } from './util';
+import { type D3Callable } from '../typings';
 import { type Point } from '../util';
 
 const createLine = line();
 
+export type LinkOptions = {
+  source?: GraphLayoutNode<any>;
+  target?: GraphLayoutNode<any>;
+  point?: Point;
+};
+
 /**
  * Render linker while dragging.
- * @param root
- * @param source
- * @param target
- * @param point
  */
-// TODO(burdon): Create generic class.
-export const linkerRenderer = (
-  root: SVGGElement,
-  source?: GraphLayoutNode<any>,
-  target?: GraphLayoutNode<any>,
-  point?: Point,
-) => {
-  select(root)
+export const linkerRenderer: D3Callable = (root, { source, target, point }: LinkOptions = {}) => {
+  root
     .selectAll('g.linker')
     .data([{ id: 'linker' }])
     .join('g')

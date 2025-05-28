@@ -9431,8 +9431,8 @@ importers:
   packages/plugins/plugin-theme-editor:
     dependencies:
       '@ch-ui/tokens':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.4.0
+        version: 2.4.0
       '@codemirror/lang-json':
         specifier: 6.0.1
         version: 6.0.1
@@ -9915,6 +9915,9 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
+      '@types/dom-speech-recognition':
+        specifier: ^0.0.6
+        version: 0.0.6
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -12706,6 +12709,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../react-ui-syntax-highlighter
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -13650,11 +13656,11 @@ importers:
   packages/ui/react-ui-theme:
     dependencies:
       '@ch-ui/tailwind-tokens':
-        specifier: 2.1.0
-        version: 2.1.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))
+        specifier: 2.7.0
+        version: 2.7.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))
       '@ch-ui/tokens':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.4.0
+        version: 2.4.0
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
@@ -13679,6 +13685,9 @@ importers:
       glob:
         specifier: ^7.2.3
         version: 7.2.3
+      globby:
+        specifier: ^14.1.0
+        version: 14.1.0
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -13708,8 +13717,8 @@ importers:
         version: 2.8.0
     devDependencies:
       '@ch-ui/colors':
-        specifier: 1.0.0
-        version: 1.0.0
+        specifier: 1.2.0
+        version: 1.2.0
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
@@ -16023,22 +16032,22 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@ch-ui/colors@1.0.0':
-    resolution: {integrity: sha512-qjk6z5ydz9fiXHBBl0S4xA0cZPFycsyYJqxSZAuiTmEvlVgYzBeJxWp188awcHZwJtpoew2LCtOkOdpMIEJGog==}
+  '@ch-ui/colors@1.2.0':
+    resolution: {integrity: sha512-+kXVvIDVWq/X65sO+daSpz8nFiVwqPrOv944fpcHCx/6gzuptV4oKkthsElyGGd0NQrwW8noFUB86x6C1HBR6g==}
     engines: {node: '>=20.0.0'}
 
   '@ch-ui/icons@0.5.0':
     resolution: {integrity: sha512-vevNSzPHnVDgyw6ZotbnE0y4FZFtIQQVKKjwVHGcfST7C5bqRyt69K1Nooo0r6s7laeJhS7YwXYmgLyPouc12w==}
     engines: {node: '>=20.0.0'}
 
-  '@ch-ui/tailwind-tokens@2.1.0':
-    resolution: {integrity: sha512-pvappJ7L3C0JigkaHU2UDZkfkXKQI2jPMZt7wqt9I9EHOJmGOEzGS99h7cp55c+U+m+vF7Ac2Y937HlT4gY9Sg==}
+  '@ch-ui/tailwind-tokens@2.7.0':
+    resolution: {integrity: sha512-Oi3h1h8zPcPX/H2ZbGCpfVskYiZ5cnQYBt2QyCtP3zzFuyqEB8zodqgqRHKFRcagEcc6dzZYCTlhW1NhiXvtcQ==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       tailwindcss: 3.x.x
 
-  '@ch-ui/tokens@2.0.0':
-    resolution: {integrity: sha512-6rjJKi72sJtUh8B3cBvTqirVFJJtE7ojyuIu8+tGH5Q+QPgfkWKYmvt3b7m5AR+pahXWszqF6BEEkj1Du11HbQ==}
+  '@ch-ui/tokens@2.4.0':
+    resolution: {integrity: sha512-YS9LgFfDYK9RGoMvyrM1ApgbeLqE8zZv12Ym/lWEDCOZFDQZIfQfrUg9VTytRIuPAdd9vniNUPKkzjs1qFwhrw==}
     engines: {node: '>=20.0.0'}
 
   '@chainsafe/is-ip@2.0.2':
@@ -21883,6 +21892,9 @@ packages:
 
   '@types/doctrine@0.0.9':
     resolution: {integrity: sha512-eOIHzCUSH7SMfonMG1LsC2f8vxBFtho6NGBznK41R84YzPuvSBzrhEps33IsQiOW9+VL6NQ9DbjQJznk/S4uRA==}
+
+  '@types/dom-speech-recognition@0.0.6':
+    resolution: {integrity: sha512-o7pAVq9UQPJL5RDjO1f/fcpfFHdgiMnR4PoIU2N/ZQrYOS3C5rzdOJMsrpqeBCbii2EE9mERXgqspQqPDdPahw==}
 
   '@types/draco3d@1.4.10':
     resolution: {integrity: sha512-AX22jp8Y7wwaBgAixaSvkoG4M/+PlAcm3Qs4OW8yT9DM4xUpWKeFhLueTAyZF39pviAdcDdeJoACapiAceqNcw==}
@@ -38057,7 +38069,7 @@ snapshots:
   '@cbor-extract/cbor-extract-win32-x64@2.2.0':
     optional: true
 
-  '@ch-ui/colors@1.0.0':
+  '@ch-ui/colors@1.2.0':
     dependencies:
       colorjs: colorjs.io@0.5.2
 
@@ -38065,15 +38077,16 @@ snapshots:
     dependencies:
       svg-sprite: 2.0.4
 
-  '@ch-ui/tailwind-tokens@2.1.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))':
+  '@ch-ui/tailwind-tokens@2.7.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))':
     dependencies:
-      '@ch-ui/tokens': 2.0.0
+      '@ch-ui/tokens': 2.4.0
       tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
 
-  '@ch-ui/tokens@2.0.0':
+  '@ch-ui/tokens@2.4.0':
     dependencies:
-      '@ch-ui/colors': 1.0.0
-      postcss: 8.4.47
+      '@ch-ui/colors': 1.2.0
+      invariant: 2.2.4
+      postcss: 8.5.3
 
   '@chainsafe/is-ip@2.0.2': {}
 
@@ -45257,6 +45270,8 @@ snapshots:
 
   '@types/doctrine@0.0.9': {}
 
+  '@types/dom-speech-recognition@0.0.6': {}
+
   '@types/draco3d@1.4.10': {}
 
   '@types/escodegen@0.0.6': {}
@@ -45974,7 +45989,7 @@ snapshots:
       '@typescript-eslint/types': 8.32.0
       '@typescript-eslint/visitor-keys': 8.32.0
       debug: 4.4.0(supports-color@5.5.0)
-      fast-glob: 3.3.2
+      fast-glob: 3.3.3
       is-glob: 4.0.3
       minimatch: 9.0.5
       semver: 7.7.1
@@ -48424,7 +48439,7 @@ snapshots:
 
   copy-webpack-plugin@10.2.4(webpack@5.88.2(@swc/core@1.5.7(@swc/helpers@0.5.17))(esbuild@0.23.1)):
     dependencies:
-      fast-glob: 3.3.2
+      fast-glob: 3.3.3
       glob-parent: 6.0.2
       globby: 12.2.0
       normalize-path: 3.0.0
@@ -51387,7 +51402,7 @@ snapshots:
       '@types/glob': 7.1.4
       array-union: 2.1.0
       dir-glob: 3.0.1
-      fast-glob: 3.3.2
+      fast-glob: 3.3.3
       glob: 7.2.3
       ignore: 5.2.4
       merge2: 1.4.1
@@ -51408,7 +51423,7 @@ snapshots:
     dependencies:
       array-union: 2.1.0
       dir-glob: 3.0.1
-      fast-glob: 3.3.2
+      fast-glob: 3.3.3
       ignore: 5.2.4
       merge2: 1.4.1
       slash: 3.0.0
@@ -51417,7 +51432,7 @@ snapshots:
     dependencies:
       array-union: 3.0.1
       dir-glob: 3.0.1
-      fast-glob: 3.3.2
+      fast-glob: 3.3.3
       ignore: 5.2.4
       merge2: 1.4.1
       slash: 4.0.0
@@ -51425,7 +51440,7 @@ snapshots:
   globby@13.2.2:
     dependencies:
       dir-glob: 3.0.1
-      fast-glob: 3.3.2
+      fast-glob: 3.3.3
       ignore: 5.2.4
       merge2: 1.4.1
       slash: 4.0.0
@@ -59280,7 +59295,7 @@ snapshots:
 
   stylus-loader@7.1.3(stylus@0.59.0)(webpack@5.88.2(@swc/core@1.5.7(@swc/helpers@0.5.17))(esbuild@0.23.1)):
     dependencies:
-      fast-glob: 3.3.2
+      fast-glob: 3.3.3
       normalize-path: 3.0.0
       stylus: 0.59.0
       webpack: 5.88.2(@swc/core@1.5.7(@swc/helpers@0.5.17))(esbuild@0.23.1)
@@ -59437,7 +59452,7 @@ snapshots:
       detective: 5.2.1
       didyoumean: 1.2.2
       dlv: 1.1.3
-      fast-glob: 3.3.2
+      fast-glob: 3.3.3
       glob-parent: 6.0.2
       is-glob: 4.0.3
       normalize-path: 3.0.0

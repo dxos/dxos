@@ -55,6 +55,7 @@ const adapterConfig: TailwindAdapterConfig = {
 export const userDefaultTokenSet = {
   colors: {
     physical: {
+      definitions: physicalColors.definitions,
       conditions: physicalColors.conditions,
       series: {
         neutral: physicalColors.series.neutral,

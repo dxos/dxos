@@ -39,6 +39,9 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-syntax-highlighter"
+    },
+    {
       "path": "../react-ui-theme"
     }
   ]
