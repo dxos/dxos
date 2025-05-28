@@ -6,6 +6,7 @@ import { cssGradientFromCurve, helicalArcFromConfig } from '@ch-ui/colors';
 import { type ResolvedHelicalArcSeries, type TokenSet } from '@ch-ui/tokens';
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { classMap } from 'lit/directives/class-map.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { debounce } from '@dxos/async';
@@ -76,34 +77,37 @@ export class DxThemeEditor extends LitElement {
     value: string | number,
     onInput: (e: Event) => void,
     headingId: string,
+    variant?: 'reverse',
   ) {
     const controlId = `${headingId}-${label.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
 
     return html`
       <div class="control-row">
         <label class="control-label" id="${controlId}-label" for="${controlId}-range">${label}:</label>
-        <input
-          id="${controlId}-range"
-          type="range"
-          min="${min}"
-          max="${max}"
-          step="${step}"
-          class="range-input"
-          .value=${value.toString()}
-          @input=${onInput}
-          aria-labelledby="${headingId} ${controlId}-label"
-        />
-        <input
-          id="${controlId}-number"
-          type="number"
-          min="${min}"
-          max="${max}"
-          step="${step}"
-          class="number-input"
-          .value=${value.toString()}
-          @input=${onInput}
-          aria-labelledby="${headingId} ${controlId}-label"
-        />
+        <div class="${classMap({ 'control-inputs': true, reverse: variant === 'reverse' })}">
+          <input
+            id="${controlId}-range"
+            type="range"
+            min="${min}"
+            max="${max}"
+            step="${step}"
+            class="range-input"
+            .value=${value.toString()}
+            @input=${onInput}
+            aria-labelledby="${headingId} ${controlId}-label"
+          />
+          <input
+            id="${controlId}-number"
+            type="number"
+            min="${min}"
+            max="${max}"
+            step="${step}"
+            class="number-input"
+            .value=${value.toString()}
+            @input=${onInput}
+            aria-labelledby="${headingId} ${controlId}-label"
+          />
+        </div>
       </div>
     `;
   }
@@ -132,35 +136,29 @@ export class DxThemeEditor extends LitElement {
             backgroundImage: cssGradientFromCurve(helicalArcFromConfig(seriesData), 21, [0, 1], 'p3'),
           })}
         ></div>
-        <div class="series-header">
-          <h3 class="series-title">${series} Series</h3>
-        </div>
+        <h3 class="series-title">${series} Series</h3>
+
+        ${this.renderControlRow(
+          'Chroma (0-0.5)',
+          0,
+          0.5,
+          0.0025,
+          keyPoint[1],
+          (e: Event) => this.handleKeyPointChange(series, 1, parseFloat((e.target as HTMLInputElement).value)),
+          keyColorHeadingId,
+          'reverse',
+        )}
+        ${this.renderControlRow(
+          'Hue (0-360)',
+          0,
+          360,
+          0.5,
+          keyPoint[2],
+          (e: Event) => this.handleKeyPointChange(series, 2, parseFloat((e.target as HTMLInputElement).value)),
+          keyColorHeadingId,
+        )}
 
         <div class="control-group">
-          <h4 id="${keyColorHeadingId}" class="control-group-title">Key Color</h4>
-          ${this.renderControlRow(
-            'Chroma (0-0.5)',
-            0,
-            0.5,
-            0.0025,
-            keyPoint[1],
-            (e: Event) => this.handleKeyPointChange(series, 1, parseFloat((e.target as HTMLInputElement).value)),
-            keyColorHeadingId,
-          )}
-          ${this.renderControlRow(
-            'Hue (0-360)',
-            0,
-            360,
-            0.5,
-            keyPoint[2],
-            (e: Event) => this.handleKeyPointChange(series, 2, parseFloat((e.target as HTMLInputElement).value)),
-            keyColorHeadingId,
-          )}
-        </div>
-
-        <div class="control-group">
-          <h4 id="${controlPointsHeadingId}" class="control-group-title">Control Points</h4>
-
           ${this.renderControlRow(
             'Dark Control Point (0-1)',
             0,
@@ -183,19 +181,15 @@ export class DxThemeEditor extends LitElement {
           )}
         </div>
 
-        <div class="control-group">
-          <h4 id="${torsionHeadingId}" class="control-group-title">Torsion</h4>
-
-          ${this.renderControlRow(
-            'Torsion (-180 to 180)',
-            -180,
-            180,
-            0.5,
-            torsion,
-            (e: Event) => this.handleTorsionChange(series, parseFloat((e.target as HTMLInputElement).value)),
-            torsionHeadingId,
-          )}
-        </div>
+        ${this.renderControlRow(
+          'Torsion (-180 to 180)',
+          -180,
+          180,
+          0.5,
+          torsion,
+          (e: Event) => this.handleTorsionChange(series, parseFloat((e.target as HTMLInputElement).value)),
+          torsionHeadingId,
+        )}
       </div>
     `;
   }

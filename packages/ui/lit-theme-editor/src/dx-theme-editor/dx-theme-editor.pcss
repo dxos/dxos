@@ -27,8 +27,21 @@ dx-theme-editor {
     border-radius: .25rem;
   }
 
+  .control-inputs {
+    display: contents;
+  }
+
   .control-group {
-    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    .control-row {
+      display: block;
+      flex: 1 1 0;
+      .control-inputs {
+        display: flex;
+        gap: .5rem;
+      }
+    }
   }
 
   .control-group:last-child {
