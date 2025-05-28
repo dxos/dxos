@@ -1,0 +1,35 @@
+{
+  "name": "@dxos/lit-theme-editor",
+  "version": "0.8.1",
+  "description": "A component for editing the user tokens layer of dxos-theme.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/src/index.js",
+      "node": "./dist/src/index.js"
+    },
+    "./dx-theme-editor.pcss": "./src/dx-theme-editor/dx-theme-editor.pcss"
+  },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "src",
+    "dist"
+  ],
+  "dependencies": {
+    "lit": "^3.2.0",
+    "@dxos/lit-ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/test-utils": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
