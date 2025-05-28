@@ -52,6 +52,7 @@ export const createSimulationDrag = <N>(
     .on('start', function (event: D3DragEvent) {
       const node = select(this).node();
       offset = pointer(event, node.parentElement);
+      source = select(node.parentElement).datum() as GraphLayoutNode<N>;
 
       if (options?.onDrop && keyMod(event.sourceEvent, 'linkMod')) {
         mode = Mode.LINK;
@@ -60,23 +61,23 @@ export const createSimulationDrag = <N>(
       }
     })
     .on('drag', function (event: D3DragEvent, d) {
-      // d3.select(this).style('pointer-events', 'none');
+      const node = select(this).node();
+      const data = select(node).datum() as GraphLayoutNode<N>;
+      if (data !== d) {
+        return;
+      }
+
+      // Calculate position.
+      const [dx, dy] = pointer(event, node.parentElement);
+      const x = data.x + dx - offset[0];
+      const y = data.y + dy - offset[1];
+      const point: Point = [x, y];
+
       switch (mode) {
         case Mode.MOVE: {
-          const node = select(this).node();
-          const data = select(node).datum() as GraphLayoutNode<N>;
-          if (data !== d) {
-            return;
-          }
-
-          // Calculate position relative to center.
-          const [dx, dy] = pointer(event, node.parentElement);
-          const x = data.x + dx - offset[0];
-          const y = data.y + dy - offset[1];
-
           // Freeze node while dragging.
-          event.subject.x = event.subject.fx = x;
-          event.subject.y = event.subject.fy = y;
+          event.subject.x = event.subject.fx = point[0];
+          event.subject.y = event.subject.fy = point[1];
 
           simulation.alphaTarget(0).alpha(1).restart();
           select(context.svg).attr('cursor', 'grabbing');
@@ -86,13 +87,12 @@ export const createSimulationDrag = <N>(
         case Mode.LINK: {
           // Get drop target.
           if (options?.onDrag) {
-            const point: Point = pointer(event, this);
             target = simulation.find(event.x, event.y, 16);
             if (source === target) {
-              select(context.svg).attr('cursor', undefined);
+              // select(context.svg).attr('cursor', undefined);
               options?.onDrag?.();
             } else {
-              select(context.svg).attr('cursor', 'none');
+              // select(context.svg).attr('cursor', 'none');
               options?.onDrag?.(source, target, point);
             }
           }
