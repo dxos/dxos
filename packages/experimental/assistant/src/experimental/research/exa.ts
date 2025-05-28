@@ -7,8 +7,6 @@ import Exa from 'exa-js';
 
 import { defineTool, ToolResult } from '@dxos/artifact';
 import { log } from '@dxos/log';
-import { writeFileSync } from 'fs';
-import { resolve } from 'path';
 import { SEARCH_RESULTS } from '../../testing/data/research';
 
 type CreateExaToolOptions = {
@@ -34,10 +32,6 @@ export const createExaTool = ({ apiKey }: CreateExaToolOptions) => {
       });
 
       log.info('exa search', { query, costDollars: context.costDollars });
-
-      const filename = `exa-search-${Date.now()}.json`;
-      writeFileSync(filename, JSON.stringify(context, null, 2));
-      log.info('exa search', { filename: resolve(filename) });
 
       return ToolResult.Success(context);
     },
