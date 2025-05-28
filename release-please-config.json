@@ -754,6 +754,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/lit-theme-editor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/lit-ui/package.json",
           "jsonpath": "$.version"
         },

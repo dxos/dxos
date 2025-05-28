@@ -23,8 +23,8 @@
     "dist"
   ],
   "dependencies": {
-    "lit": "^3.2.0",
-    "@dxos/lit-ui": "workspace:*"
+    "@dxos/lit-ui": "workspace:*",
+    "lit": "^3.2.0"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*"

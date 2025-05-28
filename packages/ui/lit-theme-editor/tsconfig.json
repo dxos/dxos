@@ -18,7 +18,7 @@
       "path": "../../common/test-utils"
     },
     {
-      "path": "../primitives/react-hooks"
+      "path": "../lit-ui"
     }
   ]
 }
