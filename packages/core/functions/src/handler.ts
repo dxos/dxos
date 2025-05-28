@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Schema, type Context } from 'effect';
 import { type Effect } from 'effect';
 
 import { type AIServiceClient } from '@dxos/assistant';
@@ -38,6 +38,12 @@ export type FunctionHandler<TData = {}, TOutput = any> = (params: {
  * Function context.
  */
 export interface FunctionContext {
+  /**
+   * Resolves a service available to the function.
+   * @throws if the service is not available.
+   */
+  getService: <T extends Context.Tag<any, any>>(tag: T) => Context.Tag.Service<T>;
+
   getSpace: (spaceId: SpaceId) => Promise<SpaceAPI>;
 
   /**
