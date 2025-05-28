@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { cssGradientFromCurve, helicalArcFromConfig } from '@ch-ui/colors';
 import { type ResolvedHelicalArcSeries, type TokenSet } from '@ch-ui/tokens';
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -10,6 +11,7 @@ import { styleMap } from 'lit/directives/style-map.js';
 import { debounce } from '@dxos/async';
 
 import { restore, saveAndRender } from './util';
+
 import './dx-theme-editor.pcss';
 
 export type DxThemeEditorProps = {};
@@ -117,9 +119,6 @@ export class DxThemeEditor extends LitElement {
     const upperCp = seriesData.upperCp || 0;
     const torsion = seriesData.torsion || 0;
 
-    // Create a color preview based on the keyPoint
-    const previewColor = `oklch(${keyPoint[0]} ${keyPoint[1]} ${keyPoint[2]})`;
-
     // Create unique IDs for headings to reference in aria-labelledby
     const keyColorHeadingId = `${series}-key-color-heading`;
     const controlPointsHeadingId = `${series}-control-points-heading`;
@@ -127,28 +126,23 @@ export class DxThemeEditor extends LitElement {
 
     return html`
       <div class="series-controls">
+        <div
+          class="series-preview"
+          style=${styleMap({
+            backgroundImage: cssGradientFromCurve(helicalArcFromConfig(seriesData), 21, [0, 1], 'p3'),
+          })}
+        ></div>
         <div class="series-header">
           <h3 class="series-title">${series} Series</h3>
-          <div class="color-preview" style=${styleMap({ backgroundColor: previewColor })}></div>
         </div>
 
         <div class="control-group">
           <h4 id="${keyColorHeadingId}" class="control-group-title">Key Color</h4>
-
           ${this.renderControlRow(
-            'Lightness (0-1)',
+            'Chroma (0-0.5)',
             0,
-            1,
-            0.01,
-            keyPoint[0],
-            (e: Event) => this.handleKeyPointChange(series, 0, parseFloat((e.target as HTMLInputElement).value)),
-            keyColorHeadingId,
-          )}
-          ${this.renderControlRow(
-            'Chroma (0-0.3)',
-            0,
-            0.3,
-            0.01,
+            0.5,
+            0.0025,
             keyPoint[1],
             (e: Event) => this.handleKeyPointChange(series, 1, parseFloat((e.target as HTMLInputElement).value)),
             keyColorHeadingId,
@@ -157,7 +151,7 @@ export class DxThemeEditor extends LitElement {
             'Hue (0-360)',
             0,
             360,
-            1,
+            0.5,
             keyPoint[2],
             (e: Event) => this.handleKeyPointChange(series, 2, parseFloat((e.target as HTMLInputElement).value)),
             keyColorHeadingId,
@@ -168,16 +162,6 @@ export class DxThemeEditor extends LitElement {
           <h4 id="${controlPointsHeadingId}" class="control-group-title">Control Points</h4>
 
           ${this.renderControlRow(
-            'Light Control Point (0-1)',
-            0,
-            1,
-            0.01,
-            lowerCp,
-            (e: Event) =>
-              this.handleControlPointChange(series, 'lowerCp', parseFloat((e.target as HTMLInputElement).value)),
-            controlPointsHeadingId,
-          )}
-          ${this.renderControlRow(
             'Dark Control Point (0-1)',
             0,
             1,
@@ -185,6 +169,16 @@ export class DxThemeEditor extends LitElement {
             upperCp,
             (e: Event) =>
               this.handleControlPointChange(series, 'upperCp', parseFloat((e.target as HTMLInputElement).value)),
+            controlPointsHeadingId,
+          )}
+          ${this.renderControlRow(
+            'Light Control Point (0-1)',
+            0,
+            1,
+            0.01,
+            lowerCp,
+            (e: Event) =>
+              this.handleControlPointChange(series, 'lowerCp', parseFloat((e.target as HTMLInputElement).value)),
             controlPointsHeadingId,
           )}
         </div>
@@ -196,7 +190,7 @@ export class DxThemeEditor extends LitElement {
             'Torsion (-180 to 180)',
             -180,
             180,
-            1,
+            0.5,
             torsion,
             (e: Event) => this.handleTorsionChange(series, parseFloat((e.target as HTMLInputElement).value)),
             torsionHeadingId,
@@ -209,8 +203,7 @@ export class DxThemeEditor extends LitElement {
   override render() {
     return html`
       <div class="theme-editor-container">
-        <h2>Theme Editor</h2>
-
+        <h2>Physical series</h2>
         ${bindSeriesDefinitions.map(
           (series) => html` <div class="series-container">${this.renderSeriesControls(series)}</div> `,
         )}

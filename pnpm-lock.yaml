@@ -11287,6 +11287,9 @@ importers:
 
   packages/ui/lit-theme-editor:
     dependencies:
+      '@ch-ui/colors':
+        specifier: 1.2.0
+        version: 1.2.0
       '@ch-ui/tokens':
         specifier: 2.4.0
         version: 2.4.0
