@@ -46,7 +46,7 @@ export const ParticipantGrid = ({ classNames, self, users, fullscreen, debug }: 
     });
 
     return allUsers;
-  }, [self.id, users]);
+  }, [self, users]);
 
   useEffect(() => {
     if (pinned) {
