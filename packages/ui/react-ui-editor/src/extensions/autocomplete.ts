@@ -49,7 +49,7 @@ export const autocomplete = ({ debug, activateOnTyping, override, onSearch }: Au
 
   if (onSearch) {
     extensions.push(
-      // TODO(burdon): Optional decoration via addToOptions
+      // TODO(burdon): Optional decoration via addToOptions.
       markdownLanguage.data.of({
         autocomplete: (context: CompletionContext): CompletionResult | null => {
           const match = context.matchBefore(/\w*/);
