@@ -10,9 +10,7 @@ svg.graph {
     }
 
     &.dot circle {
-      fill: none;
-      stroke: red;
-      stroke-width: 2px;
+      @apply fill-none stroke-red-500 stroke-2;
     }
   }
 
@@ -68,7 +66,6 @@ svg.graph {
   }
 
   circle.bullet {
-    fill: red;
-    stroke: none;
+    @apply fill-red-500 stroke-none;
   }
 }

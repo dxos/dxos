@@ -10,6 +10,7 @@ import React, { useMemo } from 'react';
 import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
 import { useThemeContext } from '@dxos/react-ui';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Graph as GraphComponent, type GraphProps } from './Graph';
@@ -29,9 +30,10 @@ type DefaultStoryProps = GraphProps & {
   grid?: boolean;
   graph: Graph;
   projectorOptions?: GraphForceProjectorOptions;
+  debug?: boolean;
 };
 
-const DefaultStory = ({ grid, graph, projectorOptions, ...props }: DefaultStoryProps) => {
+const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: DefaultStoryProps) => {
   const { themeMode } = useThemeContext();
   const model = useMemo(() => new TestGraphModel(graph), [graph]);
   const selected = useMemo(() => new SelectionModel(), []);
@@ -42,7 +44,7 @@ const DefaultStory = ({ grid, graph, projectorOptions, ...props }: DefaultStoryP
   );
 
   return (
-    <div className='w-full grid grid-cols-[1fr_30rem] divide-x divide-separator'>
+    <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
       <SVGRoot context={context}>
         <SVG classNames='graph'>
           <Markers />
@@ -71,7 +73,8 @@ const DefaultStory = ({ grid, graph, projectorOptions, ...props }: DefaultStoryP
           </Zoom>
         </SVG>
       </SVGRoot>
-      <Debug model={model} />
+
+      {debug && <Debug model={model} />}
     </div>
   );
 };
@@ -98,7 +101,7 @@ export const Default: Story = {
 
 export const Force: Story = {
   args: {
-    graph: convertTreeToGraph(createTree({ depth: 4 })),
+    graph: convertTreeToGraph(createTree({ depth: 5 })),
     drag: true,
     delay: 500,
     projectorOptions: {
@@ -113,7 +116,7 @@ export const Force: Story = {
         },
         radial: {
           radius: 300,
-          strength: 0.3,
+          strength: 0.6,
         },
         collide: {
           strength: 0.9,
@@ -146,6 +149,7 @@ export const Select = {
   },
 };
 
+// TODO(burdon): Very expensive.
 const Debug = ({ model }: { model: GraphModel }) => {
   return <JsonFilter data={model.toJSON()} classNames='text-sm' />;
 };
