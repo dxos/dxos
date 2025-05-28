@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework';
 import { useNode, useActions } from '@dxos/plugin-graph';
