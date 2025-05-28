@@ -2,17 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
+import './dx-theme-editor.ts';
 import './dx-theme-editor-physical-colors.ts';
+import './dx-theme-editor-semantic-colors.ts';
 import './dx-theme-editor.pcss';
 import { html } from 'lit';
 
-import { type DxThemeEditorProps } from './dx-theme-editor-physical-colors';
+import { type DxThemeEditorProps } from './dx-theme-editor';
+import { type DxThemeEditorPhysicalColorsProps } from './dx-theme-editor-physical-colors';
+import { type DxThemeEditorSemanticColorsProps } from './dx-theme-editor-semantic-colors';
 
 export default {
   title: 'dx-theme-editor',
   parameters: { layout: 'fullscreen' },
 };
 
-export const Basic = (props: DxThemeEditorProps) => {
+export const CombinedThemeEditor = (props: DxThemeEditorProps) => {
+  return html`<dx-theme-editor></dx-theme-editor>`;
+};
+
+export const PhysicalColors = (props: DxThemeEditorPhysicalColorsProps) => {
   return html`<dx-theme-editor-physical-colors></dx-theme-editor-physical-colors>`;
+};
+
+export const SemanticColors = (props: DxThemeEditorSemanticColorsProps) => {
+  return html`<dx-theme-editor-semantic-colors></dx-theme-editor-semantic-colors>`;
 };

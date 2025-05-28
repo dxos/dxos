@@ -1,11 +1,53 @@
-dx-theme-editor-physical-colors {
+dx-theme-editor,
+dx-theme-editor-physical-colors,
+dx-theme-editor-semantic-colors {
   display: contents;
 
   input {
     accent-color: var(--dx-accentSurface);
   }
 
-  .theme-editor-container {}
+  .theme-editor-container {
+    font-family: system-ui, sans-serif;
+    padding: 1rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .tabs-container {
+    display: flex;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 1rem;
+  }
+
+  .tab {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 1rem;
+    border-bottom: 2px solid transparent;
+
+    &.active {
+      border-bottom-color: var(--dx-accentSurface, #0066cc);
+      font-weight: bold;
+    }
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    &:focus {
+      outline: 2px solid var(--dx-accentFocusIndicator, #0066cc);
+      outline-offset: 2px;
+    }
+  }
+
+  .tab-panel {
+    &[hidden] {
+      display: none;
+    }
+  }
 
   .series-container {}
 
@@ -86,4 +128,37 @@ dx-theme-editor-physical-colors {
     width: 80px;
   }
 
+  /* Semantic Colors Editor Styles */
+  .token-container {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 0.25rem;
+  }
+
+  .token-controls {
+    padding: 0.5rem;
+  }
+
+  .token-title {
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .token-name-input {
+    font-size: 1rem;
+    font-weight: bold;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 0.25rem;
+    width: 100%;
+  }
+
+  .series-select {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 0.25rem;
+    flex: 1;
+  }
 }

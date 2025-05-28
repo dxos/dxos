@@ -15,7 +15,7 @@ import { restore, saveAndRender } from './util';
 
 import './dx-theme-editor.pcss';
 
-export type DxThemeEditorProps = {};
+export type DxThemeEditorPhysicalColorsProps = {};
 
 const bindSeriesDefinitions = ['neutral', 'primary'];
 
