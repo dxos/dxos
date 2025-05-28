@@ -31,7 +31,6 @@ export type ToolbarProps = ThemedClassName<{
   onLeave?: () => void;
 }>;
 
-// TODO(mykola): Move transcription related logic to a separate component.
 export const Toolbar = ({
   classNames,
   meeting,
