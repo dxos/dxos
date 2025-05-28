@@ -29,7 +29,7 @@ export class DxThemeEditor extends LitElement {
   tokenSet: TokenSet = restore();
 
   private debouncedSaveAndRender = debounce(() => {
-    saveAndRender(JSON.stringify(this.tokenSet));
+    saveAndRender(this.tokenSet);
   }, 200);
 
   private updateSeriesProperty(series: string, property: string, value: any) {
@@ -157,9 +157,9 @@ export class DxThemeEditor extends LitElement {
           torsionHeadingId,
         )}
         ${this.renderControlRow(
-          'Chroma (0-0.5)',
+          'Chroma (0-0.4)',
           0,
-          0.5,
+          0.4,
           0.0025,
           keyPoint[1],
           (e: Event) => this.handleKeyPointChange(series, 1, parseFloat((e.target as HTMLInputElement).value)),
@@ -192,6 +192,11 @@ export class DxThemeEditor extends LitElement {
         </div>
       </div>
     `;
+  }
+
+  override connectedCallback() {
+    super.connectedCallback();
+    saveAndRender(this.tokenSet);
   }
 
   override render() {

@@ -30,10 +30,10 @@ export const restore = () => {
 
 const styleNodeId = `${storageKey}/style`;
 
-export const saveAndRender = (value?: string) => {
+export const saveAndRender = (tokenSet?: TokenSet) => {
   let tokens = '';
   try {
-    const nextTokens = value ? JSON.parse(value) : restore();
+    const nextTokens = tokenSet ?? restore();
     localStorage.setItem(storageKey, JSON.stringify(nextTokens));
     tokens = `@layer user-tokens { ${renderTokenSet(nextTokens)} }`;
   } catch (err) {
