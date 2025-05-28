@@ -58,7 +58,10 @@ export const huePalettes = {
 };
 
 /**
- * The keyPoint represents the LCH value (Lightness: 0-1; Chroma: min 0, max 0.08–0.3 depending on hue; Hue: 0-360 [~26=Red, ~141=Green, ~262=Blue]).
+ * The keyPoint represents the LCH value:
+ * - Lightness: 0-1, should usually set the keyPoint at or near 0.5
+ * - Chroma: min 0, max 0.08–0.5 depending on hue and gamut, theme will clamp final value to within gamut’s range
+ * - Hue: 0-360 (~26 “red”, ~141 “green”, ~262 “blue”)
  *
  * NOTE: Rebuild the theme and restart the dev server to see changes.
  *
@@ -71,7 +74,7 @@ export const huePalettes = {
  */
 const systemPalettes = {
   neutral: {
-    keyPoint: [0, 0.01, 260],
+    keyPoint: [0.5, 0.01, 260],
     lowerCp: 0,
     upperCp: 0,
     torsion: 0,
