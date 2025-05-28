@@ -67,7 +67,7 @@
       "dependsOn": ["prebuild", "^compile"],
       "executor": "@nx/playwright:playwright",
       "inputs": ["default", "^production", { "env": "CI" }, { "env": "LOG_LEVEL" }, { "env": "LOG_PROCESSOR" }],
-      "options": { "config": "{projectRoot}/src/playwright/playwright.config.cts" }
+      "options": { "config": "{projectRoot}/src/playwright/playwright.config.mts" }
     },
     "lint": {
       "cache": true,
@@ -110,17 +110,13 @@
     },
     "typedoc": {
       "cache": true,
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "executor": "nx:run-script",
       "inputs": ["production"],
       "options": {
         "script": "typedoc"
       },
-      "outputs": [
-        "{projectRoot}/typedoc"
-      ]
+      "outputs": ["{projectRoot}/typedoc"]
     }
   },
   "nxCloudId": "62ed1bb8236992263d3c673b"
