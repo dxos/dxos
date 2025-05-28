@@ -15,10 +15,16 @@
   ],
   "references": [
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/test-utils"
     },
     {
       "path": "../lit-ui"
+    },
+    {
+      "path": "../react-ui-theme"
     }
   ]
 }
