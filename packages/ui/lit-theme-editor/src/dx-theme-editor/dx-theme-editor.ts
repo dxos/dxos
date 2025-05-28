@@ -66,6 +66,46 @@ export class DxThemeEditor extends LitElement {
     this.updateSeriesProperty(series, 'torsion', value);
   }
 
+  private renderControlRow(
+    label: string,
+    min: string | number,
+    max: string | number,
+    step: string | number,
+    value: string | number,
+    onInput: (e: Event) => void,
+    headingId: string,
+  ) {
+    const controlId = `${headingId}-${label.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+
+    return html`
+      <div class="control-row">
+        <label class="control-label" id="${controlId}-label" for="${controlId}-range">${label}:</label>
+        <input
+          id="${controlId}-range"
+          type="range"
+          min="${min}"
+          max="${max}"
+          step="${step}"
+          class="range-input"
+          .value=${value.toString()}
+          @input=${onInput}
+          aria-labelledby="${headingId} ${controlId}-label"
+        />
+        <input
+          id="${controlId}-number"
+          type="number"
+          min="${min}"
+          max="${max}"
+          step="${step}"
+          class="number-input"
+          .value=${value.toString()}
+          @input=${onInput}
+          aria-labelledby="${headingId} ${controlId}-label"
+        />
+      </div>
+    `;
+  }
+
   private renderSeriesControls(series: string) {
     const seriesData = this.tokenSet.colors?.physical?.definitions?.series?.[series];
     if (!isHelicalArcSeries(seriesData)) {
@@ -80,168 +120,87 @@ export class DxThemeEditor extends LitElement {
     // Create a color preview based on the keyPoint
     const previewColor = `oklch(${keyPoint[0]} ${keyPoint[1]} ${keyPoint[2]})`;
 
+    // Create unique IDs for headings to reference in aria-labelledby
+    const keyColorHeadingId = `${series}-key-color-heading`;
+    const controlPointsHeadingId = `${series}-control-points-heading`;
+    const torsionHeadingId = `${series}-torsion-heading`;
+
     return html`
       <div class="series-controls">
         <div class="series-header">
           <h3 class="series-title">${series} Series</h3>
-          <div
-            class="color-preview"
-            style=${styleMap({ backgroundColor: previewColor })}
-          ></div>
+          <div class="color-preview" style=${styleMap({ backgroundColor: previewColor })}></div>
         </div>
 
         <div class="control-group">
-          <h4 class="control-group-title">Key Color</h4>
+          <h4 id="${keyColorHeadingId}" class="control-group-title">Key Color</h4>
 
-          <div class="control-row">
-            <label class="control-label">Lightness (0-1):</label>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              class="range-input"
-              .value=${keyPoint[0].toString()}
-              @input=${(e: Event) =>
-                this.handleKeyPointChange(series, 0, parseFloat((e.target as HTMLInputElement).value))}
-            />
-            <input
-              type="number"
-              min="0"
-              max="1"
-              step="0.01"
-              class="number-input"
-              .value=${keyPoint[0].toString()}
-              @input=${(e: Event) =>
-                this.handleKeyPointChange(series, 0, parseFloat((e.target as HTMLInputElement).value))}
-            />
-          </div>
-
-          <div class="control-row">
-            <label class="control-label">Chroma (0-0.3):</label>
-            <input
-              type="range"
-              min="0"
-              max="0.3"
-              step="0.01"
-              class="range-input"
-              .value=${keyPoint[1].toString()}
-              @input=${(e: Event) =>
-                this.handleKeyPointChange(series, 1, parseFloat((e.target as HTMLInputElement).value))}
-            />
-            <input
-              type="number"
-              min="0"
-              max="0.3"
-              step="0.01"
-              class="number-input"
-              .value=${keyPoint[1].toString()}
-              @input=${(e: Event) =>
-                this.handleKeyPointChange(series, 1, parseFloat((e.target as HTMLInputElement).value))}
-            />
-          </div>
-
-          <div class="control-row">
-            <label class="control-label">Hue (0-360):</label>
-            <input
-              type="range"
-              min="0"
-              max="360"
-              step="1"
-              class="range-input"
-              .value=${keyPoint[2].toString()}
-              @input=${(e: Event) =>
-                this.handleKeyPointChange(series, 2, parseFloat((e.target as HTMLInputElement).value))}
-            />
-            <input
-              type="number"
-              min="0"
-              max="360"
-              step="1"
-              class="number-input"
-              .value=${keyPoint[2].toString()}
-              @input=${(e: Event) =>
-                this.handleKeyPointChange(series, 2, parseFloat((e.target as HTMLInputElement).value))}
-            />
-          </div>
+          ${this.renderControlRow(
+            'Lightness (0-1)',
+            0,
+            1,
+            0.01,
+            keyPoint[0],
+            (e: Event) => this.handleKeyPointChange(series, 0, parseFloat((e.target as HTMLInputElement).value)),
+            keyColorHeadingId,
+          )}
+          ${this.renderControlRow(
+            'Chroma (0-0.3)',
+            0,
+            0.3,
+            0.01,
+            keyPoint[1],
+            (e: Event) => this.handleKeyPointChange(series, 1, parseFloat((e.target as HTMLInputElement).value)),
+            keyColorHeadingId,
+          )}
+          ${this.renderControlRow(
+            'Hue (0-360)',
+            0,
+            360,
+            1,
+            keyPoint[2],
+            (e: Event) => this.handleKeyPointChange(series, 2, parseFloat((e.target as HTMLInputElement).value)),
+            keyColorHeadingId,
+          )}
         </div>
 
         <div class="control-group">
-          <h4 class="control-group-title">Control Points</h4>
+          <h4 id="${controlPointsHeadingId}" class="control-group-title">Control Points</h4>
 
-          <div class="control-row">
-            <label class="control-label">Light Control Point (0-1):</label>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              class="range-input"
-              .value=${lowerCp.toString()}
-              @input=${(e: Event) =>
-                this.handleControlPointChange(series, 'lowerCp', parseFloat((e.target as HTMLInputElement).value))}
-            />
-            <input
-              type="number"
-              min="0"
-              max="1"
-              step="0.01"
-              class="number-input"
-              .value=${lowerCp.toString()}
-              @input=${(e: Event) =>
-                this.handleControlPointChange(series, 'lowerCp', parseFloat((e.target as HTMLInputElement).value))}
-            />
-          </div>
-
-          <div class="control-row">
-            <label class="control-label">Dark Control Point (0-1):</label>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              class="range-input"
-              .value=${upperCp.toString()}
-              @input=${(e: Event) =>
-                this.handleControlPointChange(series, 'upperCp', parseFloat((e.target as HTMLInputElement).value))}
-            />
-            <input
-              type="number"
-              min="0"
-              max="1"
-              step="0.01"
-              class="number-input"
-              .value=${upperCp.toString()}
-              @input=${(e: Event) =>
-                this.handleControlPointChange(series, 'upperCp', parseFloat((e.target as HTMLInputElement).value))}
-            />
-          </div>
+          ${this.renderControlRow(
+            'Light Control Point (0-1)',
+            0,
+            1,
+            0.01,
+            lowerCp,
+            (e: Event) =>
+              this.handleControlPointChange(series, 'lowerCp', parseFloat((e.target as HTMLInputElement).value)),
+            controlPointsHeadingId,
+          )}
+          ${this.renderControlRow(
+            'Dark Control Point (0-1)',
+            0,
+            1,
+            0.01,
+            upperCp,
+            (e: Event) =>
+              this.handleControlPointChange(series, 'upperCp', parseFloat((e.target as HTMLInputElement).value)),
+            controlPointsHeadingId,
+          )}
         </div>
 
         <div class="control-group">
-          <h4 class="control-group-title">Torsion</h4>
+          <h4 id="${torsionHeadingId}" class="control-group-title">Torsion</h4>
 
-          <div class="control-row">
-            <label class="control-label">Torsion (-180 to 180):</label>
-            <input
-              type="range"
-              min="-180"
-              max="180"
-              step="1"
-              class="range-input"
-              .value=${torsion.toString()}
-              @input=${(e: Event) => this.handleTorsionChange(series, parseFloat((e.target as HTMLInputElement).value))}
-            />
-            <input
-              type="number"
-              min="-180"
-              max="180"
-              step="1"
-              class="number-input"
-              .value=${torsion.toString()}
-              @input=${(e: Event) => this.handleTorsionChange(series, parseFloat((e.target as HTMLInputElement).value))}
-            />
-          </div>
+          ${this.renderControlRow(
+            'Torsion (-180 to 180)',
+            -180,
+            180,
+            1,
+            torsion,
+            (e: Event) => this.handleTorsionChange(series, parseFloat((e.target as HTMLInputElement).value)),
+            torsionHeadingId,
+          )}
         </div>
       </div>
     `;
@@ -253,11 +212,7 @@ export class DxThemeEditor extends LitElement {
         <h2>Theme Editor</h2>
 
         ${bindSeriesDefinitions.map(
-          (series) => html`
-            <div class="series-container">
-              ${this.renderSeriesControls(series)}
-            </div>
-          `,
+          (series) => html` <div class="series-container">${this.renderSeriesControls(series)}</div> `,
         )}
       </div>
     `;
