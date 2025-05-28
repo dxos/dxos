@@ -8,11 +8,11 @@ import { select } from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
+import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { SVGRoot } from './SVGRoot';
-import { defaultStyles } from './styles';
+import { SVGRoot } from '../components';
 import {
   GraphForceProjector,
   type GraphLayoutNode,
@@ -77,7 +77,7 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
   }, []);
 
   return (
-    <svg ref={context.ref} className={defaultStyles}>
+    <svg ref={context.ref} className={'graph'}>
       <g ref={grid.ref} className={defaultGridStyles(themeMode)} />
       <g ref={zoom.ref}>
         <g ref={graphRef} />
@@ -108,12 +108,13 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
     });
 
     // TODO(burdon): Create class?
-    const drag = createSimulationDrag(context, projector._simulation, {
+    const drag = createSimulationDrag(context, projector.simulation, {
       onDrag: (source, target, point) => {
-        linkerRenderer(graphRef.current, source, target, point);
+        select(graphRef.current).call(linkerRenderer, { source, target, point });
       },
       onDrop: (source, target) => {
-        linkerRenderer(graphRef.current);
+        log.info('onDrop', { source: source.id, target: target?.id });
+        select(graphRef.current).call(linkerRenderer);
         const parent = model.getNode(source.id);
         if (target) {
           const child = model.getNode(target.id);
@@ -163,7 +164,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   }, [markersRef]);
 
   return (
-    <svg ref={context.ref} className={defaultStyles}>
+    <svg ref={context.ref} className={'graph'}>
       <defs ref={markersRef} />
       <g ref={grid.ref} className={defaultGridStyles(themeMode)} />
       <g ref={zoom.ref}>
@@ -197,7 +198,7 @@ export const Default = () => {
 };
 
 export const Bullets = () => {
-  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);
+  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
 
   return (
     <>
