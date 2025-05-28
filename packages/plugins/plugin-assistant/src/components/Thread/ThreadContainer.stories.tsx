@@ -18,7 +18,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message, type Tool } from '@dxos/artifact';
-import { genericTools, localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
+import { genericTools, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { DXN, Type } from '@dxos/echo';
 import { createQueueDxn, create } from '@dxos/echo-schema';
@@ -30,7 +30,8 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
-import { useQueue, useSpace } from '@dxos/react-client/echo';
+import { useClient } from '@dxos/react-client';
+import { useQueue } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -39,7 +40,6 @@ import { Thread, type ThreadProps } from './Thread';
 import { ChatProcessor } from '../../hooks';
 import { createProcessorOptions } from '../../testing';
 import translations from '../../translations';
-import { useClient } from '@dxos/react-client';
 
 // const endpoints = localServiceEndpoints;
 const endpoints = remoteServiceEndpoints;
