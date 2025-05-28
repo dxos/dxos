@@ -4,3 +4,4 @@
 
 export * from './conversation';
 export * from './cypher';
+export * from './research';
