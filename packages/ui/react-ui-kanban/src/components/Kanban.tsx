@@ -65,7 +65,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             <div
               role='none'
               className={mx(
-                'shrink min-bs-0 bg-groupSurface rounded-lg grid dx-focus-ring-group-x-indicator',
+                'shrink min-bs-0 border border-separator bg-baseSurface rounded-lg grid dx-focus-ring-group-x-indicator',
                 railGridHorizontalContainFitContent,
               )}
             >
@@ -85,13 +85,13 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   <StackItem.Root
                     key={card.id}
                     item={card}
-                    classNames={'contain-layout pli-2 drag-preview-p-0'}
+                    classNames='contain-layout pli-2 drag-preview-p-0'
                     focusIndicatorVariant='group'
                     onClick={() => select([card.id])}
                   >
                     <div
                       role='none'
-                      className='rounded overflow-hidden bg-baseSurface dx-focus-ring-group-y-indicator relative min-bs-[--rail-item]'
+                      className='rounded overflow-hidden bg-cardSurface dx-focus-ring-group-y-indicator relative min-bs-[--rail-item]'
                     >
                       <div role='none' className='flex items-center absolute block-start-0 inset-inline-0'>
                         <StackItem.DragHandle asChild>
@@ -128,12 +128,12 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     icon='ph--plus--regular'
                     label={t('add card label')}
                     onClick={() => handleAddCard(columnValue)}
-                    classNames='is-full bg-baseSurface'
+                    classNames='is-full'
                   />
                 </div>
               )}
 
-              <StackItem.Heading classNames='pli-2 order-first bg-groupSurface rounded-t-md'>
+              <StackItem.Heading classNames='pli-2 order-first rounded-t-md bg-transparent'>
                 {!uncategorized && (
                   <StackItem.DragHandle asChild>
                     <IconButton
