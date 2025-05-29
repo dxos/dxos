@@ -198,7 +198,7 @@ const aliasDefs: Record<string, { root?: SememeName; attention?: SememeName }> =
   // Base surface for text (e.g., Document, Table, Sheet.)
   baseSurface: { root: 'surface-20', attention: 'surface-0' },
 
-  // Forms, cards, etc.
+  // Currented / selected items, other surfaces needing special contrast against baseSurface. TODO(thure): Rename.
   groupSurface: { root: 'surface-50', attention: 'surface-40' },
 
   // Main sidebar panel.
@@ -209,6 +209,9 @@ const aliasDefs: Record<string, { root?: SememeName; attention?: SememeName }> =
 
   // Plank header.
   headerSurface: { root: 'surface-30', attention: 'surface-20' },
+
+  // Forms, cards, etc.
+  cardSurface: { root: 'surface-30', attention: 'surface-20' },
 
   // Toolbars, table/sheet headers, etc.
   toolbarSurface: { root: 'surface-30', attention: 'surface-20' },
