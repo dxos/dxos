@@ -89,35 +89,33 @@ export class DxRangeSpinbutton extends LitElement {
       : {};
 
     return html`
-      <div class="control-row">
-        <label class="control-label" id="${controlId}-label" for="${controlId}-range">${this.label}:</label>
-        <div
-          class="${classMap({ 'control-inputs': true, ...(this.variant && { [this.variant]: true }) })}"
-          style=${isTorsion ? styleMap(initialStyles) : undefined}
-        >
-          <input
-            id="${controlId}-range"
-            type="range"
-            min="${this.min}"
-            max="${this.max}"
-            step="${this.step}"
-            class="range-input dx-focus-ring"
-            .value=${this.value.toString()}
-            @input=${this.handleInput}
-            aria-labelledby="${this.headingId} ${controlId}-label"
-          />
-          <input
-            id="${controlId}-number"
-            type="number"
-            min="${this.min}"
-            max="${this.max}"
-            step="${this.step}"
-            class="number-input dx-focus-ring"
-            .value=${this.value.toString()}
-            @input=${this.handleInput}
-            aria-labelledby="${this.headingId} ${controlId}-label"
-          />
-        </div>
+      <label class="control-label" id="${controlId}-label" for="${controlId}-range">${this.label}:</label>
+      <div
+        class="${classMap({ 'control-inputs': true, ...(this.variant && { [this.variant]: true }) })}"
+        style=${isTorsion ? styleMap(initialStyles) : undefined}
+      >
+        <input
+          id="${controlId}-range"
+          type="range"
+          min="${this.min}"
+          max="${this.max}"
+          step="${this.step}"
+          class="range-input dx-focus-ring"
+          .value=${this.value.toString()}
+          @input=${this.handleInput}
+          aria-labelledby="${this.headingId} ${controlId}-label"
+        />
+        <input
+          id="${controlId}-number"
+          type="number"
+          min="${this.min}"
+          max="${this.max}"
+          step="${this.step}"
+          class="number-input dx-focus-ring"
+          .value=${this.value.toString()}
+          @input=${this.handleInput}
+          aria-labelledby="${this.headingId} ${controlId}-label"
+        />
       </div>
     `;
   }

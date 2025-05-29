@@ -1,7 +1,6 @@
 dx-theme-editor,
 dx-theme-editor-physical-colors,
-dx-theme-editor-semantic-colors,
-dx-range-spinbutton {
+dx-theme-editor-semantic-colors {
   display: contents;
 
   input {
@@ -30,7 +29,7 @@ dx-range-spinbutton {
     border-bottom: 2px solid transparent;
 
     &.active {
-      border-bottom-color: var(--dx-accentSurface, #0066cc);
+      border-bottom-color: var(--dx-accentSurface);
       font-weight: bold;
     }
 
@@ -39,7 +38,7 @@ dx-range-spinbutton {
     }
 
     &:focus {
-      outline: 2px solid var(--dx-accentFocusIndicator, #0066cc);
+      outline: 2px solid var(--dx-accentFocusIndicator);
       outline-offset: 2px;
     }
   }
@@ -90,7 +89,7 @@ dx-range-spinbutton {
     display: flex;
     gap: 1rem;
 
-    .control-row {
+    .control-row, dx-range-spinbutton {
       display: block;
       flex: 1 1 0;
 
@@ -110,26 +109,26 @@ dx-range-spinbutton {
     margin-bottom: 0.5rem;
   }
 
-  .control-row {
+  .control-row, dx-range-spinbutton {
     display: flex;
     align-items: center;
+  }
+
+  .control-row {
     margin-bottom: 0.5rem;
     gap: 0.5rem;
   }
 
-  .control-label {
-    min-width: 180px;
-  }
+  .control-label {}
 
   .range-input {
     flex: 1;
   }
 
   .number-input {
-    width: 80px;
+    width: 6rem;
   }
 
-  /* Semantic Colors Editor Styles */
   .token-container {
     margin-bottom: 1rem;
     padding: 1rem;
@@ -141,25 +140,32 @@ dx-range-spinbutton {
     padding: 0.5rem;
   }
 
-  .token-title {
-    margin: 0 0 1rem 0;
+  .token-header {
     display: flex;
     align-items: center;
+    margin-bottom: 1rem;
+    gap: 1rem;
+  }
+
+  .token-title {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    flex: 1 0 10rem;
   }
 
   .token-name-input {
-    font-size: 1rem;
-    font-weight: bold;
-    padding: 0.25rem 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 0.25rem;
     width: 100%;
+    min-width: min-content;
+  }
+
+  .token-series-select {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .series-select {
-    padding: 0.25rem 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 0.25rem;
     flex: 1;
   }
 }
