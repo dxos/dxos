@@ -205,14 +205,14 @@ export class DxThemeEditorSemanticColors extends LitElement {
     // Toggle expanded/collapsed state
     const toggleExpanded = (e: Event) => {
       const button = e.currentTarget as HTMLButtonElement;
-      const container = button.closest('.token-container') as HTMLElement;
+      const container = button.closest('.collapsible-token') as HTMLElement;
       const isExpanded = container.getAttribute('data-state') === 'expanded';
       container.setAttribute('data-state', isExpanded ? 'collapsed' : 'expanded');
       button.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
     };
 
     return html`
-      <div role="group" class="token-container" data-state="collapsed">
+      <div role="group" class="collapsible-token" data-state="collapsed">
         <h3 id="${tokenHeadingId}" class="token-title">
           <button
             class="toggle-button dx-focus-ring dx-button"
@@ -240,7 +240,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
             <dx-icon icon="ph--minus--regular" />
           </button>
         </h3>
-        <div id="${contentId}" class="token-content">
+        <div id="${contentId}" class="token-config-content">
           <div class="token-header">
             <div class="token-series-select">
               <label class="control-label" for="${seriesSelectId}">Palette:</label>
@@ -313,9 +313,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
 
     return html`
       ${semanticTokens.map(([tokenName, tokenValue]) => this.renderTokenControls(tokenName, tokenValue))}
-      <button class="add-token-button dx-focus-ring dx-button" @click=${() => this.addSemanticToken()}>
-        Add token
-      </button>
+      <button class="add-token-button dx-focus-ring dx-button" @click=${this.addSemanticToken}>Add token</button>
     `;
   }
 

@@ -111,7 +111,7 @@ export class DxRangeSpinbutton extends LitElement {
           min="${this.min}"
           max="${this.max}"
           step="${this.step}"
-          class="number-input dx-focus-ring"
+          class="number-input dx-input dx-focus-ring"
           .value=${this.value.toString()}
           @input=${this.handleInput}
           aria-labelledby="${this.headingId} ${controlId}-label"

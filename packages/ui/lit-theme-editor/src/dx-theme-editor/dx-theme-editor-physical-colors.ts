@@ -156,11 +156,7 @@ export class DxThemeEditorPhysicalColors extends LitElement {
   }
 
   override render() {
-    return html`
-      ${bindSeriesDefinitions.map(
-        (series) => html` <div class="series-container">${this.renderSeriesControls(series)}</div> `,
-      )}
-    `;
+    return bindSeriesDefinitions.map((series) => this.renderSeriesControls(series));
   }
 
   override createRenderRoot() {

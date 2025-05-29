@@ -7,6 +7,16 @@ dx-theme-editor-semantic-colors {
     accent-color: var(--dx-accentSurface);
   }
 
+  input:not([type="range"]), select {
+    border-radius: .125rem;
+    border: 1px solid var(--dx-separator);
+  }
+
+  .dx-button, input:not([type="range"]), select {
+    padding-block: .25rem;
+    min-block-size: 2rem;
+  }
+
   .tabs-container {
     display: flex;
     border-bottom: 1px solid #ccc;
@@ -136,15 +146,21 @@ dx-theme-editor-semantic-colors {
     width: 6rem;
   }
 
-  .token-container {
-    display: contents;
+  .collapsible-token {
 
     .static-token-name {
       display: none;
+      border: 1px solid transparent;
+      padding: .25rem;
+      min-block-size: 2rem;
+    }
+
+    .token-config-content {
+      padding-block-end: 1rem;
     }
 
     &:not([data-state="expanded"]) {
-      .token-content {
+      .token-config-content {
         display: none;
       }
 
