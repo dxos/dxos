@@ -16,7 +16,7 @@ svg.graph {
 
   g.guides {
     circle {
-      @apply fill-neutral-700 stroke-neutral-900 stroke-2 opacity-20; 
+      @apply fill-neutral-700 stroke-neutral-900 opacity-10; 
     }
   }
 
@@ -33,6 +33,7 @@ svg.graph {
       }      
     }
 
+    g.dragging,
     g.node:hover {
       circle {
         @apply fill-red-500;

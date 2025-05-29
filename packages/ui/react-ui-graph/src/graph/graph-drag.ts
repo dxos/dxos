@@ -6,7 +6,6 @@ import { drag, pointer, select, type Simulation } from 'd3';
 
 import { type GraphLayoutEdge, type GraphLayoutNode } from './types';
 import { type SVGContext } from '../hooks';
-import { type D3DragEvent } from '../typings';
 import { type Point } from '../util';
 
 export interface DragOptions<N> {
@@ -47,12 +46,11 @@ export const createSimulationDrag = <N>(
     return modKey === undefined || event[modKey];
   };
 
-  return drag()
+  return drag<SVGElement, GraphLayoutNode<N>>()
     .filter((event: MouseEvent) => !event.ctrlKey)
-    .on('start', function (event: D3DragEvent) {
-      const node = select(this).node();
-      offset = pointer(event, node.parentElement);
-      source = select(node.parentElement).datum() as GraphLayoutNode<N>;
+    .on('start', function (event, d) {
+      source = d;
+      offset = pointer(event, this.parentElement);
 
       if (options?.onDrop && keyMod(event.sourceEvent, 'linkMod')) {
         mode = Mode.LINK;
@@ -60,27 +58,25 @@ export const createSimulationDrag = <N>(
         mode = Mode.MOVE;
       }
     })
-    .on('drag', function (event: D3DragEvent, d) {
-      const node = select(this).node();
-      const data = select(node).datum() as GraphLayoutNode<N>;
-      if (data !== d) {
-        return;
-      }
+    .on('drag', function (event, d) {
+      const parent = this.closest('g.node');
+      select(parent).classed('dragging', true).raise();
 
       // Calculate position.
-      const [dx, dy] = pointer(event, node.parentElement);
-      const x = data.x + dx - offset[0];
-      const y = data.y + dy - offset[1];
+      const [dx, dy] = pointer(event, this.parentElement);
+      const x = d.x + dx - offset[0];
+      const y = d.y + dy - offset[1];
       const point: Point = [x, y];
 
       switch (mode) {
         case Mode.MOVE: {
+          select(context.svg).attr('cursor', 'grabbing');
+
           // Freeze node while dragging.
           event.subject.x = event.subject.fx = point[0];
           event.subject.y = event.subject.fy = point[1];
 
           simulation.alphaTarget(0).alpha(1).restart();
-          select(context.svg).attr('cursor', 'grabbing');
           break;
         }
 
@@ -89,18 +85,19 @@ export const createSimulationDrag = <N>(
           if (options?.onDrag) {
             target = simulation.find(event.x, event.y, 16);
             if (source === target) {
-              // select(context.svg).attr('cursor', undefined);
+              select(context.svg).attr('cursor', undefined);
               options?.onDrag?.();
             } else {
-              // select(context.svg).attr('cursor', 'none');
+              select(context.svg).attr('cursor', target ? 'alias' : 'cell');
               options?.onDrag?.(source, target, point);
             }
           }
         }
       }
     })
-    .on('end', (event: D3DragEvent) => {
-      // d3.select(this).style('pointer-events', undefined);
+    .on('end', function (event) {
+      select(context.svg).attr('cursor', undefined);
+      select(this.parentElement).classed('dragging', false);
       switch (mode) {
         case Mode.LINK: {
           options?.onDrop?.(source, target);
@@ -118,6 +115,5 @@ export const createSimulationDrag = <N>(
       source = undefined;
       target = undefined;
       offset = undefined;
-      select(context.svg).attr('cursor', undefined);
     });
 };

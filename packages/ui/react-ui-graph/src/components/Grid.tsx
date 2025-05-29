@@ -23,7 +23,7 @@ export type GridProps = {
  * @constructor
  */
 export const Grid = ({ axis, className }: GridProps) => {
-  const grid = useGrid({ axis });
+  const { ref } = useGrid({ axis });
 
-  return <g ref={grid.ref as any} className={className} />;
+  return <g ref={ref} className={className} />;
 };

@@ -183,14 +183,14 @@ export class GridController {
 export const useGrid = (options: GridOptions = defaultGridOptions): GridController => {
   const ref = useRef<SVGGElement>(null);
   const context = useSvgContext();
-  const grid = useMemo(() => new GridController(ref, context, options), []);
+  const controller = useMemo(() => new GridController(ref, context, options), []);
   useEffect(
     () =>
       context.resized.on(() => {
-        grid.draw();
+        controller.draw();
       }),
-    [context, grid],
+    [context, controller],
   );
 
-  return grid;
+  return controller;
 };

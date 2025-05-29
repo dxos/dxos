@@ -114,20 +114,21 @@ export const Force: Story = {
         center: {
           strength: 0.7,
         },
-        radial: {
-          radius: 300,
-          strength: 0.6,
-        },
         collide: {
-          strength: 0.9,
+          strength: 1,
         },
         manyBody: {
           strength: -100,
         },
         link: {
           distance: 20,
-          iterations: 5,
+          iterations: 25,
           strength: 0.1,
+        },
+        radial: {
+          delay: 300,
+          radius: 300,
+          strength: 0.6,
         },
       },
     },

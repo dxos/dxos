@@ -4,14 +4,9 @@
 
 export type Point = [x: number, y: number];
 
-export type Size = { width: number; height: number };
+export type Size = Pick<DOMRect, 'width' | 'height'>;
 
-export type ScreenBounds = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
+export type ScreenBounds = Pick<DOMRect, 'x' | 'y' | 'width' | 'height'>;
 
 export type Modifiers = {
   center?: boolean;
@@ -27,7 +22,6 @@ export class Screen {
 
     let width = Math.abs(x2 - x1);
     let height = Math.abs(y2 - y1);
-
     if (constrain) {
       width = height = Math.max(width, height);
     }
@@ -83,11 +77,10 @@ export class Screen {
    * @param v2
    * @param p
    */
-  // TODO(burdon): https://bl.ocks.org/1wheel/464141fe9b940153e636 (Nice line intersection demo).
   static normal = (v1: Point, v2: Point, p: Point) => {
     const d2 = (p1: Point, p2: Point) => Math.pow(Math.abs(p1[0] - p2[0]), 2) + Math.pow(Math.abs(p1[1] - p2[1]), 2);
 
-    let d;
+    let d: number;
     const len2 = d2(v1, v2);
     if (len2 === 0) {
       d = d2(p, v1);
