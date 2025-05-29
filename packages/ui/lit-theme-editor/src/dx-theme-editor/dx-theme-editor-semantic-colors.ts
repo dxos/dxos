@@ -223,10 +223,10 @@ export class DxThemeEditorSemanticColors extends LitElement {
             aria-expanded="false"
             aria-controls="${contentId}"
           >
-            <dx-icon icon="ph--caret-down--regular" />
+            <dx-icon icon="ph--caret-down--regular"></dx-icon>
             <span class="sr-only">Toggle token controls</span>
           </button>
-          <span class="static-token-name">${tokenName}</span>
+          <span class="static-token-name" @click=${toggleExpanded}>${tokenName}</span>
           <input
             type="text"
             class="token-name-input dx-focus-ring"
