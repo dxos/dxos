@@ -92,6 +92,7 @@ dx-theme-editor-semantic-colors {
     .control-row, dx-range-spinbutton {
       display: block;
       flex: 1 1 0;
+      margin-block: 0;
 
       .control-inputs {
         display: flex;
@@ -100,22 +101,16 @@ dx-theme-editor-semantic-colors {
     }
   }
 
-  .control-group:last-child {
-    margin-bottom: 1rem;
-  }
-
   .control-group-title {
     margin-top: 0;
     margin-bottom: 0.5rem;
   }
 
   .control-row, dx-range-spinbutton {
+    flex: 1 0 auto;
     display: flex;
     align-items: center;
-  }
-
-  .control-row {
-    margin-bottom: 0.5rem;
+    margin-block: 0.5rem;
     gap: 0.5rem;
   }
 
@@ -130,10 +125,7 @@ dx-theme-editor-semantic-colors {
   }
 
   .token-container {
-    margin-bottom: 1rem;
     padding: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 0.25rem;
   }
 
   .token-controls {
@@ -143,7 +135,6 @@ dx-theme-editor-semantic-colors {
   .token-header {
     display: flex;
     align-items: center;
-    margin-bottom: 1rem;
     gap: 1rem;
   }
 
