@@ -26,14 +26,15 @@ export type ToolbarProps = ThemedClassName<{
   meeting?: MeetingType;
   participants?: number;
   autoHideControls?: boolean;
+  isInRoom?: boolean;
   onJoin?: () => void;
   onLeave?: () => void;
 }>;
 
-// TODO(mykola): Move transcription related logic to a separate component.
 export const Toolbar = ({
   classNames,
   meeting,
+  isInRoom,
   participants,
   autoHideControls = true,
   onJoin,
@@ -54,7 +55,7 @@ export const Toolbar = ({
 
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
-    <div className={mx('z-20 flex justify-center m-8', call.joined && autoHideControls && hoverableHidden)}>
+    <div className={mx('z-20 flex justify-center m-8', isInRoom && autoHideControls && hoverableHidden)}>
       <NativeToolbar.Root classNames={['p-2 bg-modalSurface rounded-lg shadow-lg', classNames]}>
         <ToggleButton
           active={call.media.audioEnabled}
@@ -69,7 +70,7 @@ export const Toolbar = ({
               icon: 'ph--microphone-slash--duotone',
               label: t('mic on'),
               onClick: () => call.turnAudioOn(),
-              classNames: [call.joined && 'bg-callAlert'],
+              classNames: [isInRoom && 'bg-callAlert'],
             },
           }}
         />
@@ -96,7 +97,7 @@ export const Toolbar = ({
           </div>
         )) || <NativeToolbar.Separator variant='gap' />}
 
-        {call.joined && (
+        {isInRoom && (
           <>
             <ToggleButton
               disabled={!canSharescreen}
@@ -134,7 +135,7 @@ export const Toolbar = ({
                   icon: 'ph--hand-waving--regular',
                   label: t('lower hand'),
                   onClick: () => call.setRaisedHand(false),
-                  classNames: [call.joined && 'bg-callAlert'],
+                  classNames: [isInRoom && 'bg-callAlert'],
                 },
                 off: {
                   icon: 'ph--hand-palm--duotone',
@@ -145,9 +146,9 @@ export const Toolbar = ({
             />
           </>
         )}
-        {(call.joined && (
+        {isInRoom ? (
           <IconButton variant='destructive' icon='ph--phone-x--regular' label={t('leave call')} onClick={onLeave} />
-        )) || (
+        ) : (
           <IconButton variant='primary' icon='ph--phone-incoming--regular' label={t('join call')} onClick={onJoin} />
         )}
       </NativeToolbar.Root>
