@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, type FC } from 'react';
+import React, { useCallback, useEffect, useMemo, type FC } from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework';
 import { Context } from '@dxos/context';
@@ -26,16 +26,11 @@ export type CallContainerProps = {
 
 export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId, fullscreen }) => {
   const callManager = useCapability(MeetingCapabilities.CallManager);
-  const roomId = meeting ? fullyQualifiedId(meeting) : _roomId;
+  const roomId = useMemo(() => (meeting ? fullyQualifiedId(meeting) : _roomId), [meeting, _roomId]);
+
   const { graph } = useAppGraph();
   const joinSound = useSoundEffect('JoinCall');
   const leaveSound = useSoundEffect('LeaveCall');
-
-  useEffect(() => {
-    if (!callManager.joined && roomId) {
-      callManager.setRoomId(roomId);
-    }
-  }, [roomId, callManager.joined, callManager.roomId]);
 
   // TODO(thure): Should these be intents rather than callbacks?
   const companions = useConnections(graph, meeting && fullyQualifiedId(meeting)).filter(
