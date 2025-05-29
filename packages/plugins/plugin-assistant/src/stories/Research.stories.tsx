@@ -7,19 +7,11 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  Capabilities,
-  Events,
-  IntentPlugin,
-  SettingsPlugin,
-  Surface,
-  useCapabilities,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { Events, IntentPlugin, SettingsPlugin, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message, type Tool } from '@dxos/artifact';
-import { genericTools, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { AIServiceEdgeClient, createExaTool } from '@dxos/assistant';
+import { remoteServiceEndpoints } from '@dxos/artifact-testing';
+import { AIServiceEdgeClient } from '@dxos/assistant';
 import { DXN, Type } from '@dxos/echo';
 import { create, createQueueDxn } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -30,13 +22,14 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
+import { useClient } from '@dxos/react-client';
 import { useQueue } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
-import { useClient } from '@dxos/react-client';
 
 import { Thread, type ThreadProps } from '../components';
+import { createExaTool } from '../experimental/research';
 import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import translations from '../translations';
