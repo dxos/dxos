@@ -9,6 +9,8 @@ import { customElement, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { debounce } from '@dxos/async';
+import '@dxos/lit-ui';
+import { makeId } from '@dxos/react-hooks';
 
 import { restore, saveAndRender } from './util';
 
@@ -134,6 +136,48 @@ export class DxThemeEditorSemanticColors extends LitElement {
     });
   }
 
+  private addSemanticToken() {
+    if (!this.tokenSet.colors?.semantic?.sememes) {
+      return;
+    }
+
+    // Create a deep copy of the tokenSet to avoid direct mutation
+    const updatedTokenSet = JSON.parse(JSON.stringify(this.tokenSet));
+
+    // Generate a random ID for the token name
+    const tokenName = makeId('sememe--');
+
+    // Create a new token with default values
+    updatedTokenSet.colors.semantic.sememes[tokenName] = {
+      light: ['neutral', 500],
+      dark: ['neutral', 500],
+    };
+
+    // Update the state
+    this.tokenSet = updatedTokenSet;
+
+    // Save and render changes
+    this.debouncedSaveAndRender();
+  }
+
+  private removeSemanticToken(tokenName: string) {
+    if (!this.tokenSet.colors?.semantic?.sememes?.[tokenName]) {
+      return;
+    }
+
+    // Create a deep copy of the tokenSet to avoid direct mutation
+    const updatedTokenSet = JSON.parse(JSON.stringify(this.tokenSet));
+
+    // Delete the token
+    delete updatedTokenSet.colors.semantic.sememes[tokenName];
+
+    // Update the state
+    this.tokenSet = updatedTokenSet;
+
+    // Save and render changes
+    this.debouncedSaveAndRender();
+  }
+
   private renderTokenControls(tokenName: string, tokenValue: any) {
     const physicalColorSeries = this.getPhysicalColorSeries();
     const lightSeries = tokenValue.light?.[0] || '';
@@ -166,6 +210,14 @@ export class DxThemeEditorSemanticColors extends LitElement {
           @change=${(e: Event) => this.handleTokenNameChange(tokenName, (e.target as HTMLInputElement).value)}
           aria-label="Token name"
         />
+        <button
+          class="remove-token-button dx-focus-ring dx-button"
+          @click=${() => this.removeSemanticToken(tokenName)}
+          aria-label="Remove token"
+        >
+          <span class="sr-only">Remove token</span>
+          <dx-icon icon="ph--minus--regular" />
+        </button>
       </h3>
       <div class="token-header">
         <div class="token-series-select">
@@ -242,6 +294,9 @@ export class DxThemeEditorSemanticColors extends LitElement {
           <div class="token-container">${this.renderTokenControls(tokenName, tokenValue)}</div>
         `,
       )}
+      <button class="add-token-button dx-focus-ring dx-button" @click=${() => this.addSemanticToken()}>
+        Add token
+      </button>
     `;
   }
 

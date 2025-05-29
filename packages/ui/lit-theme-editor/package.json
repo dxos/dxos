@@ -27,6 +27,7 @@
     "@ch-ui/tokens": "2.4.0",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "lit": "^3.2.0"
   },

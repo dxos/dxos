@@ -11299,6 +11299,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../primitives/react-hooks
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
