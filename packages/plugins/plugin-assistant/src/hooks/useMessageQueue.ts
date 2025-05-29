@@ -14,7 +14,7 @@ export const useMessageQueue = (chat?: AIChatType) => {
   const space = getSpace(chat);
   const queueDxn = useMemo(() => {
     const dxn = space && chat?.assistantChatQueue.dxn;
-    return dxn ? createQueueDxn(space.id) : undefined;
+    return dxn ? createQueueDxn(space.id, dxn.parts.at(-1)) : undefined;
   }, [space, chat?.assistantChatQueue.dxn]);
 
   return useQueue<Message>(queueDxn);
