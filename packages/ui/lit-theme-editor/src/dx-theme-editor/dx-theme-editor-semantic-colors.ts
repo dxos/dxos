@@ -28,6 +28,9 @@ export class DxThemeEditorSemanticColors extends LitElement {
   @state()
   tokenSet: TokenSet = restore();
 
+  @state()
+  searchTerm: string = '';
+
   private debouncedSaveAndRender = debounce(() => {
     saveAndRender(this.tokenSet);
   }, 200);
@@ -308,11 +311,26 @@ export class DxThemeEditorSemanticColors extends LitElement {
     saveAndRender(this.tokenSet);
   }
 
+  private handleSearchChange(e: Event) {
+    this.searchTerm = (e.target as HTMLInputElement).value;
+  }
+
   override render() {
     const semanticTokens = this.getSemanticTokens();
+    const filteredTokens = semanticTokens.filter(([tokenName]) =>
+      tokenName.toLowerCase().includes(this.searchTerm.toLowerCase()),
+    );
 
     return html`
-      ${semanticTokens.map(([tokenName, tokenValue]) => this.renderTokenControls(tokenName, tokenValue))}
+      <input
+        type="search"
+        class="token-search dx-focus-ring"
+        placeholder="Search semantic tokens…"
+        .value=${this.searchTerm}
+        @input=${this.handleSearchChange}
+        aria-label="Search tokens"
+      />
+      ${filteredTokens.map(([tokenName, tokenValue]) => this.renderTokenControls(tokenName, tokenValue))}
       <button class="add-token-button dx-focus-ring dx-button" @click=${this.addSemanticToken}>Add token</button>
     `;
   }

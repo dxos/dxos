@@ -19,8 +19,9 @@ dx-theme-editor-semantic-colors {
 
   .tabs-container {
     display: flex;
-    border-bottom: 1px solid #ccc;
-    margin-bottom: 1rem;
+    gap: .25rem;
+    border-bottom: 1px solid var(--dx-separator);
+    padding-inline: 1rem;
   }
 
   .tab {
@@ -29,7 +30,8 @@ dx-theme-editor-semantic-colors {
     background: none;
     cursor: pointer;
     font-size: 1rem;
-    border-bottom: 2px solid transparent;
+    border-block: .25rem solid transparent;
+    margin-block-end: -1px;
 
     &.active {
       border-bottom-color: var(--dx-accentSurface);
@@ -37,19 +39,23 @@ dx-theme-editor-semantic-colors {
     }
 
     &:hover {
-      background-color: rgba(0, 0, 0, 0.05);
-    }
-
-    &:focus {
-      outline: 2px solid var(--dx-accentFocusIndicator);
-      outline-offset: 2px;
+      background-color: var(--dx-hoverSurface);
     }
   }
 
   .tab-panel {
+    padding: 1rem;
     &[hidden] {
       display: none;
     }
+  }
+
+  .token-search {
+    inline-size: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    box-sizing: border-box;
+    margin-block: 1px;
   }
 
   .series-container {
@@ -67,7 +73,7 @@ dx-theme-editor-semantic-colors {
   }
 
   .series-controls {
-    padding: 1rem;
+    margin-block-end: 1rem;
   }
 
   .series-preview {
@@ -202,6 +208,7 @@ dx-theme-editor-semantic-colors {
   }
 
   .add-token-button {
+    margin-block: 1px;
     inline-size: 100%;
   }
 
