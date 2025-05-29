@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 
 import { Participant, SCREENSHARE_SUFFIX } from './Participant';
 import { type UserState } from '../../types';
@@ -21,7 +21,6 @@ export type ParticipantGridProps = ThemedClassName<{
 
 export const ParticipantGrid = ({ classNames, self, users, fullscreen, debug }: ParticipantGridProps) => {
   const [pinned, setPinned] = useState<string | undefined>();
-  const currentPinned = useDynamicRef(pinned);
 
   const allUsers = useMemo(() => {
     const allUsers: (UserState & { isSelf?: boolean })[] = [];
@@ -43,11 +42,6 @@ export const ParticipantGrid = ({ classNames, self, users, fullscreen, debug }: 
         };
 
         allUsers.push(screenshare);
-
-        // Auto-pin when someone shares.
-        if (!currentPinned.current) {
-          setPinned(screenshare.id);
-        }
       }
     });
 

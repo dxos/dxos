@@ -99,7 +99,7 @@ const LobbyToolbar: FC<LobbyToolbarProps> = ({ roomId, ...props }) => {
 
   return (
     <div className='absolute bottom-0 left-0 right-0 flex justify-center'>
-      <Toolbar participants={count} {...props} />
+      <Toolbar participants={count} isInRoom={false} {...props} />
     </div>
   );
 };
