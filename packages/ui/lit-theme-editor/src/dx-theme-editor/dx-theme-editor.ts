@@ -27,7 +27,7 @@ export class DxThemeEditor extends LitElement {
         <div class="tabs-container" role="tablist">
           <button
             id="tab-physical"
-            class=${classMap({ 'tab': true, 'active': this.activeTab === 'physical' })}
+            class=${classMap({ tab: true, active: this.activeTab === 'physical' })}
             role="tab"
             aria-selected=${this.activeTab === 'physical'}
             aria-controls="panel-physical"
@@ -37,7 +37,7 @@ export class DxThemeEditor extends LitElement {
           </button>
           <button
             id="tab-semantic"
-            class=${classMap({ 'tab': true, 'active': this.activeTab === 'semantic' })}
+            class=${classMap({ tab: true, active: this.activeTab === 'semantic' })}
             role="tab"
             aria-selected=${this.activeTab === 'semantic'}
             aria-controls="panel-semantic"
@@ -46,20 +46,20 @@ export class DxThemeEditor extends LitElement {
             Semantic
           </button>
         </div>
-        
-        <div 
+
+        <div
           id="panel-physical"
-          class=${classMap({ 'tab-panel': true, 'active': this.activeTab === 'physical' })}
+          class=${classMap({ 'tab-panel': true, active: this.activeTab === 'physical' })}
           role="tabpanel"
           aria-labelledby="tab-physical"
           ?hidden=${this.activeTab !== 'physical'}
         >
           <dx-theme-editor-physical-colors></dx-theme-editor-physical-colors>
         </div>
-        
-        <div 
+
+        <div
           id="panel-semantic"
-          class=${classMap({ 'tab-panel': true, 'active': this.activeTab === 'semantic' })}
+          class=${classMap({ 'tab-panel': true, active: this.activeTab === 'semantic' })}
           role="tabpanel"
           aria-labelledby="tab-semantic"
           ?hidden=${this.activeTab !== 'semantic'}
