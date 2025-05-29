@@ -33,17 +33,13 @@ export const ContactCard = ({
       {organizationName && (
         <div role='none' className={previewChrome}>
           {typeof organization === 'object' && onOrgClick ? (
-            <Button
-              variant='ghost'
-              classNames='gap-2 text-start bg-groupSurface'
-              onClick={() => onOrgClick(organization.target!)}
-            >
+            <Button variant='ghost' classNames='gap-2 text-start' onClick={() => onOrgClick(organization.target!)}>
               <Icon icon='ph--buildings--regular' size={5} classNames='text-subdued' />
               <span className='min-is-0 flex-1 truncate'>{organizationName}</span>
               <Icon icon='ph--arrow-right--regular' />
             </Button>
           ) : (
-            <p className='dx-button gap-2 bg-groupSurface' data-variant='ghost'>
+            <p className='dx-button gap-2' data-variant='ghost'>
               <Icon icon='ph--buildings--regular' size={5} classNames='text-subdued' />
               <span className='min-is-0 flex-1 truncate'>{organizationName}</span>
             </p>
