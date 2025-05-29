@@ -5395,6 +5395,9 @@ importers:
       '@xiechao/codemirror-lang-handlebars':
         specifier: 1.0.4
         version: 1.0.4
+      exa-js:
+        specifier: ^1.5.12
+        version: 1.7.0(encoding@0.1.13)
       jsonpointer:
         specifier: ^5.0.1
         version: 5.0.1

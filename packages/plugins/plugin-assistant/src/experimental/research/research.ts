@@ -1,0 +1,208 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { identity, Option, Schema, SchemaAST } from 'effect';
+
+import { isEncodedReference } from '@dxos/echo-protocol';
+import {
+  create,
+  getEntityKind,
+  getSchemaDXN,
+  ObjectId,
+  ReferenceAnnotationId,
+  RelationSourceId,
+  RelationTargetId,
+} from '@dxos/echo-schema';
+import { mapAst } from '@dxos/effect';
+import { log } from '@dxos/log';
+import { deepMapValues } from '@dxos/util';
+
+import { AISession } from '@dxos/assistant';
+import { ConsolePrinter } from '@dxos/assistant/testing';
+import { AiService, defineFunction } from '@dxos/functions';
+import { createExaTool, createMockExaTool } from './exa';
+import INSTRUCTIONS from './instructions.tpl?raw';
+import { DataType } from '@dxos/schema';
+import { Relation } from '@dxos/echo';
+
+const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
+
+const Develops = Schema.Struct({
+  since: Schema.optional(Schema.String),
+})
+  .pipe(
+    Relation.def({
+      typename: 'example.com/relation/Develops',
+      version: '0.1.0',
+      source: DataType.Organization,
+      target: DataType.Project,
+    }),
+  )
+  .annotations({
+    description: 'A relation between an organization and a project.',
+  });
+
+export const TYPES = [
+  DataType.Event,
+  DataType.Organization,
+  DataType.Person,
+  DataType.Project,
+  DataType.Task,
+  DataType.Text,
+  Develops,
+];
+
+export const researchFn = defineFunction({
+  description: 'Research the web for information',
+  inputSchema: Schema.Struct({
+    query: Schema.String,
+  }),
+  outputSchema: Schema.Struct({
+    result: Schema.Any,
+  }),
+  handler: async ({ data: { query }, context }) => {
+    const searchTool = MOCK_SEARCH ? createMockExaTool() : createExaTool({ apiKey: EXA_API_KEY });
+
+    const session = new AISession({ operationModel: 'configured' });
+
+    const ai = context.getService(AiService);
+
+    const printer = new ConsolePrinter();
+    session.message.on((message) => printer.printMessage(message));
+    session.userMessage.on((message) => printer.printMessage(message));
+    session.block.on((block) => printer.printContentBlock(block));
+
+    // TODO(dmaretskyi): Consider adding this pattern as the "Graph" output mode for the session.
+    const outputSchema = createExtractionSchema(TYPES);
+    const result = await session.runStructured(outputSchema, {
+      client: ai.client,
+      systemPrompt: INSTRUCTIONS,
+      artifacts: [],
+      tools: [searchTool],
+      generationOptions: {
+        model: '@anthropic/claude-3-5-sonnet-20241022',
+      },
+      history: [],
+      prompt: query,
+    });
+    const data = sanitizeObjects(TYPES, result as any);
+    return { result: data };
+  },
+});
+
+const MOCK_SEARCH = true;
+
+export const createExtractionSchema = (types: Schema.Schema.AnyNoContext[]) => {
+  return Schema.Struct({
+    ...Object.fromEntries(
+      types.map(preprocessSchema).map((schema, index) => [
+        `objects_${getSanitizedSchemaName(types[index])}`,
+        Schema.optional(Schema.Array(schema)).annotations({
+          description: `The objects to answer the query of type: ${getSchemaDXN(types[index])?.asTypeDXN()!.type}`,
+        }),
+      ]),
+    ),
+  });
+};
+
+export const getSanitizedSchemaName = (schema: Schema.Schema.AnyNoContext) => {
+  return getSchemaDXN(schema)!
+    .asTypeDXN()!
+    .type.replaceAll(/[^a-zA-Z0-9]+/g, '_');
+};
+
+export const sanitizeObjects = (types: Schema.Schema.AnyNoContext[], data: Record<string, readonly unknown[]>) => {
+  const entries = types
+    .map(
+      (type) =>
+        data[`objects_${getSanitizedSchemaName(type)}`]?.map((object: any) => ({
+          data: object,
+          schema: type,
+        })) ?? [],
+    )
+    .flat();
+
+  const idMap = new Map<string, string>();
+
+  return entries
+    .map((entry) => {
+      idMap.set(entry.data.id, ObjectId.random());
+      entry.data.id = idMap.get(entry.data.id);
+      return entry;
+    })
+    .map((entry) => {
+      const data = deepMapValues(entry.data, (value, recurse) => {
+        if (isEncodedReference(value)) {
+          const ref = value['/'];
+          if (idMap.has(ref)) {
+            // TODO(dmaretskyi): Whats the best way to represent a local url.
+            return { '/': `dxn:echo:@:${idMap.get(ref)}` };
+          } else {
+            // Search URIs?
+            return { '/': `search:?q=${encodeURIComponent(ref)}` };
+          }
+        }
+
+        return recurse(value);
+      });
+
+      if (getEntityKind(entry.schema) === 'relation') {
+        const sourceId = idMap.get(data.source)!;
+        if (!sourceId) {
+          log.warn('source not found', { source: data.source });
+        }
+        const targetId = idMap.get(data.target)!;
+        if (!targetId) {
+          log.warn('target not found', { target: data.target });
+        }
+        delete data.source;
+        delete data.target;
+        data[RelationSourceId] = sourceId;
+        data[RelationTargetId] = targetId;
+      }
+
+      return create(entry.schema, data);
+    });
+};
+
+const SoftRef = Schema.Struct({
+  '/': Schema.String,
+}).annotations({
+  description: 'Reference to another object.',
+});
+
+const preprocessSchema = (schema: Schema.Schema.AnyNoContext) => {
+  const isRelationSchema = getEntityKind(schema) === 'relation';
+
+  const go = (ast: SchemaAST.AST): SchemaAST.AST => {
+    if (SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome)) {
+      return SoftRef.ast;
+    }
+
+    return mapAst(ast, go);
+  };
+
+  return Schema.make<any, any, never>(mapAst(schema.ast, go)).pipe(
+    Schema.omit('id'),
+    Schema.extend(
+      Schema.Struct({
+        id: Schema.String.annotations({
+          description: 'The id of this object. Come up with a unique id based on your judgement.',
+        }),
+      }),
+    ),
+    isRelationSchema
+      ? Schema.extend(
+          Schema.Struct({
+            source: Schema.String.annotations({
+              description: 'The id of the source object for this relation.',
+            }),
+            target: Schema.String.annotations({
+              description: 'The id of the target object for this relation.',
+            }),
+          }),
+        )
+      : identity<Schema.Schema.AnyNoContext>,
+  );
+};

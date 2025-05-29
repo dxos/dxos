@@ -4,9 +4,9 @@ import { AiService } from './ai';
 import { QueuesService } from './queues';
 
 export interface Services {
-  database: DatabaseService;
-  ai: AiService;
-  queues: QueuesService;
+  database: Context.Tag.Service<DatabaseService>;
+  ai: Context.Tag.Service<AiService>;
+  queues: Context.Tag.Service<QueuesService>;
 }
 
 const SERVICE_MAPPING: Record<string, keyof Services> = {

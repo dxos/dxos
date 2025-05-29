@@ -7,7 +7,7 @@ import Exa from 'exa-js';
 
 import { defineTool, ToolResult } from '@dxos/artifact';
 import { log } from '@dxos/log';
-import { SEARCH_RESULTS } from '../../testing/data/research';
+import { SEARCH_RESULTS } from '../../testing/research';
 
 type CreateExaToolOptions = {
   apiKey: string;

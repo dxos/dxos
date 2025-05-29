@@ -12,7 +12,7 @@ export class FunctionExecutor {
     (assertInput as any)(input);
 
     const context: FunctionContext = {
-      getService: this._services.getService,
+      getService: this._services.getService.bind(this._services),
       getSpace: async (_spaceId: SpaceId) => {
         throw new Error('Not available. Use the database service instead.');
       },

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Ref, Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
@@ -10,6 +10,7 @@ import { EchoObjectSchema } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { THREAD_PLUGIN } from './meta';
+import { EchoObject } from '@dxos/echo-schema';
 
 export namespace ThreadAction {
   const THREAD_ACTION = `${THREAD_PLUGIN}/action`;
@@ -98,3 +99,80 @@ export type ThreadState = {
   drafts: Record<string, ThreadType[]>;
   current?: string | undefined;
 };
+
+const Channel = Schema.Struct({
+  name: Schema.String,
+  messages: Ref(MessageList),
+}).pipe(
+  EchoObject({
+    typename: 'dxos.org/type/Channel',
+    version: '0.1.0',
+  }),
+);
+
+const Thread = Schema.Struct({
+  messages: Schema.Array(Ref(Thread)),
+}).pipe(
+  EchoObject({
+    typename: 'dxos.org/type/MessageList',
+    version: '0.1.0',
+  }),
+);
+
+const Message = Schema.Struct({
+  text: Schema.String,
+}).pipe(
+  EchoObject({
+    typename: 'dxos.org/type/Message',
+    version: '0.1.0',
+  }),
+);
+
+type Ref<T> = { target: T; url: string };
+
+/////////////////////
+
+type Root = {
+  pages: Ref<Page>[];
+};
+
+type Page = {
+  messages: Ref<Message>[];
+};
+
+type Message = {
+  text: string;
+};
+
+/////////////////////
+
+function forEach(root: Root, fn: (message: Message) => void) {
+  const pages = root.pages;
+  for (const page of pages) {
+    const messages = page.target.messages;
+    for (const message of messages) {
+      fn(message.target);
+    }
+  }
+}
+
+function getNth(root: Root, n: number) {}
+
+function getByPath(root: Root, path: number[]) {}
+
+///
+
+type AutomergeUrl = string;
+
+type SpaceDirectory = {
+  pages: {
+    [radix: string]: AutomergeUrl;
+  };
+};
+
+type SpaceDirectoryPage = {
+  links: {
+    [echoId: string]: AutomergeUrl;
+  };
+};
+
