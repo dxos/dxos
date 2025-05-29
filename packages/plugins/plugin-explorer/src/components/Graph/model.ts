@@ -9,12 +9,12 @@ import { type GraphEdge, AbstractGraphBuilder, Graph, ReactiveGraphModel } from 
 import { log } from '@dxos/log';
 import { CollectionType } from '@dxos/plugin-space/types';
 import {
-  Filter,
   getSource,
   getTarget,
   isRelation,
   live,
   type AnyLiveObject,
+  Filter,
   type Space,
 } from '@dxos/react-client/echo';
 import { visitValues } from '@dxos/util';
@@ -216,6 +216,7 @@ const getOutgoingReferences = (object: AnyLiveObject): Ref<any>[] => {
       visitValues(value, go);
     }
   };
+
   visitValues(object, go);
   return refs;
 };

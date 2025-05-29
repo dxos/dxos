@@ -3,7 +3,7 @@
 //
 
 import { forceLink, forceManyBody } from 'd3';
-import ForceGraph, { type NodeObject, type LinkObject, type GraphData } from 'force-graph';
+import ForceGraph from 'force-graph';
 import React, { type FC, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 import { filterObjectsSync, type SearchResult } from '@dxos/plugin-search';
 import { useAsyncState } from '@dxos/react-ui';
 
+import { GraphAdapter } from './adpater';
 import { SpaceGraphModel } from './model';
 
 export type GraphProps = {
@@ -74,7 +75,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
         // .d3AlphaDecay(0.0228)
         // .d3VelocityDecay(0.4)
 
-        .graphData(new GraphDataAdapter(model))
+        .graphData(new GraphAdapter(model))
         .warmupTicks(100)
         .cooldownTime(1_000)
         .resumeAnimation();
@@ -91,32 +92,3 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
     </div>
   );
 };
-
-class GraphDataAdapter implements GraphData {
-  private readonly _nodes: NodeObject[] = [];
-  private readonly _links: LinkObject[] = [];
-
-  // TODO(burdon): Merge and make reactive.
-  constructor(private readonly _model: SpaceGraphModel) {
-    this._nodes = this._model.graph.nodes.map((node) => ({
-      id: node.id,
-      type: node.type,
-      data: node.data,
-    }));
-
-    this._links = this._model.graph.edges.map((edge) => ({
-      type: edge.type,
-      source: edge.source,
-      target: edge.target,
-      data: edge.data,
-    }));
-  }
-
-  get nodes() {
-    return this._nodes;
-  }
-
-  get links() {
-    return this._links;
-  }
-}
