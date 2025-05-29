@@ -56,7 +56,9 @@ export const TYPES = [
 export const researchFn = defineFunction({
   description: 'Research the web for information',
   inputSchema: Schema.Struct({
-    query: Schema.String,
+    query: Schema.String.annotations({
+      description: 'The query to search for',
+    }),
   }),
   outputSchema: Schema.Struct({
     result: Schema.Any,
