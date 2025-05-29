@@ -69,7 +69,6 @@ export class DxThemeEditorPhysicalColors extends LitElement {
     this.updateSeriesProperty(series, 'torsion', value);
   }
 
-
   private renderSeriesControls(series: string) {
     const seriesData = this.tokenSet.colors?.physical?.definitions?.series?.[series];
     if (!isHelicalArcSeries(seriesData)) {
@@ -158,12 +157,9 @@ export class DxThemeEditorPhysicalColors extends LitElement {
 
   override render() {
     return html`
-      <div class="theme-editor-container">
-        <h2>Physical series</h2>
-        ${bindSeriesDefinitions.map(
-          (series) => html` <div class="series-container">${this.renderSeriesControls(series)}</div> `,
-        )}
-      </div>
+      ${bindSeriesDefinitions.map(
+        (series) => html` <div class="series-container">${this.renderSeriesControls(series)}</div> `,
+      )}
     `;
   }
 

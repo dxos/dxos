@@ -226,14 +226,11 @@ export class DxThemeEditorSemanticColors extends LitElement {
     const semanticTokens = this.getSemanticTokens();
 
     return html`
-      <div class="theme-editor-container">
-        <h2>Semantic Colors</h2>
-        ${semanticTokens.map(
-          ([tokenName, tokenValue]) => html`
-            <div class="token-container">${this.renderTokenControls(tokenName, tokenValue)}</div>
-          `,
-        )}
-      </div>
+      ${semanticTokens.map(
+        ([tokenName, tokenValue]) => html`
+          <div class="token-container">${this.renderTokenControls(tokenName, tokenValue)}</div>
+        `,
+      )}
     `;
   }
 
