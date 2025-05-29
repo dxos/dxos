@@ -200,81 +200,104 @@ export class DxThemeEditorSemanticColors extends LitElement {
     const lightHeadingId = `${tokenName}-light-heading`;
     const darkHeadingId = `${tokenName}-dark-heading`;
     const seriesSelectId = `${tokenName}-series`;
+    const contentId = `${tokenName}-content`;
+
+    // Toggle expanded/collapsed state
+    const toggleExpanded = (e: Event) => {
+      const button = e.currentTarget as HTMLButtonElement;
+      const container = button.closest('.token-container') as HTMLElement;
+      const isExpanded = container.getAttribute('data-state') === 'expanded';
+      container.setAttribute('data-state', isExpanded ? 'collapsed' : 'expanded');
+      button.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+    };
 
     return html`
-      <h3 id="${tokenHeadingId}" class="token-title">
-        <input
-          type="text"
-          class="token-name-input dx-focus-ring"
-          .value=${tokenName}
-          @change=${(e: Event) => this.handleTokenNameChange(tokenName, (e.target as HTMLInputElement).value)}
-          aria-label="Token name"
-        />
-        <button
-          class="remove-token-button dx-focus-ring dx-button"
-          @click=${() => this.removeSemanticToken(tokenName)}
-          aria-label="Remove token"
-        >
-          <span class="sr-only">Remove token</span>
-          <dx-icon icon="ph--minus--regular" />
-        </button>
-      </h3>
-      <div class="token-header">
-        <div class="token-series-select">
-          <label class="control-label" for="${seriesSelectId}">Palette:</label>
-          <select
-            id="${seriesSelectId}"
-            class="series-select dx-focus-ring"
-            .value=${currentSeries}
-            @change=${(e: Event) => this.handleBothSeriesChange(tokenName, (e.target as HTMLSelectElement).value)}
-            aria-labelledby="${tokenHeadingId}"
+      <div role="group" class="token-container" data-state="collapsed">
+        <h3 id="${tokenHeadingId}" class="token-title">
+          <button
+            class="toggle-button dx-focus-ring dx-button"
+            @click=${toggleExpanded}
+            aria-expanded="false"
+            aria-controls="${contentId}"
           >
-            ${physicalColorSeries.map(
-              (series) => html`<option value="${series}" ?selected=${series === currentSeries}>${series}</option>`,
-            )}
-          </select>
-        </div>
-        <dx-range-spinbutton
-          label="Alpha"
-          min="0"
-          max="1"
-          step="0.01"
-          .value=${currentAlpha}
-          headingId=${tokenHeadingId}
-          @value-changed=${(e: CustomEvent) => this.handleAlphaChange(tokenName, e.detail.value)}
-        ></dx-range-spinbutton>
-      </div>
-
-      <div role="group" class="control-group">
-        <div role="none" class="control-group-item">
-          <div class="shade-preview dark">
-            <div class="shade" style="${styleMap({ backgroundColor: `var(--dx-${tokenName})` })}"></div>
+            <dx-icon icon="ph--caret-down--regular" />
+            <span class="sr-only">Toggle token controls</span>
+          </button>
+          <span class="static-token-name">${tokenName}</span>
+          <input
+            type="text"
+            class="token-name-input dx-focus-ring"
+            .value=${tokenName}
+            @change=${(e: Event) => this.handleTokenNameChange(tokenName, (e.target as HTMLInputElement).value)}
+            aria-label="Token name"
+          />
+          <button
+            class="remove-token-button dx-focus-ring dx-button"
+            @click=${() => this.removeSemanticToken(tokenName)}
+            aria-label="Remove token"
+          >
+            <span class="sr-only">Remove token</span>
+            <dx-icon icon="ph--minus--regular" />
+          </button>
+        </h3>
+        <div id="${contentId}" class="token-content">
+          <div class="token-header">
+            <div class="token-series-select">
+              <label class="control-label" for="${seriesSelectId}">Palette:</label>
+              <select
+                id="${seriesSelectId}"
+                class="series-select dx-focus-ring"
+                .value=${currentSeries}
+                @change=${(e: Event) => this.handleBothSeriesChange(tokenName, (e.target as HTMLSelectElement).value)}
+                aria-labelledby="${tokenHeadingId}"
+              >
+                ${physicalColorSeries.map(
+                  (series) => html`<option value="${series}" ?selected=${series === currentSeries}>${series}</option>`,
+                )}
+              </select>
+            </div>
+            <dx-range-spinbutton
+              label="Alpha"
+              min="0"
+              max="1"
+              step="0.01"
+              .value=${currentAlpha}
+              headingId=${tokenHeadingId}
+              @value-changed=${(e: CustomEvent) => this.handleAlphaChange(tokenName, e.detail.value)}
+            ></dx-range-spinbutton>
           </div>
-          <dx-range-spinbutton
-            label="Dark"
-            min="0"
-            max="1000"
-            step="1"
-            .value=${darkLuminosity}
-            headingId=${darkHeadingId}
-            @value-changed=${(e: CustomEvent) => this.handleLuminosityChange(tokenName, 'dark', e.detail.value)}
-            variant="reverse-range"
-          ></dx-range-spinbutton>
-        </div>
-        <div role="none" class="control-group-item">
-          <div class="shade-preview">
-            <div class="shade" style="${styleMap({ backgroundColor: `var(--dx-${tokenName})` })}"></div>
+          <div role="group" class="control-group">
+            <div role="none" class="control-group-item">
+              <div class="shade-preview dark">
+                <div class="shade" style="${styleMap({ backgroundColor: `var(--dx-${tokenName})` })}"></div>
+              </div>
+              <dx-range-spinbutton
+                label="Dark"
+                min="0"
+                max="1000"
+                step="1"
+                .value=${darkLuminosity}
+                headingId=${darkHeadingId}
+                @value-changed=${(e: CustomEvent) => this.handleLuminosityChange(tokenName, 'dark', e.detail.value)}
+                variant="reverse-range"
+              ></dx-range-spinbutton>
+            </div>
+            <div role="none" class="control-group-item">
+              <div class="shade-preview">
+                <div class="shade" style="${styleMap({ backgroundColor: `var(--dx-${tokenName})` })}"></div>
+              </div>
+              <dx-range-spinbutton
+                label="Light"
+                min="0"
+                max="1000"
+                step="1"
+                .value=${lightLuminosity}
+                headingId=${lightHeadingId}
+                @value-changed=${(e: CustomEvent) => this.handleLuminosityChange(tokenName, 'light', e.detail.value)}
+                variant="reverse-order"
+              ></dx-range-spinbutton>
+            </div>
           </div>
-          <dx-range-spinbutton
-            label="Light"
-            min="0"
-            max="1000"
-            step="1"
-            .value=${lightLuminosity}
-            headingId=${lightHeadingId}
-            @value-changed=${(e: CustomEvent) => this.handleLuminosityChange(tokenName, 'light', e.detail.value)}
-            variant="reverse-order"
-          ></dx-range-spinbutton>
         </div>
       </div>
     `;
@@ -289,11 +312,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
     const semanticTokens = this.getSemanticTokens();
 
     return html`
-      ${semanticTokens.map(
-        ([tokenName, tokenValue]) => html`
-          <div class="token-container">${this.renderTokenControls(tokenName, tokenValue)}</div>
-        `,
-      )}
+      ${semanticTokens.map(([tokenName, tokenValue]) => this.renderTokenControls(tokenName, tokenValue))}
       <button class="add-token-button dx-focus-ring dx-button" @click=${() => this.addSemanticToken()}>
         Add token
       </button>

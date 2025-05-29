@@ -42,7 +42,8 @@ dx-theme-editor-semantic-colors {
     }
   }
 
-  .series-container {}
+  .series-container {
+  }
 
   .series-header {
     display: flex;
@@ -74,6 +75,7 @@ dx-theme-editor-semantic-colors {
     background-position: 0 0, 16px 16px;
     position: relative;
     overflow: hidden;
+
     & > .shade {
       position: absolute;
       inset: 0;
@@ -123,7 +125,8 @@ dx-theme-editor-semantic-colors {
     gap: 0.5rem;
   }
 
-  .control-label {}
+  .control-label {
+  }
 
   .range-input {
     flex: 1;
@@ -134,7 +137,29 @@ dx-theme-editor-semantic-colors {
   }
 
   .token-container {
-    padding: 1rem;
+    display: contents;
+
+    .static-token-name {
+      display: none;
+    }
+
+    &:not([data-state="expanded"]) {
+      .token-content {
+        display: none;
+      }
+
+      .remove-token-button, .token-name-input {
+        display: none;
+      }
+
+      .static-token-name {
+        display: block;
+      }
+
+      .toggle-button dx-icon svg {
+        transform: rotate(-90deg);
+      }
+    }
   }
 
   .token-controls {
