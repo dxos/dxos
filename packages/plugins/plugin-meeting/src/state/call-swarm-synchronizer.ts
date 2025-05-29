@@ -148,7 +148,7 @@ export class CallSwarmSynchronizer extends Resource {
    * @internal
    */
   _setRoomId(roomId?: string) {
-    if (this._stream) {
+    if (this._swarmCtx) {
       log.verbose('joined to a different room', { roomId });
       return;
     }
