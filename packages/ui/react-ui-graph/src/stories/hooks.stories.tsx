@@ -107,13 +107,12 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
       },
     });
 
-    // TODO(burdon): Create class?
     const drag = createSimulationDrag(context, projector.simulation, {
       onDrag: (source, target, point) => {
         select(graphRef.current).call(linkerRenderer, { source, target, point });
       },
       onDrop: (source, target) => {
-        log.info('onDrop', { source: source.id, target: target?.id });
+        log('onDrop', { source: source.id, target: target?.id });
         select(graphRef.current).call(linkerRenderer);
         const parent = model.getNode(source.id);
         if (target) {
