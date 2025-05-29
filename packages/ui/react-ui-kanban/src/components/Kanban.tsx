@@ -76,7 +76,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 rail={false}
                 classNames={
                   /* NOTE(thure): Do not eliminate spacing here without ensuring this element will have a significant size, otherwise dropping items into an empty stack will be made difficult or impossible. See #9035. */
-                  'pbe-1 drag-preview-p-0'
+                  ['plb-1', cards.length > 0 && '-mlb-1']
                 }
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
@@ -85,7 +85,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   <StackItem.Root
                     key={card.id}
                     item={card}
-                    classNames='contain-layout pli-2 drag-preview-p-0'
+                    classNames='contain-layout pli-2 plb-1 first:pbs-0 last:pbe-0'
                     focusIndicatorVariant='group'
                     onClick={() => select([card.id])}
                   >
