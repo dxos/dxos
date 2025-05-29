@@ -64,6 +64,22 @@ dx-theme-editor-semantic-colors {
     border-radius: .25rem;
   }
 
+  .shade-preview {
+    block-size: 2rem;
+    border-radius: .25rem;
+    background-color: #888;
+    background-image: linear-gradient(45deg, #777 25%, transparent 25%, transparent 75%, #777 75%, #777),
+    linear-gradient(45deg, #777 25%, transparent 25%, transparent 75%, #777 75%, #777);
+    background-size: 32px 32px;
+    background-position: 0 0, 16px 16px;
+    position: relative;
+    overflow: hidden;
+    & > .shade {
+      position: absolute;
+      inset: 0;
+    }
+  }
+
   .control-inputs {
     display: contents;
 
@@ -82,7 +98,7 @@ dx-theme-editor-semantic-colors {
     display: flex;
     gap: 1rem;
 
-    .control-row, dx-range-spinbutton {
+    .control-row, dx-range-spinbutton, .control-group-item {
       display: block;
       flex: 1 1 0;
       margin-block: 0;

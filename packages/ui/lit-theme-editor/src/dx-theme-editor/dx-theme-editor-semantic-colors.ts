@@ -6,6 +6,7 @@ import { type AlphaLuminosity } from '@ch-ui/colors';
 import { type TokenSet, parseAlphaLuminosity } from '@ch-ui/tokens';
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { styleMap } from 'lit/directives/style-map.js';
 
 import { debounce } from '@dxos/async';
 
@@ -168,7 +169,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
       </h3>
       <div class="token-header">
         <div class="token-series-select">
-          <label class="control-label" for="${seriesSelectId}">Series:</label>
+          <label class="control-label" for="${seriesSelectId}">Palette:</label>
           <select
             id="${seriesSelectId}"
             class="series-select dx-focus-ring"
@@ -192,27 +193,37 @@ export class DxThemeEditorSemanticColors extends LitElement {
         ></dx-range-spinbutton>
       </div>
 
-      <div class="control-group">
-        <dx-range-spinbutton
-          label="Dark shade number"
-          min="0"
-          max="1000"
-          step="1"
-          .value=${darkLuminosity}
-          headingId=${darkHeadingId}
-          @value-changed=${(e: CustomEvent) => this.handleLuminosityChange(tokenName, 'dark', e.detail.value)}
-          variant="reverse-range"
-        ></dx-range-spinbutton>
-        <dx-range-spinbutton
-          label="Light shade number"
-          min="0"
-          max="1000"
-          step="1"
-          .value=${lightLuminosity}
-          headingId=${lightHeadingId}
-          @value-changed=${(e: CustomEvent) => this.handleLuminosityChange(tokenName, 'light', e.detail.value)}
-          variant="reverse-order"
-        ></dx-range-spinbutton>
+      <div role="group" class="control-group">
+        <div role="none" class="control-group-item">
+          <div class="shade-preview dark">
+            <div class="shade" style="${styleMap({ backgroundColor: `var(--dx-${tokenName})` })}"></div>
+          </div>
+          <dx-range-spinbutton
+            label="Dark"
+            min="0"
+            max="1000"
+            step="1"
+            .value=${darkLuminosity}
+            headingId=${darkHeadingId}
+            @value-changed=${(e: CustomEvent) => this.handleLuminosityChange(tokenName, 'dark', e.detail.value)}
+            variant="reverse-range"
+          ></dx-range-spinbutton>
+        </div>
+        <div role="none" class="control-group-item">
+          <div class="shade-preview">
+            <div class="shade" style="${styleMap({ backgroundColor: `var(--dx-${tokenName})` })}"></div>
+          </div>
+          <dx-range-spinbutton
+            label="Light"
+            min="0"
+            max="1000"
+            step="1"
+            .value=${lightLuminosity}
+            headingId=${lightHeadingId}
+            @value-changed=${(e: CustomEvent) => this.handleLuminosityChange(tokenName, 'light', e.detail.value)}
+            variant="reverse-order"
+          ></dx-range-spinbutton>
+        </div>
       </div>
     `;
   }
