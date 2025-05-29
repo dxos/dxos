@@ -2,17 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SchemaAST } from 'effect';
-
-import { Event, type CleanupFn, type ReadOnlyEvent } from '@dxos/async';
-import {
-  getSchema,
-  getSchemaDXN,
-  type EchoSchema,
-  ReferenceAnnotationId,
-  SchemaValidator,
-  StoredSchema,
-} from '@dxos/echo-schema';
+import { type CleanupFn } from '@dxos/async';
+import { getSchema, getSchemaDXN, type EchoSchema, StoredSchema } from '@dxos/echo-schema';
+import { Ref } from '@dxos/echo-schema';
 import { type GraphEdge, AbstractGraphBuilder, Graph, ReactiveGraphModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { CollectionType } from '@dxos/plugin-space/types';
@@ -26,7 +18,6 @@ import {
   type Space,
 } from '@dxos/react-client/echo';
 import { visitValues } from '@dxos/util';
-import { Ref } from '@dxos/echo-schema';
 
 export type SpaceGraphModelOptions = {
   schema?: boolean;
@@ -112,8 +103,6 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
         .subscribe(
           ({ objects }) => {
             this._objects = objects;
-
-            console.log('objects', objects);
 
             // Merge with current nodes.
             const currentNodes = this._graph.nodes;

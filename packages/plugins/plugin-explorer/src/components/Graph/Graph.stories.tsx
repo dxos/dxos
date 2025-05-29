@@ -8,18 +8,18 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
+import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { live, Query } from '@dxos/react-client/echo';
+import { live } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { DataType } from '@dxos/schema';
 import { withLayout, withTheme, render } from '@dxos/storybook-utils';
+import { range } from '@dxos/util';
 
 import { Graph } from './Graph';
 import { ViewType } from '../../types';
-import { range } from '@dxos/util';
-import { DataType } from '@dxos/schema';
-import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 
 faker.seed(1);
 
@@ -40,8 +40,8 @@ const DefaultStory = () => {
       const contacts = objs.slice(10);
 
       // Add relations between objects.
-      for (const n of range(10)) {
-        await space.db.add(
+      for (const _ of range(10)) {
+        space.db.add(
           live(DataType.HasRelationship, {
             kind: 'friend',
             [RelationSourceId]: contacts[Math.floor(Math.random() * contacts.length)],

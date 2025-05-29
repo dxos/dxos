@@ -103,6 +103,7 @@ class GraphDataAdapter implements GraphData {
       type: node.type,
       data: node.data,
     }));
+
     this._links = this._model.graph.edges.map((edge) => ({
       type: edge.type,
       source: edge.source,
