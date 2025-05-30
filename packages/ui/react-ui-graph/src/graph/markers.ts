@@ -65,7 +65,7 @@ export const createMarkers =
         },
         {
           id: 'marker-dot',
-          generator: createDot(8),
+          generator: createDot(6),
           className: 'dx-dot',
         },
       ])

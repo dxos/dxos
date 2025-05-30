@@ -2,23 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, afterEach, beforeEach } from 'vitest';
 
 import { type EchoDatabase, Query } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { stripUndefined } from '@dxos/util';
 
-import { afterEach, beforeEach } from 'vitest';
-import { DataType } from '../common';
 import { type TypeSpec, type ValueGenerator, createGenerator, createObjectFactory } from './generator';
-import { getSnapshot } from '@dxos/echo-schema';
+import { DataType } from '../common';
 
 faker.seed(1);
 
 // TODO(burdon): Evolve dxos/random to support this directly.
-const generator: ValueGenerator = faker as any;
+const generator: ValueGenerator = {
+  ...faker,
+} as any as ValueGenerator;
 
 const queryObjects = async (db: EchoDatabase, specs: TypeSpec[]) => {
   for (const { type, count } of specs) {
@@ -100,25 +101,19 @@ describe('Generator', () => {
     await queryObjects(db, spec);
   });
 
-  test('generate message', async () => {
-    const messageGenerator = createGenerator(generator, DataType.Message, { optional: true });
+  test('generate message from static schema', async ({ expect }) => {
+    const messageSchema = DataType.Message;
+    const messageGenerator = createGenerator(generator, messageSchema, { optional: true });
     const message = messageGenerator.createObject();
-    // console.log(message);
+    expect(message).to.exist;
   });
 
-  test('generate message from stored schema', async () => {
-    try {
-      const { db } = await builder.createDatabase();
-      const [messageSchema] = await db.schemaRegistry.register([DataType.Message]);
-
-      log.info('messageSchema', { json: getSnapshot(messageSchema.jsonSchema) });
-
-      const messageGenerator = createGenerator(generator, messageSchema, { optional: true });
-      const message = messageGenerator.createObject();
-      console.log(message);
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
+  test('generate message from stored schema', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const messageSchema = (await db.schemaRegistry.register([DataType.Message]))[0];
+    console.log(toJsonSchema(messageSchema));
+    const messageGenerator = createGenerator(generator, messageSchema, { optional: true });
+    const message = messageGenerator.createObject();
+    expect(message).to.exist;
   });
 });

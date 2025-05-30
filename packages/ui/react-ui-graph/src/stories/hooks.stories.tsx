@@ -41,7 +41,7 @@ const DefaultStory = ({ children, ...props }: DefaultStoryProps) => {
   return (
     <SVGRoot>
       <StoryComponent {...props} />
-      {children}
+      {children && <div className='absolute left-4 bottom-4 font-mono text-green-500 text-xs'>{children}</div>}
     </SVGRoot>
   );
 };
@@ -62,8 +62,10 @@ const StoryComponent = ({
 
   const { projector, renderer } = useMemo(() => {
     const projector = new GraphForceProjector(context, projectorOptions);
-
-    if (link) {
+    let renderer: GraphRenderer<TestNode>;
+    if (!link) {
+      renderer = new GraphRenderer(context, graphRef);
+    } else {
       const drag = createSimulationDrag(context, projector.simulation, {
         onDrag: (source, target, point) => {
           select(graphRef.current).call(linkerRenderer, { source, target, point });
@@ -82,8 +84,11 @@ const StoryComponent = ({
         },
       });
 
-      const renderer = new GraphRenderer<TestNode>(context, graphRef, {
+      renderer = new GraphRenderer<TestNode>(context, graphRef, {
         drag,
+        arrows: {
+          end: true,
+        },
         labels: {
           text: (node: GraphLayoutNode<TestNode>) => node.id.substring(0, 4),
         },
@@ -95,21 +100,13 @@ const StoryComponent = ({
             model.removeEdge(edge.id);
           }
         },
-        arrows: {
-          end: true,
-        },
       });
-      return {
-        projector,
-        renderer,
-      };
-    } else {
-      const renderer = new GraphRenderer(context, graphRef);
-      return {
-        projector,
-        renderer,
-      };
     }
+
+    return {
+      projector,
+      renderer,
+    };
   }, [link]);
 
   useEffect(() => {
@@ -152,12 +149,6 @@ const StoryComponent = ({
   );
 };
 
-const Info = () => (
-  <div className='absolute left-4 bottom-4 font-mono text-green-500 text-xs'>
-    ⌘-DRAG to edge or create node; ⌘-CLICK to delete edge.
-  </div>
-);
-
 const meta: Meta = {
   title: 'ui/react-ui-graph/hooks',
   render: DefaultStory,
@@ -196,7 +187,7 @@ export const Default: Story = {
 export const Bullets: Story = {
   args: {
     model: new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))),
-    children: <Info />,
+    children: <span>⌘-DRAG to edge or create node; ⌘-CLICK to delete edge.</span>,
     link: true,
     grid: true,
     projectorOptions: {

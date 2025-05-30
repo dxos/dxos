@@ -32,20 +32,89 @@ export type AttributesOptions<N> = {
   };
 };
 
-export type GraphRendererOptions<N> = RendererOptions &
-  Partial<{
-    drag?: D3Callable;
-    arrows?: {
-      start?: boolean; // TODO(burdon): Replace with marker id.
-      end?: boolean;
-    };
-    highlight?: boolean;
-    labels?: LabelOptions<N>;
-    attributes?: AttributesOptions<N>;
-    onNodeClick?: (node: GraphLayoutNode<N>, event: MouseEvent) => void;
-    onEdgeClick?: (node: GraphLayoutEdge<N>, event: MouseEvent) => void;
-    transition?: () => any;
-  }>;
+export type GraphRendererOptions<N> = RendererOptions<{
+  drag?: D3Callable;
+  arrows?: {
+    start?: boolean; // TODO(burdon): Replace with marker id.
+    end?: boolean;
+  };
+  highlight?: boolean;
+  labels?: LabelOptions<N>;
+  attributes?: AttributesOptions<N>;
+  onNodeClick?: (node: GraphLayoutNode<N>, event: MouseEvent) => void;
+  onEdgeClick?: (node: GraphLayoutEdge<N>, event: MouseEvent) => void;
+  transition?: () => any;
+}>;
+
+/**
+ * Renders the Graph layout.
+ */
+export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOptions<N>> {
+  update(layout: GraphLayout<N>) {
+    const root = select(this.root);
+
+    //
+    // Guides
+    //
+
+    root
+      .selectAll('g.dx-guides')
+      .data([{ id: 'guides' }])
+      .join('g')
+      .classed('dx-guides', true)
+      .selectAll<SVGCircleElement, { cx: number; cy: number; r: number }>('circle')
+      .data(layout.guides ?? [], (d: GraphGuide) => d.id)
+      .join(
+        (enter) => enter.append('circle').attr('r', 0),
+        (update) => update,
+        (exit) => exit.transition().duration(500).attr('r', 0).remove(),
+      )
+      .attr('class', (d) => d.classes?.circle)
+      .attr('cx', (d) => d.cx)
+      .attr('cy', (d) => d.cy)
+      .attr('r', (d) => d.r);
+
+    //
+    // Edges
+    //
+
+    root
+      .selectAll('g.dx-edges')
+      .data([{ id: 'edges' }])
+      .join('g')
+      .classed('dx-edges', true)
+      .selectAll<SVGPathElement, GraphLayoutEdge<N>>('g.dx-edge')
+      .data(layout.graph?.edges ?? [], (d) => d.id)
+      .join((enter) =>
+        //
+        enter.append('g').classed('dx-edge', true).call(createEdge, this.options, root.select('g.dx-nodes')),
+      )
+      .call(updateEdge, this.options, layout.graph.nodes)
+      .classed('dx-edge', true);
+
+    //
+    // Nodes
+    //
+
+    root
+      .selectAll('g.dx-nodes')
+      .data([{ id: 'nodes' }])
+      .join('g')
+      .classed('dx-nodes', true)
+      .selectAll<SVGCircleElement, GraphLayoutNode<N>>('g.dx-node')
+      .data(layout.graph?.nodes ?? [], (d) => d.id)
+      .join((enter) => enter.append('g').classed('group dx-node', true).call(createNode, this.options))
+      .call(updateNode, this.options);
+  }
+
+  /**
+   * Trigger path bullets.
+   * @param node
+   */
+  fireBullet(node: GraphLayoutNode<N>) {
+    select(this.root).selectAll('g.dx-edges').selectAll('path').call(createBullets(this.root, node.id));
+  }
+}
 
 /**
  * Create node elements.
@@ -203,76 +272,3 @@ const updateEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
     return createLine(getCircumferencePoints([source.x, source.y], [target.x, target.y], source.r, target.r));
   });
 };
-
-/**
- * Renders the Graph layout.
- */
-export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOptions<N>> {
-  update(layout: GraphLayout<N>) {
-    const root = select(this.root);
-
-    //
-    // Guides
-    //
-
-    root
-      .selectAll('g.dx-guides')
-      .data([{ id: 'guides' }])
-      .join('g')
-      .classed('dx-guides', true)
-      .selectAll<SVGCircleElement, { cx: number; cy: number; r: number }>('circle')
-      .data(layout.guides ?? [], (d: GraphGuide) => d.id)
-      .join(
-        (enter) => enter.append('circle').attr('r', 0),
-        (update) => update,
-        (exit) => exit.transition().duration(500).attr('r', 0).remove(),
-      )
-      .attr('class', (d) => d.classes?.circle)
-      .attr('cx', (d) => d.cx)
-      .attr('cy', (d) => d.cy)
-      .attr('r', (d) => d.r);
-
-    //
-    // Edges
-    //
-
-    root
-      .selectAll('g.dx-edges')
-      .data([{ id: 'edges' }])
-      .join('g')
-      .classed('dx-edges', true)
-      .selectAll<SVGPathElement, GraphLayoutEdge<N>>('g.dx-edge')
-      .data(layout.graph?.edges ?? [], (d) => d.id)
-      .join((enter) =>
-        //
-        enter.append('g').classed('dx-edge', true).call(createEdge, this.options, root.select('g.dx-nodes')),
-      )
-      .call(updateEdge, this.options, layout.graph.nodes)
-      .classed('dx-edge', true);
-
-    //
-    // Nodes
-    //
-
-    root
-      .selectAll('g.dx-nodes')
-      .data([{ id: 'nodes' }])
-      .join('g')
-      .classed('dx-nodes', true)
-      .selectAll<SVGCircleElement, GraphLayoutNode<N>>('g.dx-node')
-      .data(layout.graph?.nodes ?? [], (d) => d.id)
-      .join((enter) =>
-        //
-        enter.append('g').classed('group dx-node', true).call(createNode, this.options),
-      )
-      .call(updateNode, this.options);
-  }
-
-  /**
-   * Trigger path bullets.
-   * @param node
-   */
-  fireBullet(node: GraphLayoutNode<N>) {
-    select(this.root).selectAll('g.dx-edges').selectAll('path').call(createBullets(this.root, node.id));
-  }
-}
