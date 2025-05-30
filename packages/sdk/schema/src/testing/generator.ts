@@ -70,20 +70,39 @@ export const createProps = <T extends BaseObject>(
     return getSchemaProperties<T>(schema.ast).reduce<ExcludeId<T>>((obj, property) => {
       if (obj[property.name] === undefined) {
         if (!property.optional || optional || randomBoolean()) {
-          const gen = findAnnotation<string>(property.ast, GeneratorAnnotationId);
-          const fn = gen && getDeep<() => any>(generator, gen.split('.'));
-          if (gen && !fn) {
-            throw new Error(`Unknown generator: ${gen}`);
+          // Default value.
+          let value = property.defaultValue;
+          if (value !== undefined) {
+            value = structuredClone(value);
+          } else {
+            // Generator value from annotation.
+            const annotation = findAnnotation<string>(property.ast, GeneratorAnnotationId);
+            if (annotation) {
+              const fn = annotation && getDeep<() => any>(generator, annotation.split('.'));
+              if (!fn) {
+                throw new Error(`Unknown generator: ${annotation}`);
+              }
+
+              value = fn();
+            }
           }
 
-          // TODO(dmaretskyi): Support generating nested objects here.
-          if (fn) {
-            obj[property.name] = fn();
-          } else if (property.defaultValue) {
-            obj[property.name] = structuredClone(property.defaultValue);
-          } else if (!property.optional) {
-            throw new Error(`Missing generator for required property: ${property.name}`);
+          if (!property.optional && value === undefined) {
+            // TODO(dmaretskyi): Support generating nested objects here; or generator via type.
+            if (property.array) {
+              value = [];
+            } else {
+              switch (property.type) {
+                case 'object':
+                  value = {};
+                  break;
+                default:
+                  throw new Error(`Missing generator for required property: ${property.name} [${property.type}]`);
+              }
+            }
           }
+
+          obj[property.name] = value;
         }
       }
 
@@ -194,8 +213,7 @@ export type ObjectGenerator<T extends BaseObject> = {
   createObjects: (n: number) => Live<T>[];
 };
 
-// TODO(ZaymonFC): Sync generator doesn't work with db -- createReferences is async and
-//   can't be invoked with `Effect.runSync`.
+// TODO(ZaymonFC): Sync generator doesn't work with db; createReferences is async and can't be invoked with `Effect.runSync`.
 // TODO(dmaretskyi): Expose effect API instead of pairs of sync/async APIs.
 export const createGenerator = <S extends Schema.Schema.AnyNoContext>(
   generator: ValueGenerator,

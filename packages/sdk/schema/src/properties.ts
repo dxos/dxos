@@ -71,12 +71,14 @@ export const getSchemaProperties = <T extends BaseObject>(
     if (name === 'id' && identifier !== false && !includeId) {
       return props;
     }
+
     const processed = processProperty(name, prop);
     if (processed) {
       props.push(processed);
     } else {
       log.warn('cannot process property', { prop });
     }
+
     return props;
   }, []);
 
@@ -91,6 +93,7 @@ export const getSchemaProperties = <T extends BaseObject>(
       if (!validator(val)) {
         continue;
       }
+
       const processed = processProperty(key as PropertyKey<T>, {
         isOptional: true,
         isReadonly: indexSignature.isReadonly,
