@@ -7,9 +7,9 @@ import { type RefObject } from 'react';
 import { defaultIdAccessor, type IdAccessor } from './types';
 import { type SVGContext } from '../hooks';
 
-export type RendererOptions = {
+export type RendererOptions<T = any> = {
   idAccessor: IdAccessor;
-};
+} & T;
 
 /**
  * Base class for renderer that draw layouts.

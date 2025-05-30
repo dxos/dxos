@@ -36,7 +36,7 @@ export const linkerRenderer: D3Callable = (root, { source, target, point }: Link
           [source.x, source.y],
           target ? [target.x, target.y] : point,
           source.r,
-          target ? target.r : 1,
+          target ? target.r : 0,
         ),
       );
     });
