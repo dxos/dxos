@@ -143,9 +143,14 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   );
 
   return (
-    <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
+    <div
+      className={mx(
+        'grid w-full h-full justify-center overflow-hidden divide-x divide-separator',
+        artifactItems.length && 'grid-cols-2',
+      )}
+    >
       {/* Thread */}
-      <div className='flex flex-col gap-4 overflow-hidden'>
+      <div className='flex flex-col h-full w-[40rem] max-w-[40rem] gap-4 outline outline-separator overflow-hidden'>
         <Toolbar.Root classNames='p-2'>
           <Input.Root>
             <Input.TextInput
@@ -184,23 +189,24 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
       </div>
 
       {/* Artifacts Deck */}
-      <div className='overflow-hidden grid grid-rows-[2fr_1fr] divide-y divide-separator'>
-        {artifactItems.length > 0 && (
-          <div className={mx('flex grow overflow-hidden', artifactItems.length === 1 && 'row-span-2')}>
-            <Surface role='canvas-node' limit={1} data={artifactItems[0]} />
-          </div>
-        )}
-
-        {artifactItems.length > 1 && (
-          <div className='flex shrink-0 overflow-hidden divide-x divide-separator'>
-            <div className='flex flex-1 h-full'>
-              {artifactItems.slice(1, 3).map((item, idx) => (
-                <Surface key={idx} role='canvas-node' limit={1} data={item} />
-              ))}
+      {artifactItems.length > 0 && (
+        <div className='overflow-hidden grid grid-rows-[2fr_1fr] divide-y divide-separator'>
+          {artifactItems.length > 0 && (
+            <div className={mx('flex grow overflow-hidden', artifactItems.length === 1 && 'row-span-2')}>
+              <Surface role='canvas-node' limit={1} data={artifactItems[0]} />
             </div>
-          </div>
-        )}
-      </div>
+          )}
+          {artifactItems.length > 1 && (
+            <div className='flex shrink-0 overflow-hidden divide-x divide-separator'>
+              <div className='flex flex-1 h-full'>
+                {artifactItems.slice(1, 3).map((item, idx) => (
+                  <Surface key={idx} role='canvas-node' limit={1} data={item} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
