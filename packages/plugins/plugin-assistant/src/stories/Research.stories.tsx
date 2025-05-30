@@ -38,7 +38,7 @@ import {
   ServiceContainer,
   type FunctionDefinition,
 } from '@dxos/functions';
-import { researchFn } from '../experimental/research/research';
+import { researchFn, type Subgraph } from '../experimental/research/research';
 import { raise } from '@dxos/debug';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
@@ -84,7 +84,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     [aiClient, space, queue],
   );
 
-  const tools = useMemo<Tool[]>(() => [toolFromLocalFunction(functionExecutor, 'research', researchFn)], []);
+  const tools = useMemo<Tool[]>(() => [createResearchTool(functionExecutor, 'research', researchFn)], []);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
@@ -284,7 +284,7 @@ export const WithInitialItems: Story = {
   },
 };
 
-const toolFromLocalFunction = (executor: FunctionExecutor, name: string, fn: FunctionDefinition<any, any>) => {
+const createResearchTool = (executor: FunctionExecutor, name: string, fn: typeof researchFn) => {
   return defineTool('example', {
     // TODO(dmaretskyi): Include name in definition
     name,
@@ -293,7 +293,15 @@ const toolFromLocalFunction = (executor: FunctionExecutor, name: string, fn: Fun
     schema: fn.inputSchema,
 
     execute: async (input: any) => {
-      return ToolResult.Success(await executor.invoke(fn, input));
+      const { result } = await executor.invoke(fn, input);
+      return ToolResult.Success(
+        'Research completed. The results are placed in the conversation and already presented to the user. No need to present them again.',
+        result.objects.map((obj) => ({
+          type: 'json',
+          json: JSON.stringify(obj),
+          disposition: 'graph',
+        })),
+      );
     },
   });
 };

@@ -59,6 +59,7 @@ export const Subgraph = Schema.Struct({
    */
   objects: Schema.Array(Schema.Any),
 });
+export interface Subgraph extends Schema.Schema.Type<typeof Subgraph> {}
 
 export const researchFn = defineFunction({
   description: 'Research the web for information',
@@ -73,7 +74,8 @@ export const researchFn = defineFunction({
     }),
   }),
   outputSchema: Schema.Struct({
-    result: Schema.String,
+    // result: Schema.String,
+    result: Subgraph,
   }),
   handler: async ({ data: { query, mockSearch }, context }) => {
     const ai = context.getService(AiService);
@@ -106,17 +108,18 @@ export const researchFn = defineFunction({
     });
     const data = sanitizeObjects(TYPES, result as any);
 
-    // Insert
-    queues.contextQueue!.append(data);
-
-    // Return references.
-
     return {
-      result: `
-      The research results are placed in the following objects:
-        ${data.map((object, id) => `[obj_${id}][dxn:echo:@:${object.id}]`).join('\n')}
-      `,
+      result: { objects: data },
     };
+
+    // queues.contextQueue!.append(data);
+
+    // return {
+    //   result: `
+    //   The research results are placed in the following objects:
+    //     ${data.map((object, id) => `[obj_${id}][dxn:echo:@:${object.id}]`).join('\n')}
+    //   `,
+    // };
   },
 });
 
