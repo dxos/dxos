@@ -4,6 +4,8 @@
 
 import { useEffect, useState } from 'react';
 
+import { scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
 export type UseAudioState = {
@@ -15,11 +17,19 @@ export type UseAudioState = {
 export const useAudioFile = (audioUrl: string): UseAudioState => {
   const [{ audio, stream, track }, setStream] = useState<UseAudioState>({});
   useEffect(() => {
-    const t = setTimeout(async () => {
+    const ctx = new Context();
+
+    scheduleTask(ctx, async () => {
       const response = await fetch(audioUrl);
       const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      ctx.onDispose(() => {
+        URL.revokeObjectURL(objectUrl);
+      });
+
       const audio = new Audio();
-      audio.src = URL.createObjectURL(blob);
+      audio.src = objectUrl;
+
       await new Promise<void>((resolve, reject) => {
         audio.addEventListener(
           'error',
@@ -31,22 +41,36 @@ export const useAudioFile = (audioUrl: string): UseAudioState => {
         );
         audio.addEventListener(
           'canplay',
-          () => {
+          async () => {
             log.info('starting...');
-            resolve();
+            try {
+              // Try to play the audio
+              await audio.play();
+              resolve();
+            } catch (playError) {
+              log.error('Play failed', { playError });
+              // Still resolve as the audio is ready, even if autoplay failed
+              resolve();
+            }
           },
           { once: true },
         );
         audio.load();
       });
 
-      const ctx = new AudioContext();
+      const audioCtx = new AudioContext();
 
-      const destination = ctx.createMediaStreamDestination();
+      // Resume AudioContext if it's suspended
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+      }
+
+      const destination = audioCtx.createMediaStreamDestination();
       destination.channelCount = 1;
 
-      const source = ctx.createMediaElementSource(audio);
+      const source = audioCtx.createMediaElementSource(audio);
       source.connect(destination);
+      // Also connect to speakers so audio is audible
 
       setStream({
         audio,
@@ -55,7 +79,9 @@ export const useAudioFile = (audioUrl: string): UseAudioState => {
       });
     });
 
-    return () => clearTimeout(t);
+    return () => {
+      void ctx.dispose();
+    };
   }, [audioUrl]);
 
   return { audio, stream, track };

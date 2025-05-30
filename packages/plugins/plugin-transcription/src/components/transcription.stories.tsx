@@ -8,6 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import React, {
   type Dispatch,
   type FC,
+  type RefObject,
   type SetStateAction,
   useCallback,
   useEffect,
@@ -42,17 +43,19 @@ import { processTranscriptMessage } from '../entity-extraction';
 import { useAudioFile, useAudioTrack, useQueueModelAdapter, useTranscriber } from '../hooks';
 import { type SerializationModel } from '../model';
 import { TestItem } from '../testing';
-import { type TranscriberParams } from '../transcriber';
+import { type MediaStreamRecorderParams, type TranscriberParams } from '../transcriber';
 
 const TranscriptionStory: FC<{
   model: SerializationModel<DataType.Message>;
   running: boolean;
   onRunningChange: Dispatch<SetStateAction<boolean>>;
-}> = ({ model, running, onRunningChange }) => {
+  audioRef?: RefObject<HTMLAudioElement>;
+}> = ({ model, running, onRunningChange, audioRef }) => {
   const space = useSpace();
 
   return (
     <div className='flex flex-col w-[30rem]'>
+      {audioRef && <audio ref={audioRef} autoPlay />}
       <Toolbar.Root>
         <IconButton
           iconOnly
@@ -72,7 +75,15 @@ const aiService = new AIServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.REMOTE,
 });
 
-const Microphone = ({ entityExtraction }: { entityExtraction?: boolean }) => {
+const Microphone = ({
+  entityExtraction,
+  transcriberConfig,
+  recorderConfig,
+}: {
+  entityExtraction?: boolean;
+  transcriberConfig: TranscriberParams['config'];
+  recorderConfig: MediaStreamRecorderParams['config'];
+}) => {
   const [running, setRunning] = useState(false);
 
   // Audio.
@@ -125,15 +136,11 @@ const Microphone = ({ entityExtraction }: { entityExtraction?: boolean }) => {
     [queue, space],
   );
 
-  const config = useRef<TranscriberParams['config']>({
-    transcribeAfterChunksAmount: 10,
-    prefixBufferChunksAmount: 5,
-  });
-
   const transcriber = useTranscriber({
     audioStreamTrack: track,
     onSegments: handleSegments,
-    config: config.current,
+    transcriberConfig,
+    recorderConfig,
   });
   const [isOpen, setIsOpen] = useState(false);
   useEffect(() => {
@@ -155,11 +162,25 @@ const Microphone = ({ entityExtraction }: { entityExtraction?: boolean }) => {
   return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} />;
 };
 
-const AudioFile = ({ audioUrl }: { audioUrl: string; transcriptUrl: string }) => {
+const AudioFile = ({
+  audioUrl,
+  transcriberConfig,
+  recorderConfig,
+}: {
+  audioUrl: string;
+  transcriberConfig: TranscriberParams['config'];
+  recorderConfig: MediaStreamRecorderParams['config'];
+}) => {
   const [running, setRunning] = useState(false);
 
   // Audio.
-  const { audio, track } = useAudioFile(audioUrl);
+  const { audio, track, stream } = useAudioFile(audioUrl);
+  const ref = useRef<HTMLAudioElement>(null);
+  useEffect(() => {
+    if (ref.current && stream) {
+      ref.current.srcObject = stream;
+    }
+  }, [stream]);
 
   useEffect(() => {
     if (!audio) {
@@ -189,6 +210,8 @@ const AudioFile = ({ audioUrl }: { audioUrl: string; transcriptUrl: string }) =>
   const transcriber = useTranscriber({
     audioStreamTrack: track,
     onSegments: handleSegments,
+    transcriberConfig,
+    recorderConfig,
   });
 
   useEffect(() => {
@@ -213,7 +236,7 @@ const AudioFile = ({ audioUrl }: { audioUrl: string; transcriptUrl: string }) =>
     manageChunkRecording();
   }, [transcriber, track?.readyState, transcriber?.isOpen]);
 
-  return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} />;
+  return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} audioRef={ref} />;
 };
 
 const meta: Meta<typeof AudioFile> = {
@@ -264,10 +287,21 @@ const meta: Meta<typeof AudioFile> = {
 
 export default meta;
 
+const TRANSCRIBER_CONFIG = {
+  transcribeAfterChunksAmount: 1,
+  prefixBufferChunksAmount: 3,
+};
+
+const RECORDER_CONFIG = {
+  interval: 1000,
+};
+
 export const Default: StoryObj<typeof Microphone> = {
   render: Microphone,
   args: {
     entityExtraction: false,
+    transcriberConfig: TRANSCRIBER_CONFIG,
+    recorderConfig: RECORDER_CONFIG,
   },
 };
 
@@ -275,6 +309,8 @@ export const EntityExtraction: StoryObj<typeof Microphone> = {
   render: Microphone,
   args: {
     entityExtraction: true,
+    transcriberConfig: TRANSCRIBER_CONFIG,
+    recorderConfig: RECORDER_CONFIG,
   },
 };
 
@@ -282,7 +318,8 @@ export const File: StoryObj<typeof AudioFile> = {
   render: AudioFile,
   args: {
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
-    transcriptUrl: 'https://dxos.network/audio-london.txt',
     audioUrl: 'https://dxos.network/audio-london.m4a',
+    transcriberConfig: TRANSCRIBER_CONFIG,
+    recorderConfig: RECORDER_CONFIG,
   },
 };
