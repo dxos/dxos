@@ -597,7 +597,7 @@ export class DxAutocompleteCombobox extends LitElement {
 
   override render() {
     return html`
-      <label for="${this._inputId}">${this.label}</label>
+      <label for="${this._inputId}" class="sr-only">${this.label}</label>
       <div class="combobox combobox-list">
         <div class="group">
           <input

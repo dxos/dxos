@@ -14,7 +14,8 @@ export default {
 };
 
 export const Basic = (props: DxAutocompleteComboboxProps) => {
-  return html`<div style="padding:1rem;">
+  return html`<div style="padding:1rem;display:flex;gap:.5rem;align-items:center;">
+    <span role="none">Country</span>
     <dx-autocomplete-combobox
       label="Country"
       options='["Germany", "Japan", "Canada"]'
