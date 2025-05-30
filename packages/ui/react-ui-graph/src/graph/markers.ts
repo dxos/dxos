@@ -65,8 +65,13 @@ export const createMarkers =
         },
         {
           id: 'marker-dot',
+<<<<<<< Updated upstream
           generator: createDot(12),
           className: 'dx-dot',
+=======
+          generator: createDot(6),
+          className: 'dot',
+>>>>>>> Stashed changes
         },
       ])
       .join('marker')
