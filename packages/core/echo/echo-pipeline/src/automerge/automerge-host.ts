@@ -427,9 +427,10 @@ export class AutomergeHost extends Resource {
   async flush({ documentIds }: FlushRequest = {}): Promise<void> {
     // Note: Sync protocol for client and services ensures that all handles should have all changes.
 
-    const loadedDocuments = documentIds?.filter(
-      (documentId): documentId is DocumentId => !!this._repo.handles[documentId as DocumentId],
-    );
+    const loadedDocuments = documentIds?.filter((documentId): documentId is DocumentId => {
+      const handle = this._repo.handles[documentId as DocumentId];
+      return handle && handle.isReady();
+    });
     await this._repo.flush(loadedDocuments);
   }
 

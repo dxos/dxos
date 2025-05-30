@@ -28,7 +28,7 @@ export default () =>
               {
                 id: `${fullyQualifiedId(meeting)}${ATTENDABLE_PATH_SEPARATOR}${OutlineType.typename}`,
                 type: PLANK_COMPANION_TYPE,
-                data: get(rxFromSignal(() => meeting.artifacts[OutlineType.typename]?.target)),
+                data: get(rxFromSignal(() => meeting.artifacts?.[OutlineType.typename]?.target)),
                 properties: {
                   label: ['meeting notes label', { ns: OUTLINER_PLUGIN }],
                   icon: 'ph--note--regular',

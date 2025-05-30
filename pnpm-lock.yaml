@@ -11294,6 +11294,34 @@ importers:
         specifier: workspace:*
         version: link:../../common/test-utils
 
+  packages/ui/lit-theme-editor:
+    dependencies:
+      '@ch-ui/colors':
+        specifier: 1.2.0
+        version: 1.2.0
+      '@ch-ui/tokens':
+        specifier: 2.4.0
+        version: 2.4.0
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../lit-ui
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../primitives/react-hooks
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      lit:
+        specifier: ^3.2.0
+        version: 3.2.0
+    devDependencies:
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../common/test-utils
+
   packages/ui/lit-ui:
     dependencies:
       '@dxos/react-hooks':
