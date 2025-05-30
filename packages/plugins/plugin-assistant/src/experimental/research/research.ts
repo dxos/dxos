@@ -26,7 +26,6 @@ import INSTRUCTIONS from './instructions.tpl?raw';
 import { DataType } from '@dxos/schema';
 import { Relation } from '@dxos/echo';
 
-
 const Develops = Schema.Struct({
   since: Schema.optional(Schema.String),
 })
