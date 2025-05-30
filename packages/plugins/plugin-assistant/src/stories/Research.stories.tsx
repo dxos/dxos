@@ -9,11 +9,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Events, IntentPlugin, SettingsPlugin, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Message, type Tool } from '@dxos/artifact';
+import { defineTool, Message, ToolResult, type Tool } from '@dxos/artifact';
 import { remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { DXN, Type } from '@dxos/echo';
-import { create, createQueueDxn, ObjectId, ObjectId } from '@dxos/echo-schema';
+import { create, createQueueDxn } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
@@ -29,12 +29,17 @@ import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from '../components';
-import { createExaTool } from '../experimental/research';
 import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import translations from '../translations';
-import { FunctionExecutor, ServiceContainer, type FunctionDefinition } from '@dxos/functions';
+import {
+  ConfiguredCredentialsService,
+  FunctionExecutor,
+  ServiceContainer,
+  type FunctionDefinition,
+} from '@dxos/functions';
 import { researchFn } from '../experimental/research/research';
+import { raise } from '@dxos/debug';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 
@@ -59,6 +64,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
           ai: {
             client: aiClient,
           },
+          credentials: new ConfiguredCredentialsService([
+            {
+              service: 'exa.ai',
+              apiKey: EXA_API_KEY,
+            },
+          ]),
         }),
       ),
   );
@@ -265,12 +276,15 @@ export const WithInitialItems: Story = {
 };
 
 const toolFromLocalFunction = (executor: FunctionExecutor, name: string, fn: FunctionDefinition<any, any>) => {
-  return {
+  return defineTool('example', {
     // TODO(dmaretskyi): Include name in definition
     name,
-    description: fn.description,
+    description: fn.description ?? raise(new Error('No description')),
+
+    schema: fn.inputSchema,
+
     execute: async (input: any) => {
-      return executor.invoke(fn, input);
+      return ToolResult.Success(await executor.invoke(fn, input));
     },
-  };
+  });
 };

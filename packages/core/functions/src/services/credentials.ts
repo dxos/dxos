@@ -15,7 +15,16 @@ type ServiceCredential = {
 export class CredentialsService extends Context.Tag('CredentialsService')<
   CredentialsService,
   {
+    /**
+     * Query all.
+     */
     queryCredentials: (query: CredentialQuery) => Promise<ServiceCredential[]>;
+
+    /**
+     * Get a single credential.
+     * @throws {Error} If no credential is found.
+     */
+    getCredential: (query: CredentialQuery) => Promise<ServiceCredential>;
   }
 >() {}
 
@@ -27,7 +36,15 @@ export class ConfiguredCredentialsService implements Context.Tag.Service<Credent
     return this;
   }
 
-  queryCredentials(query: CredentialQuery): Promise<ServiceCredential[]> {
-    return Promise.resolve(this.credentials.filter((credential) => credential.service === query.service));
+  async queryCredentials(query: CredentialQuery): Promise<ServiceCredential[]> {
+    return this.credentials.filter((credential) => credential.service === query.service);
+  }
+
+  async getCredential(query: CredentialQuery): Promise<ServiceCredential> {
+    const credential = this.credentials.find((credential) => credential.service === query.service);
+    if (!credential) {
+      throw new Error(`Credential not found for service: ${query.service}`);
+    }
+    return credential;
   }
 }

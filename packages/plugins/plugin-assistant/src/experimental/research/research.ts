@@ -76,7 +76,7 @@ export const researchFn = defineFunction({
   handler: async ({ data: { query, mockSearch }, context }) => {
     const ai = context.getService(AiService);
     const credentials = context.getService(CredentialsService);
-    const [exaCredential] = await credentials.queryCredentials({ service: 'https://exa.ai/' });
+    const exaCredential = await credentials.getCredential({ service: 'exa.ai' });
 
     const searchTool = mockSearch ? createMockExaTool() : createExaTool({ apiKey: exaCredential.apiKey! });
 
