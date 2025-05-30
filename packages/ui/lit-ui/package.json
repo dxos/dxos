@@ -15,6 +15,7 @@
       "node": "./dist/src/index.js"
     },
     "./dx-avatar.pcss": "./src/dx-avatar/dx-avatar.pcss",
+    "./dx-autocomplete-combobox.pcss": "./src/dx-autocomplete-combobox/dx-autocomplete-combobox.pcss",
     "./dx-tag-picker.pcss": "./src/dx-tag-picker/dx-tag-picker.pcss",
     "./dx-ref-tag.pcss": "./src/dx-ref-tag/dx-ref-tag.pcss"
   },
