@@ -19,6 +19,7 @@ import { safeParseJson } from '@dxos/util';
 
 import { ToolBlock, isToolMessage } from './ToolInvocations';
 import { ToolboxContainer } from '../Toolbox';
+import type { BaseEchoObject } from '@dxos/echo-schema';
 
 const panelClassNames = 'flex flex-col w-full px-2 bg-groupSurface rounded-md';
 const userClassNames = 'bg-[--user-fill] text-accentSurfaceText';
@@ -46,9 +47,17 @@ export type ThreadMessageProps = ThemedClassName<{
   tools?: ToolType[];
   onPrompt?: (text: string) => void;
   onDelete?: (id: string) => void;
+  onAddToGraph?: (object: BaseEchoObject) => void;
 }>;
 
-export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, space, message, tools, onPrompt }) => {
+export const ThreadMessage: FC<ThreadMessageProps> = ({
+  classNames,
+  space,
+  message,
+  tools,
+  onPrompt,
+  onAddToGraph,
+}) => {
   const { role, content = [] } = message;
 
   // TODO(burdon): Restructure types to make check unnecessary.
@@ -74,13 +83,18 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, space, messa
         classNames={mx(classNames, 'animate-[fadeIn_0.5s]')}
         user={block.type === 'text' && role === 'user'}
       >
-        <Component space={space} block={block} onPrompt={onPrompt} />
+        <Component space={space} block={block} onPrompt={onPrompt} onAddToGraph={onAddToGraph} />
       </MessageContainer>
     );
   });
 };
 
-type BlockComponent = FC<{ space?: Space; block: MessageContentBlock; onPrompt?: (text: string) => void }>;
+type BlockComponent = FC<{
+  space?: Space;
+  block: MessageContentBlock;
+  onPrompt?: (text: string) => void;
+  onAddToGraph?: (object: BaseEchoObject) => void;
+}>;
 
 const components: Record<string, BlockComponent> = {
   //
@@ -124,7 +138,7 @@ const components: Record<string, BlockComponent> = {
   //
   // JSON
   //
-  ['json' as const]: ({ space, block, onPrompt }) => {
+  ['json' as const]: ({ space, block, onPrompt, onAddToGraph }) => {
     invariant(block.type === 'json');
 
     switch (block.disposition) {
@@ -154,6 +168,17 @@ const components: Record<string, BlockComponent> = {
                 {option}
               </Button>
             ))}
+          </div>
+        );
+      }
+
+      case 'graph': {
+        return (
+          <div className='flex flex-wrap gap-1'>
+            <div className='font-mono text-xs text-pre'>{block.json}</div>
+            {onAddToGraph && (
+              <button onClick={() => onAddToGraph?.(JSON.parse(block.json ?? '{}'))}>Add to graph {'->'}</button>
+            )}
           </div>
         );
       }

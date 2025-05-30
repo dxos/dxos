@@ -22,7 +22,7 @@ export type ThreadContainerProps = {
   settings?: AssistantSettingsProps;
   part?: 'deck' | 'dialog';
   associatedArtifact?: AssociatedArtifact;
-} & Pick<ThreadProps, 'debug' | 'transcription' | 'onOpenChange'>;
+} & Pick<ThreadProps, 'debug' | 'transcription' | 'onOpenChange' | 'onAddToGraph'>;
 
 // TODO(burdon): Since this only wraps Thread, just separate out hook?
 export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({

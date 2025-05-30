@@ -13,7 +13,7 @@ import { defineTool, Message, ToolResult, type Tool } from '@dxos/artifact';
 import { remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { DXN, Type } from '@dxos/echo';
-import { create, createQueueDxn, isInstanceOf } from '@dxos/echo-schema';
+import { create, createQueueDxn, getTypename, isInstanceOf, type BaseEchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
@@ -22,8 +22,8 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
-import { useClient } from '@dxos/react-client';
-import { useQueue } from '@dxos/react-client/echo';
+import { Config, useClient } from '@dxos/react-client';
+import { useQueue, live } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -58,7 +58,10 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const [aiClient] = useState(() => new AIServiceEdgeClient({ endpoint: endpoints.ai }));
 
   // Queue.
-  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
+  const [queueDxn, setQueueDxn] = useState<string>(
+    () => 'dxn:queue:data:B5QTVZILSG7LCY2OB7VUGGHLE632U532U:01JWH3S9576J8R35WMN7DT88N8',
+    // createQueueDxn(space.id).toString()
+  );
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
   // Function executor.
@@ -168,6 +171,15 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     [queue],
   );
 
+  const handleAddToGraph = useCallback((object: BaseEchoObject) => {
+    const schema =
+      space.db.graph.schemaRegistry.getSchemaByDXN(DXN.parse(getTypename(object)!)) ??
+      raise(new Error('Schema not found'));
+
+    console.log('schema', { schema });
+    space.db.add(live(schema, object));
+  }, []);
+
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
       {/* Thread */}
@@ -205,6 +217,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
           onSubmit={processor ? handleSubmit : undefined}
           onPrompt={processor ? handlePrompt : undefined}
           onDelete={processor ? handleDelete : undefined}
+          onAddToGraph={handleAddToGraph}
           {...props}
         />
       </div>
@@ -238,8 +251,24 @@ const meta: Meta<typeof DefaultStory> = {
     withPluginManager({
       plugins: [
         ClientPlugin({
+          config: new Config({
+            runtime: {
+              client: {
+                storage: {
+                  persistent: true,
+                },
+              },
+              services: {
+                edge: {
+                  url: 'http://edge-main.dxos.workers.dev',
+                },
+              },
+            },
+          }),
           onClientInitialized: async (_, client) => {
-            await client.halo.createIdentity();
+            if (!client.halo.identity.get()) {
+              await client.halo.createIdentity();
+            }
           },
         }),
         SpacePlugin(),

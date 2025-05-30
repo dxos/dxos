@@ -32,7 +32,7 @@ export type ThreadProps = ThemedClassName<{
   contextProvider?: ContextProvider;
 }> &
   Pick<PromptBarProps, 'processing' | 'error' | 'onSubmit' | 'onSuggest' | 'onCancel'> &
-  Pick<ThreadMessageProps, 'debug' | 'tools' | 'onPrompt' | 'onDelete'>;
+  Pick<ThreadMessageProps, 'debug' | 'tools' | 'onPrompt' | 'onDelete' | 'onAddToGraph'>;
 
 /**
  * Chat thread component.
