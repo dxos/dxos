@@ -10,6 +10,7 @@ import {
   getEntityKind,
   getSchemaDXN,
   ObjectId,
+  Ref,
   ReferenceAnnotationId,
   RelationSourceId,
   RelationTargetId,
@@ -20,7 +21,7 @@ import { deepMapValues } from '@dxos/util';
 
 import { AISession } from '@dxos/assistant';
 import { ConsolePrinter } from '@dxos/assistant/testing';
-import { AiService, CredentialsService, defineFunction } from '@dxos/functions';
+import { AiService, CredentialsService, defineFunction, QueuesService } from '@dxos/functions';
 import { createExaTool, createMockExaTool } from './exa';
 import INSTRUCTIONS from './instructions.tpl?raw';
 import { DataType } from '@dxos/schema';
@@ -51,6 +52,7 @@ export const TYPES = [
   Develops,
 ];
 
+// TODO(burdon): Unify with the graph schema.
 export const Subgraph = Schema.Struct({
   /**
    * Objects and relations.
@@ -71,11 +73,13 @@ export const researchFn = defineFunction({
     }),
   }),
   outputSchema: Schema.Struct({
-    graph: Subgraph,
+    result: Schema.String,
   }),
   handler: async ({ data: { query, mockSearch }, context }) => {
     const ai = context.getService(AiService);
     const credentials = context.getService(CredentialsService);
+    const queues = context.getService(QueuesService);
+
     const exaCredential = await credentials.getCredential({ service: 'exa.ai' });
 
     const searchTool = mockSearch ? createMockExaTool() : createExaTool({ apiKey: exaCredential.apiKey! });
@@ -101,7 +105,18 @@ export const researchFn = defineFunction({
       prompt: query,
     });
     const data = sanitizeObjects(TYPES, result as any);
-    return { graph: { objects: data } };
+
+    // Insert
+    queues.contextQueue!.append(data);
+
+    // Return references.
+
+    return {
+      result: `
+      The research results are placed in the following objects:
+        ${data.map((object, id) => `[obj_${id}][dxn:echo:@:${object.id}]`).join('\n')}
+      `,
+    };
   },
 });
 

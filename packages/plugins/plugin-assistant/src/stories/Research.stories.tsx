@@ -13,7 +13,7 @@ import { defineTool, Message, ToolResult, type Tool } from '@dxos/artifact';
 import { remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { DXN, Type } from '@dxos/echo';
-import { create, createQueueDxn } from '@dxos/echo-schema';
+import { create, createQueueDxn, isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
@@ -57,7 +57,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const space = client.spaces.default;
   const [aiClient] = useState(() => new AIServiceEdgeClient({ endpoint: endpoints.ai }));
 
-  const [functionExecutor] = useState(
+  // Queue.
+  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
+  const queue = useQueue<Message>(DXN.tryParse(queueDxn));
+
+  // Function executor.
+  const functionExecutor = useMemo(
     () =>
       new FunctionExecutor(
         new ServiceContainer().setServices({
@@ -70,8 +75,13 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
               apiKey: EXA_API_KEY,
             },
           ]),
+          queues: {
+            queues: space.queues,
+            contextQueue: queue,
+          },
         }),
       ),
+    [aiClient, space, queue],
   );
 
   const tools = useMemo<Tool[]>(() => [toolFromLocalFunction(functionExecutor, 'research', researchFn)], []);
@@ -97,10 +107,6 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     );
   }, [aiClient, tools, space, dispatch]);
 
-  // Queue.
-  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
-  const queue = useQueue<Message>(DXN.tryParse(queueDxn));
-
   useEffect(() => {
     if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
       queue.append([
@@ -121,7 +127,10 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
   // State.
   const artifactItems: any[] = []; // TODO(burdon): Query from space.
-  const messages = [...(queue?.items ?? []), ...(processor?.messages.value ?? [])];
+  const messages = [
+    ...(queue?.items.filter((item) => isInstanceOf(Message, item)) ?? []),
+    ...(processor?.messages.value ?? []),
+  ];
 
   const handleSubmit = processor
     ? (message: string) => {

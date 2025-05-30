@@ -6,6 +6,7 @@ import type { SpaceId } from '@dxos/client/echo';
 export class FunctionExecutor {
   constructor(private readonly _services: ServiceContainer) {}
 
+  // TODO(dmaretskyi): Invocation context: queue, space, etc...
   async invoke<T, O>(fnDef: FunctionDefinition<T, O>, input: T): Promise<O> {
     // Assert input matches schema
     const assertInput = fnDef.inputSchema.pipe(Schema.asserts);

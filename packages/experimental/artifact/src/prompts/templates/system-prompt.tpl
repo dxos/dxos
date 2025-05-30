@@ -98,3 +98,8 @@ It is very important to respond in the correct format.
 - The <cot> tag should be the first thing in your response.
 - Suggested actions must be enclosed in a <suggest> tag and on a separate line.
 - Content proposals must be enclosed in a <proposal> tag and on a separate line.
+
+References:
+
+- Both user and you can reference external data in the markdown format: [label][URI].
+- If you get references back from a tool call, you can render them as is by preserving the ID literally.

@@ -5,6 +5,7 @@ type CredentialQuery = {
 };
 
 // TODO(dmaretskyi): Unify with other apis.
+// packages/sdk/schema/src/common/access-token.ts
 type ServiceCredential = {
   service: string;
 
