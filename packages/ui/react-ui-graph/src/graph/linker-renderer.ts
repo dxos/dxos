@@ -22,10 +22,10 @@ export type LinkOptions = {
  */
 export const linkerRenderer: D3Callable = (root, { source, target, point }: LinkOptions = {}) => {
   root
-    .selectAll('g.linker')
+    .selectAll('g.dx-linker')
     .data([{ id: 'linker' }])
     .join('g')
-    .attr('class', 'linker')
+    .attr('class', 'dx-linker')
     .selectAll<SVGPathElement, any>('path')
     .data(source ? [{ id: 'edge' }] : [])
     .join('path')

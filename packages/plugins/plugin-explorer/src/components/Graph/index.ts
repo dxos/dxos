@@ -4,4 +4,4 @@
 
 export * from './model';
 
-export * from './Graph';
+export * from './ForceGraph';

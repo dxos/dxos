@@ -216,10 +216,10 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
     //
 
     root
-      .selectAll('g.guides')
+      .selectAll('g.dx-guides')
       .data([{ id: 'guides' }])
       .join('g')
-      .classed('guides', true)
+      .classed('dx-guides', true)
       .selectAll<SVGCircleElement, { cx: number; cy: number; r: number }>('circle')
       .data(layout.guides ?? [], (d: GraphGuide) => d.id)
       .join(
@@ -237,33 +237,33 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
     //
 
     root
-      .selectAll('g.edges')
+      .selectAll('g.dx-edges')
       .data([{ id: 'edges' }])
       .join('g')
-      .classed('edges', true)
-      .selectAll<SVGPathElement, GraphLayoutEdge<N>>('g.edge')
+      .classed('dx-edges', true)
+      .selectAll<SVGPathElement, GraphLayoutEdge<N>>('g.dx-edge')
       .data(layout.graph?.edges ?? [], (d) => d.id)
       .join((enter) =>
         //
-        enter.append('g').classed('edge', true).call(createEdge, this.options, root.select('g.nodes')),
+        enter.append('g').classed('dx-edge', true).call(createEdge, this.options, root.select('g.dx-nodes')),
       )
       .call(updateEdge, this.options, layout.graph.nodes)
-      .classed('node', true);
+      .classed('dx-edge', true);
 
     //
     // Nodes
     //
 
     root
-      .selectAll('g.nodes')
+      .selectAll('g.dx-nodes')
       .data([{ id: 'nodes' }])
       .join('g')
-      .classed('nodes', true)
-      .selectAll<SVGCircleElement, GraphLayoutNode<N>>('g.node')
+      .classed('dx-nodes', true)
+      .selectAll<SVGCircleElement, GraphLayoutNode<N>>('g.dx-node')
       .data(layout.graph?.nodes ?? [], (d) => d.id)
       .join((enter) =>
         //
-        enter.append('g').classed('node group', true).call(createNode, this.options),
+        enter.append('g').classed('group dx-node', true).call(createNode, this.options),
       )
       .call(updateNode, this.options);
   }
@@ -273,6 +273,6 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
    * @param node
    */
   fireBullet(node: GraphLayoutNode<N>) {
-    select(this.root).selectAll('g.edges').selectAll('path').call(createBullets(this.root, node.id));
+    select(this.root).selectAll('g.dx-edges').selectAll('path').call(createBullets(this.root, node.id));
   }
 }

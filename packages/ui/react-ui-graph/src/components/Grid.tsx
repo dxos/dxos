@@ -4,6 +4,9 @@
 
 import React from 'react';
 
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
+
 import { useGrid } from '../hooks';
 
 export type GridSlots = {
@@ -12,18 +15,17 @@ export type GridSlots = {
   };
 };
 
-export type GridProps = {
+export type GridProps = ThemedClassName<{
   axis?: boolean;
-  className?: string;
   slots?: GridSlots;
-};
+}>;
 
 /**
  * SVG grid wrapper.
  * @constructor
  */
-export const Grid = ({ axis, className }: GridProps) => {
+export const Grid = ({ classNames, axis }: GridProps) => {
   const { ref } = useGrid({ axis });
 
-  return <g ref={ref} className={className} />;
+  return <g ref={ref} className={mx('dx-grid', classNames)} />;
 };

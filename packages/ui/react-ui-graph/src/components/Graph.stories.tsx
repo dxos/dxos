@@ -8,7 +8,6 @@ import { type StoryObj } from '@storybook/react';
 import React, { useMemo } from 'react';
 
 import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
-import { useThemeContext } from '@dxos/react-ui';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
@@ -21,8 +20,9 @@ import { SVGRoot } from './SVGRoot';
 import { Zoom } from './Zoom';
 import { GraphForceProjector, type GraphForceProjectorOptions, type GraphLayoutNode } from '../graph';
 import { createSvgContext } from '../hooks';
-import { defaultGridStyles } from '../styles';
 import { convertTreeToGraph, createGraph, createTree, seed, TestGraphModel, type TestNode } from '../testing';
+
+import '../../styles/graph.css';
 
 seed(1);
 
@@ -34,7 +34,6 @@ type DefaultStoryProps = GraphProps & {
 };
 
 const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: DefaultStoryProps) => {
-  const { themeMode } = useThemeContext();
   const model = useMemo(() => new TestGraphModel(graph), [graph]);
   const selected = useMemo(() => new SelectionModel(), []);
   const context = createSvgContext();
@@ -46,9 +45,9 @@ const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: Defaul
   return (
     <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
       <SVGRoot context={context}>
-        <SVG classNames='graph'>
+        <SVG>
           <Markers />
-          {grid && <Grid axis className={defaultGridStyles(themeMode)} />}
+          {grid && <Grid axis />}
           <Zoom extent={[1 / 2, 2]}>
             <GraphComponent
               model={model}
@@ -96,6 +95,7 @@ export const Default: Story = {
     graph: convertTreeToGraph(createTree({ depth: 4 })),
     drag: true,
     arrows: true,
+    grid: true,
   },
 };
 

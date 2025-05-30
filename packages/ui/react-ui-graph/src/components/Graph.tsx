@@ -7,6 +7,8 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
 import { type GraphModel } from '@dxos/graph';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import {
   createSimulationDrag,
@@ -18,10 +20,7 @@ import {
 } from '../graph';
 import { useSvgContext } from '../hooks';
 
-import '../styles/graph.css';
-
-export type GraphProps = {
-  className?: string;
+export type GraphProps = ThemedClassName<{
   model?: GraphModel;
   projector?: GraphForceProjector;
   delay?: number;
@@ -30,13 +29,13 @@ export type GraphProps = {
   labels?: LabelOptions<any>;
   attributes?: AttributesOptions<any>;
   onSelect?: (node: GraphLayoutNode<any>) => void;
-};
+}>;
 
 /**
  * SVG Graph controller.
  */
 export const Graph = ({
-  className = 'graph',
+  classNames,
   model,
   projector: _projector,
   delay,
@@ -92,5 +91,5 @@ export const Graph = ({
     };
   }, [projector]);
 
-  return <g ref={graphRef} className={className} />;
+  return <g ref={graphRef} className={mx('dx-graph', classNames)} />;
 };

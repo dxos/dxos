@@ -6,12 +6,12 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { useThemeContext } from '@dxos/react-ui';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SVGRoot } from './SVGRoot';
 import { useGrid, useZoom, createSvgContext, useSvgContext } from '../hooks';
-import { defaultGridStyles } from '../styles';
+
+import '../../styles/graph.css';
 
 type ComponentProps = {
   grid?: boolean;
@@ -29,14 +29,13 @@ const DefaultStory = (props: ComponentProps) => {
 };
 
 const Component = (options: ComponentProps) => {
-  const { themeMode } = useThemeContext();
   const context = useSvgContext();
   const grid = useGrid({ visible: options.grid, axis: true });
   const zoom = useZoom({ enabled: options.zoom });
 
   return (
     <svg ref={context.ref} xmlns='http://www.w3.org/2000/svg'>
-      <g ref={grid.ref} className={defaultGridStyles(themeMode)} />
+      <g ref={grid.ref} className='dx-grid' />
       <g ref={zoom.ref} className='[&>circle]:stroke-red-500'>
         <circle cx={0} cy={0} r={128} />
       </g>

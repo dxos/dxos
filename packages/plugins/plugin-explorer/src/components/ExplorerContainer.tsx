@@ -8,7 +8,7 @@ import { useGlobalSearch } from '@dxos/plugin-search';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Graph } from './Graph';
+import { ForceGraph } from './Graph';
 import { type ViewType } from '../types';
 
 const ExplorerContainer = ({ view, role }: { view: ViewType; role: string }) => {
@@ -21,7 +21,7 @@ const ExplorerContainer = ({ view, role }: { view: ViewType; role: string }) => 
 
   return (
     <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
-      <Graph space={space} match={match} />
+      <ForceGraph space={space} match={match} />
     </StackItem.Content>
   );
 };

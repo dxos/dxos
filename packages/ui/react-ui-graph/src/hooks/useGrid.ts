@@ -52,7 +52,7 @@ const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
 
     paths.push({
       id: 'axis',
-      class: 'axis',
+      class: 'dx-axis',
       path: axis.map((line) => createLine(line as any)).join(),
     });
   }
@@ -81,7 +81,7 @@ const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
 
   paths.push({
     id: 'major',
-    class: 'major',
+    class: 'dx-major',
     path: major.map((line) => createLine(line as any)).join(),
   });
 
@@ -109,7 +109,7 @@ const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
 
     paths.push({
       id: 'minor',
-      class: 'minor',
+      class: 'dx-minor',
       path: minor.map((line) => createLine(line as any)).join(),
     });
   }

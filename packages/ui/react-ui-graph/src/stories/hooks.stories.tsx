@@ -9,7 +9,6 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
 import { log } from '@dxos/log';
-import { useThemeContext } from '@dxos/react-ui';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SVGRoot } from '../components';
@@ -23,15 +22,15 @@ import {
   linkerRenderer,
 } from '../graph';
 import { useSvgContext, useZoom, useGrid } from '../hooks';
-import { defaultGridStyles } from '../styles';
 import { convertTreeToGraph, createTree, TestGraphModel, type TestNode } from '../testing';
+
+import '../../styles/graph.css';
 
 type ComponentProps = {
   model: TestGraphModel;
 };
 
-const PrimaryComponent = ({ model }: ComponentProps) => {
-  const { themeMode } = useThemeContext();
+const DefaultStory = ({ model }: ComponentProps) => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>();
   const grid = useGrid();
@@ -77,21 +76,21 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
   }, []);
 
   return (
-    <svg ref={context.ref} className={'graph'}>
-      <g ref={grid.ref} className={defaultGridStyles(themeMode)} />
+    <svg ref={context.ref}>
+      <g ref={grid.ref} className='dx-grid' />
       <g ref={zoom.ref}>
-        <g ref={graphRef} />
+        <g ref={graphRef} className='dx-graph' />
       </g>
     </svg>
   );
 };
 
+// TODO(burdon): Merge with DefaultStory.
 const SecondaryComponent = ({ model }: ComponentProps) => {
-  const { themeMode } = useThemeContext();
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>();
   const grid = useGrid();
-  const zoom = useZoom({ extent: [1, 2] });
+  const zoom = useZoom({ extent: [1 / 2, 2] });
   const markersRef = useRef<SVGGElement>();
 
   const { projector, renderer } = useMemo(() => {
@@ -99,7 +98,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
       guides: true,
       forces: {
         link: {
-          distance: 40,
+          distance: 20,
         },
         manyBody: {
           strength: -80,
@@ -125,7 +124,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
       },
     });
 
-    const renderer = new GraphRenderer<TestNode>(context, zoom.ref, {
+    const renderer = new GraphRenderer<TestNode>(context, graphRef, {
       drag,
       labels: {
         text: (node: GraphLayoutNode<TestNode>) => node.id.substring(0, 4),
@@ -163,11 +162,11 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   }, [markersRef]);
 
   return (
-    <svg ref={context.ref} className={'graph'}>
+    <svg ref={context.ref}>
       <defs ref={markersRef} />
-      <g ref={grid.ref} className={defaultGridStyles(themeMode)} />
+      <g ref={grid.ref} className='dx-grid' />
       <g ref={zoom.ref}>
-        <g ref={graphRef} />
+        <g ref={graphRef} className='dx-graph' />
       </g>
     </svg>
   );
@@ -191,7 +190,7 @@ export const Default = () => {
 
   return (
     <SVGRoot>
-      <PrimaryComponent model={model} />
+      <DefaultStory model={model} />
     </SVGRoot>
   );
 };
