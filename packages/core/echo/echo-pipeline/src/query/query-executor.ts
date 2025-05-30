@@ -579,7 +579,7 @@ export class QueryExecutor extends Resource {
     }
 
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), link as AutomergeUrl);
-    const doc = handle.docSync();
+    const doc = handle.doc();
     if (!doc) {
       return null;
     }
