@@ -18,7 +18,7 @@ export const Basic = (props: DxAutocompleteComboboxProps) => {
     <dx-autocomplete-combobox
       label="Country"
       options='["Germany", "Japan", "Canada"]'
-      autocomplete="list"
+      autocomplete="both"
     ></dx-autocomplete-combobox>
   </div>`;
 };

@@ -12,8 +12,8 @@
     border-radius: .125rem;
     background-color: var(--dx-baseSurface);
     box-sizing: border-box;
-    height: 1.875rem;
     cursor: pointer;
+    padding-block: .25rem;
   }
 
   input {
@@ -27,6 +27,7 @@
     inset-block: 0;
     inset-inline-end: 0;
     border-inline-start-width: 0;
+    padding-inline: .5rem;
     &[aria-expanded="true"] dx-icon {
       transform: rotate(180deg) translate(0, -3px);
     }
@@ -38,7 +39,7 @@ ul[role="listbox"] {
   padding: 0;
   position: absolute;
   inset-inline: 0;
-  inset-block-start: 1.875rem;
+  inset-block-start: 100%;
   list-style: none;
   background-color: var(--dx-modalSurface);
   display: none;
