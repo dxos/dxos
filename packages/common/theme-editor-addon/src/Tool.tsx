@@ -12,7 +12,10 @@ import { ADDON_ID, THEME_EDITOR_EVENT_NAME, TOOL_ID } from './constants';
 export const Tool = memo(() => {
   const api = useStorybookApi();
 
-  const toggleThemeEditor = useCallback(() => api.getChannel()?.emit(THEME_EDITOR_EVENT_NAME), [api]);
+  const toggleThemeEditor = useCallback(() => {
+    console.log('[toggleThemeEditor]', api.getChannel());
+    api.getChannel()?.emit(THEME_EDITOR_EVENT_NAME, true);
+  }, [api]);
 
   useEffect(() => {
     void api?.setAddonShortcut(ADDON_ID, {
