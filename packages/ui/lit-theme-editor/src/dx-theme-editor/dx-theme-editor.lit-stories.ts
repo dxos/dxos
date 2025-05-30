@@ -10,11 +10,9 @@ import './dx-theme-editor.pcss';
 import { html } from 'lit';
 
 import { type DxThemeEditorProps } from './dx-theme-editor';
+import { type DxThemeEditorAliasColorsProps } from './dx-theme-editor-alias-colors';
 import { type DxThemeEditorPhysicalColorsProps } from './dx-theme-editor-physical-colors';
-import {
-  type DxThemeEditorSemanticColorsProps,
-  type DxThemeEditorAliasColorsProps,
-} from './dx-theme-editor-semantic-colors';
+import { type DxThemeEditorSemanticColorsProps } from './dx-theme-editor-semantic-colors';
 
 export default {
   title: 'dx-theme-editor',

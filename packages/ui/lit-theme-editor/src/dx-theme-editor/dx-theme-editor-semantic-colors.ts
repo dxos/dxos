@@ -537,5 +537,3 @@ export class DxThemeEditorSemanticColors extends LitElement {
     return this;
   }
 }
-
-export class DxThemeEditorAliasColorsProps {}
