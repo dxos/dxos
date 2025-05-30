@@ -243,7 +243,7 @@ type Story = StoryObj<typeof DefaultStory>;
 export const Default: Story = {
   args: {
     debug: true,
-    prompts: ['What tools do you have access to?', 'Show me a chess puzzle'],
+    prompts: ['Research companies in the area of personal knowledge management and AI'],
   },
 };
 
