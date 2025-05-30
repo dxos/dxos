@@ -4,8 +4,9 @@
 
 import '@dxos-theme';
 
+import { type StoryObj } from '@storybook/react';
 import { select } from 'd3';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -17,6 +18,7 @@ import {
   type GraphLayoutNode,
   type GraphLayoutEdge,
   GraphRenderer,
+  type GraphForceProjectorOptions,
   createMarkers,
   createSimulationDrag,
   linkerRenderer,
@@ -26,140 +28,118 @@ import { convertTreeToGraph, createTree, TestGraphModel, type TestNode } from '.
 
 import '../../styles/graph.css';
 
-type ComponentProps = {
+type DefaultStoryProps = PropsWithChildren<{
   model: TestGraphModel;
+  projectorOptions?: GraphForceProjectorOptions;
+  count?: number;
+  interval?: number;
+  link?: boolean;
+  grid?: boolean;
+}>;
+
+const DefaultStory = ({ children, ...props }: DefaultStoryProps) => {
+  return (
+    <SVGRoot>
+      <StoryComponent {...props} />
+      {children}
+    </SVGRoot>
+  );
 };
 
-const DefaultStory = ({ model }: ComponentProps) => {
+const StoryComponent = ({
+  model,
+  projectorOptions,
+  count = 0,
+  interval = 200,
+  link = false,
+  grid: showGrid = false,
+}: DefaultStoryProps) => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>();
-  const grid = useGrid();
+  const markersRef = useRef<SVGGElement>();
+  const grid = useGrid({ visible: showGrid });
   const zoom = useZoom();
 
-  const { projector, renderer } = useMemo(
-    () => ({
-      projector: new GraphForceProjector(context, {
-        forces: {
-          link: {
-            distance: 20,
-            iterations: 3,
-          },
-          manyBody: {
-            strength: -10,
-          },
-        },
-      }),
-      renderer: new GraphRenderer(context, graphRef),
-    }),
-    [],
-  );
-
-  useEffect(() => {
-    void projector.start();
-    return combine(
-      model.subscribe((graph) => projector.update(graph)),
-      projector.updated.on(({ layout }) => renderer.update(layout)),
-      () => projector.stop(),
-    );
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (model.graph.nodes.length > 200) {
-        clearInterval(interval);
-      }
-
-      model.createNodes(model.getRandomNode());
-    }, 10);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <svg ref={context.ref}>
-      <g ref={grid.ref} className='dx-grid' />
-      <g ref={zoom.ref}>
-        <g ref={graphRef} className='dx-graph' />
-      </g>
-    </svg>
-  );
-};
-
-// TODO(burdon): Merge with DefaultStory.
-const SecondaryComponent = ({ model }: ComponentProps) => {
-  const context = useSvgContext();
-  const graphRef = useRef<SVGGElement>();
-  const grid = useGrid();
-  const zoom = useZoom({ extent: [1 / 2, 2] });
-  const markersRef = useRef<SVGGElement>();
-
   const { projector, renderer } = useMemo(() => {
-    const projector = new GraphForceProjector(context, {
-      guides: true,
-      forces: {
-        link: {
-          distance: 20,
+    const projector = new GraphForceProjector(context, projectorOptions);
+
+    if (link) {
+      const drag = createSimulationDrag(context, projector.simulation, {
+        onDrag: (source, target, point) => {
+          select(graphRef.current).call(linkerRenderer, { source, target, point });
         },
-        manyBody: {
-          strength: -80,
+        onDrop: (source, target) => {
+          log('onDrop', { source: source.id, target: target?.id });
+          select(graphRef.current).call(linkerRenderer);
+          const parent = model.getNode(source.id);
+          if (target) {
+            const child = model.getNode(target.id);
+            model.addEdge({ source: parent.id, target: child.id });
+          } else {
+            // TODO(burdon): Set start position.
+            model.createNodes(parent);
+          }
         },
-      },
-    });
+      });
 
-    const drag = createSimulationDrag(context, projector.simulation, {
-      onDrag: (source, target, point) => {
-        select(graphRef.current).call(linkerRenderer, { source, target, point });
-      },
-      onDrop: (source, target) => {
-        log('onDrop', { source: source.id, target: target?.id });
-        select(graphRef.current).call(linkerRenderer);
-        const parent = model.getNode(source.id);
-        if (target) {
-          const child = model.getNode(target.id);
-          model.addEdge({ source: parent.id, target: child.id });
-        } else {
-          // TODO(burdon): Set start position.
-          model.createNodes(parent);
-        }
-      },
-    });
-
-    const renderer = new GraphRenderer<TestNode>(context, graphRef, {
-      drag,
-      labels: {
-        text: (node: GraphLayoutNode<TestNode>) => node.id.substring(0, 4),
-      },
-      onNodeClick: (node: GraphLayoutNode<TestNode>, event: MouseEvent) => {
-        renderer.fireBullet(node);
-      },
-      onEdgeClick: (edge: GraphLayoutEdge<TestNode>, event: MouseEvent) => {
-        if (event.metaKey) {
-          model.removeEdge(edge.id);
-        }
-      },
-      arrows: {
-        end: true,
-      },
-    });
-
-    return {
-      projector,
-      renderer,
-    };
-  }, []);
-
-  useEffect(() => {
-    void projector.start();
-    return combine(
-      model.subscribe((graph) => projector.update(graph)),
-      projector.updated.on(({ layout }) => renderer.update(layout)),
-      () => projector.stop(),
-    );
-  }, []);
+      const renderer = new GraphRenderer<TestNode>(context, graphRef, {
+        drag,
+        labels: {
+          text: (node: GraphLayoutNode<TestNode>) => node.id.substring(0, 4),
+        },
+        onNodeClick: (node: GraphLayoutNode<TestNode>, event: MouseEvent) => {
+          renderer.fireBullet(node);
+        },
+        onEdgeClick: (edge: GraphLayoutEdge<TestNode>, event: MouseEvent) => {
+          if (event.metaKey) {
+            model.removeEdge(edge.id);
+          }
+        },
+        arrows: {
+          end: true,
+        },
+      });
+      return {
+        projector,
+        renderer,
+      };
+    } else {
+      const renderer = new GraphRenderer(context, graphRef);
+      return {
+        projector,
+        renderer,
+      };
+    }
+  }, [link]);
 
   useEffect(() => {
     select(markersRef.current).call(createMarkers());
   }, [markersRef]);
+
+  useEffect(() => {
+    void projector.start();
+    return combine(
+      model.subscribe((graph) => projector.update(graph)),
+      projector.updated.on(({ layout }) => renderer.update(layout)),
+      () => projector.stop(),
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!count) {
+      return;
+    }
+
+    const i = setInterval(() => {
+      if (model.graph.nodes.length > count) {
+        clearInterval(i);
+      }
+
+      model.createNodes(model.getRandomNode());
+    }, interval);
+
+    return () => clearInterval(i);
+  }, [count, interval]);
 
   return (
     <svg ref={context.ref}>
@@ -180,30 +160,60 @@ const Info = () => (
 
 const meta: Meta = {
   title: 'ui/react-ui-graph/hooks',
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export default meta;
 
-export const Default = () => {
-  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);
+type Story = StoryObj<typeof DefaultStory>;
 
-  return (
-    <SVGRoot>
-      <DefaultStory model={model} />
-    </SVGRoot>
-  );
+export const Default: Story = {
+  args: {
+    model: new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))),
+    grid: true,
+    count: 300,
+    interval: 20,
+    projectorOptions: {
+      guides: true,
+      forces: {
+        link: {
+          distance: 30,
+          iterations: 5,
+        },
+        manyBody: {
+          strength: -50,
+        },
+        radial: {
+          strength: 0.2,
+          radius: 150,
+        },
+      },
+    },
+  },
 };
 
-export const Bullets = () => {
-  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
-
-  return (
-    <>
-      <SVGRoot>
-        <SecondaryComponent model={model} />
-      </SVGRoot>
-      <Info />
-    </>
-  );
+export const Bullets: Story = {
+  args: {
+    model: new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))),
+    children: <Info />,
+    link: true,
+    grid: true,
+    projectorOptions: {
+      guides: true,
+      forces: {
+        link: {
+          distance: 50,
+          iterations: 5,
+        },
+        manyBody: {
+          strength: -50,
+        },
+        radial: {
+          strength: 0.1,
+          radius: 150,
+        },
+      },
+    },
+  },
 };
