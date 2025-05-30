@@ -8,14 +8,17 @@ import { structuredOutputParser } from '@dxos/artifact';
 import { AIServiceEdgeClient, OllamaClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { getSchemaDXN } from '@dxos/echo-schema';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { inspect } from 'node:util';
 import { createExtractionSchema, getSanitizedSchemaName, researchFn, sanitizeObjects, TYPES } from './research';
 
 const REMOTE_AI = true;
+const MOCK_SEARCH = true;
+const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 
 describe('Research', () => {
+  // TODO(dmaretskyi): Helper to scaffold this from a config.
   const executor = new FunctionExecutor(
     new ServiceContainer().setServices({
       ai: {
@@ -29,6 +32,7 @@ describe('Research', () => {
               },
             }),
       },
+      credentials: new ConfiguredCredentialsService([{ service: 'https://exa.ai/', apiKey: EXA_API_KEY }]),
     }),
   );
 
@@ -36,6 +40,7 @@ describe('Research', () => {
     const result = await executor.invoke(researchFn, {
       query:
         'Find projects that are in the space of AI and personal knowledge management. Project, org, relations between them.',
+      mockSearch: MOCK_SEARCH,
     });
 
     console.log(inspect(result, { depth: null, colors: true }));

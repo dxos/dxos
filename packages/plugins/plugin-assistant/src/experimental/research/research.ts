@@ -20,13 +20,12 @@ import { deepMapValues } from '@dxos/util';
 
 import { AISession } from '@dxos/assistant';
 import { ConsolePrinter } from '@dxos/assistant/testing';
-import { AiService, defineFunction } from '@dxos/functions';
+import { AiService, CredentialsService, defineFunction } from '@dxos/functions';
 import { createExaTool, createMockExaTool } from './exa';
 import INSTRUCTIONS from './instructions.tpl?raw';
 import { DataType } from '@dxos/schema';
 import { Relation } from '@dxos/echo';
 
-const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 
 const Develops = Schema.Struct({
   since: Schema.optional(Schema.String),
@@ -53,22 +52,36 @@ export const TYPES = [
   Develops,
 ];
 
+export const Subgraph = Schema.Struct({
+  /**
+   * Objects and relations.
+   */
+  objects: Schema.Array(Schema.Any),
+});
+
 export const researchFn = defineFunction({
   description: 'Research the web for information',
   inputSchema: Schema.Struct({
     query: Schema.String.annotations({
       description: 'The query to search for',
     }),
+
+    mockSearch: Schema.optional(Schema.Boolean).annotations({
+      description: 'Whether to use the mock search tool.',
+      default: false,
+    }),
   }),
   outputSchema: Schema.Struct({
-    result: Schema.Any,
+    graph: Subgraph,
   }),
-  handler: async ({ data: { query }, context }) => {
-    const searchTool = MOCK_SEARCH ? createMockExaTool() : createExaTool({ apiKey: EXA_API_KEY });
+  handler: async ({ data: { query, mockSearch }, context }) => {
+    const ai = context.getService(AiService);
+    const credentials = context.getService(CredentialsService);
+    const [exaCredential] = await credentials.queryCredentials({ service: 'https://exa.ai/' });
+
+    const searchTool = mockSearch ? createMockExaTool() : createExaTool({ apiKey: exaCredential.apiKey! });
 
     const session = new AISession({ operationModel: 'configured' });
-
-    const ai = context.getService(AiService);
 
     const printer = new ConsolePrinter();
     session.message.on((message) => printer.printMessage(message));
@@ -89,11 +102,9 @@ export const researchFn = defineFunction({
       prompt: query,
     });
     const data = sanitizeObjects(TYPES, result as any);
-    return { result: data };
+    return { graph: { objects: data } };
   },
 });
-
-const MOCK_SEARCH = true;
 
 export const createExtractionSchema = (types: Schema.Schema.AnyNoContext[]) => {
   return Schema.Struct({

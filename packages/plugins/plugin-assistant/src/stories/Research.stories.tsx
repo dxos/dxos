@@ -13,7 +13,7 @@ import { Message, type Tool } from '@dxos/artifact';
 import { remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { DXN, Type } from '@dxos/echo';
-import { create, createQueueDxn } from '@dxos/echo-schema';
+import { create, createQueueDxn, ObjectId, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
@@ -33,6 +33,8 @@ import { createExaTool } from '../experimental/research';
 import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import translations from '../translations';
+import { FunctionExecutor, ServiceContainer, type FunctionDefinition } from '@dxos/functions';
+import { researchFn } from '../experimental/research/research';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 
@@ -48,17 +50,21 @@ type RenderProps = {
 const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   const client = useClient();
   const space = client.spaces.default;
+  const [aiClient] = useState(() => new AIServiceEdgeClient({ endpoint: endpoints.ai }));
 
-  const tools = useMemo<Tool[]>(
-    () => [
-      createExaTool({
-        apiKey: EXA_API_KEY,
-      }),
-    ],
-    [],
+  const [functionExecutor] = useState(
+    () =>
+      new FunctionExecutor(
+        new ServiceContainer().setServices({
+          ai: {
+            client: aiClient,
+          },
+        }),
+      ),
   );
 
-  const [aiClient] = useState(() => new AIServiceEdgeClient({ endpoint: endpoints.ai }));
+  const tools = useMemo<Tool[]>(() => [toolFromLocalFunction(functionExecutor, 'research', researchFn)], []);
+
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // TODO(burdon): Replace with useChatProcessor.
@@ -256,4 +262,15 @@ export const WithInitialItems: Story = {
       }),
     ],
   },
+};
+
+const toolFromLocalFunction = (executor: FunctionExecutor, name: string, fn: FunctionDefinition<any, any>) => {
+  return {
+    // TODO(dmaretskyi): Include name in definition
+    name,
+    description: fn.description,
+    execute: async (input: any) => {
+      return executor.invoke(fn, input);
+    },
+  };
 };

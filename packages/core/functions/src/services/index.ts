@@ -2,3 +2,4 @@ export * from './ai';
 export * from './database';
 export * from './queues';
 export * from './service-container';
+export * from './credentials';
