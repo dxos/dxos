@@ -1,0 +1,79 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import '@dxos-theme';
+
+import { type Meta } from '@storybook/react';
+import React, { useEffect, useState } from 'react';
+
+import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
+import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
+import { faker } from '@dxos/random';
+import { useClient } from '@dxos/react-client';
+import { live } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { DataType } from '@dxos/schema';
+import { withLayout, withTheme, render } from '@dxos/storybook-utils';
+import { range } from '@dxos/util';
+
+import { D3ForceGraph } from './D3ForceGraph';
+import { ViewType } from '../../types';
+
+faker.seed(1);
+
+const DefaultStory = () => {
+  const client = useClient();
+  const [space, setSpace] = useState<Space>();
+  const [view, setView] = useState<ViewType>();
+  useEffect(() => {
+    const space = client.spaces.default;
+    const generator = createSpaceObjectGenerator(space);
+    queueMicrotask(async () => {
+      await generator.addSchemas();
+      const objs = await generator.createObjects({
+        [TestSchemaType.organization]: 10,
+        [TestSchemaType.contact]: 30,
+      });
+      const orgs = objs.slice(0, 10);
+      const contacts = objs.slice(10);
+
+      // Add relations between objects.
+      for (const _ of range(10)) {
+        space.db.add(
+          live(DataType.HasRelationship, {
+            kind: 'friend',
+            [RelationSourceId]: contacts[Math.floor(Math.random() * contacts.length)],
+            [RelationTargetId]: contacts[Math.floor(Math.random() * contacts.length)],
+          }),
+        );
+      }
+    });
+
+    const view = space.db.add(live(ViewType, { name: '', type: '' }));
+    setSpace(space);
+    setView(view);
+  }, []);
+
+  if (!space || !view) {
+    return null;
+  }
+
+  return <D3ForceGraph space={space} />;
+};
+
+const meta: Meta = {
+  title: 'plugins/plugin-explorer/D3ForceGraph',
+  component: D3ForceGraph,
+  render: render(DefaultStory),
+  decorators: [
+    withClientProvider({ createSpace: true, types: [ViewType, DataType.HasRelationship] }),
+    withTheme,
+    withLayout({ fullscreen: true }),
+  ],
+};
+
+export default meta;
+
+export const Default = {};
