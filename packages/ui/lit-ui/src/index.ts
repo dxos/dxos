@@ -6,6 +6,5 @@ export * from './dx-avatar';
 export * from './dx-tag-picker';
 export * from './dx-ref-tag';
 export * from './dx-icon';
-export * from './dx-autocomplete-combobox';
 
 export { createComponent, type EventName } from '@lit/react';

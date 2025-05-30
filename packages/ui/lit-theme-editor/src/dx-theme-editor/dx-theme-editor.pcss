@@ -1,6 +1,7 @@
 dx-theme-editor,
 dx-theme-editor-physical-colors,
-dx-theme-editor-semantic-colors {
+dx-theme-editor-semantic-colors,
+dx-theme-editor-alias-colors {
   display: contents;
 
   input {
@@ -259,5 +260,38 @@ dx-theme-editor-semantic-colors {
     color: var(--dx-errorText);
     display: flex;
     gap: .25rem;
+  }
+
+  /* Alias Colors Component Styles */
+  .alias-tokens-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .alias-token-item {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .condition-selectors {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .condition-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .condition-selector label {
+    font-weight: bold;
+  }
+
+  dx-autocomplete-combobox {
+    width: 100%;
   }
 }

@@ -8,6 +8,7 @@ import { classMap } from 'lit/directives/class-map.js';
 
 import './dx-theme-editor-physical-colors';
 import './dx-theme-editor-semantic-colors';
+import './dx-theme-editor-alias-colors';
 import './dx-theme-editor.pcss';
 
 export type DxThemeEditorProps = {};
@@ -15,9 +16,9 @@ export type DxThemeEditorProps = {};
 @customElement('dx-theme-editor')
 export class DxThemeEditor extends LitElement {
   @state()
-  private activeTab: 'physical' | 'semantic' = 'physical';
+  private activeTab: 'physical' | 'semantic' | 'alias' = 'physical';
 
-  private handleTabClick(tab: 'physical' | 'semantic') {
+  private handleTabClick(tab: 'physical' | 'semantic' | 'alias') {
     this.activeTab = tab;
   }
 
@@ -45,6 +46,16 @@ export class DxThemeEditor extends LitElement {
           >
             Semantic
           </button>
+          <button
+            id="tab-alias"
+            class=${classMap({ 'dx-focus-ring': true, tab: true, active: this.activeTab === 'alias' })}
+            role="tab"
+            aria-selected=${this.activeTab === 'alias'}
+            aria-controls="panel-alias"
+            @click=${() => this.handleTabClick('alias')}
+          >
+            Alias
+          </button>
         </div>
 
         <div
@@ -65,6 +76,16 @@ export class DxThemeEditor extends LitElement {
           ?hidden=${this.activeTab !== 'semantic'}
         >
           <dx-theme-editor-semantic-colors></dx-theme-editor-semantic-colors>
+        </div>
+
+        <div
+          id="panel-alias"
+          class=${classMap({ 'tab-panel': true, active: this.activeTab === 'alias' })}
+          role="tabpanel"
+          aria-labelledby="tab-alias"
+          ?hidden=${this.activeTab !== 'alias'}
+        >
+          <dx-theme-editor-alias-colors></dx-theme-editor-alias-colors>
         </div>
       </div>
     `;

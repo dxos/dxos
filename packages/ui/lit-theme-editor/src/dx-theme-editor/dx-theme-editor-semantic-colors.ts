@@ -9,7 +9,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { debounce } from '@dxos/async';
-import '@dxos/lit-ui';
+import '@dxos/lit-ui/dx-icon.ts';
 import { makeId } from '@dxos/react-hooks';
 
 import { restore, saveAndRender } from './util';
@@ -537,3 +537,5 @@ export class DxThemeEditorSemanticColors extends LitElement {
     return this;
   }
 }
+
+export class DxThemeEditorAliasColorsProps {}
