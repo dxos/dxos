@@ -12,7 +12,12 @@ import { ForceGraph } from './Graph';
 import { useGraphModel } from '../hooks';
 import { type ViewType } from '../types';
 
-const ExplorerContainer = ({ view, role }: { view: ViewType; role: string }) => {
+type ExplorerContainerProps = {
+  role: string;
+  view: ViewType;
+};
+
+const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {
   const space = getSpace(view);
   const { match } = useGlobalSearch();
   const model = useGraphModel(space);
