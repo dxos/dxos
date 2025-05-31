@@ -185,7 +185,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     <div
       className={mx(
         'grid w-full h-full justify-center overflow-hidden divide-x divide-separator',
-        artifactItems.length && 'grid-cols-2',
+        objects.length && 'grid-cols-2',
       )}
     >
       {/* Thread */}
