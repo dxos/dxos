@@ -29,17 +29,25 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
  * Records audio while user is speaking and transcribes it after user is done speaking.
  */
 export default () => {
-  const getTranscriber: TranscriptionCapabilities.GetTranscriber = ({ audioStreamTrack, onSegments, config }) => {
+  const getTranscriber: TranscriptionCapabilities.GetTranscriber = ({
+    audioStreamTrack,
+    onSegments,
+    transcriberConfig,
+    recorderConfig,
+  }) => {
     // Initialize audio transcription.
     return new Transcriber({
       config: {
         transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
         prefixBufferChunksAmount: PREFIXED_CHUNKS_AMOUNT,
-        ...config,
+        ...transcriberConfig,
       },
       recorder: new MediaStreamRecorder({
         mediaStreamTrack: audioStreamTrack,
-        interval: RECORD_INTERVAL,
+        config: {
+          interval: RECORD_INTERVAL,
+          ...recorderConfig,
+        },
       }),
       onSegments,
     });
