@@ -3,7 +3,7 @@
 //
 
 import { type CleanupFn } from '@dxos/async';
-import { getSchema, getSchemaDXN, type EchoSchema, StoredSchema } from '@dxos/echo-schema';
+import { getSchema, getSchemaDXN, type EchoSchema, StoredSchema, getLabel } from '@dxos/echo-schema';
 import { Ref } from '@dxos/echo-schema';
 import { type GraphEdge, AbstractGraphBuilder, Graph, ReactiveGraphModel } from '@dxos/graph';
 import { log } from '@dxos/log';
@@ -147,7 +147,13 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
                 const typename = getSchemaDXN(schema)?.typename;
                 if (typename) {
                   const current = currentNodes.find((node) => node.id === object.id);
-                  this._graph.nodes.push({ ...current, id: object.id, type: 'object', data: { typename, object } });
+                  const label = getLabel(schema, object);
+                  this._graph.nodes.push({
+                    ...current,
+                    id: object.id,
+                    type: 'object',
+                    data: { typename, object, label },
+                  });
 
                   // Link to schema.
                   const schemaNode = this._graph.nodes.find(
