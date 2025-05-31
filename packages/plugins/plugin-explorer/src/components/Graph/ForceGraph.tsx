@@ -7,28 +7,21 @@ import NativeForceGraph from 'force-graph';
 import React, { type FC, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { filterObjectsSync, type SearchResult } from '@dxos/plugin-search';
-import { useAsyncState } from '@dxos/react-ui';
-import { SpaceGraphModel } from '@dxos/schema';
+import { type SpaceGraphModel } from '@dxos/schema';
 
 import { GraphAdapter } from './adapter';
 
 export type ForceGraphProps = {
-  space: Space;
+  model: SpaceGraphModel;
   match?: RegExp;
 };
 
-export const ForceGraph: FC<ForceGraphProps> = ({ space, match }) => {
+export const ForceGraph: FC<ForceGraphProps> = ({ model, match }) => {
   const { ref, width, height } = useResizeDetector({ refreshRate: 200 });
   const rootRef = useRef<HTMLDivElement>(null);
   const forceGraph = useRef<NativeForceGraph>();
-
-  const [model] = useAsyncState(
-    async () => (space ? new SpaceGraphModel({}, { schema: true }).open(space) : undefined),
-    [space],
-  );
 
   const filteredRef = useRef<SearchResult[]>();
   filteredRef.current = filterObjectsSync(model?.objects ?? [], match);

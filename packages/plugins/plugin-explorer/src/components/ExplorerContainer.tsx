@@ -9,19 +9,21 @@ import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { ForceGraph } from './Graph';
+import { useGraphModel } from '../hooks';
 import { type ViewType } from '../types';
 
 const ExplorerContainer = ({ view, role }: { view: ViewType; role: string }) => {
   const space = getSpace(view);
   const { match } = useGlobalSearch();
+  const model = useGraphModel(space);
 
-  if (!space) {
+  if (!model || !space) {
     return null;
   }
 
   return (
     <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
-      <ForceGraph space={space} match={match} />
+      <ForceGraph model={model} match={match} />
     </StackItem.Content>
   );
 };

@@ -19,6 +19,7 @@ import { withLayout, withTheme, render } from '@dxos/storybook-utils';
 import { range } from '@dxos/util';
 
 import { ForceGraph } from './ForceGraph';
+import { useGraphModel } from '../../hooks';
 import { ViewType } from '../../types';
 
 faker.seed(1);
@@ -56,11 +57,13 @@ const DefaultStory = () => {
     setView(view);
   }, []);
 
-  if (!space || !view) {
+  const model = useGraphModel(space);
+
+  if (!model || !space || !view) {
     return null;
   }
 
-  return <ForceGraph space={space} />;
+  return <ForceGraph model={model} />;
 };
 
 const meta: Meta = {
