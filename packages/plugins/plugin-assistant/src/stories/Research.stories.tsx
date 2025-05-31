@@ -13,7 +13,7 @@ import { defineTool, Message, ToolResult, type Tool } from '@dxos/artifact';
 import { remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { DXN, Type } from '@dxos/echo';
-import { create, createQueueDxn, getTypename, isInstanceOf, type BaseEchoObject } from '@dxos/echo-schema';
+import { create, createQueueDxn, Filter, getTypename, isInstanceOf, type BaseEchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
@@ -23,7 +23,7 @@ import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { Config, useClient } from '@dxos/react-client';
-import { useQueue, live } from '@dxos/react-client/echo';
+import { useQueue, live, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -38,7 +38,7 @@ import {
   ServiceContainer,
   type FunctionDefinition,
 } from '@dxos/functions';
-import { researchFn, type Subgraph } from '../experimental/research/research';
+import { researchFn, TYPES, type Subgraph } from '../experimental/research/research';
 import { raise } from '@dxos/debug';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
@@ -129,7 +129,8 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [queueDxn, prompts, queue?.items.length, queue?.isLoading]);
 
   // State.
-  const artifactItems: any[] = []; // TODO(burdon): Query from space.
+  const objects = useQuery(space, Filter.or(...TYPES.map((t) => Filter.type(t))));
+
   const messages = [
     ...(queue?.items.filter((item) => isInstanceOf(Message, item)) ?? []),
     ...(processor?.messages.value ?? []),
@@ -224,21 +225,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
       {/* Artifacts Deck */}
       <div className='overflow-hidden grid grid-rows-[2fr_1fr] divide-y divide-separator'>
-        {artifactItems.length > 0 && (
-          <div className={mx('flex grow overflow-hidden', artifactItems.length === 1 && 'row-span-2')}>
-            <Surface role='canvas-node' limit={1} data={artifactItems[0]} />
+        {objects.map((object) => (
+          <div key={object.id} className={mx('flex grow overflow-hidden', objects.length === 1 && 'row-span-2')}>
+            {/* <Surface role='canvas-node' limit={1} data={object} /> */}
+            {JSON.stringify(object)}
           </div>
-        )}
-
-        {artifactItems.length > 1 && (
-          <div className='flex shrink-0 overflow-hidden divide-x divide-separator'>
-            <div className='flex flex-1 h-full'>
-              {artifactItems.slice(1, 3).map((item, idx) => (
-                <Surface key={idx} role='canvas-node' limit={1} data={item} />
-              ))}
-            </div>
-          </div>
-        )}
+        ))}
       </div>
     </div>
   );
