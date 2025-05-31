@@ -19,6 +19,13 @@ const initializeExtendableMediaRecorder = async () => {
   await register(await connect());
 };
 
+export type MediaStreamRecorderParams = {
+  mediaStreamTrack: MediaStreamTrack;
+  config: {
+    interval: number;
+  };
+};
+
 /**
  * Recorder that uses the MediaContext API and AudioNode API to record audio.
  *
@@ -30,14 +37,14 @@ export class MediaStreamRecorder implements AudioRecorder {
   /**
    * Default MediaRecorder implementation do not support wav encoding.
    */
-  private readonly _interval: number;
+  private readonly _config: MediaStreamRecorderParams['config'];
   private _mediaRecorder?: IMediaRecorder = undefined;
   private _header?: Uint8Array = undefined;
   private _onChunk?: (chunk: AudioChunk) => void;
 
-  constructor({ mediaStreamTrack, interval }: { mediaStreamTrack: MediaStreamTrack; interval: number }) {
+  constructor({ mediaStreamTrack, config }: MediaStreamRecorderParams) {
     this._mediaStreamTrack = mediaStreamTrack;
-    this._interval = interval;
+    this._config = config;
   }
 
   get wavConfig(): WavConfig {
@@ -72,7 +79,7 @@ export class MediaStreamRecorder implements AudioRecorder {
     }
     invariant(this._onChunk, 'MediaStreamRecorder: onChunk is not set');
     this._mediaRecorder.ondataavailable = (event) => this._ondataavailable(event);
-    this._mediaRecorder.start(this._interval);
+    this._mediaRecorder.start(this._config.interval);
   }
 
   async stop() {
