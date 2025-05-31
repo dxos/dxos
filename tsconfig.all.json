@@ -238,12 +238,6 @@
       "path": "packages/experimental/env-tests/tsconfig.json"
     },
     {
-      "path": "packages/experimental/gem-core/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/gem-spore/tsconfig.json"
-    },
-    {
       "path": "packages/experimental/metagraph/tsconfig.json"
     },
     {
@@ -439,6 +433,9 @@
       "path": "packages/ui/lit-grid/tsconfig.json"
     },
     {
+      "path": "packages/ui/lit-theme-editor/tsconfig.json"
+    },
+    {
       "path": "packages/ui/lit-ui/tsconfig.json"
     },
     {
@@ -485,6 +482,9 @@
     },
     {
       "path": "packages/ui/react-ui-geo/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-graph/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-grid/tsconfig.json"

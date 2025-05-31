@@ -26,6 +26,7 @@ export type ToolbarProps = ThemedClassName<{
   channel?: ChannelType;
   participants?: number;
   autoHideControls?: boolean;
+  isInRoom?: boolean;
   onJoin?: () => void;
   onLeave?: () => void;
 }>;
@@ -54,7 +55,7 @@ export const Toolbar = ({
 
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
-    <div className={mx('z-20 flex justify-center m-8', call.joined && autoHideControls && hoverableHidden)}>
+    <div className={mx('z-20 flex justify-center m-8', autoHideControls && hoverableHidden)}>
       <NativeToolbar.Root classNames={['p-2 bg-modalSurface rounded-lg shadow-lg', classNames]}>
         <ToggleButton
           active={call.media.audioEnabled}
@@ -145,9 +146,9 @@ export const Toolbar = ({
             />
           </>
         )}
-        {(call.joined && (
+        {call.joined ? (
           <IconButton variant='destructive' icon='ph--phone-x--regular' label={t('leave call')} onClick={onLeave} />
-        )) || (
+        ) : (
           <IconButton variant='primary' icon='ph--phone-incoming--regular' label={t('join call')} onClick={onJoin} />
         )}
       </NativeToolbar.Root>

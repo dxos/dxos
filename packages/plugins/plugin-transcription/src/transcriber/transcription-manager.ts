@@ -163,7 +163,7 @@ export class TranscriptionManager extends Resource {
     if (this._audioStreamTrack !== this._mediaRecorder?.mediaStreamTrack) {
       this._mediaRecorder = new MediaStreamRecorder({
         mediaStreamTrack: this._audioStreamTrack,
-        interval: RECORD_INTERVAL,
+        config: { interval: RECORD_INTERVAL },
       });
       needReinit = true;
     }

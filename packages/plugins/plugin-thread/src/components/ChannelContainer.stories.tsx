@@ -15,8 +15,7 @@ import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 import { withLayout, ColumnContainer } from '@dxos/storybook-utils';
 
-import { type CallContainerProps } from './CallContainer';
-import { ChannelContainer } from './ChannelContainer';
+import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 import { createThreadPlugins } from '../testing';
 import translations from '../translations';
 import { ChannelType } from '../types';
@@ -32,7 +31,7 @@ const Story = () => {
   return <ChannelContainer channel={channel} />;
 };
 
-const meta: Meta<CallContainerProps> = {
+const meta: Meta<ChannelContainerProps> = {
   title: 'plugins/plugin-thread/ChannelContainer',
   component: ChannelContainer,
   render: () => <Story />,
@@ -50,7 +49,7 @@ const meta: Meta<CallContainerProps> = {
 
 export default meta;
 
-type Story = StoryObj<CallContainerProps>;
+type Story = StoryObj<ChannelContainerProps>;
 
 export const Default: Story = {
   args: {

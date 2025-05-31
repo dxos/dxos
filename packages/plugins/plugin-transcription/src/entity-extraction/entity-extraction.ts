@@ -15,28 +15,6 @@ import { DataType } from '@dxos/schema';
 
 import SYSTEM_PROMPT from './system-prompt.tpl?raw';
 
-type ProcessTranscriptMessageParams = {
-  message: DataType.Message;
-  aiService: AIServiceClient;
-  context: {
-    objects?: BaseEchoObject[];
-  };
-
-  options?: {
-    /**
-     * Timeout for the entity extraction.
-     */
-    timeout?: number;
-
-    /**
-     * Fallback to raw text if the entity extraction fails.
-     * Otherwise the function will throw an error.
-     * @default false
-     */
-    fallbackToRaw?: boolean;
-  };
-};
-
 type ProcessTranscriptMessageResult = {
   message: DataType.Message;
   timeElapsed: number;
@@ -63,6 +41,28 @@ const ReferencedQuotes = Schema.Struct({
 });
 interface ReferencedQuotes extends Schema.Schema.Type<typeof ReferencedQuotes> {}
 
+type ProcessTranscriptMessageParams = {
+  message: DataType.Message;
+  aiService: AIServiceClient;
+  context: {
+    objects?: BaseEchoObject[];
+  };
+
+  options?: {
+    /**
+     * Timeout for the entity extraction.
+     */
+    timeout?: number;
+
+    /**
+     * Fallback to raw text if the entity extraction fails.
+     * Otherwise the function will throw an error.
+     * @default false
+     */
+    fallbackToRaw?: boolean;
+  };
+};
+
 // TODO(dmaretskyi): Move context to a vector search index.
 // TODO(wittjosiah): Factor out.
 export const processTranscriptMessage = async (
@@ -70,12 +70,13 @@ export const processTranscriptMessage = async (
 ): Promise<ProcessTranscriptMessageResult> => {
   try {
     const outputParser = structuredOutputParser(ReferencedQuotes);
+
     const runParser = async (): Promise<ProcessTranscriptMessageResult> => {
       const startTime = performance.now();
       const result = outputParser.getResult(
         await new MixedStreamParser().parse(
           await params.aiService.execStream({
-            model: '@anthropic/claude-3-5-haiku-20241022',
+            model: '@anthropic/claude-3-5-haiku-20241022', // TODO(burdon): Const.
             systemPrompt: createSystemPrompt(),
             history: [
               create(Message, {

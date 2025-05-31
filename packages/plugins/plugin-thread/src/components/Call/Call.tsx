@@ -69,7 +69,7 @@ type CallToolbarProps = Pick<ToolbarProps, 'channel' | 'onLeave'>;
 const CallToolbar: FC<CallToolbarProps> = (props) => {
   return (
     <div className='absolute bottom-0 left-0 right-0 flex justify-center'>
-      <Toolbar {...props} />
+      <Toolbar isInRoom {...props} />
     </div>
   );
 };

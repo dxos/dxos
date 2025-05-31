@@ -1,1 +1,8 @@
-export default ['packages/*', 'tools/*'];
+//
+// Copyright 2024 DXOS.org
+//
+
+export default [
+  'packages/*', 
+  'tools/*',
+];

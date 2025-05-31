@@ -175,10 +175,12 @@ export class QueryExecutor extends Resource {
           workingSet[index].documentId !== item.documentId,
       );
 
-    log('query execution result', {
-      changed,
-      trace: ExecutionTrace.format(trace),
-    });
+    // log.info('Query execution result', {
+    //   changed,
+    //   trace: ExecutionTrace.format(trace),
+    // });
+    // eslint-disable-next-line no-console
+    // console.log(ExecutionTrace.format(trace));
 
     return {
       changed,
@@ -577,7 +579,7 @@ export class QueryExecutor extends Resource {
     }
 
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), link as AutomergeUrl);
-    const doc = handle.docSync();
+    const doc = handle.doc();
     if (!doc) {
       return null;
     }

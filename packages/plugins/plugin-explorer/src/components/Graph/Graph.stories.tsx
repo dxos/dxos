@@ -12,15 +12,15 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { live } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { ClientRepeater } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { withLayout, withTheme, render } from '@dxos/storybook-utils';
 
 import { Graph } from './Graph';
 import { ViewType } from '../../types';
 
 faker.seed(1);
 
-const Story = () => {
+const DefaultStory = () => {
   const client = useClient();
   const [space, setSpace] = useState<Space>();
   const [view, setView] = useState<ViewType>();
@@ -30,8 +30,8 @@ const Story = () => {
     queueMicrotask(async () => {
       await generator.addSchemas();
       await generator.createObjects({
-        [TestSchemaType.organization]: 20,
-        [TestSchemaType.contact]: 50,
+        [TestSchemaType.organization]: 10,
+        [TestSchemaType.contact]: 30,
       });
     });
 
@@ -50,8 +50,12 @@ const Story = () => {
 const meta: Meta = {
   title: 'plugins/plugin-explorer/Graph',
   component: Graph,
-  render: () => <ClientRepeater component={Story} createSpace types={[ViewType]} />,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  render: render(DefaultStory),
+  decorators: [
+    withClientProvider({ createSpace: true, types: [ViewType] }),
+    withTheme,
+    withLayout({ fullscreen: true }),
+  ],
   parameters: {
     layout: 'fullscreen',
   },
