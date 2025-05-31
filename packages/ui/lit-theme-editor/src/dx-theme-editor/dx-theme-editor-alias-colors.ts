@@ -242,7 +242,12 @@ export class DxThemeEditorAliasColors extends LitElement {
         @input=${this.handleSearchChange}
         aria-label="Search tokens"
       />
-      <div class="alias-tokens-list">
+      <div class="alias-token-list">
+        <div class="alias-token-labels">
+          <span>Name</span>
+          <span>Root</span>
+          <span>Attention</span>
+        </div>
         ${repeat(
           filteredTokens,
           (token) => token.name,

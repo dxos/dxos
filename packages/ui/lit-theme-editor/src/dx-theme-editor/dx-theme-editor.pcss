@@ -47,6 +47,7 @@ dx-theme-editor-alias-colors {
 
   .tab-panel {
     padding: 1rem;
+
     &[hidden] {
       display: none;
     }
@@ -226,54 +227,50 @@ dx-theme-editor-alias-colors {
     flex: 1;
   }
 
-  /* Alias Tokens Styles */
-  .alias-tokens-section {
-    padding-inline: 1rem;
-  }
-
-  .alias-tokens-section h4 {
-    margin-top: 0;
-    margin-bottom: 0.75rem;
-  }
-
-  .alias-token-list {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 0.5rem 0;
-  }
-
-  .alias-token-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-block: 0.5rem;
-  }
-
   .alias-condition-select {
     inline-size: 8rem;
+    place-self: stretch;
   }
 
-  .alias-name-input {
-    flex: 1;
+  .condition-and-validation {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
   }
 
   .alias-validation {
+    display: contents;
     color: var(--dx-errorText);
-    display: flex;
-    gap: .25rem;
   }
 
   /* Alias Colors Component Styles */
-  .alias-tokens-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 1rem;
+
+  .semantic-alias-token-section {
+    padding: 1rem;
   }
 
-  .alias-token-item {
-    display: flex;
-    gap: 0.5rem;
+  .alias-token-list, .semantic-alias-token-list {
+    display: grid;
+    gap: .5rem;
+    margin-bottom: 1rem;
+    .alias-token-item, .alias-token-labels {
+      display: grid;
+      grid-template-columns: subgrid;
+    }
+  }
+
+  .alias-token-list {
+    grid-template-columns: 1fr min-content min-content min-content;
+    .alias-token-item, .alias-token-labels {
+      grid-column: span 4;
+    }
+  }
+
+  .semantic-alias-token-list {
+    grid-template-columns: min-content 1fr min-content;
+    .alias-token-item, .alias-token-labels {
+      grid-column: span 3;
+    }
   }
 
   .condition-selectors {

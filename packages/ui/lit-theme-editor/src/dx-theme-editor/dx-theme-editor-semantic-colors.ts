@@ -404,7 +404,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
                 ${repeat(
                   physicalColorSeries,
                   (series) => series,
-                  (series) => html`<option value="${series}" ?selected=${series === currentSeries}>${series}</option>`
+                  (series) => html`<option value="${series}" ?selected=${series === currentSeries}>${series}</option>`,
                 )}
               </select>
             </div>
@@ -452,32 +452,34 @@ export class DxThemeEditorSemanticColors extends LitElement {
           </div>
 
           <!-- Alias tokens -->
-          <div class="alias-tokens-section">
-            <ul id="${aliasListId}" class="alias-token-list">
+          <div class="semantic-alias-token-section">
+            <ul id="${aliasListId}" class="semantic-alias-token-list">
               ${repeat(
                 this.getAliasTokensForSemantic(tokenName),
                 (alias) => `${tokenName}-${alias.condition}-${alias.name}`,
                 (alias) => html`
                   <li class="alias-token-item">
-                    <p
-                      class="alias-validation"
-                      style=${styleMap({
-                        display: this.checkDuplicateAlias(tokenName, alias.condition, alias.name) ? 'flex' : 'none',
-                      })}
-                    >
-                      <dx-icon icon="ph--warning--duotone" size="6"></dx-icon>Duplicate
-                    </p>
-                    <select
-                      class="alias-condition-select dx-focus-ring"
-                      .value=${alias.condition}
-                      @change=${(e: Event) => {
-                        const newCondition = (e.target as HTMLSelectElement).value;
-                        this.updateAliasToken(tokenName, alias.condition, alias.name, newCondition, alias.name);
-                      }}
-                    >
-                      <option value="root">root</option>
-                      <option value="attention">attention</option>
-                    </select>
+                    <div role="none" class="condition-and-validation">
+                      <p
+                        class="alias-validation"
+                        style=${styleMap({
+                          display: this.checkDuplicateAlias(tokenName, alias.condition, alias.name) ? 'flex' : 'none',
+                        })}
+                      >
+                        <dx-icon icon="ph--warning--duotone" size="6"></dx-icon>Duplicate
+                      </p>
+                      <select
+                        class="alias-condition-select dx-focus-ring"
+                        .value=${alias.condition}
+                        @change=${(e: Event) => {
+                          const newCondition = (e.target as HTMLSelectElement).value;
+                          this.updateAliasToken(tokenName, alias.condition, alias.name, newCondition, alias.name);
+                        }}
+                      >
+                        <option value="root">root</option>
+                        <option value="attention">attention</option>
+                      </select>
+                    </div>
                     <input
                       type="text"
                       class="alias-name-input dx-focus-ring"
@@ -495,7 +497,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
                       <dx-icon icon="ph--minus--regular" />
                     </button>
                   </li>
-                `
+                `,
               )}
             </ul>
             <button class="add-alias-button dx-focus-ring dx-button" @click=${() => this.addAliasToken(tokenName)}>
@@ -534,7 +536,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
       ${repeat(
         filteredTokens,
         ([tokenName]) => tokenName,
-        ([tokenName, tokenValue]) => this.renderTokenControls(tokenName, tokenValue)
+        ([tokenName, tokenValue]) => this.renderTokenControls(tokenName, tokenValue),
       )}
       <button class="add-token-button dx-focus-ring dx-button" @click=${this.addSemanticToken}>Add token</button>
     `;
