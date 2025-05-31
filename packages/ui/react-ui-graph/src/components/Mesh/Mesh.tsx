@@ -3,28 +3,22 @@
 //
 
 import { geoPath, select, type GeoStream } from 'd3';
-import React, { type PropsWithChildren, useEffect } from 'react';
+import { useEffect } from 'react';
 import { feature, mesh } from 'topojson-client';
 import { type GeometryCollection, type GeometryObject, type Objects, type Topology } from 'topojson-specification';
 
-import { SVG } from './SVG';
-import { SVGRoot } from './SVGRoot';
-import { createSvgContext, useSvgContext } from '../hooks';
-import { Scale, type Size } from '../util';
+import { useSvgContext } from '../../hooks';
+import { type Size } from '../../util';
 
-const MeshRoot = ({ children }: PropsWithChildren) => {
-  const context = createSvgContext(new Scale(), false);
-  return <SVGRoot context={context}>{children}</SVGRoot>;
-};
-
-type HexProps = {
+export type MeshProps = {
   radius?: number;
   value?: number;
 };
 
 // https://d3og.com/mbostock/5249328
-const Hex = ({ radius = 16, value = 0.5 }: HexProps) => {
+export const Mesh = ({ radius = 16, value = 0.5 }: MeshProps) => {
   const { svg, size } = useSvgContext();
+
   useEffect(() => {
     if (size) {
       // TODO(burdon): Resize doesn't trigger.
@@ -62,15 +56,9 @@ const Hex = ({ radius = 16, value = 0.5 }: HexProps) => {
 
       select(svg).append('path').attr('class', 'border').call(redraw);
     }
-  }, [size, value]);
+  }, [svg, size, value]);
 
   return null;
-};
-
-export const Mesh = {
-  Root: MeshRoot,
-  SVG,
-  Hex,
 };
 
 type Custom = { fill: boolean };

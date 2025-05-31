@@ -11,14 +11,14 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
-  createSimulationDrag,
+  createDrag,
   type AttributesOptions,
   GraphForceProjector,
   type GraphLayoutNode,
   GraphRenderer,
   type LabelOptions,
-} from '../graph';
-import { useSvgContext } from '../hooks';
+} from '../../graph';
+import { useSvgContext } from '../../hooks';
 
 export type GraphProps = ThemedClassName<{
   model?: GraphModel;
@@ -51,7 +51,7 @@ export const Graph = ({
   const { projector, renderer } = useMemo(() => {
     const projector = _projector ?? new GraphForceProjector(context);
     const renderer = new GraphRenderer(context, graphRef, {
-      drag: drag ? createSimulationDrag(context, projector.simulation) : undefined,
+      drag: drag ? createDrag(context, projector.simulation) : undefined,
       arrows: {
         end: arrows,
       },
@@ -64,12 +64,12 @@ export const Graph = ({
       projector,
       renderer,
     };
-  }, [context, drag]);
+  }, [context, _projector, drag]);
 
   useEffect(() => {
     projector.update(model?.graph);
 
-    let unsubscribe;
+    let unsubscribe: (() => void) | undefined;
     const t = setTimeout(() => {
       // Delay rendering until projector has settled.
       unsubscribe = projector.updated.on(({ layout }) => renderer.update(layout));

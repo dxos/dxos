@@ -182,9 +182,14 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, []);
 
   return (
-    <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
+    <div
+      className={mx(
+        'grid w-full h-full justify-center overflow-hidden divide-x divide-separator',
+        artifactItems.length && 'grid-cols-2',
+      )}
+    >
       {/* Thread */}
-      <div className='flex flex-col gap-4 overflow-hidden'>
+      <div className='flex flex-col h-full w-[40rem] max-w-[40rem] gap-4 outline outline-separator overflow-hidden'>
         <Toolbar.Root classNames='p-2'>
           <Input.Root>
             <Input.TextInput

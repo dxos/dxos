@@ -7,7 +7,7 @@ import React from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useGrid } from '../hooks';
+import { useGrid } from '../../hooks';
 
 export type GridSlots = {
   path?: {

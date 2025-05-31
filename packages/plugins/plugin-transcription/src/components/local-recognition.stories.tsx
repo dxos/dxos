@@ -99,7 +99,7 @@ const SpeechRecognition = ({ keywords }: { keywords: string[] }) => {
           <span
             key={index}
             className={mx(
-              'px-3 py-1 m-2 rounded-full border',
+              'px-3 py-1 m-2 rounded border',
               word.matched ? 'bg-red-200 text-red-800 border-red-300' : 'bg-gray-200 text-gray-600 border-gray-300',
             )}
           >
@@ -123,6 +123,6 @@ export default meta;
 export const SpeechRecognitionAPI: StoryObj<typeof SpeechRecognition> = {
   render: SpeechRecognition,
   args: {
-    keywords: ['hey, rich', 'dima', 'hello'],
+    keywords: ['kai', 'computer', 'hello'],
   },
 };

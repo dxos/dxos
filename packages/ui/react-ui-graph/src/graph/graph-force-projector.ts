@@ -149,7 +149,7 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
 
   override onUpdate(data?: Graph) {
     this.mergeData(data);
-    // this.updateForces(this.options.forces);
+    this.updateForces(this.options.forces);
 
     // Guides.
     this._layout.guides = this.options.guides

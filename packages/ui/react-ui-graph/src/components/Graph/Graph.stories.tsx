@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type StoryObj } from '@storybook/react';
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 
 import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
@@ -13,18 +13,12 @@ import { mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Graph as GraphComponent, type GraphProps } from './Graph';
-import { Grid } from './Grid';
-import { Markers } from './Markers';
-import { SVG } from './SVG';
-import { SVGRoot } from './SVGRoot';
-import { Zoom } from './Zoom';
-import { GraphForceProjector, type GraphForceProjectorOptions, type GraphLayoutNode } from '../graph';
-import { createSvgContext } from '../hooks';
-import { convertTreeToGraph, createGraph, createTree, seed, TestGraphModel, type TestNode } from '../testing';
+import { GraphForceProjector, type GraphForceProjectorOptions, type GraphLayoutNode } from '../../graph';
+import { type SVGContext } from '../../hooks';
+import { convertTreeToGraph, createGraph, createTree, TestGraphModel, type TestNode } from '../../testing';
+import { SVG } from '../SVG';
 
-import '../../styles/graph.css';
-
-seed(1);
+import '../../../styles/graph.css';
 
 type DefaultStoryProps = GraphProps & {
   grid?: boolean;
@@ -36,42 +30,40 @@ type DefaultStoryProps = GraphProps & {
 const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: DefaultStoryProps) => {
   const model = useMemo(() => new TestGraphModel(graph), [graph]);
   const selected = useMemo(() => new SelectionModel(), []);
-  const context = createSvgContext();
-  const projector = useMemo(
-    () => projectorOptions && new GraphForceProjector(context, projectorOptions),
-    [projectorOptions],
+  const context = useRef<SVGContext>(null);
+  const projector = useMemo<GraphForceProjector>(
+    () => context.current && projectorOptions && new GraphForceProjector(context.current, projectorOptions),
+    [context.current, projectorOptions],
   );
 
   return (
     <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
-      <SVGRoot context={context}>
-        <SVG>
-          <Markers />
-          {grid && <Grid axis />}
-          <Zoom extent={[1 / 2, 2]}>
-            <GraphComponent
-              model={model}
-              projector={projector}
-              labels={{
-                text: (node: GraphLayoutNode<TestNode>) => node.data.label,
-              }}
-              attributes={{
-                node: (node: GraphLayoutNode<TestNode>) => ({
-                  class: selected.contains(node.id) ? 'selected' : undefined,
-                }),
-              }}
-              onSelect={(node: GraphLayoutNode<TestNode>) => {
-                if (selected.contains(node.id)) {
-                  selected.remove(node.id);
-                } else {
-                  selected.contains(node.id);
-                }
-              }}
-              {...props}
-            />
-          </Zoom>
-        </SVG>
-      </SVGRoot>
+      <SVG.Root ref={context}>
+        <SVG.Markers />
+        {grid && <SVG.Grid axis />}
+        <SVG.Zoom extent={[1 / 4, 4]}>
+          <GraphComponent
+            model={model}
+            projector={projector}
+            labels={{
+              text: (node: GraphLayoutNode<TestNode>) => node.data.label,
+            }}
+            attributes={{
+              node: (node: GraphLayoutNode<TestNode>) => ({
+                class: selected.contains(node.id) ? 'selected' : undefined,
+              }),
+            }}
+            onSelect={(node: GraphLayoutNode<TestNode>) => {
+              if (selected.contains(node.id)) {
+                selected.remove(node.id);
+              } else {
+                selected.contains(node.id);
+              }
+            }}
+            {...props}
+          />
+        </SVG.Zoom>
+      </SVG.Root>
 
       {debug && <Debug model={model} />}
     </div>
@@ -112,23 +104,23 @@ export const Force: Story = {
       radius: 400,
       forces: {
         center: {
-          strength: 0.7,
+          strength: 0.6,
         },
         collide: {
           strength: 1,
         },
         manyBody: {
-          strength: -100,
+          strength: -80,
         },
         link: {
           distance: 20,
-          iterations: 25,
-          strength: 0.1,
+          iterations: 10,
+          strength: 0.2,
         },
         radial: {
-          delay: 300,
+          delay: 500,
           radius: 300,
-          strength: 0.6,
+          strength: 0.5,
         },
       },
     },

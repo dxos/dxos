@@ -5,7 +5,7 @@
 import { select } from 'd3';
 import React, { useEffect, useRef } from 'react';
 
-import { createMarkers } from '../graph';
+import { createMarkers } from '../../graph';
 
 export type MarkersProps = {
   arrowSize?: number;

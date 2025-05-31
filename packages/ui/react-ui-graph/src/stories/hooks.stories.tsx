@@ -12,7 +12,7 @@ import { combine } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { SVGRoot } from '../components';
+import { SVG } from '../components';
 import {
   GraphForceProjector,
   type GraphLayoutNode,
@@ -20,7 +20,7 @@ import {
   GraphRenderer,
   type GraphForceProjectorOptions,
   createMarkers,
-  createSimulationDrag,
+  createDrag,
   linkerRenderer,
 } from '../graph';
 import { useSvgContext, useZoom, useGrid } from '../hooks';
@@ -39,10 +39,10 @@ type DefaultStoryProps = PropsWithChildren<{
 
 const DefaultStory = ({ children, ...props }: DefaultStoryProps) => {
   return (
-    <SVGRoot>
+    <SVG.Root>
       <StoryComponent {...props} />
       {children && <div className='absolute left-4 bottom-4 font-mono text-green-500 text-xs'>{children}</div>}
-    </SVGRoot>
+    </SVG.Root>
   );
 };
 
@@ -66,7 +66,7 @@ const StoryComponent = ({
     if (!link) {
       renderer = new GraphRenderer(context, graphRef);
     } else {
-      const drag = createSimulationDrag(context, projector.simulation, {
+      const drag = createDrag(context, projector.simulation, {
         onDrag: (source, target, point) => {
           select(graphRef.current).call(linkerRenderer, { source, target, point });
         },
@@ -139,13 +139,13 @@ const StoryComponent = ({
   }, [count, interval]);
 
   return (
-    <svg ref={context.ref}>
+    <>
       <defs ref={markersRef} />
       <g ref={grid.ref} className='dx-grid' />
       <g ref={zoom.ref}>
         <g ref={graphRef} className='dx-graph' />
       </g>
-    </svg>
+    </>
   );
 };
 
@@ -189,7 +189,7 @@ export const Bullets: Story = {
     model: new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))),
     children: <span>⌘-DRAG to edge or create node; ⌘-CLICK to delete edge.</span>,
     link: true,
-    grid: true,
+    grid: false,
     projectorOptions: {
       guides: true,
       forces: {

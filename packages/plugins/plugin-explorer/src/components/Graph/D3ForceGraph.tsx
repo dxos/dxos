@@ -2,21 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useEffect, useMemo } from 'react';
+import React, { type FC, useEffect, useMemo, useRef } from 'react';
 
 import { type Space } from '@dxos/client/echo';
 import { SelectionModel } from '@dxos/graph';
-import {
-  Graph as GraphComponent,
-  GraphForceProjector,
-  type GraphLayoutNode,
-  Grid,
-  Markers,
-  SVG,
-  SVGRoot,
-  Zoom,
-  createSvgContext,
-} from '@dxos/react-ui-graph';
+import { GraphForceProjector, type GraphLayoutNode, SVG, type SVGContext } from '@dxos/react-ui-graph';
 
 import { SpaceGraphModel } from './model';
 
@@ -30,41 +20,42 @@ export type D3ForceGraphProps = {
 export const D3ForceGraph: FC<D3ForceGraphProps> = ({ space, match }) => {
   const model = useMemo(() => new SpaceGraphModel(), [space]);
   const selected = useMemo(() => new SelectionModel(), []);
-  const context = createSvgContext();
-  const projector = useMemo(() => new GraphForceProjector(context), []);
+  const context = useRef<SVGContext>(null);
+  const projector = useMemo<GraphForceProjector | undefined>(
+    () => (context.current ? new GraphForceProjector(context.current) : undefined),
+    [context],
+  );
 
   useEffect(() => {
     void model.open(space);
   }, [space, model]);
 
   return (
-    <SVGRoot context={context}>
-      <SVG classNames='graph'>
-        <Markers />
-        <Grid axis />
-        <Zoom extent={[1 / 2, 2]}>
-          <GraphComponent
-            drag
-            model={model}
-            projector={projector}
-            labels={{
-              text: (node: GraphLayoutNode) => node.data.label,
-            }}
-            attributes={{
-              node: (node: GraphLayoutNode) => ({
-                class: selected.contains(node.id) ? 'selected' : undefined,
-              }),
-            }}
-            onSelect={(node: GraphLayoutNode) => {
-              if (selected.contains(node.id)) {
-                selected.remove(node.id);
-              } else {
-                selected.contains(node.id);
-              }
-            }}
-          />
-        </Zoom>
-      </SVG>
-    </SVGRoot>
+    <SVG.Root ref={context}>
+      <SVG.Markers />
+      <SVG.Grid axis />
+      <SVG.Zoom extent={[1 / 2, 2]}>
+        <SVG.Graph
+          drag
+          model={model}
+          projector={projector}
+          labels={{
+            text: (node: GraphLayoutNode) => node.data.label,
+          }}
+          attributes={{
+            node: (node: GraphLayoutNode) => ({
+              class: selected.contains(node.id) ? 'selected' : undefined,
+            }),
+          }}
+          onSelect={(node: GraphLayoutNode) => {
+            if (selected.contains(node.id)) {
+              selected.remove(node.id);
+            } else {
+              selected.contains(node.id);
+            }
+          }}
+        />
+      </SVG.Zoom>
+    </SVG.Root>
   );
 };
