@@ -32,11 +32,12 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { ForceGraph } from '@dxos/plugin-explorer';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
+import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { Config, useClient } from '@dxos/react-client';
-import { live, useQueue, useQuery, type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Toolbar, useAsyncState } from '@dxos/react-ui';
+import { live, useQueue, useQuery } from '@dxos/react-client/echo';
+import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { SpaceGraphModel } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -46,23 +47,11 @@ import { researchFn, TYPES } from '../experimental/research/research';
 import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import translations from '../translations';
-import { PreviewPlugin } from '@dxos/plugin-preview';
-import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 const LOCAL = false;
 
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
-
-// TODO(burdon): Reconcile with useGraphModel in plugin-explorer.
-export const useGraphModel = (space: Space | undefined): SpaceGraphModel | undefined => {
-  const [model] = useAsyncState<SpaceGraphModel>(
-    async () => (space ? new SpaceGraphModel({}, { schema: true }).open(space) : undefined),
-    [space],
-  );
-
-  return model;
-};
 
 type RenderProps = {
   items?: Type.AnyObject[];
@@ -362,9 +351,7 @@ const createResearchTool = (executor: FunctionExecutor, name: string, fn: typeof
     // TODO(dmaretskyi): Include name in definition
     name,
     description: fn.description ?? raise(new Error('No description')),
-
     schema: fn.inputSchema,
-
     execute: async (input: any) => {
       const { result } = await executor.invoke(fn, input);
       return ToolResult.Success(
