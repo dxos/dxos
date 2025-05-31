@@ -1522,9 +1522,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../log
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
@@ -11084,6 +11081,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../../common/graph
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

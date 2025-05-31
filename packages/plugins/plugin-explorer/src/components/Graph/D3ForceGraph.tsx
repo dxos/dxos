@@ -7,8 +7,7 @@ import React, { type FC, useEffect, useMemo, useRef } from 'react';
 import { type Space } from '@dxos/client/echo';
 import { SelectionModel } from '@dxos/graph';
 import { GraphForceProjector, type GraphLayoutNode, SVG, type SVGContext } from '@dxos/react-ui-graph';
-
-import { SpaceGraphModel } from './model';
+import { SpaceGraphModel } from '@dxos/schema';
 
 import '@dxos/react-ui-graph/styles/graph.css';
 

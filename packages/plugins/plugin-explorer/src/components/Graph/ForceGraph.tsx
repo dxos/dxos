@@ -11,9 +11,9 @@ import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { filterObjectsSync, type SearchResult } from '@dxos/plugin-search';
 import { useAsyncState } from '@dxos/react-ui';
+import { SpaceGraphModel } from '@dxos/schema';
 
 import { GraphAdapter } from './adapter';
-import { SpaceGraphModel } from './model';
 
 export type ForceGraphProps = {
   space: Space;
