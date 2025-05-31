@@ -40,6 +40,7 @@ import {
 } from '@dxos/functions';
 import { researchFn, TYPES, type Subgraph } from '../experimental/research/research';
 import { raise } from '@dxos/debug';
+import { ForceGraph } from '@dxos/plugin-explorer';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 
@@ -226,6 +227,10 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
           onAddToGraph={handleAddToGraph}
           {...props}
         />
+      </div>
+
+      <div className='overflow-hidden grid grid-rows-[2fr_1fr] divide-y divide-separator'>
+        <ForceGraph space={space} />
       </div>
 
       {/* Artifacts Deck */}

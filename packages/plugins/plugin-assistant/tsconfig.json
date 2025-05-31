@@ -123,6 +123,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-graph"
+    },
+    {
       "path": "../../ui/react-ui-list"
     },
     {
@@ -145,6 +148,9 @@
     },
     {
       "path": "../plugin-deck"
+    },
+    {
+      "path": "../plugin-explorer"
     },
     {
       "path": "../plugin-graph"

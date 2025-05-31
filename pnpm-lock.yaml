@@ -5320,6 +5320,9 @@ importers:
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../plugin-deck
+      '@dxos/plugin-explorer':
+        specifier: workspace:*
+        version: link:../plugin-explorer
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -5371,6 +5374,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-graph':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-graph
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
