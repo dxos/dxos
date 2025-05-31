@@ -32,7 +32,7 @@ describe('Research', () => {
               },
             }),
       },
-      credentials: new ConfiguredCredentialsService([{ service: 'https://exa.ai/', apiKey: EXA_API_KEY }]),
+      credentials: new ConfiguredCredentialsService([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
     }),
   );
 

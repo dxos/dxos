@@ -65,7 +65,7 @@ export const researchFn = defineFunction({
   handler: async ({ data: { query, mockSearch }, context }) => {
     const ai = context.getService(AiService);
     const credentials = context.getService(CredentialsService);
-    const queues = context.getService(QueuesService);
+    // const queues = context.getService(QueuesService);
 
     const exaCredential = await credentials.getCredential({ service: 'exa.ai' });
 
