@@ -14,7 +14,7 @@ export type UseAudioState = {
   track?: MediaStreamTrack;
 };
 
-export const useAudioFile = (audioUrl: string): UseAudioState => {
+export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstraints): UseAudioState => {
   const [{ audio, stream, track }, setStream] = useState<UseAudioState>({});
   useEffect(() => {
     const ctx = new Context();

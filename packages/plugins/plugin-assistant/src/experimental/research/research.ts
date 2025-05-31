@@ -65,7 +65,7 @@ export const researchFn = defineFunction({
   handler: async ({ data: { query, mockSearch }, context }) => {
     const ai = context.getService(AiService);
     const credentials = context.getService(CredentialsService);
-    const queues = context.getService(QueuesService);
+    // const queues = context.getService(QueuesService);
 
     const exaCredential = await credentials.getCredential({ service: 'exa.ai' });
 
@@ -77,6 +77,7 @@ export const researchFn = defineFunction({
     session.message.on((message) => printer.printMessage(message));
     session.userMessage.on((message) => printer.printMessage(message));
     session.block.on((block) => printer.printContentBlock(block));
+    session.streamEvent.on((event) => console.log(JSON.stringify(event)));
 
     // TODO(dmaretskyi): Consider adding this pattern as the "Graph" output mode for the session.
     const outputSchema = createExtractionSchema(TYPES);
@@ -85,9 +86,6 @@ export const researchFn = defineFunction({
       systemPrompt: INSTRUCTIONS,
       artifacts: [],
       tools: [searchTool],
-      generationOptions: {
-        model: '@anthropic/claude-3-5-sonnet-20241022',
-      },
       history: [],
       prompt: query,
     });

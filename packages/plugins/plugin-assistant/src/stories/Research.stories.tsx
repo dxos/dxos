@@ -19,7 +19,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { defineTool, Message, ToolResult, type Tool } from '@dxos/artifact';
-import { remoteServiceEndpoints } from '@dxos/artifact-testing';
+import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
 import { DXN, Type } from '@dxos/echo';
@@ -47,11 +47,12 @@ import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import translations from '../translations';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
+const LOCAL = false;
 
-// const endpoints = localServiceEndpoints;
-const endpoints = remoteServiceEndpoints;
+const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
 
 // TODO(burdon): Reconcile with useGraphModel in plugin-explorer.
 export const useGraphModel = (space: Space | undefined): SpaceGraphModel | undefined => {
@@ -72,7 +73,15 @@ type RenderProps = {
 const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   const client = useClient();
   const space = client.spaces.default;
-  const [aiClient] = useState(() => new AIServiceEdgeClient({ endpoint: endpoints.ai }));
+  const [aiClient] = useState(
+    () =>
+      new AIServiceEdgeClient({
+        endpoint: endpoints.ai,
+        defaultGenerationOptions: {
+          // model: '@anthropic/claude-sonnet-4-20250514',
+        },
+      }),
+  );
 
   // Queue.
   const [queueDxn, setQueueDxn] = useState<string>(

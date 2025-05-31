@@ -25,6 +25,9 @@ describe('Research', () => {
         client: REMOTE_AI
           ? new AIServiceEdgeClient({
               endpoint: AI_SERVICE_ENDPOINT.LOCAL,
+              defaultGenerationOptions: {
+                model: '@anthropic/claude-sonnet-4-20250514',
+              },
             })
           : new OllamaClient({
               overrides: {
@@ -32,7 +35,7 @@ describe('Research', () => {
               },
             }),
       },
-      credentials: new ConfiguredCredentialsService([{ service: 'https://exa.ai/', apiKey: EXA_API_KEY }]),
+      credentials: new ConfiguredCredentialsService([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
     }),
   );
 
