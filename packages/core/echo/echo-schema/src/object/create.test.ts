@@ -10,12 +10,11 @@ import { DXN } from '@dxos/keys';
 
 import { create } from './create';
 import { serializeStatic } from './json-serializer';
+import { RelationSourceId, RelationTargetId } from './relation';
 import { getTypename } from './typename';
 import { getSchema, getSchemaDXN } from '../ast';
 import { Testing } from '../testing';
 import { isInstanceOf } from '../types';
-import { RelationSourceId } from './relation';
-import { RelationTargetId } from './relation';
 
 describe('create (static version)', () => {
   test('defaults', ({ expect }) => {

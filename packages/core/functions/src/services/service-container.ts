@@ -1,8 +1,13 @@
-import { Context } from 'effect';
-import { DatabaseService } from './database';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Context } from 'effect';
+
 import { AiService } from './ai';
-import { QueuesService } from './queues';
 import { CredentialsService } from './credentials';
+import { DatabaseService } from './database';
+import { QueuesService } from './queues';
 
 export interface Services {
   database: Context.Tag.Service<DatabaseService>;

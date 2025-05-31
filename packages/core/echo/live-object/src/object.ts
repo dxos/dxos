@@ -15,7 +15,6 @@ import {
   ObjectMetaSchema,
 } from '@dxos/echo-schema';
 import { symbolMeta } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 
 import type { Live } from './live';
 import { createProxy, isValidProxyTarget } from './proxy';

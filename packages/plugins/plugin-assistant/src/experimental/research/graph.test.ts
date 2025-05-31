@@ -1,8 +1,10 @@
-import { describe, test } from 'vitest';
+//
+// Copyright 2025 DXOS.org
+//
 
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { findRelatedSchema } from './graph';
-import { Schema } from 'effect';
+import { describe } from 'vitest';
+
+import { type EchoTestBuilder } from '@dxos/echo-db/testing';
 
 describe('graph', () => {
   let builder: EchoTestBuilder;

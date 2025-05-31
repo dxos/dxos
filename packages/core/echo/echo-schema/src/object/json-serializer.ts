@@ -4,12 +4,12 @@
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { failedInvariant, invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 
+import { ATTR_RELATION_TARGET, ATTR_RELATION_SOURCE, RelationSourceId, RelationTargetId } from './relation';
 import { ECHO_ATTR_TYPE, TYPENAME_SYMBOL } from './typename';
 import { type Ref } from '../ref';
-import { ATTR_RELATION_TARGET, ATTR_RELATION_SOURCE, RelationSourceId, RelationTargetId } from './relation';
 import { getDXN, type BaseObject } from '../types';
-import { DXN } from '@dxos/keys';
 
 type DeepReplaceRef<T> =
   T extends Ref<any> ? EncodedReference : T extends object ? { [K in keyof T]: DeepReplaceRef<T[K]> } : T;

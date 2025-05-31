@@ -1,8 +1,11 @@
-import { EntityKind, getTypeIdentifierAnnotation, getTypename } from '@dxos/echo-schema';
+//
+// Copyright 2025 DXOS.org
+//
+
+import type { Schema } from 'effect';
 
 import type { EchoDatabase } from '@dxos/echo-db';
-import { getTypeAnnotation } from '@dxos/echo-schema';
-import type { Schema } from 'effect';
+import { EntityKind, getTypeIdentifierAnnotation, getTypename, getTypeAnnotation } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 
 export type RelatedSchema = {

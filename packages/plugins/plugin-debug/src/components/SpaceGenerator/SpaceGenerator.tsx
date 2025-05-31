@@ -18,9 +18,9 @@ import { getTypename, type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { initializeTable, TableType } from '@dxos/react-ui-table';
+import { DataType } from '@dxos/schema';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
-import { DataType } from '@dxos/schema';
 import { createGenerator, staticGenerators, type ObjectGenerator } from './ObjectGenerator';
 import { SchemaTable } from './SchemaTable';
 import { presets } from './presets';

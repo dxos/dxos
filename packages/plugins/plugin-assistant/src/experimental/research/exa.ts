@@ -7,6 +7,7 @@ import Exa from 'exa-js';
 
 import { defineTool, ToolResult } from '@dxos/artifact';
 import { log } from '@dxos/log';
+
 import { SEARCH_RESULTS } from '../../testing/research';
 
 type CreateExaToolOptions = {
@@ -49,8 +50,12 @@ export const createMockExaTool = () => {
       // Find result with closest matching autoprompt using weighted Levenshtein distance
       const result = SEARCH_RESULTS.reduce(
         (closest, current) => {
-          if (!current.autopromptString) return closest;
-          if (!closest) return current;
+          if (!current.autopromptString) {
+            return closest;
+          }
+          if (!closest) {
+            return current;
+          }
 
           // Calculate Levenshtein distance
           const dist1 = levenshteinDistance(query, current.autopromptString);
@@ -70,15 +75,19 @@ export const createMockExaTool = () => {
   });
 };
 
-function levenshteinDistance(str1: string, str2: string): number {
+const levenshteinDistance = (str1: string, str2: string): number => {
   const m = str1.length;
   const n = str2.length;
   const dp: number[][] = Array(m + 1)
     .fill(null)
     .map(() => Array(n + 1).fill(0));
 
-  for (let i = 0; i <= m; i++) dp[i][0] = i;
-  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 0; i <= m; i++) {
+    dp[i][0] = i;
+  }
+  for (let j = 0; j <= n; j++) {
+    dp[0][j] = j;
+  }
 
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
@@ -88,4 +97,4 @@ function levenshteinDistance(str1: string, str2: string): number {
   }
 
   return dp[m][n];
-}
+};

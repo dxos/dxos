@@ -1,9 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { defineTool } from './util';
-import { Schema } from 'effect';
-import { ToolResult } from './tools';
 import { ObjectId } from '@dxos/echo-schema';
+
+import { ToolResult } from './tools';
+import { defineTool } from './util';
 
 describe('tools', () => {
   test('should define a tool', () => {

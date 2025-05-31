@@ -2,20 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
-
-import {
-  createJsonSchema,
-  getTypeAnnotation,
-  toJsonSchema,
-  EchoObject,
-  EchoSchema,
-  type JsonSchemaType,
-  StoredSchema,
-  TypeAnnotationId,
-  type TypeMeta,
-  type TypeAnnotation,
-} from '@dxos/echo-schema';
+import { createJsonSchema, type JsonSchemaType, StoredSchema, type TypeMeta } from '@dxos/echo-schema';
 
 import type { Live } from './live';
 import { live } from './object';

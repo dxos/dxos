@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 export default {
   requestId: '0dc12e344fa649884456960ca1a54954',
   autopromptString: 'PKM software artificial intelligence integration open source projects',

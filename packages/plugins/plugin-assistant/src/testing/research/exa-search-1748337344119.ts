@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 export default {
   requestId: '32df0c541f9883180b35e04caece4374',
   autopromptString: 'open source AI knowledge management projects features comparison 2024',

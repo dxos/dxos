@@ -114,7 +114,7 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
       };
     }
     default: {
-      throw new Error(`Invalid tool result`);
+      throw new Error('Invalid tool result');
     }
   }
 };

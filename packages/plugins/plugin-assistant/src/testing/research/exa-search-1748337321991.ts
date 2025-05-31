@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 export default {
   requestId: '324936368a74f4db978982172bc18a6c',
   autopromptString: 'AI personal knowledge management tools projects 2024',

@@ -4,28 +4,27 @@
 
 import { identity, Option, Schema, SchemaAST } from 'effect';
 
+import { AISession } from '@dxos/assistant';
+import { ConsolePrinter } from '@dxos/assistant/testing';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
   create,
   getEntityKind,
   getSchemaDXN,
   ObjectId,
-  Ref,
   ReferenceAnnotationId,
   RelationSourceId,
   RelationTargetId,
 } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
+import { AiService, CredentialsService, defineFunction } from '@dxos/functions';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { DataType } from '@dxos/schema';
 import { deepMapValues } from '@dxos/util';
 
-import { AISession } from '@dxos/assistant';
-import { ConsolePrinter } from '@dxos/assistant/testing';
-import { AiService, CredentialsService, defineFunction, QueuesService } from '@dxos/functions';
 import { createExaTool, createMockExaTool } from './exa';
 import INSTRUCTIONS from './instructions.tpl?raw';
-import { DataType } from '@dxos/schema';
-import { DXN } from '@dxos/keys';
 
 export const TYPES = [
   DataType.Event,

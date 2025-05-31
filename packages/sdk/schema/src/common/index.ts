@@ -10,9 +10,9 @@ import * as Organization$ from './organization';
 import * as Person$ from './person';
 import * as PostalAddress$ from './postal-address';
 import * as Project$ from './project';
+import * as Relations$ from './relations';
 import * as Task$ from './task';
 import * as Text$ from './text';
-import * as Relations$ from './relations';
 
 // TODO(burdon): Remove (fix The inferred type of 'DeleteMessage' cannot be named without a reference.)
 export * from './message';

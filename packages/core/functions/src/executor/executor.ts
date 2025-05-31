@@ -1,7 +1,13 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Effect, Schema } from 'effect';
+
+import type { SpaceId } from '@dxos/client/echo';
+
 import type { FunctionContext, FunctionDefinition } from '../handler';
 import type { ServiceContainer } from '../services';
-import type { SpaceId } from '@dxos/client/echo';
 
 export class FunctionExecutor {
   constructor(private readonly _services: ServiceContainer) {}

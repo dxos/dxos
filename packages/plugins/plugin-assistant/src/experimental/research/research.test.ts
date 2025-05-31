@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { inspect } from 'node:util';
 import { describe, test } from 'vitest';
 
 import { structuredOutputParser } from '@dxos/artifact';
@@ -10,7 +11,7 @@ import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { getSchemaDXN } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { inspect } from 'node:util';
+
 import { createExtractionSchema, getSanitizedSchemaName, researchFn, sanitizeObjects, TYPES } from './research';
 
 const REMOTE_AI = true;
