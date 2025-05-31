@@ -77,7 +77,7 @@ export type GenerationStreamEvent =
   | {
       // TODO(dmaretskyi): Normalize types to our schema.
       type: 'message_start';
-      message: Omit<Message, 'spaceId' | 'threadId'>;
+      message: Message;
     }
   | {
       type: 'message_delta';

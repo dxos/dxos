@@ -24,7 +24,7 @@ describe('Research', () => {
       ai: {
         client: REMOTE_AI
           ? new AIServiceEdgeClient({
-              endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+              endpoint: AI_SERVICE_ENDPOINT.LOCAL,
             })
           : new OllamaClient({
               overrides: {
