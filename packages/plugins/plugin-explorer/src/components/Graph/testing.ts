@@ -31,9 +31,7 @@ export const generate = async (space: Space) => {
 
   // Add relations between objects.
   const { objects: contacts } = await space.db.query(Query.type(DataType.Person)).run();
-  console.log('contacts', contacts.length);
-
-  for (const _ of range(0)) {
+  for (const _ of range(10)) {
     const source = getObject(contacts);
     const target = getObject(contacts);
     if (source.id === target.id) {
