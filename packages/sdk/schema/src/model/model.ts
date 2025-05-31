@@ -103,6 +103,8 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
           ({ objects }) => {
             this._objects = objects;
 
+            console.log('objects', { objects });
+
             // Merge with current nodes.
             const currentNodes = this._graph.nodes;
 

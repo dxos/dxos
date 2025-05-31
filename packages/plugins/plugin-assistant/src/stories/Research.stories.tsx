@@ -24,6 +24,8 @@ import { AIServiceEdgeClient } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
 import { DXN, Type } from '@dxos/echo';
 import {
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
   create,
   createQueueDxn,
   EntityKind,
@@ -32,6 +34,8 @@ import {
   getTypeIdentifierAnnotation,
   getTypename,
   isInstanceOf,
+  RelationSourceId,
+  RelationTargetId,
   type BaseEchoObject,
 } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
@@ -97,7 +101,11 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
   // Queue.
   const [queueDxn, setQueueDxn] = useState<string>(
+    // Dear Rich, if you don't want to wait for AI to ......
+
     // () => 'dxn:queue:data:B5QTVZILSG7LCY2OB7VUGGHLE632U532U:01JWH3S9576J8R35WMN7DT88N8',
+    // () => 'dxn:queue:data:B5QTVZILSG7LCY2OB7VUGGHLE632U532U:01JWKKDGD3WHC7BVYDYJACWEXG',
+
     () => createQueueDxn(space.id).toString(),
   );
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
@@ -210,16 +218,40 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     [queue],
   );
 
+  // TODO(dmaretskyi): Pull in relations automatically.
   const handleAddToGraph = useCallback((object: BaseEchoObject) => {
+    // TODO(dmaretskyi): It should be easier to pull objects from the queue to the database.
     const schema =
       space.db.graph.schemaRegistry.getSchemaByDXN(DXN.parse(getTypename(object)!)) ??
       raise(new Error('Schema not found'));
-
     console.log('schema', { schema });
-    space.db.add(live(schema, object));
+
+    let { id, [ATTR_RELATION_SOURCE]: source, [ATTR_RELATION_TARGET]: target, ...props } = object as any;
+    if (source) {
+      source = space.db.getObjectById(DXN.parse(source).asEchoDXN()!.echoId);
+    }
+    if (target) {
+      target = space.db.getObjectById(DXN.parse(target).asEchoDXN()!.echoId);
+    }
+    space.db.add(
+      live(schema, {
+        id,
+        ...props,
+        [RelationSourceId]: source,
+        [RelationTargetId]: target,
+      }),
+    );
   }, []);
 
-  const model = useMemo(() => new SpaceGraphModel(space), [space]);
+  const [model] = useState(() => new SpaceGraphModel());
+
+  useEffect(() => {
+    void model.open(space);
+
+    return () => {
+      model.close();
+    };
+  }, [space]);
 
   return (
     <div className={mx('grid w-full h-full grid-cols-3 overflow-hidden divide-x divide-separator')}>
@@ -272,6 +304,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         {objects.map((object) => (
           <div key={object.id} className={mx('flex grow overflow-hidden', objects.length === 1 && 'row-span-2')}>
             {/* <Surface role='canvas-node' limit={1} data={object} /> */}
+            <div className='text-xs text-foreground-secondary'>{object.id}</div>
             <Surface
               role='card'
               data={{ subject: object }}
