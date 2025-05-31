@@ -154,7 +154,12 @@ export class MediaManager extends Resource {
   async turnAudioOn() {
     void this._speakingMonitor?.close();
     this._state.audioEnabled = true;
-    this._state.audioTrack = await getUserMediaTrack('audioinput', { sampleRate: 16_000 });
+    this._state.audioTrack = await getUserMediaTrack('audioinput', {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+      sampleRate: 16_000,
+    });
     this.stateUpdated.emit(this._state);
     this._pushTracksTask!.schedule();
     this._speakingMonitor = new SpeakingMonitor(this._state.audioTrack!);
