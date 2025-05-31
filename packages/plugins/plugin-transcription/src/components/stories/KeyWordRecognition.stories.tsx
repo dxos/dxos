@@ -114,7 +114,7 @@ const SpeechRecognition = ({ keywords }: { keywords: string[] }) => {
 };
 
 const meta: Meta<typeof SpeechRecognition> = {
-  title: 'plugins/plugin-transcription/local-recognition',
+  title: 'plugins/plugin-transcription/KeyWordDetection',
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
 };
 
