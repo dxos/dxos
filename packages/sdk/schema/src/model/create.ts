@@ -4,13 +4,12 @@
 
 import { type AnyLiveObject } from '@dxos/echo-db';
 import { type BaseObject, FormatEnum, getSchema } from '@dxos/echo-schema';
+import { GraphModel } from '@dxos/graph';
+import { Graph, type GraphNode, createEdgeId } from '@dxos/graph';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { getSchemaProperties } from '@dxos/schema';
 
-import { GraphModel } from './model';
-import { Graph, type GraphNode } from './types';
-import { createEdgeId } from './util';
+import { getSchemaProperties } from '../properties';
 
 /**
  * Creates a new reactive graph from a set of ECHO objects.

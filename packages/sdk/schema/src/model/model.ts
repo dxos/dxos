@@ -3,25 +3,14 @@
 //
 
 import { type CleanupFn } from '@dxos/async';
-import { getSchema, getSchemaDXN, type EchoSchema, StoredSchema, getLabel } from '@dxos/echo-schema';
+import { type Space } from '@dxos/client-protocol';
+import { getSource, getTarget, isRelation, type AnyLiveObject } from '@dxos/echo-db';
+import { Filter, getSchema, getSchemaDXN, type EchoSchema, StoredSchema, getLabel } from '@dxos/echo-schema';
 import { Ref } from '@dxos/echo-schema';
 import { type GraphEdge, AbstractGraphBuilder, Graph, ReactiveGraphModel } from '@dxos/graph';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { CollectionType } from '@dxos/plugin-space/types';
-import {
-  getSource,
-  getTarget,
-  isRelation,
-  live,
-  type AnyLiveObject,
-  Filter,
-  type Space,
-} from '@dxos/react-client/echo';
 import { visitValues } from '@dxos/util';
-
-export type SpaceGraphModelOptions = {
-  schema?: boolean;
-};
 
 type SchemaGraphNode = {
   id: string;
@@ -42,15 +31,18 @@ type ObjectGraphNode = {
 
 export type EchoGraphNode = SchemaGraphNode | ObjectGraphNode;
 
-// TODO(burdon): Differentiate between refs and relations.
+// TODO(burdon): Differentiate between refs and relations (via type?).
 export type EchoGraphEdge = GraphEdge.Optional;
 
 class SpaceGraphBuilder extends AbstractGraphBuilder<EchoGraphNode, EchoGraphEdge, SpaceGraphModel> {}
 
+export type SpaceGraphModelOptions = {
+  schema?: boolean;
+};
+
 /**
  * Converts ECHO objects to a graph.
  */
-// TODO(burdon): Factor out.
 export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraphEdge> {
   private _schema?: EchoSchema[];
   private _schemaSubscription?: CleanupFn;
@@ -99,7 +91,14 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
 
       this._objectsSubscription = space.db
         // TODO(burdon): ERROR: Cannot mix type and or filters.
-        .query(Filter.not(Filter.or(Filter.type(StoredSchema), Filter.type(CollectionType))))
+        .query(
+          Filter.not(
+            Filter.or(
+              Filter.type(StoredSchema),
+              // , Filter.type(CollectionType)
+            ),
+          ),
+        )
         .subscribe(
           ({ objects }) => {
             this._objects = objects;

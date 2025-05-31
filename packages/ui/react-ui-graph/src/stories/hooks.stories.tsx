@@ -39,10 +39,12 @@ type DefaultStoryProps = PropsWithChildren<{
 
 const DefaultStory = ({ children, ...props }: DefaultStoryProps) => {
   return (
-    <SVG.Root>
-      <StoryComponent {...props} />
+    <>
+      <SVG.Root>
+        <StoryComponent {...props} />
+      </SVG.Root>
       {children && <div className='absolute left-4 bottom-4 font-mono text-green-500 text-xs'>{children}</div>}
-    </SVG.Root>
+    </>
   );
 };
 
