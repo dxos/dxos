@@ -6,6 +6,7 @@ import { type AlphaLuminosity } from '@ch-ui/colors';
 import { type TokenSet, parseAlphaLuminosity } from '@ch-ui/tokens';
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { repeat } from 'lit/directives/repeat.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { debounce } from '@dxos/async';
@@ -400,8 +401,10 @@ export class DxThemeEditorSemanticColors extends LitElement {
                 @change=${(e: Event) => this.handleBothSeriesChange(tokenName, (e.target as HTMLSelectElement).value)}
                 aria-labelledby="${tokenHeadingId}"
               >
-                ${physicalColorSeries.map(
-                  (series) => html`<option value="${series}" ?selected=${series === currentSeries}>${series}</option>`,
+                ${repeat(
+                  physicalColorSeries,
+                  (series) => series,
+                  (series) => html`<option value="${series}" ?selected=${series === currentSeries}>${series}</option>`
                 )}
               </select>
             </div>
@@ -451,7 +454,9 @@ export class DxThemeEditorSemanticColors extends LitElement {
           <!-- Alias tokens -->
           <div class="alias-tokens-section">
             <ul id="${aliasListId}" class="alias-token-list">
-              ${this.getAliasTokensForSemantic(tokenName).map(
+              ${repeat(
+                this.getAliasTokensForSemantic(tokenName),
+                (alias) => `${tokenName}-${alias.condition}-${alias.name}`,
                 (alias) => html`
                   <li class="alias-token-item">
                     <p
@@ -490,7 +495,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
                       <dx-icon icon="ph--minus--regular" />
                     </button>
                   </li>
-                `,
+                `
               )}
             </ul>
             <button class="add-alias-button dx-focus-ring dx-button" @click=${() => this.addAliasToken(tokenName)}>
@@ -526,7 +531,11 @@ export class DxThemeEditorSemanticColors extends LitElement {
         @input=${this.handleSearchChange}
         aria-label="Search tokens"
       />
-      ${filteredTokens.map(([tokenName, tokenValue]) => this.renderTokenControls(tokenName, tokenValue))}
+      ${repeat(
+        filteredTokens,
+        ([tokenName]) => tokenName,
+        ([tokenName, tokenValue]) => this.renderTokenControls(tokenName, tokenValue)
+      )}
       <button class="add-token-button dx-focus-ring dx-button" @click=${this.addSemanticToken}>Add token</button>
     `;
   }

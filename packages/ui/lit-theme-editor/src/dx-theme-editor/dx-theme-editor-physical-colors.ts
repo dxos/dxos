@@ -6,6 +6,7 @@ import { cssGradientFromCurve, helicalArcFromConfig } from '@ch-ui/colors';
 import { type ResolvedHelicalArcSeries, type TokenSet } from '@ch-ui/tokens';
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { repeat } from 'lit/directives/repeat.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { debounce } from '@dxos/async';
@@ -155,7 +156,11 @@ export class DxThemeEditorPhysicalColors extends LitElement {
   }
 
   override render() {
-    return bindSeriesDefinitions.map((series) => this.renderSeriesControls(series));
+    return repeat(
+      bindSeriesDefinitions,
+      (series) => series,
+      (series) => this.renderSeriesControls(series),
+    );
   }
 
   override createRenderRoot() {

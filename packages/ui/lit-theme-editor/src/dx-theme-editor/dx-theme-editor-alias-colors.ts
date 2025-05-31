@@ -5,6 +5,7 @@
 import { type TokenSet, type AliasLayer } from '@ch-ui/tokens';
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { repeat } from 'lit/directives/repeat.js';
 
 import { debounce } from '@dxos/async';
 import { makeId } from '@dxos/react-hooks';
@@ -62,7 +63,7 @@ export class DxThemeEditorAliasColors extends LitElement {
       });
     });
 
-    return Array.from(aliasMap.values());
+    return Array.from(aliasMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   }
 
   private updateAliasToken(oldName: string, newName: string, rootToken?: string, attentionToken?: string) {
@@ -212,7 +213,9 @@ export class DxThemeEditorAliasColors extends LitElement {
         }}
       >
         <option value="">&mdash;</option>
-        ${semanticTokenNames.map(
+        ${repeat(
+          semanticTokenNames,
+          (name) => name,
           (name) => html`<option value="${name}" ?selected=${name === currentValue}>${name}</option>`,
         )}
       </select>
@@ -226,7 +229,6 @@ export class DxThemeEditorAliasColors extends LitElement {
 
   override render() {
     const aliasTokens = this.getUniqueAliasTokens();
-    const semanticTokenNames = this.getSemanticTokenNames();
     const filteredTokens = aliasTokens.filter((token) =>
       token.name.toLowerCase().includes(this.searchTerm.toLowerCase()),
     );
@@ -241,7 +243,9 @@ export class DxThemeEditorAliasColors extends LitElement {
         aria-label="Search tokens"
       />
       <div class="alias-tokens-list">
-        ${filteredTokens.map(
+        ${repeat(
+          filteredTokens,
+          (token) => token.name,
           (token) => html`
             <div class="alias-token-item">
               <input
