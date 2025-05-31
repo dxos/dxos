@@ -4,15 +4,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../debug"
-    },
-    {
-      "path": "../invariant"
-    },
-    {
-      "path": "../node-std"
-    }
-  ]
+  "references": []
 }

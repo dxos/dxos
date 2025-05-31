@@ -8,27 +8,5 @@
     "**/*",
     ".astro/types.d.ts"
   ],
-  "references": [
-    {
-      "path": "../packages/core/echo/echo"
-    },
-    {
-      "path": "../packages/core/echo/echo-signals"
-    },
-    {
-      "path": "../packages/sdk/app-framework"
-    },
-    {
-      "path": "../packages/sdk/client"
-    },
-    {
-      "path": "../packages/sdk/client-protocol"
-    },
-    {
-      "path": "../packages/sdk/config"
-    },
-    {
-      "path": "../packages/sdk/react-client"
-    }
-  ]
+  "references": []
 }

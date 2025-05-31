@@ -64,6 +64,6 @@
         "packages/core/compute"
       ]
     },
-    "noProjectReferences": false
+    "noProjectReferences": true
   }
 }
