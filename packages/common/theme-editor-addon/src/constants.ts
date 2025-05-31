@@ -3,5 +3,5 @@
 //
 
 export const ADDON_ID = '@dxos/theme-editor-addon';
+export const PARAM_KEY = `${ADDON_ID}/state`;
 export const TOOL_ID = `${ADDON_ID}/tool`;
-export const THEME_EDITOR_EVENT_NAME = `${ADDON_ID}/toggle`;

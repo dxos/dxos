@@ -3,32 +3,32 @@
 //
 
 import { LightningIcon } from '@storybook/icons';
-import { useStorybookApi } from '@storybook/manager-api';
-import React, { memo, useCallback, useEffect } from 'react';
+import { type API, useStorybookApi } from '@storybook/manager-api';
+import React, { useCallback, useEffect } from 'react';
 import { IconButton } from 'storybook/internal/components';
 
-import { ADDON_ID, THEME_EDITOR_EVENT_NAME, TOOL_ID } from './constants';
+import { ADDON_ID, PARAM_KEY, TOOL_ID } from './constants';
 
-export const Tool = memo(() => {
-  const api = useStorybookApi();
+export const Tool = ({ api }: { api: API }) => {
+  const sbApi = useStorybookApi();
 
   const toggleThemeEditor = useCallback(() => {
-    console.log('[toggleThemeEditor]', api.getChannel());
-    api.getChannel()?.emit(THEME_EDITOR_EVENT_NAME, true);
+    console.log('[toggle theme editor clicked]', PARAM_KEY);
+    api.getChannel()?.emit(PARAM_KEY, { state: 'open' });
   }, [api]);
 
   useEffect(() => {
-    void api?.setAddonShortcut(ADDON_ID, {
+    void sbApi?.setAddonShortcut(ADDON_ID, {
       label: 'Toggle theme editor [8]',
       defaultShortcut: ['8'],
       actionName: 'toggleThemeEditor',
       action: toggleThemeEditor,
     });
-  }, [api]);
+  }, [sbApi, toggleThemeEditor]);
 
   return (
     <IconButton key={TOOL_ID} title='Toggle theme editor' onClick={toggleThemeEditor}>
       <LightningIcon />
     </IconButton>
   );
-});
+};

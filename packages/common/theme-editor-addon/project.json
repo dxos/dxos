@@ -13,7 +13,7 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/manager.ts"
+          "{projectRoot}/src/manager.tsx"
         ],
         "platforms": [
           "browser"
