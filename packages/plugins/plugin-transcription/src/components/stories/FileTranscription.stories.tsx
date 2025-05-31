@@ -172,10 +172,5 @@ export const WithSpeechDetection: StoryObj<typeof AudioFile> = {
     audioUrl: 'https://dxos.network/audio-london.m4a',
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,
-    audioConstraints: {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true,
-    },
   },
 };

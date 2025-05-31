@@ -179,9 +179,9 @@ export const Default: StoryObj<typeof MicrophoneStory> = {
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,
     audioConstraints: {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true,
+      echoCancellation: false,
+      noiseSuppression: false,
+      autoGainControl: false,
     },
   },
 };
@@ -194,9 +194,9 @@ export const EntityExtraction: StoryObj<typeof MicrophoneStory> = {
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,
     audioConstraints: {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true,
+      echoCancellation: false,
+      noiseSuppression: false,
+      autoGainControl: false,
     },
   },
 };
