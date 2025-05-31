@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, type FC } from 'react';
+import React, { type FC, type PropsWithChildren } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { type MessageContentBlock, type Message, type ToolType } from '@dxos/artifact';

@@ -36,12 +36,7 @@ export type EchoGraphEdge = GraphEdge.Optional;
 
 class SpaceGraphBuilder extends AbstractGraphBuilder<EchoGraphNode, EchoGraphEdge, SpaceGraphModel> {}
 
-const defaultFilter: Filter<any> = Filter.not(
-  Filter.or(
-    Filter.type(StoredSchema),
-    // Filter.type(CollectionType),
-  ),
-);
+const defaultFilter: Filter<any> = Filter.not(Filter.type(StoredSchema));
 
 export type SpaceGraphModelOptions = {
   schema?: boolean;
@@ -61,7 +56,12 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
     graph?: Partial<Graph>,
     private readonly _options: SpaceGraphModelOptions = {},
   ) {
-    super(live(Graph, { nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] }));
+    super(
+      live(Graph, {
+        nodes: graph?.nodes ?? [],
+        edges: graph?.edges ?? [],
+      }),
+    );
   }
 
   override get builder() {
@@ -83,16 +83,15 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
   // - https://observablehq.com/@d3/psr-b1919-21
   // - https://vasturiano.github.io/react-force-graph/example/basic (3D)
 
-  // TODO(burdon): Factor out builder.
-  async open(space: Space, objectId?: string) {
-    // TODO(burdon): Factor out graph builder to lib (use common/graph abstraction).
+  // TODO(burdon): Factor out graph builder to lib (use common/graph abstraction).
+  // TODO(burdon): Normalize unsubscribe callbacks and merge handlers.
+  // TODO(burdon): Trigger initial subscription update.
+  // TODO(burdon): Normalize subscription cb for objects, schema, etc.
+  async open(space: Space) {
     if (!this._schemaSubscription) {
-      // TODO(burdon): Normalize unsubscribe callbacks and merge handlers.
-      // TODO(burdon): Trigger initial subscription update.
-      // TODO(burdon): Normalize subscription cb for objects, schema, etc.
-
       const schemaaQuery = space.db.schemaRegistry.query({});
       const schemas = await schemaaQuery.run();
+
       const onSchemaUpdate = ({ results }: { results: EchoSchema[] }) => (this._schema = results);
       this._schemaSubscription = schemaaQuery.subscribe(onSchemaUpdate);
       onSchemaUpdate({ results: schemas });
@@ -139,6 +138,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
             if (!schema) {
               return;
             }
+
             if (!(isRelation(object) as boolean)) {
               const typename = getSchemaDXN(schema)?.typename;
               if (typename) {
@@ -155,19 +155,20 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
                 const schemaNode = this._graph.nodes.find(
                   (node) => node.type === 'schema' && node.data.typename === typename,
                 );
-                if (schemaNode) {
-                  // this.addEdge({
-                  //   id: `${object.id}-${schemaNode.id}`,
-                  //   source: object.id,
-                  //   target: schemaNode.id,
-                  //   type: 'schema',
-                  // });
+                if (!schemaNode) {
+                  log.warn('schema node not found', { typename });
                 } else {
-                  log.info('schema node not found', { typename });
+                  if (this._options.schema) {
+                    this.addEdge({
+                      id: `${object.id}-${schemaNode.id}`,
+                      type: 'schema',
+                      source: object.id,
+                      target: schemaNode.id,
+                    });
+                  }
                 }
 
                 // Link ot refs.
-                // TODO(burdon): This isn't working.
                 const refs = getOutgoingReferences(object);
                 for (const ref of refs) {
                   if (!ref.target) {
@@ -175,18 +176,18 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
                   }
                   this.addEdge({
                     id: `${object.id}-${ref.dxn.toString()}`,
+                    type: 'ref',
                     source: object.id,
                     target: ref.target.id,
-                    type: 'ref',
                   });
                 }
               }
             } else {
               this.addEdge({
                 id: object.id,
+                type: 'relation',
                 source: getSource(object).id,
                 target: getTarget(object).id,
-                type: 'relation',
               });
             }
           });
@@ -195,8 +196,6 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
       );
     }
 
-    // TODO(burdon): Selection model.
-    // this.setSelected(objectId);
     return this;
   }
 
