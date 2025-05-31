@@ -10,8 +10,9 @@ import { range } from '@dxos/util';
 
 const getObject = (objects: AnyLiveObject[]) => objects[Math.floor(Math.random() * objects.length)];
 
+// TODO(burdon): Parameterize.
 export const generate = async (space: Space, generator: ValueGenerator) => {
-  const createObjects = createObjectFactory(space.db, generator);
+  await space.db.schemaRegistry.register([DataType.Organization, DataType.Project, DataType.Person]);
 
   const spec: TypeSpec[] = [
     { type: DataType.Organization, count: 5 },
@@ -19,7 +20,7 @@ export const generate = async (space: Space, generator: ValueGenerator) => {
     { type: DataType.Person, count: 10 },
   ];
 
-  await space.db.schemaRegistry.register([DataType.Organization, DataType.Project, DataType.Person]);
+  const createObjects = createObjectFactory(space.db, generator);
   await createObjects(spec);
 
   // Add relations between objects.
