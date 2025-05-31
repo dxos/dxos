@@ -9,7 +9,6 @@ import { classMap } from 'lit/directives/class-map.js';
 import './dx-theme-editor-physical-colors';
 import './dx-theme-editor-semantic-colors';
 import './dx-theme-editor-alias-colors';
-import './dx-theme-editor.pcss';
 
 export type DxThemeEditorProps = {};
 

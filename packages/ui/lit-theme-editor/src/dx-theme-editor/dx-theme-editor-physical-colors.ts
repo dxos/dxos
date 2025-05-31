@@ -13,7 +13,6 @@ import { debounce } from '@dxos/async';
 import { restore, saveAndRender } from './util';
 
 import './dx-range-spinbutton';
-import './dx-theme-editor.pcss';
 
 export type DxThemeEditorPhysicalColorsProps = {};
 

@@ -7,6 +7,7 @@ import './dx-theme-editor-physical-colors.ts';
 import './dx-theme-editor-semantic-colors.ts';
 import './dx-theme-editor-alias-colors.ts';
 import './dx-theme-editor.pcss';
+import '@dxos/lit-ui';
 import { html } from 'lit';
 
 import { type DxThemeEditorProps } from './dx-theme-editor';

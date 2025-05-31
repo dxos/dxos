@@ -11,8 +11,6 @@ import { makeId } from '@dxos/react-hooks';
 
 import { restore, saveAndRender } from './util';
 
-import './dx-theme-editor.pcss';
-
 export type DxThemeEditorAliasColorsProps = {};
 
 @customElement('dx-theme-editor-alias-colors')

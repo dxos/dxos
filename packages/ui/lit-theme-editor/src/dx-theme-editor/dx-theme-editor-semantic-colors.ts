@@ -9,13 +9,11 @@ import { customElement, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { debounce } from '@dxos/async';
-import '@dxos/lit-ui/dx-icon.ts';
 import { makeId } from '@dxos/react-hooks';
 
 import { restore, saveAndRender } from './util';
 
 import './dx-range-spinbutton';
-import './dx-theme-editor.pcss';
 
 export type DxThemeEditorSemanticColorsProps = {};
 
