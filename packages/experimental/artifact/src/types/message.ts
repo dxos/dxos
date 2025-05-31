@@ -8,19 +8,31 @@ import { Type } from '@dxos/echo';
 
 // TODO(dmaretskyi): Extract IDs to protocols and dedupe package with dxos/edge.
 
-/** @deprecated */
+/**
+ * @internal
+ * @deprecated
+ */
 export const Space = Schema.Struct({
   id: Type.SpaceId,
 });
-/** @deprecated */
+/**
+ * @internal
+ * @deprecated
+ */
 export interface Space extends Schema.Schema.Type<typeof Space> {}
 
-/** @deprecated */
+/**
+ * @internal
+ * @deprecated
+ */
 export const Thread = Schema.Struct({
   id: Type.ObjectId,
   spaceId: Type.SpaceId,
 });
-/** @deprecated */
+/**
+ * @internal
+ * @deprecated
+ */
 export interface Thread extends Schema.Schema.Type<typeof Thread> {}
 
 export const AbstractContentBlock = Schema.Struct({

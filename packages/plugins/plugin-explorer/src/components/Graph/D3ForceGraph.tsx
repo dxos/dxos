@@ -2,32 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useEffect, useMemo, useRef } from 'react';
+import React, { type FC, useMemo, useRef } from 'react';
 
-import { type Space } from '@dxos/client/echo';
 import { SelectionModel } from '@dxos/graph';
 import { GraphForceProjector, type GraphLayoutNode, SVG, type SVGContext } from '@dxos/react-ui-graph';
-import { SpaceGraphModel } from '@dxos/schema';
+import { type SpaceGraphModel } from '@dxos/schema';
 
 import '@dxos/react-ui-graph/styles/graph.css';
 
 export type D3ForceGraphProps = {
-  space: Space;
+  model: SpaceGraphModel;
   match?: RegExp;
 };
 
-export const D3ForceGraph: FC<D3ForceGraphProps> = ({ space, match }) => {
-  const model = useMemo(() => new SpaceGraphModel(), [space]);
+export const D3ForceGraph: FC<D3ForceGraphProps> = ({ model }) => {
   const selected = useMemo(() => new SelectionModel(), []);
   const context = useRef<SVGContext>(null);
   const projector = useMemo<GraphForceProjector | undefined>(
     () => (context.current ? new GraphForceProjector(context.current) : undefined),
     [context],
   );
-
-  useEffect(() => {
-    void model.open(space);
-  }, [space, model]);
 
   return (
     <SVG.Root ref={context}>

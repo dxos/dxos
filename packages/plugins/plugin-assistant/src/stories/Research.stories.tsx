@@ -14,48 +14,53 @@ import {
   Events,
   IntentPlugin,
   SettingsPlugin,
-  Surface,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { defineTool, Message, ToolResult, type Tool } from '@dxos/artifact';
 import { remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
+import { raise } from '@dxos/debug';
 import { DXN, Type } from '@dxos/echo';
 import { create, createQueueDxn, Filter, getTypename, isInstanceOf, type BaseEchoObject } from '@dxos/echo-schema';
+import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { ForceGraph } from '@dxos/plugin-explorer';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { Config, useClient } from '@dxos/react-client';
-import { useQueue, live, useQuery } from '@dxos/react-client/echo';
-import { IconButton, Input, Toolbar } from '@dxos/react-ui';
+import { live, useQueue, useQuery, type Space } from '@dxos/react-client/echo';
+import { IconButton, Input, Toolbar, useAsyncState } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+import { SpaceGraphModel } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from '../components';
+import { researchFn, TYPES } from '../experimental/research/research';
 import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import translations from '../translations';
-import {
-  ConfiguredCredentialsService,
-  FunctionExecutor,
-  ServiceContainer,
-  type FunctionDefinition,
-} from '@dxos/functions';
-import { researchFn, TYPES, type Subgraph } from '../experimental/research/research';
-import { raise } from '@dxos/debug';
-import { ForceGraph } from '@dxos/plugin-explorer';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 
 // const endpoints = localServiceEndpoints;
 const endpoints = remoteServiceEndpoints;
+
+// TODO(burdon): Reconcile with useGraphModel in plugin-explorer.
+export const useGraphModel = (space: Space | undefined): SpaceGraphModel | undefined => {
+  const [model] = useAsyncState<SpaceGraphModel>(
+    async () => (space ? new SpaceGraphModel({}, { schema: true }).open(space) : undefined),
+    [space],
+  );
+
+  return model;
+};
 
 type RenderProps = {
   items?: Type.AnyObject[];
@@ -192,6 +197,8 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     space.db.add(live(schema, object));
   }, []);
 
+  const model = useMemo(() => new SpaceGraphModel(space), [space]);
+
   return (
     <div className={mx('grid w-full h-full grid-cols-3 overflow-hidden divide-x divide-separator')}>
       {/* Thread */}
@@ -235,7 +242,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
       </div>
 
       <div className='overflow-hidden grid grid-rows-[2fr_1fr] divide-y divide-separator'>
-        <ForceGraph space={space} />
+        <ForceGraph model={model} />
       </div>
 
       {/* Artifacts Deck */}
