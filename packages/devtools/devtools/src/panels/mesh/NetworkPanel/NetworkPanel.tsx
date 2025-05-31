@@ -2,22 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { GraphModel, type Graph } from '@dxos/graph';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { type SpaceMember, useMembers, type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Toolbar } from '@dxos/react-ui';
-import {
-  createSvgContext,
-  Graph as GraphComponent,
-  GraphForceProjector,
-  type GraphLayoutNode,
-  Markers,
-  SVG,
-  SVGRoot,
-} from '@dxos/react-ui-graph';
+import { GraphForceProjector, type GraphLayoutNode, SVG, type SVGContext } from '@dxos/react-ui-graph';
 import { mx } from '@dxos/react-ui-theme';
 
 import { PanelContainer } from '../../../components';
@@ -91,28 +83,30 @@ export const NetworkPanel = (props: { space?: Space }) => {
     }
   }, [members]);
 
-  const context = createSvgContext();
-  const projector = useMemo(
+  const context = useRef<SVGContext>(null);
+  const projector = useMemo<GraphForceProjector | undefined>(
     () =>
-      new GraphForceProjector(context, {
-        forces: {
-          manyBody: {
-            strength: -160,
-          },
-          link: {
-            distance: 120,
-            iterations: 5,
-          },
-          radial: {
-            radius: 60,
-            strength: 0.2,
-          },
-        },
-        attributes: {
-          radius: (node: GraphLayoutNode<NetworkGraphNode>) => (isMe(node.data!) ? 24 : 16),
-        },
-      }),
-    [],
+      context.current
+        ? new GraphForceProjector(context.current, {
+            forces: {
+              manyBody: {
+                strength: -160,
+              },
+              link: {
+                distance: 120,
+                iterations: 5,
+              },
+              radial: {
+                radius: 60,
+                strength: 0.2,
+              },
+            },
+            attributes: {
+              radius: (node: GraphLayoutNode<NetworkGraphNode>) => (isMe(node.data!) ? 24 : 16),
+            },
+          })
+        : undefined,
+    [context],
   );
 
   // TODO(dmaretskyi): Highlight our direct connections.
@@ -128,38 +122,35 @@ export const NetworkPanel = (props: { space?: Space }) => {
         )
       }
     >
-      <SVGRoot context={context}>
-        <SVG>
-          <Markers />
-          <GraphComponent
-            model={model}
-            drag
-            arrows
-            projector={projector}
-            labels={{
-              text: (node: GraphLayoutNode<NetworkGraphNode>, highlight) => {
-                const identity =
-                  node.data!.member?.identity.profile?.displayName ??
-                  node.data!.member?.identity.identityKey.truncate();
+      <SVG.Root ref={context}>
+        <SVG.Markers />
+        <SVG.Graph
+          model={model}
+          drag
+          arrows
+          projector={projector}
+          labels={{
+            text: (node: GraphLayoutNode<NetworkGraphNode>, highlight) => {
+              const identity =
+                node.data!.member?.identity.profile?.displayName ?? node.data!.member?.identity.identityKey.truncate();
 
-                const peer = node.data!.peer?.peerId?.truncate();
-                return `${peer} [${identity}]`;
-              },
-            }}
-            attributes={{
-              node: (node: GraphLayoutNode<NetworkGraphNode>) => {
-                const key = node.data?.member?.identity.identityKey ?? node.data?.peer?.peerId;
-                return {
-                  class: mx(
-                    'font-mono',
-                    isMe(node.data) ? classes.default : classes.nodes[key?.getInsecureHash(classes.nodes.length) ?? 0],
-                  ),
-                };
-              },
-            }}
-          />
-        </SVG>
-      </SVGRoot>
+              const peer = node.data!.peer?.peerId?.truncate();
+              return `${peer} [${identity}]`;
+            },
+          }}
+          attributes={{
+            node: (node: GraphLayoutNode<NetworkGraphNode>) => {
+              const key = node.data?.member?.identity.identityKey ?? node.data?.peer?.peerId;
+              return {
+                class: mx(
+                  'font-mono',
+                  isMe(node.data) ? classes.default : classes.nodes[key?.getInsecureHash(classes.nodes.length) ?? 0],
+                ),
+              };
+            },
+          }}
+        />
+      </SVG.Root>
     </PanelContainer>
   );
 };

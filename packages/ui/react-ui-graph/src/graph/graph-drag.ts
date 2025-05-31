@@ -27,12 +27,11 @@ enum Mode {
 }
 
 /**
- * @param context
- * @param simulation
- * @param options
+ * Create drag handler.
  */
-export const createSimulationDrag = <N>(
+export const createDrag = <N>(
   context: SVGContext,
+  // TODO(burdon): Factor out dependency vis callback.
   simulation: Simulation<GraphLayoutNode<N>, GraphLayoutEdge<N>>,
   options: DragOptions<N> = defaultDragOptions,
 ) => {
