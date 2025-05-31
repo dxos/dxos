@@ -9,15 +9,18 @@ import { classMap } from 'lit/directives/class-map.js';
 import './dx-theme-editor-physical-colors';
 import './dx-theme-editor-semantic-colors';
 import './dx-theme-editor-alias-colors';
+import { reset, restore } from './util';
 
 export type DxThemeEditorProps = {};
+
+type Tab = 'physical' | 'semantic' | 'alias' | 'json' | 'reset';
 
 @customElement('dx-theme-editor')
 export class DxThemeEditor extends LitElement {
   @state()
-  private activeTab: 'physical' | 'semantic' | 'alias' = 'physical';
+  private activeTab: Tab = 'physical';
 
-  private handleTabClick(tab: 'physical' | 'semantic' | 'alias') {
+  private handleTabClick(tab: Tab) {
     this.activeTab = tab;
   }
 
@@ -55,6 +58,26 @@ export class DxThemeEditor extends LitElement {
           >
             Alias
           </button>
+          <button
+            id="tab-json"
+            class=${classMap({ 'dx-focus-ring': true, tab: true, active: this.activeTab === 'json' })}
+            role="tab"
+            aria-selected=${this.activeTab === 'json'}
+            aria-controls="panel-json"
+            @click=${() => this.handleTabClick('json')}
+          >
+            JSON
+          </button>
+          <button
+            id="tab-reset"
+            class=${classMap({ 'dx-focus-ring': true, tab: true, active: this.activeTab === 'reset' })}
+            role="tab"
+            aria-selected=${this.activeTab === 'reset'}
+            aria-controls="panel-reset"
+            @click=${() => this.handleTabClick('reset')}
+          >
+            Reset
+          </button>
         </div>
 
         <div
@@ -85,6 +108,26 @@ export class DxThemeEditor extends LitElement {
           ?hidden=${this.activeTab !== 'alias'}
         >
           <dx-theme-editor-alias-colors></dx-theme-editor-alias-colors>
+        </div>
+
+        <div
+          id="panel-json"
+          class=${classMap({ 'tab-panel': true, active: this.activeTab === 'json' })}
+          role="tabpanel"
+          aria-labelledby="tab-json"
+          ?hidden=${this.activeTab !== 'json'}
+        >
+          <textarea readonly>${JSON.stringify(restore(), null, 2)}</textarea>
+        </div>
+
+        <div
+          id="panel-reset"
+          class=${classMap({ 'tab-panel': true, active: this.activeTab === 'reset' })}
+          role="tabpanel"
+          aria-labelledby="tab-reset"
+          ?hidden=${this.activeTab !== 'reset'}
+        >
+          <button class="dx-button dx-focus-ring" data-variant="destructive" @click=${() => reset()}>Reset</button>
         </div>
       </div>
     `;
