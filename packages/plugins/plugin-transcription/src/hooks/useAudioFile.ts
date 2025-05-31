@@ -70,7 +70,12 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
 
       const source = audioCtx.createMediaElementSource(audio);
       source.connect(destination);
-      // Also connect to speakers so audio is audible
+      const track = destination.stream.getAudioTracks()[0];
+      if (constraints) {
+        await track.applyConstraints(constraints).catch((err) => log.catch(err));
+      }
+
+      // TODO(burdon):Also connect to speakers so audio is audible.
 
       setStream({
         audio,
