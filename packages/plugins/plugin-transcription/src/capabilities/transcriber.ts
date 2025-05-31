@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes } from '@dxos/app-framework';
+import { contributes, type PluginContext } from '@dxos/app-framework';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { TranscriptionCapabilities } from './capabilities';
-import { MediaStreamRecorder, Transcriber } from '../transcriber';
+import { MediaStreamRecorder, Transcriber, TranscriptionManager } from '../transcriber';
 
 // TODO(burdon): Move to config?
 
@@ -28,7 +29,7 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 /**
  * Records audio while user is speaking and transcribes it after user is done speaking.
  */
-export default () => {
+export default (context: PluginContext) => {
   const getTranscriber: TranscriptionCapabilities.GetTranscriber = ({ audioStreamTrack, onSegments, config }) => {
     // Initialize audio transcription.
     return new Transcriber({
@@ -45,5 +46,23 @@ export default () => {
     });
   };
 
-  return contributes(TranscriptionCapabilities.Transcriber, getTranscriber);
+  const getTranscriptionManager: TranscriptionCapabilities.GetTranscriptionManager = ({ messageEnricher }) => {
+    const client = context.getCapability(ClientCapabilities.Client);
+    const transcriptionManager = new TranscriptionManager({
+      edgeClient: client.edge,
+      messageEnricher,
+    });
+
+    const identity = client.halo.identity.get();
+    if (identity) {
+      transcriptionManager.setIdentityDid(identity.did);
+    }
+
+    return transcriptionManager;
+  };
+
+  return [
+    contributes(TranscriptionCapabilities.Transcriber, getTranscriber),
+    contributes(TranscriptionCapabilities.TranscriptionManager, getTranscriptionManager),
+  ];
 };

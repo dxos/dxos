@@ -4,7 +4,6 @@
 
 import { Schema } from 'effect';
 
-import { DocumentType } from '@dxos/plugin-markdown/types';
 import { ChannelType } from '@dxos/plugin-thread/types';
 
 import { MeetingType } from './schema';
@@ -23,12 +22,12 @@ export namespace MeetingAction {
     }),
   }) {}
 
-  export class FindOrCreate extends Schema.TaggedClass<FindOrCreate>()(`${MEETING_ACTION}/find-or-create`, {
+  export class SetActive extends Schema.TaggedClass<SetActive>()(`${MEETING_ACTION}/set-active`, {
     input: Schema.Struct({
-      object: ChannelType,
+      object: Schema.optional(MeetingType),
     }),
     output: Schema.Struct({
-      object: MeetingType,
+      object: Schema.optional(MeetingType),
     }),
   }) {}
 
@@ -36,8 +35,15 @@ export namespace MeetingAction {
     input: Schema.Struct({
       meeting: MeetingType,
     }),
-    output: Schema.Struct({
-      object: DocumentType,
-    }),
+    output: Schema.Void,
   }) {}
 }
+
+// TODO(burdon): Create with decode consistently: Schema.decodeSync(TranscriptionSettingsSchema)({}))
+export const MeetingSettingsSchema = Schema.mutable(
+  Schema.Struct({
+    entityExtraction: Schema.optional(Schema.Boolean).pipe(Schema.withConstructorDefault(() => true)),
+  }),
+);
+
+export type MeetingSettingsProps = Schema.Schema.Type<typeof MeetingSettingsSchema>;

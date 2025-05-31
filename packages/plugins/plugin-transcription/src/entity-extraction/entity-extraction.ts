@@ -64,6 +64,7 @@ const ReferencedQuotes = Schema.Struct({
 interface ReferencedQuotes extends Schema.Schema.Type<typeof ReferencedQuotes> {}
 
 // TODO(dmaretskyi): Move context to a vector search index.
+// TODO(wittjosiah): Factor out.
 export const processTranscriptMessage = async (
   params: ProcessTranscriptMessageParams,
 ): Promise<ProcessTranscriptMessageResult> => {

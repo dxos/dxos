@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Expando, Ref, TypedObject } from '@dxos/echo-schema';
+import { Ref, TypedObject } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 
 // TODO(wittjosiah): These types were placed here rather than in @dxos/plugin-thread
@@ -18,13 +18,9 @@ export const ThreadStatus = Schema.Union(
 
 export class ThreadType extends TypedObject({ typename: 'dxos.org/type/Thread', version: '0.1.0' })({
   name: Schema.optional(Schema.String),
+  messages: Schema.mutable(Schema.Array(Ref(DataType.Message))),
+  // TODO(wittjosiah): Factor out to a relation.
   /** AM cursor-range: 'from:to'. */
   anchor: Schema.optional(Schema.String),
   status: Schema.optional(ThreadStatus),
-  messages: Schema.mutable(Schema.Array(Ref(DataType.Message))),
-}) {}
-
-export class ChannelType extends TypedObject({ typename: 'dxos.org/type/Channel', version: '0.1.0' })({
-  name: Schema.optional(Schema.String),
-  queue: Ref(Expando),
 }) {}

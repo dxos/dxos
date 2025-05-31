@@ -10,7 +10,6 @@ import { EchoObjectSchema } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { ChannelType } from './schema';
-import { type CallState, type MediaState } from '../calls';
 import { THREAD_PLUGIN } from '../meta';
 
 export namespace ThreadAction {
@@ -25,6 +24,18 @@ export namespace ThreadAction {
       object: ChannelType,
     }),
   }) {}
+
+  export class CreateChannelThread extends Schema.TaggedClass<CreateChannelThread>()(
+    `${THREAD_ACTION}/create-channel-thread`,
+    {
+      input: Schema.Struct({
+        channel: ChannelType,
+      }),
+      output: Schema.Struct({
+        object: ThreadType,
+      }),
+    },
+  ) {}
 
   export class Create extends Schema.TaggedClass<Create>()(`${THREAD_ACTION}/create`, {
     input: Schema.Struct({
@@ -99,16 +110,4 @@ export type ThreadState = {
   /** In-memory draft threads. */
   drafts: Record<string, ThreadType[]>;
   current?: string | undefined;
-};
-
-// TODO(budron): Better way to define specific extensions for meeting companions.
-// TODO(budron): This brings in deps from ../calls; how should we manage/minimize explicit type exposure to other plugins?
-export type CallProperties = {
-  onJoin: (state: { channel?: ChannelType; roomId?: string }) => Promise<void>;
-  onLeave: (roomId?: string) => Promise<void>;
-  onCallStateUpdated: (callState: CallState) => Promise<void>;
-  onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => Promise<void>;
-
-  // TODO(dmaretskyi): What are the other properties?
-  [key: string]: any;
 };

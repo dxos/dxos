@@ -3,10 +3,14 @@
 //
 
 import { defineCapability } from '@dxos/app-framework';
-import { type Live } from '@dxos/live-object';
 
 import { TRANSCRIPTION_PLUGIN } from '../meta';
-import { type TranscriberParams, type Transcriber, type TranscriptionManager } from '../transcriber';
+import {
+  type TranscriberParams,
+  type Transcriber,
+  type TranscriptionManager,
+  type TranscriptMessageEnricher,
+} from '../transcriber';
 
 export namespace TranscriptionCapabilities {
   export type GetTranscriberProps = {
@@ -17,11 +21,11 @@ export namespace TranscriptionCapabilities {
   export type GetTranscriber = (props: GetTranscriberProps) => Transcriber;
   export const Transcriber = defineCapability<GetTranscriber>(`${TRANSCRIPTION_PLUGIN}/capability/transcriber`);
 
-  export type MeetingTranscriptionState = Live<{
-    transcriptionManager?: TranscriptionManager;
-    enabled: boolean; // TODO(burdon): Move state into TranscriptionManager.
-  }>;
-  export const MeetingTranscriptionState = defineCapability<MeetingTranscriptionState>(
-    `${TRANSCRIPTION_PLUGIN}/capability/meeting-transcription-state`,
+  export type GetTranscriptionManagerProps = {
+    messageEnricher?: TranscriptMessageEnricher;
+  };
+  export type GetTranscriptionManager = (props: GetTranscriptionManagerProps) => TranscriptionManager;
+  export const TranscriptionManager = defineCapability<GetTranscriptionManager>(
+    `${TRANSCRIPTION_PLUGIN}/capability/transcription-manager`,
   );
 }

@@ -4,13 +4,12 @@
 
 import React, { useCallback, useEffect, useState, type ChangeEvent } from 'react';
 
-import { useAppGraph, useCapability } from '@dxos/app-framework';
+import { useCapabilities, useCapability } from '@dxos/app-framework';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { type Node, useConnections } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation, Input, ElevationProvider } from '@dxos/react-ui';
 import { ControlGroup, ControlItemInput, ControlGroupButton } from '@dxos/react-ui-form';
 import { ToolbarMenu, MenuProvider, createMenuAction, useMenuActions, createMenuItemGroup } from '@dxos/react-ui-menu';
@@ -21,12 +20,12 @@ import { Call } from './Call';
 import ChatContainer from './ChatContainer';
 import { ThreadCapabilities } from '../capabilities';
 import { THREAD_PLUGIN } from '../meta';
-import { type ChannelType, type CallProperties } from '../types';
+import { type ChannelType } from '../types';
 
 export type ChannelContainerProps = {
   channel?: ChannelType;
   roomId?: string;
-  role: string;
+  role?: string;
   fullscreen?: boolean;
 };
 
@@ -37,38 +36,36 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
   const space = getSpace(channel);
   const callManager = useCapability(ThreadCapabilities.CallManager);
   const roomId = channel ? fullyQualifiedId(channel) : _roomId;
-  const { graph } = useAppGraph();
+  const identity = useIdentity();
+  const isNamed = !!identity?.profile?.displayName;
   const joinSound = useSoundEffect('JoinCall');
   const leaveSound = useSoundEffect('LeaveCall');
 
-  // TODO(wittjosiah): These callbacks should probably be intents once we support broadcast.
-  const companions = useConnections(graph, channel && fullyQualifiedId(channel)).filter(
-    ({ type }) => type === PLANK_COMPANION_TYPE,
-  ) as Node<any, CallProperties>[];
+  const extensions = useCapabilities(ThreadCapabilities.CallExtension);
   useEffect(() => {
     const ctx = new Context();
     callManager.left.on(ctx, (roomId) => {
-      companions.forEach((companion) => {
-        void companion.properties.onLeave?.(roomId);
+      extensions.forEach((extension) => {
+        void extension.onLeave?.(roomId);
       });
     });
 
     callManager.callStateUpdated.on(ctx, (state) => {
-      companions.forEach((companion) => {
-        void companion.properties.onCallStateUpdated?.(state);
+      extensions.forEach((extension) => {
+        void extension.onCallStateUpdated?.(state);
       });
     });
 
     callManager.mediaStateUpdated.on(ctx, (state) => {
-      companions.forEach((companion) => {
-        void companion.properties.onMediaStateUpdated?.(state);
+      extensions.forEach((extension) => {
+        void extension.onMediaStateUpdated?.(state);
       });
     });
 
     return () => {
       void ctx.dispose();
     };
-  }, [callManager, companions]);
+  }, [callManager, extensions]);
 
   /**
    * Join the call.
@@ -87,12 +84,12 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
       void joinSound.play();
       callManager.setRoomId(roomId);
       await callManager.join();
-      await Promise.all(companions.map((companion) => companion.properties.onJoin?.({ channel, roomId })));
+      await Promise.all(extensions.map((extension) => extension.onJoin?.({ channel, roomId })));
     } catch (err) {
       // TODO(burdon): Error sound.
       log.catch(err);
     }
-  }, [companions, channel, roomId]);
+  }, [extensions, channel, roomId]);
 
   /**
    * Leave the call.
@@ -100,7 +97,7 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
   const handleLeave = useCallback(async () => {
     try {
       void leaveSound.play();
-      await Promise.all(companions.map((companion) => companion.properties.onLeave?.(roomId)));
+      await Promise.all(extensions.map((extension) => extension.onLeave?.(roomId)));
     } catch (err) {
       // TODO(burdon): Error sound.
       log.catch(err);
@@ -110,26 +107,23 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
       void callManager.turnScreenshareOff();
       void callManager.leave();
     }
-  }, [companions, roomId]);
-
-  if (!space) {
-    return null;
-  }
+  }, [extensions, roomId]);
 
   const isJoined = callManager.joined && callManager.roomId === roomId;
 
   return (
     <StackItem.Content toolbar={!isJoined} classNames={isJoined && 'h-full'}>
-      {isJoined && (
+      {isJoined && !isNamed && <DisplayNameMissing />}
+      {isJoined && isNamed && (
         <Call.Root>
           <Call.Grid fullscreen={fullscreen} />
           <Call.Toolbar channel={channel} onLeave={handleLeave} />
         </Call.Root>
       )}
-      {!isJoined && channel && (
+      {!isJoined && channel && channel.defaultThread.target && space && (
         <>
           <ChannelToolbar attendableId={fullyQualifiedId(channel)} role={role} onJoinCall={handleJoin} />
-          <ChatContainer space={space} dxn={channel.queue.dxn} />
+          <ChatContainer space={space} thread={channel.defaultThread.target} />
         </>
       )}
     </StackItem.Content>

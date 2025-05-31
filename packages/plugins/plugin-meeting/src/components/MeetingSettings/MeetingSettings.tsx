@@ -7,11 +7,11 @@ import React from 'react';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
-import { TRANSCRIPTION_PLUGIN } from '../../meta';
-import { type TranscriptionSettingsProps } from '../../types';
+import { MEETING_PLUGIN } from '../../meta';
+import { type MeetingSettingsProps } from '../../types';
 
-export const TranscriptionSettings = ({ settings }: { settings: TranscriptionSettingsProps }) => {
-  const { t } = useTranslation(TRANSCRIPTION_PLUGIN);
+export const MeetingSettings = ({ settings }: { settings: MeetingSettingsProps }) => {
+  const { t } = useTranslation(MEETING_PLUGIN);
 
   return (
     <DeprecatedFormContainer>

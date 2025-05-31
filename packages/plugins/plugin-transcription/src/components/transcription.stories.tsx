@@ -35,7 +35,7 @@ import { ScrollContainer } from '@dxos/react-ui-components';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { seedTestData, Testing } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout } from '@dxos/storybook-utils';
 
 import { renderMarkdown, Transcript } from './Transcript';
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
@@ -263,7 +263,6 @@ const meta: Meta<typeof AudioFile> = {
       //   ),
       // ],
     }),
-    withTheme,
     withLayout({ fullscreen: true, classNames: 'justify-center' }),
   ],
 };

@@ -104,6 +104,11 @@ export type ClientPluginOptions = ClientOptions & {
   onClientInitialized?: (context: PluginContext, client: Client) => MaybePromise<void>;
 
   /**
+   * Called when spaces are ready.
+   */
+  onSpacesReady?: (context: PluginContext, client: Client) => MaybePromise<void>;
+
+  /**
    * Called when the client is reset.
    */
   onReset?: (params: { target?: string }) => MaybePromise<void>;

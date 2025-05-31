@@ -2,19 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, allOf, contributes, defineModule, definePlugin, oneOf } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
-import { ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
+import {
+  AppGraphBuilder,
+  CallExtension,
+  IntentResolver,
+  MeetingSettings,
+  MeetingState,
+  ReactSurface,
+} from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
-import { MeetingAction, MeetingType } from './types';
+import { MeetingType } from './types';
 
 export const MeetingPlugin = () =>
   definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/settings`,
+      activatesOn: Events.SetupSettings,
+      activate: MeetingSettings,
+    }),
+    defineModule({
+      id: `${meta.id}/module/state`,
+      // TODO(wittjosiah): Does not integrate with settings store.
+      //   Should this be a different event?
+      //   Should settings store be renamed to be more generic?
+      activatesOn: oneOf(Events.SetupSettings, Events.SetupAppGraph),
+      activate: MeetingState,
+    }),
     defineModule({
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
@@ -29,23 +47,15 @@ export const MeetingPlugin = () =>
           metadata: {
             label: (object: any) =>
               isInstanceOf(MeetingType, object) ? object.name || new Date(object.created).toLocaleString() : undefined,
-            icon: 'ph--video-conference--regular',
+            icon: 'ph--note--regular',
           },
         }),
       ],
     }),
     defineModule({
-      id: `${meta.id}/module/object-form`,
+      id: `${meta.id}/module/schemas`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
-            objectSchema: MeetingType,
-            hidden: true,
-            getIntent: () => createIntent(MeetingAction.Create),
-          }),
-        ),
+      activate: () => contributes(ClientCapabilities.Schema, [MeetingType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
@@ -61,5 +71,10 @@ export const MeetingPlugin = () =>
       id: `${meta.id}/module/app-graph-builder`,
       activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
+    }),
+    defineModule({
+      id: `${meta.id}/module/call-extension`,
+      activatesOn: allOf(Events.SettingsReady, ClientEvents.ClientReady),
+      activate: CallExtension,
     }),
   ]);

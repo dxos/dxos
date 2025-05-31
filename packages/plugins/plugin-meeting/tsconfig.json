@@ -37,6 +37,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/local-storage"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -70,6 +73,9 @@
       "path": "../../core/mesh/edge-client"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../experimental/artifact"
     },
     {
@@ -100,6 +106,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {
@@ -127,7 +136,13 @@
       "path": "../plugin-space"
     },
     {
+      "path": "../plugin-theme"
+    },
+    {
       "path": "../plugin-thread"
+    },
+    {
+      "path": "../plugin-transcription"
     }
   ]
 }

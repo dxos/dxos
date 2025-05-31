@@ -4,4 +4,7 @@
 
 import { lazy } from 'react';
 
-export const MissingArtifact = lazy(() => import('./MissingArtifact'));
+export const MeetingContainer = lazy(() => import('./MeetingContainer'));
+export const MeetingsList = lazy(() => import('./MeetingsList'));
+
+export * from './MeetingSettings';

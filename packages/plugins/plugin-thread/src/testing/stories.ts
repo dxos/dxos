@@ -3,22 +3,29 @@
 //
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { live } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { CollectionType } from '@dxos/plugin-space/types';
+import { ThreadType } from '@dxos/plugin-space/types';
+import { ThemePlugin } from '@dxos/plugin-theme';
 import { Config } from '@dxos/react-client';
-import { live, makeRef } from '@dxos/react-client/echo';
+import { Ref } from '@dxos/react-client/echo';
+import { defaultTx } from '@dxos/react-ui-theme';
 
 import { ThreadPlugin } from '../ThreadPlugin';
+import { ChannelType } from '../types';
 
 export const createThreadPlugins = async () => [
+  ThemePlugin({ tx: defaultTx }),
   ClientPlugin({
     onClientInitialized: async (_, client) => {
-      await client.halo.createIdentity();
-      const space = await client.spaces.create();
-      await space.waitUntilReady();
-      space.properties[CollectionType.typename] = makeRef(live(CollectionType, { objects: [], views: {} }));
+      await client.halo.createIdentity({ displayName: 'Test User' });
+    },
+    onSpacesReady: async (_, client) => {
+      await client.spaces.default.waitUntilReady();
+      const thread = live(ThreadType, { messages: [] });
+      client.spaces.default.db.add(live(ChannelType, { defaultThread: Ref.make(thread), threads: [] }));
     },
     config: new Config({
       runtime: {

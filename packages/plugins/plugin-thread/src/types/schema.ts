@@ -4,12 +4,12 @@
 
 import { Schema } from 'effect';
 
-import { Ref, TypedObject, Expando } from '@dxos/echo-schema';
+import { Ref, TypedObject } from '@dxos/echo-schema';
+import { ThreadType } from '@dxos/plugin-space/types';
 
-// TODO(wittjosiah): Factor out to @dxos/schema?
-//   Channel vs Thread?
-//   Arrays vs Queues?
 export class ChannelType extends TypedObject({ typename: 'dxos.org/type/Channel', version: '0.1.0' })({
   name: Schema.optional(Schema.String),
-  queue: Ref(Expando),
+  defaultThread: Ref(ThreadType),
+  // TODO(wittjosiah): Should be an "ordered collection".
+  threads: Schema.mutable(Schema.Array(Ref(ThreadType))),
 }) {}

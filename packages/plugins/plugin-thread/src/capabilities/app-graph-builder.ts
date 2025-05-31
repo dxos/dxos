@@ -31,7 +31,7 @@ export default (context: PluginContext) =>
                   call?.joined
                     ? [
                         {
-                          id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-meeting`,
+                          id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-call`,
                           type: DECK_COMPANION_TYPE,
                           data: null,
                           properties: {
@@ -50,6 +50,8 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
+    // TODO(wittjosiah): The channel shouldn't become the companion during a call.
+    //   Alternative: the call/meeting/thread should be a child node of the channel and that should be opened.
     createExtension({
       id: `${THREAD_PLUGIN}/channel-chat-companion`,
       connector: (node) => {
@@ -59,7 +61,10 @@ export default (context: PluginContext) =>
             Option.flatMap((node) => (isInstanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
             Option.map((channel) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
-              if (!callManager.joined || callManager.roomId !== fullyQualifiedId(channel)) {
+              const joined = get(
+                rxFromSignal(() => callManager.joined && callManager.roomId === fullyQualifiedId(channel)),
+              );
+              if (!joined) {
                 return [];
               }
 
@@ -69,8 +74,8 @@ export default (context: PluginContext) =>
                   type: PLANK_COMPANION_TYPE,
                   data: 'chat',
                   properties: {
-                    label: ['chat label', { ns: THREAD_PLUGIN }],
-                    icon: 'ph--chat-text--regular',
+                    label: ['channel companion label', { ns: THREAD_PLUGIN }],
+                    icon: 'ph--hash--regular',
                     position: 'hoist',
                     disposition: 'hidden',
                   },
@@ -90,7 +95,9 @@ export default (context: PluginContext) =>
             get(node),
             Option.flatMap((node) =>
               // TODO(wittjosiah): Support comments on any object.
-              isLiveObject(node.data) && Array.isArray(node.data.threads) ? Option.some(node) : Option.none(),
+              isLiveObject(node.data) && Array.isArray(node.data.threads) && !isInstanceOf(ChannelType, node.data)
+                ? Option.some(node)
+                : Option.none(),
             ),
             Option.map((node) => [
               {

@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
-import { type Ref } from '@dxos/echo-schema';
+import { isInstanceOf, type Ref } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
-import { type ThreadType } from '@dxos/plugin-space/types';
+import { ThreadType } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { ThreadCapabilities } from './capabilities';
@@ -37,11 +37,25 @@ export default () =>
         data.companionTo instanceof ChannelType && data.subject === 'chat',
       component: ({ data: { companionTo: channel } }) => {
         const space = getSpace(channel);
-        if (!space) {
+        const thread = channel.defaultThread.target;
+        if (!space || !thread) {
           return null;
         }
 
-        return <ChatContainer dxn={channel.queue.dxn} space={space} />;
+        return <ChatContainer thread={thread} space={space} />;
+      },
+    }),
+    createSurface({
+      id: `${THREAD_PLUGIN}/thread`,
+      role: 'article',
+      filter: (data): data is { subject: ThreadType } => isInstanceOf(ThreadType, data.subject),
+      component: ({ data: { subject: thread } }) => {
+        const space = getSpace(thread);
+        if (!space || !thread) {
+          return null;
+        }
+
+        return <ChatContainer thread={thread} space={space} />;
       },
     }),
     createSurface({

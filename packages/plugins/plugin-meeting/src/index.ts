@@ -3,6 +3,5 @@
 //
 
 export * from './meta';
-export * from './components';
 
 export * from './MeetingPlugin';

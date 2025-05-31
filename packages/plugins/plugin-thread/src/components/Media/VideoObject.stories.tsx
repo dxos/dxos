@@ -4,8 +4,6 @@
 
 import '@dxos-theme';
 
-import 'preact/debug';
-
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
