@@ -13,7 +13,6 @@ import { debounce } from '@dxos/async';
 import { restore, saveAndRender } from './util';
 
 import './dx-range-spinbutton';
-import './dx-theme-editor.pcss';
 
 export type DxThemeEditorPhysicalColorsProps = {};
 
@@ -156,11 +155,7 @@ export class DxThemeEditorPhysicalColors extends LitElement {
   }
 
   override render() {
-    return html`
-      ${bindSeriesDefinitions.map(
-        (series) => html` <div class="series-container">${this.renderSeriesControls(series)}</div> `,
-      )}
-    `;
+    return bindSeriesDefinitions.map((series) => this.renderSeriesControls(series));
   }
 
   override createRenderRoot() {

@@ -194,6 +194,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/theme-editor-addon/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/timeframe/package.json",
           "jsonpath": "$.version"
         },

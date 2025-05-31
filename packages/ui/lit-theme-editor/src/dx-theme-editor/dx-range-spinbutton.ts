@@ -7,8 +7,6 @@ import { customElement, property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
-import './dx-theme-editor.pcss';
-
 export type DxRangeSpinbuttonVariant = 'reverse-range' | 'reverse-order' | 'torsion';
 
 @customElement('dx-range-spinbutton')
@@ -111,7 +109,7 @@ export class DxRangeSpinbutton extends LitElement {
           min="${this.min}"
           max="${this.max}"
           step="${this.step}"
-          class="number-input dx-focus-ring"
+          class="number-input dx-input dx-focus-ring"
           .value=${this.value.toString()}
           @input=${this.handleInput}
           aria-labelledby="${this.headingId} ${controlId}-label"

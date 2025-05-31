@@ -16,6 +16,9 @@
       "path": "../../packages/common/log"
     },
     {
+      "path": "../../packages/common/theme-editor-addon"
+    },
+    {
       "path": "../../packages/ui/react-ui-theme"
     },
     {
