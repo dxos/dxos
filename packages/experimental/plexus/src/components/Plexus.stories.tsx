@@ -21,7 +21,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import hash from 'string-hash';
 
 import { faker } from '@dxos/random';
-import { Grid, SVG, SVGRoot, Zoom, Markers, type GraphLayoutNode } from '@dxos/react-ui-graph';
+import { SVG, type GraphLayoutNode } from '@dxos/react-ui-graph';
 import { convertTreeToGraph, createTree, type TestNode, TestGraphModel } from '@dxos/react-ui-graph/testing';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
@@ -162,18 +162,18 @@ const Test = () => {
   return (
     <div ref={containerRef} className='flex flex-col absolute left-0 right-0 top-0 bottom-0'>
       <div className='flex flex-1 relative'>
-        <SVGRoot>
-          <SVG classNames={slots?.root}>
-            <Markers arrowSize={6} />
-            <Grid className={slots?.grid?.className} />
-            <Zoom extent={[1, 4]}>
-              <g className={mx('visible', spinning && 'invisible')}>
-                <line className='stroke-slate-700 stroke-[3px]' x1={0} y1={0} x2={lineLength} y2={0} />
-              </g>
-              <Plexus model={model} slots={slots?.plexus} onSelect={handleSelect} onTransition={setSpinning} />
-            </Zoom>
-          </SVG>
-        </SVGRoot>
+        <SVG.Root>
+          {/* <SVG classNames={slots?.root}> */}
+          <SVG.Markers arrowSize={6} />
+          <SVG.Grid /*className={slots?.grid?.className} */ />
+          <SVG.Zoom extent={[1, 4]}>
+            <g className={mx('visible', spinning && 'invisible')}>
+              <line className='stroke-slate-700 stroke-[3px]' x1={0} y1={0} x2={lineLength} y2={0} />
+            </g>
+            <Plexus model={model} slots={slots?.plexus} onSelect={handleSelect} onTransition={setSpinning} />
+          </SVG.Zoom>
+          {/* </SVG> */}
+        </SVG.Root>
 
         {node && (
           <div
