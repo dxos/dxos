@@ -216,7 +216,7 @@ export default (context: PluginContext) =>
               {
                 id: `${fullyQualifiedId(meeting)}${ATTENDABLE_PATH_SEPARATOR}summary`,
                 type: PLANK_COMPANION_TYPE,
-                data: get(rxFromSignal(() => meeting.artifacts[DocumentType.typename]?.target)),
+                data: get(rxFromSignal(() => meeting.artifacts?.[DocumentType.typename]?.target)),
                 properties: {
                   label: ['meeting summary label', { ns: MEETING_PLUGIN }],
                   icon: 'ph--book-open-text--regular',
