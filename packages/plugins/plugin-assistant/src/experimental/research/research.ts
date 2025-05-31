@@ -25,6 +25,7 @@ import { AiService, CredentialsService, defineFunction, QueuesService } from '@d
 import { createExaTool, createMockExaTool } from './exa';
 import INSTRUCTIONS from './instructions.tpl?raw';
 import { DataType } from '@dxos/schema';
+import { DXN } from '@dxos/keys';
 
 export const TYPES = [
   DataType.Event,
@@ -171,8 +172,8 @@ export const sanitizeObjects = (types: Schema.Schema.AnyNoContext[], data: Recor
         }
         delete data.source;
         delete data.target;
-        data[RelationSourceId] = sourceId;
-        data[RelationTargetId] = targetId;
+        data[RelationSourceId] = DXN.fromLocalObjectId(sourceId);
+        data[RelationTargetId] = DXN.fromLocalObjectId(targetId);
       }
 
       return create(entry.schema, data);

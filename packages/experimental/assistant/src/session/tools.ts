@@ -59,7 +59,7 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
     invariant(tool.execute);
     toolResult = await tool.execute(toolCall.input, { extensions });
   } catch (error: any) {
-    log('tool error', { error });
+    log.warn('tool error', { error });
     toolResult = ToolResult.Error(error.message);
   }
 

@@ -23,7 +23,17 @@ import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-te
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
 import { DXN, Type } from '@dxos/echo';
-import { create, createQueueDxn, Filter, getTypename, isInstanceOf, type BaseEchoObject } from '@dxos/echo-schema';
+import {
+  create,
+  createQueueDxn,
+  EntityKind,
+  Filter,
+  getTypeAnnotation,
+  getTypeIdentifierAnnotation,
+  getTypename,
+  isInstanceOf,
+  type BaseEchoObject,
+} from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
@@ -35,7 +45,7 @@ import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { Config, useClient } from '@dxos/react-client';
-import { live, useQueue, useQuery, type Space } from '@dxos/react-client/echo';
+import { live, useQueue, useQuery, type Space, type EchoDatabase } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncState } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { SpaceGraphModel } from '@dxos/schema';
@@ -48,6 +58,7 @@ import { createProcessorOptions } from '../testing';
 import translations from '../translations';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
+import type { Schema } from 'effect';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 const LOCAL = false;
@@ -79,6 +90,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         endpoint: endpoints.ai,
         defaultGenerationOptions: {
           // model: '@anthropic/claude-sonnet-4-20250514',
+          model: '@anthropic/claude-3-5-sonnet-20241022',
         },
       }),
   );

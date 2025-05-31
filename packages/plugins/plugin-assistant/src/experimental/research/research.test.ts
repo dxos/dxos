@@ -24,9 +24,10 @@ describe('Research', () => {
       ai: {
         client: REMOTE_AI
           ? new AIServiceEdgeClient({
-              endpoint: AI_SERVICE_ENDPOINT.LOCAL,
+              endpoint: AI_SERVICE_ENDPOINT.REMOTE,
               defaultGenerationOptions: {
-                model: '@anthropic/claude-sonnet-4-20250514',
+                // model: '@anthropic/claude-sonnet-4-20250514',
+                model: '@anthropic/claude-3-5-sonnet-20241022',
               },
             })
           : new OllamaClient({
@@ -47,6 +48,7 @@ describe('Research', () => {
     });
 
     console.log(inspect(result, { depth: null, colors: true }));
+    console.log(JSON.stringify(result, null, 2));
   });
 });
 

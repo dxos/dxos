@@ -4,13 +4,13 @@
 
 /**
  * Used to access relation source ref on live ECHO objects.
- * Reading this symbol must return `Ref<Live<EchoObject<any>>>`
+ * Reading this symbol must return `Live<EchoObject<any>>` or a DXN.
  */
 export const RelationSourceId: unique symbol = Symbol('@dxos/echo-db/RelationSource');
 
 /**
  * Used to access relation target ref on live ECHO objects.
- * Reading this symbol must return `Ref<Live<EchoObject<any>>>`
+ * Reading this symbol must return `Live<EchoObject<any>>` or a DXN.
  */
 export const RelationTargetId: unique symbol = Symbol('@dxos/echo-db/RelationTarget');
 

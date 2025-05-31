@@ -8,7 +8,8 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { ECHO_ATTR_TYPE, TYPENAME_SYMBOL } from './typename';
 import { type Ref } from '../ref';
 import { ATTR_RELATION_TARGET, ATTR_RELATION_SOURCE, RelationSourceId, RelationTargetId } from './relation';
-import { getDXN } from '../types';
+import { getDXN, type BaseObject } from '../types';
+import { DXN } from '@dxos/keys';
 
 type DeepReplaceRef<T> =
   T extends Ref<any> ? EncodedReference : T extends object ? { [K in keyof T]: DeepReplaceRef<T[K]> } : T;
@@ -49,14 +50,24 @@ const typedJsonSerializer = function (this: any, key: string, value: any) {
   };
 
   if (this[RelationSourceId]) {
-    result[ATTR_RELATION_SOURCE] =
-      getDXN(this[RelationSourceId])?.toString() ?? failedInvariant('Missing relation source');
+    result[ATTR_RELATION_SOURCE] = formatRelationConnector(this[RelationSourceId]).toString();
   }
   if (this[RelationTargetId]) {
-    result[ATTR_RELATION_TARGET] =
-      getDXN(this[RelationTargetId])?.toString() ?? failedInvariant('Missing relation target');
+    result[ATTR_RELATION_TARGET] = formatRelationConnector(this[RelationTargetId]).toString();
   }
 
   Object.assign(result, rest);
   return result;
+};
+
+const formatRelationConnector = (value: BaseObject | DXN): DXN => {
+  if (value instanceof DXN) {
+    return value;
+  }
+
+  if (typeof value === 'object') {
+    return getDXN(value) ?? failedInvariant('Missing relation connector');
+  }
+
+  return failedInvariant('Invalid relation connector');
 };
