@@ -76,8 +76,8 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
   // Queue.
   const [queueDxn, setQueueDxn] = useState<string>(
-    () => 'dxn:queue:data:B5QTVZILSG7LCY2OB7VUGGHLE632U532U:01JWH3S9576J8R35WMN7DT88N8',
-    // createQueueDxn(space.id).toString()
+    // () => 'dxn:queue:data:B5QTVZILSG7LCY2OB7VUGGHLE632U532U:01JWH3S9576J8R35WMN7DT88N8',
+    () => createQueueDxn(space.id).toString(),
   );
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
