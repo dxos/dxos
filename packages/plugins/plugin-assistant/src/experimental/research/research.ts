@@ -25,22 +25,6 @@ import { AiService, CredentialsService, defineFunction, QueuesService } from '@d
 import { createExaTool, createMockExaTool } from './exa';
 import INSTRUCTIONS from './instructions.tpl?raw';
 import { DataType } from '@dxos/schema';
-import { Relation } from '@dxos/echo';
-
-const Develops = Schema.Struct({
-  since: Schema.optional(Schema.String),
-})
-  .pipe(
-    Relation.def({
-      typename: 'example.com/relation/Develops',
-      version: '0.1.0',
-      source: DataType.Organization,
-      target: DataType.Project,
-    }),
-  )
-  .annotations({
-    description: 'A relation between an organization and a project.',
-  });
 
 export const TYPES = [
   DataType.Event,
@@ -49,7 +33,8 @@ export const TYPES = [
   DataType.Project,
   DataType.Task,
   DataType.Text,
-  Develops,
+  DataType.HasRelationship,
+  DataType.Employer,
 ];
 
 // TODO(burdon): Unify with the graph schema.
@@ -129,7 +114,7 @@ export const createExtractionSchema = (types: Schema.Schema.AnyNoContext[]) => {
       types.map(preprocessSchema).map((schema, index) => [
         `objects_${getSanitizedSchemaName(types[index])}`,
         Schema.optional(Schema.Array(schema)).annotations({
-          description: `The objects to answer the query of type: ${getSchemaDXN(types[index])?.asTypeDXN()!.type}`,
+          description: `The objects of type: ${getSchemaDXN(types[index])?.asTypeDXN()!.type}. ${SchemaAST.getDescriptionAnnotation(types[index].ast).pipe(Option.getOrElse(() => ''))}`,
         }),
       ]),
     ),

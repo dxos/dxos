@@ -47,7 +47,7 @@ describe('Research', () => {
   });
 });
 
-describe.skip('misc', () => {
+describe('misc', () => {
   test('createExtractionSchema', () => {
     const schema = createExtractionSchema(TYPES);
     log.info('schema', { schema });

@@ -14,6 +14,7 @@ import {
   Events,
   IntentPlugin,
   SettingsPlugin,
+  Surface,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
