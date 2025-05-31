@@ -13,7 +13,6 @@ export const Tool = ({ api }: { api: API }) => {
   const sbApi = useStorybookApi();
 
   const toggleThemeEditor = useCallback(() => {
-    console.log('[toggle theme editor clicked]', PARAM_KEY);
     api.getChannel()?.emit(PARAM_KEY, { state: 'open' });
   }, [api]);
 

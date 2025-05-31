@@ -15,7 +15,7 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { PARAM_KEY } from '@dxos/theme-editor-addon';
 
 const DxThemeEditor = createComponent({
-  tagName: 'dx-grid',
+  tagName: 'dx-theme-editor',
   elementClass: NaturalDxThemeEditor,
   react: React,
 });
@@ -30,7 +30,6 @@ export const withTheme: Decorator = (Story, context) => {
   const [editorOpen, setEditorOpen] = useState(false);
 
   const handleOpenChange = useCallback((nextOpen: boolean) => {
-    console.log('[editor open change]', nextOpen);
     setEditorOpen(nextOpen);
   }, []);
 
@@ -45,7 +44,6 @@ export const withTheme: Decorator = (Story, context) => {
 
   useEffect(() => {
     const openEditor = () => {
-      console.log(`[received ${PARAM_KEY}]`);
       handleOpenChange(true);
     };
     addons.getChannel().on(PARAM_KEY, openEditor);
