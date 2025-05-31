@@ -39,7 +39,7 @@ class SpaceGraphBuilder extends AbstractGraphBuilder<EchoGraphNode, EchoGraphEdg
 const defaultFilter: Filter<any> = Filter.not(
   Filter.or(
     Filter.type(StoredSchema),
-    // , Filter.type(CollectionType)
+    // Filter.type(CollectionType),
   ),
 );
 
@@ -101,9 +101,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
         ({ objects }) => {
           this._objects = objects;
 
-            console.log('objects', { objects });
-
-            // Merge with current nodes.
+          // Merge with current nodes.
           const currentNodes = this._graph.nodes;
           this.clear();
 

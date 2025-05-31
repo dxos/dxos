@@ -4,7 +4,9 @@
 
 import React, { type PropsWithChildren, type FC } from 'react';
 
+import { Surface } from '@dxos/app-framework';
 import { type MessageContentBlock, type Message, type ToolType } from '@dxos/artifact';
+import type { BaseEchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
 import { Button, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
@@ -19,8 +21,6 @@ import { safeParseJson } from '@dxos/util';
 
 import { ToolBlock, isToolMessage } from './ToolInvocations';
 import { ToolboxContainer } from '../Toolbox';
-import type { BaseEchoObject } from '@dxos/echo-schema';
-import { Surface } from '@dxos/app-framework';
 
 const panelClassNames = 'flex flex-col w-full px-2 bg-groupSurface rounded-md';
 const userClassNames = 'bg-[--user-fill] text-accentSurfaceText';
@@ -183,7 +183,11 @@ const components: Record<string, BlockComponent> = {
               fallback={<div className='font-mono text-xs text-pre'>{block.json}</div>}
             />
             {onAddToGraph && (
-              <button onClick={() => onAddToGraph?.(JSON.parse(block.json ?? '{}'))}>Add to graph {'->'}</button>
+              <IconButton
+                icon='ph--plus--regular'
+                label='Add to graph'
+                onClick={() => onAddToGraph?.(JSON.parse(block.json ?? '{}'))}
+              />
             )}
           </div>
         );
