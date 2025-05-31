@@ -77,7 +77,7 @@ export const researchFn = defineFunction({
     session.message.on((message) => printer.printMessage(message));
     session.userMessage.on((message) => printer.printMessage(message));
     session.block.on((block) => printer.printContentBlock(block));
-    session.streamEvent.on((event) => console.log(JSON.stringify(event)));
+    session.streamEvent.on((event) => log('stream', { event }));
 
     // TODO(dmaretskyi): Consider adding this pattern as the "Graph" output mode for the session.
     const outputSchema = createExtractionSchema(TYPES);

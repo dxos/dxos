@@ -37,10 +37,9 @@ const DefaultStory = () => {
         [TestSchemaType.organization]: 10,
         [TestSchemaType.contact]: 30,
       });
-      const orgs = objs.slice(0, 10);
-      const contacts = objs.slice(10);
 
       // Add relations between objects.
+      const contacts = objs.filter((obj) => obj.typename === TestSchemaType.contact);
       for (const _ of range(10)) {
         space.db.add(
           live(DataType.HasRelationship, {
