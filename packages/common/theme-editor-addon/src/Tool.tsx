@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { LightningIcon } from '@storybook/icons';
+import { ControlsIcon } from '@storybook/icons';
 import { type API, useStorybookApi } from '@storybook/manager-api';
 import React, { useCallback, useEffect } from 'react';
 import { IconButton } from 'storybook/internal/components';
@@ -27,7 +27,7 @@ export const Tool = ({ api }: { api: API }) => {
 
   return (
     <IconButton key={TOOL_ID} title='Toggle theme editor' onClick={toggleThemeEditor}>
-      <LightningIcon />
+      <ControlsIcon />
     </IconButton>
   );
 };

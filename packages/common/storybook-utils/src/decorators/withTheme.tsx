@@ -55,15 +55,27 @@ export const withTheme: Decorator = (Story, context) => {
       <Tooltip.Provider>
         <MemoizedStory />
         <Dialog.Root open={editorOpen} onOpenChange={handleOpenChange}>
-          <Dialog.Overlay>
-            <Dialog.Content>
+          <div
+            role='none'
+            className='dx-dialog__overlay bg-transparent pointer-events-none'
+            style={{ placeContent: 'end' }}
+          >
+            <Dialog.Content
+              classNames='relative box-content py-0 px-2 md:is-[35rem] md:max-is-none overflow-y-auto layout-contain'
+              style={{ maxBlockSize: '50dvh' }}
+            >
               <Dialog.Title srOnly>Theme Editor</Dialog.Title>
               {editorOpen && <DxThemeEditor />}
               <Dialog.Close asChild>
-                <IconButton icon='ph--x--regular' label='Close' />
+                <IconButton
+                  iconOnly
+                  icon='ph--x--regular'
+                  label='Close'
+                  classNames='absolute block-start-2 inline-end-2'
+                />
               </Dialog.Close>
             </Dialog.Content>
-          </Dialog.Overlay>
+          </div>
         </Dialog.Root>
       </Tooltip.Provider>
     </ThemeProvider>
