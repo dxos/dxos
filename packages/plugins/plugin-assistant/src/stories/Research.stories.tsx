@@ -183,14 +183,9 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, []);
 
   return (
-    <div
-      className={mx(
-        'grid w-full h-full justify-center overflow-hidden divide-x divide-separator',
-        objects.length && 'grid-cols-2',
-      )}
-    >
+    <div className={mx('grid w-full h-full grid-cols-3 overflow-hidden divide-x divide-separator')}>
       {/* Thread */}
-      <div className='flex flex-col h-full w-[40rem] max-w-[40rem] gap-4 outline outline-separator overflow-hidden'>
+      <div className='flex flex-col h-full gap-4 outline outline-separator overflow-hidden'>
         <Toolbar.Root classNames='p-2'>
           <Input.Root>
             <Input.TextInput
@@ -272,6 +267,7 @@ const meta: Meta<typeof DefaultStory> = {
               await client.halo.createIdentity();
             }
           },
+          types: [...TYPES],
         }),
         SpacePlugin(),
         SettingsPlugin(),
