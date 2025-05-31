@@ -7,7 +7,16 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Events, IntentPlugin, SettingsPlugin, Surface, useIntentDispatcher } from '@dxos/app-framework';
+import {
+  Capabilities,
+  contributes,
+  createSurface,
+  Events,
+  IntentPlugin,
+  SettingsPlugin,
+  Surface,
+  useIntentDispatcher,
+} from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { defineTool, Message, ToolResult, type Tool } from '@dxos/artifact';
 import { remoteServiceEndpoints } from '@dxos/artifact-testing';
@@ -41,6 +50,7 @@ import {
 import { researchFn, TYPES, type Subgraph } from '../experimental/research/research';
 import { raise } from '@dxos/debug';
 import { ForceGraph } from '@dxos/plugin-explorer';
+import { PreviewPlugin } from '@dxos/plugin-preview';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 
@@ -233,7 +243,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         {objects.map((object) => (
           <div key={object.id} className={mx('flex grow overflow-hidden', objects.length === 1 && 'row-span-2')}>
             {/* <Surface role='canvas-node' limit={1} data={object} /> */}
-            {JSON.stringify(object)}
+            <Surface
+              role='card'
+              data={{ subject: object }}
+              limit={1}
+              fallback={<div className='font-mono text-xs text-pre'>{JSON.stringify(object)}</div>}
+            />
           </div>
         ))}
       </div>
@@ -278,6 +293,20 @@ const meta: Meta<typeof DefaultStory> = {
         InboxPlugin(),
         MapPlugin(),
         TablePlugin(),
+        PreviewPlugin(),
+      ],
+      capabilities: [
+        contributes(
+          Capabilities.ReactSurface,
+          createSurface({
+            id: 'test',
+            role: 'card',
+            position: 'fallback',
+            component: ({ data }) => (
+              <span className='text-xs whitespace-pre-wrap'>{JSON.stringify(data.subject, null, 2)}</span>
+            ),
+          }),
+        ),
       ],
       fireEvents: [Events.SetupArtifactDefinition],
     }),

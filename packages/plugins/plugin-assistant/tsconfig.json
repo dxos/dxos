@@ -165,6 +165,9 @@
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-preview"
+    },
+    {
       "path": "../plugin-script"
     },
     {

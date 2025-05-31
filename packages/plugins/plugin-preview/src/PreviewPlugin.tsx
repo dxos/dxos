@@ -127,7 +127,7 @@ export const PreviewPlugin = () =>
           //
           createSurface({
             id: `${PREVIEW_PLUGIN}/schema-popover`,
-            role: ['popover', 'card--kanban'],
+            role: ['popover', 'card--kanban', 'card'],
             filter: (data): data is { subject: DataType.Person } => isInstanceOf(DataType.Person, data.subject),
             component: ({ data, role }) => {
               const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -168,7 +168,7 @@ export const PreviewPlugin = () =>
           }),
           createSurface({
             id: `${PREVIEW_PLUGIN}/schema-popover`,
-            role: ['popover', 'card--kanban'],
+            role: ['popover', 'card--kanban', 'card'],
             filter: (data): data is { subject: DataType.Organization } =>
               isInstanceOf(DataType.Organization, data.subject),
             component: ({ data, role }) => (
@@ -179,7 +179,7 @@ export const PreviewPlugin = () =>
           }),
           createSurface({
             id: `${PREVIEW_PLUGIN}/schema-popover`,
-            role: ['popover', 'card--kanban'],
+            role: ['popover', 'card--kanban', 'card'],
             filter: (data): data is { subject: DataType.Project } => isInstanceOf(DataType.Project, data.subject),
             component: ({ data, role }) => <ProjectCard subject={data.subject} role={role} />,
           }),
@@ -189,7 +189,7 @@ export const PreviewPlugin = () =>
           //
           createSurface({
             id: `${PREVIEW_PLUGIN}/fallback-popover`,
-            role: ['popover', 'card--kanban'],
+            role: ['popover', 'card--kanban', 'card'],
             position: 'fallback',
             filter: (data): data is { subject: AnyLiveObject<any> } => isEchoObject(data.subject),
             component: ({ data, role }) => {

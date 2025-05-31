@@ -20,6 +20,7 @@ import { safeParseJson } from '@dxos/util';
 import { ToolBlock, isToolMessage } from './ToolInvocations';
 import { ToolboxContainer } from '../Toolbox';
 import type { BaseEchoObject } from '@dxos/echo-schema';
+import { Surface } from '@dxos/app-framework';
 
 const panelClassNames = 'flex flex-col w-full px-2 bg-groupSurface rounded-md';
 const userClassNames = 'bg-[--user-fill] text-accentSurfaceText';
@@ -175,7 +176,12 @@ const components: Record<string, BlockComponent> = {
       case 'graph': {
         return (
           <div className='flex flex-wrap gap-1'>
-            <div className='font-mono text-xs text-pre'>{block.json}</div>
+            <Surface
+              role='card'
+              data={{ subject: JSON.parse(block.json ?? '{}') }}
+              limit={1}
+              fallback={<div className='font-mono text-xs text-pre'>{block.json}</div>}
+            />
             {onAddToGraph && (
               <button onClick={() => onAddToGraph?.(JSON.parse(block.json ?? '{}'))}>Add to graph {'->'}</button>
             )}
