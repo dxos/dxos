@@ -3,10 +3,12 @@
 //
 
 import { type EncodedReference } from '@dxos/echo-protocol';
-import { invariant } from '@dxos/invariant';
+import { failedInvariant, invariant } from '@dxos/invariant';
 
 import { ECHO_ATTR_TYPE, TYPENAME_SYMBOL } from './typename';
 import { type Ref } from '../ref';
+import { ATTR_RELATION_TARGET, ATTR_RELATION_SOURCE, RelationSourceId, RelationTargetId } from './relation';
+import { getDXN } from '../types';
 
 type DeepReplaceRef<T> =
   T extends Ref<any> ? EncodedReference : T extends object ? { [K in keyof T]: DeepReplaceRef<T[K]> } : T;
@@ -41,9 +43,20 @@ export const attachTypedJsonSerializer = (obj: any) => {
 // NOTE: KEEP as function.
 const typedJsonSerializer = function (this: any, key: string, value: any) {
   const { id, [TYPENAME_SYMBOL]: typename, ...rest } = this;
-  return {
+  const result: any = {
     id,
     [ECHO_ATTR_TYPE]: typename,
-    ...rest,
   };
+
+  if (this[RelationSourceId]) {
+    result[ATTR_RELATION_SOURCE] =
+      getDXN(this[RelationSourceId])?.toString() ?? failedInvariant('Missing relation source');
+  }
+  if (this[RelationTargetId]) {
+    result[ATTR_RELATION_TARGET] =
+      getDXN(this[RelationTargetId])?.toString() ?? failedInvariant('Missing relation target');
+  }
+
+  Object.assign(result, rest);
+  return result;
 };

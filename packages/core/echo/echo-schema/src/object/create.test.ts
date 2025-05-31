@@ -14,6 +14,8 @@ import { getTypename } from './typename';
 import { getSchema, getSchemaDXN } from '../ast';
 import { Testing } from '../testing';
 import { isInstanceOf } from '../types';
+import { RelationSourceId } from './relation';
+import { RelationTargetId } from './relation';
 
 describe('create (static version)', () => {
   test('defaults', ({ expect }) => {
@@ -57,6 +59,29 @@ describe('create (static version)', () => {
       email: 'bot@example.com',
     });
     expect(serializeStatic(contact)).toStrictEqual(json);
+  });
+
+  test('JSON encoding with relation', () => {
+    const contactA = create(Testing.Contact, {
+      name: 'Bot',
+      email: 'bot@example.com',
+    });
+    const contactB = create(Testing.Contact, {
+      name: 'Bot',
+      email: 'bot@example.com',
+    });
+    const hasManager = create(Testing.HasManager, {
+      [RelationSourceId]: contactA,
+      [RelationTargetId]: contactB,
+    });
+
+    const json = JSON.parse(JSON.stringify(hasManager));
+    expect(json).toEqual({
+      id: hasManager.id,
+      '@type': DXN.fromTypenameAndVersion(Testing.HasManager.typename, Testing.HasManager.version).toString(),
+      '@relationSource': DXN.fromLocalObjectId(contactA.id).toString(),
+      '@relationTarget': DXN.fromLocalObjectId(contactB.id).toString(),
+    });
   });
 
   test('getSchema', () => {

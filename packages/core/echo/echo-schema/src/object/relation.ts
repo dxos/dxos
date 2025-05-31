@@ -32,3 +32,15 @@ export type RelationSourceTargetRefs<TSource = any, TTarget = any> = {
 export type RelationSource<R> = R extends RelationSourceTargetRefs<infer TSource, infer _TTarget> ? TSource : never;
 
 export type RelationTarget<R> = R extends RelationSourceTargetRefs<infer _TSource, infer TTarget> ? TTarget : never;
+
+/**
+ * Property name for relation source when object is serialized to JSON.
+ * The value is a DXN of the source object.
+ */
+export const ATTR_RELATION_SOURCE = '@relationSource';
+
+/**
+ * Property name for relation target when object is serialized to JSON.
+ * The value is a DXN of the target object.
+ */
+export const ATTR_RELATION_TARGET = '@relationTarget';
