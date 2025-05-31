@@ -13,12 +13,15 @@ import { live } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
+import { type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme, render } from '@dxos/storybook-utils';
 
 import { ForceGraph } from './ForceGraph';
 import { generate } from './testing';
 import { useGraphModel } from '../../hooks';
 import { ViewType } from '../../types';
+
+const generator = faker as any as ValueGenerator;
 
 faker.seed(1);
 
@@ -28,7 +31,7 @@ const DefaultStory = () => {
   const [view, setView] = useState<ViewType>();
   useEffect(() => {
     const space = client.spaces.default;
-    void generate(space);
+    void generate(space, generator);
     const view = space.db.add(live(ViewType, { name: '', type: '' }));
     setSpace(space);
     setView(view);

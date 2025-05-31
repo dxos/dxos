@@ -4,20 +4,13 @@
 
 import { type AnyLiveObject, live, type Space } from '@dxos/client/echo';
 import { Query, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
-import { faker } from '@dxos/random';
 import { DataType } from '@dxos/schema';
 import { createObjectFactory, type ValueGenerator, type TypeSpec } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
-// TODO(burdon): Factor out.
-faker.seed(1);
-const generator: ValueGenerator = {
-  ...faker,
-} as any as ValueGenerator;
-
 const getObject = (objects: AnyLiveObject[]) => objects[Math.floor(Math.random() * objects.length)];
 
-export const generate = async (space: Space) => {
+export const generate = async (space: Space, generator: ValueGenerator) => {
   const createObjects = createObjectFactory(space.db, generator);
 
   const spec: TypeSpec[] = [
