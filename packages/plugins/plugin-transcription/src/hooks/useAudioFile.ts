@@ -49,7 +49,7 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
               resolve();
             } catch (playError) {
               log.error('Play failed', { playError });
-              // Still resolve as the audio is ready, even if autoplay failed
+              // Still resolve as the audio is ready, even if autoplay failed.
               resolve();
             }
           },
@@ -60,7 +60,7 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
 
       const audioCtx = new AudioContext();
 
-      // Resume AudioContext if it's suspended
+      // Resume AudioContext if it's suspended.
       if (audioCtx.state === 'suspended') {
         await audioCtx.resume();
       }
@@ -75,8 +75,7 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
         await track.applyConstraints(constraints).catch((err) => log.catch(err));
       }
 
-      // TODO(burdon):Also connect to speakers so audio is audible.
-
+      // Also connect to speakers so audio is audible.
       setStream({
         audio,
         stream: destination.stream,

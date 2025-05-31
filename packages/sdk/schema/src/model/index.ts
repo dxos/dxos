@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './create';
-export * from './model';
+export * from './graph';
+export * from './space-graph';
