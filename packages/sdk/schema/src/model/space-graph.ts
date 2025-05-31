@@ -36,8 +36,16 @@ export type EchoGraphEdge = GraphEdge.Optional;
 
 class SpaceGraphBuilder extends AbstractGraphBuilder<EchoGraphNode, EchoGraphEdge, SpaceGraphModel> {}
 
+const defaultFilter: Filter<any> = Filter.not(
+  Filter.or(
+    Filter.type(StoredSchema),
+    // , Filter.type(CollectionType)
+  ),
+);
+
 export type SpaceGraphModelOptions = {
   schema?: boolean;
+  filter?: Filter<any>;
 };
 
 /**
@@ -89,115 +97,104 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
       this._schemaSubscription = schemaaQuery.subscribe(onSchemaUpdate);
       onSchemaUpdate({ results: schemas });
 
-      this._objectsSubscription = space.db
-        // TODO(burdon): ERROR: Cannot mix type and or filters.
-        .query(
-          Filter.not(
-            Filter.or(
-              Filter.type(StoredSchema),
-              // , Filter.type(CollectionType)
-            ),
-          ),
-        )
-        .subscribe(
-          ({ objects }) => {
-            this._objects = objects;
+      this._objectsSubscription = space.db.query(this._options.filter ?? defaultFilter).subscribe(
+        ({ objects }) => {
+          this._objects = objects;
 
             console.log('objects', { objects });
 
             // Merge with current nodes.
-            const currentNodes = this._graph.nodes;
+          const currentNodes = this._graph.nodes;
+          this.clear();
 
-            this.clear();
+          const addSchema = (typename: string) => {
+            const current = currentNodes.find((node) => node.id === typename);
+            if (typename) {
+              this._graph.nodes.push({
+                ...current,
+                id: typename,
+                type: 'schema',
+                data: { typename },
+              });
+            }
+          };
 
-            const addSchema = (typename: string) => {
-              const current = currentNodes.find((node) => node.id === typename);
+          // Runtime schema.
+          space.db.graph.schemaRegistry.schemas.forEach((schema) => {
+            const typename = getSchemaDXN(schema)?.typename;
+            if (typename) {
+              addSchema(typename);
+            }
+          });
+
+          // Database Schema.
+          this._schema?.forEach((schema) => {
+            const typename = getSchemaDXN(schema)?.typename;
+            if (typename) {
+              addSchema(typename);
+            }
+          });
+
+          // Database Objects.
+          this._objects.forEach((object) => {
+            const schema = getSchema(object);
+            if (!schema) {
+              return;
+            }
+            if (!(isRelation(object) as boolean)) {
+              const typename = getSchemaDXN(schema)?.typename;
               if (typename) {
+                const current = currentNodes.find((node) => node.id === object.id);
+                const label = getLabel(schema, object);
                 this._graph.nodes.push({
                   ...current,
-                  id: typename,
-                  type: 'schema',
-                  data: { typename },
-                });
-              }
-            };
-
-            // Runtime schema.
-            space.db.graph.schemaRegistry.schemas.forEach((schema) => {
-              const typename = getSchemaDXN(schema)?.typename;
-              if (typename) {
-                addSchema(typename);
-              }
-            });
-
-            // Database Schema.
-            this._schema?.forEach((schema) => {
-              const typename = getSchemaDXN(schema)?.typename;
-              if (typename) {
-                addSchema(typename);
-              }
-            });
-
-            // Database Objects.
-            this._objects.forEach((object) => {
-              const schema = getSchema(object);
-              if (!schema) {
-                return;
-              }
-              if (!(isRelation(object) as boolean)) {
-                const typename = getSchemaDXN(schema)?.typename;
-                if (typename) {
-                  const current = currentNodes.find((node) => node.id === object.id);
-                  const label = getLabel(schema, object);
-                  this._graph.nodes.push({
-                    ...current,
-                    id: object.id,
-                    type: 'object',
-                    data: { typename, object, label },
-                  });
-
-                  // Link to schema.
-                  const schemaNode = this._graph.nodes.find(
-                    (node) => node.type === 'schema' && node.data.typename === typename,
-                  );
-                  if (schemaNode) {
-                    // this.addEdge({
-                    //   id: `${object.id}-${schemaNode.id}`,
-                    //   source: object.id,
-                    //   target: schemaNode.id,
-                    //   type: 'schema',
-                    // });
-                  } else {
-                    log.info('schema node not found', { typename });
-                  }
-
-                  // Link ot refs.
-                  // TODO(burdon): This isn't working.
-                  const refs = getOutgoingReferences(object);
-                  for (const ref of refs) {
-                    if (!ref.target) {
-                      continue;
-                    }
-                    this.addEdge({
-                      id: `${object.id}-${ref.dxn.toString()}`,
-                      source: object.id,
-                      target: ref.target.id,
-                      type: 'ref',
-                    });
-                  }
-                }
-              } else {
-                this.addEdge({
                   id: object.id,
-                  source: getSource(object).id,
-                  target: getTarget(object).id,
-                  type: 'relation',
+                  type: 'object',
+                  data: { typename, object, label },
                 });
+
+                // Link to schema.
+                const schemaNode = this._graph.nodes.find(
+                  (node) => node.type === 'schema' && node.data.typename === typename,
+                );
+                if (schemaNode) {
+                  // this.addEdge({
+                  //   id: `${object.id}-${schemaNode.id}`,
+                  //   source: object.id,
+                  //   target: schemaNode.id,
+                  //   type: 'schema',
+                  // });
+                } else {
+                  log.info('schema node not found', { typename });
+                }
+
+                // Link ot refs.
+                // TODO(burdon): This isn't working.
+                const refs = getOutgoingReferences(object);
+                for (const ref of refs) {
+                  if (!ref.target) {
+                    continue;
+                  }
+                  this.addEdge({
+                    id: `${object.id}-${ref.dxn.toString()}`,
+                    source: object.id,
+                    target: ref.target.id,
+                    type: 'ref',
+                  });
+                }
               }
-            });
-          },
-          { fire: true },
-        );
+            } else {
+              this.addEdge({
+                id: object.id,
+                source: getSource(object).id,
+                target: getTarget(object).id,
+                type: 'relation',
+              });
+            }
+          });
+        },
+        { fire: true },
+      );
     }
 
     // TODO(burdon): Selection model.

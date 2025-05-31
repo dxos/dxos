@@ -14,7 +14,7 @@ export type UseAudioState = {
   track?: MediaStreamTrack;
 };
 
-export const useAudioFile = (audioUrl: string): UseAudioState => {
+export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstraints): UseAudioState => {
   const [{ audio, stream, track }, setStream] = useState<UseAudioState>({});
   useEffect(() => {
     const ctx = new Context();
@@ -49,7 +49,7 @@ export const useAudioFile = (audioUrl: string): UseAudioState => {
               resolve();
             } catch (playError) {
               log.error('Play failed', { playError });
-              // Still resolve as the audio is ready, even if autoplay failed
+              // Still resolve as the audio is ready, even if autoplay failed.
               resolve();
             }
           },
@@ -60,7 +60,7 @@ export const useAudioFile = (audioUrl: string): UseAudioState => {
 
       const audioCtx = new AudioContext();
 
-      // Resume AudioContext if it's suspended
+      // Resume AudioContext if it's suspended.
       if (audioCtx.state === 'suspended') {
         await audioCtx.resume();
       }
@@ -70,8 +70,12 @@ export const useAudioFile = (audioUrl: string): UseAudioState => {
 
       const source = audioCtx.createMediaElementSource(audio);
       source.connect(destination);
-      // Also connect to speakers so audio is audible
+      const track = destination.stream.getAudioTracks()[0];
+      if (constraints) {
+        await track.applyConstraints(constraints).catch((err) => log.catch(err));
+      }
 
+      // Also connect to speakers so audio is audible.
       setStream({
         audio,
         stream: destination.stream,
