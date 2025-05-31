@@ -28,13 +28,13 @@ import INSTRUCTIONS from './instructions.tpl?raw';
 
 export const TYPES = [
   DataType.Event,
+  DataType.Employer,
+  DataType.HasRelationship,
   DataType.Organization,
   DataType.Person,
   DataType.Project,
   DataType.Task,
   DataType.Text,
-  DataType.HasRelationship,
-  DataType.Employer,
 ];
 
 // TODO(burdon): Unify with the graph schema.

@@ -20,6 +20,9 @@ import { randomText } from './util';
 export const Status = ['pending', 'active', 'done'];
 export const Priority = [1, 2, 3, 4, 5];
 
+/**
+ * @deprecated
+ */
 export enum TestSchemaType {
   document = 'example.com/type/Document',
   organization = 'example.com/type/Organization',
@@ -27,6 +30,9 @@ export enum TestSchemaType {
   project = 'example.com/type/Project',
 }
 
+/**
+ * @deprecated
+ */
 const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   const document = Schema.Struct({
     title: Schema.String.annotations({ description: 'title of the document' }),
