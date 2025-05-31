@@ -15,12 +15,10 @@ import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 import { Graph as GraphComponent, type GraphProps } from './Graph';
 import { GraphForceProjector, type GraphForceProjectorOptions, type GraphLayoutNode } from '../../graph';
 import { type SVGContext } from '../../hooks';
-import { convertTreeToGraph, createGraph, createTree, seed, TestGraphModel, type TestNode } from '../../testing';
+import { convertTreeToGraph, createGraph, createTree, TestGraphModel, type TestNode } from '../../testing';
 import { SVG } from '../SVG';
 
 import '../../../styles/graph.css';
-
-seed(1);
 
 type DefaultStoryProps = GraphProps & {
   grid?: boolean;
@@ -33,9 +31,9 @@ const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: Defaul
   const model = useMemo(() => new TestGraphModel(graph), [graph]);
   const selected = useMemo(() => new SelectionModel(), []);
   const context = useRef<SVGContext>(null);
-  const projector = useMemo(
-    () => projectorOptions && context.current && new GraphForceProjector(context.current, projectorOptions),
-    [projectorOptions, context.current],
+  const projector = useMemo<GraphForceProjector>(
+    () => context.current && projectorOptions && new GraphForceProjector(context.current, projectorOptions),
+    [context.current, projectorOptions],
   );
 
   return (
@@ -43,7 +41,7 @@ const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: Defaul
       <SVG.Root ref={context}>
         <SVG.Markers />
         {grid && <SVG.Grid axis />}
-        <SVG.Zoom extent={[1 / 2, 2]}>
+        <SVG.Zoom extent={[1 / 4, 4]}>
           <GraphComponent
             model={model}
             projector={projector}
@@ -106,23 +104,23 @@ export const Force: Story = {
       radius: 400,
       forces: {
         center: {
-          strength: 0.7,
+          strength: 0.6,
         },
         collide: {
           strength: 1,
         },
         manyBody: {
-          strength: -100,
+          strength: -80,
         },
         link: {
           distance: 20,
-          iterations: 25,
-          strength: 0.1,
+          iterations: 10,
+          strength: 0.2,
         },
         radial: {
-          delay: 300,
+          delay: 500,
           radius: 300,
-          strength: 0.6,
+          strength: 0.5,
         },
       },
     },
