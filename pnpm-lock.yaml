@@ -6196,6 +6196,9 @@ importers:
 
   packages/plugins/plugin-deck:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
