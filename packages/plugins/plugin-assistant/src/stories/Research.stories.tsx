@@ -28,12 +28,12 @@ import {
   ATTR_RELATION_TARGET,
   create,
   createQueueDxn,
-  Filter,
   getTypename,
   isInstanceOf,
+  type BaseEchoObject,
+  Filter,
   RelationSourceId,
   RelationTargetId,
-  type BaseEchoObject,
 } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -85,16 +85,8 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   );
 
   // Queue.
-  const [queueDxn, setQueueDxn] = useState<string>(
-    // RB
-    // () => 'dxn:queue:data:B3W253EXQLOFCZZ54E6WVCEL6TINWQBN7:01JWKN27AB4VG2XRQPZ7Y2HH59',
-
-    // Dima
-    // () => 'dxn:queue:data:B5QTVZILSG7LCY2OB7VUGGHLE632U532U:01JWH3S9576J8R35WMN7DT88N8',
-    // () => 'dxn:queue:data:B5QTVZILSG7LCY2OB7VUGGHLE632U532U:01JWKKDGD3WHC7BVYDYJACWEXG',
-
-    () => createQueueDxn(space.id).toString(),
-  );
+  // TODO(burdon): For testing use env.
+  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
   // Function executor.

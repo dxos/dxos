@@ -2,15 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Schema } from 'effect';
+import { Schema } from 'effect';
 
-import type { EchoDatabase } from '@dxos/echo-db';
+import { type EchoDatabase } from '@dxos/echo-db';
 import { EntityKind, getTypeIdentifierAnnotation, getTypename, getTypeAnnotation } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 
+// TODO(burdon): Unify with the graph schema.
+export const Subgraph = Schema.Struct({
+  /** Objects and relations. */
+  objects: Schema.Array(Schema.Any),
+});
+export interface Subgraph extends Schema.Schema.Type<typeof Subgraph> {}
+
 export type RelatedSchema = {
   schema: Schema.Schema.AnyNoContext;
-  kind: 'relation' | 'reference';
+  kind: 'reference' | 'relation';
 };
 
 /**

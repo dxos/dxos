@@ -23,7 +23,8 @@ import { DataType } from '@dxos/schema';
 import { deepMapValues } from '@dxos/util';
 
 import { createExaTool, createMockExaTool } from './exa';
-import INSTRUCTIONS from './instructions.tpl?raw';
+import { Subgraph } from './graph';
+import PROMPT from './instructions.tpl?raw';
 import { AISession } from '../session';
 
 export const TYPES = [
@@ -37,18 +38,10 @@ export const TYPES = [
   DataType.Text,
 ];
 
-// TODO(burdon): Unify with the graph schema.
-export const Subgraph = Schema.Struct({
-  /**
-   * Objects and relations.
-   */
-  objects: Schema.Array(Schema.Any),
-});
-export interface Subgraph extends Schema.Schema.Type<typeof Subgraph> {}
-
 /**
  * Exec external service and return the results as a Subgraph.
  */
+// TODO(burdon): Rename.
 export const researchFn = defineFunction({
   description: 'Research the web for information',
   inputSchema: Schema.Struct({
@@ -56,6 +49,7 @@ export const researchFn = defineFunction({
       description: 'The query to search for.',
     }),
 
+    // TOOD(burdon): Move to context.
     mockSearch: Schema.optional(Schema.Boolean).annotations({
       description: 'Whether to use the mock search tool.',
       default: false,
@@ -84,7 +78,7 @@ export const researchFn = defineFunction({
     const outputSchema = createExtractionSchema(TYPES);
     const result = await session.runStructured(outputSchema, {
       client: ai.client,
-      systemPrompt: INSTRUCTIONS,
+      systemPrompt: PROMPT,
       artifacts: [],
       tools: [searchTool],
       history: [],
