@@ -87,7 +87,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
   // TODO(burdon): Normalize unsubscribe callbacks and merge handlers.
   // TODO(burdon): Trigger initial subscription update.
   // TODO(burdon): Normalize subscription cb for objects, schema, etc.
-  async open(space: Space) {
+  async open(space: Space, selected?: string) {
     if (!this._schemaSubscription) {
       const schemaaQuery = space.db.schemaRegistry.query({});
       const schemas = await schemaaQuery.run();
