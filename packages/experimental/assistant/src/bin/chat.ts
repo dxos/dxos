@@ -5,23 +5,27 @@
 import inquirer from 'inquirer';
 import { writeFileSync } from 'node:fs';
 
-import { AI_SERVICE_ENDPOINT, DEFAULT_EDGE_MODEL, AIServiceEdgeClient, ToolTypes } from '@dxos/ai';
-import { createUserMessage } from '@dxos/artifact';
-import { ObjectId } from '@dxos/echo-schema';
-import { SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
-
-import { runLLM } from '../experimental';
 import {
+  AI_SERVICE_ENDPOINT,
+  DEFAULT_EDGE_MODEL,
+  AIServiceEdgeClient,
+  ToolTypes,
+  runLLM,
   createLogger,
+} from '@dxos/ai';
+import {
   createCypherTool,
-  createSystemPrompt,
   createTestData,
   Contact,
   Organization,
   Project,
   Task,
-} from '../testing';
+  createSystemPrompt,
+} from '@dxos/ai/testing';
+import { createUserMessage } from '@dxos/artifact';
+import { ObjectId } from '@dxos/echo-schema';
+import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 // TOOD(burdon): Get from config.
 const client = new AIServiceEdgeClient({

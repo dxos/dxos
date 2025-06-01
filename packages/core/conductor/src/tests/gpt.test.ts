@@ -6,8 +6,8 @@ import { it } from '@effect/vitest';
 import { Cause, Chunk, Console, Effect, Exit, Fiber, Option, Scope, Stream } from 'effect';
 import { describe, expect, test, type TaskContext } from 'vitest';
 
-import { AIServiceEdgeClient, OllamaClient, ToolTypes, type GenerationStreamEvent } from '@dxos/assistant';
-import { createTestOllamaClient } from '@dxos/assistant/testing';
+import { AIServiceEdgeClient, OllamaClient, ToolTypes, type GenerationStreamEvent } from '@dxos/ai';
+import { createTestOllamaClient } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT, registry, type GptInput } from '../nodes';

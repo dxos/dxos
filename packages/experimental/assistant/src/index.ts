@@ -3,6 +3,4 @@
 //
 
 export * from './session';
-
-// TODO(dmaretskyi): Separate entrypoint for experimental features.
-export * from './experimental';
+export * from './types';
