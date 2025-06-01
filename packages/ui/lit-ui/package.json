@@ -15,12 +15,8 @@
       "node": "./dist/src/index.js"
     },
     "./dx-avatar.pcss": "./src/dx-avatar/dx-avatar.pcss",
-    "./dx-avatar.ts": "./src/dx-avatar/dx-avatar.ts",
-    "./dx-icon.ts": "./src/dx-icon/dx-icon.ts",
     "./dx-tag-picker.pcss": "./src/dx-tag-picker/dx-tag-picker.pcss",
-    "./dx-tag-picker.ts": "./src/dx-tag-picker/dx-tag-picker.ts",
-    "./dx-ref-tag.pcss": "./src/dx-ref-tag/dx-ref-tag.pcss",
-    "./dx-ref-tag.ts": "./src/dx-ref-tag/dx-ref-tag.ts"
+    "./dx-ref-tag.pcss": "./src/dx-ref-tag/dx-ref-tag.pcss"
   },
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
