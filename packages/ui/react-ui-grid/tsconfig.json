@@ -5,6 +5,7 @@
       "node"
     ]
   },
+  "experimentalDecorators": true,
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
@@ -35,5 +36,6 @@
     {
       "path": "../react-ui-theme"
     }
-  ]
+  ],
+  "useDefineForClassFields": false
 }
