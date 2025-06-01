@@ -10,7 +10,7 @@ import { repeat } from 'lit/directives/repeat.js';
 import { debounce } from '@dxos/async';
 import { makeId } from '@dxos/react-hooks';
 
-import { restore, saveAndRender } from './util';
+import { restore, saveAndRender, tokenSetUpdateEvent } from './util';
 
 export type DxThemeEditorAliasColorsProps = {};
 
@@ -25,6 +25,10 @@ export class DxThemeEditorAliasColors extends LitElement {
   private debouncedSaveAndRender = debounce(() => {
     saveAndRender(this.tokenSet);
   }, 200);
+
+  private handleTokenSetUpdate = () => {
+    this.tokenSet = restore();
+  };
 
   private getSemanticTokenNames(): string[] {
     if (!this.tokenSet.colors?.semantic?.sememes) {
@@ -225,6 +229,12 @@ export class DxThemeEditorAliasColors extends LitElement {
   override connectedCallback() {
     super.connectedCallback();
     saveAndRender(this.tokenSet);
+    window.addEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
   }
 
   override render() {

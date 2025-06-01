@@ -11,7 +11,7 @@ import { styleMap } from 'lit/directives/style-map.js';
 
 import { debounce } from '@dxos/async';
 
-import { restore, saveAndRender } from './util';
+import { restore, saveAndRender, tokenSetUpdateEvent } from './util';
 
 import './dx-range-spinbutton';
 
@@ -31,6 +31,10 @@ export class DxThemeEditorPhysicalColors extends LitElement {
   private debouncedSaveAndRender = debounce(() => {
     saveAndRender(this.tokenSet);
   }, 200);
+
+  private handleTokenSetUpdate = () => {
+    this.tokenSet = restore();
+  };
 
   private updateSeriesProperty(series: string, property: string, value: any) {
     if (!this.tokenSet.colors?.physical?.definitions?.series?.[series]) {
@@ -153,6 +157,12 @@ export class DxThemeEditorPhysicalColors extends LitElement {
   override connectedCallback() {
     super.connectedCallback();
     saveAndRender(this.tokenSet);
+    window.addEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
   }
 
   override render() {

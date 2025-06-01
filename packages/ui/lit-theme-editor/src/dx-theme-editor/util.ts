@@ -8,6 +8,12 @@ import { userDefaultTokenSet } from '@dxos/react-ui-theme';
 
 const storageKey = 'dxos.org/dx-theme-editor/user-tokens';
 
+export const tokenSetUpdateEvent = 'dx-theme-editor-token-set-update';
+
+export const notifyTokenSetUpdate = () => {
+  window.dispatchEvent(new CustomEvent(tokenSetUpdateEvent));
+};
+
 export const save = (value: string) => {
   let nextValue = null;
   try {
@@ -19,6 +25,7 @@ export const save = (value: string) => {
   if (nextValue) {
     localStorage.setItem(storageKey, nextValue);
     log.debug('Saved');
+    notifyTokenSetUpdate();
     return null;
   }
 };
@@ -49,9 +56,11 @@ export const saveAndRender = (tokenSet?: TokenSet) => {
       newStyleNode.textContent = tokens;
       document.head.appendChild(newStyleNode);
     }
+    notifyTokenSetUpdate();
   }
 };
 
 export const reset = () => {
   save(JSON.stringify(userDefaultTokenSet));
+  notifyTokenSetUpdate();
 };

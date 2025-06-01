@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type TokenSet } from '@ch-ui/tokens';
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
@@ -9,7 +10,7 @@ import { classMap } from 'lit/directives/class-map.js';
 import './dx-theme-editor-physical-colors';
 import './dx-theme-editor-semantic-colors';
 import './dx-theme-editor-alias-colors';
-import { reset, restore } from './util';
+import { reset, restore, tokenSetUpdateEvent } from './util';
 
 export type DxThemeEditorProps = {};
 
@@ -20,8 +21,26 @@ export class DxThemeEditor extends LitElement {
   @state()
   private activeTab: Tab = 'physical';
 
+  @state()
+  private currentTokenSet: TokenSet = restore();
+
   private handleTabClick(tab: Tab) {
     this.activeTab = tab;
+  }
+
+  private handleTokenSetUpdate = () => {
+    this.currentTokenSet = restore();
+    this.requestUpdate();
+  };
+
+  override connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
   }
 
   override render() {
@@ -117,7 +136,7 @@ export class DxThemeEditor extends LitElement {
           aria-labelledby="tab-json"
           ?hidden=${this.activeTab !== 'json'}
         >
-          <textarea readonly>${JSON.stringify(restore(), null, 2)}</textarea>
+          <textarea readonly>${JSON.stringify(this.currentTokenSet, null, 2)}</textarea>
         </div>
 
         <div
