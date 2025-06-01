@@ -51,7 +51,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
           createIntent(CollaborationActions.InsertContent, {
             spaceId: space.id,
             target: makeRef(associatedArtifact),
-            object: refFromDXN(new DXN(DXN.kind.QUEUE, [...chat.assistantChatQueue.dxn.parts, message.id])),
+            object: refFromDXN(new DXN(DXN.kind.QUEUE, [...chat.queue.dxn.parts, message.id])),
             label: 'View proposal',
           }),
         );

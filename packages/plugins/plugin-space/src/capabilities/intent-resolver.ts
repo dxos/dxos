@@ -12,7 +12,7 @@ import {
   LayoutAction,
   type PluginContext,
 } from '@dxos/app-framework';
-import { type Expando, getTypename, type HasId } from '@dxos/echo-schema';
+import { type Expando, getTypename, type HasId, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { live, makeRef, type Live } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
@@ -399,6 +399,18 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                 ]
               : []),
           ],
+        };
+      },
+    }),
+    createResolver({
+      intent: SpaceAction.AddRelation,
+      resolve: ({ space, schema, source, target, fields }) => {
+        const relation = live(schema, { [RelationSourceId]: source, [RelationTargetId]: target, ...fields });
+        space.db.add(relation);
+        return {
+          data: {
+            relation,
+          },
         };
       },
     }),
