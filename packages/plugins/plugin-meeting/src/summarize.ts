@@ -4,23 +4,19 @@
 
 import { Message } from '@dxos/artifact';
 import { DEFAULT_EDGE_MODEL, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
-import { create } from '@dxos/echo-schema';
+import { create, getSchemaTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { TranscriptType } from '@dxos/plugin-transcription/types';
 
 import { type MeetingType } from './types';
 
-export const getMeetingContent = async (meeting: MeetingType) => {
-  // const serializedArtifacts = await Promise.all(
-  //   Object.entries(meeting.artifacts).map(async ([typename, ref]) => {
-  //     const { getTextContent } = resolve(typename);
-  //     const artifact = await ref.load();
-  //     const content = await getTextContent?.(artifact);
-  //     return content;
-  //   }),
-  // );
-  // const content = serializedArtifacts.filter(isNonNullable).join('\n\n');
-  const content = '';
+// TODO(wittjosiah): Also include content of object which are linked to the meeting.
+export const getMeetingContent = async (meeting: MeetingType, resolve: (typename: string) => Record<string, any>) => {
+  const notes = await meeting.notes.load();
+  const { getTextContent } = resolve(getSchemaTypename(TranscriptType)!);
+  const transcript = await meeting.transcript.load();
+  const content = `${await getTextContent(transcript)}\n\n${notes.content}`;
   return content;
 };
 
