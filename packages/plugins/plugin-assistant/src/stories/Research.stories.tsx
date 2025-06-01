@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { defineTool, AIServiceEdgeClient, Message, ToolResult, type Tool } from '@dxos/ai';
 import {
   contributes,
   createSurface,
@@ -19,7 +19,6 @@ import {
   Surface,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { defineTool, Message, ToolResult, type Tool } from '@dxos/artifact';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { researchFn, TYPES } from '@dxos/assistant';
 import { raise } from '@dxos/debug';

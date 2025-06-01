@@ -17,7 +17,7 @@ describe('tools', () => {
       description: 'Test tool',
       schema: Schema.Struct({
         foo: Schema.String.annotations({
-          description: 'The foo',
+          description: 'Testing tool description.',
         }),
       }),
       execute: async ({ foo }) => {

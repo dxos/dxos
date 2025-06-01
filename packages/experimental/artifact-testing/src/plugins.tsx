@@ -5,8 +5,9 @@
 import { Schema } from 'effect';
 import React from 'react';
 
+import { defineTool, ToolResult } from '@dxos/ai';
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
-import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
+import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
 import { isImage } from '@dxos/conductor';
 import { Format, Type } from '@dxos/echo';

@@ -7,7 +7,6 @@ import { Effect, type Schema, type Scope } from 'effect';
 
 import { mapValues } from '@dxos/util';
 
-// TODO(burdon): Move to types to untangle circular deps.
 import type { ComputeNode } from './graph';
 import type { EventLogger, FunctionCallService, GptService, QueueService, SpaceService } from '../services';
 

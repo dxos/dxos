@@ -4,8 +4,8 @@
 
 import React, { type FC, type PropsWithChildren } from 'react';
 
+import { type MessageContentBlock, type Message, type ToolType } from '@dxos/ai';
 import { Surface } from '@dxos/app-framework';
-import { type MessageContentBlock, type Message, type ToolType } from '@dxos/artifact';
 import type { BaseEchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';

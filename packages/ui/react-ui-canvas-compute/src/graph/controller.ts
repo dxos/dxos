@@ -5,7 +5,7 @@
 import { FetchHttpClient } from '@effect/platform';
 import { type Context, Effect, Either, Exit, Layer, Scope } from 'effect';
 
-import { type ImageContentBlock } from '@dxos/artifact';
+import { type ImageContentBlock } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
 import {
   isNotExecuted,

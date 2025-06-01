@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { AIServiceEdgeClient, Message, type Tool } from '@dxos/ai';
 import {
   Capabilities,
   Events,
@@ -18,7 +18,6 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Message, type Tool } from '@dxos/artifact';
 import { genericTools, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { DXN, Type } from '@dxos/echo';
 import { createQueueDxn, create } from '@dxos/echo-schema';

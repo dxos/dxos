@@ -20,10 +20,6 @@ export type DefineToolParams<Params extends Schema.Schema.AnyNoContext> = {
   execute: (params: Schema.Schema.Type<Params>, context: ToolExecutionContext) => Promise<ToolResult>;
 };
 
-export const parseToolName = (name: string) => {
-  return name.split('_').pop();
-};
-
 export const defineTool = <Params extends Schema.Schema.AnyNoContext>(
   namespace: string,
   { name, caption, description, schema, execute }: DefineToolParams<Params>,
@@ -40,6 +36,10 @@ export const defineTool = <Params extends Schema.Schema.AnyNoContext>(
       return execute(sanitized, context ?? {});
     },
   };
+};
+
+export const parseToolName = (name: string) => {
+  return name.split('_').pop();
 };
 
 /**

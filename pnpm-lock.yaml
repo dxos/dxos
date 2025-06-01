@@ -6977,6 +6977,9 @@ importers:
 
   packages/plugins/plugin-kanban:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -7077,6 +7080,9 @@ importers:
 
   packages/plugins/plugin-map:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -7192,6 +7198,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.34.1
         version: 6.34.1
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -8266,6 +8275,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.34.1
         version: 6.34.1
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -9345,6 +9357,9 @@ importers:
 
   packages/plugins/plugin-table:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework

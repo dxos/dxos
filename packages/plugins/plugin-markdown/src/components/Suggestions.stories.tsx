@@ -8,6 +8,7 @@ import { type Meta } from '@storybook/react';
 import { Schema, SchemaAST } from 'effect';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
+import { Message } from '@dxos/ai';
 import {
   Capabilities,
   CollaborationActions,
@@ -19,7 +20,6 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Message } from '@dxos/artifact';
 import { Type } from '@dxos/echo';
 import { create, createQueueDxn, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
