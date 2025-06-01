@@ -5,8 +5,8 @@
 import { Option, Schema, SchemaAST } from 'effect';
 import Exa from 'exa-js';
 
+import { MixedStreamParser, type AIServiceClient, type GenerateRequest } from '@dxos/ai';
 import { defineTool, Message, type TextContentBlock } from '@dxos/artifact';
-import { MixedStreamParser, type AIServiceClient, type GenerateRequest } from '@dxos/assistant';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { create, getTypeAnnotation, ObjectId, ReferenceAnnotationId } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';

@@ -10,9 +10,9 @@ import { toJsonSchema, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { DEFAULT_EDGE_MODEL, AI_SERVICE_ENDPOINT } from './defs';
+import { DEFAULT_EDGE_MODEL } from './defs';
 import { AIServiceEdgeClient, MixedStreamParser, OllamaClient } from './service';
-import { createTestOllamaClient } from './testing';
+import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from './testing';
 import { ToolTypes } from './types';
 
 // log.config({ filter: 'debug' });

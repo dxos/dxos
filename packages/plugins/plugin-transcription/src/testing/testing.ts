@@ -5,8 +5,8 @@
 import { Schema, SchemaAST } from 'effect';
 import { useEffect, useMemo, useState } from 'react';
 
-import { AIServiceEdgeClient } from '@dxos/assistant';
-import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
+import { AIServiceEdgeClient } from '@dxos/ai';
+import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';

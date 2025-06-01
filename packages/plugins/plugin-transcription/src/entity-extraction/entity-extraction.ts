@@ -4,8 +4,8 @@
 
 import { Schema } from 'effect';
 
+import { type AIServiceClient, MixedStreamParser } from '@dxos/ai';
 import { createTemplate, Message, structuredOutputParser } from '@dxos/artifact';
-import { type AIServiceClient, MixedStreamParser } from '@dxos/assistant';
 import { asyncTimeout } from '@dxos/async';
 import { type BaseEchoObject, create, ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';

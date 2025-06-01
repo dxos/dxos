@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { DEFAULT_EDGE_MODEL, MixedStreamParser, type AIServiceClient } from '@dxos/ai';
 import { Message } from '@dxos/artifact';
-import { DEFAULT_EDGE_MODEL, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
 import { create, getSchemaTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

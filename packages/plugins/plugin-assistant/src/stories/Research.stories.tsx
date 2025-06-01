@@ -7,20 +7,21 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { AIServiceEdgeClient } from '@dxos/ai';
 import {
-  Capabilities,
   contributes,
   createSurface,
+  useIntentDispatcher,
+  Capabilities,
   Events,
   IntentPlugin,
   SettingsPlugin,
   Surface,
-  useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { defineTool, Message, ToolResult, type Tool } from '@dxos/artifact';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { AIServiceEdgeClient } from '@dxos/assistant';
+import { researchFn, TYPES } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
 import { DXN, Type } from '@dxos/echo';
 import {
@@ -55,7 +56,6 @@ import { SpaceGraphModel } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from '../components';
-import { researchFn, TYPES } from '../experimental/research/research';
 import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import translations from '../translations';

@@ -2321,6 +2321,9 @@ importers:
 
   packages/core/conductor:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/artifact':
         specifier: workspace:*
         version: link:../../experimental/artifact
@@ -4682,6 +4685,9 @@ importers:
 
   packages/experimental/artifact-testing:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -5355,6 +5361,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.34.1
         version: 6.34.1
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -5903,6 +5912,9 @@ importers:
 
   packages/plugins/plugin-conductor:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -6793,6 +6805,9 @@ importers:
 
   packages/plugins/plugin-inbox:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -7301,6 +7316,9 @@ importers:
 
   packages/plugins/plugin-meeting:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -8453,6 +8471,9 @@ importers:
 
   packages/plugins/plugin-search:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -9879,6 +9900,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.34.1
         version: 6.34.1
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -11915,6 +11939,9 @@ importers:
       '@antv/layout':
         specifier: ^1.2.13
         version: 1.2.13(workerize-loader@2.0.2(webpack@5.88.2(@swc/core@1.5.7(@swc/helpers@0.5.17))(esbuild@0.23.1)))
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework

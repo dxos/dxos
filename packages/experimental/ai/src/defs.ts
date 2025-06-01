@@ -5,12 +5,6 @@
 // TODO(burdon): Share with Edge.
 // TODO(burdon): Move to service config retrieved by HTTP?
 
-// TODO(burdon): Remove/Reconcile with @dxos/assistant-testing.
-export const AI_SERVICE_ENDPOINT = {
-  LOCAL: 'http://localhost:8788',
-  REMOTE: 'https://ai-service.dxos.workers.dev',
-};
-
 export const DEFAULT_EDGE_MODEL = '@anthropic/claude-3-5-sonnet-20241022';
 
 export const DEFAULT_EDGE_MODELS = [

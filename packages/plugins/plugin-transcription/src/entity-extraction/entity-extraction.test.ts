@@ -4,8 +4,8 @@
 
 import { describe, test, expect } from 'vitest';
 
-import { AIServiceEdgeClient } from '@dxos/assistant';
-import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
+import { AIServiceEdgeClient } from '@dxos/ai';
+import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 import { createTestData } from '@dxos/schema/testing';
 import { range } from '@dxos/util';

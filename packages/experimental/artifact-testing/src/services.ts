@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AIServiceEdgeClient } from '@dxos/assistant';
+import { AIServiceEdgeClient } from '@dxos/ai';
 import { EdgeGpt } from '@dxos/conductor';
 import { EdgeClient, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
 

@@ -4,15 +4,10 @@
 
 import { type Signal, batch, computed, signal } from '@preact/signals-core';
 
+import { DEFAULT_EDGE_MODEL, type AIServiceClient, type GenerateRequest } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition, type Message, type MessageContentBlock, type Tool } from '@dxos/artifact';
-import {
-  type AIServiceClient,
-  AISession,
-  type ArtifactDiffResolver,
-  DEFAULT_EDGE_MODEL,
-  type GenerateRequest,
-} from '@dxos/assistant';
+import { AISession, type ArtifactDiffResolver } from '@dxos/assistant';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { getVersion, type Space } from '@dxos/react-client/echo';

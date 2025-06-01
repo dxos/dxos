@@ -4,9 +4,10 @@
 
 import { describe, test } from 'vitest';
 
+import { DEFAULT_EDGE_MODEL, AIServiceEdgeClient } from '@dxos/ai';
+import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { type TextContentBlock } from '@dxos/artifact';
-import { AIServiceEdgeClient, AISession, DEFAULT_EDGE_MODEL } from '@dxos/assistant';
-import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
+import { AISession } from '@dxos/assistant';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 

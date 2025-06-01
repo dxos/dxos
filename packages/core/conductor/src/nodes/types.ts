@@ -4,8 +4,8 @@
 
 import { Schema } from 'effect';
 
+import { type GenerationStreamEvent } from '@dxos/ai';
 import { Tool, Message } from '@dxos/artifact';
-import { type GenerationStreamEvent } from '@dxos/assistant';
 import { ObjectId } from '@dxos/echo-schema';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../types';

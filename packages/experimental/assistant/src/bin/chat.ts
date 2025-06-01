@@ -5,22 +5,16 @@
 import inquirer from 'inquirer';
 import { writeFileSync } from 'node:fs';
 
+import { DEFAULT_EDGE_MODEL, AIServiceEdgeClient, ToolTypes, runLLM, createLogger } from '@dxos/ai';
 import {
   AI_SERVICE_ENDPOINT,
-  DEFAULT_EDGE_MODEL,
-  AIServiceEdgeClient,
-  ToolTypes,
-  runLLM,
-  createLogger,
-} from '@dxos/ai';
-import {
   createCypherTool,
+  createSystemPrompt,
   createTestData,
   Contact,
   Organization,
   Project,
   Task,
-  createSystemPrompt,
 } from '@dxos/ai/testing';
 import { createUserMessage } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';

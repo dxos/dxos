@@ -4,9 +4,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL } from '@dxos/ai';
 import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { type AssociatedArtifact, createSystemPrompt, type Tool } from '@dxos/artifact';
-import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL } from '@dxos/assistant';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';

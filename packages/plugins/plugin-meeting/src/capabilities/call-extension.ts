@@ -4,9 +4,9 @@
 
 import { type Schema } from 'effect';
 
+import { AIServiceEdgeClient, type AIServiceClient } from '@dxos/ai';
+import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { AIServiceEdgeClient, type AIServiceClient } from '@dxos/assistant';
-import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { Filter, getSchemaTypename, Query, type BaseEchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';

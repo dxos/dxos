@@ -37,9 +37,6 @@
       "@dxos/assistant": [
         "packages/experimental/assistant/src/index.ts"
       ],
-      "@dxos/assistant/testing": [
-        "packages/experimental/assistant/src/testing/index.ts"
-      ],
       "@dxos/plugin-assistant": [
         "packages/plugins/plugin-assistant/src/index.ts"
       ],
