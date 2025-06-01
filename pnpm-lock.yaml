@@ -10324,6 +10324,9 @@ importers:
 
   packages/sdk/app-framework:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../app-graph
