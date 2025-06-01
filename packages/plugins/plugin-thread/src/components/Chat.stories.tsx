@@ -9,9 +9,8 @@ import React, { useEffect, useState } from 'react';
 
 import { Capabilities, contributes, createSurface, IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { createQueueDxn } from '@dxos/echo-schema';
-import { refFromDXN } from '@dxos/live-object';
-import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
+import { makeRef } from '@dxos/live-object';
+import { ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { live, type Space } from '@dxos/react-client/echo';
@@ -23,6 +22,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ChatContainer } from './ChatContainer';
 import translations from '../translations';
+import { ChannelType } from '../types';
 
 faker.seed(1);
 
@@ -38,7 +38,8 @@ const Story = () => {
         const space = await client.spaces.create();
         const channel = space.db.add(
           live(ChannelType, {
-            queue: refFromDXN(createQueueDxn(space.id)),
+            defaultThread: makeRef(live(ThreadType, { messages: [], status: 'active' })),
+            threads: [],
           }),
         );
         setSpace(space);
@@ -47,13 +48,13 @@ const Story = () => {
     }
   }, [identity]);
 
-  if (!identity || !channel || !space) {
+  if (!identity || !channel || !space || !channel.defaultThread.target) {
     return null;
   }
 
   return (
     <main className='max-is-prose mli-auto bs-dvh overflow-hidden'>
-      <ChatContainer space={space} dxn={channel.queue.dxn} />
+      <ChatContainer space={space} thread={channel.defaultThread.target} />
     </main>
   );
 };

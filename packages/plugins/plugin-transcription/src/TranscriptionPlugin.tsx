@@ -9,14 +9,7 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import {
-  AppGraphBuilder,
-  IntentResolver,
-  MeetingTranscriptionState,
-  ReactSurface,
-  Transcriber,
-  Settings,
-} from './capabilities';
+import { IntentResolver, ReactSurface, Transcriber } from './capabilities';
 import { renderMarkdown } from './components';
 import { meta } from './meta';
 import translations from './translations';
@@ -28,11 +21,6 @@ export const TranscriptionPlugin = () =>
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/settings`,
-      activatesOn: Events.SetupSettings,
-      activate: Settings,
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
@@ -74,18 +62,8 @@ export const TranscriptionPlugin = () =>
       activate: IntentResolver,
     }),
     defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
-    }),
-    defineModule({
       id: `${meta.id}/module/transcription`,
       activatesOn: Events.SetupAppGraph,
       activate: Transcriber,
-    }),
-    defineModule({
-      id: `${meta.id}/module/meeting-transcription-state`,
-      activatesOn: Events.SetupAppGraph,
-      activate: MeetingTranscriptionState,
     }),
   ]);

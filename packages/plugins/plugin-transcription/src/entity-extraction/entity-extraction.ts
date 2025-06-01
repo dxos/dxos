@@ -64,6 +64,7 @@ type ProcessTranscriptMessageParams = {
 };
 
 // TODO(dmaretskyi): Move context to a vector search index.
+// TODO(wittjosiah): Factor out.
 export const processTranscriptMessage = async (
   params: ProcessTranscriptMessageParams,
 ): Promise<ProcessTranscriptMessageResult> => {

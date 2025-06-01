@@ -4,7 +4,10 @@
 
 import { Schema } from 'effect';
 
-import { Expando, Ref, TypedObject } from '@dxos/echo-schema';
+import { Ref, TypedObject } from '@dxos/echo-schema';
+import { ThreadType } from '@dxos/plugin-space/types';
+import { TranscriptType } from '@dxos/plugin-transcription/types';
+import { DataType } from '@dxos/schema';
 
 // TODO(wittjosiah): Factor out. Brand.
 const IdentityDidSchema = Schema.String;
@@ -19,6 +22,7 @@ export const MeetingSchema = Schema.Struct({
    * The time the meeting was created.
    * Used to generate a fallback name if one is not provided.
    */
+  // TODO(wittjosiah): Remove. Rely on object meta.
   created: Schema.String.annotations({ description: 'ISO timestamp' }),
 
   /**
@@ -27,20 +31,27 @@ export const MeetingSchema = Schema.Struct({
   participants: Schema.mutable(Schema.Array(IdentityDidSchema)),
 
   /**
-   * Set of artifacts created during the meeting.
-   * Keys are the typename of the artifact.
-   * Values are a reference to the artifact object.
-   * For example, a meeting may have a transcript, notes, and a summary.
+   * Transcript of the meeting.
    */
-  artifacts: Schema.mutable(
-    Schema.Record({
-      key: Schema.String,
-      value: Ref(Expando),
-    }),
-  ),
+  transcript: Ref(TranscriptType),
+
+  /**
+   * Markdown notes for the meeting.
+   */
+  notes: Ref(DataType.Text),
+
+  /**
+   * Generated summary of the meeting.
+   */
+  summary: Ref(DataType.Text),
+
+  /**
+   * Message thread for the meeting.
+   */
+  thread: Ref(ThreadType),
 });
 
 export class MeetingType extends TypedObject({
   typename: 'dxos.org/type/Meeting',
-  version: '0.2.0',
+  version: '0.4.0',
 })(MeetingSchema.fields) {}
