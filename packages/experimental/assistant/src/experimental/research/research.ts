@@ -4,7 +4,7 @@
 
 import { identity, Option, Schema, SchemaAST } from 'effect';
 
-import { AISession, ConsolePrinter } from '@dxos/ai';
+import { ConsolePrinter } from '@dxos/ai';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
   create,
@@ -24,6 +24,7 @@ import { deepMapValues } from '@dxos/util';
 
 import { createExaTool, createMockExaTool } from './exa';
 import INSTRUCTIONS from './instructions.tpl?raw';
+import { AISession } from '../../session';
 
 export const TYPES = [
   DataType.Event,

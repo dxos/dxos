@@ -5,11 +5,8 @@
 import { Schema } from 'effect';
 
 import { Tool, Message, type MessageContentBlock } from '@dxos/artifact';
-import { type ObjectId } from '@dxos/echo-schema';
 
 import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from './defs';
-
-export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
 
 export const LLMModel = Schema.Literal(...DEFAULT_EDGE_MODELS, ...DEFAULT_OLLAMA_MODELS);
 

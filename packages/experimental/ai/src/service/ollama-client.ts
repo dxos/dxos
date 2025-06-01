@@ -13,7 +13,7 @@ import { MessageCollector, emitMessageAsEvents } from './message-collector';
 import { type AIServiceClient, type GenerationStream } from './service';
 import { GenerationStreamImpl } from './stream';
 import { DEFAULT_OLLAMA_ENDPOINT } from '../defs';
-import { isToolUse, runTools } from '../session';
+import { isToolUse, runTools } from '../tools';
 import { ToolTypes, type GenerateRequest, type GenerateResponse, type GenerationStreamEvent } from '../types';
 
 export type OllamaClientParams = {
