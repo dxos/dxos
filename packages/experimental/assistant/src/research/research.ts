@@ -71,12 +71,10 @@ export const researchFn = defineFunction({
     // const queues = context.getService(QueuesService);
 
     const exaCredential = await credentials.getCredential({ service: 'exa.ai' });
-
     const searchTool = mockSearch ? createMockExaTool() : createExaTool({ apiKey: exaCredential.apiKey! });
 
-    const session = new AISession({ operationModel: 'configured' });
-
     const printer = new ConsolePrinter();
+    const session = new AISession({ operationModel: 'configured' });
     session.message.on((message) => printer.printMessage(message));
     session.userMessage.on((message) => printer.printMessage(message));
     session.block.on((block) => printer.printContentBlock(block));
