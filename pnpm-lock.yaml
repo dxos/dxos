@@ -2602,6 +2602,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../mesh/edge-client
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../../common/feed-store

@@ -36,7 +36,7 @@ export type EchoGraphEdge = GraphEdge.Optional;
 
 class SpaceGraphBuilder extends AbstractGraphBuilder<EchoGraphNode, EchoGraphEdge, SpaceGraphModel> {}
 
-const defaultFilter: Filter<any> = Filter.not(Filter.type(StoredSchema));
+const defaultFilter: Filter<any> = Filter.not(Filter.or(Filter.type(StoredSchema)));
 
 export type SpaceGraphModelOptions = {
   schema?: boolean;

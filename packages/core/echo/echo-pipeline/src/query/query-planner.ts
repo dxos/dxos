@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { QueryAST } from '@dxos/echo-protocol';
+import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import type { DXN, SpaceId } from '@dxos/keys';
 
+import { QueryError } from './errors';
 import { QueryPlan } from './plan';
 
 export type QueryPlannerOptions = {
@@ -31,7 +32,7 @@ export class QueryPlanner {
   }
 
   createPlan(query: QueryAST.Query): QueryPlan.Plan {
-    let plan = this._generate(query, DEFAULT_CONTEXT);
+    let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
     plan = this._optimizeEmptyFilters(plan);
     plan = this._optimizeSoloUnions(plan);
     return plan;
@@ -56,7 +57,9 @@ export class QueryPlanner {
       case 'union':
         return this._generateUnionClause(query, context);
       default:
-        throw new Error(`Unsupported query type: ${(query as any).type}`);
+        throw new QueryError(`Unsupported query type: ${(query as any).type}`, {
+          context: { query: context.originalQuery },
+        });
     }
   }
 
@@ -96,7 +99,7 @@ export class QueryPlanner {
           ]);
         }
         if (context.selectionInverted) {
-          throw new Error('Query too complex');
+          throw new QueryError('Query too complex', { context: { query: context.originalQuery } });
         }
 
         // Try to utilize indexes during selection, prioritizing selecting by id, then by typename.
@@ -174,18 +177,18 @@ export class QueryPlanner {
         ]);
       }
       case 'compare':
-        throw new Error('Query too complex');
+        throw new QueryError('Query too complex', { context: { query: context.originalQuery } });
       case 'in':
-        throw new Error('Query too complex');
+        throw new QueryError('Query too complex', { context: { query: context.originalQuery } });
       case 'range':
-        throw new Error('Query too complex');
+        throw new QueryError('Query too complex', { context: { query: context.originalQuery } });
       case 'not':
         return this._generateSelectionFromFilter(filter.filter, {
           ...context,
           selectionInverted: !context.selectionInverted,
         });
       case 'and':
-        throw new Error('Query too complex');
+        throw new QueryError('Query too complex', { context: { query: context.originalQuery } });
       case 'or':
         // Optimized case
         if (filter.filters.every(isTrivialTypenameFilter)) {
@@ -206,11 +209,13 @@ export class QueryPlanner {
             ...this._generateDeletedHandlingSteps(context),
           ]);
         } else {
-          throw new Error('Query too complex');
+          throw new QueryError('Query too complex', { context: { query: context.originalQuery } });
         }
 
       default:
-        throw new Error(`Unsupported filter type: ${(filter as any).type}`);
+        throw new QueryError(`Unsupported filter type: ${(filter as any).type}`, {
+          context: { query: context.originalQuery },
+        });
     }
   }
 
@@ -419,6 +424,11 @@ export class QueryPlanner {
  */
 type GenerationContext = {
   /**
+   * The original query.
+   */
+  originalQuery: QueryAST.Query | null;
+
+  /**
    * Which spaces to select from.
    */
   selectionSpaces: readonly SpaceId[];
@@ -435,6 +445,7 @@ type GenerationContext = {
 };
 
 const DEFAULT_CONTEXT: GenerationContext = {
+  originalQuery: null,
   selectionSpaces: [],
   deletedHandling: 'exclude',
   selectionInverted: false,

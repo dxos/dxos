@@ -50,7 +50,10 @@ const meta: Meta = {
   component: ForceGraph,
   render: render(DefaultStory),
   decorators: [
-    withClientProvider({ createSpace: true, types: [ViewType, DataType.HasRelationship] }),
+    withClientProvider({
+      createSpace: true,
+      types: [ViewType, DataType.HasRelationship, DataType.Organization, DataType.Project, DataType.Person],
+    }),
     withTheme,
     withLayout({ fullscreen: true }),
   ],

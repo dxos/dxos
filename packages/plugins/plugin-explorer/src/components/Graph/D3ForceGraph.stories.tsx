@@ -50,7 +50,10 @@ const meta: Meta = {
   component: D3ForceGraph,
   render: render(DefaultStory),
   decorators: [
-    withClientProvider({ createSpace: true, types: [ViewType, DataType.HasRelationship] }),
+    withClientProvider({
+      createSpace: true,
+      types: [ViewType, DataType.Organization, DataType.Project, DataType.Person, DataType.HasRelationship],
+    }),
     withTheme,
     withLayout({ fullscreen: true }),
   ],

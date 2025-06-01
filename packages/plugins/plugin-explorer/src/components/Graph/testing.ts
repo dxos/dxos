@@ -12,8 +12,7 @@ const getObject = (objects: AnyLiveObject[]) => objects[Math.floor(Math.random()
 
 // TODO(burdon): Parameterize.
 export const generate = async (space: Space, generator: ValueGenerator) => {
-  await space.db.schemaRegistry.register([DataType.Organization, DataType.Project, DataType.Person]);
-
+  console.log('register');
   const spec: TypeSpec[] = [
     { type: DataType.Organization, count: 5 },
     { type: DataType.Project, count: 5 },
@@ -21,6 +20,7 @@ export const generate = async (space: Space, generator: ValueGenerator) => {
   ];
 
   const createObjects = createObjectFactory(space.db, generator);
+  console.log('crate');
   await createObjects(spec);
 
   // Add relations between objects.
