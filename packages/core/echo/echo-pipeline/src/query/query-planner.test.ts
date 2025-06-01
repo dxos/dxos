@@ -440,7 +440,7 @@ describe('QueryPlanner', () => {
   });
 
   test('contact full-text search', () => {
-    const query = Query.select(Filter.text(TestSchema.Person, 'Bill'));
+    const query = Query.select(Filter.text('Bill')).select(Filter.type(TestSchema.Person));
 
     const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
@@ -464,6 +464,7 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterStep",
             "filter": {
+              "id": undefined,
               "props": {},
               "type": "object",
               "typename": "dxn:type:dxos.org/type/Person:0.1.0",

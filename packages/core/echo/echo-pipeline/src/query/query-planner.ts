@@ -163,14 +163,6 @@ export class QueryPlanner {
             },
           },
           ...this._generateDeletedHandlingSteps(context),
-          {
-            _tag: 'FilterStep',
-            filter: {
-              type: 'object',
-              typename: filter.typename,
-              props: {},
-            },
-          },
         ]);
       }
       case 'compare':
