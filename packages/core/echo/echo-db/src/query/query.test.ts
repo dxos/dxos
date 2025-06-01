@@ -455,6 +455,43 @@ describe('Queries', () => {
       ]);
     });
   });
+
+  describe('text search', () => {
+    let db: EchoDatabase;
+
+    beforeEach(async () => {
+      const { db: db1, graph } = await builder.createDatabase();
+      db = db1;
+      graph.schemaRegistry.addSchema([Testing.Task]);
+
+      const task1 = db.add(live(Testing.Task, { title: 'apples' }));
+      const task2 = db.add(live(Testing.Task, { title: 'giraffes' }));
+
+      await db.flush({ indexes: true });
+    });
+
+    test('vector', async () => {
+      {
+        const { objects } = await db.query(Query.select(Filter.text('apples', { type: 'vector' }))).run();
+        expect(objects[0].title).toEqual('apples');
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('giraffes', { type: 'vector' }))).run();
+        expect(objects[0].title).toEqual('giraffes');
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('vegetable', { type: 'vector' }))).run();
+        expect(objects[0].title).toEqual('apples');
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('animal', { type: 'vector' }))).run();
+        expect(objects[0].title).toEqual('giraffes');
+      }
+    });
+  });
 });
 
 // TODO(wittjosiah): 2/3 of these tests fail. They reproduce issues that we want to fix.

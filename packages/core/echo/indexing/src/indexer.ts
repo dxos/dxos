@@ -180,6 +180,15 @@ export class Indexer extends Resource {
         return [];
       }
       return graphIndex.find(filter);
+    } else if (filter.text?.kind === 'vector') {
+      const vectorIndex = this._engine.getIndex({ kind: IndexKind.Kind.VECTOR });
+      if (!vectorIndex) {
+        // TODO(dmaretskyi): This shouldn't be the default?
+        return [];
+      }
+      return vectorIndex.find(filter);
+    } else if (filter.text?.kind === 'text') {
+      throw new Error('Text search is not supported');
     } else {
       const typenameIndex = this._engine.getIndex({ kind: IndexKind.Kind.SCHEMA_MATCH });
       if (!typenameIndex) {

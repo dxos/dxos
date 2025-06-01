@@ -40,7 +40,14 @@ import {
 
 const INDEXER_CONFIG: IndexConfig = {
   enabled: true,
-  indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }, { kind: IndexKind.Kind.GRAPH }],
+  indexes: [
+    //
+    { kind: IndexKind.Kind.SCHEMA_MATCH },
+    { kind: IndexKind.Kind.GRAPH },
+
+    // TODO(dmaretskyi): Disable this for prod since embedding generation is expensive.
+    { kind: IndexKind.Kind.VECTOR },
+  ],
 };
 
 export type EchoHostParams = {

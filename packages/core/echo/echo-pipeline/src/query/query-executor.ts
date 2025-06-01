@@ -6,8 +6,8 @@ import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { DatabaseDirectory, isEncodedReference, ObjectStructure, type QueryAST } from '@dxos/echo-protocol';
-import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
-import { invariant } from '@dxos/invariant';
+import { EscapedPropPath, IndexQuery, type FindResult, type Indexer } from '@dxos/indexing';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
@@ -20,6 +20,7 @@ import type { AutomergeHost } from '../automerge';
 import { createIdFromSpaceKey } from '../common';
 import type { SpaceStateManager } from '../db-host';
 import { filterMatchObject } from '../filter';
+import { Match } from 'effect';
 
 type QueryExecutorOptions = {
   indexer: Indexer;
@@ -294,7 +295,33 @@ export class QueryExecutor extends Resource {
         break;
       }
       case 'TextSelector': {
-        // TODO(dmaretskyi): Implement this properly.
+        const beginIndexQuery = performance.now();
+        const indexHits = await this._indexer.execQuery({
+          typenames: [],
+          text: {
+            query: step.selector.text,
+            kind: Match.type<QueryPlan.TextSearchKind>().pipe(
+              Match.withReturnType<'text' | 'vector'>(),
+              Match.when('full-text', () => 'text'),
+              Match.when('vector', () => 'vector'),
+              Match.orElseAbsurd,
+            )(step.selector.searchKind),
+          },
+        });
+        trace.indexHits = +indexHits.length;
+        trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+        if (this._ctx.disposed) {
+          return { workingSet, trace };
+        }
+
+        const documentLoadStart = performance.now();
+        const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+        trace.documentsLoaded += results.length;
+        trace.documentLoadTime += performance.now() - documentLoadStart;
+
+        workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
+        trace.objectCount = workingSet.length;
         break;
       }
       default:
@@ -596,4 +623,17 @@ export class QueryExecutor extends Resource {
       doc: object,
     };
   }
+}
+
+{
+  const kind: 'foo' | 'bar' = 'foo';
+
+  const result: 'x-foo' | 'x-bar' = Match.type<'foo' | 'bar'>().pipe(
+    Match.withReturnType<'x-foo' | 'x-bar'>(),
+    Match.when('foo', () => 'x-foo'),
+    Match.when('bar', () => 'x-bar'),
+    Match.exhaustive,
+  )(kind);
+
+  console.log(result);
 }

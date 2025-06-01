@@ -116,6 +116,8 @@ export class IndexVector extends Resource implements Index {
       offset: 0, // Defaults to `0`
     });
 
+    log.info('Vector search results', { query: filter.text.query, results });
+
     return results.hits.map((hit) => ({
       id: hit.id,
       rank: hit.score,
