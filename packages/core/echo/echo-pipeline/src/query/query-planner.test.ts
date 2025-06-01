@@ -475,6 +475,33 @@ describe('QueryPlanner', () => {
     `);
   });
 
+  test('vector search', () => {
+    const query = Query.select(Filter.text('Bill', { type: 'vector' }));
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "selector": {
+              "_tag": "TextSelector",
+              "searchKind": "vector",
+              "text": "Bill",
+            },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+        ],
+      }
+    `);
+  });
+
   test('select multiple types', () => {
     const query = Query.select(Filter.or(Filter.type(TestSchema.Organization), Filter.type(TestSchema.Person)));
 
