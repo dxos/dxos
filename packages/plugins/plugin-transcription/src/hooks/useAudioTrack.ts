@@ -19,7 +19,7 @@ export const useAudioTrack = (active?: boolean, constraints?: MediaTrackConstrai
 
     const initAudio = async () => {
       const audio = new Audio();
-      audio.srcObject = await navigator.mediaDevices.getUserMedia({ audio: constraints });
+      audio.srcObject = await navigator.mediaDevices.getUserMedia({ audio: constraints ?? true });
       const [track] = audio.srcObject.getAudioTracks();
       if (track) {
         setTrack(track);

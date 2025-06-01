@@ -41,7 +41,7 @@ describe('Research', () => {
     }),
   );
 
-  test('should generate a research report', { timeout: 1000000 }, async () => {
+  test('should generate a research report', { timeout: 1000_000 }, async () => {
     const result = await executor.invoke(researchFn, {
       query:
         'Find projects that are in the space of AI and personal knowledge management. Project, org, relations between them.',

@@ -29,7 +29,7 @@ const defaultRelations: GenerateOptions['relations'] = { count: 10, kind: 'frien
 export const generate = async (
   space: Space,
   generator: ValueGenerator,
-  { spec = defaultTypes, relations = defaultRelations }: GenerateOptions,
+  { spec = defaultTypes, relations = defaultRelations }: GenerateOptions = {},
 ) => {
   const createObjects = createObjectFactory(space.db, generator);
   await createObjects(spec);

@@ -50,7 +50,7 @@ export const researchFn = defineFunction({
   description: 'Research the web for information',
   inputSchema: Schema.Struct({
     query: Schema.String.annotations({
-      description: 'The query to search for',
+      description: 'The query to search for.',
     }),
 
     mockSearch: Schema.optional(Schema.Boolean).annotations({
