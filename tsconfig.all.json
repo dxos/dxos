@@ -103,6 +103,9 @@
       "path": "packages/common/test-utils/tsconfig.json"
     },
     {
+      "path": "packages/common/theme-editor-addon/tsconfig.json"
+    },
+    {
       "path": "packages/common/timeframe/tsconfig.json"
     },
     {

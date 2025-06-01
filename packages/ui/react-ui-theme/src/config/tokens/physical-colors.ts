@@ -74,7 +74,7 @@ export const huePalettes = {
  */
 const systemPalettes = {
   neutral: {
-    keyPoint: [0.5, 0.01, 260],
+    keyPoint: [0.5, 0.001, 260],
     lowerCp: 0,
     upperCp: 0,
     torsion: 0,
