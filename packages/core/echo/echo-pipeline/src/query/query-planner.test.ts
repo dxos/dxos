@@ -505,6 +505,14 @@ describe('QueryPlanner', () => {
     `);
   });
 
+  // TODO(dmaretskyi): Implement this.
+  test.skip('select everything but the type', () => {
+    const query = Query.select(Filter.not(Filter.type(TestSchema.Person)));
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot();
+  });
+
   test('select excluding multiple types', () => {
     const query = Query.select(
       Filter.not(Filter.or(Filter.type(TestSchema.Organization), Filter.type(TestSchema.Person))),

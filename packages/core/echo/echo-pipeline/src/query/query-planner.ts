@@ -77,7 +77,8 @@ export class QueryPlanner {
     return this._generateSelectionFromFilter(query.filter, context);
   }
 
-  // TODO(dmaretskyi): This can be rewritten as a function of (filter) -> (selection ? undefined, rest: filter) that recurses onto itself.
+  // TODO(dmaretskyi): This can be rewritten as a function of (filter[]) -> (selection ? undefined, rest: filter[]) that recurses onto itself.
+  // TODO(dmaretskyi): If the tip of the query ast is a [select, ...filter] shape we can reorder the filters so the query is most efficient.
   private _generateSelectionFromFilter(filter: QueryAST.Filter, context: GenerationContext): QueryPlan.Plan {
     switch (filter.type) {
       case 'object': {
