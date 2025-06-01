@@ -390,7 +390,6 @@ export class Toolbox {
       }
 
       const allDepsFromRoot = this.graph.getTransitiveWorkspaceDeps(roots);
-
       const missingPackages = this.graph.projects.filter(
         (project) =>
           !roots.includes(project.name) &&
