@@ -32,11 +32,10 @@ export const PromptBar = ({
   ...props
 }: PromptBarProps) => {
   const { t } = useTranslation(ASSISTANT_PLUGIN);
-
   const promptRef = useRef<PromptController>(null);
+  const [active, setActive] = useState(false);
 
   // TODO(burdon): Configure capability in TranscriptionPlugin.
-  const [active, setActive] = useState(false);
   const { recording } = useVoiceInput({
     active,
     onUpdate: (text) => {

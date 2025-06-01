@@ -7,6 +7,10 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
+import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { log } from '@dxos/log';
+import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Prompt } from './Prompt';
@@ -17,7 +21,13 @@ import translations from '../../translations';
 const meta: Meta<typeof Prompt> = {
   title: 'plugins/plugin-assistant/Prompt',
   component: Prompt,
-  decorators: [withTheme, withLayout()],
+  decorators: [
+    withPluginManager({
+      plugins: [IntentPlugin(), SettingsPlugin(), TranscriptionPlugin()],
+    }),
+    withTheme,
+    withLayout(),
+  ],
   parameters: {
     layout: 'centered',
     translations,
@@ -33,7 +43,7 @@ export const Default: Story = {
     classNames: 'w-96 p-4 rounded outline outline-gray-200',
     autoFocus: true,
     onSubmit: (text) => {
-      console.log('onEnter', text);
+      log.info('onSubmit', { text });
     },
     onSuggest: (text) => {
       const trimmed = text.trim().toLowerCase();
@@ -64,7 +74,7 @@ export const Toolbar: Story = {
       }
       return () => clearTimeout(t);
     }, [processing]);
-    console.log('processing', processing);
+    log.info('processing', { processing });
 
     return (
       <PromptBar
@@ -85,12 +95,12 @@ export const Includes: Story = {
     references: {
       getReferences: async ({ query }) => {
         const res = references.filter((i) => i.label.toLowerCase().startsWith(query.toLowerCase()));
-        console.log('getReferences', { query, res });
+        log.info('getReferences', { query, res });
         return res;
       },
       resolveReference: async ({ uri }) => {
         const res = references.find((i) => i.uri === uri);
-        console.log('resolveReference', { uri, res });
+        log.info('resolveReference', { uri, res });
         return res ?? null;
       },
     },
