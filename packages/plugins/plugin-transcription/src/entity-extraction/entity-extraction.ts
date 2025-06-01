@@ -5,8 +5,7 @@
 import { Schema } from 'effect';
 
 import { createTemplate, Message, structuredOutputParser } from '@dxos/artifact';
-import type { AIServiceClient } from '@dxos/assistant';
-import { MixedStreamParser } from '@dxos/assistant';
+import { type AIServiceClient, MixedStreamParser } from '@dxos/assistant';
 import { asyncTimeout } from '@dxos/async';
 import { type BaseEchoObject, create, ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
@@ -63,8 +62,10 @@ type ProcessTranscriptMessageParams = {
   };
 };
 
+/**
+ * Extract entities from the transcript message and add them to the message.
+ */
 // TODO(dmaretskyi): Move context to a vector search index.
-// TODO(wittjosiah): Factor out.
 export const processTranscriptMessage = async (
   params: ProcessTranscriptMessageParams,
 ): Promise<ProcessTranscriptMessageResult> => {

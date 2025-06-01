@@ -4585,6 +4585,67 @@ importers:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
 
+  packages/experimental/ai:
+    dependencies:
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../artifact
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../../common/graph
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      parsimmon:
+        specifier: ^1.18.1
+        version: 1.18.1
+    devDependencies:
+      '@types/parsimmon':
+        specifier: ^1.10.9
+        version: 1.10.9
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
+
   packages/experimental/artifact:
     dependencies:
       '@dxos/echo':
@@ -4670,6 +4731,9 @@ importers:
 
   packages/experimental/assistant:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@dxos/artifact':
         specifier: workspace:*
         version: link:../artifact
@@ -4697,6 +4761,12 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../../common/graph
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -4727,13 +4797,7 @@ importers:
       parjs:
         specifier: ^1.3.9
         version: 1.3.9
-      parsimmon:
-        specifier: ^1.18.1
-        version: 1.18.1
     devDependencies:
-      '@types/parsimmon':
-        specifier: ^1.10.9
-        version: 1.10.9
       effect:
         specifier: 3.14.21
         version: 3.14.21
@@ -9851,6 +9915,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -58294,7 +58361,7 @@ snapshots:
 
   rxjs@7.8.1:
     dependencies:
-      tslib: 2.8.0
+      tslib: 2.8.1
 
   sade@1.8.1:
     dependencies:
