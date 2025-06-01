@@ -90,7 +90,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     // RB
     () => 'dxn:queue:data:B3W253EXQLOFCZZ54E6WVCEL6TINWQBN7:01JWKN27AB4VG2XRQPZ7Y2HH59',
 
-    // dima
+    // Dima
     // () => 'dxn:queue:data:B5QTVZILSG7LCY2OB7VUGGHLE632U532U:01JWH3S9576J8R35WMN7DT88N8',
     // () => 'dxn:queue:data:B5QTVZILSG7LCY2OB7VUGGHLE632U532U:01JWKKDGD3WHC7BVYDYJACWEXG',
     // () => createQueueDxn(space.id).toString(),
