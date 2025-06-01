@@ -14,6 +14,7 @@ import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
 /**
+ * Unified query interface for all indexes.
  * @deprecated To be replaced by a specialized API for each index.
  */
 // TODO(burdon): Reconcile with proto def.
@@ -45,6 +46,12 @@ export type IndexQuery = {
      * Only when kind is 'inbound-reference'.
      */
     property: EscapedPropPath | null;
+  };
+
+  text?: {
+    query: string;
+
+    kind: 'vector' | 'text';
   };
 };
 
