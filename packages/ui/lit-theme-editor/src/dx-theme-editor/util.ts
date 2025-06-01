@@ -61,6 +61,6 @@ export const saveAndRender = (tokenSet?: TokenSet) => {
 };
 
 export const reset = () => {
-  save(JSON.stringify(userDefaultTokenSet));
+  saveAndRender(userDefaultTokenSet);
   notifyTokenSetUpdate();
 };

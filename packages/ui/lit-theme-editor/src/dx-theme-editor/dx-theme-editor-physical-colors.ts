@@ -122,7 +122,7 @@ export class DxThemeEditorPhysicalColors extends LitElement {
           label="Chroma (0-0.4)"
           min="0"
           max="0.4"
-          step="0.0025"
+          step="0.001"
           .value=${keyPoint[1]}
           headingId=${keyColorHeadingId}
           @value-changed=${(e: CustomEvent) => this.handleKeyPointChange(series, 1, e.detail.value)}

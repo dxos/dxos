@@ -8,10 +8,11 @@ dx-theme-editor-alias-colors {
     accent-color: var(--dx-accentSurface);
   }
 
-  input:not([type="range"]), select {
+  input:not([type="range"]), select, textarea {
     border-radius: .125rem;
     border: 1px solid var(--dx-separator);
     background-color: var(--dx-baseSurface);
+    color: var(--dx-baseText);
   }
 
   .dx-button, input:not([type="range"]), select {
@@ -50,6 +51,9 @@ dx-theme-editor-alias-colors {
 
     &[hidden] {
       display: none;
+    }
+    textarea {
+      inline-size: 100%;
     }
   }
 
