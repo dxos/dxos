@@ -4,12 +4,12 @@
 
 import { describe, test } from 'vitest';
 
-import { type Message } from '@dxos/artifact';
 import { log } from '@dxos/log';
 
 import { MixedStreamParser } from './parser';
 import { createGenerationStream } from './stream';
 import { createTestSSEStream } from '../testing';
+import { type Message } from '../tools';
 import { type GenerationStreamEvent } from '../types';
 
 // TODO(burdon): Tool request/response.

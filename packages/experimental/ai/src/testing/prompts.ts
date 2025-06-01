@@ -4,11 +4,11 @@
 
 import { Schema } from 'effect';
 
-import { defineTool, ToolResult } from '@dxos/artifact';
 import { toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { executeQuery, formatJsonSchemaForLLM, type DataSource } from '../cypher';
+import { defineTool, ToolResult } from '../tools';
 import { trim } from '../util';
 
 export const createCypherTool = (dataSource: DataSource, schemaTypes: Schema.Schema.Any[] = []) =>

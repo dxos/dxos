@@ -22,7 +22,7 @@
     "src"
   ],
   "scripts": {
-    "run:chat": "tsx src/bin/chat.ts"
+    "run:chat": "tsx bin/chat.ts"
   },
   "dependencies": {
     "@dxos/ai": "workspace:*",

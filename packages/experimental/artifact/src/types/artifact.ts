@@ -4,7 +4,7 @@
 
 import { type Schema } from 'effect';
 
-import { type Tool } from './tools';
+import { type Tool } from '@dxos/ai';
 
 /**
  * Static artifact definition.

@@ -5,9 +5,8 @@
 import { inspect } from 'node:util';
 import { describe, test } from 'vitest';
 
-import { AIServiceEdgeClient, OllamaClient } from '@dxos/ai';
+import { AIServiceEdgeClient, OllamaClient, structuredOutputParser } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
-import { structuredOutputParser } from '@dxos/artifact';
 import { getSchemaDXN } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';

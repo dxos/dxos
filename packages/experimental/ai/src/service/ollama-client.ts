@@ -4,7 +4,6 @@
 
 import { Schema } from 'effect';
 
-import { type MessageContentBlock, defineTool, type Tool, ToolResult } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -13,7 +12,7 @@ import { MessageCollector, emitMessageAsEvents } from './message-collector';
 import { type AIServiceClient, type GenerationStream } from './service';
 import { GenerationStreamImpl } from './stream';
 import { DEFAULT_OLLAMA_ENDPOINT } from '../defs';
-import { isToolUse, runTools } from '../tools';
+import { defineTool, isToolUse, type MessageContentBlock, runTools, type Tool, ToolResult } from '../tools';
 import { ToolTypes, type GenerateRequest, type GenerateResponse, type GenerationStreamEvent } from '../types';
 
 export type OllamaClientParams = {

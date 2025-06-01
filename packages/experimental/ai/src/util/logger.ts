@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { ImageSource, MessageContentBlock } from '@dxos/artifact';
-
 import type { ConversationEvent } from '../conversation';
+import type { ImageSource, MessageContentBlock } from '../tools';
 
 export const createLogger = ({
   stream,

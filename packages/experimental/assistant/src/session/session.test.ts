@@ -5,9 +5,9 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { AIServiceEdgeClient, ConsolePrinter } from '@dxos/ai';
+import { AIServiceEdgeClient, ConsolePrinter, defineTool, ToolResult } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
-import { ArtifactId, defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
+import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { Type } from '@dxos/echo';
 import { create, ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';

@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import type { Message, MessageContentBlock } from '@dxos/artifact';
+import type { Message, MessageContentBlock } from '../tools';
 
 export class ConsolePrinter {
   printMessage = (message: Message) => {

@@ -40,7 +40,6 @@
     "run:chat": "tsx src/bin/chat.ts"
   },
   "dependencies": {
-    "@dxos/artifact": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",

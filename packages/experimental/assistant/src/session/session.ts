@@ -5,16 +5,19 @@
 import { Option, Schema } from 'effect';
 
 import { isToolUse, runTools } from '@dxos/ai';
-import { MixedStreamParser, type AIServiceClient, type GenerationStream, type GenerateRequest } from '@dxos/ai';
 import {
   defineTool,
   structuredOutputParser,
+  type AIServiceClient,
+  type GenerationStream,
+  type GenerateRequest,
   Message,
-  ToolResult,
-  type ArtifactDefinition,
   type MessageContentBlock,
+  MixedStreamParser,
+  ToolResult,
   type Tool,
-} from '@dxos/artifact';
+} from '@dxos/ai';
+import { type ArtifactDefinition } from '@dxos/artifact';
 import { Event, synchronized } from '@dxos/async';
 import { ObjectVersion } from '@dxos/echo-db';
 import { create, type ObjectId } from '@dxos/echo-schema';

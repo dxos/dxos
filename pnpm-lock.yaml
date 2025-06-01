@@ -4590,9 +4590,6 @@ importers:
 
   packages/experimental/ai:
     dependencies:
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../artifact
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -4654,6 +4651,9 @@ importers:
 
   packages/experimental/artifact:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo

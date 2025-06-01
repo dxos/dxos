@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Message, type MessageContentBlock } from '@dxos/artifact';
 import { Event } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -11,6 +10,7 @@ import { isNotFalsy, safeParseJson } from '@dxos/util';
 
 import { type GenerationStream } from './service';
 import { StreamTransform, type StreamBlock } from './transform';
+import { Message, type MessageContentBlock } from '../tools';
 import { type GenerationStreamEvent } from '../types';
 
 /**

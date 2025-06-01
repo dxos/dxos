@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import Exa from 'exa-js';
 
-import { defineTool, ToolResult } from '@dxos/artifact';
+import { defineTool, ToolResult } from '@dxos/ai';
 import { log } from '@dxos/log';
 
 import { SEARCH_RESULTS } from '../testing';

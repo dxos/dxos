@@ -23,7 +23,13 @@ Create artifacts.
 {{/each}}
 `;
 
-const ARTIFACTS = ['Create a map.', 'Create a kanban.', 'Create a spreadsheet.', 'Create a task list.'];
+const ARTIFACTS = [
+  //
+  'Create a map.',
+  'Create a kanban.',
+  'Create a spreadsheet.',
+  'Create a task list.',
+];
 
 describe('template', () => {
   test('should process template variables correctly', ({ expect }) => {

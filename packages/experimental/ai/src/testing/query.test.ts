@@ -5,7 +5,6 @@
 import { test } from 'vitest';
 
 import { DEFAULT_EDGE_MODEL, AIServiceEdgeClient } from '@dxos/ai';
-import { createUserMessage } from '@dxos/artifact';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
@@ -17,6 +16,7 @@ import { Contact, Organization, Project, Task } from './test-schema';
 import { runLLM } from '../conversation';
 import { EchoDataSource } from '../cypher';
 import { AI_SERVICE_ENDPOINT } from '../testing';
+import { createUserMessage } from '../tools';
 import { createLogger } from '../util';
 
 const client = new AIServiceEdgeClient({

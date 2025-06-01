@@ -4,8 +4,8 @@
 
 import { Schema } from 'effect';
 
-import type { MessageContentBlock } from '@dxos/artifact';
-import type { ObjectVersion } from '@dxos/echo-db';
+import { type MessageContentBlock } from '@dxos/ai';
+import { type ObjectVersion } from '@dxos/echo-db';
 import { getVersion } from '@dxos/echo-db';
 import { ObjectId, type BaseEchoObject } from '@dxos/echo-schema';
 
