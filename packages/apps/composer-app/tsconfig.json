@@ -4,7 +4,6 @@
   ],
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "experimentalDecorators": true,
     "lib": [
       "DOM",
       "ESNext"
@@ -14,8 +13,7 @@
     "types": [
       "node",
       "sharedworker"
-    ],
-    "useDefineForClassFields": false
+    ]
   },
   "exclude": [
     "demos/*",

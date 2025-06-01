@@ -9,7 +9,6 @@
     "plugin.d.ts",
     "vite.config.ts"
   ],
-  "experimentalDecorators": true,
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
@@ -46,6 +45,5 @@
     {
       "path": "../react-ui-types"
     }
-  ],
-  "useDefineForClassFields": false
+  ]
 }
