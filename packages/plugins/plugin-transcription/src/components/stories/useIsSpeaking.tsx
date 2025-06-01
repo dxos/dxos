@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { SpeakingMonitor } from '@dxos/plugin-meeting';
+import { SpeakingMonitor } from '@dxos/plugin-thread';
 
 export const useIsSpeaking = (track?: MediaStreamTrack) => {
   const [isSpeaking, setIsSpeaking] = useState(false);

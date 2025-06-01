@@ -1,60 +1,79 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import React, { type ChangeEvent, useCallback, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework';
-import { DeckCapabilities } from '@dxos/plugin-deck';
-import { getMode } from '@dxos/plugin-deck/types';
-import { useClient } from '@dxos/react-client';
-import { useIdentity } from '@dxos/react-client/halo';
-import { Input, useTranslation } from '@dxos/react-ui';
-import { ControlGroup, ControlItemInput, ControlGroupButton } from '@dxos/react-ui-form';
-import { StackItem } from '@dxos/react-ui-stack';
+import { createIntent, Surface, useIntentDispatcher } from '@dxos/app-framework';
+import { fullyQualifiedId } from '@dxos/client/echo';
+import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Stack, StackItem } from '@dxos/react-ui-stack';
 
-import { CallContainer } from './CallContainer';
 import { MEETING_PLUGIN } from '../meta';
-import { type MeetingType } from '../types';
+import { MeetingAction, type MeetingType } from '../types';
 
-export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
-  const identity = useIdentity();
-  const { deck } = useCapability(DeckCapabilities.MutableDeckState);
-  const isFullscreen = getMode(deck) === 'solo--fullscreen';
+export type MeetingContainerProps = {
+  meeting: MeetingType;
+};
+
+export const MeetingContainer = ({ meeting }: MeetingContainerProps) => {
+  const { t } = useTranslation(MEETING_PLUGIN);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const notes = meeting.notes.target;
+  const summary = meeting.summary.target;
+  const notesData = useMemo(() => ({ id: fullyQualifiedId(meeting), subject: notes }), [notes]);
+  const summaryData = useMemo(
+    () => summary && summary.content.length > 0 && { id: fullyQualifiedId(meeting), subject: summary },
+    [summary, summary?.content],
+  );
+
+  const handleGenerateSummary = useCallback(async () => {
+    await dispatch(createIntent(MeetingAction.Summarize, { meeting }));
+  }, [dispatch, meeting]);
+
+  if (!notes || !summary) {
+    return null;
+  }
 
   return (
-    <StackItem.Content>
-      {identity?.profile?.displayName ? (
-        <CallContainer meeting={meeting} fullscreen={isFullscreen} />
-      ) : (
-        <DisplayNameMissing />
-      )}
-    </StackItem.Content>
+    <Stack orientation='vertical'>
+      <StackItem.Root item={notes} role='section'>
+        <StackItem.Heading>
+          <StackItem.Sigil icon='ph--note--regular' triggerLabel={t('notes label')} />
+        </StackItem.Heading>
+        <StackItem.Content>
+          <Surface role='section' data={notesData} />
+        </StackItem.Content>
+      </StackItem.Root>
+      <StackItem.Root item={summary} role='section'>
+        <StackItem.Heading>
+          <StackItem.Sigil icon='ph--list-bullets--regular' triggerLabel={t('summary label')} />
+          {summaryData && (
+            <IconButton
+              iconOnly
+              variant='ghost'
+              icon='ph--book-open-text--regular'
+              label={t('regenerate summary label')}
+              onClick={handleGenerateSummary}
+            />
+          )}
+        </StackItem.Heading>
+        <StackItem.Content>
+          {summaryData ? (
+            <Surface role='section' data={summaryData} />
+          ) : (
+            <div className='grid place-items-center min-h-32'>
+              <IconButton
+                icon='ph--book-open-text--regular'
+                label={t('generate summary label')}
+                onClick={handleGenerateSummary}
+              />
+            </div>
+          )}
+        </StackItem.Content>
+      </StackItem.Root>
+    </Stack>
   );
 };
 
 export default MeetingContainer;
-
-const DisplayNameMissing = () => {
-  const { t } = useTranslation(MEETING_PLUGIN);
-  const client = useClient();
-  const [displayName, setDisplayName] = useState('');
-  const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => setDisplayName(event.target.value), []);
-  const handleSave = useCallback(() => client.halo.updateProfile({ displayName }), [client, displayName]);
-
-  return (
-    <ControlGroup classNames='p-4 place-content-center'>
-      <ControlItemInput title={t('display name label')} description={t('display name description')}>
-        <Input.TextInput
-          value={displayName}
-          onChange={handleChange}
-          placeholder={t('display name input placeholder')}
-          classNames='md:min-is-64'
-        />
-      </ControlItemInput>
-      <ControlGroupButton disabled={!displayName} onClick={handleSave}>
-        {t('set display name label')}
-      </ControlGroupButton>
-    </ControlGroup>
-  );
-};
