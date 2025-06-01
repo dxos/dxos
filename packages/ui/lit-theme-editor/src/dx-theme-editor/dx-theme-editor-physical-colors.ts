@@ -6,14 +6,14 @@ import { cssGradientFromCurve, helicalArcFromConfig } from '@ch-ui/colors';
 import { type ResolvedHelicalArcSeries, type TokenSet } from '@ch-ui/tokens';
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { repeat } from 'lit/directives/repeat.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { debounce } from '@dxos/async';
 
-import { restore, saveAndRender } from './util';
+import { restore, saveAndRender, tokenSetUpdateEvent } from './util';
 
 import './dx-range-spinbutton';
-import './dx-theme-editor.pcss';
 
 export type DxThemeEditorPhysicalColorsProps = {};
 
@@ -31,6 +31,10 @@ export class DxThemeEditorPhysicalColors extends LitElement {
   private debouncedSaveAndRender = debounce(() => {
     saveAndRender(this.tokenSet);
   }, 200);
+
+  private handleTokenSetUpdate = () => {
+    this.tokenSet = restore();
+  };
 
   private updateSeriesProperty(series: string, property: string, value: any) {
     if (!this.tokenSet.colors?.physical?.definitions?.series?.[series]) {
@@ -118,7 +122,7 @@ export class DxThemeEditorPhysicalColors extends LitElement {
           label="Chroma (0-0.4)"
           min="0"
           max="0.4"
-          step="0.0025"
+          step="0.001"
           .value=${keyPoint[1]}
           headingId=${keyColorHeadingId}
           @value-changed=${(e: CustomEvent) => this.handleKeyPointChange(series, 1, e.detail.value)}
@@ -153,14 +157,20 @@ export class DxThemeEditorPhysicalColors extends LitElement {
   override connectedCallback() {
     super.connectedCallback();
     saveAndRender(this.tokenSet);
+    window.addEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
   }
 
   override render() {
-    return html`
-      ${bindSeriesDefinitions.map(
-        (series) => html` <div class="series-container">${this.renderSeriesControls(series)}</div> `,
-      )}
-    `;
+    return repeat(
+      bindSeriesDefinitions,
+      (series) => series,
+      (series) => this.renderSeriesControls(series),
+    );
   }
 
   override createRenderRoot() {

@@ -1,16 +1,30 @@
 dx-theme-editor,
 dx-theme-editor-physical-colors,
-dx-theme-editor-semantic-colors {
+dx-theme-editor-semantic-colors,
+dx-theme-editor-alias-colors {
   display: contents;
 
   input {
     accent-color: var(--dx-accentSurface);
   }
 
+  input:not([type="range"]), select, textarea {
+    border-radius: .125rem;
+    border: 1px solid var(--dx-separator);
+    background-color: var(--dx-baseSurface);
+    color: var(--dx-baseText);
+  }
+
+  .dx-button, input:not([type="range"]), select {
+    padding-block: .25rem;
+    min-block-size: 2rem;
+  }
+
   .tabs-container {
     display: flex;
-    border-bottom: 1px solid #ccc;
-    margin-bottom: 1rem;
+    gap: .25rem;
+    border-bottom: 1px solid var(--dx-separator);
+    padding-inline: 1rem;
   }
 
   .tab {
@@ -19,7 +33,8 @@ dx-theme-editor-semantic-colors {
     background: none;
     cursor: pointer;
     font-size: 1rem;
-    border-bottom: 2px solid transparent;
+    border-block: .25rem solid transparent;
+    margin-block-end: -1px;
 
     &.active {
       border-bottom-color: var(--dx-accentSurface);
@@ -27,19 +42,27 @@ dx-theme-editor-semantic-colors {
     }
 
     &:hover {
-      background-color: rgba(0, 0, 0, 0.05);
-    }
-
-    &:focus {
-      outline: 2px solid var(--dx-accentFocusIndicator);
-      outline-offset: 2px;
+      background-color: var(--dx-hoverSurface);
     }
   }
 
   .tab-panel {
+    padding: 1rem;
+
     &[hidden] {
       display: none;
     }
+    textarea {
+      inline-size: 100%;
+    }
+  }
+
+  .token-search {
+    inline-size: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    box-sizing: border-box;
+    margin-block-end: 1rem;
   }
 
   .series-container {
@@ -57,7 +80,7 @@ dx-theme-editor-semantic-colors {
   }
 
   .series-controls {
-    padding: 1rem;
+    margin-block-end: 1rem;
   }
 
   .series-preview {
@@ -136,15 +159,23 @@ dx-theme-editor-semantic-colors {
     width: 6rem;
   }
 
-  .token-container {
-    display: contents;
+  .collapsible-token {
 
     .static-token-name {
       display: none;
+      border: 1px solid transparent;
+      padding: .25rem;
+      min-block-size: 2rem;
+      flex-grow: 1;
+      cursor: pointer;
+    }
+
+    .token-config-content {
+      padding-block-end: 1rem;
     }
 
     &:not([data-state="expanded"]) {
-      .token-content {
+      .token-config-content {
         display: none;
       }
 
@@ -186,6 +217,7 @@ dx-theme-editor-semantic-colors {
   }
 
   .add-token-button {
+    margin-block-start: 1rem;
     inline-size: 100%;
   }
 
@@ -197,5 +229,71 @@ dx-theme-editor-semantic-colors {
 
   .series-select {
     flex: 1;
+  }
+
+  .alias-condition-select {
+    inline-size: 8rem;
+    place-self: stretch;
+  }
+
+  .condition-and-validation {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+  }
+
+  .alias-validation {
+    display: contents;
+    color: var(--dx-errorText);
+  }
+
+  /* Alias Colors Component Styles */
+
+  .semantic-alias-token-section {
+    padding: 1rem;
+  }
+
+  .alias-token-list, .semantic-alias-token-list {
+    display: grid;
+    gap: .5rem;
+    margin-bottom: 1rem;
+    .alias-token-item, .alias-token-labels {
+      display: grid;
+      grid-template-columns: subgrid;
+    }
+  }
+
+  .alias-token-list {
+    grid-template-columns: 1fr min-content min-content min-content;
+    .alias-token-item, .alias-token-labels {
+      grid-column: span 4;
+    }
+  }
+
+  .semantic-alias-token-list {
+    grid-template-columns: min-content 1fr min-content;
+    .alias-token-item, .alias-token-labels {
+      grid-column: span 3;
+    }
+  }
+
+  .condition-selectors {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .condition-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .condition-selector label {
+    font-weight: bold;
+  }
+
+  dx-autocomplete-combobox {
+    width: 100%;
   }
 }
