@@ -1984,9 +1984,21 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
+      '@dxos/lit-theme-editor':
+        specifier: workspace:*
+        version: link:../../ui/lit-theme-editor
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../../ui/lit-ui
       '@dxos/log':
         specifier: workspace:*
         version: link:../log
+      '@dxos/theme-editor-addon':
+        specifier: workspace:*
+        version: link:../theme-editor-addon
+      '@storybook/manager-api':
+        specifier: ^8.3.6
+        version: 8.3.6(storybook@8.3.6)
       '@storybook/preview-api':
         specifier: ^8.3.6
         version: 8.3.6(storybook@8.3.6)
@@ -2039,6 +2051,34 @@ importers:
       pkg-up:
         specifier: ^3.1.0
         version: 3.1.0
+
+  packages/common/theme-editor-addon:
+    dependencies:
+      '@storybook/icons':
+        specifier: ^1.4.0
+        version: 1.4.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@storybook/manager-api':
+        specifier: ^8.3.6
+        version: 8.3.6(storybook@8.3.6)
+      '@storybook/preview-api':
+        specifier: ^8.3.6
+        version: 8.3.6(storybook@8.3.6)
+      storybook:
+        specifier: ^8.3.6
+        version: 8.3.6
+    devDependencies:
+      '@types/react':
+        specifier: ~18.2.0
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ~18.2.0
+        version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
 
   packages/common/timeframe:
     dependencies:
@@ -11490,9 +11530,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: ^9.24.2
         version: 9.24.6(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@lit/react':
-        specifier: ^1.0.5
-        version: 1.0.5(@types/react@18.2.79)
       '@radix-ui/primitive':
         specifier: 1.1.1
         version: 1.1.1
@@ -14141,6 +14178,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui-theme
+      '@dxos/theme-editor-addon':
+        specifier: workspace:*
+        version: link:../../packages/common/theme-editor-addon
       '@dxos/vite-plugin-icons':
         specifier: workspace:*
         version: link:../vite-plugin-icons
@@ -21164,6 +21204,13 @@ packages:
 
   '@storybook/icons@1.2.12':
     resolution: {integrity: sha512-UxgyK5W3/UV4VrI3dl6ajGfHM4aOqMAkFLWe2KibeQudLf6NJpDrDMSHwZj+3iKC4jFU7dkKbbtH2h/al4sW3Q==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      react: ~18.2.0
+      react-dom: ~18.2.0
+
+  '@storybook/icons@1.4.0':
+    resolution: {integrity: sha512-Td73IeJxOyalzvjQL+JXx72jlIYHgs+REaHiREOqfpo3A2AYYG71AUbcv+lg7mEDIweKVCxsMQ0UKo634c8XeA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: ~18.2.0
@@ -44308,7 +44355,7 @@ snapshots:
     dependencies:
       '@storybook/csf': 0.1.11
       '@storybook/global': 5.0.0
-      '@storybook/icons': 1.2.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@storybook/icons': 1.4.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/lodash': 4.17.12
       color-convert: 2.0.1
       dequal: 2.0.3
@@ -44415,6 +44462,11 @@ snapshots:
       ts-dedent: 2.2.0
 
   '@storybook/icons@1.2.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+
+  '@storybook/icons@1.4.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
     dependencies:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)

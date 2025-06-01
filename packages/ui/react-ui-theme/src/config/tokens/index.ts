@@ -80,7 +80,6 @@ export const userDefaultTokenSet = {
       namespace: aliasColors.namespace,
     },
   },
-  lengths: lengthsFacet,
 } satisfies TokenSet;
 
 export const tokensTailwindConfig = adapter(tokenSet, adapterConfig);

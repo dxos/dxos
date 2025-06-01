@@ -4,6 +4,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@dxos/storybook-utils": [
+        "packages/common/storybook-utils/src/index.ts"
+      ],
       "@dxos/compute": [
         "packages/core/compute/src/index.ts"
       ],
@@ -282,6 +285,24 @@
       ],
       "@dxos/shell/testing": [
         "packages/sdk/shell/src/testing/index.ts"
+      ],
+      "@dxos/lit-grid": [
+        "packages/ui/lit-grid/src/index.ts"
+      ],
+      "@dxos/lit-grid/testing": [
+        "packages/ui/lit-grid/src/testing/index.ts"
+      ],
+      "@dxos/lit-theme-editor": [
+        "packages/ui/lit-theme-editor/src/index.ts"
+      ],
+      "@dxos/lit-theme-editor/testing": [
+        "packages/ui/lit-theme-editor/src/testing/index.ts"
+      ],
+      "@dxos/lit-ui": [
+        "packages/ui/lit-ui/src/index.ts"
+      ],
+      "@dxos/lit-ui/testing": [
+        "packages/ui/lit-ui/src/testing/index.ts"
       ],
       "@dxos/react-ui": [
         "packages/ui/react-ui/src/index.ts"
