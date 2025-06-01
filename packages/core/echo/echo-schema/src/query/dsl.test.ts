@@ -145,11 +145,20 @@ describe('query api', () => {
   });
 
   test('contact full-text search', () => {
-    const contactFullTextSearch = Query.select(Filter.text(Person, 'Bill'));
+    const contactFullTextSearch = Query.select(Filter.text('Bill'));
 
     log('query', { ast: contactFullTextSearch.ast });
     Schema.validateSync(QueryAST.Query)(contactFullTextSearch.ast);
-    console.log('contactFullTextSearch', JSON.stringify(contactFullTextSearch.ast, null, 2));
+    expect(contactFullTextSearch.ast).toMatchInlineSnapshot(`
+      {
+        "filter": {
+          "searchKind": undefined,
+          "text": "Bill",
+          "type": "text-search",
+        },
+        "type": "select",
+      }
+    `);
   });
 
   test('filter by ref', () => {
