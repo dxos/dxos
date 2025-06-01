@@ -5724,6 +5724,9 @@ importers:
 
   packages/plugins/plugin-chess:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -8951,6 +8954,9 @@ importers:
       '@automerge/automerge':
         specifier: 3.0.0-beta.0
         version: 3.0.0-beta.0
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../experimental/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
