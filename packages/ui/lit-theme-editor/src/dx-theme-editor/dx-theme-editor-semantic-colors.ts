@@ -6,16 +6,15 @@ import { type AlphaLuminosity } from '@ch-ui/colors';
 import { type TokenSet, parseAlphaLuminosity } from '@ch-ui/tokens';
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { repeat } from 'lit/directives/repeat.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { debounce } from '@dxos/async';
-import '@dxos/lit-ui';
 import { makeId } from '@dxos/react-hooks';
 
-import { restore, saveAndRender } from './util';
+import { restore, saveAndRender, tokenSetUpdateEvent } from './util';
 
 import './dx-range-spinbutton';
-import './dx-theme-editor.pcss';
 
 export type DxThemeEditorSemanticColorsProps = {};
 
@@ -28,9 +27,16 @@ export class DxThemeEditorSemanticColors extends LitElement {
   @state()
   tokenSet: TokenSet = restore();
 
+  @state()
+  searchTerm: string = '';
+
   private debouncedSaveAndRender = debounce(() => {
     saveAndRender(this.tokenSet);
   }, 200);
+
+  private handleTokenSetUpdate = () => {
+    this.tokenSet = restore();
+  };
 
   private getPhysicalColorSeries(): string[] {
     if (!this.tokenSet.colors?.physical?.series) {
@@ -178,6 +184,153 @@ export class DxThemeEditorSemanticColors extends LitElement {
     this.debouncedSaveAndRender();
   }
 
+  private getAliasTokensForSemantic(tokenName: string): { condition: string; name: string }[] {
+    if (!this.tokenSet.colors?.alias?.aliases?.[tokenName]) {
+      return [];
+    }
+
+    const aliasTokens: { condition: string; name: string }[] = [];
+    const aliases = this.tokenSet.colors.alias.aliases[tokenName];
+
+    // Process each condition (root, attention)
+    Object.entries(aliases).forEach(([condition, names]) => {
+      names.forEach((name) => {
+        aliasTokens.push({ condition, name });
+      });
+    });
+
+    return aliasTokens;
+  }
+
+  private addAliasToken(tokenName: string) {
+    if (!this.tokenSet.colors?.alias?.aliases) {
+      return;
+    }
+
+    // Create a deep copy of the tokenSet to avoid direct mutation
+    const updatedTokenSet = JSON.parse(JSON.stringify(this.tokenSet));
+
+    // Ensure the semantic token exists in the aliases structure
+    if (!updatedTokenSet.colors.alias.aliases[tokenName]) {
+      updatedTokenSet.colors.alias.aliases[tokenName] = {};
+    }
+
+    // Ensure the 'root' condition exists
+    if (!updatedTokenSet.colors.alias.aliases[tokenName].root) {
+      updatedTokenSet.colors.alias.aliases[tokenName].root = [];
+    }
+
+    // Generate a random ID for the alias name
+    const aliasName = makeId('alias--');
+
+    // Add the new alias to the 'root' condition
+    updatedTokenSet.colors.alias.aliases[tokenName].root.push(aliasName);
+
+    // Update the state
+    this.tokenSet = updatedTokenSet;
+
+    // Save and render changes
+    this.debouncedSaveAndRender();
+  }
+
+  private removeAliasToken(tokenName: string, condition: string, aliasName: string) {
+    if (!this.tokenSet.colors?.alias?.aliases?.[tokenName]?.[condition]) {
+      return;
+    }
+
+    // Create a deep copy of the tokenSet to avoid direct mutation
+    const updatedTokenSet = JSON.parse(JSON.stringify(this.tokenSet));
+
+    // Find the index of the alias in the array
+    const aliasIndex = updatedTokenSet.colors.alias.aliases[tokenName][condition].indexOf(aliasName);
+    if (aliasIndex === -1) {
+      return;
+    }
+
+    // Remove the alias from the array
+    updatedTokenSet.colors.alias.aliases[tokenName][condition].splice(aliasIndex, 1);
+
+    // If the condition array is empty, remove it
+    if (updatedTokenSet.colors.alias.aliases[tokenName][condition].length === 0) {
+      delete updatedTokenSet.colors.alias.aliases[tokenName][condition];
+    }
+
+    // If the token has no more conditions, remove it from aliases
+    if (Object.keys(updatedTokenSet.colors.alias.aliases[tokenName]).length === 0) {
+      delete updatedTokenSet.colors.alias.aliases[tokenName];
+    }
+
+    // Update the state
+    this.tokenSet = updatedTokenSet;
+
+    // Save and render changes
+    this.debouncedSaveAndRender();
+  }
+
+  private updateAliasToken(
+    tokenName: string,
+    oldCondition: string,
+    oldName: string,
+    newCondition: string,
+    newName: string,
+  ) {
+    if (!this.tokenSet.colors?.alias?.aliases?.[tokenName]?.[oldCondition]) {
+      return;
+    }
+
+    // Create a deep copy of the tokenSet to avoid direct mutation
+    const updatedTokenSet = JSON.parse(JSON.stringify(this.tokenSet));
+
+    // Find the index of the old alias in the array
+    const aliasIndex = updatedTokenSet.colors.alias.aliases[tokenName][oldCondition].indexOf(oldName);
+    if (aliasIndex === -1) {
+      return;
+    }
+
+    // Remove the old alias
+    updatedTokenSet.colors.alias.aliases[tokenName][oldCondition].splice(aliasIndex, 1);
+
+    // If the old condition array is empty, remove it
+    if (updatedTokenSet.colors.alias.aliases[tokenName][oldCondition].length === 0) {
+      delete updatedTokenSet.colors.alias.aliases[tokenName][oldCondition];
+    }
+
+    // Ensure the new condition exists
+    if (!updatedTokenSet.colors.alias.aliases[tokenName][newCondition]) {
+      updatedTokenSet.colors.alias.aliases[tokenName][newCondition] = [];
+    }
+
+    // Add the new alias to the new condition
+    updatedTokenSet.colors.alias.aliases[tokenName][newCondition].push(newName);
+
+    // Update the state
+    this.tokenSet = updatedTokenSet;
+
+    // Save and render changes
+    this.debouncedSaveAndRender();
+  }
+
+  private checkDuplicateAlias(tokenName: string, condition: string, aliasName: string): boolean {
+    if (!this.tokenSet.colors?.alias?.aliases) {
+      return false;
+    }
+
+    // Check if the alias exists in any other token with the same condition
+    for (const [currentTokenName, conditions] of Object.entries(this.tokenSet.colors.alias.aliases)) {
+      // Skip the current token
+      if (currentTokenName === tokenName) {
+        continue;
+      }
+
+      // Check if the condition exists and contains the alias name
+      if (conditions[condition] && conditions[condition].includes(aliasName)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   private renderTokenControls(tokenName: string, tokenValue: any) {
     const physicalColorSeries = this.getPhysicalColorSeries();
     const lightSeries = tokenValue.light?.[0] || '';
@@ -201,18 +354,19 @@ export class DxThemeEditorSemanticColors extends LitElement {
     const darkHeadingId = `${tokenName}-dark-heading`;
     const seriesSelectId = `${tokenName}-series`;
     const contentId = `${tokenName}-content`;
+    const aliasListId = `${tokenName}-alias-list`;
 
     // Toggle expanded/collapsed state
     const toggleExpanded = (e: Event) => {
       const button = e.currentTarget as HTMLButtonElement;
-      const container = button.closest('.token-container') as HTMLElement;
+      const container = button.closest('.collapsible-token') as HTMLElement;
       const isExpanded = container.getAttribute('data-state') === 'expanded';
       container.setAttribute('data-state', isExpanded ? 'collapsed' : 'expanded');
       button.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
     };
 
     return html`
-      <div role="group" class="token-container" data-state="collapsed">
+      <div role="group" class="collapsible-token" data-state="collapsed">
         <h3 id="${tokenHeadingId}" class="token-title">
           <button
             class="toggle-button dx-focus-ring dx-button"
@@ -220,10 +374,10 @@ export class DxThemeEditorSemanticColors extends LitElement {
             aria-expanded="false"
             aria-controls="${contentId}"
           >
-            <dx-icon icon="ph--caret-down--regular" />
+            <dx-icon icon="ph--caret-down--regular"></dx-icon>
             <span class="sr-only">Toggle token controls</span>
           </button>
-          <span class="static-token-name">${tokenName}</span>
+          <span class="static-token-name" @click=${toggleExpanded}>${tokenName}</span>
           <input
             type="text"
             class="token-name-input dx-focus-ring"
@@ -240,7 +394,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
             <dx-icon icon="ph--minus--regular" />
           </button>
         </h3>
-        <div id="${contentId}" class="token-content">
+        <div id="${contentId}" class="token-config-content">
           <div class="token-header">
             <div class="token-series-select">
               <label class="control-label" for="${seriesSelectId}">Palette:</label>
@@ -251,7 +405,9 @@ export class DxThemeEditorSemanticColors extends LitElement {
                 @change=${(e: Event) => this.handleBothSeriesChange(tokenName, (e.target as HTMLSelectElement).value)}
                 aria-labelledby="${tokenHeadingId}"
               >
-                ${physicalColorSeries.map(
+                ${repeat(
+                  physicalColorSeries,
+                  (series) => series,
                   (series) => html`<option value="${series}" ?selected=${series === currentSeries}>${series}</option>`,
                 )}
               </select>
@@ -298,6 +454,60 @@ export class DxThemeEditorSemanticColors extends LitElement {
               ></dx-range-spinbutton>
             </div>
           </div>
+
+          <!-- Alias tokens -->
+          <div class="semantic-alias-token-section">
+            <ul id="${aliasListId}" class="semantic-alias-token-list">
+              ${repeat(
+                this.getAliasTokensForSemantic(tokenName),
+                (alias) => `${tokenName}-${alias.condition}-${alias.name}`,
+                (alias) => html`
+                  <li class="alias-token-item">
+                    <div role="none" class="condition-and-validation">
+                      <p
+                        class="alias-validation"
+                        style=${styleMap({
+                          display: this.checkDuplicateAlias(tokenName, alias.condition, alias.name) ? 'flex' : 'none',
+                        })}
+                      >
+                        <dx-icon icon="ph--warning--duotone" size="6"></dx-icon>Duplicate
+                      </p>
+                      <select
+                        class="alias-condition-select dx-focus-ring"
+                        .value=${alias.condition}
+                        @change=${(e: Event) => {
+                          const newCondition = (e.target as HTMLSelectElement).value;
+                          this.updateAliasToken(tokenName, alias.condition, alias.name, newCondition, alias.name);
+                        }}
+                      >
+                        <option value="root">root</option>
+                        <option value="attention">attention</option>
+                      </select>
+                    </div>
+                    <input
+                      type="text"
+                      class="alias-name-input dx-focus-ring"
+                      .value=${alias.name}
+                      @change=${(e: Event) => {
+                        const newName = (e.target as HTMLInputElement).value;
+                        this.updateAliasToken(tokenName, alias.condition, alias.name, alias.condition, newName);
+                      }}
+                    />
+                    <button
+                      class="remove-alias-button dx-focus-ring dx-button"
+                      @click=${() => this.removeAliasToken(tokenName, alias.condition, alias.name)}
+                    >
+                      <span class="sr-only">Remove alias token</span>
+                      <dx-icon icon="ph--minus--regular" />
+                    </button>
+                  </li>
+                `,
+              )}
+            </ul>
+            <button class="add-alias-button dx-focus-ring dx-button" @click=${() => this.addAliasToken(tokenName)}>
+              Add alias
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -306,16 +516,39 @@ export class DxThemeEditorSemanticColors extends LitElement {
   override connectedCallback() {
     super.connectedCallback();
     saveAndRender(this.tokenSet);
+    window.addEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
+  }
+
+  private handleSearchChange(e: Event) {
+    this.searchTerm = (e.target as HTMLInputElement).value;
   }
 
   override render() {
     const semanticTokens = this.getSemanticTokens();
+    const filteredTokens = semanticTokens.filter(([tokenName]) =>
+      tokenName.toLowerCase().includes(this.searchTerm.toLowerCase()),
+    );
 
     return html`
-      ${semanticTokens.map(([tokenName, tokenValue]) => this.renderTokenControls(tokenName, tokenValue))}
-      <button class="add-token-button dx-focus-ring dx-button" @click=${() => this.addSemanticToken()}>
-        Add token
-      </button>
+      <input
+        type="search"
+        class="token-search dx-focus-ring"
+        placeholder="Search semantic tokens…"
+        .value=${this.searchTerm}
+        @input=${this.handleSearchChange}
+        aria-label="Search tokens"
+      />
+      ${repeat(
+        filteredTokens,
+        ([tokenName]) => tokenName,
+        ([tokenName, tokenValue]) => this.renderTokenControls(tokenName, tokenValue),
+      )}
+      <button class="add-token-button dx-focus-ring dx-button" @click=${this.addSemanticToken}>Add token</button>
     `;
   }
 

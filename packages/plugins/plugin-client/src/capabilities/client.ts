@@ -13,7 +13,7 @@ type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationU
   context: PluginContext;
 };
 
-export default async ({ context, onClientInitialized, ...options }: ClientCapabilityOptions) => {
+export default async ({ context, onClientInitialized, onSpacesReady, ...options }: ClientCapabilityOptions) => {
   const client = new Client(options);
   await client.initialize();
   await onClientInitialized?.(context, client);
@@ -30,6 +30,7 @@ export default async ({ context, onClientInitialized, ...options }: ClientCapabi
   const subscription = client.spaces.isReady.subscribe(async (ready) => {
     if (ready) {
       await context.activatePromise(ClientEvents.SpacesReady);
+      await onSpacesReady?.(context, client);
     }
   });
 

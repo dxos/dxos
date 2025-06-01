@@ -73,6 +73,8 @@ export const fireBullet = (
 
   const paths = getPaths(graph, root, edge);
   for (const { edge, el } of paths) {
+    // TODO(wittjosiah): Fix this.
+    // @ts-ignore
     select(g).call(createBullet(edge, el, defaultBulletOptions), propagate ? cb : undefined);
   }
 };

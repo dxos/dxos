@@ -52,6 +52,7 @@
         "packages/plugins/*",
         "packages/plugins/experimental/*",
         "packages/ui/react-ui*",
+        "packages/ui/lit-*",
         "packages/devtools/devtools",
         "packages/sdk/app-graph",
         "packages/sdk/app-framework",
@@ -59,6 +60,7 @@
         "packages/sdk/shell",
         "packages/experimental/artifact-testing",
         "packages/experimental/assistant",
+        "packages/common/storybook-utils",
         "packages/core/conductor",
         "packages/core/functions",
         "packages/core/compute"
