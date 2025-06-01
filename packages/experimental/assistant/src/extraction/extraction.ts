@@ -143,7 +143,7 @@ export const postprocessText = (text: string, quotes: ReferencedQuotes) => {
       continue;
     }
 
-    // Use a case-insensitive regular expression to replace the quote
+    // Use a case-insensitive regular expression to replace the quote.
     const regex = new RegExp(quote.quote.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
     text = text.replace(regex, `[${quote.quote}][${DXN.fromLocalObjectId(quote.id).toString()}]`);
   }

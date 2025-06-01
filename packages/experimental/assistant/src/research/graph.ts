@@ -37,14 +37,14 @@ export const findRelatedSchema = async (
   // TODO(dmaretskyi): Also do references.
   return allSchemas
     .filter(
-      (s) =>
-        getTypeAnnotation(s)?.kind === EntityKind.Relation &&
-        (schemaAddressableByDxn(s, DXN.parse(getTypeAnnotation(s)!.sourceSchema!)) ||
-          schemaAddressableByDxn(s, DXN.parse(getTypeAnnotation(s)!.targetSchema!))),
+      (schema) =>
+        getTypeAnnotation(schema)?.kind === EntityKind.Relation &&
+        (isSchemaAddressableByDxn(schema, DXN.parse(getTypeAnnotation(schema)!.sourceSchema!)) ||
+          isSchemaAddressableByDxn(schema, DXN.parse(getTypeAnnotation(schema)!.targetSchema!))),
     )
     .map(
-      (s): RelatedSchema => ({
-        schema: s,
+      (schema): RelatedSchema => ({
+        schema,
         kind: 'relation',
       }),
     );
@@ -52,10 +52,9 @@ export const findRelatedSchema = async (
 
 /**
  * Non-strict DXN comparison.
- *
  * Returns true if the DXN could be resolved to the schema.
  */
-const schemaAddressableByDxn = (schema: Schema.Schema.AnyNoContext, dxn: DXN) => {
+const isSchemaAddressableByDxn = (schema: Schema.Schema.AnyNoContext, dxn: DXN): boolean => {
   if (getTypeIdentifierAnnotation(schema) === dxn.toString()) {
     return true;
   }
@@ -64,4 +63,6 @@ const schemaAddressableByDxn = (schema: Schema.Schema.AnyNoContext, dxn: DXN) =>
   if (t) {
     return t.type === getTypename(schema);
   }
+
+  return false;
 };
