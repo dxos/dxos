@@ -69,7 +69,7 @@ const DefaultStory = ({ messages: _messages, ...props }: ThreadProps) => {
 };
 
 const meta: Meta<ThreadProps> = {
-  title: 'plugins/plugin-automation/Thread',
+  title: 'plugins/plugin-assistant/Thread',
   render: DefaultStory,
   component: Thread,
   decorators: [

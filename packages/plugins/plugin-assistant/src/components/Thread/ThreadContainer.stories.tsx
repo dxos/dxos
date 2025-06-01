@@ -205,7 +205,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'plugins/plugin-automation/ThreadContainer',
+  title: 'plugins/plugin-assistant/ThreadContainer',
   render: DefaultStory,
   decorators: [
     withPluginManager({

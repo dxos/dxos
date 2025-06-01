@@ -10,22 +10,33 @@ import { range } from '@dxos/util';
 
 const getObject = (objects: AnyLiveObject[]) => objects[Math.floor(Math.random() * objects.length)];
 
-// TODO(burdon): Parameterize.
-export const generate = async (space: Space, generator: ValueGenerator) => {
-  console.log('register');
-  const spec: TypeSpec[] = [
-    { type: DataType.Organization, count: 5 },
-    { type: DataType.Project, count: 5 },
-    { type: DataType.Person, count: 10 },
-  ];
+const defaultTypes: TypeSpec[] = [
+  { type: DataType.Organization, count: 5 },
+  { type: DataType.Project, count: 5 },
+  { type: DataType.Person, count: 10 },
+];
 
+export type GenerateOptions = {
+  spec?: TypeSpec[];
+  relations?: {
+    count: number;
+    kind: string;
+  };
+};
+
+const defaultRelations: GenerateOptions['relations'] = { count: 10, kind: 'friend' };
+
+export const generate = async (
+  space: Space,
+  generator: ValueGenerator,
+  { spec = defaultTypes, relations = defaultRelations }: GenerateOptions,
+) => {
   const createObjects = createObjectFactory(space.db, generator);
-  console.log('crate');
   await createObjects(spec);
 
   // Add relations between objects.
   const { objects: contacts } = await space.db.query(Query.type(DataType.Person)).run();
-  for (const _ of range(10)) {
+  for (const _ of range(relations.count)) {
     const source = getObject(contacts);
     const target = getObject(contacts);
     if (source.id === target.id) {
@@ -34,7 +45,7 @@ export const generate = async (space: Space, generator: ValueGenerator) => {
 
     space.db.add(
       live(DataType.HasRelationship, {
-        kind: 'friend',
+        kind: relations.kind,
         [RelationSourceId]: source,
         [RelationTargetId]: target,
       }),
