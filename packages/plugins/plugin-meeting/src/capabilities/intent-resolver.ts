@@ -47,12 +47,11 @@ export default (context: PluginContext) =>
     }),
     createResolver({
       intent: MeetingAction.SetActive,
-      resolve: ({ object }) =>
-        Effect.gen(function* () {
-          const state = context.getCapability(MeetingCapabilities.State);
-          state.activeMeeting = object;
-          return { data: { object } };
-        }),
+      resolve: ({ object }) => {
+        const state = context.getCapability(MeetingCapabilities.State);
+        state.activeMeeting = object;
+        return { data: { object } };
+      },
     }),
     createResolver({
       intent: MeetingAction.Summarize,
@@ -62,10 +61,12 @@ export default (context: PluginContext) =>
         invariant(endpoint, 'AI service not configured.');
         // TODO(wittjosiah): Use capability (but note that this creates a dependency on the assistant plugin being available for summarization to work).
         const ai = new AIServiceEdgeClient({ endpoint });
+        const resolve = (typename: string) =>
+          context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
         const text = await meeting.summary.load();
         text.content = 'Generating summary...';
-        const content = await getMeetingContent(meeting);
+        const content = await getMeetingContent(meeting, resolve);
         const summary = await summarizeTranscript(ai, content);
         text.content = summary;
       },

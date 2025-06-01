@@ -53,5 +53,5 @@ export const MeetingSchema = Schema.Struct({
 
 export class MeetingType extends TypedObject({
   typename: 'dxos.org/type/Meeting',
-  version: '0.4.0',
+  version: '0.3.0',
 })(MeetingSchema.fields) {}
