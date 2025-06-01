@@ -138,9 +138,6 @@
       "path": "../plugin-markdown"
     },
     {
-      "path": "../plugin-meeting"
-    },
-    {
       "path": "../plugin-preview"
     },
     {
@@ -151,6 +148,9 @@
     },
     {
       "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-thread"
     }
   ]
 }

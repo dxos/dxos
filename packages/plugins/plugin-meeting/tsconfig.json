@@ -22,9 +22,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/context"
     },
     {
@@ -38,6 +35,9 @@
     },
     {
       "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/local-storage"
     },
     {
       "path": "../../common/log"
@@ -76,9 +76,6 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../devtools/devtools"
-    },
-    {
       "path": "../../experimental/artifact"
     },
     {
@@ -106,13 +103,10 @@
       "path": "../../ui/react-ui-components"
     },
     {
-      "path": "../../ui/react-ui-dnd"
-    },
-    {
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-sfx"
+      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-stack"
@@ -140,6 +134,15 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-thread"
+    },
+    {
+      "path": "../plugin-transcription"
     }
   ]
 }

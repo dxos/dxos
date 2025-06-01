@@ -3,32 +3,44 @@
 //
 
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
-import { createQueueDxn, Ref } from '@dxos/echo-schema';
+import { Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
-import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
+import { ThreadType } from '@dxos/plugin-space/types';
 import { live, fullyQualifiedId, getSpace, makeRef } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { ThreadCapabilities } from './capabilities';
 import { THREAD_PLUGIN } from '../meta';
-import { ThreadAction } from '../types';
+import { ChannelType, ThreadAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ThreadAction.CreateChannel,
-      resolve: ({ spaceId, name }) => ({
+      resolve: ({ name }) => ({
         data: {
           object: live(ChannelType, {
             name,
-            queue: refFromDXN(createQueueDxn(spaceId)),
+            defaultThread: makeRef(live(ThreadType, { messages: [], status: 'active' })),
+            threads: [],
           }),
         },
       }),
+    }),
+    createResolver({
+      intent: ThreadAction.CreateChannelThread,
+      resolve: ({ channel }) => {
+        const thread = live(ThreadType, { messages: [], status: 'active' });
+        channel.threads.push(makeRef(thread));
+        return {
+          data: {
+            object: thread,
+          },
+        };
+      },
     }),
     createResolver({
       intent: ThreadAction.Create,

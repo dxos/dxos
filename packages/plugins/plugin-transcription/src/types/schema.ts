@@ -10,8 +10,7 @@ import { Expando, Ref, TypedObject } from '@dxos/echo-schema';
  * Root transcript object created when the user starts a transcription.
  */
 export const TranscriptSchema = Schema.Struct({
-  name: Schema.String,
-
+  // TODO(wittjosiah): Remove?
   // TODO(burdon): Use Date or string?
   started: Schema.optional(Schema.String),
   ended: Schema.optional(Schema.String),

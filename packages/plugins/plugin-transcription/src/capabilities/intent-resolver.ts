@@ -8,7 +8,6 @@ import { type SpaceId } from '@dxos/keys';
 import { live, refFromDXN } from '@dxos/live-object';
 
 import { TranscriptionAction, TranscriptType } from '../types';
-import { getTimeStr } from '../util';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -17,7 +16,6 @@ export default (context: PluginContext) =>
       resolve: ({ name, spaceId }) => {
         const transcript = live(TranscriptType, {
           queue: refFromDXN(createQueueDxn(spaceId as SpaceId)),
-          name: name ?? `Transcript ${getTimeStr(Date.now())}`,
         });
 
         return { data: { object: transcript } };
