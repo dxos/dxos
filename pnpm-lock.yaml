@@ -2252,6 +2252,229 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)
 
+  packages/core/ai:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../echo/echo-db
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo/echo-schema
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../../common/graph
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../echo/live-object
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      parjs:
+        specifier: ^1.3.9
+        version: 1.3.9
+      parsimmon:
+        specifier: ^1.18.1
+        version: 1.18.1
+    devDependencies:
+      '@types/parsimmon':
+        specifier: ^1.10.9
+        version: 1.10.9
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
+
+  packages/core/artifact:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
+      handlebars:
+        specifier: 4.7.8
+        version: 4.7.8
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
+    devDependencies:
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
+
+  packages/core/artifact-testing:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../artifact
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../assistant
+      '@dxos/conductor':
+        specifier: workspace:*
+        version: link:../conductor
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../mesh/edge-client
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      chess.js:
+        specifier: ^1.0.0
+        version: 1.2.0
+    devDependencies:
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
+
+  packages/core/assistant:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../artifact
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../echo/echo-db
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo/echo-protocol
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo/echo-schema
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../functions
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../../common/graph
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../echo/live-object
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@xenova/transformers':
+        specifier: ^2.17.2
+        version: 2.17.2
+      exa-js:
+        specifier: ^1.5.12
+        version: 1.7.0(encoding@0.1.13)
+    devDependencies:
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
+      inquirer:
+        specifier: ^12.0.0
+        version: 12.0.0(@types/node@22.10.2)
+
   packages/core/compute:
     dependencies:
       '@dxos/async':
@@ -2323,13 +2546,13 @@ importers:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../ai
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../artifact
       '@dxos/assistant':
         specifier: workspace:*
-        version: link:../../experimental/assistant
+        version: link:../assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -2914,7 +3137,7 @@ importers:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../ai
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -4588,229 +4811,6 @@ importers:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
 
-  packages/experimental/ai:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/graph':
-        specifier: workspace:*
-        version: link:../../common/graph
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      parjs:
-        specifier: ^1.3.9
-        version: 1.3.9
-      parsimmon:
-        specifier: ^1.18.1
-        version: 1.18.1
-    devDependencies:
-      '@types/parsimmon':
-        specifier: ^1.10.9
-        version: 1.10.9
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
-
-  packages/experimental/artifact:
-    dependencies:
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../ai
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
-      handlebars:
-        specifier: 4.7.8
-        version: 4.7.8
-      lodash.defaultsdeep:
-        specifier: ^4.6.1
-        version: 4.6.1
-    devDependencies:
-      '@types/lodash.defaultsdeep':
-        specifier: ^4.6.6
-        version: 4.6.7
-
-  packages/experimental/artifact-testing:
-    dependencies:
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../ai
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../artifact
-      '@dxos/assistant':
-        specifier: workspace:*
-        version: link:../assistant
-      '@dxos/conductor':
-        specifier: workspace:*
-        version: link:../../core/conductor
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/edge-client':
-        specifier: workspace:*
-        version: link:../../core/mesh/edge-client
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/react-ui-syntax-highlighter':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-syntax-highlighter
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
-      chess.js:
-        specifier: ^1.0.0
-        version: 1.2.0
-    devDependencies:
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-
-  packages/experimental/assistant:
-    dependencies:
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../ai
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../artifact
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
-      '@dxos/echo-protocol':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-protocol
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/functions':
-        specifier: workspace:*
-        version: link:../../core/functions
-      '@dxos/graph':
-        specifier: workspace:*
-        version: link:../../common/graph
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@xenova/transformers':
-        specifier: ^2.17.2
-        version: 2.17.2
-      exa-js:
-        specifier: ^1.5.12
-        version: 1.7.0(encoding@0.1.13)
-    devDependencies:
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
-      inquirer:
-        specifier: ^12.0.0
-        version: 12.0.0(@types/node@22.10.2)
-
   packages/experimental/cf-labs:
     dependencies:
       '@dxos/credentials':
@@ -4856,10 +4856,10 @@ importers:
         version: link:../../sdk/app-framework
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../artifact
+        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
-        version: link:../assistant
+        version: link:../../core/assistant
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -5363,16 +5363,16 @@ importers:
         version: 6.34.1
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
-        version: link:../../experimental/assistant
+        version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -5535,7 +5535,7 @@ importers:
     devDependencies:
       '@dxos/artifact-testing':
         specifier: workspace:*
-        version: link:../../experimental/artifact-testing
+        version: link:../../core/artifact-testing
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
@@ -5726,16 +5726,16 @@ importers:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
-        version: link:../../experimental/assistant
+        version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -5917,13 +5917,13 @@ importers:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/assistant':
         specifier: workspace:*
-        version: link:../../experimental/assistant
+        version: link:../../core/assistant
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -6201,13 +6201,13 @@ importers:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../../core/artifact
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -6813,16 +6813,16 @@ importers:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
-        version: link:../../experimental/assistant
+        version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -6979,16 +6979,16 @@ importers:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
-        version: link:../../experimental/assistant
+        version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -7082,16 +7082,16 @@ importers:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
-        version: link:../../experimental/assistant
+        version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -7200,13 +7200,13 @@ importers:
         version: 6.34.1
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../../core/artifact
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -7333,16 +7333,16 @@ importers:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
-        version: link:../../experimental/assistant
+        version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8277,16 +8277,16 @@ importers:
         version: 6.34.1
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
-        version: link:../../experimental/assistant
+        version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8491,16 +8491,16 @@ importers:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
-        version: link:../../experimental/assistant
+        version: link:../../core/assistant
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -8968,13 +8968,13 @@ importers:
         version: 3.0.0-beta.0
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../../core/artifact
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -9359,16 +9359,16 @@ importers:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
-        version: link:../../experimental/assistant
+        version: link:../../core/assistant
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -9926,16 +9926,16 @@ importers:
         version: 6.34.1
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
-        version: link:../../experimental/assistant
+        version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -10350,13 +10350,13 @@ importers:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../app-graph
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../../core/artifact
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11968,16 +11968,16 @@ importers:
         version: 1.2.13(workerize-loader@2.0.2(webpack@5.88.2(@swc/core@1.5.7(@swc/helpers@0.5.17))(esbuild@0.23.1)))
       '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/artifact':
         specifier: workspace:*
-        version: link:../../experimental/artifact
+        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
-        version: link:../../experimental/assistant
+        version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -12059,7 +12059,7 @@ importers:
     devDependencies:
       '@dxos/artifact-testing':
         specifier: workspace:*
-        version: link:../../experimental/artifact-testing
+        version: link:../../core/artifact-testing
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute
