@@ -5,7 +5,7 @@
 import inquirer from 'inquirer';
 import { writeFileSync } from 'node:fs';
 
-import { AIServiceEdgeClient, ToolTypes, DEFAULT_EDGE_MODEL } from '@dxos/ai';
+import { AI_SERVICE_ENDPOINT, DEFAULT_EDGE_MODEL, AIServiceEdgeClient, ToolTypes } from '@dxos/ai';
 import { createUserMessage } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
@@ -13,7 +13,6 @@ import { log } from '@dxos/log';
 
 import { runLLM } from '../experimental';
 import {
-  AI_SERVICE_ENDPOINT,
   createLogger,
   createCypherTool,
   createSystemPrompt,

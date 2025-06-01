@@ -5,14 +5,13 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
+import { AI_SERVICE_ENDPOINT, DEFAULT_EDGE_MODEL, AIServiceEdgeClient } from '@dxos/ai';
 import { createUserMessage, defineTool, ToolResult } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { runLLM, type ConversationEvent } from './conversation';
-import { AIServiceEdgeClient, DEFAULT_EDGE_MODEL } from '../../ai-service';
-import { AI_SERVICE_ENDPOINT } from '../../testing';
 
 // TODO(burdon): Local live LLM test.
 describe.skip('Conversation tests', () => {

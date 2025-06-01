@@ -4,7 +4,7 @@
 
 import { Schema, type Context, type Effect } from 'effect';
 
-import { type AIServiceClient } from '@dxos/assistant';
+import { type AIServiceClient } from '@dxos/ai';
 // import { type Space } from '@dxos/client/echo';
 import type { CoreDatabase, EchoDatabase } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';

@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { AIServiceEdgeClient, Tool } from '../ai-service';
+import { AIServiceEdgeClient, Tool } from '@dxos/ai';
 import { defineTool, ToolResult } from '../conversation';
 
 // TODO(dmaretskyi): Effect schema.

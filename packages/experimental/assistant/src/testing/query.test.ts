@@ -4,18 +4,17 @@
 
 import { test } from 'vitest';
 
+import { AI_SERVICE_ENDPOINT, DEFAULT_EDGE_MODEL, AIServiceEdgeClient } from '@dxos/ai';
 import { createUserMessage } from '@dxos/artifact';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { AI_SERVICE_ENDPOINT } from './defs';
 import { createLogger } from './logger';
 import { createCypherTool, createSystemPrompt } from './query-promts';
 import { createTestData, seedTestData } from './test-data';
 import { Contact, Organization, Project, Task } from './test-schema';
-import { AIServiceEdgeClient, DEFAULT_EDGE_MODEL } from '../ai-service';
 import { runLLM, EchoDataSource } from '../experimental';
 
 const client = new AIServiceEdgeClient({

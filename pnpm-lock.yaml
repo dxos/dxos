@@ -2909,9 +2909,9 @@ importers:
 
   packages/core/functions:
     dependencies:
-      '@dxos/assistant':
+      '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/assistant
+        version: link:../../experimental/ai
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

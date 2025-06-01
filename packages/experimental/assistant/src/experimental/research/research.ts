@@ -4,8 +4,7 @@
 
 import { identity, Option, Schema, SchemaAST } from 'effect';
 
-import { AISession } from '@dxos/ai';
-import { ConsolePrinter } from '@dxos/assistant/testing';
+import { AISession, ConsolePrinter } from '@dxos/ai';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
   create,

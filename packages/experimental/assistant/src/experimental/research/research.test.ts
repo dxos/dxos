@@ -5,14 +5,13 @@
 import { inspect } from 'node:util';
 import { describe, test } from 'vitest';
 
+import { AI_SERVICE_ENDPOINT, AIServiceEdgeClient, OllamaClient } from '@dxos/ai';
 import { structuredOutputParser } from '@dxos/artifact';
-import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { getSchemaDXN } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { createExtractionSchema, getSanitizedSchemaName, researchFn, sanitizeObjects, TYPES } from './research';
-import { AIServiceEdgeClient, OllamaClient } from '../../ai-service';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = true;
