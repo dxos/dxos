@@ -8,7 +8,9 @@
 
       &:focus-visible {
         @apply ring-focusLine ring-offset-focusOffset z-[1] ring-accentFocusIndicator;
-
+        body[data-focus="hidden"] & {
+          @apply ring-transparent;
+        }
         &:hover {
           @apply outline-none;
 
@@ -33,6 +35,9 @@
   .dx-focus-ring-group-x:focus-visible .dx-focus-ring-group-x-indicator,
   .dx-focus-ring-group-y:focus-visible .dx-focus-ring-group-y-indicator {
     @apply ring-focusLine ring-offset-focusOffset ring-accentFocusIndicator;
+    body[data-focus="hidden"] & {
+      @apply ring-transparent;
+    }
 
     &:hover {
       @apply outline-none;
@@ -67,6 +72,9 @@
       &:focus-visible {
         &::after {
           @apply ring-focusLine ring-offset-focusOffset ring-inset z-[1] ring-accentFocusIndicator;
+          body[data-focus="hidden"] & {
+            @apply ring-transparent;
+          }
         }
 
         &:hover {
