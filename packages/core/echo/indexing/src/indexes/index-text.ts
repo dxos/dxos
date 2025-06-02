@@ -9,10 +9,12 @@ import { Resource } from '@dxos/context';
 import { type ObjectStructure } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import type { ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
+import { extractTextBlocks } from './text';
 import {
   type IndexQuery,
   staticImplements,
@@ -21,8 +23,6 @@ import {
   type LoadParams,
   type FindResult,
 } from '../types';
-import { extractTextBlocks } from './text';
-import { log } from '@dxos/log';
 
 // Note: By default, Orama search returns 10 results.
 // const ORAMA_LIMIT = 1_000_000;
@@ -68,6 +68,7 @@ export class IndexText extends Resource implements Index {
     });
     return true;
   }
+
   async remove(id: ObjectPointerEncoded) {
     invariant(this._orama, 'Index is not initialized');
     await Orama.remove(this._orama, id);

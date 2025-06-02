@@ -1,5 +1,11 @@
-import { Resource } from '@dxos/context';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { pipeline, type FeatureExtractionPipeline } from '@xenova/transformers';
+
+import { Resource } from '@dxos/context';
+
 import type { ExtractInputBlock } from './text';
 
 export interface EmbeddingExtractorOptions {
@@ -113,7 +119,9 @@ export const breakIntoChunks = (data: ExtractInputBlock[], maxChunkSize: number)
 
     for (const paragraph of paragraphs) {
       const content = paragraph.trim();
-      if (!content) continue;
+      if (!content) {
+        continue;
+      }
 
       // If paragraph fits within maxChunkSize, add it directly
       if (content.length <= maxChunkSize) {
@@ -130,7 +138,9 @@ export const breakIntoChunks = (data: ExtractInputBlock[], maxChunkSize: number)
         const delimiter = sentences[i + 1] || '';
         const sentenceContent = sentence.trim() + delimiter;
 
-        if (!sentenceContent) continue;
+        if (!sentenceContent) {
+          continue;
+        }
 
         // If adding this sentence would exceed maxChunkSize
         if (currentChunk.length + sentenceContent.length > maxChunkSize) {
@@ -150,7 +160,9 @@ export const breakIntoChunks = (data: ExtractInputBlock[], maxChunkSize: number)
               const wordDelimiter = words[j + 1] || '';
               const wordContent = word.trim() + wordDelimiter;
 
-              if (!wordContent) continue;
+              if (!wordContent) {
+                continue;
+              }
 
               if (currentChunk.length + wordContent.length > maxChunkSize) {
                 if (currentChunk) {

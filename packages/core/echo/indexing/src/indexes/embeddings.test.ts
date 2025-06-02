@@ -6,9 +6,9 @@ import * as Orama from '@orama/orama';
 import { pipeline } from '@xenova/transformers';
 import { describe, expect, test } from 'vitest';
 
+import { breakIntoChunks, EmbeddingExtractor } from './embeddings';
 import type { ExtractInputBlock } from './text';
 import { TestData } from '../testing';
-import { breakIntoChunks, EmbeddingExtractor } from './embeddings';
 
 // Associated research: https://chatgpt.com/share/6828c870-7f08-8012-b4d6-676f00545e79
 
@@ -307,7 +307,9 @@ const assertAllWordsAppear = (original: string, chunks: ExtractInputBlock[]) => 
       .map((w) => w.replace(/[^a-z]/g, '')),
   );
   for (const word of words) {
-    if (!word) continue; // Skip empty strings after filtering
+    if (!word) {
+      continue;
+    } // Skip empty strings after filtering
     expect(chunkWords.some((chunk) => chunk.includes(word))).toBe(true);
   }
 };

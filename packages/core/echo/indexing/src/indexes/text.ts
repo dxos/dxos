@@ -1,5 +1,9 @@
-import { visitValues } from '@dxos/util';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { isEncodedReference, type ObjectStructure } from '@dxos/echo-protocol';
+import { visitValues } from '@dxos/util';
 
 export type ExtractInputBlock = {
   content: string;

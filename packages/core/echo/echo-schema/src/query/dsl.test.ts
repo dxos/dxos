@@ -161,7 +161,7 @@ describe('query api', () => {
     `);
   });
 
-  test('untyped full-text search', () => {
+  test('typed full-text search', () => {
     const contactFullTextSearch = Query.select(Filter.type(Person)).select(Filter.text('Bill'));
 
     log('query', { ast: contactFullTextSearch.ast });

@@ -3,11 +3,12 @@
 //
 
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
+import { Match } from 'effect';
 
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { DatabaseDirectory, isEncodedReference, ObjectStructure, type QueryAST } from '@dxos/echo-protocol';
-import { EscapedPropPath, IndexQuery, type FindResult, type Indexer } from '@dxos/indexing';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
+import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
@@ -20,7 +21,6 @@ import type { AutomergeHost } from '../automerge';
 import { createIdFromSpaceKey } from '../common';
 import type { SpaceStateManager } from '../db-host';
 import { filterMatchObject } from '../filter';
-import { Match } from 'effect';
 
 type QueryExecutorOptions = {
   indexer: Indexer;
@@ -631,17 +631,4 @@ export class QueryExecutor extends Resource {
       doc: object,
     };
   }
-}
-
-{
-  const kind: 'foo' | 'bar' = 'foo';
-
-  const result: 'x-foo' | 'x-bar' = Match.type<'foo' | 'bar'>().pipe(
-    Match.withReturnType<'x-foo' | 'x-bar'>(),
-    Match.when('foo', () => 'x-foo'),
-    Match.when('bar', () => 'x-bar'),
-    Match.exhaustive,
-  )(kind);
-
-  console.log(result);
 }

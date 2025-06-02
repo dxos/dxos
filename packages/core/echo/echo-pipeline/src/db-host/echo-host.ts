@@ -17,7 +17,7 @@ import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
-import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
 import { DataServiceImpl } from './data-service';
@@ -37,19 +37,6 @@ import {
   type PeerIdProvider,
   type RootDocumentSpaceKeyProvider,
 } from '../automerge';
-
-const INDEXER_CONFIG: IndexConfig = {
-  enabled: true,
-  indexes: [
-    //
-    { kind: IndexKind.Kind.SCHEMA_MATCH },
-    { kind: IndexKind.Kind.GRAPH },
-    { kind: IndexKind.Kind.FULL_TEXT },
-
-    // TODO(dmaretskyi): Disable this for prod since embedding generation is expensive.
-    { kind: IndexKind.Kind.VECTOR },
-  ],
-};
 
 export interface EchoHostIndexingConfig {
   /**
