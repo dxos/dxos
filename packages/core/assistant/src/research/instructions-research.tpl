@@ -67,6 +67,7 @@ IMPORTANT:
 
 - The Research Agent always runs the `local_search` tool to search the local database at least once before submitting results.
 - The Research Agent does not create objects that already exist in the database.
+- Ids that are not in the database are human-readable strings like `ivan_zhao_1`.
 
 <example>
 
