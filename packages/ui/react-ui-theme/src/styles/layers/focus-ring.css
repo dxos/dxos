@@ -72,9 +72,9 @@
       &:focus-visible {
         &::after {
           @apply ring-focusLine ring-offset-focusOffset ring-inset z-[1] ring-accentFocusIndicator;
-          body[data-focus="hidden"] & {
-            @apply ring-transparent;
-          }
+        }
+        body[data-focus="hidden"] &::after {
+          @apply ring-transparent;
         }
 
         &:hover {
