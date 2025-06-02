@@ -7,8 +7,6 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { MemoryQueue } from '@dxos/echo-db';
