@@ -5,8 +5,15 @@
 import { Schema } from 'effect';
 
 import { type EchoDatabase } from '@dxos/echo-db';
-import { EntityKind, getTypeIdentifierAnnotation, getTypename, getTypeAnnotation } from '@dxos/echo-schema';
+import {
+  EntityKind,
+  getTypeIdentifierAnnotation,
+  getTypename,
+  getTypeAnnotation,
+  getSchemaTypename,
+} from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 // TODO(burdon): Unify with the graph schema.
 export const Subgraph = Schema.Struct({
@@ -29,19 +36,32 @@ export type RelatedSchema = {
  */
 export const findRelatedSchema = async (
   db: EchoDatabase,
-  schema: Schema.Schema.AnyNoContext,
+  anchor: Schema.Schema.AnyNoContext,
 ): Promise<RelatedSchema[]> => {
   // TODO(dmaretskyi): Query stored schemas.
   const allSchemas = [...db.graph.schemaRegistry.schemas];
 
   // TODO(dmaretskyi): Also do references.
   return allSchemas
-    .filter(
-      (schema) =>
-        getTypeAnnotation(schema)?.kind === EntityKind.Relation &&
-        (isSchemaAddressableByDxn(schema, DXN.parse(getTypeAnnotation(schema)!.sourceSchema!)) ||
-          isSchemaAddressableByDxn(schema, DXN.parse(getTypeAnnotation(schema)!.targetSchema!))),
-    )
+    .filter((schema) => {
+      if (getTypeAnnotation(schema)?.kind !== EntityKind.Relation) {
+        return false;
+      }
+
+      log.info('relatedness check', {
+        schema,
+        anchor,
+        anchorId: getTypeIdentifierAnnotation(schema),
+        anchorTypename: getTypename(schema),
+        sourceDxn: DXN.parse(getTypeAnnotation(schema)!.sourceSchema!),
+        targetDxn: DXN.parse(getTypeAnnotation(schema)!.targetSchema!),
+      });
+
+      return (
+        isSchemaAddressableByDxn(anchor, DXN.parse(getTypeAnnotation(schema)!.sourceSchema!)) ||
+        isSchemaAddressableByDxn(anchor, DXN.parse(getTypeAnnotation(schema)!.targetSchema!))
+      );
+    })
     .map(
       (schema): RelatedSchema => ({
         schema,
@@ -61,7 +81,7 @@ const isSchemaAddressableByDxn = (schema: Schema.Schema.AnyNoContext, dxn: DXN):
 
   const t = dxn.asTypeDXN();
   if (t) {
-    return t.type === getTypename(schema);
+    return t.type === getSchemaTypename(schema);
   }
 
   return false;
