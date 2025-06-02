@@ -158,7 +158,7 @@ describe('Queries', () => {
 
     let root: AutomergeUrl;
     {
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       const db = await peer.createDatabase(spaceKey);
       await createObjects(peer, db, { count: 3 });
 
@@ -167,7 +167,7 @@ describe('Queries', () => {
     }
 
     {
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       const db = await peer.openDatabase(spaceKey, root);
       expect((await db.query().run()).objects.length).to.eq(3);
     }
@@ -185,7 +185,7 @@ describe('Queries', () => {
     let root: AutomergeUrl;
     let expectedObjectId: string;
     {
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
@@ -200,7 +200,7 @@ describe('Queries', () => {
     }
 
     {
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       const db = await peer.openDatabase(spaceKey, root);
       const queryResult = (await db.query().run()).objects;
       expect(queryResult.length).to.eq(1);
@@ -260,7 +260,7 @@ describe('Queries', () => {
       await builder.close();
     });
 
-    const peer = await builder.createPeer(kv);
+    const peer = await builder.createPeer({ kv });
     const db = await peer.createDatabase(spaceKey);
     const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
@@ -468,7 +468,7 @@ describe('Queries', () => {
     let db: EchoDatabase;
 
     beforeEach(async () => {
-      const { db: db1, graph } = await builder.createDatabase();
+      const { db: db1, graph } = await builder.createDatabase({ indexing: { vector: true } });
       db = db1;
       graph.schemaRegistry.addSchema([Testing.Task]);
 
