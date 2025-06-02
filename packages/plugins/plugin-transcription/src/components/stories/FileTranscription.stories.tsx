@@ -11,11 +11,8 @@ import { AIServiceEdgeClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { scheduleTask } from '@dxos/async';
-import { Context } from '@dxos/context';
 import { MemoryQueue } from '@dxos/echo-db';
 import { create, createQueueDxn } from '@dxos/echo-schema';
-import { ServiceContainer, FunctionExecutor } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -30,7 +27,6 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
-import { TranscriptionNormalizer, getActorId } from '../../assistant';
 import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { TestItem } from '../../testing';
 import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
@@ -38,14 +34,12 @@ import { renderMarkdown } from '../Transcript';
 
 const AudioFile = ({
   detectSpeaking,
-  normalizeSentences,
   audioUrl,
   transcriberConfig,
   recorderConfig,
   audioConstraints,
 }: {
   detectSpeaking?: boolean;
-  normalizeSentences?: boolean;
   audioUrl: string;
   transcriberConfig?: TranscriberParams['config'];
   recorderConfig?: MediaStreamRecorderParams['config'];
@@ -87,44 +81,6 @@ const AudioFile = ({
   // Transcriber.
   const queueDxn = useMemo(() => createQueueDxn(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
-  const normalizer = useMemo(() => {
-    if (!normalizeSentences) {
-      return undefined;
-    }
-
-    return new TranscriptionNormalizer({
-      functionExecutor: new FunctionExecutor(
-        new ServiceContainer().setServices({
-          ai: {
-            client: new AIServiceEdgeClient({
-              endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-              defaultGenerationOptions: {
-                model: '@anthropic/claude-3-5-sonnet-20241022',
-              },
-            }),
-          },
-        }),
-      ),
-      queue,
-      startCursor: {
-        timestamp: new Date().toISOString(),
-        actorId: getActorId(actor),
-      },
-    });
-  }, [normalizeSentences, queue]);
-  useEffect(() => {
-    const ctx = new Context();
-    scheduleTask(ctx, async () => {
-      await normalizer?.open(ctx);
-      ctx.onDispose(async () => {
-        await normalizer?.close(ctx);
-      });
-    });
-
-    return () => {
-      void ctx.dispose();
-    };
-  }, [normalizer]);
 
   const model = useQueueModelAdapter(renderMarkdown([]), queue);
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
@@ -215,7 +171,7 @@ export const Default: StoryObj<typeof AudioFile> = {
     detectSpeaking: true,
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
     audioUrl: 'https://dxos.network/audio-london.m4a',
-    textUrl: 'https://dxos.network/audio-london.txt',
+    // textUrl: 'https://dxos.network/audio-london.txt',
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,
   },
@@ -224,11 +180,10 @@ export const Default: StoryObj<typeof AudioFile> = {
 export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
   render: AudioFile,
   args: {
-    normalizeSentences: true,
     detectSpeaking: true,
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
     audioUrl: 'https://dxos.network/audio-london.m4a',
-    textUrl: 'https://dxos.network/audio-london.txt',
+    // textUrl: 'https://dxos.network/audio-london.txt',
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,
   },

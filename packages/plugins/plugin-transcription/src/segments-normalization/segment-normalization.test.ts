@@ -7,14 +7,13 @@ import { describe, test } from 'vitest';
 import { AIServiceEdgeClient, OllamaClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
-import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataType } from '@dxos/schema';
 
-import { sentenceNormalization } from './sentence-normalization';
+import { sentenceNormalization } from './function';
 
 // Generate bunch of complex messages.
-const originalStrings: string[] = [
+const segments: DataType.MessageBlock.Transcription[] = [
   // Control message.
   'Hello, every body. We will talk about quantum entanglement today',
 
@@ -38,11 +37,15 @@ const originalStrings: string[] = [
 
   // No punctuation.
   'in classical physics objects have well-defined properties such as position speed and momentum',
-];
+].map((string, index) => ({
+  type: 'transcription',
+  started: new Date(Date.now() + 1000 * index).toISOString(),
+  text: string,
+}));
 
 const REMOTE_AI = true;
 
-describe.only('SentenceNormalization', () => {
+describe('SentenceNormalization', () => {
   const getExecutor = () => {
     return new FunctionExecutor(
       new ServiceContainer().setServices({
@@ -64,15 +67,15 @@ describe.only('SentenceNormalization', () => {
     );
   };
 
-  test('messages merging', { timeout: 120_000 }, async () => {
+  test.only('messages merging', { timeout: 120_000 }, async () => {
     const executor = getExecutor();
 
-    const sentences: string[] = [];
-    let buffer: string[] = [];
+    const sentences: DataType.MessageBlock.Transcription[] = [];
+    let buffer: DataType.MessageBlock.Transcription[] = [];
     let activeSentenceIndex = 0;
-    for (const message of originalStrings) {
+    for (const segment of segments) {
       const result = await executor.invoke(sentenceNormalization, {
-        messages: [...buffer, message],
+        segments: [...buffer, segment],
       });
       log.info('BEFORE sentence splicing', { activeSentenceIndex, sentences, inserting: result.sentences });
       sentences.splice(activeSentenceIndex, sentences.length - activeSentenceIndex, ...result.sentences);
@@ -84,38 +87,6 @@ describe.only('SentenceNormalization', () => {
       }
     }
     log.info('sentences', { sentences });
-    throw new Error('test');
-  });
-
-  test.only('messages normalization', { timeout: 120_000 }, async () => {
-    const executor = getExecutor();
-    const messages: DataType.Message[] = originalStrings.map((string) => ({
-      id: ObjectId.random(),
-      created: new Date().toISOString(),
-      sender: {
-        name: 'test',
-        type: 'user',
-      },
-      blocks: [{ type: 'text', text: string, created: new Date().toISOString() }],
-    }));
-
-    const newMessages: DataType.Message[] = [];
-    let buffer: DataType.Message[] = [];
-    let activeIdx = 0;
-    for (const message of messages) {
-      const result = await executor.invoke(sentenceNormalization, {
-        messages: [...buffer.map((buf) => JSON.stringify(buf)), JSON.stringify(message)],
-      });
-      log.info('BEFORE messages splicing', { activeIdx, newMessages, inserting: result.sentences });
-      newMessages.splice(activeIdx, newMessages.length - activeIdx, ...result.messages);
-      log.info('AFTER messages splicing', { activeIdx, newMessages });
-
-      if (newMessages.length > 0) {
-        activeIdx = newMessages.length - 1;
-        buffer = newMessages.slice(activeIdx);
-      }
-    }
-    log.info('newMessages', { newMessages });
     throw new Error('test');
   });
 });
