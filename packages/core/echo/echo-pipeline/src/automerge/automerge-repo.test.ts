@@ -592,7 +592,7 @@ describe('AutomergeRepo', () => {
       await connectPeers(spaceKey, teleportBuilder, peerWithDocs.peer, peer2);
       await connectPeers(anotherSpaceKey, teleportBuilder, peer2, peerFromAnotherSpace);
 
-      const loadedDocument = await peer2.repo.find(document.url);
+      const loadedDocument = await peer2.repo.find(document.url, FIND_PARAMS);
       await asyncTimeout(loadedDocument.whenReady(), 1000);
 
       await sleep(200);

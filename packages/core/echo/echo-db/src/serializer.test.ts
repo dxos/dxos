@@ -205,7 +205,7 @@ describe('Serializer', () => {
 
       const builder = new EchoTestBuilder();
       await openAndClose(builder);
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       const root = await peer.host.createSpaceRoot(spaceKey);
 
       {
@@ -217,7 +217,7 @@ describe('Serializer', () => {
         await peer.close();
       }
       {
-        const peer = await builder.createPeer(kv);
+        const peer = await builder.createPeer({ kv });
         const db = await peer.openDatabase(spaceKey, root.url);
         data = await serializer.export(db);
         expect(data.objects.length).to.eq(totalObjects);
