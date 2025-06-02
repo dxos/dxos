@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Capabilities, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
+import { ArtifactId, defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
 import { ScriptType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -178,8 +178,7 @@ export default () => {
         description: 'Inspect a script. Returns the artifact definition for the script',
         caption: 'Inspecting script...',
         schema: Schema.Struct({
-          // TODO(wittjosiah): ObjectId schema should be used here but it's not working.
-          id: Schema.String.annotations({ description: 'The ID of the script' }),
+          id: ArtifactId,
         }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
@@ -198,8 +197,7 @@ export default () => {
         description: 'Update a script. Returns the artifact definition for the script',
         caption: 'Updating script...',
         schema: Schema.Struct({
-          // TODO(wittjosiah): ObjectId schema should be used here but it's not working.
-          id: Schema.String.annotations({ description: 'The ID of the script to update' }),
+          id: ArtifactId,
           code: Schema.String.annotations({
             description: 'The full code of the script in JavaScript or TypeScript. Must be valid executable code.',
           }),

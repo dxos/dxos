@@ -18,7 +18,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message, type Tool } from '@dxos/artifact';
-import { genericTools, localServiceEndpoints } from '@dxos/artifact-testing';
+import { genericTools, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { DXN, Type } from '@dxos/echo';
 import { createQueueDxn, create } from '@dxos/echo-schema';
@@ -28,6 +28,7 @@ import { ChessType } from '@dxos/plugin-chess/types';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
+import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
@@ -40,7 +41,7 @@ import { ChatProcessor } from '../../hooks';
 import { createProcessorOptions } from '../../testing';
 import translations from '../../translations';
 
-const endpoints = localServiceEndpoints;
+const endpoints = remoteServiceEndpoints;
 
 type RenderProps = {
   items?: Type.AnyObject[];
@@ -80,6 +81,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
   useEffect(() => {
+    if (space) {
+      setQueueDxn(createQueueDxn(space.id).toString());
+    }
+  }, [space]);
+
+  useEffect(() => {
     if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
       queue.append([
         create(Message, {
@@ -101,32 +108,28 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const artifactItems: any[] = []; // TODO(burdon): Query from space.
   const messages = [...(queue?.items ?? []), ...(processor?.messages.value ?? [])];
 
-  const handleSubmit = processor
-    ? (message: string) => {
-        requestAnimationFrame(async () => {
-          invariant(processor);
-          if (processor.streaming.value) {
-            await processor.cancel();
-          }
+  const handleSubmit = useCallback(
+    (message: string) => {
+      requestAnimationFrame(async () => {
+        if (!processor || !queue) {
+          return;
+        }
 
-          invariant(queue);
-          await processor.request(message, {
-            history: queue.items,
-            onComplete: (messages) => {
-              queue.append(messages);
-            },
-          });
+        if (processor.streaming.value) {
+          await processor.cancel();
+        }
+
+        await processor.request(message, {
+          history: queue.items,
+          onComplete: (messages) => {
+            queue.append(messages);
+          },
         });
+      });
 
-        return true;
-      }
-    : undefined;
-
-  const handlePrompt = useCallback(
-    (text: string) => {
-      void handleSubmit?.(text);
+      return true;
     },
-    [handleSubmit],
+    [processor, queue],
   );
 
   const handleDelete = useCallback(
@@ -136,6 +139,10 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     },
     [queue],
   );
+
+  if (!space) {
+    return <></>;
+  }
 
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
@@ -159,7 +166,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
               iconOnly
               label='Clear history'
               icon='ph--trash--regular'
-              onClick={() => setQueueDxn(createQueueDxn().toString())}
+              onClick={() => setQueueDxn(createQueueDxn(space.id).toString())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor?.cancel()} />
           </Input.Root>
@@ -172,7 +179,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
           error={processor?.error.value}
           tools={processor?.tools}
           onSubmit={processor ? handleSubmit : undefined}
-          onPrompt={processor ? handlePrompt : undefined}
+          onPrompt={processor ? handleSubmit : undefined}
           onDelete={processor ? handleDelete : undefined}
           {...props}
         />
@@ -201,7 +208,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'plugins/plugin-automation/ThreadContainer',
+  title: 'plugins/plugin-assistant/ThreadContainer',
   render: DefaultStory,
   decorators: [
     withPluginManager({
@@ -219,6 +226,7 @@ const meta: Meta<typeof DefaultStory> = {
         ChessPlugin(),
         InboxPlugin(),
         MapPlugin(),
+        MarkdownPlugin(),
         TablePlugin(),
       ],
       fireEvents: [Events.SetupArtifactDefinition],

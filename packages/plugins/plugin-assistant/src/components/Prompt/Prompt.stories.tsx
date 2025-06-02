@@ -15,7 +15,7 @@ import type { ReferenceData } from './references';
 import translations from '../../translations';
 
 const meta: Meta<typeof Prompt> = {
-  title: 'plugins/plugin-automation/Prompt',
+  title: 'plugins/plugin-assistant/Prompt',
   component: Prompt,
   decorators: [withTheme, withLayout()],
   parameters: {

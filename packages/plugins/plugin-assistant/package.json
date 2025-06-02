@@ -97,6 +97,7 @@
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",

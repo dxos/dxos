@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
-import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
+import { ArtifactId, defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
 import { isImage } from '@dxos/conductor';
 import { Format, Type } from '@dxos/echo';
@@ -41,7 +41,9 @@ export const genericTools = [
   defineTool('testing', {
     name: 'focus',
     description: 'Focus on the given artifact. Use this tool to bring the artifact to the front of the canvas.',
-    schema: Schema.Struct({ id: Type.ObjectId }),
+    schema: Schema.Struct({
+      id: ArtifactId,
+    }),
     execute: async ({ id }, { extensions }) => {
       invariant(extensions?.artifacts, 'No artifacts context');
       const artifactIndex = extensions.artifacts.items.findIndex((artifact) => artifact.id === id);
