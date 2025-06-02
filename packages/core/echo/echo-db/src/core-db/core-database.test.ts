@@ -305,7 +305,7 @@ describe('CoreDatabase', () => {
       const kv = createTestLevel();
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
-      const { db } = await testBuilder.createDatabase(kv);
+      const { db } = await testBuilder.createDatabase({ kv });
       const object = createExpando({ title: 'first object' });
       db.add(object);
 
@@ -316,7 +316,7 @@ describe('CoreDatabase', () => {
       await db.close();
 
       {
-        const testPeer = await testBuilder.createPeer(kv);
+        const testPeer = await testBuilder.createPeer({ kv });
         const db = await testPeer.openDatabase(spaceKey, rootUrl);
         await db.query({ id: objectId }).first();
         const object = db.getObjectById(objectId);
@@ -393,7 +393,7 @@ const createClientDbInSpaceWithObject = async (
 
   const testBuilder = new EchoTestBuilder();
   await openAndClose(testBuilder);
-  const peer1 = await testBuilder.createPeer(kv);
+  const peer1 = await testBuilder.createPeer({ kv });
   const spaceKey = PublicKey.random();
   const db1 = await peer1.createDatabase(spaceKey);
   db1.add(object);
@@ -401,7 +401,7 @@ const createClientDbInSpaceWithObject = async (
   await db1.flush();
   await peer1.close();
 
-  const peer2 = await testBuilder.createPeer(kv);
+  const peer2 = await testBuilder.createPeer({ kv });
   return peer2.openDatabase(spaceKey, db1.rootUrl!);
 };
 

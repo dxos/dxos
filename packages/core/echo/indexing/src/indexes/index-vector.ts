@@ -14,6 +14,7 @@ import type { ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
+import { EmbeddingExtractor } from './embeddings';
 import { extractTextBlocks } from './text';
 import {
   type IndexQuery,
@@ -27,27 +28,36 @@ import {
 // Note: By default, Orama search returns 10 results.
 // const ORAMA_LIMIT = 1_000_000;
 
-type OramaSchemaType = Orama.Orama<
+// Type of the Orama instance with the specific schema we're using
+type OramaInstanceType = Orama.Orama<
   {
-    chunks: 'string[]';
+    embedding: `vector[${number}]`;
   },
   Orama.IIndex<Orama.components.index.Index>,
   Orama.IDocumentsStore<Orama.components.documentsStore.DocumentsStore>
 >;
 
+// Must match the vector dimension of the embedding extractor.
+const VECTOR_DIMENSION = 384;
+
 @trace.resource()
 @staticImplements<IndexStaticProps>()
-export class IndexText extends Resource implements Index {
+export class IndexVector extends Resource implements Index {
   private _identifier = PublicKey.random().toString();
-  public readonly kind: IndexKind = { kind: IndexKind.Kind.FULL_TEXT };
+
+  private _extractor = new EmbeddingExtractor();
+
+  public readonly kind: IndexKind = { kind: IndexKind.Kind.VECTOR };
   public readonly updated = new Event<void>();
 
-  private _orama?: OramaSchemaType = undefined;
+  private _orama?: OramaInstanceType = undefined;
 
   override async _open() {
+    await this._extractor.open();
+
     this._orama = await Orama.create({
       schema: {
-        chunks: 'string[]',
+        embedding: `vector[${VECTOR_DIMENSION}]`,
       },
     });
   }
@@ -60,13 +70,25 @@ export class IndexText extends Resource implements Index {
   async update(id: ObjectPointerEncoded, object: Partial<ObjectStructure>): Promise<boolean> {
     const blocks = extractTextBlocks(object);
 
+    log.info('Extracting embeddings', { id, blocks });
+
+    if (blocks.length === 0) {
+      invariant(this._orama, 'Index is not initialized');
+      await Orama.remove(this._orama, id);
+      return true; // TODO(dmaretskyi): This re-runs all queries even if nothing changed.
+    }
+
+    const embeddings = await this._extractor.extract(blocks);
+    invariant(embeddings.length === 1, 'Vectors must be combined');
+    invariant(embeddings[0].length === VECTOR_DIMENSION, 'Vector dimension mismatch');
+
     invariant(this._orama, 'Index is not initialized');
     await Orama.remove(this._orama, id);
     await Orama.insert(this._orama, {
       id,
-      chunks: blocks.map((block) => block.content),
+      embedding: embeddings[0],
     });
-    return true;
+    return true; // TODO(dmaretskyi): This re-runs all queries even if nothing changed.
   }
 
   async remove(id: ObjectPointerEncoded) {
@@ -80,24 +102,33 @@ export class IndexText extends Resource implements Index {
     invariant(!filter.inverted, 'Inverted search is not supported');
     invariant(!filter.graph, 'Graph search is not supported');
     invariant(typeof filter.text?.query === 'string');
-    invariant(filter.text?.kind === 'text');
+    invariant(filter.text?.kind === 'vector');
+
+    const embeddings = await this._extractor.extract([{ content: filter.text.query }]);
+    invariant(embeddings.length === 1, 'Vectors must be combined');
+    invariant(embeddings[0].length === VECTOR_DIMENSION, 'Vector dimension mismatch');
 
     invariant(this._orama, 'Index is not initialized');
     const results = await Orama.search(this._orama, {
-      mode: 'fulltext',
-      term: filter.text.query,
+      mode: 'vector',
+      vector: {
+        value: embeddings[0],
+        property: 'embedding',
+      },
 
       // TODO(dmaretskyi): Add a way to configure these.
+      similarity: 0.2, // Minimum vector search similarity. Defaults to `0.8`
+      includeVectors: true, // Defaults to `false`
       limit: 10, // Defaults to `10`
       offset: 0, // Defaults to `0`
     });
 
-    log.info('Text search results', { query: filter.text.query, results });
+    log.info('Vector search results', { query: filter.text.query, results });
 
     return results.hits.map((hit) => ({
       id: hit.id,
       rank: hit.score,
-    })); // TODO(dmaretskyi): This re-runs all queries even if nothing changed.
+    }));
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -107,10 +138,10 @@ export class IndexText extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  static async load({ serialized, identifier }: LoadParams): Promise<IndexText> {
+  static async load({ serialized, identifier }: LoadParams): Promise<IndexVector> {
     const deserialized = JSON.parse(serialized);
 
-    const index = new IndexText();
+    const index = new IndexVector();
     await index.open();
     invariant(index._orama, 'Index is not initialized');
     index._identifier = identifier;
