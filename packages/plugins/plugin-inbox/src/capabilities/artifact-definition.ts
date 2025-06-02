@@ -9,6 +9,7 @@ import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
+import { MailboxType } from '../types';
 
 declare global {
   interface ToolContextExtensions {
@@ -28,7 +29,7 @@ export default () => {
       - When creating the schema for a travel itinerary you must include a geopoint property (i.e., as an array of [lng,lat]).
       - Suggest to view the itinerary on a map.
     `,
-    schema: Schema.Struct({}),
+    schema: MailboxType,
     tools: [
       defineTool(meta.id, {
         name: 'inspect',
