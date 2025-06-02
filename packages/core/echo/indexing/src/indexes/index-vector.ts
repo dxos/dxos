@@ -72,6 +72,12 @@ export class IndexVector extends Resource implements Index {
 
     log.info('Extracting embeddings', { id, blocks });
 
+    if (blocks.length === 0) {
+      invariant(this._orama, 'Index is not initialized');
+      await Orama.remove(this._orama, id);
+      return true; // TODO(dmaretskyi): This re-runs all queries even if nothing changed.
+    }
+
     const embeddings = await this._extractor.extract(blocks);
     invariant(embeddings.length === 1, 'Vectors must be combined');
     invariant(embeddings[0].length === VECTOR_DIMENSION, 'Vector dimension mismatch');
@@ -81,7 +87,7 @@ export class IndexVector extends Resource implements Index {
       id,
       embedding: embeddings[0],
     });
-    return true;
+    return true; // TODO(dmaretskyi): This re-runs all queries even if nothing changed.
   }
 
   async remove(id: ObjectPointerEncoded) {

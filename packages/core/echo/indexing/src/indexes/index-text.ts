@@ -95,7 +95,7 @@ export class IndexText extends Resource implements Index {
     return results.hits.map((hit) => ({
       id: hit.id,
       rank: hit.score,
-    }));
+    })); // TODO(dmaretskyi): This re-runs all queries even if nothing changed.
   }
 
   @trace.span({ showInBrowserTimeline: true })
