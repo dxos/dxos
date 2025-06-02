@@ -61,6 +61,7 @@ export class IndexText extends Resource implements Index {
     const blocks = extractTextBlocks(object);
 
     invariant(this._orama, 'Index is not initialized');
+    await Orama.remove(this._orama, id);
     await Orama.insert(this._orama, {
       id,
       chunks: blocks.map((block) => block.content),
