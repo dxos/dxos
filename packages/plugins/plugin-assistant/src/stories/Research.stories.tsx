@@ -47,7 +47,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { Config, useClient } from '@dxos/react-client';
-import { live, useQueue, useQuery } from '@dxos/react-client/echo';
+import { live, useQueue, useQuery, type Live, type EchoDatabase } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -207,28 +207,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
   // TODO(dmaretskyi): Pull in relations automatically.
   const handleAddToGraph = useCallback(async (object: BaseEchoObject) => {
-    // TODO(dmaretskyi): It should be easier to pull objects from the queue to the database.
-    const schema =
-      space.db.graph.schemaRegistry.getSchemaByDXN(DXN.parse(getTypename(object)!)) ??
-      raise(new Error('Schema not found'));
-    console.log('schema', { schema });
-
-    let { id, [ATTR_RELATION_SOURCE]: source, [ATTR_RELATION_TARGET]: target, ...props } = object as any;
-    if (source) {
-      source = space.db.getObjectById(DXN.parse(source).asEchoDXN()!.echoId);
-    }
-    if (target) {
-      target = space.db.getObjectById(DXN.parse(target).asEchoDXN()!.echoId);
-    }
-
-    space.db.add(
-      live(schema, {
-        id,
-        ...props,
-        [RelationSourceId]: source,
-        [RelationTargetId]: target,
-      }),
-    );
+    space.db.add(instantiate(space.db, object));
     await space.db.flush({ indexes: true });
     forceUpdate({});
   }, []);
@@ -403,5 +382,35 @@ const createResearchTool = (executor: FunctionExecutor, name: string, fn: typeof
         })),
       );
     },
+  });
+};
+
+/**
+ * Instantiate an object from it's JSON representation.
+ * Resolves schema and relation references.
+ * 
+ * @param db - The database to use for reference lookup.
+ * @param object - The object in JSON format to instantiate.
+ */
+// TODO(dmaretskyi): Move into core.
+const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
+  const schema =
+    db.graph.schemaRegistry.getSchemaByDXN(DXN.parse(getTypename(object as any)!)) ??
+    raise(new Error('Schema not found'));
+  console.log('schema', { schema });
+
+  let { id, [ATTR_RELATION_SOURCE]: source, [ATTR_RELATION_TARGET]: target, ...props } = object as any;
+  if (source) {
+    source = db.getObjectById(DXN.parse(source).asEchoDXN()!.echoId) ?? raise(new Error('Source not found'));
+  }
+  if (target) {
+    target = db.getObjectById(DXN.parse(target).asEchoDXN()!.echoId) ?? raise(new Error('Target not found'));
+  }
+
+  return live(schema, {
+    id,
+    ...props,
+    [RelationSourceId]: source,
+    [RelationTargetId]: target,
   });
 };
