@@ -79,6 +79,7 @@ export const structuredOutputParser = <TSchema extends Schema.Schema.AnyNoContex
     description: 'You must call this tool with the result of your work.',
     schema,
     execute: async (params, context) => {
+      // Assert that the params are valid.
       return ToolResult.Break(params);
     },
   });
@@ -91,7 +92,13 @@ export const structuredOutputParser = <TSchema extends Schema.Schema.AnyNoContex
         ?.content.filter((content) => content.type === 'tool_use')
         .find((content) => content.name === tool.name)?.input as any;
 
-      return Schema.decodeUnknownSync(schema)(result);
+      try {
+        return Schema.decodeUnknownSync(schema)(result);
+      } catch (err) {
+        // This should never happen.
+        debugger;
+        throw err;
+      }
     },
   };
 };

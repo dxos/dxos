@@ -89,6 +89,8 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
+  const [, forceUpdate] = useState({});
+
   // Function executor.
   const functionExecutor = useMemo(
     () =>
@@ -106,6 +108,9 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
           queues: {
             queues: space.queues,
             contextQueue: queue,
+          },
+          database: {
+            db: space.db,
           },
         }),
       ),
@@ -169,6 +174,9 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
             await processor.cancel();
           }
 
+          // Make sure everything is indexed before agent starts processing.
+          await space.db.flush({ indexes: true });
+
           invariant(queue);
           await processor.request(message, {
             history: queue.items,
@@ -198,7 +206,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   );
 
   // TODO(dmaretskyi): Pull in relations automatically.
-  const handleAddToGraph = useCallback((object: BaseEchoObject) => {
+  const handleAddToGraph = useCallback(async (object: BaseEchoObject) => {
     // TODO(dmaretskyi): It should be easier to pull objects from the queue to the database.
     const schema =
       space.db.graph.schemaRegistry.getSchemaByDXN(DXN.parse(getTypename(object)!)) ??
@@ -221,6 +229,8 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         [RelationTargetId]: target,
       }),
     );
+    await space.db.flush({ indexes: true });
+    forceUpdate({});
   }, []);
 
   const [model] = useState(() => new SpaceGraphModel());
@@ -315,6 +325,7 @@ const meta: Meta<typeof DefaultStory> = {
                 storage: {
                   persistent: true,
                 },
+                enableVectorIndexing: true,
               },
               services: {
                 edge: {
@@ -371,18 +382,7 @@ type Story = StoryObj<typeof DefaultStory>;
 export const Default: Story = {
   args: {
     debug: true,
-    prompts: ['Research companies in the area of personal knowledge management and AI'],
-  },
-};
-
-export const WithInitialItems: Story = {
-  args: {
-    debug: true,
-    items: [
-      create(ChessType, {
-        fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-      }),
-    ],
+    prompts: ['Research companies in the area of personal knowledge management and AI', 'Who founded Notion?'],
   },
 };
 

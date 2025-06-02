@@ -27,7 +27,8 @@ import { deepMapValues } from '@dxos/util';
 
 import { createExaTool, createMockExaTool } from './exa';
 import { Subgraph } from './graph';
-import PROMPT from './instructions.tpl?raw';
+// TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up
+import PROMPT from './instructions-research.tpl?raw';
 import { AISession } from '../session';
 import { EchoDatabaseImpl, type EchoDatabase } from '@dxos/echo-db';
 
@@ -116,8 +117,12 @@ const createLocalSearchTool = (db: EchoDatabase) => {
       }),
     }),
     execute: async ({ query }) => {
-      const results = await db.query(Query.select(Filter.text(query, { type: 'vector' }))).run();
-      return ToolResult.Success(results);
+      const { objects } = await db.query(Query.select(Filter.text(query, { type: 'vector' }))).run();
+      return ToolResult.Success(`
+        <local_context>
+          ${JSON.stringify(objects, null, 2)}
+        </local_context>
+        `);
     },
   });
 };
@@ -219,7 +224,8 @@ export const sanitizeObjects = async (
       }
 
       return create(entry.schema, data);
-    });
+    })
+    .filter((object) => !existingIds.has(object.id));
 
   const { objects } = await db.query(Query.select(Filter.ids(...existingIds))).run();
   const missing = Array.from(existingIds).filter((id) => !objects.some((object) => object.id === id));
