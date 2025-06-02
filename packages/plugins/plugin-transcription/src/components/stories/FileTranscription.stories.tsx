@@ -167,7 +167,6 @@ const RECORDER_CONFIG = {
 export const Default: StoryObj<typeof AudioFile> = {
   render: AudioFile,
   args: {
-    normalizeSentences: false,
     detectSpeaking: true,
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
     audioUrl: 'https://dxos.network/audio-london.m4a',
