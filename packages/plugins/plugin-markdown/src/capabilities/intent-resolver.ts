@@ -3,7 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { Match, Option, pipe, type Schema } from 'effect';
+import { Option, pipe, type Schema } from 'effect';
 
 import {
   Capabilities,
@@ -14,8 +14,7 @@ import {
 } from '@dxos/app-framework';
 import { createQueueDxn, isInstanceOf } from '@dxos/echo-schema';
 import { makeRef, live, refFromDXN } from '@dxos/live-object';
-import { createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
-import { type EditorSelection } from '@dxos/react-ui-editor';
+import { createDocAccessor, getRangeFromCursor } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
@@ -50,33 +49,18 @@ export default (context: PluginContext) =>
       ): data is Omit<Schema.Schema.Type<typeof CollaborationActions.InsertContent.fields.input>, 'target'> & {
         target: DocumentType;
       } => isInstanceOf(DocumentType, data.target),
-      resolve: async ({ target, object: objectRef, label }) => {
-        const { editorState } = context.getCapability(MarkdownCapabilities.State);
+      resolve: async ({ target, object: objectRef, at, label }) => {
         const text = await target.content.load();
         const accessor = createDocAccessor(text, ['content']);
-        const { start, length } = pipe(
-          editorState.getState(fullyQualifiedId(target))?.selection,
-          Option.fromNullable,
-          Option.getOrElse((): EditorSelection => ({ anchor: text.content.length - 1 })),
-          selectionToRange,
+        const { start, end } = pipe(
+          Option.fromNullable(at),
+          Option.flatMap((at) => Option.fromNullable(getRangeFromCursor(accessor, at))),
+          Option.getOrElse(() => ({ start: text.content.length - 1, end: text.content.length - 1 })),
         );
         accessor.handle.change((doc) => {
           const ref = `[${label ?? 'Generated content'}]](${objectRef.dxn.toString()})\n`;
-          A.splice(doc, accessor.path.slice(), start, length, ref);
+          A.splice(doc, accessor.path.slice(), start, end - start, ref);
         });
       },
     }),
   ]);
-
-// TODO(wittjosiah): Factor out.
-const selectionToRange = Match.type<EditorSelection>().pipe(
-  Match.when(
-    ({ head, anchor }) => (head ? head > anchor : false),
-    ({ head, anchor }) => ({ start: anchor, length: head! - anchor }),
-  ),
-  Match.when(
-    ({ head, anchor }) => (head ? head < anchor : false),
-    ({ head, anchor }) => ({ start: head!, length: anchor - head! }),
-  ),
-  Match.orElse(({ anchor }) => ({ start: anchor, length: 0 })),
-);

@@ -11,6 +11,7 @@ export namespace CollaborationActions {
     input: Schema.Struct({
       target: Expando,
       object: Ref(Expando),
+      at: Schema.optional(Schema.String),
       label: Schema.String.pipe(Schema.optional),
     }).annotations({
       [SchemaAST.DescriptionAnnotationId]:
