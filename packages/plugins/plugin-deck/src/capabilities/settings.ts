@@ -11,6 +11,7 @@ import { DeckSettingsSchema, type DeckSettingsProps } from '../types';
 export default () => {
   const settings = live<DeckSettingsProps>({
     showHints: false,
+    hideFocus: false,
     enableDeck: false,
     enableStatusbar: false,
     enableNativeRedirect: false,
