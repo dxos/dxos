@@ -75,7 +75,7 @@ export default () =>
 
               const program = Effect.gen(function* () {
                 const { object } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
-                yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space }));
+                yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space, hidden: true }));
                 yield* dispatch(
                   createIntent(SpaceAction.AddRelation, {
                     space,

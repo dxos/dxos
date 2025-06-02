@@ -121,7 +121,6 @@ export default (context: PluginContext) =>
               }
 
               const chat = get(rxFromQuery(query))[0];
-              console.log('chat', { chat, object });
               return [
                 {
                   id: [fullyQualifiedId(object), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
