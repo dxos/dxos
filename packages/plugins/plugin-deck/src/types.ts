@@ -27,6 +27,7 @@ export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
 export const DeckSettingsSchema = Schema.Struct({
   showHints: Schema.optional(Schema.Boolean),
   enableDeck: Schema.optional(Schema.Boolean),
+  hideFocus: Schema.optional(Schema.Boolean),
   enableStatusbar: Schema.optional(Schema.Boolean),
   enableNativeRedirect: Schema.optional(Schema.Boolean),
   newPlankPositioning: Schema.optional(Schema.Literal(...NewPlankPositions)),
