@@ -85,8 +85,7 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
 
     void dispatch(
       createIntent(CollaborationActions.InsertContent, {
-        spaceId: space.id,
-        target: makeRef(doc as any as Expando), // TODO(burdon): Comomon base type.
+        target: doc as any as Expando, // TODO(burdon): Common base type.
         object: refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
         label: 'Proposal',
       }),
@@ -107,6 +106,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
   const space = useSpace();
   const [doc, setDoc] = useState<DocumentType>();
   const settings = useCapability(Capabilities.SettingsStore).getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
+  const { editorState } = useCapability(MarkdownCapabilities.State);
 
   useEffect(() => {
     if (!space) {
@@ -135,7 +135,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
 
   return (
     <>
-      <MarkdownContainer id={doc.id} object={doc} settings={settings} />
+      <MarkdownContainer id={doc.id} object={doc} settings={settings} editorStateStore={editorState} />
       <TestChat doc={doc} content={chat} />
     </>
   );

@@ -8,7 +8,7 @@ import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/a
 import { type AssociatedArtifact } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { makeRef, refFromDXN } from '@dxos/live-object';
+import { refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -49,8 +49,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
       if (space && chat && message && dispatch && associatedArtifact) {
         void dispatch(
           createIntent(CollaborationActions.InsertContent, {
-            spaceId: space.id,
-            target: makeRef(associatedArtifact),
+            target: associatedArtifact,
             object: refFromDXN(new DXN(DXN.kind.QUEUE, [...chat.assistantChatQueue.dxn.parts, message.id])),
             label: 'View proposal',
           }),

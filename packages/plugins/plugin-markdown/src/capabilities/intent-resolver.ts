@@ -3,6 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
+import { Match, Option, pipe, type Schema } from 'effect';
 
 import {
   Capabilities,
@@ -13,10 +14,8 @@ import {
 } from '@dxos/app-framework';
 import { createQueueDxn, isInstanceOf } from '@dxos/echo-schema';
 import { makeRef, live, refFromDXN } from '@dxos/live-object';
-import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { resolveRef } from '@dxos/react-client';
-import { createDocAccessor } from '@dxos/react-client/echo';
+import { createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
+import { type EditorSelection } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
@@ -44,26 +43,40 @@ export default (context: PluginContext) =>
         state.viewMode[id] = viewMode;
       },
     }),
-    // TODO(burdon): What is the error boundary for intents? Are errors reported back to caller?
     createResolver({
       intent: CollaborationActions.InsertContent,
-      resolve: async ({ spaceId, target: targetRef, object: objectRef, label }) => {
-        const client = context.getCapability(ClientCapabilities.Client);
-        const space = client.spaces.get(spaceId);
-        const target = await resolveRef(client, targetRef.dxn, space);
-        if (target && isInstanceOf(DocumentType, target)) {
-          const accessor = createDocAccessor(target, ['content']);
-          // TODO(burdon): Should be a cursor that references a selected position.
-          const index = 0;
-          accessor.handle.change((doc) => {
-            // TODO(burdon): Throws error:
-            // intent-dispatcher.ts:270 Cannot read properties of undefined (reading 'annotations') (FiberFailure) TypeError: Cannot read properties of undefined (reading 'annotations')
-            const ref = `[${label ?? 'Generated content'}]](${objectRef.dxn.toString()})\n`;
-            A.splice(doc, accessor.path.slice(), index, 0, ref);
-          });
-        } else {
-          log.warn('target is not a document', { targetRef, objectRef });
-        }
+      filter: (
+        data,
+      ): data is Omit<Schema.Schema.Type<typeof CollaborationActions.InsertContent.fields.input>, 'target'> & {
+        target: DocumentType;
+      } => isInstanceOf(DocumentType, data.target),
+      resolve: async ({ target, object: objectRef, label }) => {
+        const { editorState } = context.getCapability(MarkdownCapabilities.State);
+        const text = await target.content.load();
+        const accessor = createDocAccessor(text, ['content']);
+        const { start, length } = pipe(
+          editorState.getState(fullyQualifiedId(target))?.selection,
+          Option.fromNullable,
+          Option.getOrElse((): EditorSelection => ({ anchor: text.content.length - 1 })),
+          selectionToRange,
+        );
+        accessor.handle.change((doc) => {
+          const ref = `[${label ?? 'Generated content'}]](${objectRef.dxn.toString()})\n`;
+          A.splice(doc, accessor.path.slice(), start, length, ref);
+        });
       },
     }),
   ]);
+
+// TODO(wittjosiah): Factor out.
+const selectionToRange = Match.type<EditorSelection>().pipe(
+  Match.when(
+    ({ head, anchor }) => (head ? head > anchor : false),
+    ({ head, anchor }) => ({ start: anchor, length: head! - anchor }),
+  ),
+  Match.when(
+    ({ head, anchor }) => (head ? head < anchor : false),
+    ({ head, anchor }) => ({ start: head!, length: anchor - head! }),
+  ),
+  Match.orElse(({ anchor }) => ({ start: anchor, length: 0 })),
+);
