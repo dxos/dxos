@@ -83,6 +83,7 @@ export class IndexVector extends Resource implements Index {
     invariant(embeddings[0].length === VECTOR_DIMENSION, 'Vector dimension mismatch');
 
     invariant(this._orama, 'Index is not initialized');
+    await Orama.remove(this._orama, id);
     await Orama.insert(this._orama, {
       id,
       embedding: embeddings[0],

@@ -148,4 +148,37 @@ describe('IndexVector', () => {
 
     expect(results.length).toBe(0);
   });
+
+  test('update document', async () => {
+    const index = new IndexVector();
+    await index.open();
+
+    const doc = {
+      id: 'doc1',
+      content: 'The quick brown fox jumps over the lazy dog',
+    };
+
+    const docId = objectPointerCodec.encode({ spaceKey: spaceKey.toHex(), documentId: doc.id, objectId: doc.id });
+    await index.update(docId, {
+      data: {
+        content: doc.content,
+      },
+    });
+
+    doc.content = 'red fox';
+    await index.update(docId, {
+      data: {
+        content: doc.content,
+      },
+    });
+
+    const results = await index.find({
+      text: { query: 'quick fox', kind: 'vector' },
+      typenames: [],
+    });
+
+    expect(results.length).toBe(1);
+    expect(results[0].id).toBe(docId);
+    expect(results[0].rank).toBeGreaterThan(0);
+  });
 });
