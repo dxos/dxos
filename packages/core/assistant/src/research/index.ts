@@ -4,3 +4,4 @@
 
 export * from './exa';
 export * from './research';
+export * from './graph';

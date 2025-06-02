@@ -20,7 +20,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { researchFn, TYPES } from '@dxos/assistant';
+import { researchFn, TYPES, findRelatedSchema, type RelatedSchema } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
 import { DXN, Type } from '@dxos/echo';
 import {
@@ -34,6 +34,11 @@ import {
   Filter,
   RelationSourceId,
   RelationTargetId,
+  getSchema,
+  getSchemaDXN,
+  getSchemaTypename,
+  type BaseObject,
+  toJsonSchema,
 } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -47,8 +52,8 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { Config, useClient } from '@dxos/react-client';
-import { live, useQueue, useQuery } from '@dxos/react-client/echo';
-import { IconButton, Input, Toolbar } from '@dxos/react-ui';
+import { live, useQueue, useQuery, type Live, type EchoDatabase, getSpace } from '@dxos/react-client/echo';
+import { IconButton, Input, Toolbar, useAsyncState } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { SpaceGraphModel } from '@dxos/schema';
@@ -58,6 +63,8 @@ import { Thread, type ThreadProps } from '../components';
 import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import translations from '../translations';
+import { Option, type Schema } from 'effect';
+import { getDescriptionAnnotation } from 'effect/SchemaAST';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 const LOCAL = false;
@@ -89,6 +96,8 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
+  const [, forceUpdate] = useState({});
+
   // Function executor.
   const functionExecutor = useMemo(
     () =>
@@ -106,6 +115,9 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
           queues: {
             queues: space.queues,
             contextQueue: queue,
+          },
+          database: {
+            db: space.db,
           },
         }),
       ),
@@ -169,6 +181,9 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
             await processor.cancel();
           }
 
+          // Make sure everything is indexed before agent starts processing.
+          await space.db.flush({ indexes: true });
+
           invariant(queue);
           await processor.request(message, {
             history: queue.items,
@@ -198,29 +213,10 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   );
 
   // TODO(dmaretskyi): Pull in relations automatically.
-  const handleAddToGraph = useCallback((object: BaseEchoObject) => {
-    // TODO(dmaretskyi): It should be easier to pull objects from the queue to the database.
-    const schema =
-      space.db.graph.schemaRegistry.getSchemaByDXN(DXN.parse(getTypename(object)!)) ??
-      raise(new Error('Schema not found'));
-    console.log('schema', { schema });
-
-    let { id, [ATTR_RELATION_SOURCE]: source, [ATTR_RELATION_TARGET]: target, ...props } = object as any;
-    if (source) {
-      source = space.db.getObjectById(DXN.parse(source).asEchoDXN()!.echoId);
-    }
-    if (target) {
-      target = space.db.getObjectById(DXN.parse(target).asEchoDXN()!.echoId);
-    }
-
-    space.db.add(
-      live(schema, {
-        id,
-        ...props,
-        [RelationSourceId]: source,
-        [RelationTargetId]: target,
-      }),
-    );
+  const handleAddToGraph = useCallback(async (object: BaseEchoObject) => {
+    space.db.add(instantiate(space.db, object));
+    await space.db.flush({ indexes: true });
+    forceUpdate({});
   }, []);
 
   const [model] = useState(() => new SpaceGraphModel());
@@ -232,6 +228,23 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
       model.close();
     };
   }, [space]);
+
+  const handleResearchMore = useCallback((object: BaseObject, relatedSchema: RelatedSchema) => {
+    const prompt = `
+      Research more about objects related to the object in terms of the by the specific relation schema:
+
+      <object>${JSON.stringify(object, null, 2)}</object>
+      
+      <schema>
+        <description>${getDescriptionAnnotation(relatedSchema.schema.ast).pipe(Option.getOrElse(() => ''))}</description>
+        <json>
+          ${JSON.stringify(toJsonSchema(relatedSchema.schema), null, 2)}
+        </json>
+      </schema>
+    `;
+
+    handlePrompt(prompt);
+  }, []);
 
   return (
     <div className={mx('grid w-full h-full grid-cols-3 overflow-hidden divide-x divide-separator')}>
@@ -284,7 +297,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
             key={object.id}
             className={mx('flex flex-col border border-separator rounded m-2 mb-0 hover:bg-hoverSurface')}
           >
-            {/* <div className='px-2 text-xs text-foreground-secondary'>{object.id}</div> */}
+            <div className='px-2 text-xs text-foreground-secondary'>{object.id}</div>
             <Surface
               role='card'
               limit={1}
@@ -295,9 +308,36 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
                 </SyntaxHighlighter>
               }
             />
+            <ResearchPrompts object={object} onResearch={handleResearchMore} />
           </div>
         ))}
       </div>
+    </div>
+  );
+};
+
+const ResearchPrompts = ({
+  object,
+  onResearch,
+}: {
+  object: BaseEchoObject;
+  onResearch: (object: BaseObject, relatedSchema: RelatedSchema) => void;
+}) => {
+  const [relatedSchemas = []] = useAsyncState(
+    async () => findRelatedSchema(getSpace(object)!.db, getSchema(object)!),
+    [object],
+  );
+  return (
+    <div>
+      {relatedSchemas.map((schema) => (
+        <button
+          key={getSchemaDXN(schema.schema)?.toString()}
+          onClick={() => onResearch(object, schema)}
+          className='border border-separator rounded px-2 py-1 m-1'
+        >
+          Research more of {getSchemaTypename(schema.schema)}
+        </button>
+      ))}
     </div>
   );
 };
@@ -315,6 +355,7 @@ const meta: Meta<typeof DefaultStory> = {
                 storage: {
                   persistent: true,
                 },
+                enableVectorIndexing: true,
               },
               services: {
                 edge: {
@@ -371,18 +412,7 @@ type Story = StoryObj<typeof DefaultStory>;
 export const Default: Story = {
   args: {
     debug: true,
-    prompts: ['Research companies in the area of personal knowledge management and AI'],
-  },
-};
-
-export const WithInitialItems: Story = {
-  args: {
-    debug: true,
-    items: [
-      create(ChessType, {
-        fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-      }),
-    ],
+    prompts: ['Research companies in the area of personal knowledge management and AI', 'Who founded Notion?'],
   },
 };
 
@@ -403,5 +433,35 @@ const createResearchTool = (executor: FunctionExecutor, name: string, fn: typeof
         })),
       );
     },
+  });
+};
+
+/**
+ * Instantiate an object from it's JSON representation.
+ * Resolves schema and relation references.
+ *
+ * @param db - The database to use for reference lookup.
+ * @param object - The object in JSON format to instantiate.
+ */
+// TODO(dmaretskyi): Move into core.
+const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
+  const schema =
+    db.graph.schemaRegistry.getSchemaByDXN(DXN.parse(getTypename(object as any)!)) ??
+    raise(new Error('Schema not found'));
+  console.log('schema', { schema });
+
+  let { id, [ATTR_RELATION_SOURCE]: source, [ATTR_RELATION_TARGET]: target, ...props } = object as any;
+  if (source) {
+    source = db.getObjectById(DXN.parse(source).asEchoDXN()!.echoId) ?? raise(new Error('Source not found'));
+  }
+  if (target) {
+    target = db.getObjectById(DXN.parse(target).asEchoDXN()!.echoId) ?? raise(new Error('Target not found'));
+  }
+
+  return live(schema, {
+    id,
+    ...props,
+    [RelationSourceId]: source,
+    [RelationTargetId]: target,
   });
 };

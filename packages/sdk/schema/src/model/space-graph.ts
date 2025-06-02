@@ -105,6 +105,10 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
           this.clear();
 
           const addSchema = (typename: string) => {
+            if (!this._options.schema) {
+              return;
+            }
+
             const current = currentNodes.find((node) => node.id === typename);
             if (typename) {
               this._graph.nodes.push({

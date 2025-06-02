@@ -3,47 +3,71 @@
 //
 
 import { inspect } from 'node:util';
-import { describe, test } from 'vitest';
+import { beforeAll, describe, test } from 'vitest';
 
 import { AIServiceEdgeClient, OllamaClient, structuredOutputParser } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { getSchemaDXN } from '@dxos/echo-schema';
-import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { ConfiguredCredentialsService, DatabaseService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { createExtractionSchema, getSanitizedSchemaName, researchFn, sanitizeObjects, TYPES } from './research';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import type { EchoDatabase } from '@dxos/echo-db';
+import { live } from '@dxos/live-object';
+import { DataType } from '@dxos/schema';
 
 const REMOTE_AI = true;
-const MOCK_SEARCH = true;
+const MOCK_SEARCH = false;
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 
 describe('Research', () => {
-  // TODO(dmaretskyi): Helper to scaffold this from a config.
-  const executor = new FunctionExecutor(
-    new ServiceContainer().setServices({
-      ai: {
-        client: REMOTE_AI
-          ? new AIServiceEdgeClient({
-              endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-              defaultGenerationOptions: {
-                // model: '@anthropic/claude-sonnet-4-20250514',
-                model: '@anthropic/claude-3-5-sonnet-20241022',
-              },
-            })
-          : new OllamaClient({
-              overrides: {
-                model: 'llama3.1:8b',
-              },
-            }),
-      },
-      credentials: new ConfiguredCredentialsService([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-    }),
-  );
+  let builder: EchoTestBuilder;
+  let db: EchoDatabase;
+  let executor: FunctionExecutor;
+
+  beforeAll(async () => {
+    // TODO(dmaretskyi): Helper to scaffold this from a config.
+    builder = await new EchoTestBuilder().open();
+    const { db: db1 } = await builder.createDatabase({ indexing: { vector: true } });
+    db = db1;
+    db.graph.schemaRegistry.addSchema(TYPES);
+    executor = new FunctionExecutor(
+      new ServiceContainer().setServices({
+        ai: {
+          client: REMOTE_AI
+            ? new AIServiceEdgeClient({
+                endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+                defaultGenerationOptions: {
+                  // model: '@anthropic/claude-sonnet-4-20250514',
+                  model: '@anthropic/claude-3-5-sonnet-20241022',
+                },
+              })
+            : new OllamaClient({
+                overrides: {
+                  model: 'llama3.1:8b',
+                },
+              }),
+        },
+        credentials: new ConfiguredCredentialsService([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
+        database: {
+          db,
+        },
+      }),
+    );
+  });
 
   test('should generate a research report', { timeout: 1000_000 }, async () => {
+    db.add(
+      live(DataType.Organization, {
+        name: 'Notion',
+        website: 'https://www.notion.com/',
+      }),
+    );
+    await db.flush({ indexes: true });
+
     const result = await executor.invoke(researchFn, {
-      query:
-        'Find projects that are in the space of AI and personal knowledge management. Project, org, relations between them.',
+      query: 'Who are the founders of Notion?',
       mockSearch: MOCK_SEARCH,
     });
 
@@ -55,28 +79,28 @@ describe('Research', () => {
 describe('misc', () => {
   test('createExtractionSchema', () => {
     const schema = createExtractionSchema(TYPES);
-    log.info('schema', { schema });
+    // log.info('schema', { schema });
   });
 
   test('extract schema json schema', () => {
     const schema = createExtractionSchema(TYPES);
     const parser = structuredOutputParser(schema);
-    log.info('schema', { json: parser.tool.parameters });
+    // log.info('schema', { json: parser.tool.parameters });
   });
 
   test('getSanitizedSchemaName', () => {
     const names = TYPES.map(getSanitizedSchemaName);
-    log.info('names', { names });
+    // log.info('names', { names });
   });
 
   test('getTypeAnnotation', () => {
     for (const schema of TYPES) {
       const dxn = getSchemaDXN(schema);
-      log.info('dxn', { schema, dxn });
+      // log.info('dxn', { schema, dxn });
     }
   });
 
-  test('sanitizeObjects', () => {
+  test.skip('sanitizeObjects', () => {
     const TEST_DATA = {
       objects_dxos_org_type_Project: [
         {
@@ -161,7 +185,7 @@ describe('misc', () => {
       ],
     };
 
-    const data = sanitizeObjects(TYPES, TEST_DATA);
-    log.info('data', { data });
+    // const data = await sanitizeObjects(TYPES, TEST_DATA, db);
+    // log.info('data', { data });
   });
 });

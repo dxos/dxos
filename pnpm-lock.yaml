@@ -5466,6 +5466,9 @@ importers:
       '@dxos/plugin-wnfs':
         specifier: workspace:*
         version: link:../plugin-wnfs
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
