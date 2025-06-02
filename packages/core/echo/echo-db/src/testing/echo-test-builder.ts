@@ -7,7 +7,7 @@ import isEqual from 'lodash.isequal';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { EchoHost } from '@dxos/echo-pipeline';
+import { EchoHost, type EchoHostIndexingConfig } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -26,6 +26,11 @@ type OpenDatabaseOptions = {
   preloadSchemaOnOpen?: boolean;
 };
 
+type PeerOptions = {
+  kv?: LevelDB;
+  indexing?: Partial<EchoHostIndexingConfig>;
+};
+
 export class EchoTestBuilder extends Resource {
   private readonly _peers: EchoTestPeer[] = [];
 
@@ -37,8 +42,8 @@ export class EchoTestBuilder extends Resource {
     await Promise.all(this._peers.map((peer) => peer.close(ctx)));
   }
 
-  async createPeer(kv?: LevelDB): Promise<EchoTestPeer> {
-    const peer = new EchoTestPeer(kv);
+  async createPeer(options: PeerOptions = {}): Promise<EchoTestPeer> {
+    const peer = new EchoTestPeer(options);
     this._peers.push(peer);
     await peer.open();
     return peer;
@@ -47,8 +52,8 @@ export class EchoTestBuilder extends Resource {
   /**
    * Shorthand for creating a peer and a database.
    */
-  async createDatabase(kv?: LevelDB) {
-    const peer = await this.createPeer(kv);
+  async createDatabase(options: PeerOptions = {}) {
+    const peer = await this.createPeer(options);
     const db = await peer.createDatabase(PublicKey.random());
     return {
       peer,
@@ -61,19 +66,23 @@ export class EchoTestBuilder extends Resource {
 }
 
 export class EchoTestPeer extends Resource {
+  private readonly _kv: LevelDB;
+  private readonly _indexing: Partial<EchoHostIndexingConfig>;
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
 
-  constructor(private readonly _kv: LevelDB = createTestLevel()) {
+  constructor({ kv = createTestLevel(), indexing = {} }: PeerOptions) {
     super();
+    this._kv = kv;
+    this._indexing = indexing;
     this._initEcho();
   }
 
   private _initEcho() {
-    this._echoHost = new EchoHost({ kv: this._kv });
+    this._echoHost = new EchoHost({ kv: this._kv, indexing: this._indexing });
     this._clients.delete(this._echoClient);
     this._echoClient = new EchoClient();
     this._clients.add(this._echoClient);

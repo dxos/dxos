@@ -208,7 +208,7 @@ describe('Reactive Object with ECHO database', () => {
 
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
-    const peer = await builder.createPeer(kv);
+    const peer = await builder.createPeer({ kv });
     const root = await peer.host.createSpaceRoot(spaceKey);
     peer.client.graph.schemaRegistry.addSchema([Testing.TestType]);
 
@@ -223,7 +223,7 @@ describe('Reactive Object with ECHO database', () => {
 
     // Create a new DB instance to simulate a restart
     {
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       peer.client.graph.schemaRegistry.addSchema([Testing.TestType]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
@@ -243,7 +243,7 @@ describe('Reactive Object with ECHO database', () => {
     const spaceKey = PublicKey.random();
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
-    const peer = await builder.createPeer(kv);
+    const peer = await builder.createPeer({ kv });
     const root = await peer.host.createSpaceRoot(spaceKey);
 
     let id: string;
@@ -259,7 +259,7 @@ describe('Reactive Object with ECHO database', () => {
 
     // Create a new DB instance to simulate a restart
     {
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       const db = await peer.openDatabase(spaceKey, root.url);
 
       const obj = (await db.query({ id }).first()) as AnyLiveObject<Testing.TestSchema>;
@@ -616,7 +616,7 @@ describe('Reactive Object with ECHO database', () => {
       const spaceKey = PublicKey.random();
       const builder = new EchoTestBuilder();
       await openAndClose(builder);
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       const root = await peer.host.createSpaceRoot(spaceKey);
 
       let id: string;
@@ -630,7 +630,7 @@ describe('Reactive Object with ECHO database', () => {
       }
 
       {
-        const peer = await builder.createPeer(kv);
+        const peer = await builder.createPeer({ kv });
         const db = await peer.openDatabase(spaceKey, root.url);
         const obj = (await db.query({ id }).first()) as AnyLiveObject<Testing.TestSchema>;
         expect(getMeta(obj).keys).to.deep.eq([metaKey]);

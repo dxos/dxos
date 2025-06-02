@@ -440,7 +440,7 @@ describe('QueryPlanner', () => {
   });
 
   test('contact full-text search', () => {
-    const query = Query.select(Filter.text(TestSchema.Person, 'Bill'));
+    const query = Query.select(Filter.text('Bill')).select(Filter.type(TestSchema.Person));
 
     const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
@@ -464,10 +464,38 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterStep",
             "filter": {
+              "id": undefined,
               "props": {},
               "type": "object",
               "typename": "dxn:type:dxos.org/type/Person:0.1.0",
             },
+          },
+        ],
+      }
+    `);
+  });
+
+  test('vector search', () => {
+    const query = Query.select(Filter.text('Bill', { type: 'vector' }));
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "selector": {
+              "_tag": "TextSelector",
+              "searchKind": "vector",
+              "text": "Bill",
+            },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
           },
         ],
       }
@@ -502,6 +530,14 @@ describe('QueryPlanner', () => {
         ],
       }
     `);
+  });
+
+  // TODO(dmaretskyi): Implement this.
+  test.skip('select everything but the type', () => {
+    const query = Query.select(Filter.not(Filter.type(TestSchema.Person)));
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot();
   });
 
   test('select excluding multiple types', () => {
