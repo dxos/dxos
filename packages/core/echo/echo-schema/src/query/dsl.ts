@@ -133,6 +133,7 @@ export declare namespace Query {
   export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
 
   export type TextSearchOptions = {
+    // TODO(dmaretskyi): Hybrid search.
     type?: 'full-text' | 'vector';
   };
 }
@@ -191,13 +192,11 @@ interface FilterAPI {
   /**
    * Full-text or vector search.
    */
-  text<S extends Schema.Schema.All>(
-    // TODO(dmaretskyi): Allow passing an array of schema here.
-    schema: S,
+  text(
     // TODO(dmaretskyi): Consider passing a vector here, but really the embedding should be done on the query-executor side.
     text: string,
     options?: Query.TextSearchOptions,
-  ): Filter<Schema.Schema.Type<S>>;
+  ): Filter<any>;
 
   /**
    * Filter by foreign keys.
@@ -364,15 +363,9 @@ class FilterClass implements Filter<any> {
     });
   }
 
-  static text<S extends Schema.Schema.All>(
-    schema: S,
-    text: string,
-    options?: Query.TextSearchOptions,
-  ): Filter<Schema.Schema.Type<S>> {
-    const dxn = getTypeReference(schema)?.toDXN() ?? raise(new TypeError('Schema has no DXN'));
+  static text(text: string, options?: Query.TextSearchOptions): Filter<any> {
     return new FilterClass({
       type: 'text-search',
-      typename: dxn.toString(),
       text,
       searchKind: options?.type,
     });

@@ -70,7 +70,6 @@ export const FilterRange: Schema.Schema<FilterRange> = FilterRange_;
 
 const FilterTextSearch_ = Schema.Struct({
   type: Schema.Literal('text-search'),
-  typename: TypenameSpecifier,
   text: Schema.String,
   searchKind: Schema.optional(Schema.Literal('full-text', 'vector')),
 });

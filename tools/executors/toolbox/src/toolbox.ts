@@ -411,7 +411,8 @@ export class Toolbox {
             )
             .join('\n')}`,
         );
-        throw new Error('Missing packages');
+        // TODO(thure): Lit packages which use decorators need to be “missing” by this definition in order to work.
+        // throw new Error('Missing packages');
       }
     }
 
