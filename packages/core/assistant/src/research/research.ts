@@ -4,19 +4,22 @@
 
 import { identity, Option, Schema, SchemaAST } from 'effect';
 
-import { ConsolePrinter } from '@dxos/ai';
+import { ConsolePrinter, defineTool, ToolResult } from '@dxos/ai';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
   create,
+  Filter,
   getEntityKind,
   getSchemaDXN,
   ObjectId,
+  Query,
   ReferenceAnnotationId,
   RelationSourceId,
   RelationTargetId,
+  type BaseObject,
 } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
-import { AiService, CredentialsService, defineFunction } from '@dxos/functions';
+import { AiService, CredentialsService, DatabaseService, defineFunction } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
@@ -26,6 +29,7 @@ import { createExaTool, createMockExaTool } from './exa';
 import { Subgraph } from './graph';
 import PROMPT from './instructions.tpl?raw';
 import { AISession } from '../session';
+import { EchoDatabaseImpl, type EchoDatabase } from '@dxos/echo-db';
 
 export const TYPES = [
   DataType.Event,
@@ -62,6 +66,7 @@ export const researchFn = defineFunction({
   handler: async ({ data: { query, mockSearch }, context }) => {
     const ai = context.getService(AiService);
     const credentials = context.getService(CredentialsService);
+    const { db } = context.getService(DatabaseService);
     // const queues = context.getService(QueuesService);
 
     const exaCredential = await credentials.getCredential({ service: 'exa.ai' });
@@ -80,11 +85,11 @@ export const researchFn = defineFunction({
       client: ai.client,
       systemPrompt: PROMPT,
       artifacts: [],
-      tools: [searchTool],
+      tools: [searchTool, createLocalSearchTool(db)],
       history: [],
       prompt: query,
     });
-    const data = sanitizeObjects(TYPES, result as any);
+    const data = await sanitizeObjects(TYPES, result as any, db);
 
     return {
       result: { objects: data },
@@ -100,6 +105,22 @@ export const researchFn = defineFunction({
     // };
   },
 });
+
+const createLocalSearchTool = (db: EchoDatabase) => {
+  return defineTool('example', {
+    name: 'local_search',
+    description: 'Search the local database for information using a vector index',
+    schema: Schema.Struct({
+      query: Schema.String.annotations({
+        description: 'The query to search for. Could be a question or a topic or a set of keywords.',
+      }),
+    }),
+    execute: async ({ query }) => {
+      const results = await db.query(Query.select(Filter.text(query, { type: 'vector' }))).run();
+      return ToolResult.Success(results);
+    },
+  });
+};
 
 export const createExtractionSchema = (types: Schema.Schema.AnyNoContext[]) => {
   return Schema.Struct({
@@ -120,7 +141,11 @@ export const getSanitizedSchemaName = (schema: Schema.Schema.AnyNoContext) => {
     .type.replaceAll(/[^a-zA-Z0-9]+/g, '_');
 };
 
-export const sanitizeObjects = (types: Schema.Schema.AnyNoContext[], data: Record<string, readonly unknown[]>) => {
+export const sanitizeObjects = async (
+  types: Schema.Schema.AnyNoContext[],
+  data: Record<string, readonly unknown[]>,
+  db: EchoDatabase,
+): Promise<BaseObject[]> => {
   const entries = types
     .map(
       (type) =>
@@ -133,8 +158,29 @@ export const sanitizeObjects = (types: Schema.Schema.AnyNoContext[], data: Recor
 
   const idMap = new Map<string, string>();
 
-  return entries
+  const existingIds = new Set<ObjectId>();
+
+  const resolveId = (id: string): DXN | undefined => {
+    if (ObjectId.isValid(id)) {
+      existingIds.add(id);
+      return DXN.fromLocalObjectId(id);
+    }
+
+    const mappedId = idMap.get(id);
+    if (mappedId) {
+      return DXN.fromLocalObjectId(mappedId);
+    }
+
+    return undefined;
+  };
+
+  const res = entries
     .map((entry) => {
+      // This entry mutates existing object.
+      if (ObjectId.isValid(entry.data.id)) {
+        return entry;
+      }
+
       idMap.set(entry.data.id, ObjectId.random());
       entry.data.id = idMap.get(entry.data.id);
       return entry;
@@ -143,9 +189,11 @@ export const sanitizeObjects = (types: Schema.Schema.AnyNoContext[], data: Recor
       const data = deepMapValues(entry.data, (value, recurse) => {
         if (isEncodedReference(value)) {
           const ref = value['/'];
-          if (idMap.has(ref)) {
-            // TODO(dmaretskyi): Whats the best way to represent a local url.
-            return { '/': `dxn:echo:@:${idMap.get(ref)}` };
+          const id = resolveId(ref);
+
+          if (id) {
+            // Link to an existing object.
+            return { '/': id.toString() };
           } else {
             // Search URIs?
             return { '/': `search:?q=${encodeURIComponent(ref)}` };
@@ -156,22 +204,30 @@ export const sanitizeObjects = (types: Schema.Schema.AnyNoContext[], data: Recor
       });
 
       if (getEntityKind(entry.schema) === 'relation') {
-        const sourceId = idMap.get(data.source)!;
-        if (!sourceId) {
+        const sourceDxn = resolveId(data.source);
+        if (!sourceDxn) {
           log.warn('source not found', { source: data.source });
         }
-        const targetId = idMap.get(data.target)!;
-        if (!targetId) {
+        const targetDxn = resolveId(data.target);
+        if (!targetDxn) {
           log.warn('target not found', { target: data.target });
         }
         delete data.source;
         delete data.target;
-        data[RelationSourceId] = DXN.fromLocalObjectId(sourceId);
-        data[RelationTargetId] = DXN.fromLocalObjectId(targetId);
+        data[RelationSourceId] = sourceDxn;
+        data[RelationTargetId] = targetDxn;
       }
 
       return create(entry.schema, data);
     });
+
+  const { objects } = await db.query(Query.select(Filter.ids(...existingIds))).run();
+  const missing = Array.from(existingIds).filter((id) => !objects.some((object) => object.id === id));
+  if (missing.length > 0) {
+    throw new Error(`Object IDs do not point to existing objects: ${missing.join(', ')}`);
+  }
+
+  return res;
 };
 
 const SoftRef = Schema.Struct({
