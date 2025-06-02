@@ -267,8 +267,16 @@ export class QueryExecutor extends Resource {
         break;
       }
       case 'IdSelector': {
-        // For object id filters, we select nothing as those are handled by the SpaceQuerySource.
-        // TODO(dmaretskyi): Implement this properly.
+        const beginLoad = performance.now();
+        const items = await Promise.all(
+          step.selector.objectIds.map((id) =>
+            this._loadFromDXN(DXN.fromLocalObjectId(id), { sourceSpaceId: step.spaces[0] }),
+          ),
+        );
+        trace.documentLoadTime += performance.now() - beginLoad;
+
+        workingSet.push(...items.filter(isNonNullable));
+        trace.objectCount = workingSet.length;
         break;
       }
       case 'TypeSelector': {

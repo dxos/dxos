@@ -12,7 +12,7 @@ import { Expando, RelationSourceId, RelationTargetId, TypedObject, Ref } from '@
 import { Testing } from '@dxos/echo-schema/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live, getMeta } from '@dxos/live-object';
+import { live, getMeta, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { openAndClose } from '@dxos/test-utils';
@@ -379,18 +379,20 @@ describe('Queries', () => {
   describe('traversals', () => {
     let db: EchoDatabase;
 
+    let alice: Live<Testing.Contact>, bob: Live<Testing.Contact>;
+
     beforeEach(async () => {
       const { db: db1, graph } = await builder.createDatabase();
       db = db1;
       graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager, Testing.Task]);
 
       // TODO(dmaretskyi): Better test data.
-      const alice = db.add(
+      alice = db.add(
         live(Testing.Contact, {
           name: 'Alice',
         }),
       );
-      const bob = db.add(
+      bob = db.add(
         live(Testing.Contact, {
           name: 'Bob',
         }),
@@ -453,6 +455,12 @@ describe('Queries', () => {
         { title: 'Task 1' },
         { title: 'Task 2' },
       ]);
+    });
+
+    test('traverse query started from id', async () => {
+      const { objects } = await db.query(Query.select(Filter.ids(bob.id)).sourceOf(Testing.HasManager).target()).run();
+
+      expect(objects).toMatchObject([{ name: 'Alice' }]);
     });
   });
 
