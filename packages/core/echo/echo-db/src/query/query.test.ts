@@ -465,20 +465,17 @@ describe('Queries', () => {
   });
 
   describe('text search', () => {
-    let db: EchoDatabase;
+    beforeEach(async () => {});
 
-    beforeEach(async () => {
-      const { db: db1, graph } = await builder.createDatabase({ indexing: { vector: true } });
-      db = db1;
+    test.skipIf(process.env.CI)('vector', async () => {
+      const { db, graph } = await builder.createDatabase({ indexing: { vector: true } });
       graph.schemaRegistry.addSchema([Testing.Task]);
 
       db.add(live(Testing.Task, { title: 'apples' }));
       db.add(live(Testing.Task, { title: 'giraffes' }));
 
       await db.flush({ indexes: true });
-    });
 
-    test('vector', async () => {
       {
         const { objects } = await db.query(Query.select(Filter.text('apples', { type: 'vector' }))).run();
         expect(objects[0].title).toEqual('apples');
@@ -501,6 +498,14 @@ describe('Queries', () => {
     });
 
     test('full-text', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.schemaRegistry.addSchema([Testing.Task]);
+
+      db.add(live(Testing.Task, { title: 'apples' }));
+      db.add(live(Testing.Task, { title: 'giraffes' }));
+
+      await db.flush({ indexes: true });
+
       {
         const { objects } = await db.query(Query.select(Filter.text('apples', { type: 'full-text' }))).run();
         expect(objects).toHaveLength(1);
