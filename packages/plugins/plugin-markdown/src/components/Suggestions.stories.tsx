@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import { Schema, SchemaAST } from 'effect';
+import { Match, Option, pipe, Schema, SchemaAST } from 'effect';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { Message } from '@dxos/ai';
@@ -31,9 +31,9 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { useQueue, useSpace } from '@dxos/react-client/echo';
+import { createDocAccessor, fullyQualifiedId, toCursorRange, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { command, useTextEditor } from '@dxos/react-ui-editor';
+import { command, type EditorSelection, type Range, useTextEditor } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
@@ -66,16 +66,27 @@ const TestItem = Schema.Struct({
 const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { parentRef } = useTextEditor({ initialValue: content });
+  const { editorState } = useCapability(MarkdownCapabilities.State);
 
   const space = useSpace();
   const queueDxn = useMemo(() => space && createQueueDxn(space.id), [space]);
   const queue = useQueue<Message>(queueDxn);
 
-  const handleInsert = () => {
+  const handleInsert = async () => {
     invariant(space);
     invariant(queue);
     queue.append([create(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
     const message = queue.items[queue.items.length - 1];
+
+    const text = await doc.content.load();
+    const accessor = createDocAccessor(text, ['content']);
+    const cursor = pipe(
+      editorState.getState(fullyQualifiedId(doc))?.selection,
+      Option.fromNullable,
+      Option.map(selectionToRange),
+      Option.map((range) => toCursorRange(accessor, range.from, range.to)),
+      Option.getOrUndefined,
+    );
 
     // {
     //   const ref = refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id]));
@@ -85,9 +96,9 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
 
     void dispatch(
       createIntent(CollaborationActions.InsertContent, {
-        spaceId: space.id,
-        target: makeRef(doc as any as Expando), // TODO(burdon): Comomon base type.
+        target: doc as any as Expando, // TODO(burdon): Common base type.
         object: refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
+        at: cursor,
         label: 'Proposal',
       }),
     );
@@ -107,6 +118,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
   const space = useSpace();
   const [doc, setDoc] = useState<DocumentType>();
   const settings = useCapability(Capabilities.SettingsStore).getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
+  const { editorState } = useCapability(MarkdownCapabilities.State);
 
   useEffect(() => {
     if (!space) {
@@ -135,7 +147,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
 
   return (
     <>
-      <MarkdownContainer id={doc.id} object={doc} settings={settings} />
+      <MarkdownContainer id={doc.id} object={doc} settings={settings} editorStateStore={editorState} />
       <TestChat doc={doc} content={chat} />
     </>
   );
@@ -189,3 +201,16 @@ export const Default: Story = {
     ].join('\n'),
   },
 };
+
+// TODO(wittjosiah): Factor out.
+const selectionToRange = Match.type<EditorSelection>().pipe(
+  Match.when(
+    ({ head, anchor }) => (head ? head > anchor : false),
+    ({ head, anchor }) => ({ from: anchor, to: head! }) as Range,
+  ),
+  Match.when(
+    ({ head, anchor }) => (head ? head < anchor : false),
+    ({ head, anchor }) => ({ from: head!, to: anchor }) as Range,
+  ),
+  Match.orElse(({ anchor }) => ({ from: anchor, to: anchor }) as Range),
+);

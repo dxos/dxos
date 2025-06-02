@@ -321,7 +321,7 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
             }
             if (suppressNextTooltip?.current) {
               suppressNextTooltip.current = false;
-            } else {
+            } else if (document.body.getAttribute('data-focus') !== 'hidden') {
               context.onTriggerChange(ref.current);
               context.onOpen();
             }
