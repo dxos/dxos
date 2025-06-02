@@ -44,6 +44,7 @@ const INDEXER_CONFIG: IndexConfig = {
     //
     { kind: IndexKind.Kind.SCHEMA_MATCH },
     { kind: IndexKind.Kind.GRAPH },
+    { kind: IndexKind.Kind.FULL_TEXT },
 
     // TODO(dmaretskyi): Disable this for prod since embedding generation is expensive.
     { kind: IndexKind.Kind.VECTOR },

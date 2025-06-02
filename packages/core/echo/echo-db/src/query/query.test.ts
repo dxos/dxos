@@ -464,8 +464,8 @@ describe('Queries', () => {
       db = db1;
       graph.schemaRegistry.addSchema([Testing.Task]);
 
-      const task1 = db.add(live(Testing.Task, { title: 'apples' }));
-      const task2 = db.add(live(Testing.Task, { title: 'giraffes' }));
+      db.add(live(Testing.Task, { title: 'apples' }));
+      db.add(live(Testing.Task, { title: 'giraffes' }));
 
       await db.flush({ indexes: true });
     });
@@ -489,6 +489,30 @@ describe('Queries', () => {
       {
         const { objects } = await db.query(Query.select(Filter.text('animal', { type: 'vector' }))).run();
         expect(objects[0].title).toEqual('giraffes');
+      }
+    });
+
+    test('full-text', async () => {
+      {
+        const { objects } = await db.query(Query.select(Filter.text('apples', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('apples');
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('giraffes', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('giraffes');
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('vegetable', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(0);
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('animal', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(0);
       }
     });
   });

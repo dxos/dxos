@@ -133,6 +133,7 @@ export declare namespace Query {
   export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
 
   export type TextSearchOptions = {
+    // TODO(dmaretskyi): Hybrid search.
     type?: 'full-text' | 'vector';
   };
 }

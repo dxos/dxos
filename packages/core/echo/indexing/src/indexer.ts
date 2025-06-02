@@ -188,7 +188,12 @@ export class Indexer extends Resource {
       }
       return vectorIndex.find(filter);
     } else if (filter.text?.kind === 'text') {
-      throw new Error('Text search is not supported');
+      const textIndex = this._engine.getIndex({ kind: IndexKind.Kind.FULL_TEXT });
+      if (!textIndex) {
+        // TODO(dmaretskyi): This shouldn't be the default?
+        return [];
+      }
+      return textIndex.find(filter);
     } else {
       const typenameIndex = this._engine.getIndex({ kind: IndexKind.Kind.SCHEMA_MATCH });
       if (!typenameIndex) {

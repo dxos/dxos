@@ -21,9 +21,9 @@ import {
   type LoadParams,
   type FindResult,
 } from '../types';
-import { EmbeddingExtractor, type ExtractInputBlock } from './embeddings';
-import { visitValues } from '@dxos/util';
+import { EmbeddingExtractor } from './embeddings';
 import { log } from '@dxos/log';
+import { extractTextBlocks } from './text';
 
 // Note: By default, Orama search returns 10 results.
 // const ORAMA_LIMIT = 1_000_000;
@@ -142,20 +142,3 @@ export class IndexVector extends Resource implements Index {
     return index;
   }
 }
-
-const extractTextBlocks = (object: Partial<ObjectStructure>): ExtractInputBlock[] => {
-  const blocks: ExtractInputBlock[] = [];
-
-  const go = (value: any, _key: string | number) => {
-    if (isEncodedReference(value)) {
-      return;
-    }
-    if (typeof value === 'string') {
-      blocks.push({ content: value });
-    }
-    visitValues(value, go);
-  };
-  visitValues(object.data, go);
-
-  return blocks;
-};

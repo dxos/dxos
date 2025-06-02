@@ -1,6 +1,6 @@
 import { Resource } from '@dxos/context';
-import type { ObjectStructure } from '@dxos/echo-protocol';
 import { pipeline, type FeatureExtractionPipeline } from '@xenova/transformers';
+import type { ExtractInputBlock } from './text';
 
 export interface EmbeddingExtractorOptions {
   /**
@@ -24,16 +24,6 @@ const DEFAULT_OPTIONS: EmbeddingExtractorOptions = {
   chunkCombination: 'mean',
 
   maxChunkSize: 500,
-};
-
-export type ExtractInputBlock = {
-  content: string;
-
-  /**
-   * The weight of the block.
-   */
-  // TODO(dmaretskyi): Currently not supported.
-  weight?: number;
 };
 
 export class EmbeddingExtractor extends Resource {
