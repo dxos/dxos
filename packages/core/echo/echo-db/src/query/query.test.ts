@@ -12,7 +12,7 @@ import { Expando, RelationSourceId, RelationTargetId, TypedObject, Ref } from '@
 import { Testing } from '@dxos/echo-schema/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live, getMeta } from '@dxos/live-object';
+import { live, getMeta, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { openAndClose } from '@dxos/test-utils';
@@ -158,7 +158,7 @@ describe('Queries', () => {
 
     let root: AutomergeUrl;
     {
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       const db = await peer.createDatabase(spaceKey);
       await createObjects(peer, db, { count: 3 });
 
@@ -167,7 +167,7 @@ describe('Queries', () => {
     }
 
     {
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       const db = await peer.openDatabase(spaceKey, root);
       expect((await db.query().run()).objects.length).to.eq(3);
     }
@@ -185,7 +185,7 @@ describe('Queries', () => {
     let root: AutomergeUrl;
     let expectedObjectId: string;
     {
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
@@ -200,7 +200,7 @@ describe('Queries', () => {
     }
 
     {
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       const db = await peer.openDatabase(spaceKey, root);
       const queryResult = (await db.query().run()).objects;
       expect(queryResult.length).to.eq(1);
@@ -260,7 +260,7 @@ describe('Queries', () => {
       await builder.close();
     });
 
-    const peer = await builder.createPeer(kv);
+    const peer = await builder.createPeer({ kv });
     const db = await peer.createDatabase(spaceKey);
     const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
@@ -379,18 +379,20 @@ describe('Queries', () => {
   describe('traversals', () => {
     let db: EchoDatabase;
 
+    let alice: Live<Testing.Contact>, bob: Live<Testing.Contact>;
+
     beforeEach(async () => {
       const { db: db1, graph } = await builder.createDatabase();
       db = db1;
       graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager, Testing.Task]);
 
       // TODO(dmaretskyi): Better test data.
-      const alice = db.add(
+      alice = db.add(
         live(Testing.Contact, {
           name: 'Alice',
         }),
       );
-      const bob = db.add(
+      bob = db.add(
         live(Testing.Contact, {
           name: 'Bob',
         }),
@@ -453,6 +455,78 @@ describe('Queries', () => {
         { title: 'Task 1' },
         { title: 'Task 2' },
       ]);
+    });
+
+    test('traverse query started from id', async () => {
+      const { objects } = await db.query(Query.select(Filter.ids(bob.id)).sourceOf(Testing.HasManager).target()).run();
+
+      expect(objects).toMatchObject([{ name: 'Alice' }]);
+    });
+  });
+
+  describe('text search', () => {
+    beforeEach(async () => {});
+
+    test.skipIf(process.env.CI)('vector', async () => {
+      const { db, graph } = await builder.createDatabase({ indexing: { vector: true } });
+      graph.schemaRegistry.addSchema([Testing.Task]);
+
+      db.add(live(Testing.Task, { title: 'apples' }));
+      db.add(live(Testing.Task, { title: 'giraffes' }));
+
+      await db.flush({ indexes: true });
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('apples', { type: 'vector' }))).run();
+        expect(objects[0].title).toEqual('apples');
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('giraffes', { type: 'vector' }))).run();
+        expect(objects[0].title).toEqual('giraffes');
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('vegetable', { type: 'vector' }))).run();
+        expect(objects[0].title).toEqual('apples');
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('animal', { type: 'vector' }))).run();
+        expect(objects[0].title).toEqual('giraffes');
+      }
+    });
+
+    test('full-text', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.schemaRegistry.addSchema([Testing.Task]);
+
+      db.add(live(Testing.Task, { title: 'apples' }));
+      db.add(live(Testing.Task, { title: 'giraffes' }));
+
+      await db.flush({ indexes: true });
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('apples', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('apples');
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('giraffes', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('giraffes');
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('vegetable', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(0);
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('animal', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(0);
+      }
     });
   });
 });
