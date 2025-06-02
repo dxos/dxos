@@ -26,6 +26,9 @@ export const DeckSettings = ({ settings }: { settings: DeckSettingsProps }) => {
       <DeprecatedFormInput label={t('settings enable deck label')}>
         <Input.Switch checked={settings.enableDeck} onCheckedChange={(checked) => (settings.enableDeck = checked)} />
       </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('settings hidden focus label')}>
+        <Input.Switch checked={settings.hideFocus} onCheckedChange={(checked) => (settings.hideFocus = checked)} />
+      </DeprecatedFormInput>
       <DeprecatedFormInput label={t('select new plank positioning label')}>
         <Select.Root
           disabled={!settings.enableDeck}
