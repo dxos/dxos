@@ -7,6 +7,8 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { AIServiceEdgeClient } from '@dxos/ai';
+import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { MemoryQueue } from '@dxos/echo-db';
@@ -44,9 +46,16 @@ const AudioFile = ({
   audioConstraints?: MediaTrackConstraints;
 }) => {
   const [running, setRunning] = useState(false);
+  const actor: DataType.Actor = useMemo(
+    () => ({
+      name: 'You',
+    }),
+    [],
+  );
 
   // Audio.
   const { audio, track, stream } = useAudioFile(audioUrl, audioConstraints);
+
   // Speaking.
   const isSpeaking = detectSpeaking ? useIsSpeaking(track) : true;
   const ref = useRef<HTMLAudioElement>(null);
@@ -72,10 +81,11 @@ const AudioFile = ({
   // Transcriber.
   const queueDxn = useMemo(() => createQueueDxn(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
+
   const model = useQueueModelAdapter(renderMarkdown([]), queue);
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
-      const message = create(DataType.Message, { sender: { name: 'You' }, created: new Date().toISOString(), blocks });
+      const message = create(DataType.Message, { sender: actor, created: new Date().toISOString(), blocks });
       void queue?.append([message]);
     },
     [queue],
@@ -146,8 +156,8 @@ const meta: Meta<typeof AudioFile> = {
 export default meta;
 
 const TRANSCRIBER_CONFIG = {
-  transcribeAfterChunksAmount: 50,
-  prefixBufferChunksAmount: 10,
+  transcribeAfterChunksAmount: 100,
+  prefixBufferChunksAmount: 50,
 };
 
 const RECORDER_CONFIG = {
@@ -157,19 +167,22 @@ const RECORDER_CONFIG = {
 export const Default: StoryObj<typeof AudioFile> = {
   render: AudioFile,
   args: {
+    detectSpeaking: true,
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
     audioUrl: 'https://dxos.network/audio-london.m4a',
+    // textUrl: 'https://dxos.network/audio-london.txt',
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,
   },
 };
 
-export const WithSpeechDetection: StoryObj<typeof AudioFile> = {
+export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
   render: AudioFile,
   args: {
     detectSpeaking: true,
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
     audioUrl: 'https://dxos.network/audio-london.m4a',
+    // textUrl: 'https://dxos.network/audio-london.txt',
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,
   },
