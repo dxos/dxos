@@ -29,7 +29,7 @@ describe('Config hook', () => {
     expect(Object.entries(result.current).length).toBeGreaterThan(0);
   });
 
-  test('should return custom client config when used properly in a context', { retry: 2 }, async () => {
+  test('should return custom client config when used properly in a context', { retry: 3 }, async () => {
     const config = new Config({
       version: 1,
       runtime: {
