@@ -5,8 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import { Option } from 'effect';
-import { getDescriptionAnnotation } from 'effect/SchemaAST';
+import { Option, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineTool, AIServiceEdgeClient, Message, ToolResult, type Tool } from '@dxos/ai';
@@ -31,16 +30,16 @@ import {
   create,
   createQueueDxn,
   getTypename,
-  isInstanceOf,
-  type BaseEchoObject,
-  Filter,
-  RelationSourceId,
-  RelationTargetId,
   getSchema,
   getSchemaDXN,
   getSchemaTypename,
-  type BaseObject,
+  isInstanceOf,
   toJsonSchema,
+  type BaseEchoObject,
+  type BaseObject,
+  Filter,
+  RelationSourceId,
+  RelationTargetId,
 } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -65,7 +64,9 @@ import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import translations from '../translations';
 
+// TODO(burdon): Move out of source.
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
+
 const LOCAL = false;
 
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
@@ -84,14 +85,13 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
       new AIServiceEdgeClient({
         endpoint: endpoints.ai,
         defaultGenerationOptions: {
-          // model: '@anthropic/claude-sonnet-4-20250514',
           model: '@anthropic/claude-3-5-sonnet-20241022',
+          // model: '@anthropic/claude-sonnet-4-20250514',
         },
       }),
   );
 
   // Queue.
-  // TODO(burdon): For testing use env.
   const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
@@ -166,7 +166,6 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
   // State.
   const objects = useQuery(space, Filter.or(...TYPES.map((t) => Filter.type(t))));
-
   const messages = [
     ...(queue?.items.filter((item) => isInstanceOf(Message, item)) ?? []),
     ...(processor?.messages.value ?? []),
@@ -219,10 +218,8 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, []);
 
   const [model] = useState(() => new SpaceGraphModel());
-
   useEffect(() => {
     void model.open(space);
-
     return () => {
       model.close();
     };
@@ -235,7 +232,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
       <object>${JSON.stringify(object, null, 2)}</object>
       
       <schema>
-        <description>${getDescriptionAnnotation(relatedSchema.schema.ast).pipe(Option.getOrElse(() => ''))}</description>
+        <description>${SchemaAST.getDescriptionAnnotation(relatedSchema.schema.ast).pipe(Option.getOrElse(() => ''))}</description>
         <json>
           ${JSON.stringify(toJsonSchema(relatedSchema.schema), null, 2)}
         </json>
@@ -287,6 +284,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         />
       </div>
 
+      {/* TODO(burdon): Filter/query. */}
       <ForceGraph model={model} />
 
       {/* Artifacts Deck */}

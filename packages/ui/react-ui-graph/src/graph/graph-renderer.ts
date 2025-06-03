@@ -70,21 +70,21 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
       .attr('r', (d) => d.r);
 
     //
-    // Groups
-    // TODO(burdon): Experimental.
+    // Subgraphs
     //
 
     const scale = 100;
     const offsetDistance = 24 * scale;
 
-    // TODO(burdon): Cache when data changes.
+    // TODO(burdon): Cache components in layout.
+    // TODO(burdon): Separate force system for each subgraph.
     const components = this._options.subgraphs
       ? findConnectedComponents({
           nodes: layout.graph?.nodes ?? [],
           edges: (layout.graph?.edges ?? []).map(({ source, target }) => ({ source: source.id, target: target.id })),
         })
-          .filter((component) => component.length > 1)
-          .map((component, i) => ({ id: `group-${i}`, component }))
+          .filter((component) => component.length > 2)
+          .map((component, i) => ({ id: `subgraph-${i}`, component }))
       : [];
 
     root
@@ -103,9 +103,6 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
 
             // https://d3js.org/d3-polygon
             const hullPoints = polygonHull(points);
-            if (!hullPoints) {
-              return;
-            }
 
             // https://www.npmjs.com/package/js-clipper
             const co = new Clipper.ClipperOffset();
@@ -332,8 +329,9 @@ const applyClasses = (el: D3Selection, classes: Record<string, boolean>) => {
 };
 
 /**
- * Find connected components (subgraphs)in a graph.
+ * Find connected components (subgraphs) in a graph.
  */
+// TODO(burdon): Factor out.
 const findConnectedComponents = (graph: {
   nodes: { id: string }[];
   edges: { source: string; target: string }[];
@@ -350,7 +348,6 @@ const findConnectedComponents = (graph: {
 
   const visited = new Set<string>();
   const components: string[][] = [];
-
   for (const node of graph.nodes) {
     if (visited.has(node.id)) {
       continue;
