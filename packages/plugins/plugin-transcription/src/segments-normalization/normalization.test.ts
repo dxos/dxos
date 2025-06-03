@@ -2,18 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
 import { describe, test } from 'vitest';
 
 import { AIServiceEdgeClient, OllamaClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
+import { scheduleTaskInterval } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { MemoryQueue } from '@dxos/echo-db';
+import { createQueueDxn, ObjectId } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type DataType } from '@dxos/schema';
 
-import { sentenceNormalization } from './function';
+import { MessageNormalizer } from './message-normalizer';
+import { type MessageWithRangeId, sentenceNormalization } from './normalization';
+import { getActorId } from './utils';
+
+const sender: DataType.Actor = {
+  identityDid: 'did:key:123',
+};
 
 // Generate bunch of complex messages.
-const segments: DataType.MessageBlock.Transcription[] = [
+const messages: MessageWithRangeId[] = [
   // Control message.
   'Hello, every body. We will talk about quantum entanglement today',
 
@@ -38,14 +49,16 @@ const segments: DataType.MessageBlock.Transcription[] = [
   // No punctuation.
   'in classical physics objects have well-defined properties such as position speed and momentum',
 ].map((string, index) => ({
-  type: 'transcription',
-  started: new Date(Date.now() + 1000 * index).toISOString(),
-  text: string,
+  id: ObjectId.random(),
+  created: new Date(Date.now() + 1000 * index).toISOString(),
+  sender,
+  blocks: [{ type: 'transcription', started: new Date(Date.now() + 1000 * index).toISOString(), text: string }],
+  rangeId: [],
 }));
 
 const REMOTE_AI = true;
 
-describe('SentenceNormalization', () => {
+describe.skip('SentenceNormalization', () => {
   const getExecutor = () => {
     return new FunctionExecutor(
       new ServiceContainer().setServices({
@@ -67,15 +80,14 @@ describe('SentenceNormalization', () => {
     );
   };
 
-  test.only('messages merging', { timeout: 120_000 }, async () => {
+  test('messages merging', { timeout: 120_000 }, async () => {
     const executor = getExecutor();
-
-    const sentences: DataType.MessageBlock.Transcription[] = [];
-    let buffer: DataType.MessageBlock.Transcription[] = [];
+    const sentences: MessageWithRangeId[] = [];
+    let buffer: MessageWithRangeId[] = [];
     let activeSentenceIndex = 0;
-    for (const segment of segments) {
+    for (const message of messages) {
       const result = await executor.invoke(sentenceNormalization, {
-        segments: [...buffer, segment],
+        messages: [...buffer, message],
       });
       log.info('BEFORE sentence splicing', { activeSentenceIndex, sentences, inserting: result.sentences });
       sentences.splice(activeSentenceIndex, sentences.length - activeSentenceIndex, ...result.sentences);
@@ -86,7 +98,45 @@ describe('SentenceNormalization', () => {
         buffer = sentences.slice(activeSentenceIndex);
       }
     }
-    log.info('sentences', { sentences });
+    log.info('sentences', {
+      originalMessages: JSON.stringify(messages, null, 2),
+      sentences: JSON.stringify(sentences, null, 2),
+    });
     throw new Error('test');
+  });
+
+  test.only('queue', { timeout: 120_000 }, async () => {
+    // Create queue.
+    const queue = new MemoryQueue<DataType.Message>(createQueueDxn());
+    const ctx = new Context();
+    let idx = 0;
+    scheduleTaskInterval(
+      ctx,
+      async () => {
+        if (idx >= messages.length) {
+          void ctx.dispose();
+          return;
+        }
+        await queue.append([messages[idx]]);
+        idx++;
+      },
+      2_000,
+    );
+
+    // Create normalizer.
+    const normalizer = new MessageNormalizer({
+      functionExecutor: getExecutor(),
+      queue,
+      startingCursor: { actorId: getActorId(sender), timestamp: '0' },
+    });
+
+    // Start normalizer.
+    await normalizer.open();
+    effect(() => {
+      log.info('normalizer');
+      log.info(JSON.stringify(queue.items, null, 2));
+    });
+
+    await new Promise(() => {});
   });
 });

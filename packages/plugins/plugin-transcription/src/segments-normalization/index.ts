@@ -2,5 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './function';
+export * from './normalization';
+export * from './message-normalizer';
 export * from './utils';
