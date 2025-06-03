@@ -22,13 +22,13 @@ import { SVG } from '../SVG';
 import '../../../styles/graph.css';
 
 type DefaultStoryProps = GraphProps & {
+  debug?: boolean;
   grid?: boolean;
   graph: Graph;
   projectorOptions?: GraphForceProjectorOptions;
-  debug?: boolean;
 };
 
-const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: DefaultStoryProps) => {
+const DefaultStory = ({ debug, grid, graph, projectorOptions, ...props }: DefaultStoryProps) => {
   const model = useMemo(() => new TestGraphModel(graph), [graph]);
   const selected = useMemo(() => new SelectionModel(), []);
   const context = useRef<SVGContext>(null);
@@ -37,8 +37,6 @@ const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: Defaul
     [context.current, projectorOptions],
   );
   const graphRef = useRef<GraphController | null>(null);
-
-  console.log(selected.toJSON());
 
   return (
     <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
@@ -67,7 +65,6 @@ const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: Defaul
                 selected.add(node.id);
               }
               graphRef.current?.refresh();
-              console.log(selected.contains(node.id));
             }}
             {...props}
           />

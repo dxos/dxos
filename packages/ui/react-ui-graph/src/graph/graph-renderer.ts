@@ -37,7 +37,7 @@ export type GraphRendererOptions<N> = RendererOptions<{
   labels?: LabelOptions<N>;
   attributes?: AttributesOptions<N>;
   onNodeClick?: (node: GraphLayoutNode<N>, event: MouseEvent) => void;
-  onEdgeClick?: (node: GraphLayoutEdge<N>, event: MouseEvent) => void;
+  onLinkClick?: (link: GraphLayoutEdge<N>, event: MouseEvent) => void;
   transition?: () => any;
 }>;
 
@@ -219,15 +219,16 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
  * @param nodes
  */
 const createEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>, nodes) => {
-  // if (options.onEdgeClick) {
-  //   // Shadow path with wide stroke for click handler.
-  //   group.append('path')
-  //     .attr('class', 'click')
-  //     .on('click', (event: MouseEvent) => {
-  //       const edge = select<SVGLineElement, GraphLayoutEdge<N>>(event.target as SVGLineElement).datum();
-  //       options.onEdgeClick(edge, event);
-  //     });
-  // }
+  if (options.onEdgeClick) {
+    // Shadow path with wide stroke for click handler.
+    group
+      .append('path')
+      .attr('class', 'click')
+      .on('click', (event: MouseEvent) => {
+        const edge = select<SVGLineElement, GraphLayoutEdge<N>>(event.target as SVGLineElement).datum();
+        options.onEdgeClick(edge, event);
+      });
+  }
 
   group
     .append('path')
