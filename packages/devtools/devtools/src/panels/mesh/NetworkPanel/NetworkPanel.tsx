@@ -10,7 +10,6 @@ import { type SpaceMember, useMembers, type Space } from '@dxos/react-client/ech
 import { useIdentity } from '@dxos/react-client/halo';
 import { Toolbar } from '@dxos/react-ui';
 import { GraphForceProjector, type GraphLayoutNode, SVG, type SVGContext } from '@dxos/react-ui-graph';
-import { mx } from '@dxos/react-ui-theme';
 
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
@@ -54,7 +53,7 @@ class NetworkGraphModel extends GraphModel {
   }
 }
 
-const classes = {
+const _classes = {
   default: '[&>circle]:fill-zinc-300 [&>circle]:stroke-zinc-400 [&>circle]:stroke-2',
   nodes: [
     '[&>circle]:fill-red-300',
@@ -138,17 +137,18 @@ export const NetworkPanel = (props: { space?: Space }) => {
               return `${peer} [${identity}]`;
             },
           }}
-          attributes={{
-            node: (node: GraphLayoutNode<NetworkGraphNode>) => {
-              const key = node.data?.member?.identity.identityKey ?? node.data?.peer?.peerId;
-              return {
-                class: mx(
-                  'font-mono',
-                  isMe(node.data) ? classes.default : classes.nodes[key?.getInsecureHash(classes.nodes.length) ?? 0],
-                ),
-              };
-            },
-          }}
+          // TODO(burdon): Fix classes.
+          // attributes={{
+          //   node: (node: GraphLayoutNode<NetworkGraphNode>) => {
+          //     const key = node.data?.member?.identity.identityKey ?? node.data?.peer?.peerId;
+          //     return {
+          //       class: mx(
+          //         'font-mono',
+          //         isMe(node.data) ? classes.default : classes.nodes[key?.getInsecureHash(classes.nodes.length) ?? 0],
+          //       ),
+          //     };
+          //   },
+          // }}
         />
       </SVG.Root>
     </PanelContainer>
