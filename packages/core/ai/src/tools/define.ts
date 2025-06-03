@@ -92,13 +92,7 @@ export const structuredOutputParser = <TSchema extends Schema.Schema.AnyNoContex
         ?.content.filter((content) => content.type === 'tool_use')
         .find((content) => content.name === tool.name)?.input as any;
 
-      try {
-        return Schema.decodeUnknownSync(schema)(result);
-      } catch (err) {
-        // This should never happen.
-        debugger;
-        throw err;
-      }
+      return Schema.decodeUnknownSync(schema)(result);
     },
   };
 };
