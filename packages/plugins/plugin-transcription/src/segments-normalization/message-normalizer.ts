@@ -19,7 +19,7 @@ import { type MessageWithRangeId, sentenceNormalization } from './normalization'
 import { getActorId } from './utils';
 
 const PROCESSING_TIMEOUT = 20_000; // ms
-const MAX_RANGE_ID_COUNT = 20;
+const MAX_RANGE_ID_COUNT = 10;
 
 export type SegmentsNormalizerParams = {
   functionExecutor: FunctionExecutor;
@@ -27,11 +27,13 @@ export type SegmentsNormalizerParams = {
   startingCursor: QueueCursor;
 };
 
+// TODO(mykola): Use generic queue cursor from @dxos/protocols.
 export type QueueCursor = {
   actorId: string;
   timestamp: string;
 };
 
+// TODO(mykola): .
 export class MessageNormalizer extends Resource {
   private readonly _functionExecutor: FunctionExecutor;
   private _queue: Queue<DataType.Message>;
@@ -48,26 +50,24 @@ export class MessageNormalizer extends Resource {
   }
 
   protected override async _open() {
-    this._normalizationTask = new DeferredTask(this._ctx, () => this._processSegments());
-    const unsubscribe = effect(() => this._processMessages(this._queue.items));
+    this._normalizationTask = new DeferredTask(this._ctx, () => this._processMessages());
+    const unsubscribe = effect(() => {
+      if (this._lifecycleState !== LifecycleState.OPEN) {
+        return;
+      }
+
+      this._messagesToProcess = this._queue.items.filter((message) => {
+        const actorId = getActorId(message.sender);
+        return actorId === this._cursor.actorId && message.created >= this._cursor.timestamp;
+      });
+
+      this._normalizationTask!.schedule();
+    });
     this._ctx.onDispose(() => unsubscribe());
   }
 
-  private _processMessages(messages: DataType.Message[]) {
-    if (this._lifecycleState !== LifecycleState.OPEN) {
-      return;
-    }
-
-    this._messagesToProcess = messages.filter((message) => {
-      const actorId = getActorId(message.sender);
-      return actorId === this._cursor.actorId && message.created >= this._cursor.timestamp;
-    });
-
-    this._normalizationTask!.schedule();
-  }
-
   // Need to unpack strings from blocks from messages run them through the function and then pack them back into blocks into messages.
-  private async _processSegments() {
+  private async _processMessages() {
     const messages = this._messagesToProcess;
     this._messagesToProcess = [];
     if (
@@ -80,6 +80,7 @@ export class MessageNormalizer extends Resource {
     this._lastProcessedMessageIds = messages.map((message) => message.id);
 
     try {
+      // TODO(mykola): Executor should support timeout.
       const response = await asyncTimeout(
         this._functionExecutor.invoke(sentenceNormalization, { messages }),
         PROCESSING_TIMEOUT,
@@ -89,7 +90,7 @@ export class MessageNormalizer extends Resource {
       this._lastProcessedMessageIds.push(...response.sentences.map((sentence) => sentence.id));
       if (response.sentences.length === 1 && response.sentences.at(-1)!.rangeId!.length > MAX_RANGE_ID_COUNT) {
         log.warn('Sentence is too long', { messages });
-        this._cursor.timestamp = new Date(new Date(response.sentences[0].created).getTime() + 1000).toISOString();
+        this._cursor.timestamp = new Date(new Date(response.sentences[0].created).getTime() + 1).toISOString();
       }
     } catch {
       log.error('Failed to normalize segments', { messages });

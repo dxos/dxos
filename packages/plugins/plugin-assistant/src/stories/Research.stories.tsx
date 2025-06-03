@@ -5,6 +5,8 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
+import { Option } from 'effect';
+import { getDescriptionAnnotation } from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineTool, AIServiceEdgeClient, Message, ToolResult, type Tool } from '@dxos/ai';
@@ -43,7 +45,6 @@ import {
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
-import { ChessType } from '@dxos/plugin-chess/types';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ForceGraph } from '@dxos/plugin-explorer';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -63,8 +64,6 @@ import { Thread, type ThreadProps } from '../components';
 import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import translations from '../translations';
-import { Option, type Schema } from 'effect';
-import { getDescriptionAnnotation } from 'effect/SchemaAST';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 const LOCAL = false;

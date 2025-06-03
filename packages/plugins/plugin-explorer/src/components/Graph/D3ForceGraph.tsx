@@ -35,11 +35,12 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ model }) => {
           labels={{
             text: (node: GraphLayoutNode) => node.data.label,
           }}
-          attributes={{
-            node: (node: GraphLayoutNode) => ({
-              class: selected.contains(node.id) ? 'selected' : undefined,
-            }),
-          }}
+          // TODO(burdon): Fix classes.
+          // attributes={{
+          //   node: (node: GraphLayoutNode) => ({
+          //     class: selected.contains(node.id) ? 'selected' : undefined,
+          //   }),
+          // }}
           onSelect={(node: GraphLayoutNode) => {
             if (selected.contains(node.id)) {
               selected.remove(node.id);

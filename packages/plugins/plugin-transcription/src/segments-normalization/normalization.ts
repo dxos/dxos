@@ -14,6 +14,7 @@ import { DataType } from '@dxos/schema';
 const MessageWithRangeId = Schema.extend(
   DataType.Message,
   Schema.Struct({
+    // TODO(mykola): Move to meta in DataType.Message. Use `DataType.Message` instead.
     rangeId: Schema.optional(Schema.Array(Schema.String)).annotations({
       description: 'The IDs of the messages that contain the sentences.',
     }),
@@ -22,13 +23,14 @@ const MessageWithRangeId = Schema.extend(
 
 export interface MessageWithRangeId extends Schema.Schema.Type<typeof MessageWithRangeId> {}
 
-export const InputSchema = Schema.Struct({
+export const NormalizationInput = Schema.Struct({
+  // TODO(mykola): Move to meta in DataType.Message. Use `DataType.Message` instead.
   messages: Schema.Array(MessageWithRangeId).annotations({
     description: 'Messages to normalize into sentences.',
   }),
 });
 
-export const OutputSchema = Schema.Struct({
+export const NormalizationOutput = Schema.Struct({
   sentences: Schema.Array(MessageWithRangeId.pipe(Schema.mutable)).pipe(Schema.mutable).annotations({
     description: 'The sentences of the transcript.',
   }),
@@ -70,14 +72,14 @@ The transcription is delivered in chunks of 10 seconds or less. As a result, ind
 
 export const sentenceNormalization = defineFunction({
   description: 'Post process of transcription for sentence normalization',
-  inputSchema: InputSchema,
-  outputSchema: OutputSchema,
+  inputSchema: NormalizationInput,
+  outputSchema: NormalizationOutput,
   handler: async ({ data: { messages }, context }) => {
     log.info('input', { messages });
     const ai = context.getService(AiService);
     const session = new AISession({ operationModel: 'configured' });
 
-    const response = await session.runStructured(OutputSchema, {
+    const response = await session.runStructured(NormalizationOutput, {
       generationOptions: { model: DEFAULT_EDGE_MODEL },
       client: ai.client,
       tools: [],
