@@ -284,7 +284,7 @@ export class GraphBuilder {
         const removed = previous.filter((id) => !ids.includes(id));
         previous = ids;
 
-        log('update', { id, relation, ids, removed });
+        log.info('update', { id, relation, ids, removed });
         Rx.batch(() => {
           this._graph.removeEdges(
             removed.map((target) => ({ source: id, target })),
