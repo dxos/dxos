@@ -26,6 +26,13 @@ export interface AIServiceClient {
  * Streaming chat completion stream.
  */
 export interface GenerationStream extends AsyncIterable<GenerationStreamEvent> {
+  /**
+   * Stop the generation
+   */
   abort(): void;
+
+  /**
+   * Wait for the stream to finish.
+   */
   complete(): Promise<void>;
 }
