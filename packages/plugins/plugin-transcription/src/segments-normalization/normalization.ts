@@ -11,62 +11,28 @@ import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-const MessageWithRangeId = Schema.extend(
-  DataType.Message,
-  Schema.Struct({
-    // TODO(mykola): Move to meta in DataType.Message. Use `DataType.Message` instead.
-    rangeId: Schema.optional(Schema.Array(Schema.String)).annotations({
-      description: 'The IDs of the messages that contain the sentences.',
-    }),
-  }),
-);
-
-export interface MessageWithRangeId extends Schema.Schema.Type<typeof MessageWithRangeId> {}
-
 export const NormalizationInput = Schema.Struct({
-  // TODO(mykola): Move to meta in DataType.Message. Use `DataType.Message` instead.
-  messages: Schema.Array(MessageWithRangeId).annotations({
-    description: 'Messages to normalize into sentences.',
+  segments: Schema.Array(Schema.String).annotations({
+    description: 'The sentences to normalize.',
   }),
 });
 
 export const NormalizationOutput = Schema.Struct({
-  sentences: Schema.Array(MessageWithRangeId.pipe(Schema.mutable)).pipe(Schema.mutable).annotations({
+  sentences: Schema.Array(Schema.String).annotations({
     description: 'The sentences of the transcript.',
   }),
 });
 
 const prompt = `
-You are observing a real-time transcript of a single person speaking.
-The transcription is delivered in chunks of 10 seconds or less. As a result, individual sentences may be split across multiple messages, or multiple sentences may appear within a single message. Additionally, because this is real-time transcription, punctuation and capitalization may be incorrect or missing.
-
 # Task Description:
-  - Your task is to detect and reconstruct broken or incomplete sentences by merging segments into coherent, grammatically correct sentences where appropriate.
-
-# Input Format:
-  - The input is an array of messages that contain transcription blocks.
-  - Each message is a DataType.Message, as described in the output format.
+  - Reconstruct sentences from the provided segments.
 
 # Output Format:
   - You have been provided with the tool that defines the output format; make sure to query it.
   - Do not output anything other than the expected format.
 
-# Segment Handling Rules:
-  - Sort messages by timestamp.
-  - Leave ID of the first message in a sentence.
-  - Each divided sentence should be added to the output as a separate message or block within existing messages, preserving the original order.
-  - If one message contains multiple sentences, you should not split them.
-  - The last sentence may be incomplete; it should still be output as a separate block or message.
-  - Keep track of the original timestamps of the messages and blocks and, use the timestamp of the first message/block of a sentence as the 'started' field of the merged message.
-  - The 'rangeId' field of the merged message should include 'messageId'-s and 'rangeId'-s of all messages that have been used to construct this message.
-
-# Punctuation and Capitalization:
-  - Do not rely on the original punctuation and capitalization—they may be incorrect.
-  - Use logical reasoning to apply appropriate punctuation (e.g., period, comma, question mark, exclamation mark) and capitalization.
-
 # Restrictions:
   - Do not alter the order of the original messages; maintain the natural flow of speech.
-  - Do not interpret or infer meaning beyond reconstructing sentences.
   - Do not add or remove any words or phrases.
 `;
 
@@ -74,8 +40,8 @@ export const sentenceNormalization = defineFunction({
   description: 'Post process of transcription for sentence normalization',
   inputSchema: NormalizationInput,
   outputSchema: NormalizationOutput,
-  handler: async ({ data: { messages }, context }) => {
-    log.info('input', { messages });
+  handler: async ({ data: { segments }, context }) => {
+    log.info('input', { segments });
     const ai = context.getService(AiService);
     const session = new AISession({ operationModel: 'configured' });
 
@@ -88,15 +54,12 @@ export const sentenceNormalization = defineFunction({
         {
           id: ObjectId.random(),
           role: 'user',
-          content: messages.map((message) => ({ type: 'text', text: JSON.stringify(message) })),
+          content: segments.map((segment) => ({ type: 'text', text: segment })),
         },
       ],
       prompt,
     });
 
-    response.sentences.forEach((sentence) => {
-      sentence.id = ObjectId.random();
-    });
     log.info('response', { response });
     return response;
   },

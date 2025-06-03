@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { type DataType } from '@dxos/schema';
 
 import { MessageNormalizer } from './message-normalizer';
-import { type MessageWithRangeId, sentenceNormalization } from './normalization';
+import { sentenceNormalization } from './normalization';
 import { getActorId } from './utils';
 
 const sender: DataType.Actor = {
@@ -38,9 +38,15 @@ const messages: MessageWithRangeId[] = [
   'in modern physics',
 
   // Two sentences without separators.
-  'it challenges our classical intuitions about how the universe works and forces us to reconsider our assumptions about space, time, and information',
-  'at its core, quantum entanglement refers to a peculiar connection between two or more particles in such a way that the state of one particle instantly...',
-  'determines the state of the other, no matter how far apart they may be — even if they are light-years away',
+  'it challenges our classical',
+  'intuitions about how the universe works',
+  'and forces us to reconsider our assumptions about space',
+  'time, and information at its core, quantum',
+  'entanglement refers to a peculiar connection',
+  'between two or more particles in such a way',
+  'that the state of one particle instantly...',
+  'determines the state of the other, no matter how far apart',
+  'they may be — even if they are light-years away',
 
   // 2 sentences are merged.
   'this seemingly instantaneous correlation between distant particles has baffled physicists since the early 20th century to understand entanglement, we',
@@ -48,17 +54,11 @@ const messages: MessageWithRangeId[] = [
 
   // No punctuation.
   'in classical physics objects have well-defined properties such as position speed and momentum',
-].map((string, index) => ({
-  id: ObjectId.random(),
-  created: new Date(Date.now() + 1000 * index).toISOString(),
-  sender,
-  blocks: [{ type: 'transcription', started: new Date(Date.now() + 1000 * index).toISOString(), text: string }],
-  rangeId: [],
-}));
+];
 
 const REMOTE_AI = true;
 
-describe.skip('SentenceNormalization', () => {
+describe('SentenceNormalization', () => {
   const getExecutor = () => {
     return new FunctionExecutor(
       new ServiceContainer().setServices({
@@ -82,12 +82,12 @@ describe.skip('SentenceNormalization', () => {
 
   test('messages merging', { timeout: 120_000 }, async () => {
     const executor = getExecutor();
-    const sentences: MessageWithRangeId[] = [];
-    let buffer: MessageWithRangeId[] = [];
+    const sentences: string[] = [];
+    let buffer: string[] = [];
     let activeSentenceIndex = 0;
     for (const message of messages) {
       const result = await executor.invoke(sentenceNormalization, {
-        messages: [...buffer, message],
+        segments: [...buffer, message],
       });
       log.info('BEFORE sentence splicing', { activeSentenceIndex, sentences, inserting: result.sentences });
       sentences.splice(activeSentenceIndex, sentences.length - activeSentenceIndex, ...result.sentences);
@@ -98,12 +98,7 @@ describe.skip('SentenceNormalization', () => {
         buffer = sentences.slice(activeSentenceIndex);
       }
     }
-    sentences.push(...buffer);
-
-    log.info('sentences', {
-      originalMessages: JSON.stringify(messages, null, 2),
-      sentences: JSON.stringify(sentences, null, 2),
-    });
+    log.info('sentences', { sentences });
     throw new Error('test');
   });
 });
