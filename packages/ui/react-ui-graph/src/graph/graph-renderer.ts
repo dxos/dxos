@@ -75,7 +75,7 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
     //
 
     const scale = 100;
-    const offsetDistance = 16 * scale;
+    const offsetDistance = 24 * scale;
 
     // TODO(burdon): Cache when data changes.
     const components = this._options.subgraphs

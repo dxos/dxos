@@ -25,7 +25,7 @@ export type GraphController = {
 };
 
 export type GraphProps = ThemedClassName<
-  Pick<GraphRendererOptions<any>, 'labels' | 'attributes' | 'subgraphs'> & {
+  Pick<GraphRendererOptions<any>, 'labels' | 'subgraphs' | 'attributes'> & {
     model?: GraphModel;
     projector?: GraphForceProjector;
     renderer?: GraphRenderer<any>;
