@@ -27,7 +27,7 @@ describe('tools', () => {
     expect(tool.parameters?.properties).toEqual({
       foo: {
         type: 'string',
-        description: 'The foo',
+        description: 'Testing tool description.',
       },
     });
   });
