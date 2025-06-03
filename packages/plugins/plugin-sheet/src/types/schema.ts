@@ -4,8 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Ref, TypedObject } from '@dxos/echo-schema';
-import { ThreadType } from '@dxos/plugin-space/types';
+import { TypedObject } from '@dxos/echo-schema';
 
 export const CellValue = Schema.Struct({
   // TODO(burdon): How to store dates (datetime, date, time), percentages, etc.
@@ -52,7 +51,4 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/Sheet', ve
 
   // Cell formatting referenced by indexed range.
   ranges: Schema.mutable(Schema.Array(Range)),
-
-  // Threads associated with the sheet
-  threads: Schema.optional(Schema.mutable(Schema.Array(Ref(ThreadType)))),
 }) {}

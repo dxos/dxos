@@ -10245,6 +10245,9 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/primitives/react-hooks
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../schema
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

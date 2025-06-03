@@ -5,10 +5,10 @@
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { Markdown, Thread, ReactSurface, IntentResolver, ComputeGraphRegistry } from './capabilities';
+import { AnchorSort, Markdown, ReactSurface, IntentResolver, ComputeGraphRegistry } from './capabilities';
 import { meta } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
@@ -57,9 +57,10 @@ export const SheetPlugin = () =>
       activate: Markdown,
     }),
     defineModule({
-      id: `${meta.id}/module/thread`,
-      activatesOn: ThreadEvents.SetupThread,
-      activate: Thread,
+      id: `${meta.id}/module/anchor-sort`,
+      // TODO(wittjosiah): More relevant event?
+      activatesOn: Events.AppGraphReady,
+      activate: AnchorSort,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

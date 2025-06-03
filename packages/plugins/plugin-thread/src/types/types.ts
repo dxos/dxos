@@ -5,11 +5,10 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { ThreadType } from '@dxos/plugin-space/types';
 import { EchoObjectSchema } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { ChannelType } from './schema';
+import { ChannelType, ThreadType } from './schema';
 import { THREAD_PLUGIN } from '../meta';
 
 export namespace ThreadAction {

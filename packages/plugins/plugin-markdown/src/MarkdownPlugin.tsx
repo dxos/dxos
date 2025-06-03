@@ -6,19 +6,19 @@ import { Capabilities, contributes, createIntent, defineModule, definePlugin, Ev
 import { isInstanceOf, type BaseObject } from '@dxos/echo-schema';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 
 import {
+  AnchorSort,
   AppGraphSerializer,
   ArtifactDefinition,
   IntentResolver,
   MarkdownState,
   MarkdownSettings,
   ReactSurface,
-  Thread,
 } from './capabilities';
 import { MarkdownEvents } from './events';
 import { meta } from './meta';
@@ -60,8 +60,7 @@ export const MarkdownPlugin = () =>
               managesAutofocus: true,
             },
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (doc: DocumentType) =>
-              await RefArray.loadAll<BaseObject>([doc.content, ...doc.threads]),
+            loadReferences: async (doc: DocumentType) => await RefArray.loadAll<BaseObject>([doc.content]),
             serializer,
           },
         }),
@@ -101,9 +100,10 @@ export const MarkdownPlugin = () =>
       activate: AppGraphSerializer,
     }),
     defineModule({
-      id: `${meta.id}/module/thread`,
-      activatesOn: ThreadEvents.SetupThread,
-      activate: Thread,
+      id: `${meta.id}/module/anchor-sort`,
+      // TODO(wittjosiah): More relevant event?
+      activatesOn: Events.AppGraphReady,
+      activate: AnchorSort,
     }),
     defineModule({
       id: `${meta.id}/module/artifact-definition`,

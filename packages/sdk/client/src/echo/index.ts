@@ -43,6 +43,8 @@ export {
   isEchoObject,
   getObjectCore,
   getRangeFromCursor,
+  getSource,
+  getTarget,
   getTextInRange,
   getVersion,
   loadObjectReferences,

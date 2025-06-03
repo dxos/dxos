@@ -4,18 +4,15 @@
 
 import { Schema } from 'effect';
 
-import { Type } from '@dxos/echo';
-import { Expando, LabelAnnotationId, Ref } from '@dxos/echo-schema';
-import { makeRef, live } from '@dxos/live-object';
-import { ThreadType } from '@dxos/plugin-space/types';
+import { Type, Ref } from '@dxos/echo';
+import { LabelAnnotationId } from '@dxos/echo-schema';
+import { live } from '@dxos/live-object';
 import { DataType } from '@dxos/schema';
 
 export const DocumentSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   fallbackName: Schema.optional(Schema.String),
-  content: Ref(DataType.Text),
-  threads: Schema.mutable(Schema.Array(Ref(ThreadType))),
-  assistantChatQueue: Schema.optional(Ref(Expando)),
+  content: Type.Ref(DataType.Text),
 }).annotations({
   // TODO(dmaretskyi): `Schema.Struct(...).pipe(defaultLabel(['name', 'fallbackName']))` for type-safe annotations.
   [LabelAnnotationId]: ['name', 'fallbackName'],
@@ -31,7 +28,7 @@ export type DocumentType = Schema.Schema.Type<typeof DocumentType>;
 
 // TODO(burdon): Replace when defaults are supported.
 export const createDocument = ({ name, content }: { name: string; content: string }) =>
-  live(DocumentType, { name, content: makeRef(live(DataType.Text, { content })), threads: [] });
+  live(DocumentType, { name, content: Ref.make(live(DataType.Text, { content })) });
 
 /**
  * Checks if an object conforms to the interface needed to render an editor.

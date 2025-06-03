@@ -3,18 +3,16 @@
 //
 
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
-import { Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
-import { ThreadType } from '@dxos/plugin-space/types';
-import { live, fullyQualifiedId, getSpace, makeRef } from '@dxos/react-client/echo';
+import { live, fullyQualifiedId, getSpace, Ref } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { ThreadCapabilities } from './capabilities';
 import { THREAD_PLUGIN } from '../meta';
-import { ChannelType, ThreadAction } from '../types';
+import { ChannelType, ThreadAction, ThreadType } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -24,7 +22,7 @@ export default (context: PluginContext) =>
         data: {
           object: live(ChannelType, {
             name,
-            defaultThread: makeRef(live(ThreadType, { messages: [], status: 'active' })),
+            defaultThread: Ref.make(live(ThreadType, { messages: [], status: 'active' })),
             threads: [],
           }),
         },
@@ -34,7 +32,7 @@ export default (context: PluginContext) =>
       intent: ThreadAction.CreateChannelThread,
       resolve: ({ channel }) => {
         const thread = live(ThreadType, { messages: [], status: 'active' });
-        channel.threads.push(makeRef(thread));
+        channel.threads.push(Ref.make(thread));
         return {
           data: {
             object: thread,
@@ -190,12 +188,12 @@ export default (context: PluginContext) =>
           // TODO(wittjosiah): Context based on attention.
           // context: context ? makeRef(context) : undefined,
         });
-        thread.messages.push(makeRef(message));
+        thread.messages.push(Ref.make(message));
 
         if (state.drafts[subjectId]?.find((t) => t === thread)) {
           // Move draft to document.
           thread.status = 'active';
-          subject.threads ? subject.threads.push(makeRef(thread)) : (subject.threads = [makeRef(thread)]);
+          subject.threads ? subject.threads.push(Ref.make(thread)) : (subject.threads = [Ref.make(thread)]);
           state.drafts[subjectId] = state.drafts[subjectId]?.filter(({ id }) => id !== thread.id);
           intents.push(
             createIntent(ObservabilityAction.SendEvent, {
@@ -267,7 +265,7 @@ export default (context: PluginContext) =>
             return;
           }
 
-          thread.messages.splice(messageIndex, 0, makeRef(message));
+          thread.messages.splice(messageIndex, 0, Ref.make(message));
           return {
             intents: [
               createIntent(ObservabilityAction.SendEvent, {
