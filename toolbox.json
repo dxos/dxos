@@ -65,6 +65,6 @@
         "packages/ui/lit-*"
       ]
     },
-    "noProjectReferences": true
+    "noProjectReferences": false
   }
 }
