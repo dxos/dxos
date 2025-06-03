@@ -14,6 +14,7 @@ import { faker } from '@dxos/random';
 
 import { createSpaceObjectGenerator, createTestObjectGenerator, TestSchemaType } from './data';
 import { SpaceObjectGenerator } from './generator';
+import { range } from '@dxos/util';
 
 faker.seed(3);
 
@@ -137,5 +138,18 @@ describe('TestObjectGenerator', () => {
     });
     expect(objects).to.exist;
     expect(objects.length).to.be.eq(2);
+  });
+
+  test('create project', async () => {
+    const generator = createTestObjectGenerator();
+    const project = await generator.createObject({ types: [TestSchemaType.project] });
+    expect(getType(project)).to.exist;
+  });
+
+  test('create object with not type', async () => {
+    // TODO(burdon): Create Client/spaces.
+    const generator = createTestObjectGenerator();
+
+    await generator.createObject();
   });
 });

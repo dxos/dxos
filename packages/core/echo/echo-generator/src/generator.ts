@@ -20,6 +20,7 @@ import {
   type TestObjectProvider,
   type TestSchemaMap,
 } from './types';
+import { log } from '@dxos/log';
 
 /**
  * Typed object generator.

@@ -101,8 +101,10 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
 
   [TestSchemaType.project]: async () => ({
     name: faker.commerce.productName(),
-    repo: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
+    repo: faker.internet.url(),
     status: faker.helpers.arrayElement(Status),
+    description: faker.lorem.sentences(),
+    website: faker.internet.url(),
     priority: faker.helpers.arrayElement(Priority),
     active: faker.datatype.boolean(),
   }),
