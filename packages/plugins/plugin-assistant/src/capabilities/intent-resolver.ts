@@ -13,10 +13,11 @@ export default () => [
     Capabilities.IntentResolver,
     createResolver({
       intent: AssistantAction.CreateChat,
-      resolve: ({ spaceId, name }) => ({
+      resolve: ({ space, name }) => ({
         data: {
           object: live(AIChatType, {
-            assistantChatQueue: refFromDXN(createQueueDxn(spaceId)),
+            name,
+            queue: refFromDXN(createQueueDxn(space.id)),
           }),
         },
       }),
