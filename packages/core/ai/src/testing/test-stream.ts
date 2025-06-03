@@ -7,6 +7,22 @@ import { ObjectId } from '@dxos/echo-schema';
 import { type GenerationStreamEvent } from '../types';
 
 /**
+ * Replay server-side events (SSE) stream.
+ */
+export const createReplaySSEStream = (events: GenerationStreamEvent[]): ReadableStream => {
+  const encoder = new TextEncoder();
+
+  return new ReadableStream({
+    start: (controller) => {
+      for (const event of events) {
+        controller.enqueue(encoder.encode(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`));
+      }
+      controller.close();
+    },
+  });
+};
+
+/**
  * Mock server-side events (SSE) stream.
  */
 export const createTestSSEStream = (
