@@ -333,7 +333,7 @@ describe('effect-to-json', () => {
     const schema = Schema.Struct({
       id: ObjectId.annotations({ description: 'The id' }),
     });
-    log.info('schema', { schema: ObjectId.ast });
+    // log.info('schema', { schema: ObjectId.ast });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toMatchInlineSnapshot(`
       {

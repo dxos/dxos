@@ -73,18 +73,20 @@ export const toPropType = (type?: PropType): string => {
   }
 };
 
+const JSON_SCHEMA_URL = 'http://json-schema.org/draft-07/schema#';
+
 /**
  * Convert effect schema to JSON Schema.
  * @param schema
  */
 export const toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
   invariant(schema);
-  const schemaWithRefinements = Schema.make(withEchoRefinements(schema.ast, '#'));
-  let jsonSchema = JSONSchema.fromAST(schemaWithRefinements.ast, {
+  const withRefinements = withEchoRefinements(schema.ast, '#');
+  let jsonSchema = JSONSchema.fromAST(withRefinements, {
     definitions: {},
   }) as JsonSchemaType;
 
-  jsonSchema.$schema = 'http://json-schema.org/draft-07/schema#';
+  jsonSchema.$schema = JSON_SCHEMA_URL;
 
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
