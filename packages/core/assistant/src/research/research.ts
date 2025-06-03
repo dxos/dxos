@@ -5,6 +5,7 @@
 import { identity, Option, Schema, SchemaAST } from 'effect';
 
 import { ConsolePrinter, defineTool, ToolResult } from '@dxos/ai';
+import { type EchoDatabase } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
   create,
@@ -30,7 +31,6 @@ import { Subgraph } from './graph';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up
 import PROMPT from './instructions-research.tpl?raw';
 import { AISession } from '../session';
-import { EchoDatabaseImpl, type EchoDatabase } from '@dxos/echo-db';
 
 export const TYPES = [
   DataType.Event,

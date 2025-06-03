@@ -7,15 +7,14 @@ import { beforeAll, describe, test } from 'vitest';
 
 import { AIServiceEdgeClient, OllamaClient, structuredOutputParser } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
-import { getSchemaDXN } from '@dxos/echo-schema';
-import { ConfiguredCredentialsService, DatabaseService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
-import { log } from '@dxos/log';
-
-import { createExtractionSchema, getSanitizedSchemaName, researchFn, sanitizeObjects, TYPES } from './research';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import type { EchoDatabase } from '@dxos/echo-db';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { getSchemaDXN } from '@dxos/echo-schema';
+import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { live } from '@dxos/live-object';
 import { DataType } from '@dxos/schema';
+
+import { createExtractionSchema, getSanitizedSchemaName, researchFn, TYPES } from './research';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;

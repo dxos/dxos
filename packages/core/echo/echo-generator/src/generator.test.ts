@@ -14,7 +14,6 @@ import { faker } from '@dxos/random';
 
 import { createSpaceObjectGenerator, createTestObjectGenerator, TestSchemaType } from './data';
 import { SpaceObjectGenerator } from './generator';
-import { range } from '@dxos/util';
 
 faker.seed(3);
 
