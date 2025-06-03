@@ -4,8 +4,8 @@
 
 import { Schema, SchemaAST } from 'effect';
 
+import { defineTool, ToolResult } from '@dxos/ai';
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineTool, ToolResult } from '@dxos/artifact';
 import { type Space } from '@dxos/client/echo';
 import { FormatEnum, FormatEnums, SelectOptionSchema, GeoPoint, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';

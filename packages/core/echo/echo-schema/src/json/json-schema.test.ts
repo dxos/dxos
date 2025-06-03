@@ -14,6 +14,7 @@ import {
   EchoObject,
   EntityKind,
   FieldLookupAnnotationId,
+  GeneratorAnnotationId,
   getNormalizedEchoAnnotations,
   getSchemaProperty,
   getTypeAnnotation,
@@ -328,6 +329,34 @@ describe('effect-to-json', () => {
     });
   });
 
+  test('object id with description', () => {
+    const schema = Schema.Struct({
+      id: ObjectId.annotations({ description: 'The id' }),
+    });
+    // log.info('schema', { schema: ObjectId.ast });
+    const jsonSchema = toJsonSchema(schema);
+    expect(jsonSchema).toMatchInlineSnapshot(`
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "The id",
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+            "type": "string",
+          },
+        },
+        "propertyOrder": [
+          "id",
+        ],
+        "required": [
+          "id",
+        ],
+        "type": "object",
+      }
+    `);
+  });
+
   const expectReferenceAnnotation = (object: JsonSchemaType) => {
     expect(object.reference).to.deep.eq({
       schema: {
@@ -459,6 +488,102 @@ describe('json-to-effect', () => {
     const jsonSchema = toJsonSchema(schema);
     const effectSchema = toEffectSchema(jsonSchema);
     expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(schema.ast));
+  });
+
+  test('generator annotation', () => {
+    const schema = Schema.Struct({
+      name: Schema.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
+    });
+    const jsonSchema = toJsonSchema(schema);
+    expect(jsonSchema).toMatchInlineSnapshot(`
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "annotations": {
+              "generator": "commerce.productName",
+            },
+            "type": "string",
+          },
+        },
+        "propertyOrder": [
+          "name",
+        ],
+        "required": [
+          "name",
+        ],
+        "type": "object",
+      }
+    `);
+  });
+
+  // test('generator annotation on object', () => {
+  //   const schema = Schema.Struct({
+  //   });
+  //   const jsonSchema = toJsonSchema(schema);
+  //   expect(jsonSchema).toMatchInlineSnapshot();
+  // });
+
+  test('default annotation ', () => {
+    const schema = Schema.Struct({
+      str: Schema.String.annotations({
+        default: 'foo',
+      }),
+      arr: Schema.Array(Schema.String).annotations({
+        default: [],
+      }),
+      obj: Schema.Struct({
+        foo: Schema.optional(Schema.String).annotations({
+          default: 'bar',
+        }),
+      }),
+    });
+    const jsonSchema = toJsonSchema(schema);
+    expect(jsonSchema).toMatchInlineSnapshot(`
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "arr": {
+            "default": [],
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "obj": {
+            "additionalProperties": false,
+            "properties": {
+              "foo": {
+                "default": "bar",
+                "type": "string",
+              },
+            },
+            "propertyOrder": [
+              "foo",
+            ],
+            "required": [],
+            "type": "object",
+          },
+          "str": {
+            "default": "foo",
+            "type": "string",
+          },
+        },
+        "propertyOrder": [
+          "str",
+          "arr",
+          "obj",
+        ],
+        "required": [
+          "str",
+          "arr",
+          "obj",
+        ],
+        "type": "object",
+      }
+    `);
   });
 });
 

@@ -42,6 +42,18 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/artifact"
+    },
+    {
+      "path": "../../core/artifact-testing"
+    },
+    {
+      "path": "../../core/assistant"
+    },
+    {
       "path": "../../core/compute"
     },
     {
@@ -61,15 +73,6 @@
     },
     {
       "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../experimental/artifact"
-    },
-    {
-      "path": "../../experimental/artifact-testing"
-    },
-    {
-      "path": "../../experimental/assistant"
     },
     {
       "path": "../../sdk/app-framework"

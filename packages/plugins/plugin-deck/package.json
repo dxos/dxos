@@ -31,6 +31,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/artifact": "workspace:*",
     "@dxos/async": "workspace:*",

@@ -7,9 +7,9 @@ import '@dxos-theme';
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
+import { createTestOllamaClient } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities, createEdgeServices } from '@dxos/artifact-testing';
-import { createTestOllamaClient } from '@dxos/assistant/testing';
 import { EdgeGpt, type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';

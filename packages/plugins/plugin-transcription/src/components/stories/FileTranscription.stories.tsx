@@ -7,10 +7,15 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { AIServiceEdgeClient } from '@dxos/ai';
+import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { MemoryQueue } from '@dxos/echo-db';
 import { create, createQueueDxn } from '@dxos/echo-schema';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -26,6 +31,7 @@ import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
+import { getActorId, MessageNormalizer } from '../../segments-normalization';
 import { TestItem } from '../../testing';
 import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
 import { renderMarkdown } from '../Transcript';
@@ -33,20 +39,24 @@ import { renderMarkdown } from '../Transcript';
 const AudioFile = ({
   detectSpeaking,
   audioUrl,
+  normalizeSentences,
   transcriberConfig,
   recorderConfig,
   audioConstraints,
 }: {
   detectSpeaking?: boolean;
+  normalizeSentences?: boolean;
   audioUrl: string;
   transcriberConfig?: TranscriberParams['config'];
   recorderConfig?: MediaStreamRecorderParams['config'];
   audioConstraints?: MediaTrackConstraints;
 }) => {
   const [running, setRunning] = useState(false);
+  const actor: DataType.Actor = useMemo(() => ({ name: 'You' }), []);
 
   // Audio.
   const { audio, track, stream } = useAudioFile(audioUrl, audioConstraints);
+
   // Speaking.
   const isSpeaking = detectSpeaking ? useIsSpeaking(track) : true;
   const ref = useRef<HTMLAudioElement>(null);
@@ -72,10 +82,11 @@ const AudioFile = ({
   // Transcriber.
   const queueDxn = useMemo(() => createQueueDxn(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
+
   const model = useQueueModelAdapter(renderMarkdown([]), queue);
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
-      const message = create(DataType.Message, { sender: { name: 'You' }, created: new Date().toISOString(), blocks });
+      const message = create(DataType.Message, { sender: actor, created: new Date().toISOString(), blocks });
       void queue?.append([message]);
     },
     [queue],
@@ -88,28 +99,76 @@ const AudioFile = ({
     recorderConfig,
   });
 
+  // Normalize sentences.
+  const normalizer = useMemo(() => {
+    if (!normalizeSentences) {
+      return;
+    }
+    const executor = new FunctionExecutor(
+      new ServiceContainer().setServices({
+        ai: {
+          client: new AIServiceEdgeClient({
+            endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+            defaultGenerationOptions: {
+              model: '@anthropic/claude-3-5-sonnet-20241022',
+            },
+          }),
+        },
+      }),
+    );
+
+    return new MessageNormalizer({
+      functionExecutor: executor,
+      queue,
+      startingCursor: { actorId: getActorId(actor), timestamp: new Date().toISOString() },
+    });
+  }, [normalizeSentences, queue, actor]);
+
+  useEffect(() => {
+    if (!normalizer) {
+      return;
+    }
+    const ctx = new Context();
+    scheduleTask(ctx, async () => {
+      await normalizer.open();
+      ctx.onDispose(async () => {
+        await normalizer.close();
+      });
+    });
+    return () => {
+      void ctx.dispose();
+    };
+  }, [normalizer]);
+
   const manageChunkRecording = () => {
-    if (track?.readyState === 'live' && transcriber?.isOpen && isSpeaking) {
+    if (running && isSpeaking) {
       log.info('starting transcription');
-      transcriber.startChunksRecording();
-    } else if (!isSpeaking || track?.readyState !== 'live') {
+      transcriber?.startChunksRecording();
+    } else if (!isSpeaking || !running) {
       log.info('stopping transcription');
       transcriber?.stopChunksRecording();
     }
   };
 
   useEffect(() => {
-    if (transcriber && running) {
-      void transcriber.open().then(manageChunkRecording);
-    } else if (!running) {
-      transcriber?.stopChunksRecording();
-      void transcriber?.close();
-    }
+    const ctx = new Context();
+    scheduleTask(ctx, async () => {
+      if (transcriber && running) {
+        await transcriber.open();
+      } else if (!running) {
+        await transcriber?.close();
+      }
+      manageChunkRecording();
+    });
+
+    return () => {
+      void ctx.dispose();
+    };
   }, [transcriber, running]);
 
   useEffect(() => {
     manageChunkRecording();
-  }, [transcriber, track?.readyState, isSpeaking]);
+  }, [isSpeaking, stream]);
 
   return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} audioRef={ref} />;
 };
@@ -146,8 +205,9 @@ const meta: Meta<typeof AudioFile> = {
 export default meta;
 
 const TRANSCRIBER_CONFIG = {
-  transcribeAfterChunksAmount: 50,
-  prefixBufferChunksAmount: 10,
+  transcribeAfterChunksAmount: 100,
+  prefixBufferChunksAmount: 50,
+  normalizeSentences: true,
 };
 
 const RECORDER_CONFIG = {
@@ -157,19 +217,23 @@ const RECORDER_CONFIG = {
 export const Default: StoryObj<typeof AudioFile> = {
   render: AudioFile,
   args: {
+    detectSpeaking: true,
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
     audioUrl: 'https://dxos.network/audio-london.m4a',
+    // textUrl: 'https://dxos.network/audio-london.txt',
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,
   },
 };
 
-export const WithSpeechDetection: StoryObj<typeof AudioFile> = {
+export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
   render: AudioFile,
   args: {
     detectSpeaking: true,
+    normalizeSentences: true,
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
     audioUrl: 'https://dxos.network/audio-london.m4a',
+    // textUrl: 'https://dxos.network/audio-london.txt',
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,
   },

@@ -70,13 +70,39 @@ export const createProps = <T extends BaseObject>(
     return getSchemaProperties<T>(schema.ast).reduce<ExcludeId<T>>((obj, property) => {
       if (obj[property.name] === undefined) {
         if (!property.optional || optional || randomBoolean()) {
-          const gen = findAnnotation<string>(property.ast, GeneratorAnnotationId);
-          const fn = gen && getDeep<() => any>(generator, gen.split('.'));
-          if (fn) {
-            obj[property.name] = fn();
-          } else if (!property.optional) {
-            log.warn('missing generator for required property', { property, schema });
+          // Default value.
+          let value = property.defaultValue;
+          if (value !== undefined) {
+            value = structuredClone(value);
+          } else {
+            // Generator value from annotation.
+            const annotation = findAnnotation<string>(property.ast, GeneratorAnnotationId);
+            if (annotation) {
+              const fn = annotation && getDeep<() => any>(generator, annotation.split('.'));
+              if (!fn) {
+                throw new Error(`Unknown generator: ${annotation}`);
+              }
+
+              value = fn();
+            }
           }
+
+          if (!property.optional && value === undefined) {
+            // TODO(dmaretskyi): Support generating nested objects here; or generator via type.
+            if (property.array) {
+              value = [];
+            } else {
+              switch (property.type) {
+                case 'object':
+                  value = {};
+                  break;
+                default:
+                  throw new Error(`Missing generator for required property: ${property.name} [${property.type}]`);
+              }
+            }
+          }
+
+          obj[property.name] = value;
         }
       }
 
@@ -121,6 +147,7 @@ export const addToDatabase = (db: EchoDatabase) => {
   return <T extends BaseObject>(obj: Live<T>): AnyLiveObject<T> => db.add(obj);
 };
 
+// TODO(burdon): `identity` from effect
 export const noop = (obj: any) => obj;
 
 export const logObject = (message: string) => (obj: any) => log.info(message, { obj });
@@ -152,9 +179,10 @@ export const createObjectPipeline = <T extends BaseObject>(
 ): ((obj: ExcludeId<T>) => Effect.Effect<Live<T>, never, never>) => {
   if (!db) {
     return (obj: ExcludeId<T>) => {
-      const pipeline: Effect.Effect<Live<T>> = Effect.gen(function* (_) {
+      const pipeline: Effect.Effect<Live<T>> = Effect.gen(function* () {
         // logObject('before')(obj);
         const withProps = createProps(generator, type, optional)(obj);
+        log('after props', { withProps });
         const liveObj = createReactiveObject(type)(withProps);
         // logObject('after')(liveObj);
         return liveObj;
@@ -164,9 +192,10 @@ export const createObjectPipeline = <T extends BaseObject>(
     };
   } else {
     return (obj: ExcludeId<T>) => {
-      const pipeline: Effect.Effect<AnyLiveObject<any>, never, never> = Effect.gen(function* (_) {
+      const pipeline: Effect.Effect<AnyLiveObject<any>, never, never> = Effect.gen(function* () {
         // logObject('before')(obj);
         const withProps = createProps(generator, type, optional)(obj);
+        log('after props', { withProps });
         const liveObj = createReactiveObject(type)(withProps);
         const withRefs = yield* Effect.promise(() => createReferences(type, db)(liveObj));
         const dbObj = addToDatabase(db)(withRefs);
@@ -184,17 +213,17 @@ export type ObjectGenerator<T extends BaseObject> = {
   createObjects: (n: number) => Live<T>[];
 };
 
-// TODO(ZaymonFC): Sync generator doesn't work with db -- createReferences is async and
-//   can't be invoked with `Effect.runSync`.
-export const createGenerator = <T extends BaseObject>(
+// TODO(ZaymonFC): Sync generator doesn't work with db; createReferences is async and can't be invoked with `Effect.runSync`.
+// TODO(dmaretskyi): Expose effect API instead of pairs of sync/async APIs.
+export const createGenerator = <S extends Schema.Schema.AnyNoContext>(
   generator: ValueGenerator,
-  type: Schema.Schema<T>,
+  type: S,
   options: Omit<CreateOptions, 'db'> = {},
-): ObjectGenerator<T> => {
+): ObjectGenerator<Schema.Schema.Type<S>> => {
   const pipeline = createObjectPipeline(generator, type, options);
 
   return {
-    createObject: () => Effect.runSync(pipeline({} as ExcludeId<T>)),
+    createObject: () => Effect.runSync(pipeline({} as ExcludeId<Schema.Schema.Type<S>>)),
     createObjects: (n: number) => Effect.runSync(createArrayPipeline(n, pipeline)),
   };
 };

@@ -1,0 +1,169 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import '@dxos-theme';
+
+import { effect } from '@preact/signals-core';
+import { type StoryObj } from '@storybook/react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+
+import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
+import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/react-ui-theme';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
+import { GraphForceProjector, type GraphForceProjectorOptions, type GraphLayoutNode } from '../../graph';
+import { type SVGContext } from '../../hooks';
+import { convertTreeToGraph, createGraph, createTree, TestGraphModel, type TestNode } from '../../testing';
+import { SVG } from '../SVG';
+
+import '../../../styles/graph.css';
+
+type DefaultStoryProps = GraphProps & {
+  grid?: boolean;
+  graph: Graph;
+  projectorOptions?: GraphForceProjectorOptions;
+  debug?: boolean;
+};
+
+const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: DefaultStoryProps) => {
+  const model = useMemo(() => new TestGraphModel(graph), [graph]);
+  const selected = useMemo(() => new SelectionModel(), []);
+  const context = useRef<SVGContext>(null);
+  const projector = useMemo<GraphForceProjector>(
+    () => context.current && projectorOptions && new GraphForceProjector(context.current, projectorOptions),
+    [context.current, projectorOptions],
+  );
+  const graphRef = useRef<GraphController | null>(null);
+
+  console.log(selected.toJSON());
+
+  return (
+    <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
+      <SVG.Root ref={context}>
+        <SVG.Markers />
+        {grid && <SVG.Grid axis />}
+        <SVG.Zoom extent={[1 / 4, 4]}>
+          <GraphComponent
+            ref={graphRef}
+            model={model}
+            projector={projector}
+            labels={{
+              text: (node: GraphLayoutNode<TestNode>) => node.data.label,
+            }}
+            attributes={{
+              node: (node: GraphLayoutNode<TestNode>) => ({
+                classes: {
+                  selected: selected.contains(node.id),
+                },
+              }),
+            }}
+            onSelect={(node: GraphLayoutNode<TestNode>) => {
+              if (selected.contains(node.id)) {
+                selected.remove(node.id);
+              } else {
+                selected.add(node.id);
+              }
+              graphRef.current?.refresh();
+              console.log(selected.contains(node.id));
+            }}
+            {...props}
+          />
+        </SVG.Zoom>
+      </SVG.Root>
+
+      {debug && <Debug model={model} selected={selected} />}
+    </div>
+  );
+};
+
+const meta: Meta<DefaultStoryProps> = {
+  title: 'ui/react-ui-graph/Graph',
+  render: DefaultStory,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+};
+
+export default meta;
+
+type Story = StoryObj<DefaultStoryProps>;
+
+// TODO(burdon): Enable filtering of links that affect the force.
+
+export const Default: Story = {
+  args: {
+    debug: true,
+    graph: convertTreeToGraph(createTree({ depth: 4 })),
+    drag: true,
+    arrows: true,
+    grid: true,
+  },
+};
+
+export const Force: Story = {
+  args: {
+    debug: true,
+    graph: convertTreeToGraph(createTree({ depth: 5 })),
+    drag: true,
+    delay: 500,
+    projectorOptions: {
+      guides: true,
+      attributes: {
+        radius: (node, count) => 3 + Math.log(count + 1) * 3,
+      },
+      radius: 400,
+      forces: {
+        center: {
+          strength: 0.6,
+        },
+        collide: {
+          strength: 1,
+        },
+        manyBody: {
+          strength: -80,
+        },
+        link: {
+          distance: 20,
+          iterations: 10,
+          strength: 0.2,
+        },
+        radial: {
+          delay: 500,
+          radius: 300,
+          strength: 0.5,
+        },
+      },
+    },
+  },
+};
+
+export const Select = {
+  args: {
+    debug: true,
+    graph: createGraph(150, 50),
+    drag: true,
+    projectorOptions: {
+      forces: {
+        radial: {
+          radius: 200,
+          strength: 0.05,
+        },
+      },
+    },
+  },
+};
+
+const Debug = ({ model, selected }: { model: GraphModel; selected: SelectionModel }) => {
+  const [data, setData] = useState({});
+  useEffect(() => {
+    effect(() => {
+      setData({
+        selected: selected.toJSON(),
+        model: model.toJSON(),
+      });
+    });
+  }, [model, selected]);
+
+  return <JsonFilter data={data} classNames='text-sm' />;
+};
