@@ -44,13 +44,19 @@ svg {
         }
         text {
           @apply invisible;
-        }      
+        }
+
+        &.selected {
+          circle {
+            @apply fill-red-500;
+          }
+        }
       }
 
       g.dx-dragging,
       g.dx-node:hover {
         circle {
-          @apply fill-red-500;
+          @apply opacity-50;
         }
         rect {
           @apply visible stroke-neutral-700 dark:stroke-neutral-700;
