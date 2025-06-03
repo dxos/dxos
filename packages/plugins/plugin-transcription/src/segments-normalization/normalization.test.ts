@@ -98,45 +98,12 @@ describe.skip('SentenceNormalization', () => {
         buffer = sentences.slice(activeSentenceIndex);
       }
     }
+    sentences.push(...buffer);
+
     log.info('sentences', {
       originalMessages: JSON.stringify(messages, null, 2),
       sentences: JSON.stringify(sentences, null, 2),
     });
     throw new Error('test');
-  });
-
-  test.only('queue', { timeout: 120_000 }, async () => {
-    // Create queue.
-    const queue = new MemoryQueue<DataType.Message>(createQueueDxn());
-    const ctx = new Context();
-    let idx = 0;
-    scheduleTaskInterval(
-      ctx,
-      async () => {
-        if (idx >= messages.length) {
-          void ctx.dispose();
-          return;
-        }
-        await queue.append([messages[idx]]);
-        idx++;
-      },
-      2_000,
-    );
-
-    // Create normalizer.
-    const normalizer = new MessageNormalizer({
-      functionExecutor: getExecutor(),
-      queue,
-      startingCursor: { actorId: getActorId(sender), timestamp: '0' },
-    });
-
-    // Start normalizer.
-    await normalizer.open();
-    effect(() => {
-      log.info('normalizer');
-      log.info(JSON.stringify(queue.items, null, 2));
-    });
-
-    await new Promise(() => {});
   });
 });
