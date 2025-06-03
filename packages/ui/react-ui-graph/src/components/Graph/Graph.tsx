@@ -32,14 +32,18 @@ export type GraphProps = ThemedClassName<{
   arrows?: boolean;
   labels?: LabelOptions<any>;
   attributes?: AttributesOptions<any>;
-  onSelect?: (node: GraphLayoutNode<any>) => void;
+  onSelect?: (node: GraphLayoutNode<any>, event: MouseEvent) => void;
+  onInspect?: (node: GraphLayoutNode<any>, event: MouseEvent) => void;
 }>;
 
 /**
  * SVG Graph controller.
  */
 export const Graph = forwardRef<GraphController, GraphProps>(
-  ({ classNames, model, projector: _projector, delay, drag, arrows, labels, attributes, onSelect }, forwardedRef) => {
+  (
+    { classNames, model, projector: _projector, delay, drag, arrows, labels, attributes, onSelect, onInspect },
+    forwardedRef,
+  ) => {
     const context = useSvgContext();
     const graphRef = useRef<SVGGElement>();
 
@@ -50,7 +54,8 @@ export const Graph = forwardRef<GraphController, GraphProps>(
         arrows: { end: arrows },
         labels,
         attributes,
-        onNodeClick: onSelect ? (node: GraphLayoutNode<any>) => onSelect(node) : undefined,
+        onNodeClick: onSelect ? (node: GraphLayoutNode<any>, event) => onSelect(node, event) : undefined,
+        onNodePointerEnter: onInspect ? (node: GraphLayoutNode<any>, event) => onInspect(node, event) : undefined,
       });
 
       return {

@@ -9,6 +9,7 @@ import { type StoryObj } from '@storybook/react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
+import { Popover } from '@dxos/react-ui';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
@@ -37,45 +38,67 @@ const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: Defaul
     [context.current, projectorOptions],
   );
   const graphRef = useRef<GraphController | null>(null);
+  const anchorRef = useRef<HTMLButtonElement | null>(null);
+  const [popoverContent, setPopoverContent] = useState('');
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   console.log(selected.toJSON());
 
   return (
-    <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
-      <SVG.Root ref={context}>
-        <SVG.Markers />
-        {grid && <SVG.Grid axis />}
-        <SVG.Zoom extent={[1 / 4, 4]}>
-          <GraphComponent
-            ref={graphRef}
-            model={model}
-            projector={projector}
-            labels={{
-              text: (node: GraphLayoutNode<TestNode>) => node.data.label,
-            }}
-            attributes={{
-              node: (node: GraphLayoutNode<TestNode>) => ({
-                classes: {
-                  selected: selected.contains(node.id),
-                },
-              }),
-            }}
-            onSelect={(node: GraphLayoutNode<TestNode>) => {
-              if (selected.contains(node.id)) {
-                selected.remove(node.id);
-              } else {
-                selected.add(node.id);
-              }
-              graphRef.current?.refresh();
-              console.log(selected.contains(node.id));
-            }}
-            {...props}
-          />
-        </SVG.Zoom>
-      </SVG.Root>
+    <Popover.Root open={popoverOpen} onOpenChange={setPopoverOpen}>
+      <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
+        <SVG.Root ref={context}>
+          <SVG.Markers />
+          {grid && <SVG.Grid axis />}
+          <SVG.Zoom extent={[1 / 4, 4]}>
+            <GraphComponent
+              ref={graphRef}
+              model={model}
+              projector={projector}
+              labels={{
+                text: (node: GraphLayoutNode<TestNode>) => node.data.label,
+              }}
+              attributes={{
+                node: (node: GraphLayoutNode<TestNode>) => ({
+                  classes: {
+                    selected: selected.contains(node.id),
+                  },
+                }),
+              }}
+              onInspect={(node, event) => {
+                setPopoverOpen(false);
+                setPopoverContent('');
+                anchorRef.current = null;
+                queueMicrotask(() => {
+                  anchorRef.current = (event.target as HTMLElement).querySelector(
+                    'circle',
+                  ) as unknown as HTMLButtonElement | null;
+                  setPopoverContent(node.id);
+                  setPopoverOpen(true);
+                });
+              }}
+              onSelect={(node: GraphLayoutNode<TestNode>) => {
+                if (selected.contains(node.id)) {
+                  selected.remove(node.id);
+                } else {
+                  selected.add(node.id);
+                }
+                graphRef.current?.refresh();
+                console.log(selected.contains(node.id));
+              }}
+              {...props}
+            />
+          </SVG.Zoom>
+        </SVG.Root>
 
-      {debug && <Debug model={model} selected={selected} />}
-    </div>
+        {debug && <Debug model={model} selected={selected} />}
+      </div>
+      <Popover.VirtualTrigger virtualRef={anchorRef} />
+      <Popover.Content classNames='popover-consistent-width' onOpenAutoFocus={(e) => e.preventDefault()}>
+        <p>{popoverContent}</p>
+        <Popover.Arrow />
+      </Popover.Content>
+    </Popover.Root>
   );
 };
 

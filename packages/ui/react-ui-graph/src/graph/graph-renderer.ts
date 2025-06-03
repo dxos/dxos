@@ -37,6 +37,7 @@ export type GraphRendererOptions<N> = RendererOptions<{
   labels?: LabelOptions<N>;
   attributes?: AttributesOptions<N>;
   onNodeClick?: (node: GraphLayoutNode<N>, event: MouseEvent) => void;
+  onNodePointerEnter?: (node: GraphLayoutNode<N>, event: MouseEvent) => void;
   onEdgeClick?: (node: GraphLayoutEdge<N>, event: MouseEvent) => void;
   transition?: () => any;
 }>;
@@ -142,13 +143,19 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
       .text((d) => options.labels.text(d));
   }
 
-  // Highlight.
-  if (options.highlight !== false) {
+  // Highlight/Inspect
+  if (options.onNodePointerEnter) {
+    group.on('pointerenter', (event: PointerEvent) => {
+      const node = select<SVGElement, GraphLayoutNode<N>>(event.target as SVGGElement).datum();
+      options.onNodePointerEnter(node, event);
+    });
+    group.attr('data-hover', 'handled');
+  } else if (options.highlight !== false) {
     group
-      .on('mouseover', function () {
+      .on('pointerenter', function () {
         select(this).raise();
       })
-      .on('mouseout', function () {
+      .on('pointerleave', function () {
         select(this);
       });
   }

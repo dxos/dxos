@@ -58,10 +58,10 @@ svg {
         circle {
           @apply opacity-50;
         }
-        rect {
+        &:not([data-hover="handled"]) rect {
           @apply visible stroke-neutral-700 dark:stroke-neutral-700;
         }
-        text {
+        &:not([data-hover="handled"]) text {
           @apply visible fill-neutral-200 dark:fill-neutral-500;
         }      
       }
