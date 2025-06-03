@@ -4,9 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { defineTool, Message } from '@dxos/artifact';
-import { type AIServiceClient } from '@dxos/assistant';
-import { MixedStreamParser } from '@dxos/assistant';
+import { defineTool, Message, type AIServiceClient, MixedStreamParser } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import { create } from '@dxos/echo-schema';
 import { failedInvariant } from '@dxos/invariant';

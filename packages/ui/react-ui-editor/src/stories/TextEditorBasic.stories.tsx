@@ -13,32 +13,32 @@ import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import {
   EditorStory,
-  defaultExtensions,
   allExtensions,
-  text,
-  str,
   content,
-  longText,
-  largeWithImages,
-  headings,
+  defaultExtensions,
   global,
+  headings,
+  largeWithImages,
+  links,
+  longText,
+  names,
   renderLinkButton,
   renderLinkTooltip,
-  links,
-  names,
+  str,
+  text,
 } from './story-utils';
 import { editorMonospace } from '../defaults';
 import {
   InputModeExtensions,
-  selectionState,
+  autocomplete,
   decorateMarkdown,
   folding,
   image,
   linkTooltip,
-  table,
-  autocomplete,
   mention,
   outliner,
+  selectionState,
+  table,
 } from '../extensions';
 import { listItemToString, treeFacet } from '../extensions/outliner/tree';
 

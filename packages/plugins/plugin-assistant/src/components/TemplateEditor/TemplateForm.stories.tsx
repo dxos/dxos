@@ -41,7 +41,7 @@ const DefaultStory = () => {
 };
 
 const meta: Meta<typeof TemplateForm> = {
-  title: 'plugins/plugin-automation/TemplateForm',
+  title: 'plugins/plugin-assistant/TemplateForm',
   component: TemplateForm,
   render: DefaultStory,
   decorators: [

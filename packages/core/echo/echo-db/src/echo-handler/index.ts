@@ -9,3 +9,4 @@ export * from './util';
 export * from './clone';
 export * from './edit-history';
 export * from './version';
+export * from './relations';

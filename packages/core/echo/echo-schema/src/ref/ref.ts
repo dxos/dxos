@@ -223,6 +223,7 @@ export const createEchoReferenceSchema = (
     schemaVersion: version,
   };
 
+  // TODO(dmaretskyi): Add name and description.
   const refSchema = Schema.declare<Ref<any>, EncodedReference, []>(
     [],
     {

@@ -75,6 +75,7 @@ export type ForceCollideOptions = {
  * https://github.com/d3/d3-force#forceRadial
  */
 export type ForceRadialOptions = {
+  delay?: number;
   x?: number;
   y?: number;
   radius?: number;
@@ -148,7 +149,7 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
 
   override onUpdate(data?: Graph) {
     this.mergeData(data);
-    this.updateForces();
+    this.updateForces(this.options.forces);
 
     // Guides.
     this._layout.guides = this.options.guides
@@ -265,7 +266,18 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
   }
 
   override async onStart() {
-    this.updateForces();
+    // TODO(burdon): Generalize.
+    // Delay radial force until other forces have settled.
+    const { radial, ...forces } = this.options.forces ?? {};
+    if (typeof radial === 'boolean' || !radial?.delay) {
+      this.updateForces(this.options.forces);
+    } else {
+      this.updateForces(forces);
+      setTimeout(() => {
+        this._simulation.alphaTarget(0).alpha(1).restart();
+        this.updateForces(this.options.forces);
+      }, radial.delay);
+    }
 
     this._simulation
       .on('tick', () => {
@@ -288,9 +300,7 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
   /**
    * Update all forces.
    */
-  private updateForces() {
-    const forces = this.options.forces;
-
+  private updateForces(forces: ForceOptions) {
     // https://github.com/d3/d3-force#simulation_force
     this._simulation
 

@@ -4,8 +4,8 @@
 
 import { useState } from 'react';
 
-import { AIServiceEdgeClient } from '@dxos/assistant';
-import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
+import { AIServiceEdgeClient } from '@dxos/ai';
+import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { getSchema, getTypename } from '@dxos/echo-schema';
 import type { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';

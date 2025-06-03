@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { AIServiceEdgeClient, Message, type Tool } from '@dxos/ai';
 import {
   Capabilities,
   Events,
@@ -17,9 +18,7 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Message, type Tool } from '@dxos/artifact';
-import { genericTools, localServiceEndpoints } from '@dxos/artifact-testing';
-import { AIServiceEdgeClient } from '@dxos/assistant';
+import { genericTools, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { DXN, Type } from '@dxos/echo';
 import { createQueueDxn, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -30,7 +29,8 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
-import { useQueue, useSpace } from '@dxos/react-client/echo';
+import { useClient } from '@dxos/react-client';
+import { useQueue } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -40,7 +40,8 @@ import { ChatProcessor } from '../../hooks';
 import { createProcessorOptions } from '../../testing';
 import translations from '../../translations';
 
-const endpoints = localServiceEndpoints;
+// const endpoints = localServiceEndpoints;
+const endpoints = remoteServiceEndpoints;
 
 type RenderProps = {
   items?: Type.AnyObject[];
@@ -49,7 +50,9 @@ type RenderProps = {
 
 // TODO(burdon): Use ChatContainer.
 const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) => {
-  const space = useSpace();
+  const client = useClient();
+  const space = client.spaces.default;
+
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const tools = useMemo<Tool[]>(() => [...genericTools], []);
 
@@ -76,7 +79,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [aiClient, tools, space, dispatch, artifactDefinitions]);
 
   // Queue.
-  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn().toString());
+  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
   useEffect(() => {
@@ -201,7 +204,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'plugins/plugin-automation/ThreadContainer',
+  title: 'plugins/plugin-assistant/ThreadContainer',
   render: DefaultStory,
   decorators: [
     withPluginManager({

@@ -5,7 +5,6 @@
 export { TranscriptionCapabilities } from './capabilities';
 
 export * from './components';
-export * from './entity-extraction';
 export * from './hooks';
 export * from './meta';
 export * from './transcriber';

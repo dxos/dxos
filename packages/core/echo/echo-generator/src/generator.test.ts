@@ -60,14 +60,14 @@ describe('TestObjectGenerator', () => {
       const generator = createSpaceObjectGenerator(space);
       await generator.addSchemas();
       const organization = await generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(getType(organization)!.asEchoDXN()!.echoId!);
+      schemaId.push(getType(organization)!.toString());
     }
 
     {
       const generator = createSpaceObjectGenerator(space);
       await generator.addSchemas();
       const organization = await generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(getType(organization)!.asEchoDXN()!.echoId!);
+      schemaId.push(getType(organization)!.toString());
     }
 
     expect(schemaId[0]).not.to.be.undefined;
@@ -123,5 +123,32 @@ describe('TestObjectGenerator', () => {
 
     const todo = await generator.createObject({ types: [Types.task] });
     expect(getType(todo)).to.exist;
+  });
+
+  test('references', async () => {
+    const { space } = await setupTest();
+    const generator = createSpaceObjectGenerator(space);
+    await generator.addSchemas();
+
+    // Create raw object.
+    const objects = await generator.createObjects({
+      [TestSchemaType.organization]: 1,
+      [TestSchemaType.contact]: 1,
+    });
+    expect(objects).to.exist;
+    expect(objects.length).to.be.eq(2);
+  });
+
+  test('create project', async () => {
+    const generator = createTestObjectGenerator();
+    const project = await generator.createObject({ types: [TestSchemaType.project] });
+    expect(getType(project)).to.exist;
+  });
+
+  test('create object with not type', async () => {
+    // TODO(burdon): Create Client/spaces.
+    const generator = createTestObjectGenerator();
+
+    await generator.createObject();
   });
 });

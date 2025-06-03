@@ -4,8 +4,9 @@
 
 import { Schema } from 'effect';
 
+import { defineTool, ToolResult } from '@dxos/ai';
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { ArtifactId, defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
+import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { invariant, assertArgument } from '@dxos/invariant';
 import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';

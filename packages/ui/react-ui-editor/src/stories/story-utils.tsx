@@ -311,7 +311,7 @@ export const EditorStory = ({
   }, [view]);
 
   return (
-    <div className='w-full h-full grid grid-cols-[1fr_600px] overflow-hidden'>
+    <div className={mx('w-full h-full grid overflow-hidden', debug && 'grid-cols-[1fr_600px]')}>
       <div role='none' className='flex overflow-hidden' ref={parentRef} {...focusAttributes} />
       {debug && (
         <div className='grid h-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'>

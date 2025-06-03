@@ -4,8 +4,9 @@
 
 import React, { useState, useEffect, Fragment, type FC } from 'react';
 
+import { parseToolName, type Tool } from '@dxos/ai';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
-import { parseToolName, type ArtifactDefinition, type Tool } from '@dxos/artifact';
+import { type ArtifactDefinition } from '@dxos/artifact';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';

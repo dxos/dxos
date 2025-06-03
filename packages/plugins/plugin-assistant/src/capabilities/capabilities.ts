@@ -4,8 +4,8 @@
 
 import { type ReadonlySignal } from '@preact/signals-core';
 
+import { type AIServiceClient } from '@dxos/ai';
 import { defineCapability } from '@dxos/app-framework';
-import { type AIServiceClient } from '@dxos/assistant';
 
 import { ASSISTANT_PLUGIN } from '../meta';
 

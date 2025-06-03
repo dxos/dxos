@@ -4,12 +4,14 @@
 
 import { type RefObject } from 'react';
 
+import { invariant } from '@dxos/invariant';
+
 import { defaultIdAccessor, type IdAccessor } from './types';
 import { type SVGContext } from '../hooks';
 
-export type RendererOptions = {
+export type RendererOptions<T = any> = {
   idAccessor: IdAccessor;
-};
+} & T;
 
 /**
  * Base class for renderer that draw layouts.
@@ -19,7 +21,7 @@ export abstract class Renderer<LAYOUT, OPTIONS extends RendererOptions> {
 
   constructor(
     protected readonly _context: SVGContext,
-    protected readonly _ref: RefObject<SVGGElement>,
+    protected readonly _root: RefObject<SVGGElement>,
     options?: Partial<OPTIONS>,
   ) {
     this._options = Object.assign(
@@ -35,12 +37,13 @@ export abstract class Renderer<LAYOUT, OPTIONS extends RendererOptions> {
   }
 
   get root(): SVGGElement {
-    return this._ref.current;
+    invariant(this._root.current, 'SVG root is not initialized');
+    return this._root.current;
   }
 
   get options() {
     return this._options;
   }
 
-  abstract update(layout: LAYOUT);
+  abstract update(layout: LAYOUT): void;
 }

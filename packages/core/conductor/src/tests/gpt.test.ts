@@ -6,8 +6,8 @@ import { it } from '@effect/vitest';
 import { Cause, Chunk, Console, Effect, Exit, Fiber, Option, Scope, Stream } from 'effect';
 import { describe, expect, test, type TaskContext } from 'vitest';
 
-import { AIServiceEdgeClient, OllamaClient, ToolTypes, type GenerationStreamEvent } from '@dxos/assistant';
-import { createTestOllamaClient } from '@dxos/assistant/testing';
+import { AIServiceEdgeClient, OllamaClient, ToolTypes, type GenerationStreamEvent } from '@dxos/ai';
+import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT, registry, type GptInput } from '../nodes';
@@ -17,7 +17,6 @@ import { ComputeGraphModel, makeValueBag, unwrapValueBag, type ValueEffect } fro
 
 const ENABLE_LOGGING = true;
 const SKIP_AI_SERVICE_TESTS = true;
-const AI_SERVICE_ENDPOINT = 'http://localhost:8788';
 
 describe.skip('GPT pipelines', () => {
   it.effect('text output', ({ expect }) =>
@@ -120,7 +119,7 @@ describe.skip('GPT pipelines', () => {
             Effect.provide(
               testServices({
                 enableLogging: ENABLE_LOGGING,
-                gpt: new EdgeGpt(new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT })),
+                gpt: new EdgeGpt(new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL })),
               }),
             ),
             Scope.extend(scope),
@@ -157,7 +156,7 @@ describe.skip('GPT pipelines', () => {
             Effect.provide(
               testServices({
                 enableLogging: ENABLE_LOGGING,
-                gpt: new EdgeGpt(new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT })),
+                gpt: new EdgeGpt(new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL })),
               }),
             ),
             Scope.extend(scope),
@@ -203,7 +202,7 @@ describe.skip('GPT pipelines', () => {
         Effect.provide(
           testServices({
             enableLogging: ENABLE_LOGGING,
-            gpt: new EdgeGpt(new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT })),
+            gpt: new EdgeGpt(new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL })),
           }),
         ),
       );

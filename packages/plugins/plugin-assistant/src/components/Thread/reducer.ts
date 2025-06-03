@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Message } from '@dxos/artifact';
+import { type Message } from '@dxos/ai';
 
 // TODO(burdon): Move to util?
 type Reducer<R, I> = (acc: R, value: I) => R;

@@ -7,10 +7,11 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { AIServiceEdgeClient } from '@dxos/ai';
+import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AIServiceEdgeClient } from '@dxos/assistant';
-import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
+import { processTranscriptMessage } from '@dxos/assistant';
 import { Filter, MemoryQueue } from '@dxos/echo-db';
 import { create, createQueueDxn } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -28,33 +29,44 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
-import { processTranscriptMessage } from '../../entity-extraction';
 import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { TestItem } from '../../testing';
 import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
 import { renderMarkdown } from '../Transcript';
 
+const TRANSCRIBER_CONFIG = {
+  transcribeAfterChunksAmount: 50,
+  prefixBufferChunksAmount: 10,
+};
+
+const RECORDER_CONFIG = {
+  interval: 200,
+};
+
 const aiService = new AIServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.REMOTE,
 });
 
-const MicrophoneStory = ({
-  detectSpeaking,
-  entityExtraction,
-  transcriberConfig,
-  recorderConfig,
-  audioConstraints,
-}: {
+type DefaultStoryProps = {
   detectSpeaking?: boolean;
   entityExtraction?: boolean;
   transcriberConfig: TranscriberParams['config'];
   recorderConfig: MediaStreamRecorderParams['config'];
   audioConstraints?: MediaTrackConstraints;
-}) => {
+};
+
+const DefaultStory = ({
+  detectSpeaking,
+  entityExtraction,
+  transcriberConfig,
+  recorderConfig,
+  audioConstraints,
+}: DefaultStoryProps) => {
   const [running, setRunning] = useState(false);
 
   // Audio.
   const track = useAudioTrack(running, audioConstraints);
+
   // Speaking.
   const isSpeaking = detectSpeaking ? useIsSpeaking(track) : true;
 
@@ -131,8 +143,9 @@ const MicrophoneStory = ({
   return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} />;
 };
 
-const meta: Meta<typeof MicrophoneStory> = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-transcription/MicrophoneTranscription',
+  render: DefaultStory,
   decorators: [
     withPluginManager({
       plugins: [
@@ -162,17 +175,9 @@ const meta: Meta<typeof MicrophoneStory> = {
 
 export default meta;
 
-const TRANSCRIBER_CONFIG = {
-  transcribeAfterChunksAmount: 50,
-  prefixBufferChunksAmount: 10,
-};
+type Story = StoryObj<typeof DefaultStory>;
 
-const RECORDER_CONFIG = {
-  interval: 200,
-};
-
-export const Default: StoryObj<typeof MicrophoneStory> = {
-  render: MicrophoneStory,
+export const Default: Story = {
   args: {
     detectSpeaking: false,
     entityExtraction: false,
@@ -186,8 +191,7 @@ export const Default: StoryObj<typeof MicrophoneStory> = {
   },
 };
 
-export const EntityExtraction: StoryObj<typeof MicrophoneStory> = {
-  render: MicrophoneStory,
+export const EntityExtraction: Story = {
   args: {
     detectSpeaking: false,
     entityExtraction: true,
@@ -201,8 +205,7 @@ export const EntityExtraction: StoryObj<typeof MicrophoneStory> = {
   },
 };
 
-export const SpeechDetection: StoryObj<typeof MicrophoneStory> = {
-  render: MicrophoneStory,
+export const SpeechDetection: Story = {
   args: {
     detectSpeaking: true,
     transcriberConfig: TRANSCRIBER_CONFIG,
