@@ -6,17 +6,28 @@ import { Schema } from 'effect';
 
 import { ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { ObjectId } from '@dxos/keys';
 import { type Comparator, intersection } from '@dxos/util';
 
 import type { BaseObject } from '../types';
 
 //
 // ObjectMeta
-//
+// `
 
 // TODO(dmaretskyi): Rename to ObjectMeta
 export const ObjectMetaSchema = Schema.Struct({
+  /**
+   * Keys of this object in foreign systems.
+   */
   keys: Schema.mutable(Schema.Array(ForeignKey)),
+
+  /**
+   * This object is a newer version of the objects that it succeeds.
+   *
+   * The specifics of how "succession" works is left to the specific application.
+   */
+  succeeds: Schema.mutable(Schema.Array(ObjectId)),
 });
 
 export type ObjectMeta = Schema.Schema.Type<typeof ObjectMetaSchema>;

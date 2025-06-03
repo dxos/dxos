@@ -9,6 +9,7 @@ import { ObjectId } from '@dxos/keys';
 
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
+import { ObjectMeta, symbolMeta } from './meta';
 import { setTypename } from './typename';
 import { getSchemaDXN, getTypeAnnotation, setSchema } from '../ast';
 
@@ -62,5 +63,11 @@ export const create = <S extends Schema.Schema.AnyNoContext>(
   setSchema(obj, schema);
   attachTypedJsonSerializer(obj);
   attachedTypedObjectInspector(obj);
+  // TODO(dmaretskyi): Allow to be passed in.
+  Object.defineProperty(obj, symbolMeta, {
+    value: { keys: [], succeeds: [] } satisfies ObjectMeta,
+    writable: false,
+    enumerable: false,
+  });
   return obj;
 };
