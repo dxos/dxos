@@ -4,6 +4,7 @@
 
 import { Schema } from 'effect';
 
+import { defineTool, ToolResult } from '@dxos/ai';
 import {
   contributes,
   createIntent,
@@ -11,7 +12,6 @@ import {
   LayoutAction,
   type PromiseIntentDispatcher,
 } from '@dxos/app-framework';
-import { defineTool, ToolResult } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '../meta';

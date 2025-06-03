@@ -6,8 +6,9 @@ import { type Registry } from '@effect-rx/rx-react';
 import { type Schema } from 'effect';
 import { type FC, type PropsWithChildren } from 'react';
 
+import { type Tool } from '@dxos/ai';
 import { type GraphBuilder, type BuilderExtensions } from '@dxos/app-graph';
-import { type ArtifactDefinition, type Tool } from '@dxos/artifact';
+import { type ArtifactDefinition } from '@dxos/artifact';
 import { type Space } from '@dxos/client-protocol';
 import { type RootSettingsStore } from '@dxos/local-storage';
 

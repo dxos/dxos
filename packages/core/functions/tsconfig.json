@@ -35,9 +35,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../experimental/assistant"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
@@ -45,6 +42,9 @@
     },
     {
       "path": "../agent"
+    },
+    {
+      "path": "../ai"
     },
     {
       "path": "../echo/echo-db"

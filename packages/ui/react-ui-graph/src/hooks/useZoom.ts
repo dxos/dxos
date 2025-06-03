@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { select, type ZoomTransform, zoom, zoomIdentity } from 'd3';
+import { select, zoom, type ZoomBehavior, zoomIdentity, type ZoomTransform } from 'd3';
 import defaultsDeep from 'lodash.defaultsdeep';
 import { type RefObject, useEffect, useMemo, useRef } from 'react';
 
@@ -26,7 +26,7 @@ const defaultZoomOptions: ZoomOptions = {
  * Zoom API.
  */
 export class ZoomHandler {
-  private readonly _zoom;
+  private readonly _zoom: ZoomBehavior<SVGGElement, unknown>;
   private readonly _options: ZoomOptions;
   private _enabled: boolean;
 
@@ -39,7 +39,7 @@ export class ZoomHandler {
     this._enabled = this._options.enabled ?? true;
 
     // https://github.com/d3/d3-zoom#zoom
-    this._zoom = zoom().scaleExtent(this._options.extent ?? (defaultZoomOptions.extent as any));
+    this._zoom = zoom<SVGGElement, unknown>().scaleExtent(this._options.extent ?? (defaultZoomOptions.extent as any));
   }
 
   /**
@@ -101,11 +101,11 @@ export class ZoomHandler {
 export const useZoom = (options: ZoomOptions = defaultZoomOptions): ZoomHandler => {
   const context = useSvgContext();
   const ref = useRef<SVGGElement>(null);
-  const handler = useMemo(() => new ZoomHandler(ref, context, options), []);
+  const handler = useMemo(() => new ZoomHandler(ref, context, options), [context, options]);
 
+  // TODO(burdon): Distinguish between zoom and pan.
   useEffect(() => {
     // Transform container.
-    // TODO(burdon): Implement momentum.
     handler.zoom.on('zoom', ({ transform }: { transform: ZoomTransform }) => {
       context.setTransform(transform); // Fires the resize event (e.g., to update grid).
       select(ref.current!).attr('transform', transform as any);

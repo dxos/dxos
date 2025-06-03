@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import jsonpointer from 'jsonpointer';
 import { type OpenAPIV2, type OpenAPIV3_1 } from 'openapi-types';
 
-import { ToolResult, type Tool } from '@dxos/artifact';
+import { ToolResult, type Tool } from '@dxos/ai';
 import { JsonSchemaType, normalizeSchema, toEffectSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

@@ -4,8 +4,8 @@
 
 import { effect, signal } from '@preact/signals-core';
 
+import { type AIServiceClient, AIServiceEdgeClient, OllamaClient } from '@dxos/ai';
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { type AIServiceClient, AIServiceEdgeClient, OllamaClient } from '@dxos/assistant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { AssistantCapabilities } from './capabilities';

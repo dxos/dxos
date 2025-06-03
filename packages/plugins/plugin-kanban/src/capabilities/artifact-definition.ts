@@ -4,8 +4,9 @@
 
 import { Schema, pipe } from 'effect';
 
+import { defineTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
+import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';

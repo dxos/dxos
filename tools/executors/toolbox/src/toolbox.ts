@@ -390,7 +390,6 @@ export class Toolbox {
       }
 
       const allDepsFromRoot = this.graph.getTransitiveWorkspaceDeps(roots);
-
       const missingPackages = this.graph.projects.filter(
         (project) =>
           !roots.includes(project.name) &&
@@ -402,7 +401,7 @@ export class Toolbox {
       );
       if (missingPackages.length > 0) {
         console.error(
-          `These packages must be included in the tsconfig.paths.json file because their dependencies are included:\n${missingPackages
+          `These packages must be included in the path mapping config file because their dependencies are included:\n${missingPackages
             .map(
               (p) =>
                 `${relative(this.rootDir, p.path)} because it depends on ${this.graph

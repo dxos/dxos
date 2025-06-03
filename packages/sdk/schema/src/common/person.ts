@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { Format, GeneratorAnnotationId } from '@dxos/echo-schema';
+import { Format, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
 
 import { Organization } from './organization';
 import { PostalAddress } from './postal-address';
@@ -107,6 +107,9 @@ export const Person = PersonSchema.pipe(
     typename: 'dxos.org/type/Person',
     version: '0.1.0',
   }),
-);
+).annotations({
+  description: 'A person.',
+  [LabelAnnotationId]: ['preferredName', 'fullName', 'nickname'],
+});
 
 export interface Person extends Schema.Schema.Type<typeof Person> {}

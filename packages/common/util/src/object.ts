@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export const keys = <K extends keyof any>(obj: Record<K, any>): K[] => Object.keys(obj) as K[];
+export const keys = <R>(obj: R): (keyof R)[] => Object.keys(obj as any) as (keyof R)[];
 
-export const entries = <K extends keyof any, V>(obj: Record<K, V>): [K, V][] => Object.entries(obj) as [K, V][];
+export const entries = <R>(obj: R): [keyof R, R[keyof R]][] => Object.entries(obj as any) as [keyof R, any][];

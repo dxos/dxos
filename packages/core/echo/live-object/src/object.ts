@@ -15,7 +15,6 @@ import {
   ObjectMetaSchema,
 } from '@dxos/echo-schema';
 import { symbolMeta } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 
 import type { Live } from './live';
 import { createProxy, isValidProxyTarget } from './proxy';
@@ -79,8 +78,14 @@ const createReactiveObject = <T extends BaseObject>(
  * Used for objects with schema and the ones explicitly marked as Expando.
  */
 const setIdOnTarget = (target: any) => {
-  invariant(!('id' in target), 'Object already has an `id` field, which is reserved.');
-  target.id = ObjectId.random();
+  // invariant(!('id' in target), 'Object already has an `id` field, which is reserved.');
+  if ('id' in target) {
+    if (!ObjectId.isValid(target.id)) {
+      throw new Error('Invalid object id format.');
+    }
+  } else {
+    target.id = ObjectId.random();
+  }
 };
 
 /**

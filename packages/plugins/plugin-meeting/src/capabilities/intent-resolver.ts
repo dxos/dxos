@@ -4,8 +4,8 @@
 
 import { Effect } from 'effect';
 
+import { AIServiceEdgeClient } from '@dxos/ai';
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
-import { AIServiceEdgeClient } from '@dxos/assistant';
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';

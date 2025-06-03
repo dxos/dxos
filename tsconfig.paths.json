@@ -7,6 +7,12 @@
       "@dxos/storybook-utils": [
         "packages/common/storybook-utils/src/index.ts"
       ],
+      "@dxos/artifact-testing": [
+        "packages/core/artifact-testing/src/index.ts"
+      ],
+      "@dxos/assistant": [
+        "packages/core/assistant/src/index.ts"
+      ],
       "@dxos/compute": [
         "packages/core/compute/src/index.ts"
       ],
@@ -30,15 +36,6 @@
       ],
       "@dxos/devtools": [
         "packages/devtools/devtools/src/index.ts"
-      ],
-      "@dxos/artifact-testing": [
-        "packages/experimental/artifact-testing/src/index.ts"
-      ],
-      "@dxos/assistant": [
-        "packages/experimental/assistant/src/index.ts"
-      ],
-      "@dxos/assistant/testing": [
-        "packages/experimental/assistant/src/testing/index.ts"
       ],
       "@dxos/plugin-assistant": [
         "packages/plugins/plugin-assistant/src/index.ts"
@@ -285,6 +282,24 @@
       ],
       "@dxos/shell/testing": [
         "packages/sdk/shell/src/testing/index.ts"
+      ],
+      "@dxos/lit-grid": [
+        "packages/ui/lit-grid/src/index.ts"
+      ],
+      "@dxos/lit-grid/testing": [
+        "packages/ui/lit-grid/src/testing/index.ts"
+      ],
+      "@dxos/lit-theme-editor": [
+        "packages/ui/lit-theme-editor/src/index.ts"
+      ],
+      "@dxos/lit-theme-editor/testing": [
+        "packages/ui/lit-theme-editor/src/testing/index.ts"
+      ],
+      "@dxos/lit-ui": [
+        "packages/ui/lit-ui/src/index.ts"
+      ],
+      "@dxos/lit-ui/testing": [
+        "packages/ui/lit-ui/src/testing/index.ts"
       ],
       "@dxos/react-ui": [
         "packages/ui/react-ui/src/index.ts"
