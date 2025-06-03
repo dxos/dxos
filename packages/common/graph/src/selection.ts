@@ -12,6 +12,12 @@ export class SelectionModel {
   private readonly _selected: Signal<Set<string>> = signal(new Set<string>());
   private readonly _selectedIds = computed(() => Array.from(this._selected.value.values()));
 
+  toJSON() {
+    return {
+      selected: Array.from(this._selected.value.values()),
+    };
+  }
+
   get size(): number {
     return this._selected.value.size;
   }

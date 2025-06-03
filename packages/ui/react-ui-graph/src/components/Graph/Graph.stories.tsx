@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type StoryObj } from '@storybook/react';
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
@@ -65,7 +65,7 @@ const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: Defaul
         </SVG.Zoom>
       </SVG.Root>
 
-      {debug && <Debug model={model} />}
+      {debug && <Debug model={model} selected={selected} />}
     </div>
   );
 };
@@ -84,6 +84,7 @@ type Story = StoryObj<DefaultStoryProps>;
 
 export const Default: Story = {
   args: {
+    debug: true,
     graph: convertTreeToGraph(createTree({ depth: 4 })),
     drag: true,
     arrows: true,
@@ -93,6 +94,7 @@ export const Default: Story = {
 
 export const Force: Story = {
   args: {
+    debug: true,
     graph: convertTreeToGraph(createTree({ depth: 5 })),
     drag: true,
     delay: 500,
@@ -129,6 +131,7 @@ export const Force: Story = {
 
 export const Select = {
   args: {
+    debug: true,
     graph: createGraph(150, 50),
     drag: true,
     projectorOptions: {
@@ -142,7 +145,14 @@ export const Select = {
   },
 };
 
-// TODO(burdon): Very expensive.
-const Debug = ({ model }: { model: GraphModel }) => {
-  return <JsonFilter data={model.toJSON()} classNames='text-sm' />;
+const Debug = ({ model, selected }: { model: GraphModel; selected: SelectionModel }) => {
+  const [data, setData] = useState({});
+  useEffect(() => {
+    setData({
+      model: model.toJSON(),
+      selected: selected.toJSON(),
+    });
+  }, [model, selected]);
+
+  return <JsonFilter data={data} classNames='text-sm' />;
 };
