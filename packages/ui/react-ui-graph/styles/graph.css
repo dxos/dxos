@@ -34,6 +34,12 @@ svg {
       }
     }
 
+    g.dx-subgraphs {
+      path.dx-subgraph {
+        @apply stroke-red-500 fill-neutral-100 dark:fill-neutral-900 [stroke-dasharray:4_4];
+      }
+    }
+
     g.dx-nodes {
       g.dx-node {
         circle {

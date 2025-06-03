@@ -135,11 +135,28 @@ export const Force: Story = {
   },
 };
 
-export const Select = {
+export const Select: Story = {
   args: {
     debug: true,
     graph: createGraph(150, 50),
     drag: true,
+    projectorOptions: {
+      forces: {
+        radial: {
+          radius: 200,
+          strength: 0.05,
+        },
+      },
+    },
+  },
+};
+
+export const Groups: Story = {
+  args: {
+    debug: true,
+    graph: createGraph(50, 30),
+    drag: true,
+    subgraphs: true,
     projectorOptions: {
       forces: {
         radial: {
@@ -162,5 +179,9 @@ const Debug = ({ model, selected }: { model: GraphModel; selected: SelectionMode
     });
   }, [model, selected]);
 
-  return <JsonFilter data={data} classNames='text-sm' />;
+  return (
+    <div>
+      <JsonFilter data={data} classNames='text-sm' />;
+    </div>
+  );
 };
