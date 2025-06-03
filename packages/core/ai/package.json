@@ -55,6 +55,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
     "parjs": "^1.3.9",
     "parsimmon": "^1.18.1"
   },
