@@ -4,6 +4,8 @@
 
 import { Schema } from 'effect';
 
+import { SpaceSchema } from '@dxos/react-client/echo';
+
 import { AIChatType } from './chat';
 import { TemplateType } from './template';
 import { ASSISTANT_PLUGIN } from '../meta';
@@ -13,7 +15,7 @@ export namespace AssistantAction {
 
   export class CreateChat extends Schema.TaggedClass<CreateChat>()(`${ASSISTANT_ACTION}/create-chat`, {
     input: Schema.Struct({
-      spaceId: Schema.optional(Schema.String),
+      space: SpaceSchema,
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
