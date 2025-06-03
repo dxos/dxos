@@ -10,6 +10,7 @@ import { getDescriptionAnnotation } from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineTool, AIServiceEdgeClient, Message, ToolResult, type Tool } from '@dxos/ai';
+import { SpyAIService } from '@dxos/ai/testing';
 import {
   contributes,
   createSurface,
@@ -55,6 +56,15 @@ import { TablePlugin } from '@dxos/plugin-table';
 import { Config, useClient } from '@dxos/react-client';
 import { live, useQueue, useQuery, type Live, type EchoDatabase, getSpace } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncState } from '@dxos/react-ui';
+import {
+  type ActionGraphProps,
+  useMenuActions,
+  createMenuAction,
+  ToolbarMenu,
+  MenuProvider,
+  createMenuItemGroup,
+  type ToolbarMenuActionGroupProperties,
+} from '@dxos/react-ui-menu';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { SpaceGraphModel } from '@dxos/schema';
@@ -81,14 +91,18 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const space = client.spaces.default;
   const [aiClient] = useState(
     () =>
-      new AIServiceEdgeClient({
-        endpoint: endpoints.ai,
-        defaultGenerationOptions: {
-          // model: '@anthropic/claude-sonnet-4-20250514',
-          model: '@anthropic/claude-3-5-sonnet-20241022',
-        },
-      }),
+      new SpyAIService(
+        new AIServiceEdgeClient({
+          endpoint: endpoints.ai,
+          defaultGenerationOptions: {
+            // model: '@anthropic/claude-sonnet-4-20250514',
+            model: '@anthropic/claude-3-5-sonnet-20241022',
+          },
+        }),
+      ),
   );
+  const actionCreator = useCallback(() => createToolbar(aiClient), [aiClient]);
+  const menuProps = useMenuActions(actionCreator);
 
   // Queue.
   // TODO(burdon): For testing use env.
@@ -249,6 +263,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     <div className={mx('grid w-full h-full grid-cols-3 overflow-hidden divide-x divide-separator')}>
       {/* Thread */}
       <div className='flex flex-col h-full gap-4 outline outline-separator overflow-hidden'>
+        {/* TODO(wittjosiah): Use react-ui-menu toolbar. */}
         <Toolbar.Root classNames='p-2'>
           <Input.Root>
             <Input.TextInput
@@ -291,6 +306,10 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
       {/* Artifacts Deck */}
       <div className='flex flex-col overflow-y-auto'>
+        {/* TODO(wittjosiah): Combine with thread toolbar. */}
+        <MenuProvider {...menuProps}>
+          <ToolbarMenu />
+        </MenuProvider>
         {objects.map((object) => (
           <div
             key={object.id}
@@ -463,4 +482,41 @@ const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
     [RelationSourceId]: source,
     [RelationTargetId]: target,
   });
+};
+
+const createToolbar = (aiClient: SpyAIService) => {
+  const result: ActionGraphProps = { nodes: [], edges: [] };
+  const save = createMenuAction('save', () => aiClient.saveEvents(), {
+    label: 'Save events',
+    icon: 'ph--floppy-disk--regular',
+  });
+  const load = createMenuAction('load', () => aiClient.loadEvents(), {
+    label: 'Load events',
+    icon: 'ph--folder-open--regular',
+  });
+  const modes = createMenuItemGroup('mode', {
+    variant: 'dropdownMenu',
+    applyActive: true,
+    selectCardinality: 'single',
+    value: aiClient.mode,
+  } as ToolbarMenuActionGroupProperties);
+  const spy = createMenuAction('spy', () => aiClient.setMode('spy'), {
+    label: 'Spy',
+    icon: 'ph--detective--regular',
+    checked: aiClient.mode === 'spy',
+  });
+  const mock = createMenuAction('mock', () => aiClient.setMode('mock'), {
+    label: 'Mock',
+    icon: 'ph--rewind--regular',
+    checked: aiClient.mode === 'mock',
+  });
+  result.nodes.push(save, load, modes, spy, mock);
+  result.edges.push(
+    { source: 'root', target: save.id },
+    { source: 'root', target: load.id },
+    { source: 'root', target: modes.id },
+    { source: modes.id, target: spy.id },
+    { source: modes.id, target: mock.id },
+  );
+  return result;
 };
