@@ -61,8 +61,7 @@
         "packages/sdk/app-graph",
         "packages/sdk/migrations",
         "packages/sdk/shell",
-        "packages/ui/react-ui*",
-        "packages/ui/lit-*"
+        "packages/ui/react-ui*"
       ]
     },
     "noProjectReferences": false
