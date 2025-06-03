@@ -24,7 +24,7 @@ describe('complex schema validations', () => {
   test('meta', () => {
     const source = 'test';
     const schema = Schema.Struct({ field: Schema.Number });
-    const object = live(schema, { field: 42 }, { keys: [foreignKey(source, '123')] });
+    const object = live(schema, { field: 42 }, { keys: [foreignKey(source, '123')], succeeds: [] });
     expect(getMeta(object).keys).to.deep.eq([foreignKey(source, '123')]);
   });
 

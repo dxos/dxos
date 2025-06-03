@@ -91,7 +91,7 @@ const setIdOnTarget = (target: any) => {
 /**
  * Set metadata on object.
  */
-const initMeta = <T>(obj: T, meta: ObjectMeta = { keys: [] }) => {
+const initMeta = <T>(obj: T, meta: ObjectMeta = { keys: [], succeeds: [] }) => {
   prepareTypedTarget(meta, ObjectMetaSchema);
   defineHiddenProperty(obj, symbolMeta, createProxy(meta, TypedReactiveHandler.instance as any));
 };
