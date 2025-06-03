@@ -3,6 +3,7 @@
   "compilerOptions": {},
   "include": [
     "src",
+    "bin",
     "src/**/*.json"
   ],
   "references": []

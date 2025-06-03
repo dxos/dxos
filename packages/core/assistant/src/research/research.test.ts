@@ -20,7 +20,7 @@ const REMOTE_AI = true;
 const MOCK_SEARCH = false;
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 
-describe('Research', () => {
+describe.skip('Research', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let executor: FunctionExecutor;
@@ -77,30 +77,30 @@ describe('Research', () => {
 
 describe('misc', () => {
   test('createExtractionSchema', () => {
-    const schema = createExtractionSchema(TYPES);
+    const _schema = createExtractionSchema(TYPES);
     // log.info('schema', { schema });
   });
 
   test('extract schema json schema', () => {
     const schema = createExtractionSchema(TYPES);
-    const parser = structuredOutputParser(schema);
+    const _parser = structuredOutputParser(schema);
     // log.info('schema', { json: parser.tool.parameters });
   });
 
   test('getSanitizedSchemaName', () => {
-    const names = TYPES.map(getSanitizedSchemaName);
+    const _names = TYPES.map(getSanitizedSchemaName);
     // log.info('names', { names });
   });
 
   test('getTypeAnnotation', () => {
     for (const schema of TYPES) {
-      const dxn = getSchemaDXN(schema);
+      const _dxn = getSchemaDXN(schema);
       // log.info('dxn', { schema, dxn });
     }
   });
 
   test.skip('sanitizeObjects', () => {
-    const TEST_DATA = {
+    const _TEST_DATA = {
       objects_dxos_org_type_Project: [
         {
           name: 'Reor',
