@@ -48,6 +48,8 @@ describe('Config hook', () => {
       await waitForCondition({ condition: () => client.status.get() === SystemStatus.ACTIVE });
     });
     await expect.poll(() => result.current).toBeDefined();
+    // TODO(burdon): Flaky.
+    //  TypeError: Cannot read properties of null (reading 'get')
     expect(result.current.get('runtime.client.storage')).toEqual(config.get('runtime.client.storage'));
   });
 });
