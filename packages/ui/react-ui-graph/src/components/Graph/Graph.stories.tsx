@@ -4,15 +4,16 @@
 
 import '@dxos-theme';
 
+import { effect } from '@preact/signals-core';
 import { type StoryObj } from '@storybook/react';
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Graph as GraphComponent, type GraphProps } from './Graph';
+import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
 import { GraphForceProjector, type GraphForceProjectorOptions, type GraphLayoutNode } from '../../graph';
 import { type SVGContext } from '../../hooks';
 import { convertTreeToGraph, createGraph, createTree, TestGraphModel, type TestNode } from '../../testing';
@@ -35,6 +36,9 @@ const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: Defaul
     () => context.current && projectorOptions && new GraphForceProjector(context.current, projectorOptions),
     [context.current, projectorOptions],
   );
+  const graphRef = useRef<GraphController | null>(null);
+
+  console.log(selected.toJSON());
 
   return (
     <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
@@ -43,6 +47,7 @@ const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: Defaul
         {grid && <SVG.Grid axis />}
         <SVG.Zoom extent={[1 / 4, 4]}>
           <GraphComponent
+            ref={graphRef}
             model={model}
             projector={projector}
             labels={{
@@ -50,22 +55,26 @@ const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: Defaul
             }}
             attributes={{
               node: (node: GraphLayoutNode<TestNode>) => ({
-                class: selected.contains(node.id) ? 'selected' : undefined,
+                classes: {
+                  selected: selected.contains(node.id),
+                },
               }),
             }}
             onSelect={(node: GraphLayoutNode<TestNode>) => {
               if (selected.contains(node.id)) {
                 selected.remove(node.id);
               } else {
-                selected.contains(node.id);
+                selected.add(node.id);
               }
+              graphRef.current?.refresh();
+              console.log(selected.contains(node.id));
             }}
             {...props}
           />
         </SVG.Zoom>
       </SVG.Root>
 
-      {debug && <Debug model={model} />}
+      {debug && <Debug model={model} selected={selected} />}
     </div>
   );
 };
@@ -84,6 +93,7 @@ type Story = StoryObj<DefaultStoryProps>;
 
 export const Default: Story = {
   args: {
+    debug: true,
     graph: convertTreeToGraph(createTree({ depth: 4 })),
     drag: true,
     arrows: true,
@@ -93,6 +103,7 @@ export const Default: Story = {
 
 export const Force: Story = {
   args: {
+    debug: true,
     graph: convertTreeToGraph(createTree({ depth: 5 })),
     drag: true,
     delay: 500,
@@ -129,6 +140,7 @@ export const Force: Story = {
 
 export const Select = {
   args: {
+    debug: true,
     graph: createGraph(150, 50),
     drag: true,
     projectorOptions: {
@@ -142,7 +154,16 @@ export const Select = {
   },
 };
 
-// TODO(burdon): Very expensive.
-const Debug = ({ model }: { model: GraphModel }) => {
-  return <JsonFilter data={model.toJSON()} classNames='text-sm' />;
+const Debug = ({ model, selected }: { model: GraphModel; selected: SelectionModel }) => {
+  const [data, setData] = useState({});
+  useEffect(() => {
+    effect(() => {
+      setData({
+        selected: selected.toJSON(),
+        model: model.toJSON(),
+      });
+    });
+  }, [model, selected]);
+
+  return <JsonFilter data={data} classNames='text-sm' />;
 };

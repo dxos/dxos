@@ -75,6 +75,7 @@ export default (context: PluginContext) =>
                 properties: {
                   label: ['script automation label', { ns: meta.id }],
                   icon: 'ph--lightning--regular',
+                  disposition: 'hidden',
                 },
               },
             ]),

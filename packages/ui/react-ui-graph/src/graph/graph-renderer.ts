@@ -4,8 +4,6 @@
 
 import { line, select } from 'd3';
 
-import { log } from '@dxos/log';
-
 import { createBullets } from './bullets';
 import { Renderer, type RendererOptions } from './renderer';
 import { type GraphGuide, type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from './types';
@@ -19,16 +17,13 @@ export type LabelOptions<N> = {
   text: (node: GraphLayoutNode<N>, highlight?: boolean) => string | undefined;
 };
 
-/**
- * @deprecated
- */
 export type AttributesOptions<N> = {
   node?: (node: GraphLayoutNode<N>) => {
-    class?: string;
+    classes?: Record<string, boolean>;
   };
 
-  edge?: (edge: GraphLayoutEdge<N>) => {
-    class?: string;
+  link?: (edge: GraphLayoutEdge<N>) => {
+    classes?: Record<string, boolean>;
   };
 };
 
@@ -132,8 +127,7 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
 
   // Click.
   if (options.onNodeClick) {
-    group.on('click', function (event: MouseEvent) {
-      log.info('click', { node: select(this).datum() });
+    group.on('click', (event: MouseEvent) => {
       const node = select<SVGElement, GraphLayoutNode<N>>(event.target as SVGGElement).datum();
       options.onNodeClick(node, event);
     });
@@ -171,8 +165,10 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   // Custom attributes.
   if (options.attributes?.node) {
     group.each((d, i, nodes) => {
-      const { class: className } = options.attributes?.node(d);
-      select(nodes[i]).classed(className, !!className);
+      const { classes } = options.attributes?.node(d);
+      if (classes) {
+        applyClasses(select(nodes[i]), classes);
+      }
     });
   }
 
@@ -251,10 +247,12 @@ const createEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
  */
 const updateEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
   // Custom attributes.
-  if (options.attributes?.edge) {
+  if (options.attributes?.link) {
     group.each((d, i, nodes) => {
-      const { class: className } = options.attributes?.edge(d);
-      select(nodes[i]).classed(className, true);
+      const { classes } = options.attributes?.link(d);
+      if (classes) {
+        applyClasses(select(nodes[i]), classes);
+      }
     });
   }
 
@@ -271,4 +269,10 @@ const updateEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
 
     return createLine(getCircumferencePoints([source.x, source.y], [target.x, target.y], source.r, target.r));
   });
+};
+
+const applyClasses = (el: D3Selection, classes: Record<string, boolean>) => {
+  for (const [className, value] of Object.entries(classes)) {
+    el.classed(className, value);
+  }
 };

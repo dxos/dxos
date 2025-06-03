@@ -7,7 +7,6 @@ import NativeForceGraph from 'force-graph';
 import React, { type FC, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { log } from '@dxos/log';
 import { filterObjectsSync, type SearchResult } from '@dxos/plugin-search';
 import { type SpaceGraphModel } from '@dxos/schema';
 
@@ -57,7 +56,6 @@ export const ForceGraph: FC<ForceGraphProps> = ({ model, match }) => {
           handleZoomToFit();
         })
         .onNodeClick((node: any) => {
-          log.info('click', { node });
           forceGraph.current?.emitParticle(node);
         })
 
