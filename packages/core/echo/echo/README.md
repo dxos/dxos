@@ -25,24 +25,29 @@ License: [MIT](./LICENSE) Copyright 2022 © DXOS
 |                               | Object                         | Relation                       | Ref             |
 | ----------------------------- | ------------------------------ | ------------------------------ | --------------- |
 | **SCHEMA API**                |
-| Define schema                 | `Type.def()`                   | `Relation.def()`               | `Ref()`         |
+| Define schema                 | `Type.def()`                   | `Relation.def()`               | `Type.Ref()`    |
 | Any schema type               | `Schema.AnyNoContext`          | `Schema.AnyNoContext`          | `Ref$<any>`     |
-| Get DXN (of schema)           | `Type.getDXN`                  | `Type.getDXN`                  |                 |
-| Get typename (of schema)      | `Type.getTypename`             | `Type.getTypename`             |                 |
-| Get type metadata (of schema) | `Type.getMeta`                 | `Type.getMeta`                 |                 |
-| Is mutable schema             | `Type.isMutable`               | `Type.isMutable`               |
+| Get DXN (of schema)           | `Type.getDXN(schema)`          | `Type.getDXN(schema)`          |                 |
+| Get typename (of schema)      | `Type.getTypename(schema)`     | `Type.getTypename(schema)`     |                 |
+| Get type metadata (of schema) | `Type.getMeta(schema)`         | `Type.getMeta(schema)`         |                 |
+| Is mutable schema             | `Type.isMutable(schema)`       | `Type.isMutable(schema)`       |
 | **DATA API**                  |
 | Any instance type             | `AnyEchoObject`                | `AnyEchoObject`                | `Ref<any>`      |
 | Create object                 | `Type.create(Schema, { ... })` | `Type.create(Schema, { ... })` | `Ref.make(obj)` |
 | Check kind                    | `isEchoObject`                 | `isRelation`                   | `Ref.isRef`     |
 | Check instance of             | `Type.instanceOf`              | `Type.instanceOf`              |                 |
-| Get DXN (of instance)         | `getDXN`                       | `getDXN`                       |                 |
-| Get typename (of instance)    | `getTypename`                  | `getTypename`                  |                 |
+| Get DXN (of instance)         | `getDXN(obj)`                  | `getDXN(obj)`                  |                 |
+| Get typename (of instance)    | `getTypename(obj)`             | `getTypename(obj)`             |                 |
 | Get Meta                      | `getMeta(obj)`                 | `getMeta(relation)`            |                 |
-| Get relation source           |                                | `getSource`                    |
-| Get relation target           |                                | `getTarget`                    |                 |
+| Get relation source           |                                | `getSource(relation)`          |
+| Get relation target           |                                | `getTarget(relation)`          |                 |
+
+ISSUE: Define nouns: Object, Relation, Ref; Obj, Objekt, Entity
 
 ISSUE: Return type of `getTypename`: string | DXN ??
+
 ISSUE: Better any schema types: id, typename, meta? fields enforced
+
 ISSUE: Better any instance types
+
 ISSUE: Create vs live: Is it fundamentally the same thing?
