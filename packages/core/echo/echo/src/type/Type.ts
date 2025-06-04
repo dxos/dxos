@@ -4,7 +4,7 @@
 
 import { type Schema } from 'effect';
 
-import { type AnyLiveObject as AnyLiveObject$ } from '@dxos/echo-db';
+import { type Live } from '@dxos/live-object';
 import {
   type BaseEchoObject,
   type BaseObject,
@@ -31,6 +31,8 @@ import {
 import { invariant } from '@dxos/invariant';
 import { SpaceId as SpaceId$ } from '@dxos/keys';
 import { live as live$ } from '@dxos/live-object';
+
+type AnyLiveObject$<T extends BaseObject> = Live<T> & BaseEchoObject;
 
 /**
  * Type System API.
