@@ -5,11 +5,17 @@
 // @ts-ignore
 import { create, defineFunction, DXN, EchoObject, Filter, ObjectId, S } from 'dxos:functions';
 // @ts-ignore
-import { FetchHttpClient } from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21';
+import { FetchHttpClient } from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21&bundle=false';
 // @ts-ignore
-import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'https://esm.sh/dfx@0.113.0?deps=effect@3.14.21';
+import { subYears } from 'https://esm.sh/date-fns@3.3.1?bundle=false';
+import {
+  DiscordConfig,
+  DiscordREST,
+  DiscordRESTMemoryLive,
+  // @ts-ignore
+} from 'https://esm.sh/dfx@0.113.0?deps=effect@3.14.21&bundle=false';
 // @ts-ignore
-import { Effect, Config, Redacted, Ref } from 'https://esm.sh/effect@3.14.21';
+import { Effect, Config, Redacted, Ref } from 'https://esm.sh/effect@3.14.21?bundle=false';
 
 const MessageSchema = S.Struct({
   id: ObjectId,
@@ -24,8 +30,6 @@ const MessageSchema = S.Struct({
   }),
 );
 
-const DEFAULT_AFTER = 1704067200; // 2024-01-01
-
 const generateSnowflake = (unixTimestamp: number): bigint => {
   const discordEpoch = 1420070400000n; // Discord Epoch (ms)
   return (BigInt(unixTimestamp * 1000) - discordEpoch) << 22n;
@@ -36,8 +40,8 @@ export default defineFunction({
     // TODO(wittjosiah): Remove. This is used to provide a terminal for a cron trigger.
     tick: S.optional(S.String),
     channelId: S.String,
-    after: S.optional(S.Number),
-    pageSize: S.optional(S.Number),
+    after: S.optional(S.Number).pipe(S.withDecodingDefault(() => Math.floor(subYears(new Date(), 1).getTime() / 1000))),
+    pageSize: S.optional(S.Number).pipe(S.withDecodingDefault(() => 5)),
     queueId: S.String,
   }),
 
@@ -45,7 +49,7 @@ export default defineFunction({
     newMessages: S.Number,
   }),
 
-  handler: ({ data: { channelId, queueId, after = DEFAULT_AFTER, pageSize = 5 }, context: { space } }: any) =>
+  handler: ({ data: { channelId, queueId, after, pageSize }, context: { space } }: any) =>
     Effect.gen(function* () {
       const { token } = yield* Effect.tryPromise({
         try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'discord.com' })).first(),

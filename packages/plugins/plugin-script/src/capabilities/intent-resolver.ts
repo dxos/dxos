@@ -5,18 +5,29 @@
 import { Octokit } from '@octokit/core';
 import { Predicate } from 'effect';
 
-import { contributes, Capabilities, createResolver, createIntent, LayoutAction } from '@dxos/app-framework';
-import { ScriptType } from '@dxos/functions';
-import { live, makeRef } from '@dxos/live-object';
+import {
+  contributes,
+  Capabilities,
+  createResolver,
+  createIntent,
+  LayoutAction,
+  type PluginContext,
+} from '@dxos/app-framework';
+import { getInvocationUrl, getUserFunctionUrlInMetadata, ScriptType } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
+import { getMeta, live, makeRef } from '@dxos/live-object';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
+import { getSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { DEPLOYMENT_DIALOG } from '../components';
 import { defaultScriptsForIntegration } from '../meta';
 import { templates } from '../templates';
 import { ScriptAction } from '../types';
+import { deployScript } from '../util';
 
-export default () =>
+export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ScriptAction.Create,
@@ -53,6 +64,42 @@ export default () =>
             }),
           },
         };
+      },
+    }),
+    createResolver({
+      intent: ScriptAction.Deploy,
+      resolve: async ({ object: script }) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const space = getSpace(script);
+        invariant(space);
+
+        const result = await deployScript({ script, client, space });
+        if (result.error) {
+          return { error: result.error };
+        }
+
+        const object = result.storedFunction;
+        invariant(object, 'Function not found');
+        return { data: { object } };
+      },
+    }),
+    createResolver({
+      intent: ScriptAction.Invoke,
+      resolve: async ({ object: fn, data, space }) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+        invariant(edgeUrl, 'Edge URL not found');
+        const existingFunctionUrl = getUserFunctionUrlInMetadata(getMeta(fn));
+        invariant(existingFunctionUrl, 'Function URL not found');
+        const url = getInvocationUrl(existingFunctionUrl, edgeUrl, { spaceId: space?.id });
+        const response = await fetch(url, {
+          method: 'POST',
+          body: data,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        return { data: await response.json() };
       },
     }),
     createResolver({

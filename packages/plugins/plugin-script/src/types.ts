@@ -5,7 +5,7 @@
 import { Schema, SchemaAST } from 'effect';
 
 import { SpaceSchema } from '@dxos/client/echo';
-import { ScriptType } from '@dxos/functions';
+import { FunctionType, ScriptType } from '@dxos/functions';
 import { EditorInputMode } from '@dxos/react-ui-editor';
 
 import { SCRIPT_PLUGIN } from './meta';
@@ -30,6 +30,26 @@ export namespace ScriptAction {
     output: Schema.Struct({
       object: ScriptType,
     }),
+  }) {}
+
+  export class Deploy extends Schema.TaggedClass<Deploy>()(`${SCRIPT_ACTION}/deploy`, {
+    input: Schema.Struct({
+      object: ScriptType,
+    }),
+    output: Schema.Struct({
+      object: FunctionType,
+    }),
+  }) {}
+
+  export class Invoke extends Schema.TaggedClass<Invoke>()(`${SCRIPT_ACTION}/invoke`, {
+    input: Schema.Struct({
+      object: FunctionType,
+      // TODO(wittjosiah): Should follow function input schema.
+      data: Schema.String,
+      space: Schema.optional(SpaceSchema),
+    }),
+    // TODO(wittjosiah): Should follow function output schema.
+    output: Schema.Any,
   }) {}
 }
 

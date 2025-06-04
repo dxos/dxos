@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import { Option } from 'effect';
+import { Effect, Option } from 'effect';
 import { getDescriptionAnnotation } from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -17,9 +17,11 @@ import {
   useIntentDispatcher,
   Capabilities,
   Events,
+  type IntentDispatcher,
   IntentPlugin,
   SettingsPlugin,
   Surface,
+  createIntent,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
@@ -45,16 +47,21 @@ import {
 } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { ChessPlugin } from '@dxos/plugin-chess';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientPlugin } from '@dxos/plugin-client';
 import { ForceGraph } from '@dxos/plugin-explorer';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { ScriptPlugin } from '@dxos/plugin-script';
+import { ScriptAction } from '@dxos/plugin-script/types';
 import { SpacePlugin } from '@dxos/plugin-space';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { TablePlugin } from '@dxos/plugin-table';
-import { Config, useClient } from '@dxos/react-client';
-import { live, useQueue, useQuery, type Live, type EchoDatabase, getSpace } from '@dxos/react-client/echo';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type Client, Config, useClient } from '@dxos/react-client';
+import { live, useQueue, useQuery, type Live, type EchoDatabase, getSpace, type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncState } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
@@ -64,10 +71,11 @@ import {
   MenuProvider,
   createMenuItemGroup,
   type ToolbarMenuActionGroupProperties,
+  createGapSeparator,
 } from '@dxos/react-ui-menu';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
-import { SpaceGraphModel } from '@dxos/schema';
+import { DataType, SpaceGraphModel } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from '../components';
@@ -87,6 +95,7 @@ type RenderProps = {
 
 // TODO(burdon): Use ChatContainer.
 const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) => {
+  const { dispatch, dispatchPromise } = useIntentDispatcher();
   const client = useClient();
   const space = client.spaces.default;
   const [aiClient] = useState(
@@ -101,7 +110,10 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         }),
       ),
   );
-  const actionCreator = useCallback(() => createToolbar(aiClient), [aiClient]);
+  const actionCreator = useCallback(
+    () => createToolbar(client, aiClient, space, dispatch),
+    [client, aiClient, space, dispatch],
+  );
   const menuProps = useMenuActions(actionCreator);
 
   // Queue.
@@ -139,8 +151,6 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
   const tools = useMemo<Tool[]>(() => [createResearchTool(functionExecutor, 'research', researchFn)], []);
 
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-
   // TODO(burdon): Replace with useChatProcessor.
   // const processor = useChatProcessor(space);
   const processor = useMemo<ChatProcessor | undefined>(() => {
@@ -154,11 +164,11 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
       [],
       {
         space,
-        dispatch,
+        dispatch: dispatchPromise,
       },
       createProcessorOptions([]),
     );
-  }, [aiClient, tools, space, dispatch]);
+  }, [aiClient, tools, space, dispatchPromise]);
 
   useEffect(() => {
     if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
@@ -374,10 +384,16 @@ const meta: Meta<typeof DefaultStory> = {
                   persistent: true,
                 },
                 enableVectorIndexing: true,
+                edgeFeatures: {
+                  signaling: true,
+                  echoReplicator: true,
+                  feedReplicator: true,
+                  agents: true,
+                },
               },
               services: {
                 edge: {
-                  url: 'http://edge-main.dxos.workers.dev',
+                  url: 'https://edge-main.dxos.workers.dev',
                 },
               },
             },
@@ -385,7 +401,10 @@ const meta: Meta<typeof DefaultStory> = {
           onClientInitialized: async (_, client) => {
             if (!client.halo.identity.get()) {
               await client.halo.createIdentity();
+              await client.spaces.waitUntilReady();
+              await client.spaces.default.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
             }
+            log.info('identity', client.halo.identity.get());
           },
           types: [...TYPES],
         }),
@@ -399,8 +418,10 @@ const meta: Meta<typeof DefaultStory> = {
         MapPlugin(),
         TablePlugin(),
         PreviewPlugin(),
+        ScriptPlugin(),
       ],
       capabilities: [
+        contributes(ClientCapabilities.Schema, [DataType.AccessToken]),
         contributes(
           Capabilities.ReactSurface,
           createSurface({
@@ -484,7 +505,7 @@ const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
   });
 };
 
-const createToolbar = (aiClient: SpyAIService) => {
+const createToolbar = (client: Client, aiClient: SpyAIService, space: Space, dispatch: IntentDispatcher) => {
   const result: ActionGraphProps = { nodes: [], edges: [] };
   const save = createMenuAction('save', () => aiClient.saveEvents(), {
     label: 'Save events',
@@ -510,13 +531,84 @@ const createToolbar = (aiClient: SpyAIService) => {
     icon: 'ph--rewind--regular',
     checked: aiClient.mode === 'mock',
   });
-  result.nodes.push(save, load, modes, spy, mock);
+  const gap = createGapSeparator();
+  const discord = createMenuAction(
+    'discord',
+    async () => {
+      // @ts-expect-error
+      const token = import.meta.env.VITE_DISCORD;
+      if (!token) {
+        window.alert('Provide a Discord token with VITE_DISCORD env var');
+        return;
+      }
+
+      const program = Effect.gen(function* () {
+        const { object: accessToken } = yield* dispatch(
+          createIntent(SpaceAction.AddObject, {
+            object: live(DataType.AccessToken, { note: '', source: 'discord.com', token }),
+            target: space,
+            hidden: true,
+          }),
+        );
+        console.log('accessToken', accessToken);
+        const { object: script } = yield* dispatch(
+          createIntent(ScriptAction.Create, {
+            space,
+            initialTemplateId: 'dxos.org/script/discord',
+          }),
+        );
+        yield* dispatch(
+          createIntent(SpaceAction.AddObject, {
+            object: script,
+            target: space,
+            hidden: true,
+          }),
+        );
+        console.log('script', script);
+        const { object: fn } = yield* dispatch(
+          createIntent(ScriptAction.Deploy, {
+            object: script,
+          }),
+        );
+        console.log('fn', fn);
+        const result = yield* dispatch(
+          createIntent(ScriptAction.Invoke, {
+            object: fn,
+            data: JSON.stringify({ channelId: '837138313172353098', queueId: createQueueDxn(space.id).toString() }),
+            space,
+          }),
+        );
+
+        log.info('Discord Results', result);
+      });
+      await Effect.runPromise(program);
+    },
+    {
+      label: 'Import Messages from Discord',
+      icon: 'ph--discord-logo--regular',
+    },
+  );
+  const reset = createMenuAction(
+    'reset',
+    async () => {
+      await client.reset();
+      location.reload();
+    },
+    {
+      label: 'Reset',
+      icon: 'ph--radioactive--regular',
+    },
+  );
+  result.nodes.push(save, load, modes, spy, mock, ...gap.nodes, discord, reset);
   result.edges.push(
     { source: 'root', target: save.id },
     { source: 'root', target: load.id },
     { source: 'root', target: modes.id },
     { source: modes.id, target: spy.id },
     { source: modes.id, target: mock.id },
+    ...gap.edges,
+    { source: 'root', target: discord.id },
+    { source: 'root', target: reset.id },
   );
   return result;
 };

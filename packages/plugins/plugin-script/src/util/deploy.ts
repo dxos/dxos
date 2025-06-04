@@ -30,11 +30,12 @@ type DeployScriptProps = {
   existingFunctionUrl?: string;
 };
 
-type DeployScriptResult = { success: boolean; error?: Error; functionUrl?: string };
+type DeployScriptResult = { success: boolean; error?: Error; functionUrl?: string; storedFunction?: FunctionType };
 
 /**
  * Deploy a script to a space, handling bundling and uploading to the FaaS infrastructure.
  */
+// TODO(wittjosiah): Move into intent resolver.
 export const deployScript = async ({
   script,
   client,
@@ -74,7 +75,7 @@ export const deployScript = async ({
     const functionUrl = makeFunctionUrl({ functionId });
     setUserFunctionUrlInMetadata(getMeta(storedFunction), functionUrl);
 
-    return { success: true, functionUrl };
+    return { success: true, functionUrl, storedFunction };
   } catch (err: any) {
     log.catch(err);
     return { success: false, error: err };
