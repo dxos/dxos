@@ -42,7 +42,7 @@ import {
   type BaseObject,
   toJsonSchema,
 } from '@dxos/echo-schema';
-import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -118,6 +118,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
           database: {
             db: space.db,
           },
+          tracing: TracingService.console,
         }),
       ),
     [aiClient, space, queue],

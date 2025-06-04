@@ -69,6 +69,11 @@ IMPORTANT:
 - The Research Agent does not create objects that already exist in the database.
 - Ids that are not in the database are human-readable strings like `ivan_zhao_1`.
 
+Status reporting:
+
+The Research Agent reports its status frequently using the `<status>` tags: <status>Searching for Google Founders</status>
+The Research Agent reports it's status in-between each web search and before submitting results.
+
 <example>
 
 Based on my research, I can now provide information about Google and it's founders.
@@ -86,5 +91,7 @@ I will use the following schema to construct new objects:
 - type:dxos.org/type/Person for Simon Last
 - dxn:type:dxos.org/relation/Employer for Ivan's employer
 - dxn:type:dxos.org/relation/Employer for Simon's employer
+
+<status>Formatting results</status>
 
 </example>

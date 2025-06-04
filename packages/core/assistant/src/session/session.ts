@@ -4,7 +4,7 @@
 
 import { Option, Schema } from 'effect';
 
-import { isToolUse, runTools } from '@dxos/ai';
+import { AgentStatusReport, isToolUse, runTools, type AgentStatus } from '@dxos/ai';
 import {
   defineTool,
   structuredOutputParser,
@@ -132,10 +132,20 @@ export class AISession {
    */
   public readonly userMessage = new Event<Message>();
 
+  /**
+   * Agent self-reporting its status.
+   */
+  public readonly statusReport = new Event<AgentStatus>();
+
   constructor(private readonly _options: AiSessionOptions) {
     // Message complete.
     this._parser.message.on((message) => {
       this._pending.push(message);
+    });
+    this._parser.block.on((block) => {
+      if (block.type === 'text' && block.disposition === 'status') {
+        this.statusReport.emit(create(AgentStatusReport, { message: block.text }));
+      }
     });
   }
 
