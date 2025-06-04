@@ -22,37 +22,56 @@ License: [MIT](./LICENSE) Copyright 2022 © DXOS
 
 ## API
 
-**Exports**: `Type`, `Obj`, `Relation`, `Ref`
+```ts
+import { Type, Obj, Relation, Ref, Query, Filter } from '@dxos/echo';
+```
 
-|                               | Object                          | Relation                                    | Ref                  |
-| ----------------------------- | ------------------------------- | ------------------------------------------- | -------------------- |
+|                               | Object                          | Relation                                    | Ref             |
+| ----------------------------- | ------------------------------- | ------------------------------------------- | --------------- |
 | **SCHEMA API**                |
-| Define schema                 | `Type.Obj()`                    | `Type.Relation()`                           | `Type.Ref()`         |
-| Any schema type               | `Type.Obj.Any`                  | `Type.Relation.Any`                         | `Type.Ref.Any`       |
-| Get DXN (of schema)           | `Type.getDXN(schema)`           | `Type.getDXN(schema)`                       |                      |
-| Get typename (of schema)      | `Type.getTypename(schema)`      | `Type.getTypename(schema)`                  |                      |
-| Get type metadata (of schema) | `Type.getMeta(schema)`          | `Type.getMeta(schema)`                      |                      |
+| Define schema                 | `Type.Obj()`                    | `Type.Relation()`                           | `Type.Ref()`    |
+| Any schema type               | `Type.Obj.Any`                  | `Type.Relation.Any`                         | `Type.Ref.Any`  |
+| Get DXN (of schema)           | `Type.getDXN(schema)`           | `Type.getDXN(schema)`                       |                 |
+| Get typename (of schema)      | `Type.getTypename(schema)`      | `Type.getTypename(schema)`                  |                 |
+| Get type metadata (of schema) | `Type.getMeta(schema)`          | `Type.getMeta(schema)`                      |                 |
 | Is mutable schema             | `Type.isMutable(schema)`        | `Type.isMutable(schema)`                    |
 | **DATA API**                  |
-| Any instance type             | `Obj.Any`                       | `Relation.Any`                              | `Ref.Any`            |
-| Create object                 | `Obj.make(Schema, { ... })`     | `Relation.make(Schema, { ... })`            | `Ref.make(obj)`      |
-| Check kind                    | `Obj.isObject(x): x is Obj.Any` | `Relation.isRelation(x): x is Relation.Any` | `Ref.isRef`          |
-| Check instance of             | `Obj.instanceOf(Schema, obj)`   | `Obj.instanceOf(Schema, rel)`               |                      |
-| Get schema                    | `Obj.getSchema(obj)`            | `Obj.getSchema(obj)`                        | `Obj.getSchema(obj)` |
-| Get DXN (of instance)         | `Obj.getDXN(obj)`               | `Obj.getDXN(obj)`                           |                      |
-| Get typename (of instance)    | `Obj.getTypename(obj)`          | `Obj.getTypename(obj)`                      |                      |
-| Get Meta                      | `Obj.getMeta(obj)`              | `Obj.getMeta(relation)`                     |                      |
-| Is deleted                    | `Obj.isDeleted(obj)`            | `Obj.isDeleted(obj)`                        |                      |
-| Get relation source           |                                 | `Obj.getSource(relation)`                   |
-| Get relation target           |                                 | `Obj.getTarget(relation)`                   |                      |
+| Any instance type             | `Obj.Any`                       | `Relation.Any`                              | `Ref.Any`       |
+| Create object                 | `Obj.make(Schema, { ... })`     | `Relation.make(Schema, { ... })`            | `Ref.make(obj)` |
+| Check kind                    | `Obj.isObject(x): x is Obj.Any` | `Relation.isRelation(x): x is Relation.Any` | `Ref.isRef(x)`  |
+| Check instance of             | `Obj.instanceOf(Schema, obj)`   | `Obj.instanceOf(Schema, rel)`               |                 |
+| Get schema                    | `Obj.getSchema(obj)`            | `Obj.getSchema(obj)`                        |                 |
+| Get DXN (of instance)         | `Obj.getDXN(obj)`               | `Obj.getDXN(obj)`                           |                 |
+| Get typename (of instance)    | `Obj.getTypename(obj)`          | `Obj.getTypename(obj)`                      |                 |
+| Get Meta                      | `Obj.getMeta(obj)`              | `Obj.getMeta(relation)`                     |                 |
+| Is deleted                    | `Obj.isDeleted(obj)`            | `Obj.isDeleted(obj)`                        |                 |
+| Get relation source           |                                 | `Relation.getSource(relation)`              |
+| Get relation target           |                                 | `Relation.getTarget(relation)`              |                 |
 
-ISSUE: Define nouns: Object, Relation, Ref; Obj, Objekt, Entity
+```ts
+Type.getDXN(schema) == DXN.parse('dxn:type:example.com/type/Person:0.1.0');
+Type.getMeta(schema) == { typename: }
+Type.getTypename(schema) === 'example.com/type/Person'
+Type.getVersion(schema) === '0.1.0'
 
-ISSUE: Return type of `getTypename`: string | DXN ??
+Obj.getDXN(obj) === DXN.parse('dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX')
 
-ISSUE: Better any schema types: id, typename, meta? fields enforced
+// We need this for objects that have typename defined, but their schema can't be resolved (Obj.getSchema(obj) === undefined)
+Obj.getSchemaDXN(obj) === DXN.parse('dxn:type:example.com/type/Person:0.1.0');
 
-ISSUE: Better any instance types
+/**
+ * @deprecated
+ **/
+Obj.getTypename(obj) === 'example.com/type/Person'
+```
+
+~~ISSUE: Define nouns: Object, Relation, Ref; Obj, Objekt, Entity~~
+
+~~ISSUE: Return type of `getTypename`: string | DXN ??~~
+
+~~ISSUE: Better any schema types: id, typename, meta? fields enforced~~
+
+~~ISSUE: Better any instance types~~
 
 ISSUE: Create vs live: Is it fundamentally the same thing?
 
