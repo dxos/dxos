@@ -187,20 +187,25 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   if (options.labels) {
     const g = group.append('g');
     g.append('rect');
+    g.append('line');
     g.append('text')
       .style('dominant-baseline', 'middle')
       .text((d) => options.labels.text(d));
   }
 
-  // Highlight.
+  // Hover.
   if (options.highlight !== false) {
-    group
-      .on('mouseover', function () {
-        select(this).raise();
-      })
-      .on('mouseout', function () {
-        select(this);
-      });
+    circle.on('mouseover', function () {
+      select(this.parentElement).classed('dx-active', true).classed('dx-highlight', true).raise();
+    });
+    group.on('mouseleave', function () {
+      select(this).classed('dx-active', false);
+      setTimeout(() => {
+        if (!select(this).classed('dx-active')) {
+          select(this).classed('dx-highlight', false).lower();
+        }
+      }, 500);
+    });
   }
 };
 
@@ -237,7 +242,10 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
 
   // Update labels.
   if (options.labels) {
-    const dx = (d: any, padding = 0) => ((d.r ?? 0) + 6 - padding) * (d.x > 0 ? 1 : -1);
+    const px = 4;
+    const py = 2;
+    const offset = 16;
+    const dx = (d: any, offset = 0) => (offset + (d.r ?? 0)) * (d.x > 0 ? 1 : -1);
 
     groupOrTransition
       .select<SVGTextElement>('text')
@@ -245,19 +253,27 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
         return (select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.text;
       })
       .style('text-anchor', (d) => (d.x > 0 ? 'start' : 'end'))
-      .attr('dx', (d) => dx(d))
+      .attr('dx', (d) => dx(d, offset))
+      .attr('dy', 1)
       .text((d) => options.labels.text(d))
       .each(function (d) {
         const bbox = this.getBBox();
-        const width = bbox.width + 8;
-        const height = bbox.height + 4;
+        const width = bbox.width + px * 2;
+        const height = bbox.height + py * 2;
         select(this.parentElement)
           .select('rect')
-          .attr('rx', 4)
-          .attr('x', (d.x > 0 ? 0 : -1) * width + dx(d, 4))
-          .attr('y', -height / 2 - 1)
+          .attr('x', dx(d, offset - px) + (d.x > 0 ? 0 : -1) * width)
+          .attr('y', -height / 2)
           .attr('width', width)
-          .attr('height', height);
+          .attr('height', height)
+          .attr('rx', 4);
+        select(this.parentElement)
+          .select('line')
+          .classed('stroke-neutral-500', true)
+          .attr('x1', dx(d))
+          .attr('y1', 0)
+          .attr('x2', dx(d, offset - px))
+          .attr('y2', 0);
       });
   }
 };

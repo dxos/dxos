@@ -55,7 +55,7 @@ const DefaultStory = ({ debug, grid, graph, projectorOptions, ...props }: Defaul
             attributes={{
               node: (node: GraphLayoutNode<TestNode>) => ({
                 classes: {
-                  selected: selected.contains(node.id),
+                  'dx-selected': selected.contains(node.id),
                 },
               }),
             }}

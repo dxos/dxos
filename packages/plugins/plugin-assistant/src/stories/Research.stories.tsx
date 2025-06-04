@@ -313,13 +313,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   );
 };
 
-const ResearchPrompts = ({
-  object,
-  onResearch,
-}: {
+type ResearchPromptsProps = {
   object: BaseEchoObject;
   onResearch: (object: BaseObject, relatedSchema: RelatedSchema) => void;
-}) => {
+};
+
+const ResearchPrompts = ({ object, onResearch }: ResearchPromptsProps) => {
   const [relatedSchemas = []] = useAsyncState(
     async () => findRelatedSchema(getSpace(object)!.db, getSchema(object)!),
     [object],
@@ -445,7 +444,6 @@ const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
   const schema =
     db.graph.schemaRegistry.getSchemaByDXN(DXN.parse(getTypename(object as any)!)) ??
     raise(new Error('Schema not found'));
-  console.log('schema', { schema });
 
   let { id, [ATTR_RELATION_SOURCE]: source, [ATTR_RELATION_TARGET]: target, ...props } = object as any;
   if (source) {
