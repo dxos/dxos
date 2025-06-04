@@ -9,10 +9,13 @@ import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
 import type { SpaceId } from './space-id';
+import type { ObjectId } from './object-id';
 
 /**
  * Tags for ECHO DXNs that should resolve the object ID in the local space.
  */
+// TODO(dmaretskyi): Rebrand this as "unknown location" to specify objects in the same space or queue. Essentially making the DXN it a URI not URL
+// TODO(dmaretskyi): "@" is a separator character in the URI spec.
 export const LOCAL_SPACE_TAG = '@';
 
 // TODO(burdon): Namespace for.
@@ -239,6 +242,29 @@ export class DXN {
     );
   }
 }
+
+// TODO(dmaretskyi): Fluent API:
+/*
+class DXN {
+  ...
+isEchoDXN(): this is EchoDXN {
+  return this.#kind === DXN.kind.ECHO;
+}
+...
+}
+
+interface EchoDXN extends DXN {
+  objectId: ObjectId;
+}
+
+declare const dxn: DXN;
+
+dxn.objectId
+
+if(dxn.isEchoDXN()) {
+  dxn.objectId
+}
+  ```
 
 /**
  * API namespace.
