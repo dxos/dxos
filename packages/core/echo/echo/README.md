@@ -47,6 +47,7 @@ import { Type, Obj, Relation, Ref, Query, Filter } from '@dxos/echo';
 | Is deleted                    | `Obj.isDeleted(obj)`            | `Obj.isDeleted(obj)`                        |                 |
 | Get relation source           |                                 | `Relation.getSource(relation)`              |
 | Get relation target           |                                 | `Relation.getTarget(relation)`              |                 |
+| Expando                       | `Expando`                       |
 
 ```ts
 Type.getDXN(schema) == DXN.parse('dxn:type:example.com/type/Person:0.1.0');
