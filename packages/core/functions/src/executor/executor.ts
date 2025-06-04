@@ -13,7 +13,10 @@ export class FunctionExecutor {
   constructor(private readonly _services: ServiceContainer) {}
 
   // TODO(dmaretskyi): Invocation context: queue, space, etc...
-  async invoke<T, O>(fnDef: FunctionDefinition<T, O>, input: T): Promise<O> {
+  async invoke<F extends FunctionDefinition<any, any>>(
+    fnDef: F,
+    input: F extends FunctionDefinition<infer I, infer O> ? I : never,
+  ): Promise<F extends FunctionDefinition<any, infer O> ? O : never> {
     // Assert input matches schema
     const assertInput = fnDef.inputSchema.pipe(Schema.asserts);
     (assertInput as any)(input);
@@ -36,9 +39,9 @@ export class FunctionExecutor {
     (assertOutput as any)(result);
 
     if (Effect.isEffect(result)) {
-      return Effect.runPromise(result);
+      return Effect.runPromise(result as any);
     }
 
-    return result as O;
+    return result as any;
   }
 }
