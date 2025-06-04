@@ -79,6 +79,7 @@ export class MediaStreamRecorder implements AudioRecorder {
     }
     invariant(this._onChunk, 'MediaStreamRecorder: onChunk is not set');
     this._mediaRecorder.ondataavailable = (event) => this._ondataavailable(event);
+    this._mediaRecorder.onerror = (event) => log.error('MediaStreamRecorder: error', { event });
     this._mediaRecorder.start(this._config.interval);
   }
 
@@ -92,6 +93,10 @@ export class MediaStreamRecorder implements AudioRecorder {
   @synchronized
   private async _ondataavailable(event: IBlobEvent) {
     const blob = event.data;
+    if (blob.size < 4) {
+      log.warn('MediaStreamRecorder: invalid chunk', { blob });
+      return;
+    }
     const uint8Array = new Uint8Array(await blob.arrayBuffer());
 
     // First chunk from the MediaRecorder has a header.
