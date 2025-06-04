@@ -25,12 +25,9 @@ export const NormalizationOutput = Schema.Struct({
 
 const prompt = `
 # Task Description:
-  - Your task is to process the provided segments and return the remapped sentences.
-  - Reconstruct sentences from the provided segments.
-
-# Output Format:
-  - You need to provide me an array of new sentences as an array of strings.  
-  - Do not output anything other than the expected format.
+  - Merge/split the provided segments into sentences fixing punctuation and spelling.
+  - Return an json array of new sentences, if some sentence is not finished, return it as a one string in array.
+  - Do not output anything other than the expected format (no explanation, no notes, no comments, no nothing).
 
 # Restrictions:
   - Do not add or remove any words or phrases.
@@ -42,7 +39,6 @@ export const sentenceNormalization = defineFunction({
   inputSchema: NormalizationInput,
   outputSchema: NormalizationOutput,
   handler: async ({ data: { segments }, context }) => {
-    log.info('input', { segments });
     if (segments.length === 0) {
       return { sentences: [] };
     }
@@ -65,10 +61,11 @@ export const sentenceNormalization = defineFunction({
     });
 
     const lastMessage = response.at(-1)?.content.at(-1);
-    log.info('lastMessage', { lastMessage });
     invariant(lastMessage?.type === 'text', 'Last message is not a text');
-    const sentences = JSON.parse(lastMessage.text);
-    log.info('sentences', { sentences });
+    // Remove the json wrapper.
+    const trimmed = lastMessage.text.replace(/^[`'js\n]+[`'js\n]+$/g, '');
+    log.info('lastMessage', { lastMessage: trimmed });
+    const sentences = JSON.parse(trimmed);
 
     return { sentences };
   },

@@ -50,7 +50,7 @@ const queueMessages = [
   'to live in such fast paced place',
 ];
 
-const QueueNormalization = () => {
+const QueueNormalization = ({ llmType }: { llmType: 'local' | 'remote' }) => {
   // Actor.
   const actor = useMemo<DataType.Actor>(() => ({ name: 'John Doe' }), []);
 
@@ -85,14 +85,17 @@ const QueueNormalization = () => {
   }, [actor, queue]);
 
   // Normalizer.
-  const _ = useMemo(() => {
-    const executor = getExecutor('local');
+  const normalizer = useMemo<MessageNormalizer>(() => {
+    const executor = getExecutor(llmType);
     const normalizer = new MessageNormalizer({
       functionExecutor: executor,
       queue,
       startingCursor: { actorId: getActorId(actor), timestamp: new Date().toISOString() },
     });
+    return normalizer;
+  }, [llmType, actor, queue]);
 
+  useEffect(() => {
     const ctx = new Context();
     scheduleTask(ctx, async () => {
       await normalizer.open(ctx);
@@ -107,9 +110,24 @@ const QueueNormalization = () => {
   }, [queue]);
 
   return (
-    <ScrollContainer>
-      <Transcript space={space} model={model} attendableId='story' />
-    </ScrollContainer>
+    <div className='flex flex-row w-[60rem]'>
+      <div className='flex flex-col w-1/2'>
+        <ScrollContainer>
+          <Transcript space={space} model={model} attendableId='story' />
+        </ScrollContainer>
+      </div>
+      <div className='flex flex-col w-1/2'>
+        <ScrollContainer>
+          {normalizer.sentences.map((sentence) => (
+            <div className='border border-separator rounded px-2 py-1 m-1' key={sentence.segments.join(' ')}>
+              segments: {JSON.stringify(sentence.segments)}
+              <br />
+              sentences: {JSON.stringify(sentence.sentences, null, 2)}
+            </div>
+          ))}
+        </ScrollContainer>
+      </div>
+    </div>
   );
 };
 
@@ -143,4 +161,7 @@ export default meta;
 
 export const Default: StoryObj<typeof QueueNormalization> = {
   render: QueueNormalization,
+  args: {
+    llmType: 'remote',
+  },
 };

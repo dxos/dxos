@@ -15,6 +15,7 @@ import {
   GenerationStreamImpl,
 } from '@dxos/ai';
 import { ObjectId } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 type PromptSession = {
@@ -26,22 +27,8 @@ type PromptSession = {
 // @see https://developer.chrome.com/docs/extensions/ai/prompt-api
 export class ChromePromptClient implements AIServiceClient {
   async exec(request: GenerateRequest): Promise<GenerateResponse> {
-    const session: PromptSession = await (window as any).LanguageModel.create({});
-    const response = await session.prompt(
-      request.history
-        ?.map((message) =>
-          message.content
-            .filter((block) => block.type === 'text')
-            .map((block) => block.text)
-            .join('\n'),
-        )
-        .join('\n') +
-        '\n' +
-        request
-          .prompt!.content.filter((block) => block.type === 'text')
-          .map((block) => block.text)
-          .join('\n'),
-    );
+    const session: PromptSession = await this._getSession();
+    const response = await session.prompt(this._getPrompt(request));
     await session.destroy();
     return {
       messages: [
@@ -55,25 +42,10 @@ export class ChromePromptClient implements AIServiceClient {
   }
 
   async execStream(request: GenerateRequest): Promise<GenerationStream> {
-    const session: PromptSession = await (window as any).LanguageModel.create({});
+    const session: PromptSession = await this._getSession();
     log.info('Creating session', { request });
 
-    const prompt =
-      request.history
-        ?.map((message) =>
-          message.content
-            .filter((block) => block.type === 'text')
-            .map((block) => block.text)
-            .join('\n'),
-        )
-        .join('\n') +
-      '\n' +
-      (request.systemPrompt ?? '') +
-      '\n' +
-      (request.prompt?.content ?? [])
-        .filter((block) => block.type === 'text')
-        .map((block) => block.text)
-        .join('\n');
+    const prompt = this._getPrompt(request);
 
     log.info('prompt', { prompt });
 
@@ -138,5 +110,17 @@ export class ChromePromptClient implements AIServiceClient {
     };
 
     return new GenerationStreamImpl(controller, asyncIterator);
+  }
+
+  private _getPrompt(request: GenerateRequest) {
+    invariant(request.history, 'History is required');
+    return request.history
+      .flatMap((message) => message.content.filter((block) => block.type === 'text').map((block) => block.text))
+      .join('\n');
+  }
+
+  private _getSession(): Promise<PromptSession> {
+    // Note: topK and temperature are set to 1 and 0 to avoid hallucinations.
+    return (window as any).LanguageModel.create({ topK: 1, temperature: 0 });
   }
 }
