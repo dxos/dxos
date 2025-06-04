@@ -151,6 +151,8 @@ message Runtime {
     /// Disabled automerge & hypercore replication through P2P connections.
     optional bool disable_p2p_replication = 10;
 
+    optional bool enable_vector_indexing = 12;
+
     optional EdgeFeatures edge_features = 11;
   }
 

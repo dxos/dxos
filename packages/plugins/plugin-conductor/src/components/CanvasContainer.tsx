@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { AIServiceEdgeClient } from '@dxos/assistant';
+import { AIServiceEdgeClient } from '@dxos/ai';
 import { type Config } from '@dxos/client';
 import { ComputeGraphModel, EdgeGpt } from '@dxos/conductor';
 import { createStubEdgeIdentity, EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
@@ -15,8 +15,8 @@ import {
   ComputeGraphController,
   type ComputeShape,
   ComputeShapeLayout,
-  computeShapes,
   type Services,
+  computeShapes,
   useComputeGraphController,
   useGraphMonitor,
 } from '@dxos/react-ui-canvas-compute';

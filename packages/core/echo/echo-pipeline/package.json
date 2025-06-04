@@ -51,6 +51,7 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/hypercore": "workspace:*",
     "@dxos/indexing": "workspace:*",

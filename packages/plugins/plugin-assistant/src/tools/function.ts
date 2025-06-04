@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineTool, ToolResult } from '@dxos/artifact';
-import type { Tool } from '@dxos/artifact';
+import { defineTool, ToolResult, type Tool } from '@dxos/ai';
 import { toEffectSchema } from '@dxos/echo-schema';
 import { getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
-import type { FunctionType } from '@dxos/functions';
+import { type FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
-import type { SpaceId } from '@dxos/react-client/echo';
+import { type SpaceId } from '@dxos/react-client/echo';
 import { getMeta } from '@dxos/react-client/echo';
 
 export const convertFunctionToTool = (

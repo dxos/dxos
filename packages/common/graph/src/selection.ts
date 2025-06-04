@@ -4,13 +4,22 @@
 
 import { computed, signal, type ReadonlySignal, type Signal } from '@preact/signals-core';
 
+import { invariant } from '@dxos/invariant';
+
 /**
  * Reactive selection model.
  */
-// TOOD(burdon): Option for single-select.
 export class SelectionModel {
   private readonly _selected: Signal<Set<string>> = signal(new Set<string>());
   private readonly _selectedIds = computed(() => Array.from(this._selected.value.values()));
+
+  constructor(private readonly _singleSelect: boolean = false) {}
+
+  toJSON() {
+    return {
+      selected: Array.from(this._selected.value.values()),
+    };
+  }
 
   get size(): number {
     return this._selected.value.size;
@@ -29,12 +38,18 @@ export class SelectionModel {
   }
 
   add(id: string) {
-    this._selected.value = new Set<string>([...Array.from(this._selected.value.values()), id]);
+    invariant(id);
+    this._selected.value = new Set<string>(
+      this._singleSelect ? [id] : [...Array.from(this._selected.value.values()), id],
+    );
   }
 
   remove(id: string) {
+    invariant(id);
     this._selected.value = new Set<string>(Array.from(this._selected.value.values()).filter((_id) => _id !== id));
   }
+
+  // TODO(burdon): Handle single select.
 
   setSelected(ids: string[], shift = false) {
     this._selected.value = new Set([...(shift ? Array.from(this._selected.value.values()) : []), ...ids]);

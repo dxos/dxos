@@ -22,6 +22,7 @@
   "dependencies": {
     "@antv/graphlib": "^2.0.4",
     "@antv/layout": "^1.2.13",
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/artifact": "workspace:*",
     "@dxos/assistant": "workspace:*",

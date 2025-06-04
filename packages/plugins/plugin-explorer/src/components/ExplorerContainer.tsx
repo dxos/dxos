@@ -8,20 +8,27 @@ import { useGlobalSearch } from '@dxos/plugin-search';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Graph } from './Graph';
+import { ForceGraph } from './Graph';
+import { useGraphModel } from '../hooks';
 import { type ViewType } from '../types';
 
-const ExplorerContainer = ({ view, role }: { view: ViewType; role: string }) => {
+type ExplorerContainerProps = {
+  role: string;
+  view: ViewType;
+};
+
+const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {
   const space = getSpace(view);
   const { match } = useGlobalSearch();
+  const model = useGraphModel(space);
 
-  if (!space) {
+  if (!model || !space) {
     return null;
   }
 
   return (
     <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
-      <Graph space={space} match={match} />
+      <ForceGraph model={model} match={match} />
     </StackItem.Content>
   );
 };

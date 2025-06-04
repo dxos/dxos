@@ -18,19 +18,17 @@ export const getCircumferencePoints = (p1: Point, p2: Point, r1 = 0, r2 = 0): [P
   const [x1, y1] = p1;
   const [x2, y2] = p2;
 
-  if (!r1 || !r2) {
-    return [
-      [x1, y1],
-      [x2, y2],
-    ];
-  }
-
   const theta = Math.atan2(x2 - x1, y2 - y1);
 
   return [
-    [x1 + (r1 === 0 ? 0 : r1 * Math.sin(theta)), y1 - (r1 === 0 ? 0 : r1 * -Math.cos(theta))],
     [
-      x2 + (r2 === 0 ? 0 : r2 * -Math.cos(Math.PI / 2 - theta)),
+      // p1
+      x1 + (r1 === 0 ? 0 : r1 * Math.sin(theta)),
+      y1 + (r1 === 0 ? 0 : r1 * Math.cos(theta)),
+    ],
+    [
+      // p2
+      x2 - (r2 === 0 ? 0 : r2 * Math.cos(Math.PI / 2 - theta)),
       y2 - (r2 === 0 ? 0 : r2 * Math.sin(Math.PI / 2 - theta)),
     ],
   ];

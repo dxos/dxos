@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { AIServiceEdgeClient, OllamaClient } from '@dxos/assistant';
-import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
+import { AIServiceEdgeClient, OllamaClient } from '@dxos/ai';
+import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 import { Testing } from '@dxos/schema/testing';
 

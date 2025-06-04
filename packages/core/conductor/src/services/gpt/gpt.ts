@@ -4,7 +4,7 @@
 
 import { Context, Schema } from 'effect';
 
-import { ImageSource } from '@dxos/artifact';
+import { ImageSource } from '@dxos/ai';
 import { ECHO_ATTR_TYPE } from '@dxos/echo-schema';
 
 import { type GptInput, type GptOutput } from '../../nodes';

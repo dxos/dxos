@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { AIServiceEdgeClient, Message } from '@dxos/ai';
 import {
   Capabilities,
   Events,
@@ -17,9 +18,7 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Message } from '@dxos/artifact';
 import { remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { AIServiceEdgeClient } from '@dxos/assistant';
 import { DXN, Type } from '@dxos/echo';
 import { createQueueDxn, create, Query, Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -31,7 +30,8 @@ import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
-import { useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
+import { useClient } from '@dxos/react-client';
+import { useQueue, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -41,6 +41,7 @@ import { ChatProcessor } from '../../hooks';
 import { createProcessorOptions } from '../../testing';
 import translations from '../../translations';
 
+// const endpoints = localServiceEndpoints;
 const endpoints = remoteServiceEndpoints;
 
 type RenderProps = {
@@ -50,7 +51,9 @@ type RenderProps = {
 
 // TODO(burdon): Use ChatContainer.
 const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) => {
-  const space = useSpace();
+  const client = useClient();
+  const space = client.spaces.default;
+
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const tools = useCapabilities(Capabilities.Tools);
 
@@ -77,7 +80,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [aiClient, tools, space, dispatch, artifactDefinitions]);
 
   // Queue.
-  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn().toString());
+  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
   useEffect(() => {

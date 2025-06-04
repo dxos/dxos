@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, type FC } from 'react';
+import React, { type FC, type PropsWithChildren } from 'react';
 
-import { type MessageContentBlock, type Message, type ToolType } from '@dxos/artifact';
+import { type MessageContentBlock, type Message, type ToolType } from '@dxos/ai';
+import { Surface } from '@dxos/app-framework';
+import type { BaseEchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
 import { Button, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
@@ -46,9 +48,17 @@ export type ThreadMessageProps = ThemedClassName<{
   tools?: ToolType[];
   onPrompt?: (text: string) => void;
   onDelete?: (id: string) => void;
+  onAddToGraph?: (object: BaseEchoObject) => void;
 }>;
 
-export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, space, message, tools, onPrompt }) => {
+export const ThreadMessage: FC<ThreadMessageProps> = ({
+  classNames,
+  space,
+  message,
+  tools,
+  onPrompt,
+  onAddToGraph,
+}) => {
   const { role, content = [] } = message;
 
   // TODO(burdon): Restructure types to make check unnecessary.
@@ -74,13 +84,18 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, space, messa
         classNames={mx(classNames, 'animate-[fadeIn_0.5s]')}
         user={block.type === 'text' && role === 'user'}
       >
-        <Component space={space} block={block} onPrompt={onPrompt} />
+        <Component space={space} block={block} onPrompt={onPrompt} onAddToGraph={onAddToGraph} />
       </MessageContainer>
     );
   });
 };
 
-type BlockComponent = FC<{ space?: Space; block: MessageContentBlock; onPrompt?: (text: string) => void }>;
+type BlockComponent = FC<{
+  space?: Space;
+  block: MessageContentBlock;
+  onPrompt?: (text: string) => void;
+  onAddToGraph?: (object: BaseEchoObject) => void;
+}>;
 
 const components: Record<string, BlockComponent> = {
   //
@@ -124,7 +139,7 @@ const components: Record<string, BlockComponent> = {
   //
   // JSON
   //
-  ['json' as const]: ({ space, block, onPrompt }) => {
+  ['json' as const]: ({ space, block, onPrompt, onAddToGraph }) => {
     invariant(block.type === 'json');
 
     switch (block.disposition) {
@@ -154,6 +169,26 @@ const components: Record<string, BlockComponent> = {
                 {option}
               </Button>
             ))}
+          </div>
+        );
+      }
+
+      case 'graph': {
+        return (
+          <div className='flex flex-wrap gap-1'>
+            <Surface
+              role='card'
+              data={{ subject: JSON.parse(block.json ?? '{}') }}
+              limit={1}
+              fallback={<div className='font-mono text-xs text-pre'>{block.json}</div>}
+            />
+            {onAddToGraph && (
+              <IconButton
+                icon='ph--plus--regular'
+                label='Add to graph'
+                onClick={() => onAddToGraph?.(JSON.parse(block.json ?? '{}'))}
+              />
+            )}
           </div>
         );
       }

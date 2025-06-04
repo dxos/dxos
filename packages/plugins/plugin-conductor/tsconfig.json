@@ -25,6 +25,12 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/assistant"
+    },
+    {
       "path": "../../core/conductor"
     },
     {
@@ -41,9 +47,6 @@
     },
     {
       "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../experimental/assistant"
     },
     {
       "path": "../../sdk/app-framework"

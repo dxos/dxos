@@ -65,6 +65,10 @@ export type TranscribeConfig = {
 export type TranscriberParams = {
   config: TranscribeConfig;
   recorder: AudioRecorder;
+  /**
+   * Callback to handle the transcribed segments, after all segment transformers are applied.
+   * @param segments - The transcribed segments.
+   */
   onSegments: (segments: DataType.MessageBlock.Transcription[]) => Promise<void>;
 };
 
