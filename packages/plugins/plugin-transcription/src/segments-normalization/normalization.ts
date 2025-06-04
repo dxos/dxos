@@ -18,7 +18,7 @@ export const NormalizationInput = Schema.Struct({
 });
 
 export const NormalizationOutput = Schema.Struct({
-  sentences: Schema.Array(Schema.String).annotations({
+  sentences: Schema.Array(Schema.String).pipe(Schema.mutable).annotations({
     description: 'The sentences of the transcript.',
   }),
 });
