@@ -5,9 +5,9 @@
 import { Schema } from 'effect';
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { ScriptType } from '@dxos/functions';
+import { FunctionType, ScriptType } from '@dxos/functions';
 import { RefArray } from '@dxos/live-object';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
@@ -58,6 +58,11 @@ export const ScriptPlugin = () =>
       id: `${meta.id}/module/app-graph-builder`,
       activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () => contributes(ClientCapabilities.Schema, [FunctionType]),
     }),
     defineModule({
       id: `${meta.id}/module/object-form`,

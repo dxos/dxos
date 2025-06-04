@@ -85,6 +85,13 @@ export const config = (
             },
           },
         },
+        // TODO(burdon): Required to allow ScriptPlugin to run in storybook due to Octokit.
+        resolve: {
+          alias: {
+            'stream': '@dxos/node-std/stream',
+            'node:stream': '@dxos/node-std/stream',
+          },
+        },
         // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
         server: {
           headers: {

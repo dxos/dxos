@@ -2,4 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-export { Duplex, PassThrough, pipeline, Stream, Transform, Readable, Writable } from 'readable-stream';
+import { Duplex, PassThrough, Readable, Stream, Transform, Writable, pipeline } from 'readable-stream';
+
+export { Duplex, PassThrough, Readable, Stream, Transform, Writable, pipeline };
+
+export default {
+  Duplex,
+  PassThrough,
+  Readable,
+  Stream,
+  Transform,
+  Writable,
+  pipeline,
+};
