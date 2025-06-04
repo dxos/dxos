@@ -74,9 +74,9 @@ export default defineFunction({
           ? `in:inbox after:${Math.floor(new Date(last.created).getTime() / 1000)}`
           : `in:inbox after:${after}`;
         const pageToken = yield* Ref.get(nextPage);
-        const { messages, nextPageToken } = yield* listMessages(userId, q, pageSize, pageToken);
-        yield* Ref.update(nextPage, () => nextPageToken);
-        for (const message of messages) {
+        const response = yield* listMessages(userId, q, pageSize, pageToken);
+        yield* Ref.update(nextPage, () => response.nextPageToken);
+        for (const message of response.messages) {
           const messageDetails = yield* getMessage(userId, message.id);
           const created = new Date(parseInt(messageDetails.internalDate)).toISOString();
           const from = messageDetails.payload.headers.find((h: any) => h.name === 'From');
@@ -136,7 +136,9 @@ const getUrl = (userId: string, messageId?: string, params?: Record<string, any>
   const api = new URL(
     [`https://gmail.googleapis.com/gmail/v1/users/${userId}/messages`, messageId].filter(Boolean).join('/'),
   );
-  Object.entries(params ?? {}).forEach(([key, value]) => api.searchParams.set(key, value));
+  Object.entries(params ?? {})
+    .filter(([_, value]) => !!value)
+    .forEach(([key, value]) => api.searchParams.set(key, value));
   return api.toString();
 };
 
