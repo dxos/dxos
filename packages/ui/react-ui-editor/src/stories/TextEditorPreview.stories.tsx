@@ -96,7 +96,7 @@ const PreviewCard = () => {
   const { link, target } = useRefPopover('PreviewCard');
   return (
     <Popover.Portal>
-      <Popover.Content onOpenAutoFocus={(e) => e.preventDefault()}>
+      <Popover.Content classNames='popover-consistent-width' onOpenAutoFocus={(e) => e.preventDefault()}>
         <Popover.Viewport>
           <div className='grow truncate'>{link?.label}</div>
           {target && <div className='line-clamp-3'>{target.text}</div>}
