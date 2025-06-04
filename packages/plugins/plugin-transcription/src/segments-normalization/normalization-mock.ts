@@ -2,12 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
-
-import { create, getMeta } from '@dxos/echo-schema';
 import { defineFunction } from '@dxos/functions';
-import { ObjectId } from '@dxos/keys';
-import { DataType } from '@dxos/schema';
+
 import { NormalizationInput, NormalizationOutput } from './normalization';
 
 export const normalizationMockFn = defineFunction({

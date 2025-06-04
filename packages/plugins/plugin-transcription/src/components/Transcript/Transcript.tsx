@@ -45,7 +45,7 @@ export const renderMarkdown =
     const blocks = message.blocks.filter((block) => block.type === 'transcription');
     return [
       `###### ${name}` + (debug ? ` [${index}]:${message.id}` : ''),
-      blocks.map((block) => block.text.trim()).join(' '),
+      blocks.map((block) => (block.pending ? '***' + block.text.trim() + '***' : block.text.trim())).join(' '),
       '',
     ];
   };

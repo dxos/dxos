@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
-import { create, ObjectId } from '@dxos/echo-schema';
-import { DataType } from '@dxos/schema';
-import { ServiceContainer } from '@dxos/functions';
-import { FunctionExecutor } from '@dxos/functions';
+import { ServiceContainer, FunctionExecutor } from '@dxos/functions';
 import { log } from '@dxos/log';
+
 import { normalizationMockFn } from './normalization-mock';
 
 export const sender = {
@@ -67,13 +65,5 @@ describe.only('QueueReducer', () => {
     sentences.push(...buffer);
 
     log.info('result', { sentences });
-  });
-
-  test('reduce queue', async () => {
-    const executor = new FunctionExecutor(new ServiceContainer());
-    const result = await executor.invoke(normalizationMockFn, {
-      segments,
-    });
-    log.info('result', { result });
   });
 });

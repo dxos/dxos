@@ -12,8 +12,11 @@ import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { processTranscriptMessage } from '@dxos/assistant';
+import { scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { Filter, MemoryQueue } from '@dxos/echo-db';
 import { create, createQueueDxn } from '@dxos/echo-schema';
+import { ServiceContainer, FunctionExecutor } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -30,6 +33,7 @@ import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '../../hooks';
+import { getActorId, MessageNormalizer } from '../../segments-normalization';
 import { TestItem } from '../../testing';
 import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
 import { renderMarkdown } from '../Transcript';
@@ -49,6 +53,7 @@ const aiService = new AIServiceEdgeClient({
 
 type DefaultStoryProps = {
   detectSpeaking?: boolean;
+  normalizeSentences?: boolean;
   entityExtraction?: boolean;
   transcriberConfig: TranscriberParams['config'];
   recorderConfig: MediaStreamRecorderParams['config'];
@@ -57,11 +62,17 @@ type DefaultStoryProps = {
 
 const DefaultStory = ({
   detectSpeaking,
+  normalizeSentences,
   entityExtraction,
   transcriberConfig,
   recorderConfig,
   audioConstraints,
 }: DefaultStoryProps) => {
+  const actor = useMemo<DataType.Actor>(() => {
+    return {
+      name: 'You',
+    };
+  }, []);
   const [running, setRunning] = useState(false);
 
   // Audio.
@@ -116,6 +127,47 @@ const DefaultStory = ({
     },
     [queue, space],
   );
+
+  // Normalize sentences.
+  const normalizer = useMemo(() => {
+    if (!normalizeSentences) {
+      return;
+    }
+    const executor = new FunctionExecutor(
+      new ServiceContainer().setServices({
+        ai: {
+          client: new AIServiceEdgeClient({
+            endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+            defaultGenerationOptions: {
+              model: '@anthropic/claude-3-5-sonnet-20241022',
+            },
+          }),
+        },
+      }),
+    );
+
+    return new MessageNormalizer({
+      functionExecutor: executor,
+      queue,
+      startingCursor: { actorId: getActorId(actor), timestamp: new Date().toISOString() },
+    });
+  }, [normalizeSentences, queue, actor]);
+
+  useEffect(() => {
+    if (!normalizer) {
+      return;
+    }
+    const ctx = new Context();
+    scheduleTask(ctx, async () => {
+      await normalizer.open();
+      ctx.onDispose(async () => {
+        await normalizer.close();
+      });
+    });
+    return () => {
+      void ctx.dispose();
+    };
+  }, [normalizer]);
 
   const transcriber = useTranscriber({
     audioStreamTrack: track,
@@ -180,6 +232,7 @@ type Story = StoryObj<typeof DefaultStory>;
 export const Default: Story = {
   args: {
     detectSpeaking: false,
+    normalizeSentences: false,
     entityExtraction: false,
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,
@@ -194,6 +247,7 @@ export const Default: Story = {
 export const EntityExtraction: Story = {
   args: {
     detectSpeaking: false,
+    normalizeSentences: false,
     entityExtraction: true,
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,
@@ -208,6 +262,7 @@ export const EntityExtraction: Story = {
 export const SpeechDetection: Story = {
   args: {
     detectSpeaking: true,
+    normalizeSentences: true,
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,
     audioConstraints: {

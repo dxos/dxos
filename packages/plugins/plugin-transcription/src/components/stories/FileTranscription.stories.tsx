@@ -229,7 +229,7 @@ export const Default: StoryObj<typeof AudioFile> = {
 export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
   render: AudioFile,
   args: {
-    detectSpeaking: true,
+    detectSpeaking: false,
     normalizeSentences: true,
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
     audioUrl: 'https://dxos.network/audio-london.m4a',

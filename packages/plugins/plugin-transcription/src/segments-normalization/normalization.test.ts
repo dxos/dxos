@@ -2,23 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
-import { describe, onTestFinished, test } from 'vitest';
+import { describe, test } from 'vitest';
 
-import { AIServiceClient, AIServiceEdgeClient, OllamaClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
-import { scheduleTaskInterval } from '@dxos/async';
-import { Context } from '@dxos/context';
-import { MemoryQueue } from '@dxos/echo-db';
-import { createQueueDxn, ObjectId } from '@dxos/echo-schema';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type DataType } from '@dxos/schema';
 
-import { MessageNormalizer } from './message-normalizer';
+import { getExecutor } from './get-executor';
 import { sentenceNormalization } from './normalization';
-import { getActorId } from './utils';
-import { LanguageModelClient } from './language-model-client';
 
 const sender: DataType.Actor = {
   identityDid: 'did:key:123',
@@ -58,39 +48,8 @@ const messages: string[] = [
 ];
 
 describe('SentenceNormalization', () => {
-  const getExecutor = async ({ inBrowser = false, remote = true }: { inBrowser?: boolean; remote?: boolean } = {}) => {
-    let client: AIServiceClient;
-
-    if (inBrowser) {
-      const languageModelClient = new LanguageModelClient();
-      await languageModelClient.open();
-      onTestFinished(async () => {
-        await languageModelClient.close();
-      });
-      client = languageModelClient;
-    } else if (remote) {
-      client = new AIServiceEdgeClient({
-        endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-        defaultGenerationOptions: {
-          model: '@anthropic/claude-3-5-sonnet-20241022',
-        },
-      });
-    } else {
-      client = new OllamaClient({
-        overrides: {
-          model: 'llama3.1:8b',
-        },
-      });
-    }
-    return new FunctionExecutor(
-      new ServiceContainer().setServices({
-        ai: { client },
-      }),
-    );
-  };
-
   test('messages merging', { timeout: 120_000 }, async () => {
-    const executor = await getExecutor();
+    const executor = getExecutor();
     const sentences: string[] = [];
     let buffer: string[] = [];
     let activeSentenceIndex = 0;
