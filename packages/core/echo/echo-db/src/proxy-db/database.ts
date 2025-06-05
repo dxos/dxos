@@ -74,6 +74,8 @@ export interface EchoDatabase {
   get spaceKey(): PublicKey;
   get spaceId(): SpaceId;
 
+  toJSON(): object;
+
   getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): AnyLiveObject<T> | undefined;
 
   /**

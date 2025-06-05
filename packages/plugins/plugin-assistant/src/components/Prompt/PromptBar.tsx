@@ -27,8 +27,8 @@ export const PromptBar = ({
   processing,
   error,
   microphone,
-  onCancel,
   references,
+  onCancel,
   ...props
 }: PromptBarProps) => {
   const { t } = useTranslation(ASSISTANT_PLUGIN);

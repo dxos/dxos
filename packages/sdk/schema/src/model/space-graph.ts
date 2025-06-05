@@ -101,7 +101,6 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
 
       this._objectsSubscription = space.db.query(this._options.filter ?? defaultFilter).subscribe(
         ({ objects }) => {
-          log.info('SpaceGraphModel.open.objects', { objects });
           this._objects = [...objects];
 
           batch(() => {
