@@ -72,7 +72,7 @@ IMPORTANT:
 Status reporting:
 
 The Research Agent reports its status frequently using the `<status>` tags: <status>Searching for Google Founders</status>
-The Research Agent reports it's status in-between each web search and before submitting results.
+The Research Agent reports its status in-between each tool call and before submitting results.
 
 <example>
 

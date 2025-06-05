@@ -31,7 +31,7 @@ const DEFAULT_SERVICES: Partial<Services> = {
 };
 
 export class ServiceContainer {
-  private _services: Partial<Services> = DEFAULT_SERVICES;
+  private _services: Partial<Services> = { ...DEFAULT_SERVICES };
 
   /**
    * Set services.
@@ -50,5 +50,9 @@ export class ServiceContainer {
       throw new Error(`Service not available: ${tag.key}`);
     }
     return service as Context.Tag.Service<T>;
+  }
+
+  clone() {
+    return new ServiceContainer().setServices({ ...this._services });
   }
 }

@@ -48,15 +48,6 @@ export const findRelatedSchema = async (
         return false;
       }
 
-      log.info('relatedness check', {
-        schema,
-        anchor,
-        anchorId: getTypeIdentifierAnnotation(schema),
-        anchorTypename: getTypename(schema),
-        sourceDxn: DXN.parse(getTypeAnnotation(schema)!.sourceSchema!),
-        targetDxn: DXN.parse(getTypeAnnotation(schema)!.targetSchema!),
-      });
-
       return (
         isSchemaAddressableByDxn(anchor, DXN.parse(getTypeAnnotation(schema)!.sourceSchema!)) ||
         isSchemaAddressableByDxn(anchor, DXN.parse(getTypeAnnotation(schema)!.targetSchema!))

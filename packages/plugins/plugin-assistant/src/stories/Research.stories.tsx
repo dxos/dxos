@@ -9,7 +9,7 @@ import { Option } from 'effect';
 import { getDescriptionAnnotation } from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { defineTool, AIServiceEdgeClient, Message, ToolResult, type Tool } from '@dxos/ai';
+import { defineTool, AIServiceEdgeClient, Message, ToolResult, type Tool, AgentStatusReport } from '@dxos/ai';
 import {
   contributes,
   createSurface,
@@ -64,6 +64,7 @@ import { Thread, type ThreadProps } from '../components';
 import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import translations from '../translations';
+import { log } from '@dxos/log';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 const LOCAL = false;
@@ -98,33 +99,31 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const [, forceUpdate] = useState({});
 
   // Function executor.
-  const functionExecutor = useMemo(
+  const serviceContainer = useMemo(
     () =>
-      new FunctionExecutor(
-        new ServiceContainer().setServices({
-          ai: {
-            client: aiClient,
+      new ServiceContainer().setServices({
+        ai: {
+          client: aiClient,
+        },
+        credentials: new ConfiguredCredentialsService([
+          {
+            service: 'exa.ai',
+            apiKey: EXA_API_KEY,
           },
-          credentials: new ConfiguredCredentialsService([
-            {
-              service: 'exa.ai',
-              apiKey: EXA_API_KEY,
-            },
-          ]),
-          queues: {
-            queues: space.queues,
-            contextQueue: queue,
-          },
-          database: {
-            db: space.db,
-          },
-          tracing: TracingService.console,
-        }),
-      ),
+        ]),
+        queues: {
+          queues: space.queues,
+          contextQueue: queue,
+        },
+        database: {
+          db: space.db,
+        },
+        tracing: TracingService.console,
+      }),
     [aiClient, space, queue],
   );
 
-  const tools = useMemo<Tool[]>(() => [createResearchTool(functionExecutor, 'research', researchFn)], []);
+  const tools = useMemo<Tool[]>(() => [createResearchTool(serviceContainer, 'research', researchFn)], []);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
@@ -416,13 +415,34 @@ export const Default: Story = {
   },
 };
 
-const createResearchTool = (executor: FunctionExecutor, name: string, fn: typeof researchFn) => {
+const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn: typeof researchFn) => {
   return defineTool('example', {
     // TODO(dmaretskyi): Include name in definition
     name,
     description: fn.description ?? raise(new Error('No description')),
     schema: fn.inputSchema,
-    execute: async (input: any) => {
+    execute: async (input, { reportStatus }) => {
+      const executor = new FunctionExecutor(
+        serviceContainer.clone().setServices({
+          tracing: {
+            write(event) {
+              if (isInstanceOf(AgentStatusReport, event)) {
+                log.info('[too] report status', { status: event });
+                reportStatus(event);
+              }
+            },
+          },
+        }),
+      );
+
+      reportStatus(
+        create(AgentStatusReport, {
+          message: 'Researching...',
+        }),
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       const { result } = await executor.invoke(fn, input);
       return ToolResult.Success(
         'Research completed. The results are placed in the conversation and already presented to the user. No need to present them again.',

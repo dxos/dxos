@@ -81,7 +81,10 @@ export const researchFn = defineFunction({
     session.message.on((message) => printer.printMessage(message));
     session.userMessage.on((message) => printer.printMessage(message));
     session.block.on((block) => printer.printContentBlock(block));
-    session.statusReport.on((status) => tracing.write(status));
+    session.statusReport.on((status) => {
+      log.info('[agent] status', { status });
+      tracing.write(status);
+    });
     session.streamEvent.on((event) => log('stream', { event }));
 
     // TODO(dmaretskyi): Consider adding this pattern as the "Graph" output mode for the session.
