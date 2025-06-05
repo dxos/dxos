@@ -251,7 +251,6 @@ type TooltipTriggerProps = PrimitiveButtonProps &
   Pick<TooltipProps, 'delayDuration'> & {
     content?: string;
     side?: TooltipSide;
-    suppressNextTooltip?: MutableRefObject<boolean>;
     onInteract?: (event: SyntheticEvent) => void;
   };
 
@@ -262,7 +261,6 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
       onInteract,
       // TODO(thure): Pass `delayDuration` into the context.
       delayDuration: _delayDuration,
-      suppressNextTooltip,
       side,
       content,
       ...triggerProps
