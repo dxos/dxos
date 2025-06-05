@@ -5,6 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
+
 import { AgentStatusReport } from '../status-report';
 
 // TODO(dmaretskyi): Extract IDs to protocols and dedupe package with dxos/edge.

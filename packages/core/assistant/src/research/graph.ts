@@ -5,15 +5,8 @@
 import { Schema } from 'effect';
 
 import { type EchoDatabase } from '@dxos/echo-db';
-import {
-  EntityKind,
-  getTypeIdentifierAnnotation,
-  getTypename,
-  getTypeAnnotation,
-  getSchemaTypename,
-} from '@dxos/echo-schema';
+import { EntityKind, getTypeIdentifierAnnotation, getTypeAnnotation, getSchemaTypename } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
 
 // TODO(burdon): Unify with the graph schema.
 export const Subgraph = Schema.Struct({

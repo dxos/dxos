@@ -4,11 +4,11 @@
 
 import { Schema } from 'effect';
 
+import { Queue } from '@dxos/echo-db';
 import { EchoObject, Expando, ObjectId, Ref } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { FunctionTrigger, type FunctionTriggerType } from './types';
-import { Queue } from '@dxos/echo-db';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',

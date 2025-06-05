@@ -26,11 +26,11 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 import { deepMapValues } from '@dxos/util';
 
-import { AISession } from '../session';
 import { createExaTool, createMockExaTool } from './exa';
 import { Subgraph } from './graph';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up
 import PROMPT from './instructions-research.tpl?raw';
+import { AISession } from '../session';
 
 export const TYPES = [
   DataType.Event,

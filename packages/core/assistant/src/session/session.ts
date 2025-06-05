@@ -4,8 +4,11 @@
 
 import { Option, Schema } from 'effect';
 
-import { AgentStatusReport, isToolUse, runTools, type AgentStatus, type ToolUseContentBlock } from '@dxos/ai';
 import {
+  AgentStatusReport,
+  isToolUse,
+  runTools,
+  type AgentStatus,
   defineTool,
   structuredOutputParser,
   type AIServiceClient,

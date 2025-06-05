@@ -6,7 +6,6 @@ import { Schema } from 'effect';
 
 import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from './defs';
 import { Tool, Message, type MessageContentBlock } from './tools';
-import { EchoObject } from '@dxos/echo-schema';
 
 export const LLMModel = Schema.Literal(...DEFAULT_EDGE_MODELS, ...DEFAULT_OLLAMA_MODELS);
 

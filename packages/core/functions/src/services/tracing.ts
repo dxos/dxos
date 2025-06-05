@@ -18,5 +18,10 @@ export class TracingService extends Context.Tag('TracingService')<
 >() {
   static noop: Context.Tag.Service<TracingService> = { write: () => {} };
 
-  static console: Context.Tag.Service<TracingService> = { write: (event) => console.log(event) };
+  static console: Context.Tag.Service<TracingService> = {
+    write: (event) => {
+      // eslint-disable-next-line no-console
+      console.log(event);
+    },
+  };
 }

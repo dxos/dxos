@@ -44,6 +44,7 @@ import {
 } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ForceGraph } from '@dxos/plugin-explorer';
@@ -73,7 +74,6 @@ import { Thread, type ThreadProps } from '../components';
 import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import translations from '../translations';
-import { log } from '@dxos/log';
 
 // TODO(burdon): Move out of source.
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
@@ -441,7 +441,7 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
       const executor = new FunctionExecutor(
         serviceContainer.clone().setServices({
           tracing: {
-            write(event) {
+            write: (event) => {
               if (isInstanceOf(AgentStatusReport, event)) {
                 log.info('[too] report status', { status: event });
                 reportStatus(event);

@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { BaseEchoObject, EntityKind, TypeAnnotationId, type TypeAnnotation } from '@dxos/echo-schema';
-import { type DXN } from '@dxos/keys';
 import { Schema } from 'effect';
+
+import { type BaseEchoObject, EntityKind, TypeAnnotationId, type TypeAnnotation } from '@dxos/echo-schema';
+import { type DXN } from '@dxos/keys';
 
 /**
  * Client-side view onto an EDGE queue.
