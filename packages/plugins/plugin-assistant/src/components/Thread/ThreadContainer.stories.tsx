@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AIServiceEdgeClient, Message, type Tool } from '@dxos/ai';
+import { AIServiceEdgeClient, Message } from '@dxos/ai';
 import {
   Capabilities,
   Events,
@@ -18,21 +18,22 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { genericTools, remoteServiceEndpoints } from '@dxos/artifact-testing';
+import { remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { DXN, Type } from '@dxos/echo';
-import { createQueueDxn, create } from '@dxos/echo-schema';
+import { createQueueDxn, create, Query, Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
+import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { useClient } from '@dxos/react-client';
-import { useQueue } from '@dxos/react-client/echo';
+import { useQueue, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from './Thread';
@@ -55,7 +56,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const space = client.spaces.default;
 
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
-  const tools = useMemo<Tool[]>(() => [...genericTools], []);
+  const tools = useCapabilities(Capabilities.Tools);
 
   const [aiClient] = useState(() => new AIServiceEdgeClient({ endpoint: endpoints.ai }));
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -69,7 +70,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
     return new ChatProcessor(
       aiClient,
-      tools,
+      tools.flat(),
       artifactDefinitions,
       {
         space,
@@ -82,6 +83,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   // Queue.
   const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
+
+  useEffect(() => {
+    if (space) {
+      setQueueDxn(createQueueDxn(space.id).toString());
+    }
+  }, [space]);
 
   useEffect(() => {
     if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
@@ -102,35 +109,35 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [queueDxn, prompts, queue?.items.length, queue?.isLoading]);
 
   // State.
-  const artifactItems: any[] = []; // TODO(burdon): Query from space.
+  const query = useMemo(
+    () => Query.select(Filter.or(...artifactDefinitions.map((definition) => Filter.type(definition.schema)))),
+    [artifactDefinitions],
+  );
+  const artifactItems = useQuery(space, query);
   const messages = [...(queue?.items ?? []), ...(processor?.messages.value ?? [])];
 
-  const handleSubmit = processor
-    ? (message: string) => {
-        requestAnimationFrame(async () => {
-          invariant(processor);
-          if (processor.streaming.value) {
-            await processor.cancel();
-          }
+  const handleSubmit = useCallback(
+    (message: string) => {
+      requestAnimationFrame(async () => {
+        if (!processor || !queue) {
+          return;
+        }
 
-          invariant(queue);
-          await processor.request(message, {
-            history: queue.items,
-            onComplete: (messages) => {
-              queue.append(messages);
-            },
-          });
+        if (processor.streaming.value) {
+          await processor.cancel();
+        }
+
+        await processor.request(message, {
+          history: queue.items,
+          onComplete: (messages) => {
+            queue.append(messages);
+          },
         });
+      });
 
-        return true;
-      }
-    : undefined;
-
-  const handlePrompt = useCallback(
-    (text: string) => {
-      void handleSubmit?.(text);
+      return true;
     },
-    [handleSubmit],
+    [processor, queue],
   );
 
   const handleDelete = useCallback(
@@ -140,6 +147,10 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     },
     [queue],
   );
+
+  if (!space) {
+    return <></>;
+  }
 
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
@@ -163,7 +174,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
               iconOnly
               label='Clear history'
               icon='ph--trash--regular'
-              onClick={() => setQueueDxn(createQueueDxn().toString())}
+              onClick={() => setQueueDxn(createQueueDxn(space.id).toString())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor?.cancel()} />
           </Input.Root>
@@ -176,7 +187,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
           error={processor?.error.value}
           tools={processor?.tools}
           onSubmit={processor ? handleSubmit : undefined}
-          onPrompt={processor ? handlePrompt : undefined}
+          onPrompt={processor ? handleSubmit : undefined}
           onDelete={processor ? handleDelete : undefined}
           {...props}
         />
@@ -186,7 +197,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
       <div className='overflow-hidden grid grid-rows-[2fr_1fr] divide-y divide-separator'>
         {artifactItems.length > 0 && (
           <div className={mx('flex grow overflow-hidden', artifactItems.length === 1 && 'row-span-2')}>
-            <Surface role='canvas-node' limit={1} data={artifactItems[0]} />
+            <Surface role='article' limit={1} data={{ subject: artifactItems[0] }} fallback={Fallback} />
           </div>
         )}
 
@@ -194,7 +205,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
           <div className='flex shrink-0 overflow-hidden divide-x divide-separator'>
             <div className='flex flex-1 h-full'>
               {artifactItems.slice(1, 3).map((item, idx) => (
-                <Surface key={idx} role='canvas-node' limit={1} data={item} />
+                <Surface key={idx} role='article' limit={1} data={{ subject: item }} fallback={Fallback} />
               ))}
             </div>
           </div>
@@ -223,6 +234,7 @@ const meta: Meta<typeof DefaultStory> = {
         ChessPlugin(),
         InboxPlugin(),
         MapPlugin(),
+        MarkdownPlugin(),
         TablePlugin(),
       ],
       fireEvents: [Events.SetupArtifactDefinition],
@@ -255,4 +267,18 @@ export const WithInitialItems: Story = {
       }),
     ],
   },
+};
+
+const Fallback = ({ error }: { error?: Error }) => {
+  const errorString = error?.toString() ?? '';
+  return (
+    <div role='none' className='overflow-auto p-8 attention-surface grid place-items-center'>
+      <p
+        role='alert'
+        className={mx(descriptionMessage, 'break-words rounded-lg p-8', errorString.length < 256 && 'text-lg')}
+      >
+        {error ? errorString : 'error'}
+      </p>
+    </div>
+  );
 };
