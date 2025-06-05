@@ -34,19 +34,25 @@ svg {
       }
     }
 
+    g.dx-subgraphs {
+      path.dx-subgraph {
+        @apply stroke-red-500 fill-neutral-100 dark:fill-neutral-900 [stroke-dasharray:4_4];
+      }
+    }
+
     g.dx-nodes {
       g.dx-node {
         circle {
-          @apply fill-neutral-200 stroke-neutral-500 dark:fill-neutral-500 dark:stroke-none;
+          @apply fill-neutral-200 stroke-neutral-700 dark:fill-neutral-500 dark:stroke-none;
         }
-        rect {
-          @apply invisible;
+        line {
+          @apply opacity-0;
         }
-        text {
-          @apply invisible;
+        rect, text {
+          @apply opacity-0 transition-opacity duration-200;
         }
 
-        &.selected {
+        &.dx-selected {
           circle {
             @apply fill-red-500;
           }
@@ -54,16 +60,19 @@ svg {
       }
 
       g.dx-dragging,
-      g.dx-node:hover {
+      g.dx-highlight {
         circle {
-          @apply opacity-50;
+          @apply stroke-2 stroke-neutral-900 dark:stroke-neutral-200 cursor-pointer;
         }
         rect {
-          @apply visible stroke-neutral-700 dark:stroke-neutral-700;
+          @apply opacity-100 stroke-none fill-inverseSurface;
+        }
+        line {
+          @apply opacity-100 stroke-2 stroke-neutral-700 dark:stroke-neutral-200;
         }
         text {
-          @apply visible fill-neutral-200 dark:fill-neutral-500;
-        }      
+          @apply opacity-100 fill-neutral-100 dark:fill-neutral-800;
+        }
       }
     }
 

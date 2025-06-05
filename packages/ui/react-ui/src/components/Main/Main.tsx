@@ -308,6 +308,7 @@ const MainContent = forwardRef<HTMLDivElement, MainProps>(
         {...props}
         data-sidebar-inline-start-state={navigationSidebarState}
         data-sidebar-inline-end-state={complementarySidebarState}
+        data-handles-focus={handlesFocus}
         className={tx('main.content', 'main', { bounce, handlesFocus }, classNames)}
         ref={forwardedRef}
       >

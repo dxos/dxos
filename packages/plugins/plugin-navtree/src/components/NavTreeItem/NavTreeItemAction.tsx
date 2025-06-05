@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type MutableRefObject, useRef } from 'react';
+import React from 'react';
 
 import { type Action, type Node } from '@dxos/app-graph';
 import { useTranslation, toLocalizedString, IconButton, useDensityContext } from '@dxos/react-ui';
@@ -17,7 +17,6 @@ export type NavTreeItemActionMenuProps = ActionProperties & {
   caller?: string;
   monolithic?: boolean;
   menuActions?: Action[];
-  suppressNextTooltip?: MutableRefObject<boolean>;
 };
 
 const fallbackIcon = 'ph--placeholder--regular';
@@ -40,16 +39,10 @@ export const NavTreeItemActionDropdownMenu = ({
   caller,
 }: NavTreeItemActionMenuProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
-  const suppressNextTooltip = useRef<boolean>(false);
   const density = useDensityContext();
   return (
     <MenuProvider>
-      <DropdownMenu.Root
-        group={parent}
-        items={menuActions as MenuItem[]}
-        caller={caller}
-        suppressNextTooltip={suppressNextTooltip}
-      >
+      <DropdownMenu.Root group={parent} items={menuActions as MenuItem[]} caller={caller}>
         <DropdownMenu.Trigger asChild>
           <IconButton
             {...(density === 'coarse' ? coarseActionButtonProps : fineActionButtonProps)}
@@ -59,7 +52,6 @@ export const NavTreeItemActionDropdownMenu = ({
             iconOnly
             label={toLocalizedString(label, t)}
             data-testid={testId}
-            suppressNextTooltip={suppressNextTooltip}
           />
         </DropdownMenu.Trigger>
       </DropdownMenu.Root>

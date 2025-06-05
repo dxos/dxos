@@ -4,10 +4,11 @@
 
 import { expect, test } from 'vitest';
 
-import { type ScreenBounds, type Point, Screen } from './screen';
+import { Screen } from './screen';
+import { type Rect, type Point } from './types';
 
 test('createBounds', () => {
-  const tests: { p1: Point; p2: Point; bounds: ScreenBounds }[] = [
+  const tests: { p1: Point; p2: Point; bounds: Rect }[] = [
     {
       p1: [0, 0],
       p2: [0, 0],

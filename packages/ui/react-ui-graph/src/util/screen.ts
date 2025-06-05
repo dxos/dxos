@@ -2,11 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export type Point = [x: number, y: number];
-
-export type Size = Pick<DOMRect, 'width' | 'height'>;
-
-export type ScreenBounds = Pick<DOMRect, 'x' | 'y' | 'width' | 'height'>;
+import { type Rect, type Point } from './types';
 
 export type Modifiers = {
   center?: boolean;
@@ -14,7 +10,7 @@ export type Modifiers = {
 };
 
 export class Screen {
-  static createBounds = ([x1, y1]: Point, [x2, y2]: Point, mod: Modifiers = {}): ScreenBounds => {
+  static createBounds = ([x1, y1]: Point, [x2, y2]: Point, mod: Modifiers = {}): Rect => {
     const { constrain, center } = mod;
 
     const x = Math.min(x1, x2);
@@ -43,11 +39,11 @@ export class Screen {
     }
   };
 
-  static center = ({ x, y, width, height }: ScreenBounds): Point => {
+  static center = ({ x, y, width, height }: Rect): Point => {
     return [x + width / 2, y + height / 2];
   };
 
-  static contains = (bounds: ScreenBounds, point: Point): boolean => {
+  static contains = (bounds: Rect, point: Point): boolean => {
     const [x, y] = point;
 
     if (x < bounds.x || y < bounds.y) {

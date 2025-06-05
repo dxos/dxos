@@ -48,6 +48,7 @@
     "d3": "^7.9.0",
     "d3-force": "~3.0.0",
     "immutability-helper": "^3.0.2",
+    "js-clipper": "1.0.1",
     "lodash.defaultsdeep": "^4.6.1",
     "react-resize-detector": "^11.0.1",
     "topojson-client": "^3.1.0"
