@@ -126,6 +126,25 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                       </div>
                       <Surface role='card--kanban' limit={1} data={{ subject: card }} />
                     </div>
+                    <StackItem.DragPreview>
+                      {({ item }) => (
+                        <div
+                          role='none'
+                          className='rounded overflow-hidden bg-cardSurface dx-focus-ring-group-y-indicator relative min-bs-[--rail-item]'
+                        >
+                          <div role='none' className='flex items-center absolute block-start-0 inset-inline-0'>
+                            <IconButton
+                              iconOnly
+                              icon='ph--dots-six-vertical--regular'
+                              variant='default'
+                              label={t('card drag handle label')}
+                              classNames='pli-2'
+                            />
+                          </div>
+                          <Surface role='card--kanban' limit={1} data={{ subject: item }} />
+                        </div>
+                      )}
+                    </StackItem.DragPreview>
                   </StackItem.Root>
                 ))}
               </Stack>
@@ -175,6 +194,28 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 )} */}
               </StackItem.Heading>
             </div>
+            <StackItem.DragPreview>
+              {({ item }) => (
+                <div className='rounded overflow-hidden bg-baseSurface p-2 border border-separator'>
+                  <div className='flex items-center'>
+                    <IconButton
+                      iconOnly
+                      icon='ph--dots-six-vertical--regular'
+                      variant='ghost'
+                      label={t('column drag handle label')}
+                      classNames='pli-2'
+                    />
+                    <Tag
+                      palette={model.getPivotAttributes(item.id).color as any}
+                      data-uncategorized={item.id === UNCATEGORIZED_VALUE}
+                      classNames='mis-1 data-[uncategorized="true"]:mis-2'
+                    >
+                      {model.getPivotAttributes(item.id).title}
+                    </Tag>
+                  </div>
+                </div>
+              )}
+            </StackItem.DragPreview>
           </StackItem.Root>
         );
       })}

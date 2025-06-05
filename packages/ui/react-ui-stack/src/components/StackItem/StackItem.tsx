@@ -5,6 +5,7 @@
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
+import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import {
   attachClosestEdge,
   extractClosestEdge,
@@ -12,7 +13,15 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
-import React, { forwardRef, useLayoutEffect, useState, type ComponentPropsWithRef, useCallback } from 'react';
+import React, {
+  forwardRef,
+  useLayoutEffect,
+  useState,
+  type ComponentPropsWithRef,
+  useCallback,
+  type ReactNode,
+} from 'react';
+import { createPortal } from 'react-dom';
 
 import { type ThemedClassName, ListItem } from '@dxos/react-ui';
 import { resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
@@ -34,7 +43,7 @@ import {
   type StackItemSigilButtonProps,
   StackItemSigilButton,
 } from './StackItemSigil';
-import { useStack, StackItemContext } from '../StackContext';
+import { useStack, StackItemContext, idle, type ItemDragState, useStackItem } from '../StackContext';
 import { type StackItemSize, type StackItemData } from '../defs';
 
 // NOTE: 48rem fills the screen on a MacbookPro with the sidebars closed.
@@ -77,6 +86,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
     const [closestEdge, setEdge] = useState<Edge | null>(null);
     const [sourceId, setSourceId] = useState<string | null>(null);
+    const [dragState, setDragState] = useState<ItemDragState>(idle);
     const { orientation, rail, onRearrange } = useStack();
     const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
       useState(propsSize);
@@ -109,17 +119,28 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           getInitialData: () => ({ id: item.id, type }),
           onGenerateDragPreview: ({ nativeSetDragImage, source, location }) => {
             document.body.setAttribute('data-drag-preview', 'true');
-            const { x, y } = preserveOffsetOnSource({ element: source.element, input: location.current.input })({
-              container: (source.element.offsetParent ?? document.body) as HTMLElement,
+            const offsetFn = preserveOffsetOnSource({ element: source.element, input: location.current.input });
+            const rect = source.element.getBoundingClientRect();
+            setCustomNativeDragPreview({
+              nativeSetDragImage,
+              getOffset: ({ container }) => {
+                return offsetFn({ container });
+              },
+              render: ({ container }) => {
+                container.style.width = rect.width + 'px';
+                setDragState({ type: 'preview', container, item });
+                return () => {};
+              },
             });
-            nativeSetDragImage?.(source.element, x, y);
           },
           onDragStart: () => {
             document.body.removeAttribute('data-drag-preview');
             itemElement?.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'active');
+            setDragState({ type: 'is-dragging', item });
           },
           onDrop: () => {
             itemElement?.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'idle');
+            setDragState(idle);
           },
         }),
         dropTargetForElements({
@@ -194,7 +215,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     };
 
     return (
-      <StackItemContext.Provider value={{ selfDragHandleRef, size, setSize }}>
+      <StackItemContext.Provider value={{ selfDragHandleRef, size, setSize, state: dragState, setState: setDragState }}>
         <Root
           {...props}
           tabIndex={0}
@@ -231,6 +252,15 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
   },
 );
 
+type StackItemDragPreviewProps = {
+  children: ({ item }: { item: any }) => ReactNode;
+};
+
+export const StackItemDragPreview = ({ children }: StackItemDragPreviewProps) => {
+  const { state } = useStackItem();
+  return state?.type === 'preview' ? createPortal(children({ item: state.item }), state.container) : null;
+};
+
 export const StackItem = {
   Root: StackItemRoot,
   Content: StackItemContent,
@@ -240,6 +270,7 @@ export const StackItem = {
   DragHandle: StackItemDragHandle,
   Sigil: StackItemSigil,
   SigilButton: StackItemSigilButton,
+  DragPreview: StackItemDragPreview,
 };
 
 export type {
@@ -252,4 +283,5 @@ export type {
   StackItemSigilProps,
   StackItemSigilButtonProps,
   StackItemSigilAction,
+  StackItemDragPreviewProps,
 };
