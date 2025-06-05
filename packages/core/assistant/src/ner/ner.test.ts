@@ -2,25 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipeline } from '@xenova/transformers';
+import {
+  pipeline,
+  TokenClassificationOutput,
+  TokenClassificationPipelineType,
+  TokenClassificationSingle,
+} from '@xenova/transformers';
 import { beforeAll, describe, expect, test } from 'vitest';
 
 import { log } from '@dxos/log';
 import { createTestData } from '@dxos/schema/testing';
 
-type NerToken = {
-  entity: string;
-  score: number;
-  index: number;
-  word: string;
-  start: number | null;
-  end: number | null;
-};
+const createTokenGroups = (tokens: TokenClassificationSingle[]): TokenClassificationSingle[][] => {
+  const tokenGroups: TokenClassificationSingle[][] = [];
 
-const createTokenGroups = (tokens: NerToken[]): NerToken[][] => {
-  const tokenGroups: NerToken[][] = [];
-
-  const canBeCombined = (prevToken: NerToken, currentToken: NerToken) => {
+  const canBeCombined = (prevToken: TokenClassificationSingle, currentToken: TokenClassificationSingle) => {
     const [currentState, currentEntity] = currentToken.entity.split('-'); // B, I, O
     const [prevState, prevEntity] = prevToken.entity.split('-'); // B, I, O
 
@@ -61,8 +57,8 @@ const createTokenGroups = (tokens: NerToken[]): NerToken[][] => {
   return tokenGroups;
 };
 
-const combineNerTokens = (group: NerToken[]): NerToken => {
-  const combinedToken: NerToken = {
+const combineNerTokens = (group: TokenClassificationSingle[]): TokenClassificationSingle => {
+  const combinedToken: TokenClassificationSingle = {
     entity: group.at(0)!.entity.split('-')[1],
     score: group.reduce((acc, token) => acc + token.score, 0) / group.length,
     index: group.at(0)!.index,
@@ -83,7 +79,7 @@ const combineNerTokens = (group: NerToken[]): NerToken => {
 };
 
 describe.skip('Named Entity Recognition', () => {
-  let ner: any;
+  let ner: TokenClassificationPipelineType;
 
   beforeAll(async () => {
     // Initialize the NER pipeline
@@ -92,7 +88,7 @@ describe.skip('Named Entity Recognition', () => {
 
   test.skip('should identify named entities in text', async () => {
     const text = 'Elon Musk is the CEO of SpaceX and Tesla.';
-    const result = await ner(text);
+    const result = (await ner(text)) as TokenClassificationOutput;
 
     // Verify the structure of the result
     expect(Array.isArray(result)).toBe(true);
@@ -101,14 +97,14 @@ describe.skip('Named Entity Recognition', () => {
     log.info('ner', { result });
 
     // Check for specific entities
-    const entities = result.map((item: any) => ({
+    const entities = result.map((item: TokenClassificationSingle) => ({
       text: item.word,
       entity: item.entity,
       score: item.score,
     }));
 
     // Verify Elon Musk is recognized as a person
-    const elonMusk = entities.find((e: any) => e.text === 'Elon' || e.text === 'Musk');
+    const elonMusk = entities.find((e) => e.text === 'Elon' || e.text === 'Musk');
     expect(elonMusk).toBeDefined();
     expect(elonMusk?.entity).toMatch(/PER/);
 
@@ -128,7 +124,7 @@ describe.skip('Named Entity Recognition', () => {
     );
 
     for (const block of blocks) {
-      const result = await ner(block);
+      const result = (await ner(block)) as TokenClassificationOutput;
       const combinedTokens = createTokenGroups(result).map(combineNerTokens);
       log.info('ner', { text: block, result: combinedTokens });
     }
@@ -142,7 +138,7 @@ describe.skip('Named Entity Recognition', () => {
     );
 
     for (const block of blocks) {
-      const result = await ner(block);
+      const result = (await ner(block)) as TokenClassificationOutput;
       const combinedTokens = createTokenGroups(result).map(combineNerTokens);
       log.info('ner', { text: block, result: combinedTokens });
     }
