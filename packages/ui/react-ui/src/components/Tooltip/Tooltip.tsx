@@ -313,20 +313,7 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
           isPointerDownRef.current = true;
           document.addEventListener('pointerup', handlePointerUp, { once: true });
         })}
-        onFocus={composeEventHandlers(props.onFocus, (event) => {
-          if (!isPointerDownRef.current) {
-            onInteract?.(event);
-            if (event.defaultPrevented) {
-              return;
-            }
-            if (suppressNextTooltip?.current) {
-              suppressNextTooltip.current = false;
-            } else {
-              context.onTriggerChange(ref.current);
-              context.onOpen();
-            }
-          }
-        })}
+        onFocus={props.onFocus}
         onBlur={composeEventHandlers(props.onBlur, context.onClose)}
         onClick={composeEventHandlers(props.onClick, context.onClose)}
       />
