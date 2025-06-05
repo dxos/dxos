@@ -77,7 +77,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 classNames={
                   /* NOTE(thure): Do not let this element have zero intrinsic size, otherwise dropping items into an
                     empty stack will be made difficult or impossible. See #9035. */
-                  'plb-0 min-bs-2'
+                  ['plb-1', cards.length > 0 && 'plb-2 relative -block-start-1 z-[1] -mbe-1']
                 }
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
@@ -125,7 +125,10 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
               </Stack>
 
               {onAddCard && (
-                <div role='none' className='plb-2 pli-2'>
+                <div
+                  role='none'
+                  className='plb-2 pli-2 relative before:absolute before:inset-inline-2 before:block-start-0 before:bs-px before:bg-separator'
+                >
                   <IconButton
                     icon='ph--plus--regular'
                     label={t('add card label')}
