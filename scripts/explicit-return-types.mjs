@@ -107,11 +107,6 @@ for (const filePath of tsFiles) {
         continue;
       }
 
-      // Skip if method is not public
-      if (!method.hasModifier(ts.SyntaxKind.PublicKeyword)) {
-        continue;
-      }
-
       // Get the inferred return type
       const returnType = method.getReturnType();
       const returnTypeText = returnType.getText();
@@ -125,6 +120,94 @@ for (const filePath of tsFiles) {
 
       // Add the return type annotation
       method.setReturnType(returnTypeText);
+      hasChanges = true;
+    }
+
+    // Process class properties
+    const properties = cls.getProperties();
+    for (const prop of properties) {
+      // Skip if property already has a type
+      if (prop.getTypeNode()) {
+        continue;
+      }
+
+      // Skip if property is not public
+      if (!prop.hasModifier(ts.ScriptTarget.PublicKeyword)) {
+        continue;
+      }
+
+      // Get the inferred property type
+      const propType = prop.getType();
+      const propTypeText = propType.getText();
+
+      if (!canApplyType(propType)) {
+        logSkip(propTypeText, filePath, prop.getStartLineNumber());
+        continue;
+      }
+
+      logSet(propTypeText, filePath, prop.getStartLineNumber());
+
+      // Add the type annotation
+      prop.setType(propTypeText);
+      hasChanges = true;
+    }
+
+    // Process getters and setters
+    const getAccessors = cls.getGetAccessors();
+    for (const getter of getAccessors) {
+      // Skip if getter already has a return type
+      if (getter.getReturnTypeNode()) {
+        continue;
+      }
+
+      // Skip if getter is not public
+      if (!getter.hasModifier(ts.ScriptTarget.PublicKeyword)) {
+        continue;
+      }
+
+      // Get the inferred return type
+      const returnType = getter.getReturnType();
+      const returnTypeText = returnType.getText();
+
+      if (!canApplyType(returnType)) {
+        logSkip(returnTypeText, filePath, getter.getStartLineNumber());
+        continue;
+      }
+
+      logSet(returnTypeText, filePath, getter.getStartLineNumber());
+
+      // Add the return type annotation
+      getter.setReturnType(returnTypeText);
+      hasChanges = true;
+    }
+
+    const setAccessors = cls.getSetAccessors();
+    for (const setter of setAccessors) {
+      // Skip if setter already has a parameter type
+      if (setter.getParameters()[0]?.getTypeNode()) {
+        continue;
+      }
+
+      // Skip if setter is not public
+      if (!setter.hasModifier(ts.ScriptTarget.PublicKeyword)) {
+        continue;
+      }
+
+      // Get the inferred parameter type
+      const paramType = setter.getParameters()[0]?.getType();
+      if (!paramType) continue;
+
+      const paramTypeText = paramType.getText();
+
+      if (!canApplyType(paramType)) {
+        logSkip(paramTypeText, filePath, setter.getStartLineNumber());
+        continue;
+      }
+
+      logSet(paramTypeText, filePath, setter.getStartLineNumber());
+
+      // Add the parameter type annotation
+      setter.getParameters()[0]?.setType(paramTypeText);
       hasChanges = true;
     }
   }
