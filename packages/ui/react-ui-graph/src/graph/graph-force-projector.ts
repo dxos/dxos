@@ -2,7 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import { forceCenter, forceCollide, forceLink, forceManyBody, forceRadial, forceSimulation, forceX, forceY } from 'd3';
+import {
+  type Force,
+  forceCenter,
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceRadial,
+  forceSimulation,
+  forceX,
+  forceY,
+} from 'd3';
 
 import { type Graph } from '@dxos/graph';
 
@@ -26,7 +36,11 @@ const getValue = <T>(v: T | ((...args: any[]) => T) | undefined, cb, defaultValu
  * @param cb
  * @param defaultValue
  */
-const maybeForce = <T>(options: T | boolean, cb, defaultValue = undefined) => {
+const maybeForce = <Config>(
+  options: Config | boolean,
+  cb: (config: Config) => Force<any, any>,
+  defaultValue = undefined,
+) => {
   const value = typeof options === 'boolean' ? (options ? {} : undefined) : options ?? defaultValue;
   if (value) {
     return cb(value);
@@ -143,12 +157,13 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
     return this._simulation;
   }
 
-  numChildren(node) {
+  numChildren(node: GraphLayoutNode) {
     return this._layout.graph.edges.filter((edge) => edge.source.id === this.options.idAccessor(node)).length;
   }
 
   override onUpdate(data?: Graph) {
     this.mergeData(data);
+    this._simulation.stop();
     this.updateForces(this.options.forces);
 
     // Guides.
@@ -249,11 +264,13 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
     });
 
     // Replace edges.
-    const edges = data.edges.map((edge) => ({
-      id: edge.id,
-      source: nodes.find((n) => n.id === edge.source),
-      target: nodes.find((n) => n.id === edge.target),
-    }));
+    const edges = data.edges
+      .map((edge) => ({
+        id: edge.id,
+        source: nodes.find((n) => n.id === edge.source),
+        target: nodes.find((n) => n.id === edge.target),
+      }))
+      .filter((edge) => edge.source && edge.target);
 
     this._layout = {
       graph: {
