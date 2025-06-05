@@ -441,7 +441,7 @@ export class AISession {
     });
   }
 
-  private _onToolStatusReport(message: Message, status: AgentStatus) {
+  private _onToolStatusReport(message: Message, status: AgentStatus): void {
     this.toolStatusReport.emit({ message, status });
   }
 
