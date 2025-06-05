@@ -102,10 +102,6 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
     }
   }, [settings.enableDeck, dispatch, active, layoutMode]);
 
-  useEffect(() => {
-    document.body.setAttribute('data-focus', settings.hideFocus ? 'hidden' : 'normal');
-  }, [settings.hideFocus]);
-
   /**
    * Clear scroll restoration state if the window is resized
    */
