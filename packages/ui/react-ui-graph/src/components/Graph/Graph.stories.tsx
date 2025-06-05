@@ -152,6 +152,18 @@ export const Default: Story = {
   },
 };
 
+export const Empty: Story = {
+  render: () => (
+    <SVG.Root>
+      <SVG.Markers />
+      <SVG.Grid axis />
+      <SVG.Zoom extent={[1 / 4, 4]}>
+        <GraphComponent />
+      </SVG.Zoom>
+    </SVG.Root>
+  ),
+};
+
 export const Force: Story = {
   args: {
     debug: true,

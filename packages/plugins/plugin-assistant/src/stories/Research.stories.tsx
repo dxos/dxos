@@ -10,16 +10,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineTool, AIServiceEdgeClient, Message, ToolResult, type Tool } from '@dxos/ai';
 import { SpyAIService } from '@dxos/ai/testing';
-import {
-  contributes,
-  createSurface,
-  useIntentDispatcher,
-  Capabilities,
-  Events,
-  IntentPlugin,
-  SettingsPlugin,
-  Surface,
-} from '@dxos/app-framework';
+import { contributes, createSurface, useIntentDispatcher, Capabilities, Events, Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { researchFn, TYPES, findRelatedSchema, type RelatedSchema } from '@dxos/assistant';
@@ -44,15 +35,8 @@ import {
 } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { ChessPlugin } from '@dxos/plugin-chess';
-import { ClientPlugin } from '@dxos/plugin-client';
 import { ForceGraph } from '@dxos/plugin-explorer';
-import { InboxPlugin } from '@dxos/plugin-inbox';
-import { MapPlugin } from '@dxos/plugin-map';
-import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { TablePlugin } from '@dxos/plugin-table';
-import { Config, useClient } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 import { live, useQueue, useQuery, type Live, type EchoDatabase, getSpace } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncState } from '@dxos/react-ui';
 import {
@@ -69,6 +53,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { SpaceGraphModel } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { testPlugins } from './testing';
 import { Thread, type ThreadProps } from '../components';
 import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
@@ -357,80 +342,6 @@ const ResearchPrompts = ({ object, onResearch }: ResearchPromptsProps) => {
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
-  title: 'plugins/plugin-assistant/Research',
-  render: DefaultStory,
-  decorators: [
-    withPluginManager({
-      plugins: [
-        ClientPlugin({
-          config: new Config({
-            runtime: {
-              client: {
-                storage: {
-                  persistent: true,
-                },
-                enableVectorIndexing: true,
-              },
-              services: {
-                edge: {
-                  url: 'http://edge-main.dxos.workers.dev',
-                },
-              },
-            },
-          }),
-          onClientInitialized: async (_, client) => {
-            if (!client.halo.identity.get()) {
-              await client.halo.createIdentity();
-            }
-          },
-          types: [...TYPES],
-        }),
-        SpacePlugin(),
-        SettingsPlugin(),
-        IntentPlugin(),
-
-        // Artifacts.
-        ChessPlugin(),
-        InboxPlugin(),
-        MapPlugin(),
-        TablePlugin(),
-        PreviewPlugin(),
-      ],
-      capabilities: [
-        contributes(
-          Capabilities.ReactSurface,
-          createSurface({
-            id: 'test',
-            role: 'card',
-            position: 'fallback',
-            component: ({ data }) => (
-              <span className='text-xs whitespace-pre-wrap'>{JSON.stringify(data.subject, null, 2)}</span>
-            ),
-          }),
-        ),
-      ],
-      fireEvents: [Events.SetupArtifactDefinition],
-    }),
-    withTheme,
-    withLayout({ fullscreen: true }),
-  ],
-  parameters: {
-    translations,
-  },
-};
-
-export default meta;
-
-type Story = StoryObj<typeof DefaultStory>;
-
-export const Default: Story = {
-  args: {
-    debug: true,
-    prompts: ['Research companies in the area of personal knowledge management and AI', 'Who founded Notion?'],
-  },
-};
-
 const createResearchTool = (executor: FunctionExecutor, name: string, fn: typeof researchFn) => {
   return defineTool('example', {
     // TODO(dmaretskyi): Include name in definition
@@ -515,4 +426,48 @@ const createToolbar = (aiClient: SpyAIService) => {
     { source: modes.id, target: mock.id },
   );
   return result;
+};
+
+const meta: Meta<typeof DefaultStory> = {
+  title: 'plugins/plugin-assistant/Research',
+  render: DefaultStory,
+  decorators: [
+    withPluginManager({
+      plugins: testPlugins,
+      capabilities: [
+        contributes(
+          Capabilities.ReactSurface,
+          createSurface({
+            id: 'test',
+            role: 'card',
+            position: 'fallback',
+            component: ({ data }) => (
+              <span className='text-xs whitespace-pre-wrap'>{JSON.stringify(data.subject, null, 2)}</span>
+            ),
+          }),
+        ),
+      ],
+      fireEvents: [Events.SetupArtifactDefinition],
+    }),
+    withTheme,
+    withLayout({ fullscreen: true }),
+  ],
+  parameters: {
+    translations,
+  },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof DefaultStory>;
+
+export const Default: Story = {
+  args: {
+    debug: true,
+    prompts: [
+      //
+      'Research companies in the area of personal knowledge management and AI',
+      'Who founded Notion?',
+    ],
+  },
 };

@@ -11,12 +11,13 @@ import { type SpaceGraphModel } from '@dxos/schema';
 import '@dxos/react-ui-graph/styles/graph.css';
 
 export type D3ForceGraphProps = {
-  model: SpaceGraphModel;
+  model?: SpaceGraphModel;
   match?: RegExp;
+  selection?: SelectionModel;
 };
 
-export const D3ForceGraph: FC<D3ForceGraphProps> = ({ model }) => {
-  const selected = useMemo(() => new SelectionModel(), []);
+export const D3ForceGraph: FC<D3ForceGraphProps> = ({ model, selection: _selection }) => {
+  const selected = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
   const context = useRef<SVGContext>(null);
   const projector = useMemo<GraphForceProjector | undefined>(
     () => (context.current ? new GraphForceProjector(context.current) : undefined),
