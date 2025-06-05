@@ -60,7 +60,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             key={columnValue}
             item={{ id: columnValue }}
             size={20}
-            classNames='flex flex-col pli-2 plb-2 drag-preview-p-0'
+            classNames='flex flex-col pli-2 plb-2'
             disableRearrange={uncategorized}
             focusIndicatorVariant='group'
             prevSiblingId={prevSiblingId}
