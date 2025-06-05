@@ -6,6 +6,8 @@ import { invariant } from '@dxos/invariant';
 
 import { type Expression, type BinaryOperator, type RelationalOperator } from './types';
 
+// TODO(burdon): Move to echo-schema?
+
 type RelationalSymbol = '=' | '<' | '>';
 
 const operators: Record<RelationalSymbol, RelationalOperator> = {
@@ -24,6 +26,11 @@ export class QueryParser {
   }
 
   private tokenize(input: string): string[] {
+    // Handle empty input.
+    if (!input.trim()) {
+      return [];
+    }
+
     // Split on spaces but preserve quoted strings.
     const tokens: string[] = [];
     let current = '';
@@ -123,6 +130,7 @@ export class QueryParser {
       };
     }
 
+    // Handle parentheses.
     if (this.match('(')) {
       const expr = this.parseExpression();
       if (!this.match(')')) {
@@ -137,6 +145,10 @@ export class QueryParser {
     if (token.includes(':')) {
       const [field, value] = token.split(':');
       this.advance();
+      if (!field || !value) {
+        throw new Error(`Invalid type expression: ${token}`);
+      }
+
       return {
         type: 'binary',
         operator: 'EQ',
@@ -174,6 +186,14 @@ export class QueryParser {
   }
 
   public parse(): Expression {
+    // Return a special expression for empty input.
+    if (this.tokens.length === 0) {
+      return {
+        type: 'literal',
+        value: '*',
+      };
+    }
+
     return this.parseExpression();
   }
 }

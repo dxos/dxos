@@ -67,6 +67,10 @@ export const generateFilter = (ast: Expression): Filter<any> => {
 
     case 'literal': {
       const { value } = ast as Literal;
+      // Handle special '*' value for empty input.
+      if (value === '*') {
+        return Filter.everything();
+      }
       return Filter.eq(value);
     }
 

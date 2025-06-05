@@ -5,23 +5,25 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { timeout } from '@dxos/async';
 import { type BaseEchoObject } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { D3ForceGraph } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { SpaceGraphModel } from '@dxos/schema';
-import { type ValueGenerator } from '@dxos/schema/testing';
+import { DataType, SpaceGraphModel } from '@dxos/schema';
+import { createObjectFactory, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { testPlugins } from './testing';
 import { PromptBar, type PromptBarProps } from '../components';
+import { generateFilter, QueryParser } from '../parser';
 import translations from '../translations';
 
 faker.seed(1);
@@ -32,7 +34,8 @@ const generator = faker as any as ValueGenerator;
 const DefaultStory = () => {
   const space = useSpace();
   const model = useMemo(() => new SpaceGraphModel(), []);
-  const items = useQuery(space, Query.select(Filter.everything()));
+  const [filter, setFilter] = useState<Filter.Any | null>(null);
+  const items = useQuery(space, Query.select(filter ?? Filter.everything()));
 
   useEffect(() => {
     if (!space) {
@@ -40,11 +43,11 @@ const DefaultStory = () => {
     }
 
     return timeout(async () => {
-      // const createObjects = createObjectFactory(space.db, generator);
-      // await createObjects([
-      // { type: DataType.Organization, count: 1 },
-      // { type: DataType.Person, count: 1 },
-      // ]);
+      const createObjects = createObjectFactory(space.db, generator);
+      await createObjects([
+        { type: DataType.Organization, count: 1 },
+        { type: DataType.Person, count: 1 },
+      ]);
 
       void model.open(space);
     });
@@ -52,7 +55,12 @@ const DefaultStory = () => {
 
   const handleSubmit = useCallback<NonNullable<PromptBarProps['onSubmit']>>(
     (text) => {
-      console.log(text);
+      try {
+        log.info('filter', text);
+        const parser = new QueryParser(text);
+        const filter = generateFilter(parser.parse());
+        setFilter(filter);
+      } catch (err) {}
     },
     [space],
   );
