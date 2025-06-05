@@ -128,20 +128,19 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     </div>
                     <StackItem.DragPreview>
                       {({ item }) => (
-                        <div
-                          role='none'
-                          className='rounded overflow-hidden bg-cardSurface dx-focus-ring-group-y-indicator relative min-bs-[--rail-item]'
-                        >
-                          <div role='none' className='flex items-center absolute block-start-0 inset-inline-0'>
-                            <IconButton
-                              iconOnly
-                              icon='ph--dots-six-vertical--regular'
-                              variant='default'
-                              label={t('card drag handle label')}
-                              classNames='pli-2'
-                            />
+                        <div className='p-2'>
+                          <div className='rounded overflow-hidden bg-cardSurface ring-focusLine ring-accentFocusIndicator relative min-bs-[--rail-item]'>
+                            <div role='none' className='flex items-center absolute block-start-0 inset-inline-0'>
+                              <IconButton
+                                iconOnly
+                                icon='ph--dots-six-vertical--regular'
+                                variant='ghost'
+                                label={t('card drag handle label')}
+                                classNames='pli-2'
+                              />
+                            </div>
+                            <Surface role='card--kanban' limit={1} data={{ subject: item }} />
                           </div>
-                          <Surface role='card--kanban' limit={1} data={{ subject: item }} />
                         </div>
                       )}
                     </StackItem.DragPreview>
@@ -208,7 +207,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
 
                 return (
                   <div className='p-2'>
-                    <div className='rounded-lg max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface border border-separator flex flex-col'>
+                    <div className='rounded-lg max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface ring-focusLine ring-accentFocusIndicator flex flex-col'>
                       {/* Column Header */}
                       <div className='flex items-center p-2'>
                         <IconButton
