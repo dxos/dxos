@@ -8,6 +8,17 @@ import fs from 'fs/promises';
 import chalk from 'chalk';
 import { Type } from 'ts-morph';
 
+// Parse command line arguments
+const argv = yargs(hideBin(process.argv))
+  .option('verbose', {
+    short: 'v',
+    description: 'Verbose output',
+    type: 'boolean',
+    default: false,
+  })
+  .help()
+  .parse();
+
 // Find all TypeScript files
 const tsFiles = await globby(['**/*.ts', '**/*.tsx'], {
   ignore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
@@ -41,6 +52,10 @@ function logSave(filePath) {
 
 // Process each file independently
 for (const filePath of tsFiles) {
+  if (argv.verbose) {
+    console.log(chalk.gray(`🔍 ${filePath}`));
+  }
+
   const project = new Project({
     useInMemoryFileSystem: true,
     compilerOptions: {
