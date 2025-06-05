@@ -60,6 +60,7 @@ for (const filePath of tsFiles) {
     useInMemoryFileSystem: true,
     compilerOptions: {
       target: ts.ScriptTarget.Latest,
+      strict: true,
     },
   });
 
@@ -230,9 +231,20 @@ function canApplyType(type) {
   const flags = type.getFlags();
   if (
     flags &
-    (ts.TypeFlags.Boolean | ts.TypeFlags.String | ts.TypeFlags.Number | ts.TypeFlags.Void | ts.TypeFlags.Undefined)
+    (ts.TypeFlags.Boolean |
+      ts.TypeFlags.String |
+      ts.TypeFlags.Number |
+      ts.TypeFlags.Void |
+      ts.TypeFlags.Undefined |
+      ts.TypeFlags.ThisType)
   ) {
     return true;
+  }
+
+  // Handle union types
+  if (flags & ts.TypeFlags.Union) {
+    const unionTypes = type.getUnionTypes();
+    return unionTypes.every((unionType) => canApplyType(unionType));
   }
 
   // Handle Promise types using type flags
