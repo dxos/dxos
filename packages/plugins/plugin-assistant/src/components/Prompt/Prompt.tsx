@@ -7,11 +7,11 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
-  type BasicExtensionsOptions,
   createBasicExtensions,
   createThemeExtensions,
   keymap,
   useTextEditor,
+  type BasicExtensionsOptions,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';

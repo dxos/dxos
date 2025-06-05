@@ -5,39 +5,99 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { timeout } from '@dxos/async';
 import { D3ForceGraph } from '@dxos/plugin-explorer';
-import { Toolbar } from '@dxos/react-ui';
+import { faker } from '@dxos/random';
+import { type Space, useSpace } from '@dxos/react-client/echo';
 import { List } from '@dxos/react-ui-list';
+import { DataType, SpaceGraphModel } from '@dxos/schema';
+import { createObjectFactory, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { testPlugins } from './testing';
+import { PromptBar } from '../components';
 import translations from '../translations';
 
+faker.seed(1);
+
+// TODO(burdon): Evolve dxos/random to support this directly.
+const generator = faker as any as ValueGenerator;
+
 const DefaultStory = () => {
+  const space = useSpace();
+  const model = useMemo(() => new SpaceGraphModel(), []);
+  useEffect(() => {
+    if (!space) {
+      return;
+    }
+
+    return timeout(async () => {
+      console.log('!!!');
+      const createObjects = createObjectFactory(space.db, generator);
+      await createObjects([
+        { type: DataType.Organization, count: 1 },
+        { type: DataType.Person, count: 1 },
+      ]);
+
+      void model.open(space);
+    });
+  }, [model, space]);
+
   return (
-    <div className='grow grid grid-rows-[min-content_1fr]'>
-      <QueryToolbar />
-      <div className='grow grid grid-cols-[1fr,400px] divide-x divide-separator'>
-        <D3ForceGraph />
-        <ItemList />
+    <div className='grow grid'>
+      <div className='grow grid grid-cols-[1fr_400px]'>
+        <D3ForceGraph classNames='border-ie border-separator' model={model} />
+        <ItemList space={space} />
       </div>
+      {/* TODO(burdon): Dialog currently prevent drag events. */}
+      {/* <Dialog.Root open>
+        <AmbientDialog resizeable={false}> */}
+      <div className='fixed bottom-8 left-1/2 -translate-x-1/2'>
+        <div className='w-[30rem] p-1 bg-groupSurface border border-separator rounded'>
+          <PromptBar />
+        </div>
+      </div>
+      {/* </AmbientDialog>
+      </Dialog.Root> */}
     </div>
   );
 };
 
-const ItemList = () => {
-  return <List.Root items={[]}></List.Root>;
+type TestItem = {
+  id: string;
+  title: string;
 };
 
-const QueryToolbar = () => {
+const ItemList = ({ space }: { space?: Space }) => {
+  const [items, setItems] = useState<TestItem[]>([]);
+  useEffect(() => {
+    if (!space) {
+      return;
+    }
+
+    return timeout(() => {
+      setItems([{ id: 'test', title: 'Test' }]);
+    });
+  }, [space]);
+
   return (
-    <Toolbar.Root>
-      <Toolbar.Button>Test</Toolbar.Button>
-    </Toolbar.Root>
+    <List.Root<TestItem> items={items}>
+      {({ items }) => (
+        <div role='list' className='flex flex-col w-full'>
+          <List.Item<TestItem> key='test' item={items?.[0]}>
+            {items.map((item) => (
+              <div key={item.id} className='flex flex-col truncate'>
+                <List.ItemTitle>{item.title}</List.ItemTitle>
+              </div>
+            ))}
+          </List.Item>
+        </div>
+      )}
+    </List.Root>
   );
 };
 
