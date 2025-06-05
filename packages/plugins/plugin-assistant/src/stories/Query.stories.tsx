@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { timeout } from '@dxos/async';
+import { combine, timeout } from '@dxos/async';
 import { type BaseEchoObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { D3ForceGraph } from '@dxos/plugin-explorer';
@@ -33,24 +33,31 @@ const generator = faker as any as ValueGenerator;
 
 const DefaultStory = () => {
   const space = useSpace();
-  const model = useMemo(() => new SpaceGraphModel(), []);
   const [filter, setFilter] = useState<Filter.Any | null>(null);
   const items = useQuery(space, Query.select(filter ?? Filter.everything()));
+
+  // TODO(burdon): Apply filter.
+  const model = useMemo(() => new SpaceGraphModel(), []);
 
   useEffect(() => {
     if (!space) {
       return;
     }
 
-    return timeout(async () => {
-      const createObjects = createObjectFactory(space.db, generator);
-      await createObjects([
-        { type: DataType.Organization, count: 1 },
-        { type: DataType.Person, count: 1 },
-      ]);
+    return combine(
+      timeout(async () => {
+        const createObjects = createObjectFactory(space.db, generator);
+        await createObjects([
+          { type: DataType.Organization, count: 1 },
+          { type: DataType.Person, count: 1 },
+        ]);
 
-      void model.open(space);
-    });
+        void model.open(space);
+      }),
+      () => {
+        void model.close();
+      },
+    );
   }, [space]);
 
   const handleSubmit = useCallback<NonNullable<PromptBarProps['onSubmit']>>(
