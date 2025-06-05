@@ -174,8 +174,8 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
       const isTrailingEdgeOfPrevSibling =
         prevSiblingId !== undefined &&
         sourceId === prevSiblingId &&
-        ((orientation === 'horizontal' && closestEdge === 'right') ||
-          (orientation === 'vertical' && closestEdge === 'bottom'));
+        ((orientation === 'horizontal' && closestEdge === 'left') ||
+          (orientation === 'vertical' && closestEdge === 'top'));
       if (isTrailingEdgeOfPrevSibling) {
         return false;
       }
@@ -184,8 +184,8 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
       const isLeadingEdgeOfNextSibling =
         nextSiblingId !== undefined &&
         sourceId === nextSiblingId &&
-        ((orientation === 'horizontal' && closestEdge === 'left') ||
-          (orientation === 'vertical' && closestEdge === 'top'));
+        ((orientation === 'horizontal' && closestEdge === 'right') ||
+          (orientation === 'vertical' && closestEdge === 'bottom'));
       if (isLeadingEdgeOfNextSibling) {
         return false;
       }

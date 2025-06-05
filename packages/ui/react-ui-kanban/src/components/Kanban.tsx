@@ -50,9 +50,11 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       itemsCount={model.arrangedCards.length}
       {...autoScrollRootAttributes}
     >
-      {model.arrangedCards.map(({ columnValue, cards }) => {
+      {model.arrangedCards.map(({ columnValue, cards }, index, array) => {
         const { color, title } = model.getPivotAttributes(columnValue);
         const uncategorized = columnValue === UNCATEGORIZED_VALUE;
+        const prevSiblingId = index > 0 ? array[index - 1].columnValue : undefined;
+        const nextSiblingId = index < array.length - 1 ? array[index + 1].columnValue : undefined;
         return (
           <StackItem.Root
             key={columnValue}
@@ -61,6 +63,8 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             classNames='flex flex-col pli-2 plb-2 drag-preview-p-0'
             disableRearrange={uncategorized}
             focusIndicatorVariant='group'
+            prevSiblingId={prevSiblingId}
+            nextSiblingId={nextSiblingId}
           >
             <div
               role='none'
@@ -82,13 +86,15 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
               >
-                {cards.map((card) => (
+                {cards.map((card, cardIndex, cardsArray) => (
                   <StackItem.Root
                     key={card.id}
                     item={card}
                     classNames='contain-layout pli-2 plb-1 first-of-type:pbs-0 last-of-type:pbe-0'
                     focusIndicatorVariant='group'
                     onClick={() => select([card.id])}
+                    prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
+                    nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
                   >
                     <div
                       role='none'
