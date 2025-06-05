@@ -107,7 +107,7 @@ export class HaloProxy implements Halo {
    *
    * @internal
    */
-  async _open() {
+  async _open(): Promise<void> {
     log.trace('dxos.sdk.halo-proxy.open', Trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     const gotIdentity = this._identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
@@ -186,7 +186,7 @@ export class HaloProxy implements Halo {
    *
    * @internal
    */
-  async _close() {
+  async _close(): Promise<void> {
     await this._invitationProxy?.close();
     this._invitationProxy = undefined;
     this._subscriptions.clear();

@@ -30,7 +30,7 @@ export class TestBuilder {
     }
   }
 
-  async destroy() {
+  async destroy(): Promise<void> {
     await Promise.all(Array.from(this._peers).map((agent) => agent.destroy()));
   }
 
@@ -48,7 +48,7 @@ export class TestBuilder {
     return [connection1, connection2];
   }
 
-  async disconnect(peer1: TestPeer, peer2: TestPeer) {
+  async disconnect(peer1: TestPeer, peer2: TestPeer): Promise<void> {
     invariant(peer1 !== peer2);
     invariant(this._peers.has(peer1));
     invariant(this._peers.has(peer1));
@@ -72,8 +72,8 @@ export class TestPeer {
 
   constructor(public readonly peerId: PublicKey = PublicKey.random()) {}
 
-  protected async onOpen(connection: TestConnection) {}
-  protected async onClose(connection: TestConnection) {}
+  protected async onOpen(connection: TestConnection): Promise<void> {}
+  protected async onClose(connection: TestConnection): Promise<void> {}
 
   createConnection({ initiator, remotePeerId }: { initiator: boolean; remotePeerId: PublicKey }) {
     const connection = new TestConnection(this.peerId, remotePeerId, initiator);
@@ -81,20 +81,20 @@ export class TestPeer {
     return connection;
   }
 
-  async openConnection(connection: TestConnection) {
+  async openConnection(connection: TestConnection): Promise<void> {
     invariant(this.connections.has(connection));
     await connection.teleport.open(PublicKey.random());
     await this.onOpen(connection);
   }
 
-  async closeConnection(connection: TestConnection) {
+  async closeConnection(connection: TestConnection): Promise<void> {
     invariant(this.connections.has(connection));
     await this.onClose(connection);
     await connection.teleport.close();
     this.connections.delete(connection);
   }
 
-  async destroy() {
+  async destroy(): Promise<void> {
     for (const teleport of this.connections) {
       await this.closeConnection(teleport);
     }

@@ -53,7 +53,7 @@ export class MeshProxy {
   /**
    * @internal
    */
-  async _open() {
+  async _open(): Promise<void> {
     log.trace('dxos.sdk.mesh-proxy.open', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context({ onError: (err) => log.catch(err) });
 
@@ -72,7 +72,7 @@ export class MeshProxy {
   /**
    * @internal
    */
-  async _close() {
+  async _close(): Promise<void> {
     await this._ctx?.dispose();
   }
 }

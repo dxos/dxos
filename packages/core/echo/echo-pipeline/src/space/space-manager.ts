@@ -83,10 +83,10 @@ export class SpaceManager {
   }
 
   @synchronized
-  async open() {}
+  async open(): Promise<void> {}
 
   @synchronized
-  async close() {
+  async close(): Promise<void> {
     await Promise.all([...this._spaces.values()].map((space) => space.close()));
   }
 

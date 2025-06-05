@@ -35,19 +35,19 @@ export class SelectionManager {
     return this.selections[contextId];
   }
 
-  updateSelection(contextId: string, selectedIds: Set<string> | string[]) {
+  updateSelection(contextId: string, selectedIds: Set<string> | string[]): void {
     untracked(() => {
       this._state.selections[contextId] = selectedIds instanceof Set ? selectedIds : new Set(selectedIds);
     });
   }
 
-  clearSelection(contextId: string) {
+  clearSelection(contextId: string): void {
     untracked(() => {
       this._state.selections[contextId] = new Set();
     });
   }
 
-  toggleSelection(contextId: string, id: string) {
+  toggleSelection(contextId: string, id: string): void {
     untracked(() => {
       const current = this.getSelection(contextId);
       if (current.has(id)) {

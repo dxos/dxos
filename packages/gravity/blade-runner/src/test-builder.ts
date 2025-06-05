@@ -42,7 +42,7 @@ export class TestBuilder {
     return server;
   }
 
-  async destroy() {
+  async destroy(): Promise<void> {
     await Promise.all([...this._peers.values()].map((p) => p.destroy()));
     await Promise.all([...this._servers.values()].map((s) => s.stop()));
   }
@@ -64,11 +64,11 @@ export class TestPeer {
     this.peerId = peerId;
   }
 
-  regeneratePeerId() {
+  regeneratePeerId(): void {
     this.peerId = PublicKey.random();
   }
 
-  async start() {
+  async start(): Promise<void> {
     if (this._ctx.disposed) {
       throw new Error('Agent already destroyed');
     }
@@ -112,7 +112,7 @@ export class TestPeer {
     await this.signalManager.subscribeMessages(this.peerId);
   }
 
-  async destroy() {
+  async destroy(): Promise<void> {
     log.trace(
       'dxos.test.signal.start',
       checkType<TraceEvent>({
@@ -128,7 +128,7 @@ export class TestPeer {
     return agent.peerId.toHex();
   }
 
-  async joinTopic(topic: PublicKey) {
+  async joinTopic(topic: PublicKey): Promise<void> {
     log.trace(
       'dxos.test.signal',
       checkType<TraceEvent>({
@@ -140,7 +140,7 @@ export class TestPeer {
     await this.signalManager.join({ topic, peerId: this.peerId });
   }
 
-  async leaveTopic(topic: PublicKey) {
+  async leaveTopic(topic: PublicKey): Promise<void> {
     log.trace(
       'dxos.test.signal',
       checkType<TraceEvent>({
@@ -152,7 +152,7 @@ export class TestPeer {
     await this.signalManager.leave({ topic, peerId: this.peerId });
   }
 
-  async sendMessage(to: PublicKey) {
+  async sendMessage(to: PublicKey): Promise<void> {
     const message: Message = {
       author: this.peerId,
       recipient: to,

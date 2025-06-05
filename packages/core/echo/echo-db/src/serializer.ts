@@ -51,7 +51,7 @@ export class Serializer {
     return data;
   }
 
-  async import(database: EchoDatabase, data: SerializedSpace, opts?: ImportOptions) {
+  async import(database: EchoDatabase, data: SerializedSpace, opts?: ImportOptions): Promise<void> {
     invariant(data.version === Serializer.version, `Invalid version: ${data.version}`);
 
     const { objects } = data;
@@ -84,7 +84,7 @@ export class Serializer {
     });
   }
 
-  private _importObject(database: EchoDatabase, object: SerializedObject) {
+  private _importObject(database: EchoDatabase, object: SerializedObject): void {
     const { '@id': id, '@type': type, '@deleted': deleted, '@meta': meta, ...data } = object;
     const dataProperties = Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')));
     const decodedData = deepMapValues(dataProperties, (value, recurse) => {

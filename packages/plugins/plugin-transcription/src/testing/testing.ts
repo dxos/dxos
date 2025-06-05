@@ -87,7 +87,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
     };
   }
 
-  next() {
+  next(): Date {
     this.start = new Date(this.start.getTime() + Math.random() * 10_000);
     return this.start;
   }
@@ -103,7 +103,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
   currentMessage: number = 0;
   transcriptMessages: DataType.Message[] = [];
 
-  async connect(space: Space) {
+  async connect(space: Space): Promise<void> {
     this.space = space;
     const { transcriptMessages } = await seedTestData(space);
     this.transcriptMessages = transcriptMessages;

@@ -19,7 +19,7 @@ export class QueueFactory extends Resource implements AbstractQueueFactory {
   private readonly _queues = new Map<DXN.String, Queue<BaseEchoObject>>();
   private _service?: QueuesService = undefined;
 
-  setService(service: QueuesService) {
+  setService(service: QueuesService): void {
     this._service = service;
   }
 

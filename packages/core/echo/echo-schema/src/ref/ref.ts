@@ -355,7 +355,7 @@ export class RefImpl<T> implements Ref<T> {
    * Do not inline the target object in the reference.
    * Makes .target unavailable unless the reference is connected to a database context.
    */
-  noInline() {
+  noInline(): this {
     this.#target = undefined;
     return this;
   }
@@ -377,7 +377,7 @@ export class RefImpl<T> implements Ref<T> {
     return this.encode();
   }
 
-  toString() {
+  toString(): string {
     if (this.#target) {
       return `Ref(${this.#target.toString()})`;
     }
@@ -391,7 +391,7 @@ export class RefImpl<T> implements Ref<T> {
    * Internal method to set the resolver.
    * @internal
    */
-  _setResolver(resolver: RefResolver) {
+  _setResolver(resolver: RefResolver): void {
     this.#resolver = resolver;
   }
 
@@ -400,7 +400,7 @@ export class RefImpl<T> implements Ref<T> {
    * Not the same as `target` which is resolved from the resolver.
    * @internal
    */
-  _getSavedTarget() {
+  _getSavedTarget(): T | undefined {
     return this.#target;
   }
 }

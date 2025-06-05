@@ -33,12 +33,12 @@ export const addEventListener = <T extends Event = Event>(
 export class SubscriptionList {
   private readonly _cleanups: CleanupFn[] = [];
 
-  add(cb: CleanupFn) {
+  add(cb: CleanupFn): this {
     this._cleanups.push(cb);
     return this;
   }
 
-  clear() {
+  clear(): void {
     this._cleanups.forEach((cb) => cb());
     this._cleanups.length = 0;
   }
@@ -51,12 +51,12 @@ export class SubscriptionSet<T = any> {
     this._cleanupMap = new ComplexMap<T, CleanupFn>(keyProjection);
   }
 
-  set(key: T, cb: CleanupFn) {
+  set(key: T, cb: CleanupFn): this {
     this._cleanupMap.set(key, cb);
     return this;
   }
 
-  clear() {
+  clear(): void {
     this._cleanupMap.forEach((cb) => cb());
     this._cleanupMap.clear();
   }

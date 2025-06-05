@@ -276,7 +276,7 @@ class ItemWidget extends WidgetType {
   }
 
   // Prevents re-rendering.
-  override eq(widget: this) {
+  override eq(widget: this): boolean {
     return widget.props.itemId === this.props.itemId;
   }
 

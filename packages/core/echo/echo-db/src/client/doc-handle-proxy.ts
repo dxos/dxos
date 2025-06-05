@@ -153,7 +153,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * Confirm that the last write was successful.
    * @internal
    */
-  _confirmSync() {
+  _confirmSync(): void {
     this._lastSentHeads = this._currentlySendingHeads;
   }
 
@@ -161,7 +161,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * Update the doc with a foreign mutation from worker.
    * @internal
    */
-  _integrateHostUpdate(mutation: Uint8Array) {
+  _integrateHostUpdate(mutation: Uint8Array): void {
     invariant(this._doc, 'Doc is deleted, cannot write mutation');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);

@@ -41,10 +41,10 @@ class Feed {
   key!: string;
 
   @trace.span()
-  async open(ctx: Context) {}
+  async open(ctx: Context): Promise<void> {}
 
   @trace.span()
-  async close() {
+  async close(): Promise<void> {
     throw new Error('Not implemented');
   }
 }

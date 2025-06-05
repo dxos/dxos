@@ -82,7 +82,7 @@ export class InvitationGuestExtension
     };
   }
 
-  override async onOpen(context: ExtensionContext) {
+  override async onOpen(context: ExtensionContext): Promise<void> {
     await super.onOpen(context);
 
     try {
@@ -115,7 +115,7 @@ export class InvitationGuestExtension
     }
   }
 
-  override async onClose() {
+  override async onClose(): Promise<void> {
     await this._destroy();
   }
 
@@ -123,7 +123,7 @@ export class InvitationGuestExtension
     await this._destroy();
   }
 
-  private async _destroy() {
+  private async _destroy(): Promise<void> {
     await this._ctx.dispose();
     if (this._invitationFlowLock != null) {
       this._invitationFlowLock.release();

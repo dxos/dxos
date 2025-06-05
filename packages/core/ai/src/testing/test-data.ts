@@ -272,11 +272,11 @@ export class MockDataSource implements DataSource {
   nodes: Node[] = [];
   relationships: Relationship[] = [];
 
-  async getNodes({ label }: { label?: string }) {
+  async getNodes({ label }: { label?: string }): Promise<Node[]> {
     return this.nodes.filter((node) => !label || node.label === label);
   }
 
-  async getRelationships({ label }: { label?: string }) {
+  async getRelationships({ label }: { label?: string }): Promise<Relationship[]> {
     return this.relationships.filter((relationship) => !label || relationship.label === label);
   }
 
@@ -302,7 +302,7 @@ export class MockDataSource implements DataSource {
     return data;
   }
 
-  computeGraph() {
+  computeGraph(): void {
     this.nodes = [];
     this.relationships = [];
 

@@ -243,7 +243,7 @@ export class TestAgent {
     });
   }
 
-  async spaceGenesis(space: Space) {
+  async spaceGenesis(space: Space): Promise<void> {
     const generator = new CredentialGenerator(this.keyring, this.identityKey, this.deviceKey);
     const credentials = [
       ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),

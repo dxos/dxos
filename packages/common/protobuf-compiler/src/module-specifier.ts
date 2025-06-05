@@ -29,11 +29,11 @@ export class ModuleSpecifier {
     invariant(isAbsolute(contextPath));
   }
 
-  isAbsolute() {
+  isAbsolute(): boolean {
     return !this.name.startsWith('.');
   }
 
-  importSpecifier(importContext: string) {
+  importSpecifier(importContext: string): string {
     if (this.isAbsolute()) {
       return this.name;
     } else {

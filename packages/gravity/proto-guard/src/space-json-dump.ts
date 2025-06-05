@@ -64,7 +64,7 @@ export class SpacesDumper {
     return true;
   };
 
-  static save(dump: SpacesDump, filePath: string) {
+  static save(dump: SpacesDump, filePath: string): void {
     fs.writeFileSync(path.join(filePath), JSON.stringify(dump, null, 2));
   }
 

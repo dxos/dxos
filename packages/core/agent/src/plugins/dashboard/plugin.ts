@@ -26,7 +26,7 @@ export class DashboardPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/dashboard';
 
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
-  override async onOpen() {
+  override async onOpen(): Promise<void> {
     const subscription = this.context.client.spaces.isReady.subscribe(async (ready) => {
       if (!ready) {
         return;

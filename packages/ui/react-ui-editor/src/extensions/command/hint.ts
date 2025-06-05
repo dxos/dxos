@@ -76,7 +76,7 @@ class CommandHint extends WidgetType {
     return rect;
   }
 
-  override ignoreEvent() {
+  override ignoreEvent(): boolean {
     return false;
   }
 }

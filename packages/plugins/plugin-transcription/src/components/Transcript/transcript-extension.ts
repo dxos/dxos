@@ -193,7 +193,7 @@ class TimestampMarker extends GutterMarker {
     super();
   }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return other._timestamp === this._timestamp;
   }
 

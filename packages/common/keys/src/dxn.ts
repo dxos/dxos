@@ -76,12 +76,12 @@ export class DXN {
     QUEUE: 'queue',
   });
 
-  static equals(a: DXN, b: DXN) {
+  static equals(a: DXN, b: DXN): boolean {
     return a.kind === b.kind && a.parts.length === b.parts.length && a.parts.every((part, i) => part === b.parts[i]);
   }
 
   // TODO(burdon): Rename isValid.
-  static isDXNString(dxn: string) {
+  static isDXNString(dxn: string): boolean {
     return dxn.startsWith('dxn:');
   }
 
@@ -172,11 +172,11 @@ export class DXN {
     return this.#parts[0];
   }
 
-  hasTypenameOf(typename: string) {
+  hasTypenameOf(typename: string): boolean {
     return this.#kind === DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
   }
 
-  isLocalObjectId() {
+  isLocalObjectId(): boolean {
     return this.#kind === DXN.kind.ECHO && this.#parts[0] === LOCAL_SPACE_TAG && this.#parts.length === 2;
   }
 
@@ -229,7 +229,7 @@ export class DXN {
   /**
    * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
    */
-  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect) {
+  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect): string {
     const printControlCode = (code: number) => {
       return `\x1b[${code}m`;
     };

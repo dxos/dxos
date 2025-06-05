@@ -321,7 +321,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return this._wrapInProxyIfRequired(target, decodedValueAtPath);
   }
 
-  private _arrayHas(target: ProxyTarget, prop: string | symbol) {
+  private _arrayHas(target: ProxyTarget, prop: string | symbol): boolean {
     invariant(target instanceof EchoArray);
     if (typeof prop === 'string') {
       const parsedIndex = parseInt(prop);
@@ -642,7 +642,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
   }
 
-  private _arraySetLength(target: ProxyTarget, path: KeyPath, newLength: number) {
+  private _arraySetLength(target: ProxyTarget, path: KeyPath, newLength: number): void {
     if (newLength < 0) {
       throw new RangeError('Invalid array length');
     }

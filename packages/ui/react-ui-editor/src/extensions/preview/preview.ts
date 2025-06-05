@@ -180,7 +180,7 @@ class PreviewInlineWidget extends WidgetType {
   //   return false;
   // }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return this._link.ref === other._link.ref && this._link.label === other._link.label;
   }
 
@@ -208,7 +208,7 @@ class PreviewBlockWidget extends WidgetType {
   //   return true;
   // }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return this._link.ref === other._link.ref;
   }
 

@@ -258,7 +258,7 @@ export class Context {
   [Symbol.toStringTag] = 'Context';
   [inspect.custom] = () => this.toString();
 
-  toString() {
+  toString(): string {
     return `Context(${this.#isDisposed ? 'disposed' : 'active'})`;
   }
 

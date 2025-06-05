@@ -306,7 +306,7 @@ export class GraphBuilder<
   Node extends BaseGraphNode = BaseGraphNode,
   Edge extends BaseGraphEdge = BaseGraphEdge,
 > extends AbstractGraphBuilder<Node, Edge, GraphModel<Node, Edge>> {
-  override call(cb: (builder: this) => void) {
+  override call(cb: (builder: this) => void): this {
     cb(this);
     return this;
   }

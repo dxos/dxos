@@ -149,13 +149,13 @@ export class TestPeer {
     });
   }
 
-  async open() {
+  async open(): Promise<void> {
     await this._networkManager.open();
     await this._proxy?.open();
     await this._service?.open();
   }
 
-  async close() {
+  async close(): Promise<void> {
     await Promise.all(Array.from(this._swarms.values()).map((swarm) => swarm.leave()));
     this._swarms.clear();
 
@@ -184,11 +184,11 @@ export class TestPeer {
     return swarm;
   }
 
-  async goOffline() {
+  async goOffline(): Promise<void> {
     await this._networkManager.setConnectionState(ConnectionState.OFFLINE);
   }
 
-  async goOnline() {
+  async goOnline(): Promise<void> {
     await this._networkManager.setConnectionState(ConnectionState.ONLINE);
   }
 }
@@ -209,7 +209,7 @@ export class TestSwarmConnection {
 
   // TODO(burdon): Need to create new plugin instance per swarm?
   //  If so, then perhaps joinSwarm should return swarm object with access to plugins.
-  async join(topology = new FullyConnectedTopology()) {
+  async join(topology = new FullyConnectedTopology()): Promise<this> {
     await this.peer._networkManager.joinSwarm({
       topic: this.topic,
       peerInfo: { peerKey: this.peer.peerId.toHex(), identityKey: this.peer.peerId.toHex() },
@@ -220,7 +220,7 @@ export class TestSwarmConnection {
     return this;
   }
 
-  async leave() {
+  async leave(): Promise<this> {
     await this.peer._networkManager.leaveSwarm(this.topic);
     return this;
   }

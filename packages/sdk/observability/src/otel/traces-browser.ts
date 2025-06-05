@@ -44,7 +44,7 @@ export class OtelTraces {
     this._tracer = trace.getTracer('dxos-observability', this.options.serviceVersion);
   }
 
-  public start() {
+  public start(): void {
     registerInstrumentations({
       instrumentations: [getWebAutoInstrumentations()],
     });

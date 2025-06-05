@@ -121,7 +121,7 @@ export abstract class Resource implements Lifecycle {
   /**
    * Waits until the resource is open.
    */
-  async waitUntilOpen() {
+  async waitUntilOpen(): Promise<void> {
     switch (this.#lifecycleState) {
       case LifecycleState.OPEN:
         return;
@@ -135,18 +135,18 @@ export abstract class Resource implements Lifecycle {
     await this.#openPromise;
   }
 
-  async [Symbol.asyncDispose]() {
+  async [Symbol.asyncDispose](): Promise<void> {
     await this.close();
   }
 
-  async #open(ctx?: Context) {
+  async #open(ctx?: Context): Promise<void> {
     this.#closePromise = null;
     this.#parentCtx = ctx?.derive({ name: this.#name }) ?? this.#createParentContext();
     await this._open(this.#parentCtx);
     this.#lifecycleState = LifecycleState.OPEN;
   }
 
-  async #close(ctx = Context.default()) {
+  async #close(ctx = Context.default()): Promise<void> {
     this.#openPromise = null;
     await this.#internalCtx.dispose();
     await this._close(ctx);

@@ -216,14 +216,14 @@ export class EchoHost extends Resource {
   /**
    * Flush all pending writes to the underlying storage.
    */
-  async flush() {
+  async flush(): Promise<void> {
     await this._automergeHost.repo.flush();
   }
 
   /**
    * Perform any pending index updates.
    */
-  async updateIndexes() {
+  async updateIndexes(): Promise<void> {
     await this._indexer.updateIndexes();
   }
 

@@ -30,7 +30,7 @@ export class LoggingReactiveHandler implements ReactiveHandler<any> {
     return false;
   }
 
-  getSchema() {
+  getSchema(): undefined {
     return undefined;
   }
 

@@ -55,7 +55,7 @@ export abstract class AbstractStorage implements Storage {
   /**
    * Delete all files.
    */
-  async reset() {
+  async reset(): Promise<void> {
     try {
       log.info('Erasing all data...');
       await this._closeFilesInPath('');
@@ -135,7 +135,7 @@ export abstract class AbstractStorage implements Storage {
     );
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this._closeFilesInPath('');
   }
 

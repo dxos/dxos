@@ -39,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 
-  private resetError() {
+  private resetError(): void {
     this.setState({ error: undefined });
   }
 }

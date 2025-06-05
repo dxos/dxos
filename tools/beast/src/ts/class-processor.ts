@@ -84,7 +84,7 @@ export class ClassProcessor {
   /**
    * Process classes in referenced file.
    */
-  processFile(filePath: string) {
+  processFile(filePath: string): void {
     const sourceFile: SourceFile = this._project.getSourceFileOrThrow(filePath);
     const classes = sourceFile.getClasses();
     classes.forEach((name) => {
@@ -198,7 +198,7 @@ export class ClassProcessor {
   /**
    * Process properties or constructor params.
    */
-  processProperty(classDef: ClassDefinition, property: PropertyDeclaration | ParameterDeclaration) {
+  processProperty(classDef: ClassDefinition, property: PropertyDeclaration | ParameterDeclaration): void {
     const type = property.getType();
     const { name: propertyName, initializer, isReadonly } = property.getStructure();
     assert(propertyName);

@@ -103,7 +103,7 @@ export class IndexQuerySource implements QuerySource {
     queryType: QueryReactivity,
     onResult: (results: QueryResultEntry[]) => void,
     onError?: (error: Error) => void,
-  ) {
+  ): void {
     const queryId = nextQueryId++;
 
     log('queryIndex', { queryId });
@@ -225,7 +225,7 @@ export class IndexQuerySource implements QuerySource {
     return queryResult;
   }
 
-  private _closeStream() {
+  private _closeStream(): void {
     void this._stream?.close().catch(() => {});
     this._stream = undefined;
   }

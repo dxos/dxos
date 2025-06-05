@@ -83,11 +83,11 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     }));
   }
 
-  reiterateBlock(block: FeedBlock<T>) {
+  reiterateBlock(block: FeedBlock<T>): void {
     this._trigger.wake();
   }
 
-  async addFeed(feed: FeedWrapper<T>) {
+  async addFeed(feed: FeedWrapper<T>): Promise<void> {
     invariant(!this._feedQueues.has(feed.key), `Feed already added: ${feed.key}`);
     invariant(feed.properties.opened);
     log('feed added', { feedKey: feed.key });

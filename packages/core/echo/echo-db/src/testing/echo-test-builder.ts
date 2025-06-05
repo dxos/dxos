@@ -81,7 +81,7 @@ export class EchoTestPeer extends Resource {
     this._initEcho();
   }
 
-  private _initEcho() {
+  private _initEcho(): void {
     this._echoHost = new EchoHost({ kv: this._kv, indexing: this._indexing });
     this._clients.delete(this._echoClient);
     this._echoClient = new EchoClient();
@@ -120,7 +120,7 @@ export class EchoTestPeer extends Resource {
   /**
    * Simulates a reload of the process by re-creation ECHO.
    */
-  async reload() {
+  async reload(): Promise<void> {
     await this.close();
     this._initEcho();
     await this.open();

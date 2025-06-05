@@ -35,7 +35,7 @@ export class TestAgent extends TestPeerBase {
     void this.presence.open();
   }
 
-  override async onOpen(connection: TestConnection) {
+  override async onOpen(connection: TestConnection): Promise<void> {
     const extension = this.gossip.createExtension({ remotePeerId: connection.teleport!.remotePeerId });
     connection.teleport.addExtension('dxos.mesh.teleport.gossip', extension);
   }
@@ -52,7 +52,7 @@ export class TestAgent extends TestPeerBase {
     );
   }
 
-  override async destroy() {
+  override async destroy(): Promise<void> {
     await super.destroy();
     await this.gossip.close();
     await this.presence.close();

@@ -58,7 +58,7 @@ export class RootSettingsStore implements SettingsStoreFactory {
     });
   }
 
-  removeStore(prefix: string) {
+  removeStore(prefix: string): void {
     untracked(() => {
       const store = this._stores[prefix];
       if (store) {
@@ -113,23 +113,23 @@ export class SettingsStore<T extends SettingsValue> {
     return this._value;
   }
 
-  getKey(path: Path) {
+  getKey(path: Path): string {
     return [this._prefix, ...path.map((p) => (typeof p === 'string' ? hyphenize(p) : String(p)))].join('/');
   }
 
-  open() {
+  open(): void {
     // TODO(burdon): Import from '@dxos/signals' (rename echo-signals).
     this._unsubscribe = effect(() => {
       this.save();
     });
   }
 
-  close() {
+  close(): void {
     this._unsubscribe?.();
     this._unsubscribe = undefined;
   }
 
-  reset() {
+  reset(): void {
     this.close();
 
     for (const prop of Object.keys(this._value)) {

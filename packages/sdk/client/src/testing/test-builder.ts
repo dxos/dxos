@@ -74,7 +74,7 @@ export class TestBuilder {
     return this._ctx;
   }
 
-  async destroy() {
+  async destroy(): Promise<void> {
     await this._ctx.dispose(false); // TODO(burdon): Set to true to check clean shutdown.
   }
 

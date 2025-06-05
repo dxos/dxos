@@ -104,7 +104,7 @@ export class Schema<T, S extends {} = {}> {
   /**
    * Dynamically add new definitions to this schema.
    */
-  addJson(schema: any) {
+  addJson(schema: any): void {
     if (!schema.nested) {
       throw new Error('Invalid schema: missing nested object');
     }

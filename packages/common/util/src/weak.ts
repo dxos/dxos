@@ -96,7 +96,7 @@ export class WeakDictionary<K, V extends object> implements Map<K, V> {
     });
   }
 
-  private _register(key: K, value: V) {
+  private _register(key: K, value: V): void {
     this._finalization.register(
       value,
       () => {
@@ -106,7 +106,7 @@ export class WeakDictionary<K, V extends object> implements Map<K, V> {
     );
   }
 
-  private _unregister(value: V) {
+  private _unregister(value: V): void {
     this._finalization.unregister(value);
   }
 }

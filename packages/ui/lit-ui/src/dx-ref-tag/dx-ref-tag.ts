@@ -35,7 +35,7 @@ export class DxRefTag extends LitElement {
     this.addEventListener('click', this.handleActivate);
   }
 
-  override connectedCallback () {
+  override connectedCallback (): void {
     super.connectedCallback();
     this.tabIndex = 0;
     this.classList.add('dx-focus-ring');
@@ -45,13 +45,13 @@ export class DxRefTag extends LitElement {
     this.setAttribute('role', 'button');
   }
 
-  private handleActivate(event: { type: string }) {
+  private handleActivate(event: { type: string }): void {
     this.dispatchEvent(
       new DxRefTagActivate({ ref: this.ref, label: this.textContent ?? '', trigger: this }),
     );
   }
 
-  override createRenderRoot() {
+  override createRenderRoot(): this {
     return this;
   }
 }
