@@ -25,6 +25,26 @@ const tsFiles = await globby(['**/*.ts', '**/*.tsx'], {
   gitignore: true,
 });
 
+// Create a single project instance for all files
+const project = new Project({
+  compilerOptions: {
+    target: ts.ScriptTarget.Latest,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.NodeNext,
+    esModuleInterop: true,
+    skipLibCheck: true,
+  },
+});
+
+console.log({ files: tsFiles.length });
+
+// Add all source files to the project
+// project.addSourceFilesAtPaths(tsFiles);
+for (const filePath of tsFiles) {
+  console.log(chalk.gray(`⬇️ ${filePath}`));
+  project.addSourceFileAtPath(filePath);
+}
+
 /**
  * @param {string} type
  * @param {string} filePath
@@ -50,23 +70,11 @@ function logSave(filePath) {
   console.log(chalk.magenta(`💾 ${chalk.gray(filePath)}`));
 }
 
-// Process each file independently
+// Process each file
 for (const filePath of tsFiles) {
-  if (argv.verbose) {
-    console.log(chalk.gray(`🔍 ${filePath}`));
-  }
+  const sourceFile = project.getSourceFile(filePath);
+  if (!sourceFile) continue;
 
-  const project = new Project({
-    useInMemoryFileSystem: true,
-    compilerOptions: {
-      target: ts.ScriptTarget.Latest,
-      strict: true,
-    },
-  });
-
-  // Read file content
-  const fileContent = await fs.readFile(filePath, 'utf8');
-  const sourceFile = project.createSourceFile(filePath, fileContent);
   let hasChanges = false;
 
   // Process function declarations
