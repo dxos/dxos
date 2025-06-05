@@ -11,7 +11,7 @@ import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 import { SVG } from './SVG';
 import { useGrid, useZoom, type SVGContext } from '../../hooks';
 
-import '../../styles/graph.css';
+import '../../../styles/graph.css';
 
 type ComponentProps = {
   grid?: boolean;

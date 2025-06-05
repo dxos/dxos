@@ -41,6 +41,7 @@ import { ChatProcessor } from '../../hooks';
 import { createProcessorOptions } from '../../testing';
 import translations from '../../translations';
 
+// TODO(burdon): Configure for local with ollama/LM studio.
 // const endpoints = localServiceEndpoints;
 const endpoints = remoteServiceEndpoints;
 

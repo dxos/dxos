@@ -182,8 +182,8 @@ export abstract class AbstractGraphModel<
   }
 
   removeNode(id: string): Model {
-    const nodes = removeBy<Node>(this._graph.nodes as Node[], (node) => node.id === id);
     const edges = removeBy<Edge>(this._graph.edges as Edge[], (edge) => edge.source === id || edge.target === id);
+    const nodes = removeBy<Node>(this._graph.nodes as Node[], (node) => node.id === id);
     return this.copy({ nodes, edges });
   }
 
