@@ -227,6 +227,17 @@ console.log(chalk.green('\nDone! All files processed.'));
  * @param {Type<ts.Type>} type
  */
 function canApplyType(type) {
+  const text = type.getText();
+  if (text.includes('import(')) {
+    return false;
+  }
+  if (text.includes('unknown')) {
+    return false;
+  }
+  if (text.includes('any')) {
+    return false;
+  }
+
   // Handle primitive types using type flags
   const flags = type.getFlags();
   if (
