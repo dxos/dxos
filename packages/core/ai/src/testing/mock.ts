@@ -2,12 +2,65 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createTestSSEStream } from './test-stream';
-import { createGenerationStream, type GenerationStream, type AIServiceClient } from '../service';
-import { type GenerateRequest, type GenerateResponse } from '../types';
+import { type Signal, signal } from '@preact/signals-core';
 
-export class MockAIService implements AIServiceClient {
-  constructor(private readonly _responses: string[]) {}
+import { createReplaySSEStream } from './test-stream';
+import { createGenerationStream, type GenerationStream, type AIServiceClient, GenerationStreamImpl } from '../service';
+import { type GenerationStreamEvent, type GenerateRequest, type GenerateResponse } from '../types';
+
+export type SpyAIServiceMode = 'mock' | 'spy';
+
+export class SpyAIService implements AIServiceClient {
+  // TODO(wittjosiah): Factor out signal to higher level?
+  private _mode: Signal<SpyAIServiceMode> = signal('spy');
+  private _events: GenerationStreamEvent[] = [];
+
+  constructor(private readonly _service: AIServiceClient) {}
+
+  /** @reactive */
+  get mode() {
+    return this._mode.value;
+  }
+
+  get events() {
+    return this._events;
+  }
+
+  setMode(mode: SpyAIServiceMode) {
+    this._mode.value = mode;
+  }
+
+  setEvents(events: GenerationStreamEvent[]) {
+    this._events = events;
+  }
+
+  /**
+   * Save events to file.
+   */
+  async saveEvents() {
+    const fileHandle = await window.showSaveFilePicker({
+      suggestedName: 'events.json',
+      types: [
+        {
+          description: 'JSON',
+          accept: { 'application/json': ['.json'] },
+        },
+      ],
+    });
+    const writableStream = await fileHandle.createWritable();
+    await writableStream.write(JSON.stringify(this._events));
+    await writableStream.close();
+  }
+
+  /**
+   * Load events from file.
+   */
+  async loadEvents() {
+    const [fileHandle] = await window.showOpenFilePicker();
+    const file = await fileHandle.getFile();
+    const events = JSON.parse(await file.text());
+    this._events = events;
+  }
 
   /**
    * Generate non-streaming response.
@@ -16,9 +69,30 @@ export class MockAIService implements AIServiceClient {
     throw new Error('Not implemented');
   }
 
-  // TODO(burdon): Match response to request.
-  // TODO(burdon): See MockGpt (from conductor).
+  /**
+   * Process request and open message stream.
+   */
   async execStream(request: GenerateRequest): Promise<GenerationStream> {
-    return createGenerationStream(new Response(createTestSSEStream(this._responses)));
+    switch (this._mode.peek()) {
+      case 'mock': {
+        return createGenerationStream(new Response(createReplaySSEStream(this._events)));
+      }
+      case 'spy': {
+        const stream = await this._service.execStream(request);
+        const iterator = async function* (this: SpyAIService) {
+          for await (const item of stream) {
+            this._events.push(item);
+            yield item;
+          }
+        }.bind(this);
+
+        const controller = new AbortController();
+        controller.signal.onabort = () => {
+          stream.abort();
+        };
+
+        return new GenerationStreamImpl(controller, iterator);
+      }
+    }
   }
 }

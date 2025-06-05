@@ -5,11 +5,11 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import { Option } from 'effect';
-import { getDescriptionAnnotation } from 'effect/SchemaAST';
+import { Option, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineTool, AIServiceEdgeClient, Message, ToolResult, type Tool, AgentStatusReport } from '@dxos/ai';
+import { SpyAIService } from '@dxos/ai/testing';
 import {
   contributes,
   createSurface,
@@ -31,16 +31,16 @@ import {
   create,
   createQueueDxn,
   getTypename,
-  isInstanceOf,
-  type BaseEchoObject,
-  Filter,
-  RelationSourceId,
-  RelationTargetId,
   getSchema,
   getSchemaDXN,
   getSchemaTypename,
-  type BaseObject,
+  isInstanceOf,
   toJsonSchema,
+  type BaseEchoObject,
+  type BaseObject,
+  Filter,
+  RelationSourceId,
+  RelationTargetId,
 } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -55,6 +55,15 @@ import { TablePlugin } from '@dxos/plugin-table';
 import { Config, useClient } from '@dxos/react-client';
 import { live, useQueue, useQuery, type Live, type EchoDatabase, getSpace } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncState } from '@dxos/react-ui';
+import {
+  type ActionGraphProps,
+  useMenuActions,
+  createMenuAction,
+  ToolbarMenu,
+  MenuProvider,
+  createMenuItemGroup,
+  type ToolbarMenuActionGroupProperties,
+} from '@dxos/react-ui-menu';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { SpaceGraphModel } from '@dxos/schema';
@@ -66,7 +75,9 @@ import { createProcessorOptions } from '../testing';
 import translations from '../translations';
 import { log } from '@dxos/log';
 
+// TODO(burdon): Move out of source.
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
+
 const LOCAL = false;
 
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
@@ -82,17 +93,20 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const space = client.spaces.default;
   const [aiClient] = useState(
     () =>
-      new AIServiceEdgeClient({
-        endpoint: endpoints.ai,
-        defaultGenerationOptions: {
-          // model: '@anthropic/claude-sonnet-4-20250514',
-          model: '@anthropic/claude-3-5-sonnet-20241022',
-        },
-      }),
+      new SpyAIService(
+        new AIServiceEdgeClient({
+          endpoint: endpoints.ai,
+          defaultGenerationOptions: {
+            // model: '@anthropic/claude-sonnet-4-20250514',
+            model: '@anthropic/claude-3-5-sonnet-20241022',
+          },
+        }),
+      ),
   );
+  const actionCreator = useCallback(() => createToolbar(aiClient), [aiClient]);
+  const menuProps = useMenuActions(actionCreator);
 
   // Queue.
-  // TODO(burdon): For testing use env.
   const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
@@ -166,7 +180,6 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
   // State.
   const objects = useQuery(space, Filter.or(...TYPES.map((t) => Filter.type(t))));
-
   const messages = [
     ...(queue?.items.filter((item) => isInstanceOf(Message, item)) ?? []),
     ...(processor?.messages.value ?? []),
@@ -219,10 +232,8 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, []);
 
   const [model] = useState(() => new SpaceGraphModel());
-
   useEffect(() => {
     void model.open(space);
-
     return () => {
       model.close();
     };
@@ -235,7 +246,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
       <object>${JSON.stringify(object, null, 2)}</object>
       
       <schema>
-        <description>${getDescriptionAnnotation(relatedSchema.schema.ast).pipe(Option.getOrElse(() => ''))}</description>
+        <description>${SchemaAST.getDescriptionAnnotation(relatedSchema.schema.ast).pipe(Option.getOrElse(() => ''))}</description>
         <json>
           ${JSON.stringify(toJsonSchema(relatedSchema.schema), null, 2)}
         </json>
@@ -249,6 +260,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     <div className={mx('grid w-full h-full grid-cols-3 overflow-hidden divide-x divide-separator')}>
       {/* Thread */}
       <div className='flex flex-col h-full gap-4 outline outline-separator overflow-hidden'>
+        {/* TODO(wittjosiah): Use react-ui-menu toolbar. */}
         <Toolbar.Root classNames='p-2'>
           <Input.Root>
             <Input.TextInput
@@ -287,10 +299,15 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         />
       </div>
 
+      {/* TODO(burdon): Filter/query. */}
       <ForceGraph model={model} />
 
       {/* Artifacts Deck */}
       <div className='flex flex-col overflow-y-auto'>
+        {/* TODO(wittjosiah): Combine with thread toolbar. */}
+        <MenuProvider {...menuProps}>
+          <ToolbarMenu />
+        </MenuProvider>
         {objects.map((object) => (
           <div
             key={object.id}
@@ -315,13 +332,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   );
 };
 
-const ResearchPrompts = ({
-  object,
-  onResearch,
-}: {
+type ResearchPromptsProps = {
   object: BaseEchoObject;
   onResearch: (object: BaseObject, relatedSchema: RelatedSchema) => void;
-}) => {
+};
+
+const ResearchPrompts = ({ object, onResearch }: ResearchPromptsProps) => {
   const [relatedSchemas = []] = useAsyncState(
     async () => findRelatedSchema(getSpace(object)!.db, getSchema(object)!),
     [object],
@@ -468,7 +484,6 @@ const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
   const schema =
     db.graph.schemaRegistry.getSchemaByDXN(DXN.parse(getTypename(object as any)!)) ??
     raise(new Error('Schema not found'));
-  console.log('schema', { schema });
 
   let { id, [ATTR_RELATION_SOURCE]: source, [ATTR_RELATION_TARGET]: target, ...props } = object as any;
   if (source) {
@@ -484,4 +499,41 @@ const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
     [RelationSourceId]: source,
     [RelationTargetId]: target,
   });
+};
+
+const createToolbar = (aiClient: SpyAIService) => {
+  const result: ActionGraphProps = { nodes: [], edges: [] };
+  const save = createMenuAction('save', () => aiClient.saveEvents(), {
+    label: 'Save events',
+    icon: 'ph--floppy-disk--regular',
+  });
+  const load = createMenuAction('load', () => aiClient.loadEvents(), {
+    label: 'Load events',
+    icon: 'ph--folder-open--regular',
+  });
+  const modes = createMenuItemGroup('mode', {
+    variant: 'dropdownMenu',
+    applyActive: true,
+    selectCardinality: 'single',
+    value: aiClient.mode,
+  } as ToolbarMenuActionGroupProperties);
+  const spy = createMenuAction('spy', () => aiClient.setMode('spy'), {
+    label: 'Spy',
+    icon: 'ph--detective--regular',
+    checked: aiClient.mode === 'spy',
+  });
+  const mock = createMenuAction('mock', () => aiClient.setMode('mock'), {
+    label: 'Mock',
+    icon: 'ph--rewind--regular',
+    checked: aiClient.mode === 'mock',
+  });
+  result.nodes.push(save, load, modes, spy, mock);
+  result.edges.push(
+    { source: 'root', target: save.id },
+    { source: 'root', target: load.id },
+    { source: 'root', target: modes.id },
+    { source: modes.id, target: spy.id },
+    { source: modes.id, target: mock.id },
+  );
+  return result;
 };
