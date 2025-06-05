@@ -195,26 +195,67 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
               </StackItem.Heading>
             </div>
             <StackItem.DragPreview>
-              {({ item }) => (
-                <div className='rounded overflow-hidden bg-baseSurface p-2 border border-separator'>
-                  <div className='flex items-center'>
-                    <IconButton
-                      iconOnly
-                      icon='ph--dots-six-vertical--regular'
-                      variant='ghost'
-                      label={t('column drag handle label')}
-                      classNames='pli-2'
-                    />
-                    <Tag
-                      palette={model.getPivotAttributes(item.id).color as any}
-                      data-uncategorized={item.id === UNCATEGORIZED_VALUE}
-                      classNames='mis-1 data-[uncategorized="true"]:mis-2'
-                    >
-                      {model.getPivotAttributes(item.id).title}
-                    </Tag>
+              {({ item }) => {
+                // Find the column data for this item
+                const columnData = model.arrangedCards.find((col) => col.columnValue === item.id);
+                if (!columnData) {
+                  return null;
+                }
+
+                const { cards, columnValue } = columnData;
+                const { color, title } = model.getPivotAttributes(columnValue);
+                const uncategorized = columnValue === UNCATEGORIZED_VALUE;
+
+                return (
+                  <div className='p-2'>
+                    <div className='rounded-lg max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface border border-separator flex flex-col'>
+                      {/* Column Header */}
+                      <div className='flex items-center p-2'>
+                        <IconButton
+                          iconOnly
+                          icon='ph--dots-six-vertical--regular'
+                          variant='ghost'
+                          label={t('column drag handle label')}
+                          classNames='pli-2'
+                        />
+                        <Tag
+                          palette={color as any}
+                          data-uncategorized={uncategorized}
+                          classNames='mis-1 data-[uncategorized="true"]:mis-2'
+                        >
+                          {title}
+                        </Tag>
+                      </div>
+
+                      {/* Cards Container */}
+                      <div
+                        className={mx(
+                          'overflow-y-auto flex-1 pli-2 flex flex-col gap-2',
+                          'plb-1',
+                          cards.length > 0 && 'plb-2 relative -block-start-1 z-[1] -mbe-1',
+                        )}
+                      >
+                        {cards.map((card) => (
+                          <div
+                            key={card.id}
+                            role='none'
+                            className='flex-none rounded overflow-hidden bg-cardSurface dx-focus-ring-group-y-indicator relative min-bs-[--rail-item]'
+                          >
+                            <Surface role='card--kanban' limit={1} data={{ subject: card }} />
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Add Card Button */}
+                      {onAddCard && (
+                        <div className='p-2 border-t border-separator'>
+                          <IconButton icon='ph--plus--regular' label={t('add card label')} classNames='is-full' />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              }}
             </StackItem.DragPreview>
           </StackItem.Root>
         );
