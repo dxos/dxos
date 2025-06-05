@@ -15,6 +15,7 @@ export type ServiceEndpoints = {
  * pnpm -w nx dev edge --port 8787
  * pnpm -w nx dev ai-service --port 8788
  */
+// TODO(burdon): Reconcile with ai/testing.
 export const localServiceEndpoints = {
   edge: 'http://localhost:8787',
   ai: 'http://localhost:8788',

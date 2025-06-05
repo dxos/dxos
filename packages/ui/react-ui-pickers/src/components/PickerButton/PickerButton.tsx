@@ -3,7 +3,7 @@
 //
 
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type FC, useEffect, useRef, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 
 import { Button, DropdownMenu, Icon, type IconProps, type ThemedClassName, Toolbar, Tooltip } from '@dxos/react-ui';
 
@@ -45,20 +45,11 @@ export const PickerButton = ({
 
   const [open, setOpen] = useState<boolean>(false);
 
-  const suppressNextTooltip = useRef<boolean>(false);
-
   const TriggerRoot = rootVariant === 'toolbar-button' ? Toolbar.Button : Button;
 
   return (
-    <DropdownMenu.Root
-      modal={false}
-      open={open}
-      onOpenChange={(nextOpen) => {
-        setOpen(nextOpen);
-        suppressNextTooltip.current = true;
-      }}
-    >
-      <Tooltip.Trigger asChild content={label} side='bottom' suppressNextTooltip={suppressNextTooltip}>
+    <DropdownMenu.Root modal={false} open={open} onOpenChange={setOpen}>
+      <Tooltip.Trigger asChild content={label} side='bottom'>
         <DropdownMenu.Trigger asChild>
           <TriggerRoot classNames={['gap-2 plb-1', classNames]} disabled={disabled}>
             <span className='sr-only'>{label}</span>

@@ -52,6 +52,9 @@
       "path": "../../core/artifact"
     },
     {
+      "path": "../../core/assistant"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
