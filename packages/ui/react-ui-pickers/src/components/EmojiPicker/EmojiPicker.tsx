@@ -5,7 +5,7 @@
 import emojiData from '@emoji-mart/data';
 import EmojiMart from '@emoji-mart/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 
 import {
   Button,
@@ -52,22 +52,15 @@ export const EmojiPickerToolbarButton = ({
   });
 
   const [emojiPickerOpen, setEmojiPickerOpen] = useState<boolean>(false);
-  const suppressNextTooltip = useRef<boolean>(false);
 
   return (
     <Popover.Root
       open={emojiPickerOpen}
       onOpenChange={(nextOpen) => {
         setEmojiPickerOpen(nextOpen);
-        suppressNextTooltip.current = true;
       }}
     >
-      <Tooltip.Trigger
-        asChild
-        content={t('select emoji label')}
-        side='bottom'
-        suppressNextTooltip={suppressNextTooltip}
-      >
+      <Tooltip.Trigger asChild content={t('select emoji label')} side='bottom'>
         <Popover.Trigger asChild>
           <Toolbar.Button classNames={['gap-2 text-2xl plb-1', classNames]} disabled={disabled}>
             <span className='sr-only'>{t('select emoji label')}</span>
@@ -82,7 +75,6 @@ export const EmojiPickerToolbarButton = ({
             if (event.key === 'Escape') {
               event.stopPropagation();
               setEmojiPickerOpen(false);
-              suppressNextTooltip.current = true;
             }
           }}
         >
