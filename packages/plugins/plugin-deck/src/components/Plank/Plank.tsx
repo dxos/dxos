@@ -203,7 +203,7 @@ const PlankComponent = memo(
 
     const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
     const className = mx(
-      'attention-surface relative',
+      'attention-surface relative dx-focus-ring-inset-over-all',
       isSolo && mainIntrinsicSize,
       isSolo && railGridHorizontal,
       isSolo && 'absolute inset-0',
