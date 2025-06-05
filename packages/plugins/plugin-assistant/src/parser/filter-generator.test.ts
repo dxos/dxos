@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Filter } from '@dxos/echo-schema';
 
-import { generateFilter } from './filter-generator';
+import { createFilter } from './filter-generator';
 import { QueryParser } from './query-parser';
 
 describe('FilterGenerator', () => {
@@ -26,7 +26,7 @@ describe('FilterGenerator', () => {
       },
     });
 
-    const filter = generateFilter(ast);
+    const filter = createFilter(ast);
     expect(filter).toEqual(Filter.typename('example.com/type/Person'));
   });
 });

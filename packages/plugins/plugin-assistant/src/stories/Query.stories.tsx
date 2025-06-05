@@ -23,7 +23,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { testPlugins } from './testing';
 import { PromptBar, type PromptBarProps } from '../components';
-import { generateFilter, QueryParser } from '../parser';
+import { createFilter, QueryParser } from '../parser';
 import translations from '../translations';
 
 faker.seed(1);
@@ -58,7 +58,7 @@ const DefaultStory = () => {
       try {
         log.info('filter', text);
         const parser = new QueryParser(text);
-        const filter = generateFilter(parser.parse());
+        const filter = createFilter(parser.parse());
         setFilter(filter);
       } catch (err) {}
     },

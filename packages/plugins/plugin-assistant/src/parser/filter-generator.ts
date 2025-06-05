@@ -23,17 +23,17 @@ const specialPredicates: Record<string, (value: string) => Filter<any>> = {
   ['type' as const]: Filter.typename,
 };
 
-export const generateFilter = (ast: Expression): Filter<any> => {
+export const createFilter = (ast: Expression): Filter<any> => {
   switch (ast.type) {
     case 'binary': {
       const { operator, left, right } = ast as BinaryExpression;
 
       // Handle logical operators.
       if (operator === 'AND') {
-        return Filter.and(generateFilter(left), generateFilter(right));
+        return Filter.and(createFilter(left), createFilter(right));
       }
       if (operator === 'OR') {
-        return Filter.or(generateFilter(left), generateFilter(right));
+        return Filter.or(createFilter(left), createFilter(right));
       }
 
       // Handle special predicates (e.g., "type:Person")
@@ -55,7 +55,7 @@ export const generateFilter = (ast: Expression): Filter<any> => {
     case 'unary': {
       const { operator, argument } = ast as UnaryExpression;
       if (operator === 'NOT') {
-        return Filter.not(generateFilter(argument));
+        return Filter.not(createFilter(argument));
       }
       throw new Error(`Unsupported unary operator: ${operator}`);
     }
