@@ -236,6 +236,8 @@ function canApplyType(type) {
       ts.TypeFlags.Number |
       ts.TypeFlags.Void |
       ts.TypeFlags.Undefined |
+      ts.TypeFlags.Null |
+      ts.TypeFlags.TypeParameter |
       ts.TypeFlags.ThisType)
   ) {
     return true;
@@ -284,9 +286,36 @@ function canApplyType(type) {
       }
     }
 
-    // Check if it's a type reference
+    // Check if it's a type reference or interface
     const typeNode = symbol.getDeclarations()[0];
     if (typeNode && (ts.isTypeReferenceNode(typeNode) || ts.isInterfaceDeclaration(typeNode))) {
+      return true;
+    }
+
+    // Check if it's a global type (like Error, Date, etc.)
+    const globalTypeNames = new Set([
+      'Error',
+      'Date',
+      'RegExp',
+      'Map',
+      'Set',
+      'WeakMap',
+      'WeakSet',
+      'Array',
+      'Promise',
+      'Uint8Array',
+      'Uint16Array',
+      'Uint32Array',
+      'Int8Array',
+      'Int16Array',
+      'Int32Array',
+      'Float32Array',
+      'Float64Array',
+      'ArrayBuffer',
+      'DataView',
+    ]);
+
+    if (globalTypeNames.has(symbol.getName())) {
       return true;
     }
   }
