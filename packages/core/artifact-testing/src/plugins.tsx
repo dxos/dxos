@@ -25,7 +25,7 @@ export const MapSchema = Schema.Struct({
 
 export type MapSchema = Schema.Schema.Type<typeof MapSchema>;
 
-// TODO(burdon): Move ot ECHO def.
+// TODO(burdon): Move to ECHO def.
 export type ArtifactsContext = {
   items: Type.AnyObject[];
   getArtifacts: () => Type.AnyObject[];

@@ -194,6 +194,7 @@ export const Select: Story = {
     debug: true,
     graph: createGraph(150, 50),
     drag: true,
+    subgraphs: true,
     projectorOptions: {
       forces: {
         radial: {
