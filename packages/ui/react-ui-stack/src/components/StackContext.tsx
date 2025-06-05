@@ -22,16 +22,36 @@ export const StackContext = createContext<StackContextValue>({
 
 export const useStack = () => useContext(StackContext);
 
+export type ItemDragState =
+  | {
+      type: 'idle';
+    }
+  | {
+      type: 'preview';
+      container: HTMLElement;
+      item: any;
+    }
+  | {
+      type: 'is-dragging';
+      item: any;
+    };
+
+export const idle: ItemDragState = { type: 'idle' };
+
 export type StackItemContextValue = {
   selfDragHandleRef: (element: HTMLDivElement | null) => void;
   size: StackItemSize;
   setSize: (nextSize: StackItemSize, commit?: boolean) => void;
+  state: ItemDragState;
+  setState: (state: ItemDragState) => void;
 };
 
 export const StackItemContext = createContext<StackItemContextValue>({
   selfDragHandleRef: () => {},
   size: 'min-content',
   setSize: () => {},
+  state: idle,
+  setState: () => {},
 });
 
 export const useStackItem = () => useContext(StackItemContext);

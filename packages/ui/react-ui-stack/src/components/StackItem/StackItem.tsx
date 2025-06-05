@@ -5,7 +5,7 @@
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
-import { scrollJustEnoughIntoView } from '@atlaskit/pragmatic-drag-and-drop/element/scroll-just-enough-into-view';
+import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import {
   attachClosestEdge,
   extractClosestEdge,
@@ -13,7 +13,15 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
-import React, { forwardRef, useLayoutEffect, useState, type ComponentPropsWithRef, useCallback } from 'react';
+import React, {
+  forwardRef,
+  useLayoutEffect,
+  useState,
+  type ComponentPropsWithRef,
+  useCallback,
+  type ReactNode,
+} from 'react';
+import { createPortal } from 'react-dom';
 
 import { type ThemedClassName, ListItem } from '@dxos/react-ui';
 import { resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
@@ -35,7 +43,7 @@ import {
   type StackItemSigilButtonProps,
   StackItemSigilButton,
 } from './StackItemSigil';
-import { useStack, StackItemContext } from '../StackContext';
+import { useStack, StackItemContext, idle, type ItemDragState, useStackItem } from '../StackContext';
 import { type StackItemSize, type StackItemData } from '../defs';
 
 // NOTE: 48rem fills the screen on a MacbookPro with the sidebars closed.
@@ -46,6 +54,8 @@ export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackIte
 type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   item: Omit<StackItemData, 'type'>;
   order?: number;
+  prevSiblingId?: string;
+  nextSiblingId?: string;
   size?: StackItemSize;
   onSizeChange?: (nextSize: StackItemSize) => void;
   role?: 'article' | 'section';
@@ -63,6 +73,8 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
       onSizeChange,
       role,
       order,
+      prevSiblingId,
+      nextSiblingId,
       style,
       disableRearrange,
       focusIndicatorVariant = 'over-all',
@@ -73,6 +85,8 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
     const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
     const [closestEdge, setEdge] = useState<Edge | null>(null);
+    const [sourceId, setSourceId] = useState<string | null>(null);
+    const [dragState, setDragState] = useState<ItemDragState>(idle);
     const { orientation, rail, onRearrange } = useStack();
     const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
       useState(propsSize);
@@ -105,18 +119,28 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           getInitialData: () => ({ id: item.id, type }),
           onGenerateDragPreview: ({ nativeSetDragImage, source, location }) => {
             document.body.setAttribute('data-drag-preview', 'true');
-            scrollJustEnoughIntoView({ element: source.element });
-            const { x, y } = preserveOffsetOnSource({ element: source.element, input: location.current.input })({
-              container: (source.element.offsetParent ?? document.body) as HTMLElement,
+            const offsetFn = preserveOffsetOnSource({ element: source.element, input: location.current.input });
+            const rect = source.element.getBoundingClientRect();
+            setCustomNativeDragPreview({
+              nativeSetDragImage,
+              getOffset: ({ container }) => {
+                return offsetFn({ container });
+              },
+              render: ({ container }) => {
+                container.style.width = rect.width + 'px';
+                setDragState({ type: 'preview', container, item });
+                return () => {};
+              },
             });
-            nativeSetDragImage?.(source.element, x, y);
           },
           onDragStart: () => {
             document.body.removeAttribute('data-drag-preview');
             itemElement?.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'active');
+            setDragState({ type: 'is-dragging', item });
           },
           onDrop: () => {
             itemElement?.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'idle');
+            setDragState(idle);
           },
         }),
         dropTargetForElements({
@@ -130,16 +154,22 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           onDragEnter: ({ self, source }) => {
             if (source.data.type === self.data.type) {
               setEdge(extractClosestEdge(self.data));
+              setSourceId(source.data.id as string);
             }
           },
           onDrag: ({ self, source }) => {
             if (source.data.type === self.data.type) {
               setEdge(extractClosestEdge(self.data));
+              setSourceId(source.data.id as string);
             }
           },
-          onDragLeave: () => setEdge(null),
+          onDragLeave: () => {
+            setEdge(null);
+            setSourceId(null);
+          },
           onDrop: ({ self, source }) => {
             setEdge(null);
+            setSourceId(null);
             if (source.data.type === self.data.type) {
               onRearrange(source.data as StackItemData, self.data as StackItemData, extractClosestEdge(self.data));
             }
@@ -150,8 +180,42 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
 
     const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
 
+    // Determine if the drop would result in any changes
+    const shouldShowDropIndicator = () => {
+      if (!closestEdge || !sourceId) {
+        return false;
+      }
+
+      // Don't show indicator when dragged item is over itself
+      if (sourceId === item.id) {
+        return false;
+      }
+
+      // Don't show indicator when dragged item is over the trailing edge of its previous sibling
+      const isTrailingEdgeOfPrevSibling =
+        prevSiblingId !== undefined &&
+        sourceId === prevSiblingId &&
+        ((orientation === 'horizontal' && closestEdge === 'left') ||
+          (orientation === 'vertical' && closestEdge === 'top'));
+      if (isTrailingEdgeOfPrevSibling) {
+        return false;
+      }
+
+      // Don't show indicator when dragged item is over the leading edge of its next sibling
+      const isLeadingEdgeOfNextSibling =
+        nextSiblingId !== undefined &&
+        sourceId === nextSiblingId &&
+        ((orientation === 'horizontal' && closestEdge === 'right') ||
+          (orientation === 'vertical' && closestEdge === 'bottom'));
+      if (isLeadingEdgeOfNextSibling) {
+        return false;
+      }
+
+      return true;
+    };
+
     return (
-      <StackItemContext.Provider value={{ selfDragHandleRef, size, setSize }}>
+      <StackItemContext.Provider value={{ selfDragHandleRef, size, setSize, state: dragState, setState: setDragState }}>
         <Root
           {...props}
           tabIndex={0}
@@ -179,12 +243,23 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           ref={composedItemRef}
         >
           {children}
-          {closestEdge && <ListItem.DropIndicator lineInset={8} terminalInset={-8} edge={closestEdge} />}
+          {shouldShowDropIndicator() && closestEdge && (
+            <ListItem.DropIndicator lineInset={8} terminalInset={-8} edge={closestEdge} />
+          )}
         </Root>
       </StackItemContext.Provider>
     );
   },
 );
+
+type StackItemDragPreviewProps = {
+  children: ({ item }: { item: any }) => ReactNode;
+};
+
+export const StackItemDragPreview = ({ children }: StackItemDragPreviewProps) => {
+  const { state } = useStackItem();
+  return state?.type === 'preview' ? createPortal(children({ item: state.item }), state.container) : null;
+};
 
 export const StackItem = {
   Root: StackItemRoot,
@@ -195,6 +270,7 @@ export const StackItem = {
   DragHandle: StackItemDragHandle,
   Sigil: StackItemSigil,
   SigilButton: StackItemSigilButton,
+  DragPreview: StackItemDragPreview,
 };
 
 export type {
@@ -207,4 +283,5 @@ export type {
   StackItemSigilProps,
   StackItemSigilButtonProps,
   StackItemSigilAction,
+  StackItemDragPreviewProps,
 };

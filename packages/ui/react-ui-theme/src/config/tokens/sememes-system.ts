@@ -176,8 +176,8 @@ export const systemSememes = {
     dark: ['primary', 350],
   },
   ['accentFocusIndicator' as const]: {
-    light: ['primary', 350],
-    dark: ['primary', 450],
+    light: ['neutral', 350],
+    dark: ['neutral', 450],
   },
   ['unAccentHover' as const]: {
     light: ['neutral', 400],
