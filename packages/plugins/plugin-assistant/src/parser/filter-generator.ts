@@ -5,12 +5,12 @@
 import { Filter } from '@dxos/echo-schema';
 
 import {
-  type Expression,
   type BinaryExpression,
-  type UnaryExpression,
+  type Expression,
   type Identifier,
   type Literal,
   type RelationalOperator,
+  type UnaryExpression,
 } from './types';
 
 const relationalOperators: Record<RelationalOperator, (value: any) => Filter<any>> = {
@@ -71,6 +71,7 @@ export const createFilter = (ast: Expression): Filter<any> => {
       if (value === '*') {
         return Filter.everything();
       }
+
       return Filter.eq(value);
     }
 
