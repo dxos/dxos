@@ -36,7 +36,7 @@ const DefaultStory = () => {
     }
 
     return timeout(async () => {
-      console.log('!!!');
+      console.log(space.db);
       const createObjects = createObjectFactory(space.db, generator);
       await createObjects([
         { type: DataType.Organization, count: 1 },
