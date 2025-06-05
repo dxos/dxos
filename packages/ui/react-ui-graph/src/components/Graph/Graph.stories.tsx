@@ -9,6 +9,7 @@ import { type StoryObj } from '@storybook/react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
+import { Toolbar } from '@dxos/react-ui';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
@@ -22,13 +23,14 @@ import { SVG } from '../SVG';
 import '../../../styles/graph.css';
 
 type DefaultStoryProps = GraphProps & {
+  debug?: boolean;
   grid?: boolean;
   graph: Graph;
   projectorOptions?: GraphForceProjectorOptions;
-  debug?: boolean;
 };
 
-const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: DefaultStoryProps) => {
+const DefaultStory = ({ debug, grid, graph, projectorOptions, ...props }: DefaultStoryProps) => {
+  const graphRef = useRef<GraphController | null>(null);
   const model = useMemo(() => new TestGraphModel(graph), [graph]);
   const selected = useMemo(() => new SelectionModel(), []);
   const context = useRef<SVGContext>(null);
@@ -36,9 +38,6 @@ const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: Defaul
     () => context.current && projectorOptions && new GraphForceProjector(context.current, projectorOptions),
     [context.current, projectorOptions],
   );
-  const graphRef = useRef<GraphController | null>(null);
-
-  console.log(selected.toJSON());
 
   return (
     <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
@@ -56,7 +55,7 @@ const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: Defaul
             attributes={{
               node: (node: GraphLayoutNode<TestNode>) => ({
                 classes: {
-                  selected: selected.contains(node.id),
+                  'dx-selected': selected.contains(node.id),
                 },
               }),
             }}
@@ -67,14 +66,66 @@ const DefaultStory = ({ grid, graph, projectorOptions, debug, ...props }: Defaul
                 selected.add(node.id);
               }
               graphRef.current?.refresh();
-              console.log(selected.contains(node.id));
             }}
             {...props}
           />
         </SVG.Zoom>
       </SVG.Root>
 
-      {debug && <Debug model={model} selected={selected} />}
+      {debug && (
+        <Debug
+          model={model}
+          selected={selected}
+          onAdd={() => {
+            if (graph.nodes.length) {
+              const source = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
+              const target = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
+              if (source !== target) {
+                model.addEdge({ source: source.id, target: target.id });
+              }
+            }
+          }}
+          onDelete={() => {
+            const node = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
+            if (node) {
+              // TODO(burdon): Throws error.
+              model.removeNode(node.id);
+            }
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+const Debug = ({
+  model,
+  selected,
+  onAdd,
+  onDelete,
+}: {
+  model: GraphModel;
+  selected: SelectionModel;
+  onAdd: () => void;
+  onDelete: () => void;
+}) => {
+  const [data, setData] = useState({});
+  useEffect(() => {
+    effect(() => {
+      setData({
+        selected: selected.toJSON(),
+        model: model.toJSON(),
+      });
+    });
+  }, [model, selected]);
+
+  return (
+    <div className='flex flex-col overflow-hidden'>
+      <JsonFilter data={data} classNames='text-sm' />
+      <Toolbar.Root>
+        <Toolbar.Button onClick={onAdd}>Add</Toolbar.Button>
+        <Toolbar.Button onClick={onDelete}>Delete</Toolbar.Button>
+      </Toolbar.Root>
     </div>
   );
 };
@@ -138,11 +189,12 @@ export const Force: Story = {
   },
 };
 
-export const Select = {
+export const Select: Story = {
   args: {
     debug: true,
     graph: createGraph(150, 50),
     drag: true,
+    subgraphs: true,
     projectorOptions: {
       forces: {
         radial: {
@@ -154,16 +206,19 @@ export const Select = {
   },
 };
 
-const Debug = ({ model, selected }: { model: GraphModel; selected: SelectionModel }) => {
-  const [data, setData] = useState({});
-  useEffect(() => {
-    effect(() => {
-      setData({
-        selected: selected.toJSON(),
-        model: model.toJSON(),
-      });
-    });
-  }, [model, selected]);
-
-  return <JsonFilter data={data} classNames='text-sm' />;
+export const Groups: Story = {
+  args: {
+    debug: true,
+    graph: createGraph(50, 30),
+    drag: true,
+    subgraphs: true,
+    projectorOptions: {
+      forces: {
+        radial: {
+          radius: 200,
+          strength: 0.05,
+        },
+      },
+    },
+  },
 };
