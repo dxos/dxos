@@ -48,6 +48,7 @@ export const createObjectFactory =
       try {
         const pipeline = createObjectPipeline(generator, type, { db });
         const objects = await Effect.runPromise(createArrayPipeline(count, pipeline));
+        console.log('===', { type, count, objects: objects.length });
         map.set(type.typename, objects);
         await db.flush();
       } catch (err) {
@@ -198,6 +199,7 @@ export const createObjectPipeline = <T extends BaseObject>(
         log('after props', { withProps });
         const liveObj = createReactiveObject(type)(withProps);
         const withRefs = yield* Effect.promise(() => createReferences(type, db)(liveObj));
+        log.info('add to db', { withRefs });
         const dbObj = addToDatabase(db)(withRefs);
         // logObject('after')(dbObj);
         return dbObj;

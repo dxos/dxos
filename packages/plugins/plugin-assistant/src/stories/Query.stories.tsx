@@ -14,6 +14,7 @@ import { D3ForceGraph } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { type Space, useSpace } from '@dxos/react-client/echo';
 import { List } from '@dxos/react-ui-list';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DataType, SpaceGraphModel } from '@dxos/schema';
 import { createObjectFactory, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -30,16 +31,19 @@ const generator = faker as any as ValueGenerator;
 const DefaultStory = () => {
   const space = useSpace();
   const model = useMemo(() => new SpaceGraphModel(), []);
+
   useEffect(() => {
     if (!space) {
       return;
     }
 
     return timeout(async () => {
-      console.log(space.db);
+      console.log('timeout');
+      // TODO(burdon): Inspect?
+      console.log(space.db.toJSON());
       const createObjects = createObjectFactory(space.db, generator);
       await createObjects([
-        { type: DataType.Organization, count: 1 },
+        { type: DataType.Organization, count: 3 },
         { type: DataType.Person, count: 1 },
       ]);
 
@@ -51,7 +55,10 @@ const DefaultStory = () => {
     <div className='grow grid'>
       <div className='grow grid grid-cols-[1fr_400px]'>
         <D3ForceGraph classNames='border-ie border-separator' model={model} />
-        <ItemList space={space} />
+        <div className='grow grid grid-rows-2'>
+          <ItemList space={space} />
+          <SyntaxHighlighter language='json'>{JSON.stringify({ model, db: space?.db }, null, 2)}</SyntaxHighlighter>
+        </div>
       </div>
       {/* TODO(burdon): Dialog currently prevent drag events. */}
       {/* <Dialog.Root open>
@@ -90,7 +97,7 @@ const ItemList = ({ space }: { space?: Space }) => {
         <div role='list' className='flex flex-col w-full'>
           <List.Item<TestItem> key='test' item={items?.[0]}>
             {items.map((item) => (
-              <div key={item.id} className='flex flex-col truncate'>
+              <div key={item.id}>
                 <List.ItemTitle>{item.title}</List.ItemTitle>
               </div>
             ))}

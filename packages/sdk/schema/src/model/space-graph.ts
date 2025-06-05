@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { batch } from '@preact/signals-core';
+
 import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { getSource, getTarget, isRelation, type AnyLiveObject } from '@dxos/echo-db';
@@ -88,6 +90,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
   // TODO(burdon): Trigger initial subscription update.
   // TODO(burdon): Normalize subscription cb for objects, schema, etc.
   async open(space: Space, selected?: string) {
+    log.info('SpaceGraphModel.open');
     if (!this._schemaSubscription) {
       const schemaaQuery = space.db.schemaRegistry.query({});
       const schemas = await schemaaQuery.run();
@@ -98,102 +101,105 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
 
       this._objectsSubscription = space.db.query(this._options.filter ?? defaultFilter).subscribe(
         ({ objects }) => {
-          this._objects = objects;
+          log.info('SpaceGraphModel.open.objects', { objects });
+          this._objects = [...objects];
 
-          // Merge with current nodes.
-          const currentNodes = this._graph.nodes;
-          this.clear();
+          batch(() => {
+            // Merge with current nodes.
+            const currentNodes = this._graph.nodes;
+            this.clear();
 
-          const addSchema = (typename: string) => {
-            if (!this._options.schema) {
-              return;
-            }
+            const addSchema = (typename: string) => {
+              if (!this._options.schema) {
+                return;
+              }
 
-            const current = currentNodes.find((node) => node.id === typename);
-            if (typename) {
-              this._graph.nodes.push({
-                ...current,
-                id: typename,
-                type: 'schema',
-                data: { typename },
-              });
-            }
-          };
-
-          // Runtime schema.
-          space.db.graph.schemaRegistry.schemas.forEach((schema) => {
-            const typename = getSchemaDXN(schema)?.typename;
-            if (typename) {
-              addSchema(typename);
-            }
-          });
-
-          // Database Schema.
-          this._schema?.forEach((schema) => {
-            const typename = getSchemaDXN(schema)?.typename;
-            if (typename) {
-              addSchema(typename);
-            }
-          });
-
-          // Database Objects.
-          this._objects.forEach((object) => {
-            const schema = getSchema(object);
-            if (!schema) {
-              return;
-            }
-
-            if (!(isRelation(object) as boolean)) {
-              const typename = getSchemaDXN(schema)?.typename;
+              const current = currentNodes.find((node) => node.id === typename);
               if (typename) {
-                const current = currentNodes.find((node) => node.id === object.id);
-                const label = getLabel(schema, object);
                 this._graph.nodes.push({
                   ...current,
-                  id: object.id,
-                  type: 'object',
-                  data: { typename, object, label },
+                  id: typename,
+                  type: 'schema',
+                  data: { typename },
                 });
+              }
+            };
 
-                // Link to schema.
-                const schemaNode = this._graph.nodes.find(
-                  (node) => node.type === 'schema' && node.data.typename === typename,
-                );
-                if (!schemaNode) {
-                  log.warn('schema node not found', { typename });
-                } else {
-                  if (this._options.schema) {
+            // Runtime schema.
+            space.db.graph.schemaRegistry.schemas.forEach((schema) => {
+              const typename = getSchemaDXN(schema)?.typename;
+              if (typename) {
+                addSchema(typename);
+              }
+            });
+
+            // Database Schema.
+            this._schema?.forEach((schema) => {
+              const typename = getSchemaDXN(schema)?.typename;
+              if (typename) {
+                addSchema(typename);
+              }
+            });
+
+            // Database Objects.
+            this._objects!.forEach((object) => {
+              const schema = getSchema(object);
+              if (!schema) {
+                return;
+              }
+
+              if (!(isRelation(object) as boolean)) {
+                const typename = getSchemaDXN(schema)?.typename;
+                if (typename) {
+                  const current = currentNodes.find((node) => node.id === object.id);
+                  const label = getLabel(schema, object);
+                  this._graph.nodes.push({
+                    ...current,
+                    id: object.id,
+                    type: 'object',
+                    data: { typename, object, label },
+                  });
+
+                  // Link to schema.
+                  const schemaNode = this._graph.nodes.find(
+                    (node) => node.type === 'schema' && node.data.typename === typename,
+                  );
+                  if (!schemaNode) {
+                    log.warn('schema node not found', { typename });
+                  } else {
+                    if (this._options.schema) {
+                      this.addEdge({
+                        id: `${object.id}-${schemaNode.id}`,
+                        type: 'schema',
+                        source: object.id,
+                        target: schemaNode.id,
+                      });
+                    }
+                  }
+
+                  // Link ot refs.
+                  const refs = getOutgoingReferences(object);
+                  for (const ref of refs) {
+                    if (!ref.target) {
+                      continue;
+                    }
                     this.addEdge({
-                      id: `${object.id}-${schemaNode.id}`,
-                      type: 'schema',
+                      id: `${object.id}-${ref.dxn.toString()}`,
+                      type: 'ref',
                       source: object.id,
-                      target: schemaNode.id,
+                      target: ref.target.id,
                     });
                   }
                 }
-
-                // Link ot refs.
-                const refs = getOutgoingReferences(object);
-                for (const ref of refs) {
-                  if (!ref.target) {
-                    continue;
-                  }
-                  this.addEdge({
-                    id: `${object.id}-${ref.dxn.toString()}`,
-                    type: 'ref',
-                    source: object.id,
-                    target: ref.target.id,
-                  });
-                }
+              } else {
+                this.addEdge({
+                  id: object.id,
+                  type: 'relation',
+                  source: getSource(object).id,
+                  target: getTarget(object).id,
+                });
               }
-            } else {
-              this.addEdge({
-                id: object.id,
-                type: 'relation',
-                source: getSource(object).id,
-                target: getTarget(object).id,
-              });
-            }
+            });
           });
         },
         { fire: true },
