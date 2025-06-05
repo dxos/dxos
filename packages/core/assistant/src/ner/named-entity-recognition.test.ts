@@ -78,13 +78,13 @@ const combineNerTokens = (group: TokenClassificationSingle[]): TokenClassificati
   return combinedToken;
 };
 
-describe.skip('Named Entity Recognition', () => {
+describe('NamedEntityRecognition', () => {
   let ner: TokenClassificationPipelineType;
 
   beforeAll(async () => {
     // Initialize the NER pipeline
     ner = await pipeline('ner', 'Xenova/bert-base-NER');
-  });
+  }, 30_000);
 
   test.skip('should identify named entities in text', async () => {
     const text = 'Elon Musk is the CEO of SpaceX and Tesla.';
