@@ -45,6 +45,8 @@ export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackIte
 type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   item: Omit<StackItemData, 'type'>;
   order?: number;
+  prevSiblingId?: string;
+  nextSiblingId?: string;
   size?: StackItemSize;
   onSizeChange?: (nextSize: StackItemSize) => void;
   role?: 'article' | 'section';
@@ -62,6 +64,8 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
       onSizeChange,
       role,
       order,
+      prevSiblingId,
+      nextSiblingId,
       style,
       disableRearrange,
       focusIndicatorVariant = 'over-all',
@@ -72,6 +76,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
     const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
     const [closestEdge, setEdge] = useState<Edge | null>(null);
+    const [sourceId, setSourceId] = useState<string | null>(null);
     const { orientation, rail, onRearrange } = useStack();
     const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
       useState(propsSize);
@@ -128,16 +133,22 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           onDragEnter: ({ self, source }) => {
             if (source.data.type === self.data.type) {
               setEdge(extractClosestEdge(self.data));
+              setSourceId(source.data.id as string);
             }
           },
           onDrag: ({ self, source }) => {
             if (source.data.type === self.data.type) {
               setEdge(extractClosestEdge(self.data));
+              setSourceId(source.data.id as string);
             }
           },
-          onDragLeave: () => setEdge(null),
+          onDragLeave: () => {
+            setEdge(null);
+            setSourceId(null);
+          },
           onDrop: ({ self, source }) => {
             setEdge(null);
+            setSourceId(null);
             if (source.data.type === self.data.type) {
               onRearrange(source.data as StackItemData, self.data as StackItemData, extractClosestEdge(self.data));
             }
@@ -147,6 +158,40 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     }, [orientation, item, onRearrange, selfDragHandleElement, itemElement]);
 
     const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
+
+    // Determine if the drop would result in any changes
+    const shouldShowDropIndicator = () => {
+      if (!closestEdge || !sourceId) {
+        return false;
+      }
+
+      // Don't show indicator when dragged item is over itself
+      if (sourceId === item.id) {
+        return false;
+      }
+
+      // Don't show indicator when dragged item is over the trailing edge of its previous sibling
+      const isTrailingEdgeOfPrevSibling =
+        prevSiblingId !== undefined &&
+        sourceId === prevSiblingId &&
+        ((orientation === 'horizontal' && closestEdge === 'right') ||
+          (orientation === 'vertical' && closestEdge === 'bottom'));
+      if (isTrailingEdgeOfPrevSibling) {
+        return false;
+      }
+
+      // Don't show indicator when dragged item is over the leading edge of its next sibling
+      const isLeadingEdgeOfNextSibling =
+        nextSiblingId !== undefined &&
+        sourceId === nextSiblingId &&
+        ((orientation === 'horizontal' && closestEdge === 'left') ||
+          (orientation === 'vertical' && closestEdge === 'top'));
+      if (isLeadingEdgeOfNextSibling) {
+        return false;
+      }
+
+      return true;
+    };
 
     return (
       <StackItemContext.Provider value={{ selfDragHandleRef, size, setSize }}>
@@ -177,7 +222,9 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           ref={composedItemRef}
         >
           {children}
-          {closestEdge && <ListItem.DropIndicator lineInset={8} terminalInset={-8} edge={closestEdge} />}
+          {shouldShowDropIndicator() && closestEdge && (
+            <ListItem.DropIndicator lineInset={8} terminalInset={-8} edge={closestEdge} />
+          )}
         </Root>
       </StackItemContext.Provider>
     );
