@@ -23,6 +23,10 @@ export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   onRemoveCard?: (card: T) => void;
 };
 
+const getColumnDropElement = (stackElement: HTMLDivElement) => {
+  return stackElement.closest('.kanban-drop') as HTMLDivElement;
+};
+
 export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
   const { select, clear } = useSelectionActions([model.id, getTypename(model.schema)!]);
@@ -69,7 +73,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             <div
               role='none'
               className={mx(
-                'shrink min-bs-0 border border-separator bg-baseSurface rounded-lg grid dx-focus-ring-group-x-indicator',
+                'shrink min-bs-0 border border-separator bg-baseSurface rounded-lg grid dx-focus-ring-group-x-indicator kanban-drop',
                 railGridHorizontalContainFitContent,
               )}
             >
@@ -79,12 +83,12 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 size='contain'
                 rail={false}
                 classNames={
-                  /* NOTE(thure): Do not let this element have zero intrinsic size, otherwise dropping items into an
-                    empty stack will be made difficult or impossible. See #9035. */
+                  /* NOTE(thure): Do not let this element have zero intrinsic size, otherwise the drop indicator will not display. See #9035. */
                   ['plb-1', cards.length > 0 && 'plb-2 relative -block-start-1 z-[1] -mbe-1']
                 }
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
+                getDropElement={getColumnDropElement}
               >
                 {cards.map((card, cardIndex, cardsArray) => (
                   <StackItem.Root
