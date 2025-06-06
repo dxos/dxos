@@ -1,7 +1,8 @@
 import { AIServiceEdgeClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { describe, test } from 'vitest';
-import { Blueprint, BlueprintMachine } from './blueprint';
+import { BlueprintMachine } from './machiene';
+import { Blueprint } from './blueprint';
 import chalk from 'chalk';
 
 // Force chalk colors on for tests
