@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { combine, timeout } from '@dxos/async';
-import { type BaseEchoObject } from '@dxos/echo-schema';
+import { getLabel, getSchema, type BaseEchoObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { D3ForceGraph } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
@@ -80,7 +80,19 @@ const DefaultStory = () => {
       <div className='grow grid grid-cols-[1fr_400px] overflow-hidden'>
         {enableGraph ? <D3ForceGraph classNames='border-ie border-separator' model={model} /> : <div />}
         <div className='grow grid grid-rows-[1fr_1fr] overflow-hidden divide-y divide-separator'>
-          <ItemList items={items} getTitle={(item) => (item as any).title ?? item.id} />
+          <ItemList
+            items={items}
+            getTitle={(item) => {
+              // TODO(burdon): Factor out.
+              const schema = getSchema(item);
+              if (!schema) {
+                return item.id;
+              }
+
+              const label = getLabel(schema, item);
+              return label ?? item.id;
+            }}
+          />
           <JsonFilter data={{ model, db: space?.db }} />
         </div>
       </div>
@@ -104,7 +116,6 @@ const ItemList = ({
   getTitle,
 }: {
   items?: BaseEchoObject[];
-  // TODO(burdon): Use annotation to get title.
   getTitle: (item: BaseEchoObject) => string;
 }) => {
   return (
