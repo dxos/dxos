@@ -11,6 +11,7 @@ export { ForeignKey } from '@dxos/echo-protocol';
 export * from './ast';
 export * from './formats';
 export * from './json';
+export * from './json-schema';
 export * from './object';
 export * from './query';
 export * from './types';

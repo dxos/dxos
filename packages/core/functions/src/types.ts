@@ -4,7 +4,8 @@
 
 import { Schema, SchemaAST } from 'effect';
 
-import { Expando, OptionsAnnotationId, TypedObject, DXN, Ref, RawObject } from '@dxos/echo-schema';
+import { Expando, OptionsAnnotationId, TypedObject, Ref, RawObject } from '@dxos/echo-schema';
+import { DXN } from '@dxos/keys';
 
 import { FunctionType } from './schema';
 
@@ -42,7 +43,7 @@ export type EmailTrigger = Schema.Schema.Type<typeof EmailTriggerSchema>;
 
 const QueueTriggerSchema = Schema.Struct({
   kind: Schema.Literal(TriggerKind.Queue).annotations(kindLiteralAnnotations),
-  queue: DXN,
+  queue: DXN.Schema,
 }).pipe(Schema.mutable);
 export type QueueTrigger = Schema.Schema.Type<typeof QueueTriggerSchema>;
 
@@ -134,7 +135,7 @@ export type WebhookTriggerOutput = Schema.Schema.Type<typeof WebhookTriggerOutpu
 
 export const QueueTriggerOutput = Schema.mutable(
   Schema.Struct({
-    queue: DXN,
+    queue: DXN.Schema,
     item: Schema.Any,
     cursor: Schema.String,
   }),

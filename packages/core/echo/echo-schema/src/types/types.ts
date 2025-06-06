@@ -34,9 +34,9 @@ export type HasId = {
 // TODO(burdon): Reconcile with AnyLiveObject. This type is used in some places (e.g. Ref) to mean LiveObject? Do we need branded types?
 export type WithId = BaseObject & HasId;
 
-export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
-
 export type ExcludeId<T extends BaseObject> = Omit<T, 'id'>;
+
+export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 
 export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 
@@ -53,6 +53,9 @@ export const RawObject = <S extends Schema.Schema.AnyNoContext>(
 // Data
 //
 
+/**
+ * @deprecated No longer used.
+ */
 export interface CommonObjectData {
   id: string;
   // TODO(dmaretskyi): Document cases when this can be null.
@@ -61,6 +64,9 @@ export interface CommonObjectData {
   __meta: ObjectMeta;
 }
 
+/**
+ * @deprecated No longer used.
+ */
 export interface AnyObjectData extends CommonObjectData {
   /**
    * Fields of the object.
@@ -73,6 +79,7 @@ export interface AnyObjectData extends CommonObjectData {
  * References are encoded in the IPLD format.
  * `__typename` is the string DXN of the object type.
  * Meta is added under `__meta` key.
+ * @deprecated No longer used.
  */
 export type ObjectData<S> = Schema.Schema.Encoded<S> & CommonObjectData;
 
@@ -82,6 +89,7 @@ export type ObjectData<S> = Schema.Schema.Encoded<S> & CommonObjectData;
 
 /**
  * Utility to split meta property from raw object.
+ * @deprecated Bad API.
  */
 export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMeta } => {
   const meta = object[ECHO_ATTR_META];
@@ -89,6 +97,7 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
   return { meta, object };
 };
 
+// TODO(burdon): Move to `@dxos/util`.
 export const getValue = <T extends object>(obj: T, path: JsonPath): any => {
   return getDeep(
     obj,
@@ -96,6 +105,7 @@ export const getValue = <T extends object>(obj: T, path: JsonPath): any => {
   );
 };
 
+// TODO(burdon): Move to `@dxos/util`.
 export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): T => {
   return setDeep(
     obj,
