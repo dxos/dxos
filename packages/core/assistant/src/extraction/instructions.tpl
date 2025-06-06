@@ -18,17 +18,7 @@ Here are your instructions:
 4. Maintain the exact order and structure of the original transcript segments.
 
 Output Format:
-The final output should be a JSON array of references.
-
-Example output structure:
-```json
-{
-  "references": [
-    { "quote": "earnings report", "id": "01JT0JP9AX0XKGZX4MV4B69VT6" },
-    { "quote": "John", "id": "01JT0VM0VN3ZKN7GDBM8CV9BA7" }
-  ]
-}
-```
+You have been provided with a tool that specifies output format
 
 Remember:
 - Only quote the text that is in the transcript.

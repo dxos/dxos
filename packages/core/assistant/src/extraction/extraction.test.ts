@@ -10,32 +10,41 @@ import { log } from '@dxos/log';
 import { createTestData } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
-import { processTranscriptMessage, postprocessText } from './extraction';
+import { processTranscriptMessage } from './extraction';
+import { extractionAnthropicFn } from './extraction-llm-function';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 
-const aiService = new AIServiceEdgeClient({
-  endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-});
+describe('EntityExtraction', { timeout: 180_000 }, () => {
+  const getExecutor = () =>
+    new FunctionExecutor(
+      new ServiceContainer().setServices({
+        ai: {
+          client: new AIServiceEdgeClient({
+            endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+          }),
+        },
+      }),
+    );
 
-describe.skip('EntityExtraction', { timeout: 180_000 }, () => {
-  test.skip('should process a transcript block', async () => {
-    const { transcriptMessages, documents, contacts } = await createTestData();
-
+  test('should process a transcript block', async () => {
+    const { transcriptMessages, documents, contacts } = createTestData();
     log.info('context', { documents, contacts });
 
     for (const message of transcriptMessages) {
       log.info('input', message);
       const { message: enhancedMessage } = await processTranscriptMessage({
-        message,
-        aiService,
-        context: {
+        input: {
+          message,
           objects: [...documents, ...Object.values(contacts)],
         },
+        function: extractionAnthropicFn,
+        executor: getExecutor(),
       });
       log.info('output', enhancedMessage);
     }
   });
 
-  test.only('computational irreducibility', async () => {
+  test('computational irreducibility', async () => {
     const { transcriptWoflram, documents, contacts } = await createTestData();
 
     log.info('context', { documents, contacts });
@@ -45,11 +54,11 @@ describe.skip('EntityExtraction', { timeout: 180_000 }, () => {
     await Promise.all(
       range(10).map(async () => {
         const { message: enhancedMessage, timeElapsed } = await processTranscriptMessage({
-          message,
-          aiService,
-          context: {
-            objects: [...documents, ...Object.values(contacts)],
+          input: {
+            message,
           },
+          function: extractionAnthropicFn,
+          executor: getExecutor(),
         });
         log.info('output', { message: enhancedMessage.blocks[0], timeElapsed });
       }),
@@ -65,11 +74,11 @@ describe.skip('EntityExtraction', { timeout: 180_000 }, () => {
       log.info('input', message);
 
       const { message: enhancedMessage } = await processTranscriptMessage({
-        message,
-        aiService,
-        context: {
-          objects: [...documents, ...Object.values(contacts), ...Object.values(organizations)],
+        input: {
+          message,
         },
+        function: extractionAnthropicFn,
+        executor: getExecutor(),
       });
       log.info('output', enhancedMessage);
     }
