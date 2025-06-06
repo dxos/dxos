@@ -10,7 +10,7 @@ import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { getSchemaDXN } from '@dxos/echo-schema';
-import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { live } from '@dxos/live-object';
 import { DataType } from '@dxos/schema';
 
@@ -19,7 +19,7 @@ import { createExtractionSchema, getSanitizedSchemaName, researchFn, TYPES } fro
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
 
-describe.skip('Research', () => {
+describe('Research', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let executor: FunctionExecutor;
@@ -49,6 +49,7 @@ describe.skip('Research', () => {
         },
         credentials: new ConfiguredCredentialsService([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
         database: { db },
+        tracing: TracingService.console,
       }),
     );
   });
