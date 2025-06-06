@@ -185,7 +185,7 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   }
 
   // Label.
-  if (options.labels) {
+  if (options.labels && !options.onNodePointerEnter) {
     const g = group.append('g');
     g.append('rect');
     g.append('line');
@@ -196,9 +196,9 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
 
   // Hover.
   if (options.onNodePointerEnter) {
-    group.on('pointerenter', (event: PointerEvent) => {
-      const node = select<SVGElement, GraphLayoutNode<N>>(event.target as SVGGElement).datum();
-      options.onNodePointerEnter(node, event);
+    circle.on('pointerenter', function (event: PointerEvent) {
+      const node = select(this.parentElement).datum();
+      options.onNodePointerEnter(node as GraphLayoutNode, event);
     });
     group.attr('data-hover', 'handled');
   } else if (options.highlight !== false) {

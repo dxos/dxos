@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import { effect } from '@preact/signals-core';
 import { type StoryObj } from '@storybook/react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
 import { Popover, Toolbar } from '@dxos/react-ui';
@@ -27,9 +27,10 @@ type DefaultStoryProps = GraphProps & {
   grid?: boolean;
   graph: Graph;
   projectorOptions?: GraphForceProjectorOptions;
+  noInspect?: boolean;
 };
 
-const DefaultStory = ({ debug, grid, graph, projectorOptions, ...props }: DefaultStoryProps) => {
+const DefaultStory = ({ debug, grid, graph, projectorOptions, noInspect, ...props }: DefaultStoryProps) => {
   const graphRef = useRef<GraphController | null>(null);
   const model = useMemo(() => new TestGraphModel(graph), [graph]);
   const selected = useMemo(() => new SelectionModel(), []);
@@ -43,6 +44,17 @@ const DefaultStory = ({ debug, grid, graph, projectorOptions, ...props }: Defaul
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   console.log(selected.toJSON());
+
+  const handleInspect: GraphProps['onInspect'] = useCallback((node, event) => {
+    setPopoverOpen(false);
+    setPopoverContent('');
+    anchorRef.current = null;
+    queueMicrotask(() => {
+      anchorRef.current = event.target as HTMLButtonElement;
+      setPopoverContent(node.id);
+      setPopoverOpen(true);
+    });
+  }, []);
 
   return (
     <Popover.Root open={popoverOpen} onOpenChange={setPopoverOpen}>
@@ -65,18 +77,7 @@ const DefaultStory = ({ debug, grid, graph, projectorOptions, ...props }: Defaul
                   },
                 }),
               }}
-              onInspect={(node, event) => {
-                setPopoverOpen(false);
-                setPopoverContent('');
-                anchorRef.current = null;
-                queueMicrotask(() => {
-                  anchorRef.current = (event.target as HTMLElement).querySelector(
-                    'circle',
-                  ) as unknown as HTMLButtonElement | null;
-                  setPopoverContent(node.id);
-                  setPopoverOpen(true);
-                });
-              }}
+              onInspect={noInspect ? undefined : handleInspect}
               onSelect={(node: GraphLayoutNode<TestNode>) => {
                 if (selected.contains(node.id)) {
                   selected.remove(node.id);
@@ -173,6 +174,17 @@ export const Default: Story = {
     drag: true,
     arrows: true,
     grid: true,
+  },
+};
+
+export const Highlight: Story = {
+  args: {
+    debug: true,
+    graph: convertTreeToGraph(createTree({ depth: 4 })),
+    drag: true,
+    arrows: true,
+    grid: true,
+    noInspect: true,
   },
 };
 

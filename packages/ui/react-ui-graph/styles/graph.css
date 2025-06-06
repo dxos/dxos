@@ -64,13 +64,13 @@ svg {
         circle {
           @apply stroke-2 stroke-neutral-900 dark:stroke-neutral-200 cursor-pointer;
         }
-        &:not([data-hover="handled"]) rect {
+        rect {
           @apply opacity-100 stroke-none fill-inverseSurface;
         }
         line {
           @apply opacity-100 stroke-2 stroke-neutral-700 dark:stroke-neutral-200;
         }
-        &:not([data-hover="handled"]) text {
+        text {
           @apply opacity-100 fill-neutral-100 dark:fill-neutral-800;
         }
       }
