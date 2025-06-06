@@ -2,6 +2,7 @@ import { ConsolePrinter, defineTool, isToolUse, Message, MixedStreamParser, type
 import { create } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import chalk from 'chalk';
 import { Match, Schema } from 'effect';
 
 export type Blueprint = {
@@ -61,8 +62,9 @@ export class BlueprintMachine {
     }
     const nextStep = this.blueprint.steps[prevStep + 1];
     const onLastStep = prevStep === this.blueprint.steps.length - 2;
-
-    console.log(`\n\x1b[35mSTEP ${prevStep + 2} of ${this.blueprint.steps.length}: ${nextStep.instructions}\x1b[0m\n`);
+    console.log(
+      `\n${chalk.magenta(`${chalk.bold(`STEP ${prevStep + 2} of ${this.blueprint.steps.length}:`)} ${nextStep.instructions}`)}\n`,
+    );
 
     const ReportSchema = Schema.Struct({
       status: Schema.Literal('done', 'bailed').annotations({
