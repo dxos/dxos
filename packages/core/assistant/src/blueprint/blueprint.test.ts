@@ -1,4 +1,4 @@
-import { AIServiceEdgeClient, defineTool, ToolResult } from '@dxos/ai';
+import { AIServiceEdgeClient, ConsolePrinter, defineTool, ToolResult } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { ArtifactId } from '@dxos/artifact';
 import { create } from '@dxos/echo-schema';
@@ -6,8 +6,9 @@ import { DataType } from '@dxos/schema';
 import chalk from 'chalk';
 import { describe, test } from 'vitest';
 import { Blueprint, BlueprintBuilder } from './blueprint';
-import { BlueprintMachine } from './machiene';
+import { BlueprintMachine, type BlueprintMachineState, type BlueprintTraceStep } from './machiene';
 import { Schema } from 'effect';
+import { log } from '@dxos/log';
 
 // Force chalk colors on for tests
 chalk.level = 2;
@@ -71,19 +72,35 @@ describe('Blueprint', () => {
       .step(
         'Determine if the email is introduction, question, or spam. Bail if email does not fit into one of these categories.',
       )
+      .step('If the email is spam, label it as spam and do not respond.')
+      .withTool(labelTool)
       .step(
         'If the email is an introduction, respond with a short introduction of yourself and ask for more information.',
       )
       .withTool(replyTool)
       .step('If the email is a question, respond with a short answer and ask for more information.')
       .withTool(replyTool)
-      .step('If the email is spam, label it as spam and do not respond.')
-      .withTool(labelTool)
       .end();
 
+    const printer = new ConsolePrinter();
     const machine = new BlueprintMachine(blueprint);
 
-    await machine.runToCompletion({ aiService, input: TEST_EMAILS[2] });
+    const EXTRA_LOGGING = false;
+    if (EXTRA_LOGGING) {
+      machine.stepStart.on((step) =>
+        console.log(
+          `\n${chalk.magenta(`${chalk.bold(`STEP ${machine.blueprint.steps.indexOf(step) + 1} of ${machine.blueprint.steps.length}:`)} ${step.instructions}`)}\n`,
+        ),
+      );
+      machine.message.on((msg) => printer.printMessage(msg));
+      machine.block.on((block) => printer.printContentBlock(block));
+    }
+    machine.begin.on(() => printTrace(machine.blueprint, machine.state));
+    machine.stepComplete.on(() => printTrace(machine.blueprint, machine.state));
+
+    const input = TEST_EMAILS[2];
+    log.info('begin', { input });
+    await machine.runToCompletion({ aiService, input });
   });
 });
 
@@ -160,3 +177,40 @@ const b = Blueprint.make()
   .step('clean the plate')
 
 */
+
+const printTrace = (blueprint: Blueprint, state: BlueprintMachineState) => {
+  console.log('\n==============================================\n');
+  console.log(chalk.bold('\nThe Blueprint:'));
+
+  blueprint.steps.forEach((step, index) => {
+    const traceStep = state.trace.find((t) => t.stepId === step.id);
+    const stepNum = `${index + 1}/${blueprint.steps.length}`;
+
+    let color = chalk.gray; // Not executed
+    let bullet = '○';
+    if (traceStep) {
+      switch (traceStep.status) {
+        case 'done':
+          color = chalk.green;
+          bullet = '✓';
+          break;
+        case 'skipped':
+          color = chalk.blue;
+          bullet = '↓';
+          break;
+        case 'bailed':
+          color = chalk.red;
+          bullet = '✗';
+          break;
+      }
+    }
+
+    console.log(color(`\n${bullet} ${step.instructions}`));
+
+    if (traceStep?.comment) {
+      console.log(chalk.white(`    ↳ ${traceStep.comment}`));
+    }
+  });
+  console.log('\n');
+  console.log('\n==============================================\n');
+};

@@ -13,12 +13,13 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import chalk from 'chalk';
 import { Match, Schema } from 'effect';
-import type { Blueprint } from './blueprint';
+import type { Blueprint, BlueprintStep } from './blueprint';
 import { Session } from 'inspector/promises';
 import { AISession } from '../session';
 import { log } from '@dxos/log';
+import { Event } from '@dxos/async';
 
-type BlueprintMachineState = {
+export type BlueprintMachineState = {
   history: Message[];
   trace: BlueprintTraceStep[];
   state: 'working' | 'bail' | 'done';
@@ -30,7 +31,7 @@ const INITIAL_STATE: BlueprintMachineState = {
   state: 'working',
 };
 
-type BlueprintTraceStep = {
+export type BlueprintTraceStep = {
   stepId: ObjectId;
   status: 'done' | 'bailed' | 'skipped';
   comment: string;
@@ -46,11 +47,19 @@ type ExecutionOptions = {
 };
 
 export class BlueprintMachine {
+  public readonly begin = new Event<void>();
+  public readonly end = new Event<void>();
+  public readonly stepStart = new Event<BlueprintStep>();
+  public readonly stepComplete = new Event<BlueprintStep>();
+  public readonly message = new Event<Message>();
+  public readonly block = new Event<MessageContentBlock>();
+
   constructor(readonly blueprint: Blueprint) {}
 
   state: BlueprintMachineState = structuredClone(INITIAL_STATE);
 
   async runToCompletion(opts: ExecutionOptions): Promise<void> {
+    this.begin.emit();
     let firstStep = true;
     while (this.state.state !== 'done') {
       const input = firstStep ? opts.input : undefined;
@@ -60,10 +69,14 @@ export class BlueprintMachine {
         aiService: opts.aiService,
       });
 
+      this.stepComplete.emit(this.blueprint.steps.find((step) => step.id === this.state.trace.at(-1)?.stepId)!);
+
       if (this.state.state === 'bail') {
         throw new Error('Agent unable to follow the blueprint');
       }
     }
+
+    this.end.emit();
   }
 
   private async _execStep(state: BlueprintMachineState, opts: ExecutionOptions): Promise<BlueprintMachineState> {
@@ -72,13 +85,9 @@ export class BlueprintMachine {
       throw new Error('Done execution blueprint');
     }
 
-    log.info('executing', { history: state.history.length });
-
     const nextStep = this.blueprint.steps[prevStep + 1];
     const onLastStep = prevStep === this.blueprint.steps.length - 2;
-    console.log(
-      `\n${chalk.magenta(`${chalk.bold(`STEP ${prevStep + 2} of ${this.blueprint.steps.length}:`)} ${nextStep.instructions}`)}\n`,
-    );
+    this.stepStart.emit(nextStep);
 
     const ReportSchema = Schema.Struct({
       status: Schema.Literal('done', 'bailed', 'skipped').annotations({
@@ -100,10 +109,9 @@ export class BlueprintMachine {
       operationModel: 'configured',
     });
 
-    const printer = new ConsolePrinter();
-    session.userMessage.on((message) => printer.printMessage(message));
-    session.message.on((message) => printer.printMessage(message));
-    session.block.on((block) => printer.printContentBlock(block));
+    session.userMessage.pipeInto(this.message);
+    session.message.pipeInto(this.message);
+    session.block.pipeInto(this.block);
 
     const inputMessages = opts.input
       ? [
@@ -113,7 +121,7 @@ export class BlueprintMachine {
           }),
         ]
       : [];
-    inputMessages.forEach((message) => printer.printMessage(message));
+    inputMessages.forEach((message) => this.message.emit(message));
 
     const messages = await session.run({
       systemPrompt: `
@@ -140,20 +148,6 @@ export class BlueprintMachine {
     }
 
     const { status, comment } = ReportSchema.pipe(Schema.decodeUnknownSync)(lastBlock.input);
-
-    switch (status) {
-      case 'done':
-        console.log(chalk.green.bold('DONE'));
-        console.log(chalk.green(comment));
-        break;
-      case 'skipped':
-        console.log(chalk.blue.bold('SKIP'));
-        console.log(chalk.blue(comment));
-        break;
-      case 'bailed':
-        console.log(chalk.red.bold('BAIL'));
-        console.log(chalk.red(comment));
-    }
 
     return {
       history: [...state.history, ...inputMessages, ...trimmedHistory],
