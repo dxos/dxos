@@ -3,6 +3,7 @@ import {
   defineTool,
   Message,
   MixedStreamParser,
+  ToolResult,
   type AIServiceClient,
   type MessageContentBlock,
 } from '@dxos/ai';
@@ -12,6 +13,9 @@ import { ObjectId } from '@dxos/keys';
 import chalk from 'chalk';
 import { Match, Schema } from 'effect';
 import type { Blueprint } from './blueprint';
+import { Session } from 'inspector/promises';
+import { AISession } from '../session';
+import { log } from '@dxos/log';
 
 type BlueprintMachineState = {
   history: Message[];
@@ -60,6 +64,9 @@ export class BlueprintMachine {
     if (prevStep === this.blueprint.steps.length - 1) {
       throw new Error('Done execution blueprint');
     }
+
+    log.info('executing', { history: state.history.length });
+
     const nextStep = this.blueprint.steps[prevStep + 1];
     const onLastStep = prevStep === this.blueprint.steps.length - 2;
     console.log(
@@ -67,7 +74,7 @@ export class BlueprintMachine {
     );
 
     const ReportSchema = Schema.Struct({
-      status: Schema.Literal('done', 'bailed').annotations({
+      status: Schema.Literal('done', 'bailed', 'skipped').annotations({
         description: 'The status of the task completion',
       }),
     });
@@ -75,40 +82,44 @@ export class BlueprintMachine {
       name: 'report',
       description: 'This tool reports that the agent has completed the task or is unable to do so',
       schema: ReportSchema,
-      execute: () => failedInvariant(),
+      execute: async (input) => ToolResult.Break(input),
     });
 
-    const parser = new MixedStreamParser();
+    const session = new AISession({
+      operationModel: 'configured',
+    });
+
     const printer = new ConsolePrinter();
-    parser.message.on((message) => printer.printMessage(message));
-    parser.block.on((block) => printer.printContentBlock(block));
-    const prompt = create(Message, {
-      role: 'user',
-      content: [
-        ...(opts.input ? [taggedDataBlock('input', opts.input)] : []),
-        {
-          type: 'text',
-          text: nextStep.instructions,
-        },
-      ],
-    });
-    printer.printMessage(prompt);
+    session.userMessage.on((message) => printer.printMessage(message));
+    session.message.on((message) => printer.printMessage(message));
+    session.block.on((block) => printer.printContentBlock(block));
 
-    const messages = await parser.parse(
-      await opts.aiService.execStream({
-        systemPrompt: `
-          You are a smart Rule-Following Agent.
-          Rule-Following Agent executes the command that the user sent in the last message.
-          After doing the work, the Rule-Following Agent calls report tool.
-          If the Rule-Following Agent is unable to perform the task, it calls the report tool with a bail status.
-          Rule-Following Agent explains the reason it is unable to perform the task before bailing.
-          The Rule-Following Agent can express creativity and imagination in the way it performs the task as long as it follows the instructions.
-        `,
-        history: [...state.history, prompt],
-        model: '@anthropic/claude-3-5-sonnet-20241022',
-        tools: [report],
-      }),
-    );
+    const inputMessages = opts.input
+      ? [
+          create(Message, {
+            role: 'user',
+            content: [taggedDataBlock('input', opts.input)],
+          }),
+        ]
+      : [];
+    inputMessages.forEach((message) => printer.printMessage(message));
+
+    const messages = await session.run({
+      systemPrompt: `
+               You are a smart Rule-Following Agent.
+               Rule-Following Agent executes the command that the user sent in the last message.
+               After doing the work, the Rule-Following Agent calls report tool.
+               If the Rule-Following agent believes that no action is needed, it calls the report tool with "skipped" status.
+               If the Rule-Following Agent is unable to perform the task, it calls the report tool with "bail" status.
+               Rule-Following Agent explains the reason it is unable to perform the task before bailing.
+               The Rule-Following Agent can express creativity and imagination in the way it performs the task as long as it follows the instructions.
+             `,
+      history: [...state.history, ...inputMessages],
+      tools: [...nextStep.tools, report],
+      artifacts: [],
+      client: opts.aiService,
+      prompt: nextStep.instructions,
+    });
 
     // Pop the last tool call block
     const lastBlock = messages.at(-1)?.content.at(-1);
@@ -123,11 +134,12 @@ export class BlueprintMachine {
     const output = ReportSchema.pipe(Schema.decodeUnknownSync)(lastBlock.input);
 
     return {
-      history: [...state.history, prompt, ...trimmedHistory],
+      history: [...state.history, ...inputMessages, ...trimmedHistory],
       currentStep: nextStep.id,
       state: Match.value(output.status).pipe(
         Match.withReturnType<BlueprintMachineState['state']>(),
         Match.when('done', () => (onLastStep ? 'done' : 'working')),
+        Match.when('skipped', () => (onLastStep ? 'done' : 'working')),
         Match.when('bailed', () => 'bail'),
         Match.exhaustive,
       ),

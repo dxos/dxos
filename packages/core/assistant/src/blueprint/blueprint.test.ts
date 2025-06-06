@@ -1,12 +1,13 @@
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { AIServiceEdgeClient, defineTool, ToolResult } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
-import { describe, test } from 'vitest';
-import { BlueprintMachine } from './machiene';
-import { Blueprint } from './blueprint';
-import chalk from 'chalk';
-import { Message } from '@dxos/ai';
-import { DataType } from '@dxos/schema';
+import { ArtifactId } from '@dxos/artifact';
 import { create } from '@dxos/echo-schema';
+import { DataType } from '@dxos/schema';
+import chalk from 'chalk';
+import { describe, test } from 'vitest';
+import { Blueprint, BlueprintBuilder } from './blueprint';
+import { BlueprintMachine } from './machiene';
+import { Schema } from 'effect';
 
 // Force chalk colors on for tests
 chalk.level = 2;
@@ -33,29 +34,101 @@ describe('Blueprint', () => {
     await machine.runToCompletion({ aiService });
   });
 
-  test('email bot', { timeout: 60_000 }, async () => {
-    const blueprint = Blueprint.make([
-      'Determine if the email is introduction, question, or spam. Bail if email does not fit into one of these categories.',
-      'If the email is an introduction, respond with a short introduction of yourself and ask for more information.',
-      'If the email is a question, respond with a short answer and ask for more information.',
-      'If the email is spam, label it as spam and do not respond.',
-    ]);
+  test.only('email bot', { timeout: 60_000 }, async () => {
+    const replyTool = defineTool('email', {
+      name: 'reply',
+      description: 'Reply to the email',
+      schema: Schema.Struct({
+        toEmail: ArtifactId,
+        subject: Schema.String.annotations({
+          description: 'The subject of the reply',
+        }),
+        body: Schema.String.annotations({
+          description: 'The body of the reply',
+        }),
+      }),
+      execute: async (params) => {
+        console.log('reply', params);
+        return ToolResult.Success('Sent!');
+      },
+    });
+
+    const labelTool = defineTool('email', {
+      name: 'label',
+      description: 'Apply a label to the email',
+      schema: Schema.Struct({
+        toEmail: ArtifactId,
+        label: Schema.String.annotations({
+          description: 'The label to apply to the email',
+        }),
+      }),
+      execute: async (params) => {
+        return ToolResult.Success('Labeled!');
+      },
+    });
+
+    const blueprint = BlueprintBuilder.begin()
+      .step(
+        'Determine if the email is introduction, question, or spam. Bail if email does not fit into one of these categories.',
+      )
+      .step(
+        'If the email is an introduction, respond with a short introduction of yourself and ask for more information.',
+      )
+      .withTool(replyTool)
+      .step('If the email is a question, respond with a short answer and ask for more information.')
+      .withTool(replyTool)
+      .step('If the email is spam, label it as spam and do not respond.')
+      .withTool(labelTool)
+      .end();
 
     const machine = new BlueprintMachine(blueprint);
 
-    await machine.runToCompletion({ aiService, input: TEST_EMAIL });
+    await machine.runToCompletion({ aiService, input: TEST_EMAILS[2] });
   });
 });
 
-const TEST_EMAIL: DataType.Message[] = [
+const TEST_EMAILS: DataType.Message[] = [
   create(DataType.Message, {
+    properties: {
+      subject: 'Introduction email',
+    },
     sender: {
-      role: 'user',
+      email: 'alice@example.com',
     },
     blocks: [
       {
         type: 'text',
-        text: 'How do you query for an ECHO object?',
+        text: "Hi there! I came across your work and would love to connect. I'm working on some interesting projects in the decentralized space and think there could be good collaboration opportunities.",
+      },
+    ],
+    created: new Date().toISOString(),
+  }),
+  create(DataType.Message, {
+    properties: {
+      subject: 'Question about integration',
+    },
+    sender: {
+      email: 'bob@example.com',
+    },
+    blocks: [
+      {
+        type: 'text',
+        text: "Hello, I was wondering if your system supports integration with external APIs? We have some custom services we'd like to connect. Could you explain the process?",
+      },
+    ],
+    created: new Date().toISOString(),
+  }),
+  create(DataType.Message, {
+    properties: {
+      subject: 'MAKE MONEY FAST!!!',
+    },
+    sender: {
+      email: 'spammer123@sketchy.com',
+    },
+    blocks: [
+      {
+        type: 'text',
+        text: 'CONGRATULATIONS!!! You have been selected to receive $10 MILLION dollars! Just send us your bank details and social security number to claim your prize NOW!!!',
       },
     ],
     created: new Date().toISOString(),
