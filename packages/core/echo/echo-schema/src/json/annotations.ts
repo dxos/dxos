@@ -48,9 +48,8 @@ export const DecodedAnnotations: Partial<Record<RootJsonSchemaProperty, symbol>>
 // TODO(dmaretskyi): Consider removing ECHO namespace and putting them at the top level.
 // TODO(dmaretskyi): Move to format.ts when circular imports are solved
 export const EchoAnnotations: Partial<Record<NamespacedJsonSchemaProperty, symbol>> = {
+  // TODO(dmaretskyi): `FieldLookupAnnotationId` might go here, but lets remove it entirely and use LabelAnnotation instead.
   meta: PropertyMetaAnnotationId,
   generator: GeneratorAnnotationId,
   labelProp: LabelAnnotationId,
-
-  // TODO(dmaretskyi): `FieldLookupAnnotationId` might go here, but lets remove it entirely and use LabelAnnotation instead.
 };

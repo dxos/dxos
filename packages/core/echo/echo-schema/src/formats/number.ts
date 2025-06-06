@@ -21,7 +21,7 @@ export const DecimalPrecision = Schema.transform(Schema.Number, Schema.Number, {
   encode: (value) => encodeMultipleOf(value),
   decode: (value) => Math.log10(1 / value),
 }).annotations({
-  [SchemaAST.TitleAnnotationId]: 'Number of digits',
+  title: 'Number of digits',
 });
 
 export const CurrencyAnnotationId = Symbol.for('@dxos/schema/annotation/Currency');
@@ -39,8 +39,8 @@ export const Currency = ({ decimals, code }: CurrencyAnnotation = { decimals: 2 
     encodeMultiple(decimals),
     FormatAnnotation.set(FormatEnum.Currency),
     Schema.annotations({
-      [SchemaAST.TitleAnnotationId]: 'Currency',
-      [SchemaAST.DescriptionAnnotationId]: 'Currency value',
+      title: 'Currency',
+      description: 'Currency value',
       ...(code ? { [CurrencyAnnotationId]: code.toUpperCase() } : {}),
     }),
   );
@@ -57,8 +57,8 @@ export const Integer = () =>
     Schema.int(),
     FormatAnnotation.set(FormatEnum.Integer),
     Schema.annotations({
-      [SchemaAST.TitleAnnotationId]: 'Integer',
-      [SchemaAST.DescriptionAnnotationId]: 'Integer value',
+      title: 'Integer',
+      description: 'Integer value',
     }),
   );
 
@@ -71,8 +71,8 @@ export const Percent = ({ decimals }: PercentAnnotation = { decimals: 2 }) =>
     encodeMultiple(decimals),
     FormatAnnotation.set(FormatEnum.Percent),
     Schema.annotations({
-      [SchemaAST.TitleAnnotationId]: 'Percent',
-      [SchemaAST.DescriptionAnnotationId]: 'Percentage value',
+      title: 'Percent',
+      description: 'Percentage value',
     }),
   );
 
@@ -83,7 +83,7 @@ export const Percent = ({ decimals }: PercentAnnotation = { decimals: 2 }) =>
 export const Timestamp = Schema.Number.pipe(
   FormatAnnotation.set(FormatEnum.Timestamp),
   Schema.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Timestamp',
-    [SchemaAST.DescriptionAnnotationId]: 'Unix timestamp',
+    title: 'Timestamp',
+    description: 'Unix timestamp',
   }),
 );

@@ -18,21 +18,21 @@ import {
  */
 export const BasePropertySchema = Schema.Struct({
   property: JsonProp.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Property',
-    [SchemaAST.DescriptionAnnotationId]: 'Field name.',
+    title: 'Property',
+    description: 'Field name.',
   }),
 
   title: Schema.optional(
     Schema.String.annotations({
-      [SchemaAST.TitleAnnotationId]: 'Label',
-      [SchemaAST.DescriptionAnnotationId]: 'Property label.',
+      title: 'Label',
+      description: 'Property label.',
     }),
   ),
 
   description: Schema.optional(
     Schema.String.annotations({
-      [SchemaAST.TitleAnnotationId]: 'Description',
-      [SchemaAST.DescriptionAnnotationId]: 'Property description.',
+      title: 'Description',
+      description: 'Property description.',
     }),
   ),
 });
@@ -45,7 +45,7 @@ const extend = <Fields extends Schema.Struct.Fields>(format: FormatEnum, type: T
     Schema.Struct({
       type: Schema.Literal(type),
       format: Schema.Literal(format).annotations({
-        [SchemaAST.TitleAnnotationId]: 'Type format',
+        title: 'Type format',
       }),
       ...fields,
     }),
@@ -83,13 +83,13 @@ export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon
   [FormatEnum.Boolean]: extend(FormatEnum.Boolean, TypeEnum.Boolean),
   [FormatEnum.Ref]: extend(FormatEnum.Ref, TypeEnum.Ref, {
     referenceSchema: Schema.NonEmptyString.annotations({
-      [SchemaAST.TitleAnnotationId]: 'Schema',
-      [SchemaAST.DescriptionAnnotationId]: 'Schema typename',
+      title: 'Schema',
+      description: 'Schema typename',
     }),
     referencePath: Schema.optional(
       JsonProp.annotations({
-        [SchemaAST.TitleAnnotationId]: 'Lookup property',
-        [SchemaAST.DescriptionAnnotationId]: 'Referenced property',
+        title: 'Lookup property',
+        description: 'Referenced property',
       }),
     ),
   }),
@@ -115,15 +115,15 @@ export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon
 
   [FormatEnum.SingleSelect]: extend(FormatEnum.SingleSelect, TypeEnum.String, {
     options: Schema.Array(SelectOptionSchema).annotations({
-      [SchemaAST.TitleAnnotationId]: 'Options',
-      [SchemaAST.DescriptionAnnotationId]: 'Available choices',
+      title: 'Options',
+      description: 'Available choices',
     }),
   }),
 
   [FormatEnum.MultiSelect]: extend(FormatEnum.MultiSelect, TypeEnum.Object, {
     options: Schema.Array(SelectOptionSchema).annotations({
-      [SchemaAST.TitleAnnotationId]: 'Options',
-      [SchemaAST.DescriptionAnnotationId]: 'Available choices',
+      title: 'Options',
+      description: 'Available choices',
     }),
   }),
 
@@ -135,8 +135,8 @@ export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon
     multipleOf: Schema.optional(DecimalPrecision),
     currency: Schema.optional(
       Schema.String.annotations({
-        [SchemaAST.TitleAnnotationId]: 'Currency code',
-        [SchemaAST.DescriptionAnnotationId]: 'ISO 4217 currency code.',
+        title: 'Currency code',
+        description: 'ISO 4217 currency code.',
       }),
     ),
   }),

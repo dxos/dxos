@@ -19,13 +19,13 @@ export const CreateMapSchema = Schema.Struct({
   initialSchema: Schema.optional(
     Schema.String.annotations({
       [TypenameAnnotationId]: true,
-      [SchemaAST.TitleAnnotationId]: 'Schema',
+      title: 'Schema',
     }),
   ),
   locationProperty: Schema.optional(
     Schema.String.annotations({
       [LocationAnnotationId]: true,
-      [SchemaAST.TitleAnnotationId]: 'Location property',
+      title: 'Location property',
     }),
   ),
 });

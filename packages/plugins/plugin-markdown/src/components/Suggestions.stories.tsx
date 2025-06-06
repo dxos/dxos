@@ -49,12 +49,12 @@ faker.seed(1);
 
 const TestItem = Schema.Struct({
   title: Schema.String.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Title',
-    [SchemaAST.DescriptionAnnotationId]: 'Product title',
+    title: 'Title',
+    description: 'Product title',
   }),
   description: Schema.String.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Description',
-    [SchemaAST.DescriptionAnnotationId]: 'Product description',
+    title: 'Description',
+    description: 'Product description',
   }),
 }).pipe(
   Type.def({

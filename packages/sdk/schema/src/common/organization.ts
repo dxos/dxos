@@ -2,19 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 
 import { Format, Type } from '@dxos/echo';
 import {
-  FormatAnnotationId,
-  GeneratorAnnotationId,
-  LabelAnnotationId,
+  FormatAnnotation,
+  FormatEnum,
+  GeneratorAnnotation,
+  LabelAnnotation,
   PropertyMetaAnnotationId,
 } from '@dxos/echo-schema';
 
-import { IconAnnotationId } from '../annotations';
+import { IconAnnotation } from '../annotations';
 
-// TODO(burdon): Remove.
+// TODO(burdon): Remove (specific to kanban demo).
 export const OrganizationStatusOptions = [
   { id: 'prospect', title: 'Prospect', color: 'indigo' },
   { id: 'qualified', title: 'Qualified', color: 'purple' },
@@ -28,34 +29,35 @@ export const OrganizationStatusOptions = [
  */
 const OrganizationSchema = Schema.Struct({
   id: Type.ObjectId,
-  name: Schema.optional(Schema.String.annotations({ title: 'Name', [GeneratorAnnotationId]: 'company.name' })),
+  name: Schema.optional(
+    Schema.String.pipe(Schema.annotations({ title: 'Name' }), GeneratorAnnotation.set('company.name')),
+  ),
   description: Schema.optional(Schema.String.annotations({ title: 'Description' })),
-  // TODO(wittjosiah): Remove; change to relation.
+  // TODO(wittjosiah): Remove; 1change to relation.
   status: Schema.optional(
-    Schema.Literal('prospect', 'qualified', 'active', 'commit', 'reject').annotations({
-      title: 'Status',
-      [PropertyMetaAnnotationId]: {
-        singleSelect: {
-          options: OrganizationStatusOptions,
+    Schema.Literal('prospect', 'qualified', 'active', 'commit', 'reject')
+      .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
+      .annotations({
+        title: 'Status',
+        [PropertyMetaAnnotationId]: {
+          singleSelect: {
+            options: OrganizationStatusOptions,
+          },
         },
-      },
-      [FormatAnnotationId]: 'single-select',
-    }),
+      }),
   ),
   // TODO(wittjosiah): Format.URL (currently breaks schema validation). Support ref?
   image: Schema.optional(Schema.String.annotations({ title: 'Image' })),
   website: Schema.optional(
     Format.URL.annotations({
       title: 'Website',
-      [GeneratorAnnotationId]: 'internet.url',
-    }),
+    }).pipe(GeneratorAnnotation.set('internet.url')),
   ),
-}).annotations({
-  [SchemaAST.TitleAnnotationId]: 'Organization',
-  [SchemaAST.DescriptionAnnotationId]: 'An organization.',
-  [LabelAnnotationId]: 'name',
-  [IconAnnotationId]: 'ph--building--regular',
-});
+}).pipe(
+  Schema.annotations({ title: 'Organization', description: 'An organization.' }),
+  LabelAnnotation.set(['name']),
+  IconAnnotation.set('ph--building--regular'),
+);
 
 export const Organization = OrganizationSchema.pipe(
   Type.def({

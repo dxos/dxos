@@ -42,10 +42,10 @@ const createDefaultTaskSchema = () => {
     version: '0.1.0',
   })({
     title: Schema.optional(Schema.String).annotations({
-      [SchemaAST.TitleAnnotationId]: 'Title',
+      title: 'Title',
     }),
     description: Schema.optional(Schema.String).annotations({
-      [SchemaAST.TitleAnnotationId]: 'Description',
+      title: 'Description',
     }),
     state: Schema.optional(Schema.String),
   });

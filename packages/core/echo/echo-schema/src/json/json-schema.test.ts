@@ -14,17 +14,17 @@ import {
   EchoObject,
   EntityKind,
   FieldLookupAnnotationId,
-  GeneratorAnnotationId,
+  GeneratorAnnotation,
   getNormalizedEchoAnnotations,
   getSchemaProperty,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
   JsonSchemaType,
-  LabelAnnotationId,
+  LabelAnnotation,
   PropertyMeta,
   setSchemaProperty,
 } from '../ast';
-import { Email, FormatAnnotationId } from '../formats';
+import { Email, FormatAnnotation, FormatEnum } from '../formats';
 import { TypedObject } from '../object';
 import { createSchemaReference, getSchemaReference, Ref } from '../ref';
 import { StoredSchema } from '../schema';
@@ -118,7 +118,9 @@ describe('effect-to-json', () => {
   test('annotations', () => {
     class TestSchema extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
       name: Schema.String.annotations({ description: 'Person name', title: 'Name' }),
-      email: Schema.String.annotations({ description: 'Email address', [FormatAnnotationId]: 'email' }),
+      email: Schema.String.pipe(FormatAnnotation.set(FormatEnum.Email)).annotations({
+        description: 'Email address',
+      }),
     }) {}
     const jsonSchema = toJsonSchema(TestSchema);
     expect(jsonSchema).to.deep.eq({
@@ -296,11 +298,13 @@ describe('effect-to-json', () => {
     const Organization = Schema.Struct({
       id: ObjectId,
       name: Schema.String,
-    })
-      .annotations({
-        [LabelAnnotationId]: 'name',
-      })
-      .pipe(EchoObject({ typename: 'example.com/type/Organization', version: '0.1.0' }));
+    }).pipe(
+      EchoObject({
+        typename: 'example.com/type/Organization',
+        version: '0.1.0',
+      }),
+      LabelAnnotation.set(['name']),
+    );
 
     const jsonSchema = toJsonSchema(Organization);
     expect(jsonSchema).toEqual({
@@ -400,7 +404,7 @@ describe('json-to-effect', () => {
           object: Schema.Struct({ id: Schema.String, field: Ref(Organization) }),
           echoObject: Ref(Organization),
           echoObjectArray: Schema.Array(Ref(Organization)),
-          email: Schema.String.annotations({ [FormatAnnotationId]: 'email' }),
+          email: Schema.String.pipe(FormatAnnotation.set(FormatEnum.Email)),
           null: Schema.Null,
         },
         partial ? { partial } : {},
@@ -467,9 +471,8 @@ describe('json-to-effect', () => {
   });
 
   test('symbol annotations get compared', () => {
-    const schema1 = Schema.String.annotations({ [FormatAnnotationId]: 'email' });
-    const schema2 = Schema.String.annotations({ [FormatAnnotationId]: 'currency' });
-
+    const schema1 = Schema.String.pipe(FormatAnnotation.set(FormatEnum.Email));
+    const schema2 = Schema.String.pipe(FormatAnnotation.set(FormatEnum.Currency));
     expect(prepareAstForCompare(schema1.ast)).not.to.deep.eq(prepareAstForCompare(schema2.ast));
   });
 
@@ -492,7 +495,7 @@ describe('json-to-effect', () => {
 
   test('generator annotation', () => {
     const schema = Schema.Struct({
-      name: Schema.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
+      name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName')),
     });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toMatchInlineSnapshot(`

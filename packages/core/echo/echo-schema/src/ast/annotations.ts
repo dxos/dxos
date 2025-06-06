@@ -10,6 +10,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
+import { createAnnotationHelper } from './annotation-helper';
 import { EntityKind } from './entity-kind';
 import { type HasId } from './types';
 import { DXN as DXNSchema } from '../formats';
@@ -327,6 +328,8 @@ export type SchemaMeta = TypeMeta & { id: string };
  */
 export const LabelAnnotationId = Symbol.for('@dxos/schema/annotation/Label');
 
+export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationId);
+
 /**
  * Default field to be used on referenced schema to lookup the value.
  */
@@ -336,6 +339,9 @@ export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/Field
  * Generate test data.
  */
 export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
+
+// TODO(burdon): Change type.
+export const GeneratorAnnotation = createAnnotationHelper<string>(GeneratorAnnotationId);
 
 /**
  * Returns the label for a given object based on {@link LabelAnnotationId}.

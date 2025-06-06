@@ -40,7 +40,7 @@ export const KanbanSchema = Schema.Struct({
 
 export const KanbanSettingsSchema = Schema.Struct({
   columnFieldId: Schema.String.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Column field identifier',
+    title: 'Column field identifier',
   }),
 });
 

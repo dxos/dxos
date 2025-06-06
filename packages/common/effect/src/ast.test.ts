@@ -92,13 +92,13 @@ describe('AST', () => {
 
   test('findAnnotation', ({ expect }) => {
     const TestSchema = Schema.NonEmptyString.pipe(Schema.pattern(/^\d{5}$/)).annotations({
-      [SchemaAST.TitleAnnotationId]: 'original title',
+      title: 'original title',
     });
 
     const ContactSchema = Schema.Struct({
-      p1: TestSchema.annotations({ [SchemaAST.TitleAnnotationId]: 'new title' }),
-      p2: TestSchema.annotations({ [SchemaAST.TitleAnnotationId]: 'new title' }).pipe(Schema.optional),
-      p3: Schema.optional(TestSchema.annotations({ [SchemaAST.TitleAnnotationId]: 'new title' })),
+      p1: TestSchema.annotations({ title: 'new title' }),
+      p2: TestSchema.annotations({ title: 'new title' }).pipe(Schema.optional),
+      p3: Schema.optional(TestSchema.annotations({ title: 'new title' })),
     });
 
     for (const p of ['p1', 'p2', 'p3']) {
@@ -111,7 +111,7 @@ describe('AST', () => {
 
   test('findAnnotation skips defaults', ({ expect }) => {
     const annotation = findAnnotation(
-      Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'test' }).ast,
+      Schema.String.annotations({ title: 'test' }).ast,
       SchemaAST.TitleAnnotationId,
     );
     expect(annotation).to.eq('test');

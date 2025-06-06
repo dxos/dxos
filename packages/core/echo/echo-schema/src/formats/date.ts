@@ -103,8 +103,8 @@ export const DateOnly = /* Schema.transformOrFail(Schema.String, SimpleDate, {
 }) */ Schema.String.pipe(
   FormatAnnotation.set(FormatEnum.Date),
   Schema.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Date',
-    [SchemaAST.DescriptionAnnotationId]: 'Valid date in ISO format',
+    title: 'Date',
+    description: 'Valid date in ISO format',
   }),
 );
 
@@ -133,8 +133,8 @@ export const TimeOnly = /* Schema.transformOrFail(Schema.String, SimpleTime, {
 }) */ Schema.String.pipe(
   FormatAnnotation.set(FormatEnum.Time),
   Schema.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Time',
-    [SchemaAST.DescriptionAnnotationId]: 'Valid time in ISO format',
+    title: 'Time',
+    description: 'Valid time in ISO format',
   }),
 );
 
@@ -178,8 +178,8 @@ export const DateTime = /* Schema.transformOrFail(Schema.String, SimpleDateTime,
 }) */ Schema.String.pipe(
   FormatAnnotation.set(FormatEnum.DateTime),
   Schema.annotations({
-    [SchemaAST.TitleAnnotationId]: 'DateTime',
-    [SchemaAST.DescriptionAnnotationId]: 'Valid date and time in ISO format',
+    title: 'DateTime',
+    description: 'Valid date and time in ISO format',
   }),
 );
 
@@ -190,8 +190,8 @@ export const DateTime = /* Schema.transformOrFail(Schema.String, SimpleDateTime,
 export const Duration = Schema.String.pipe(
   FormatAnnotation.set(FormatEnum.Duration),
   Schema.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Duration',
-    [SchemaAST.DescriptionAnnotationId]: 'Duration in ISO 8601 format',
+    title: 'Duration',
+    description: 'Duration in ISO 8601 format',
     [SchemaAST.ExamplesAnnotationId]: ['1h', '3D'],
   }),
 );

@@ -5,16 +5,14 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { getLabel, EchoObject, LabelAnnotationId, Typename, Version } from './annotations';
+import { getLabel, EchoObject, Typename, Version, LabelAnnotation } from './annotations';
 
 // TODO(dmaretskyi): Use one of the testing schemas.
 const TestObject = Schema.Struct({
   name: Schema.optional(Schema.String),
   fallbackName: Schema.optional(Schema.String),
   other: Schema.String,
-}).annotations({
-  [LabelAnnotationId]: ['name', 'fallbackName'],
-});
+}).pipe(LabelAnnotation.set(['name', 'fallbackName']));
 
 const a: Schema.Struct<typeof TestObject.fields> = TestObject;
 console.log(a);

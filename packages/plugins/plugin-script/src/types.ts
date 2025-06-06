@@ -19,7 +19,7 @@ export namespace ScriptAction {
   export const CreateScriptSchema = Schema.Struct({
     name: Schema.optional(Schema.String),
     // TODO(wittjosiah): Placeholder annotation?
-    gistUrl: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Import from Gist (url)' })),
+    gistUrl: Schema.optional(Schema.String.annotations({ title: 'Import from Gist (url)' })),
     initialTemplateId: Schema.optional(Schema.String),
   });
 

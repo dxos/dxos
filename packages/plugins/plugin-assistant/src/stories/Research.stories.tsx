@@ -50,12 +50,11 @@ import {
 } from '@dxos/react-ui-menu';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
-import { SpaceGraphModel } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { testPlugins } from './testing';
 import { Thread, type ThreadProps } from '../components';
-import { ChatProcessor } from '../hooks';
+import { ChatProcessor, useGraphModel } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import translations from '../translations';
 
@@ -73,8 +72,10 @@ type RenderProps = {
 
 // TODO(burdon): Use ChatContainer.
 const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) => {
+  const [, forceUpdate] = useState({});
+
   const client = useClient();
-  const space = client.spaces.default;
+  // TODO(burdon): Hook.
   const [aiClient] = useState(
     () =>
       new SpyAIService(
@@ -87,14 +88,16 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         }),
       ),
   );
+
+  const space = client.spaces.default;
+  const model = useGraphModel(space);
+
   const actionCreator = useCallback(() => createToolbar(aiClient), [aiClient]);
   const menuProps = useMenuActions(actionCreator);
 
   // Queue.
   const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
-
-  const [, forceUpdate] = useState({});
 
   // Function executor.
   const functionExecutor = useMemo(
@@ -215,14 +218,6 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     await space.db.flush({ indexes: true });
     forceUpdate({});
   }, []);
-
-  const [model] = useState(() => new SpaceGraphModel());
-  useEffect(() => {
-    void model.open(space);
-    return () => {
-      model.close();
-    };
-  }, [space]);
 
   const handleResearchMore = useCallback((object: BaseObject, relatedSchema: RelatedSchema) => {
     const prompt = `

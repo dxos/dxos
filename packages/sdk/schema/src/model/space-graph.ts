@@ -225,13 +225,13 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
           });
 
           // Link to schema.
-          const schemaNode = this._graph.nodes.find(
-            (node) => node.type === 'schema' && node.data.typename === typename,
-          );
-          if (!schemaNode) {
-            log.warn('schema node not found', { typename });
-          } else {
-            if (this._options?.showSchema) {
+          if (this._options?.showSchema) {
+            const schemaNode = this._graph.nodes.find(
+              (node) => node.type === 'schema' && node.data.typename === typename,
+            );
+            if (!schemaNode) {
+              log.warn('schema node not found', { typename });
+            } else {
               this.addEdge({
                 id: `${object.id}-${schemaNode.id}`,
                 type: 'schema',

@@ -22,19 +22,19 @@ import { FormatAnnotation, FormatEnum } from './types';
  */
 export const GeoPoint = Schema.Tuple(
   Schema.Number.pipe(Schema.clamp(-180, 180), Schema.multipleOf(0.00001)).annotations({
-    [SchemaAST.TitleAnnotationId]: 'Longitude',
+    title: 'Longitude',
   }),
   Schema.Number.pipe(Schema.clamp(-90, 90), Schema.multipleOf(0.00001)).annotations({
-    [SchemaAST.TitleAnnotationId]: 'Latitude',
+    title: 'Latitude',
   }),
   Schema.optionalElement(Schema.Number).annotations({
-    [SchemaAST.TitleAnnotationId]: 'Height ASL (m)',
+    title: 'Height ASL (m)',
   }),
 ).pipe(
   FormatAnnotation.set(FormatEnum.GeoPoint),
   Schema.annotations({
-    [SchemaAST.TitleAnnotationId]: 'GeoPoint',
-    [SchemaAST.DescriptionAnnotationId]: 'GeoJSON Position',
+    title: 'GeoPoint',
+    description: 'GeoJSON Position',
   }),
 );
 

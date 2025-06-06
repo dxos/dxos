@@ -70,7 +70,7 @@ describe('View', () => {
       },
       toJsonSchema(
         Schema.Struct({
-          name: Schema.optional(Schema.String).annotations({ [SchemaAST.TitleAnnotationId]: 'Name' }),
+          name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
           email: Schema.optional(Format.Email),
           salary: Schema.optional(Format.Currency({ code: 'usd', decimals: 2 })),
         }),

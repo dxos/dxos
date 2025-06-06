@@ -15,9 +15,9 @@ import { getLocationProperty, setLocationProperty } from '../util';
 
 export const MapSettingsSchema = Schema.Struct({
   coordinateSource: Schema.optional(
-    Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Coordinate source type' }),
+    Schema.String.annotations({ title: 'Coordinate source type' }),
   ),
-  coordinateColumn: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Coordinate column' })),
+  coordinateColumn: Schema.optional(Schema.String.annotations({ title: 'Coordinate column' })),
 });
 
 type MapViewEditorProps = { map: MapType };

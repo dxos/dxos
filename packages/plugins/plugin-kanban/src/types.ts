@@ -28,13 +28,13 @@ export const CreateKanbanSchema = Schema.Struct({
   typename: Schema.optional(
     Schema.String.annotations({
       [TypenameAnnotationId]: true,
-      [SchemaAST.TitleAnnotationId]: 'Select card schema (leave empty to start fresh)',
+      title: 'Select card schema (leave empty to start fresh)',
     }),
   ),
   initialPivotColumn: Schema.optional(
     Schema.String.annotations({
       [PivotColumnAnnotationId]: true,
-      [SchemaAST.TitleAnnotationId]: 'Pivot column',
+      title: 'Pivot column',
     }),
   ),
 });

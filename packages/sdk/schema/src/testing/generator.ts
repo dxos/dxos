@@ -185,7 +185,6 @@ export const createObjectPipeline = <T extends BaseObject>(
         const withProps = createProps(generator, type, optional)(obj);
         log('after props', { withProps });
         const liveObj = createReactiveObject(type)(withProps);
-        // logObject('after')(liveObj);
         return liveObj;
       });
 
@@ -194,14 +193,10 @@ export const createObjectPipeline = <T extends BaseObject>(
   } else {
     return (obj: ExcludeId<T>) => {
       const pipeline: Effect.Effect<AnyLiveObject<any>, never, never> = Effect.gen(function* () {
-        // logObject('before')(obj);
         const withProps = createProps(generator, type, optional)(obj);
-        log('after props', { withProps });
         const liveObj = createReactiveObject(type)(withProps);
         const withRefs = yield* Effect.promise(() => createReferences(type, db)(liveObj));
-        log.info('add to db', { withRefs });
         const dbObj = addToDatabase(db)(withRefs);
-        // logObject('after')(dbObj);
         return dbObj;
       });
 

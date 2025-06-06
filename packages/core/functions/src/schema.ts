@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { EchoObject, JsonSchemaType, LabelAnnotationId, Ref, TypedObject } from '@dxos/echo-schema';
+import { EchoObject, JsonSchemaType, LabelAnnotation, Ref, TypedObject } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 
 /**
@@ -17,14 +17,13 @@ export const ScriptType = Schema.Struct({
   // Whether source has changed since last deploy.
   changed: Schema.optional(Schema.Boolean),
   source: Ref(DataType.Text),
-})
-  .annotations({ [LabelAnnotationId]: 'name' })
-  .pipe(
-    EchoObject({
-      typename: 'dxos.org/type/Script',
-      version: '0.1.0',
-    }),
-  );
+}).pipe(
+  EchoObject({
+    typename: 'dxos.org/type/Script',
+    version: '0.1.0',
+  }),
+  LabelAnnotation.set(['name']),
+);
 
 export type ScriptType = Schema.Schema.Type<typeof ScriptType>;
 

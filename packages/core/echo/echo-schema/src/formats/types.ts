@@ -4,8 +4,7 @@
 
 import { Option, SchemaAST, type JSONSchema, pipe } from 'effect';
 
-import { type JsonSchemaType } from '../ast';
-import { createAnnotationHelper } from '../ast/annotation-helper';
+import { createAnnotationHelper, type JsonSchemaType } from '../ast';
 
 export enum TypeEnum {
   Object = 'object',
@@ -50,7 +49,7 @@ export const FormatAnnotation = createAnnotationHelper<FormatEnum>(FormatAnnotat
 export const getFormatAnnotation = (node: SchemaAST.AST): FormatEnum | undefined =>
   pipe(SchemaAST.getAnnotation<FormatEnum>(FormatAnnotationId)(node), Option.getOrUndefined);
 
-// TODO(burdon): Rename Format.
+// TODO(burdon): Rename to Format and change enum to string literals (remove need to import).
 export enum FormatEnum {
   None = 'none',
   String = 'string',
@@ -97,7 +96,7 @@ export enum FormatEnum {
   // { type: 'object' }
   //
 
-  GeoPoint = 'latlng', // TODO(burdon): Change to geopoint.
+  GeoPoint = 'latlng',
 }
 
 export const FormatEnums = Object.values(FormatEnum).sort();

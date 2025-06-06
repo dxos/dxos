@@ -14,7 +14,7 @@ export namespace CollaborationActions {
       at: Schema.optional(Schema.String),
       label: Schema.String.pipe(Schema.optional),
     }).annotations({
-      [SchemaAST.DescriptionAnnotationId]:
+      description:
         'Enables plugins to inject content blocks or references into a related entity.',
     }),
     output: Schema.Void,

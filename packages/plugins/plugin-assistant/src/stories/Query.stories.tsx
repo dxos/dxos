@@ -15,6 +15,7 @@ import { log } from '@dxos/log';
 import { D3ForceGraph } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, Query, useQuery, useSpace } from '@dxos/react-client/echo';
+import { Toolbar } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { DataType, SpaceGraphModel } from '@dxos/schema';
@@ -48,8 +49,8 @@ const DefaultStory = () => {
       timeout(async () => {
         const createObjects = createObjectFactory(space.db, generator);
         await createObjects([
-          { type: DataType.Organization, count: 1 },
-          // { type: DataType.Person, count: 1 },
+          { type: DataType.Organization, count: 10 },
+          { type: DataType.Person, count: 20 },
         ]);
 
         void model.open(space);
@@ -72,25 +73,29 @@ const DefaultStory = () => {
     [space],
   );
 
-  // TODO(burdon): Remove once query is fixed.
-  const enableGraph = false;
+  const handleRefresh = useCallback(() => {
+    model.invalidate();
+  }, [model]);
 
   return (
     <div className='grow grid overflow-hidden'>
       <div className='grow grid grid-cols-[1fr_400px] overflow-hidden'>
-        {enableGraph ? <D3ForceGraph classNames='border-ie border-separator' model={model} /> : <div />}
-        <div className='grow grid grid-rows-[1fr_1fr] overflow-hidden divide-y divide-separator'>
+        <D3ForceGraph classNames='border-ie border-separator' model={model} />
+        <div className='grow grid grid-rows-[min-content_1fr_1fr] overflow-hidden divide-y divide-separator'>
+          <Toolbar.Root>
+            <Toolbar.Button onClick={handleRefresh}>Refresh</Toolbar.Button>
+          </Toolbar.Root>
           <ItemList
             items={items}
             getTitle={(item) => {
               // TODO(burdon): Factor out.
               const schema = getSchema(item);
               if (!schema) {
-                return item.id;
+                return undefined;
               }
 
               const label = getLabel(schema, item);
-              return label ?? item.id;
+              return label;
             }}
           />
           <JsonFilter data={{ model, db: space?.db }} />
@@ -116,14 +121,20 @@ const ItemList = ({
   getTitle,
 }: {
   items?: BaseEchoObject[];
-  getTitle: (item: BaseEchoObject) => string;
+  getTitle: (item: BaseEchoObject) => string | undefined;
 }) => {
   return (
     <List.Root<BaseEchoObject> items={items}>
       {({ items }) => (
-        <div role='list' className='grow flex flex-col'>
+        <div role='list' className='grow flex flex-col overflow-y-auto'>
+          {/* TODO(burdon): Virtualize. */}
           {items.map((item) => (
-            <List.Item<BaseEchoObject> key={item.id} item={item}>
+            <List.Item<BaseEchoObject>
+              key={item.id}
+              item={item}
+              classNames='grid grid-cols-[4rem_1fr] min-h-[32px] items-center'
+            >
+              <div className='text-xs font-mono truncate px-1'>{item.id}</div>
               <List.ItemTitle>{getTitle(item)}</List.ItemTitle>
             </List.Item>
           ))}
