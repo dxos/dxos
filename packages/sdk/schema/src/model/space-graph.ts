@@ -54,16 +54,20 @@ export type SpaceGraphModelOptions = {
  * Converts ECHO objects to a graph.
  */
 export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraphEdge> {
+  private _options?: SpaceGraphModelOptions;
+  private _space?: Space;
+  private _filter?: Filter.Any;
+
   private _schema?: EchoSchema[];
   private _schemaSubscription?: CleanupFn;
   private _objects?: AnyLiveObject<any>[];
   private _objectsSubscription?: CleanupFn;
-  private _space?: Space;
-  private _filter?: Filter.Any;
 
   constructor(
+    /**
+     * Provide existing reactive graph?
+     */
     graph?: Partial<Graph>,
-    private readonly _options: SpaceGraphModelOptions = {},
   ) {
     super(
       live(Graph, {
@@ -89,9 +93,18 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
     return this._space !== undefined;
   }
 
+  setOptions(options?: SpaceGraphModelOptions): this {
+    this._options = options;
+    if (this.isOpen()) {
+      this.invalidate();
+    }
+
+    return this;
+  }
+
   setFilter(filter?: Filter.Any): this {
     this._filter = filter;
-    if (this._space) {
+    if (this.isOpen()) {
       this._subscribe();
     }
 
@@ -114,6 +127,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
     this._schemaSubscription = schemaaQuery.subscribe(onSchemaUpdate);
     onSchemaUpdate({ results: schemas });
     this._subscribe();
+
     return this;
   }
 
@@ -127,6 +141,20 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
     return this;
   }
 
+  private _timeout?: NodeJS.Timeout;
+
+  /**
+   * Batch updates into same execution frame.
+   */
+  public invalidate() {
+    clearTimeout(this._timeout);
+    this._timeout = setTimeout(() => {
+      if (this.isOpen()) {
+        this._update();
+      }
+    }, 0);
+  }
+
   private _subscribe() {
     this._objectsSubscription?.();
 
@@ -134,7 +162,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
     this._objectsSubscription = this._space.db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
       ({ objects }) => {
         this._objects = [...objects];
-        this._update();
+        this.invalidate();
       },
       { fire: true },
     );
@@ -146,7 +174,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
     this.clear();
 
     const addSchema = (typename: string) => {
-      if (!this._options.showSchema) {
+      if (!this._options?.showSchema) {
         return;
       }
 
@@ -203,7 +231,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
           if (!schemaNode) {
             log.warn('schema node not found', { typename });
           } else {
-            if (this._options.showSchema) {
+            if (this._options?.showSchema) {
               this.addEdge({
                 id: `${object.id}-${schemaNode.id}`,
                 type: 'schema',
