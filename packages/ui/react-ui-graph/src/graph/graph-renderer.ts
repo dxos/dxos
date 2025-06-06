@@ -186,8 +186,8 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   // Label.
   if (options.labels) {
     const g = group.append('g');
-    g.append('rect');
     g.append('line');
+    g.append('rect');
     g.append('text')
       .style('dominant-baseline', 'middle')
       .text((d) => options.labels.text(d));
@@ -196,7 +196,7 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   // Hover.
   if (options.highlight !== false) {
     circle.on('mouseover', function () {
-      select(this.parentElement).classed('dx-active', true).classed('dx-highlight', true).raise();
+      select(this.parentElement).raise().classed('dx-active', true).classed('dx-highlight', true);
     });
     group.on('mouseleave', function () {
       select(this).classed('dx-active', false);
@@ -204,7 +204,7 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
         if (!select(this).classed('dx-active')) {
           select(this).classed('dx-highlight', false).lower();
         }
-      }, 500);
+      }, 300);
     });
   }
 };
@@ -257,8 +257,13 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
       .attr('dy', 1)
       .text((d) => options.labels.text(d))
       .each(function (d) {
-        // TODO(burdon): Expensive; do lazily.
-        const bbox = this.getBBox();
+        // Cache bounding box.
+        let bbox = d.bbox;
+        if (!bbox) {
+          bbox = this.getBBox();
+          d.bbox = bbox;
+        }
+
         const width = bbox.width + px * 2;
         const height = bbox.height + py * 2;
         select(this.parentElement)
