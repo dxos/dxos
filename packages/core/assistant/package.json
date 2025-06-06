@@ -24,6 +24,7 @@
     "run:chat": "tsx ./bin/chat.ts"
   },
   "dependencies": {
+    "chalk": "^4.1.0",
     "@dxos/ai": "workspace:*",
     "@dxos/artifact": "workspace:*",
     "@dxos/async": "workspace:*",
