@@ -45,6 +45,17 @@ const DefaultStory = ({ debug, grid, graph, projectorOptions, noInspect, ...prop
   const [popoverContent, setPopoverContent] = useState('');
   const [popoverOpen, setPopoverOpen] = useState(false);
 
+  // Dismiss popover when SVG context transform changes
+  useEffect(() => {
+    if (context.current) {
+      const handleTransformChange = () => {
+        setPopoverOpen(false);
+      };
+
+      return context.current.resized.on(handleTransformChange);
+    }
+  }, [context]);
+
   console.log(selected.toJSON());
 
   const handleInspect: GraphProps['onInspect'] = useCallback((node, event) => {
