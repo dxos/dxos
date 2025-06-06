@@ -10,6 +10,7 @@ export default [
       [translationKey]: {
         'fields label': 'Fields',
         'hidden fields label': 'Hidden Fields',
+        'empty readonly ref field label': '(none)',
 
         // TODO(burdon): Standardize field/property.
         'button add property': 'Add property',

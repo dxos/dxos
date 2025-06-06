@@ -5,6 +5,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 
 import { Input, Select } from '@dxos/react-ui';
+import { TagPickerItem } from '@dxos/react-ui-tag-picker';
 
 import { type InputProps, InputHeader } from './Input';
 
@@ -110,29 +111,37 @@ export const SelectInput = ({
   const value = getValue() as string | undefined;
   const handleValueChange = useCallback((value: string | number) => onValueChange(type, value), [type, onValueChange]);
 
-  return (
+  return disabled && !value ? null : (
     <Input.Root validationValence={status}>
       {!inputOnly && (
         <InputHeader error={error}>
           <Input.Label>{label}</Input.Label>
         </InputHeader>
       )}
-      <Select.Root value={value} onValueChange={handleValueChange}>
-        {/* TODO(burdon): Placeholder not working? */}
-        <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              {options?.map(({ value, label }) => (
-                // NOTE: Numeric values are converted to and from strings.
-                <Select.Option key={String(value)} value={String(value)}>
-                  {label ?? String(value)}
-                </Select.Option>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
+      {disabled ? (
+        <TagPickerItem
+          key={value}
+          itemId={value}
+          label={options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}
+        />
+      ) : (
+        <Select.Root value={value} onValueChange={handleValueChange}>
+          {/* TODO(burdon): Placeholder not working? */}
+          <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {options?.map(({ value, label }) => (
+                  // NOTE: Numeric values are converted to and from strings.
+                  <Select.Option key={String(value)} value={String(value)}>
+                    {label ?? String(value)}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+      )}
       {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );

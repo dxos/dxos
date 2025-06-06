@@ -83,6 +83,20 @@ export const Default: Story<TestType> = {
   },
 };
 
+export const Readonly: Story<TestType> = {
+  args: {
+    schema: TestSchema,
+    values: {
+      name: 'DXOS',
+      active: true,
+      address: {
+        zip: '11205',
+      },
+    },
+    readonly: true,
+  },
+};
+
 export const Organization: Story<Testing.Organization> = {
   args: {
     schema: Testing.OrganizationSchema,
