@@ -6,6 +6,8 @@ import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 
+import { AgentStatusReport } from '../status-report';
+
 // TODO(dmaretskyi): Extract IDs to protocols and dedupe package with dxos/edge.
 
 /**
@@ -38,7 +40,7 @@ export interface Thread extends Schema.Schema.Type<typeof Thread> {}
 export const AbstractContentBlock = Schema.Struct({
   pending: Schema.optional(Schema.Boolean),
 });
-export type AbstractContentBlock = Schema.Schema.Type<typeof AbstractContentBlock>;
+export interface AbstractContentBlock extends Schema.Schema.Type<typeof AbstractContentBlock> {}
 
 /**
  * Text
@@ -51,7 +53,7 @@ export const TextContentBlock = Schema.extend(
     text: Schema.String,
   }),
 ).pipe(Schema.mutable);
-export type TextContentBlock = Schema.Schema.Type<typeof TextContentBlock>;
+export interface TextContentBlock extends Schema.Schema.Type<typeof TextContentBlock> {}
 
 /**
  * JSON
@@ -64,7 +66,7 @@ export const JsonContentBlock = Schema.extend(
     json: Schema.String,
   }),
 ).pipe(Schema.mutable);
-export type JsonContentBlock = Schema.Schema.Type<typeof JsonContentBlock>;
+export interface JsonContentBlock extends Schema.Schema.Type<typeof JsonContentBlock> {}
 
 export const ImageSource = Schema.Struct({
   type: Schema.Literal('base64'),
@@ -72,7 +74,7 @@ export const ImageSource = Schema.Struct({
   data: Schema.String,
 }).pipe(Schema.mutable);
 
-export type ImageSource = Schema.Schema.Type<typeof ImageSource>;
+export interface ImageSource extends Schema.Schema.Type<typeof ImageSource> {}
 
 /**
  * Image
@@ -85,7 +87,7 @@ export const ImageContentBlock = Schema.extend(
     source: Schema.optional(ImageSource),
   }),
 ).pipe(Schema.mutable);
-export type ImageContentBlock = Schema.Schema.Type<typeof ImageContentBlock>;
+export interface ImageContentBlock extends Schema.Schema.Type<typeof ImageContentBlock> {}
 
 /**
  * Tool use.
@@ -110,8 +112,14 @@ export const ToolUseContentBlock = Schema.extend(
      * Input parameters.
      */
     input: Schema.Unknown,
+
+    /**
+     * Ephemeral status message.
+     */
+    currentStatus: Schema.optional(AgentStatusReport),
   }),
 ).pipe(Schema.mutable);
+export interface ToolUseContentBlock extends Schema.Schema.Type<typeof ToolUseContentBlock> {}
 
 export const ToolResultContentBlock = Schema.extend(
   AbstractContentBlock,
@@ -122,6 +130,7 @@ export const ToolResultContentBlock = Schema.extend(
     isError: Schema.optional(Schema.Boolean), // TODO(burdon): Change to error string.
   }),
 ).pipe(Schema.mutable);
+export interface ToolResultContentBlock extends Schema.Schema.Type<typeof ToolResultContentBlock> {}
 
 /**
  * Content union.
