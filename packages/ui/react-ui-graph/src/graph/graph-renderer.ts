@@ -38,6 +38,7 @@ export type GraphRendererOptions<N> = RendererOptions<{
   attributes?: AttributesOptions<N>;
   transition?: () => any;
   onNodeClick?: (node: GraphLayoutNode<N>, event: MouseEvent) => void;
+  onNodePointerEnter?: (node: GraphLayoutNode<N>, event: MouseEvent) => void;
   onLinkClick?: (link: GraphLayoutEdge<N>, event: MouseEvent) => void;
 }>;
 
@@ -184,7 +185,7 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   }
 
   // Label.
-  if (options.labels) {
+  if (options.labels && !options.onNodePointerEnter) {
     const g = group.append('g');
     g.append('rect');
     g.append('line');
@@ -194,11 +195,17 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   }
 
   // Hover.
-  if (options.highlight !== false) {
-    circle.on('mouseover', function () {
+  if (options.onNodePointerEnter) {
+    circle.on('pointerenter', function (event: PointerEvent) {
+      const node = select(this.parentElement).datum();
+      options.onNodePointerEnter(node as GraphLayoutNode, event);
+    });
+    group.attr('data-hover', 'handled');
+  } else if (options.highlight !== false) {
+    circle.on('pointerenter', function () {
       select(this.parentElement).classed('dx-active', true).classed('dx-highlight', true).raise();
     });
-    group.on('mouseleave', function () {
+    group.on('pointerleave', function () {
       select(this).classed('dx-active', false);
       setTimeout(() => {
         if (!select(this).classed('dx-active')) {

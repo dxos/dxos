@@ -32,7 +32,8 @@ export type GraphProps = ThemedClassName<
     delay?: number;
     drag?: boolean;
     arrows?: boolean;
-    onSelect?: (node: GraphLayoutNode<any>) => void;
+    onSelect?: (node: GraphLayoutNode<any>, event: MouseEvent) => void;
+    onInspect?: (node: GraphLayoutNode<any>, event: MouseEvent) => void;
   }
 >;
 
@@ -41,7 +42,18 @@ export type GraphProps = ThemedClassName<
  */
 export const Graph = forwardRef<GraphController, GraphProps>(
   (
-    { classNames, model, projector: _projector, renderer: _renderer, delay, drag, arrows, onSelect, ...props },
+    {
+      classNames,
+      model,
+      projector: _projector,
+      renderer: _renderer,
+      delay,
+      drag,
+      arrows,
+      onSelect,
+      onInspect,
+      ...props
+    },
     forwardedRef,
   ) => {
     const context = useSvgContext();
@@ -55,7 +67,8 @@ export const Graph = forwardRef<GraphController, GraphProps>(
           ...props,
           drag: drag ? createDrag(context, projector.simulation) : undefined,
           arrows: { end: arrows },
-          onNodeClick: onSelect ? (node: GraphLayoutNode) => onSelect(node) : undefined,
+          onNodeClick: onSelect ? (node: GraphLayoutNode, event) => onSelect(node, event) : undefined,
+          onNodePointerEnter: onInspect ? (node: GraphLayoutNode, event) => onInspect(node, event) : undefined,
         });
 
       return {

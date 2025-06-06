@@ -6,17 +6,17 @@ import '@dxos-theme';
 
 import { effect } from '@preact/signals-core';
 import { type StoryObj } from '@storybook/react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
-import { Toolbar } from '@dxos/react-ui';
+import { Popover, Toolbar } from '@dxos/react-ui';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
 import { GraphForceProjector, type GraphForceProjectorOptions, type GraphLayoutNode } from '../../graph';
-import { type SVGContext } from '../../hooks';
+import { type SVGContext, type ZoomExtent } from '../../hooks';
 import { convertTreeToGraph, createGraph, createTree, TestGraphModel, type TestNode } from '../../testing';
 import { SVG } from '../SVG';
 
@@ -27,9 +27,12 @@ type DefaultStoryProps = GraphProps & {
   grid?: boolean;
   graph: Graph;
   projectorOptions?: GraphForceProjectorOptions;
+  noInspect?: boolean;
 };
 
-const DefaultStory = ({ debug, grid, graph, projectorOptions, ...props }: DefaultStoryProps) => {
+const zoomExtent = [1 / 4, 4] satisfies ZoomExtent;
+
+const DefaultStory = ({ debug, grid, graph, projectorOptions, noInspect, ...props }: DefaultStoryProps) => {
   const graphRef = useRef<GraphController | null>(null);
   const model = useMemo(() => new TestGraphModel(graph), [graph]);
   const selected = useMemo(() => new SelectionModel(), []);
@@ -38,63 +41,98 @@ const DefaultStory = ({ debug, grid, graph, projectorOptions, ...props }: Defaul
     () => context.current && projectorOptions && new GraphForceProjector(context.current, projectorOptions),
     [context.current, projectorOptions],
   );
+  const anchorRef = useRef<HTMLButtonElement | null>(null);
+  const [popoverContent, setPopoverContent] = useState('');
+  const [popoverOpen, setPopoverOpen] = useState(false);
+
+  // Dismiss popover when SVG context transform changes
+  useEffect(() => {
+    if (context.current) {
+      const handleTransformChange = () => {
+        setPopoverOpen(false);
+      };
+
+      return context.current.resized.on(handleTransformChange);
+    }
+  }, [context]);
+
+  console.log(selected.toJSON());
+
+  const handleInspect: GraphProps['onInspect'] = useCallback((node, event) => {
+    setPopoverOpen(false);
+    setPopoverContent('');
+    anchorRef.current = null;
+    queueMicrotask(() => {
+      anchorRef.current = event.target as HTMLButtonElement;
+      setPopoverContent(node.id);
+      setPopoverOpen(true);
+    });
+  }, []);
 
   return (
-    <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
-      <SVG.Root ref={context}>
-        <SVG.Markers />
-        {grid && <SVG.Grid axis />}
-        <SVG.Zoom extent={[1 / 4, 4]}>
-          <GraphComponent
-            ref={graphRef}
-            model={model}
-            projector={projector}
-            labels={{
-              text: (node: GraphLayoutNode<TestNode>) => node.data.label,
-            }}
-            attributes={{
-              node: (node: GraphLayoutNode<TestNode>) => ({
-                classes: {
-                  'dx-selected': selected.contains(node.id),
-                },
-              }),
-            }}
-            onSelect={(node: GraphLayoutNode<TestNode>) => {
-              if (selected.contains(node.id)) {
-                selected.remove(node.id);
-              } else {
-                selected.add(node.id);
-              }
-              graphRef.current?.refresh();
-            }}
-            {...props}
-          />
-        </SVG.Zoom>
-      </SVG.Root>
+    <Popover.Root open={popoverOpen} onOpenChange={setPopoverOpen}>
+      <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
+        <SVG.Root ref={context}>
+          <SVG.Markers />
+          {grid && <SVG.Grid axis />}
+          <SVG.Zoom extent={zoomExtent}>
+            <GraphComponent
+              ref={graphRef}
+              model={model}
+              projector={projector}
+              labels={{
+                text: (node: GraphLayoutNode<TestNode>) => node.data.label,
+              }}
+              attributes={{
+                node: (node: GraphLayoutNode<TestNode>) => ({
+                  classes: {
+                    'dx-selected': selected.contains(node.id),
+                  },
+                }),
+              }}
+              onInspect={noInspect ? undefined : handleInspect}
+              onSelect={(node: GraphLayoutNode<TestNode>) => {
+                if (selected.contains(node.id)) {
+                  selected.remove(node.id);
+                } else {
+                  selected.add(node.id);
+                }
+                graphRef.current?.refresh();
+              }}
+              {...props}
+            />
+          </SVG.Zoom>
+        </SVG.Root>
 
-      {debug && (
-        <Debug
-          model={model}
-          selected={selected}
-          onAdd={() => {
-            if (graph.nodes.length) {
-              const source = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
-              const target = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
-              if (source !== target) {
-                model.addEdge({ source: source.id, target: target.id });
+        {debug && (
+          <Debug
+            model={model}
+            selected={selected}
+            onAdd={() => {
+              if (graph.nodes.length) {
+                const source = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
+                const target = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
+                if (source !== target) {
+                  model.addEdge({ source: source.id, target: target.id });
+                }
               }
-            }
-          }}
-          onDelete={() => {
-            const node = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
-            if (node) {
-              // TODO(burdon): Throws error.
-              model.removeNode(node.id);
-            }
-          }}
-        />
-      )}
-    </div>
+            }}
+            onDelete={() => {
+              const node = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
+              if (node) {
+                // TODO(burdon): Throws error.
+                model.removeNode(node.id);
+              }
+            }}
+          />
+        )}
+      </div>
+      <Popover.VirtualTrigger virtualRef={anchorRef} />
+      <Popover.Content classNames='popover-consistent-width' onOpenAutoFocus={(e) => e.preventDefault()}>
+        <p>{popoverContent}</p>
+        <Popover.Arrow />
+      </Popover.Content>
+    </Popover.Root>
   );
 };
 
@@ -149,6 +187,17 @@ export const Default: Story = {
     drag: true,
     arrows: true,
     grid: true,
+  },
+};
+
+export const Highlight: Story = {
+  args: {
+    debug: true,
+    graph: convertTreeToGraph(createTree({ depth: 4 })),
+    drag: true,
+    arrows: true,
+    grid: true,
+    noInspect: true,
   },
 };
 
