@@ -5388,6 +5388,9 @@ importers:
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context

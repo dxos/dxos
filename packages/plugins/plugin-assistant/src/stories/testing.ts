@@ -4,8 +4,11 @@
 
 import '@dxos-theme';
 
+import defaulstDeep from 'lodash.defaultsdeep';
+
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { TYPES } from '@dxos/assistant';
+import { type ConfigProto } from '@dxos/config';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -15,29 +18,25 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { Config } from '@dxos/react-client';
 
-export const testPlugins = [
+export const testPlugins = (config?: ConfigProto) => [
   ClientPlugin({
-    config: new Config({
-      runtime: {
-        client: {
-          storage: {
-            persistent: true,
-          },
-          enableVectorIndexing: true,
-        },
-        services: {
-          edge: {
-            url: 'http://edge-main.dxos.workers.dev',
+    config: new Config(
+      defaulstDeep({}, config, {
+        runtime: {
+          services: {
+            edge: {
+              url: 'http://edge-main.dxos.workers.dev',
+            },
           },
         },
-      },
-    }),
+      }),
+    ),
+    types: [...TYPES],
     onClientInitialized: async (_, client) => {
       if (!client.halo.identity.get()) {
         await client.halo.createIdentity();
       }
     },
-    types: [...TYPES],
   }),
   SpacePlugin(),
   SettingsPlugin(),

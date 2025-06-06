@@ -433,7 +433,16 @@ const meta: Meta<typeof DefaultStory> = {
   render: DefaultStory,
   decorators: [
     withPluginManager({
-      plugins: testPlugins,
+      plugins: testPlugins({
+        runtime: {
+          client: {
+            storage: {
+              persistent: true,
+            },
+            enableVectorIndexing: true,
+          },
+        },
+      }),
       capabilities: [
         contributes(
           Capabilities.ReactSurface,

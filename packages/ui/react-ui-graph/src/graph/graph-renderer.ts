@@ -257,6 +257,7 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
       .attr('dy', 1)
       .text((d) => options.labels.text(d))
       .each(function (d) {
+        // TODO(burdon): Expensive; do lazily.
         const bbox = this.getBBox();
         const width = bbox.width + px * 2;
         const height = bbox.height + py * 2;

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 
 import { Type } from '@dxos/echo';
 import { Format, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
@@ -108,7 +108,8 @@ export const Person = PersonSchema.pipe(
     version: '0.1.0',
   }),
 ).annotations({
-  description: 'A person.',
+  [SchemaAST.TitleAnnotationId]: 'Person',
+  [SchemaAST.DescriptionAnnotationId]: 'A person.',
   [LabelAnnotationId]: ['preferredName', 'fullName', 'nickname'],
 });
 

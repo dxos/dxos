@@ -138,7 +138,7 @@ const meta: Meta<typeof DefaultStory> = {
   render: DefaultStory,
   decorators: [
     withPluginManager({
-      plugins: testPlugins,
+      plugins: testPlugins(),
       fireEvents: [Events.SetupArtifactDefinition],
     }),
     withTheme,

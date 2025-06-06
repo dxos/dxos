@@ -52,6 +52,7 @@ const OrganizationSchema = Schema.Struct({
   ),
 }).annotations({
   [SchemaAST.TitleAnnotationId]: 'Organization',
+  [SchemaAST.DescriptionAnnotationId]: 'An organization.',
   [LabelAnnotationId]: 'name',
   [IconAnnotationId]: 'ph--building--regular',
 });
@@ -61,8 +62,6 @@ export const Organization = OrganizationSchema.pipe(
     typename: 'dxos.org/type/Organization',
     version: '0.1.0',
   }),
-).annotations({
-  description: 'An organization.',
-});
+);
 
 export interface Organization extends Schema.Schema.Type<typeof Organization> {}
