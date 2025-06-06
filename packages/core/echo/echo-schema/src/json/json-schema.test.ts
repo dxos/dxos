@@ -321,7 +321,7 @@ describe('effect-to-json', () => {
         },
       },
       annotations: {
-        labelProp: 'name',
+        labelProp: ['name'],
       },
       propertyOrder: ['id', 'name'],
       required: ['id', 'name'],
