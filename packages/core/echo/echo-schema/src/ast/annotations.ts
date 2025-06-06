@@ -11,11 +11,10 @@ import { DXN } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
 import { createAnnotationHelper } from './annotation-helper';
-import { EntityKind } from './entity-kind';
 import { type HasId } from './types';
 import { DXN as DXNSchema } from '../formats';
-import type { RelationSourceTargetRefs } from '../object';
-import { type BaseObject } from '../types';
+import { type RelationSourceTargetRefs } from '../object';
+import { type BaseObject, EntityKind } from '../types';
 
 type ToMutable<T> = T extends BaseObject
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }

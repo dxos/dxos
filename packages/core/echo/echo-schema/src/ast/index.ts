@@ -4,7 +4,6 @@
 
 export * from './annotations';
 export * from './annotation-helper';
-export * from './entity-kind';
 export * from './json-schema-normalize';
 export * from './json-schema-type';
 export * from './schema';

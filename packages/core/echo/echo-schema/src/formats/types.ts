@@ -35,6 +35,8 @@ export const getTypeEnum = (property: JsonSchemaType): TypeEnum | undefined => {
       return TypeEnum.Number;
     case 'boolean':
       return TypeEnum.Boolean;
+    default:
+      return undefined;
   }
 };
 

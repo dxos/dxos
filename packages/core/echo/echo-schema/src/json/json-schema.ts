@@ -15,19 +15,18 @@ import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annota
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   ECHO_ANNOTATIONS_NS_KEY,
-  EntityKind,
-  EntityKindSchema,
   getNormalizedEchoAnnotations,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-  TypeAnnotationId,
-  TypeIdentifierAnnotationId,
   type JsonSchemaEchoAnnotations,
   type JsonSchemaType,
   type TypeAnnotation,
+  TypeAnnotationId,
+  TypeIdentifierAnnotationId,
 } from '../ast';
 import { Expando } from '../object';
 import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
+import { EntityKind, EntityKindSchema } from '../types';
 
 /**
  * Create object jsonSchema.

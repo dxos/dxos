@@ -6,8 +6,8 @@ import { Schema } from 'effect';
 
 import { JsonPath, type JsonProp } from '@dxos/effect';
 
-import { EntityKind } from './entity-kind';
 import { FormatAnnotation, FormatEnum } from '../formats';
+import { EntityKindSchema } from '../types';
 
 //
 // JSON Schema
@@ -22,8 +22,6 @@ const JsonSchemaOrBoolean = Schema.Union(
   Schema.suspend(() => JsonSchemaType),
   Schema.Boolean,
 );
-
-export const EntityKindSchema = Schema.Enums(EntityKind);
 
 /**
  * Go under the `annotations` property.
