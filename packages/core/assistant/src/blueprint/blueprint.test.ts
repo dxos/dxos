@@ -15,7 +15,6 @@ describe('Blueprint', () => {
   test('follows a simple blueprint', { timeout: 60_000 }, async () => {
     const blueprint = Blueprint.make([
       'Generate an idea for a new product. Do not use any external tools for this.',
-      'If foo goto STEP 5',
       'Write a short description of the product',
       'Run a market research to see if the product is viable. Do not use any external tools for this.',
       'Write a pitch deck for the product',
