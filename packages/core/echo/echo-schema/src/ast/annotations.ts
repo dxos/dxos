@@ -10,7 +10,7 @@ import { DXN } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
 import { createAnnotationHelper } from './annotation-helper';
-import { EntityKind } from '../types';
+import { EntityKind } from './entity-kind';
 
 /**
  * ECHO identifier (for a stored schema).

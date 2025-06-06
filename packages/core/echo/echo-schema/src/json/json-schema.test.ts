@@ -17,6 +17,7 @@ import {
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMeta,
+  EntityKind,
 } from '../ast';
 import { Email, FormatAnnotation, FormatEnum } from '../formats';
 import { getNormalizedEchoAnnotations, getSchemaProperty, JsonSchemaType, setSchemaProperty } from '../json-schema';
@@ -24,7 +25,6 @@ import { EchoObject, TypedObject } from '../object';
 import { createSchemaReference, getSchemaReference, Ref } from '../ref';
 import { StoredSchema } from '../schema';
 import { prepareAstForCompare, Testing } from '../testing';
-import { EntityKind } from '../types';
 
 const EXAMPLE_NAMESPACE = '@example';
 

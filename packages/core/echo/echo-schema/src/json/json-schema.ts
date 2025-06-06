@@ -19,6 +19,7 @@ import {
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
 } from '../ast';
+import { EntityKind, EntityKindSchema } from '../ast';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   ECHO_ANNOTATIONS_NS_KEY,
@@ -28,7 +29,6 @@ import {
 } from '../json-schema';
 import { Expando } from '../object';
 import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
-import { EntityKind, EntityKindSchema } from '../types';
 
 /**
  * Create object jsonSchema.
