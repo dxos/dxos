@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback } from 'react';
 
 import { Icon, Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -78,7 +78,6 @@ const DropdownMenuToolbarItem = ({
   __menuScope,
 }: MenuScopedProps<ToolbarMenuActionGroupProps>) => {
   const { iconOnly, disabled, testId } = group.properties;
-  const suppressNextTooltip = useRef(false);
   const { t } = useTranslation(translationKey);
   const { iconSize } = useMenu('DropdownMenuToolbarItem', __menuScope);
   const items = useMenuItems(group, propsItems, 'DropdownMenuToolbarItem', __menuScope);
@@ -91,7 +90,7 @@ const DropdownMenuToolbarItem = ({
   const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
   const labelAction = (group.properties as any).applyActive && activeItem ? (activeItem as MenuAction) : group;
   const rootProps = icon
-    ? { icon, size: iconSize, iconOnly, label: actionLabel(labelAction, t), caretDown: true, suppressNextTooltip }
+    ? { icon, size: iconSize, iconOnly, label: actionLabel(labelAction, t), caretDown: true }
     : {
         children: (
           <>
@@ -101,7 +100,7 @@ const DropdownMenuToolbarItem = ({
         ),
       };
   return (
-    <DropdownMenu.Root group={group} items={items} suppressNextTooltip={suppressNextTooltip}>
+    <DropdownMenu.Root group={group} items={items}>
       <DropdownMenu.Trigger asChild>
         <Root variant='ghost' disabled={disabled} {...(rootProps as any)} {...(testId && { 'data-testid': testId })} />
       </DropdownMenu.Trigger>

@@ -50,17 +50,21 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       itemsCount={model.arrangedCards.length}
       {...autoScrollRootAttributes}
     >
-      {model.arrangedCards.map(({ columnValue, cards }) => {
+      {model.arrangedCards.map(({ columnValue, cards }, index, array) => {
         const { color, title } = model.getPivotAttributes(columnValue);
         const uncategorized = columnValue === UNCATEGORIZED_VALUE;
+        const prevSiblingId = index > 0 ? array[index - 1].columnValue : undefined;
+        const nextSiblingId = index < array.length - 1 ? array[index + 1].columnValue : undefined;
         return (
           <StackItem.Root
             key={columnValue}
             item={{ id: columnValue }}
             size={20}
-            classNames='flex flex-col pli-2 plb-2 drag-preview-p-0'
+            classNames='flex flex-col pli-2 plb-2'
             disableRearrange={uncategorized}
             focusIndicatorVariant='group'
+            prevSiblingId={prevSiblingId}
+            nextSiblingId={nextSiblingId}
           >
             <div
               role='none'
@@ -77,18 +81,20 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 classNames={
                   /* NOTE(thure): Do not let this element have zero intrinsic size, otherwise dropping items into an
                     empty stack will be made difficult or impossible. See #9035. */
-                  'plb-0 min-bs-2'
+                  ['plb-1', cards.length > 0 && 'plb-2 relative -block-start-1 z-[1] -mbe-1']
                 }
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
               >
-                {cards.map((card) => (
+                {cards.map((card, cardIndex, cardsArray) => (
                   <StackItem.Root
                     key={card.id}
                     item={card}
                     classNames='contain-layout pli-2 plb-1 first-of-type:pbs-0 last-of-type:pbe-0'
                     focusIndicatorVariant='group'
                     onClick={() => select([card.id])}
+                    prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
+                    nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
                   >
                     <div
                       role='none'
@@ -120,12 +126,33 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                       </div>
                       <Surface role='card--kanban' limit={1} data={{ subject: card }} />
                     </div>
+                    <StackItem.DragPreview>
+                      {({ item }) => (
+                        <div className='p-2'>
+                          <div className='rounded overflow-hidden bg-cardSurface ring-focusLine ring-accentFocusIndicator relative min-bs-[--rail-item]'>
+                            <div role='none' className='flex items-center absolute block-start-0 inset-inline-0'>
+                              <IconButton
+                                iconOnly
+                                icon='ph--dots-six-vertical--regular'
+                                variant='ghost'
+                                label={t('card drag handle label')}
+                                classNames='pli-2'
+                              />
+                            </div>
+                            <Surface role='card--kanban' limit={1} data={{ subject: item }} />
+                          </div>
+                        </div>
+                      )}
+                    </StackItem.DragPreview>
                   </StackItem.Root>
                 ))}
               </Stack>
 
               {onAddCard && (
-                <div role='none' className='plb-2 pli-2'>
+                <div
+                  role='none'
+                  className='plb-2 pli-2 relative before:absolute before:inset-inline-2 before:block-start-0 before:bs-px before:bg-separator'
+                >
                   <IconButton
                     icon='ph--plus--regular'
                     label={t('add card label')}
@@ -166,6 +193,69 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 )} */}
               </StackItem.Heading>
             </div>
+            <StackItem.DragPreview>
+              {({ item }) => {
+                // Find the column data for this item
+                const columnData = model.arrangedCards.find((col) => col.columnValue === item.id);
+                if (!columnData) {
+                  return null;
+                }
+
+                const { cards, columnValue } = columnData;
+                const { color, title } = model.getPivotAttributes(columnValue);
+                const uncategorized = columnValue === UNCATEGORIZED_VALUE;
+
+                return (
+                  <div className='p-2'>
+                    <div className='rounded-lg max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface ring-focusLine ring-accentFocusIndicator flex flex-col'>
+                      {/* Column Header */}
+                      <div className='flex items-center p-2'>
+                        <IconButton
+                          iconOnly
+                          icon='ph--dots-six-vertical--regular'
+                          variant='ghost'
+                          label={t('column drag handle label')}
+                          classNames='pli-2'
+                        />
+                        <Tag
+                          palette={color as any}
+                          data-uncategorized={uncategorized}
+                          classNames='mis-1 data-[uncategorized="true"]:mis-2'
+                        >
+                          {title}
+                        </Tag>
+                      </div>
+
+                      {/* Cards Container */}
+                      <div
+                        className={mx(
+                          'overflow-y-auto flex-1 pli-2 flex flex-col gap-2',
+                          'plb-1',
+                          cards.length > 0 && 'plb-2 relative -block-start-1 z-[1] -mbe-1',
+                        )}
+                      >
+                        {cards.map((card) => (
+                          <div
+                            key={card.id}
+                            role='none'
+                            className='flex-none rounded overflow-hidden bg-cardSurface dx-focus-ring-group-y-indicator relative min-bs-[--rail-item]'
+                          >
+                            <Surface role='card--kanban' limit={1} data={{ subject: card }} />
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Add Card Button */}
+                      {onAddCard && (
+                        <div className='p-2 border-t border-separator'>
+                          <IconButton icon='ph--plus--regular' label={t('add card label')} classNames='is-full' />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              }}
+            </StackItem.DragPreview>
           </StackItem.Root>
         );
       })}

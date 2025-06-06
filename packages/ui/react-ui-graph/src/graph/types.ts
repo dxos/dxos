@@ -66,6 +66,7 @@ export type GraphLayoutEdge<N = any> = {
 
 export type GraphLayout<N = any> = {
   guides?: GraphGuide[];
+  // TODO(burdon): Use common/graph type.
   graph: {
     nodes: GraphLayoutNode<N>[];
     edges: GraphLayoutEdge<N>[];
