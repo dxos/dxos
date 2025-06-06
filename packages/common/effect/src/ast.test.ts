@@ -110,10 +110,7 @@ describe('AST', () => {
   });
 
   test('findAnnotation skips defaults', ({ expect }) => {
-    const annotation = findAnnotation(
-      Schema.String.annotations({ title: 'test' }).ast,
-      SchemaAST.TitleAnnotationId,
-    );
+    const annotation = findAnnotation(Schema.String.annotations({ title: 'test' }).ast, SchemaAST.TitleAnnotationId);
     expect(annotation).to.eq('test');
 
     const annotationIds = [SchemaAST.TitleAnnotationId, SchemaAST.DescriptionAnnotationId];
