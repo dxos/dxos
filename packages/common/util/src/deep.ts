@@ -2,7 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import get from 'lodash.get';
+import set from 'lodash.set';
+
 import { invariant } from '@dxos/invariant';
+
+// TODO(burdon): Re-export most common utils like defaultsDeep.
+export { get, set };
 
 /**
  * Initialize a deeply nested object.
@@ -23,8 +29,6 @@ export const setDeep = <T>(obj: any, path: readonly (string | number)[], value: 
   return obj;
 };
 
-export const set = setDeep;
-
 /**
  * Gets a value from a deeply nested object.
  * @param obj
@@ -39,5 +43,3 @@ export const getDeep = <T>(obj: any, path: readonly (string | number)[]): T | un
 
   return parent;
 };
-
-export const get = getDeep;

@@ -2126,10 +2126,22 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+      lodash.set:
+        specifier: ^4.3.2
+        version: 4.3.2
     devDependencies:
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../crypto
+      '@types/lodash.get':
+        specifier: ^4.4.9
+        version: 4.4.9
+      '@types/lodash.set':
+        specifier: ^4.3.9
+        version: 4.3.9
 
   packages/core/agent:
     dependencies:
@@ -22230,6 +22242,9 @@ packages:
   '@types/lodash.flatten@4.4.7':
     resolution: {integrity: sha512-6yyP/mHEKL2sa86V61F7TnEcUKlLML9+aWI7TCKvnS4SFt7RD4zTVwkdDgluOJqxVkwZ/2z7HvtRs/7j/Uru7g==}
 
+  '@types/lodash.get@4.4.9':
+    resolution: {integrity: sha512-J5dvW98sxmGnamqf+/aLP87PYXyrha9xIgc2ZlHl6OHMFR2Ejdxep50QfU0abO1+CH6+ugx+8wEUN1toImAinA==}
+
   '@types/lodash.isequal@4.5.6':
     resolution: {integrity: sha512-Ww4UGSe3DmtvLLJm2F16hDwEQSv7U0Rr8SujLUA2wHI2D2dm8kPu6Et+/y303LfjTIwSBKXB/YTUcAKpem/XEg==}
 
@@ -22253,6 +22268,9 @@ packages:
 
   '@types/lodash.pick@4.4.7':
     resolution: {integrity: sha512-HgdyKz7/1+oeoVzbpu1XiX/Bti9AUksHtOILH38T07aKvqoirzcdOsrO2+Yg3L51Hv/8m1MetvHZEUGeABiTiQ==}
+
+  '@types/lodash.set@4.3.9':
+    resolution: {integrity: sha512-KOxyNkZpbaggVmqbpr82N2tDVTx05/3/j0f50Es1prxrWB0XYf9p3QNxqcbWb7P1Q9wlvsUSlCFnwlPCIJ46PQ==}
 
   '@types/lodash.sortby@4.7.7':
     resolution: {integrity: sha512-J/4IS+jQopGBrrRetBXDCX0KnSeXJZ0rOTmGAxR9MWGV24YdHxX8IRi9LCGAU9GKWlBov9KRSfQpuup9PReqrw==}
@@ -28738,6 +28756,10 @@ packages:
   lodash.flattendeep@4.4.0:
     resolution: {integrity: sha512-uHaJFihxmJcEX3kT4I23ABqKKalJ/zDrDg0lsFtc1h+3uw49SIJ5beyhx5ExVRti3AvKoOJngIj7xz3oylPdWQ==}
 
+  lodash.get@4.4.2:
+    resolution: {integrity: sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==}
+    deprecated: This package is deprecated. Use the optional chaining (?.) operator instead.
+
   lodash.isarguments@3.1.0:
     resolution: {integrity: sha512-chi4NHZlZqZD18a0imDHnZPrDeBbTtVN7GXMwuGdRH9qotxAjYs3aVLKc7zNOG9eddR5Ksd8rvFEBc9SsggPpg==}
 
@@ -28773,6 +28795,9 @@ packages:
   lodash.pick@4.4.0:
     resolution: {integrity: sha512-hXt6Ul/5yWjfklSGvLQl8vM//l3FtyHZeuelpzK6mm99pNvN9yTDruNZPEJZD1oWrqo+izBmB7oUfWgcCX7s4Q==}
     deprecated: This package is deprecated. Use destructuring assignment syntax instead.
+
+  lodash.set@4.3.2:
+    resolution: {integrity: sha512-4hNPN5jlm/N/HLMCO43v8BXKq9Z7QdAGc/VGrRD61w8gN9g/6jF9A4L1pbUgBLCffi0w9VsXfTOij5x8iTyFvg==}
 
   lodash.snakecase@4.1.1:
     resolution: {integrity: sha512-QZ1d4xoBHYUeuouhEq3lk3Uq7ldgyFXGBhg04+oRLnIz8o9T65Eh+8YdroUwn846zchkA9yDsDl5CVVaV2nqYw==}
@@ -45619,6 +45644,10 @@ snapshots:
     dependencies:
       '@types/lodash': 4.14.191
 
+  '@types/lodash.get@4.4.9':
+    dependencies:
+      '@types/lodash': 4.17.12
+
   '@types/lodash.isequal@4.5.6':
     dependencies:
       '@types/lodash': 4.17.0
@@ -45650,6 +45679,10 @@ snapshots:
   '@types/lodash.pick@4.4.7':
     dependencies:
       '@types/lodash': 4.14.191
+
+  '@types/lodash.set@4.3.9':
+    dependencies:
+      '@types/lodash': 4.17.12
 
   '@types/lodash.sortby@4.7.7':
     dependencies:
@@ -53756,6 +53789,8 @@ snapshots:
 
   lodash.flattendeep@4.4.0: {}
 
+  lodash.get@4.4.2: {}
+
   lodash.isarguments@3.1.0: {}
 
   lodash.isequal@4.5.0: {}
@@ -53777,6 +53812,8 @@ snapshots:
   lodash.orderby@4.6.0: {}
 
   lodash.pick@4.4.0: {}
+
+  lodash.set@4.3.2: {}
 
   lodash.snakecase@4.1.1: {}
 
