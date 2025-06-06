@@ -9,7 +9,7 @@ export type EventHandle = () => void;
 export class EventEmitter<T> {
   private readonly _listeners = new Set<EventListener<T>>();
 
-  clear() {
+  clear(): void {
     this._listeners.clear();
   }
 

@@ -27,7 +27,7 @@ export class Timer {
     return !!this._timer;
   }
 
-  start(options: TimerOptions, cb?: () => void) {
+  start(options: TimerOptions, cb?: () => void): this {
     if (isNaN(options.count) || isNaN(options.interval)) {
       throw new Error(`Invalid options: ${JSON.stringify(options)}`);
     }
@@ -61,7 +61,7 @@ export class Timer {
     return this;
   }
 
-  stop() {
+  stop(): this {
     clearInterval(this._timer);
     this._timer = undefined;
     this._state.emit(false);

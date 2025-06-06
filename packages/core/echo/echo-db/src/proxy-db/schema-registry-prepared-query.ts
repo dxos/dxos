@@ -95,7 +95,7 @@ export class SchemaRegistryPreparedQueryImpl<T> implements SchemaRegistryPrepare
     };
   }
 
-  private _onSubscriberCountChange() {
+  private _onSubscriberCountChange(): void {
     if (this._subscriberCount === 0) {
       this._stop();
     } else if (this._subscriberCount > 0) {
@@ -103,7 +103,7 @@ export class SchemaRegistryPreparedQueryImpl<T> implements SchemaRegistryPrepare
     }
   }
 
-  private _start() {
+  private _start(): void {
     if (this._isReactiveQueryRunning) {
       return;
     }
@@ -122,7 +122,7 @@ export class SchemaRegistryPreparedQueryImpl<T> implements SchemaRegistryPrepare
     });
   }
 
-  private _stop() {
+  private _stop(): void {
     if (!this._isReactiveQueryRunning) {
       return;
     }

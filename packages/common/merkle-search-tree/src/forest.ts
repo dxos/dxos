@@ -254,7 +254,7 @@ export class Forest {
     return new TreeMut(this, root);
   }
 
-  formatToString(digest: DigestHex, { pad = 0 }: { pad?: number } = {}) {
+  formatToString(digest: DigestHex, { pad = 0 }: { pad?: number } = {}): string {
     const padStr = '  '.repeat(pad);
 
     const node = this.#nodes.get(digest);
@@ -399,11 +399,11 @@ export class TreeMut {
     return this.#forest.get(this.#root, key);
   }
 
-  async setBatch(pairs: Iterable<Pair>) {
+  async setBatch(pairs: Iterable<Pair>): Promise<void> {
     this.#root = await this.#forest.setBatch(this.#root, pairs);
   }
 
-  async set(key: Key, value: Uint8Array) {
+  async set(key: Key, value: Uint8Array): Promise<void> {
     this.#root = await this.#forest.set(this.#root, key, value);
   }
 

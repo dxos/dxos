@@ -265,7 +265,7 @@ export class PluginManager {
     return untracked(() => Effect.runPromise(this._reset(event)));
   }
 
-  private _addPlugin(plugin: Plugin) {
+  private _addPlugin(plugin: Plugin): void {
     untracked(() => {
       log('add plugin', { id: plugin.meta.id });
       if (!this._state.plugins.includes(plugin)) {
@@ -274,7 +274,7 @@ export class PluginManager {
     });
   }
 
-  private _removePlugin(id: string) {
+  private _removePlugin(id: string): void {
     untracked(() => {
       log('remove plugin', { id });
       const pluginIndex = this._state.plugins.findIndex((plugin) => plugin.meta.id === id);
@@ -284,7 +284,7 @@ export class PluginManager {
     });
   }
 
-  private _addModule(module: PluginModule) {
+  private _addModule(module: PluginModule): void {
     untracked(() => {
       log('add module', { id: module.id });
       if (!this._state.modules.includes(module)) {
@@ -293,7 +293,7 @@ export class PluginManager {
     });
   }
 
-  private _removeModule(id: string) {
+  private _removeModule(id: string): void {
     untracked(() => {
       log('remove module', { id });
       const moduleIndex = this._state.modules.findIndex((module) => module.id === id);

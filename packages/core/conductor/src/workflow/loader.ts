@@ -142,7 +142,7 @@ export class WorkflowLoader {
     return result;
   }
 
-  private _validateWorkflowInOut(graph: ComputeGraphModel) {
+  private _validateWorkflowInOut(graph: ComputeGraphModel): void {
     const inputNodes = graph.nodes.filter((node) => node.type === NODE_INPUT);
     invariant(inputNodes.length > 0, 'Workflow must have at least one input node.');
     const outputNodes = graph.nodes.filter((node) => node.type === NODE_OUTPUT);

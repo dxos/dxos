@@ -23,7 +23,7 @@ class DeferGuard {
    */
   constructor(private readonly _fn: () => void) {}
 
-  [Symbol.dispose]() {
+  [Symbol.dispose](): void {
     const result = this._fn();
     if ((result as any) instanceof Promise) {
       throw new Error('Async functions in defer are not supported. Use deferAsync instead.');
@@ -50,7 +50,7 @@ class DeferAsyncGuard implements AsyncDisposable {
    */
   constructor(private readonly _fn: () => Promise<void>) {}
 
-  async [Symbol.asyncDispose]() {
+  async [Symbol.asyncDispose](): Promise<void> {
     await this._fn();
   }
 }

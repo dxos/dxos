@@ -131,7 +131,7 @@ export class IndexingEngine extends Resource {
    * Promotes new indexes to the main indexes.
    */
   @trace.span({ showInBrowserTimeline: true })
-  async promoteNewIndexes() {
+  async promoteNewIndexes(): Promise<void> {
     const documentsToIndex = await this._metadataStore.getAllIndexedDocuments();
     for await (const documents of this._documentLoader.loadDocuments(documentsToIndex)) {
       if (this._ctx.disposed) {
@@ -239,7 +239,7 @@ export class IndexingEngine extends Resource {
 
   @trace.span({ showInBrowserTimeline: true })
   @synchronized
-  private async _saveIndexes() {
+  private async _saveIndexes(): Promise<void> {
     for (const index of this._indexes.values()) {
       if (this._ctx.disposed) {
         return;

@@ -41,7 +41,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     return this.schemas.find((schema) => getTypeAnnotation(schema)!.typename === type);
   }
 
-  protected setSchema(type: T, schema: EchoSchema | Schema.Schema.AnyNoContext) {
+  protected setSchema(type: T, schema: EchoSchema | Schema.Schema.AnyNoContext): void {
     this._schemas[type] = schema;
   }
 
@@ -126,7 +126,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     }
   }
 
-  async mutateObject(object: AnyLiveObject<any>, params: MutationsProviderParams) {
+  async mutateObject(object: AnyLiveObject<any>, params: MutationsProviderParams): Promise<void> {
     invariant(this._mutations, 'Mutations not defined.');
     const type = getTypeAnnotation(getSchema(object)!)!.typename as T;
     invariant(type && this._mutations?.[type], 'Invalid object type.');
@@ -134,7 +134,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     await this._mutations![type](object, params);
   }
 
-  async mutateObjects(objects: AnyLiveObject<any>[], params: MutationsProviderParams) {
+  async mutateObjects(objects: AnyLiveObject<any>[], params: MutationsProviderParams): Promise<void> {
     for (const object of objects) {
       await this.mutateObject(object, params);
     }

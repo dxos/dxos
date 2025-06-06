@@ -90,7 +90,7 @@ export class FeedStore<T extends {}> {
   /**
    * Close all feeds.
    */
-  async close() {
+  async close(): Promise<void> {
     log('closing...');
     this._closed = true;
     await Promise.all(

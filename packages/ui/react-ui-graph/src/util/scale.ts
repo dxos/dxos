@@ -25,7 +25,7 @@ export class Scale {
     return this._transform || zoomIdentity;
   }
 
-  setTransform(transform: ZoomTransform) {
+  setTransform(transform: ZoomTransform): void {
     this._transform = transform;
   }
 

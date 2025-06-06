@@ -32,7 +32,7 @@ export class DxRangeSpinbutton extends LitElement {
   @property({ type: String })
   variant?: DxRangeSpinbuttonVariant;
 
-  private handleInput(e: Event) {
+  private handleInput(e: Event): void {
     const value = (e.target as HTMLInputElement).value;
     this.value = value;
 
@@ -118,7 +118,7 @@ export class DxRangeSpinbutton extends LitElement {
     `;
   }
 
-  override createRenderRoot() {
+  override createRenderRoot(): this {
     return this;
   }
 }

@@ -299,7 +299,7 @@ export class HumanHasher {
    * @param words How many words to output (more = safer)
    * @param separator The string used to seperate the words
    */
-  humanize(hexdigest: string, words = 4, separator = '-') {
+  humanize(hexdigest: string, words = 4, separator = '-'): string {
     const pairs = hexdigest.match(/(..?)/g);
     if (!pairs) {
       throw new Error('');
@@ -317,7 +317,7 @@ export class HumanHasher {
    * @param bytes A list of bytes (numbers from 0-254)
    * @param target The number of bytes to return / compress to
    */
-  _compress(bytes: number[], target: number) {
+  _compress(bytes: number[], target: number): number[] {
     const length = bytes.length;
     if (target > length) {
       throw new Error('Fewer input bytes than requested output');

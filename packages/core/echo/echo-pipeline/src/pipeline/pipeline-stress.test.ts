@@ -83,12 +83,12 @@ class Agent {
     public id: string,
   ) {}
 
-  async open() {
+  async open(): Promise<void> {
     const key = await this.builder.keyring.createKey();
     this.feed = await this.feedStore.openFeed(key, { writable: true });
   }
 
-  async start() {
+  async start(): Promise<void> {
     this.pipeline = new Pipeline();
     await this.pipeline.setCursor(this.startingTimeframe);
     await this.pipeline.start();
@@ -101,22 +101,22 @@ class Agent {
     void this.consume();
   }
 
-  async stop() {
+  async stop(): Promise<void> {
     await this.pipeline.stop();
     this.startingTimeframe = this.pipeline.state.timeframe;
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this.feed.close();
   }
 
-  write(message: FeedMessage.Payload) {
+  write(message: FeedMessage.Payload): void {
     const prev = this.writePromise;
     const promise = this.pipeline.writer!.write(message);
     this.writePromise = Promise.all([prev, promise]);
   }
 
-  async consume() {
+  async consume(): Promise<void> {
     for await (const msg of this.pipeline.consume()) {
       this.messages.push(msg);
     }
@@ -139,7 +139,7 @@ class WriteCommand implements fc.AsyncCommand<Model, Real> {
 
   check = () => true;
 
-  async run(model: Model, real: Real) {
+  async run(model: Model, real: Real): Promise<void> {
     // console.log(`WriteCommand(${this.agent}, ${this.count})`);
     const agent = real.agents.get(this.agent)!;
     const toWrite = Math.min(this.count, NUM_MESSAGES - agent.feed.length);
@@ -156,7 +156,7 @@ class WriteCommand implements fc.AsyncCommand<Model, Real> {
 class SyncCommand implements fc.AsyncCommand<Model, Real> {
   check = () => true;
 
-  async run(model: Model, real: Real) {
+  async run(model: Model, real: Real): Promise<void> {
     // console.log('SyncCommand()');
     const targets: any = {};
 
@@ -217,7 +217,7 @@ class RestartCommand implements fc.AsyncCommand<Model, Real> {
 
   check = () => true;
 
-  async run(model: Model, real: Real) {
+  async run(model: Model, real: Real): Promise<void> {
     log(`RestartCommand(${this.agent})`);
 
     const agent = real.agents.get(this.agent)!;

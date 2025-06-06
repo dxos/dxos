@@ -37,15 +37,15 @@ export class ProtoRpcPeer<Service> {
     private readonly _peer: RpcPeer,
   ) {}
 
-  async open() {
+  async open(): Promise<void> {
     await this._peer.open();
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this._peer.close();
   }
 
-  async abort() {
+  async abort(): Promise<void> {
     await this._peer.abort();
   }
 }

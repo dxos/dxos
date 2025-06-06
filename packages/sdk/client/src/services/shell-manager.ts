@@ -53,7 +53,7 @@ export class ShellManager {
     return this._display;
   }
 
-  async setLayout(request: LayoutRequest) {
+  async setLayout(request: LayoutRequest): Promise<void> {
     invariant(this._shellRpc, 'ShellManager not open');
     log('set layout', request);
     this._display = ShellDisplay.FULLSCREEN;
@@ -67,12 +67,12 @@ export class ShellManager {
     )?.focus();
   }
 
-  async setInvitationUrl(request: InvitationUrlRequest) {
+  async setInvitationUrl(request: InvitationUrlRequest): Promise<void> {
     log('set invitation url', request);
     await this._shellRpc?.rpc.ShellService.setInvitationUrl(request, { timeout: RPC_TIMEOUT });
   }
 
-  async open() {
+  async open(): Promise<void> {
     if (this._shellRpc) {
       return;
     }
@@ -123,7 +123,7 @@ export class ShellManager {
     await this._shellRpc.open();
   }
 
-  async close() {
+  async close(): Promise<void> {
     if (!this._shellRpc) {
       return;
     }

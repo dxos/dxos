@@ -54,7 +54,7 @@ export const defaultFunctionContextOptions: FunctionContextOptions = {
  */
 export class FunctionContext {
   // Mangle name with params.
-  static createInvocationKey(name: string, ...args: any) {
+  static createInvocationKey(name: string, ...args: any): string {
     return JSON.stringify({ name, ...args });
   }
 
@@ -102,14 +102,14 @@ export class FunctionContext {
     return { cache: this._cache.size, invocations: this._invocations };
   }
 
-  flush() {
+  flush(): void {
     this._cache.clear();
     this._invocations = {};
     this._subscriptions.forEach((unsubscribe) => unsubscribe());
     this._subscriptions.clear();
   }
 
-  createSubscription(name: string, unsubscribe: CleanupFn) {
+  createSubscription(name: string, unsubscribe: CleanupFn): void {
     this._subscriptions.get(name)?.();
     this._subscriptions.set(name, unsubscribe);
   }

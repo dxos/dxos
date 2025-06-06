@@ -45,7 +45,7 @@ export class ShellManager extends ScopedShellManager {
 
   // Actions
 
-  async createIdentity(name: string) {
+  async createIdentity(name: string): Promise<void> {
     await this.shell.getByTestId('create-identity').click();
     await this.page.keyboard.type(name);
     await this.shell.getByTestId('create-identity-input-continue').click();
@@ -59,25 +59,25 @@ export class ShellManager extends ScopedShellManager {
     return await this._invitationCode.wait();
   }
 
-  async resetDevice() {
+  async resetDevice(): Promise<void> {
     await this.shell.getByTestId('device-list-item-current.options').click();
     await this.shell.getByTestId('device-list-item-current.reset').click();
     await this.shell.getByTestId('reset-storage.reset-identity-input').fill(CONFIRM_INPUT);
     await this.shell.getByTestId('reset-storage.reset-identity-confirm').click();
   }
 
-  async joinNewIdentity(invitationCode: string) {
+  async joinNewIdentity(invitationCode: string): Promise<void> {
     await this.shell.getByTestId('device-list-item-current.options').click();
     await this.shell.getByTestId('device-list-item-current.join-existing').click();
     await this.shell.getByTestId('join-new-identity.reset-identity-input').fill(CONFIRM_INPUT);
     await this.shell.getByTestId('join-new-identity.reset-identity-confirm').click();
   }
 
-  async acceptDeviceInvitation(invitationCode: string) {
+  async acceptDeviceInvitation(invitationCode: string): Promise<void> {
     await this.inputInvitation('device', invitationCode, this.shell);
   }
 
-  async authenticateDevice(authCode: string, skipDone = true) {
+  async authenticateDevice(authCode: string, skipDone = true): Promise<void> {
     // Wait for focus to shift before typing.
     await sleep(1500);
     await this.authenticateInvitation('device', authCode, this.shell);
@@ -87,7 +87,7 @@ export class ShellManager extends ScopedShellManager {
     }
   }
 
-  async closeShell() {
+  async closeShell(): Promise<void> {
     await this.page.keyboard.press('Escape');
   }
 
@@ -100,7 +100,7 @@ export class ShellManager extends ScopedShellManager {
     return await this._invitationCode.wait();
   }
 
-  async acceptSpaceInvitation(invitationCode: string) {
+  async acceptSpaceInvitation(invitationCode: string): Promise<void> {
     await this.inputInvitation('space', invitationCode, this.shell);
   }
 
@@ -108,13 +108,13 @@ export class ShellManager extends ScopedShellManager {
     return await this._authCode.wait();
   }
 
-  async authenticate(authCode: string) {
+  async authenticate(authCode: string): Promise<void> {
     // Wait for focus to shift before typing.
     await sleep(1500);
     await this.authenticateInvitation('space', authCode, this.shell);
   }
 
-  private async _onConsoleMessage(message: ConsoleMessage) {
+  private async _onConsoleMessage(message: ConsoleMessage): Promise<void> {
     try {
       const text = message.text();
       const json = JSON.parse(text.slice(text.indexOf('{')));

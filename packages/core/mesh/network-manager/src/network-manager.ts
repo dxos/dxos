@@ -125,18 +125,18 @@ export class SwarmNetworkManager {
     return this._swarms.get(topic);
   }
 
-  setPeerInfo(peerInfo: PeerInfo) {
+  setPeerInfo(peerInfo: PeerInfo): void {
     this._peerInfo = peerInfo;
   }
 
-  async open() {
+  async open(): Promise<void> {
     log.trace('dxos.mesh.network-manager.open', trace.begin({ id: this._instanceId }));
     await this._messenger.open();
     await this._signalManager.open();
     log.trace('dxos.mesh.network-manager.open', trace.end({ id: this._instanceId }));
   }
 
-  async close() {
+  async close(): Promise<void> {
     for (const topic of this._swarms.keys()) {
       await this.leaveSwarm(topic).catch((err) => {
         log(err);
@@ -202,7 +202,7 @@ export class SwarmNetworkManager {
    * Close the connection.
    */
   @synchronized
-  async leaveSwarm(topic: PublicKey) {
+  async leaveSwarm(topic: PublicKey): Promise<void> {
     if (!this._swarms.has(topic)) {
       // log.warn('swarm not open', { topic: PublicKey.from(topic).truncate() });
       return;
@@ -225,7 +225,7 @@ export class SwarmNetworkManager {
     log('left', { topic: PublicKey.from(topic), count: this._swarms.size });
   }
 
-  async setConnectionState(state: ConnectionState) {
+  async setConnectionState(state: ConnectionState): Promise<void> {
     if (state === this._connectionState) {
       return;
     }

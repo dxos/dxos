@@ -241,7 +241,7 @@ export class RtcPeerConnection {
     this._abortConnection(connection, error);
   }
 
-  private _abortConnection(connection: RTCPeerConnection, error: Error) {
+  private _abortConnection(connection: RTCPeerConnection, error: Error): void {
     if (connection !== this._connection) {
       log.error('attempted to abort an inactive connection', { error });
       this._safeCloseConnection(connection);
@@ -261,7 +261,7 @@ export class RtcPeerConnection {
   }
 
   @synchronized
-  private async _lockAndCloseConnection() {
+  private async _lockAndCloseConnection(): Promise<void> {
     invariant(this._transportChannels.size === 0);
     if (this._connection) {
       this._safeCloseConnection();
@@ -270,7 +270,7 @@ export class RtcPeerConnection {
   }
 
   @synchronized
-  public async onSignal(signal: Signal) {
+  public async onSignal(signal: Signal): Promise<void> {
     const connection = this._connection;
     if (!connection) {
       log.warn('a signal ignored because the connection was closed', { type: signal.payload.data.type });
@@ -335,7 +335,7 @@ export class RtcPeerConnection {
     log('signal processed', { type: data.type });
   }
 
-  private async _processIceCandidate(connection: RTCPeerConnection, candidate: RTCIceCandidate) {
+  private async _processIceCandidate(connection: RTCPeerConnection, candidate: RTCIceCandidate): Promise<void> {
     try {
       // ICE candidates are associated with a session, so we need to wait for the remote description to be set.
       await this._readyForCandidates.wait();
@@ -348,7 +348,7 @@ export class RtcPeerConnection {
     }
   }
 
-  private _onSessionNegotiated(connection: RTCPeerConnection) {
+  private _onSessionNegotiated(connection: RTCPeerConnection): void {
     if (connection === this._connection) {
       log('ready to process ice candidates');
       this._readyForCandidates.wake();
@@ -357,7 +357,7 @@ export class RtcPeerConnection {
     }
   }
 
-  private _onConnectionCallbackAfterClose(callback: string, connection: RTCPeerConnection) {
+  private _onConnectionCallbackAfterClose(callback: string, connection: RTCPeerConnection): void {
     log.warn('callback invoked after a connection was destroyed, this is probably a bug', {
       callback,
       state: connection.connectionState,
@@ -365,7 +365,7 @@ export class RtcPeerConnection {
     this._safeCloseConnection(connection);
   }
 
-  private _safeCloseConnection(connection: RTCPeerConnection | undefined = this._connection) {
+  private _safeCloseConnection(connection: RTCPeerConnection | undefined = this._connection): void {
     const resetFields = this._connection && connection === this._connection;
     try {
       connection?.close();
@@ -397,7 +397,7 @@ export class RtcPeerConnection {
     return config;
   }
 
-  private async _sendIceCandidate(candidate: RTCIceCandidate) {
+  private async _sendIceCandidate(candidate: RTCIceCandidate): Promise<void> {
     try {
       await this._options.sendSignal({
         payload: {
@@ -417,7 +417,7 @@ export class RtcPeerConnection {
     }
   }
 
-  private async _sendDescription(connection: RTCPeerConnection, description: RTCSessionDescriptionInit) {
+  private async _sendDescription(connection: RTCPeerConnection, description: RTCSessionDescriptionInit): Promise<void> {
     if (connection !== this._connection) {
       // Connection was closed while description was being created.
       return;

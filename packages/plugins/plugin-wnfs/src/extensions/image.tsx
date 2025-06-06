@@ -165,7 +165,7 @@ class WnfsImageWidget extends WidgetType {
     super();
   }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return this._wnfsUrl === (other as any as WnfsImageWidget)._wnfsUrl;
   }
 

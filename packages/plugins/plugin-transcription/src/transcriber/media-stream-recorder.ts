@@ -64,7 +64,7 @@ export class MediaStreamRecorder implements AudioRecorder {
     this._onChunk = onChunk;
   }
 
-  async start() {
+  async start(): Promise<void> {
     await (initializingPromise ??= initializeExtendableMediaRecorder()).catch((err) =>
       log.info('initializeExtendableMediaRecorder', { err }),
     );
@@ -82,7 +82,7 @@ export class MediaStreamRecorder implements AudioRecorder {
     this._mediaRecorder.start(this._config.interval);
   }
 
-  async stop() {
+  async stop(): Promise<void> {
     if (this._mediaRecorder?.state !== 'recording') {
       return;
     }
@@ -90,7 +90,7 @@ export class MediaStreamRecorder implements AudioRecorder {
   }
 
   @synchronized
-  private async _ondataavailable(event: IBlobEvent) {
+  private async _ondataavailable(event: IBlobEvent): Promise<void> {
     const blob = event.data;
     const uint8Array = new Uint8Array(await blob.arrayBuffer());
 

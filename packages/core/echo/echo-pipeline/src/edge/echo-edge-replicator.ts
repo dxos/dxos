@@ -69,7 +69,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
     );
   }
 
-  private async _handleReconnect() {
+  private async _handleReconnect(): Promise<void> {
     using _guard = await this._mutex.acquire();
 
     const spaces = [...this._connectedSpaces];
@@ -95,7 +95,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
     this._connections.clear();
   }
 
-  async connectToSpace(spaceId: SpaceId) {
+  async connectToSpace(spaceId: SpaceId): Promise<void> {
     using _guard = await this._mutex.acquire();
 
     if (this._connectedSpaces.has(spaceId)) {
@@ -109,7 +109,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
     }
   }
 
-  async disconnectFromSpace(spaceId: SpaceId) {
+  async disconnectFromSpace(spaceId: SpaceId): Promise<void> {
     using _guard = await this._mutex.acquire();
 
     this._connectedSpaces.delete(spaceId);
@@ -121,7 +121,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
     }
   }
 
-  private async _openConnection(spaceId: SpaceId, reconnects: number = 0) {
+  private async _openConnection(spaceId: SpaceId, reconnects: number = 0): Promise<void> {
     invariant(this._context);
     invariant(!this._connections.has(spaceId));
 
@@ -311,7 +311,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     return spaceId === this._spaceId && params.collectionId.split(':').length === 3;
   }
 
-  private _onMessage(message: RouterMessage) {
+  private _onMessage(message: RouterMessage): void {
     if (message.serviceId !== this._targetServiceId) {
       return;
     }
@@ -328,7 +328,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     this._processMessage(payload);
   }
 
-  private _processMessage(message: AutomergeProtocolMessage) {
+  private _processMessage(message: AutomergeProtocolMessage): void {
     // There's a race between the credentials being replicated that are needed for access control and the data replication.
     // AutomergeReplicator might return a Forbidden error if the credentials are not yet replicated.
     // We restart the connection with some delay to account for that.
@@ -342,7 +342,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     this._readableStreamController.enqueue(message);
   }
 
-  private async _sendMessage(message: AutomergeProtocolMessage) {
+  private async _sendMessage(message: AutomergeProtocolMessage): Promise<void> {
     // Fix the peer id.
     (message as any).targetId = this._targetServiceId as PeerId;
 

@@ -73,7 +73,7 @@ export class Agent {
     return this._clientServices;
   }
 
-  async start() {
+  async start(): Promise<void> {
     invariant(!this._clientServices);
     log('starting...');
 
@@ -155,7 +155,7 @@ export class Agent {
     log('started');
   }
 
-  async stop() {
+  async stop(): Promise<void> {
     log('stopping...');
 
     // Close plugins.
@@ -183,7 +183,7 @@ export class Agent {
 
   // create multipurpose HTTP server to expose agent functionality to external clients.
   // TODO: extract to separate class, e.g. extend WebsocketRpcServer?
-  async createHttpServer(options: agentHttpServerOptions) {
+  async createHttpServer(options: agentHttpServerOptions): Promise<void> {
     invariant(this._clientServices);
     const server = http.createServer();
     const socketServer = createServer(this._clientServices, { noServer: true });

@@ -66,16 +66,16 @@ export class Balancer {
     return this._sendBuffers.size;
   }
 
-  addChannel(channel: number) {
+  addChannel(channel: number): void {
     this._channels.push(channel);
   }
 
-  pushData(data: Uint8Array, trigger: Trigger, channelId: number) {
+  pushData(data: Uint8Array, trigger: Trigger, channelId: number): void {
     this._enqueueChunk(data, trigger, channelId);
     this._sendChunks().catch((err) => log.catch(err));
   }
 
-  destroy() {
+  destroy(): void {
     if (this._sendBuffers.size !== 0) {
       log.info('destroying balancer with pending calls');
     }
@@ -83,7 +83,7 @@ export class Balancer {
     this._framer.destroy();
   }
 
-  private _processIncomingMessage(msg: Uint8Array) {
+  private _processIncomingMessage(msg: Uint8Array): void {
     const { channelId, dataLength, chunk } = decodeChunk(msg, (channelId) => !this._receiveBuffers.has(channelId));
     if (!this._receiveBuffers.has(channelId)) {
       if (chunk.length < dataLength!) {
@@ -106,7 +106,7 @@ export class Balancer {
     }
   }
 
-  private _getNextCallerId() {
+  private _getNextCallerId(): number {
     if (this._sendBuffers.has(this._sysChannelId)) {
       return this._sysChannelId;
     }
@@ -117,7 +117,7 @@ export class Balancer {
     return this._channels[index];
   }
 
-  private _enqueueChunk(data: Uint8Array, trigger: Trigger, channelId: number) {
+  private _enqueueChunk(data: Uint8Array, trigger: Trigger, channelId: number): void {
     if (!this._channels.includes(channelId)) {
       throw new Error(`Unknown channel ${channelId}`);
     }
@@ -166,7 +166,7 @@ export class Balancer {
     return null;
   }
 
-  private async _sendChunks() {
+  private async _sendChunks(): Promise<void> {
     if (this._sending) {
       return;
     }

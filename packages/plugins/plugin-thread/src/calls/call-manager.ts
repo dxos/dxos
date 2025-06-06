@@ -107,19 +107,19 @@ export class CallManager extends Resource {
     return this._state.call.activities?.[key];
   }
 
-  setRoomId(roomId: string) {
+  setRoomId(roomId: string): void {
     this._swarmSynchronizer._setRoomId(roomId);
   }
 
-  setSpeaking(speaking: boolean) {
+  setSpeaking(speaking: boolean): void {
     this._swarmSynchronizer.setSpeaking(speaking);
   }
 
-  setRaisedHand(raisedHand: boolean) {
+  setRaisedHand(raisedHand: boolean): void {
     this._swarmSynchronizer.setRaisedHand(raisedHand);
   }
 
-  setActivity(key: string, payload: ActivityState['payload']) {
+  setActivity(key: string, payload: ActivityState['payload']): void {
     this._swarmSynchronizer.setActivity(key, payload);
   }
 
@@ -157,7 +157,7 @@ export class CallManager extends Resource {
     this._mediaManager = new MediaManager();
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     await this._mediaManager.open();
     await this._swarmSynchronizer.open();
     const subscription = this._client.halo.identity.subscribe((identity) => {
@@ -174,7 +174,7 @@ export class CallManager extends Resource {
     this._mediaManager.stateUpdated.on(this._ctx, (state) => this._onMediaStateUpdated(state));
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     await this._swarmSynchronizer.leave();
     await this._swarmSynchronizer.close();
     await this._mediaManager.close();
@@ -187,7 +187,7 @@ export class CallManager extends Resource {
 
   // TODO(mykola): Reconcile with _swarmSynchronizer.state.joined.
   @synchronized
-  async join() {
+  async join(): Promise<void> {
     this._swarmSynchronizer.setJoined(true);
     await this._swarmSynchronizer.join();
     await this._mediaManager.join({
@@ -197,13 +197,13 @@ export class CallManager extends Resource {
   }
 
   @synchronized
-  async leave() {
+  async leave(): Promise<void> {
     this._swarmSynchronizer.setJoined(false);
     await this._swarmSynchronizer.leave();
     await this._mediaManager.leave();
   }
 
-  private _onCallStateUpdated(state: CallState) {
+  private _onCallStateUpdated(state: CallState): void {
     const tracksToPull = state.users
       ?.filter((user) => user.joined && user.id !== state.self?.id)
       ?.flatMap((user) => [user.tracks?.video, user.tracks?.audio, user.tracks?.screenshare])
@@ -214,7 +214,7 @@ export class CallManager extends Resource {
     this._updateState();
   }
 
-  private _onMediaStateUpdated(state: MediaState) {
+  private _onMediaStateUpdated(state: MediaState): void {
     this._swarmSynchronizer.setTracks({
       video: state.pushedVideoTrack ? TrackNameCodec.encode(state.pushedVideoTrack) : undefined,
       audio: state.pushedAudioTrack ? TrackNameCodec.encode(state.pushedAudioTrack) : undefined,
@@ -234,7 +234,7 @@ export class CallManager extends Resource {
   /**
    * Only this method is allowed to change state.
    */
-  private _updateState() {
+  private _updateState(): void {
     this._state.call = this._swarmSynchronizer._getState();
     this._state.media = this._mediaManager._getState();
   }

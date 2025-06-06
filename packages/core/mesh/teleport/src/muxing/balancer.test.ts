@@ -19,7 +19,7 @@ class StuckableStream extends Duplex {
     super();
   }
 
-  override _write(chunk: Buffer, encoding: string, callback: Function) {
+  override _write(chunk: Buffer, encoding: string, callback: Function): void {
     this.writeCalls++;
     if (this._stuck) {
       this.unstuck = () => {
@@ -33,7 +33,7 @@ class StuckableStream extends Duplex {
     }
   }
 
-  override _read(size: number) {}
+  override _read(size: number): void {}
 }
 
 const setupBalancer = (channels: number, stuck: boolean): { balancer: Balancer; stream: StuckableStream } => {

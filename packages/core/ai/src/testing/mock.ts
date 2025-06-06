@@ -26,18 +26,18 @@ export class SpyAIService implements AIServiceClient {
     return this._events;
   }
 
-  setMode(mode: SpyAIServiceMode) {
+  setMode(mode: SpyAIServiceMode): void {
     this._mode.value = mode;
   }
 
-  setEvents(events: GenerationStreamEvent[]) {
+  setEvents(events: GenerationStreamEvent[]): void {
     this._events = events;
   }
 
   /**
    * Save events to file.
    */
-  async saveEvents() {
+  async saveEvents(): Promise<void> {
     const fileHandle = await window.showSaveFilePicker({
       suggestedName: 'events.json',
       types: [
@@ -55,7 +55,7 @@ export class SpyAIService implements AIServiceClient {
   /**
    * Load events from file.
    */
-  async loadEvents() {
+  async loadEvents(): Promise<void> {
     const [fileHandle] = await window.showOpenFilePicker();
     const file = await fileHandle.getFile();
     const events = JSON.parse(await file.text());

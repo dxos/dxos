@@ -41,7 +41,7 @@ export class TestPeer extends Resource {
     return expectPeerLeft(this.signalManager, topic, peer);
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     this.signalManager = await this.testBuilder.createSignalManager(this);
     this.messenger = new Messenger({ signalManager: this.signalManager, retryDelay: 300 });
 
@@ -57,7 +57,7 @@ export class TestPeer extends Resource {
       .catch((err) => log.catch(err));
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     await this.messenger.close();
     await this.signalManager.close();
   }

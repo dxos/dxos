@@ -99,7 +99,7 @@ class ImageWidget extends WidgetType {
     super();
   }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return this._url === other._url;
   }
 

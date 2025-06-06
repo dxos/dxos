@@ -21,7 +21,7 @@ export class AppManager {
 
   constructor(private readonly _browser: Browser) {}
 
-  async init() {
+  async init(): Promise<void> {
     if (this._initialized) {
       return;
     }
@@ -53,7 +53,7 @@ export class AppManager {
     return this.page.getByTestId('todo').locator(`:has-text("${title}")`).getByTestId('todo-toggle');
   }
 
-  async todoCount() {
+  async todoCount(): Promise<number | null> {
     try {
       const countString = await this.page.getByTestId('todo-count').innerText({ timeout: 100 });
       return parseInt(countString.split(' ')[0]);
@@ -64,64 +64,64 @@ export class AppManager {
 
   // Actions
 
-  async createSpace() {
+  async createSpace(): Promise<void> {
     await this.page.getByTestId('add-button').click();
   }
 
-  async openShareSpace() {
+  async openShareSpace(): Promise<void> {
     await this.page.getByTestId('share-button').click();
   }
 
-  async openJoinSpace() {
+  async openJoinSpace(): Promise<void> {
     await this.page.getByTestId('join-button').click();
   }
 
-  async createTodo(title: string) {
+  async createTodo(title: string): Promise<void> {
     await this.page.getByTestId('new-todo').fill(title);
     await this.page.keyboard.press('Enter');
   }
 
-  async toggleTodo(title: string) {
+  async toggleTodo(title: string): Promise<void> {
     await this.todoToggle(title).click();
   }
 
-  async setTodoEditing(title: string) {
+  async setTodoEditing(title: string): Promise<void> {
     await this.page.getByTestId('todo').locator(`:text("${title}")`).dblclick();
   }
 
-  async submitTodoEdits() {
+  async submitTodoEdits(): Promise<void> {
     await this.page.keyboard.press('Enter');
   }
 
-  async cancelTodoEditing() {
+  async cancelTodoEditing(): Promise<void> {
     await this.page.keyboard.press('Escape');
   }
 
-  async deleteTodo(title: string) {
+  async deleteTodo(title: string): Promise<void> {
     await this.todo(title).hover();
     const destroy = this.page.getByTestId('todo').locator(`:has-text("${title}")`).getByTestId('destroy-button');
     // NOTE: This input behaves weirdly so eval is necessary to toggle it.
     await destroy.evaluate((elem: HTMLButtonElement) => elem.click());
   }
 
-  async toggleAll() {
+  async toggleAll(): Promise<void> {
     // NOTE: This input behaves weirdly so eval is necessary to toggle it.
     await this.page.$eval('data-testid=toggle-all', (elem: HTMLLabelElement) => elem.click());
     // Allow some time for the page to update when actioning the whole list.
     await sleep(500);
   }
 
-  async clearCompleted() {
+  async clearCompleted(): Promise<void> {
     await this.page.getByTestId('clear-button').click();
     // Allow some time for the page to update when actioning the whole list.
     await sleep(500);
   }
 
-  async filterTodos(filter: FILTER) {
+  async filterTodos(filter: FILTER): Promise<void> {
     await this.page.getByTestId(`${filter}-filter`).click();
   }
 
-  private async _onConsoleMessage(message: ConsoleMessage) {
+  private async _onConsoleMessage(message: ConsoleMessage): Promise<void> {
     try {
       const json = JSON.parse(message.text());
       if (json.invitationCode) {

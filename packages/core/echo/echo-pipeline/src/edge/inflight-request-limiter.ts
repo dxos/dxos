@@ -26,19 +26,19 @@ export class InflightRequestLimiter extends Resource {
     super();
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     this._inflightRequestBalance = 0;
     this._requestBarrier.reset();
     this._requestBarrier.wake();
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     this._inflightRequestBalance = 0;
     this._requestBarrier.throw(new Error('Rate limiter closed.'));
     clearTimeout(this._resetBalanceTimeout);
   }
 
-  public async rateLimit(message: AutomergeProtocolMessage) {
+  public async rateLimit(message: AutomergeProtocolMessage): Promise<void> {
     if (message.type !== 'sync') {
       return;
     }
@@ -56,7 +56,7 @@ export class InflightRequestLimiter extends Resource {
     }
   }
 
-  public handleResponse(message: AutomergeProtocolMessage) {
+  public handleResponse(message: AutomergeProtocolMessage): void {
     if (message.type !== 'sync') {
       return;
     }

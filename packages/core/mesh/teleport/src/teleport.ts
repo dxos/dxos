@@ -145,7 +145,7 @@ export class Teleport {
    * Blocks until the handshake is complete.
    */
 
-  async open(sessionId: PublicKey = PublicKey.random()) {
+  async open(sessionId: PublicKey = PublicKey.random()): Promise<void> {
     // invariant(sessionId);
     this._sessionId = sessionId;
     log('open');
@@ -155,13 +155,13 @@ export class Teleport {
     this._muxer.setSessionId(sessionId);
   }
 
-  async close(err?: Error) {
+  async close(err?: Error): Promise<void> {
     // TODO(dmaretskyi): Try soft close.
     await this.destroy(err);
   }
 
   @synchronized
-  async abort(err?: Error) {
+  async abort(err?: Error): Promise<void> {
     if (this._aborting || this._destroying) {
       return;
     }
@@ -187,7 +187,7 @@ export class Teleport {
 
   @synchronized
   // TODO(nf): analyze callers and consider abort instead
-  async destroy(err?: Error) {
+  async destroy(err?: Error): Promise<void> {
     if (this._destroying || this._aborting) {
       return;
     }
@@ -215,7 +215,7 @@ export class Teleport {
     log('teleport destroyed');
   }
 
-  addExtension(name: string, extension: TeleportExtension) {
+  addExtension(name: string, extension: TeleportExtension): void {
     if (!this._open) {
       throw new Error('Not open');
     }
@@ -243,13 +243,13 @@ export class Teleport {
     }
   }
 
-  private _setExtension(extensionName: string, extension: TeleportExtension) {
+  private _setExtension(extensionName: string, extension: TeleportExtension): void {
     invariant(!extensionName.includes('/'), 'Invalid extension name');
     invariant(!this._extensions.has(extensionName), 'Extension already exists');
     this._extensions.set(extensionName, extension);
   }
 
-  private async _openExtension(extensionName: string) {
+  private async _openExtension(extensionName: string): Promise<void> {
     log('open extension', { extensionName });
     const extension = this._extensions.get(extensionName) ?? failUndefined();
 

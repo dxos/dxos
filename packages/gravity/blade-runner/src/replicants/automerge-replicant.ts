@@ -45,7 +45,7 @@ export class AutomergeReplicant {
   constructor(private readonly env: ReplicantEnv) {}
 
   @trace.span()
-  async openRepo({ storageAdaptor }: { storageAdaptor: StorageAdaptorKind }) {
+  async openRepo({ storageAdaptor }: { storageAdaptor: StorageAdaptorKind }): Promise<void> {
     await this._repoCtx.dispose();
     this._repoCtx = new Context();
     const storage = await this._createStorage(this._repoCtx, storageAdaptor);
@@ -54,7 +54,7 @@ export class AutomergeReplicant {
   }
 
   @trace.span()
-  async closeRepo() {
+  async closeRepo(): Promise<void> {
     await this._repoCtx.dispose();
     this._repoCtx = new Context();
     this._repo = undefined;

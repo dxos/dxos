@@ -51,7 +51,7 @@ class LinkButton extends WidgetType {
     super();
   }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return this.url === other.url;
   }
 
@@ -68,7 +68,7 @@ class CheckboxWidget extends WidgetType {
     super();
   }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return this._checked === other._checked;
   }
 
@@ -105,7 +105,7 @@ class CheckboxWidget extends WidgetType {
     return span;
   }
 
-  override ignoreEvent() {
+  override ignoreEvent(): boolean {
     return false;
   }
 }

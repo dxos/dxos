@@ -29,7 +29,7 @@ export class ErrorHandler extends EventEmitter {
     window.addEventListener('unhandledrejection', this._listener);
   }
 
-  reset() {
+  reset(): void {
     window.removeEventListener('error', this._listener);
     window.removeEventListener('unhandledrejection', this._listener);
   }

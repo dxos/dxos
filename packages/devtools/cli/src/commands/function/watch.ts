@@ -140,11 +140,11 @@ export default class Watch extends BaseCommand<typeof Watch> {
     }
   }
 
-  private _logWithTime(message: string) {
+  private _logWithTime(message: string): void {
     this.log(`[${new Date().toTimeString().split(' ')[0]}] ${message}`);
   }
 
-  private _printUploadInstruction() {
+  private _printUploadInstruction(): void {
     const message = ['Try running:', '', 'dx function upload scriptFilePath'].join('\n');
     this.log(message);
   }

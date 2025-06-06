@@ -83,7 +83,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   @synchronized
-  async open() {
+  async open(): Promise<void> {
     if (this._lifecycleState === LifecycleState.OPEN) {
       return;
     }
@@ -92,7 +92,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   @synchronized
-  async close() {
+  async close(): Promise<this | undefined> {
     if (this._lifecycleState === LifecycleState.CLOSED) {
       return this;
     }
@@ -106,12 +106,12 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._lifecycleState = LifecycleState.CLOSED;
   }
 
-  async whenConnected() {
+  async whenConnected(): Promise<void> {
     await this._connected.wait({ timeout: 10_000 });
   }
 
   @synchronized
-  async addReplicator(replicator: EchoReplicator) {
+  async addReplicator(replicator: EchoReplicator): Promise<void> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(this.peerId);
     invariant(!this._replicators.has(replicator));
@@ -132,7 +132,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   @synchronized
-  async removeReplicator(replicator: EchoReplicator) {
+  async removeReplicator(replicator: EchoReplicator): Promise<void> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(this._replicators.has(replicator));
     await replicator.disconnect();
@@ -178,7 +178,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._send(message);
   }
 
-  private _send(message: Message) {
+  private _send(message: Message): void {
     const connectionEntry = this._connections.get(message.targetId);
     if (!connectionEntry) {
       throw new Error('Connection not found.');
@@ -211,7 +211,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       .filter(isNonNullable);
   }
 
-  private _onConnectionOpen(connection: ReplicatorConnection) {
+  private _onConnectionOpen(connection: ReplicatorConnection): void {
     log('Connection opened', { peerId: connection.peerId });
     invariant(!this._connections.has(connection.peerId as PeerId));
     const reader = connection.readable.getReader();
@@ -242,7 +242,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._params.monitor?.recordPeerConnected(connection.peerId);
   }
 
-  private _onMessage(message: Message) {
+  private _onMessage(message: Message): void {
     if (isCollectionQueryMessage(message)) {
       this._params.onCollectionStateQueried(message.collectionId, message.senderId);
     } else if (isCollectionStateMessage(message)) {
@@ -253,7 +253,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._params.monitor?.recordMessageReceived(message);
   }
 
-  public onConnectionAuthScopeChanged(peer: PeerId) {
+  public onConnectionAuthScopeChanged(peer: PeerId): void {
     const entry = this._connections.get(peer);
     if (entry) {
       this._onConnectionAuthScopeChanged(entry.connection);
@@ -264,7 +264,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
    * Trigger doc-synchronizer shared documents set recalculation. Happens on peer-candidate.
    * TODO(y): replace with a proper API call when sharePolicy update becomes supported by automerge-repo
    */
-  private _onConnectionAuthScopeChanged(connection: ReplicatorConnection) {
+  private _onConnectionAuthScopeChanged(connection: ReplicatorConnection): void {
     log('Connection auth scope changed', { peerId: connection.peerId });
     const entry = this._connections.get(connection.peerId as PeerId);
     invariant(entry);
@@ -272,7 +272,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._emitPeerCandidate(connection);
   }
 
-  private _onConnectionClosed(connection: ReplicatorConnection) {
+  private _onConnectionClosed(connection: ReplicatorConnection): void {
     log('Connection closed', { peerId: connection.peerId });
     const entry = this._connections.get(connection.peerId as PeerId);
     invariant(entry);
@@ -287,7 +287,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._connections.delete(connection.peerId as PeerId);
   }
 
-  private _emitPeerCandidate(connection: ReplicatorConnection) {
+  private _emitPeerCandidate(connection: ReplicatorConnection): void {
     this.emit('peer-candidate', {
       peerId: connection.peerId as PeerId,
       peerMetadata: createEchoPeerMetadata(),

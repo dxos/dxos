@@ -41,12 +41,12 @@ export type SnapshotDescription = {
 export class SnapshotsRegistry {
   static snapshots: SnapshotDescription[] = JSON.parse(readFileSync(REGISTRY_FILE, 'utf-8').toString());
 
-  static registerSnapshot(snapshot: SnapshotDescription) {
+  static registerSnapshot(snapshot: SnapshotDescription): void {
     SnapshotsRegistry.snapshots.push(snapshot);
     SnapshotsRegistry._save();
   }
 
-  static removeSnapshot(snapshotToRemove: { name?: string; version?: number }) {
+  static removeSnapshot(snapshotToRemove: { name?: string; version?: number }): void {
     SnapshotsRegistry.snapshots = SnapshotsRegistry.snapshots.filter((snapshot) =>
       Object.keys(snapshotToRemove).every((key) => (snapshot as any)[key] !== (snapshotToRemove as any)[key]),
     );
@@ -57,7 +57,7 @@ export class SnapshotsRegistry {
     return SnapshotsRegistry.snapshots.find((snapshot) => snapshot.name === name);
   }
 
-  private static _save() {
+  private static _save(): void {
     writeFileSync(REGISTRY_FILE, JSON.stringify(SnapshotsRegistry.snapshots, null, 2));
   }
 }

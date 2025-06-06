@@ -81,7 +81,7 @@ export class InvitationTopology implements Topology {
     this._seenPeers.clear();
   }
 
-  toString() {
+  toString(): string {
     return `InvitationTopology(${this._role === InvitationOptions.Role.GUEST ? 'guest' : 'host'})`;
   }
 }

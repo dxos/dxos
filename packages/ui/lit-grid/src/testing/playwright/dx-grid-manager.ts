@@ -49,7 +49,7 @@ export class DxGridManager {
     start: DxGridPlanePosition,
     end: DxGridPlanePosition,
     iterator: (col: number, row: number) => Promise<void>,
-  ) {
+  ): Promise<void> {
     const nCols = 1 + end.col - start.col;
     const nRows = 1 + end.row - start.row;
 
@@ -64,13 +64,13 @@ export class DxGridManager {
     );
   }
 
-  async expectSelectionResult(start: DxGridPlanePosition, end: DxGridPlanePosition) {
+  async expectSelectionResult(start: DxGridPlanePosition, end: DxGridPlanePosition): Promise<void> {
     return this.forCellsInRange(start, end, (col, row) =>
       expect(this.cell(col, row, 'grid')).toHaveAttribute('aria-selected', 'true'),
     );
   }
 
-  async expectVirtualizationResult(cols: number, rows: number, minColIndex = 0, minRowIndex = 0) {
+  async expectVirtualizationResult(cols: number, rows: number, minColIndex = 0, minRowIndex = 0): Promise<void> {
     await this.cell(minColIndex, minRowIndex, 'grid').waitFor({ state: 'visible' });
     // Top planes
     await expect(this.cellsWithinPlane('fixedStartStart')).toHaveCount(4);

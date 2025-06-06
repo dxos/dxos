@@ -51,7 +51,7 @@ export class PortMuxer {
     return port;
   }
 
-  private onWorkerMessage(event: MessageEvent<MessageData>) {
+  private onWorkerMessage(event: MessageEvent<MessageData>): void {
     const message = event.data;
     log.debug('Recieved message from worker port', {
       channel: message.channel,
@@ -62,7 +62,7 @@ export class PortMuxer {
     callback?.(new Uint8Array(message.payload));
   }
 
-  private onWindowMessage(event: MessageEvent<MessageData>) {
+  private onWindowMessage(event: MessageEvent<MessageData>): void {
     const message = event.data;
     log.debug('Recieved message from window', {
       channel: message.channel,

@@ -137,7 +137,7 @@ export class LocalStorageStore<T extends object> {
   /**
    * Binds signal property to local storage key.
    */
-  prop<K extends keyof T>({ key, type }: PropDef<K, T>) {
+  prop<K extends keyof T>({ key, type }: PropDef<K, T>): this {
     invariant(typeof key === 'string');
     const storageKey = this._prefix + '/' + hyphenize(key);
     if (this._subscriptions.has(storageKey)) {
@@ -167,7 +167,7 @@ export class LocalStorageStore<T extends object> {
   /**
    * Delete all settings.
    */
-  reset() {
+  reset(): void {
     localStorage.removeItem(this._prefix);
     for (const key of Object.keys(localStorage)) {
       if (key.startsWith(this._prefix)) {
@@ -179,11 +179,11 @@ export class LocalStorageStore<T extends object> {
   /**
    * Expunges all store-related items from local storage.
    */
-  expunge() {
+  expunge(): void {
     this._subscriptions.forEach((_, key) => localStorage.removeItem(key));
   }
 
-  close() {
+  close(): void {
     this._subscriptions.forEach((unsubscribe) => unsubscribe());
     this._subscriptions.clear();
   }

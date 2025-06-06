@@ -46,7 +46,7 @@ export class MeshEchoReplicator implements EchoReplicator {
     this._context = context;
   }
 
-  async disconnect() {
+  async disconnect(): Promise<void> {
     for (const connection of this._connections) {
       if (connection.isEnabled) {
         this._context?.onConnectionClosed(connection);
@@ -180,7 +180,7 @@ export class MeshEchoReplicator implements EchoReplicator {
     return connection.replicatorExtension;
   }
 
-  async authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
+  async authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey): Promise<void> {
     log('authorizeDevice', { spaceKey, deviceKey });
     const spaceId = await createIdFromSpaceKey(spaceKey);
     defaultMap(this._authorizedDevices, spaceId, () => new ComplexSet(PublicKey.hash)).add(deviceKey);

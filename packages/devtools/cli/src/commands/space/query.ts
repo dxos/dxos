@@ -34,7 +34,7 @@ export default class Query extends BaseCommand<typeof Query> {
     });
   }
 
-  private _printObjects(objects: any[], flags: TableFlags = {}) {
+  private _printObjects(objects: any[], flags: TableFlags = {}): void {
     ux.stdout(
       table(
         objects,

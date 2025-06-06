@@ -40,7 +40,7 @@ export class DxGridMultiselectCell extends LitElement {
     </button>`;
   }
 
-  override createRenderRoot() {
+  override createRenderRoot(): this {
     return this;
   }
 }

@@ -73,7 +73,7 @@ export default class Start extends BaseCommand<typeof Start> {
     }
   }
 
-  private async _runInForeground() {
+  private async _runInForeground(): Promise<void> {
     const socket = 'unix://' + getProfilePath(DX_RUNTIME, this.flags.profile, 'agent.sock');
     {
       // Clear out old socket file.
@@ -217,7 +217,7 @@ export default class Start extends BaseCommand<typeof Start> {
     }, system);
   }
 
-  private async _sendTelemetry() {
+  private async _sendTelemetry(): Promise<void> {
     const sendTelemetry = async () => {
       // TODO(nf): move to observability
       const installationId = this._observability?.getTag('installationId');

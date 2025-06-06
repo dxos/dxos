@@ -36,21 +36,21 @@ export class SpaceArchiveWriter extends Resource {
     return Promise.resolve();
   }
 
-  async begin(meta: SpaceArchiveBeginProps) {
+  async begin(meta: SpaceArchiveBeginProps): Promise<void> {
     assertState(this._tar, 'Not open');
     assertState(!this._meta, 'Already started');
     this._meta = meta;
     this._archive = new this._tar.Archive();
   }
 
-  async setCurrentRootUrl(url: string) {
+  async setCurrentRootUrl(url: string): Promise<void> {
     assertArgument(url.startsWith('automerge:'), 'Invalid root URL');
     assertState(this._tar, 'Not open');
     assertState(this._meta, 'Not started');
     this._currentRootUrl = url;
   }
 
-  async writeDocument(documentId: string, data: Uint8Array) {
+  async writeDocument(documentId: string, data: Uint8Array): Promise<void> {
     assertArgument(!documentId.startsWith('automerge:'), 'Invalid document ID');
     assertState(this._archive, 'Not open');
     this._archive.addBinaryFile(`${SpaceArchiveFileStructure.documents}/${documentId}.bin`, data);

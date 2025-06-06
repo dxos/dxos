@@ -161,7 +161,7 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
     return this._layout.graph.edges.filter((edge) => edge.source.id === this.options.idAccessor(node)).length;
   }
 
-  override onUpdate(data?: Graph) {
+  override onUpdate(data?: Graph): void {
     this.mergeData(data);
     this._simulation.stop();
     this.updateForces(this.options.forces);
@@ -282,7 +282,7 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
     return this._layout;
   }
 
-  override async onStart() {
+  override async onStart(): Promise<void> {
     // TODO(burdon): Generalize.
     // Delay radial force until other forces have settled.
     const { radial, ...forces } = this.options.forces ?? {};
@@ -310,14 +310,14 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
       .restart();
   }
 
-  override async onStop() {
+  override async onStop(): Promise<void> {
     this._simulation.stop();
   }
 
   /**
    * Update all forces.
    */
-  private updateForces(forces: ForceOptions) {
+  private updateForces(forces: ForceOptions): void {
     // https://github.com/d3/d3-force#simulation_force
     this._simulation
 

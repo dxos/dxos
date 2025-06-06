@@ -13,7 +13,7 @@ export enum SnoopLevel {
  */
 // TODO(burdon): Integrate with log/spyglass.
 export class Snoop {
-  static stackFunction(err: Error) {
+  static stackFunction(err: Error): string | undefined {
     const stack = err.stack!.split('\n');
     const match = stack[2].match(/.+\((.+)\).*/);
     if (match) {
@@ -32,18 +32,18 @@ export class Snoop {
     return SnoopLevel.BOLD;
   }
 
-  format(prefix: string, name: string, args: string, level: SnoopLevel) {
+  format(prefix: string, name: string, args: string, level: SnoopLevel): string {
     const pre = prefix.repeat(level === SnoopLevel.BOLD ? 8 : 2);
     const label = this._context ? `${this._context}.${name}` : name;
     const line = `${pre} ${label}${args}`;
     return level === SnoopLevel.BOLD ? [pre, line, pre].join('\n') : line;
   }
 
-  in(label: string, level: SnoopLevel, ...args: any[]) {
+  in(label: string, level: SnoopLevel, ...args: any[]): string {
     return this.format('<', label, level === SnoopLevel.DEFAULT ? '' : `(${String(...args)})`, level);
   }
 
-  out(label: string, level: SnoopLevel, result: any) {
+  out(label: string, level: SnoopLevel, result: any): string {
     return this.format('>', label, level === SnoopLevel.DEFAULT ? '' : ` = ${String(result)}`, level);
   }
 

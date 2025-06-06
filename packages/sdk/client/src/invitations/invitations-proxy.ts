@@ -86,7 +86,7 @@ export class InvitationsProxy implements Invitations {
     return this._opened;
   }
 
-  async open() {
+  async open(): Promise<void> {
     if (this._opened) {
       return;
     }
@@ -154,7 +154,7 @@ export class InvitationsProxy implements Invitations {
     log('opened', this._getInvitationContext());
   }
 
-  async close() {
+  async close(): Promise<void> {
     if (!this._opened) {
       return;
     }

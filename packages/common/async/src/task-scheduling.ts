@@ -33,7 +33,7 @@ export class DeferredTask {
   /**
    * Schedule the task to run asynchronously.
    */
-  schedule() {
+  schedule(): void {
     if (this._scheduled) {
       return; // Already scheduled.
     }
@@ -59,7 +59,7 @@ export class DeferredTask {
   /**
    * Schedule the task to run and wait for it to finish.
    */
-  async runBlocking() {
+  async runBlocking(): Promise<void> {
     if (this._ctx.disposed) {
       throw new ContextDisposedError();
     }
@@ -72,7 +72,7 @@ export class DeferredTask {
    * Waits for the current task to finish if it is running.
    * Does not schedule a new task.
    */
-  async join() {
+  async join(): Promise<void> {
     await this._currentTask;
   }
 }

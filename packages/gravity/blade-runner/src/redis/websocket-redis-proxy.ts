@@ -70,12 +70,12 @@ export class WebSocketRedisProxy {
     });
   }
 
-  async destroy() {
+  async destroy(): Promise<void> {
     this._wsServer.close();
     await this._ctx.dispose();
   }
 
-  private _pipeStreams(ctx: Context, first: Duplex, second: Duplex) {
+  private _pipeStreams(ctx: Context, first: Duplex, second: Duplex): void {
     first.pipe(second).pipe(first);
     ctx.onDispose(() => {
       first.unpipe(second).unpipe(first);

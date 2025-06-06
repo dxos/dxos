@@ -64,21 +64,21 @@ export class MemoryShellRuntime implements ShellRuntime {
     return this._spaceInvitationParam;
   }
 
-  setLayout(request: LayoutRequest) {
+  setLayout(request: LayoutRequest): void {
     this._layout = request.layout;
     this._invitationCode = request.invitationCode;
     this._spaceKey = request.spaceKey;
     this.layoutUpdate.emit(request);
   }
 
-  setInvitationUrl(request: InvitationUrlRequest) {
+  setInvitationUrl(request: InvitationUrlRequest): void {
     this._invitationUrl = request.invitationUrl;
     this._deviceInvitationParam = request.deviceInvitationParam;
     this._spaceInvitationParam = request.spaceInvitationParam;
     this.invitationUrlUpdate.emit(request);
   }
 
-  async setAppContext(context: AppContextRequest) {
+  async setAppContext(context: AppContextRequest): Promise<void> {
     this.contextUpdate.emit(context);
   }
 }

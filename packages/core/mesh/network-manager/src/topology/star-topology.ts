@@ -13,7 +13,7 @@ export class StarTopology implements Topology {
 
   constructor(private readonly _centralPeer: PublicKey) {}
 
-  toString() {
+  toString(): string {
     return `StarTopology(${this._centralPeer.truncate()})`;
   }
 

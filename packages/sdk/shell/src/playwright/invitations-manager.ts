@@ -25,7 +25,7 @@ export class InvitationsManager extends ScopedShellManager {
     super();
   }
 
-  async init() {
+  async init(): Promise<void> {
     if (this._initialized) {
       return;
     }
@@ -40,7 +40,7 @@ export class InvitationsManager extends ScopedShellManager {
     this._initialized = true;
   }
 
-  async closePage() {
+  async closePage(): Promise<void> {
     await this.page.close();
   }
 
@@ -81,11 +81,11 @@ export class InvitationsManager extends ScopedShellManager {
 
   // Actions
 
-  async toggleNetworkStatus(id: number) {
+  async toggleNetworkStatus(id: number): Promise<void> {
     await this.peer(id).getByTestId('invitations.toggle-network').click();
   }
 
-  async openPanel(id: number, panel: PanelType) {
+  async openPanel(id: number, panel: PanelType): Promise<void> {
     const peer = this.peer(id);
 
     if (typeof panel === 'number') {
@@ -112,14 +112,14 @@ export class InvitationsManager extends ScopedShellManager {
     }
   }
 
-  async createIdentity(id: number) {
+  async createIdentity(id: number): Promise<void> {
     const createIdentity = this.peer(id).getByTestId('invitations.create-identity');
     // TODO(wittjosiah): Clicking on buttons wrapped in tooltips is flaky in webkit playwright.
     await createIdentity.click();
     await expect(createIdentity).toBeDisabled();
   }
 
-  async createSpace(id: number) {
+  async createSpace(id: number): Promise<void> {
     await this.peer(id).getByTestId('invitations.create-space').click();
   }
 
@@ -154,7 +154,7 @@ export class InvitationsManager extends ScopedShellManager {
     return this._invitationCode.wait({ timeout: 1_000 });
   }
 
-  async acceptInvitation(id: number, type: 'device' | 'space', invitation: string) {
+  async acceptInvitation(id: number, type: 'device' | 'space', invitation: string): Promise<void> {
     const peer = this.peer(id);
     // TODO(wittjosiah): Update ids.
     if (type === 'device') {
@@ -165,7 +165,7 @@ export class InvitationsManager extends ScopedShellManager {
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input-continue`).click();
   }
 
-  private async _onConsoleMessage(message: ConsoleMessage) {
+  private async _onConsoleMessage(message: ConsoleMessage): Promise<void> {
     try {
       const json = JSON.parse(message.text());
       if (json.invitationCode) {

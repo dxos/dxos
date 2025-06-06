@@ -16,7 +16,7 @@ export class DeckManager {
     return new PlankManager(this._page.getByTestId('deck.plank').nth(nth));
   }
 
-  async closeAll() {
+  async closeAll(): Promise<void> {
     const planks = await this._page.getByTestId('deck.plank').all();
     // Iterate in reverse to avoid re-indexing.
     for (const plank of planks.reverse()) {
@@ -32,7 +32,7 @@ export class PlankManager {
     this._page = locator.page();
   }
 
-  async close() {
+  async close(): Promise<void> {
     await closePlank(this.locator);
   }
 

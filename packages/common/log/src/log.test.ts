@@ -19,7 +19,7 @@ class LogError extends Error {
     Object.setPrototypeOf(this, new.target.prototype);
   }
 
-  override toString() {
+  override toString(): string {
     return `LogError: ${this.message}`;
   }
 }

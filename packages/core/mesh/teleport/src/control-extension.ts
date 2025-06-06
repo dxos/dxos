@@ -45,7 +45,7 @@ export class ControlExtension implements TeleportExtension {
     private readonly remotePeerId: PublicKey,
   ) {}
 
-  async registerExtension(name: string) {
+  async registerExtension(name: string): Promise<void> {
     await this._rpc.rpc.Control.registerExtension({ name });
   }
 

@@ -36,7 +36,7 @@ export class PackageDependencyBuilder {
   /**
    * Create docs page.
    */
-  createDocs(project: Project, docsDir: string, baseUrl: string) {
+  createDocs(project: Project, docsDir: string, baseUrl: string): void {
     const baseDir = path.join(this._workspace.baseDir, project.subDir, docsDir);
     if (!fs.existsSync(baseDir)) {
       fs.mkdirSync(baseDir, { recursive: true });
@@ -103,7 +103,7 @@ export class PackageDependencyBuilder {
   /**
    * Create table.
    */
-  private generateDependenciesTable(project: Project, docsDir: string) {
+  private generateDependenciesTable(project: Project, docsDir: string): string {
     const dir = project.subDir;
     const createLink = (p: Project) => {
       const name = p.package.name;

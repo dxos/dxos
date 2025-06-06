@@ -39,7 +39,7 @@ export class ComplexSet<T> implements Set<T> {
     return inspectObject(this);
   }
 
-  toJSON() {
+  toJSON(): T[] | { size: number; } {
     return this._values.size > MAX_SERIALIZATION_LENGTH
       ? { size: this._values.size }
       : Array.from(this._values.values());
@@ -168,7 +168,7 @@ export class ComplexMap<K, V> implements Map<K, V> {
     return inspectObject(this);
   }
 
-  toJSON() {
+  toJSON(): V[] | { size: number; } {
     return this._values.size > MAX_SERIALIZATION_LENGTH
       ? { size: this._values.size }
       : Array.from(this._values.values());

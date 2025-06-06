@@ -43,7 +43,7 @@ export class IndexStore {
     });
   }
 
-  async save(index: Index) {
+  async save(index: Index): Promise<void> {
     await this._db.put<string, IndexData>(index.identifier, await indexCodec.encode(index), encodings);
   }
 
@@ -52,7 +52,7 @@ export class IndexStore {
     return indexCodec.decode(identifier, data);
   }
 
-  async remove(identifier: string) {
+  async remove(identifier: string): Promise<void> {
     await this._db.del(identifier, encodings);
   }
 

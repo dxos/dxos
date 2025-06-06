@@ -40,15 +40,15 @@ export abstract class Projector<DATA, LAYOUT, OPTIONS extends ProjectorOptions> 
     return this._options;
   }
 
-  update(data?: DATA, selected?: string) {
+  update(data?: DATA, selected?: string): void {
     this.onUpdate(data, selected);
   }
 
-  async start() {
+  async start(): Promise<void> {
     await this.onStart();
   }
 
-  async stop() {
+  async stop(): Promise<void> {
     await this.onStop();
   }
 

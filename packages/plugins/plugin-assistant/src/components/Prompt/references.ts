@@ -170,11 +170,11 @@ class ReferenceWidget extends WidgetType {
     return span;
   }
 
-  override eq(other: ReferenceWidget) {
+  override eq(other: ReferenceWidget): boolean {
     return other.data.uri === this.data.uri;
   }
 
-  override ignoreEvent() {
+  override ignoreEvent(): boolean {
     return true;
   }
 }

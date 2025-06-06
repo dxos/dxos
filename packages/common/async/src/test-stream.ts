@@ -16,7 +16,7 @@ export class TestStream extends Duplex {
     stream1: TestStream,
     stream2: TestStream,
     { timeout = 200 }: { timeout?: number } = {},
-  ) {
+  ): Promise<void> {
     stream1.push('ping');
     stream2.push('pong');
 

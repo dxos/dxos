@@ -15,7 +15,7 @@ let inUntrackedScope = false;
 class GuardSignal implements GenericSignal {
   constructor(public readonly debugInfo: unknown) {}
 
-  notifyRead() {
+  notifyRead(): void {
     // Separate if statements so it's possible to place a debugger breakpoint on `!inUntrackedScope` condition.
     if (inUntrackedScope) {
       return;
@@ -26,7 +26,7 @@ class GuardSignal implements GenericSignal {
     }
   }
 
-  notifyWrite() {
+  notifyWrite(): void {
     // Separate if statements so it's possible to place a debugger breakpoint on `!inUntrackedScope` condition.
     if (inUntrackedScope) {
       return;

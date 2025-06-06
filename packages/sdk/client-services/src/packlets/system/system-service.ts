@@ -79,7 +79,7 @@ export class SystemServiceImpl implements SystemService {
     return getPlatform();
   }
 
-  async updateStatus({ status }: UpdateStatusRequest) {
+  async updateStatus({ status }: UpdateStatusRequest): Promise<void> {
     await this._onUpdateStatus(status);
   }
 
@@ -100,7 +100,7 @@ export class SystemServiceImpl implements SystemService {
     });
   }
 
-  async reset() {
+  async reset(): Promise<void> {
     await this._onReset();
   }
 }

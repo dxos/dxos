@@ -107,11 +107,11 @@ export class RepoProxy extends Resource {
     return handle;
   }
 
-  async flush() {
+  async flush(): Promise<void> {
     await this._sendUpdatesJob?.runBlocking();
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     // TODO(dmaretskyi): Set proper space id.
     this._subscription = this._dataService.subscribe({
       subscriptionId: this._subscriptionId,
@@ -123,7 +123,7 @@ export class RepoProxy extends Resource {
     this._subscription.subscribe((updates) => this._receiveUpdate(updates));
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     await this._sendUpdatesJob?.join();
     this._sendUpdatesJob = undefined;
 
@@ -204,7 +204,7 @@ export class RepoProxy extends Resource {
     return handle;
   }
 
-  private _receiveUpdate({ updates }: BatchedDocumentUpdates) {
+  private _receiveUpdate({ updates }: BatchedDocumentUpdates): void {
     if (!updates) {
       return;
     }
@@ -220,7 +220,7 @@ export class RepoProxy extends Resource {
     }
   }
 
-  private async _sendUpdates() {
+  private async _sendUpdates(): Promise<void> {
     // Save current state of pending updates to avoid race conditions.
     const createIds = Array.from(this._pendingCreateIds);
     const addIds = Array.from(this._pendingAddIds);
@@ -269,7 +269,7 @@ export class RepoProxy extends Resource {
     }
   }
 
-  private _emitSaveStateEvent() {
+  private _emitSaveStateEvent(): void {
     const unsavedDocuments = [...this._pendingCreateIds, ...this._pendingUpdateIds];
     this.saveStateChanged.emit({ unsavedDocuments });
   }

@@ -52,7 +52,7 @@ export class WebsocketRpcClient<C, S> {
     return this._params.url;
   }
 
-  async open() {
+  async open(): Promise<void> {
     if (this._params.authenticationToken) {
       this._socket = new WebSocketWithTokenAuth(this._params.url, this._params.authenticationToken);
     } else {
@@ -87,7 +87,7 @@ export class WebsocketRpcClient<C, S> {
     await this._connectTrigger.wait();
   }
 
-  async close() {
+  async close(): Promise<void> {
     try {
       await this._rpc?.close();
     } catch (err) {

@@ -26,13 +26,13 @@ export class WebsocketRpcServer<C, S> {
   private _server?: WebSocket.Server;
 
   constructor(private readonly _params: WebsocketRpcServerParams<C, S>) {}
-  handleUpgrade(request: IncomingMessage, socket: Socket, head: Buffer) {
+  handleUpgrade(request: IncomingMessage, socket: Socket, head: Buffer): void {
     this._server?.handleUpgrade(request, socket, head, (ws) => {
       this._server?.emit('connection', ws, request);
     });
   }
 
-  async open() {
+  async open(): Promise<void> {
     this._server = new WebSocket.Server({
       ...this._params,
     });
@@ -69,7 +69,7 @@ export class WebsocketRpcServer<C, S> {
     });
   }
 
-  async close() {
+  async close(): Promise<void> {
     this._server?.close();
   }
 }

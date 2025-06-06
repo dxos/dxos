@@ -144,7 +144,7 @@ export class RpcPeer {
    * Will block before the other peer calls `open`.
    */
   @synchronized
-  async open() {
+  async open(): Promise<void> {
     if (this._state !== RpcState.INITIAL) {
       return;
     }
@@ -198,7 +198,7 @@ export class RpcPeer {
    * Will wait for confirmation from the other side.
    * Any responses for RPC calls made before close will be delivered.
    */
-  async close({ timeout = CLOSE_TIMEOUT }: CloseOptions = {}) {
+  async close({ timeout = CLOSE_TIMEOUT }: CloseOptions = {}): Promise<void> {
     if (this._state === RpcState.CLOSED) {
       return;
     }
@@ -227,7 +227,7 @@ export class RpcPeer {
   /**
    * Dispose the connection without waiting for the other side.
    */
-  async abort() {
+  async abort(): Promise<void> {
     if (this._state === RpcState.CLOSED) {
       return;
     }
@@ -236,7 +236,7 @@ export class RpcPeer {
     this._disposeAndClose();
   }
 
-  private _abortRequests() {
+  private _abortRequests(): void {
     // Abort open
     this._clearOpenInterval?.();
     this._closingTrigger.wake();
@@ -248,7 +248,7 @@ export class RpcPeer {
     this._outgoingRequests.clear();
   }
 
-  private _disposeAndClose() {
+  private _disposeAndClose(): void {
     this._unsubscribeFromPort?.();
     this._unsubscribeFromPort = undefined;
     this._clearOpenInterval?.();
@@ -482,7 +482,7 @@ export class RpcPeer {
     });
   }
 
-  private async _sendMessage(message: RpcMessage, timeout?: number) {
+  private async _sendMessage(message: RpcMessage, timeout?: number): Promise<void> {
     DEBUG_CALLS && log('sending message', { type: Object.keys(message)[0] });
     await this._params.port.send(getRpcMessageCodec().encode(message, { preserveAny: true }), timeout);
   }
@@ -506,7 +506,7 @@ export class RpcPeer {
     }
   }
 
-  private _callStreamHandler(req: Request, callback: (response: Response) => void) {
+  private _callStreamHandler(req: Request, callback: (response: Response) => void): void {
     try {
       invariant(this._params.streamHandler, 'Requests with streaming responses are not supported.');
       invariant(typeof req.id === 'number');

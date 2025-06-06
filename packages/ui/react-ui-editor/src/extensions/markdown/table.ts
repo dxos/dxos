@@ -106,7 +106,7 @@ class TableWidget extends WidgetType {
     super();
   }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return (
       this._table.header?.join() === other._table.header?.join() &&
       this._table.rows?.join() === other._table.rows?.join()
@@ -138,7 +138,7 @@ class TableWidget extends WidgetType {
     return div;
   }
 
-  override ignoreEvent(e: Event) {
+  override ignoreEvent(e: Event): boolean {
     return !/^mouse/.test(e.type);
   }
 }

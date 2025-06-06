@@ -211,7 +211,7 @@ export class DataSpaceManager extends Resource {
   }
 
   @synchronized
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     log('open');
     log.trace('dxos.echo.data-space-manager.open', Trace.begin({ id: this._instanceId }));
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
@@ -231,7 +231,7 @@ export class DataSpaceManager extends Resource {
   }
 
   @synchronized
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     log('close');
     for (const space of this._spaces.values()) {
       await space.close();
@@ -429,7 +429,7 @@ export class DataSpaceManager extends Resource {
    * Used by invitation handler.
    * TODO(dmaretskyi): Consider removing.
    */
-  async waitUntilSpaceReady(spaceKey: PublicKey) {
+  async waitUntilSpaceReady(spaceKey: PublicKey): Promise<void> {
     await cancelWithContext(
       this._ctx,
       this.updated.waitForCondition(() => {
@@ -453,7 +453,7 @@ export class DataSpaceManager extends Resource {
     });
   }
 
-  async setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting) {
+  async setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting): Promise<void> {
     const space = this._spaces.get(spaceKey);
     invariant(space, 'Space not found.');
 
@@ -597,7 +597,7 @@ export class DataSpaceManager extends Resource {
     return dataSpace;
   }
 
-  private async _connectEchoMeshReplicator(space: Space, session: Teleport) {
+  private async _connectEchoMeshReplicator(space: Space, session: Teleport): Promise<void> {
     const replicator = this._meshReplicator;
     if (!replicator) {
       log.warn('p2p automerge replication disabled', { space: space.key });

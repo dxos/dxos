@@ -151,14 +151,14 @@ export class Space extends Resource {
     return this._controlPipeline.pipeline;
   }
 
-  async setControlFeed(feed: FeedWrapper<FeedMessage>) {
+  async setControlFeed(feed: FeedWrapper<FeedMessage>): Promise<this> {
     invariant(!this._controlFeed, 'Control feed already set.');
     this._controlFeed = feed;
     await this._controlPipeline.setWriteFeed(feed);
     return this;
   }
 
-  async setDataFeed(feed: FeedWrapper<FeedMessage>) {
+  async setDataFeed(feed: FeedWrapper<FeedMessage>): Promise<this> {
     invariant(!this._dataFeed, 'Data feed already set.');
     this._dataFeed = feed;
     return this;
@@ -172,7 +172,7 @@ export class Space extends Resource {
   }
 
   @trace.span()
-  protected override async _open(ctx: Context) {
+  protected override async _open(ctx: Context): Promise<void> {
     log('opening...');
 
     // Order is important.
@@ -182,14 +182,14 @@ export class Space extends Resource {
   }
 
   @synchronized
-  public async startProtocol() {
+  public async startProtocol(): Promise<void> {
     invariant(this.isOpen);
     await this.protocol.start();
     await this.protocol.addFeed(await this._feedProvider(this._genesisFeedKey));
   }
 
   @synchronized
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     log('closing...', { key: this._key });
 
     // Closes in reverse order to open.

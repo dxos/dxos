@@ -264,7 +264,7 @@ export class Stream<T> {
     }
   }
 
-  private _markAsReady() {
+  private _markAsReady(): void {
     if (!this._isReady) {
       this._isReady = true;
       this._readyHandler?.();
@@ -273,7 +273,7 @@ export class Stream<T> {
   }
 
   // TODO(burdon): Can this be cancelled?
-  subscribe(onMessage: (msg: T) => void, onClose?: (err?: Error) => void) {
+  subscribe(onMessage: (msg: T) => void, onClose?: (err?: Error) => void): void {
     invariant(!this._messageHandler, 'Stream is already subscribed to.');
     invariant(!this._closeHandler, 'Stream is already subscribed to.');
     invariant(this._buffer); // Must be not-null.
@@ -321,7 +321,7 @@ export class Stream<T> {
   /**
    * Close the stream and dispose of any resources.
    */
-  async close() {
+  async close(): Promise<void> {
     if (this._isClosed) {
       return;
     }

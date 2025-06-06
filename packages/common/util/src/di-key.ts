@@ -19,11 +19,11 @@ export class SymbolDiKey<T> {
 
   public [symbolSingleton]?: SingletonFactory<T> = undefined;
 
-  toString() {
+  toString(): string {
     return String(this.symbol).slice(7, -1);
   }
 
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return this.toString();
   }
 }

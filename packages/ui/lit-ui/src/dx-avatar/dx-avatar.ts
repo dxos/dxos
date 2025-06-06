@@ -84,23 +84,23 @@ export class DxAvatar extends LitElement {
   @state()
   loadingStaus: ImageLoadingStatus = 'idle';
 
-  override connectedCallback() {
+  override connectedCallback(): void {
     super.connectedCallback();
     this.role = 'img';
     this.loadingStaus = this.imgSrc ? 'loading' : 'idle';
   }
 
-  override willUpdate(changedProperties: Map<string, any>) {
+  override willUpdate(changedProperties: Map<string, any>): void {
     if (changedProperties.has('imgSrc')) {
       this.loadingStaus = changedProperties.get('imgSrc') ? 'loading' : 'idle';
     }
   }
 
-  private handleLoad() {
+  private handleLoad(): void {
     this.loadingStaus = 'loaded';
   }
 
-  private handleError() {
+  private handleError(): void {
     this.loadingStaus = 'error';
   }
 
@@ -205,7 +205,7 @@ export class DxAvatar extends LitElement {
     /></span>`;
   }
 
-  override createRenderRoot() {
+  override createRenderRoot(): this {
     return this;
   }
 }

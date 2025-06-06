@@ -44,7 +44,7 @@ export class ObservableProvider<Events extends {}, Value = unknown> implements O
     return this._value;
   }
 
-  setValue(value: Value) {
+  setValue(value: Value): void {
     this._value = value;
   }
 
@@ -88,7 +88,7 @@ export class CancellableObservableProvider<
     return this._cancelled;
   }
 
-  async cancel() {
+  async cancel(): Promise<void> {
     if (this._cancelled) {
       return;
     }

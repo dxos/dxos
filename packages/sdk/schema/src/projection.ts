@@ -220,7 +220,7 @@ export class ViewProjection {
    * @param projection The field and props to update
    * @param index Optional index for inserting new fields. Ignored when updating existing fields.
    */
-  setFieldProjection({ field, props }: Partial<FieldProjection>, index?: number) {
+  setFieldProjection({ field, props }: Partial<FieldProjection>, index?: number): void {
     log('setFieldProjection', { field, props, index });
 
     untracked(() => {

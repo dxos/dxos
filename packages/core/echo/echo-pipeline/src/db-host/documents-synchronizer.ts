@@ -45,7 +45,7 @@ export class DocumentsSynchronizer extends Resource {
     super();
   }
 
-  addDocuments(documentIds: DocumentId[], retryCounter = 0) {
+  addDocuments(documentIds: DocumentId[], retryCounter = 0): void {
     if (retryCounter > 3) {
       log.warn('Failed to load document, retry limit reached', { documentIds });
       return;
@@ -67,7 +67,7 @@ export class DocumentsSynchronizer extends Resource {
     }
   }
 
-  removeDocuments(documentIds: DocumentId[]) {
+  removeDocuments(documentIds: DocumentId[]): void {
     for (const documentId of documentIds) {
       this._syncStates.get(documentId)?.clearSubscriptions?.();
       this._syncStates.delete(documentId);
@@ -86,7 +86,7 @@ export class DocumentsSynchronizer extends Resource {
     this._syncStates.clear();
   }
 
-  update(updates: DocumentUpdate[]) {
+  update(updates: DocumentUpdate[]): void {
     for (const { documentId, mutation, isNew } of updates) {
       if (isNew) {
         const { handle: doc } = this._params.repo.findWithProgress<DatabaseDirectory>(documentId as DocumentId);
@@ -98,7 +98,7 @@ export class DocumentsSynchronizer extends Resource {
     }
   }
 
-  private _startSync(doc: DocHandle<DatabaseDirectory>) {
+  private _startSync(doc: DocHandle<DatabaseDirectory>): void {
     if (this._syncStates.has(doc.documentId)) {
       log.info('Document already being synced', { documentId: doc.documentId });
       return;
@@ -109,7 +109,7 @@ export class DocumentsSynchronizer extends Resource {
     this._syncStates.set(doc.documentId, syncState);
   }
 
-  _subscribeForChanges(syncState: DocSyncState) {
+  _subscribeForChanges(syncState: DocSyncState): void {
     const handler = () => {
       this._pendingUpdates.add(syncState.handle.documentId);
       this._sendUpdatesJob!.trigger();
@@ -118,7 +118,7 @@ export class DocumentsSynchronizer extends Resource {
     syncState.clearSubscriptions = () => syncState.handle.off('heads-changed', handler);
   }
 
-  private async _checkAndSendUpdates() {
+  private async _checkAndSendUpdates(): Promise<void> {
     const updates: DocumentUpdate[] = [];
 
     const docsWithPendingUpdates = Array.from(this._pendingUpdates);
@@ -155,7 +155,7 @@ export class DocumentsSynchronizer extends Resource {
     return mutation;
   }
 
-  private _writeMutation(documentId: DocumentId, mutation: Uint8Array) {
+  private _writeMutation(documentId: DocumentId, mutation: Uint8Array): void {
     const syncState = this._syncStates.get(documentId);
     invariant(syncState, 'Sync state for document not found');
     syncState.handle.update((doc) => {

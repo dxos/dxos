@@ -35,23 +35,23 @@ interface MetricsMethods {
 export class RemoteMetrics implements MetricsMethods {
   private _metrics = new Set<MetricsMethods>();
 
-  registerProcessor(processor: MetricsMethods) {
+  registerProcessor(processor: MetricsMethods): void {
     this._metrics.add(processor);
   }
 
-  increment(name: string, value?: number, data?: MetricData) {
+  increment(name: string, value?: number, data?: MetricData): void[] {
     return Array.from(this._metrics.values()).map((processor) => processor.increment(name, value, data));
   }
 
-  distribution(name: string, value: number, data?: MetricData) {
+  distribution(name: string, value: number, data?: MetricData): void[] {
     return Array.from(this._metrics.values()).map((processor) => processor.distribution(name, value, data));
   }
 
-  set(name: string, value: number | string, data?: MetricData) {
+  set(name: string, value: number | string, data?: MetricData): void[] {
     return Array.from(this._metrics.values()).map((processor) => processor.set(name, value, data));
   }
 
-  gauge(name: string, value: number, data?: MetricData) {
+  gauge(name: string, value: number, data?: MetricData): void[] {
     return Array.from(this._metrics.values()).map((processor) => processor.gauge(name, value, data));
   }
 }

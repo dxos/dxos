@@ -111,7 +111,7 @@ export class IdentityManager {
   }
 
   @Trace.span({ showInBrowserTimeline: true })
-  async open(ctx: Context) {
+  async open(ctx: Context): Promise<void> {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.halo.identity-manager.open', trace.begin({ id: traceId }));
 
@@ -131,7 +131,7 @@ export class IdentityManager {
     log.trace('dxos.halo.identity-manager.open', trace.end({ id: traceId }));
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this._identity?.close(new Context());
   }
 
@@ -263,7 +263,7 @@ export class IdentityManager {
   /**
    * Accept an existing identity. Expects its device key to be authorized (now or later).
    */
-  public async acceptIdentity(identity: Identity, identityRecord: IdentityRecord, profile?: DeviceProfileDocument) {
+  public async acceptIdentity(identity: Identity, identityRecord: IdentityRecord, profile?: DeviceProfileDocument): Promise<void> {
     this._identity = identity;
 
     // Identity becomes ready after device chain is replicated. Wait for it before storing the record.

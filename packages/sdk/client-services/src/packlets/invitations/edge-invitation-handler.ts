@@ -61,7 +61,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
     guardedState: GuardedInvitationState,
     protocol: InvitationProtocol,
     deviceProfile?: DeviceProfileDocument,
-  ) {
+  ): void {
     if (!this._client) {
       log('edge disabled');
       return;
@@ -118,7 +118,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
     guardedState: GuardedInvitationState,
     admissionRequest: SpaceAdmissionRequest,
     spaceId: SpaceId,
-  ) {
+  ): Promise<void> {
     try {
       log('edge invitation flow');
       this._flowLock = await tryAcquireBeforeContextDisposed(ctx, guardedState.mutex);
@@ -182,7 +182,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
     return this._flowLock != null;
   }
 
-  private _calculateNextRetryMs() {
+  private _calculateNextRetryMs(): number {
     return this._retryInterval + Math.random() * this._retryJitter;
   }
 }

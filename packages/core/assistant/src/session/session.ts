@@ -428,7 +428,7 @@ export class AISession {
     });
   }
 
-  abort() {
+  abort(): void {
     this._stream?.abort();
   }
 }

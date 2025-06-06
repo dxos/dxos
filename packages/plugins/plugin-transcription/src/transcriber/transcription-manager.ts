@@ -62,11 +62,11 @@ export class TranscriptionManager extends Resource {
     this._messageEnricher = options.messageEnricher;
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     await this._toggleTranscriber();
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     void this._transcriber?.close();
   }
 
@@ -108,7 +108,7 @@ export class TranscriptionManager extends Resource {
    * @param enabled - Whether to enable transcription.
    */
   @synchronized
-  async setEnabled(enabled?: boolean) {
+  async setEnabled(enabled?: boolean): Promise<void> {
     if (this._enabled.value === enabled) {
       return;
     }
@@ -119,7 +119,7 @@ export class TranscriptionManager extends Resource {
   }
 
   @synchronized
-  async setAudioTrack(track?: MediaStreamTrack) {
+  async setAudioTrack(track?: MediaStreamTrack): Promise<void> {
     if (this._audioStreamTrack === track) {
       return;
     }
@@ -129,7 +129,7 @@ export class TranscriptionManager extends Resource {
   }
 
   // TODO(burdon): Change this to setEnables (explicit), not toggle.
-  private async _toggleTranscriber() {
+  private async _toggleTranscriber(): Promise<void> {
     await this._maybeReinitTranscriber();
 
     // Open or close transcriber if transcription is enabled or disabled.
@@ -153,7 +153,7 @@ export class TranscriptionManager extends Resource {
     }
   }
 
-  private async _maybeReinitTranscriber() {
+  private async _maybeReinitTranscriber(): Promise<void> {
     if (!this._audioStreamTrack || !this._enabled.value) {
       return;
     }
@@ -180,7 +180,7 @@ export class TranscriptionManager extends Resource {
     }
   }
 
-  private async _onSegments(segments: DataType.MessageBlock.Transcription[]) {
+  private async _onSegments(segments: DataType.MessageBlock.Transcription[]): Promise<void> {
     if (!this.isOpen || !this._queue) {
       return;
     }

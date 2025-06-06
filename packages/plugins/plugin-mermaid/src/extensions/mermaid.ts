@@ -71,7 +71,7 @@ class MermaidWidget extends WidgetType {
     super();
   }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return this._source === other._source;
   }
 
@@ -131,7 +131,7 @@ class MermaidWidget extends WidgetType {
     }
   }
 
-  override ignoreEvent(e: Event) {
+  override ignoreEvent(e: Event): boolean {
     return !/^mouse/.test(e.type);
   }
 }

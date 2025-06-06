@@ -45,7 +45,7 @@ export type GraphRendererOptions<N> = RendererOptions<{
  * Renders the Graph layout.
  */
 export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOptions<N>> {
-  override update(layout: GraphLayout<N>) {
+  override update(layout: GraphLayout<N>): void {
     const root = select(this.root);
 
     //
@@ -156,7 +156,7 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
    * Trigger path bullets.
    * @param node
    */
-  fireBullet(node: GraphLayoutNode<N>) {
+  fireBullet(node: GraphLayoutNode<N>): void {
     select(this.root).selectAll('g.dx-edges').selectAll('path').call(createBullets(this.root, node.id));
   }
 }

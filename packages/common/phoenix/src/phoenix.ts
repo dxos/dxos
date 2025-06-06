@@ -69,7 +69,7 @@ export class Phoenix {
   /**
    * Stops detached watchdog process by PID info written down in PID file.
    */
-  static async stop(pidFile: string, force = false) {
+  static async stop(pidFile: string, force = false): Promise<void> {
     if (!existsSync(pidFile)) {
       throw new Error('PID file does not exist');
     }

@@ -206,7 +206,7 @@ class InlineSuggestionWidget extends WidgetType {
     return span;
   }
 
-  override eq(other: InlineSuggestionWidget) {
+  override eq(other: InlineSuggestionWidget): boolean {
     return other.suffix === this.suffix;
   }
 }

@@ -72,7 +72,7 @@ export class IndexMetadataStore {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  markDirty(idToHeads: IdToHeads, batch: BatchLevel) {
+  markDirty(idToHeads: IdToHeads, batch: BatchLevel): void {
     log('mark dirty', { count: idToHeads.size });
     for (const [id, heads] of idToHeads.entries()) {
       batch.put(id, heads, { sublevel: this._lastSeen, valueEncoding: headsEncoding });
@@ -85,12 +85,12 @@ export class IndexMetadataStore {
   /**
    * Called after leveldb batch commit.
    */
-  notifyMarkedDirty() {
+  notifyMarkedDirty(): void {
     this.dirty.emit();
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  markClean(idToHeads: IdToHeads, batch: BatchLevel) {
+  markClean(idToHeads: IdToHeads, batch: BatchLevel): void {
     log('mark clean', { count: idToHeads.size });
     for (const [id, heads] of idToHeads.entries()) {
       batch.put(id, heads, { sublevel: this._lastIndexed, valueEncoding: headsEncoding });
@@ -105,7 +105,7 @@ export class IndexMetadataStore {
   /**
    * Called on re-indexing.
    */
-  dropFromClean(ids: ObjectPointerEncoded[], batch: BatchLevel) {
+  dropFromClean(ids: ObjectPointerEncoded[], batch: BatchLevel): void {
     for (const id of ids) {
       batch.del(id, { sublevel: this._lastIndexed });
     }

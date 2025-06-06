@@ -19,7 +19,7 @@ export class HeadsStore {
     this._db = db;
   }
 
-  setHeads(documentId: DocumentId, heads: Heads, batch: BatchLevel) {
+  setHeads(documentId: DocumentId, heads: Heads, batch: BatchLevel): void {
     batch.put<DocumentId, Heads>(documentId, heads, {
       sublevel: this._db,
       keyEncoding: 'utf8',

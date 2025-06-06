@@ -94,7 +94,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return this._identity.peerKey;
   }
 
-  setIdentity(identity: EdgeIdentity) {
+  setIdentity(identity: EdgeIdentity): void {
     if (identity.identityKey !== this._identity.identityKey || identity.peerKey !== this._identity.peerKey) {
       log('Edge identity changed', { identity, oldIdentity: this._identity });
       this._identity = identity;
@@ -129,7 +129,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
   /**
    * Open connection to messaging service.
    */
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     log('opening...', { info: this.info });
     this._persistentLifecycle.open().catch((err) => {
       log.warn('Error while opening connection', { err });
@@ -139,7 +139,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
   /**
    * Close connection and free resources.
    */
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     log('closing...', { peerKey: this._identity.peerKey });
     this._closeCurrentConnection();
     await this._persistentLifecycle.close();
@@ -204,19 +204,19 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return connection;
   }
 
-  private async _disconnect(state: EdgeWsConnection) {
+  private async _disconnect(state: EdgeWsConnection): Promise<void> {
     await state.close();
     this.statusChanged.emit(this.status);
   }
 
-  private _closeCurrentConnection(error: Error = new EdgeConnectionClosedError()) {
+  private _closeCurrentConnection(error: Error = new EdgeConnectionClosedError()): void {
     this._currentConnection = undefined;
     this._ready.throw(error);
     this._ready.reset();
     this.statusChanged.emit(this.status);
   }
 
-  private _notifyReconnected() {
+  private _notifyReconnected(): void {
     this.statusChanged.emit(this.status);
     for (const listener of this._reconnectListeners) {
       try {
@@ -227,7 +227,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     }
   }
 
-  private _notifyMessageReceived(message: Message) {
+  private _notifyMessageReceived(message: Message): void {
     for (const listener of this._messageListeners) {
       try {
         listener(message);

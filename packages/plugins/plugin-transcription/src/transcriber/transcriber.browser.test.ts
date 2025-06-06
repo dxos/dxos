@@ -194,14 +194,14 @@ class MockAudioRecorder implements AudioRecorder {
     };
   }
 
-  setOnChunk(onChunk: (chunk: AudioChunk) => void) {
+  setOnChunk(onChunk: (chunk: AudioChunk) => void): void {
     this._onChunk = onChunk;
   }
 
   /**
    * Emit a chunk in controlled manner for testing purposes.
    */
-  emitChunk() {
+  emitChunk(): void {
     const chunk = this.chunks.shift();
     if (!chunk) {
       return;
@@ -211,7 +211,7 @@ class MockAudioRecorder implements AudioRecorder {
   }
 
   @trace.span()
-  async start() {
+  async start(): Promise<void> {
     log.info('start mock audio recorder', { wavParams: this.wav.fmt });
     const now = Date.now();
     const samples = this.wav.getSamples();
@@ -226,5 +226,5 @@ class MockAudioRecorder implements AudioRecorder {
     }
   }
 
-  async stop() {}
+  async stop(): Promise<void> {}
 }

@@ -193,7 +193,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     _: number,
     options: InspectOptionsStylized,
     inspectFn: (value: any, options?: InspectOptionsStylized) => string,
-  ) {
+  ): string {
     return `Typed ${inspectFn(this, {
       ...options,
       compact: true,

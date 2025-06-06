@@ -55,7 +55,7 @@ export class ProjectionMapper implements Projection {
     }
   }
 
-  update(bounds: Dimension, scale: number, offset: Point) {
+  update(bounds: Dimension, scale: number, offset: Point): this {
     this._bounds = bounds;
     this._scale = scale;
     this._offset = offset;

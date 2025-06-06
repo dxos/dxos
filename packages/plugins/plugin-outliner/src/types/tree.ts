@@ -183,7 +183,7 @@ export class Tree {
   /**
    * Clear tree.
    */
-  clear() {
+  clear(): void {
     const root = this._tree.nodes[this._tree.root];
     root.children.length = 0;
     this._tree.nodes = {
@@ -242,7 +242,7 @@ export class Tree {
   /**
    * Indent node.
    */
-  indentNode(node: TreeNodeType) {
+  indentNode(node: TreeNodeType): void {
     const parent = this.getParent(node);
     if (!parent) {
       return;
@@ -261,7 +261,7 @@ export class Tree {
   /**
    * Unindent node.
    */
-  unindentNode(node: TreeNodeType) {
+  unindentNode(node: TreeNodeType): void {
     const parent = this.getParent(node);
     if (!parent) {
       return;

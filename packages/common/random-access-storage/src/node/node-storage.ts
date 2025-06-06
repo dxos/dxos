@@ -18,7 +18,7 @@ export class NodeStorage extends AbstractStorage implements Storage {
   public override type: StorageType = StorageType.NODE;
   private _initialized = false;
 
-  private async _loadFiles(path: string) {
+  private async _loadFiles(path: string): Promise<void> {
     // TODO(mykola): Do not load all files at once. It is a quick fix.
     if (!existsSync(path)) {
       return;
@@ -50,7 +50,7 @@ export class NodeStorage extends AbstractStorage implements Storage {
     return file;
   }
 
-  protected override async _destroy() {
+  protected override async _destroy(): Promise<void> {
     await del(this.path, { force: true });
   }
 

@@ -46,7 +46,7 @@ export class TrustedKeySetAuthVerifier {
 
   constructor(private readonly _params: TrustedKeySetAuthVerifierParams) {}
 
-  async close() {
+  async close(): Promise<void> {
     await this._ctx.dispose();
   }
 

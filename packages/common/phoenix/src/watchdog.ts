@@ -59,7 +59,7 @@ export class WatchDog {
   constructor(private readonly _params: WatchDogParams) {}
 
   @synchronized
-  async start() {
+  async start(): Promise<void> {
     const { cwd, shell, env, command, args } = { cwd: process.cwd(), ...this._params };
 
     this._log(`Spawning process \`\`\`${command} ${args?.join(' ')}\`\`\``);
@@ -98,7 +98,7 @@ export class WatchDog {
    * Sends SIGKILL to the child process and the tree it spawned (if `killTree` param is `true`).
    */
   @synchronized
-  async kill() {
+  async kill(): Promise<void> {
     if (!this._child) {
       return;
     }
@@ -112,7 +112,7 @@ export class WatchDog {
     await waitForPidDeletion(this._params.pidFile);
   }
 
-  async restart() {
+  async restart(): Promise<void> {
     await this.kill();
     if (this._params.maxRestarts !== undefined && this._restarts >= this._params.maxRestarts) {
       this._err('Max restarts number is reached');
@@ -123,20 +123,20 @@ export class WatchDog {
     }
   }
 
-  async _killWithSignal(signal: number | NodeJS.Signals) {
+  async _killWithSignal(signal: number | NodeJS.Signals): Promise<void> {
     invariant(this._child?.pid, 'Child process has no pid.');
     this._child.kill(signal);
     this._child = undefined;
   }
 
-  private _log(message: string | Uint8Array) {
+  private _log(message: string | Uint8Array): void {
     writeFileSync(this._params.logFile, message + '\n', {
       flag: 'a+',
       encoding: 'utf-8',
     });
   }
 
-  private _err(message: string | Uint8Array) {
+  private _err(message: string | Uint8Array): void {
     this._log(message);
     writeFileSync(this._params.errFile, message + '\n', {
       flag: 'a+',

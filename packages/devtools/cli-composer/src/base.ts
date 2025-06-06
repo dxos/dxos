@@ -25,14 +25,14 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
     return this._schemaMap;
   }
 
-  protected override async onClientInit(client: Client) {
+  protected override async onClientInit(client: Client): Promise<void> {
     this._schemaMap = await this.addTypes(client);
   }
 
   /**
    * build typename
    */
-  protected async addTypes(client: Client) {
+  protected async addTypes(client: Client): Promise<Map<string, Schema.Schema.AnyNoContext>> {
     const schemaMap = new Map<string, Schema.Schema.AnyNoContext>();
     // TODO(burdon): Enable dynamic import? (e.g., from npm.)
     // const types = await import('@braneframe/types');

@@ -28,7 +28,7 @@ export class FunctionsPlugin extends Plugin {
   // Map of dispatchers by runtime name.
   private readonly _dispatchers: Map<string, FunctionDispatcher> = new Map();
 
-  override async onOpen() {
+  override async onOpen(): Promise<void> {
     /**
      * Function front-end proxy server; dispatches to backend (e.g., dev-server).
      */

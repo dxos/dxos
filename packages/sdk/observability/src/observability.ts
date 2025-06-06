@@ -187,7 +187,7 @@ export class Observability {
     }
   }
 
-  async initialize() {
+  async initialize(): Promise<void> {
     log('initializing...');
     await this._initLogs();
     await this._initMetrics();
@@ -196,7 +196,7 @@ export class Observability {
     await this._initTraces();
   }
 
-  async close() {
+  async close(): Promise<void> {
     log('closing...');
     const closes: Promise<void>[] = [];
     this._telemetry && closes.push(this._telemetry.close());
@@ -207,7 +207,7 @@ export class Observability {
     await this._ctx.dispose();
   }
 
-  setMode(mode: Mode) {
+  setMode(mode: Mode): void {
     this._mode = mode;
   }
 
@@ -221,7 +221,7 @@ export class Observability {
   /**
    * camelCase keys are converted to snake_case in Segment.
    */
-  setTag(key: string, value: string | undefined, scope?: TagScope) {
+  setTag(key: string, value: string | undefined, scope?: TagScope): void {
     if (value === undefined) {
       return;
     }
@@ -240,7 +240,7 @@ export class Observability {
   }
 
   // TODO(wittjosiah): Improve privacy of telemetry identifiers. See `getTelemetryIdentifier`.
-  async setIdentityTags(clientServices: Partial<ClientServices>) {
+  async setIdentityTags(clientServices: Partial<ClientServices>): Promise<void> {
     if (clientServices.IdentityService) {
       clientServices.IdentityService.queryIdentity().subscribe((idqr) => {
         if (!idqr?.identity?.did) {
@@ -287,7 +287,7 @@ export class Observability {
   // Logs
   //
 
-  private async _initLogs() {
+  private async _initLogs(): Promise<void> {
     if (this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION && this._mode !== 'disabled') {
       const { OtelLogs } = await import('./otel');
       this._otelLogs = new OtelLogs({
@@ -317,7 +317,7 @@ export class Observability {
   // Metrics
   //
 
-  private async _initMetrics() {
+  private async _initMetrics(): Promise<void> {
     if (this.enabled && this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION) {
       const { OtelMetrics } = await import('./otel');
       this._otelMetrics = new OtelMetrics({
@@ -345,13 +345,13 @@ export class Observability {
    *
    * The default implementation uses OpenTelemetry
    */
-  gauge(name: string, value: number | any, extraTags?: any) {
+  gauge(name: string, value: number | any, extraTags?: any): void {
     this._otelMetrics?.gauge(name, value, extraTags);
   }
 
   // TODO(nf): Refactor into ObservabilityExtensions.
 
-  startNetworkMetrics(clientServices: Partial<ClientServices>) {
+  startNetworkMetrics(clientServices: Partial<ClientServices>): void {
     if (!clientServices.NetworkService) {
       return;
     }
@@ -403,7 +403,7 @@ export class Observability {
     scheduleTaskInterval(this._ctx, async () => updateSignalMetrics.emit(), NETWORK_METRICS_MIN_INTERVAL);
   }
 
-  startSpacesMetrics(client: Client, namespace: string) {
+  startSpacesMetrics(client: Client, namespace: string): void {
     // TODO(nf): update subscription on new spaces
     const spaces = client.spaces.get();
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
@@ -458,7 +458,7 @@ export class Observability {
     scheduleTaskInterval(this._ctx, async () => updateSpaceMetrics.emit(), NETWORK_METRICS_MIN_INTERVAL);
   }
 
-  async startRuntimeMetrics(client: Client, frequency: number = NETWORK_METRICS_MIN_INTERVAL) {
+  async startRuntimeMetrics(client: Client, frequency: number = NETWORK_METRICS_MIN_INTERVAL): Promise<void> {
     const platform = await client.services.services.SystemService?.getPlatform();
     invariant(platform, 'platform is required');
 
@@ -504,7 +504,7 @@ export class Observability {
   // Telemetry
   //
 
-  private async _initTelemetry() {
+  private async _initTelemetry(): Promise<void> {
     if (this._secrets.TELEMETRY_API_KEY && this._mode !== 'disabled' && typeof document !== 'undefined') {
       const { SegmentTelemetry } = await import('./segment');
       this._telemetry = new SegmentTelemetry({
@@ -528,7 +528,7 @@ export class Observability {
    * Submit telemetry page view.
    * The default implementation uses Segment.
    */
-  page(options: PageOptions) {
+  page(options: PageOptions): void {
     this._telemetry?.page(options);
   }
 
@@ -536,7 +536,7 @@ export class Observability {
    * Submit telemetry user action.
    * The default implementation uses Segment.
    */
-  track(options: TrackOptions) {
+  track(options: TrackOptions): void {
     this._telemetry?.track(options);
   }
 
@@ -544,7 +544,7 @@ export class Observability {
   // Error Logs
   //
 
-  private async _initErrorLogs() {
+  private async _initErrorLogs(): Promise<void> {
     if (this._secrets.SENTRY_DESTINATION && this._mode !== 'disabled') {
       const { captureException, captureUserFeedback, init, setTag } = await import('./sentry');
       const { SentryLogProcessor } = await import('./sentry/sentry-log-processor');
@@ -577,16 +577,16 @@ export class Observability {
     }
   }
 
-  startErrorLogs() {
+  startErrorLogs(): void {
     this._sentryLogProcessor && log.runtimeConfig.processors.push(this._sentryLogProcessor.logProcessor);
   }
 
-  startTraces() {
+  startTraces(): void {
     this._otelTraces && this._otelTraces.start();
   }
 
   // TODO(nf): Refactor init based on providers and their capabilities.
-  private async _initTraces() {
+  private async _initTraces(): Promise<void> {
     if (this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION && this._mode !== 'disabled') {
       const { OtelTraces } = await import('./otel');
       this._otelTraces = new OtelTraces({
@@ -610,7 +610,7 @@ export class Observability {
    * Manually capture an exception.
    * The default implementation uses Sentry.
    */
-  captureException(err: any) {
+  captureException(err: any): void {
     if (this.enabled) {
       this._captureException?.(err);
     }
@@ -620,7 +620,7 @@ export class Observability {
    * Manually capture user feedback.
    * The default implementation uses Sentry.
    */
-  captureUserFeedback(message: string) {
+  captureUserFeedback(message: string): void {
     if (!this._secrets.SENTRY_DESTINATION) {
       log.info('Feedback submitted without Sentry destination', { message });
       return;

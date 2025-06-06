@@ -76,7 +76,7 @@ class CompositeSignal implements GenericSignal {
     }
   }
 
-  toString() {
+  toString(): string {
     return 'CompositeSignal';
   }
 }

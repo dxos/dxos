@@ -19,7 +19,7 @@ export class TimeSeriesCounter extends BaseCounter {
     this.units = units;
   }
 
-  inc(by = 1) {
+  inc(by = 1): void {
     this._currentValue += by;
     this._totalValue += by;
   }

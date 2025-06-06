@@ -182,7 +182,7 @@ export class InvitationsManager {
     return [...this._acceptInvitations.values()].map((i) => i.get());
   }
 
-  onPersistentInvitationsLoaded(ctx: Context, callback: () => void) {
+  onPersistentInvitationsLoaded(ctx: Context, callback: () => void): void {
     if (this._persistentInvitationsLoaded) {
       callback();
     } else {
@@ -310,7 +310,7 @@ export class InvitationsManager {
     }
   }
 
-  private _onInvitationComplete(invitation: CancellableInvitation, callback: () => void) {
+  private _onInvitationComplete(invitation: CancellableInvitation, callback: () => void): void {
     invitation.subscribe(
       () => {},
       () => {},

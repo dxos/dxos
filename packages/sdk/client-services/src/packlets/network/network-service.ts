@@ -43,7 +43,7 @@ export class NetworkServiceImpl implements NetworkService {
     });
   }
 
-  async updateConfig(request: UpdateConfigRequest) {
+  async updateConfig(request: UpdateConfigRequest): Promise<void> {
     await this.networkManager.setConnectionState(request.swarm);
   }
 

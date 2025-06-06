@@ -91,7 +91,7 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
     return summary;
   }
 
-  override async _open() {
+  override async _open(): Promise<void> {
     await this._redis.config('SET', 'notify-keyspace-events', 'AKE');
     await this._redisSub.config('SET', 'notify-keyspace-events', 'AKE');
 
@@ -105,7 +105,7 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
     });
   }
 
-  override async _close() {
+  override async _close(): Promise<void> {
     for (const replicant of this.replicants) {
       // Kill all replicants.
       replicant.kill('SIGTERM');
@@ -119,7 +119,7 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
   /**
    * Waits for all agents to reach this statement.
    */
-  async syncBarrier(key: string, amount: number) {
+  async syncBarrier(key: string, amount: number): Promise<void> {
     const syncKey = `${this.params.testId}:${key}`;
 
     await this._barrier(syncKey, amount);
@@ -146,7 +146,7 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
   /**
    * Waits for all agents to reach this statement.
    */
-  private async _barrier(syncKey: string, count: number) {
+  private async _barrier(syncKey: string, count: number): Promise<void> {
     const done = new Trigger();
     const listener: Callback<unknown> = async (error, result) => {
       const value = await this._redis.get(syncKey);

@@ -39,7 +39,7 @@ export class RtcTransportProxy extends Resource implements Transport {
     super();
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     let stream: Stream<BridgeEvent>;
     try {
       stream = this._options.bridgeService.open(
@@ -120,7 +120,7 @@ export class RtcTransportProxy extends Resource implements Transport {
     );
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     try {
       await this._serviceStream?.close();
       this._serviceStream = undefined;
@@ -137,7 +137,7 @@ export class RtcTransportProxy extends Resource implements Transport {
     this.closed.emit();
   }
 
-  async onSignal(signal: Signal) {
+  async onSignal(signal: Signal): Promise<void> {
     this._options.bridgeService
       .sendSignal({ proxyId: this._proxyId, signal }, { timeout: RPC_TIMEOUT })
       .catch((err) => this._raiseIfOpen(decodeError(err)));
@@ -161,7 +161,7 @@ export class RtcTransportProxy extends Resource implements Transport {
     }
   }
 
-  private _handleData(dataEvent: BridgeEvent.DataEvent) {
+  private _handleData(dataEvent: BridgeEvent.DataEvent): void {
     try {
       // NOTE: This must be a Buffer otherwise hypercore-protocol breaks.
       this._options.stream.write(arrayToBuffer(dataEvent.payload));
@@ -170,7 +170,7 @@ export class RtcTransportProxy extends Resource implements Transport {
     }
   }
 
-  private async _handleSignal(signalEvent: BridgeEvent.SignalEvent) {
+  private async _handleSignal(signalEvent: BridgeEvent.SignalEvent): Promise<void> {
     try {
       await this._options.sendSignal(signalEvent.payload);
     } catch (error) {
@@ -208,7 +208,7 @@ export class RtcTransportProxy extends Resource implements Transport {
     }
   }
 
-  private _raiseIfOpen(error: any) {
+  private _raiseIfOpen(error: any): void {
     if (this.isOpen) {
       this.errors.raise(error);
     } else {
@@ -219,7 +219,7 @@ export class RtcTransportProxy extends Resource implements Transport {
   /**
    * Called when underlying proxy service becomes unavailable.
    */
-  forceClose() {
+  forceClose(): void {
     void this._serviceStream?.close();
     this.closed.emit();
   }

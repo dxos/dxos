@@ -44,7 +44,7 @@ export class ClientServicesProxy implements ClientServicesProvider {
     return this._proxy.rpc;
   }
 
-  async open() {
+  async open(): Promise<void> {
     if (this._proxy) {
       return;
     }
@@ -65,7 +65,7 @@ export class ClientServicesProxy implements ClientServicesProvider {
     );
   }
 
-  async close() {
+  async close(): Promise<void> {
     if (!this._proxy) {
       return;
     }

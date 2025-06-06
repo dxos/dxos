@@ -102,7 +102,7 @@ export class SpaceStateMachine implements SpaceState {
     return this._invitations.invitations;
   }
 
-  async addCredentialProcessor(processor: CredentialProcessor) {
+  async addCredentialProcessor(processor: CredentialProcessor): Promise<void> {
     if (this._credentialProcessors.find((p) => p.processor === processor)) {
       throw new Error('Credential processor already added.');
     }
@@ -128,7 +128,7 @@ export class SpaceStateMachine implements SpaceState {
     await consumer.open();
   }
 
-  async removeCredentialProcessor(processor: CredentialProcessor) {
+  async removeCredentialProcessor(processor: CredentialProcessor): Promise<void> {
     const consumer = this._credentialProcessors.find((p) => p.processor === processor);
     await consumer?.close();
   }
@@ -283,13 +283,13 @@ class CredentialConsumer<T extends CredentialProcessor> {
   /**
    * @internal
    */
-  async _process(credential: Credential) {
+  async _process(credential: Credential): Promise<void> {
     await runInContextAsync(this._ctx, async () => {
       await this.processor.processCredential(credential);
     });
   }
 
-  async open() {
+  async open(): Promise<void> {
     if (this._ctx.disposed) {
       throw new Error('CredentialProcessor is disposed');
     }
@@ -297,7 +297,7 @@ class CredentialConsumer<T extends CredentialProcessor> {
     await this._onOpen();
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this._ctx.dispose();
 
     await this._onClose();

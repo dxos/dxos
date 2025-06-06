@@ -35,17 +35,17 @@ export class SectionManager {
     return this.locator.getAttribute('id');
   }
 
-  async remove() {
+  async remove(): Promise<void> {
     await this.locator.getByTestId('section.drag-handle-menu-trigger').click();
     await this._page.getByTestId('section.remove').click();
   }
 
-  async navigateTo() {
+  async navigateTo(): Promise<void> {
     await this.locator.getByTestId('section.drag-handle-menu-trigger').click();
     await this._page.getByTestId('section.navigate-to').click();
   }
 
-  async dragTo(target: Locator, offset: { x: number; y: number } = { x: 0, y: 0 }) {
+  async dragTo(target: Locator, offset: { x: number; y: number } = { x: 0, y: 0 }): Promise<void> {
     const active = this.locator.getByTestId('section.drag-handle-menu-trigger');
     const box = await target.boundingBox();
     if (box) {

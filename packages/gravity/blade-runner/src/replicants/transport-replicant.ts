@@ -59,7 +59,7 @@ export class TransportReplicant {
     streamLoadInterval,
     streamLoadChunkSize,
     streamsDelay,
-  }: ReplicantRunParams) {
+  }: ReplicantRunParams): Promise<void> {
     const networkManagerBuilder = new NetworkManagerTestBuilder({
       signalHosts: [{ server: signalUrl }],
       transport,

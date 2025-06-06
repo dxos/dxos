@@ -58,7 +58,7 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
    * Processes the SpaceMember credential.
    * Assumes the credential is already pre-verified and the issuer has been authorized to issue credentials of this type.
    */
-  async process(credential: Credential) {
+  async process(credential: Credential): Promise<void> {
     const assertion = getCredentialAssertion(credential);
 
     switch (assertion['@type']) {
