@@ -6,7 +6,7 @@ import { DataType } from '@dxos/schema';
 import chalk from 'chalk';
 import { describe, test } from 'vitest';
 import { Blueprint, BlueprintBuilder } from './blueprint';
-import { BlueprintMachine, type BlueprintMachineState, type BlueprintTraceStep } from './machiene';
+import { BlueprintMachine, type BlueprintMachineState, type BlueprintTraceStep } from './machine';
 import { Schema } from 'effect';
 import { log } from '@dxos/log';
 
@@ -98,7 +98,7 @@ describe('Blueprint', () => {
     machine.begin.on(() => printTrace(machine.blueprint, machine.state));
     machine.stepComplete.on(() => printTrace(machine.blueprint, machine.state));
 
-    const input = TEST_EMAILS[2];
+    const input = TEST_EMAILS[0];
     log.info('begin', { input });
     await machine.runToCompletion({ aiService, input });
   });

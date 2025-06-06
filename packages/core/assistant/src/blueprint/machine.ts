@@ -131,7 +131,8 @@ export class BlueprintMachine {
                If the Rule-Following agent believes that no action is needed, it calls the report tool with "skipped" status.
                If the Rule-Following Agent is unable to perform the task, it calls the report tool with "bail" status.
                Rule-Following Agent explains the reason it is unable to perform the task before bailing.
-               The Rule-Following Agent can express creativity and imagination in the way it performs the task as long as it follows the instructions.
+               The Rule-Following Agent can express creativity and imagination in the way it performs the task.
+               The Rule-Following Agent precisely follows the instructions.
              `,
       history: [...state.history, ...inputMessages],
       tools: [...nextStep.tools, report],
