@@ -20,10 +20,7 @@ import { PostalAddress } from './postal-address';
  */
 const PersonSchema = Schema.Struct({
   fullName: Schema.optional(
-    Schema.String.pipe(
-      Schema.annotations({ title: 'Full Name' }),
-      GeneratorAnnotation.set({ generator: 'person.fullName', probability: 1 }),
-    ),
+    Schema.String.pipe(Schema.annotations({ title: 'Full Name' }), GeneratorAnnotation.set(['person.fullName', 1])),
   ),
   preferredName: Schema.optional(Schema.String.annotations({ title: 'Preferred Name' })),
   nickname: Schema.optional(Schema.String.annotations({ title: 'Nickname' })),

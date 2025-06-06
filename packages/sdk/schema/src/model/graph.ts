@@ -29,7 +29,7 @@ export const createGraph = <T extends BaseObject>(
   objects.forEach((object) => {
     const schema = getSchema(object);
     if (!schema) {
-      log.info('no schema for object', { id: object.id.slice(0, 8) });
+      log('no schema for object', { id: object.id.slice(0, 8) });
       return;
     }
 

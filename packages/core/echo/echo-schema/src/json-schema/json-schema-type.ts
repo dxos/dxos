@@ -39,7 +39,7 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
    * Generator function for this schema.
    * Mapped from {@link GeneratorAnnotationId}.
    */
-  generator: Schema.optional(Schema.String),
+  generator: Schema.optional(Schema.Union(Schema.String, Schema.Tuple(Schema.String, Schema.Number))),
 
   /**
    * {@link PropertyMeta} annotations get serialized here.

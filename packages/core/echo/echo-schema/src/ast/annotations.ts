@@ -191,9 +191,7 @@ export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/Field
  */
 export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
 
-export type GeneratorAnnotationValue = {
-  generator: string;
-  probability?: number;
-};
+/** [path, probability] */
+export type GeneratorAnnotationValue = string | [string, number];
 
-export const GeneratorAnnotation = createAnnotationHelper<string | GeneratorAnnotationValue>(GeneratorAnnotationId);
+export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationValue>(GeneratorAnnotationId);

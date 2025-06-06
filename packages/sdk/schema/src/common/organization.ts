@@ -30,10 +30,7 @@ export const OrganizationStatusOptions = [
 const OrganizationSchema = Schema.Struct({
   id: Type.ObjectId,
   name: Schema.optional(
-    Schema.String.pipe(
-      Schema.annotations({ title: 'Name' }),
-      GeneratorAnnotation.set({ generator: 'company.name', probability: 1 }),
-    ),
+    Schema.String.pipe(Schema.annotations({ title: 'Name' }), GeneratorAnnotation.set(['company.name', 1])),
   ),
   description: Schema.optional(Schema.String.annotations({ title: 'Description' })),
   // TODO(wittjosiah): Remove; 1change to relation.
