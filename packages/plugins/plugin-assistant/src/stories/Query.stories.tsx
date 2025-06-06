@@ -49,7 +49,7 @@ const DefaultStory = () => {
         const createObjects = createObjectFactory(space.db, generator);
         await createObjects([
           { type: DataType.Organization, count: 1 },
-          { type: DataType.Person, count: 1 },
+          // { type: DataType.Person, count: 1 },
         ]);
 
         void model.open(space);
@@ -72,10 +72,13 @@ const DefaultStory = () => {
     [space],
   );
 
+  // TODO(burdon): Remove once query is fixed.
+  const enableGraph = false;
+
   return (
     <div className='grow grid overflow-hidden'>
       <div className='grow grid grid-cols-[1fr_400px] overflow-hidden'>
-        <D3ForceGraph classNames='border-ie border-separator' model={model} />
+        {enableGraph ? <D3ForceGraph classNames='border-ie border-separator' model={model} /> : <div />}
         <div className='grow grid grid-rows-[1fr_1fr] overflow-hidden divide-y divide-separator'>
           <ItemList items={items} getTitle={(item) => (item as any).title ?? item.id} />
           <JsonFilter data={{ model, db: space?.db }} />
