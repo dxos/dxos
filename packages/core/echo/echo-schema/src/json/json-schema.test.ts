@@ -13,7 +13,6 @@ import { toEffectSchema, toJsonSchema } from './json-schema';
 import {
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-  EchoObject,
   FieldLookupAnnotationId,
   GeneratorAnnotation,
   LabelAnnotation,
@@ -21,7 +20,7 @@ import {
 } from '../ast';
 import { Email, FormatAnnotation, FormatEnum } from '../formats';
 import { getNormalizedEchoAnnotations, getSchemaProperty, JsonSchemaType, setSchemaProperty } from '../json-schema';
-import { TypedObject } from '../object';
+import { EchoObject, TypedObject } from '../object';
 import { createSchemaReference, getSchemaReference, Ref } from '../ref';
 import { StoredSchema } from '../schema';
 import { prepareAstForCompare, Testing } from '../testing';

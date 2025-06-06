@@ -4,3 +4,4 @@
 
 export * from './entity-kind';
 export * from './types';
+export * from './util';
