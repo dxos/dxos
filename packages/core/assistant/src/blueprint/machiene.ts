@@ -1,4 +1,11 @@
-import { ConsolePrinter, defineTool, Message, MixedStreamParser, type AIServiceClient } from '@dxos/ai';
+import {
+  ConsolePrinter,
+  defineTool,
+  Message,
+  MixedStreamParser,
+  type AIServiceClient,
+  type MessageContentBlock,
+} from '@dxos/ai';
 import { create } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
@@ -20,6 +27,11 @@ const INITIAL_STATE: BlueprintMachineState = {
 
 type ExecutionOptions = {
   aiService: AIServiceClient;
+
+  /**
+   * Input to the blueprint.
+   */
+  input?: unknown;
 };
 
 export class BlueprintMachine {
@@ -28,8 +40,15 @@ export class BlueprintMachine {
   state: BlueprintMachineState = structuredClone(INITIAL_STATE);
 
   async runToCompletion(opts: ExecutionOptions): Promise<void> {
+    let firstStep = true;
     while (this.state.state !== 'done') {
-      this.state = await this._execStep(this.state, opts);
+      const input = firstStep ? opts.input : undefined;
+      firstStep = false;
+      this.state = await this._execStep(this.state, {
+        input,
+        aiService: opts.aiService,
+      });
+
       if (this.state.state === 'bail') {
         throw new Error('Agent unable to follow the blueprint');
       }
@@ -66,6 +85,7 @@ export class BlueprintMachine {
     const prompt = create(Message, {
       role: 'user',
       content: [
+        ...(opts.input ? [taggedDataBlock('input', opts.input)] : []),
         {
           type: 'text',
           text: nextStep.instructions,
@@ -114,3 +134,10 @@ export class BlueprintMachine {
     };
   }
 }
+
+const taggedDataBlock = (tag: string, data: unknown): MessageContentBlock => {
+  return {
+    type: 'text',
+    text: `<${tag}>\n${JSON.stringify(data, null, 2)}\n</${tag}>`,
+  } satisfies MessageContentBlock;
+};

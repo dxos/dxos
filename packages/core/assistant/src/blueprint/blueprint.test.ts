@@ -4,6 +4,9 @@ import { describe, test } from 'vitest';
 import { BlueprintMachine } from './machiene';
 import { Blueprint } from './blueprint';
 import chalk from 'chalk';
+import { Message } from '@dxos/ai';
+import { DataType } from '@dxos/schema';
+import { create } from '@dxos/echo-schema';
 
 // Force chalk colors on for tests
 chalk.level = 2;
@@ -29,7 +32,35 @@ describe('Blueprint', () => {
 
     await machine.runToCompletion({ aiService });
   });
+
+  test('email bot', { timeout: 60_000 }, async () => {
+    const blueprint = Blueprint.make([
+      'Determine if the email is introduction, question, or spam. Bail if email does not fit into one of these categories.',
+      'If the email is an introduction, respond with a short introduction of yourself and ask for more information.',
+      'If the email is a question, respond with a short answer and ask for more information.',
+      'If the email is spam, label it as spam and do not respond.',
+    ]);
+
+    const machine = new BlueprintMachine(blueprint);
+
+    await machine.runToCompletion({ aiService, input: TEST_EMAIL });
+  });
 });
+
+const TEST_EMAIL: DataType.Message[] = [
+  create(DataType.Message, {
+    sender: {
+      role: 'user',
+    },
+    blocks: [
+      {
+        type: 'text',
+        text: 'How do you query for an ECHO object?',
+      },
+    ],
+    created: new Date().toISOString(),
+  }),
+];
 
 /*
 const b1 = Blueprint.make([
