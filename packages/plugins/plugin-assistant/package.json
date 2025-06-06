@@ -94,10 +94,9 @@
     "@lezer/highlight": "^1.2.1",
     "@preact/signals-core": "^1.6.0",
     "@xiechao/codemirror-lang-handlebars": "1.0.4",
-    "lodash.defaultsdeep": "^4.6.2",
     "exa-js": "^1.5.12",
     "jsonpointer": "^5.0.1",
-    "lodash.get": "^4.4.2",
+    "lodash.defaultsdeep": "^4.6.1",
     "unified": "^11.0.0"
   },
   "devDependencies": {
@@ -115,7 +114,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@effect-rx/rx-react": "^0.34.1",
     "@effect/platform": "0.80.12",
-    "@types/lodash.defaultsdeep": "^4.6.2",
+    "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "effect": "3.14.21",

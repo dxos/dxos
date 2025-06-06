@@ -23,6 +23,8 @@ export const setDeep = <T>(obj: any, path: readonly (string | number)[], value: 
   return obj;
 };
 
+export const set = setDeep;
+
 /**
  * Gets a value from a deeply nested object.
  * @param obj
@@ -37,3 +39,5 @@ export const getDeep = <T>(obj: any, path: readonly (string | number)[]): T | un
 
   return parent;
 };
+
+export const get = getDeep;
