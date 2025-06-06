@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SchemaAST, Schema } from 'effect';
+import { Schema } from 'effect';
 
 import { clamp } from '@dxos/util';
 

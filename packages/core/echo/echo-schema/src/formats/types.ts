@@ -4,7 +4,8 @@
 
 import { Option, SchemaAST, type JSONSchema, pipe } from 'effect';
 
-import { createAnnotationHelper, type JsonSchemaType } from '../ast';
+import { createAnnotationHelper } from '../ast';
+import { type JsonSchemaType } from '../json-schema';
 
 export enum TypeEnum {
   Object = 'object',

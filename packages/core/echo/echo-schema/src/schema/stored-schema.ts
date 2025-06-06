@@ -4,7 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { EchoObject, JsonSchemaType } from '../ast';
+import { EchoObject } from '../ast';
+import { JsonSchemaType } from '../json-schema';
 
 /**
  * Persistent representation of a schema.

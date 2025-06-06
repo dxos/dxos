@@ -11,7 +11,7 @@ import { DXN } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
 import { createAnnotationHelper } from './annotation-helper';
-import { type RelationSourceTargetRefs } from '../object';
+import { type RelationSourceTargetRefs } from '../object'; // TODO(burdon): ???
 import { type HasId, type BaseObject, EntityKind } from '../types';
 
 type ToMutable<T> = T extends BaseObject
@@ -94,6 +94,10 @@ export const getSchemaTypename = (schema: Schema.Schema.All): string | undefined
  */
 export const getSchemaVersion = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.version;
 
+//
+// MOVE TO OBJECT
+//
+
 /**
  * Pipeable function to add ECHO object annotations to a schema.
  */
@@ -141,8 +145,8 @@ const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): string => {
 };
 
 // TODO(dmaretskyi): Rename?
-export const EchoRelation = <TSource extends Schema.Schema.AnyNoContext, TTarget extends Schema.Schema.AnyNoContext>(
-  options: EchoRelationOptions<TSource, TTarget>,
+export const EchoRelation = <Source extends Schema.Schema.AnyNoContext, Target extends Schema.Schema.AnyNoContext>(
+  options: EchoRelationOptions<Source, Target>,
 ) => {
   const sourceDXN = getDXNForRelationSchemaRef(options.source);
   const targetDXN = getDXNForRelationSchemaRef(options.target);
@@ -155,7 +159,7 @@ export const EchoRelation = <TSource extends Schema.Schema.AnyNoContext, TTarget
 
   return <Self extends Schema.Schema.Any>(
     self: Self,
-  ): EchoTypeSchema<Self, RelationSourceTargetRefs<Schema.Schema.Type<TSource>, Schema.Schema.Type<TTarget>>> => {
+  ): EchoTypeSchema<Self, RelationSourceTargetRefs<Schema.Schema.Type<Source>, Schema.Schema.Type<Target>>> => {
     invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
 
     // TODO(dmaretskyi): Does `Schema.mutable` work for deep mutability here?

@@ -4,14 +4,9 @@
 
 import { SchemaAST } from 'effect';
 
-import {
-  GeneratorAnnotationId,
-  type JsonSchemaEchoAnnotations,
-  type JsonSchemaType,
-  LabelAnnotationId,
-  PropertyMetaAnnotationId,
-} from '../ast';
+import { GeneratorAnnotationId, LabelAnnotationId, PropertyMetaAnnotationId } from '../ast';
 import { FormatAnnotationId, CurrencyAnnotationId } from '../formats';
+import { type JsonSchemaEchoAnnotations, type JsonSchemaType } from '../json-schema';
 
 //
 // This file configures annotations for JSON encoding/decoding.
