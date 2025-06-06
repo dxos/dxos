@@ -9,7 +9,7 @@ import { Option, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineTool, AIServiceEdgeClient, Message, ToolResult, type Tool } from '@dxos/ai';
-import { SpyAIService } from '@dxos/ai/testing';
+import { EXA_API_KEY, SpyAIService } from '@dxos/ai/testing';
 import { contributes, createSurface, useIntentDispatcher, Capabilities, Events, Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
@@ -35,17 +35,17 @@ import {
 } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { ForceGraph } from '@dxos/plugin-explorer';
+import { ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { useClient } from '@dxos/react-client';
 import { live, useQueue, useQuery, type Live, type EchoDatabase, getSpace } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncState } from '@dxos/react-ui';
 import {
-  type ActionGraphProps,
-  useMenuActions,
   createMenuAction,
-  ToolbarMenu,
-  MenuProvider,
   createMenuItemGroup,
+  useMenuActions,
+  type ActionGraphProps,
+  MenuProvider,
+  ToolbarMenu,
   type ToolbarMenuActionGroupProperties,
 } from '@dxos/react-ui-menu';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -54,15 +54,11 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { testPlugins } from './testing';
 import { Thread, type ThreadProps } from '../components';
-import { ChatProcessor, useGraphModel } from '../hooks';
+import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import translations from '../translations';
 
-// TODO(burdon): Move out of source.
-const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
-
 const LOCAL = false;
-
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
 
 type RenderProps = {
