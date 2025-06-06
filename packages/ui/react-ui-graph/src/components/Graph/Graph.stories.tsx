@@ -16,7 +16,7 @@ import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
 import { GraphForceProjector, type GraphForceProjectorOptions, type GraphLayoutNode } from '../../graph';
-import { type SVGContext } from '../../hooks';
+import { type SVGContext, type ZoomExtent } from '../../hooks';
 import { convertTreeToGraph, createGraph, createTree, TestGraphModel, type TestNode } from '../../testing';
 import { SVG } from '../SVG';
 
@@ -29,6 +29,8 @@ type DefaultStoryProps = GraphProps & {
   projectorOptions?: GraphForceProjectorOptions;
   noInspect?: boolean;
 };
+
+const zoomExtent = [1 / 4, 4] satisfies ZoomExtent;
 
 const DefaultStory = ({ debug, grid, graph, projectorOptions, noInspect, ...props }: DefaultStoryProps) => {
   const graphRef = useRef<GraphController | null>(null);
@@ -62,7 +64,7 @@ const DefaultStory = ({ debug, grid, graph, projectorOptions, noInspect, ...prop
         <SVG.Root ref={context}>
           <SVG.Markers />
           {grid && <SVG.Grid axis />}
-          <SVG.Zoom extent={[1 / 4, 4]}>
+          <SVG.Zoom extent={zoomExtent}>
             <GraphComponent
               ref={graphRef}
               model={model}
