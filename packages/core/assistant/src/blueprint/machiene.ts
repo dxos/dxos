@@ -6,6 +6,7 @@ import {
   ToolResult,
   type AIServiceClient,
   type MessageContentBlock,
+  type ToolUseContentBlock,
 } from '@dxos/ai';
 import { create } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -19,14 +20,20 @@ import { log } from '@dxos/log';
 
 type BlueprintMachineState = {
   history: Message[];
-  currentStep: ObjectId | null;
+  trace: BlueprintTraceStep[];
   state: 'working' | 'bail' | 'done';
 };
 
 const INITIAL_STATE: BlueprintMachineState = {
   history: [],
-  currentStep: null,
+  trace: [],
   state: 'working',
+};
+
+type BlueprintTraceStep = {
+  stepId: ObjectId;
+  status: 'done' | 'bailed' | 'skipped';
+  comment: string;
 };
 
 type ExecutionOptions = {
@@ -60,7 +67,7 @@ export class BlueprintMachine {
   }
 
   private async _execStep(state: BlueprintMachineState, opts: ExecutionOptions): Promise<BlueprintMachineState> {
-    const prevStep = this.blueprint.steps.findIndex((step) => step.id === state.currentStep);
+    const prevStep = this.blueprint.steps.findIndex((step) => step.id === this.state.trace.at(-1)?.stepId);
     if (prevStep === this.blueprint.steps.length - 1) {
       throw new Error('Done execution blueprint');
     }
@@ -76,6 +83,10 @@ export class BlueprintMachine {
     const ReportSchema = Schema.Struct({
       status: Schema.Literal('done', 'bailed', 'skipped').annotations({
         description: 'The status of the task completion',
+      }),
+      comment: Schema.String.annotations({
+        description:
+          'A comment about the task completion. If you bailed, you must explain why in detail (min couple of sentences).',
       }),
     });
     const report = defineTool('system', {
@@ -121,22 +132,40 @@ export class BlueprintMachine {
       prompt: nextStep.instructions,
     });
 
-    // Pop the last tool call block
-    const lastBlock = messages.at(-1)?.content.at(-1);
-    invariant(lastBlock?.type === 'tool_use');
-    const trimmedHistory = [
-      ...messages.slice(0, -1),
-      {
-        ...messages.at(-1)!,
-        content: [...messages.at(-1)!.content.slice(0, -1)],
-      } satisfies Message,
-    ];
-    const output = ReportSchema.pipe(Schema.decodeUnknownSync)(lastBlock.input);
+    const { messages: trimmedHistory, call: lastBlock } = popLastToolCall(messages);
+
+    if (!lastBlock) {
+      // TODO(dmaretskyi): Handle this with grace
+      throw new Error('Agent did not call the report tool');
+    }
+
+    const { status, comment } = ReportSchema.pipe(Schema.decodeUnknownSync)(lastBlock.input);
+
+    switch (status) {
+      case 'done':
+        console.log(chalk.green.bold('DONE'));
+        console.log(chalk.green(comment));
+        break;
+      case 'skipped':
+        console.log(chalk.blue.bold('SKIP'));
+        console.log(chalk.blue(comment));
+        break;
+      case 'bailed':
+        console.log(chalk.red.bold('BAIL'));
+        console.log(chalk.red(comment));
+    }
 
     return {
       history: [...state.history, ...inputMessages, ...trimmedHistory],
-      currentStep: nextStep.id,
-      state: Match.value(output.status).pipe(
+      trace: [
+        ...state.trace,
+        {
+          stepId: nextStep.id,
+          status,
+          comment,
+        },
+      ],
+      state: Match.value(status).pipe(
         Match.withReturnType<BlueprintMachineState['state']>(),
         Match.when('done', () => (onLastStep ? 'done' : 'working')),
         Match.when('skipped', () => (onLastStep ? 'done' : 'working')),
@@ -152,4 +181,24 @@ const taggedDataBlock = (tag: string, data: unknown): MessageContentBlock => {
     type: 'text',
     text: `<${tag}>\n${JSON.stringify(data, null, 2)}\n</${tag}>`,
   } satisfies MessageContentBlock;
+};
+
+const popLastToolCall = (messages: Message[]): { messages: Message[]; call?: ToolUseContentBlock } => {
+  const lastBlock = messages.at(-1)?.content.at(-1);
+  if (lastBlock?.type !== 'tool_use') {
+    return { messages };
+  }
+
+  const trimmedHistory = [
+    ...messages.slice(0, -1),
+    {
+      ...messages.at(-1)!,
+      content: [...messages.at(-1)!.content.slice(0, -1)],
+    } satisfies Message,
+  ];
+
+  return {
+    messages: trimmedHistory,
+    call: lastBlock,
+  };
 };
