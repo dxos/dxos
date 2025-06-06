@@ -9,7 +9,7 @@ import { splitJsonPath, type JsonPath } from '@dxos/effect';
 import { DXN, ObjectId } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
-import { getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation, type HasId } from '../ast';
+import { getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../ast';
 import { getTypename, type ObjectMeta } from '../object';
 
 // TODO(burdon): Use consistently (with serialization utils).
@@ -23,6 +23,13 @@ export const ECHO_ATTR_META = '@meta';
 // TODO(burdon): Consider moving to lower-level base type lib.
 // TODO(dmaretskyi): Rename AnyProperties.
 export type BaseObject = Record<string, any>;
+
+/**
+ * Marker interface for object with an `id`.
+ */
+export type HasId = {
+  readonly id: string;
+};
 
 // TODO(burdon): Reconcile with AnyLiveObject. This type is used in some places (e.g. Ref) to mean LiveObject? Do we need branded types?
 export type WithId = BaseObject & HasId;
