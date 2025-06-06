@@ -350,6 +350,7 @@ export class OllamaClient implements AIServiceClient {
             const result = await runTools({
               message: collector.messages.at(-1)!,
               tools: this._getEmbededTools(request.tools ?? []),
+              reportStatus: () => {},
             });
 
             switch (result.type) {
