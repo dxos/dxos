@@ -11,7 +11,6 @@ import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { combine, timeout } from '@dxos/async';
 import { getLabel, getSchema, type BaseEchoObject } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
 import { D3ForceGraph } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, Query, useQuery, useSpace } from '@dxos/react-client/echo';
@@ -34,11 +33,14 @@ const generator = faker as any as ValueGenerator;
 
 const DefaultStory = () => {
   const space = useSpace();
-  const [filter, setFilter] = useState<Filter.Any | null>(null);
+  const [filter, setFilter] = useState<Filter.Any>();
   const items = useQuery(space, Query.select(filter ?? Filter.everything()));
-
-  // TODO(burdon): Apply filter.
   const model = useMemo(() => new SpaceGraphModel(), []);
+
+  // TODO(burdon): Breaks links.
+  // useEffect(() => {
+  //   model.setFilter(filter ?? Filter.everything());
+  // }, [model, filter]);
 
   useEffect(() => {
     if (!space) {
@@ -64,11 +66,12 @@ const DefaultStory = () => {
   const handleSubmit = useCallback<NonNullable<PromptBarProps['onSubmit']>>(
     (text) => {
       try {
-        log.info('filter', text);
         const parser = new QueryParser(text);
         const filter = createFilter(parser.parse());
         setFilter(filter);
-      } catch (err) {}
+      } catch (err) {
+        // Ignore.
+      }
     },
     [space],
   );

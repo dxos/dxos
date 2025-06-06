@@ -35,7 +35,9 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
           model={model}
           projector={projector}
           labels={{
-            text: (node: GraphLayoutNode) => node.data.label,
+            text: (node: GraphLayoutNode) => {
+              return node.data.data.label ?? node.id;
+            },
           }}
           // TODO(burdon): Fix classes.
           // attributes={{

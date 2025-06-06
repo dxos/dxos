@@ -150,7 +150,6 @@ export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationI
 /**
  * Returns the label for a given object based on {@link LabelAnnotationId}.
  */
-// TODO(burdon): This is really a title, not a label.
 // TODO(burdon): Convert to JsonPath?
 export const getLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.Schema.Type<S>): string | undefined => {
   let annotation = schema.ast.annotations[LabelAnnotationId];

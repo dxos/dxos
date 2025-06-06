@@ -15,8 +15,6 @@ import { type Specialize } from '@dxos/util';
 export const BaseGraphNode = Schema.Struct({
   id: Schema.String,
   type: Schema.optional(Schema.String),
-
-  // TODO(burdon): Reconcile with ExtendableBaseGraphNode (one or the other).
   data: Schema.optional(Schema.Any),
 });
 

@@ -188,23 +188,26 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
     const g = group.append('g');
     g.append('line');
     g.append('rect');
-    g.append('text')
-      .style('dominant-baseline', 'middle')
-      .text((d) => options.labels.text(d));
+    g.append('text').style('dominant-baseline', 'middle');
   }
 
   // Hover.
   if (options.highlight !== false) {
     circle.on('mouseover', function () {
-      select(this.parentElement).raise().classed('dx-active', true).classed('dx-highlight', true);
+      select(this.parentElement).raise();
+      if (options.labels) {
+        select(this.parentElement).classed('dx-active', true).classed('dx-highlight', true);
+      }
     });
     group.on('mouseleave', function () {
-      select(this).classed('dx-active', false);
-      setTimeout(() => {
-        if (!select(this).classed('dx-active')) {
-          select(this).classed('dx-highlight', false).lower();
-        }
-      }, 300);
+      if (options.labels) {
+        select(this).classed('dx-active', false);
+        setTimeout(() => {
+          if (!select(this).classed('dx-active')) {
+            select(this).classed('dx-highlight', false).lower();
+          }
+        }, 300);
+      }
     });
   }
 };
@@ -251,6 +254,9 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
       .select<SVGTextElement>('text')
       .attr('class', function () {
         return (select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.text;
+      })
+      .text((d) => {
+        return options.labels.text(d);
       })
       .style('text-anchor', (d) => (d.x > 0 ? 'start' : 'end'))
       .attr('dx', (d) => dx(d, offset))

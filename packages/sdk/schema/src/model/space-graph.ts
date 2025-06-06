@@ -55,9 +55,9 @@ export type SpaceGraphModelOptions = {
  */
 export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraphEdge> {
   private _options?: SpaceGraphModelOptions;
-  private _space?: Space;
   private _filter?: Filter.Any;
 
+  private _space?: Space;
   private _schema?: EchoSchema[];
   private _schemaSubscription?: CleanupFn;
   private _objects?: AnyLiveObject<any>[];
@@ -111,8 +111,6 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
     return this;
   }
 
-  // TODO(burdon): Factor out graph builder to lib (use common/graph abstraction).
-  // TODO(burdon): Normalize unsubscribe callbacks and merge handlers.
   async open(space: Space, selected?: string): Promise<this> {
     log.info('open');
     if (this.isOpen()) {
