@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FormatEnum, toJsonSchema, type EchoSchema } from '@dxos/echo-schema';
@@ -14,9 +14,7 @@ import { type MapType } from '../types';
 import { getLocationProperty, setLocationProperty } from '../util';
 
 export const MapSettingsSchema = Schema.Struct({
-  coordinateSource: Schema.optional(
-    Schema.String.annotations({ title: 'Coordinate source type' }),
-  ),
+  coordinateSource: Schema.optional(Schema.String.annotations({ title: 'Coordinate source type' })),
   coordinateColumn: Schema.optional(Schema.String.annotations({ title: 'Coordinate column' })),
 });
 

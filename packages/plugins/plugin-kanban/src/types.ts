@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { KanbanType } from '@dxos/react-ui-kanban';

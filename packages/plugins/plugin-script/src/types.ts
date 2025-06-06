@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 
 import { SpaceSchema } from '@dxos/client/echo';
 import { ScriptType } from '@dxos/functions';

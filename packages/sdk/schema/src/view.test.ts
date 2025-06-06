@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST, String, pipe } from 'effect';
+import { Schema, String, pipe } from 'effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Format, Ref } from '@dxos/echo';

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 
 import { Ref, ObjectId, TypedObject, Expando } from '@dxos/echo-schema';
 // import { ThreadType } from '@dxos/plugin-space/types';

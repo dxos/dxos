@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 
 import { Format, Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 import { useEffect, useMemo, useState } from 'react';
 
 import { AIServiceEdgeClient } from '@dxos/ai';
