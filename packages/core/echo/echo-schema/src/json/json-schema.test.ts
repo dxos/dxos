@@ -11,17 +11,17 @@ import { log } from '@dxos/log';
 
 import { toEffectSchema, toJsonSchema } from './json-schema';
 import {
-  EchoObject,
-  FieldLookupAnnotationId,
-  GeneratorAnnotation,
   getNormalizedEchoAnnotations,
   getSchemaProperty,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
+  setSchemaProperty,
+  EchoObject,
+  FieldLookupAnnotationId,
+  GeneratorAnnotation,
   JsonSchemaType,
   LabelAnnotation,
   PropertyMeta,
-  setSchemaProperty,
 } from '../ast';
 import { Email, FormatAnnotation, FormatEnum } from '../formats';
 import { TypedObject } from '../object';

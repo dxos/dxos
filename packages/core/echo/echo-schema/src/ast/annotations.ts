@@ -12,7 +12,6 @@ import { type Primitive } from '@dxos/util';
 
 import { createAnnotationHelper } from './annotation-helper';
 import { type HasId } from './types';
-import { DXN as DXNSchema } from '../formats';
 import { type RelationSourceTargetRefs } from '../object';
 import { type BaseObject, EntityKind } from '../types';
 
@@ -53,13 +52,13 @@ export const TypeAnnotation = Schema.Struct({
    * If this is a relation, the schema of the source object.
    * Must be present if entity kind is {@link EntityKind.Relation}.
    */
-  sourceSchema: Schema.optional(DXNSchema),
+  sourceSchema: Schema.optional(DXN.Schema),
 
   /**
    * If this is a relation, the schema of the target object.
    * Must be present if entity kind is {@link EntityKind.Relation}.
    */
-  targetSchema: Schema.optional(DXNSchema),
+  targetSchema: Schema.optional(DXN.Schema),
 });
 
 export interface TypeAnnotation extends Schema.Schema.Type<typeof TypeAnnotation> {}

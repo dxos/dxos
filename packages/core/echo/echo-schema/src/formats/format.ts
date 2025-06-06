@@ -4,6 +4,8 @@
 
 import { Schema } from 'effect';
 
+import { DXN as $DXN } from '@dxos/keys';
+
 import * as DateUtil from './date';
 import * as NumberUtil from './number';
 import * as ObjectUtil from './object';
@@ -21,7 +23,7 @@ import * as StringUtil from './string';
 // TODO(burdon): Add fields for `examples`, `message`, etc.
 export namespace Format {
   // Strings
-  export const DXN = StringUtil.DXN;
+  export const DXN = $DXN;
   export const Email = StringUtil.Email;
   export const Formula = StringUtil.Formula;
   export const Hostname = StringUtil.Hostname;

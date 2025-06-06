@@ -7,20 +7,6 @@ import { SchemaAST, Schema } from 'effect';
 import { FormatAnnotation, FormatEnum } from './types';
 
 /**
- * Decentralized name.
- */
-// TODO(dmaretskyi): Reconcile with @dxos/keys#DXN.Schema
-export const DXN = Schema.NonEmptyString.pipe(
-  Schema.pattern(/^dxn:([^:]+):(?:[^:]+:?)+[^:]$/),
-  FormatAnnotation.set(FormatEnum.DXN),
-  Schema.annotations({
-    title: 'DXN',
-    description: 'DXN URI',
-    [SchemaAST.ExamplesAnnotationId]: ['dxn:type:example.com/type/MyType', 'dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6'],
-  }),
-);
-
-/**
  * Email address (RFC 5321)
  * https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.2
  */

@@ -6,10 +6,10 @@ import { SchemaAST } from 'effect';
 
 import {
   GeneratorAnnotationId,
-  LabelAnnotationId,
-  PropertyMetaAnnotationId,
   type JsonSchemaEchoAnnotations,
   type JsonSchemaType,
+  LabelAnnotationId,
+  PropertyMetaAnnotationId,
 } from '../ast';
 import { FormatAnnotationId, CurrencyAnnotationId } from '../formats';
 
