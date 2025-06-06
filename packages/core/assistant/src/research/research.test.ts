@@ -48,9 +48,7 @@ describe.skip('Research', () => {
               }),
         },
         credentials: new ConfiguredCredentialsService([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-        database: {
-          db,
-        },
+        database: { db },
       }),
     );
   });

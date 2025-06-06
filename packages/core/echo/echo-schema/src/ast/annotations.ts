@@ -340,8 +340,12 @@ export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/Field
  */
 export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
 
-// TODO(burdon): Change type.
-export const GeneratorAnnotation = createAnnotationHelper<string>(GeneratorAnnotationId);
+export type GeneratorAnnotationValue = {
+  generator: string;
+  probability?: number;
+};
+
+export const GeneratorAnnotation = createAnnotationHelper<string | GeneratorAnnotationValue>(GeneratorAnnotationId);
 
 /**
  * Returns the label for a given object based on {@link LabelAnnotationId}.

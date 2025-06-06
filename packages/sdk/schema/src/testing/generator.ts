@@ -6,12 +6,13 @@ import { type Schema, SchemaAST, Effect } from 'effect';
 
 import { type EchoDatabase, type AnyLiveObject, Query, Filter } from '@dxos/echo-db';
 import {
-  FormatEnum,
-  GeneratorAnnotationId,
   getSchemaReference,
   getTypename,
   type BaseObject,
   type ExcludeId,
+  FormatEnum,
+  GeneratorAnnotationId,
+  type GeneratorAnnotationValue,
   type JsonSchemaType,
   type TypedObject,
   Ref,
@@ -48,7 +49,6 @@ export const createObjectFactory =
       try {
         const pipeline = createObjectPipeline(generator, type, { db });
         const objects = await Effect.runPromise(createArrayPipeline(count, pipeline));
-        console.log('===', { type, count, objects: objects.length });
         map.set(type.typename, objects);
         await db.flush();
       } catch (err) {
@@ -70,21 +70,25 @@ export const createProps = <T extends BaseObject>(
   return (data: ExcludeId<T> = {} as ExcludeId<T>): ExcludeId<T> => {
     return getSchemaProperties<T>(schema.ast).reduce<ExcludeId<T>>((obj, property) => {
       if (obj[property.name] === undefined) {
-        if (!property.optional || optional || randomBoolean()) {
+        if (!property.optional || optional) {
           // Default value.
           let value = property.defaultValue;
           if (value !== undefined) {
             value = structuredClone(value);
           } else {
             // Generator value from annotation.
-            const annotation = findAnnotation<string>(property.ast, GeneratorAnnotationId);
+            const annotation = findAnnotation<GeneratorAnnotationValue>(property.ast, GeneratorAnnotationId);
             if (annotation) {
-              const fn = annotation && getDeep<() => any>(generator, annotation.split('.'));
-              if (!fn) {
-                throw new Error(`Unknown generator: ${annotation}`);
+              const { generator: generatorName, probability } =
+                typeof annotation === 'string' ? { generator: annotation, probability: 0.5 } : annotation;
+              if (randomBoolean(probability)) {
+                const fn = getDeep<() => any>(generator, generatorName.split('.'));
+                if (!fn) {
+                  log.warn('unknown generator', { generatorName });
+                } else {
+                  value = fn();
+                }
               }
-
-              value = fn();
             }
           }
 

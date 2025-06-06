@@ -11,8 +11,7 @@ import {
   type JsonSchemaEchoAnnotations,
   type JsonSchemaType,
 } from '../ast';
-import { FormatAnnotationId } from '../formats';
-import { CurrencyAnnotationId } from '../formats/number';
+import { FormatAnnotationId, CurrencyAnnotationId } from '../formats';
 
 //
 // This file configures annotations for JSON encoding/decoding.
@@ -28,6 +27,7 @@ type NamespacedJsonSchemaProperty = keyof JsonSchemaEchoAnnotations;
  * List of annotations for JSON encoding/decoding.
  * Omits default effect-schema annotations since they are encoded with default serializer.
  */
+// TODO(burdon): Reconcile with `EchoAnnotations`.
 export const CustomAnnotations: Partial<Record<RootJsonSchemaProperty, symbol>> = {
   format: FormatAnnotationId,
   currency: CurrencyAnnotationId,
