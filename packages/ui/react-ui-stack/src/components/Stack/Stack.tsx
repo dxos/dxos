@@ -17,7 +17,10 @@ export type Orientation = 'horizontal' | 'vertical';
 export type Size = 'intrinsic' | 'contain' | 'contain-fit-content';
 
 export type StackProps = Omit<ThemedClassName<ComponentPropsWithRef<'div'>>, 'aria-orientation'> &
-  Partial<StackContextValue> & { itemsCount?: number };
+  Partial<StackContextValue> & {
+    itemsCount?: number;
+    getDropElement?: (stackElement: HTMLDivElement) => HTMLDivElement;
+  };
 
 export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
 export const railGridVertical = 'grid-cols-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
@@ -41,6 +44,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       size = 'intrinsic',
       onRearrange,
       itemsCount = Children.count(children),
+      getDropElement,
       ...props
     },
     forwardedRef,
@@ -59,7 +63,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
 
     const { dropping } = useStackDropForElements({
       id: props.id,
-      element: stackElement,
+      element: getDropElement && stackElement ? getDropElement(stackElement) : stackElement,
       selfDroppable,
       orientation,
       onRearrange,
