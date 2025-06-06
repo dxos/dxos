@@ -7,7 +7,6 @@ import { capitalize } from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
-import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
@@ -124,17 +123,15 @@ export const FormField = ({
   const InputComponent = getInputComponent(type, format);
   if (InputComponent) {
     return (
-      <div role='none'>
-        <InputComponent
-          type={type}
-          format={format}
-          label={label}
-          inputOnly={inline}
-          placeholder={placeholder}
-          disabled={readonly}
-          {...inputProps}
-        />
-      </div>
+      <InputComponent
+        type={type}
+        format={format}
+        label={label}
+        inputOnly={inline}
+        placeholder={placeholder}
+        disabled={readonly}
+        {...inputProps}
+      />
     );
   }
 
@@ -144,18 +141,16 @@ export const FormField = ({
 
   if (options) {
     return (
-      <div role='none'>
-        <SelectInput
-          type={type}
-          format={format}
-          disabled={readonly}
-          inputOnly={inline}
-          label={label}
-          options={options.map((option) => ({ value: option, label: String(option) }))}
-          placeholder={placeholder}
-          {...inputProps}
-        />
-      </div>
+      <SelectInput
+        type={type}
+        format={format}
+        disabled={readonly}
+        inputOnly={inline}
+        label={label}
+        options={options.map((option) => ({ value: option, label: String(option) }))}
+        placeholder={placeholder}
+        {...inputProps}
+      />
     );
   }
 
@@ -220,7 +215,7 @@ export const FormFields = ({
   }, [schema, values, filter, sort]);
 
   return (
-    <div role='form' className={mx('flex flex-col w-full gap-2')}>
+    <div role='form' className='contents'>
       {properties
         .map((property) => {
           return (

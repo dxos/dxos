@@ -5,7 +5,6 @@
 import React from 'react';
 
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 import { useFormContext } from './FormContext';
 import { translationKey } from '../../translations';
@@ -20,22 +19,20 @@ export const FormActions = ({ onCancel, readonly }: FormActionsProps) => {
   const { canSave, handleSave } = useFormContext();
 
   return (
-    <div role='none' className='mt-2 flex justify-center'>
-      <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
-        {onCancel && !readonly && (
-          <IconButton data-testid='cancel-button' icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
-        )}
-        {handleSave && (
-          <IconButton
-            type='submit'
-            data-testid='save-button'
-            disabled={!canSave}
-            icon='ph--check--regular'
-            label={t('button save')}
-            onClick={handleSave}
-          />
-        )}
-      </div>
+    <div role='none' className='mbs-4 flex [&_button]:grow'>
+      {onCancel && !readonly && (
+        <IconButton data-testid='cancel-button' icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
+      )}
+      {handleSave && (
+        <IconButton
+          type='submit'
+          data-testid='save-button'
+          disabled={!canSave}
+          icon='ph--check--regular'
+          label={t('button save')}
+          onClick={handleSave}
+        />
+      )}
     </div>
   );
 };
