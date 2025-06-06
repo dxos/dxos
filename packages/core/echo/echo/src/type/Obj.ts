@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AnyLiveObject as AnyLiveObject$ } from '@dxos/echo-db';
 import { type BaseEchoObject, type BaseObject, getSchema as getSchema$ } from '@dxos/echo-schema';
-import { live as live$ } from '@dxos/live-object';
+import { type Live, live as live$ } from '@dxos/live-object';
+
+type AnyLiveObject$<T extends BaseObject> = Live<T> & BaseEchoObject;
 
 // TODO(burdon): Remove from Type?
 
