@@ -4,7 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 
-import type { JsonSchemaType } from '../ast';
+import { type JsonSchemaType } from '../json-schema';
 import { getSnapshot } from '../schema';
 
 /**

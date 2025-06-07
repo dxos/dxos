@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 
 import { GeoPoint } from '@dxos/echo-schema';
 import { SpaceSchema } from '@dxos/react-client/echo';
@@ -19,13 +19,13 @@ export const CreateMapSchema = Schema.Struct({
   initialSchema: Schema.optional(
     Schema.String.annotations({
       [TypenameAnnotationId]: true,
-      [SchemaAST.TitleAnnotationId]: 'Schema',
+      title: 'Schema',
     }),
   ),
   locationProperty: Schema.optional(
     Schema.String.annotations({
       [LocationAnnotationId]: true,
-      [SchemaAST.TitleAnnotationId]: 'Location property',
+      title: 'Location property',
     }),
   ),
 });

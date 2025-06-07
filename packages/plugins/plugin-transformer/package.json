@@ -51,8 +51,7 @@
     "@huggingface/transformers": "^3.3.3",
     "@preact/signals-core": "^1.6.0",
     "date-fns": "^3.3.1",
-    "effect": "^3.13.3",
-    "lodash.get": "^4.4.2"
+    "effect": "^3.13.3"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
@@ -60,7 +59,6 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "@types/lodash.get": "^4.4.7",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "@xenova/transformers": "^2.17.2",

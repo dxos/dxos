@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { type JsonPath } from '.';
+import { type JsonPath } from '@dxos/effect';
+
 import { getValue, setValue, type BaseObject } from './types';
 
 describe('Types', () => {

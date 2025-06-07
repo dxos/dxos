@@ -95,7 +95,6 @@ export class CoreDatabase {
   private readonly _repoProxy: RepoProxy;
   private readonly _spaceId: SpaceId;
   private readonly _spaceKey: PublicKey;
-
   private readonly _objects = new Map<string, ObjectCore>();
 
   /**
@@ -132,6 +131,13 @@ export class CoreDatabase {
     this._repoProxy = new RepoProxy(this._dataService, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this._repoProxy, spaceId, spaceKey);
+  }
+
+  toJSON() {
+    return {
+      id: this._spaceId,
+      objects: this._objects.size,
+    };
   }
 
   get graph(): Hypergraph {

@@ -4,7 +4,8 @@
 
 import { Schema, SchemaAST } from 'effect';
 
-import { Expando, OptionsAnnotationId, TypedObject, DXN, Ref, RawObject } from '@dxos/echo-schema';
+import { Expando, OptionsAnnotationId, TypedObject, Ref, RawObject } from '@dxos/echo-schema';
+import { DXN } from '@dxos/keys';
 
 import { FunctionType } from './schema';
 
@@ -21,7 +22,7 @@ export enum TriggerKind {
   Queue = 'queue',
 }
 
-const kindLiteralAnnotations = { [SchemaAST.TitleAnnotationId]: 'Kind' };
+const kindLiteralAnnotations = { title: 'Kind' };
 
 /**
  * Cron timer.
@@ -29,7 +30,7 @@ const kindLiteralAnnotations = { [SchemaAST.TitleAnnotationId]: 'Kind' };
 const TimerTriggerSchema = Schema.Struct({
   kind: Schema.Literal(TriggerKind.Timer).annotations(kindLiteralAnnotations),
   cron: Schema.String.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Cron',
+    title: 'Cron',
     [SchemaAST.ExamplesAnnotationId]: ['0 0 * * *'],
   }),
 }).pipe(Schema.mutable);
@@ -42,7 +43,7 @@ export type EmailTrigger = Schema.Schema.Type<typeof EmailTriggerSchema>;
 
 const QueueTriggerSchema = Schema.Struct({
   kind: Schema.Literal(TriggerKind.Queue).annotations(kindLiteralAnnotations),
-  queue: DXN,
+  queue: DXN.Schema,
 }).pipe(Schema.mutable);
 export type QueueTrigger = Schema.Schema.Type<typeof QueueTriggerSchema>;
 
@@ -53,13 +54,13 @@ const WebhookTriggerSchema = Schema.Struct({
   kind: Schema.Literal(TriggerKind.Webhook).annotations(kindLiteralAnnotations),
   method: Schema.optional(
     Schema.String.annotations({
-      [SchemaAST.TitleAnnotationId]: 'Method',
+      title: 'Method',
       [OptionsAnnotationId]: ['GET', 'POST'],
     }),
   ),
   port: Schema.optional(
     Schema.Number.annotations({
-      [SchemaAST.TitleAnnotationId]: 'Port',
+      title: 'Port',
     }),
   ),
 }).pipe(Schema.mutable);
@@ -67,9 +68,9 @@ export type WebhookTrigger = Schema.Schema.Type<typeof WebhookTriggerSchema>;
 
 // TODO(burdon): Use ECHO definition (from https://github.com/dxos/dxos/pull/8233).
 const QuerySchema = Schema.Struct({
-  type: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Type' })),
+  type: Schema.optional(Schema.String.annotations({ title: 'Type' })),
   props: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-}).annotations({ [SchemaAST.TitleAnnotationId]: 'Query' });
+}).annotations({ title: 'Query' });
 
 /**
  * Subscription.
@@ -81,10 +82,10 @@ const SubscriptionTriggerSchema = Schema.Struct({
   options: Schema.optional(
     Schema.Struct({
       // Watch changes to object (not just creation).
-      deep: Schema.optional(Schema.Boolean.annotations({ [SchemaAST.TitleAnnotationId]: 'Nested' })),
+      deep: Schema.optional(Schema.Boolean.annotations({ title: 'Nested' })),
       // Debounce changes (delay in ms).
-      delay: Schema.optional(Schema.Number.annotations({ [SchemaAST.TitleAnnotationId]: 'Delay' })),
-    }).annotations({ [SchemaAST.TitleAnnotationId]: 'Options' }),
+      delay: Schema.optional(Schema.Number.annotations({ title: 'Delay' })),
+    }).annotations({ title: 'Options' }),
   ),
 }).pipe(Schema.mutable);
 export type SubscriptionTrigger = Schema.Schema.Type<typeof SubscriptionTriggerSchema>;
@@ -99,7 +100,7 @@ export const TriggerSchema = Schema.Union(
   EmailTriggerSchema,
   QueueTriggerSchema,
 ).annotations({
-  [SchemaAST.TitleAnnotationId]: 'Trigger',
+  title: 'Trigger',
 });
 export type TriggerType = Schema.Schema.Type<typeof TriggerSchema>;
 
@@ -134,7 +135,7 @@ export type WebhookTriggerOutput = Schema.Schema.Type<typeof WebhookTriggerOutpu
 
 export const QueueTriggerOutput = Schema.mutable(
   Schema.Struct({
-    queue: DXN,
+    queue: DXN.Schema,
     item: Schema.Any,
     cursor: Schema.String,
   }),
@@ -159,16 +160,16 @@ export const FunctionTriggerSchema = Schema.Struct({
    * Function or workflow to invoke.
    */
   // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
-  function: Schema.optional(Ref(Expando).annotations({ [SchemaAST.TitleAnnotationId]: 'Function' })),
+  function: Schema.optional(Ref(Expando).annotations({ title: 'Function' })),
 
   /**
    * Only used for workflowSchema.
    * Specifies the input node in the circuit.
    * @deprecated Remove and enforce a single input node in all compute graphSchema.
    */
-  inputNodeId: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Input Node ID' })),
+  inputNodeId: Schema.optional(Schema.String.annotations({ title: 'Input Node ID' })),
 
-  enabled: Schema.optional(Schema.Boolean.annotations({ [SchemaAST.TitleAnnotationId]: 'Enabled' })),
+  enabled: Schema.optional(Schema.Boolean.annotations({ title: 'Enabled' })),
 
   spec: Schema.optional(TriggerSchema),
 

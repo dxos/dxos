@@ -9,7 +9,8 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
-import { getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId, type JsonSchemaType } from '../ast';
+import { getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId } from '../ast';
+import { type JsonSchemaType } from '../json-schema';
 import type { BaseObject, WithId } from '../types';
 
 /**

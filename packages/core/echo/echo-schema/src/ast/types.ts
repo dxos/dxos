@@ -5,13 +5,6 @@
 import { PropertyMeta } from './annotations';
 
 /**
- * Marker interface for object with an `id`.
- */
-export interface HasId {
-  readonly id: string;
-}
-
-/**
  * @internal
  */
 export const FIELD_PATH_ANNOTATION = 'path';

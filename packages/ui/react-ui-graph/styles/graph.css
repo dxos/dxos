@@ -45,11 +45,8 @@ svg {
         circle {
           @apply fill-neutral-200 stroke-neutral-700 dark:fill-neutral-500 dark:stroke-none;
         }
-        line {
-          @apply opacity-0;
-        }
-        rect, text {
-          @apply opacity-0 transition-opacity duration-200;
+        line, rect, text {
+          @apply invisible;
         }
 
         &.dx-selected {
@@ -59,19 +56,20 @@ svg {
         }
       }
 
+      /* g.dx-node, */
       g.dx-dragging,
       g.dx-highlight {
         circle {
           @apply stroke-2 stroke-neutral-900 dark:stroke-neutral-200 cursor-pointer;
         }
-        rect {
-          @apply opacity-100 stroke-none fill-inverseSurface;
-        }
         line {
-          @apply opacity-100 stroke-2 stroke-neutral-700 dark:stroke-neutral-200;
+          @apply visible stroke-2 stroke-neutral-700 dark:stroke-neutral-200;
+        }
+        rect {
+          @apply visible stroke-neutral-500 fill-inverseSurface;
         }
         text {
-          @apply opacity-100 fill-neutral-100 dark:fill-neutral-800;
+          @apply visible fill-inverseSurfaceText;
         }
       }
     }

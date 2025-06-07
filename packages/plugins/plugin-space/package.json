@@ -76,7 +76,6 @@
     "effect": "3.14.21",
     "jszip": "^3.10.1",
     "localforage": "^1.10.0",
-    "lodash.get": "^4.4.2",
     "react-drag-drop-files": "^2.3.8",
     "react-is": "~18.2.0",
     "react-qr-rounded": "^1.0.0"
@@ -90,7 +89,6 @@
     "@effect-rx/rx-react": "^0.34.1",
     "@effect/platform": "0.80.12",
     "@phosphor-icons/react": "^2.1.5",
-    "@types/lodash.get": "^4.4.7",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",

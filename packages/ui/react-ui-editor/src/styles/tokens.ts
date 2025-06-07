@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import get from 'lodash.get';
-
 import { tokens } from '@dxos/react-ui-theme';
+import { get } from '@dxos/util';
 
 /**
  * Returns the tailwind token value.

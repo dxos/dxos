@@ -26,6 +26,9 @@ export type GenerateOptions = {
 
 const defaultRelations: GenerateOptions['relations'] = { count: 10, kind: 'friend' };
 
+/**
+ * @deprecated Use @dxos/schema.
+ */
 export const generate = async (
   space: Space,
   generator: ValueGenerator,

@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 import { defineObjectMigration } from '@dxos/echo-db';
-import { Expando, GeneratorAnnotationId, ObjectId, Ref, TypedObject } from '@dxos/echo-schema';
+import { Expando, GeneratorAnnotation, ObjectId, Ref, TypedObject } from '@dxos/echo-schema';
 
 import { Actor } from './actor';
 
@@ -120,13 +120,11 @@ export const MessageContentBlock = Schema.Union(
 //  - Read receipts don't need to be added to schema until they being implemented.
 const MessageSchema = Schema.Struct({
   id: ObjectId,
-  created: Schema.String.annotations({
-    description: 'ISO date string when the message was sent.',
-    [GeneratorAnnotationId]: 'date.iso8601',
-  }),
-  sender: Schema.mutable(Actor).annotations({
-    description: 'Identity of the message sender.',
-  }),
+  created: Schema.String.pipe(
+    Schema.annotations({ description: 'ISO date string when the message was sent.' }),
+    GeneratorAnnotation.set('date.iso8601'),
+  ),
+  sender: Schema.mutable(Actor).pipe(Schema.annotations({ description: 'Identity of the message sender.' })),
   blocks: Schema.mutable(Schema.Array(MessageContentBlock)).annotations({
     description: 'Contents of the message.',
     default: [],

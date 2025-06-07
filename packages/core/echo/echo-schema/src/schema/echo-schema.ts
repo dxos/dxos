@@ -16,15 +16,9 @@ import {
 } from './manipulation';
 import { getSnapshot } from './snapshot';
 import { StoredSchema } from './stored-schema';
-import {
-  getTypeAnnotation,
-  SchemaMetaSymbol,
-  schemaVariance,
-  type JsonSchemaType,
-  type SchemaMeta,
-  type TypeAnnotation,
-} from '../ast';
+import { getTypeAnnotation, schemaVariance, SchemaMetaSymbol, type SchemaMeta, type TypeAnnotation } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
+import { type JsonSchemaType } from '../json-schema';
 import { type TypedObject, type TypedObjectPrototype } from '../object';
 
 /**

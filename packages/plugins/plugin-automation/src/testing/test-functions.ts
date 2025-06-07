@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 
 import { ContactType } from '@dxos/client/testing';
 import { Ref, toJsonSchema } from '@dxos/echo-schema';
@@ -14,7 +14,7 @@ export const functions = [
     inputSchema: toJsonSchema(
       Schema.Struct({
         level: Schema.Number.annotations({
-          [SchemaAST.TitleAnnotationId]: 'Level',
+          title: 'Level',
         }),
       }),
     ),
@@ -26,10 +26,10 @@ export const functions = [
     inputSchema: toJsonSchema(
       Schema.Struct({
         from: Schema.String.annotations({
-          [SchemaAST.TitleAnnotationId]: 'Currency from',
+          title: 'Currency from',
         }),
         to: Schema.String.annotations({
-          [SchemaAST.TitleAnnotationId]: 'Currency to',
+          title: 'Currency to',
         }),
       }),
     ),
@@ -40,7 +40,7 @@ export const functions = [
     inputSchema: toJsonSchema(
       Schema.Struct({
         contact: Ref(ContactType).annotations({
-          [SchemaAST.TitleAnnotationId]: 'Contact',
+          title: 'Contact',
         }),
       }),
     ),

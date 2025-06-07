@@ -13,19 +13,20 @@ import { clearUndefined, orderKeys } from '@dxos/util';
 
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
-  ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
-  ECHO_ANNOTATIONS_NS_KEY,
-  EntityKind,
-  EntityKindSchema,
-  getNormalizedEchoAnnotations,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
+  type TypeAnnotation,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
+} from '../ast';
+import { EntityKind, EntityKindSchema } from '../ast';
+import {
+  ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
+  ECHO_ANNOTATIONS_NS_KEY,
+  getNormalizedEchoAnnotations,
   type JsonSchemaEchoAnnotations,
   type JsonSchemaType,
-  type TypeAnnotation,
-} from '../ast';
+} from '../json-schema';
 import { Expando } from '../object';
 import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
 

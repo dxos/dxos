@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import get from 'lodash.get';
 import { useEffect, useState } from 'react';
 
 import { SpaceState } from '@dxos/client/echo';
@@ -16,6 +15,7 @@ import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type Diagnostics, TRACE_PROCESSOR, type DiagnosticsRequest } from '@dxos/tracing';
 import { DiagnosticsChannel } from '@dxos/tracing';
+import { get } from '@dxos/util';
 
 // TODO(burdon): Factor out.
 

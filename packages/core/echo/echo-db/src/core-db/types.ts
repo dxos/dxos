@@ -3,12 +3,12 @@
 //
 
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@automerge/automerge';
-import get from 'lodash.get';
 
 import { type Reference } from '@dxos/echo-protocol';
 import { type BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject, type Live } from '@dxos/live-object';
+import { get } from '@dxos/util';
 
 import { type AnyLiveObject, getObjectCore } from '../echo-handler';
 import { symbolPath, type ProxyTarget } from '../echo-handler/echo-proxy-target';

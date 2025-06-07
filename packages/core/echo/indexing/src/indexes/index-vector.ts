@@ -70,8 +70,7 @@ export class IndexVector extends Resource implements Index {
   async update(id: ObjectPointerEncoded, object: Partial<ObjectStructure>): Promise<boolean> {
     const blocks = extractTextBlocks(object);
 
-    log.info('Extracting embeddings', { id, blocks });
-
+    log('Extracting embeddings', { id, blocks });
     if (blocks.length === 0) {
       invariant(this._orama, 'Index is not initialized');
       await Orama.remove(this._orama, id);

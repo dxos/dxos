@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { Format, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
+import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo-schema';
 
 import { Organization } from './organization';
 import { PostalAddress } from './postal-address';
@@ -20,7 +20,7 @@ import { PostalAddress } from './postal-address';
  */
 const PersonSchema = Schema.Struct({
   fullName: Schema.optional(
-    Schema.String.annotations({ [GeneratorAnnotationId]: 'person.fullName', title: 'Full Name' }),
+    Schema.String.pipe(Schema.annotations({ title: 'Full Name' }), GeneratorAnnotation.set(['person.fullName', 1])),
   ),
   preferredName: Schema.optional(Schema.String.annotations({ title: 'Preferred Name' })),
   nickname: Schema.optional(Schema.String.annotations({ title: 'Nickname' })),
@@ -37,7 +37,7 @@ const PersonSchema = Schema.Struct({
       Schema.Array(
         Schema.Struct({
           label: Schema.optional(Schema.String),
-          value: Format.Email.annotations({ [GeneratorAnnotationId]: 'internet.email' }),
+          value: Format.Email.pipe(GeneratorAnnotation.set('internet.email')),
         }),
       ),
     ),
@@ -81,7 +81,7 @@ const PersonSchema = Schema.Struct({
       Schema.Array(
         Schema.Struct({
           label: Schema.optional(Schema.String),
-          value: Format.URL.annotations({ [GeneratorAnnotationId]: 'internet.url' }),
+          value: Format.URL.pipe(GeneratorAnnotation.set('internet.url')),
         }),
       ),
     ),
@@ -107,9 +107,9 @@ export const Person = PersonSchema.pipe(
     typename: 'dxos.org/type/Person',
     version: '0.1.0',
   }),
-).annotations({
-  description: 'A person.',
-  [LabelAnnotationId]: ['preferredName', 'fullName', 'nickname'],
-});
+).pipe(
+  Schema.annotations({ title: 'Person', description: 'A person.' }),
+  LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
+);
 
 export interface Person extends Schema.Schema.Type<typeof Person> {}

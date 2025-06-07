@@ -158,6 +158,14 @@ export class SpaceProxy implements Space, CustomInspectable {
     this._queues.setService(queuesService);
   }
 
+  toJSON() {
+    return {
+      id: this.id,
+      db: this._db.toJSON(),
+      state: SpaceState[this.state.get()],
+    };
+  }
+
   get id(): SpaceId {
     return this._data.id as SpaceId;
   }
@@ -493,13 +501,6 @@ export class SpaceProxy implements Space, CustomInspectable {
   createSnapshot(): Promise<SpaceSnapshot> {
     return todo();
     // return this._serviceProvider.services.SpaceService.createSnapshot({ space_key: this.key });
-  }
-
-  toJSON() {
-    return {
-      key: this.key.toHex(),
-      state: SpaceState[this.state.get()],
-    };
   }
 
   private async _removeMember(memberKey: PublicKey) {

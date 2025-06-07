@@ -3,11 +3,11 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import get from 'lodash.get';
 
 import { type BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject } from '@dxos/live-object';
+import { get } from '@dxos/util';
 
 import { type KeyPath, type DocAccessor, isValidKeyPath, createDocAccessor } from './core-db';
 import { type AnyLiveObject } from './echo-handler';

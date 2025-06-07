@@ -1,4 +1,5 @@
-/* eslint-disable no-undef */
+#!/usr/bin/env node
+
 import { globby } from 'globby';
 import madge from 'madge';
 

@@ -15,7 +15,7 @@ type ListContext<T extends ListItemRecord> = {
   state: ItemDragState & { item?: T };
   setState: (state: ItemDragState & { item?: T }) => void;
   dragPreview?: boolean;
-  isItem: (item: any) => boolean;
+  isItem?: (item: any) => boolean;
   getId?: (item: T) => string; // TODO(burdon): Require if T doesn't conform to type.
 };
 
@@ -68,7 +68,7 @@ export const ListRoot = <T extends ListItemRecord>({
     }
 
     return monitorForElements({
-      canMonitor: ({ source }) => isItem(source.data),
+      canMonitor: ({ source }) => isItem?.(source.data) ?? false,
       onDrop: ({ location, source }) => {
         const target = location.current.dropTargets[0];
         if (!target) {
@@ -78,7 +78,7 @@ export const ListRoot = <T extends ListItemRecord>({
         const sourceData = source.data;
         const targetData = target.data;
 
-        if (!isItem(sourceData) || !isItem(targetData)) {
+        if (!isItem?.(sourceData) || !isItem?.(targetData)) {
           return;
         }
 

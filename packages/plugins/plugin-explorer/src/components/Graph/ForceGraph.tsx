@@ -13,7 +13,7 @@ import { type SpaceGraphModel } from '@dxos/schema';
 import { GraphAdapter } from './adapter';
 
 export type ForceGraphProps = {
-  model: SpaceGraphModel;
+  model?: SpaceGraphModel;
   match?: RegExp;
 };
 

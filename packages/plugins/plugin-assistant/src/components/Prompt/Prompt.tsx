@@ -7,11 +7,11 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
-  type BasicExtensionsOptions,
   createBasicExtensions,
   createThemeExtensions,
   keymap,
   useTextEditor,
+  type BasicExtensionsOptions,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -37,7 +37,17 @@ export type PromptProps = ThemedClassName<
 
 export const Prompt = forwardRef<PromptController, PromptProps>(
   (
-    { classNames, autoFocus, lineWrapping = false, placeholder, onSubmit, onSuggest, onOpenChange, references },
+    {
+      classNames,
+      autoFocus,
+      lineWrapping = false,
+      placeholder,
+      onSubmit,
+      onSuggest,
+      onCancel,
+      onOpenChange,
+      references,
+    },
     forwardRef,
   ) => {
     const { themeMode } = useThemeContext();
@@ -53,13 +63,13 @@ export const Prompt = forwardRef<PromptController, PromptProps>(
           }),
           createThemeExtensions({ themeMode }),
           references ? promptReferences({ provider: references }) : [],
-          createAutocompleteExtension({ onSubmit, onSuggest }),
+          createAutocompleteExtension({ onSubmit, onSuggest, onCancel }),
           Prec.highest(
             keymap.of([
               {
                 key: 'cmd-ArrowUp',
                 preventDefault: true,
-                run: (view) => {
+                run: () => {
                   onOpenChange?.(true);
                   return true;
                 },
@@ -67,7 +77,7 @@ export const Prompt = forwardRef<PromptController, PromptProps>(
               {
                 key: 'cmd-ArrowDown',
                 preventDefault: true,
-                run: (view) => {
+                run: () => {
                   onOpenChange?.(false);
                   return true;
                 },

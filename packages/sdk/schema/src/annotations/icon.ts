@@ -2,13 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Option, SchemaAST, type Schema } from 'effect';
+import { Option, type Schema } from 'effect';
 
-/**
- * @deprecated
- */
-// TODO(burdon): Remove.
+import { createAnnotationHelper } from '@dxos/echo-schema';
+
 export const IconAnnotationId: unique symbol = Symbol.for('@dxos/schema/IconAnnotationId');
+
+export const IconAnnotation = createAnnotationHelper<string>(IconAnnotationId);
+
+export const getIconAnnotation = (schema: Schema.Schema.AnyNoContext): string | undefined =>
+  IconAnnotation.get(schema).pipe(Option.getOrUndefined) as string | undefined;
 
 /**
  * Add an icon to a schema.
@@ -22,6 +25,3 @@ export const withIcon =
     schema.annotations({
       [IconAnnotationId]: icon,
     });
-
-export const getIconAnnotation = (schema: Schema.Schema.AnyNoContext): string | undefined =>
-  SchemaAST.getAnnotation(schema.ast, IconAnnotationId).pipe(Option.getOrUndefined) as string | undefined;

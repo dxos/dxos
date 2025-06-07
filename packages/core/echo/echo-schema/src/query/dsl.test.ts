@@ -10,8 +10,7 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { Filter, Query } from './dsl';
-import { EchoObject, EchoRelation } from '../ast';
-import { create } from '../object';
+import { EchoObject, EchoRelation, create } from '../object';
 import { Ref } from '../ref';
 
 // TODO(dmaretskyi): Move those out.

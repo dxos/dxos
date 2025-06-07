@@ -48,7 +48,7 @@ export class ViewType extends TypedObject({
    * Human readable name.
    */
   name: Schema.String.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Name',
+    title: 'Name',
     [SchemaAST.ExamplesAnnotationId]: ['Contact'],
   }),
 
@@ -90,7 +90,7 @@ export class ViewTypeV1 extends TypedObject({
   version: '0.1.0',
 })({
   name: Schema.String.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Name',
+    title: 'Name',
     [SchemaAST.ExamplesAnnotationId]: ['Contact'],
   }),
   query: Schema.Struct({

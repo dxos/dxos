@@ -134,7 +134,7 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
       dropTargetForElements({
         element,
         canDrop: ({ source }) => {
-          return source.element !== element && isItem(source.data);
+          return (source.element !== element && isItem?.(source.data)) ?? false;
         },
         getData: ({ input }) => {
           return attachClosestEdge(item, { element, input, allowedEdges: ['top', 'bottom'] });

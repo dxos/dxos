@@ -39,11 +39,11 @@ export const Root = forwardRef<SVGContext, RootProps>(({ classNames, children, .
 
   return (
     <SVGContextProvider value={context}>
-      <div ref={containerRef} className='grid grow overflow-hidden'>
+      <div ref={containerRef} className={mx('grid grow overflow-hidden', classNames)}>
         <svg
           xmlns='http://www.w3.org/2000/svg'
           ref={context.ref}
-          className={mx('transition-opacity opacity-0 duration-1000', classNames, ready && 'opacity-100')}
+          className={mx('transition-opacity opacity-0 duration-1000', ready && 'opacity-100')}
         >
           {ready && children}
         </svg>

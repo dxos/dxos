@@ -7,8 +7,9 @@ import { describe, test } from 'vitest';
 
 import { composeSchema } from './compose';
 import { toJsonSchema } from './json-schema';
-import { ECHO_ANNOTATIONS_NS_KEY, FieldPath } from '../ast';
+import { FieldPath } from '../ast';
 import { FormatAnnotation, FormatEnum } from '../formats';
+import { ECHO_ANNOTATIONS_NS_KEY } from '../json-schema';
 import { TypedObject } from '../object';
 
 describe('schema composition', () => {

@@ -10,10 +10,10 @@ import { log } from '@dxos/log';
 import {
   DateOnly,
   DateTime,
-  TimeOnly,
   type SimpleDate,
   type SimpleDateTime,
   type SimpleTime,
+  TimeOnly,
   toSimpleDate,
   toSimpleTime,
 } from './date';

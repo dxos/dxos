@@ -14,7 +14,7 @@ import {
   isMutable,
   toJsonSchema,
   EchoObject,
-  GeneratorAnnotationId,
+  GeneratorAnnotation,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -274,9 +274,7 @@ export const StaticSchema: StoryObj = {
 };
 
 const ContactWithArrayOfEmails = Schema.Struct({
-  name: Schema.String.annotations({
-    [GeneratorAnnotationId]: 'person.fullName',
-  }),
+  name: Schema.String.pipe(GeneratorAnnotation.set('person.fullName')),
   emails: Schema.optional(
     Schema.Array(
       Schema.Struct({
@@ -285,7 +283,12 @@ const ContactWithArrayOfEmails = Schema.Struct({
       }),
     ),
   ),
-}).pipe(EchoObject({ typename: 'dxos.org/type/ContactWithArrayOfEmails', version: '0.1.0' }));
+}).pipe(
+  EchoObject({
+    typename: 'dxos.org/type/ContactWithArrayOfEmails',
+    version: '0.1.0',
+  }),
+);
 
 export const ArrayOfObjects: StoryObj = {
   render: DefaultStory,

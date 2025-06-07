@@ -47,6 +47,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/conductor": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -56,6 +57,7 @@
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/live-object": "workspace:*",
@@ -95,7 +97,7 @@
     "@xiechao/codemirror-lang-handlebars": "1.0.4",
     "exa-js": "^1.5.12",
     "jsonpointer": "^5.0.1",
-    "lodash.get": "^4.4.2",
+    "lodash.defaultsdeep": "^4.6.1",
     "unified": "^11.0.0"
   },
   "devDependencies": {
@@ -113,7 +115,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@effect-rx/rx-react": "^0.34.1",
     "@effect/platform": "0.80.12",
-    "@types/lodash.get": "^4.4.7",
+    "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "effect": "3.14.21",

@@ -4,15 +4,9 @@
 
 import { SchemaAST } from 'effect';
 
-import {
-  GeneratorAnnotationId,
-  LabelAnnotationId,
-  PropertyMetaAnnotationId,
-  type JsonSchemaEchoAnnotations,
-  type JsonSchemaType,
-} from '../ast';
-import { FormatAnnotationId } from '../formats';
-import { CurrencyAnnotationId } from '../formats/number';
+import { GeneratorAnnotationId, LabelAnnotationId, PropertyMetaAnnotationId } from '../ast';
+import { FormatAnnotationId, CurrencyAnnotationId } from '../formats';
+import { type JsonSchemaEchoAnnotations, type JsonSchemaType } from '../json-schema';
 
 //
 // This file configures annotations for JSON encoding/decoding.
@@ -28,6 +22,7 @@ type NamespacedJsonSchemaProperty = keyof JsonSchemaEchoAnnotations;
  * List of annotations for JSON encoding/decoding.
  * Omits default effect-schema annotations since they are encoded with default serializer.
  */
+// TODO(burdon): Reconcile with `EchoAnnotations`.
 export const CustomAnnotations: Partial<Record<RootJsonSchemaProperty, symbol>> = {
   format: FormatAnnotationId,
   currency: CurrencyAnnotationId,
@@ -48,9 +43,8 @@ export const DecodedAnnotations: Partial<Record<RootJsonSchemaProperty, symbol>>
 // TODO(dmaretskyi): Consider removing ECHO namespace and putting them at the top level.
 // TODO(dmaretskyi): Move to format.ts when circular imports are solved
 export const EchoAnnotations: Partial<Record<NamespacedJsonSchemaProperty, symbol>> = {
+  // TODO(dmaretskyi): `FieldLookupAnnotationId` might go here, but lets remove it entirely and use LabelAnnotation instead.
   meta: PropertyMetaAnnotationId,
   generator: GeneratorAnnotationId,
   labelProp: LabelAnnotationId,
-
-  // TODO(dmaretskyi): `FieldLookupAnnotationId` might go here, but lets remove it entirely and use LabelAnnotation instead.
 };

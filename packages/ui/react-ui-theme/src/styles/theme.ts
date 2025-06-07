@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import get from 'lodash.get';
-
 import { type ComponentFunction, type Theme } from '@dxos/react-ui-types';
+import { get } from '@dxos/util';
 
 import {
   anchoredOverflowTheme,

@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 // import { ThreadType } from '@dxos/plugin-space/types';
-import { LabelAnnotationId, ObjectId, Ref, Expando, EchoObject } from '@dxos/echo-schema';
+import { ObjectId, Ref, Expando, EchoObject, LabelAnnotation } from '@dxos/echo-schema';
 import { ViewType } from '@dxos/schema';
 
 export const TableSchema = Schema.Struct({
@@ -14,10 +14,7 @@ export const TableSchema = Schema.Struct({
   view: Schema.optional(Ref(ViewType)),
   // TODO(burdon): Document why threads is included here?
   threads: Schema.optional(Schema.Array(Ref(Expando /* ThreadType */))),
-}).annotations({
-  // TODO(burdon): Move annotation to property.
-  [LabelAnnotationId]: 'name',
-});
+}).pipe(LabelAnnotation.set(['name']));
 
 // TODO(burdon): Move out of react-ui-xxx.
 export const TableType = TableSchema.pipe(

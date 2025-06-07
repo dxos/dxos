@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { Expando, LabelAnnotationId, Ref } from '@dxos/echo-schema';
+import { Expando, LabelAnnotation, Ref } from '@dxos/echo-schema';
 import { makeRef, live } from '@dxos/live-object';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
@@ -16,10 +16,7 @@ export const DocumentSchema = Schema.Struct({
   content: Ref(DataType.Text),
   threads: Schema.mutable(Schema.Array(Ref(ThreadType))),
   assistantChatQueue: Schema.optional(Ref(Expando)),
-}).annotations({
-  // TODO(dmaretskyi): `Schema.Struct(...).pipe(defaultLabel(['name', 'fallbackName']))` for type-safe annotations.
-  [LabelAnnotationId]: ['name', 'fallbackName'],
-});
+}).pipe(LabelAnnotation.set(['name', 'fallbackName']));
 
 export const DocumentType = DocumentSchema.pipe(
   Type.def({
