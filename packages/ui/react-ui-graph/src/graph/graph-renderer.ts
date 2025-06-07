@@ -8,7 +8,7 @@ import * as Clipper from 'js-clipper';
 import { createBullets } from './bullets';
 import { Renderer, type RendererOptions } from './renderer';
 import { type GraphGuide, type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from './types';
-import { type D3Selection, type D3Callable, getCircumferencePoints, type Point } from '../util';
+import { getCircumferencePoints, type D3Selection, type D3Callable, type Point } from '../util';
 
 const createLine = line<Point>();
 

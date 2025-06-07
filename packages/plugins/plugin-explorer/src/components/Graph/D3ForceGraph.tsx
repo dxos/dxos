@@ -21,8 +21,22 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
   const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
   const context = useRef<SVGContext>(null);
   const projector = useMemo<GraphForceProjector | undefined>(
-    () => (context.current ? new GraphForceProjector(context.current) : undefined),
-    [context],
+    () =>
+      context.current
+        ? new GraphForceProjector(context.current, {
+            forces: {
+              x: {
+                value: 0,
+                strength: 0.02,
+              },
+              y: {
+                value: 0,
+                strength: 0.02,
+              },
+            },
+          })
+        : undefined,
+    [context.current],
   );
 
   return (

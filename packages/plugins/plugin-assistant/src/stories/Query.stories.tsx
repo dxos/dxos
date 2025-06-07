@@ -15,7 +15,7 @@ import { SelectionModel } from '@dxos/graph';
 import { D3ForceGraph } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
-import { Toolbar } from '@dxos/react-ui';
+import { IconButton, Toolbar } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -102,7 +102,7 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
         {showList && (
           <div className='grow grid grid-rows-[min-content_1fr_1fr] overflow-hidden divide-y divide-separator'>
             <Toolbar.Root>
-              <Toolbar.Button onClick={handleRefresh}>Refresh</Toolbar.Button>
+              <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='refresh' onClick={handleRefresh} />
             </Toolbar.Root>
             <ItemList items={items} getTitle={(item) => getLabelForObject(item)} />
             <JsonFilter data={{ model: model?.toJSON(), db: space?.db.toJSON(), items: items.length, ast }} />
@@ -113,7 +113,7 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
       {/* <Dialog.Root open>
         <AmbientDialog resizeable={false}> */}
       <div className='fixed bottom-8 left-1/2 -translate-x-1/2'>
-        <div className='w-[30rem] p-1 bg-groupSurface border border-separator rounded'>
+        <div className='w-[40rem] p-1 bg-groupSurface border border-separator rounded'>
           <PromptBar onSubmit={handleSubmit} onCancel={handleCancel} />
         </div>
       </div>
