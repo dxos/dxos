@@ -10,17 +10,12 @@ import { type Specialize } from '@dxos/util';
 // Node
 //
 
-export const BaseGraphNode = Schema.Struct(
-  {
-    id: Schema.String,
-    type: Schema.optional(Schema.String),
-    data: Schema.optional(Schema.Any),
-  },
-  // {
-  //   key: Schema.String,
-  //   value: Schema.Any,
-  // },
-);
+// TODO(burdon): Make type extensible (i.e., not dependent on `data` property)?
+export const BaseGraphNode = Schema.Struct({
+  id: Schema.String,
+  type: Schema.optional(Schema.String),
+  data: Schema.optional(Schema.Any),
+});
 
 /** Raw base type. */
 export type BaseGraphNode = Schema.Schema.Type<typeof BaseGraphNode>;
@@ -44,9 +39,9 @@ export declare namespace GraphNode {
 export const BaseGraphEdge = Schema.Struct({
   id: Schema.String,
   type: Schema.optional(Schema.String),
-  data: Schema.optional(Schema.Any),
   source: Schema.String,
   target: Schema.String,
+  data: Schema.optional(Schema.Any),
 });
 
 /** Raw base type. */

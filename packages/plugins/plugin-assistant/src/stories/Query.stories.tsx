@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { combine, timeout } from '@dxos/async';
-import { getLabel, getSchema, type BaseEchoObject } from '@dxos/echo-schema';
+import { getLabelForObject, type BaseEchoObject } from '@dxos/echo-schema';
 import { D3ForceGraph } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, Query, useQuery, useSpace } from '@dxos/react-client/echo';
@@ -63,6 +63,10 @@ const DefaultStory = () => {
     );
   }, [space]);
 
+  const handleRefresh = useCallback(() => {
+    model.invalidate();
+  }, [model]);
+
   const handleSubmit = useCallback<NonNullable<PromptBarProps['onSubmit']>>(
     (text) => {
       try {
@@ -76,10 +80,6 @@ const DefaultStory = () => {
     [space],
   );
 
-  const handleRefresh = useCallback(() => {
-    model.invalidate();
-  }, [model]);
-
   return (
     <div className='grow grid overflow-hidden'>
       <div className='grow grid grid-cols-[1fr_30rem] overflow-hidden'>
@@ -88,19 +88,7 @@ const DefaultStory = () => {
           <Toolbar.Root>
             <Toolbar.Button onClick={handleRefresh}>Refresh</Toolbar.Button>
           </Toolbar.Root>
-          <ItemList
-            items={items}
-            getTitle={(item) => {
-              // TODO(burdon): Factor out.
-              const schema = getSchema(item);
-              if (!schema) {
-                return undefined;
-              }
-
-              const label = getLabel(schema, item);
-              return label;
-            }}
-          />
+          <ItemList items={items} getTitle={(item) => getLabelForObject(item)} />
           <JsonFilter data={{ model, db: space?.db }} />
         </div>
       </div>

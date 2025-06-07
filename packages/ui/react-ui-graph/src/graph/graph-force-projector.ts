@@ -163,7 +163,7 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
   }
 
   override onUpdate(graph?: Graph) {
-    log.info('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
+    log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this._simulation.stop();
 
     this.mergeData(graph);

@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { batch } from '@preact/signals-core';
+
 import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { getSource, getTarget, isRelation, type AnyLiveObject } from '@dxos/echo-db';
@@ -119,7 +121,9 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     clearTimeout(this._timeout);
     this._timeout = setTimeout(() => {
       if (this.isOpen()) {
-        this._update();
+        batch(() => {
+          this._update();
+        });
       }
     }, 0);
   }
@@ -138,10 +142,12 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   }
 
   private _update() {
-    log.info('update');
+    log('update');
 
     // TOOD(burdon): Merge edges also?
     const currentNodes = [...this._graph.nodes];
+
+    // TOOD(burdon): Causes D3 graph to reset since live? Batch preact changes?
     this.clear();
 
     const addSchema = (typename: string) => {

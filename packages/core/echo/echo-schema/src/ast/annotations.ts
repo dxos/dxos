@@ -11,6 +11,7 @@ import { type Primitive } from '@dxos/util';
 
 import { createAnnotationHelper } from './annotation-helper';
 import { EntityKind } from './entity-kind';
+import { getSchema } from './schema';
 
 /**
  * ECHO identifier (for a stored schema).
@@ -146,6 +147,16 @@ export type SchemaMeta = TypeMeta & { id: string };
 export const LabelAnnotationId = Symbol.for('@dxos/schema/annotation/Label');
 
 export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationId);
+
+/**
+ * Returns the label for a given object based on {@link LabelAnnotationId}.
+ */
+export const getLabelForObject = (obj: unknown | undefined): string | undefined => {
+  const schema = getSchema(obj);
+  if (schema) {
+    return getLabel(schema, obj);
+  }
+};
 
 /**
  * Returns the label for a given object based on {@link LabelAnnotationId}.
