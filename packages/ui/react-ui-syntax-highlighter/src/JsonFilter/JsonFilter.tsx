@@ -37,7 +37,7 @@ export const JsonFilter = ({ data: initialData, classNames }: JsonProps) => {
         setError(err as Error);
       }
     }
-  }, [text]);
+  }, [initialData, text]); // TODO(burdon): Need structural diff.
 
   return (
     <div className='flex flex-col grow overflow-hidden'>

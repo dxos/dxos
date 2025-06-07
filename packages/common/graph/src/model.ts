@@ -38,18 +38,10 @@ export class ReadonlyGraphModel<
   /**
    * Return stable sorted JSON representation of graph.
    */
-  // TODO(burdon): Create separate toJson method with computed signal.
   toJSON() {
-    // const { id, nodes, edges } = getSnapshot(this._graph); // TODO(burdon): Remove dependency.
-    // nodes.sort(({ id: a }, { id: b }) => a.localeCompare(b));
-    // edges.sort(({ id: a }, { id: b }) => a.localeCompare(b));
-    // return stripUndefined({ id, nodes, edges });
-    // return {
-    //   nodes: this.nodes.length,
-    //   edges: this.edges.length,
-    // };
     return {
-      iAmAGraph: true,
+      nodes: this.nodes.length,
+      edges: this.edges.length,
     };
   }
 

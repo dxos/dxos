@@ -91,8 +91,11 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
   );
 
   const handleCancel = useCallback<NonNullable<PromptBarProps['onCancel']>>(() => {
+    setAst(undefined);
     setFilter(undefined);
   }, []);
+
+  console.log(items.length);
 
   return (
     <div className='grow grid overflow-hidden'>
