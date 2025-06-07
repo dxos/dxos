@@ -59,8 +59,8 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
       timeout(async () => {
         const createObjects = createObjectFactory(space.db, generator);
         await createObjects([
-          { type: DataType.Organization, count: 10 },
-          { type: DataType.Person, count: 20 },
+          { type: DataType.Organization, count: 30 },
+          { type: DataType.Person, count: 50 },
         ]);
 
         void model?.open(space);
@@ -105,7 +105,15 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
               <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='refresh' onClick={handleRefresh} />
             </Toolbar.Root>
             <ItemList items={items} getTitle={(item) => getLabelForObject(item)} />
-            <JsonFilter data={{ model: model?.toJSON(), db: space?.db.toJSON(), items: items.length, ast }} />
+            <JsonFilter
+              data={{
+                model: model?.toJSON(),
+                db: space?.db.toJSON(),
+                selection: selection.toJSON(),
+                items: items.length,
+                ast,
+              }}
+            />
           </div>
         )}
       </div>

@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useMemo, useRef } from 'react';
+import React, { type FC, useCallback, useMemo, useRef } from 'react';
 
 import { SelectionModel } from '@dxos/graph';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { GraphForceProjector, SVG, type SVGContext } from '@dxos/react-ui-graph';
+import { GraphForceProjector, type GraphProps, SVG, type SVGContext } from '@dxos/react-ui-graph';
 import { type SpaceGraphNode, type SpaceGraphModel, type SpaceGraphEdge } from '@dxos/schema';
 
 import '@dxos/react-ui-graph/styles/graph.css';
@@ -39,6 +39,17 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
     [context.current],
   );
 
+  const handleSelect = useCallback<NonNullable<GraphProps['onSelect']>>(
+    (node) => {
+      if (selection.contains(node.id)) {
+        selection.remove(node.id);
+      } else {
+        selection.add(node.id);
+      }
+    },
+    [selection],
+  );
+
   return (
     <SVG.Root ref={context} classNames={classNames}>
       <SVG.Markers />
@@ -60,13 +71,7 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
               },
             }),
           }}
-          onSelect={(node) => {
-            if (selection.contains(node.id)) {
-              selection.remove(node.id);
-            } else {
-              selection.contains(node.id);
-            }
-          }}
+          onSelect={handleSelect}
         />
       </SVG.Zoom>
     </SVG.Root>
