@@ -2,10 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import { identity } from 'effect';
 import { useMemo, useSyncExternalStore } from 'react';
 
 import { type Echo, Filter, type Live, Query, type Space, isSpace } from '@dxos/client/echo';
-import { getDebugName } from '@dxos/util';
+
+const EMPTY_ARRAY: never[] = [];
 
 // TODO(dmaretskyi): Queries are fully serializable, so we can remove `deps` argument.
 interface UseQueryFn {
@@ -27,10 +29,6 @@ export const useQuery: UseQueryFn = (
 ): Live<unknown>[] => {
   const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
 
-  console.log(
-    [getDebugName(spaceOrEcho), JSON.stringify(query.ast), ...(deps ?? [])].length,
-    ...[getDebugName(spaceOrEcho), JSON.stringify(query.ast), ...(deps ?? [])],
-  );
   const { getObjects, subscribe } = useMemo(() => {
     let subscribed = false;
     const queryResult =
@@ -44,7 +42,7 @@ export const useQuery: UseQueryFn = (
       getObjects: () => (subscribed && queryResult ? queryResult.objects : EMPTY_ARRAY),
       subscribe: (cb: () => void) => {
         subscribed = true;
-        const unsubscribe = queryResult?.subscribe(cb) ?? noop;
+        const unsubscribe = queryResult?.subscribe(cb) ?? identity;
         return () => {
           unsubscribe?.();
           subscribed = false;
@@ -58,7 +56,3 @@ export const useQuery: UseQueryFn = (
   const objects = useSyncExternalStore<Live<unknown>[] | undefined>(subscribe, getObjects);
   return objects ?? [];
 };
-
-const noop = () => {};
-
-const EMPTY_ARRAY: never[] = [];

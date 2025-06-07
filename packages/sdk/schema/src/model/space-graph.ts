@@ -7,7 +7,7 @@ import { batch } from '@preact/signals-core';
 import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { getSource, getTarget, isRelation, type AnyLiveObject } from '@dxos/echo-db';
-import { Filter, getSchema, getSchemaDXN, type EchoSchema, StoredSchema, getLabel, Query } from '@dxos/echo-schema';
+import { Filter, getSchema, getSchemaDXN, type EchoSchema, getLabel, Query } from '@dxos/echo-schema';
 import { Ref } from '@dxos/echo-schema';
 import { type GraphEdge, AbstractGraphBuilder, type Graph, ReactiveGraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
@@ -31,13 +31,11 @@ export type SpaceGraphEdge = GraphEdge.Optional;
 
 class SpaceGraphBuilder extends AbstractGraphBuilder<SpaceGraphNode, SpaceGraphEdge, SpaceGraphModel> {}
 
-const defaultFilter: Filter<any> = Filter.not(Filter.or(Filter.type(StoredSchema)));
+const defaultFilter: Filter<any> = Filter.everything();
 
 export type SpaceGraphModelOptions = {
   showSchema?: boolean;
 };
-
-let updateCount = 0;
 
 /**
  * Converts ECHO objects to a graph.
@@ -136,11 +134,6 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     invariant(this._space);
     this._objectsSubscription = this._space.db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
       ({ objects }) => {
-        if(++updateCount > 1_000) {
-          return;
-        }
-
-        console.log('objects', objects.length);
         this._objects = [...objects];
         this.invalidate();
       },
@@ -149,7 +142,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   }
 
   private _update() {
-    console.log('update');
+    log.info('update');
 
     // TOOD(burdon): Merge edges also?
     const currentNodes = [...this._graph.nodes];

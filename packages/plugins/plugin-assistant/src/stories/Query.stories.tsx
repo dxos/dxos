@@ -35,18 +35,18 @@ const generator = faker as any as ValueGenerator;
 type Mode = 'graph' | 'list';
 
 const DefaultStory = ({ mode }: { mode?: Mode }) => {
+  const showList = mode !== 'graph';
+  const showGraph = mode !== 'list';
   const space = useSpace();
   const [ast, setAst] = useState<Expression | undefined>();
   const [filter, setFilter] = useState<Filter.Any>();
   const items = useQuery(space, Query.select(filter ?? Filter.everything()));
-  const [model] = useState<SpaceGraphModel | undefined>(() => (mode === 'list' ? undefined : new SpaceGraphModel()));
+  const [model] = useState<SpaceGraphModel | undefined>(() => (showGraph ? new SpaceGraphModel() : undefined));
 
   // TODO(burdon): Breaks links.
   // useEffect(() => {
   //   model.setFilter(filter ?? Filter.everything());
   // }, [model, filter]);
-
-  console.log('DefaultStory');
 
   useEffect(() => {
     if (!space) {
@@ -61,11 +61,9 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
           { type: DataType.Person, count: 20 },
         ]);
 
-        console.log('open', model);
         void model?.open(space);
       }),
       () => {
-        console.log('close', model);
         void model?.close();
       },
     );
@@ -93,14 +91,14 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
   return (
     <div className='grow grid overflow-hidden'>
       <div className={mx('grow grid overflow-hidden', !mode && 'grid-cols-[1fr_30rem]')}>
-        {mode !== 'list' && <D3ForceGraph classNames='border-ie border-separator' model={model} />}
-        {mode !== 'graph' && (
+        {showGraph && <D3ForceGraph classNames='border-ie border-separator' model={model} />}
+        {showList && (
           <div className='grow grid grid-rows-[min-content_1fr_1fr] overflow-hidden divide-y divide-separator'>
             <Toolbar.Root>
               <Toolbar.Button onClick={handleRefresh}>Refresh</Toolbar.Button>
             </Toolbar.Root>
             <ItemList items={items} getTitle={(item) => getLabelForObject(item)} />
-            <JsonFilter data={{ model: model?.toJSON(), db: space?.db, items: items.length, ast }} />
+            <JsonFilter data={{ model: model?.toJSON(), db: space?.db.toJSON(), items: items.length, ast }} />
           </div>
         )}
       </div>
