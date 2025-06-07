@@ -6,8 +6,8 @@ import { effect } from '@preact/signals-core';
 
 import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { getSnapshot, type Live, live } from '@dxos/live-object';
-import { type MakeOptional, isNotFalsy, removeBy, stripUndefined } from '@dxos/util';
+import { type Live, live } from '@dxos/live-object';
+import { type MakeOptional, isNotFalsy, removeBy } from '@dxos/util';
 
 import { type BaseGraphEdge, type BaseGraphNode, type Graph, type GraphEdge, type GraphNode } from './types';
 import { createEdgeId } from './util';
@@ -40,10 +40,17 @@ export class ReadonlyGraphModel<
    */
   // TODO(burdon): Create separate toJson method with computed signal.
   toJSON() {
-    const { id, nodes, edges } = getSnapshot(this._graph); // TODO(burdon): Remove dependency.
-    nodes.sort(({ id: a }, { id: b }) => a.localeCompare(b));
-    edges.sort(({ id: a }, { id: b }) => a.localeCompare(b));
-    return stripUndefined({ id, nodes, edges });
+    // const { id, nodes, edges } = getSnapshot(this._graph); // TODO(burdon): Remove dependency.
+    // nodes.sort(({ id: a }, { id: b }) => a.localeCompare(b));
+    // edges.sort(({ id: a }, { id: b }) => a.localeCompare(b));
+    // return stripUndefined({ id, nodes, edges });
+    // return {
+    //   nodes: this.nodes.length,
+    //   edges: this.edges.length,
+    // };
+    return {
+      iAmAGraph: true,
+    };
   }
 
   get graph(): Graph {

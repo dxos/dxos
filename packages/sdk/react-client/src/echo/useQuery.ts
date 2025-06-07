@@ -5,6 +5,7 @@
 import { useMemo, useSyncExternalStore } from 'react';
 
 import { type Echo, Filter, type Live, Query, type Space, isSpace } from '@dxos/client/echo';
+import { getDebugName } from '@dxos/util';
 
 // TODO(dmaretskyi): Queries are fully serializable, so we can remove `deps` argument.
 interface UseQueryFn {
@@ -26,6 +27,10 @@ export const useQuery: UseQueryFn = (
 ): Live<unknown>[] => {
   const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
 
+  console.log(
+    [getDebugName(spaceOrEcho), JSON.stringify(query.ast), ...(deps ?? [])].length,
+    ...[getDebugName(spaceOrEcho), JSON.stringify(query.ast), ...(deps ?? [])],
+  );
   const { getObjects, subscribe } = useMemo(() => {
     let subscribed = false;
     const queryResult =
@@ -46,7 +51,7 @@ export const useQuery: UseQueryFn = (
         };
       },
     };
-  }, [spaceOrEcho, ...JSON.stringify(query.ast), ...(deps ?? [])]);
+  }, [spaceOrEcho, JSON.stringify(query.ast), ...(deps ?? [])]);
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
   // NOTE: This hook will resubscribe whenever the callback passed to the first argument changes; make sure it is stable.

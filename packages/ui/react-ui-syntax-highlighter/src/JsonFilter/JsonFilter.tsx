@@ -37,7 +37,7 @@ export const JsonFilter = ({ data: initialData, classNames }: JsonProps) => {
         setError(err as Error);
       }
     }
-  }, [initialData, text]);
+  }, [text]);
 
   return (
     <div className='flex flex-col grow overflow-hidden'>

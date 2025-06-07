@@ -37,6 +37,8 @@ export type SpaceGraphModelOptions = {
   showSchema?: boolean;
 };
 
+let updateCount = 0;
+
 /**
  * Converts ECHO objects to a graph.
  */
@@ -134,6 +136,11 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     invariant(this._space);
     this._objectsSubscription = this._space.db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
       ({ objects }) => {
+        if(++updateCount > 1_000) {
+          return;
+        }
+
+        console.log('objects', objects.length);
         this._objects = [...objects];
         this.invalidate();
       },
@@ -142,7 +149,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   }
 
   private _update() {
-    log('update');
+    console.log('update');
 
     // TOOD(burdon): Merge edges also?
     const currentNodes = [...this._graph.nodes];
