@@ -84,11 +84,15 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
         const filter = createFilter(ast);
         setFilter(filter);
       } catch (err) {
-        // Ignore.
+        // Ignore invalid filters.
       }
     },
     [space],
   );
+
+  const handleCancel = useCallback<NonNullable<PromptBarProps['onCancel']>>(() => {
+    setFilter(undefined);
+  }, []);
 
   return (
     <div className='grow grid overflow-hidden'>
@@ -109,7 +113,7 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
         <AmbientDialog resizeable={false}> */}
       <div className='fixed bottom-8 left-1/2 -translate-x-1/2'>
         <div className='w-[30rem] p-1 bg-groupSurface border border-separator rounded'>
-          <PromptBar onSubmit={handleSubmit} />
+          <PromptBar onSubmit={handleSubmit} onCancel={handleCancel} />
         </div>
       </div>
       {/* </AmbientDialog>
