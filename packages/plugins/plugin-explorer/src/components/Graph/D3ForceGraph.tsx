@@ -18,7 +18,7 @@ export type D3ForceGraphProps = ThemedClassName<{
 }>;
 
 export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selection: _selection }) => {
-  const selected = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
+  const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
   const context = useRef<SVGContext>(null);
   const projector = useMemo<GraphForceProjector | undefined>(
     () => (context.current ? new GraphForceProjector(context.current) : undefined),
@@ -39,17 +39,18 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
               return node.data?.data.label ?? node.id;
             },
           }}
-          // TODO(burdon): Fix classes.
-          // attributes={{
-          //   node: (node) => ({
-          //     class: selected.contains(node.id) ? 'selected' : undefined,
-          //   }),
-          // }}
+          attributes={{
+            node: (node) => ({
+              classes: {
+                'dx-selected': selection.contains(node.id),
+              },
+            }),
+          }}
           onSelect={(node) => {
-            if (selected.contains(node.id)) {
-              selected.remove(node.id);
+            if (selection.contains(node.id)) {
+              selection.remove(node.id);
             } else {
-              selected.contains(node.id);
+              selection.contains(node.id);
             }
           }}
         />

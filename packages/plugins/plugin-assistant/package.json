@@ -57,6 +57,7 @@
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/live-object": "workspace:*",

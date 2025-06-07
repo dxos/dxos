@@ -5,12 +5,13 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { combine, timeout } from '@dxos/async';
 import { type AnyEchoObject, getLabelForObject, Query } from '@dxos/echo-schema';
+import { SelectionModel } from '@dxos/graph';
 import { D3ForceGraph } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
@@ -37,16 +38,17 @@ type Mode = 'graph' | 'list';
 const DefaultStory = ({ mode }: { mode?: Mode }) => {
   const showList = mode !== 'graph';
   const showGraph = mode !== 'list';
-  const space = useSpace();
+
   const [ast, setAst] = useState<Expression | undefined>();
   const [filter, setFilter] = useState<Filter.Any>();
-  const items = useQuery(space, Query.select(filter ?? Filter.everything()));
   const [model] = useState<SpaceGraphModel | undefined>(() => (showGraph ? new SpaceGraphModel() : undefined));
+  const selection = useMemo(() => new SelectionModel(), []);
 
-  // TODO(burdon): Breaks links.
-  // useEffect(() => {
-  //   model.setFilter(filter ?? Filter.everything());
-  // }, [model, filter]);
+  const space = useSpace();
+  const items = useQuery(space, Query.select(filter ?? Filter.everything()));
+  useEffect(() => {
+    model.setFilter(filter ?? Filter.everything());
+  }, [model, filter]);
 
   useEffect(() => {
     if (!space) {
@@ -91,7 +93,7 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
   return (
     <div className='grow grid overflow-hidden'>
       <div className={mx('grow grid overflow-hidden', !mode && 'grid-cols-[1fr_30rem]')}>
-        {showGraph && <D3ForceGraph classNames='border-ie border-separator' model={model} />}
+        {showGraph && <D3ForceGraph classNames='border-ie border-separator' model={model} selection={selection} />}
         {showList && (
           <div className='grow grid grid-rows-[min-content_1fr_1fr] overflow-hidden divide-y divide-separator'>
             <Toolbar.Root>

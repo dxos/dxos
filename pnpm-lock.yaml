@@ -5406,6 +5406,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../../common/graph
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

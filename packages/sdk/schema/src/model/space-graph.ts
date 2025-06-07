@@ -85,7 +85,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   }
 
   async open(space: Space, selected?: string): Promise<this> {
-    log.info('open');
+    log('open');
     if (this.isOpen()) {
       await this.close();
     }
@@ -103,7 +103,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   }
 
   async close(): Promise<this> {
-    log.info('close');
+    log('close');
     this._schemaSubscription?.();
     this._schemaSubscription = undefined;
     this._objectsSubscription?.();
@@ -142,7 +142,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   }
 
   private _update() {
-    log.info('update');
+    log('update', { nodes: this._graph.nodes.length, edges: this._graph.edges.length });
 
     // TOOD(burdon): Merge edges also?
     const currentNodes = [...this._graph.nodes];

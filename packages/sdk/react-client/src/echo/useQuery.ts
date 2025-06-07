@@ -2,12 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { identity } from 'effect';
 import { useMemo, useSyncExternalStore } from 'react';
 
 import { type Echo, Filter, type Live, Query, type Space, isSpace } from '@dxos/client/echo';
 
 const EMPTY_ARRAY: never[] = [];
+
+const noop = () => {};
 
 // TODO(dmaretskyi): Queries are fully serializable, so we can remove `deps` argument.
 interface UseQueryFn {
@@ -42,7 +43,7 @@ export const useQuery: UseQueryFn = (
       getObjects: () => (subscribed && queryResult ? queryResult.objects : EMPTY_ARRAY),
       subscribe: (cb: () => void) => {
         subscribed = true;
-        const unsubscribe = queryResult?.subscribe(cb) ?? identity;
+        const unsubscribe = queryResult?.subscribe(cb) ?? noop;
         return () => {
           unsubscribe?.();
           subscribed = false;

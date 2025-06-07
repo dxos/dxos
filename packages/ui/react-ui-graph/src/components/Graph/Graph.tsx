@@ -82,7 +82,6 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
     let unsubscribe: CleanupFn | undefined;
     return combine(
       effect(() => {
-        console.log('update projector');
         projector.update(model?.graph);
       }),
       timeout(() => {
