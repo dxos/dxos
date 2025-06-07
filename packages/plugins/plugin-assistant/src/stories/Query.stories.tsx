@@ -47,7 +47,7 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
   const space = useSpace();
   const items = useQuery(space, Query.select(filter ?? Filter.everything()));
   useEffect(() => {
-    model.setFilter(filter ?? Filter.everything());
+    model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
 
   useEffect(() => {
