@@ -22,6 +22,7 @@ import { useSvgContext } from '../../hooks';
 
 export type GraphController = {
   refresh: () => void;
+  repaint: () => void;
 };
 
 export type GraphProps<Node extends BaseGraphNode = any, Edge extends BaseGraphEdge = any> = ThemedClassName<
@@ -72,7 +73,9 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
     () => ({
       refresh: () => {
         projector.update(model?.graph);
-        // renderer.update(projector.layout);
+      },
+      repaint: () => {
+        renderer.update(projector.layout);
       },
     }),
     [projector, model],

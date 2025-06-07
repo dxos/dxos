@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useCallback, useMemo, useRef } from 'react';
+import React, { type FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { SelectionModel } from '@dxos/graph';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { GraphForceProjector, type GraphProps, SVG, type SVGContext } from '@dxos/react-ui-graph';
+import { type GraphController, GraphForceProjector, type GraphProps, SVG, type SVGContext } from '@dxos/react-ui-graph';
 import { type SpaceGraphNode, type SpaceGraphModel, type SpaceGraphEdge } from '@dxos/schema';
 
 import '@dxos/react-ui-graph/styles/graph.css';
@@ -18,7 +18,6 @@ export type D3ForceGraphProps = ThemedClassName<{
 }>;
 
 export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selection: _selection }) => {
-  const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
   const context = useRef<SVGContext>(null);
   const projector = useMemo<GraphForceProjector | undefined>(
     () =>
@@ -39,6 +38,10 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
     [context.current],
   );
 
+  const graph = useRef<GraphController>(null);
+  const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
+  useEffect(() => graph.current?.repaint(), [selection.selected.value]);
+
   const handleSelect = useCallback<NonNullable<GraphProps['onSelect']>>(
     (node) => {
       if (selection.contains(node.id)) {
@@ -56,6 +59,7 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
       <SVG.Grid axis />
       <SVG.Zoom extent={[1 / 2, 2]}>
         <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
+          ref={graph}
           drag
           model={model}
           projector={projector}
