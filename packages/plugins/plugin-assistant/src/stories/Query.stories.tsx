@@ -16,6 +16,7 @@ import { D3ForceGraph } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
+import { matchCompletion, typeahead } from '@dxos/react-ui-editor';
 import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -95,6 +96,22 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
     setFilter(undefined);
   }, []);
 
+  const extensions = useMemo(
+    () => [
+      typeahead({
+        onComplete: matchCompletion([
+          //
+          'type',
+          'dxos.org',
+          'AND',
+          'OR',
+          'NOT',
+        ]),
+      }),
+    ],
+    [],
+  );
+
   return (
     <div className='grow grid overflow-hidden'>
       <div className={mx('grow grid overflow-hidden', !mode && 'grid-cols-[1fr_30rem]')}>
@@ -122,7 +139,7 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
         <AmbientDialog resizeable={false}> */}
       <div className='fixed bottom-8 left-1/2 -translate-x-1/2'>
         <div className='w-[40rem] p-1 bg-groupSurface border border-separator rounded'>
-          <PromptBar onSubmit={handleSubmit} onCancel={handleCancel} />
+          <PromptBar extensions={extensions} onSubmit={handleSubmit} onCancel={handleCancel} />
         </div>
       </div>
       {/* </AmbientDialog>

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Prec } from '@codemirror/state';
+import { type Extension, Prec } from '@codemirror/state';
 import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
@@ -15,6 +15,7 @@ import {
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
+import { isNonNullable } from '@dxos/util';
 
 import { createAutocompleteExtension, type AutocompleteOptions } from './autocomplete';
 import { promptReferences, type ReferencesProvider } from './references';
@@ -28,8 +29,9 @@ export interface PromptController {
 
 export type PromptProps = ThemedClassName<
   {
-    onOpenChange?: (open: boolean) => void;
+    extensions?: Extension;
     references?: ReferencesProvider;
+    onOpenChange?: (open: boolean) => void;
   } & AutocompleteOptions &
     Pick<UseTextEditorProps, 'autoFocus'> &
     Pick<BasicExtensionsOptions, 'lineWrapping' | 'placeholder'>
@@ -39,6 +41,8 @@ export const Prompt = forwardRef<PromptController, PromptProps>(
   (
     {
       classNames,
+      extensions,
+      references,
       autoFocus,
       lineWrapping = false,
       placeholder,
@@ -46,7 +50,6 @@ export const Prompt = forwardRef<PromptController, PromptProps>(
       onSuggest,
       onCancel,
       onOpenChange,
-      references,
     },
     forwardRef,
   ) => {
@@ -84,9 +87,10 @@ export const Prompt = forwardRef<PromptController, PromptProps>(
               },
             ]),
           ),
-        ],
+          extensions,
+        ].filter(isNonNullable),
       },
-      [themeMode, onSubmit, onSuggest],
+      [themeMode, extensions, onSubmit, onSuggest],
     );
 
     // Expose editor view.

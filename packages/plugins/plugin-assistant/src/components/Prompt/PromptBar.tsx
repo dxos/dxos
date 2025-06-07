@@ -15,7 +15,14 @@ import { ASSISTANT_PLUGIN } from '../../meta';
 export type PromptBarProps = ThemedClassName<
   Pick<
     PromptProps,
-    'placeholder' | 'lineWrapping' | 'onSubmit' | 'onSuggest' | 'onCancel' | 'onOpenChange' | 'references'
+    | 'extensions'
+    | 'references'
+    | 'placeholder'
+    | 'lineWrapping'
+    | 'onSubmit'
+    | 'onSuggest'
+    | 'onCancel'
+    | 'onOpenChange'
   > & {
     processing?: boolean;
     error?: Error;

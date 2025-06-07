@@ -117,7 +117,6 @@ export const config = (
               resolve(packages, 'app/*/src/**', contentFiles),
               resolve(packages, 'experimental/*/src/**', contentFiles),
               resolve(packages, 'plugins/*/src/**', contentFiles),
-              resolve(packages, 'plugins/experimental/*/src/**', contentFiles),
               resolve(packages, 'sdk/*/src/**', contentFiles),
               resolve(packages, 'ui/*/src/**', contentFiles),
             ],
