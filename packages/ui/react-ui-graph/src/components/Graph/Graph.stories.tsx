@@ -76,6 +76,9 @@ const DefaultStory = ({ debug, grid, graph, projectorOptions, ...props }: Defaul
         <Debug
           model={model}
           selected={selected}
+          onRefresh={() => {
+            graphRef.current?.refresh();
+          }}
           onAdd={() => {
             if (graph.nodes.length) {
               const source = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
@@ -101,11 +104,13 @@ const DefaultStory = ({ debug, grid, graph, projectorOptions, ...props }: Defaul
 const Debug = ({
   model,
   selected,
+  onRefresh,
   onAdd,
   onDelete,
 }: {
   model: GraphModel;
   selected: SelectionModel;
+  onRefresh: () => void;
   onAdd: () => void;
   onDelete: () => void;
 }) => {
@@ -123,6 +128,7 @@ const Debug = ({
     <div className='flex flex-col overflow-hidden'>
       <JsonFilter data={data} classNames='text-sm' />
       <Toolbar.Root>
+        <Toolbar.Button onClick={onRefresh}>Refresh</Toolbar.Button>
         <Toolbar.Button onClick={onAdd}>Add</Toolbar.Button>
         <Toolbar.Button onClick={onDelete}>Delete</Toolbar.Button>
       </Toolbar.Root>

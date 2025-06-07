@@ -70,7 +70,7 @@ export class ReadonlyGraphModel<
     return this.findNode(id) ?? failedInvariant();
   }
 
-  filterNodes({ type }: Partial<GraphNode> = {}): Node[] {
+  filterNodes({ type }: Partial<GraphNode.Any> = {}): Node[] {
     return this.nodes.filter((node) => !type || type === node.type);
   }
 
@@ -286,12 +286,17 @@ export class ReactiveGraphModel<
   Node extends BaseGraphNode = BaseGraphNode,
   Edge extends BaseGraphEdge = BaseGraphEdge,
 > extends GraphModel<Node, Edge> {
-  constructor(graph?: Graph) {
-    super(live({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] }));
+  constructor(graph?: Partial<Graph>) {
+    super(
+      live({
+        nodes: graph?.nodes ?? [],
+        edges: graph?.edges ?? [],
+      }),
+    );
   }
 
   override copy(graph?: Partial<Graph>) {
-    return new ReactiveGraphModel<Node, Edge>({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] });
+    return new ReactiveGraphModel<Node, Edge>(graph);
   }
 
   subscribe(cb: GraphModelSubscription, fire = false): () => void {

@@ -6,8 +6,8 @@ import React, { type FC, useMemo, useRef } from 'react';
 
 import { SelectionModel } from '@dxos/graph';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { GraphForceProjector, type GraphLayoutNode, SVG, type SVGContext } from '@dxos/react-ui-graph';
-import { type SpaceGraphModel } from '@dxos/schema';
+import { GraphForceProjector, SVG, type SVGContext } from '@dxos/react-ui-graph';
+import { type SpaceGraphNode, type SpaceGraphModel, type SpaceGraphEdge } from '@dxos/schema';
 
 import '@dxos/react-ui-graph/styles/graph.css';
 
@@ -30,22 +30,22 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
       <SVG.Markers />
       <SVG.Grid axis />
       <SVG.Zoom extent={[1 / 2, 2]}>
-        <SVG.Graph
+        <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
           drag
           model={model}
           projector={projector}
           labels={{
-            text: (node: GraphLayoutNode) => {
-              return node.data.data.label ?? node.id;
+            text: (node) => {
+              return node.data?.data.label ?? node.id;
             },
           }}
           // TODO(burdon): Fix classes.
           // attributes={{
-          //   node: (node: GraphLayoutNode) => ({
+          //   node: (node) => ({
           //     class: selected.contains(node.id) ? 'selected' : undefined,
           //   }),
           // }}
-          onSelect={(node: GraphLayoutNode) => {
+          onSelect={(node) => {
             if (selected.contains(node.id)) {
               selected.remove(node.id);
             } else {

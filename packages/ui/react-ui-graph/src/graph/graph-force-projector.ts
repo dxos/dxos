@@ -15,6 +15,7 @@ import {
 } from 'd3';
 
 import { type Graph } from '@dxos/graph';
+import { log } from '@dxos/log';
 
 import { Projector, type ProjectorOptions } from './projector';
 import { emptyGraph, type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from './types';
@@ -137,7 +138,7 @@ export type GraphForceProjectorOptions = ProjectorOptions &
 /**
  * D3 force layout.
  */
-export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForceProjectorOptions> {
+export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayout<Data>, GraphForceProjectorOptions> {
   // https://github.com/d3/d3-force
   _simulation = forceSimulation<GraphLayoutNode, GraphLayoutEdge>();
 
@@ -161,9 +162,11 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
     return this._layout.graph.edges.filter((edge) => edge.source.id === this.options.idAccessor(node)).length;
   }
 
-  override onUpdate(data?: Graph) {
-    this.mergeData(data);
+  override onUpdate(graph?: Graph) {
+    log.info('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this._simulation.stop();
+
+    this.mergeData(graph);
     this.updateForces(this.options.forces);
 
     // Guides.
@@ -182,7 +185,7 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
     // Initialize nodes.
     this._layout.graph.nodes.forEach((node) => {
       if (!node.initialized) {
-        // Get starting point from edgeed element.
+        // Get starting point from linked element.
         const edge = this._layout.graph.edges.find((edge) => edge.target.id === this.options.idAccessor(node));
 
         // Initial positions.
@@ -249,18 +252,18 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
    * Merge external data with internal representation (e.g., so force properties like position are preserved).
    * @param data
    */
-  private mergeData(data: Graph = emptyGraph): GraphLayout {
+  private mergeData(data: Graph = emptyGraph) {
     // Merge nodes.
     const nodes: GraphLayoutNode[] = data.nodes.map((node) => {
-      let existing: GraphLayoutNode = this._layout.graph.nodes.find((n) => n.id === this.options.idAccessor(node));
-      if (!existing) {
-        existing = {
+      let current: GraphLayoutNode = this._layout.graph.nodes.find((n) => n.id === this.options.idAccessor(node));
+      if (!current) {
+        current = {
           id: this.options.idAccessor(node),
         };
       }
 
-      existing.data = node;
-      return existing;
+      current.data = node;
+      return current;
     });
 
     // Replace edges.
@@ -278,8 +281,6 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
         edges,
       },
     };
-
-    return this._layout;
   }
 
   override async onStart() {

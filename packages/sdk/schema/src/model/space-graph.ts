@@ -7,9 +7,8 @@ import { type Space } from '@dxos/client-protocol';
 import { getSource, getTarget, isRelation, type AnyLiveObject } from '@dxos/echo-db';
 import { Filter, getSchema, getSchemaDXN, type EchoSchema, StoredSchema, getLabel, Query } from '@dxos/echo-schema';
 import { Ref } from '@dxos/echo-schema';
-import { type GraphEdge, AbstractGraphBuilder, Graph, ReactiveGraphModel } from '@dxos/graph';
+import { type GraphEdge, AbstractGraphBuilder, type Graph, ReactiveGraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
-import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { visitValues } from '@dxos/util';
 
@@ -20,29 +19,15 @@ import { visitValues } from '@dxos/util';
 // - https://observablehq.com/@d3/psr-b1919-21
 // - https://vasturiano.github.io/react-force-graph/example/basic (3D)
 
-type SchemaGraphNode = {
-  id: string;
-  type: 'schema';
-  data: {
-    typename: string;
-  };
-};
+export type SpaceGraphNode = GraphNode.Required<{
+  label: string;
+  object?: AnyLiveObject<any>;
+}>;
 
-type ObjectGraphNode = {
-  id: string;
-  type: 'object';
-  data: {
-    typename: string;
-    object: AnyLiveObject<any>;
-  };
-};
+// TODO(burdon): Differentiate between refs and relations.
+export type SpaceGraphEdge = GraphEdge.Optional;
 
-export type EchoGraphNode = SchemaGraphNode | ObjectGraphNode;
-
-// TODO(burdon): Differentiate between refs and relations (via type?).
-export type EchoGraphEdge = GraphEdge.Optional;
-
-class SpaceGraphBuilder extends AbstractGraphBuilder<EchoGraphNode, EchoGraphEdge, SpaceGraphModel> {}
+class SpaceGraphBuilder extends AbstractGraphBuilder<SpaceGraphNode, SpaceGraphEdge, SpaceGraphModel> {}
 
 const defaultFilter: Filter<any> = Filter.not(Filter.or(Filter.type(StoredSchema)));
 
@@ -53,7 +38,7 @@ export type SpaceGraphModelOptions = {
 /**
  * Converts ECHO objects to a graph.
  */
-export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraphEdge> {
+export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGraphEdge> {
   private _options?: SpaceGraphModelOptions;
   private _filter?: Filter.Any;
 
@@ -62,20 +47,6 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
   private _schemaSubscription?: CleanupFn;
   private _objects?: AnyLiveObject<any>[];
   private _objectsSubscription?: CleanupFn;
-
-  constructor(
-    /**
-     * Provide existing reactive graph?
-     */
-    graph?: Partial<Graph>,
-  ) {
-    super(
-      live(Graph, {
-        nodes: graph?.nodes ?? [],
-        edges: graph?.edges ?? [],
-      }),
-    );
-  }
 
   override get builder() {
     return new SpaceGraphBuilder(this);
@@ -167,8 +138,10 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
   }
 
   private _update() {
-    // Merge with current nodes.
-    const currentNodes = this._graph.nodes;
+    log.info('update');
+
+    // TOOD(burdon): Merge edges also?
+    const currentNodes = [...this._graph.nodes];
     this.clear();
 
     const addSchema = (typename: string) => {
@@ -176,14 +149,18 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
         return;
       }
 
-      const current = currentNodes.find((node) => node.id === typename);
       if (typename) {
-        this._graph.nodes.push({
-          ...current,
-          id: typename,
-          type: 'schema',
-          data: { typename },
-        });
+        const current = currentNodes.find((node) => node.id === typename);
+        this._graph.nodes.push(
+          current ??
+            ({
+              id: typename,
+              type: 'schema',
+              data: {
+                label: typename,
+              },
+            } satisfies SpaceGraphNode),
+        );
       }
     };
 
@@ -210,17 +187,28 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
         return;
       }
 
-      if (!(isRelation(object) as boolean)) {
+      if (isRelation(object) as boolean) {
+        this.addEdge({
+          id: object.id,
+          type: 'relation',
+          source: getSource(object).id,
+          target: getTarget(object).id,
+        });
+      } else {
         const typename = getSchemaDXN(schema)?.typename;
         if (typename) {
           const current = currentNodes.find((node) => node.id === object.id);
-          const label = getLabel(schema, object);
-          this._graph.nodes.push({
-            ...current,
-            id: object.id,
-            type: 'object',
-            data: { typename, object, label },
-          });
+          this._graph.nodes.push(
+            current ??
+              ({
+                id: object.id,
+                type: 'object',
+                data: {
+                  label: getLabel(schema, object) ?? object.id,
+                  object,
+                },
+              } satisfies SpaceGraphNode),
+          );
 
           // Link to schema.
           if (this._options?.showSchema) {
@@ -253,13 +241,6 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
             });
           }
         }
-      } else {
-        this.addEdge({
-          id: object.id,
-          type: 'relation',
-          source: getSource(object).id,
-          target: getTarget(object).id,
-        });
       }
     });
   }

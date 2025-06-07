@@ -17,8 +17,8 @@ import { getSchemaProperties } from '../properties';
  */
 export const createGraph = <T extends BaseObject>(
   objects: AnyLiveObject<T>[],
-): GraphModel<GraphNode<AnyLiveObject<T>>> => {
-  const graph = new GraphModel<GraphNode<AnyLiveObject<T>>>(live(Graph, { nodes: [], edges: [] }));
+): GraphModel<GraphNode.Required<AnyLiveObject<T>>> => {
+  const graph = new GraphModel<GraphNode.Required<AnyLiveObject<T>>>(live(Graph, { nodes: [], edges: [] }));
 
   // Map objects.
   objects.forEach((object) => {

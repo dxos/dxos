@@ -6,35 +6,35 @@ import { Schema } from 'effect';
 
 import { type Specialize } from '@dxos/util';
 
-// TODO(burdon): Generalize `id` via accessor.
-
 //
 // Node
 //
 
-export const BaseGraphNode = Schema.Struct({
-  id: Schema.String,
-  type: Schema.optional(Schema.String),
-  data: Schema.optional(Schema.Any),
-});
-
-// TODO(burdon): Why not just add to `data`?
-export const ExtendableBaseGraphNode = Schema.extend(
-  BaseGraphNode,
-  Schema.Struct({}, { key: Schema.String, value: Schema.Any }),
+export const BaseGraphNode = Schema.Struct(
+  {
+    id: Schema.String,
+    type: Schema.optional(Schema.String),
+    data: Schema.optional(Schema.Any),
+  },
+  // {
+  //   key: Schema.String,
+  //   value: Schema.Any,
+  // },
 );
 
 /** Raw base type. */
 export type BaseGraphNode = Schema.Schema.Type<typeof BaseGraphNode>;
 
 /** Typed node data. */
-export type GraphNode<Data = any, Optional extends boolean = false> = Specialize<
+type GraphNode<Data = any, Optional extends boolean = false> = Specialize<
   BaseGraphNode,
   Optional extends true ? { data?: Data } : { data: Data }
 >;
 
 export declare namespace GraphNode {
-  export type Optional<T = any> = GraphNode<T, true>;
+  export type Any = GraphNode<any, true>;
+  export type Optional<Data = any> = GraphNode<Data, true>;
+  export type Required<Data = any> = GraphNode<Data, false>;
 }
 
 //
@@ -59,7 +59,9 @@ export type GraphEdge<Data = any, Optional extends boolean = false> = Specialize
 >;
 
 export declare namespace GraphEdge {
-  export type Optional<T = any> = GraphEdge<T, true>;
+  export type Any = GraphEdge<any, true>;
+  export type Optional<Data = any> = GraphEdge<Data, true>;
+  export type Required<Data = any> = GraphEdge<Data, false>;
 }
 
 //
@@ -68,7 +70,7 @@ export declare namespace GraphEdge {
 
 export const Graph = Schema.Struct({
   id: Schema.optional(Schema.String),
-  nodes: Schema.mutable(Schema.Array(ExtendableBaseGraphNode)),
+  nodes: Schema.mutable(Schema.Array(BaseGraphNode)),
   edges: Schema.mutable(Schema.Array(BaseGraphEdge)),
 });
 

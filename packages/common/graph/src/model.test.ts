@@ -104,7 +104,7 @@ describe('Graph', () => {
 
   test('optional', ({ expect }) => {
     {
-      const graph = new GraphModel<GraphNode<string>>();
+      const graph = new GraphModel<GraphNode.Required<string>>();
       const node = graph.addNode({ id: 'test', data: 'test' });
       expect(node.data.length).to.eq(4);
     }
@@ -117,7 +117,7 @@ describe('Graph', () => {
   });
 
   test('add and remove subgraphs', ({ expect }) => {
-    const graph = new GraphModel<GraphNode<TestData>>();
+    const graph = new GraphModel<GraphNode.Required<TestData>>();
     graph.builder
       .addNode({ id: 'node1', data: { value: 'test' } })
       .addNode({ id: 'node2', data: { value: 'test' } })

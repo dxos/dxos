@@ -82,7 +82,7 @@ const DefaultStory = () => {
 
   return (
     <div className='grow grid overflow-hidden'>
-      <div className='grow grid grid-cols-[1fr_400px] overflow-hidden'>
+      <div className='grow grid grid-cols-[1fr_30rem] overflow-hidden'>
         <D3ForceGraph classNames='border-ie border-separator' model={model} />
         <div className='grow grid grid-rows-[min-content_1fr_1fr] overflow-hidden divide-y divide-separator'>
           <Toolbar.Root>
