@@ -54,6 +54,9 @@ const DefaultStory = ({ debug, grid, graph, projectorOptions, ...props }: Defaul
             }}
             attributes={{
               node: (node: GraphLayoutNode<TestNode>) => ({
+                data: {
+                  color: node.data.type,
+                },
                 classes: {
                   'dx-selected': selected.contains(node.id),
                 },
@@ -209,15 +212,21 @@ export const Force: Story = {
 
 export const Select: Story = {
   args: {
-    debug: true,
-    graph: createGraph(150, 50),
+    debug: false,
+    graph: createGraph(100, 30, ['1', '2', '3', '4', '5', '6']),
     drag: true,
+    grid: true,
     subgraphs: true,
     projectorOptions: {
       forces: {
-        radial: {
-          radius: 200,
-          strength: 0.05,
+        collide: true,
+        x: {
+          value: 0,
+          strength: 0.02,
+        },
+        y: {
+          value: 0,
+          strength: 0.02,
         },
       },
     },

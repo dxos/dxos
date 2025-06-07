@@ -75,6 +75,8 @@ export type ForceManyBodyOptions = {
  * https://github.com/d3/d3-force#centering
  */
 export type ForceCenterOptions = {
+  x?: number;
+  y?: number;
   strength?: number;
 };
 
@@ -187,13 +189,16 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
       if (!node.initialized) {
         // Get starting point from linked element.
         const edge = this._layout.graph.edges.find((edge) => edge.target.id === this.options.idAccessor(node));
+        const a = 2 * Math.PI * Math.random();
+        const r = this.options.radius ?? 200;
 
         // Initial positions.
         Object.assign(node, {
           initialized: true,
+
           // Position around center or parent; must have delta to avoid spike.
-          x: edge?.source?.x + (Math.random() - 0.5) * (this.options.radius ?? 100),
-          y: edge?.source?.y + (Math.random() - 0.5) * (this.options.radius ?? 100),
+          x: edge?.source?.x + r * Math.cos(a),
+          y: edge?.source?.y + r * Math.sin(a),
         });
       }
 
@@ -301,9 +306,9 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
       .on('tick', () => {
         this.updated.emit({ layout: this._layout });
       })
-      .on('end', () => {
-        // alpha < alphaMin
-      })
+      // .on('end', () => {
+      // alpha < alphaMin
+      // })
 
       // .alphaDecay(1 - Math.pow(0.001, 1 / 300))
       .alphaTarget(0)
@@ -319,6 +324,8 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
    * Update all forces.
    */
   private updateForces(forces: ForceOptions) {
+    log('updateForces', { forces });
+
     // https://github.com/d3/d3-force#simulation_force
     this._simulation
 
@@ -347,7 +354,9 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
       .force(
         'center',
         maybeForce<ForceCenterOptions>(forces?.center, (config: ForceCenterOptions) => {
-          const force = forceCenter();
+          const force = forceCenter()
+            .x(config.x ?? 0)
+            .y(config.y ?? 0);
           if (config.strength != null) {
             force.strength(config.strength);
           }

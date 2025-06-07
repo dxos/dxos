@@ -95,8 +95,6 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
     setFilter(undefined);
   }, []);
 
-  console.log(items.length);
-
   return (
     <div className='grow grid overflow-hidden'>
       <div className={mx('grow grid overflow-hidden', !mode && 'grid-cols-[1fr_30rem]')}>

@@ -19,6 +19,7 @@ export type LabelOptions<Data = any> = {
 export type AttributesOptions<Data = any> = {
   node?: (node: GraphLayoutNode<Data>) => {
     classes?: Record<string, boolean>;
+    data?: Record<string, string>;
   };
 
   link?: (edge: GraphLayoutEdge<Data>) => {
@@ -110,8 +111,10 @@ export class GraphRenderer<Data = any> extends Renderer<GraphLayout<Data>, Graph
             const clipperPath = hullPoints.map(([x, y]) => ({ X: x * scale, Y: y * scale }));
             co.AddPath(clipperPath, Clipper.JoinType.jtRound, Clipper.EndType.etClosedPolygon);
             co.Execute(solution, offsetDistance);
-            const offset = solution[0].map(({ X, Y }) => [X / scale, Y / scale]);
-            return createLine([...offset, offset[0]]);
+            if (solution.length > 0) {
+              const offset = solution[0].map(({ X, Y }) => [X / scale, Y / scale]);
+              return createLine([...offset, offset[0]]);
+            }
           });
         },
       );
@@ -127,7 +130,6 @@ export class GraphRenderer<Data = any> extends Renderer<GraphLayout<Data>, Graph
       .classed('dx-edges', true)
       .selectAll<SVGPathElement, GraphLayoutEdge<Data>>('g.dx-edge')
       .data(layout.graph?.edges ?? [], (d) => d.id)
-      // TODO(burdon): Strickly speaking should render nodes first but in lower group.
       .join((enter) => enter.append('g').classed('dx-edge', true).call(createEdge, this.options))
       .call(updateEdge, this.options);
 
@@ -179,7 +181,7 @@ const createNode: D3Callable = <Data>(group: D3Selection, options: GraphRenderer
 
   // Label.
   if (options.labels) {
-    const g = group.append('g');
+    const g = group.append('g').classed('dx-label', true);
     g.append('line');
     g.append('rect');
     g.append('text').style('dominant-baseline', 'middle');
@@ -188,7 +190,7 @@ const createNode: D3Callable = <Data>(group: D3Selection, options: GraphRenderer
   // Hover.
   if (options.highlight !== false) {
     circle.on('mouseover', function () {
-      select(this.parentElement).raise();
+      select(this.closest('g.dx-node')).raise();
       if (options.labels) {
         select(this.parentElement).classed('dx-active', true).classed('dx-highlight', true);
       }
@@ -198,7 +200,7 @@ const createNode: D3Callable = <Data>(group: D3Selection, options: GraphRenderer
         select(this).classed('dx-active', false);
         setTimeout(() => {
           if (!select(this).classed('dx-active')) {
-            select(this).classed('dx-highlight', false).lower();
+            select(this).classed('dx-highlight', false);
           }
         }, 300);
       }
@@ -217,9 +219,15 @@ const updateNode: D3Callable = <Data = any>(group: D3Selection, options: GraphRe
   // Custom attributes.
   if (options.attributes?.node) {
     group.each((d, i, nodes) => {
-      const { classes } = options.attributes?.node(d);
+      const el = select(nodes[i]);
+      const { classes, data } = options.attributes?.node(d);
       if (classes) {
-        applyClasses(select(nodes[i]), classes);
+        applyClasses(el, classes);
+      }
+      if (data) {
+        Object.entries(data).forEach(([key, value]) => {
+          el.attr(`data-${key}`, value);
+        });
       }
     });
   }
@@ -239,6 +247,7 @@ const updateNode: D3Callable = <Data = any>(group: D3Selection, options: GraphRe
 
   // Update labels.
   if (options.labels) {
+    const bx = 1;
     const px = 4;
     const py = 2;
     const offset = 16;
@@ -264,21 +273,23 @@ const updateNode: D3Callable = <Data = any>(group: D3Selection, options: GraphRe
           d.bbox = bbox;
         }
 
-        const width = bbox.width + px * 2;
+        const width = bbox.width + (bx + px) * 2;
         const height = bbox.height + py * 2;
+
         select(this.parentElement)
           .select('rect')
-          .attr('x', dx(d, offset - px) + (d.x > 0 ? 0 : -1) * width)
+          .attr('x', dx(d, offset - (bx + px)) + (d.x > 0 ? 0 : -1) * width)
           .attr('y', -height / 2)
           .attr('width', width)
           .attr('height', height)
           .attr('rx', 4);
+
         select(this.parentElement)
           .select('line')
           .classed('stroke-neutral-500', true)
-          .attr('x1', dx(d))
+          .attr('x1', dx(d, 1))
           .attr('y1', 0)
-          .attr('x2', dx(d, offset - px))
+          .attr('x2', dx(d, offset - (bx + px)))
           .attr('y2', 0);
       });
   }
