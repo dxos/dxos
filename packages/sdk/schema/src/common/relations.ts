@@ -15,6 +15,9 @@ import { Person } from './person';
 
 export const Employer = Schema.Struct({
   id: Type.ObjectId,
+  role: Schema.String,
+  startDate: Schema.optional(Schema.Date),
+  endDate: Schema.optional(Schema.Date),
 })
   .pipe(
     Relation.def({
