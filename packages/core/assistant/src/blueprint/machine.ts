@@ -1,23 +1,23 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Match, Schema } from 'effect';
+
 import {
-  ConsolePrinter,
   defineTool,
   Message,
-  MixedStreamParser,
   ToolResult,
   type AIServiceClient,
   type MessageContentBlock,
   type ToolUseContentBlock,
 } from '@dxos/ai';
-import { create } from '@dxos/echo-schema';
-import { failedInvariant, invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
-import chalk from 'chalk';
-import { Match, Schema } from 'effect';
-import type { Blueprint, BlueprintStep } from './blueprint';
-import { Session } from 'inspector/promises';
-import { AISession } from '../session';
-import { log } from '@dxos/log';
 import { Event } from '@dxos/async';
+import { create } from '@dxos/echo-schema';
+import { type ObjectId } from '@dxos/keys';
+
+import type { Blueprint, BlueprintStep } from './blueprint';
+import { AISession } from '../session';
 
 export type BlueprintMachineState = {
   history: Message[];

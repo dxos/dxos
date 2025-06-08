@@ -1,5 +1,8 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import type { Tool } from '@dxos/ai';
-import { todo } from '@dxos/debug';
 import { assertState } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 
@@ -50,11 +53,13 @@ export namespace BlueprintBuilder {
       });
       return this;
     }
+
     withTool(tool: Tool): Step {
       assertState(this._steps.length > 0, 'Must have at least one step');
       this._steps.at(-1)!.tools.push(tool);
       return this;
     }
+
     end(): Blueprint {
       return {
         steps: this._steps,

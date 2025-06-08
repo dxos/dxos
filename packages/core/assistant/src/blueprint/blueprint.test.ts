@@ -1,14 +1,20 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import chalk from 'chalk';
+import { Schema } from 'effect';
+import { describe, test } from 'vitest';
+
 import { AIServiceEdgeClient, ConsolePrinter, defineTool, ToolResult } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { ArtifactId } from '@dxos/artifact';
 import { create } from '@dxos/echo-schema';
-import { DataType } from '@dxos/schema';
-import chalk from 'chalk';
-import { describe, test } from 'vitest';
-import { Blueprint, BlueprintBuilder } from './blueprint';
-import { BlueprintMachine, type BlueprintMachineState, type BlueprintTraceStep } from './machine';
-import { Schema } from 'effect';
 import { log } from '@dxos/log';
+import { DataType } from '@dxos/schema';
+
+import { Blueprint, BlueprintBuilder } from './blueprint';
+import { BlueprintMachine, type BlueprintMachineState } from './machine';
 
 // Force chalk colors on for tests
 chalk.level = 2;
@@ -163,7 +169,6 @@ const b2 = Blueprint.make([
   Blueprint.if('thing happens', b1)
 ]);
 
-
 const b = Blueprint.make()
   .step('turn on the stove')
   .step('wait for the stove to heat up')
@@ -184,7 +189,6 @@ const printTrace = (blueprint: Blueprint, state: BlueprintMachineState) => {
 
   blueprint.steps.forEach((step, index) => {
     const traceStep = state.trace.find((t) => t.stepId === step.id);
-    const stepNum = `${index + 1}/${blueprint.steps.length}`;
 
     let color = chalk.gray; // Not executed
     let bullet = '○';
