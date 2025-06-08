@@ -15,6 +15,11 @@ const argv = yargs(hideBin(process.argv))
     type: 'boolean',
     default: false,
   })
+  .option('debug', {
+    description: 'Debug output',
+    type: 'boolean',
+    default: false,
+  })
   .option('dry', {
     description: 'Dry run. No changes will be made.',
     type: 'boolean',
@@ -102,7 +107,7 @@ for (const filePath of tsFiles) {
     const returnType = func.getReturnType();
     const returnTypeText = returnType.getText();
 
-    if (!canApplyType(returnType)) {
+    if (!canApplyType(returnType, func)) {
       logSkip(returnTypeText, filePath, func.getStartLineNumber());
       continue;
     }
@@ -128,7 +133,7 @@ for (const filePath of tsFiles) {
       const returnType = method.getReturnType();
       const returnTypeText = returnType.getText();
 
-      if (!canApplyType(returnType)) {
+      if (!canApplyType(returnType, method)) {
         logSkip(returnTypeText, filePath, method.getStartLineNumber());
         continue;
       }
@@ -157,7 +162,7 @@ for (const filePath of tsFiles) {
       const propType = prop.getType();
       const propTypeText = propType.getText();
 
-      if (!canApplyType(propType)) {
+      if (!canApplyType(propType, prop)) {
         logSkip(propTypeText, filePath, prop.getStartLineNumber());
         continue;
       }
@@ -186,7 +191,7 @@ for (const filePath of tsFiles) {
       const returnType = getter.getReturnType();
       const returnTypeText = returnType.getText();
 
-      if (!canApplyType(returnType)) {
+      if (!canApplyType(returnType, getter)) {
         logSkip(returnTypeText, filePath, getter.getStartLineNumber());
         continue;
       }
@@ -216,7 +221,7 @@ for (const filePath of tsFiles) {
 
       const paramTypeText = paramType.getText();
 
-      if (!canApplyType(paramType)) {
+      if (!canApplyType(paramType, setter)) {
         logSkip(paramTypeText, filePath, setter.getStartLineNumber());
         continue;
       }
@@ -239,117 +244,179 @@ for (const filePath of tsFiles) {
     await fs.writeFile(filePath, updatedContent, 'utf8');
     logSave(filePath);
   }
+
+  /**
+   * @param {Type<ts.Type>} type
+   */
+  function canApplyType(type, node) {
+    const typeNode = project
+      .getTypeChecker()
+      .compilerObject.typeToTypeNode(type.compilerType, node.compilerNode, ts.NodeBuilderFlags.NoTruncation);
+
+    if (argv.debug) {
+      console.log({
+        text: type.getText(),
+        typeFlags: Object.keys(ts.TypeFlags).filter((flag) => type.getFlags() & ts.TypeFlags[flag]),
+        nodeKind: ts.SyntaxKind[typeNode.kind],
+        typeNode,
+      });
+    }
+
+    const text = type.getText();
+    if (text.includes('import(')) {
+      return false;
+    }
+    if (text.includes('unknown')) {
+      return false;
+    }
+    if (text.includes('any')) {
+      return false;
+    }
+
+    const result = typeNode ? canApplyTypeNode(typeNode) : undefined;
+    if (result !== undefined) {
+      return result;
+    }
+
+    // Handle primitive types using type flags
+    const flags = type.getFlags();
+    if (
+      flags &
+      (ts.TypeFlags.Boolean |
+        ts.TypeFlags.String |
+        ts.TypeFlags.Number |
+        ts.TypeFlags.Void |
+        ts.TypeFlags.Undefined |
+        ts.TypeFlags.Null |
+        ts.TypeFlags.TypeParameter |
+        ts.TypeFlags.ThisType)
+    ) {
+      return true;
+    }
+
+    // Handle union types
+    if (flags & ts.TypeFlags.Union) {
+      const unionTypes = type.getUnionTypes();
+      return unionTypes.every((unionType) => canApplyType(unionType, node));
+    }
+
+    // Handle Promise types using type flags
+    if (flags & ts.TypeFlags.Object) {
+      const symbol = type.getSymbol();
+      if (symbol?.getName() === 'Promise') {
+        const typeArgs = type.getTypeArguments();
+        if (typeArgs.length === 1) {
+          return canApplyType(typeArgs[0], node);
+        }
+        return false;
+      }
+
+      // Handle simple object structures
+      const properties = type.getProperties();
+      if (properties.length > 0 && properties.length <= 4) {
+        // Check if all property types are also allowed
+        return properties.every((prop) => {
+          const propType = prop.getValueDeclaration()?.getType();
+          return propType && canApplyType(propType, node);
+        });
+      }
+    }
+
+    // Handle type references (but not import types)
+    if (type.isObject()) {
+      const symbol = type.getSymbol();
+      if (!symbol) {
+        return false;
+      }
+
+      // Check if it's an import type
+      const declarations = symbol.getDeclarations();
+      for (const declaration of declarations) {
+        if (ts.isImportTypeNode(declaration)) {
+          return false;
+        }
+      }
+
+      // Check if it's a type reference or interface
+      const typeNode = symbol.getDeclarations()[0];
+      if (typeNode && (ts.isTypeReferenceNode(typeNode) || ts.isInterfaceDeclaration(typeNode))) {
+        return true;
+      }
+
+      // Check if it's a global type (like Error, Date, etc.)
+      const globalTypeNames = new Set([
+        'Error',
+        'Date',
+        'RegExp',
+        'Map',
+        'Set',
+        'WeakMap',
+        'WeakSet',
+        'Array',
+        'Promise',
+        'Uint8Array',
+        'Uint16Array',
+        'Uint32Array',
+        'Int8Array',
+        'Int16Array',
+        'Int32Array',
+        'Float32Array',
+        'Float64Array',
+        'ArrayBuffer',
+        'DataView',
+      ]);
+
+      if (globalTypeNames.has(symbol.getName())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+  /**
+   * @param {ts.TypeNode} typeNode
+   * @returns {boolean | undefined}
+   */
+  function canApplyTypeNode(typeNode) {
+    if (argv.debug) {
+      console.log({
+        nodeKind: ts.SyntaxKind[typeNode.kind],
+        typeNode,
+      });
+    }
+
+    if (
+      [
+        ts.SyntaxKind.VoidKeyword,
+        ts.SyntaxKind.UndefinedKeyword,
+        ts.SyntaxKind.StringKeyword,
+        ts.SyntaxKind.NumberKeyword,
+        ts.SyntaxKind.BooleanKeyword,
+        ts.SyntaxKind.BigIntKeyword,
+        ts.SyntaxKind.SymbolKeyword,
+        ts.SyntaxKind.NullKeyword,
+        ts.SyntaxKind.TrueKeyword,
+        ts.SyntaxKind.FalseKeyword,
+        ts.SyntaxKind.ThisType,
+      ].includes(typeNode.kind)
+    ) {
+      return true;
+    }
+
+    if (ts.isFunctionTypeNode(typeNode)) {
+      return typeNode.parameters.every((param) => canApplyTypeNode(param)) && canApplyTypeNode(typeNode.type);
+    }
+
+    if (ts.isTypeReferenceNode(typeNode)) {
+      return !typeNode.typeArguments || typeNode.typeArguments.every((arg) => canApplyTypeNode(arg));
+    }
+
+    if (ts.isArrayTypeNode(typeNode)) {
+      return canApplyTypeNode(typeNode.elementType);
+    }
+
+    return undefined;
+  }
 }
 
 console.log(chalk.green('\nDone! All files processed.'));
-
-/**
- * @param {Type<ts.Type>} type
- */
-function canApplyType(type) {
-  const text = type.getText();
-  if (text.includes('import(')) {
-    return false;
-  }
-  if (text.includes('unknown')) {
-    return false;
-  }
-  if (text.includes('any')) {
-    return false;
-  }
-
-  // Handle primitive types using type flags
-  const flags = type.getFlags();
-  if (
-    flags &
-    (ts.TypeFlags.Boolean |
-      ts.TypeFlags.String |
-      ts.TypeFlags.Number |
-      ts.TypeFlags.Void |
-      ts.TypeFlags.Undefined |
-      ts.TypeFlags.Null |
-      ts.TypeFlags.TypeParameter |
-      ts.TypeFlags.ThisType)
-  ) {
-    return true;
-  }
-
-  // Handle union types
-  if (flags & ts.TypeFlags.Union) {
-    const unionTypes = type.getUnionTypes();
-    return unionTypes.every((unionType) => canApplyType(unionType));
-  }
-
-  // Handle Promise types using type flags
-  if (flags & ts.TypeFlags.Object) {
-    const symbol = type.getSymbol();
-    if (symbol?.getName() === 'Promise') {
-      const typeArgs = type.getTypeArguments();
-      if (typeArgs.length === 1) {
-        return canApplyType(typeArgs[0]);
-      }
-      return false;
-    }
-
-    // Handle simple object structures
-    const properties = type.getProperties();
-    if (properties.length > 0 && properties.length <= 4) {
-      // Check if all property types are also allowed
-      return properties.every((prop) => {
-        const propType = prop.getValueDeclaration()?.getType();
-        return propType && canApplyType(propType);
-      });
-    }
-  }
-
-  // Handle type references (but not import types)
-  if (type.isObject()) {
-    const symbol = type.getSymbol();
-    if (!symbol) {
-      return false;
-    }
-
-    // Check if it's an import type
-    const declarations = symbol.getDeclarations();
-    for (const declaration of declarations) {
-      if (ts.isImportTypeNode(declaration)) {
-        return false;
-      }
-    }
-
-    // Check if it's a type reference or interface
-    const typeNode = symbol.getDeclarations()[0];
-    if (typeNode && (ts.isTypeReferenceNode(typeNode) || ts.isInterfaceDeclaration(typeNode))) {
-      return true;
-    }
-
-    // Check if it's a global type (like Error, Date, etc.)
-    const globalTypeNames = new Set([
-      'Error',
-      'Date',
-      'RegExp',
-      'Map',
-      'Set',
-      'WeakMap',
-      'WeakSet',
-      'Array',
-      'Promise',
-      'Uint8Array',
-      'Uint16Array',
-      'Uint32Array',
-      'Int8Array',
-      'Int16Array',
-      'Int32Array',
-      'Float32Array',
-      'Float64Array',
-      'ArrayBuffer',
-      'DataView',
-    ]);
-
-    if (globalTypeNames.has(symbol.getName())) {
-      return true;
-    }
-  }
-
-  return false;
-}
