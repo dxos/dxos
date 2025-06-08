@@ -305,6 +305,14 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   }
 
   /**
+   * Pipe the events into another event.
+   * @param event
+   */
+  pipeInto(event: Event<T>): CleanupFn {
+    return this.on((data) => event.emit(data));
+  }
+
+  /**
    * Overridden to not return implementation details.
    */
   toJSON(): { listenerCount: number } {
