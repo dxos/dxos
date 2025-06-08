@@ -15,7 +15,7 @@ import { SelectionModel } from '@dxos/graph';
 import { D3ForceGraph } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
-import { IconButton, Toolbar } from '@dxos/react-ui';
+import { IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { matchCompletion, typeahead } from '@dxos/react-ui-editor';
 import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
@@ -26,6 +26,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { testPlugins } from './testing';
 import { PromptBar, type PromptBarProps } from '../components';
+import { ASSISTANT_PLUGIN } from '../meta';
 import { createFilter, type Expression, QueryParser } from '../parser';
 import translations from '../translations';
 
@@ -37,6 +38,7 @@ const generator = faker as any as ValueGenerator;
 type Mode = 'graph' | 'list';
 
 const DefaultStory = ({ mode }: { mode?: Mode }) => {
+  const { t } = useTranslation(ASSISTANT_PLUGIN);
   const showList = mode !== 'graph';
   const showGraph = mode !== 'list';
 
@@ -139,7 +141,12 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
         <AmbientDialog resizeable={false}> */}
       <div className='fixed bottom-8 left-1/2 -translate-x-1/2'>
         <div className='w-[40rem] p-1 bg-groupSurface border border-separator rounded'>
-          <PromptBar extensions={extensions} onSubmit={handleSubmit} onCancel={handleCancel} />
+          <PromptBar
+            placeholder={t('search input placeholder')}
+            extensions={extensions}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+          />
         </div>
       </div>
       {/* </AmbientDialog>
@@ -167,9 +174,7 @@ const ItemList = ({
               item={item}
               classNames='grid grid-cols-[4rem_1fr] min-h-[32px] items-center'
             >
-              <div key={item.id} className='text-xs font-mono truncate px-1'>
-                {item.id}
-              </div>
+              <div className='text-xs font-mono truncate px-1'>{item.id}</div>
               <List.ItemTitle>{getTitle(item)}</List.ItemTitle>
             </List.Item>
           ))}
