@@ -40,6 +40,14 @@ export const registerSerializer = <T>(prototype: T, serializer: StructSerializer
 const serializers = new Map<unknown, StructSerializer<any>>();
 const serializersById = new Map<StructId, StructSerializer<any>>();
 
+/**
+ * Converts a value to a plain object.
+ * Runs registered serializers for objects with custom prototypes.
+ *
+ * @param value - The value to convert.
+ * @returns A plain object.
+ * @throws {TypeError} If the value is a non-plain object without a registered serializer.
+ */
 export const serialize = (value: unknown): unknown => {
   if (value && typeof value === 'object') {
     const proto = Object.getPrototypeOf(value);
@@ -78,6 +86,14 @@ export const serialize = (value: unknown): unknown => {
   return value;
 };
 
+/**
+ * Converts a plain object to a value.
+ * Runs registered deserializers for objects with type ids.
+ *
+ * @param value - The plain object to convert.
+ * @returns A value.
+ * @throws {TypeError} When encountering a type id that is not registered.
+ */
 export const deserialize = (value: unknown): unknown => {
   if (Array.isArray(value)) {
     return value.map(deserialize);
