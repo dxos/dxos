@@ -33,7 +33,8 @@ export type GraphProps<Node extends BaseGraphNode = any, Edge extends BaseGraphE
     drag?: boolean;
     arrows?: boolean;
     delay?: number;
-    onSelect?: (node: GraphLayoutNode<Node>) => void;
+    onSelect?: (node: GraphLayoutNode<Node>, event: MouseEvent) => void;
+    onInspect?: (node: GraphLayoutNode<Node>, event: MouseEvent) => void;
   }
 >;
 
@@ -47,6 +48,7 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
     arrows,
     delay,
     onSelect,
+    onInspect,
     ...props
   }: GraphProps<Node, Edge>,
   forwardedRef: Ref<GraphController>,
@@ -62,7 +64,8 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
         ...props,
         drag: drag ? createDrag(context, projector.simulation) : undefined,
         arrows: { end: arrows },
-        onNodeClick: onSelect ? (node: GraphLayoutNode) => onSelect(node) : undefined,
+        onNodeClick: onSelect ? (node: GraphLayoutNode, event) => onSelect(node, event) : undefined,
+        onNodePointerEnter: onInspect ? (node: GraphLayoutNode, event) => onInspect(node, event) : undefined,
       });
 
     return { projector, renderer };

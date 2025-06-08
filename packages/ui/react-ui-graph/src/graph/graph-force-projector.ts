@@ -17,6 +17,7 @@ import {
 import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
+import { forcePoint } from './graph-forces';
 import { Projector, type ProjectorOptions } from './projector';
 import { emptyGraph, type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from './types';
 
@@ -103,7 +104,8 @@ export type ForceRadialOptions = {
  * https://github.com/d3/d3-force#positioning
  */
 export type ForcePositioningOptions = {
-  value?: number;
+  x?: number;
+  y?: number;
   strength?: number;
 };
 
@@ -112,14 +114,16 @@ export type ForcePositioningOptions = {
  * NOTE: A value of `true` enables the force with the default option.
  */
 // TODO(burdon): Options for alpha, etc.
+// TODO(burdon): Change to map of forces by type (i.e., support multiple forces of the same type).
 export type ForceOptions = {
   link?: boolean | ForceLinkOptions;
   manyBody?: boolean | ForceManyBodyOptions;
   center?: boolean | ForceCenterOptions;
   collide?: boolean | ForceCollideOptions;
   radial?: boolean | ForceRadialOptions;
-  x?: ForcePositioningOptions;
-  y?: ForcePositioningOptions;
+  point?: boolean | ForcePositioningOptions;
+  x?: boolean | ForcePositioningOptions;
+  y?: boolean | ForcePositioningOptions;
 };
 
 export const defaultForceOptions: ForceOptions = {
@@ -225,7 +229,7 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
         'link',
         maybeForce<ForceLinkOptions>(
           forces?.link,
-          (config: ForceLinkOptions) => {
+          (config) => {
             const force = forceLink()
               .id((d: GraphLayoutNode) => d.id)
               .links(this._layout.graph.edges);
@@ -324,7 +328,7 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
    * Update all forces.
    */
   private updateForces(forces: ForceOptions) {
-    log('updateForces', { forces });
+    log.info('updateForces', { forces });
 
     // https://github.com/d3/d3-force#simulation_force
     this._simulation
@@ -335,7 +339,7 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
         'manyBody',
         maybeForce<ForceManyBodyOptions>(
           forces?.manyBody,
-          (config: ForceManyBodyOptions) => {
+          (config) => {
             const force = forceManyBody();
             if (config.distanceMax != null) {
               force.distanceMax(config.distanceMax);
@@ -353,7 +357,7 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
       // https://github.com/d3/d3-force#centering
       .force(
         'center',
-        maybeForce<ForceCenterOptions>(forces?.center, (config: ForceCenterOptions) => {
+        maybeForce<ForceCenterOptions>(forces?.center, (config) => {
           const force = forceCenter()
             .x(config.x ?? 0)
             .y(config.y ?? 0);
@@ -368,7 +372,7 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
       // https://github.com/d3/d3-force#forceCollide
       .force(
         'collide',
-        maybeForce<ForceCollideOptions>(forces?.collide, (config: ForceCollideOptions) => {
+        maybeForce<ForceCollideOptions>(forces?.collide, (config) => {
           const force = forceCollide();
           force.radius(config.radius ?? 8);
           if (config.strength != null) {
@@ -382,8 +386,8 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
       // https://github.com/d3/d3-force#forceRadial
       .force(
         'radial',
-        maybeForce<ForceRadialOptions>(forces?.radial, (config: ForceRadialOptions) => {
-          const force = forceRadial(config.radius ?? 0, config.x ?? 0, config.y ?? 0);
+        maybeForce<ForceRadialOptions>(forces?.radial, (config) => {
+          const force = forceRadial(config.radius ?? 100, config.x ?? 0, config.y ?? 0);
           if (config.strength != null) {
             force.strength(config.strength);
           }
@@ -391,12 +395,18 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
         }),
       )
 
-      // Positioning
-      // https://github.com/d3/d3-force#positioning
+      // Point
+      // https://github.com/d3/d3-force#forcePoint
+      .force(
+        'point',
+        maybeForce<ForcePositioningOptions>(forces?.point, ({ x = 0, y = 0, strength }) => {
+          return forcePoint({ x, y, strength });
+        }),
+      )
       .force(
         'x',
         maybeForce<ForcePositioningOptions>(forces?.x, (config: ForcePositioningOptions) => {
-          const force = forceX(config.value ?? 0);
+          const force = forceX(config.x ?? 0);
           if (config.strength != null) {
             force.strength(config.strength);
           }
@@ -406,7 +416,7 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
       .force(
         'y',
         maybeForce<ForcePositioningOptions>(forces?.y, (config: ForcePositioningOptions) => {
-          const force = forceY(config.value ?? 0);
+          const force = forceY(config.y ?? 0);
           if (config.strength != null) {
             force.strength(config.strength);
           }

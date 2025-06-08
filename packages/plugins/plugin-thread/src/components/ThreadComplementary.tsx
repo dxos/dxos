@@ -47,7 +47,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
 
   const threads = useMemo(() => {
     return threadObjects.concat(drafts ?? []).filter(isNonNullable) as ThreadType[];
-  }, [JSON.stringify(threadObjects), JSON.stringify(drafts)]);
+  }, [JSON.stringify(threadObjects), JSON.stringify(drafts)]); // TODO(burdon): Avoid stringify.
 
   const detachedIds = useMemo(() => {
     return threads.filter(({ anchor }) => !anchor).map((thread) => fullyQualifiedId(thread));
