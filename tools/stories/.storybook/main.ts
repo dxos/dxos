@@ -39,7 +39,11 @@ export const config = (
     reactDocgen: false,
   },
   addons: [
-    '@storybook/addon-essentials',
+    // ADDING '@storybook/addon-essentials' CAUSES THE TAB TO OMM WHEN PRINTING A DEEPLY NESTED DATA STRUCTURE.
+    // https://github.com/storybookjs/storybook/issues/17098
+    // https://github.com/storybookjs/storybook/issues/19844
+    // '@storybook/addon-essentials',
+
     '@storybook/addon-interactions',
     '@storybook/addon-links',
     '@storybook/addon-themes',
@@ -112,7 +116,6 @@ export const config = (
               resolve(packages, 'app/*/src/**', contentFiles),
               resolve(packages, 'experimental/*/src/**', contentFiles),
               resolve(packages, 'plugins/*/src/**', contentFiles),
-              resolve(packages, 'plugins/experimental/*/src/**', contentFiles),
               resolve(packages, 'sdk/*/src/**', contentFiles),
               resolve(packages, 'ui/*/src/**', contentFiles),
             ],

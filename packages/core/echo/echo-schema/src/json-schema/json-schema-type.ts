@@ -6,8 +6,8 @@ import { Schema } from 'effect';
 
 import { JsonPath, type JsonProp } from '@dxos/effect';
 
-import { EntityKind } from './entity-kind';
-import { FormatAnnotationId } from '../formats';
+import { EntityKindSchema } from '../ast';
+import { FormatAnnotation, FormatEnum } from '../formats';
 
 //
 // JSON Schema
@@ -17,13 +17,13 @@ import { FormatAnnotationId } from '../formats';
 const SimpleTypes = Schema.Literal('array', 'boolean', 'integer', 'null', 'number', 'object', 'string');
 
 const NonNegativeInteger = Schema.Number.pipe(Schema.greaterThanOrEqualTo(0));
+
 const StringArray = Schema.Array(Schema.String).pipe(Schema.mutable);
+
 const JsonSchemaOrBoolean = Schema.Union(
   Schema.suspend(() => JsonSchemaType),
   Schema.Boolean,
 );
-
-export const EntityKindSchema = Schema.Enums(EntityKind);
 
 /**
  * Go under the `annotations` property.
@@ -39,7 +39,7 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
    * Generator function for this schema.
    * Mapped from {@link GeneratorAnnotationId}.
    */
-  generator: Schema.optional(Schema.String),
+  generator: Schema.optional(Schema.Union(Schema.String, Schema.Tuple(Schema.String, Schema.Number))),
 
   /**
    * {@link PropertyMeta} annotations get serialized here.
@@ -206,7 +206,7 @@ const _JsonSchemaType = Schema.Struct({
   /**
    * Regex pattern for strings.
    */
-  pattern: Schema.optional(Schema.String.annotations({ [FormatAnnotationId]: 'regex' })),
+  pattern: Schema.optional(Schema.String.pipe(FormatAnnotation.set(FormatEnum.Regex))),
 
   /**
    * Serialized from {@link FormatAnnotationId}.

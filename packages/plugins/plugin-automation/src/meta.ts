@@ -12,5 +12,5 @@ export const meta: PluginMeta = {
   description:
     'The Automation tab allows you to trigger pre-defined workflows related to the element you are interacting with inside of Composer.',
   icon: 'ph--robot--regular',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-automation',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-automation',
 };

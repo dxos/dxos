@@ -20,7 +20,6 @@ export default [
       },
       [ASSISTANT_PLUGIN]: {
         'templates label': 'Templates',
-
         'open ambient chat label': 'Open Assistant',
         'assistant chat label': 'Assistant',
         'plugin name': 'Assistant',
@@ -40,6 +39,7 @@ export default [
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
 
+        'search input placeholder': 'Search...',
         'chat input placeholder': 'Ask a question...',
         'chat stop': 'Cancel request.',
 

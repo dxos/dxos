@@ -63,7 +63,7 @@ const Rope = () => {
 };
 
 const meta: Meta = {
-  title: 'ui/react-ui-canvas-editor/Path',
+  title: 'ui/react-ui-canvas-editor/Rope',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
