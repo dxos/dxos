@@ -38,7 +38,10 @@ export class MulticastObservable<T> extends Observable<T> {
     this._observable.subscribe(this._handlers);
   }
 
-  static override from<T>(value: Observable<T> | ObservableLike<T> | ArrayLike<T> | Event<T>, initialValue?: T): MulticastObservable<T> {
+  static override from<T>(
+    value: Observable<T> | ObservableLike<T> | ArrayLike<T> | Event<T>,
+    initialValue?: T,
+  ): MulticastObservable<T> {
     if ('emit' in value) {
       return new MulticastObservable((observer) => {
         // TODO(wittjosiah): Do error/complete matter for events?

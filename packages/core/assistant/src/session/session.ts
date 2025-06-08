@@ -265,7 +265,10 @@ export class AISession {
     return this._pending;
   }
 
-  async runStructured<S extends Schema.Schema.AnyNoContext>(schema: S, options: SessionRunOptions): Promise<Schema.Schema.Type<S>> {
+  async runStructured<S extends Schema.Schema.AnyNoContext>(
+    schema: S,
+    options: SessionRunOptions,
+  ): Promise<Schema.Schema.Type<S>> {
     const parser = structuredOutputParser(schema);
     const result = await this.run({
       ...options,

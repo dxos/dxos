@@ -495,7 +495,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     // return this._serviceProvider.services.SpaceService.createSnapshot({ space_key: this.key });
   }
 
-  toJSON(): { key: string; state: string; } {
+  toJSON(): { key: string; state: string } {
     return {
       key: this.key.toHex(),
       state: SpaceState[this.state.get()],

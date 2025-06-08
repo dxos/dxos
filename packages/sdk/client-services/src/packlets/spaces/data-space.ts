@@ -298,7 +298,7 @@ export class DataSpace {
     return this._gossip.postMessage(channel, message);
   }
 
-  listen(channel: string, callback: (message: GossipMessage) => void): { unsubscribe: () => void; } {
+  listen(channel: string, callback: (message: GossipMessage) => void): { unsubscribe: () => void } {
     return this._gossip.listen(channel, callback);
   }
 

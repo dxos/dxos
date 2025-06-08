@@ -124,7 +124,7 @@ export class Gossip {
     }
   }
 
-  listen(channel: string, callback: (message: GossipMessage) => void): { unsubscribe: () => void; } {
+  listen(channel: string, callback: (message: GossipMessage) => void): { unsubscribe: () => void } {
     if (!this._listeners.has(channel)) {
       this._listeners.set(channel, new Set());
     }

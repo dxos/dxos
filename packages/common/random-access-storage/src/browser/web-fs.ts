@@ -397,7 +397,7 @@ export class WebFile extends EventEmitter implements File {
     this._flushLater();
   }
 
-  async stat(): Promise<{ size: number; }> {
+  async stat(): Promise<{ size: number }> {
     this.assertNotDestroyed('Truncate');
 
     this._operations.inc();

@@ -35,7 +35,12 @@ export class TestBuilder {
     return peer;
   }
 
-  async createSignalServer(num: number, outFolder: string, signalArguments: string[], onError?: (err: any) => void): Promise<void> {
+  async createSignalServer(
+    num: number,
+    outFolder: string,
+    signalArguments: string[],
+    onError?: (err: any) => void,
+  ): Promise<void> {
     const server = await runSignal(num, outFolder, signalArguments, onError);
     await server.waitUntilStarted();
     this._servers.set(server.url(), server);

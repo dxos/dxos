@@ -263,7 +263,11 @@ export class IdentityManager {
   /**
    * Accept an existing identity. Expects its device key to be authorized (now or later).
    */
-  public async acceptIdentity(identity: Identity, identityRecord: IdentityRecord, profile?: DeviceProfileDocument): Promise<void> {
+  public async acceptIdentity(
+    identity: Identity,
+    identityRecord: IdentityRecord,
+    profile?: DeviceProfileDocument,
+  ): Promise<void> {
     this._identity = identity;
 
     // Identity becomes ready after device chain is replicated. Wait for it before storing the record.

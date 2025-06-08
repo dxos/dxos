@@ -32,7 +32,7 @@ export abstract class AbstractStorage implements Storage {
     return inspectObject(this);
   }
 
-  toJSON(): { type: StorageType; path: string; } {
+  toJSON(): { type: StorageType; path: string } {
     return { type: this.type, path: this.path };
   }
 

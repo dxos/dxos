@@ -154,7 +154,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   // Private logic.
   //
 
-  private _getSelectOptions(): { id: string; title: string; color: string; }[] {
+  private _getSelectOptions(): { id: string; title: string; color: string }[] {
     if (this._kanban.columnFieldId === undefined) {
       return [];
     }
@@ -194,7 +194,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   }
 
   /** Find a column by ID in the arrangement, checking both column values and card IDs. */
-  private _findColumn(id: string, arrangement: ArrangedCards<T>): { columnValue: string; cards: T[]; } | undefined {
+  private _findColumn(id: string, arrangement: ArrangedCards<T>): { columnValue: string; cards: T[] } | undefined {
     return arrangement.find(({ columnValue, cards }) => columnValue === id || cards.some((card) => card.id === id));
   }
 

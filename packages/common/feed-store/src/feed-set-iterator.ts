@@ -60,7 +60,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     return inspectObject(this);
   }
 
-  override toJSON(): { open: boolean; running: boolean; indexes: FeedIndex[]; } {
+  override toJSON(): { open: boolean; running: boolean; indexes: FeedIndex[] } {
     return {
       open: this.isOpen,
       running: this.isRunning,

@@ -144,7 +144,15 @@ export class MemorySignalManager implements SignalManager {
     throw new Error('Not implemented');
   }
 
-  async sendMessage({ author, recipient, payload }: { author: PeerInfo; recipient: PeerInfo; payload: Any }): Promise<void> {
+  async sendMessage({
+    author,
+    recipient,
+    payload,
+  }: {
+    author: PeerInfo;
+    recipient: PeerInfo;
+    payload: Any;
+  }): Promise<void> {
     log('send message', { author, recipient, ...dec(payload) });
 
     invariant(recipient);

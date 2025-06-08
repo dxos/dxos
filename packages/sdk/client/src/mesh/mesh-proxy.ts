@@ -35,7 +35,7 @@ export class MeshProxy {
     public _traceParent?: string,
   ) {}
 
-  toJSON(): { networkStatus: NetworkStatus; } {
+  toJSON(): { networkStatus: NetworkStatus } {
     return {
       networkStatus: this._networkStatus.get(),
     };

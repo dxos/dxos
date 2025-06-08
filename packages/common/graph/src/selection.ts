@@ -15,7 +15,7 @@ export class SelectionModel {
 
   constructor(private readonly _singleSelect: boolean = false) {}
 
-  toJSON(): { selected: string[]; } {
+  toJSON(): { selected: string[] } {
     return {
       selected: Array.from(this._selected.value.values()),
     };

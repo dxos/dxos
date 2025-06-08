@@ -177,7 +177,12 @@ export class MemoryTransport implements Transport {
     return this._instanceId.toHex();
   }
 
-  async getStats(): Promise<{ bytesSent: number; bytesReceived: number; packetsSent: number; packetsReceived: number; }> {
+  async getStats(): Promise<{
+    bytesSent: number;
+    bytesReceived: number;
+    packetsSent: number;
+    packetsReceived: number;
+  }> {
     return {
       bytesSent: 0,
       bytesReceived: 0,

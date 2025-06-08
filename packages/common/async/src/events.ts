@@ -307,7 +307,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   /**
    * Overridden to not return implementation details.
    */
-  toJSON(): { listenerCount: number; } {
+  toJSON(): { listenerCount: number } {
     return {
       listenerCount: this.listenerCount(),
     };

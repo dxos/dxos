@@ -21,7 +21,7 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
   protected _open = false;
   protected _running = false;
 
-  toJSON(): { open: boolean; running: boolean; } {
+  toJSON(): { open: boolean; running: boolean } {
     return {
       open: this.isOpen,
       running: this.isRunning,

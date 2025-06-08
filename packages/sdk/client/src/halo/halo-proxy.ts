@@ -61,7 +61,7 @@ export class HaloProxy implements Halo {
   }
 
   @trace.info({ depth: null })
-  toJSON(): { identityKey: string | undefined; deviceKey: string | undefined; } {
+  toJSON(): { identityKey: string | undefined; deviceKey: string | undefined } {
     return {
       identityKey: this._identity.get()?.identityKey.truncate(),
       deviceKey: this.device?.deviceKey.truncate(),

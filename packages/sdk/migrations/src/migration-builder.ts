@@ -164,7 +164,15 @@ export class MigrationBuilder {
     this._addHandleToFlushList(this._newRoot);
   }
 
-  private _createObject({ id, schema, props }: { id?: string; schema: Schema.Schema.AnyNoContext; props: any }): ObjectCore {
+  private _createObject({
+    id,
+    schema,
+    props,
+  }: {
+    id?: string;
+    schema: Schema.Schema.AnyNoContext;
+    props: any;
+  }): ObjectCore {
     const core = new ObjectCore();
     if (id) {
       core.id = id;

@@ -88,7 +88,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   @trace.info({ depth: null })
-  toJSON(): { spaces: number | undefined; } {
+  toJSON(): { spaces: number | undefined } {
     return {
       spaces: this._value?.length,
     };

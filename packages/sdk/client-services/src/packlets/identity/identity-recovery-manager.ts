@@ -32,7 +32,9 @@ export class EdgeIdentityRecoveryManager {
     private readonly _acceptRecoveredIdentity: (params: JoinIdentityParams) => Promise<Identity>,
   ) {}
 
-  public async createRecoveryCredential({ data }: CreateRecoveryCredentialRequest): Promise<{ recoveryCode: string | undefined; }> {
+  public async createRecoveryCredential({
+    data,
+  }: CreateRecoveryCredentialRequest): Promise<{ recoveryCode: string | undefined }> {
     const identity = this._identityProvider();
     invariant(identity);
 

@@ -21,7 +21,7 @@ export class ErrorBoundary extends Component<Props, State> {
     this.state = { error: undefined };
   }
 
-  static getDerivedStateFromError(error: Error): { error: Error; } {
+  static getDerivedStateFromError(error: Error): { error: Error } {
     return { error };
   }
 

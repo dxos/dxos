@@ -104,7 +104,7 @@ export class SerializationModel<T extends Chunk> {
     });
   }
 
-  toJSON(): { chunks: number; changes: number; } {
+  toJSON(): { chunks: number; changes: number } {
     return {
       chunks: this._chunks.length,
       changes: this._changes.length,

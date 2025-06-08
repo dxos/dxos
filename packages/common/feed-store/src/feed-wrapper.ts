@@ -43,7 +43,7 @@ export class FeedWrapper<T extends {}> {
     return inspectObject(this);
   }
 
-  toJSON(): { feedKey: PublicKey; length: number; opened: boolean; closed: boolean; } {
+  toJSON(): { feedKey: PublicKey; length: number; opened: boolean; closed: boolean } {
     return {
       feedKey: this._key,
       length: this.properties.length,

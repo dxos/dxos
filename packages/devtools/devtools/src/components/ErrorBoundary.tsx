@@ -59,7 +59,7 @@ export class ErrorBoundary extends Component<
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): { hasError: boolean; error: Error; } {
+  static getDerivedStateFromError(error: Error): { hasError: boolean; error: Error } {
     captureException(error);
     return { hasError: true, error };
   }

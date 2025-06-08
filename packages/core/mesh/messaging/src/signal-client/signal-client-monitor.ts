@@ -24,7 +24,7 @@ export class SignalClientMonitor {
    */
   private _lastStateChange = new Date();
 
-  public getRecordedTimestamps(): { connectionStarted: Date; lastStateChange: Date; } {
+  public getRecordedTimestamps(): { connectionStarted: Date; lastStateChange: Date } {
     return {
       connectionStarted: this._connectionStarted,
       lastStateChange: this._lastStateChange,
