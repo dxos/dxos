@@ -6,8 +6,8 @@ import { effect } from '@preact/signals-core';
 
 import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { getSnapshot, type Live, live } from '@dxos/live-object';
-import { type MakeOptional, isNotFalsy, removeBy, stripUndefined } from '@dxos/util';
+import { type Live, live } from '@dxos/live-object';
+import { type MakeOptional, isNotFalsy, removeBy } from '@dxos/util';
 
 import { type BaseGraphEdge, type BaseGraphNode, type Graph, type GraphEdge, type GraphNode } from './types';
 import { createEdgeId } from './util';
@@ -38,12 +38,11 @@ export class ReadonlyGraphModel<
   /**
    * Return stable sorted JSON representation of graph.
    */
-  // TODO(burdon): Create separate toJson method with computed signal.
   toJSON() {
-    const { id, nodes, edges } = getSnapshot(this._graph); // TODO(burdon): Remove dependency.
-    nodes.sort(({ id: a }, { id: b }) => a.localeCompare(b));
-    edges.sort(({ id: a }, { id: b }) => a.localeCompare(b));
-    return stripUndefined({ id, nodes, edges });
+    return {
+      nodes: this.nodes.length,
+      edges: this.edges.length,
+    };
   }
 
   get graph(): Graph {
@@ -70,7 +69,7 @@ export class ReadonlyGraphModel<
     return this.findNode(id) ?? failedInvariant();
   }
 
-  filterNodes({ type }: Partial<GraphNode> = {}): Node[] {
+  filterNodes({ type }: Partial<GraphNode.Any> = {}): Node[] {
     return this.nodes.filter((node) => !type || type === node.type);
   }
 
@@ -286,12 +285,17 @@ export class ReactiveGraphModel<
   Node extends BaseGraphNode = BaseGraphNode,
   Edge extends BaseGraphEdge = BaseGraphEdge,
 > extends GraphModel<Node, Edge> {
-  constructor(graph?: Graph) {
-    super(live({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] }));
+  constructor(graph?: Partial<Graph>) {
+    super(
+      live({
+        nodes: graph?.nodes ?? [],
+        edges: graph?.edges ?? [],
+      }),
+    );
   }
 
   override copy(graph?: Partial<Graph>): ReactiveGraphModel<Node, Edge> {
-    return new ReactiveGraphModel<Node, Edge>({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] });
+    return new ReactiveGraphModel<Node, Edge>(graph);
   }
 
   subscribe(cb: GraphModelSubscription, fire = false): () => void {

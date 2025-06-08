@@ -64,21 +64,27 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
     id,
     position = 'static',
     relation = 'outbound',
-    connector,
+    connector: _connector,
     actions: _actions,
     actionGroups: _actionGroups,
   } = extension;
   const getId = (key: string) => `${id}/${key}`;
 
+  const connector =
+    _connector &&
+    Rx.family((node: Rx.Rx<Option.Option<Node>>) =>
+      _connector(node).pipe(Rx.withLabel(`graph-builder:_connector:${id}`)),
+    );
+
   const actionGroups =
     _actionGroups &&
     Rx.family((node: Rx.Rx<Option.Option<Node>>) =>
-      _actionGroups(node).pipe(Rx.withLabel(`graph-builder:actionGroups:${id}`)),
+      _actionGroups(node).pipe(Rx.withLabel(`graph-builder:_actionGroups:${id}`)),
     );
 
   const actions =
     _actions &&
-    Rx.family((node: Rx.Rx<Option.Option<Node>>) => _actions(node).pipe(Rx.withLabel(`graph-builder:actions:${id}`)));
+    Rx.family((node: Rx.Rx<Option.Option<Node>>) => _actions(node).pipe(Rx.withLabel(`graph-builder:_actions:${id}`)));
 
   return [
     // resolver ? { id: getId('resolver'), position, resolver } : undefined,
@@ -87,7 +93,16 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
           id: getId('connector'),
           position,
           relation,
-          connector: Rx.family((key) => connector(key).pipe(Rx.withLabel(`graph-builder:connector:${id}`))),
+          connector: Rx.family((node) =>
+            Rx.make((get) => {
+              try {
+                return get(connector(node));
+              } catch {
+                log.warn('Error in connector', { id: getId('connector'), node });
+                return [];
+              }
+            }).pipe(Rx.withLabel(`graph-builder:connector:${id}`)),
+          ),
         } satisfies BuilderExtension)
       : undefined,
     actionGroups
@@ -96,13 +111,18 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
           position,
           relation: 'outbound',
           connector: Rx.family((node) =>
-            Rx.make((get) =>
-              get(actionGroups(node)).map((arg) => ({
-                ...arg,
-                data: actionGroupSymbol,
-                type: ACTION_GROUP_TYPE,
-              })),
-            ).pipe(Rx.withLabel(`graph-builder:connector:actionGroups:${id}`)),
+            Rx.make((get) => {
+              try {
+                return get(actionGroups(node)).map((arg) => ({
+                  ...arg,
+                  data: actionGroupSymbol,
+                  type: ACTION_GROUP_TYPE,
+                }));
+              } catch {
+                log.warn('Error in actionGroups', { id: getId('actionGroups'), node });
+                return [];
+              }
+            }).pipe(Rx.withLabel(`graph-builder:connector:actionGroups:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -112,9 +132,14 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
           position,
           relation: 'outbound',
           connector: Rx.family((node) =>
-            Rx.make((get) => get(actions(node)).map((arg) => ({ ...arg, type: ACTION_TYPE }))).pipe(
-              Rx.withLabel(`graph-builder:connector:actions:${id}`),
-            ),
+            Rx.make((get) => {
+              try {
+                return get(actions(node)).map((arg) => ({ ...arg, type: ACTION_TYPE }));
+              } catch {
+                log.warn('Error in actions', { id: getId('actions'), node });
+                return [];
+              }
+            }).pipe(Rx.withLabel(`graph-builder:connector:actions:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,

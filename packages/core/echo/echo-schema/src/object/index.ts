@@ -4,6 +4,7 @@
 
 export * from './common';
 export * from './create';
+export * from './entity';
 export * from './expando';
 export * from './ids';
 export * from './json-serializer';

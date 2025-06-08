@@ -9,9 +9,10 @@ import { render, screen } from '@testing-library/react';
 // TODO(wittjosiah): Move to vitest expect (and remove from package.json).
 import chai, { expect } from 'chai';
 import chaiDom from 'chai-dom';
-import get from 'lodash.get';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { describe, test } from 'vitest';
+
+import { get } from '@dxos/util';
 
 import { automerge } from './automerge';
 

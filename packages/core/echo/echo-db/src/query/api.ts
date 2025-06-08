@@ -28,10 +28,12 @@ export interface QueryFn {
    * @deprecated Pass `Query` instead.
    */
   (): QueryResult;
+
   /**
    * @deprecated Pass `Query` instead.
    */
   <F extends Filter.Any>(filter: F, options?: QueryOptions | undefined): QueryResult<Live<Filter.Type<F>>>;
+
   /**
    * @deprecated Pass `Query` instead.
    */

@@ -301,7 +301,6 @@ const styles = EditorView.theme({
     width: 'var(--dx-tag-picker-width)',
     marginTop: '6.5px',
   },
-  '.cm-completionLabel': {},
   '.cm-tooltip-autocomplete ul li[aria-selected]': {
     backgroundColor: 'var(--dx-hoverSurface)',
   },

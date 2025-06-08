@@ -2,8 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import { inspect } from 'node:util';
+
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
+import { inspectObject } from '@dxos/debug';
 import { type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -70,6 +73,8 @@ export interface EchoDatabase {
 
   get spaceKey(): PublicKey;
   get spaceId(): SpaceId;
+
+  toJSON(): object;
 
   getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): AnyLiveObject<T> | undefined;
 
@@ -174,6 +179,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       reactiveQuery: params.reactiveSchemaQuery,
       preloadSchemaOnOpen: params.preloadSchemaOnOpen,
     });
+  }
+
+  [inspect.custom]() {
+    return inspectObject(this);
+  }
+
+  toJSON() {
+    return this._coreDatabase.toJSON();
   }
 
   get spaceId(): SpaceId {
