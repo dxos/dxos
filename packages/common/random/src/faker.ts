@@ -64,6 +64,7 @@ export const faker = {
   },
   date: {
     recent: () => randRecentDate(),
+    iso8601: () => randRecentDate().toISOString(),
   },
   image: {
     url: () => randImg(),

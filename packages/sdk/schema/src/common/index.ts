@@ -10,6 +10,7 @@ import * as Organization$ from './organization';
 import * as Person$ from './person';
 import * as PostalAddress$ from './postal-address';
 import * as Project$ from './project';
+import * as Relations$ from './relations';
 import * as Task$ from './task';
 import * as Text$ from './text';
 
@@ -116,6 +117,16 @@ export namespace DataType {
 
   export const Text = Text$.Text;
   export type Text = Text$.Text;
+
+  //
+  // Relations
+  //
+
+  export const HasRelationship = Relations$.HasRelationship;
+  export type HasRelationship = Relations$.HasRelationship;
+
+  export const Employer = Relations$.Employer;
+  export type Employer = Relations$.Employer;
 
   // TOOD(burdon): Move Thread from plugin-space?
 }

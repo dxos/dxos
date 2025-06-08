@@ -121,6 +121,18 @@
       "path": "packages/core/agent/tsconfig.json"
     },
     {
+      "path": "packages/core/ai/tsconfig.json"
+    },
+    {
+      "path": "packages/core/artifact/tsconfig.json"
+    },
+    {
+      "path": "packages/core/artifact-testing/tsconfig.json"
+    },
+    {
+      "path": "packages/core/assistant/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/tsconfig.json"
     },
     {
@@ -221,15 +233,6 @@
     },
     {
       "path": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/artifact/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/artifact-testing/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/assistant/tsconfig.json"
     },
     {
       "path": "packages/experimental/cf-labs/tsconfig.json"

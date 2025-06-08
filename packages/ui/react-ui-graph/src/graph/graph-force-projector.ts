@@ -2,7 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import { forceCenter, forceCollide, forceLink, forceManyBody, forceRadial, forceSimulation, forceX, forceY } from 'd3';
+import {
+  type Force,
+  forceCenter,
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceRadial,
+  forceSimulation,
+  forceX,
+  forceY,
+} from 'd3';
 
 import { type Graph } from '@dxos/graph';
 
@@ -26,7 +36,11 @@ const getValue = <T>(v: T | ((...args: any[]) => T) | undefined, cb, defaultValu
  * @param cb
  * @param defaultValue
  */
-const maybeForce = <T>(options: T | boolean, cb, defaultValue = undefined) => {
+const maybeForce = <Config>(
+  options: Config | boolean,
+  cb: (config: Config) => Force<any, any>,
+  defaultValue = undefined,
+) => {
   const value = typeof options === 'boolean' ? (options ? {} : undefined) : options ?? defaultValue;
   if (value) {
     return cb(value);
@@ -75,6 +89,7 @@ export type ForceCollideOptions = {
  * https://github.com/d3/d3-force#forceRadial
  */
 export type ForceRadialOptions = {
+  delay?: number;
   x?: number;
   y?: number;
   radius?: number;
@@ -142,13 +157,14 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
     return this._simulation;
   }
 
-  numChildren(node) {
+  numChildren(node: GraphLayoutNode) {
     return this._layout.graph.edges.filter((edge) => edge.source.id === this.options.idAccessor(node)).length;
   }
 
   override onUpdate(data?: Graph) {
     this.mergeData(data);
-    this.updateForces();
+    this._simulation.stop();
+    this.updateForces(this.options.forces);
 
     // Guides.
     this._layout.guides = this.options.guides
@@ -248,11 +264,13 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
     });
 
     // Replace edges.
-    const edges = data.edges.map((edge) => ({
-      id: edge.id,
-      source: nodes.find((n) => n.id === edge.source),
-      target: nodes.find((n) => n.id === edge.target),
-    }));
+    const edges = data.edges
+      .map((edge) => ({
+        id: edge.id,
+        source: nodes.find((n) => n.id === edge.source),
+        target: nodes.find((n) => n.id === edge.target),
+      }))
+      .filter((edge) => edge.source && edge.target);
 
     this._layout = {
       graph: {
@@ -265,7 +283,18 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
   }
 
   override async onStart() {
-    this.updateForces();
+    // TODO(burdon): Generalize.
+    // Delay radial force until other forces have settled.
+    const { radial, ...forces } = this.options.forces ?? {};
+    if (typeof radial === 'boolean' || !radial?.delay) {
+      this.updateForces(this.options.forces);
+    } else {
+      this.updateForces(forces);
+      setTimeout(() => {
+        this._simulation.alphaTarget(0).alpha(1).restart();
+        this.updateForces(this.options.forces);
+      }, radial.delay);
+    }
 
     this._simulation
       .on('tick', () => {
@@ -288,9 +317,7 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
   /**
    * Update all forces.
    */
-  private updateForces() {
-    const forces = this.options.forces;
-
+  private updateForces(forces: ForceOptions) {
     // https://github.com/d3/d3-force#simulation_force
     this._simulation
 

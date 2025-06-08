@@ -4,9 +4,18 @@
 
 import { type Signal, batch, computed, signal } from '@preact/signals-core';
 
+import {
+  DEFAULT_EDGE_MODEL,
+  type AIServiceClient,
+  type GenerateRequest,
+  type Message,
+  type MessageContentBlock,
+  type Tool,
+  type ToolUseContentBlock,
+} from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { type ArtifactDefinition, type Message, type MessageContentBlock, type Tool } from '@dxos/artifact';
-import { type AIServiceClient, AISession, DEFAULT_EDGE_MODEL, type GenerateRequest } from '@dxos/assistant';
+import { type ArtifactDefinition } from '@dxos/artifact';
+import { AISession, type ArtifactDiffResolver } from '@dxos/assistant';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { getVersion, type Space } from '@dxos/react-client/echo';
@@ -120,6 +129,33 @@ export class ChatProcessor {
       this._pending.value = [...this._pending.value, message];
     });
 
+    this._session.toolStatusReport.on(({ message, status }) => {
+      const msg = this._pending.peek().find((m) => m.id === message.id);
+      const toolUse = msg?.content.find((block) => block.type === 'tool_use');
+      if (!toolUse) {
+        return;
+      }
+
+      const block = msg?.content.find(
+        (block): block is ToolUseContentBlock => block.type === 'tool_use' && block.id === toolUse.id,
+      );
+      if (block) {
+        this._pending.value = this._pending.value.map((m) => {
+          if (m.id === message.id) {
+            return {
+              ...m,
+              content: m.content.map((b) =>
+                b.type === 'tool_use' && b.id === toolUse.id ? { ...b, currentStatus: status } : b,
+              ),
+            };
+          }
+          return m;
+        });
+      } else {
+        log.warn('no block for status report');
+      }
+    });
+
     try {
       const messages = await this._session.run({
         client: this._ai,
@@ -130,28 +166,7 @@ export class ChatProcessor {
         prompt: message,
         systemPrompt: this._options.systemPrompt,
         extensions: this._extensions,
-        artifactDiffResolver: async (artifacts) => {
-          const space = this._extensions?.space;
-          if (!space) {
-            return new Map();
-          }
-          const versions = new Map();
-          await Promise.all(
-            artifacts.map(async (artifact) => {
-              const {
-                objects: [object],
-              } = await space.db.query({ id: artifact.id }).run();
-              if (!object) {
-                return;
-              }
-              versions.set(artifact.id, {
-                version: getVersion(object),
-                diff: `Current state: ${JSON.stringify(object)}`,
-              });
-            }),
-          );
-          return versions;
-        },
+        artifactDiffResolver: this._artifactDiffResolver,
         generationOptions: {
           model: this._options.model,
         },
@@ -192,6 +207,29 @@ export class ChatProcessor {
 
     return messages;
   }
+
+  private _artifactDiffResolver: ArtifactDiffResolver = async (artifacts) => {
+    const space = this._extensions?.space;
+    if (!space) {
+      return new Map();
+    }
+    const versions = new Map();
+    await Promise.all(
+      artifacts.map(async (artifact) => {
+        const {
+          objects: [object],
+        } = await space.db.query({ id: artifact.id }).run();
+        if (!object) {
+          return;
+        }
+        versions.set(artifact.id, {
+          version: getVersion(object),
+          diff: `Current state: ${JSON.stringify(object)}`,
+        });
+      }),
+    );
+    return versions;
+  };
 }
 
 // TODO(wittjosiah): Move to ai-service-client.

@@ -10,6 +10,7 @@ import { DXN } from '@dxos/keys';
 
 import { create } from './create';
 import { serializeStatic } from './json-serializer';
+import { RelationSourceId, RelationTargetId } from './relation';
 import { getTypename } from './typename';
 import { getSchema, getSchemaDXN } from '../ast';
 import { Testing } from '../testing';
@@ -57,6 +58,29 @@ describe('create (static version)', () => {
       email: 'bot@example.com',
     });
     expect(serializeStatic(contact)).toStrictEqual(json);
+  });
+
+  test('JSON encoding with relation', () => {
+    const contactA = create(Testing.Contact, {
+      name: 'Bot',
+      email: 'bot@example.com',
+    });
+    const contactB = create(Testing.Contact, {
+      name: 'Bot',
+      email: 'bot@example.com',
+    });
+    const hasManager = create(Testing.HasManager, {
+      [RelationSourceId]: contactA,
+      [RelationTargetId]: contactB,
+    });
+
+    const json = JSON.parse(JSON.stringify(hasManager));
+    expect(json).toEqual({
+      id: hasManager.id,
+      '@type': DXN.fromTypenameAndVersion(Testing.HasManager.typename, Testing.HasManager.version).toString(),
+      '@relationSource': DXN.fromLocalObjectId(contactA.id).toString(),
+      '@relationTarget': DXN.fromLocalObjectId(contactB.id).toString(),
+    });
   });
 
   test('getSchema', () => {

@@ -4,7 +4,7 @@
 
 import { easeLinear, interpolate, select } from 'd3';
 
-import { type D3Callable, type D3Selection } from '../typings';
+import { type D3Selection, type D3Callable } from '../util';
 
 export type BulletOptions = {
   max?: number;
@@ -35,7 +35,7 @@ export const createBullets = (group: SVGGElement, nodeId: string, options: Bulle
 
         const bullet = select(group)
           .append('circle')
-          .attr('class', 'bullet')
+          .attr('class', 'dx-bullet')
           .attr('cx', p.x)
           .attr('cy', p.y)
           .attr('r', radius);
@@ -61,7 +61,7 @@ export const createBullets = (group: SVGGElement, nodeId: string, options: Bulle
             select(this).remove();
 
             // Propagate with circuit breaker to prevent infinite recursion.
-            const num = select(group).selectAll('circle.bullet').size();
+            const num = select(group).selectAll('circle.dx-bullet').size();
             if (num < max) {
               selection.call(createBullets(group, target.id));
             }

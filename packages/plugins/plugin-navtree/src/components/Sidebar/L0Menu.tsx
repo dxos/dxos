@@ -313,7 +313,6 @@ export type L0MenuProps = {
 
 export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountItem, parent, path }: L0MenuProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
-  const suppressNextTooltip = useRef(true);
 
   return (
     <Tabs.Tablist
@@ -336,7 +335,6 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
                 label={t('app menu label')}
                 tooltipSide='right'
                 classNames='w-[50px] _bg-primary-500'
-                suppressNextTooltip={suppressNextTooltip}
                 data-testid='spacePlugin.addSpace'
               />
             </DropdownMenu.Trigger>

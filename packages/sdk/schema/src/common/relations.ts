@@ -15,14 +15,18 @@ import { Person } from './person';
 
 export const Employer = Schema.Struct({
   id: Type.ObjectId,
-}).pipe(
-  Relation.def({
-    typename: 'dxos.org/relation/Employer',
-    version: '0.1.0',
-    source: Person,
-    target: Organization,
-  }),
-);
+})
+  .pipe(
+    Relation.def({
+      typename: 'dxos.org/relation/Employer',
+      version: '0.1.0',
+      source: Person,
+      target: Organization,
+    }),
+  )
+  .annotations({
+    description: 'An employing organization of a person.',
+  });
 
 export interface Employer extends Schema.Schema.Type<typeof Employer> {}
 
@@ -32,15 +36,22 @@ export interface Employer extends Schema.Schema.Type<typeof Employer> {}
 
 export const HasRelationship = Schema.Struct({
   id: Type.ObjectId,
-  kind: Schema.String,
-}).pipe(
-  Relation.def({
-    typename: 'dxos.org/relation/HasRelationship',
-    version: '0.1.0',
-    source: Person,
-    target: Person,
+  kind: Schema.String.annotations({
+    description: 'The kind of relationship.',
+    examples: ['friend', 'family', 'colleague', 'spouse'],
   }),
-);
+})
+  .pipe(
+    Relation.def({
+      typename: 'dxos.org/relation/HasRelationship',
+      version: '0.1.0',
+      source: Person,
+      target: Person,
+    }),
+  )
+  .annotations({
+    description: 'A relationship between two people.',
+  });
 
 export interface HasRelationship extends Schema.Schema.Type<typeof HasRelationship> {}
 

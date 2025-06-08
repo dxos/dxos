@@ -7,9 +7,9 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { type Message } from '@dxos/ai';
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { type Message } from '@dxos/artifact';
 import { Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -69,7 +69,7 @@ const DefaultStory = ({ messages: _messages, ...props }: ThreadProps) => {
 };
 
 const meta: Meta<ThreadProps> = {
-  title: 'plugins/plugin-automation/Thread',
+  title: 'plugins/plugin-assistant/Thread',
   render: DefaultStory,
   component: Thread,
   decorators: [

@@ -4,7 +4,7 @@
 
 import { line, select } from 'd3';
 
-import { type D3Callable } from '../typings';
+import { type D3Callable } from '../util';
 
 const createLine = line();
 
@@ -56,17 +56,17 @@ export const createMarkers =
         {
           id: 'marker-arrow-start',
           generator: createArrow(arrowSize, -0.5, true),
-          className: 'arrow',
+          className: 'dx-arrow',
         },
         {
           id: 'marker-arrow-end',
           generator: createArrow(arrowSize, 0.5, false),
-          className: 'arrow',
+          className: 'dx-arrow',
         },
         {
           id: 'marker-dot',
-          generator: createDot(8),
-          className: 'dot',
+          generator: createDot(6),
+          className: 'dx-dot',
         },
       ])
       .join('marker')

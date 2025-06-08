@@ -251,7 +251,6 @@ type TooltipTriggerProps = PrimitiveButtonProps &
   Pick<TooltipProps, 'delayDuration'> & {
     content?: string;
     side?: TooltipSide;
-    suppressNextTooltip?: MutableRefObject<boolean>;
     onInteract?: (event: SyntheticEvent) => void;
   };
 
@@ -262,7 +261,6 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
       onInteract,
       // TODO(thure): Pass `delayDuration` into the context.
       delayDuration: _delayDuration,
-      suppressNextTooltip,
       side,
       content,
       ...triggerProps
@@ -313,20 +311,7 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
           isPointerDownRef.current = true;
           document.addEventListener('pointerup', handlePointerUp, { once: true });
         })}
-        onFocus={composeEventHandlers(props.onFocus, (event) => {
-          if (!isPointerDownRef.current) {
-            onInteract?.(event);
-            if (event.defaultPrevented) {
-              return;
-            }
-            if (suppressNextTooltip?.current) {
-              suppressNextTooltip.current = false;
-            } else if (document.body.getAttribute('data-focus') !== 'hidden') {
-              context.onTriggerChange(ref.current);
-              context.onOpen();
-            }
-          }
-        })}
+        onFocus={props.onFocus}
         onBlur={composeEventHandlers(props.onBlur, context.onClose)}
         onClick={composeEventHandlers(props.onClick, context.onClose)}
       />

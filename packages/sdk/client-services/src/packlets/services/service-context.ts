@@ -59,6 +59,7 @@ export type ServiceContextRuntimeParams = Pick<
   DataSpaceManagerRuntimeParams & {
     invitationConnectionDefaultParams?: InvitationConnectionParams;
     disableP2pReplication?: boolean;
+    enableVectorIndexing?: boolean;
   };
 /**
  * Shared backend for all client services.
@@ -155,6 +156,9 @@ export class ServiceContext extends Resource {
       kv: this.level,
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
+      indexing: {
+        vector: this._runtimeParams?.enableVectorIndexing,
+      },
     });
 
     this._meshReplicator = new MeshEchoReplicator();

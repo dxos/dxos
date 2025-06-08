@@ -1,0 +1,101 @@
+/**
+ * Graph styles.
+ */
+
+/* TODO(burdon): Implement light/dark theme or use semantic tokens. */
+
+svg {
+  marker {
+    &.dx-arrow path {
+      @apply stroke-neutral-300 dark:stroke-neutral-600 fill-none stroke-1;
+    }
+
+    &.dx-dot circle {
+      @apply fill-none stroke-red-500 stroke-2;
+    }
+  }
+
+  g.dx-grid {
+    path.dx-axis {
+      @apply stroke-neutral-200 dark:stroke-neutral-700;
+    }
+    path.dx-major {
+      @apply stroke-neutral-100 dark:stroke-neutral-800;
+    }
+    path.dx-minor {
+      @apply stroke-neutral-100 dark:stroke-neutral-850;
+    }
+  }  
+
+  g.dx-graph {
+    g.dx-guides {
+      circle {
+        @apply fill-neutral-300 stroke-neutral-500 opacity-10 dark:fill-neutral-700 dark:stroke-neutral-900; 
+      }
+    }
+
+    g.dx-subgraphs {
+      path.dx-subgraph {
+        @apply stroke-red-500 fill-neutral-100 dark:fill-neutral-900 [stroke-dasharray:4_4];
+      }
+    }
+
+    g.dx-nodes {
+      g.dx-node {
+        circle {
+          @apply fill-neutral-200 stroke-neutral-700 dark:fill-neutral-500 dark:stroke-none;
+        }
+        line {
+          @apply opacity-0;
+        }
+        rect, text {
+          @apply opacity-0 transition-opacity duration-200;
+        }
+
+        &.dx-selected {
+          circle {
+            @apply fill-red-500;
+          }
+        }
+      }
+
+      g.dx-dragging,
+      g.dx-highlight {
+        circle {
+          @apply stroke-2 stroke-neutral-900 dark:stroke-neutral-200 cursor-pointer;
+        }
+        rect {
+          @apply opacity-100 stroke-none fill-inverseSurface;
+        }
+        line {
+          @apply opacity-100 stroke-2 stroke-neutral-700 dark:stroke-neutral-200;
+        }
+        text {
+          @apply opacity-100 fill-neutral-100 dark:fill-neutral-800;
+        }
+      }
+    }
+
+    g.dx-edges {
+      g.dx-edge {
+        path {
+          @apply stroke-1 stroke-neutral-300 dark:stroke-neutral-600;
+        }
+      }
+    }
+
+    .dx-linker {
+      path {
+        @apply stroke-orange-500 [stroke-dasharray:4_4];
+      }
+
+      path::marker {
+        @apply stroke-red-500;
+      }
+    }
+
+    circle.dx-bullet {
+      @apply fill-red-500 stroke-none;
+    }
+  }
+}

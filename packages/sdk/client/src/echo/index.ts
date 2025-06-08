@@ -51,6 +51,9 @@ export {
   toCursor,
   toCursorRange,
   updateText,
+  isRelation,
+  getSource,
+  getTarget,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.

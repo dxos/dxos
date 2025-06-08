@@ -195,5 +195,11 @@ export const getDXN = (object: any): DXN | undefined => {
   return DXN.fromLocalObjectId(object.id);
 };
 
+/**
+ * Canonical type for all ECHO objects.
+ * @deprecated Use `AnyEchoObject` instead.
+ */
+export interface BaseEchoObject extends HasId, HasTypename {}
+
 // TODO(burdon): Reconcile with Type.Any.
-export type BaseEchoObject = HasId & HasTypename;
+export interface AnyEchoObject extends BaseEchoObject {}

@@ -22,7 +22,7 @@ export type ThreadContainerProps = {
   settings?: AssistantSettingsProps;
   part?: 'deck' | 'dialog';
   associatedArtifact?: AssociatedArtifact;
-} & Pick<ThreadProps, 'debug' | 'transcription' | 'onOpenChange'>;
+} & Pick<ThreadProps, 'debug' | 'transcription' | 'onOpenChange' | 'onAddToGraph'>;
 
 // TODO(burdon): Since this only wraps Thread, just separate out hook?
 export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
@@ -50,7 +50,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
         void dispatch(
           createIntent(CollaborationActions.InsertContent, {
             target: associatedArtifact,
-            object: refFromDXN(new DXN(DXN.kind.QUEUE, [...chat.assistantChatQueue.dxn.parts, message.id])),
+            object: refFromDXN(new DXN(DXN.kind.QUEUE, [...chat.queue.dxn.parts, message.id])),
             label: 'View proposal',
           }),
         );

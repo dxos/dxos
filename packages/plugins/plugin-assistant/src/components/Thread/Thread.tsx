@@ -4,7 +4,7 @@
 
 import React, { type CSSProperties, useCallback, useMemo, useRef } from 'react';
 
-import { type Message } from '@dxos/artifact';
+import { type Message } from '@dxos/ai';
 import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -32,7 +32,7 @@ export type ThreadProps = ThemedClassName<{
   contextProvider?: ContextProvider;
 }> &
   Pick<PromptBarProps, 'processing' | 'error' | 'onSubmit' | 'onSuggest' | 'onCancel'> &
-  Pick<ThreadMessageProps, 'debug' | 'tools' | 'onPrompt' | 'onDelete'>;
+  Pick<ThreadMessageProps, 'debug' | 'tools' | 'onPrompt' | 'onDelete' | 'onAddToGraph'>;
 
 /**
  * Chat thread component.
