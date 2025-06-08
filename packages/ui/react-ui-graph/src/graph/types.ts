@@ -40,9 +40,9 @@ export type GraphGuide = {
   };
 };
 
-export type GraphLayoutNode<N = any> = {
+export type GraphLayoutNode<Data = any> = {
   id: string;
-  data?: N;
+  data?: Data;
   x?: number;
   y?: number;
   r?: number;
@@ -55,20 +55,19 @@ export type GraphLayoutNode<N = any> = {
   last?: Point;
 };
 
-export type GraphLayoutEdge<N = any> = {
+export type GraphLayoutEdge<Data = any> = {
   id: string;
-  source: GraphLayoutNode<N>;
-  target: GraphLayoutNode<N>;
+  source: GraphLayoutNode<Data>;
+  target: GraphLayoutNode<Data>;
   classes?: {
     path?: string;
   };
 };
 
-export type GraphLayout<N = any> = {
+export type GraphLayout<Data = any> = {
   guides?: GraphGuide[];
-  // TODO(burdon): Use common/graph type.
   graph: {
-    nodes: GraphLayoutNode<N>[];
-    edges: GraphLayoutEdge<N>[];
+    nodes: GraphLayoutNode<Data>[];
+    edges: GraphLayoutEdge<Data>[];
   };
 };

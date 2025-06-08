@@ -16,6 +16,16 @@ export const combine = (...cleanupFns: CleanupFn[]): CleanupFn => {
   };
 };
 
+export const timeout = (cb: Function, ms = 0): CleanupFn => {
+  const t = setTimeout(cb, ms);
+  return () => clearTimeout(t);
+};
+
+export const interval = (cb: Function, ms: number): CleanupFn => {
+  const t = setInterval(cb, ms);
+  return () => clearInterval(t);
+};
+
 /**
  * Add the event listener and return a cleanup function.
  * Can be used in effect hooks in conjunction with `combine`.

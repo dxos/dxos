@@ -35,10 +35,12 @@ import {
   folding,
   image,
   linkTooltip,
+  matchCompletion,
   mention,
   outliner,
   selectionState,
   table,
+  typeahead,
 } from '../extensions';
 import { listItemToString, treeFacet } from '../extensions/outliner/tree';
 
@@ -314,7 +316,7 @@ export const Typescript = {
 };
 
 //
-// Custom
+// Autocomplete
 //
 
 export const Autocomplete = {
@@ -327,6 +329,26 @@ export const Autocomplete = {
           onSearch: (text) => {
             return links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase()));
           },
+        }),
+      ]}
+    />
+  ),
+};
+
+//
+// Typeahead
+//
+
+const completions = ['type', 'AND', 'OR', 'NOT', 'dxos.org'];
+
+export const Typeahead = {
+  render: () => (
+    <EditorStory
+      text={str('# Typeahead', '')}
+      extensions={[
+        decorateMarkdown({ renderLinkButton }),
+        typeahead({
+          onComplete: matchCompletion(completions, completions[0]),
         }),
       ]}
     />

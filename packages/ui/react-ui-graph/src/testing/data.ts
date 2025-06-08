@@ -20,7 +20,8 @@ export const createNode = (type: string = undefined): TestNode => ({
   label: faker.lorem.words(3).replace(/ /g, '-'),
 });
 
-export const createNodes = (n = 0): TestNode[] => Array.from({ length: n }).map(createNode);
+export const createNodes = (n = 0, types?: string[]): TestNode[] =>
+  Array.from({ length: n }, () => createNode(types ? faker.helpers.arrayElement(types) : undefined));
 
 export const createEdge = (source: TestNode, target: TestNode): BaseGraphEdge => ({
   id: `${source.id}-${target.id}`,
@@ -75,8 +76,8 @@ export const convertTreeToGraph = (root: TestNode): Graph => {
  * @param numNodes
  * @param numEdges
  */
-export const createGraph = (numNodes = 0, numEdges = 0): Graph => {
-  const nodes = createNodes(numNodes);
+export const createGraph = (numNodes = 0, numEdges = 0, types?: string[]): Graph => {
+  const nodes = createNodes(numNodes, types);
 
   const edges = new Map();
   if (numEdges && nodes.length >= 2) {

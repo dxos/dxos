@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 
 import { Format, Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
@@ -18,7 +18,7 @@ export class TestSchema extends TypedObject({
   name: Schema.optional(
     Schema.String.pipe(
       Schema.annotations({
-        [SchemaAST.DescriptionAnnotationId]: 'Full name.',
+        description: 'Full name.',
       }),
     ),
   ),
@@ -31,7 +31,7 @@ export class TestSchema extends TypedObject({
   //       Schema.String.pipe(
   //         Schema.pattern(/^[0-9]{5}(?:-[0-9]{4})?$/),
   //         Schema.annotations({
-  //           [SchemaAST.DescriptionAnnotationId]: 'ZIP code.',
+  //           description: 'ZIP code.',
   //         }),
   //       ),
   //     ),
