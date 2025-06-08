@@ -106,7 +106,7 @@ for (const filePath of tsFiles) {
 
     // Get the inferred return type
     const returnType = func.getReturnType();
-    const returnTypeText = returnType.getText();
+    const returnTypeText = returnType.getText(func);
 
     if (!canApplyType(returnType, func)) {
       logSkip(returnTypeText, filePath, func.getStartLineNumber());
@@ -132,7 +132,7 @@ for (const filePath of tsFiles) {
 
       // Get the inferred return type
       const returnType = method.getReturnType();
-      const returnTypeText = returnType.getText();
+      const returnTypeText = returnType.getText(method);
 
       if (!canApplyType(returnType, method)) {
         logSkip(returnTypeText, filePath, method.getStartLineNumber());
@@ -161,7 +161,7 @@ for (const filePath of tsFiles) {
 
       // Get the inferred property type
       const propType = prop.getType();
-      const propTypeText = propType.getText();
+      const propTypeText = propType.getText(prop);
 
       if (!canApplyType(propType, prop)) {
         logSkip(propTypeText, filePath, prop.getStartLineNumber());
@@ -190,7 +190,7 @@ for (const filePath of tsFiles) {
 
       // Get the inferred return type
       const returnType = getter.getReturnType();
-      const returnTypeText = returnType.getText();
+      const returnTypeText = returnType.getText(getter);
 
       if (!canApplyType(returnType, getter)) {
         logSkip(returnTypeText, filePath, getter.getStartLineNumber());
@@ -220,7 +220,7 @@ for (const filePath of tsFiles) {
       const paramType = setter.getParameters()[0]?.getType();
       if (!paramType) continue;
 
-      const paramTypeText = paramType.getText();
+      const paramTypeText = paramType.getText(setter);
 
       if (!canApplyType(paramType, setter)) {
         logSkip(paramTypeText, filePath, setter.getStartLineNumber());
@@ -253,17 +253,17 @@ for (const filePath of tsFiles) {
     const typeNode = project
       .getTypeChecker()
       .compilerObject.typeToTypeNode(type.compilerType, node.compilerNode, ts.NodeBuilderFlags.NoTruncation);
+    const text = type.getText(node);
 
     if (argv.debug) {
       console.log({
-        text: type.getText(),
+        text,
         typeFlags: Object.keys(ts.TypeFlags).filter((flag) => type.getFlags() & ts.TypeFlags[flag]),
         nodeKind: ts.SyntaxKind[typeNode.kind],
         typeNode,
       });
     }
 
-    const text = type.getText();
     if (text.includes('import(')) {
       return false;
     }
