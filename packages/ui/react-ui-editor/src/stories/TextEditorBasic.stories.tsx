@@ -35,10 +35,10 @@ import {
   folding,
   image,
   linkTooltip,
-  matchCompletion,
   mention,
   outliner,
   selectionState,
+  staticCompletion,
   table,
   typeahead,
 } from '../extensions';
@@ -348,7 +348,7 @@ export const Typeahead = {
       extensions={[
         decorateMarkdown({ renderLinkButton }),
         typeahead({
-          onComplete: matchCompletion(completions, completions[0]),
+          onComplete: staticCompletion(completions, completions[0]),
         }),
       ]}
     />

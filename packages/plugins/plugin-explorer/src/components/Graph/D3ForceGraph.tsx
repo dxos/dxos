@@ -11,13 +11,16 @@ import { type SpaceGraphNode, type SpaceGraphModel, type SpaceGraphEdge } from '
 
 import '@dxos/react-ui-graph/styles/graph.css';
 
-export type D3ForceGraphProps = ThemedClassName<{
-  model?: SpaceGraphModel;
-  match?: RegExp;
-  selection?: SelectionModel;
-}>;
+export type D3ForceGraphProps = ThemedClassName<
+  {
+    model?: SpaceGraphModel;
+    match?: RegExp;
+    selection?: SelectionModel;
+    grid?: boolean;
+  } & Pick<GraphProps, 'drag'>
+>;
 
-export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selection: _selection }) => {
+export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selection: _selection, grid, ...props }) => {
   const context = useRef<SVGContext>(null);
   const projector = useMemo<GraphForceProjector | undefined>(
     () =>
@@ -56,11 +59,11 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
   return (
     <SVG.Root ref={context} classNames={classNames}>
       <SVG.Markers />
-      <SVG.Grid axis />
+      {grid && <SVG.Grid axis />}
       <SVG.Zoom extent={[1 / 2, 2]}>
         <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
+          {...props}
           ref={graph}
-          drag
           model={model}
           projector={projector}
           labels={{
