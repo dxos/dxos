@@ -8,7 +8,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Type } from '@dxos/echo';
 import { assertEchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -19,7 +18,7 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { Filter, useSpaces, useQuery, useSchema, live } from '@dxos/react-client/echo';
+import { Filter, useSpaces, useQuery, useSchema, live, useJsonSchema } from '@dxos/react-client/echo';
 import { useDeepCompareEffect } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban, KanbanType, useKanbanModel } from '@dxos/react-ui-kanban';
@@ -61,15 +60,12 @@ const StorybookKanban = () => {
     }
   }, [kanbans]);
 
+  const jsonSchema = useJsonSchema(schema);
   useDeepCompareEffect(() => {
-    if (kanban?.cardView?.target && schema) {
-      const jsonSchema = Type.toJsonSchema(schema);
+    if (jsonSchema && kanban?.cardView?.target) {
       setProjection(new ViewProjection(jsonSchema, kanban.cardView.target));
     }
-
-    // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
-    //  @dmaretskyi? Once resolved, update in multiple places (e.g., storybooks).
-  }, [kanban?.cardView?.target, schema]);
+  }, [kanban?.cardView?.target, jsonSchema]);
 
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);

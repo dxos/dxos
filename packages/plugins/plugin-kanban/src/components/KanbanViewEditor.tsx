@@ -9,7 +9,7 @@ import { Type } from '@dxos/echo';
 import { assertEchoSchema, FormatEnum, isMutable } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
-import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
+import { Filter, getSpace, useJsonSchema, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useDeepCompareMemo } from '@dxos/react-ui';
 import { ViewEditor, Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
 import { type KanbanType, KanbanSettingsSchema } from '@dxos/react-ui-kanban';
@@ -50,12 +50,13 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     [dispatch, kanban],
   );
 
+  const jsonSchema = useJsonSchema(schema);
   const projection = useDeepCompareMemo(() => {
     if (kanban?.cardView?.target && schema) {
       const jsonSchema = Type.toJsonSchema(schema);
       return new ViewProjection(jsonSchema, kanban.cardView.target);
     }
-  }, [kanban?.cardView?.target, schema, schema ? Type.toJsonSchema(schema) : {}]);
+  }, [kanban?.cardView?.target, jsonSchema]);
 
   const fieldProjections = projection?.getFieldProjections() || [];
   const selectFields = fieldProjections

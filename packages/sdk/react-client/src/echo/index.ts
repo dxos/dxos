@@ -5,6 +5,7 @@
 export * from '@dxos/client/echo';
 
 export * from './useMembers';
+export * from './useJsonSchema';
 export * from './useQuery';
 export * from './useQueue';
 export * from './useSchema';
