@@ -6,6 +6,8 @@ import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 
+import { AgentStatusReport } from '../status-report';
+
 // TODO(dmaretskyi): Extract IDs to protocols and dedupe package with dxos/edge.
 
 /**
@@ -110,6 +112,11 @@ export const ToolUseContentBlock = Schema.extend(
      * Input parameters.
      */
     input: Schema.Unknown,
+
+    /**
+     * Ephemeral status message.
+     */
+    currentStatus: Schema.optional(AgentStatusReport),
   }),
 ).pipe(Schema.mutable);
 export interface ToolUseContentBlock extends Schema.Schema.Type<typeof ToolUseContentBlock> {}
