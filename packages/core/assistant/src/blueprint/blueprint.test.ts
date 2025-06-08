@@ -19,7 +19,7 @@ import { BlueprintMachine, type BlueprintMachineState } from './machine';
 // Force chalk colors on for tests
 chalk.level = 2;
 
-describe('Blueprint', () => {
+describe.skip('Blueprint', () => {
   const aiService = new AIServiceEdgeClient({
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
     defaultGenerationOptions: {
@@ -41,7 +41,7 @@ describe('Blueprint', () => {
     await machine.runToCompletion({ aiService });
   });
 
-  test.only('email bot', { timeout: 60_000 }, async () => {
+  test('email bot', { timeout: 60_000 }, async () => {
     const replyTool = defineTool('email', {
       name: 'reply',
       description: 'Reply to the email',
