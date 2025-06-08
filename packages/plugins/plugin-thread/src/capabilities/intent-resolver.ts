@@ -3,12 +3,13 @@
 //
 
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
+import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { live, fullyQualifiedId, getSpace, Ref } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { AnchoredTo, DataType } from '@dxos/schema';
 
 import { ThreadCapabilities } from './capabilities';
 import { THREAD_PLUGIN } from '../meta';
@@ -40,32 +41,29 @@ export default (context: PluginContext) =>
         };
       },
     }),
+    // TODO(wittjosiah): Break this up into more composable pieces.
     createResolver({
       intent: ThreadAction.Create,
       resolve: ({ name, cursor, subject }) => {
-        // Seed the threads array if it does not exist.
-        if (subject?.threads === undefined) {
-          try {
-            // Static schema will throw an error if subject does not support threads array property.
-            subject.threads = [];
-          } catch (err) {
-            log.error('Subject does not support threads array', { typename: subject?.typename });
-            return;
-          }
-        }
+        const space = getSpace(subject);
+        invariant(space, 'Space not found');
 
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
-        const thread = live(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
+        const thread = live(ThreadType, { name, messages: [], status: 'staged' });
+        const anchor = live(AnchoredTo, {
+          [RelationSourceId]: thread,
+          [RelationTargetId]: subject,
+          anchor: cursor,
+        });
         const draft = state.drafts[subjectId];
         if (draft) {
-          draft.push(thread);
+          draft.push(anchor);
         } else {
-          state.drafts[subjectId] = [thread];
+          state.drafts[subjectId] = [anchor];
         }
 
         return {
-          data: { object: thread },
           intents: [
             createIntent(ThreadAction.Select, { current: fullyQualifiedId(thread) }),
             createIntent(DeckAction.ChangeCompanion, {
@@ -111,37 +109,33 @@ export default (context: PluginContext) =>
     }),
     createResolver({
       intent: ThreadAction.Delete,
-      resolve: ({ subject, thread }, undo) => {
+      resolve: ({ subject, anchor, thread: _thread }, undo) => {
+        const thread = _thread ?? (anchor[RelationSourceId] as ThreadType);
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
         const draft = state.drafts[subjectId];
         if (draft) {
           // Check if we're deleting a draft; if so, remove it.
-          const index = draft.findIndex((t) => t.id === thread.id);
+          const index = draft.findIndex((a) => a.id === anchor.id);
           if (index !== -1) {
             draft.splice(index, 1);
             return;
           }
         }
 
-        const space = getSpace(thread);
-        if (!space || !subject.threads) {
+        const space = getSpace(anchor);
+        if (!space) {
           return;
         }
 
         if (!undo) {
-          const index = subject.threads.findIndex((t: any) => t?.id === thread.id);
-          const cursor = subject.threads[index]?.anchor;
-          if (index !== -1) {
-            subject.threads?.splice(index, 1);
-          }
-
           space.db.remove(thread);
+          space.db.remove(anchor);
 
           return {
             undoable: {
               message: ['thread deleted label', { ns: THREAD_PLUGIN }],
-              data: { cursor },
+              data: { thread, anchor },
             },
             intents: [
               createIntent(ObservabilityAction.SendEvent, {
@@ -154,9 +148,8 @@ export default (context: PluginContext) =>
             ],
           };
         } else {
-          // TODO(wittjosiah): SDK should do this automatically.
-          const savedThread = space.db.add(thread);
-          subject.threads.push(savedThread);
+          space.db.add(thread);
+          space.db.add(anchor);
 
           return {
             intents: [
@@ -174,7 +167,8 @@ export default (context: PluginContext) =>
     }),
     createResolver({
       intent: ThreadAction.AddMessage,
-      resolve: ({ thread, subject, sender, text }) => {
+      resolve: ({ anchor, subject, sender, text }) => {
+        const thread = anchor[RelationSourceId] as ThreadType;
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
         const space = getSpace(subject);
@@ -190,11 +184,22 @@ export default (context: PluginContext) =>
         });
         thread.messages.push(Ref.make(message));
 
-        if (state.drafts[subjectId]?.find((t) => t === thread)) {
+        const draft = state.drafts[subjectId]?.find((a) => a.id === anchor.id);
+        if (draft) {
           // Move draft to document.
           thread.status = 'active';
-          subject.threads ? subject.threads.push(Ref.make(thread)) : (subject.threads = [Ref.make(thread)]);
-          state.drafts[subjectId] = state.drafts[subjectId]?.filter(({ id }) => id !== thread.id);
+          // TODO(wittjosiah): This causes the thread to flash as it transitions from draft to db.
+          state.drafts[subjectId] = state.drafts[subjectId]?.filter((a) => a.id !== anchor.id);
+          intents.push(createIntent(SpaceAction.AddObject, { object: thread, target: space, hidden: true }));
+          intents.push(
+            createIntent(SpaceAction.AddRelation, {
+              space,
+              schema: AnchoredTo,
+              source: thread,
+              target: subject,
+              fields: { anchor: draft.anchor },
+            }),
+          );
           intents.push(
             createIntent(ObservabilityAction.SendEvent, {
               name: 'threads.create',
@@ -224,7 +229,8 @@ export default (context: PluginContext) =>
     }),
     createResolver({
       intent: ThreadAction.DeleteMessage,
-      resolve: ({ subject, thread, messageId, message, messageIndex }, undo) => {
+      resolve: ({ subject, anchor, messageId, message, messageIndex }, undo) => {
+        const thread = anchor[RelationSourceId] as ThreadType;
         const space = getSpace(subject);
         invariant(space, 'Space not found');
 
@@ -238,7 +244,7 @@ export default (context: PluginContext) =>
           if (messageIndex === 0 && thread.messages.length === 1) {
             // If the message is the only message in the thread, delete the thread.
             return {
-              intents: [createIntent(ThreadAction.Delete, { subject, thread })],
+              intents: [createIntent(ThreadAction.Delete, { subject, anchor })],
             };
           } else {
             thread.messages.splice(messageIndex, 1);

@@ -61,7 +61,7 @@ export interface HasRelationship extends Schema.Schema.Type<typeof HasRelationsh
 
 export const AnchoredTo = Schema.Struct({
   id: Type.ObjectId,
-  anchor: Schema.String,
+  anchor: Schema.optional(Schema.String),
 }).pipe(
   Relation.def({
     typename: 'dxos.org/relation/AnchoredTo',

@@ -6,9 +6,8 @@ import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import { createIntent, type FileInfo, useIntentDispatcher } from '@dxos/app-framework';
+import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type DNDOptions,
@@ -26,8 +25,6 @@ import {
   editorGutter,
   processEditorPayload,
   stackItemContentEditorClassNames,
-  useCommentState,
-  useCommentClickListener,
   useFormattingState,
   useTextEditor,
   useEditorToolbarState,
@@ -77,7 +74,6 @@ export const MarkdownEditor = ({
 }: MarkdownEditorProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const toolbarState = useEditorToolbarState({ viewMode });
   const formattingObserver = useFormattingState(toolbarState);
 
@@ -90,18 +86,6 @@ export const MarkdownEditor = ({
     () => extensionProviders?.flatMap((provider) => provider({})).filter(isNonNullable),
     [extensionProviders],
   );
-
-  // TODO(Zan): Factor out to thread plugin.
-  const commentObserver = useCommentState(toolbarState);
-  const onCommentClick = useCallback(async () => {
-    await dispatch(
-      createIntent(DeckAction.ChangeCompanion, {
-        primary: id,
-        companion: `${id}${ATTENDABLE_PATH_SEPARATOR}comments`,
-      }),
-    );
-  }, [dispatch]);
-  const commentClickObserver = useCommentClickListener(onCommentClick);
 
   // TODO(wittjosiah): Factor out to file uploader plugin.
   // Drag files.
@@ -122,8 +106,6 @@ export const MarkdownEditor = ({
       initialValue,
       extensions: [
         formattingObserver,
-        comment && commentObserver,
-        comment && commentClickObserver,
         createBasicExtensions({
           readOnly: viewMode === 'readonly',
           placeholder: t('editor placeholder'),
@@ -202,12 +184,12 @@ export const MarkdownEditor = ({
     <StackItem.Content toolbar={!!toolbar}>
       {toolbar && (
         <>
+          {/* TODO(wittjosiah): Comments via graph actions. */}
           <EditorToolbar
             attendableId={id}
             role={role}
             state={toolbarState}
             getView={getView}
-            comment={comment}
             image={handleImageUpload}
             viewMode={handleViewModeChange}
           />

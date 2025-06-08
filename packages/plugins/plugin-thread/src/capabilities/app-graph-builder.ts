@@ -94,10 +94,7 @@ export default (context: PluginContext) =>
           pipe(
             get(node),
             Option.flatMap((node) =>
-              // TODO(wittjosiah): Support comments on any object.
-              isLiveObject(node.data) && Array.isArray(node.data.threads) && !isInstanceOf(ChannelType, node.data)
-                ? Option.some(node)
-                : Option.none(),
+              isLiveObject(node.data) && !isInstanceOf(ChannelType, node.data) ? Option.some(node) : Option.none(),
             ),
             Option.map((node) => [
               {

@@ -5,11 +5,11 @@
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
-import { defineObjectForm, ThreadType } from '@dxos/plugin-space/types';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 import { type AnyLiveObject, RefArray } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
-import { DataType } from '@dxos/schema';
+import { AnchoredTo, DataType } from '@dxos/schema';
 
 import {
   AppGraphBuilder,
@@ -20,10 +20,9 @@ import {
   ReactSurface,
   ThreadState,
 } from './capabilities';
-import { ThreadEvents as LocalThreadEvents } from './events';
 import { meta, THREAD_ITEM } from './meta';
 import translations from './translations';
-import { ChannelType, ThreadAction } from './types';
+import { ChannelType, ThreadAction, ThreadType } from './types';
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
@@ -112,7 +111,8 @@ export const ThreadPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ThreadType, DataType.Message, DataType.MessageV1]),
+      activate: () =>
+        contributes(ClientCapabilities.Schema, [AnchoredTo, ThreadType, DataType.Message, DataType.MessageV1]),
     }),
     defineModule({
       id: `${meta.id}/module/migration`,
@@ -132,8 +132,6 @@ export const ThreadPlugin = () =>
     defineModule({
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupReactSurface,
-      // TODO(wittjosiah): Should occur before the comments thread is loaded when surfaces activation is more granular.
-      activatesBefore: [ThreadEvents.SetupThread, LocalThreadEvents.SetupActivity],
       activate: ReactSurface,
     }),
     defineModule({
