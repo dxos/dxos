@@ -10,13 +10,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { combine, timeout } from '@dxos/async';
-import { type AnyEchoObject, getLabelForObject, Query } from '@dxos/echo-schema';
+import { type AnyEchoObject, getLabelForObject, getSchemaTypename, Query } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
-import { D3ForceGraph } from '@dxos/plugin-explorer';
+import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
-import { matchCompletion, typeahead } from '@dxos/react-ui-editor';
+import { matchCompletion, staticCompletion, typeahead, type TypeaheadOptions } from '@dxos/react-ui-editor';
 import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -37,7 +37,7 @@ const generator = faker as any as ValueGenerator;
 
 type Mode = 'graph' | 'list';
 
-const DefaultStory = ({ mode }: { mode?: Mode }) => {
+const DefaultStory = ({ mode, ...props }: { mode?: Mode } & D3ForceGraphProps) => {
   const { t } = useTranslation(ASSISTANT_PLUGIN);
   const showList = mode !== 'graph';
   const showGraph = mode !== 'list';
@@ -98,26 +98,43 @@ const DefaultStory = ({ mode }: { mode?: Mode }) => {
     setFilter(undefined);
   }, []);
 
-  const extensions = useMemo(
-    () => [
-      typeahead({
-        onComplete: matchCompletion([
-          //
-          'type',
-          'dxos.org',
-          'AND',
-          'OR',
-          'NOT',
-        ]),
-      }),
-    ],
-    [],
+  // TODO(burdon): Match against expression grammar.
+  const handleMatch = useCallback<NonNullable<TypeaheadOptions['onComplete']>>(
+    ({ line }) => {
+      const words = line.split(/\s+/).filter(Boolean);
+      if (words.length > 0) {
+        const word = words.at(-1)!;
+
+        // Match type.
+        const match = word.match(/^type:(.+)/);
+        if (match) {
+          const part = match[1];
+          for (const schema of space?.db.graph.schemaRegistry.schemas ?? []) {
+            const typename = getSchemaTypename(schema);
+            if (typename) {
+              const completion = matchCompletion(typename, part);
+              if (completion) {
+                return completion;
+              }
+            }
+          }
+        }
+
+        // Match static.
+        return staticCompletion(['type:', 'AND', 'OR', 'NOT'])({ line });
+      }
+    },
+    [space],
   );
+
+  const extensions = useMemo(() => [typeahead({ onComplete: handleMatch })], [handleMatch]);
 
   return (
     <div className='grow grid overflow-hidden'>
       <div className={mx('grow grid overflow-hidden', !mode && 'grid-cols-[1fr_30rem]')}>
-        {showGraph && <D3ForceGraph classNames='border-ie border-separator' model={model} selection={selection} />}
+        {showGraph && (
+          <D3ForceGraph classNames='border-ie border-separator' model={model} selection={selection} {...props} />
+        )}
         {showList && (
           <div className='grow grid grid-rows-[min-content_1fr_1fr] overflow-hidden divide-y divide-separator'>
             <Toolbar.Root>
@@ -205,7 +222,10 @@ type Story = StoryObj<typeof DefaultStory>;
 export default meta;
 
 export const Default: Story = {
-  args: {},
+  args: {
+    grid: false,
+    drag: true,
+  },
 };
 
 export const WithList: Story = {

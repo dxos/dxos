@@ -3,18 +3,44 @@
 //
 
 import { EditorSelection, Prec, RangeSetBuilder, type Extension } from '@codemirror/state';
-import { Decoration, type DecorationSet, keymap, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import {
+  type Command,
+  Decoration,
+  type DecorationSet,
+  type EditorView,
+  keymap,
+  ViewPlugin,
+  type ViewUpdate,
+} from '@codemirror/view';
 
 import { Hint } from './hint';
 
-export type TypeaheadContext = { line: string; word: string };
+export type TypeaheadContext = { line: string };
 
+// TODO(burdon): Option to complete only at end of line?
 export type TypeaheadOptions = {
-  onComplete?: (args: TypeaheadContext) => string | undefined;
+  onComplete?: (context: TypeaheadContext) => string | undefined;
 };
 
+/**
+ * CodeMirror extension for typeahead completion.
+ */
 export const typeahead = ({ onComplete }: TypeaheadOptions = {}): Extension => {
   let hint: string | undefined;
+
+  const complete: Command = (view: EditorView) => {
+    if (!hint) {
+      return false;
+    }
+
+    const selection = view.state.selection.main;
+    view.dispatch({
+      changes: [{ from: selection.from, to: selection.to, insert: hint }],
+      selection: EditorSelection.cursor(selection.from + hint.length),
+    });
+
+    return true;
+  };
 
   return [
     ViewPlugin.fromClass(
@@ -29,12 +55,9 @@ export const typeahead = ({ onComplete }: TypeaheadOptions = {}): Extension => {
           // TODO(burdon): Context grammar.
           if (selection.from === selection.to && selection.from === line.to) {
             const str = update.state.sliceDoc(line.from, selection.from);
-            const words = str.split(/\W+/);
-            if (words.length) {
-              hint = onComplete?.({ line: str, word: words.at(-1)! });
-              if (hint) {
-                builder.add(selection.from, selection.to, Decoration.widget({ widget: new Hint(hint) }));
-              }
+            hint = onComplete?.({ line: str });
+            if (hint) {
+              builder.add(selection.from, selection.to, Decoration.widget({ widget: new Hint(hint) }));
             }
           }
 
@@ -50,35 +73,42 @@ export const typeahead = ({ onComplete }: TypeaheadOptions = {}): Extension => {
         {
           key: 'Tab',
           preventDefault: true,
-          run: (view) => {
-            if (hint) {
-              const selection = view.state.selection.main;
-              view.dispatch({
-                changes: [{ from: selection.from, to: selection.to, insert: hint }],
-                selection: EditorSelection.cursor(selection.from + hint.length),
-              });
-            }
-
-            return true;
-          },
+          run: complete,
+        },
+        {
+          key: 'ArrowRight',
+          preventDefault: true,
+          run: complete,
         },
       ]),
     ),
   ];
 };
 
-export const matchCompletion =
+/**
+ * Util to match current line to a static list of completions.
+ */
+export const staticCompletion =
   (completions: string[], defaultCompletion?: string) =>
-  ({ line, word }: TypeaheadContext) => {
+  ({ line }: TypeaheadContext) => {
     if (line.length === 0 && defaultCompletion) {
       return defaultCompletion;
     }
 
-    if (word.length) {
+    const words = line.split(/\s+/).filter(Boolean);
+    if (words.length) {
+      const word = words.at(-1)!;
       for (const completion of completions) {
-        if (completion.length > word.length && completion.startsWith(word)) {
-          return completion.slice(word.length);
+        const match = matchCompletion(completion, word);
+        if (match) {
+          return match;
         }
       }
     }
   };
+
+export const matchCompletion = (completion: string, word: string): string | undefined => {
+  if (completion.length > word.length && completion.startsWith(word)) {
+    return completion.slice(word.length);
+  }
+};
