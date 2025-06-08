@@ -11,8 +11,12 @@ import { Type } from 'ts-morph';
 // Parse command line arguments
 const argv = yargs(hideBin(process.argv))
   .option('verbose', {
-    short: 'v',
     description: 'Verbose output',
+    type: 'boolean',
+    default: false,
+  })
+  .option('dry', {
+    description: 'Dry run. No changes will be made.',
     type: 'boolean',
     default: false,
   })
@@ -223,6 +227,10 @@ for (const filePath of tsFiles) {
 
   // Save changes if any were made
   if (hasChanges) {
+    if (argv.dry) {
+      continue;
+    }
+
     const updatedContent = sourceFile.getFullText();
     await fs.writeFile(filePath, updatedContent, 'utf8');
     logSave(filePath);
