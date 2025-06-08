@@ -12,9 +12,9 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { getSchemaDXN } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { live } from '@dxos/live-object';
-import { DataType } from '@dxos/schema';
+import { DataType, DataTypes } from '@dxos/schema';
 
-import { createExtractionSchema, getSanitizedSchemaName, researchFn, TYPES } from './research';
+import { createExtractionSchema, getSanitizedSchemaName, researchFn } from './research';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
@@ -29,7 +29,7 @@ describe('Research', () => {
     builder = await new EchoTestBuilder().open();
     const { db: db1 } = await builder.createDatabase({ indexing: { vector: true } });
     db = db1;
-    db.graph.schemaRegistry.addSchema(TYPES);
+    db.graph.schemaRegistry.addSchema(DataTypes);
     executor = new FunctionExecutor(
       new ServiceContainer().setServices({
         ai: {
@@ -75,23 +75,23 @@ describe('Research', () => {
 
 describe('misc', () => {
   test('createExtractionSchema', () => {
-    const _schema = createExtractionSchema(TYPES);
+    const _schema = createExtractionSchema(DataTypes);
     // log.info('schema', { schema });
   });
 
   test('extract schema json schema', () => {
-    const schema = createExtractionSchema(TYPES);
+    const schema = createExtractionSchema(DataTypes);
     const _parser = structuredOutputParser(schema);
     // log.info('schema', { json: parser.tool.parameters });
   });
 
   test('getSanitizedSchemaName', () => {
-    const _names = TYPES.map(getSanitizedSchemaName);
+    const _names = DataTypes.map(getSanitizedSchemaName);
     // log.info('names', { names });
   });
 
   test('getTypeAnnotation', () => {
-    for (const schema of TYPES) {
+    for (const schema of DataTypes) {
       const _dxn = getSchemaDXN(schema);
       // log.info('dxn', { schema, dxn });
     }

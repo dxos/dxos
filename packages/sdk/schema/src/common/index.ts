@@ -129,3 +129,15 @@ export namespace DataType {
 
   // TOOD(burdon): Move Thread from plugin-space?
 }
+
+export const DataTypes = [
+  DataType.AccessToken,
+  DataType.Event,
+  DataType.Employer,
+  DataType.HasRelationship,
+  DataType.Organization,
+  DataType.Person,
+  DataType.Project,
+  DataType.Task,
+  DataType.Text,
+];
