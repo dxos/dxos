@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useMemo, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 
 import { type Echo, Filter, type Live, Query, type Space, isSpace } from '@dxos/client/echo';
+import { useDeepCompareMemo } from '@dxos/react-hooks';
 
 const EMPTY_ARRAY: never[] = [];
 
@@ -30,7 +31,7 @@ export const useQuery: UseQueryFn = (
 ): Live<unknown>[] => {
   const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
 
-  const { getObjects, subscribe } = useMemo(() => {
+  const { getObjects, subscribe } = useDeepCompareMemo(() => {
     let subscribed = false;
     const queryResult =
       spaceOrEcho === undefined
@@ -50,10 +51,8 @@ export const useQuery: UseQueryFn = (
         };
       },
     };
-  }, [spaceOrEcho, JSON.stringify(query.ast), ...(deps ?? [])]);
+  }, [spaceOrEcho, query.ast, ...(deps ?? [])]);
 
-  // https://beta.reactjs.org/reference/react/useSyncExternalStore
-  // NOTE: This hook will resubscribe whenever the callback passed to the first argument changes; make sure it is stable.
   const objects = useSyncExternalStore<Live<unknown>[] | undefined>(subscribe, getObjects);
   return objects ?? [];
 };

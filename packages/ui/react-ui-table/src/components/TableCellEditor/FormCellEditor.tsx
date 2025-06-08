@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { getSnapshot } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Popover } from '@dxos/react-ui';
+import { Popover, useDeepCompareMemo } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
@@ -33,12 +33,13 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
     }
   }, [editing?.cellElement]);
 
-  const narrowedSchema = useMemo(() => {
+  const narrowedSchema = useDeepCompareMemo(() => {
     if (!schema) {
       return undefined;
     }
+
     return narrowSchema(schema, [fieldProjection.field.path]);
-  }, [JSON.stringify(schema), fieldProjection.field.path]);
+  }, [schema, fieldProjection.field.path]);
 
   const originalRow = useMemo(() => {
     if (model && editing) {

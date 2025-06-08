@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ComponentProps, useCallback, useEffect, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { getSnapshot, getTypename, type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
+import { IconButton, useTranslation, Tag, useDeepCompareMemo } from '@dxos/react-ui';
 import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Stack, StackItem, autoScrollRootAttributes, railGridHorizontalContainFitContent } from '@dxos/react-ui-stack';
@@ -323,11 +323,11 @@ const _CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardFor
     [model.items],
   );
 
-  const initialValue = useMemo(() => getSnapshot(card), [JSON.stringify(card)]);
+  const initialValue = useDeepCompareMemo(() => getSnapshot(card), [card]);
 
   // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
   //   omit fields from the form?
-  const Custom: ComponentProps<typeof Form>['Custom'] = useMemo(() => {
+  const Custom: ComponentProps<typeof Form>['Custom'] = useDeepCompareMemo(() => {
     if (!model.columnFieldPath) {
       return undefined;
     }
@@ -339,7 +339,7 @@ const _CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardFor
     }
 
     return custom;
-  }, [model.columnFieldPath, JSON.stringify(model.kanban.cardView?.target?.hiddenFields)]);
+  }, [model.columnFieldPath, model.kanban.cardView?.target?.hiddenFields]);
 
   return (
     <Form

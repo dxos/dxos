@@ -43,7 +43,6 @@ export class Phoenix {
     }
 
     const watchdogPath = join(dirname(pkgUp.sync({ cwd: scriptDir })!), 'bin', 'watchdog.mjs');
-
     const watchDog = fork(watchdogPath, [JSON.stringify(params)], {
       detached: true,
     });

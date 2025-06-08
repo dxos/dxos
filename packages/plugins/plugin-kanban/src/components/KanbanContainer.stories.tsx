@@ -20,6 +20,7 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, useSpaces, useQuery, useSchema, live } from '@dxos/react-client/echo';
+import { useDeepCompareEffect } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban, KanbanType, useKanbanModel } from '@dxos/react-ui-kanban';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -60,14 +61,15 @@ const StorybookKanban = () => {
     }
   }, [kanbans]);
 
-  useEffect(() => {
+  useDeepCompareEffect(() => {
     if (kanban?.cardView?.target && schema) {
       const jsonSchema = Type.toJsonSchema(schema);
       setProjection(new ViewProjection(jsonSchema, kanban.cardView.target));
     }
+
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
     //  @dmaretskyi? Once resolved, update in multiple places (e.g., storybooks).
-  }, [kanban?.cardView?.target, schema, JSON.stringify(schema ? Type.toJsonSchema(schema) : {})]);
+  }, [kanban?.cardView?.target, schema]);
 
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);

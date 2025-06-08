@@ -4,7 +4,9 @@
 
 import { select, zoom, type ZoomBehavior, zoomIdentity, type ZoomTransform } from 'd3';
 import defaultsDeep from 'lodash.defaultsdeep';
-import { type RefObject, useEffect, useMemo, useRef } from 'react';
+import { type RefObject, useEffect, useRef } from 'react';
+
+import { useDeepCompareMemo } from '@dxos/react-ui';
 
 import { type SVGContext, useSvgContext } from './useSvgContext';
 
@@ -101,7 +103,7 @@ export class ZoomHandler {
 export const useZoom = (options: ZoomOptions = defaultZoomOptions): ZoomHandler => {
   const context = useSvgContext();
   const ref = useRef<SVGGElement>(null);
-  const handler = useMemo(() => new ZoomHandler(ref, context, options), [context, options]);
+  const handler = useDeepCompareMemo(() => new ZoomHandler(ref, context, options), [context, options]);
 
   // TODO(burdon): Distinguish between zoom and pan.
   useEffect(() => {

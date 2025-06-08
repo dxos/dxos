@@ -3,8 +3,10 @@
 //
 
 import { geoPath, geoInterpolate, geoDistance, selection as d3Selection } from 'd3';
-import { type SetStateAction, type Dispatch, useEffect, useState, useMemo } from 'react';
+import { type SetStateAction, type Dispatch, useState, useMemo } from 'react';
 import versor from 'versor';
+
+import { useDeepCompareEffect } from '@dxos/react-ui';
 
 import type { GlobeController } from '../components';
 import { geoToPosition, type LatLng, positionToRotation, type StyleSet } from '../util';
@@ -34,7 +36,8 @@ export const useTour = (
 ): [boolean, Dispatch<SetStateAction<boolean>>] => {
   const selection = useMemo(() => d3Selection(), []);
   const [running, setRunning] = useState(options.running ?? false);
-  useEffect(() => {
+
+  useDeepCompareEffect(() => {
     if (!running) {
       selection.interrupt(TRANSITION_NAME);
       return;
@@ -116,7 +119,7 @@ export const useTour = (
         selection.interrupt(TRANSITION_NAME);
       };
     }
-  }, [controller, running, JSON.stringify(options)]);
+  }, [controller, running, options]);
 
   return [running, setRunning];
 };

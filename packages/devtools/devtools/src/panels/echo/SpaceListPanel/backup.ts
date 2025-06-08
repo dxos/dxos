@@ -9,7 +9,6 @@ import { type Space } from '@dxos/react-client/echo';
 
 export const exportData = async (space: Space): Promise<Blob> => {
   const backup = await new Serializer().export(space.db);
-
   return new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
 };
 

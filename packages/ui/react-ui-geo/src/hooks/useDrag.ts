@@ -3,7 +3,8 @@
 //
 
 import { select } from 'd3';
-import { useEffect } from 'react';
+
+import { useDeepCompareEffect } from '@dxos/react-ui';
 
 import { type GlobeController } from '../components';
 import { geoInertiaDrag } from '../util';
@@ -24,7 +25,7 @@ export type DragOptions = {
  * Allows user to drag globe.
  */
 export const useDrag = (controller?: GlobeController | null, options: DragOptions = {}) => {
-  useEffect(() => {
+  useDeepCompareEffect(() => {
     const canvas = controller?.canvas;
     if (!canvas || options.disabled) {
       return;
@@ -45,11 +46,8 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
       },
     );
 
-    // TODO(burdon): Cancel drag timer.
     return () => {
-      cancelDrag(select(canvas));
+      select(canvas).on('.drag', null);
     };
-  }, [controller, JSON.stringify(options)]);
+  }, [controller, options]);
 };
-
-const cancelDrag = (node) => node.on('.drag', null);

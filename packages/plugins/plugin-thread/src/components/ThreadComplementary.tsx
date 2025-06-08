@@ -9,7 +9,7 @@ import { ThreadCapabilities } from '@dxos/plugin-space';
 import { type ThreadType } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, RefArray } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTranslation } from '@dxos/react-ui';
+import { useDeepCompareMemo, useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -44,10 +44,9 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const sort = useMemo(() => createSort?.(subject), [createSort, subject]);
 
   const threadObjects = RefArray.targets(subject.threads ?? []);
-
-  const threads = useMemo(() => {
+  const threads = useDeepCompareMemo(() => {
     return threadObjects.concat(drafts ?? []).filter(isNonNullable) as ThreadType[];
-  }, [JSON.stringify(threadObjects), JSON.stringify(drafts)]);
+  }, [threadObjects, drafts]);
 
   const detachedIds = useMemo(() => {
     return threads.filter(({ anchor }) => !anchor).map((thread) => fullyQualifiedId(thread));

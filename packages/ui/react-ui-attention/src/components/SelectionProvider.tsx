@@ -3,9 +3,9 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { useCallback, useMemo, type PropsWithChildren } from 'react';
+import React, { useCallback, type PropsWithChildren } from 'react';
 
-import { useDefaultValue } from '@dxos/react-ui';
+import { useDeepCompareMemo, useDefaultValue } from '@dxos/react-ui';
 
 import { SelectionManager } from '../selection';
 
@@ -44,7 +44,7 @@ export const useSelectedItems = (contextId?: string): Set<string> => {
  * Provides functions to manage the selection state for multiple contexts.
  */
 export const useSelectionActions = (contextIds: string[]) => {
-  const stableContextIds = useMemo(() => contextIds, [JSON.stringify(contextIds)]);
+  const stableContextIds = useDeepCompareMemo(() => contextIds, [contextIds]);
   const { selection } = useSelectionContext(SELECTION_NAME);
 
   const select = useCallback(

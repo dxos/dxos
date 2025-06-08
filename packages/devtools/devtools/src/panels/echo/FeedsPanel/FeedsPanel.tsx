@@ -17,7 +17,7 @@ import { type Client, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type Space } from '@dxos/react-client/echo';
 import { useContacts } from '@dxos/react-client/halo';
-import { Toolbar } from '@dxos/react-ui';
+import { Toolbar, useDeepCompareEffect } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
 
@@ -61,11 +61,11 @@ export const FeedsPanel = (props: { space?: Space }) => {
     }
   }, [key]);
 
-  useEffect(() => {
+  useDeepCompareEffect(() => {
     if (feedKey && feedKeys.length > 0 && !feedKeys.find((feed) => feed.equals(feedKey))) {
       handleSelect(feedKeys[0]);
     }
-  }, [JSON.stringify(feedKeys), feedKey]);
+  }, [feedKeys, feedKey]);
 
   const handleSelect = (feedKey?: PublicKey) => {
     setContext((state) => ({ ...state, feedKey }));

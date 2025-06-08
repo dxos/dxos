@@ -18,3 +18,5 @@ export * from './useRefCallback';
 export * from './useResize';
 export * from './useTrackProps';
 export * from './useTransitions';
+
+export * from 'use-deep-compare';
