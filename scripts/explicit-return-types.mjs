@@ -46,6 +46,7 @@ const project = new Project({
     moduleResolution: ts.ModuleResolutionKind.NodeNext,
     esModuleInterop: true,
     skipLibCheck: true,
+    strict: true,
   },
 });
 
@@ -398,6 +399,7 @@ for (const filePath of tsFiles) {
         ts.SyntaxKind.TrueKeyword,
         ts.SyntaxKind.FalseKeyword,
         ts.SyntaxKind.ThisType,
+        ts.SyntaxKind.LiteralType,
       ].includes(typeNode.kind)
     ) {
       return true;
@@ -413,6 +415,14 @@ for (const filePath of tsFiles) {
 
     if (ts.isArrayTypeNode(typeNode)) {
       return canApplyTypeNode(typeNode.elementType);
+    }
+
+    if (ts.isTupleTypeNode(typeNode)) {
+      return typeNode.elements.every((element) => canApplyTypeNode(element));
+    }
+
+    if (ts.isUnionTypeNode(typeNode)) {
+      return typeNode.types.every((type) => canApplyTypeNode(type));
     }
 
     return undefined;
