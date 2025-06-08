@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import { Option, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { defineTool, AIServiceEdgeClient, Message, ToolResult, type Tool } from '@dxos/ai';
+import { defineTool, AIServiceEdgeClient, Message, ToolResult, type Tool, AgentStatusReport } from '@dxos/ai';
 import { SpyAIService } from '@dxos/ai/testing';
 import {
   contributes,
@@ -42,8 +42,9 @@ import {
   RelationSourceId,
   RelationTargetId,
 } from '@dxos/echo-schema';
-import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ForceGraph } from '@dxos/plugin-explorer';
@@ -112,32 +113,31 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const [, forceUpdate] = useState({});
 
   // Function executor.
-  const functionExecutor = useMemo(
+  const serviceContainer = useMemo(
     () =>
-      new FunctionExecutor(
-        new ServiceContainer().setServices({
-          ai: {
-            client: aiClient,
+      new ServiceContainer().setServices({
+        ai: {
+          client: aiClient,
+        },
+        credentials: new ConfiguredCredentialsService([
+          {
+            service: 'exa.ai',
+            apiKey: EXA_API_KEY,
           },
-          credentials: new ConfiguredCredentialsService([
-            {
-              service: 'exa.ai',
-              apiKey: EXA_API_KEY,
-            },
-          ]),
-          queues: {
-            queues: space.queues,
-            contextQueue: queue,
-          },
-          database: {
-            db: space.db,
-          },
-        }),
-      ),
+        ]),
+        queues: {
+          queues: space.queues,
+          contextQueue: queue,
+        },
+        database: {
+          db: space.db,
+        },
+        tracing: TracingService.console,
+      }),
     [aiClient, space, queue],
   );
 
-  const tools = useMemo<Tool[]>(() => [createResearchTool(functionExecutor, 'research', researchFn)], []);
+  const tools = useMemo<Tool[]>(() => [createResearchTool(serviceContainer, 'research', researchFn)], []);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
@@ -431,13 +431,34 @@ export const Default: Story = {
   },
 };
 
-const createResearchTool = (executor: FunctionExecutor, name: string, fn: typeof researchFn) => {
+const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn: typeof researchFn) => {
   return defineTool('example', {
     // TODO(dmaretskyi): Include name in definition
     name,
     description: fn.description ?? raise(new Error('No description')),
     schema: fn.inputSchema,
-    execute: async (input: any) => {
+    execute: async (input, { reportStatus }) => {
+      const executor = new FunctionExecutor(
+        serviceContainer.clone().setServices({
+          tracing: {
+            write: (event) => {
+              if (isInstanceOf(AgentStatusReport, event)) {
+                log.info('[too] report status', { status: event });
+                reportStatus(event);
+              }
+            },
+          },
+        }),
+      );
+
+      reportStatus(
+        create(AgentStatusReport, {
+          message: 'Researching...',
+        }),
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       const { result } = await executor.invoke(fn, input);
       return ToolResult.Success(
         'Research completed. The results are placed in the conversation and already presented to the user. No need to present them again.',

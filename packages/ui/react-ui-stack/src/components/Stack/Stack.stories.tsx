@@ -97,14 +97,24 @@ const DefaultStory = () => {
   return (
     <main className='fixed inset-0'>
       <Stack orientation='horizontal' size='contain' onRearrange={reorderItem}>
-        {columns.map((column) => (
-          <StackItem.Root key={column.id} item={column}>
+        {columns.map((column, columnIndex, columnsArray) => (
+          <StackItem.Root
+            key={column.id}
+            item={column}
+            prevSiblingId={columnIndex > 0 ? columnsArray[columnIndex - 1].id : undefined}
+            nextSiblingId={columnIndex < columnsArray.length - 1 ? columnsArray[columnIndex + 1].id : undefined}
+          >
             <StackItem.Heading>
               <StackItem.ResizeHandle />
             </StackItem.Heading>
             <Stack orientation='vertical' size='contain'>
-              {column.items?.map((card) => (
-                <StackItem.Root key={card.id} item={card}>
+              {column.items?.map((card, cardIndex, cardsArray) => (
+                <StackItem.Root
+                  key={card.id}
+                  item={card}
+                  prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
+                  nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
+                >
                   <StackItem.Heading>
                     <StackItem.ResizeHandle />
                   </StackItem.Heading>

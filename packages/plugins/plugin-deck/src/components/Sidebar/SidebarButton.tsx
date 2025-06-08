@@ -8,8 +8,7 @@ import { createIntent, LayoutAction, useCapability, useIntentDispatcher } from '
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { DeckCapabilities } from '../../capabilities';
-import { useDeckCompanions } from '../../hooks';
-import { getCompanionId } from '../../hooks/useDeckCompanions';
+import { useDeckCompanions, getCompanionId } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 
 export const ToggleSidebarButton = ({
@@ -73,11 +72,8 @@ export const ToggleComplementarySidebarButton = ({
     }
   }, [layoutContext, current, companions, dispatch]);
 
-  // TODO(thure): This should have a tooltip but is suppressed because focus is getting set on this twice when the app
-  //  first mounts, causing even `suppressNextTooltip` not to have the intended effect.
   return (
     <IconButton
-      noTooltip
       iconOnly
       onClick={handleClick}
       variant='ghost'

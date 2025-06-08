@@ -11,6 +11,7 @@ import {
   type Message,
   type MessageContentBlock,
   type Tool,
+  type ToolUseContentBlock,
 } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
@@ -126,6 +127,33 @@ export class ChatProcessor {
 
     this._session.userMessage.on((message) => {
       this._pending.value = [...this._pending.value, message];
+    });
+
+    this._session.toolStatusReport.on(({ message, status }) => {
+      const msg = this._pending.peek().find((m) => m.id === message.id);
+      const toolUse = msg?.content.find((block) => block.type === 'tool_use');
+      if (!toolUse) {
+        return;
+      }
+
+      const block = msg?.content.find(
+        (block): block is ToolUseContentBlock => block.type === 'tool_use' && block.id === toolUse.id,
+      );
+      if (block) {
+        this._pending.value = this._pending.value.map((m) => {
+          if (m.id === message.id) {
+            return {
+              ...m,
+              content: m.content.map((b) =>
+                b.type === 'tool_use' && b.id === toolUse.id ? { ...b, currentStatus: status } : b,
+              ),
+            };
+          }
+          return m;
+        });
+      } else {
+        log.warn('no block for status report');
+      }
     });
 
     try {

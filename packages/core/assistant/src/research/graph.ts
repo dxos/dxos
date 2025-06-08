@@ -5,15 +5,8 @@
 import { Schema } from 'effect';
 
 import { type EchoDatabase } from '@dxos/echo-db';
-import {
-  EntityKind,
-  getTypeIdentifierAnnotation,
-  getTypename,
-  getTypeAnnotation,
-  getSchemaTypename,
-} from '@dxos/echo-schema';
+import { EntityKind, getTypeIdentifierAnnotation, getTypeAnnotation, getSchemaTypename } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
 
 // TODO(burdon): Unify with the graph schema.
 export const Subgraph = Schema.Struct({
@@ -47,15 +40,6 @@ export const findRelatedSchema = async (
       if (getTypeAnnotation(schema)?.kind !== EntityKind.Relation) {
         return false;
       }
-
-      log.info('relatedness check', {
-        schema,
-        anchor,
-        anchorId: getTypeIdentifierAnnotation(schema),
-        anchorTypename: getTypename(schema),
-        sourceDxn: DXN.parse(getTypeAnnotation(schema)!.sourceSchema!),
-        targetDxn: DXN.parse(getTypeAnnotation(schema)!.targetSchema!),
-      });
 
       return (
         isSchemaAddressableByDxn(anchor, DXN.parse(getTypeAnnotation(schema)!.sourceSchema!)) ||

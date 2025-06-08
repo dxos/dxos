@@ -4,8 +4,11 @@
 
 import { Option, Schema } from 'effect';
 
-import { isToolUse, runTools } from '@dxos/ai';
 import {
+  AgentStatusReport,
+  isToolUse,
+  runTools,
+  type AgentStatus,
   defineTool,
   structuredOutputParser,
   type AIServiceClient,
@@ -132,10 +135,22 @@ export class AISession {
    */
   public readonly userMessage = new Event<Message>();
 
+  /**
+   * Agent self-reporting its status.
+   */
+  public readonly statusReport = new Event<AgentStatus>();
+
+  public readonly toolStatusReport = new Event<{ message: Message; status: AgentStatus }>();
+
   constructor(private readonly _options: AiSessionOptions) {
     // Message complete.
     this._parser.message.on((message) => {
       this._pending.push(message);
+    });
+    this._parser.block.on((block) => {
+      if (block.type === 'text' && block.disposition === 'status') {
+        this.statusReport.emit(create(AgentStatusReport, { message: block.text }));
+      }
     });
   }
 
@@ -218,6 +233,7 @@ export class AISession {
             message: this._pending.at(-1)!,
             tools,
             extensions: options.extensions ?? {},
+            reportStatus: (status) => this._onToolStatusReport(message, status),
           });
 
           log('tool response', { response });
@@ -426,6 +442,10 @@ export class AISession {
         return ToolResult.Success({ stepResults });
       },
     });
+  }
+
+  private _onToolStatusReport(message: Message, status: AgentStatus): void {
+    this.toolStatusReport.emit({ message, status });
   }
 
   abort(): void {

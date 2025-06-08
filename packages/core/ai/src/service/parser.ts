@@ -300,6 +300,22 @@ export const mergeMessageBlock = (
           return { ...contentBlock, type: 'text', disposition: 'cot', text: content };
         }
 
+        case 'status': {
+          const content = streamBlock.content
+            .map((block) => {
+              switch (block.type) {
+                case 'text':
+                  return block.content;
+                default:
+                  return null;
+              }
+            })
+            .filter(isNotFalsy)
+            .join('\n');
+
+          return { ...contentBlock, type: 'text', disposition: 'status', text: content };
+        }
+
         case 'artifact': {
           const { attributes } = streamBlock;
           return { type: 'json', disposition: 'artifact', json: JSON.stringify(attributes) };

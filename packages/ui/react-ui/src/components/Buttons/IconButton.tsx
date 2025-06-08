@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, type MutableRefObject } from 'react';
+import React, { forwardRef } from 'react';
 
 import { Button, type ButtonProps } from './Button';
 import { useThemeContext } from '../../hooks';
@@ -19,16 +19,15 @@ type IconButtonProps = Omit<ButtonProps, 'children'> &
     iconClassNames?: ThemedClassName<any>['classNames'];
     tooltipPortal?: boolean;
     tooltipSide?: TooltipSide;
-    suppressNextTooltip?: MutableRefObject<boolean>;
   };
 
 const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ noTooltip, tooltipPortal = true, tooltipSide, suppressNextTooltip, ...props }, forwardedRef) => {
+  ({ noTooltip, tooltipPortal = true, tooltipSide, ...props }, forwardedRef) => {
     if (noTooltip) {
       return <LabelledIconButton {...props} ref={forwardedRef} />;
     }
     return (
-      <Tooltip.Trigger asChild content={props.label} side={tooltipSide} suppressNextTooltip={suppressNextTooltip}>
+      <Tooltip.Trigger asChild content={props.label} side={tooltipSide}>
         <LabelledIconButton {...props} ref={forwardedRef} />
       </Tooltip.Trigger>
     );
@@ -36,10 +35,7 @@ const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 );
 
 const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  (
-    { icon, size, iconOnly, label, classNames, iconClassNames, caretDown, suppressNextTooltip, ...props },
-    forwardedRef,
-  ) => {
+  ({ icon, size, iconOnly, label, classNames, iconClassNames, caretDown, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <Button {...props} classNames={tx('iconButton.root', 'iconButton', {}, classNames)} ref={forwardedRef}>
