@@ -44,7 +44,7 @@ export const useSelectedItems = (contextId?: string): Set<string> => {
  * Provides functions to manage the selection state for multiple contexts.
  */
 export const useSelectionActions = (contextIds: string[]) => {
-  const stableContextIds = useDeepCompareMemo(() => contextIds, [contextIds]); // TODO(burdon): Avoid stringify.
+  const stableContextIds = useDeepCompareMemo(() => contextIds, [contextIds]);
   const { selection } = useSelectionContext(SELECTION_NAME);
 
   const select = useCallback(

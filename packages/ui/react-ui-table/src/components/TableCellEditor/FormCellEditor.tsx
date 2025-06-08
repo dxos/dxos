@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Scope } from '@radix-ui/react-context';
 import { type Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { getSnapshot } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Popover, useDeepCompareMemo } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Popover, type PopoverRootProps, useDeepCompareMemo } from '@dxos/react-ui';
+import { Form, type FormProps } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 import { getDeep, setDeep } from '@dxos/util';
@@ -17,29 +18,29 @@ import { type TableModel } from '../../model';
 import { narrowSchema } from '../../util';
 
 type FormCellEditorProps = {
-  fieldProjection: FieldProjection;
   model?: TableModel;
   schema?: Schema.Schema.AnyNoContext;
-  __gridScope: any;
+  fieldProjection: FieldProjection;
+  __gridScope: Scope;
 };
 
-export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: FormCellEditorProps) => {
-  const { editing, setEditing } = useGridContext('ArrayEditor', __gridScope);
+export const FormCellEditor = ({ model, schema, fieldProjection, __gridScope }: FormCellEditorProps) => {
   const cellRef = useRef<HTMLButtonElement | null>(null);
 
+  const { editing, setEditing } = useGridContext('ArrayEditor', __gridScope);
   useEffect(() => {
     if (editing && editing.cellElement) {
       cellRef.current = editing.cellElement as HTMLButtonElement;
     }
   }, [editing?.cellElement]);
 
-  const narrowedSchema = useDeepCompareMemo(() => {
+  const narrowedSchema = useDeepCompareMemo<Schema.Schema.AnyNoContext | undefined>(() => {
     if (!schema) {
       return undefined;
     }
 
     return narrowSchema(schema, [fieldProjection.field.path]);
-  }, [schema, fieldProjection.field.path]); // TODO(burdon): Avoid stringify.
+  }, [schema, fieldProjection.field.path]);
 
   const originalRow = useMemo(() => {
     if (model && editing) {
@@ -53,15 +54,15 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
     return undefined;
   }, [model, editing]);
 
+  // NOTE(ZaymonFC): Important to get a snapshot to eject from the live object.
   const formValues = useMemo(() => {
     if (originalRow) {
-      // NOTE(ZaymonFC): Important to get a snapshot to eject from the live object.
       return getSnapshot(originalRow);
     }
   }, [originalRow]);
 
-  const handleSave = useCallback(
-    (values: any) => {
+  const handleSave = useCallback<NonNullable<FormProps<any>['onSave']>>(
+    (values) => {
       const path = fieldProjection.field.path;
       const value = getDeep(values, [path]);
       setDeep(originalRow, [path], value);
@@ -70,8 +71,8 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
     [fieldProjection.field.path, originalRow],
   );
 
-  const handleOpenChange = useCallback(
-    (nextOpen: boolean) => {
+  const handleOpenChange = useCallback<NonNullable<PopoverRootProps['onOpenChange']>>(
+    (nextOpen) => {
       if (nextOpen === false) {
         setEditing(null);
       }
@@ -79,7 +80,7 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
     [setEditing],
   );
 
-  if (!editing) {
+  if (!narrowedSchema || !editing) {
     return null;
   }
 
@@ -88,7 +89,7 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
       <Popover.VirtualTrigger virtualRef={cellRef} />
       <Popover.Content tabIndex={-1} classNames='popover-card-width'>
         <Popover.Arrow />
-        <Form values={formValues} schema={narrowedSchema as any} onSave={handleSave} />
+        <Form schema={narrowedSchema} values={formValues} onSave={handleSave} />
       </Popover.Content>
     </Popover.Root>
   );

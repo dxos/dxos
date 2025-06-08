@@ -65,7 +65,7 @@ export const FeedsPanel = (props: { space?: Space }) => {
     if (feedKey && feedKeys.length > 0 && !feedKeys.find((feed) => feed.equals(feedKey))) {
       handleSelect(feedKeys[0]);
     }
-  }, [feedKeys, feedKey]); // TODO(burdon): Avoid stringify.
+  }, [feedKeys, feedKey]);
 
   const handleSelect = (feedKey?: PublicKey) => {
     setContext((state) => ({ ...state, feedKey }));

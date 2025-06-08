@@ -323,7 +323,7 @@ const _CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardFor
     [model.items],
   );
 
-  const initialValue = useDeepCompareMemo(() => getSnapshot(card), [card]); // TODO(burdon): Avoid stringify.
+  const initialValue = useDeepCompareMemo(() => getSnapshot(card), [card]);
 
   // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
   //   omit fields from the form?
