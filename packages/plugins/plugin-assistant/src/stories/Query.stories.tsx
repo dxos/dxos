@@ -12,6 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { combine, timeout } from '@dxos/async';
 import { type AnyEchoObject, getLabelForObject, getSchemaTypename, Query } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
+import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
@@ -127,6 +128,11 @@ const DefaultStory = ({ mode, ...props }: { mode?: Mode } & D3ForceGraphProps) =
     [space],
   );
 
+  // TODO(burdon): Trigger research blueprint (to update graph).
+  const handleResearch = useCallback(() => {
+    log.info('research', { selected: selection.selected.value });
+  }, [selection]);
+
   const extensions = useMemo(() => [typeahead({ onComplete: handleMatch })], [handleMatch]);
 
   return (
@@ -139,6 +145,7 @@ const DefaultStory = ({ mode, ...props }: { mode?: Mode } & D3ForceGraphProps) =
           <div className='grow grid grid-rows-[min-content_1fr_1fr] overflow-hidden divide-y divide-separator'>
             <Toolbar.Root>
               <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='refresh' onClick={handleRefresh} />
+              <IconButton icon='ph--sparkle--regular' iconOnly label='research' onClick={handleResearch} />
             </Toolbar.Root>
             <ItemList items={items} getTitle={(item) => getLabelForObject(item)} />
             <JsonFilter

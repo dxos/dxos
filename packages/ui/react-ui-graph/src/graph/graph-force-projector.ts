@@ -328,7 +328,7 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
    * Update all forces.
    */
   private updateForces(forces: ForceOptions) {
-    log.info('updateForces', { forces });
+    log('updateForces', { forces });
 
     // https://github.com/d3/d3-force#simulation_force
     this._simulation
