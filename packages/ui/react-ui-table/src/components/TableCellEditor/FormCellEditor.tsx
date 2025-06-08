@@ -39,7 +39,7 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
     }
 
     return narrowSchema(schema, [fieldProjection.field.path]);
-  }, [schema, fieldProjection.field.path]);
+  }, [schema, fieldProjection.field.path]); // TODO(burdon): Avoid stringify.
 
   const originalRow = useMemo(() => {
     if (model && editing) {
@@ -86,7 +86,7 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
   return (
     <Popover.Root open={editing !== null} onOpenChange={handleOpenChange}>
       <Popover.VirtualTrigger virtualRef={cellRef} />
-      <Popover.Content tabIndex={-1} classNames='popover-consistent-width'>
+      <Popover.Content tabIndex={-1} classNames='popover-card-width'>
         <Popover.Arrow />
         <Form values={formValues} schema={narrowedSchema as any} onSave={handleSave} />
       </Popover.Content>

@@ -27,12 +27,9 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
       context.current
         ? new GraphForceProjector(context.current, {
             forces: {
-              x: {
-                value: 0,
-                strength: 0.02,
-              },
-              y: {
-                value: 0,
+              point: {
+                x: 0,
+                y: 0,
                 strength: 0.02,
               },
             },

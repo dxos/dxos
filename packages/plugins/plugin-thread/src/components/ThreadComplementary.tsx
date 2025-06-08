@@ -46,7 +46,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const threadObjects = RefArray.targets(subject.threads ?? []);
   const threads = useDeepCompareMemo(() => {
     return threadObjects.concat(drafts ?? []).filter(isNonNullable) as ThreadType[];
-  }, [threadObjects, drafts]);
+  }, [threadObjects, drafts]); // TODO(burdon): Avoid stringify.
 
   const detachedIds = useMemo(() => {
     return threads.filter(({ anchor }) => !anchor).map((thread) => fullyQualifiedId(thread));
