@@ -9,3 +9,4 @@ export * from './service';
 export * from './tools';
 export * from './types';
 export * from './util';
+export * from './status-report';

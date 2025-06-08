@@ -8,45 +8,46 @@ import * as Clipper from 'js-clipper';
 import { createBullets } from './bullets';
 import { Renderer, type RendererOptions } from './renderer';
 import { type GraphGuide, type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from './types';
-import { type D3Selection, type D3Callable, getCircumferencePoints, type Point } from '../util';
+import { getCircumferencePoints, type D3Selection, type D3Callable, type Point } from '../util';
 
 const createLine = line<Point>();
 
-export type LabelOptions<N> = {
-  text: (node: GraphLayoutNode<N>, highlight?: boolean) => string | undefined;
+export type LabelOptions<Data = any> = {
+  text: (node: GraphLayoutNode<Data>, highlight?: boolean) => string | undefined;
 };
 
-export type AttributesOptions<N> = {
-  node?: (node: GraphLayoutNode<N>) => {
+export type AttributesOptions<Data = any> = {
+  node?: (node: GraphLayoutNode<Data>) => {
     classes?: Record<string, boolean>;
+    data?: Record<string, string>;
   };
 
-  link?: (edge: GraphLayoutEdge<N>) => {
+  link?: (edge: GraphLayoutEdge<Data>) => {
     classes?: Record<string, boolean>;
   };
 };
 
-export type GraphRendererOptions<N> = RendererOptions<{
+export type GraphRendererOptions<Data = any> = RendererOptions<{
   drag?: D3Callable;
   arrows?: {
     start?: boolean; // TODO(burdon): Replace with marker id.
     end?: boolean;
   };
   highlight?: boolean;
-  labels?: LabelOptions<N>;
+  labels?: LabelOptions<Data>;
   subgraphs?: boolean;
-  attributes?: AttributesOptions<N>;
+  attributes?: AttributesOptions<Data>;
   transition?: () => any;
-  onNodeClick?: (node: GraphLayoutNode<N>, event: MouseEvent) => void;
-  onNodePointerEnter?: (node: GraphLayoutNode<N>, event: MouseEvent) => void;
-  onLinkClick?: (link: GraphLayoutEdge<N>, event: MouseEvent) => void;
+  onNodeClick?: (node: GraphLayoutNode<Data>, event: MouseEvent) => void;
+  onNodePointerEnter?: (node: GraphLayoutNode<Data>, event: MouseEvent) => void;
+  onLinkClick?: (link: GraphLayoutEdge<Data>, event: MouseEvent) => void;
 }>;
 
 /**
  * Renders the Graph layout.
  */
-export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOptions<N>> {
-  override update(layout: GraphLayout<N>) {
+export class GraphRenderer<Data = any> extends Renderer<GraphLayout<Data>, GraphRendererOptions<Data>> {
+  override update(layout: GraphLayout<Data>) {
     const root = select(this.root);
 
     //
@@ -111,8 +112,10 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
             const clipperPath = hullPoints.map(([x, y]) => ({ X: x * scale, Y: y * scale }));
             co.AddPath(clipperPath, Clipper.JoinType.jtRound, Clipper.EndType.etClosedPolygon);
             co.Execute(solution, offsetDistance);
-            const offset = solution[0].map(({ X, Y }) => [X / scale, Y / scale]);
-            return createLine([...offset, offset[0]]);
+            if (solution.length > 0) {
+              const offset = solution[0].map(({ X, Y }) => [X / scale, Y / scale]);
+              return createLine([...offset, offset[0]]);
+            }
           });
         },
       );
@@ -126,14 +129,10 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
       .data([{ id: 'edges' }])
       .join('g')
       .classed('dx-edges', true)
-      .selectAll<SVGPathElement, GraphLayoutEdge<N>>('g.dx-edge')
+      .selectAll<SVGPathElement, GraphLayoutEdge<Data>>('g.dx-edge')
       .data(layout.graph?.edges ?? [], (d) => d.id)
-      .join((enter) =>
-        //
-        // TODO(burdon): Strickly speaking should render nodes first but in lower group.
-        enter.append('g').classed('dx-edge', true).call(createEdge, this.options, root.select('g.dx-nodes')),
-      )
-      .call(updateEdge, this.options, layout.graph.nodes);
+      .join((enter) => enter.append('g').classed('dx-edge', true).call(createEdge, this.options))
+      .call(updateEdge, this.options);
 
     //
     // Nodes
@@ -144,12 +143,9 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
       .data([{ id: 'nodes' }])
       .join('g')
       .classed('dx-nodes', true)
-      .selectAll<SVGCircleElement, GraphLayoutNode<N>>('g.dx-node')
+      .selectAll<SVGCircleElement, GraphLayoutNode<Data>>('g.dx-node')
       .data(layout.graph?.nodes ?? [], (d) => d.id)
-      .join((enter) =>
-        //
-        enter.append('g').classed('group dx-node', true).call(createNode, this.options),
-      )
+      .join((enter) => enter.append('g').classed('dx-node', true).call(createNode, this.options))
       .call(updateNode, this.options);
   }
 
@@ -157,7 +153,7 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
    * Trigger path bullets.
    * @param node
    */
-  fireBullet(node: GraphLayoutNode<N>) {
+  fireBullet(node: GraphLayoutNode<Data>) {
     select(this.root).selectAll('g.dx-edges').selectAll('path').call(createBullets(this.root, node.id));
   }
 }
@@ -167,7 +163,7 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
  * @param group
  * @param options
  */
-const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
+const createNode: D3Callable = <Data>(group: D3Selection, options: GraphRendererOptions<Data>) => {
   // Circle.
   const circle = group.append('circle');
 
@@ -179,39 +175,44 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   // Click.
   if (options.onNodeClick) {
     group.on('click', (event: MouseEvent) => {
-      const node = select<SVGElement, GraphLayoutNode<N>>(event.target as SVGGElement).datum();
+      const node = select<SVGElement, GraphLayoutNode<Data>>(event.target as SVGGElement).datum();
       options.onNodeClick(node, event);
     });
   }
 
   // Label.
   if (options.labels && !options.onNodePointerEnter) {
-    const g = group.append('g');
-    g.append('rect');
+    const g = group.append('g').classed('dx-label', true);
     g.append('line');
-    g.append('text')
-      .style('dominant-baseline', 'middle')
-      .text((d) => options.labels.text(d));
+    g.append('rect');
+    g.append('text').style('dominant-baseline', 'middle');
   }
 
   // Hover.
   if (options.onNodePointerEnter) {
     circle.on('pointerenter', function (event: PointerEvent) {
-      const node = select(this.parentElement).datum();
-      options.onNodePointerEnter(node as GraphLayoutNode, event);
+      const node = select<any, GraphLayoutNode<Data>>(this.parentElement).datum();
+      options.onNodePointerEnter(node, event);
     });
-    group.attr('data-hover', 'handled');
+
+    group.attr('data-hover', 'handled'); // TODO(burdon): ???
   } else if (options.highlight !== false) {
     circle.on('pointerenter', function () {
-      select(this.parentElement).classed('dx-active', true).classed('dx-highlight', true).raise();
+      select(this.closest('g.dx-node')).raise();
+      if (options.labels) {
+        select(this.parentElement).classed('dx-active', true).classed('dx-highlight', true);
+      }
     });
+
     group.on('pointerleave', function () {
-      select(this).classed('dx-active', false);
-      setTimeout(() => {
-        if (!select(this).classed('dx-active')) {
-          select(this).classed('dx-highlight', false).lower();
-        }
-      }, 500);
+      if (options.labels) {
+        select(this).classed('dx-active', false);
+        setTimeout(() => {
+          if (!select(this).classed('dx-active')) {
+            select(this).classed('dx-highlight', false);
+          }
+        }, 300);
+      }
     });
   }
 };
@@ -221,15 +222,21 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
  * @param group
  * @param options
  */
-const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
+const updateNode: D3Callable = <Data = any>(group: D3Selection, options: GraphRendererOptions<Data>) => {
   group.attr('transform', (d) => `translate(${d.x},${d.y})`);
 
   // Custom attributes.
   if (options.attributes?.node) {
     group.each((d, i, nodes) => {
-      const { classes } = options.attributes?.node(d);
+      const el = select(nodes[i]);
+      const { classes, data } = options.attributes?.node(d);
       if (classes) {
-        applyClasses(select(nodes[i]), classes);
+        applyClasses(el, classes);
+      }
+      if (data) {
+        Object.entries(data).forEach(([key, value]) => {
+          el.attr(`data-${key}`, value);
+        });
       }
     });
   }
@@ -243,12 +250,13 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   groupOrTransition
     .select<SVGCircleElement>('circle')
     .attr('class', function () {
-      return (select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.circle;
+      return (select(this.parentNode as any).datum() as GraphLayoutNode<Data>).classes?.circle;
     })
     .attr('r', (d) => d.r ?? 16);
 
   // Update labels.
   if (options.labels) {
+    const bx = 1;
     const px = 4;
     const py = 2;
     const offset = 16;
@@ -257,29 +265,40 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
     groupOrTransition
       .select<SVGTextElement>('text')
       .attr('class', function () {
-        return (select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.text;
+        return (select(this.parentNode as any).datum() as GraphLayoutNode<Data>).classes?.text;
+      })
+      .text((d) => {
+        return options.labels.text(d);
       })
       .style('text-anchor', (d) => (d.x > 0 ? 'start' : 'end'))
       .attr('dx', (d) => dx(d, offset))
       .attr('dy', 1)
       .text((d) => options.labels.text(d))
       .each(function (d) {
-        const bbox = this.getBBox();
-        const width = bbox.width + px * 2;
+        // Cache bounding box.
+        let bbox = d.bbox;
+        if (!bbox) {
+          bbox = this.getBBox();
+          d.bbox = bbox;
+        }
+
+        const width = bbox.width + (bx + px) * 2;
         const height = bbox.height + py * 2;
+
         select(this.parentElement)
           .select('rect')
-          .attr('x', dx(d, offset - px) + (d.x > 0 ? 0 : -1) * width)
+          .attr('x', dx(d, offset - (bx + px)) + (d.x > 0 ? 0 : -1) * width)
           .attr('y', -height / 2)
           .attr('width', width)
           .attr('height', height)
           .attr('rx', 4);
+
         select(this.parentElement)
           .select('line')
           .classed('stroke-neutral-500', true)
-          .attr('x1', dx(d))
+          .attr('x1', dx(d, 1))
           .attr('y1', 0)
-          .attr('x2', dx(d, offset - px))
+          .attr('x2', dx(d, offset - (bx + px)))
           .attr('y2', 0);
       });
   }
@@ -291,14 +310,14 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
  * @param options
  * @param nodes
  */
-const createEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>, nodes) => {
+const createEdge: D3Callable = <Data = any>(group: D3Selection, options: GraphRendererOptions<Data>) => {
   if (options.onLinkClick) {
     // Shadow path with wide stroke for click handler.
     group
       .append('path')
       .attr('class', 'click')
       .on('click', (event: MouseEvent) => {
-        const edge = select<SVGLineElement, GraphLayoutEdge<N>>(event.target as SVGLineElement).datum();
+        const edge = select<SVGLineElement, GraphLayoutEdge<Data>>(event.target as SVGLineElement).datum();
         options.onLinkClick(edge, event);
       });
   }
@@ -310,7 +329,7 @@ const createEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
     .attr('marker-start', () => (options.arrows?.start ? 'url(#marker-arrow-start)' : undefined))
     .attr('marker-end', () => (options.arrows?.end ? 'url(#marker-arrow-end)' : undefined))
     .attr('class', function () {
-      return (select(this.parentNode as any).datum() as GraphLayoutEdge<N>).classes?.path;
+      return (select(this.parentNode as any).datum() as GraphLayoutEdge<Data>).classes?.path;
     });
 };
 
@@ -319,7 +338,7 @@ const createEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
  * @param group
  * @param options
  */
-const updateEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
+const updateEdge: D3Callable = <Data = any>(group: D3Selection, options: GraphRendererOptions<Data>) => {
   // Custom attributes.
   if (options.attributes?.link) {
     group.each((d, i, nodes) => {
@@ -335,7 +354,7 @@ const updateEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
     ? (group.transition(options.transition()) as unknown as D3Selection)
     : group;
 
-  groupOrTransition.selectAll<SVGPathElement, GraphLayoutEdge<N>>('path').attr('d', (d) => {
+  groupOrTransition.selectAll<SVGPathElement, GraphLayoutEdge<Data>>('path').attr('d', (d) => {
     const { source, target } = d;
     if (!source.initialized || !target.initialized) {
       return;
@@ -344,6 +363,8 @@ const updateEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
     return createLine(getCircumferencePoints([source.x, source.y], [target.x, target.y], source.r, target.r));
   });
 };
+
+// TODO(burdon): Factor out.
 
 const applyClasses = (el: D3Selection, classes: Record<string, boolean>) => {
   for (const [className, value] of Object.entries(classes)) {
@@ -354,7 +375,6 @@ const applyClasses = (el: D3Selection, classes: Record<string, boolean>) => {
 /**
  * Find connected components (subgraphs) in a graph.
  */
-// TODO(burdon): Factor out.
 const findConnectedComponents = (graph: {
   nodes: { id: string }[];
   edges: { source: string; target: string }[];

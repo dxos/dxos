@@ -64,7 +64,7 @@ export type ObjectId = ObjectId$;
  * }));
  * ```
  */
-export const Ref = <S extends Schema.Schema.AnyNoContext>(self: S) => Ref$<Schema.Schema.Type<S>>(self);
+export const Ref = <S extends Schema.Schema.AnyNoContext>(self: S) => Ref$<S>(self);
 
 //
 // Objects

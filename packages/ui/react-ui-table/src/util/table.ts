@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 
 import {
   type EchoSchema,
@@ -83,10 +83,10 @@ const ContactSchema = TypedObject({
   typename: `example.com/type/${PublicKey.random().truncate()}`,
   version: '0.1.0',
 })({
-  name: Schema.optional(Schema.String).annotations({ [SchemaAST.TitleAnnotationId]: 'Name' }),
+  name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
   active: Schema.optional(Schema.Boolean),
   email: Schema.optional(Format.Email),
-  salary: Schema.optional(Format.Currency()).annotations({ [SchemaAST.TitleAnnotationId]: 'Salary' }),
+  salary: Schema.optional(Format.Currency()).annotations({ title: 'Salary' }),
 });
 
 const ContactFields = ['name', 'email', 'salary', 'active'];

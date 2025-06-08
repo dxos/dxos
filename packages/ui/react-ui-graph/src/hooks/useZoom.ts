@@ -101,7 +101,10 @@ export class ZoomHandler {
 export const useZoom = (options: ZoomOptions = defaultZoomOptions): ZoomHandler => {
   const context = useSvgContext();
   const ref = useRef<SVGGElement>(null);
-  const handler = useMemo(() => new ZoomHandler(ref, context, options), [context, options]);
+  const handler = useMemo(() => {
+    console.log('useZoom', options);
+    return new ZoomHandler(ref, context, options);
+  }, [context, options]);
 
   // TODO(burdon): Distinguish between zoom and pan.
   useEffect(() => {

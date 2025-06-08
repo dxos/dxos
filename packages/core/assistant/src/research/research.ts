@@ -4,7 +4,7 @@
 
 import { identity, Option, Schema, SchemaAST } from 'effect';
 
-import { ConsolePrinter, defineTool, ToolResult } from '@dxos/ai';
+import { AgentStatusReport, ConsolePrinter, defineTool, ToolResult } from '@dxos/ai';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
@@ -20,7 +20,7 @@ import {
   type BaseObject,
 } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
-import { AiService, CredentialsService, DatabaseService, defineFunction } from '@dxos/functions';
+import { AiService, CredentialsService, DatabaseService, defineFunction, TracingService } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
@@ -69,6 +69,9 @@ export const researchFn = defineFunction({
     const credentials = context.getService(CredentialsService);
     const { db } = context.getService(DatabaseService);
     // const queues = context.getService(QueuesService);
+    const tracing = context.getService(TracingService);
+
+    tracing.write(create(AgentStatusReport, { message: 'Researching...' }));
 
     const exaCredential = await credentials.getCredential({ service: 'exa.ai' });
     const searchTool = mockSearch ? createMockExaTool() : createExaTool({ apiKey: exaCredential.apiKey! });
@@ -78,6 +81,10 @@ export const researchFn = defineFunction({
     session.message.on((message) => printer.printMessage(message));
     session.userMessage.on((message) => printer.printMessage(message));
     session.block.on((block) => printer.printContentBlock(block));
+    session.statusReport.on((status) => {
+      log.info('[agent] status', { status });
+      tracing.write(status);
+    });
     session.streamEvent.on((event) => log('stream', { event }));
 
     // TODO(dmaretskyi): Consider adding this pattern as the "Graph" output mode for the session.

@@ -16,7 +16,7 @@ export type ZoomProps = {
  * SVG zoomable component wrapper.
  */
 export const Zoom = memo(({ extent, className, children }: ZoomProps) => {
-  const options = useMemo(() => ({ extent }), [extent]);
+  const options = useMemo(() => ({ extent }), [JSON.stringify(extent)]); // TODO(burdon): Avoid stringify.
   const zoom = useZoom(options);
 
   return (

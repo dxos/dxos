@@ -64,7 +64,7 @@ const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema<T>, co
       return;
     }
 
-    const objectGenerator = createAsyncGenerator(generator, schema, { optional: true, db: space?.db });
+    const objectGenerator = createAsyncGenerator(generator, schema, { db: space?.db, force: true });
     void objectGenerator.createObjects(count).then((objects) => {
       model.setRows(objects);
     });
@@ -83,7 +83,6 @@ const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema<T>, co
 
 const DefaultStory = () => {
   const { model: orgModel, presentation: orgPresentation } = useTestModel(DataType.Organization, 50);
-  // TODO(burdon): Generate links with references.
   const { model: contactModel, presentation: contactPresentation } = useTestModel(DataType.Person, 50);
 
   return (

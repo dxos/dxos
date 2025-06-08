@@ -10,13 +10,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
 import { Popover, Toolbar } from '@dxos/react-ui';
-import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
 import { GraphForceProjector, type GraphForceProjectorOptions, type GraphLayoutNode } from '../../graph';
-import { type SVGContext, type ZoomExtent } from '../../hooks';
+import { type SVGContext } from '../../hooks';
 import { convertTreeToGraph, createGraph, createTree, TestGraphModel, type TestNode } from '../../testing';
 import { SVG } from '../SVG';
 
@@ -25,57 +25,61 @@ import '../../../styles/graph.css';
 type DefaultStoryProps = GraphProps & {
   debug?: boolean;
   grid?: boolean;
+  inspect?: boolean;
   graph: Graph;
   projectorOptions?: GraphForceProjectorOptions;
-  noInspect?: boolean;
 };
 
-const zoomExtent = [1 / 4, 4] satisfies ZoomExtent;
-
-const DefaultStory = ({ debug, grid, graph, projectorOptions, noInspect, ...props }: DefaultStoryProps) => {
+const DefaultStory = ({ debug, grid, inspect, graph, projectorOptions, ...props }: DefaultStoryProps) => {
   const graphRef = useRef<GraphController | null>(null);
   const model = useMemo(() => new TestGraphModel(graph), [graph]);
-  const selected = useMemo(() => new SelectionModel(), []);
   const context = useRef<SVGContext>(null);
   const projector = useMemo<GraphForceProjector>(
     () => context.current && projectorOptions && new GraphForceProjector(context.current, projectorOptions),
     [context.current, projectorOptions],
   );
-  const anchorRef = useRef<HTMLButtonElement | null>(null);
-  const [popoverContent, setPopoverContent] = useState('');
-  const [popoverOpen, setPopoverOpen] = useState(false);
 
-  // Dismiss popover when SVG context transform changes
+  const popoverAnchorRef = useRef<HTMLButtonElement | null>(null);
+  const [popover, setPopover] = useState<any>();
+
+  // Dismiss popover when SVG context transform changes.
   useEffect(() => {
-    if (context.current) {
-      const handleTransformChange = () => {
-        setPopoverOpen(false);
-      };
-
-      return context.current.resized.on(handleTransformChange);
+    if (!context.current) {
+      return;
     }
+
+    return context.current.resized.on(() => setPopover(undefined));
   }, [context]);
 
-  console.log(selected.toJSON());
+  const handleInspect = useCallback<GraphProps['onInspect']>((node, event) => {
+    setPopover(undefined);
+    popoverAnchorRef.current = null;
 
-  const handleInspect: GraphProps['onInspect'] = useCallback((node, event) => {
-    setPopoverOpen(false);
-    setPopoverContent('');
-    anchorRef.current = null;
     queueMicrotask(() => {
-      anchorRef.current = event.target as HTMLButtonElement;
-      setPopoverContent(node.id);
-      setPopoverOpen(true);
+      popoverAnchorRef.current = event.target as HTMLButtonElement;
+      setPopover(node.data);
     });
   }, []);
 
+  const selected = useMemo(() => new SelectionModel(), []);
+
+  const handleSelect = useCallback<GraphProps['onSelect']>((node) => {
+    if (selected.contains(node.id)) {
+      selected.remove(node.id);
+    } else {
+      selected.add(node.id);
+    }
+
+    graphRef.current?.repaint();
+  }, []);
+
   return (
-    <Popover.Root open={popoverOpen} onOpenChange={setPopoverOpen}>
+    <Popover.Root open={!!popover} onOpenChange={(state) => !state && setPopover(undefined)}>
       <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
         <SVG.Root ref={context}>
           <SVG.Markers />
           {grid && <SVG.Grid axis />}
-          <SVG.Zoom extent={zoomExtent}>
+          <SVG.Zoom extent={[1 / 4, 4]}>
             <GraphComponent
               ref={graphRef}
               model={model}
@@ -85,20 +89,16 @@ const DefaultStory = ({ debug, grid, graph, projectorOptions, noInspect, ...prop
               }}
               attributes={{
                 node: (node: GraphLayoutNode<TestNode>) => ({
+                  data: {
+                    color: node.data.type,
+                  },
                   classes: {
                     'dx-selected': selected.contains(node.id),
                   },
                 }),
               }}
-              onInspect={noInspect ? undefined : handleInspect}
-              onSelect={(node: GraphLayoutNode<TestNode>) => {
-                if (selected.contains(node.id)) {
-                  selected.remove(node.id);
-                } else {
-                  selected.add(node.id);
-                }
-                graphRef.current?.refresh();
-              }}
+              onInspect={inspect ? handleInspect : undefined}
+              onSelect={handleSelect}
               {...props}
             />
           </SVG.Zoom>
@@ -108,6 +108,9 @@ const DefaultStory = ({ debug, grid, graph, projectorOptions, noInspect, ...prop
           <Debug
             model={model}
             selected={selected}
+            onRefresh={() => {
+              graphRef.current?.refresh();
+            }}
             onAdd={() => {
               if (graph.nodes.length) {
                 const source = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
@@ -127,9 +130,10 @@ const DefaultStory = ({ debug, grid, graph, projectorOptions, noInspect, ...prop
           />
         )}
       </div>
-      <Popover.VirtualTrigger virtualRef={anchorRef} />
-      <Popover.Content classNames='popover-consistent-width' onOpenAutoFocus={(e) => e.preventDefault()}>
-        <p>{popoverContent}</p>
+
+      <Popover.VirtualTrigger virtualRef={popoverAnchorRef} />
+      <Popover.Content classNames='popover-card-width' onOpenAutoFocus={(event) => event.preventDefault()}>
+        <SyntaxHighlighter classNames='text-sm' language='json' code={JSON.stringify(popover, null, 2)} />
         <Popover.Arrow />
       </Popover.Content>
     </Popover.Root>
@@ -139,11 +143,13 @@ const DefaultStory = ({ debug, grid, graph, projectorOptions, noInspect, ...prop
 const Debug = ({
   model,
   selected,
+  onRefresh,
   onAdd,
   onDelete,
 }: {
   model: GraphModel;
   selected: SelectionModel;
+  onRefresh: () => void;
   onAdd: () => void;
   onDelete: () => void;
 }) => {
@@ -161,6 +167,7 @@ const Debug = ({
     <div className='flex flex-col overflow-hidden'>
       <JsonFilter data={data} classNames='text-sm' />
       <Toolbar.Root>
+        <Toolbar.Button onClick={onRefresh}>Refresh</Toolbar.Button>
         <Toolbar.Button onClick={onAdd}>Add</Toolbar.Button>
         <Toolbar.Button onClick={onDelete}>Delete</Toolbar.Button>
       </Toolbar.Root>
@@ -190,15 +197,16 @@ export const Default: Story = {
   },
 };
 
-export const Highlight: Story = {
-  args: {
-    debug: true,
-    graph: convertTreeToGraph(createTree({ depth: 4 })),
-    drag: true,
-    arrows: true,
-    grid: true,
-    noInspect: true,
-  },
+export const Empty: Story = {
+  render: () => (
+    <SVG.Root>
+      <SVG.Markers />
+      <SVG.Grid axis />
+      <SVG.Zoom extent={[1 / 4, 4]}>
+        <GraphComponent />
+      </SVG.Zoom>
+    </SVG.Root>
+  ),
 };
 
 export const Force: Story = {
@@ -240,8 +248,29 @@ export const Force: Story = {
 
 export const Select: Story = {
   args: {
+    debug: false,
+    graph: createGraph(100, 30, ['1', '2', '3', '4', '5', '6']),
+    drag: true,
+    grid: true,
+    subgraphs: true,
+    projectorOptions: {
+      forces: {
+        collide: true,
+        x: {
+          strength: 0.02,
+        },
+        y: {
+          strength: 0.02,
+        },
+      },
+    },
+  },
+};
+
+export const WithSubgraphs: Story = {
+  args: {
     debug: true,
-    graph: createGraph(150, 50),
+    graph: createGraph(50, 30),
     drag: true,
     subgraphs: true,
     projectorOptions: {
@@ -255,18 +284,18 @@ export const Select: Story = {
   },
 };
 
-export const Groups: Story = {
+export const WithPopover: Story = {
   args: {
-    debug: true,
-    graph: createGraph(50, 30),
+    debug: false,
+    graph: createGraph(30, 10),
     drag: true,
+    inspect: true,
+    grid: true,
     subgraphs: true,
     projectorOptions: {
       forces: {
-        radial: {
-          radius: 200,
-          strength: 0.05,
-        },
+        collide: true,
+        point: true,
       },
     },
   },

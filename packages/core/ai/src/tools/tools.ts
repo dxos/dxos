@@ -7,6 +7,7 @@ import { Schema } from 'effect';
 import { JsonSchemaType } from '@dxos/echo-schema';
 
 import { type MessageContentBlock } from './message';
+import type { AgentStatus } from '../status-report';
 
 declare global {
   /**
@@ -30,6 +31,14 @@ declare global {
 }
 
 export type ToolExecutionContext = {
+  /**
+   * Report what tool is doing currently.
+   */
+  reportStatus: (status: AgentStatus) => void;
+
+  /**
+   * Extensions are injected by the caller.
+   */
   extensions?: ToolContextExtensions;
 };
 

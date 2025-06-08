@@ -175,7 +175,7 @@ export class ViewTypeV1 extends TypedObject({
   version: '0.1.0',
 })({
   name: Schema.String.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Name',
+    title: 'Name',
     [SchemaAST.ExamplesAnnotationId]: ['Contact'],
   }),
   query: Schema.Struct({
@@ -192,7 +192,7 @@ export class ViewTypeV2 extends TypedObject({
   version: '0.2.0',
 })({
   name: Schema.String.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Name',
+    title: 'Name',
     [SchemaAST.ExamplesAnnotationId]: ['Contact'],
   }),
   query: QueryType,

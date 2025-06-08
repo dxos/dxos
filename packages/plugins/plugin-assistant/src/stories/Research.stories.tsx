@@ -8,21 +8,12 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import { Option, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { defineTool, AIServiceEdgeClient, Message, ToolResult, type Tool } from '@dxos/ai';
-import { SpyAIService } from '@dxos/ai/testing';
-import {
-  contributes,
-  createSurface,
-  useIntentDispatcher,
-  Capabilities,
-  Events,
-  IntentPlugin,
-  SettingsPlugin,
-  Surface,
-} from '@dxos/app-framework';
+import { AgentStatusReport, AIServiceEdgeClient, defineTool, Message, ToolResult, type Tool } from '@dxos/ai';
+import { EXA_API_KEY, SpyAIService } from '@dxos/ai/testing';
+import { Capabilities, contributes, createSurface, Events, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { researchFn, TYPES, findRelatedSchema, type RelatedSchema } from '@dxos/assistant';
+import { findRelatedSchema, researchFn, TYPES, type RelatedSchema } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
 import { DXN, Type } from '@dxos/echo';
 import {
@@ -30,55 +21,45 @@ import {
   ATTR_RELATION_TARGET,
   create,
   createQueueDxn,
-  getTypename,
+  Filter,
   getSchema,
   getSchemaDXN,
   getSchemaTypename,
+  getTypename,
   isInstanceOf,
+  RelationSourceId,
+  RelationTargetId,
   toJsonSchema,
   type BaseEchoObject,
   type BaseObject,
-  Filter,
-  RelationSourceId,
-  RelationTargetId,
 } from '@dxos/echo-schema';
-import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { ChessPlugin } from '@dxos/plugin-chess';
-import { ClientPlugin } from '@dxos/plugin-client';
-import { ForceGraph } from '@dxos/plugin-explorer';
-import { InboxPlugin } from '@dxos/plugin-inbox';
-import { MapPlugin } from '@dxos/plugin-map';
-import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { TablePlugin } from '@dxos/plugin-table';
-import { Config, useClient } from '@dxos/react-client';
-import { live, useQueue, useQuery, type Live, type EchoDatabase, getSpace } from '@dxos/react-client/echo';
+import { log } from '@dxos/log';
+import { ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
+import { useClient } from '@dxos/react-client';
+import { getSpace, live, useQuery, useQueue, type EchoDatabase, type Live } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncState } from '@dxos/react-ui';
 import {
-  type ActionGraphProps,
-  useMenuActions,
   createMenuAction,
-  ToolbarMenu,
-  MenuProvider,
   createMenuItemGroup,
+  MenuProvider,
+  ToolbarMenu,
+  useMenuActions,
+  type ActionGraphProps,
   type ToolbarMenuActionGroupProperties,
 } from '@dxos/react-ui-menu';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
-import { SpaceGraphModel } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { testPlugins } from './testing';
 import { Thread, type ThreadProps } from '../components';
 import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import translations from '../translations';
 
-// TODO(burdon): Move out of source.
-const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
-
 const LOCAL = false;
-
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
 
 type RenderProps = {
@@ -88,8 +69,10 @@ type RenderProps = {
 
 // TODO(burdon): Use ChatContainer.
 const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) => {
+  const [, forceUpdate] = useState({});
+
   const client = useClient();
-  const space = client.spaces.default;
+  // TODO(burdon): Hook.
   const [aiClient] = useState(
     () =>
       new SpyAIService(
@@ -102,6 +85,10 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         }),
       ),
   );
+
+  const space = client.spaces.default;
+  const model = useGraphModel(space);
+
   const actionCreator = useCallback(() => createToolbar(aiClient), [aiClient]);
   const menuProps = useMenuActions(actionCreator);
 
@@ -109,35 +96,32 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
-  const [, forceUpdate] = useState({});
-
   // Function executor.
-  const functionExecutor = useMemo(
+  const serviceContainer = useMemo(
     () =>
-      new FunctionExecutor(
-        new ServiceContainer().setServices({
-          ai: {
-            client: aiClient,
+      new ServiceContainer().setServices({
+        ai: {
+          client: aiClient,
+        },
+        credentials: new ConfiguredCredentialsService([
+          {
+            service: 'exa.ai',
+            apiKey: EXA_API_KEY,
           },
-          credentials: new ConfiguredCredentialsService([
-            {
-              service: 'exa.ai',
-              apiKey: EXA_API_KEY,
-            },
-          ]),
-          queues: {
-            queues: space.queues,
-            contextQueue: queue,
-          },
-          database: {
-            db: space.db,
-          },
-        }),
-      ),
+        ]),
+        queues: {
+          queues: space.queues,
+          contextQueue: queue,
+        },
+        database: {
+          db: space.db,
+        },
+        tracing: TracingService.console,
+      }),
     [aiClient, space, queue],
   );
 
-  const tools = useMemo<Tool[]>(() => [createResearchTool(functionExecutor, 'research', researchFn)], []);
+  const tools = useMemo<Tool[]>(() => [createResearchTool(serviceContainer, 'research', researchFn)], []);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
@@ -230,14 +214,6 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     await space.db.flush({ indexes: true });
     forceUpdate({});
   }, []);
-
-  const [model] = useState(() => new SpaceGraphModel());
-  useEffect(() => {
-    void model.open(space);
-    return () => {
-      model.close();
-    };
-  }, [space]);
 
   const handleResearchMore = useCallback((object: BaseObject, relatedSchema: RelatedSchema) => {
     const prompt = `
@@ -357,87 +333,34 @@ const ResearchPrompts = ({ object, onResearch }: ResearchPromptsProps) => {
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
-  title: 'plugins/plugin-assistant/Research',
-  render: DefaultStory,
-  decorators: [
-    withPluginManager({
-      plugins: [
-        ClientPlugin({
-          config: new Config({
-            runtime: {
-              client: {
-                storage: {
-                  persistent: true,
-                },
-                enableVectorIndexing: true,
-              },
-              services: {
-                edge: {
-                  url: 'http://edge-main.dxos.workers.dev',
-                },
-              },
-            },
-          }),
-          onClientInitialized: async (_, client) => {
-            if (!client.halo.identity.get()) {
-              await client.halo.createIdentity();
-            }
-          },
-          types: [...TYPES],
-        }),
-        SpacePlugin(),
-        SettingsPlugin(),
-        IntentPlugin(),
-
-        // Artifacts.
-        ChessPlugin(),
-        InboxPlugin(),
-        MapPlugin(),
-        TablePlugin(),
-        PreviewPlugin(),
-      ],
-      capabilities: [
-        contributes(
-          Capabilities.ReactSurface,
-          createSurface({
-            id: 'test',
-            role: 'card',
-            position: 'fallback',
-            component: ({ data }) => (
-              <span className='text-xs whitespace-pre-wrap'>{JSON.stringify(data.subject, null, 2)}</span>
-            ),
-          }),
-        ),
-      ],
-      fireEvents: [Events.SetupArtifactDefinition],
-    }),
-    withTheme,
-    withLayout({ fullscreen: true }),
-  ],
-  parameters: {
-    translations,
-  },
-};
-
-export default meta;
-
-type Story = StoryObj<typeof DefaultStory>;
-
-export const Default: Story = {
-  args: {
-    debug: true,
-    prompts: ['Research companies in the area of personal knowledge management and AI', 'Who founded Notion?'],
-  },
-};
-
-const createResearchTool = (executor: FunctionExecutor, name: string, fn: typeof researchFn) => {
+const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn: typeof researchFn) => {
   return defineTool('example', {
     // TODO(dmaretskyi): Include name in definition
     name,
     description: fn.description ?? raise(new Error('No description')),
     schema: fn.inputSchema,
-    execute: async (input: any) => {
+    execute: async (input, { reportStatus }) => {
+      const executor = new FunctionExecutor(
+        serviceContainer.clone().setServices({
+          tracing: {
+            write: (event) => {
+              if (isInstanceOf(AgentStatusReport, event)) {
+                log.info('[too] report status', { status: event });
+                reportStatus(event);
+              }
+            },
+          },
+        }),
+      );
+
+      reportStatus(
+        create(AgentStatusReport, {
+          message: 'Researching...',
+        }),
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       const { result } = await executor.invoke(fn, input);
       return ToolResult.Success(
         'Research completed. The results are placed in the conversation and already presented to the user. No need to present them again.',
@@ -515,4 +438,57 @@ const createToolbar = (aiClient: SpyAIService) => {
     { source: modes.id, target: mock.id },
   );
   return result;
+};
+
+const meta: Meta<typeof DefaultStory> = {
+  title: 'plugins/plugin-assistant/Research',
+  render: DefaultStory,
+  decorators: [
+    withPluginManager({
+      plugins: testPlugins({
+        runtime: {
+          client: {
+            storage: {
+              persistent: true,
+            },
+            enableVectorIndexing: true,
+          },
+        },
+      }),
+      capabilities: [
+        contributes(
+          Capabilities.ReactSurface,
+          createSurface({
+            id: 'test',
+            role: 'card',
+            position: 'fallback',
+            component: ({ data }) => (
+              <span className='text-xs whitespace-pre-wrap'>{JSON.stringify(data.subject, null, 2)}</span>
+            ),
+          }),
+        ),
+      ],
+      fireEvents: [Events.SetupArtifactDefinition],
+    }),
+    withTheme,
+    withLayout({ fullscreen: true }),
+  ],
+  parameters: {
+    translations,
+  },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof DefaultStory>;
+
+export const Default: Story = {
+  args: {
+    debug: true,
+    prompts: [
+      //
+      'Research companies in the area of personal knowledge management and AI',
+      'Who founded Notion?',
+    ],
+  },
 };

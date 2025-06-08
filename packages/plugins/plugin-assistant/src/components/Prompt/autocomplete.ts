@@ -27,13 +27,18 @@ export type AutocompleteOptions = {
    * @returns Array of suggestion strings
    */
   onSuggest?: (text: string) => string[];
+
+  /**
+   * ESC pressed.
+   */
+  onCancel?: () => void;
 };
 
 /**
  * Creates an autocomplete extension that shows inline suggestions.
  * Pressing Tab will complete the suggestion.
  */
-export const createAutocompleteExtension = ({ onSubmit, onSuggest }: AutocompleteOptions): Extension => {
+export const createAutocompleteExtension = ({ onSubmit, onSuggest, onCancel }: AutocompleteOptions): Extension => {
   const suggestionPlugin = ViewPlugin.fromClass(
     class {
       _decorations: DecorationSet;
@@ -186,6 +191,7 @@ export const createAutocompleteExtension = ({ onSubmit, onSuggest }: Autocomplet
                 insert: '',
               },
             });
+            onCancel?.();
             return true;
           },
         },

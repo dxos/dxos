@@ -323,7 +323,7 @@ const _CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardFor
     [model.items],
   );
 
-  const initialValue = useMemo(() => getSnapshot(card), [JSON.stringify(card)]);
+  const initialValue = useMemo(() => getSnapshot(card), [JSON.stringify(card)]); // TODO(burdon): Avoid stringify.
 
   // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
   //   omit fields from the form?
