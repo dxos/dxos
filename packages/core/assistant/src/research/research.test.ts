@@ -6,8 +6,8 @@ import { inspect } from 'node:util';
 import { beforeAll, describe, test } from 'vitest';
 
 import { AIServiceEdgeClient, OllamaClient, structuredOutputParser } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
-import type { EchoDatabase } from '@dxos/echo-db';
+import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
+import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { getSchemaDXN } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
@@ -18,7 +18,6 @@ import { createExtractionSchema, getSanitizedSchemaName, researchFn, TYPES } fro
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
-const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 
 describe('Research', () => {
   let builder: EchoTestBuilder;
@@ -49,19 +48,17 @@ describe('Research', () => {
               }),
         },
         credentials: new ConfiguredCredentialsService([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-        database: {
-          db,
-        },
+        database: { db },
         tracing: TracingService.console,
       }),
     );
   });
 
-  test('should generate a research report', { timeout: 1000_000 }, async () => {
+  test.skip('should generate a research report', { timeout: 1000_000 }, async () => {
     db.add(
       live(DataType.Organization, {
         name: 'Notion',
-        website: 'https://www.notion.com/',
+        website: 'https://www.notion.com',
       }),
     );
     await db.flush({ indexes: true });

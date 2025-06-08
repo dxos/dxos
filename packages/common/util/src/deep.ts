@@ -2,7 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import get from 'lodash.get';
+import set from 'lodash.set';
+
 import { invariant } from '@dxos/invariant';
+
+// TODO(burdon): Re-export most common utils? (isEqual, defaultsDeep, merge, omit, pick, etc.)
+export { get, set };
 
 /**
  * Initialize a deeply nested object.
@@ -25,8 +31,6 @@ export const setDeep = <T>(obj: any, path: readonly (string | number)[], value: 
 
 /**
  * Gets a value from a deeply nested object.
- * @param obj
- * @param path
  * @returns The value of the prop if it exists, otherwise undefined.
  */
 export const getDeep = <T>(obj: any, path: readonly (string | number)[]): T | undefined => {

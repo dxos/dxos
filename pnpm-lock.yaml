@@ -181,12 +181,6 @@ importers:
       '@types/json-stringify-safe':
         specifier: 5.0.0
         version: 5.0.0
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/lodash.set':
-        specifier: ^4.3.7
-        version: 4.3.7
       '@types/node':
         specifier: 22.10.2
         version: 22.10.2
@@ -307,12 +301,6 @@ importers:
       json-stringify-safe:
         specifier: ^5.0.1
         version: 5.0.1
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-      lodash.set:
-        specifier: ^4.3.2
-        version: 4.3.2
       loupe:
         specifier: 2.3.7
         version: 2.3.7
@@ -2138,10 +2126,22 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+      lodash.set:
+        specifier: ^4.3.2
+        version: 4.3.2
     devDependencies:
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../crypto
+      '@types/lodash.get':
+        specifier: ^4.4.9
+        version: 4.4.9
+      '@types/lodash.set':
+        specifier: ^4.3.9
+        version: 4.3.9
 
   packages/core/agent:
     dependencies:
@@ -2736,9 +2736,6 @@ importers:
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.1
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       lodash.isequal:
         specifier: ^4.5.0
         version: 4.5.0
@@ -2752,9 +2749,6 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/lodash.isequal':
         specifier: ^4.5.0
         version: 4.5.6
@@ -4537,9 +4531,6 @@ importers:
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       luxon:
         specifier: ^3.4.4
         version: 3.4.4
@@ -4595,9 +4586,6 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -5391,6 +5379,9 @@ importers:
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -5418,6 +5409,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../../common/graph
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -5535,9 +5529,9 @@ importers:
       jsonpointer:
         specifier: ^5.0.1
         version: 5.0.1
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
       unified:
         specifier: ^11.0.0
         version: 11.0.4
@@ -5575,9 +5569,9 @@ importers:
       '@effect/platform':
         specifier: 0.80.12
         version: 0.80.12(effect@3.14.21)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -6156,9 +6150,6 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       react-json-tree:
         specifier: ^0.18.0
         version: 0.18.0(@types/react@18.2.79)(react@18.2.0)
@@ -6187,9 +6178,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -6519,9 +6507,6 @@ importers:
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -6765,9 +6750,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: ^9.24.2
         version: 9.24.6(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       react-joyride:
         specifier: ^2.7.2
         version: 2.7.2(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -6793,9 +6775,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -6931,9 +6910,6 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       react-resize-detector:
         specifier: ^12.0.2
         version: 12.0.2(react@18.2.0)
@@ -6965,9 +6941,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -7553,9 +7526,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -7898,9 +7868,6 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -7923,9 +7890,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -8050,9 +8014,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -8446,9 +8407,6 @@ importers:
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       prettier:
         specifier: ^3.2.4
         version: 3.2.4
@@ -8480,9 +8438,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -9107,9 +9062,6 @@ importers:
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       react-drag-drop-files:
         specifier: ^2.3.8
         version: 2.3.8(react-dom@18.2.0(react@18.2.0))(react-is@18.2.0)(react@18.2.0)
@@ -9141,9 +9093,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -9784,9 +9733,6 @@ importers:
       extendable-media-recorder-wav-encoder:
         specifier: ^7.0.123
         version: 7.0.127
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       md5-hex:
         specifier: 5.0.0
         version: 5.0.0
@@ -9821,9 +9767,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -10193,9 +10136,6 @@ importers:
       effect:
         specifier: ^3.13.3
         version: 3.14.21
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -10212,9 +10152,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -10638,9 +10575,6 @@ importers:
       jwt-decode:
         specifier: ^4.0.0
         version: 4.0.0
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       lodash.isequal:
         specifier: ^4.5.0
         version: 4.5.0
@@ -10654,9 +10588,6 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/lodash.isequal':
         specifier: ^4.5.0
         version: 4.5.6
@@ -12496,9 +12427,6 @@ importers:
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       lodash.merge:
         specifier: ^4.6.2
         version: 4.6.2
@@ -12554,9 +12482,6 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/lodash.merge':
         specifier: ^4.6.6
         version: 4.6.9
@@ -13910,6 +13835,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@fontsource-variable/inter':
         specifier: 5.0.16
         version: 5.0.16
@@ -13934,9 +13862,6 @@ importers:
       globby:
         specifier: ^14.1.0
         version: 14.1.0
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       lodash.merge:
         specifier: ^4.6.2
         version: 4.6.2
@@ -13968,9 +13893,6 @@ importers:
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/lodash.merge':
         specifier: ^4.6.6
         version: 4.6.7
@@ -22326,8 +22248,8 @@ packages:
   '@types/lodash.flatten@4.4.7':
     resolution: {integrity: sha512-6yyP/mHEKL2sa86V61F7TnEcUKlLML9+aWI7TCKvnS4SFt7RD4zTVwkdDgluOJqxVkwZ/2z7HvtRs/7j/Uru7g==}
 
-  '@types/lodash.get@4.4.7':
-    resolution: {integrity: sha512-af34Mj+KdDeuzsJBxc/XeTtOx0SZHZNLd+hdrn+PcKGQs0EG2TJTzQAOTCZTgDJCArahlCzLWSy8c2w59JRz7Q==}
+  '@types/lodash.get@4.4.9':
+    resolution: {integrity: sha512-J5dvW98sxmGnamqf+/aLP87PYXyrha9xIgc2ZlHl6OHMFR2Ejdxep50QfU0abO1+CH6+ugx+8wEUN1toImAinA==}
 
   '@types/lodash.isequal@4.5.6':
     resolution: {integrity: sha512-Ww4UGSe3DmtvLLJm2F16hDwEQSv7U0Rr8SujLUA2wHI2D2dm8kPu6Et+/y303LfjTIwSBKXB/YTUcAKpem/XEg==}
@@ -22353,8 +22275,8 @@ packages:
   '@types/lodash.pick@4.4.7':
     resolution: {integrity: sha512-HgdyKz7/1+oeoVzbpu1XiX/Bti9AUksHtOILH38T07aKvqoirzcdOsrO2+Yg3L51Hv/8m1MetvHZEUGeABiTiQ==}
 
-  '@types/lodash.set@4.3.7':
-    resolution: {integrity: sha512-bS5Wkg/nrT82YUfkNYPSccFrNZRL+irl7Yt4iM6OTSQ0VZJED2oUIVm15NkNtUAQ8SRhCe+axqERUV6MJgkeEg==}
+  '@types/lodash.set@4.3.9':
+    resolution: {integrity: sha512-KOxyNkZpbaggVmqbpr82N2tDVTx05/3/j0f50Es1prxrWB0XYf9p3QNxqcbWb7P1Q9wlvsUSlCFnwlPCIJ46PQ==}
 
   '@types/lodash.sortby@4.7.7':
     resolution: {integrity: sha512-J/4IS+jQopGBrrRetBXDCX0KnSeXJZ0rOTmGAxR9MWGV24YdHxX8IRi9LCGAU9GKWlBov9KRSfQpuup9PReqrw==}
@@ -45728,7 +45650,7 @@ snapshots:
     dependencies:
       '@types/lodash': 4.14.191
 
-  '@types/lodash.get@4.4.7':
+  '@types/lodash.get@4.4.9':
     dependencies:
       '@types/lodash': 4.17.12
 
@@ -45764,7 +45686,7 @@ snapshots:
     dependencies:
       '@types/lodash': 4.14.191
 
-  '@types/lodash.set@4.3.7':
+  '@types/lodash.set@4.3.9':
     dependencies:
       '@types/lodash': 4.17.12
 
