@@ -193,7 +193,7 @@ export class EchoReplicant {
     return { peerId: this._replicator.context.peerId };
   }
 
-  async peerId() {
+  async peerId(): Promise<string> {
     invariant(this._replicator?.context, 'Replicator not connected.');
     return this._replicator.context.peerId;
   }

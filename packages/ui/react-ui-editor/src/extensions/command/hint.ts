@@ -46,7 +46,7 @@ class CommandHint extends WidgetType {
     super();
   }
 
-  toDOM() {
+  toDOM(): HTMLSpanElement {
     const wrap = document.createElement('span');
     wrap.className = 'cm-placeholder';
     wrap.style.pointerEvents = 'none';

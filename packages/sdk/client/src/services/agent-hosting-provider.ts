@@ -141,7 +141,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   }
 
   // TODO(nf): use asymmetric key to verify token?
-  _decodeComposerBetaJwt() {
+  _decodeComposerBetaJwt(): ComposerBetaJwt {
     const decoded: ComposerBetaJwt = jwtDecode(this._getComposerBetaCookie());
     return decoded;
   }
@@ -296,7 +296,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     return decoded;
   }
 
-  public async _queryCredentials(type?: string, predicate?: (value: Credential) => boolean) {
+  public async _queryCredentials(type?: string, predicate?: (value: Credential) => boolean): Promise<Credential[]> {
     // assumes all credentials are already loaded. should client.spaces.waitUntilReady()?
     const haloCredentials = this._halo.credentials.get();
 

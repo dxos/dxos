@@ -45,7 +45,7 @@ export class Compiler {
     this.environment.createFile(fileName, content);
   }
 
-  compile(fileName: string) {
+  compile(fileName: string): ts.EmitOutput {
     return this.environment.languageService.getEmitOutput(fileName);
   }
 }

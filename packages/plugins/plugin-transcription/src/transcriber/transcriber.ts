@@ -174,7 +174,7 @@ export class Transcriber extends Resource {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _mergeAudioChunks(chunks: AudioChunk[]) {
+  private async _mergeAudioChunks(chunks: AudioChunk[]): Promise<string> {
     const file = new WaveFile();
     const wavConfig = this._recorder.wavConfig;
 

@@ -228,7 +228,7 @@ export class Swarm {
     return answer;
   }
 
-  private _getOfferSenderPeer(senderInfo: PeerInfo) {
+  private _getOfferSenderPeer(senderInfo: PeerInfo): Peer {
     const peer = this._getOrCreatePeer(senderInfo);
 
     // Handle fast peer reconnect (eg. tab reload)

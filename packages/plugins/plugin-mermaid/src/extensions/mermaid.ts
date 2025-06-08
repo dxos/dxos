@@ -75,7 +75,7 @@ class MermaidWidget extends WidgetType {
     return this._source === other._source;
   }
 
-  override toDOM(view: EditorView) {
+  override toDOM(view: EditorView): HTMLDivElement {
     const div = document.createElement('div');
     setTimeout(async () => {
       // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/config.type.ts

@@ -173,7 +173,7 @@ export class MemoryTransport implements Transport {
     }
   }
 
-  async getDetails() {
+  async getDetails(): Promise<string> {
     return this._instanceId.toHex();
   }
 

@@ -24,7 +24,7 @@ class FeedStore {
   }
 
   @trace.span()
-  async openFeed(ctx: Context) {
+  async openFeed(ctx: Context): Promise<Feed> {
     const feed = new Feed();
     feed.key = Math.random().toString(36).substring(2, 15);
     this._feeds.set(feed.key, feed);

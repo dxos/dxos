@@ -75,7 +75,7 @@ export class AppManager {
     await this.page.keyboard.press(`${modifier}+KeyV`);
   }
 
-  isAuthenticated({ timeout = 5_000 } = {}) {
+  isAuthenticated({ timeout = 5_000 } = {}): Promise<boolean> {
     return this.page
       .getByTestId('treeView.userAccount')
       .waitFor({ timeout })
@@ -172,7 +172,7 @@ export class AppManager {
     await this.page.getByTestId('treeView.alternateTreeButton').waitFor({ timeout });
   }
 
-  getSpacePresenceMembers() {
+  getSpacePresenceMembers(): Locator {
     return this.page.getByTestId('spacePlugin.presence.member');
   }
 
@@ -189,7 +189,7 @@ export class AppManager {
     }
   }
 
-  toggleCollectionCollapsed(nth = 0) {
+  toggleCollectionCollapsed(nth = 0): Promise<void> {
     return this.page.getByTestId('spacePlugin.object').nth(nth).getByRole('button').first().click();
   }
 
@@ -245,19 +245,19 @@ export class AppManager {
     await this.page.keyboard.press('Enter');
   }
 
-  getObject(nth = 0) {
+  getObject(nth = 0): Locator {
     return this.page.getByTestId('spacePlugin.object').nth(nth);
   }
 
-  getObjectByName(name: string) {
+  getObjectByName(name: string): Locator {
     return this.page.getByTestId('spacePlugin.object').filter({ has: this.page.locator(`span:has-text("${name}")`) });
   }
 
-  getSpaceItems() {
+  getSpaceItems(): Locator {
     return this.page.getByTestId('spacePlugin.space');
   }
 
-  getObjectLinks() {
+  getObjectLinks(): Locator {
     return this.page.getByTestId('spacePlugin.object');
   }
 
@@ -290,7 +290,7 @@ export class AppManager {
     await this.page.getByTestId(`pluginRegistry.${category}`).click();
   }
 
-  getPluginToggle(plugin: string) {
+  getPluginToggle(plugin: string): Locator {
     return this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]');
   }
 

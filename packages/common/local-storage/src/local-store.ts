@@ -35,7 +35,7 @@ type PropOptions = {
 export class LocalStorageStore<T extends object> {
   static string(): PropType<string>;
   static string(params: PropOptions): PropType<string | undefined>;
-  static string(params?: PropOptions) {
+  static string(params?: PropOptions): PropType<string | undefined> | PropType<string> {
     const prop: PropType<string | undefined> = {
       get: (key) => {
         const value = localStorage.getItem(key);
@@ -55,7 +55,7 @@ export class LocalStorageStore<T extends object> {
 
   static enum<U>(): PropType<U>;
   static enum<U>(params: PropOptions): PropType<U | undefined>;
-  static enum<U>(params?: PropOptions) {
+  static enum<U>(params?: PropOptions): PropType<U | undefined> | PropType<U> {
     return params?.allowUndefined
       ? (LocalStorageStore.string(params) as PropType<U | undefined>)
       : (LocalStorageStore.string() as unknown as PropType<U>);
@@ -63,7 +63,7 @@ export class LocalStorageStore<T extends object> {
 
   static number(): PropType<number>;
   static number(params: PropOptions): PropType<number | undefined>;
-  static number(params?: PropOptions) {
+  static number(params?: PropOptions): PropType<number | undefined> | PropType<number> {
     const prop: PropType<number | undefined> = {
       get: (key) => {
         const value = parseInt(localStorage.getItem(key) ?? '');
@@ -83,7 +83,7 @@ export class LocalStorageStore<T extends object> {
 
   static bool(): PropType<boolean>;
   static bool(params: PropOptions): PropType<boolean | undefined>;
-  static bool(params?: PropOptions) {
+  static bool(params?: PropOptions): PropType<boolean | undefined> | PropType<boolean> {
     const prop: PropType<boolean | undefined> = {
       get: (key) => {
         const value = localStorage.getItem(key);

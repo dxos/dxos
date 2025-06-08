@@ -31,7 +31,7 @@ export class Migrations {
     return this.migrations[this.migrations.length - 1]?.version;
   }
 
-  static running(space: Space) {
+  static running(space: Space): boolean {
     return this._state.running.includes(space.key.toHex());
   }
 

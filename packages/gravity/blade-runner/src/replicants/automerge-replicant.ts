@@ -131,7 +131,7 @@ export class AutomergeReplicant {
     };
   }
 
-  private async _createStorage(ctx: Context, kind: StorageAdaptorKind) {
+  private async _createStorage(ctx: Context, kind: StorageAdaptorKind): Promise<IndexedDBStorageAdapter | LevelDBStorageAdapter> {
     switch (kind) {
       case 'idb':
         return new IndexedDBStorageAdapter();

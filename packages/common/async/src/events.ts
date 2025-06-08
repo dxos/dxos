@@ -271,7 +271,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * the event is emitted after `timeout / 8` ms.
    */
   // TODO(burdon): Factor out generic function.
-  debounce(timeout = 0) {
+  debounce(timeout = 0): Event<void> {
     let firing: NodeJS.Timeout | undefined;
     let lastFired: number | undefined;
 

@@ -174,7 +174,7 @@ export class GraphBuilder {
     });
   }
 
-  static from(pickle?: string, registry?: Registry.Registry) {
+  static from(pickle?: string, registry?: Registry.Registry): GraphBuilder {
     if (!pickle) {
       return new GraphBuilder({ registry });
     }

@@ -28,11 +28,11 @@ export abstract class AbstractStorage implements Storage {
   // TODO(burdon): Make required.
   constructor(public readonly path: string) {}
 
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return inspectObject(this);
   }
 
-  toJSON() {
+  toJSON(): { type: StorageType; path: string; } {
     return { type: this.type, path: this.path };
   }
 

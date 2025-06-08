@@ -303,27 +303,27 @@ export class PluginManager {
     });
   }
 
-  private _getPlugin(id: string) {
+  private _getPlugin(id: string): Plugin | undefined {
     return this._state.plugins.find((plugin) => plugin.meta.id === id);
   }
 
-  private _getActiveModules() {
+  private _getActiveModules(): PluginModule[] {
     return this._state.modules.filter((module) => this._state.active.includes(module.id));
   }
 
-  private _getInactiveModules() {
+  private _getInactiveModules(): PluginModule[] {
     return this._state.modules.filter((module) => !this._state.active.includes(module.id));
   }
 
-  private _getActiveModulesByEvent(key: string) {
+  private _getActiveModulesByEvent(key: string): PluginModule[] {
     return this._getActiveModules().filter((module) => getEvents(module.activatesOn).map(eventKey).includes(key));
   }
 
-  private _getInactiveModulesByEvent(key: string) {
+  private _getInactiveModulesByEvent(key: string): PluginModule[] {
     return this._getInactiveModules().filter((module) => getEvents(module.activatesOn).map(eventKey).includes(key));
   }
 
-  private _setPendingResetByModule(module: PluginModule) {
+  private _setPendingResetByModule(module: PluginModule): void {
     return untracked(() => {
       const activationEvents = getEvents(module.activatesOn)
         .map(eventKey)

@@ -191,7 +191,7 @@ export class SpacesServiceImpl implements SpacesService {
     await space.postMessage(getChannelId(channel), message);
   }
 
-  subscribeMessages({ spaceKey, channel }: SubscribeMessagesRequest) {
+  subscribeMessages({ spaceKey, channel }: SubscribeMessagesRequest): Stream<GossipMessage> {
     return new Stream<GossipMessage>(({ ctx, next }) => {
       scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();

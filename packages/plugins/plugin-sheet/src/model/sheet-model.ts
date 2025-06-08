@@ -177,13 +177,13 @@ export class SheetModel extends Resource {
     this._node?.graph.hf.rebuildAndRecalculate();
   }
 
-  insertRows(i: number, n = 1) {
+  insertRows(i: number, n = 1): string[] {
     const idx = insertIndices(this._sheet.rows, i, n, MAX_ROWS);
     this.reset();
     return idx;
   }
 
-  insertColumns(i: number, n = 1) {
+  insertColumns(i: number, n = 1): string[] {
     const idx = insertIndices(this._sheet.columns, i, n, MAX_COLS);
     this.reset();
     return idx;

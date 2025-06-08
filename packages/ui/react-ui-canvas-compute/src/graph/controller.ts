@@ -199,11 +199,11 @@ export class ComputeGraphController extends Resource {
     return this._graph.getNode(nodeId);
   }
 
-  getInputs(nodeId: string) {
+  getInputs(nodeId: string): Record<string, RuntimeValue> {
     return this._runtimeStateInputs[nodeId] ?? {};
   }
 
-  getOutputs(nodeId: string) {
+  getOutputs(nodeId: string): Record<string, RuntimeValue> {
     return this._runtimeStateOutputs[nodeId] ?? {};
   }
 

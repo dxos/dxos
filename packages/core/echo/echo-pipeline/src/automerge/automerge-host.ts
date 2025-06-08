@@ -381,7 +381,7 @@ export class AutomergeHost extends Resource {
   }
 
   @trace.info({ depth: null })
-  private _automergePeers() {
+  private _automergePeers(): PeerId[] {
     return this._repo.peers;
   }
 

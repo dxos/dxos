@@ -194,7 +194,7 @@ export default class Start extends BaseCommand<typeof Start> {
     await gracefulStopComplete.wait();
   }
 
-  private async _runAsDaemon(system: boolean) {
+  private async _runAsDaemon(system: boolean): Promise<void | undefined> {
     return await this.execWithDaemon(async (daemon) => {
       if (await daemon.isRunning(this.flags.profile)) {
         this.log(chalk`{red Warning}: '${this.flags.profile}' is already running.`);

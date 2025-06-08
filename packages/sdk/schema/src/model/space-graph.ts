@@ -68,7 +68,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
     return new SpaceGraphBuilder(this);
   }
 
-  override copy(graph?: Partial<Graph>) {
+  override copy(graph?: Partial<Graph>): SpaceGraphModel {
     return new SpaceGraphModel(graph);
   }
 

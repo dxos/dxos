@@ -64,11 +64,11 @@ export class ProjectGraph {
     return this.projects.some((project) => project.name === name);
   }
 
-  getProject(name: string) {
+  getProject(name: string): Project | undefined {
     return this.projects.find((project) => project.name === name);
   }
 
-  getManifest(name: string) {
+  getManifest(name: string): PackageJson | undefined {
     return this.manifests.find((manifest) => manifest.name === name);
   }
 

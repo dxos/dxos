@@ -364,7 +364,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
     }
   }
 
-  private _getSchema() {
+  private _getSchema(): Schema.Schema.AnyNoContext {
     this._rebuild();
     return this._schema!;
   }

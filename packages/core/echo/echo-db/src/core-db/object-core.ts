@@ -136,7 +136,7 @@ export class ObjectCore {
     this.notifyUpdate();
   }
 
-  getDoc() {
+  getDoc(): Doc<ObjectStructure> | Doc<DatabaseDirectory> {
     return this.doc ?? this.docHandle?.doc() ?? failedInvariant('Invalid state');
   }
 
@@ -324,7 +324,7 @@ export class ObjectCore {
     return newLength;
   }
 
-  private _getRaw(path: KeyPath) {
+  private _getRaw(path: KeyPath): Doc<ObjectStructure> | Doc<DatabaseDirectory> {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();

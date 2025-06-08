@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 export type TestConnectionStateProvider = () => 'on' | 'off';
 
 export class TestAdapter extends NetworkAdapter {
-  static createPair(connectionStateProvider: TestConnectionStateProvider = () => 'on') {
+  static createPair(connectionStateProvider: TestConnectionStateProvider = () => 'on'): TestAdapter[] {
     const adapter1: TestAdapter = new TestAdapter({
       send: (message: Message) => connectionStateProvider() === 'on' && sleep(10).then(() => adapter2.receive(message)),
     });

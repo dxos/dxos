@@ -154,7 +154,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   // Private logic.
   //
 
-  private _getSelectOptions() {
+  private _getSelectOptions(): { id: string; title: string; color: string; }[] {
     if (this._kanban.columnFieldId === undefined) {
       return [];
     }

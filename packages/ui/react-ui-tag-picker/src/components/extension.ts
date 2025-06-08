@@ -280,7 +280,7 @@ class ItemWidget extends WidgetType {
     return widget.props.itemId === this.props.itemId;
   }
 
-  toDOM() {
+  toDOM(): HTMLElement {
     const el = document.createElement('dx-tag-picker-item');
     el.classList.add('inline-block', 'pie-0.5');
     el.setAttribute('itemId', this.props.itemId ?? 'never');

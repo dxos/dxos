@@ -77,15 +77,15 @@ export class SheetManager {
     await this.page.getByTestId(`grid.${axis}.drop`).click();
   }
 
-  toolbarAction(key: string, value: string) {
+  toolbarAction(key: string, value: string): Locator {
     return this.page.getByTestId(`grid.toolbar.${key}.${value}`);
   }
 
-  cellEditor() {
+  cellEditor(): Locator {
     return this.page.getByTestId('grid.cell-editor').getByRole('textbox');
   }
 
-  rangeInList(a1Coords: string) {
+  rangeInList(a1Coords: string): Locator {
     return this.page.getByTestId('grid.range-list').getByText(a1Coords);
   }
 }

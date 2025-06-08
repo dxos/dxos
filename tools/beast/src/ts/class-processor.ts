@@ -57,7 +57,7 @@ export class ClassProcessor {
     log('files', { sources, count: this._project.getSourceFiles().length });
   }
 
-  getClasses() {
+  getClasses(): ClassDefinition[] {
     return Array.from(this._classes.values());
   }
 

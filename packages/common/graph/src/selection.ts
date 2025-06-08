@@ -15,7 +15,7 @@ export class SelectionModel {
 
   constructor(private readonly _singleSelect: boolean = false) {}
 
-  toJSON() {
+  toJSON(): { selected: string[]; } {
     return {
       selected: Array.from(this._selected.value.values()),
     };
@@ -29,7 +29,7 @@ export class SelectionModel {
     return this._selectedIds;
   }
 
-  contains(id: string) {
+  contains(id: string): boolean {
     return this._selected.value.has(id);
   }
 

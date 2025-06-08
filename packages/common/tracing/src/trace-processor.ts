@@ -154,7 +154,7 @@ export class TraceProcessor {
     this._markResourceDirty(id);
   }
 
-  createTraceSender() {
+  createTraceSender(): TraceSender {
     return new TraceSender(this);
   }
 

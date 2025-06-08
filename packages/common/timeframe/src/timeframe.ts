@@ -24,7 +24,7 @@ export class Timeframe implements Equatable {
     }
   }
 
-  toJSON() {
+  toJSON(): Record<string, number> {
     return this.frames().reduce((frames: Record<string, number>, [key, seq]) => {
       frames[key.truncate()] = seq;
       return frames;

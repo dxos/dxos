@@ -43,7 +43,7 @@ export class TestBuilder {
 
   constructor(public readonly options: TestBuilderOptions = {}) {}
 
-  createSignalManager() {
+  createSignalManager(): WebsocketSignalManager | MemorySignalManager {
     if (this.options.signalHosts) {
       return new WebsocketSignalManager(this.options.signalHosts);
     }
@@ -51,7 +51,7 @@ export class TestBuilder {
     return new MemorySignalManager(this._signalContext);
   }
 
-  createPeer(peerId: PublicKey = PublicKey.random()) {
+  createPeer(peerId: PublicKey = PublicKey.random()): TestPeer {
     return new TestPeer(this, peerId, this.options.transport);
   }
 }
@@ -88,7 +88,7 @@ export class TestPeer {
   }
 
   // TODO(burdon): Move to TestBuilder.
-  createNetworkManager(transport: TransportKind) {
+  createNetworkManager(transport: TransportKind): SwarmNetworkManager {
     let transportFactory: TransportFactory;
     if (this.testBuilder.options.signalHosts) {
       log.info(`using ${transport} transport with signal server.`);

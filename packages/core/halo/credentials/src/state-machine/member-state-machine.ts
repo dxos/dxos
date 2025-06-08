@@ -99,7 +99,7 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
     };
   }
 
-  public isUpdateAllowed(scope: StateScope<SpaceMember>, credential: Credential, assertion: SpaceMember) {
+  public isUpdateAllowed(scope: StateScope<SpaceMember>, credential: Credential, assertion: SpaceMember): boolean {
     if (assertion.role === SpaceMember.Role.OWNER) {
       return credential!.issuer.equals(this._spaceKey);
     }

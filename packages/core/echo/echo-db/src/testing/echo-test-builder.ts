@@ -126,7 +126,7 @@ export class EchoTestPeer extends Resource {
     await this.open();
   }
 
-  async createClient() {
+  async createClient(): Promise<EchoClient> {
     const client = new EchoClient();
     this._clients.add(client);
     client.connectToService({

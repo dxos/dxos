@@ -37,7 +37,7 @@ export class Spy {
     return `${this.id.toHex().slice(0, 4)}[${this.size}]`;
   }
 
-  humanize(key: PublicKey) {
+  humanize(key: PublicKey): string {
     invariant(key);
     return humanize(key);
   }

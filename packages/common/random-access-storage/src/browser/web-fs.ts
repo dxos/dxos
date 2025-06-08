@@ -65,7 +65,7 @@ export class WebFS implements Storage {
   }
 
   @synchronized
-  private async _initialize() {
+  private async _initialize(): Promise<FileSystemDirectoryHandle> {
     if (this._root) {
       return this._root;
     }
@@ -74,7 +74,7 @@ export class WebFS implements Storage {
     return this._root;
   }
 
-  createDirectory(sub = '') {
+  createDirectory(sub = ''): Directory {
     return new Directory({
       type: this.type,
       path: getFullPath(this.path, sub),
@@ -98,7 +98,7 @@ export class WebFS implements Storage {
     return file;
   }
 
-  private _createFile(fullName: string) {
+  private _createFile(fullName: string): WebFile {
     return new WebFile({
       fileName: fullName,
       file: this._initialize().then((root) => root.getFileHandle(fullName, { create: true })),
@@ -138,7 +138,7 @@ export class WebFS implements Storage {
     );
   }
 
-  private _getFullFilename(path: string, filename?: string) {
+  private _getFullFilename(path: string, filename?: string): string {
     // Replace slashes with underscores. Because we can't have slashes in filenames in Browser File Handle API.
     if (filename) {
       return getFullPath(path, filename).replace(/\//g, '_');
@@ -327,7 +327,7 @@ export class WebFile extends EventEmitter implements File {
     await this._flushPromise;
   }
 
-  async read(offset: number, size: number) {
+  async read(offset: number, size: number): Promise<Buffer> {
     this.assertNotDestroyed('Read');
 
     this._operations.inc();

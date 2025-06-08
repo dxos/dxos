@@ -579,7 +579,7 @@ export class Graph implements WritableGraph {
   async waitForPath(
     params: { source?: string; target: string },
     { timeout = 5_000, interval = 500 }: { timeout?: number; interval?: number } = {},
-  ) {
+  ): Promise<string[]> {
     const path = this.getPath(params);
     if (Option.isSome(path)) {
       return path.value;

@@ -157,7 +157,7 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
     return this._simulation;
   }
 
-  numChildren(node: GraphLayoutNode) {
+  numChildren(node: GraphLayoutNode): number {
     return this._layout.graph.edges.filter((edge) => edge.source.id === this.options.idAccessor(node)).length;
   }
 

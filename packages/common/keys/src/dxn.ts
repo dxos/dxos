@@ -114,7 +114,7 @@ export class DXN {
   /**
    * @example `dxn:type:example.com/type/Contact`
    */
-  static fromTypename(typename: string) {
+  static fromTypename(typename: string): DXN {
     return new DXN(DXN.kind.TYPE, [typename]);
   }
 
@@ -122,14 +122,14 @@ export class DXN {
    * @example `dxn:type:example.com/type/Contact:0.1.0`
    */
   // TODO(dmaretskyi): Consider using @ as the version separator.
-  static fromTypenameAndVersion(typename: string, version: string) {
+  static fromTypenameAndVersion(typename: string, version: string): DXN {
     return new DXN(DXN.kind.TYPE, [typename, version]);
   }
 
   /**
    * @example `dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6`
    */
-  static fromLocalObjectId(id: string) {
+  static fromLocalObjectId(id: string): DXN {
     return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, id]);
   }
 

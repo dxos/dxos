@@ -98,7 +98,7 @@ export class TrustedKeySetAuthVerifier {
     };
   }
 
-  private _isTrustedKey(deviceKey: PublicKey) {
+  private _isTrustedKey(deviceKey: PublicKey): boolean {
     const deviceSet = this._params.trustedKeysProvider();
     return deviceSet.has(deviceKey);
   }

@@ -29,7 +29,7 @@ export class TestPeer extends Resource {
     return buf.create(PeerSchema, { peerKey: this.peerId.toHex(), identityKey: this.peerId.toHex() });
   }
 
-  async waitTillReceive(message: Message) {
+  async waitTillReceive(message: Message): Promise<Message> {
     return expectReceivedMessage(this.defaultReceived, message);
   }
 

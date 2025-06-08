@@ -35,7 +35,7 @@ export class ComplexSet<T> implements Set<T> {
     }
   }
 
-  toString() {
+  toString(): string {
     return inspectObject(this);
   }
 
@@ -45,7 +45,7 @@ export class ComplexSet<T> implements Set<T> {
       : Array.from(this._values.values());
   }
 
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return inspectObject(this);
   }
 
@@ -164,7 +164,7 @@ export class ComplexMap<K, V> implements Map<K, V> {
     }
   }
 
-  toString() {
+  toString(): string {
     return inspectObject(this);
   }
 
@@ -174,7 +174,7 @@ export class ComplexMap<K, V> implements Map<K, V> {
       : Array.from(this._values.values());
   }
 
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return inspectObject(this);
   }
 

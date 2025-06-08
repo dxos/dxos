@@ -26,7 +26,7 @@ export class PortMuxer {
     }
   }
 
-  createWorkerPort(options: Omit<WorkerPortOptions, 'port' | 'subscribe' | 'channel'> & { channel: string }) {
+  createWorkerPort(options: Omit<WorkerPortOptions, 'port' | 'subscribe' | 'channel'> & { channel: string }): RpcPort {
     if (!this._messagePort) {
       throw new Error('Message port is required to create worker ports');
     }
@@ -44,7 +44,7 @@ export class PortMuxer {
     return port;
   }
 
-  createIFramePort(options: IFramePortOptions) {
+  createIFramePort(options: IFramePortOptions): RpcPort {
     const port = createIFramePort(options);
     this._rpcPorts.set(options.channel, port);
 

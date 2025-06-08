@@ -191,7 +191,7 @@ export class GraphExecutor {
   /**
    * Clone the graph and the topology but discard the runtime state.
    */
-  clone() {
+  clone(): GraphExecutor {
     const executor = new GraphExecutor({
       computeMetaResolver: this._computeMetaResolver,
       computeNodeResolver: this._computeNodeResolver,

@@ -81,7 +81,7 @@ export class TestBuilder {
   /**
    * Create backend service handlers.
    */
-  createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
+  createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams): ClientServicesHost {
     const services = new ClientServicesHost({
       config: this.config,
       storage: this?.storage?.(),

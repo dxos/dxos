@@ -34,7 +34,7 @@ export class TestBuilder {
     await Promise.all(Array.from(this._peers).map((agent) => agent.destroy()));
   }
 
-  async connect(peer1: TestPeer, peer2: TestPeer) {
+  async connect(peer1: TestPeer, peer2: TestPeer): Promise<TestConnection[]> {
     invariant(peer1 !== peer2);
     invariant(this._peers.has(peer1));
     invariant(this._peers.has(peer1));
@@ -75,7 +75,7 @@ export class TestPeer {
   protected async onOpen(connection: TestConnection): Promise<void> {}
   protected async onClose(connection: TestConnection): Promise<void> {}
 
-  createConnection({ initiator, remotePeerId }: { initiator: boolean; remotePeerId: PublicKey }) {
+  createConnection({ initiator, remotePeerId }: { initiator: boolean; remotePeerId: PublicKey }): TestConnection {
     const connection = new TestConnection(this.peerId, remotePeerId, initiator);
     this.connections.add(connection);
     return connection;
@@ -129,7 +129,7 @@ export class TestConnection {
     });
   }
 
-  public whenOpen(open: boolean) {
+  public whenOpen(open: boolean): Promise<boolean> {
     return waitForCondition({ condition: () => this.teleport.isOpen === open });
   }
 }

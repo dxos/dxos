@@ -243,7 +243,7 @@ export class DataSpaceManager extends Resource {
    * Creates a new space writing the genesis credentials to the control feed.
    */
   @synchronized
-  async createSpace(options: CreateSpaceOptions = {}) {
+  async createSpace(options: CreateSpaceOptions = {}): Promise<DataSpace> {
     assertArgument(!!options.rootUrl === !!options.documents, 'root url must be required when providing documents');
 
     assertState(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
@@ -338,7 +338,7 @@ export class DataSpaceManager extends Resource {
     }
   }
 
-  async createDefaultSpace() {
+  async createDefaultSpace(): Promise<DataSpace> {
     const space = await this.createSpace();
     const document = await this._getSpaceRootDocument(space);
 
@@ -473,7 +473,7 @@ export class DataSpaceManager extends Resource {
     space.stateUpdate.emit();
   }
 
-  private async _constructSpace(metadata: SpaceMetadata) {
+  private async _constructSpace(metadata: SpaceMetadata): Promise<DataSpace> {
     log('construct space', { metadata });
     const gossip = new Gossip({
       localPeerId: this._signingContext.deviceKey,

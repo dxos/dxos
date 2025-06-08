@@ -22,7 +22,7 @@ class BrowserRtcConnectionFactory implements RtcConnectionFactory {
   async initialize(): Promise<void> {}
   async onConnectionDestroyed(): Promise<void> {}
 
-  async createConnection(config: RTCConfiguration) {
+  async createConnection(config: RTCConfiguration): Promise<RTCPeerConnection> {
     return new RTCPeerConnection(config);
   }
 
@@ -42,7 +42,7 @@ class NodeRtcConnectionFactory implements RtcConnectionFactory {
 
   // TODO(burdon): Do imports here?
   async initialize(): Promise<void> {}
-  async onConnectionDestroyed() {
+  async onConnectionDestroyed(): Promise<void> {
     return NodeRtcConnectionFactory._cleanupMutex.executeSynchronized(async () => {
       if (--NodeRtcConnectionFactory._createdConnections === 0) {
         (await import('#node-datachannel')).cleanup();

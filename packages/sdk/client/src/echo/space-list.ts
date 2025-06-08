@@ -79,7 +79,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     this._spacesStream = spacesStream;
   }
 
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return inspectObject(this);
   }
 
@@ -88,7 +88,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   @trace.info({ depth: null })
-  toJSON() {
+  toJSON(): { spaces: number | undefined; } {
     return {
       spaces: this._value?.length,
     };
@@ -276,7 +276,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   override get(): Space[];
   override get(spaceIdOrKey: SpaceId | PublicKey): Space | undefined;
-  override get(spaceIdOrKey?: SpaceId | PublicKey) {
+  override get(spaceIdOrKey?: SpaceId | PublicKey): Space | Space[] | undefined {
     if (!spaceIdOrKey) {
       return this._value;
     }

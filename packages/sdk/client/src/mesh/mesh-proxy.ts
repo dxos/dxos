@@ -35,7 +35,7 @@ export class MeshProxy {
     public _traceParent?: string,
   ) {}
 
-  toJSON() {
+  toJSON(): { networkStatus: NetworkStatus; } {
     return {
       networkStatus: this._networkStatus.get(),
     };
@@ -45,7 +45,7 @@ export class MeshProxy {
     return this._networkStatus;
   }
 
-  async updateConfig(swarm: ConnectionState) {
+  async updateConfig(swarm: ConnectionState): Promise<void> {
     invariant(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
     return this._serviceProvider.services.NetworkService.updateConfig({ swarm }, { timeout: RPC_TIMEOUT });
   }

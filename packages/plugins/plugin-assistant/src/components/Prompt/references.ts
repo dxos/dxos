@@ -163,7 +163,7 @@ class ReferenceWidget extends WidgetType {
     super();
   }
 
-  override toDOM() {
+  override toDOM(): HTMLSpanElement {
     const span = document.createElement('span');
     span.textContent = `@ ${this.data.label}`;
     span.className = 'cm-reference-pill';

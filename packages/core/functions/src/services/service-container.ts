@@ -52,7 +52,7 @@ export class ServiceContainer {
     return service as Context.Tag.Service<T>;
   }
 
-  clone() {
+  clone(): ServiceContainer {
     return new ServiceContainer().setServices({ ...this._services });
   }
 }

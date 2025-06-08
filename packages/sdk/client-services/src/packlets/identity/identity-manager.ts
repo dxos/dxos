@@ -135,7 +135,7 @@ export class IdentityManager {
     await this._identity?.close(new Context());
   }
 
-  async createIdentity({ displayName, deviceProfile }: CreateIdentityOptions = {}) {
+  async createIdentity({ displayName, deviceProfile }: CreateIdentityOptions = {}): Promise<Identity> {
     // TODO(nf): populate using context from ServiceContext?
     invariant(!this._identity, 'Identity already exists.');
     log('creating identity...');
@@ -287,7 +287,7 @@ export class IdentityManager {
   /**
    * Update the profile document of an existing identity.
    */
-  async updateProfile(profile: ProfileDocument) {
+  async updateProfile(profile: ProfileDocument): Promise<ProfileDocument> {
     invariant(this._identity, 'Identity not initialized.');
     // TODO(wittjosiah): Use CredentialGenerator.
     const credential = await this._identity.getIdentityCredentialSigner().createCredential({
@@ -330,7 +330,7 @@ export class IdentityManager {
     };
   }
 
-  private async _constructIdentity(identityRecord: IdentityRecord) {
+  private async _constructIdentity(identityRecord: IdentityRecord): Promise<Identity> {
     invariant(!this._identity);
     log('constructing identity', { identityRecord });
 

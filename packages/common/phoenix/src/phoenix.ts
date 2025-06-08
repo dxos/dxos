@@ -22,7 +22,7 @@ export class Phoenix {
   /**
    * Starts detached watchdog process which starts and monitors selected command.
    */
-  static async start(params: WatchDogParams) {
+  static async start(params: WatchDogParams): Promise<ProcessInfo> {
     {
       // Clear stale pid file.
       if (existsSync(params.pidFile)) {

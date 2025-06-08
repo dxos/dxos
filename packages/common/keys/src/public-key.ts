@@ -90,7 +90,7 @@ export class PublicKey implements Equatable {
   /**
    * Creates new instance of PublicKey from hex string.
    */
-  static fromHex(hex: string) {
+  static fromHex(hex: string): PublicKey {
     if (hex.startsWith('0x')) {
       hex = hex.slice(2);
     }
@@ -216,7 +216,7 @@ export class PublicKey implements Equatable {
     return 'B' + base32Encode(this._value, 'RFC4648');
   }
 
-  truncate(length = undefined) {
+  truncate(length = undefined): string {
     return truncateKey(this, length);
   }
 

@@ -209,7 +209,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     });
   }
 
-  private _matchSelfPeerInfo(peer: PeerInfo) {
+  private _matchSelfPeerInfo(peer: PeerInfo): boolean {
     return (
       peer && (peer.peerKey === this._edgeConnection.peerKey || peer.identityKey === this._edgeConnection.identityKey)
     );

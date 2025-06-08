@@ -28,14 +28,14 @@ export class TestBuilder {
     return Array.from(this._servers.values());
   }
 
-  async createPeer(params: TestAgentParams) {
+  async createPeer(params: TestAgentParams): Promise<TestPeer> {
     const peer = new TestPeer(params);
     await peer.start();
     this._peers.set(peer.peerId, peer);
     return peer;
   }
 
-  async createSignalServer(num: number, outFolder: string, signalArguments: string[], onError?: (err: any) => void) {
+  async createSignalServer(num: number, outFolder: string, signalArguments: string[], onError?: (err: any) => void): Promise<void> {
     const server = await runSignal(num, outFolder, signalArguments, onError);
     await server.waitUntilStarted();
     this._servers.set(server.url(), server);
@@ -124,7 +124,7 @@ export class TestPeer {
     await this.signalManager.close();
   }
 
-  static hash(agent: TestPeer) {
+  static hash(agent: TestPeer): string {
     return agent.peerId.toHex();
   }
 

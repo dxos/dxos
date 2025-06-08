@@ -280,7 +280,7 @@ export class MockDataSource implements DataSource {
     return this.relationships.filter((relationship) => !label || relationship.label === label);
   }
 
-  add<S extends Schema.Schema.All>(schema: S, data: Schema.Schema.Type<S>) {
+  add<S extends Schema.Schema.All>(schema: S, data: Schema.Schema.Type<S>): Schema.Schema.Type<S> {
     invariant(typeof data.id === 'string', 'Data must have an id');
     const jsonSchema = toJsonSchema(schema);
     if (!this.schema[jsonSchema.$id!]) {

@@ -72,7 +72,7 @@ export class MediaManager extends Resource {
   /**
    * @internal
    */
-  _getState() {
+  _getState(): MediaState {
     return this._state;
   }
 
@@ -328,7 +328,7 @@ export class MediaManager extends Resource {
     track?: MediaStreamTrack,
     previousTrack?: TrackObject,
     encodings?: RTCRtpEncodingParameters[],
-  ) {
+  ): Promise<TrackObject | undefined> {
     if (!track && !previousTrack) {
       return;
     }

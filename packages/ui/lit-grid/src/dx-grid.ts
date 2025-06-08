@@ -276,7 +276,7 @@ export class DxGrid extends LitElement {
     }
   }
 
-  private dispatchSelectionChange() {
+  private dispatchSelectionChange(): boolean {
     return this.dispatchEvent(
       new DxGridCellsSelect({
         start: this.selectionStart,
@@ -495,12 +495,12 @@ export class DxGrid extends LitElement {
   // Accessors
   //
 
-  private colSize(c: number | string, plane: DxGridPlane) {
+  private colSize(c: number | string, plane: DxGridPlane): number {
     const resolvedPlane = resolveColPlane(plane);
     return this.colSizes?.[resolvedPlane]?.[c] ?? this.columnDefault[resolvedPlane]?.size ?? defaultColSize;
   }
 
-  private rowSize(r: number | string, plane: DxGridPlane) {
+  private rowSize(r: number | string, plane: DxGridPlane): number {
     const resolvedPlane = resolveRowPlane(plane);
     return this.rowSizes?.[resolvedPlane]?.[r] ?? this.rowDefault[resolvedPlane]?.size ?? defaultRowSize;
   }
@@ -863,11 +863,11 @@ export class DxGrid extends LitElement {
     return `[data-dx-grid-plane=${this.focusedCell.plane}]`;
   }
 
-  private focusedCellElement() {
+  private focusedCellElement(): HTMLElement | null {
     return this.gridRef.value?.querySelector(this.focusedCellQuery()) as HTMLElement | null;
   }
 
-  private focusedPlaneElement() {
+  private focusedPlaneElement(): HTMLElement | null {
     return this.gridRef.value?.querySelector(this.focusedPlaneQuery()) as HTMLElement | null;
   }
 
@@ -1225,7 +1225,7 @@ export class DxGrid extends LitElement {
       : null;
   }
 
-  private cellReadonly(col: number, row: number, plane: DxGridPlane) {
+  private cellReadonly(col: number, row: number, plane: DxGridPlane): boolean {
     const colPlane = resolveColPlane(plane);
     const rowPlane = resolveRowPlane(plane);
 

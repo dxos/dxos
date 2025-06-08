@@ -12,7 +12,7 @@ type PlankKind = 'markdown' | 'collection' | 'unknown';
 export class DeckManager {
   constructor(private readonly _page: Page) {}
 
-  plank(nth = 0) {
+  plank(nth = 0): PlankManager {
     return new PlankManager(this._page.getByTestId('deck.plank').nth(nth));
   }
 
@@ -36,15 +36,15 @@ export class PlankManager {
     await closePlank(this.locator);
   }
 
-  async kind() {
+  async kind(): Promise<PlankKind> {
     return classifyArticleElement(this.locator);
   }
 
-  async qualifiedId() {
+  async qualifiedId(): Promise<string | null> {
     return this.locator.getAttribute('data-attendable-id');
   }
 
-  membersPresence() {
+  membersPresence(): Locator {
     return this.locator.getByTestId('spacePlugin.presence.member');
   }
 }

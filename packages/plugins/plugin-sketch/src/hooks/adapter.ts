@@ -25,7 +25,7 @@ export class TLDrawStoreAdapter extends AbstractAutomergeStoreAdapter<TLRecord> 
     return this._store;
   }
 
-  override getElements() {
+  override getElements(): TLRecord[] {
     invariant(this._store);
     return this._store.allRecords();
   }

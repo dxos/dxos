@@ -123,27 +123,27 @@ export class CallManager extends Resource {
     this._swarmSynchronizer.setActivity(key, payload);
   }
 
-  turnAudioOn() {
+  turnAudioOn(): Promise<void> {
     return this._mediaManager.turnAudioOn();
   }
 
-  turnAudioOff() {
+  turnAudioOff(): Promise<void> {
     return this._mediaManager.turnAudioOff();
   }
 
-  turnVideoOn() {
+  turnVideoOn(): Promise<void> {
     return this._mediaManager.turnVideoOn();
   }
 
-  turnVideoOff() {
+  turnVideoOff(): Promise<void> {
     return this._mediaManager.turnVideoOff();
   }
 
-  turnScreenshareOn() {
+  turnScreenshareOn(): Promise<void> {
     return this._mediaManager.turnScreenshareOn();
   }
 
-  turnScreenshareOff() {
+  turnScreenshareOff(): Promise<void> {
     return this._mediaManager.turnScreenshareOff();
   }
 
@@ -180,7 +180,7 @@ export class CallManager extends Resource {
     await this._mediaManager.close();
   }
 
-  async peek(roomId: string) {
+  async peek(roomId: string): Promise<number> {
     const peers = await this._swarmSynchronizer.querySwarm(roomId);
     return peers.length;
   }

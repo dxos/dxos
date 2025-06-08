@@ -84,7 +84,7 @@ export class CallSwarmSynchronizer extends Resource {
   /**
    * @internal
    */
-  _getState() {
+  _getState(): CallState {
     return this._state;
   }
 

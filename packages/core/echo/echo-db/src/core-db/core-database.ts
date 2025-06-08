@@ -409,7 +409,7 @@ export class CoreDatabase {
   /**
    * @internal
    */
-  _createQueryContext() {
+  _createQueryContext(): CoreDatabaseQueryContext {
     return new CoreDatabaseQueryContext(this, this._queryService);
   }
 
@@ -838,7 +838,7 @@ export class CoreDatabase {
     }
   }
 
-  private _createObjectInDocument(docHandle: DocHandleProxy<DatabaseDirectory>, objectId: string) {
+  private _createObjectInDocument(docHandle: DocHandleProxy<DatabaseDirectory>, objectId: string): ObjectCore {
     invariant(!this._objects.get(objectId));
     const core = new ObjectCore();
     core.id = objectId;

@@ -90,11 +90,11 @@ export class OtelMetrics {
     distribution.record(value, { ...this.options.getTags(), ...tags });
   }
 
-  flush() {
+  flush(): Promise<void> {
     return this._meterProvider.forceFlush();
   }
 
-  close() {
+  close(): Promise<void> {
     return this._meterProvider.shutdown();
   }
 }

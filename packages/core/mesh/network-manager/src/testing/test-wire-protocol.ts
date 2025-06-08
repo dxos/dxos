@@ -59,7 +59,7 @@ export class TestWireProtocol {
     }
   });
 
-  async waitForConnection(peerId: PublicKey) {
+  async waitForConnection(peerId: PublicKey): Promise<TestExtension> {
     if (this.connections.has(peerId)) {
       return this.connections.get(peerId)!;
     }

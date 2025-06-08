@@ -143,7 +143,7 @@ export class CallsServicePeer extends Resource {
     return peerConnection;
   }
 
-  private async _initiateCallSession() {
+  private async _initiateCallSession(): Promise<string> {
     log('creating new session');
     const { sessionId } = await this._fetch<SessionResponse>('/sessions/new?SESSION', { method: 'POST' });
     return sessionId;

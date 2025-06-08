@@ -225,7 +225,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     messageCounts.failed++;
   }
 
-  private _getStatsForType(message: Message) {
+  private _getStatsForType(message: Message): { messageCounts: MessageCounts; messageSize: SlidingWindowSummary; } {
     const messageSize = (this._sizeByMessage[message.type] ??= createSlidingWindow());
     const messageCounts = (this._activeCounters.byType[message.type] ??= createMessageCounter());
     return { messageCounts, messageSize };

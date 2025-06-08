@@ -359,7 +359,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     }
   }
 
-  createExtension() {
+  createExtension(): NotarizationTeleportExtension {
     const extension = new NotarizationTeleportExtension({
       onOpen: async () => {
         log('extension opened', { peer: extension.localPeerId });

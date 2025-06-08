@@ -43,7 +43,7 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
 
   // TODO(burdon): Make async?
   // TODO(burdon): Define return type.
-  private _sendRequest(query: QueryAST.Query) {
+  private _sendRequest(query: QueryAST.Query): { response: Promise<QueryResponse>; cancelRequest: () => void; } {
     const request: QueryRequest = {
       queryId: PublicKey.random().toHex(),
       query: JSON.stringify(query),

@@ -231,7 +231,7 @@ export class InvitationsManager {
     } satisfies Invitation;
   }
 
-  private _createObservableInvitation(handler: InvitationProtocol, invitation: Invitation) {
+  private _createObservableInvitation(handler: InvitationProtocol, invitation: Invitation): { ctx: Context; stream: PushStream<Invitation>; observableInvitation: CancellableInvitation; } {
     const stream = new PushStream<Invitation>();
     const ctx = new Context({
       onError: (err) => {
@@ -254,7 +254,7 @@ export class InvitationsManager {
     return { ctx, stream, observableInvitation };
   }
 
-  private _createObservableAcceptingInvitation(handler: InvitationProtocol, initialState: Invitation) {
+  private _createObservableAcceptingInvitation(handler: InvitationProtocol, initialState: Invitation): { ctx: Context; invitation: AuthenticatingInvitation; stream: PushStream<Invitation>; otpEnteredTrigger: Trigger<string>; } {
     const otpEnteredTrigger = new Trigger<string>();
     const stream = new PushStream<Invitation>();
     const ctx = new Context({

@@ -202,7 +202,7 @@ export class MixedBlockstore extends BaseBlockstore {
 
   // 🛠️
 
-  async #createCar(blocks: Block[]) {
+  async #createCar(blocks: Block[]): Promise<Uint8Array> {
     const { writer, out } = CarWriter.create();
     const outPromise = all(out);
 

@@ -373,7 +373,7 @@ export class RefImpl<T> implements Ref<T> {
    * When a reference has a saved target (i.e. the target or object holding the reference is not in the database),
    * the target is included in the serialized object.
    */
-  toJSON() {
+  toJSON(): EncodedReference {
     return this.encode();
   }
 

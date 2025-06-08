@@ -154,7 +154,7 @@ export abstract class Resource implements Lifecycle {
     this.#lifecycleState = LifecycleState.CLOSED;
   }
 
-  #createContext() {
+  #createContext(): Context {
     return new Context({
       name: this.#name,
       onError: (error) =>
@@ -169,7 +169,7 @@ export abstract class Resource implements Lifecycle {
     });
   }
 
-  #createParentContext() {
+  #createParentContext(): Context {
     return new Context({ name: this.#name });
   }
 }

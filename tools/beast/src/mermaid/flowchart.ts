@@ -55,7 +55,7 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
     readonly style?: string,
   ) {}
 
-  addSubgraph({ id, label, style }: Subgraph) {
+  addSubgraph({ id, label, style }: Subgraph): SubgraphImpl {
     const subgraph = new SubgraphImpl(id, label, style);
     this._subGraphs.add(subgraph);
     return subgraph;

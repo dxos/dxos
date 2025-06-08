@@ -56,11 +56,11 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     invariant(options);
   }
 
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return inspectObject(this);
   }
 
-  override toJSON() {
+  override toJSON(): { open: boolean; running: boolean; indexes: FeedIndex[]; } {
     return {
       open: this.isOpen,
       running: this.isRunning,
@@ -109,7 +109,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     this._trigger.wake();
   }
 
-  hasFeed(feedKey: PublicKey) {
+  hasFeed(feedKey: PublicKey): boolean {
     return this._feedQueues.has(feedKey);
   }
 

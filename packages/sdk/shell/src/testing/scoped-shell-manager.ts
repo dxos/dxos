@@ -9,7 +9,7 @@ type Scope = Locator | FrameLocator | Page;
 export class ScopedShellManager {
   page!: Page;
 
-  authenticatorIsVisible(type: 'device' | 'space', scope?: Scope) {
+  authenticatorIsVisible(type: 'device' | 'space', scope?: Scope): Promise<boolean> {
     return (scope || this.page).getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).isVisible();
   }
 

@@ -113,7 +113,7 @@ class TableWidget extends WidgetType {
     );
   }
 
-  override toDOM(view: EditorView) {
+  override toDOM(view: EditorView): HTMLDivElement {
     const div = document.createElement('div');
     const table = div.appendChild(document.createElement('table'));
 

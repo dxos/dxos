@@ -42,7 +42,7 @@ export class FeedQueue<T extends {}> {
     private readonly _options: FeedQueueOptions = {},
   ) {}
 
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return inspectObject(this);
   }
 

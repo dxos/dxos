@@ -244,7 +244,7 @@ export class Peer {
    * Create new connection.
    * Either we're initiating a connection or creating one in response to an offer from the other peer.
    */
-  private _createConnection(initiator: boolean, sessionId: PublicKey) {
+  private _createConnection(initiator: boolean, sessionId: PublicKey): Connection {
     log('creating connection', {
       topic: this.topic,
       peerId: this.localInfo,

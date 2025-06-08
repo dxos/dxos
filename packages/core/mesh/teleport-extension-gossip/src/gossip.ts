@@ -124,7 +124,7 @@ export class Gossip {
     }
   }
 
-  listen(channel: string, callback: (message: GossipMessage) => void) {
+  listen(channel: string, callback: (message: GossipMessage) => void): { unsubscribe: () => void; } {
     if (!this._listeners.has(channel)) {
       this._listeners.set(channel, new Set());
     }
@@ -145,7 +145,7 @@ export class Gossip {
     }
   }
 
-  private _propagateAnnounce(message: GossipMessage) {
+  private _propagateAnnounce(message: GossipMessage): Promise<void[]> {
     return Promise.all(
       [...this._connections.entries()].map(async ([remotePeerId, extension]) => {
         if (this._params.localPeerId.equals(message.peerId) || remotePeerId.equals(message.peerId)) {
@@ -173,7 +173,7 @@ export class Gossip {
     }
   }
 
-  private _sendAnnounceWithTimeoutTracking(extension: GossipExtension, message: GossipMessage) {
+  private _sendAnnounceWithTimeoutTracking(extension: GossipExtension, message: GossipMessage): Promise<void> {
     return extension.sendAnnounce(message).catch((err) => {
       // Noop?
     });

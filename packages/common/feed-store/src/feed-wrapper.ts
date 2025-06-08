@@ -39,11 +39,11 @@ export class FeedWrapper<T extends {}> {
     this._writeLock.wake();
   }
 
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return inspectObject(this);
   }
 
-  toJSON() {
+  toJSON(): { feedKey: PublicKey; length: number; opened: boolean; closed: boolean; } {
     return {
       feedKey: this._key,
       length: this.properties.length,

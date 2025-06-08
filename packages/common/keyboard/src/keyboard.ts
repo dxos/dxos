@@ -40,7 +40,7 @@ class KeyboardContext {
     return Array.from(this._keyMap.values());
   }
 
-  get(binding: string) {
+  get(binding: string): KeyBinding | undefined {
     return this._keyMap.get(binding);
   }
 
@@ -99,7 +99,7 @@ export class Keyboard {
     return context;
   }
 
-  getBindings() {
+  getBindings(): KeyBinding[] {
     const bindings = new Map<string, KeyBinding>();
     for (let i = 0; i < this._contexts.length; ++i) {
       const path = this._contexts[i];

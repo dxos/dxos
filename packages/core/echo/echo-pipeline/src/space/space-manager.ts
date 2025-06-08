@@ -98,7 +98,7 @@ export class SpaceManager {
     onDelegatedInvitationStatusChange,
     onMemberRolesChanged,
     memberKey,
-  }: ConstructSpaceParams) {
+  }: ConstructSpaceParams): Promise<Space> {
     log.trace('dxos.echo.space-manager.construct-space', trace.begin({ id: this._instanceId }));
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 

@@ -258,7 +258,7 @@ export class GraphModel<
     return new GraphBuilder<Node, Edge>(this);
   }
 
-  override copy(graph?: Partial<Graph>) {
+  override copy(graph?: Partial<Graph>): GraphModel<Node, Edge> {
     return new GraphModel<Node, Edge>({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] });
   }
 }
@@ -290,7 +290,7 @@ export class ReactiveGraphModel<
     super(live({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] }));
   }
 
-  override copy(graph?: Partial<Graph>) {
+  override copy(graph?: Partial<Graph>): ReactiveGraphModel<Node, Edge> {
     return new ReactiveGraphModel<Node, Edge>({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] });
   }
 

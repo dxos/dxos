@@ -126,7 +126,7 @@ export class EdgeFeedReplicator extends Resource {
     }
   }
 
-  private _getPushMutex(key: PublicKey) {
+  private _getPushMutex(key: PublicKey): Mutex {
     return defaultMap(this._pushMutex, key, () => new Mutex());
   }
 
@@ -287,7 +287,7 @@ export class EdgeFeedReplicator extends Resource {
     }
   }
 
-  private _createConnectionContext() {
+  private _createConnectionContext(): Context {
     const connectionCtx = new Context({
       onError: async (err: any) => {
         if (connectionCtx !== this._connectionCtx) {

@@ -129,7 +129,7 @@ export class PipelineState {
     ctx = new Context(),
     timeout,
     breakOnStall = true,
-  }: WaitUntilReachedTargetParams = {}) {
+  }: WaitUntilReachedTargetParams = {}): Promise<void> {
     log('waitUntilReachedTargetTimeframe', {
       timeout,
       current: this.timeframe,
@@ -244,7 +244,7 @@ export class Pipeline implements PipelineAccessor {
     return this._writer;
   }
 
-  hasFeed(feedKey: PublicKey) {
+  hasFeed(feedKey: PublicKey): boolean {
     return this._feeds.has(feedKey);
   }
 

@@ -72,7 +72,7 @@ export class TestBuilder<T extends {}> {
     return this;
   }
 
-  createFeedFactory() {
+  createFeedFactory(): FeedFactory<T> {
     return new FeedFactory<T>({
       root: this.root,
       signer: this.keyring,
@@ -82,7 +82,7 @@ export class TestBuilder<T extends {}> {
     });
   }
 
-  createFeedStore() {
+  createFeedStore(): FeedStore<T> {
     return new FeedStore<T>({
       factory: this.createFeedFactory(),
     });

@@ -11,7 +11,7 @@ export class StackManager {
     this._page = locator.page();
   }
 
-  sections() {
+  sections(): Locator {
     return this.locator.locator('section');
   }
 
@@ -19,7 +19,7 @@ export class StackManager {
     return this.locator.locator('section').evaluateAll((els) => els.map((el) => el.getAttribute('id')));
   }
 
-  section(index: number) {
+  section(index: number): SectionManager {
     return new SectionManager(this.locator.locator('section').nth(index));
   }
 }
@@ -31,7 +31,7 @@ export class SectionManager {
     this._page = locator.page();
   }
 
-  async id() {
+  async id(): Promise<string | null> {
     return this.locator.getAttribute('id');
   }
 

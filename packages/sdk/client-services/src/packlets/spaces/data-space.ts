@@ -294,11 +294,11 @@ export class DataSpace {
     await this._gossip.close();
   }
 
-  async postMessage(channel: string, message: any) {
+  async postMessage(channel: string, message: any): Promise<void> {
     return this._gossip.postMessage(channel, message);
   }
 
-  listen(channel: string, callback: (message: GossipMessage) => void) {
+  listen(channel: string, callback: (message: GossipMessage) => void): { unsubscribe: () => void; } {
     return this._gossip.listen(channel, callback);
   }
 

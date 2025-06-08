@@ -88,7 +88,7 @@ export class MigrationBuilder {
     this._addHandleToFlushList(newHandle);
   }
 
-  async addObject(schema: Schema.Schema.AnyNoContext, props: any) {
+  async addObject(schema: Schema.Schema.AnyNoContext, props: any): Promise<string> {
     const core = this._createObject({ schema, props });
     return core.id;
   }
@@ -164,7 +164,7 @@ export class MigrationBuilder {
     this._addHandleToFlushList(this._newRoot);
   }
 
-  private _createObject({ id, schema, props }: { id?: string; schema: Schema.Schema.AnyNoContext; props: any }) {
+  private _createObject({ id, schema, props }: { id?: string; schema: Schema.Schema.AnyNoContext; props: any }): ObjectCore {
     const core = new ObjectCore();
     if (id) {
       core.id = id;

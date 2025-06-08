@@ -98,7 +98,7 @@ export class BlobSync {
     return ctx ? cancelWithContext(ctx, request.trigger.wait()) : request.trigger.wait();
   }
 
-  createExtension() {
+  createExtension(): BlobSyncExtension {
     const extension = new BlobSyncExtension({
       blobStore: this._params.blobStore,
       onOpen: async () => {

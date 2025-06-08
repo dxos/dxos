@@ -343,7 +343,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
    * Use this method for user-facing warnings.
    * Use @dxos/logger for internal messages.
    */
-  override warn(err: string | Error) {
+  override warn(err: string | Error): string | Error {
     const message = typeof err === 'string' ? err : err.message;
     super.logToStderr(chalk`{red Warning}: ${message}`);
     // NOTE: Default method displays stack trace.
@@ -434,7 +434,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
   /**
    * Lazily create the client.
    */
-  async getClient() {
+  async getClient(): Promise<Client> {
     invariant(this._clientConfig);
     if (!this._client) {
       try {

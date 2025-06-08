@@ -448,7 +448,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   /**
    * Listen for messages posted to the space.
    */
-  listen(channel: string, callback: (message: GossipMessage) => void) {
+  listen(channel: string, callback: (message: GossipMessage) => void): () => Promise<void> {
     invariant(this._clientServices.services.SpacesService, 'SpacesService not available');
     const stream = this._clientServices.services.SpacesService.subscribeMessages(
       { spaceKey: this.key, channel },
@@ -478,7 +478,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   /**
    * Requests member role update.
    */
-  updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>) {
+  updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void> {
     this._throwIfNotInitialized();
     return this._clientServices.services.SpacesService!.updateMemberRole({
       spaceKey: this.key,
@@ -495,14 +495,14 @@ export class SpaceProxy implements Space, CustomInspectable {
     // return this._serviceProvider.services.SpaceService.createSnapshot({ space_key: this.key });
   }
 
-  toJSON() {
+  toJSON(): { key: string; state: string; } {
     return {
       key: this.key.toHex(),
       state: SpaceState[this.state.get()],
     };
   }
 
-  private async _removeMember(memberKey: PublicKey) {
+  private async _removeMember(memberKey: PublicKey): Promise<void> {
     return this._clientServices.services.SpacesService!.updateMemberRole({
       spaceKey: this.key,
       memberKey,
