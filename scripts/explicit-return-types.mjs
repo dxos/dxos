@@ -23,11 +23,15 @@ const argv = yargs(hideBin(process.argv))
   .help()
   .parse();
 
+const globs = argv._.length > 0 ? argv._ : ['**/*.ts', '**/*.tsx'];
+
 // Find all TypeScript files
-const tsFiles = await globby(['**/*.ts', '**/*.tsx'], {
+const tsFiles = await globby(globs, {
   ignore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
   gitignore: true,
 });
+
+console.log(chalk.gray(`Processing ${tsFiles.length} files`));
 
 // Create a single project instance for all files
 const project = new Project({
@@ -40,12 +44,12 @@ const project = new Project({
   },
 });
 
-console.log({ files: tsFiles.length });
-
 // Add all source files to the project
 // project.addSourceFilesAtPaths(tsFiles);
 for (const filePath of tsFiles) {
-  console.log(chalk.gray(`⬇️ ${filePath}`));
+  if (argv.verbose) {
+    console.log(chalk.gray(`⬇️ ${filePath}`));
+  }
   project.addSourceFileAtPath(filePath);
 }
 
@@ -55,7 +59,7 @@ for (const filePath of tsFiles) {
  * @param {number} line
  */
 function logSkip(type, filePath, line) {
-  console.log(chalk.yellow(`✗ SKIP ${chalk.bold(type)}: ${chalk.gray(`${filePath}:${line}`)}`));
+  console.log(chalk.yellow(`✗ SKIP ${chalk.bold(type)}    ${chalk.gray(`${filePath}:${line}`)}`));
 }
 
 /**
@@ -64,7 +68,7 @@ function logSkip(type, filePath, line) {
  * @param {number} line
  */
 function logSet(type, filePath, line) {
-  console.log(chalk.green(`✓ SET  ${chalk.bold(type)}: ${chalk.gray(`${filePath}:${line}`)}`));
+  console.log(chalk.green(`✓ SET  ${chalk.bold(type)}    ${chalk.gray(`${filePath}:${line}`)}`));
 }
 
 /**
