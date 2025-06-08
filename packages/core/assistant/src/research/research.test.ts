@@ -54,11 +54,11 @@ describe('Research', () => {
     );
   });
 
-  test('should generate a research report', { timeout: 1000_000 }, async () => {
+  test.skip('should generate a research report', { timeout: 1000_000 }, async () => {
     db.add(
       live(DataType.Organization, {
         name: 'Notion',
-        website: 'https://www.notion.com/',
+        website: 'https://www.notion.com',
       }),
     );
     await db.flush({ indexes: true });

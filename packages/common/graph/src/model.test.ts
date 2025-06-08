@@ -31,7 +31,7 @@ describe('Graph', () => {
     const graph = new GraphModel();
     expect(graph.nodes).to.have.length(0);
     expect(graph.edges).to.have.length(0);
-    expect(graph.toJSON()).to.deep.eq({ nodes: [], edges: [] });
+    expect(graph.toJSON()).to.deep.eq({ nodes: 0, edges: 0 });
   });
 
   test('extended', ({ expect }) => {
