@@ -169,39 +169,52 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
     return this._simulation.find(x, y, radius);
   }
 
-  override refresh() {
+  override refresh(dragging = false) {
+    // Disable centering force while dragging.
+    if (this.forces.center) {
+      if (dragging) {
+        this._simulation.force('center', null);
+      } else {
+        this.updateForces(this.forces);
+      }
+    }
+
     this._simulation.alpha(1).restart();
   }
 
+  private _timeout?: NodeJS.Timeout;
+
   override async onStart() {
+    clearTimeout(this._timeout);
     let propagating = true;
 
     // Delay radial force until other forces have settled.
     const { radial, ...forces } = this.forces;
-    if (radial == null) {
-      this.updateForces(this.forces);
-    } else {
+    const delay = typeof radial === 'object' ? radial.delay : undefined;
+    if (delay) {
       propagating = false;
       this.updateForces(forces);
-      setTimeout(
-        () => {
+      this._timeout = setTimeout(() => {
+        this.updateForces(this.forces);
+        this._simulation.alpha(1).restart();
+        this._timeout = setTimeout(() => {
           propagating = true;
-          this.updateForces(this.forces);
-          this._simulation.alpha(1).restart();
-        },
-        (typeof radial === 'object' ? radial.delay : undefined) ?? 500,
-      );
+        }, delay);
+      }, delay);
+    } else {
+      this.updateForces(this.forces);
     }
 
     this._simulation
       .on('tick', () => propagating && this.emitUpdate())
-      .velocityDecay(0.4)
+      .velocityDecay(0.3)
       .alphaDecay(1 - Math.pow(0.001, 1 / 300))
       .alpha(1)
       .restart();
   }
 
   override async onStop() {
+    clearTimeout(this._timeout);
     this._simulation.stop();
   }
 

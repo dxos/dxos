@@ -75,7 +75,7 @@ export const createDrag = <NodeData>(
           // Freeze node while dragging.
           event.subject.x = event.subject.fx = point[0];
           event.subject.y = event.subject.fy = point[1];
-          projector.refresh();
+          projector.refresh(true);
           break;
         }
 
@@ -114,5 +114,6 @@ export const createDrag = <NodeData>(
       source = undefined;
       target = undefined;
       offset = undefined;
+      projector.refresh(false);
     });
 };

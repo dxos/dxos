@@ -40,7 +40,7 @@ export abstract class Projector<NodeData, Layout, Options extends ProjectorOptio
     return this._options;
   }
 
-  refresh() {}
+  refresh(dragging = false) {}
 
   updateData(data?: NodeData, selected?: string) {
     this.onUpdate(data, selected);

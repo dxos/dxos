@@ -254,7 +254,7 @@ export const Radial: Story = {
     debug: true,
     drag: true,
     arrows: true,
-    projectorType: 'radial',
+    // projectorType: 'radial',
     projectorOptions: {
       radius: 300,
       duration: 500,

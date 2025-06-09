@@ -65,7 +65,7 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
     if (!renderer) {
       renderer = new GraphRenderer<Node>(context, graphRef, {
         ...props,
-        drag: drag ? createDrag(context, projector) : undefined,
+        drag: drag ? createDrag(context, projector) : undefined, // TODO(burdon): Replace drag when projector is updated.
         arrows: { end: arrows },
         onNodeClick: onSelect ? (node: GraphLayoutNode, event) => onSelect(node, event) : undefined,
         onNodePointerEnter: onInspect ? (node: GraphLayoutNode, event) => onInspect(node, event) : undefined,
