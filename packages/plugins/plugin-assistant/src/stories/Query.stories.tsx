@@ -264,5 +264,7 @@ export const GraphList: Story = {
 };
 
 export const Research: Story = {
-  args: {},
+  args: {
+    drag: true,
+  },
 };

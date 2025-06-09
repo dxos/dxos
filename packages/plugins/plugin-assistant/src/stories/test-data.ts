@@ -34,9 +34,19 @@ const organizations: DataType.Organization[] = [
     website: 'https://protocol.ai',
   },
   {
+    id: 'google',
+    name: 'Google',
+    website: 'https://google.com',
+  },
+  {
     id: 'microsoft',
     name: 'Microsoft',
     website: 'https://microsoft.com',
+  },
+  {
+    id: 'openai',
+    name: 'OpenAI',
+    website: 'https://openai.com',
   },
 ];
 
@@ -96,53 +106,40 @@ const testObjects: Record<string, any[]> = {
   [getSchemaTypename(DataType.Person)!]: people,
 };
 
-const testRelationships: Record<string, ({ source: string; targets: string[] } & Record<string, any>)[]> = {
+const testRelationships: Record<
+  string,
+  ({
+    source: string;
+    target: string;
+  } & Record<string, any>)[]
+> = {
   [getSchemaTypename(DataType.Employer)!]: [
-    {
-      source: 'dxos',
-      targets: ['rich_burdon', 'josiah_witt', 'dima_dmaretskyi'],
-    },
-    {
-      source: 'blueyard',
-      targets: ['chad_fowler', 'ciaran_oleary', 'jason_whitmire'],
-    },
-    {
-      source: 'protocol_labs',
-      targets: ['juan_benet'],
-    },
-    {
-      source: 'backed',
-      targets: ['alex_brunicki', 'andre_de_haes'],
-    },
-    {
-      source: 'newlab',
-      targets: ['scott_cohen'],
-    },
-    {
-      source: 'microsoft',
-      targets: ['satya_nadella', 'kevin_scott'],
-    },
+    { source: 'rich_burdon', target: 'dxos' },
+    { source: 'rich_burdon', target: 'google', active: false }, // TODO(burdon): Should not contribute to force.
+    { source: 'josiah_witt', target: 'dxos' },
+    { source: 'dima_dmaretskyi', target: 'dxos' },
+    { source: 'chad_fowler', target: 'blueyard' },
+    { source: 'chad_fowler', target: 'microsoft', active: false },
+    { source: 'ciaran_oleary', target: 'blueyard' },
+    { source: 'jason_whitmire', target: 'blueyard' },
+    { source: 'juan_benet', target: 'protocol_labs' },
+    { source: 'alex_brunicki', target: 'backed' },
+    { source: 'andre_de_haes', target: 'backed' },
+    { source: 'scott_cohen', target: 'newlab' },
+    { source: 'satya_nadella', target: 'microsoft' },
+    { source: 'kevin_scott', target: 'microsoft' },
+    { source: 'kevin_scott', target: 'google', active: false },
   ],
-  [getSchemaTypename(DataType.HasRelationship)!]: [
-    {
-      kind: 'investor',
-      source: 'blueyard',
-      targets: ['dxos', 'protocol_labs'],
-    },
-    {
-      kind: 'investor',
-      source: 'backed',
-      targets: ['dxos'],
-    },
-    {
-      kind: 'investor',
-      source: 'newlab',
-      targets: ['dxos'],
-    },
+  [getSchemaTypename(DataType.HasConnection)!]: [
+    { kind: 'investor', source: 'blueyard', target: 'dxos' },
+    { kind: 'investor', source: 'blueyard', target: 'protocol_labs' },
+    { kind: 'investor', source: 'backed', target: 'dxos' },
+    { kind: 'investor', source: 'newlab', target: 'dxos' },
+    { kind: 'investor', source: 'microsoft', target: 'openai' },
   ],
 };
 
-export const addTestData = (space: Space) => {
+export const addTestData = (space: Space): void => {
   const objectMap = new Map<string, Live<any>>();
 
   for (const [typename, objects] of Object.entries(testObjects)) {
@@ -157,20 +154,21 @@ export const addTestData = (space: Space) => {
   for (const [typename, relationships] of Object.entries(testRelationships)) {
     const schema = space.db.graph.schemaRegistry.getSchema(typename);
     invariant(schema, `Schema not found: ${typename}`);
-    for (const { source, targets, ...data } of relationships) {
+
+    for (const { source, target, ...data } of relationships) {
       const sourceObject = objectMap.get(source);
+      const targetObject = objectMap.get(target);
       invariant(sourceObject, `Source object not found: ${source}`);
-      for (const target of targets) {
-        const targetObject = objectMap.get(target);
-        invariant(targetObject, `Target object not found: ${target}`);
-        space.db.add(
-          create(schema, {
-            ...data,
-            [RelationSourceId]: sourceObject,
-            [RelationTargetId]: targetObject,
-          }),
-        );
-      }
+      invariant(targetObject, `Target object not found: ${target}`);
+
+      space.db.add(
+        create(schema, {
+          ...data,
+          // TODO(burdon): Test type.
+          [RelationSourceId]: sourceObject,
+          [RelationTargetId]: targetObject,
+        }),
+      );
     }
   }
 };
