@@ -11,7 +11,7 @@ import { createTestData } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 
-import { processTranscriptMessage } from './extraction';
+import { processTranscriptMessage } from '../extraction';
 import { extractionAnthropicFn } from './extraction-llm-function';
 
 describe('LLM EntityExtraction', () => {

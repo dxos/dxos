@@ -3,7 +3,8 @@
 //
 
 import { DatabaseService, defineFunction } from '@dxos/functions';
-import { ExtractionInput, ExtractionOutput, findQuotes, insertReferences } from '../extraction';
+import { ExtractionInput, ExtractionOutput } from '../extraction';
+import { findQuotes, insertReferences } from '../quotes';
 import { asyncTimeout } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
