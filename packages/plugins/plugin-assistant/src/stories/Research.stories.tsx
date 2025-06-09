@@ -219,9 +219,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const handleResearchMore = useCallback((object: BaseObject, relatedSchema: RelatedSchema) => {
     const prompt = `
       Research more about objects related to the object in terms of the by the specific relation schema:
-
       <object>${JSON.stringify(object, null, 2)}</object>
-      
       <schema>
         <description>${SchemaAST.getDescriptionAnnotation(relatedSchema.schema.ast).pipe(Option.getOrElse(() => ''))}</description>
         <json>

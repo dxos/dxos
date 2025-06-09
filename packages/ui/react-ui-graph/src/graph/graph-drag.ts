@@ -30,6 +30,7 @@ const defaultDragOptions: DragOptions<any> = {
 /**
  * Create drag handler.
  */
+// TODO(burdon): Stop centering force while dragging.
 export const createDrag = <NodeData>(
   context: SVGContext,
   projector: GraphProjector<NodeData>,

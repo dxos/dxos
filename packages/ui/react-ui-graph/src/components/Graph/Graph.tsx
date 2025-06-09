@@ -57,22 +57,27 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>();
 
-  // TODO(burdon): Swap.
   const { projector, renderer } = useMemo(() => {
-    const projector = _projector ?? new GraphForceProjector<Node>(context);
-    const renderer =
-      _renderer ??
-      new GraphRenderer<Node>(context, graphRef, {
+    let projector = _projector;
+    if (!projector) {
+      projector = new GraphForceProjector<Node>(context);
+    }
+
+    let renderer = _renderer;
+    if (!renderer) {
+      renderer = new GraphRenderer<Node>(context, graphRef, {
         ...props,
         drag: drag ? createDrag(context, projector) : undefined,
         arrows: { end: arrows },
         onNodeClick: onSelect ? (node: GraphLayoutNode, event) => onSelect(node, event) : undefined,
         onNodePointerEnter: onInspect ? (node: GraphLayoutNode, event) => onInspect(node, event) : undefined,
       });
+    }
 
     return { projector, renderer };
   }, [context, _projector, _renderer, drag]);
 
+  // External API.
   useImperativeHandle(
     forwardedRef,
     () => ({
@@ -83,11 +88,13 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
         renderer.update(projector.layout);
       },
     }),
-    [projector, model],
+    [projector, renderer, model],
   );
 
+  // Subscriptions.
   useEffect(() => {
     let unsubscribe: CleanupFn | undefined;
+
     return combine(
       effect(() => {
         projector.update(model?.graph);
@@ -102,11 +109,16 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
             log.catch(error);
           }
         });
-      }, delay),
-      () => unsubscribe?.(),
-    );
-  }, [projector, renderer, model]);
 
+        projector.update(model?.graph);
+      }, delay),
+      () => {
+        unsubscribe?.();
+      },
+    );
+  }, [projector, renderer, model, delay]);
+
+  // Start.
   useEffect(() => {
     void projector.start();
     return () => {

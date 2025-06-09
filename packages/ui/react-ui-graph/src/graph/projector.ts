@@ -44,6 +44,14 @@ export abstract class Projector<NodeData, Layout, Options extends ProjectorOptio
     this.onUpdate(data, selected);
   }
 
+  triggerUpdate() {
+    this.updated.emit({ layout: this.layout });
+  }
+
+  async clear() {
+    await this.onClear();
+  }
+
   async start() {
     await this.onStart();
   }
@@ -53,6 +61,7 @@ export abstract class Projector<NodeData, Layout, Options extends ProjectorOptio
   }
 
   protected onUpdate(data?: NodeData, selected?: string): void {}
+  protected async onClear(): Promise<void> {}
   protected async onStart(): Promise<void> {}
   protected async onStop(): Promise<void> {}
 }

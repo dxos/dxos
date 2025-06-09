@@ -7,7 +7,7 @@ import * as Clipper from 'js-clipper';
 
 import { createBullets } from './bullets';
 import { Renderer, type RendererOptions } from './renderer';
-import { type GraphGuide, type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from './types';
+import { type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from './types';
 import { getCircumferencePoints, type D3Selection, type D3Callable, type Point } from '../util';
 
 const createLine = line<Point>();
@@ -64,7 +64,7 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
       .join('g')
       .classed('dx-guides', true)
       .selectAll<SVGCircleElement, { cx: number; cy: number; r: number }>('circle')
-      .data(layout.guides ?? [], (d: GraphGuide) => d.id)
+      .data(layout.guides ?? [])
       .join(
         (enter) => enter.append('circle').attr('r', 0),
         (update) => update,
@@ -99,7 +99,7 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
       .join('g')
       .classed('dx-subgraphs', true)
       .selectAll<SVGPathElement, { id: string }>('path')
-      .data(components, (d) => d.id)
+      .data(components)
       .join(
         (enter) => enter.append('path').classed('dx-subgraph', true),
         (update) => {
@@ -128,15 +128,26 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
     // Edges
     //
 
+    const createId = (...parts: string[]) => parts.join('_');
+
+    // TODO(burdon): Only call join when data changes (otherwise exit transitions are called multiple times).
     root
       .selectAll('g.dx-edges')
-      .data([{ id: 'edges' }])
+      .data([{ id: 'edges' }], (d: any) => d.id)
       .join('g')
       .classed('dx-edges', true)
       .selectAll<SVGPathElement, GraphLayoutEdge<NodeData, EdgeData>>('g.dx-edge')
       .data(layout.graph?.edges ?? [], (d) => d.id)
-      .join((enter) => enter.append('g').classed('dx-edge', true).call(createEdge, this.options))
-      .call(updateEdge, this.options);
+      .join(
+        (enter) =>
+          enter
+            .append('g')
+            .attr('data-id', (d) => createId(layout.id, d.id))
+            .classed('dx-edge', true)
+            .call(createEdge, this.options),
+        (update) => update.call(updateEdge, this.options).each((d) => {}),
+        (exit) => exit.remove(),
+      );
 
     //
     // Nodes
@@ -148,9 +159,28 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
       .join('g')
       .classed('dx-nodes', true)
       .selectAll<SVGCircleElement, GraphLayoutNode<NodeData>>('g.dx-node')
-      .data(layout.graph?.nodes ?? [], (d) => d.id)
-      .join((enter) => enter.append('g').classed('dx-node', true).call(createNode, this.options))
-      .call(updateNode, this.options);
+      .data(layout.graph?.nodes ?? [], (d) => createId(layout.id, d.id))
+      .join(
+        (enter) =>
+          enter
+            .append('g')
+            .attr('data-id', (d) => createId(layout.id, d.id))
+            .attr('opacity', 1)
+            .classed('dx-node', true)
+            .call(createNode, this.options),
+        (update) => update.call(updateNode, this.options),
+        (exit) => {
+          // Fade out.
+          return exit
+            .transition()
+            .delay((d, i) => i * 100)
+            .duration(500)
+            .attr('opacity', 0.5)
+            .on('end', function (d) {
+              select(this).remove();
+            });
+        },
+      );
   }
 
   /**
@@ -374,8 +404,9 @@ const updateEdge: D3Callable = <NodeData = any, EdgeData = any>(
     ? (group.transition(options.transition()) as unknown as D3Selection)
     : group;
 
-  groupOrTransition.selectAll<SVGPathElement, GraphLayoutEdge<NodeData, EdgeData>>('path').attr('d', (d) => {
-    const { source, target } = d;
+  groupOrTransition.selectAll<SVGPathElement, GraphLayoutEdge<NodeData, EdgeData>>('path').attr('d', function () {
+    // NOTE: `d` is stale after layout is switched.
+    const { source, target } = select(this.parentElement).datum() as GraphLayoutEdge<NodeData, EdgeData>;
     if (!source.initialized || !target.initialized) {
       return;
     }
