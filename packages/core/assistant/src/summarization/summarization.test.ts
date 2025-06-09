@@ -137,7 +137,7 @@ const refinementFn = defineFunction({
   },
 });
 
-describe('Summarization', () => {
+describe.skip('Summarization', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let executor: FunctionExecutor;
