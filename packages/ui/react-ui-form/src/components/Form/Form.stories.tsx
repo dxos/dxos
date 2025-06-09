@@ -268,14 +268,14 @@ const RefSchema = Schema.Struct({
   unknownExpando: Schema.optional(Ref(Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' })),
 });
 
+const contact1 = live(ContactType, { identifiers: [] });
+const contact2 = live(ContactType, { identifiers: [] });
+
 const RefStory = ({ values: initialValues }: FormProps<any>) => {
   const [values, setValues] = useState(initialValues);
   const handleSave = useCallback<NonNullable<FormProps<any>['onSave']>>((values) => {
     setValues(values);
   }, []);
-
-  const contact1 = live(ContactType, { identifiers: [] });
-  const contact2 = live(ContactType, { identifiers: [] });
 
   const onQueryRefOptions = useCallback((typeInfo: TypeAnnotation) => {
     switch (typeInfo.typename) {
@@ -300,5 +300,5 @@ const RefStory = ({ values: initialValues }: FormProps<any>) => {
 
 export const Refs: StoryObj<FormProps<ContactType>> = {
   render: RefStory,
-  args: { values: {} },
+  args: { values: { refArray: [Ref.make(contact1), Ref.make(contact2)] } as any },
 };
