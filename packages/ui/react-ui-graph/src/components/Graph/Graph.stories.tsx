@@ -256,17 +256,18 @@ export const Radial: Story = {
     arrows: true,
     projectorType: 'radial',
     projectorOptions: {
-      radius: 200,
+      radius: 300,
+      duration: 500,
       forces: {
         center: true,
-        radial: {
-          delay: 500,
-          radius: 200,
-          strength: 0.5,
-        },
+        // radial: {
+        //   delay: 500,
+        //   radius: 200,
+        //   strength: 0.5,
+        // },
       },
     },
-    graph: convertTreeToGraph(createTree({ depth: 2 })),
+    graph: convertTreeToGraph(createTree({ depth: 4 })),
   },
 };
 
