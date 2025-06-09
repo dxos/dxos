@@ -8,6 +8,7 @@ import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
+import { createDocAccessor, getTextInRange } from '@dxos/react-client/echo';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 
@@ -62,6 +63,15 @@ export const MarkdownPlugin = () =>
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: async (doc: DocumentType) => await RefArray.loadAll<BaseObject>([doc.content]),
             serializer,
+            // TODO(wittjosiah): Consider how to do generic comments without these.
+            comments: 'anchored',
+            selectionMode: 'multi-range',
+            getAnchorLabel: (doc: DocumentType, anchor: string): string | undefined => {
+              if (doc.content) {
+                const [start, end] = anchor.split(':');
+                return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
+              }
+            },
           },
         }),
     }),

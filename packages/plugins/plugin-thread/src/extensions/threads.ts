@@ -82,7 +82,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Promi
       id: fullyQualifiedId(doc),
       onCreate: ({ cursor }) => {
         const name = getName(doc, cursor);
-        void dispatch(createIntent(ThreadAction.Create, { cursor, name, subject: doc }));
+        void dispatch(createIntent(ThreadAction.Create, { anchor: cursor, name, subject: doc }));
       },
       onDelete: ({ id }) => {
         const draft = state.drafts[fullyQualifiedId(doc)];

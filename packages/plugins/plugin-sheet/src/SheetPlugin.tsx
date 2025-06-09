@@ -36,6 +36,7 @@ export const SheetPlugin = () =>
             label: (object: any) => (object instanceof SheetType ? object.name : undefined),
             icon: 'ph--grid-nine--regular',
             serializer,
+            comments: 'anchored',
           },
         }),
     }),

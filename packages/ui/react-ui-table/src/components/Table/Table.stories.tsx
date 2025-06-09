@@ -114,31 +114,15 @@ const useTestTableModel = () => {
     onRowOrderChange: handleRowOrderChange,
   });
 
+  const handleSaveView = useCallback(() => {
+    model?.saveView();
+  }, [model]);
+
   const presentation = useMemo(() => {
     if (model) {
       return new TablePresentation(model);
     }
   }, [model]);
-
-  const handleToolbarAction = useCallback(
-    (action: { type: string }) => {
-      switch (action.type) {
-        case 'on-thread-create': {
-          console.log('Thread creation triggered');
-          break;
-        }
-        case 'add-row': {
-          handleInsertRow();
-          break;
-        }
-        case 'save-view': {
-          model?.saveView();
-          break;
-        }
-      }
-    },
-    [table, model],
-  );
 
   return {
     schema,
@@ -147,7 +131,8 @@ const useTestTableModel = () => {
     model,
     presentation,
     space,
-    handleToolbarAction,
+    handleInsertRow,
+    handleSaveView,
     handleDeleteRows,
     handleDeleteColumn,
   };
@@ -186,7 +171,7 @@ const StoryViewEditor = () => {
 //
 
 const DefaultStory = () => {
-  const { schema, table, tableRef, model, presentation, handleToolbarAction } = useTestTableModel();
+  const { schema, table, tableRef, model, presentation, handleInsertRow, handleSaveView } = useTestTableModel();
 
   if (!schema || !table) {
     return <div />;
@@ -195,7 +180,7 @@ const DefaultStory = () => {
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
       <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
-        <TableToolbar classNames='border-be border-separator' onAction={handleToolbarAction} />
+        <TableToolbar classNames='border-be border-separator' onAdd={handleInsertRow} onSave={handleSaveView} />
         <Table.Root>
           <Table.Main ref={tableRef} model={model} presentation={presentation} schema={schema} ignoreAttention />
         </Table.Root>

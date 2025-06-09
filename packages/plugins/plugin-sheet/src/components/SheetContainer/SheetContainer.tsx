@@ -27,7 +27,7 @@ export const SheetContainer = ({ space, sheet, role, ignoreAttention }: SheetCon
   return graph ? (
     <SheetProvider sheet={sheet} graph={graph} ignoreAttention={ignoreAttention}>
       <StackItem.Content toolbar statusbar {...(role === 'section' && { classNames: 'aspect-video' })}>
-        <SheetToolbar attendableId={fullyQualifiedId(sheet)} />
+        <SheetToolbar id={fullyQualifiedId(sheet)} />
         <GridSheet />
         <FunctionEditor />
       </StackItem.Content>

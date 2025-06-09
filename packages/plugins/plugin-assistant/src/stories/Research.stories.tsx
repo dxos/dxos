@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { Rx } from '@effect-rx/rx-react';
 import { type Meta, type StoryObj } from '@storybook/react';
 import { Option, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -64,6 +65,7 @@ import {
   MenuProvider,
   createMenuItemGroup,
   type ToolbarMenuActionGroupProperties,
+  rxFromSignal,
 } from '@dxos/react-ui-menu';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -103,7 +105,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         }),
       ),
   );
-  const actionCreator = useCallback(() => createToolbar(aiClient), [aiClient]);
+  const actionCreator = useMemo(() => createToolbar(aiClient), [aiClient]);
   const menuProps = useMenuActions(actionCreator);
 
   // Queue.
@@ -501,39 +503,40 @@ const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
   });
 };
 
-const createToolbar = (aiClient: SpyAIService) => {
-  const result: ActionGraphProps = { nodes: [], edges: [] };
-  const save = createMenuAction('save', () => aiClient.saveEvents(), {
-    label: 'Save events',
-    icon: 'ph--floppy-disk--regular',
+const createToolbar = (aiClient: SpyAIService) =>
+  Rx.make((get) => {
+    const result: ActionGraphProps = { nodes: [], edges: [] };
+    const save = createMenuAction('save', () => aiClient.saveEvents(), {
+      label: 'Save events',
+      icon: 'ph--floppy-disk--regular',
+    });
+    const load = createMenuAction('load', () => aiClient.loadEvents(), {
+      label: 'Load events',
+      icon: 'ph--folder-open--regular',
+    });
+    const modes = createMenuItemGroup('mode', {
+      variant: 'dropdownMenu',
+      applyActive: true,
+      selectCardinality: 'single',
+      value: get(rxFromSignal(() => aiClient.mode)),
+    } as ToolbarMenuActionGroupProperties);
+    const spy = createMenuAction('spy', () => aiClient.setMode('spy'), {
+      label: 'Spy',
+      icon: 'ph--detective--regular',
+      checked: get(rxFromSignal(() => aiClient.mode === 'spy')),
+    });
+    const mock = createMenuAction('mock', () => aiClient.setMode('mock'), {
+      label: 'Mock',
+      icon: 'ph--rewind--regular',
+      checked: get(rxFromSignal(() => aiClient.mode === 'mock')),
+    });
+    result.nodes.push(save, load, modes, spy, mock);
+    result.edges.push(
+      { source: 'root', target: save.id },
+      { source: 'root', target: load.id },
+      { source: 'root', target: modes.id },
+      { source: modes.id, target: spy.id },
+      { source: modes.id, target: mock.id },
+    );
+    return result;
   });
-  const load = createMenuAction('load', () => aiClient.loadEvents(), {
-    label: 'Load events',
-    icon: 'ph--folder-open--regular',
-  });
-  const modes = createMenuItemGroup('mode', {
-    variant: 'dropdownMenu',
-    applyActive: true,
-    selectCardinality: 'single',
-    value: aiClient.mode,
-  } as ToolbarMenuActionGroupProperties);
-  const spy = createMenuAction('spy', () => aiClient.setMode('spy'), {
-    label: 'Spy',
-    icon: 'ph--detective--regular',
-    checked: aiClient.mode === 'spy',
-  });
-  const mock = createMenuAction('mock', () => aiClient.setMode('mock'), {
-    label: 'Mock',
-    icon: 'ph--rewind--regular',
-    checked: aiClient.mode === 'mock',
-  });
-  result.nodes.push(save, load, modes, spy, mock);
-  result.edges.push(
-    { source: 'root', target: save.id },
-    { source: 'root', target: load.id },
-    { source: 'root', target: modes.id },
-    { source: modes.id, target: spy.id },
-    { source: modes.id, target: mock.id },
-  );
-  return result;
-};

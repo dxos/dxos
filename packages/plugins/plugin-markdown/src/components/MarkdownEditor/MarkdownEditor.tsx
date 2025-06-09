@@ -29,6 +29,7 @@ import {
   useTextEditor,
   useEditorToolbarState,
   addLink,
+  type EditorToolbarActionGraphProps,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNotFalsy, isNonNullable } from '@dxos/util';
@@ -43,8 +44,8 @@ export type MarkdownEditorProps = {
   inputMode?: EditorInputMode;
   scrollPastEnd?: boolean;
   toolbar?: boolean;
+  customActions?: EditorToolbarActionGraphProps['customActions'];
   // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
-  comment?: boolean;
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
@@ -66,7 +67,7 @@ export const MarkdownEditor = ({
   extensionProviders,
   scrollPastEnd,
   toolbar,
-  comment = true,
+  customActions,
   viewMode,
   editorStateStore,
   onFileUpload,
@@ -131,7 +132,7 @@ export const MarkdownEditor = ({
         moveToEndOfLine: true,
       }),
     }),
-    [id, formattingObserver, comment, viewMode, themeMode, extensions, providerExtensions],
+    [id, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
   );
 
   useTest(editorView);
@@ -184,11 +185,11 @@ export const MarkdownEditor = ({
     <StackItem.Content toolbar={!!toolbar}>
       {toolbar && (
         <>
-          {/* TODO(wittjosiah): Comments via graph actions. */}
           <EditorToolbar
             attendableId={id}
             role={role}
             state={toolbarState}
+            customActions={customActions}
             getView={getView}
             image={handleImageUpload}
             viewMode={handleViewModeChange}

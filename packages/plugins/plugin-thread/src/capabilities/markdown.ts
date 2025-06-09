@@ -22,16 +22,10 @@ export default (context: PluginContext) =>
     },
     ({ document: doc }) => {
       const { state } = context.getCapability(ThreadCapabilities.MutableState);
-      let toolbar = state.toolbar[fullyQualifiedId(doc)];
-      if (!toolbar) {
-        toolbar = { comment: false, selection: false };
-        state.toolbar[fullyQualifiedId(doc)] = toolbar;
-      }
 
       return EditorView.updateListener.of((update) => {
         if (update.docChanged || update.selectionSet) {
-          toolbar.comment = selectionOverlapsComment(update.state);
-          toolbar.selection = hasActiveSelection(update.state);
+          state.toolbar[fullyQualifiedId(doc)] = selectionOverlapsComment(update.state);
         }
       });
     },
@@ -71,8 +65,4 @@ const selectionOverlapsComment = (state: EditorState): boolean => {
   }
 
   return false;
-};
-
-const hasActiveSelection = (state: EditorState): boolean => {
-  return state.selection.ranges.some((range) => !range.empty);
 };

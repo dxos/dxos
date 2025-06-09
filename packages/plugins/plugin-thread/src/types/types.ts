@@ -39,7 +39,7 @@ export namespace ThreadAction {
   export class Create extends Schema.TaggedClass<Create>()(`${THREAD_ACTION}/create`, {
     input: Schema.Struct({
       name: Schema.optional(Schema.String),
-      cursor: Schema.String,
+      anchor: Schema.optional(Schema.String),
       subject: EchoObjectSchema,
     }),
     output: Schema.Void,
@@ -103,8 +103,7 @@ export type ViewStore = Record<SubjectId, ViewState>;
 
 export type ThreadState = {
   /** Object toolbar state. */
-  // TODO(wittjosiah): Use global selection state.
-  toolbar: Record<string, { comment: boolean; selection: boolean }>;
+  toolbar: Record<string, boolean>;
   /** In-memory draft threads. */
   drafts: Record<string, AnchoredTo[]>;
   current?: string | undefined;

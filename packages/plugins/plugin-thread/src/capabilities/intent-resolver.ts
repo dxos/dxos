@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { batch } from '@preact/signals-core';
+
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
 import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -44,7 +46,7 @@ export default (context: PluginContext) =>
     // TODO(wittjosiah): Break this up into more composable pieces.
     createResolver({
       intent: ThreadAction.Create,
-      resolve: ({ name, cursor, subject }) => {
+      resolve: ({ name, anchor: _anchor, subject }) => {
         const space = getSpace(subject);
         invariant(space, 'Space not found');
 
@@ -54,7 +56,7 @@ export default (context: PluginContext) =>
         const anchor = live(AnchoredTo, {
           [RelationSourceId]: thread,
           [RelationTargetId]: subject,
-          anchor: cursor,
+          anchor: _anchor,
         });
         const draft = state.drafts[subjectId];
         if (draft) {
@@ -129,8 +131,10 @@ export default (context: PluginContext) =>
         }
 
         if (!undo) {
-          space.db.remove(thread);
-          space.db.remove(anchor);
+          batch(() => {
+            space.db.remove(thread);
+            space.db.remove(anchor);
+          });
 
           return {
             undoable: {
@@ -148,8 +152,10 @@ export default (context: PluginContext) =>
             ],
           };
         } else {
-          space.db.add(thread);
-          space.db.add(anchor);
+          batch(() => {
+            space.db.add(thread);
+            space.db.add(anchor);
+          });
 
           return {
             intents: [

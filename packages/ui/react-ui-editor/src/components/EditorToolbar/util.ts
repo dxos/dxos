@@ -3,6 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
+import { type Rx } from '@effect-rx/rx-react';
 import { useMemo } from 'react';
 
 import { type Action } from '@dxos/app-graph';
@@ -42,7 +43,7 @@ export type EditorToolbarActionGraphProps = {
   state: Live<EditorToolbarState>;
   getView: () => EditorView;
   // TODO(wittjosiah): Control positioning.
-  customActions?: () => ActionGraphProps;
+  customActions?: Rx.Rx<ActionGraphProps>;
 };
 
 export type EditorToolbarProps = ThemedClassName<

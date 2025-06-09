@@ -26,9 +26,13 @@ export type ThreadsContainerProps = Omit<CommentContainerProps, 'anchor' | 'curr
  */
 export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...props }: ThreadsContainerProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
+  // TODO(wittjosiah): There seems to be a race between thread and anchor being deleted.
   const filteredAnchors = showResolvedThreads
-    ? anchors
-    : anchors.filter((anchor) => !(anchor[RelationSourceId]?.status === 'resolved'));
+    ? anchors.filter((anchor) => !!anchor[RelationSourceId])
+    : anchors.filter((anchor) => {
+        const thread = anchor[RelationSourceId];
+        return thread && thread.status !== 'resolved';
+      });
 
   useEffect(() => {
     if (currentId) {
