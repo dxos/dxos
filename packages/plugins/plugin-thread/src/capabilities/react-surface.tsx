@@ -26,14 +26,14 @@ export default () =>
     createSurface({
       id: `${THREAD_PLUGIN}/channel`,
       role: 'article',
-      filter: (data): data is { subject: ChannelType } => data.subject instanceof ChannelType,
+      filter: (data): data is { subject: ChannelType } => isInstanceOf(ChannelType, data.subject),
       component: ({ data: { subject: channel }, role }) => <ChannelContainer channel={channel} role={role} />,
     }),
     createSurface({
       id: `${THREAD_PLUGIN}/chat-companion`,
       role: 'article',
       filter: (data): data is { companionTo: ChannelType; subject: 'chat' } =>
-        data.companionTo instanceof ChannelType && data.subject === 'chat',
+        isInstanceOf(ChannelType, data.companionTo) && data.subject === 'chat',
       component: ({ data: { companionTo: channel } }) => {
         const space = getSpace(channel);
         const thread = channel.defaultThread.target;
