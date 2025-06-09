@@ -11,26 +11,8 @@ import PROMPT from './instructions.tpl?raw';
 import { AiService, defineFunction, FunctionDefinition } from '@dxos/functions';
 import { AISession } from '../session';
 import { ExtractionInput, ExtractionOutput } from './extraction';
-import { insertReferences } from './insert-references';
+import { insertReferences, ReferencedQuotes } from './quotes';
 import { Message } from '@dxos/ai';
-
-// TODO(burdon): Rename: is this transcript specific?
-
-const ReferencedQuotes = Schema.Struct({
-  references: Schema.Array(
-    Schema.Struct({
-      id: Schema.String,
-      quote: Schema.String, // TODO(burdon): Quote?
-    }),
-  ).annotations({
-    // TODO(burdon): Does this description make sense?
-    description: `
-      The references to the context objects that are mentioned in the transcript. 
-      Quote should match the original transcript text exactly, while id is the id of the context object.
-    `,
-  }),
-});
-interface ReferencedQuotes extends Schema.Schema.Type<typeof ReferencedQuotes> {}
 
 export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
   description: 'Extract entities from the transcript message and add them to the message.',

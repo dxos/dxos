@@ -3,7 +3,20 @@
 //
 
 import { TokenClassificationOutput, TokenClassificationSingle } from '@xenova/transformers';
-import { getNer } from './ner';
+import { pipeline, TokenClassificationPipelineType } from '@xenova/transformers';
+
+let _ner: Promise<TokenClassificationPipelineType>;
+/**
+ * Named Entity Recognition pipeline.
+ * Initializes the pipeline on first call.
+ * @returns The singleton promise that resolves to a token classification pipeline.
+ */
+export const getNer = () => {
+  if (!_ner) {
+    _ner = pipeline('ner', 'Xenova/bert-base-NER');
+  }
+  return _ner;
+};
 
 /**
  * Extracts entities from text using the named entity recognition pipeline and does simple grouping of tokens.

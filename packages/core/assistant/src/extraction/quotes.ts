@@ -4,8 +4,9 @@
 
 import { Schema } from 'effect';
 
-import { ObjectId } from '@dxos/echo-schema';
+import { Filter, ObjectId, Query } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
+import { EchoDatabase } from '@dxos/echo-db';
 
 export const ReferencedQuotes = Schema.Struct({
   references: Schema.Array(
@@ -13,15 +14,27 @@ export const ReferencedQuotes = Schema.Struct({
       id: Schema.String,
       quote: Schema.String, // TODO(burdon): Quote?
     }),
-  ).annotations({
-    // TODO(burdon): Does this description make sense?
-    description: `
+  )
+    .pipe(Schema.mutable)
+    .annotations({
+      // TODO(burdon): Does this description make sense?
+      description: `
       The references to the context objects that are mentioned in the transcript. 
       Quote should match the original transcript text exactly, while id is the id of the context object.
     `,
-  }),
+    }),
 });
 export type ReferencedQuotes = Schema.Schema.Type<typeof ReferencedQuotes>;
+
+export const findQuotes = async (quotes: string[], db: EchoDatabase): Promise<ReferencedQuotes> => {
+  const references = await Promise.all(
+    quotes.map(async (quote) => {
+      const { objects } = await db.query(Query.select(Filter.text(quote, { type: 'vector' }))).run();
+      return objects.length > 0 ? [{ id: objects[0].id.toString(), quote }] : [];
+    }),
+  );
+  return { references: references.flat() };
+};
 
 /**
  * Finds and replaces all quotes with DXNs references.

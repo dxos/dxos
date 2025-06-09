@@ -12,8 +12,7 @@ import { beforeAll, describe, expect, test } from 'vitest';
 
 import { log } from '@dxos/log';
 import { createTestData } from '@dxos/schema/testing';
-import { combineNerTokens, createTokenGroups, extractFullEntities } from './extract-full-entitities';
-import { getNer } from './ner';
+import { combineNerTokens, createTokenGroups, extractFullEntities, getNer } from './named-entity-recognition';
 
 describe('NamedEntityRecognition', () => {
   let ner: TokenClassificationPipelineType;
