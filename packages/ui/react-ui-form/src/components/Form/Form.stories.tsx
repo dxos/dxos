@@ -64,6 +64,12 @@ const meta: Meta<StoryProps<any>> = {
   parameters: {
     translations,
   },
+  argTypes: {
+    readonly: {
+      control: 'boolean',
+      description: 'Readonly',
+    },
+  },
 };
 
 export default meta;
@@ -80,20 +86,7 @@ export const Default: Story<TestType> = {
         zip: '11205',
       },
     },
-  },
-};
-
-export const Readonly: Story<TestType> = {
-  args: {
-    schema: TestSchema,
-    values: {
-      name: 'DXOS',
-      active: true,
-      address: {
-        zip: '11205',
-      },
-    },
-    readonly: true,
+    readonly: false,
   },
 };
 
@@ -104,6 +97,7 @@ export const Organization: Story<Testing.Organization> = {
       name: 'DXOS',
       // website: 'https://dxos.org',
     },
+    readonly: false,
   },
 };
 
@@ -115,6 +109,7 @@ export const OrganizationAutoSave: Story<Testing.Organization> = {
       // website: 'https://dxos.org',
     },
     autoSave: true,
+    readonly: false,
   },
 };
 
@@ -155,7 +150,7 @@ type ShapeType = Schema.Schema.Type<typeof ShapeSchema>;
 
 type DiscriminatedUnionStoryProps = FormProps<ShapeType>;
 
-const DiscriminatedUnionStory = ({ values: initialValues }: DiscriminatedUnionStoryProps) => {
+const DiscriminatedUnionStory = ({ values: initialValues, readonly }: DiscriminatedUnionStoryProps) => {
   const [values, setValues] = useState(initialValues);
   const handleSave = useCallback<NonNullable<FormProps<ShapeType>['onSave']>>((values) => {
     setValues(values);
@@ -179,6 +174,7 @@ const DiscriminatedUnionStory = ({ values: initialValues }: DiscriminatedUnionSt
               />
             ),
           }}
+          readonly={readonly}
         />
       </TestPanel>
     </TestLayout>
@@ -194,6 +190,7 @@ export const DiscriminatedShape: StoryObj<DiscriminatedUnionStoryProps> = {
         radius: 5,
       },
     },
+    readonly: false,
   },
 };
 
@@ -204,7 +201,7 @@ const ArraysSchema = Schema.Struct({
 
 type ArraysType = Schema.Schema.Type<typeof ArraysSchema>;
 
-const ArraysStory = ({ values: initialValues }: FormProps<ArraysType>) => {
+const ArraysStory = ({ values: initialValues, readonly }: FormProps<ArraysType>) => {
   const [values, setValues] = useState(initialValues);
   const handleSave = useCallback<NonNullable<FormProps<ArraysType>['onSave']>>((values) => {
     setValues(values);
@@ -213,7 +210,7 @@ const ArraysStory = ({ values: initialValues }: FormProps<ArraysType>) => {
   return (
     <TestLayout json={{ values, schema: ArraysSchema.ast.toJSON() }}>
       <TestPanel>
-        <Form<ArraysType> schema={ArraysSchema} values={values} onSave={handleSave} />
+        <Form<ArraysType> schema={ArraysSchema} values={values} onSave={handleSave} readonly={readonly} />
       </TestPanel>
     </TestLayout>
   );
@@ -226,6 +223,7 @@ export const Arrays: StoryObj<FormProps<ArraysType>> = {
       names: ['Alice', 'Bob'],
       addresses: [],
     },
+    readonly: false,
   },
 };
 
@@ -237,7 +235,7 @@ const ColorSchema = Schema.Struct({
 
 type ColorType = Schema.Schema.Type<typeof ColorSchema>;
 
-const EnumStory = ({ values: initialValues }: FormProps<ColorType>) => {
+const EnumStory = ({ values: initialValues, readonly }: FormProps<ColorType>) => {
   const [values, setValues] = useState(initialValues);
   const handleSave = useCallback<NonNullable<FormProps<ColorType>['onSave']>>((values) => {
     setValues(values);
@@ -246,7 +244,7 @@ const EnumStory = ({ values: initialValues }: FormProps<ColorType>) => {
   return (
     <TestLayout json={{ values, schema: ColorSchema.ast.toJSON() }}>
       <TestPanel>
-        <Form<ColorType> schema={ColorSchema} values={values} onSave={handleSave} />
+        <Form<ColorType> schema={ColorSchema} values={values} onSave={handleSave} readonly={readonly} />
       </TestPanel>
     </TestLayout>
   );
@@ -258,6 +256,7 @@ export const Enum: StoryObj<FormProps<ColorType>> = {
     values: {
       color: 'red',
     },
+    readonly: false,
   },
 };
 
@@ -271,7 +270,7 @@ const RefSchema = Schema.Struct({
 const contact1 = live(ContactType, { identifiers: [] });
 const contact2 = live(ContactType, { identifiers: [] });
 
-const RefStory = ({ values: initialValues }: FormProps<any>) => {
+const RefStory = ({ values: initialValues, readonly }: FormProps<any>) => {
   const [values, setValues] = useState(initialValues);
   const handleSave = useCallback<NonNullable<FormProps<any>['onSave']>>((values) => {
     setValues(values);
@@ -292,7 +291,13 @@ const RefStory = ({ values: initialValues }: FormProps<any>) => {
   return (
     <TestLayout json={{ values, schema: RefSchema.ast.toJSON() }}>
       <TestPanel>
-        <Form schema={RefSchema} values={values} onSave={handleSave} onQueryRefOptions={onQueryRefOptions} />
+        <Form
+          schema={RefSchema}
+          values={values}
+          onSave={handleSave}
+          onQueryRefOptions={onQueryRefOptions}
+          readonly={readonly}
+        />
       </TestPanel>
     </TestLayout>
   );
@@ -300,5 +305,8 @@ const RefStory = ({ values: initialValues }: FormProps<any>) => {
 
 export const Refs: StoryObj<FormProps<ContactType>> = {
   render: RefStory,
-  args: { values: { refArray: [Ref.make(contact1), Ref.make(contact2)] } as any },
+  args: {
+    values: { refArray: [Ref.make(contact1), Ref.make(contact2)] } as any,
+    readonly: false,
+  },
 };
