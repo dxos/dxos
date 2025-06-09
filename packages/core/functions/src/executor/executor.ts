@@ -15,8 +15,8 @@ export class FunctionExecutor {
   // TODO(dmaretskyi): Invocation context: queue, space, etc...
   async invoke<F extends FunctionDefinition<any, any>>(
     fnDef: F,
-    input: F extends FunctionDefinition<infer I, infer O> ? I : never,
-  ): Promise<F extends FunctionDefinition<any, infer O> ? O : never> {
+    input: F extends FunctionDefinition<infer I, infer _O> ? I : never,
+  ): Promise<F extends FunctionDefinition<infer _I, infer O> ? O : never> {
     // Assert input matches schema
     const assertInput = fnDef.inputSchema.pipe(Schema.asserts);
     (assertInput as any)(input);

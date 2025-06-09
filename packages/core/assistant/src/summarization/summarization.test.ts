@@ -2,30 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
+import { pipe, Schema } from 'effect';
 import { beforeAll, describe, test } from 'vitest';
 
-import {
-  AIServiceEdgeClient,
-  Message,
-  MixedStreamParser,
-  OllamaClient,
-  type TextContentBlock
-} from '@dxos/ai';
+import { AIServiceEdgeClient, Message, MixedStreamParser, OllamaClient, type TextContentBlock } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import type { EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { create } from '@dxos/echo-schema';
-import {
-  AiService,
-  defineFunction,
-  FunctionExecutor,
-  ServiceContainer
-} from '@dxos/functions';
+import { AiService, defineFunction, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { live } from '@dxos/live-object';
 import { DataType } from '@dxos/schema';
-
 import { createTestData } from '@dxos/schema/testing';
-import { pipe, Schema } from 'effect';
 
 const REMOTE_AI = true;
 
@@ -186,7 +174,7 @@ describe('Summarization', () => {
   test('keeps transcript outline', { timeout: 1000_000 }, async () => {
     const { transcriptMessages } = createTestData();
 
-    let summary = live(DataType.Text, {
+    const summary = live(DataType.Text, {
       content: '',
     });
 
