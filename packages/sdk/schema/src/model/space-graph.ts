@@ -160,13 +160,13 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
       if (typename) {
         let node = currentNodes.find((node) => node.id === typename);
         if (!node) {
-          node = this.addNode({
+          node = {
             id: typename,
             type: 'schema',
             data: {
               label: typename,
             },
-          });
+          };
         }
 
         this._graph.nodes.push(node);
@@ -215,14 +215,14 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
         if (typename) {
           let node: SpaceGraphNode | undefined = currentNodes.find((node) => node.id === object.id);
           if (!node) {
-            node = this.addNode({
+            node = {
               id: object.id,
               type: 'object',
               data: {
                 object,
                 label: getLabel(schema, object) ?? object.id,
               },
-            });
+            };
 
             this._options?.onCreateNode?.(node, object);
           }
