@@ -38,7 +38,7 @@ export abstract class GraphProjector<NodeData = any, Options extends GraphProjec
   reset() {
     this._layout.graph.nodes = [];
     this._layout.graph.edges = [];
-    this.triggerUpdate();
+    this.emitUpdate();
   }
 
   numChildren(node: GraphLayoutNode) {

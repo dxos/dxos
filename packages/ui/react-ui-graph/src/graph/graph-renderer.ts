@@ -2,8 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { line, select, polygonHull } from 'd3';
+import { line, select, polygonHull, easeCubicOut } from 'd3';
 import * as Clipper from 'js-clipper';
+
+import { log } from '@dxos/log';
 
 import { createBullets } from './bullets';
 import { Renderer, type RendererOptions } from './renderer';
@@ -51,7 +53,9 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
   GraphLayout<NodeData, EdgeData>,
   GraphRendererOptions<NodeData, EdgeData>
 > {
-  override update(layout: GraphLayout<NodeData, EdgeData>) {
+  override render(layout: GraphLayout<NodeData, EdgeData>) {
+    log('render', layout);
+
     const root = select(this.root);
 
     //
@@ -125,46 +129,34 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
       );
 
     //
-    // Edges
+    // Edges and nodes
+    // TODO(burdon): Only call join when data changes (otherwise exit transitions are called multiple times).
     //
 
-    const createId = (...parts: string[]) => parts.join('_');
-
-    // TODO(burdon): Only call join when data changes (otherwise exit transitions are called multiple times).
-    root
+    const edgeGroup = root
       .selectAll('g.dx-edges')
       .data([{ id: 'edges' }], (d: any) => d.id)
       .join('g')
-      .classed('dx-edges', true)
-      .selectAll<SVGPathElement, GraphLayoutEdge<NodeData, EdgeData>>('g.dx-edge')
-      .data(layout.graph?.edges ?? [], (d) => d.id)
-      .join(
-        (enter) =>
-          enter
-            .append('g')
-            .attr('data-id', (d) => createId(layout.id, d.id))
-            .classed('dx-edge', true)
-            .call(createEdge, this.options),
-        (update) => update.call(updateEdge, this.options).each((d) => {}),
-        (exit) => exit.remove(),
-      );
+      .classed('dx-edges', true);
+
+    const nodeGroup = root
+      .selectAll('g.dx-nodes')
+      .data([{ id: 'nodes' }], (d: any) => d.id)
+      .join('g')
+      .classed('dx-nodes', true);
 
     //
     // Nodes
     //
 
-    root
-      .selectAll('g.dx-nodes')
-      .data([{ id: 'nodes' }])
-      .join('g')
-      .classed('dx-nodes', true)
+    nodeGroup
       .selectAll<SVGCircleElement, GraphLayoutNode<NodeData>>('g.dx-node')
-      .data(layout.graph?.nodes ?? [], (d) => createId(layout.id, d.id))
+      .data(layout.graph?.nodes ?? [], (d) => d.id)
       .join(
         (enter) =>
           enter
             .append('g')
-            .attr('data-id', (d) => createId(layout.id, d.id))
+            .attr('data-id', (d) => d.id)
             .attr('opacity', 1)
             .classed('dx-node', true)
             .call(createNode, this.options),
@@ -173,13 +165,31 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
           // Fade out.
           return exit
             .transition()
-            .delay((d, i) => i * 100)
-            .duration(500)
-            .attr('opacity', 0.5)
+            .ease(easeCubicOut)
+            .duration(300)
+            .attr('opacity', 0)
             .on('end', function (d) {
               select(this).remove();
             });
         },
+      );
+
+    //
+    // Edges
+    //
+
+    edgeGroup
+      .selectAll<SVGPathElement, GraphLayoutEdge<NodeData, EdgeData>>('g.dx-edge')
+      .data(layout.graph?.edges ?? [], (d) => d.id)
+      .join(
+        (enter) =>
+          enter
+            .append('g')
+            .attr('data-id', (d) => d.id)
+            .classed('dx-edge', true)
+            .call(createEdge, this.options),
+        (update) => update.call(updateEdge, this.options, nodeGroup).each((d) => {}),
+        (exit) => exit.remove(),
       );
   }
 
@@ -260,7 +270,9 @@ const updateNode: D3Callable = <NodeData = any, EdgeData = any>(
   group: D3Selection,
   options: GraphRendererOptions<NodeData, EdgeData>,
 ) => {
-  group.attr('transform', (d) => `translate(${d.x},${d.y})`);
+  group.attr('transform', (d) => {
+    return d.x != null && d.y != null ? `translate(${d.x},${d.y})` : undefined;
+  });
 
   // Custom attributes.
   if (options.attributes?.node) {
@@ -383,6 +395,7 @@ const createEdge: D3Callable = <NodeData = any, EdgeData = any>(
 const updateEdge: D3Callable = <NodeData = any, EdgeData = any>(
   group: D3Selection,
   options: GraphRendererOptions<NodeData, EdgeData>,
+  nodeGroup: D3Selection,
 ) => {
   // Custom attributes.
   group.each((d, i, edges) => {
@@ -405,7 +418,7 @@ const updateEdge: D3Callable = <NodeData = any, EdgeData = any>(
     : group;
 
   groupOrTransition.selectAll<SVGPathElement, GraphLayoutEdge<NodeData, EdgeData>>('path').attr('d', function () {
-    // NOTE: `d` is stale after layout is switched.
+    // NOTE: `d` is stale after layout is switched so get the datum from the parent element.
     const { source, target } = select(this.parentElement).datum() as GraphLayoutEdge<NodeData, EdgeData>;
     if (!source.initialized || !target.initialized) {
       return;

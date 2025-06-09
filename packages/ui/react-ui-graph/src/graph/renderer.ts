@@ -45,5 +45,5 @@ export abstract class Renderer<LAYOUT, OPTIONS extends RendererOptions> {
     return this._options;
   }
 
-  abstract update(layout: LAYOUT): void;
+  abstract render(layout: LAYOUT): void;
 }

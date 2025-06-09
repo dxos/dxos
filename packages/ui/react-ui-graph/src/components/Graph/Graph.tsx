@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 import React, { type JSX, type Ref, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
-import { type CleanupFn, combine, timeout } from '@dxos/async';
+import { combine } from '@dxos/async';
 import { type BaseGraphEdge, type BaseGraphNode, type GraphModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -33,7 +33,6 @@ export type GraphProps<Node extends BaseGraphNode = any, Edge extends BaseGraphE
     renderer?: GraphRenderer<Node>;
     drag?: boolean;
     arrows?: boolean;
-    delay?: number;
     onSelect?: (node: GraphLayoutNode<Node>, event: MouseEvent) => void;
     onInspect?: (node: GraphLayoutNode<Node>, event: MouseEvent) => void;
   }
@@ -47,7 +46,6 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
     renderer: _renderer,
     drag,
     arrows,
-    delay,
     onSelect,
     onInspect,
     ...props
@@ -82,10 +80,10 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
     forwardedRef,
     () => ({
       refresh: () => {
-        projector.update(model?.graph);
+        projector.updateData(model?.graph);
       },
       repaint: () => {
-        renderer.update(projector.layout);
+        renderer.render(projector.layout);
       },
     }),
     [projector, renderer, model],
@@ -93,30 +91,20 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
 
   // Subscriptions.
   useEffect(() => {
-    let unsubscribe: CleanupFn | undefined;
-
     return combine(
-      effect(() => {
-        projector.update(model?.graph);
+      projector.updated.on(({ layout }) => {
+        try {
+          renderer.render(layout);
+        } catch (error) {
+          void projector.stop();
+          log.catch(error);
+        }
       }),
-      timeout(() => {
-        // Delay rendering until projector has settled.
-        unsubscribe = projector.updated.on(({ layout }) => {
-          try {
-            renderer.update(layout);
-          } catch (error) {
-            void projector.stop();
-            log.catch(error);
-          }
-        });
-
-        projector.update(model?.graph);
-      }, delay),
-      () => {
-        unsubscribe?.();
-      },
+      effect(() => {
+        projector.updateData(model?.graph);
+      }),
     );
-  }, [projector, renderer, model, delay]);
+  }, [projector, renderer, model]);
 
   // Start.
   useEffect(() => {

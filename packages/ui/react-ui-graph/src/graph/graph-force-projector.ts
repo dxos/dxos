@@ -169,21 +169,32 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
     return this._simulation.find(x, y, radius);
   }
 
+  override refresh() {
+    this._simulation.alpha(1).restart();
+  }
+
   override async onStart() {
+    let propagating = true;
+
     // Delay radial force until other forces have settled.
     const { radial, ...forces } = this.forces;
-    if (typeof radial === 'boolean' || !radial?.delay) {
+    if (radial == null) {
       this.updateForces(this.forces);
     } else {
+      propagating = false;
       this.updateForces(forces);
-      setTimeout(() => {
-        this.updateForces(this.forces);
-        this._simulation.alpha(1).restart();
-      }, radial.delay);
+      setTimeout(
+        () => {
+          propagating = true;
+          this.updateForces(this.forces);
+          this._simulation.alpha(1).restart();
+        },
+        (typeof radial === 'object' ? radial.delay : undefined) ?? 500,
+      );
     }
 
     this._simulation
-      .on('tick', () => this.triggerUpdate())
+      .on('tick', () => propagating && this.emitUpdate())
       .velocityDecay(0.4)
       .alphaDecay(1 - Math.pow(0.001, 1 / 300))
       .alpha(1)
@@ -197,14 +208,13 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
   override onUpdate(graph?: Graph) {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this._simulation.stop();
+    this.mergeData(graph);
     this.updateLayout(graph);
     this.updateForces(this.forces);
     this._simulation.alpha(1).restart();
   }
 
   private updateLayout(graph?: Graph) {
-    this.mergeData(graph);
-
     // Guides.
     this._layout.guides = this.options.guides
       ? [

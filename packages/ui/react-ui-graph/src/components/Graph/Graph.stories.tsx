@@ -252,9 +252,6 @@ export const Default: Story = {
 export const Radial: Story = {
   args: {
     debug: true,
-    grid: {
-      axis: true,
-    },
     drag: true,
     arrows: true,
     projectorType: 'radial',
@@ -269,7 +266,7 @@ export const Radial: Story = {
         },
       },
     },
-    graph: convertTreeToGraph(createTree({ depth: 4 })),
+    graph: convertTreeToGraph(createTree({ depth: 2 })),
   },
 };
 
@@ -289,7 +286,6 @@ export const Force: Story = {
   args: {
     debug: true,
     drag: true,
-    delay: 500,
     projectorOptions: {
       guides: true,
       attributes: {
@@ -297,7 +293,6 @@ export const Force: Story = {
       },
       radius: 400,
       forces: {
-        center: true,
         collide: {
           strength: 1,
         },

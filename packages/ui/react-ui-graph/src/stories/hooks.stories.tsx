@@ -118,8 +118,8 @@ const StoryComponent = ({
   useEffect(() => {
     void projector.start();
     return combine(
-      model.subscribe((graph) => projector.update(graph)),
-      projector.updated.on(({ layout }) => renderer.update(layout)),
+      model.subscribe((graph) => projector.updateData(graph)),
+      projector.updated.on(({ layout }) => renderer.render(layout)),
       () => projector.stop(),
     );
   }, []);
