@@ -27,8 +27,9 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
       context.current
         ? new GraphForceProjector(context.current, {
             attributes: {
-              // Edge shouldn't contribute to force if it's not active.
               linkForce: (edge) => {
+                // TODO(burdon): Check type (currently assumes Employee property).
+                // Edge shouldn't contribute to force if it's not active.
                 return edge.data?.object?.active !== false;
               },
             },
