@@ -10,17 +10,16 @@ import { log } from '@dxos/log';
 import { createTestData } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
-import { ExtractionInput, ExtractionOutput, processTranscriptMessage } from './extraction';
-import { FunctionDefinition, FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { processTranscriptMessage } from '../extraction';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { EchoDatabase } from '@dxos/echo-db';
 import { DataType } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
 
-import { extractionNerFn } from '../ner/extraction-ner-function';
-import { extractionAnthropicFn } from './extraction-llm-function';
+import { extractionNerFn } from './extraction-ner-function';
 
-export const extractionBlueprintTest = (extractionFn: FunctionDefinition<ExtractionInput, ExtractionOutput>) => {
+describe('NER Extraction', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let executor: FunctionExecutor;
@@ -53,17 +52,6 @@ export const extractionBlueprintTest = (extractionFn: FunctionDefinition<Extract
 
     executor = new FunctionExecutor(
       new ServiceContainer().setServices({
-        // Required for LLM extraction.
-        ai: {
-          client: new AIServiceEdgeClient({
-            endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-            defaultGenerationOptions: {
-              // model: '@anthropic/claude-sonnet-4-20250514',
-              model: '@anthropic/claude-3-5-haiku-20241022',
-            },
-          }),
-        },
-        // Required for NER extraction.
         database: { db },
       }),
     );
@@ -80,7 +68,7 @@ export const extractionBlueprintTest = (extractionFn: FunctionDefinition<Extract
           message,
           objects: [...documents, ...Object.values(contacts)],
         },
-        function: extractionFn,
+        function: extractionNerFn,
         executor: executor,
       });
       log.info('output', enhancedMessage);
@@ -99,8 +87,9 @@ export const extractionBlueprintTest = (extractionFn: FunctionDefinition<Extract
         const { message: enhancedMessage, timeElapsed } = await processTranscriptMessage({
           input: {
             message,
+            objects: [...documents, ...Object.values(contacts)],
           },
-          function: extractionFn,
+          function: extractionNerFn,
           executor: executor,
         });
         log.info('output', { message: enhancedMessage.blocks[0], timeElapsed });
@@ -109,7 +98,7 @@ export const extractionBlueprintTest = (extractionFn: FunctionDefinition<Extract
   });
 
   test('org and document linking', async () => {
-    const { transcriptJosiah, documents, contacts, organizations } = await createTestData();
+    const { transcriptJosiah, documents, contacts, organizations } = testData;
 
     log.info('context', { contacts, organizations, documents });
 
@@ -119,21 +108,12 @@ export const extractionBlueprintTest = (extractionFn: FunctionDefinition<Extract
       const { message: enhancedMessage } = await processTranscriptMessage({
         input: {
           message,
+          objects: [...documents, ...Object.values(contacts), ...Object.values(organizations)],
         },
-        function: extractionFn,
+        function: extractionNerFn,
         executor: executor,
       });
       log.info('output', enhancedMessage);
     }
-  });
-};
-
-describe('Extraction', () => {
-  describe('LLM Extraction', () => {
-    extractionBlueprintTest(extractionAnthropicFn);
-  });
-
-  describe('NER Extraction', () => {
-    extractionBlueprintTest(extractionNerFn);
   });
 });
