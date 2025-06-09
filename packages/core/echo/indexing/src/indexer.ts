@@ -100,6 +100,7 @@ export class Indexer extends Resource {
   }
 
   @synchronized
+  // TODO(mykola): Make it iterative (e.g. `initConfig(<index1>); initConfig(<index2>); ...`).
   async setConfig(config: IndexConfig): Promise<void> {
     if (this._indexConfig) {
       log.warn('Index config is already set');

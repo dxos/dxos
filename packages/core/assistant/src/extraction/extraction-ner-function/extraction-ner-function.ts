@@ -11,6 +11,7 @@ import { DataType } from '@dxos/schema';
 import { extractFullEntities } from './named-entity-recognition';
 import { ExtractionInput, ExtractionOutput } from '../extraction';
 import { findQuotes, insertReferences } from '../quotes';
+import { log } from '@dxos/log';
 
 // TODO(mykola): Make it use vector index to query objects and not pass objects as input.
 export const extractionNerFn = defineFunction({
@@ -18,6 +19,7 @@ export const extractionNerFn = defineFunction({
   inputSchema: ExtractionInput,
   outputSchema: ExtractionOutput,
   handler: async ({ data: { message, options }, context }) => {
+    log.info('input', { message, options });
     const startTime = performance.now();
     const { db } = context.getService(DatabaseService);
 
@@ -28,6 +30,7 @@ export const extractionNerFn = defineFunction({
       }),
     ).then((entities) => entities.flat());
     const entities = options?.timeout ? await asyncTimeout(entitiesPromise, options.timeout) : await entitiesPromise;
+    log.info('entities', { entities });
     const quoteReferences = await findQuotes(
       entities.map((entity) => entity.word),
       db,
@@ -36,12 +39,15 @@ export const extractionNerFn = defineFunction({
       invariant(block.type === 'transcription' || block.type === 'text', 'Block must have text');
       return { ...block, text: insertReferences(block.text, quoteReferences) };
     });
+    const messageWithReferences = create(DataType.Message, {
+      ...message,
+      blocks: blocksWithReferences,
+    });
+
+    log.info('output', { messageWithReferences });
 
     return {
-      message: create(DataType.Message, {
-        ...message,
-        blocks: blocksWithReferences,
-      }),
+      message: messageWithReferences,
       timeElapsed: performance.now() - startTime,
     };
   },
