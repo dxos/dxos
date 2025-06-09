@@ -53,7 +53,7 @@ describe('ViewProjection', () => {
     const registry = new EchoSchemaRegistry(db);
 
     const schema = Schema.Struct({
-      name: Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Name' }),
+      name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
     }).annotations({
@@ -147,7 +147,7 @@ describe('ViewProjection', () => {
     }) {}
 
     const schema = Schema.Struct({
-      name: Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Name' }),
+      name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
       organization: Ref(Organization),
@@ -204,7 +204,7 @@ describe('ViewProjection', () => {
     const registry = new EchoSchemaRegistry(db);
 
     const schema = Schema.Struct({
-      name: Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Name' }),
+      name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
     }).annotations({
       [TypeAnnotationId]: {

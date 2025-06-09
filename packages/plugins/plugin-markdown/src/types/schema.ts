@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type, Ref } from '@dxos/echo';
-import { LabelAnnotationId } from '@dxos/echo-schema';
+import { LabelAnnotation } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 import { DataType } from '@dxos/schema';
 
@@ -13,10 +13,7 @@ export const DocumentSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   fallbackName: Schema.optional(Schema.String),
   content: Type.Ref(DataType.Text),
-}).annotations({
-  // TODO(dmaretskyi): `Schema.Struct(...).pipe(defaultLabel(['name', 'fallbackName']))` for type-safe annotations.
-  [LabelAnnotationId]: ['name', 'fallbackName'],
-});
+}).pipe(LabelAnnotation.set(['name', 'fallbackName']));
 
 export const DocumentType = DocumentSchema.pipe(
   Type.def({

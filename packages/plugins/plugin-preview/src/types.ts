@@ -32,7 +32,7 @@ export type PreviewProps<T extends object> = PropsWithChildren<
  *   </Card.Body>
  * </Card.Root>
  */
-export const popoverCard = 'popover-consistent-width rounded-lg overflow-hidden';
+export const popoverCard = 'popover-card-width rounded-lg overflow-hidden';
 export const defaultCard = '';
 export const kanbanCardWithoutPoster = 'pbs-[--rail-action]';
 export const previewTitle = 'text-lg font-medium line-clamp-2';

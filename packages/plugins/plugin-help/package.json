@@ -44,7 +44,6 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@fluentui/react-tabster": "^9.24.2",
-    "lodash.get": "^4.4.2",
     "react-joyride": "^2.7.2"
   },
   "devDependencies": {
@@ -55,7 +54,6 @@
     "@effect-rx/rx-react": "^0.34.1",
     "@effect/platform": "0.80.12",
     "@phosphor-icons/react": "^2.1.5",
-    "@types/lodash.get": "^4.4.7",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "effect": "3.14.21",

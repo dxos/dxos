@@ -62,7 +62,7 @@ export const useSelected = <T extends SelectionMode>(
  * Provides functions to manage the selection state for multiple contexts.
  */
 export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 'multi') => {
-  const stableContextIds = useMemo(() => contextIds, [JSON.stringify(contextIds)]);
+  const stableContextIds = useMemo(() => contextIds, [JSON.stringify(contextIds)]); // TODO(burdon): Avoid stringify.
   const { selection } = useSelectionContext(SELECTION_NAME);
 
   const singleSelect = useCallback(
