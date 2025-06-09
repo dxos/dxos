@@ -18,8 +18,8 @@ import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { forcePoint } from './graph-forces';
-import { Projector, type ProjectorOptions } from './projector';
-import { emptyGraph, type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from './types';
+import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
+import { emptyGraph, type GraphLayoutEdge, type GraphLayoutNode } from './types';
 
 /**
  * Return value or invoke function.
@@ -138,35 +138,22 @@ export const defaultForceOptions: ForceOptions = {
   manyBody: true,
 };
 
-export type GraphForceProjectorOptions = ProjectorOptions &
-  Partial<{
-    guides?: boolean;
-    forces?: ForceOptions;
-    radius?: number;
-    attributes?: {
-      radius?: number | ((node: GraphLayoutNode<any>, children: number) => number);
-      linkForce?: boolean | ((edge: GraphLayoutEdge<any>) => boolean);
-    };
-  }>;
+export type GraphForceProjectorOptions = GraphProjectorOptions & {
+  guides?: boolean;
+  forces?: ForceOptions;
+  radius?: number;
+  attributes?: {
+    radius?: number | ((node: GraphLayoutNode<any>, children: number) => number);
+    linkForce?: boolean | ((edge: GraphLayoutEdge<any>) => boolean);
+  };
+};
 
 /**
- * D3 force layout.
+ * D3 force directed graph layout using d3 simulation..
  */
-export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayout<Data>, GraphForceProjectorOptions> {
+export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData, GraphForceProjectorOptions> {
   // https://github.com/d3/d3-force
-  _simulation = forceSimulation<GraphLayoutNode, GraphLayoutEdge>();
-
-  // Current layout.
-  _layout: GraphLayout = {
-    graph: {
-      nodes: [],
-      edges: [],
-    },
-  };
-
-  get layout() {
-    return this._layout;
-  }
+  private _simulation = forceSimulation<GraphLayoutNode, GraphLayoutEdge>();
 
   get simulation() {
     return this._simulation;
@@ -174,6 +161,10 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
 
   numChildren(node: GraphLayoutNode) {
     return this._layout.graph.edges.filter((edge) => edge.source.id === this.options.idAccessor(node)).length;
+  }
+
+  override findNode(x: number, y: number, radius: number): GraphLayoutNode<NodeData> | undefined {
+    return this._simulation.find(x, y, radius);
   }
 
   override onUpdate(graph?: Graph) {

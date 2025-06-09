@@ -68,7 +68,7 @@ const StoryComponent = ({
     if (!link) {
       renderer = new GraphRenderer(context, graphRef);
     } else {
-      const drag = createDrag(context, projector.simulation, {
+      const drag = createDrag(context, projector, {
         onDrag: (source, target, point) => {
           select(graphRef.current).call(linkerRenderer, { source, target, point });
         },

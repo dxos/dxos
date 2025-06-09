@@ -15,6 +15,7 @@ import {
   createDrag,
   GraphForceProjector,
   type GraphLayoutNode,
+  type GraphProjector,
   GraphRenderer,
   type GraphRendererOptions,
 } from '../../graph';
@@ -28,7 +29,7 @@ export type GraphController = {
 export type GraphProps<Node extends BaseGraphNode = any, Edge extends BaseGraphEdge = any> = ThemedClassName<
   Pick<GraphRendererOptions<Node>, 'labels' | 'subgraphs' | 'attributes'> & {
     model?: GraphModel<Node, Edge>;
-    projector?: GraphForceProjector<Node>;
+    projector?: GraphProjector<Node>;
     renderer?: GraphRenderer<Node>;
     drag?: boolean;
     arrows?: boolean;
@@ -56,13 +57,14 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>();
 
+  // TODO(burdon): Swap.
   const { projector, renderer } = useMemo(() => {
     const projector = _projector ?? new GraphForceProjector<Node>(context);
     const renderer =
       _renderer ??
       new GraphRenderer<Node>(context, graphRef, {
         ...props,
-        drag: drag ? createDrag(context, projector.simulation) : undefined,
+        drag: drag ? createDrag(context, projector) : undefined,
         arrows: { end: arrows },
         onNodeClick: onSelect ? (node: GraphLayoutNode, event) => onSelect(node, event) : undefined,
         onNodePointerEnter: onInspect ? (node: GraphLayoutNode, event) => onInspect(node, event) : undefined,
