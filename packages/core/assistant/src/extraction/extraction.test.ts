@@ -13,6 +13,7 @@ import { range } from '@dxos/util';
 import { processTranscriptMessage } from './extraction';
 import { extractionAnthropicFn } from './extraction-llm-function';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { insertReferences } from './insert-references';
 
 describe('EntityExtraction', { timeout: 180_000 }, () => {
   const getExecutor = () =>
@@ -85,17 +86,17 @@ describe('EntityExtraction', { timeout: 180_000 }, () => {
   });
 });
 
-describe('postprocessText', () => {
+describe('insertReferences', () => {
   test('should replace quotes with DXN references', () => {
     const quotes = {
       references: [{ quote: 'computational irreducibility', id: '01JTG9JW11XGWJZ32AW8ET93D1' }],
     };
 
-    expect(postprocessText('This is a computational irreducibility test.', quotes)).toBe(
+    expect(insertReferences('This is a computational irreducibility test.', quotes)).toBe(
       'This is a [computational irreducibility][dxn:echo:@:01JTG9JW11XGWJZ32AW8ET93D1] test.',
     );
     expect(
-      postprocessText(
+      insertReferences(
         "And what I'd like to talk today about is Steven Wolfram's concept of a computational irreducibility.",
         quotes,
       ),

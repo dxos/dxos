@@ -4,17 +4,15 @@
 
 import { Schema } from 'effect';
 
-import { type AIServiceClient, Message, MixedStreamParser, structuredOutputParser } from '@dxos/ai';
-import { createTemplate } from '@dxos/artifact';
-import { asyncTimeout } from '@dxos/async';
-import { type BaseEchoObject, create, Expando, ObjectId } from '@dxos/echo-schema';
-import { DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { create } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 
 import PROMPT from './instructions.tpl?raw';
-import { AiService, defineFunction, FunctionDefinition, FunctionExecutor } from '@dxos/functions';
+import { AiService, defineFunction, FunctionDefinition } from '@dxos/functions';
 import { AISession } from '../session';
+import { ExtractionInput, ExtractionOutput } from './extraction';
+import { insertReferences } from './insert-references';
+import { Message } from '@dxos/ai';
 
 // TODO(burdon): Rename: is this transcript specific?
 
@@ -36,25 +34,16 @@ interface ReferencedQuotes extends Schema.Schema.Type<typeof ReferencedQuotes> {
 
 export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
   description: 'Extract entities from the transcript message and add them to the message.',
-  inputSchema: Schema.Struct({
-    message: DataType.Message,
-    objects: Schema.optional(Schema.Array(Expando)),
-    options: Schema.optional(
-      Schema.Struct({
-        timeout: Schema.optional(Schema.Number),
-        fallbackToRaw: Schema.optional(Schema.Boolean),
-      }),
-    ),
-  }),
-  outputSchema: Schema.Struct({
-    message: DataType.Message,
-    timeElapsed: Schema.Number,
-  }),
+  inputSchema: ExtractionInput,
+  outputSchema: ExtractionOutput,
   handler: async ({ data: { message, objects }, context }) => {
     const startTime = performance.now();
     const ai = context.getService(AiService);
     const session = new AISession({ operationModel: 'configured' });
     const result = await session.runStructured(ReferencedQuotes, {
+      generationOptions: {
+        model: '@anthropic/claude-3-5-haiku-20241022',
+      },
       client: ai.client,
       systemPrompt: PROMPT,
       history: [
@@ -85,7 +74,7 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
             ? block
             : {
                 ...block,
-                text: postprocessText(block.text, result),
+                text: insertReferences(block.text, result),
               },
         ),
       }),
@@ -93,21 +82,3 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
     };
   },
 });
-
-/**
- * Finds and replaces all quotes with DXNs references.
- */
-// TODO(dmaretskyi): Lookup and verifiy ids from provided context.
-export const postprocessText = (text: string, quotes: ReferencedQuotes) => {
-  for (const quote of quotes.references) {
-    if (!ObjectId.isValid(quote.id)) {
-      continue;
-    }
-
-    // Use a case-insensitive regular expression to replace the quote.
-    const regex = new RegExp(quote.quote.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    text = text.replace(regex, `[${quote.quote}][${DXN.fromLocalObjectId(quote.id).toString()}]`);
-  }
-
-  return text;
-};
