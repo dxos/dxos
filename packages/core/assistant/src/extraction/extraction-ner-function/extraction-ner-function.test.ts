@@ -2,22 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, test, expect, beforeAll } from 'vitest';
+import { describe, test, beforeAll } from 'vitest';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
+import { type EchoDatabase } from '@dxos/echo-db';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { createTestData } from '@dxos/schema/testing';
+import { DataType } from '@dxos/schema';
+import { createTestData, Testing } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
-import { processTranscriptMessage } from '../extraction';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { EchoDatabase } from '@dxos/echo-db';
-import { DataType } from '@dxos/schema';
-import { Testing } from '@dxos/schema/testing';
-
 import { extractionNerFn } from './extraction-ner-function';
+import { processTranscriptMessage } from '../extraction';
 
 describe.skip('NER EntityExtraction', () => {
   let builder: EchoTestBuilder;
@@ -69,7 +65,7 @@ describe.skip('NER EntityExtraction', () => {
           objects: [...documents, ...Object.values(contacts)],
         },
         function: extractionNerFn,
-        executor: executor,
+        executor,
       });
       log.info('output', enhancedMessage);
     }
@@ -90,7 +86,7 @@ describe.skip('NER EntityExtraction', () => {
             objects: [...documents, ...Object.values(contacts)],
           },
           function: extractionNerFn,
-          executor: executor,
+          executor,
         });
         log.info('output', { message: enhancedMessage.blocks[0], timeElapsed });
       }),
@@ -111,7 +107,7 @@ describe.skip('NER EntityExtraction', () => {
           objects: [...documents, ...Object.values(contacts), ...Object.values(organizations)],
         },
         function: extractionNerFn,
-        executor: executor,
+        executor,
       });
       log.info('output', enhancedMessage);
     }

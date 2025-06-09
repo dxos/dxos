@@ -4,9 +4,9 @@
 
 import { Schema } from 'effect';
 
+import { type EchoDatabase } from '@dxos/echo-db';
 import { Filter, ObjectId, Query } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { EchoDatabase } from '@dxos/echo-db';
 
 export const ReferencedQuotes = Schema.Struct({
   references: Schema.Array(

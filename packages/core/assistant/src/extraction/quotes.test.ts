@@ -4,7 +4,7 @@
 
 import { describe, test, expect } from 'vitest';
 
-import { insertReferences, ReferencedQuotes } from './quotes';
+import { insertReferences } from './quotes';
 
 describe('insertReferences', () => {
   test('should replace quotes with DXN references', () => {

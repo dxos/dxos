@@ -2,17 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
-
+import { Message } from '@dxos/ai';
 import { create } from '@dxos/echo-schema';
+import { AiService, defineFunction, type FunctionDefinition } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
 
-import PROMPT from './instructions.tpl?raw';
-import { AiService, defineFunction, FunctionDefinition } from '@dxos/functions';
-import { AISession } from '../session';
 import { ExtractionInput, ExtractionOutput } from './extraction';
+import PROMPT from './instructions.tpl?raw';
 import { insertReferences, ReferencedQuotes } from './quotes';
-import { Message } from '@dxos/ai';
+import { AISession } from '../session';
 
 export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
   description: 'Extract entities from the transcript message and add them to the message.',

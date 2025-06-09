@@ -2,17 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, test, expect, beforeAll } from 'vitest';
+import { describe, test, beforeAll } from 'vitest';
 
 import { AIServiceEdgeClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { createTestData } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 
-import { processTranscriptMessage } from '../extraction';
 import { extractionAnthropicFn } from './extraction-llm-function';
+import { processTranscriptMessage } from '../extraction';
 
 describe.skip('LLM EntityExtraction', () => {
   let executor: FunctionExecutor;
@@ -45,7 +45,7 @@ describe.skip('LLM EntityExtraction', () => {
           objects: [...documents, ...Object.values(contacts)],
         },
         function: extractionAnthropicFn,
-        executor: executor,
+        executor,
       });
       log.info('output', enhancedMessage);
     }
@@ -66,7 +66,7 @@ describe.skip('LLM EntityExtraction', () => {
             objects: [...documents, ...Object.values(contacts)],
           },
           function: extractionAnthropicFn,
-          executor: executor,
+          executor,
         });
         log.info('output', { message: enhancedMessage.blocks[0], timeElapsed });
       }),
@@ -87,7 +87,7 @@ describe.skip('LLM EntityExtraction', () => {
           objects: [...documents, ...Object.values(contacts), ...Object.values(organizations)],
         },
         function: extractionAnthropicFn,
-        executor: executor,
+        executor,
       });
       log.info('output', enhancedMessage);
     }

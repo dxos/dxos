@@ -2,16 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  pipeline,
-  TokenClassificationOutput,
-  TokenClassificationPipelineType,
-  TokenClassificationSingle,
-} from '@xenova/transformers';
+import { type TokenClassificationOutput, type TokenClassificationPipelineType } from '@xenova/transformers';
 import { beforeAll, describe, expect, test } from 'vitest';
 
 import { log } from '@dxos/log';
 import { createTestData } from '@dxos/schema/testing';
+
 import { combineNerTokens, createTokenGroups, extractFullEntities, getNer } from './named-entity-recognition';
 
 describe('NamedEntityRecognition', () => {

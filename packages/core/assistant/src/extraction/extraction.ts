@@ -4,14 +4,11 @@
 
 import { Schema } from 'effect';
 
-import { type AIServiceClient, Message, MixedStreamParser, structuredOutputParser } from '@dxos/ai';
-import { createTemplate } from '@dxos/artifact';
 import { asyncTimeout } from '@dxos/async';
-import { type BaseEchoObject, create, Expando, ObjectId } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo-schema';
+import { type FunctionDefinition, type FunctionExecutor } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
-
-import { AiService, defineFunction, FunctionDefinition, FunctionExecutor } from '@dxos/functions';
 
 export const ExtractionInput = Schema.Struct({
   message: DataType.Message,

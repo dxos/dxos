@@ -2,8 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { TokenClassificationOutput, TokenClassificationSingle } from '@xenova/transformers';
-import { pipeline, TokenClassificationPipelineType } from '@xenova/transformers';
+import {
+  type TokenClassificationOutput,
+  type TokenClassificationSingle,
+  pipeline,
+  type TokenClassificationPipelineType,
+} from '@xenova/transformers';
 
 let _ner: Promise<TokenClassificationPipelineType>;
 /**
