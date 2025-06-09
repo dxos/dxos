@@ -12,42 +12,46 @@ import { getCircumferencePoints, type D3Selection, type D3Callable, type Point }
 
 const createLine = line<Point>();
 
-export type LabelOptions<Data = any> = {
-  text: (node: GraphLayoutNode<Data>, highlight?: boolean) => string | undefined;
+export type LabelOptions<NodeData = any> = {
+  text: (node: GraphLayoutNode<NodeData>, highlight?: boolean) => string | undefined;
 };
 
-export type AttributesOptions<Data = any> = {
-  node?: (node: GraphLayoutNode<Data>) => {
+export type AttributesOptions<NodeData = any, EdgeData = any> = {
+  node?: (node: GraphLayoutNode<NodeData>) => {
     classes?: Record<string, boolean>;
     data?: Record<string, string>;
   };
 
-  link?: (edge: GraphLayoutEdge<Data>) => {
+  link?: (edge: GraphLayoutEdge<NodeData, EdgeData>) => {
     classes?: Record<string, boolean>;
+    data?: Record<string, string>;
   };
 };
 
-export type GraphRendererOptions<Data = any> = RendererOptions<{
+export type GraphRendererOptions<NodeData = any, EdgeData = any> = RendererOptions<{
   drag?: D3Callable;
   arrows?: {
     start?: boolean; // TODO(burdon): Replace with marker id.
     end?: boolean;
   };
   highlight?: boolean;
-  labels?: LabelOptions<Data>;
+  labels?: LabelOptions<NodeData>;
   subgraphs?: boolean;
-  attributes?: AttributesOptions<Data>;
+  attributes?: AttributesOptions<NodeData>;
   transition?: () => any;
-  onNodeClick?: (node: GraphLayoutNode<Data>, event: MouseEvent) => void;
-  onNodePointerEnter?: (node: GraphLayoutNode<Data>, event: MouseEvent) => void;
-  onLinkClick?: (link: GraphLayoutEdge<Data>, event: MouseEvent) => void;
+  onNodeClick?: (node: GraphLayoutNode<NodeData>, event: MouseEvent) => void;
+  onNodePointerEnter?: (node: GraphLayoutNode<NodeData>, event: MouseEvent) => void;
+  onLinkClick?: (link: GraphLayoutEdge<NodeData, EdgeData>, event: MouseEvent) => void;
 }>;
 
 /**
  * Renders the Graph layout.
  */
-export class GraphRenderer<Data = any> extends Renderer<GraphLayout<Data>, GraphRendererOptions<Data>> {
-  override update(layout: GraphLayout<Data>) {
+export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
+  GraphLayout<NodeData, EdgeData>,
+  GraphRendererOptions<NodeData, EdgeData>
+> {
+  override update(layout: GraphLayout<NodeData, EdgeData>) {
     const root = select(this.root);
 
     //
@@ -129,7 +133,7 @@ export class GraphRenderer<Data = any> extends Renderer<GraphLayout<Data>, Graph
       .data([{ id: 'edges' }])
       .join('g')
       .classed('dx-edges', true)
-      .selectAll<SVGPathElement, GraphLayoutEdge<Data>>('g.dx-edge')
+      .selectAll<SVGPathElement, GraphLayoutEdge<NodeData, EdgeData>>('g.dx-edge')
       .data(layout.graph?.edges ?? [], (d) => d.id)
       .join((enter) => enter.append('g').classed('dx-edge', true).call(createEdge, this.options))
       .call(updateEdge, this.options);
@@ -143,7 +147,7 @@ export class GraphRenderer<Data = any> extends Renderer<GraphLayout<Data>, Graph
       .data([{ id: 'nodes' }])
       .join('g')
       .classed('dx-nodes', true)
-      .selectAll<SVGCircleElement, GraphLayoutNode<Data>>('g.dx-node')
+      .selectAll<SVGCircleElement, GraphLayoutNode<NodeData>>('g.dx-node')
       .data(layout.graph?.nodes ?? [], (d) => d.id)
       .join((enter) => enter.append('g').classed('dx-node', true).call(createNode, this.options))
       .call(updateNode, this.options);
@@ -153,7 +157,7 @@ export class GraphRenderer<Data = any> extends Renderer<GraphLayout<Data>, Graph
    * Trigger path bullets.
    * @param node
    */
-  fireBullet(node: GraphLayoutNode<Data>) {
+  fireBullet(node: GraphLayoutNode<NodeData>) {
     select(this.root).selectAll('g.dx-edges').selectAll('path').call(createBullets(this.root, node.id));
   }
 }
@@ -222,20 +226,23 @@ const createNode: D3Callable = <Data>(group: D3Selection, options: GraphRenderer
  * @param group
  * @param options
  */
-const updateNode: D3Callable = <Data = any>(group: D3Selection, options: GraphRendererOptions<Data>) => {
+const updateNode: D3Callable = <NodeData = any, EdgeData = any>(
+  group: D3Selection,
+  options: GraphRendererOptions<NodeData, EdgeData>,
+) => {
   group.attr('transform', (d) => `translate(${d.x},${d.y})`);
 
   // Custom attributes.
   if (options.attributes?.node) {
     group.each((d, i, nodes) => {
-      const el = select(nodes[i]);
-      const { classes, data } = options.attributes?.node(d);
+      const node = select(nodes[i]);
+      const { classes, data } = options.attributes?.node?.(d) ?? {};
       if (classes) {
-        applyClasses(el, classes);
+        applyClasses(node, classes);
       }
       if (data) {
         Object.entries(data).forEach(([key, value]) => {
-          el.attr(`data-${key}`, value);
+          node.attr(`data-${key}`, value);
         });
       }
     });
@@ -250,7 +257,7 @@ const updateNode: D3Callable = <Data = any>(group: D3Selection, options: GraphRe
   groupOrTransition
     .select<SVGCircleElement>('circle')
     .attr('class', function () {
-      return (select(this.parentNode as any).datum() as GraphLayoutNode<Data>).classes?.circle;
+      return (select(this.parentNode as any).datum() as GraphLayoutNode<NodeData>).classes?.circle;
     })
     .attr('r', (d) => d.r ?? 16);
 
@@ -265,7 +272,7 @@ const updateNode: D3Callable = <Data = any>(group: D3Selection, options: GraphRe
     groupOrTransition
       .select<SVGTextElement>('text')
       .attr('class', function () {
-        return (select(this.parentNode as any).datum() as GraphLayoutNode<Data>).classes?.text;
+        return (select(this.parentNode as any).datum() as GraphLayoutNode<NodeData>).classes?.text;
       })
       .text((d) => {
         return options.labels.text(d);
@@ -310,14 +317,19 @@ const updateNode: D3Callable = <Data = any>(group: D3Selection, options: GraphRe
  * @param options
  * @param nodes
  */
-const createEdge: D3Callable = <Data = any>(group: D3Selection, options: GraphRendererOptions<Data>) => {
+const createEdge: D3Callable = <NodeData = any, EdgeData = any>(
+  group: D3Selection,
+  options: GraphRendererOptions<NodeData, EdgeData>,
+) => {
   if (options.onLinkClick) {
     // Shadow path with wide stroke for click handler.
     group
       .append('path')
       .attr('class', 'click')
       .on('click', (event: MouseEvent) => {
-        const edge = select<SVGLineElement, GraphLayoutEdge<Data>>(event.target as SVGLineElement).datum();
+        const edge = select<SVGLineElement, GraphLayoutEdge<NodeData, EdgeData>>(
+          event.target as SVGLineElement,
+        ).datum();
         options.onLinkClick(edge, event);
       });
   }
@@ -329,7 +341,7 @@ const createEdge: D3Callable = <Data = any>(group: D3Selection, options: GraphRe
     .attr('marker-start', () => (options.arrows?.start ? 'url(#marker-arrow-start)' : undefined))
     .attr('marker-end', () => (options.arrows?.end ? 'url(#marker-arrow-end)' : undefined))
     .attr('class', function () {
-      return (select(this.parentNode as any).datum() as GraphLayoutEdge<Data>).classes?.path;
+      return (select(this.parentNode as any).datum() as GraphLayoutEdge<NodeData, EdgeData>).classes?.path;
     });
 };
 
@@ -338,23 +350,31 @@ const createEdge: D3Callable = <Data = any>(group: D3Selection, options: GraphRe
  * @param group
  * @param options
  */
-const updateEdge: D3Callable = <Data = any>(group: D3Selection, options: GraphRendererOptions<Data>) => {
+const updateEdge: D3Callable = <NodeData = any, EdgeData = any>(
+  group: D3Selection,
+  options: GraphRendererOptions<NodeData, EdgeData>,
+) => {
   // Custom attributes.
-  if (options.attributes?.link) {
-    group.each((d, i, nodes) => {
-      const { classes } = options.attributes?.link(d);
-      if (classes) {
-        applyClasses(select(nodes[i]), classes);
-      }
-    });
-  }
+  group.each((d, i, edges) => {
+    const edge = select(edges[i]);
+    edge.classed('dx-dashed', d.linkForce === false);
+    const { classes, data } = options.attributes?.link?.(d) ?? {};
+    if (classes) {
+      applyClasses(edge, classes);
+    }
+    if (data) {
+      Object.entries(data).forEach(([key, value]) => {
+        edge.attr(`data-${key}`, value);
+      });
+    }
+  });
 
   // Optional transition.
   const groupOrTransition: D3Selection = options.transition
     ? (group.transition(options.transition()) as unknown as D3Selection)
     : group;
 
-  groupOrTransition.selectAll<SVGPathElement, GraphLayoutEdge<Data>>('path').attr('d', (d) => {
+  groupOrTransition.selectAll<SVGPathElement, GraphLayoutEdge<NodeData, EdgeData>>('path').attr('d', (d) => {
     const { source, target } = d;
     if (!source.initialized || !target.initialized) {
       return;

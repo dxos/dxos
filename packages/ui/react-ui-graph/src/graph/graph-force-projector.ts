@@ -23,12 +23,19 @@ import { emptyGraph, type GraphLayout, type GraphLayoutEdge, type GraphLayoutNod
 
 /**
  * Return value or invoke function.
- * @param v
- * @param cb
+ * @param valueOrFunction
+ * @param invoker
  * @param defaultValue
  */
-const getValue = <T>(v: T | ((...args: any[]) => T) | undefined, cb, defaultValue: T) => {
-  return typeof v === 'function' ? cb(v) : v ?? defaultValue;
+const getValue = <T>(
+  valueOrFunction: T | ((...args: any[]) => T) | undefined,
+  invoker: (fn: (...args: any[]) => T) => T,
+  defaultValue: T,
+) => {
+  return (
+    (typeof valueOrFunction === 'function' ? invoker(valueOrFunction as (...args: any[]) => T) : valueOrFunction) ??
+    defaultValue
+  );
 };
 
 /**
@@ -137,7 +144,8 @@ export type GraphForceProjectorOptions = ProjectorOptions &
     forces?: ForceOptions;
     radius?: number;
     attributes?: {
-      radius: number | ((node: GraphLayoutNode<any>, children: number) => number);
+      radius?: number | ((node: GraphLayoutNode<any>, children: number) => number);
+      linkForce?: boolean | ((edge: GraphLayoutEdge<any>) => boolean);
     };
   }>;
 
@@ -208,7 +216,14 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
 
       const children = this.numChildren(node);
       Object.assign(node, {
-        r: getValue<number>(this.options?.attributes?.radius, (f) => f(node, children), 6),
+        r: getValue<number>(this.options?.attributes?.radius, (fn) => fn(node, children), 6),
+      });
+    });
+
+    // Initialize edges.
+    this._layout.graph.edges.forEach((edge) => {
+      Object.assign(edge, {
+        linkForce: getValue<boolean>(this.options.attributes?.linkForce, (fn) => fn(edge), true),
       });
     });
 
@@ -232,7 +247,7 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
           (config) => {
             const force = forceLink()
               .id((d: GraphLayoutNode) => d.id)
-              .links(this._layout.graph.edges);
+              .links(this._layout.graph.edges.filter((edge) => edge.linkForce));
 
             if (config.distance != null) {
               force.distance(config.distance);
@@ -281,6 +296,7 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
         id: edge.id,
         source: nodes.find((n) => n.id === edge.source),
         target: nodes.find((n) => n.id === edge.target),
+        data: edge.data,
       }))
       .filter((edge) => edge.source && edge.target);
 
@@ -328,7 +344,7 @@ export class GraphForceProjector<Data = any> extends Projector<Graph, GraphLayou
    * Update all forces.
    */
   private updateForces(forces: ForceOptions) {
-    log.info('updateForces', { forces });
+    log('updateForces', { forces });
 
     // https://github.com/d3/d3-force#simulation_force
     this._simulation
