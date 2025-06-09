@@ -3,12 +3,12 @@
 //
 
 import {
+  type BaseEchoObject,
   EntityKind,
   EntityKindPropertyId,
   RelationSourceId,
   RelationTargetId,
   type BaseObject,
-  type HasId,
   type RelationSourceTargetRefs,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -16,9 +16,10 @@ import { type Live } from '@dxos/live-object';
 
 import type { AnyLiveObject } from './create';
 
-export type ReactiveEchoRelation<T extends BaseObject> = Live<T> & HasId & RelationSourceTargetRefs;
+// TODO(burdon): Normalize with AnyLiveObject.
+export type AnyLiveRelation<T extends BaseObject> = Live<T> & BaseEchoObject & RelationSourceTargetRefs;
 
-export const isRelation = <T extends BaseObject>(object: AnyLiveObject<T>): object is ReactiveEchoRelation<T> => {
+export const isRelation = <T extends BaseObject>(object: AnyLiveObject<T>): object is AnyLiveRelation<T> => {
   const kind = (object as any)[EntityKindPropertyId];
   if (kind === undefined) {
     throw new TypeError('Provided value is not a valid ECHO object or relation');

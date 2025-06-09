@@ -40,9 +40,9 @@ export type GraphGuide = {
   };
 };
 
-export type GraphLayoutNode<Data = any> = {
+export type GraphLayoutNode<NodeData = any> = {
   id: string;
-  data?: Data;
+  data?: NodeData;
   x?: number;
   y?: number;
   r?: number;
@@ -55,19 +55,21 @@ export type GraphLayoutNode<Data = any> = {
   last?: Point;
 };
 
-export type GraphLayoutEdge<Data = any> = {
+export type GraphLayoutEdge<NodeData = any, EdgeData = any> = {
   id: string;
-  source: GraphLayoutNode<Data>;
-  target: GraphLayoutNode<Data>;
+  source: GraphLayoutNode<NodeData>;
+  target: GraphLayoutNode<NodeData>;
+  data?: EdgeData;
+  linkForce?: boolean;
   classes?: {
     path?: string;
   };
 };
 
-export type GraphLayout<Data = any> = {
+export type GraphLayout<NodeData = any, EdgeData = any> = {
   guides?: GraphGuide[];
   graph: {
-    nodes: GraphLayoutNode<Data>[];
-    edges: GraphLayoutEdge<Data>[];
+    nodes: GraphLayoutNode<NodeData>[];
+    edges: GraphLayoutEdge<NodeData, EdgeData>[];
   };
 };
