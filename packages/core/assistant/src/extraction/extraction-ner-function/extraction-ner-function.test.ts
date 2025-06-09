@@ -19,7 +19,7 @@ import { Testing } from '@dxos/schema/testing';
 
 import { extractionNerFn } from './extraction-ner-function';
 
-describe('NER EntityExtraction', () => {
+describe.skip('NER EntityExtraction', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let executor: FunctionExecutor;

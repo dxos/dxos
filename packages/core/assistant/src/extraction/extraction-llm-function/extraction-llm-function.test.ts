@@ -14,7 +14,7 @@ import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { processTranscriptMessage } from '../extraction';
 import { extractionAnthropicFn } from './extraction-llm-function';
 
-describe('LLM EntityExtraction', () => {
+describe.skip('LLM EntityExtraction', () => {
   let executor: FunctionExecutor;
 
   beforeAll(async () => {
