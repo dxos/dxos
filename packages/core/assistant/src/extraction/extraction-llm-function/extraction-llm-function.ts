@@ -7,10 +7,10 @@ import { create } from '@dxos/echo-schema';
 import { AiService, defineFunction, type FunctionDefinition } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
 
-import { ExtractionInput, ExtractionOutput } from './extraction';
+import { ExtractionInput, ExtractionOutput } from '../extraction';
 import PROMPT from './instructions.tpl?raw';
-import { insertReferences, ReferencedQuotes } from './quotes';
-import { AISession } from '../session';
+import { insertReferences, ReferencedQuotes } from '../quotes';
+import { AISession } from '../../session';
 
 export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
   description: 'Extract entities from the transcript message and add them to the message.',

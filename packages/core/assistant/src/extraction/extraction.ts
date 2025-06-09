@@ -28,7 +28,7 @@ export const ExtractionOutput = Schema.Struct({
 });
 export interface ExtractionOutput extends Schema.Schema.Type<typeof ExtractionOutput> {}
 
-type ProcessTranscriptMessageParams = {
+export type ProcessTranscriptMessageParams = {
   input: ExtractionInput;
   function: FunctionDefinition<ExtractionInput, ExtractionOutput>;
   executor: FunctionExecutor;
@@ -47,6 +47,8 @@ type ProcessTranscriptMessageParams = {
     fallbackToRaw?: boolean;
   };
 };
+
+export type ExtractionFunction = FunctionDefinition<ExtractionInput, ExtractionOutput>;
 
 /**
  * Extract entities from the transcript message and add them to the message.
