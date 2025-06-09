@@ -12,6 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { combine, timeout } from '@dxos/async';
 import { type AnyEchoObject, getLabelForObject, getSchemaTypename, Query } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
+import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
@@ -21,9 +22,10 @@ import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { DataType, SpaceGraphModel } from '@dxos/schema';
-import { createObjectFactory, type ValueGenerator } from '@dxos/schema/testing';
+import { createObjectFactory, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { addTestData } from './test-data';
 import { testPlugins } from './testing';
 import { PromptBar, type PromptBarProps } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
@@ -37,14 +39,27 @@ const generator = faker as any as ValueGenerator;
 
 type Mode = 'graph' | 'list';
 
-const DefaultStory = ({ mode, ...props }: { mode?: Mode } & D3ForceGraphProps) => {
+type DefaultStoryProps = { mode?: Mode; spec?: TypeSpec[] } & D3ForceGraphProps;
+
+const DefaultStory = ({ mode, spec, ...props }: DefaultStoryProps) => {
   const { t } = useTranslation(ASSISTANT_PLUGIN);
   const showList = mode !== 'graph';
   const showGraph = mode !== 'list';
 
   const [ast, setAst] = useState<Expression | undefined>();
   const [filter, setFilter] = useState<Filter.Any>();
-  const [model] = useState<SpaceGraphModel | undefined>(() => (showGraph ? new SpaceGraphModel() : undefined));
+  const [model] = useState<SpaceGraphModel | undefined>(() =>
+    showGraph
+      ? new SpaceGraphModel().setOptions({
+          onCreateEdge: (edge, relation) => {
+            // TODO(burdon): Check type.
+            if (relation.active === false) {
+              edge.data.force = false;
+            }
+          },
+        })
+      : undefined,
+  );
   const selection = useMemo(() => new SelectionModel(), []);
 
   const space = useSpace();
@@ -60,11 +75,12 @@ const DefaultStory = ({ mode, ...props }: { mode?: Mode } & D3ForceGraphProps) =
 
     return combine(
       timeout(async () => {
-        const createObjects = createObjectFactory(space.db, generator);
-        await createObjects([
-          { type: DataType.Organization, count: 30 },
-          { type: DataType.Person, count: 50 },
-        ]);
+        if (spec) {
+          const createObjects = createObjectFactory(space.db, generator);
+          await createObjects(spec);
+        } else {
+          addTestData(space);
+        }
 
         void model?.open(space);
       }),
@@ -72,7 +88,7 @@ const DefaultStory = ({ mode, ...props }: { mode?: Mode } & D3ForceGraphProps) =
         void model?.close();
       },
     );
-  }, [model, space]);
+  }, [space, model]);
 
   const handleRefresh = useCallback(() => {
     model?.invalidate();
@@ -127,6 +143,11 @@ const DefaultStory = ({ mode, ...props }: { mode?: Mode } & D3ForceGraphProps) =
     [space],
   );
 
+  // TODO(burdon): Trigger research blueprint (to update graph).
+  const handleResearch = useCallback(() => {
+    log.info('research', { selected: selection.selected.value });
+  }, [selection]);
+
   const extensions = useMemo(() => [typeahead({ onComplete: handleMatch })], [handleMatch]);
 
   return (
@@ -139,6 +160,7 @@ const DefaultStory = ({ mode, ...props }: { mode?: Mode } & D3ForceGraphProps) =
           <div className='grow grid grid-rows-[min-content_1fr_1fr] overflow-hidden divide-y divide-separator'>
             <Toolbar.Root>
               <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='refresh' onClick={handleRefresh} />
+              <IconButton icon='ph--sparkle--regular' iconOnly label='research' onClick={handleResearch} />
             </Toolbar.Root>
             <ItemList items={items} getTitle={(item) => getLabelForObject(item)} />
             <JsonFilter
@@ -225,17 +247,35 @@ export const Default: Story = {
   args: {
     grid: false,
     drag: true,
+    spec: [
+      { type: DataType.Organization, count: 10 },
+      { type: DataType.Person, count: 30 },
+    ],
   },
 };
 
 export const WithList: Story = {
   args: {
     mode: 'list',
+    spec: [
+      { type: DataType.Organization, count: 30 },
+      { type: DataType.Person, count: 50 },
+    ],
   },
 };
 
 export const GraphList: Story = {
   args: {
     mode: 'graph',
+    spec: [
+      { type: DataType.Organization, count: 30 },
+      { type: DataType.Person, count: 50 },
+    ],
+  },
+};
+
+export const Research: Story = {
+  args: {
+    drag: true,
   },
 };

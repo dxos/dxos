@@ -26,11 +26,16 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
     () =>
       context.current
         ? new GraphForceProjector(context.current, {
+            attributes: {
+              linkForce: (edge) => {
+                // TODO(burdon): Check type (currently assumes Employee property).
+                // Edge shouldn't contribute to force if it's not active.
+                return edge.data?.object?.active !== false;
+              },
+            },
             forces: {
               point: {
-                x: 0,
-                y: 0,
-                strength: 0.02,
+                strength: 0.01,
               },
             },
           })

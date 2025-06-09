@@ -9,9 +9,9 @@ import { type EchoDatabase } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
   create,
-  Filter,
   getEntityKind,
   getSchemaDXN,
+  Filter,
   ObjectId,
   Query,
   ReferenceAnnotationId,
@@ -23,7 +23,7 @@ import { mapAst } from '@dxos/effect';
 import { AiService, CredentialsService, DatabaseService, defineFunction, TracingService } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { DataTypes } from '@dxos/schema';
 import { deepMapValues } from '@dxos/util';
 
 import { createExaTool, createMockExaTool } from './exa';
@@ -31,17 +31,6 @@ import { Subgraph } from './graph';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up
 import PROMPT from './instructions-research.tpl?raw';
 import { AISession } from '../session';
-
-export const TYPES = [
-  DataType.Event,
-  DataType.Employer,
-  DataType.HasRelationship,
-  DataType.Organization,
-  DataType.Person,
-  DataType.Project,
-  DataType.Task,
-  DataType.Text,
-];
 
 /**
  * Exec external service and return the results as a Subgraph.
@@ -88,7 +77,7 @@ export const researchFn = defineFunction({
     session.streamEvent.on((event) => log('stream', { event }));
 
     // TODO(dmaretskyi): Consider adding this pattern as the "Graph" output mode for the session.
-    const outputSchema = createExtractionSchema(TYPES);
+    const outputSchema = createExtractionSchema(DataTypes);
     const result = await session.runStructured(outputSchema, {
       client: ai.client,
       systemPrompt: PROMPT,
@@ -97,7 +86,8 @@ export const researchFn = defineFunction({
       history: [],
       prompt: query,
     });
-    const data = await sanitizeObjects(TYPES, result as any, db);
+
+    const data = await sanitizeObjects(DataTypes, result as any, db);
 
     return {
       result: { objects: data },

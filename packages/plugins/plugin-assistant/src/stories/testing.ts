@@ -7,7 +7,6 @@ import '@dxos-theme';
 import defaulstDeep from 'lodash.defaultsdeep';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
-import { TYPES } from '@dxos/assistant';
 import { type ConfigProto } from '@dxos/config';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -17,6 +16,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { Config } from '@dxos/react-client';
+import { DataTypes } from '@dxos/schema';
 
 export const testPlugins = (config?: ConfigProto) => [
   ClientPlugin({
@@ -31,7 +31,7 @@ export const testPlugins = (config?: ConfigProto) => [
         },
       }),
     ),
-    types: [...TYPES],
+    types: DataTypes,
     onClientInitialized: async (_, client) => {
       if (!client.halo.identity.get()) {
         await client.halo.createIdentity();
