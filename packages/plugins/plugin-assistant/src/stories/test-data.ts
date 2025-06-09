@@ -118,7 +118,7 @@ export const addTestData = (space: Space): void => {
       space.db.add(
         create(schema, {
           ...data,
-          // TODO(burdon): Test type.
+          // TODO(burdon): Test source/target types match.
           [RelationSourceId]: sourceObject,
           [RelationTargetId]: targetObject,
         }),

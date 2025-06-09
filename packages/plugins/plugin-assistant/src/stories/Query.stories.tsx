@@ -48,7 +48,18 @@ const DefaultStory = ({ mode, spec, ...props }: DefaultStoryProps) => {
 
   const [ast, setAst] = useState<Expression | undefined>();
   const [filter, setFilter] = useState<Filter.Any>();
-  const [model] = useState<SpaceGraphModel | undefined>(() => (showGraph ? new SpaceGraphModel() : undefined));
+  const [model] = useState<SpaceGraphModel | undefined>(() =>
+    showGraph
+      ? new SpaceGraphModel().setOptions({
+          onCreateEdge: (edge, relation) => {
+            // TODO(burdon): Check type.
+            if (relation.active === false) {
+              edge.data.force = false;
+            }
+          },
+        })
+      : undefined,
+  );
   const selection = useMemo(() => new SelectionModel(), []);
 
   const space = useSpace();
