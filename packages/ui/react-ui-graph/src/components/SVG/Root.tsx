@@ -20,7 +20,9 @@ export type RootProps = ThemedClassName<PropsWithChildren<SVGContextOptions>>;
 export const Root = forwardRef<SVGContext, RootProps>(({ classNames, children, ...props }, ref) => {
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
 
-  const context = useMemo<SVGContext>(() => new SVGContext(props), [props.scale, props.centered]);
+  const context = useMemo<SVGContext>(() => {
+    return new SVGContext(props);
+  }, [props.scale, props.centered]);
 
   useImperativeHandle(ref, () => context, [context]);
 
@@ -39,11 +41,11 @@ export const Root = forwardRef<SVGContext, RootProps>(({ classNames, children, .
 
   return (
     <SVGContextProvider value={context}>
-      <div ref={containerRef} className='grid grow overflow-hidden'>
+      <div ref={containerRef} className={mx('grid grow overflow-hidden', classNames)}>
         <svg
           xmlns='http://www.w3.org/2000/svg'
           ref={context.ref}
-          className={mx('transition-opacity opacity-0 duration-1000', classNames, ready && 'opacity-100')}
+          className={mx('transition-opacity opacity-0 duration-1000', ready && 'opacity-100')}
         >
           {ready && children}
         </svg>

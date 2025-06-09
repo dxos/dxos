@@ -4,7 +4,7 @@
 
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type Message, type ToolType } from '@dxos/ai';
+import { type AgentStatus, type Message, type ToolType } from '@dxos/ai';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { NumericTabs, StatusRoll, ToggleContainer } from '@dxos/react-ui-components';
@@ -21,12 +21,12 @@ const getToolName = (tool: ToolType) => {
   return tool.namespace && tool.function ? `${tool.namespace}:${tool.function}` : tool.name.split('_').pop();
 };
 
-const getToolCaption = (tool: ToolType | undefined) => {
+const getToolCaption = (tool: ToolType | undefined, status: AgentStatus | undefined) => {
   if (!tool) {
     return 'Calling tool...';
   }
 
-  return tool.caption ?? `Calling ${getToolName(tool)}...`;
+  return status?.message ?? tool.caption ?? `Calling ${getToolName(tool)}...`;
 };
 
 export const ToolBlock: FC<ThemedClassName<ThreadMessageProps>> = ({ classNames, message, tools }) => {
@@ -43,8 +43,10 @@ export const ToolBlock: FC<ThemedClassName<ThreadMessageProps>> = ({ classNames,
             return null;
           }
 
+          log.info('tool_use', { tool: request?.tool, status: block.currentStatus });
+
           request = { tool: tools?.find((tool) => tool.name === block.name), block };
-          return { title: getToolCaption(request.tool), block };
+          return { title: getToolCaption(request.tool, block.currentStatus), block };
         }
 
         case 'tool_result': {
@@ -53,7 +55,7 @@ export const ToolBlock: FC<ThemedClassName<ThreadMessageProps>> = ({ classNames,
             return { title: 'Error', block };
           }
 
-          return { title: `${getToolCaption(request.tool)} (Success)`, block };
+          return { title: `${getToolCaption(request.tool, undefined)} (Success)`, block };
         }
 
         default: {

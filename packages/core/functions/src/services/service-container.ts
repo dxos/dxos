@@ -8,12 +8,14 @@ import { AiService } from './ai';
 import { CredentialsService } from './credentials';
 import { DatabaseService } from './database';
 import { QueuesService } from './queues';
+import { TracingService } from './tracing';
 
 export interface Services {
   database: Context.Tag.Service<DatabaseService>;
   ai: Context.Tag.Service<AiService>;
   queues: Context.Tag.Service<QueuesService>;
   credentials: Context.Tag.Service<CredentialsService>;
+  tracing: Context.Tag.Service<TracingService>;
 }
 
 const SERVICE_MAPPING: Record<string, keyof Services> = {
@@ -21,10 +23,15 @@ const SERVICE_MAPPING: Record<string, keyof Services> = {
   [AiService.key]: 'ai',
   [QueuesService.key]: 'queues',
   [CredentialsService.key]: 'credentials',
+  [TracingService.key]: 'tracing',
+};
+
+const DEFAULT_SERVICES: Partial<Services> = {
+  tracing: TracingService.noop,
 };
 
 export class ServiceContainer {
-  private _services: Partial<Services> = {};
+  private _services: Partial<Services> = { ...DEFAULT_SERVICES };
 
   /**
    * Set services.
@@ -43,5 +50,9 @@ export class ServiceContainer {
       throw new Error(`Service not available: ${tag.key}`);
     }
     return service as Context.Tag.Service<T>;
+  }
+
+  clone() {
+    return new ServiceContainer().setServices({ ...this._services });
   }
 }

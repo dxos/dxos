@@ -6,21 +6,20 @@ import { inspect } from 'node:util';
 import { beforeAll, describe, test } from 'vitest';
 
 import { AIServiceEdgeClient, OllamaClient, structuredOutputParser } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
-import type { EchoDatabase } from '@dxos/echo-db';
+import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
+import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { getSchemaDXN } from '@dxos/echo-schema';
-import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { live } from '@dxos/live-object';
-import { DataType } from '@dxos/schema';
+import { DataType, DataTypes } from '@dxos/schema';
 
-import { createExtractionSchema, getSanitizedSchemaName, researchFn, TYPES } from './research';
+import { createExtractionSchema, getSanitizedSchemaName, researchFn } from './research';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
-const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 
-describe.skip('Research', () => {
+describe('Research', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let executor: FunctionExecutor;
@@ -30,7 +29,7 @@ describe.skip('Research', () => {
     builder = await new EchoTestBuilder().open();
     const { db: db1 } = await builder.createDatabase({ indexing: { vector: true } });
     db = db1;
-    db.graph.schemaRegistry.addSchema(TYPES);
+    db.graph.schemaRegistry.addSchema(DataTypes);
     executor = new FunctionExecutor(
       new ServiceContainer().setServices({
         ai: {
@@ -49,18 +48,17 @@ describe.skip('Research', () => {
               }),
         },
         credentials: new ConfiguredCredentialsService([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-        database: {
-          db,
-        },
+        database: { db },
+        tracing: TracingService.console,
       }),
     );
   });
 
-  test('should generate a research report', { timeout: 1000_000 }, async () => {
+  test.skip('should generate a research report', { timeout: 1000_000 }, async () => {
     db.add(
       live(DataType.Organization, {
         name: 'Notion',
-        website: 'https://www.notion.com/',
+        website: 'https://www.notion.com',
       }),
     );
     await db.flush({ indexes: true });
@@ -77,23 +75,23 @@ describe.skip('Research', () => {
 
 describe('misc', () => {
   test('createExtractionSchema', () => {
-    const _schema = createExtractionSchema(TYPES);
+    const _schema = createExtractionSchema(DataTypes);
     // log.info('schema', { schema });
   });
 
   test('extract schema json schema', () => {
-    const schema = createExtractionSchema(TYPES);
+    const schema = createExtractionSchema(DataTypes);
     const _parser = structuredOutputParser(schema);
     // log.info('schema', { json: parser.tool.parameters });
   });
 
   test('getSanitizedSchemaName', () => {
-    const _names = TYPES.map(getSanitizedSchemaName);
+    const _names = DataTypes.map(getSanitizedSchemaName);
     // log.info('names', { names });
   });
 
   test('getTypeAnnotation', () => {
-    for (const schema of TYPES) {
+    for (const schema of DataTypes) {
       const _dxn = getSchemaDXN(schema);
       // log.info('dxn', { schema, dxn });
     }

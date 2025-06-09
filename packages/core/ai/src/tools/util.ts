@@ -8,6 +8,7 @@ import { log } from '@dxos/log';
 
 import { Message } from './message';
 import { type Tool, ToolResult } from './tools';
+import type { AgentStatus } from '../status-report';
 
 export const isToolUse = (message: Message, { onlyToolNames }: { onlyToolNames?: string[] } = {}) => {
   const block = message.content.at(-1);
@@ -19,6 +20,7 @@ export type RunToolsOptions = {
   message: Message;
   tools: Tool[];
   extensions?: ToolContextExtensions;
+  reportStatus: (status: AgentStatus) => void;
 };
 
 export type RunToolsResult =
@@ -31,7 +33,12 @@ export type RunToolsResult =
       result: unknown;
     };
 
-export const runTools = async ({ message, tools, extensions }: RunToolsOptions): Promise<RunToolsResult> => {
+export const runTools = async ({
+  message,
+  tools,
+  extensions,
+  reportStatus,
+}: RunToolsOptions): Promise<RunToolsResult> => {
   const toolCalls = message.content.filter((block) => block.type === 'tool_use');
   invariant(toolCalls.length === 1);
   const toolCall = toolCalls[0];
@@ -59,7 +66,7 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
   let toolResult: ToolResult;
   try {
     invariant(tool.execute);
-    toolResult = await tool.execute(toolCall.input, { extensions });
+    toolResult = await tool.execute(toolCall.input, { extensions, reportStatus });
   } catch (error: any) {
     log.warn('tool error', { error });
     toolResult = ToolResult.Error(error.message);

@@ -12,7 +12,6 @@ export default config({
     join(packages, '/devtools/*/src/**/*.stories.{mdx,tsx}'),
     join(packages, '/experimental/*/src/**/*.stories.{mdx,tsx}'),
     join(packages, '/plugins/*/src/**/*.stories.{mdx,tsx}'),
-    join(packages, '/plugins/experimental/*/src/**/*.stories.{mdx,tsx}'),
     join(packages, '/sdk/*/src/**/*.stories.{mdx,tsx}'),
     join(packages, '/ui/*/src/**/*.stories.{mdx,tsx}'),
   ],

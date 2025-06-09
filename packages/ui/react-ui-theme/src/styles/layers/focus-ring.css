@@ -8,9 +8,7 @@
 
       &:focus-visible {
         @apply ring-focusLine ring-offset-focusOffset z-[1] ring-accentFocusIndicator;
-        body[data-focus="hidden"] & {
-          @apply ring-transparent;
-        }
+
         &:hover {
           @apply outline-none;
 
@@ -35,9 +33,6 @@
   .dx-focus-ring-group-x:focus-visible .dx-focus-ring-group-x-indicator,
   .dx-focus-ring-group-y:focus-visible .dx-focus-ring-group-y-indicator {
     @apply ring-focusLine ring-offset-focusOffset ring-accentFocusIndicator;
-    body[data-focus="hidden"] & {
-      @apply ring-transparent;
-    }
 
     &:hover {
       @apply outline-none;
@@ -73,9 +68,6 @@
         &::after {
           @apply ring-focusLine ring-offset-focusOffset ring-inset z-[1] ring-accentFocusIndicator;
         }
-        body[data-focus="hidden"] &::after {
-          @apply ring-transparent;
-        }
 
         &:hover {
           @apply outline-none;
@@ -102,18 +94,22 @@
     &[disabled='false'] {
       &::after {
         position: fixed;
-        inset-block-start: 0;
-        inset-inline: 0;
-        inset-block-end: var(--statusbar-size);
+        inset: 0;
       }
 
       @media screen(lg) {
-        &[data-sidebar-inline-start-state="open"]::after {
+        &[data-sidebar-inline-start-state="expanded"]::after {
           inset-inline-start: var(--nav-sidebar-size);
         }
+        &[data-sidebar-inline-start-state="collapsed"]::after {
+          inset-inline-start: var(--l0-size);
+        }
 
-        &[data-sidebar-inline-end-state="open"]::after {
+        &[data-sidebar-inline-end-state="expanded"]::after {
           inset-inline-end: var(--complementary-sidebar-size);
+        }
+        &[data-sidebar-inline-end-state="collapsed"]::after {
+          inset-inline-end: var(--r0-size);
         }
       }
     }
