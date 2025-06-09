@@ -4,6 +4,7 @@
 
 import { Schema } from 'effect';
 
+import { Queue } from '@dxos/echo-db';
 import { EchoObject, Expando, ObjectId, Ref } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -49,10 +50,9 @@ export const InvocationTraceStartEvent = Schema.Struct({
   // TODO(burdon): Input schema?
   input: Schema.Object,
   /**
-   * Queue DXN for function/workflow invocation events.
+   * Queue  for function/workflow invocation events.
    */
-  // TODO(burdon): Need reference type for queue. vs. string?
-  invocationTraceQueue: Ref(Expando),
+  invocationTraceQueue: Ref(Queue),
   /**
    * DXN of the invoked function/workflow.
    */
@@ -121,7 +121,7 @@ export type InvocationSpan = {
   outcome: InvocationOutcome;
   input: object;
   durationMs: number;
-  invocationTraceQueue: Ref<Expando>;
+  invocationTraceQueue: Ref<Queue>;
   invocationTarget: Ref<Expando>;
   trigger?: Ref<FunctionTriggerType>;
   exception?: TraceEventException;

@@ -5,13 +5,10 @@
 import { Schema } from 'effect';
 import React from 'react';
 
-import { defineTool, ToolResult } from '@dxos/ai';
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
-import { createArtifactElement } from '@dxos/assistant';
 import { isImage } from '@dxos/conductor';
 import { Format, Type } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 export const MapSchema = Schema.Struct({
@@ -25,7 +22,7 @@ export const MapSchema = Schema.Struct({
 
 export type MapSchema = Schema.Schema.Type<typeof MapSchema>;
 
-// TODO(burdon): Move ot ECHO def.
+// TODO(burdon): Move to ECHO def.
 export type ArtifactsContext = {
   items: Type.AnyObject[];
   getArtifacts: () => Type.AnyObject[];
@@ -37,26 +34,6 @@ declare global {
     artifacts?: ArtifactsContext;
   }
 }
-
-export const genericTools = [
-  defineTool('testing', {
-    name: 'focus',
-    description: 'Focus on the given artifact. Use this tool to bring the artifact to the front of the canvas.',
-    schema: Schema.Struct({ id: Type.ObjectId }),
-    execute: async ({ id }, { extensions }) => {
-      invariant(extensions?.artifacts, 'No artifacts context');
-      const artifactIndex = extensions.artifacts.items.findIndex((artifact) => artifact.id === id);
-      if (artifactIndex !== -1) {
-        extensions.artifacts.items = [
-          ...extensions.artifacts.items.filter((artifact) => artifact.id !== id),
-          extensions.artifacts.items[artifactIndex],
-        ];
-      }
-
-      return ToolResult.Success(createArtifactElement(id));
-    },
-  }),
-];
 
 export const capabilities: AnyCapability[] = [
   //

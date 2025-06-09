@@ -57,7 +57,6 @@ export default [
         'settings overscroll none label': 'None',
         'settings enable statusbar label': 'Show status bar',
         'settings enable deck label': 'Enable Deck',
-        'settings hidden focus label': 'Hide focus indicators and suppress tooltips on focused elements',
         'close current label': 'Close current plank',
         'close others label': 'Close other planks',
         'close all label': 'Close all planks',

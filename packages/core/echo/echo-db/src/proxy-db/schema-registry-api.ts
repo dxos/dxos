@@ -36,6 +36,7 @@ export interface SchemaRegistry {
   register(input: RegisterSchemaInput[]): Promise<EchoSchema[]>;
 }
 
+// TODO(burdon): Could this use the smae ECHO object query/result interface?
 export type SchemaRegistryQuery = {
   /**
    * Filter by schema ID.

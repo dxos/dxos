@@ -71,7 +71,6 @@
     "effect": "3.14.21",
     "lib0": "^0.2.65",
     "lodash.defaultsdeep": "^4.6.1",
-    "lodash.get": "^4.4.2",
     "lodash.merge": "^4.6.2",
     "lodash.sortby": "^4.7.0",
     "style-mod": "^4.1.0"
@@ -93,7 +92,6 @@
     "@types/chai": "^4.2.15",
     "@types/chai-dom": "^1.11.0",
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/lodash.get": "^4.4.7",
     "@types/lodash.merge": "^4.6.6",
     "@types/lodash.sortby": "^4.7.7",
     "@types/react": "~18.2.0",

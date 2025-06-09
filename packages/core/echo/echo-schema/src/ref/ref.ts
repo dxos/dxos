@@ -9,7 +9,8 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
-import { getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId, type JsonSchemaType } from '../ast';
+import { getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId } from '../ast';
+import { type JsonSchemaType } from '../json-schema';
 import type { BaseObject, WithId } from '../types';
 
 /**
@@ -45,7 +46,7 @@ export interface Ref$<T extends WithId> extends Schema.SchemaClass<Ref<T>, Encod
 
 // Type of the `Ref` function and extra methods attached to it.
 interface RefFn {
-  <T extends WithId>(schema: Schema.Schema<T, any>): Ref$<T>;
+  <S extends Schema.Schema.Any>(schema: S): Ref$<Schema.Schema.Type<S>>;
 
   /**
    * @returns True if the object is a reference.
@@ -81,7 +82,7 @@ interface RefFn {
 /**
  * Schema builder for references.
  */
-export const Ref: RefFn = <T extends WithId>(schema: Schema.Schema<T, any>): Ref$<T> => {
+export const Ref: RefFn = <S extends Schema.Schema.Any>(schema: S): Ref$<Schema.Schema.Type<S>> => {
   assertArgument(Schema.isSchema(schema), 'Must call with an instance of effect-schema');
 
   const annotation = getTypeAnnotation(schema);

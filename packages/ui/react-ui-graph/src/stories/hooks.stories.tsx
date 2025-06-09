@@ -97,7 +97,7 @@ const StoryComponent = ({
         onNodeClick: (node: GraphLayoutNode<TestNode>, event: MouseEvent) => {
           renderer.fireBullet(node);
         },
-        onEdgeClick: (edge: GraphLayoutEdge<TestNode>, event: MouseEvent) => {
+        onLinkClick: (edge: GraphLayoutEdge<TestNode>, event: MouseEvent) => {
           if (event.metaKey) {
             model.removeEdge(edge.id);
           }

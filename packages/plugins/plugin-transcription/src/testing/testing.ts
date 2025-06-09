@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 import { useEffect, useMemo, useState } from 'react';
 
 import { AIServiceEdgeClient } from '@dxos/ai';
@@ -23,12 +23,12 @@ import { Testing, seedTestData } from '@dxos/schema/testing';
 // TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
 export const TestItem = Schema.Struct({
   title: Schema.String.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Title',
-    [SchemaAST.DescriptionAnnotationId]: 'Product title',
+    title: 'Title',
+    description: 'Product title',
   }),
   description: Schema.String.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Description',
-    [SchemaAST.DescriptionAnnotationId]: 'Product description',
+    title: 'Description',
+    description: 'Product description',
   }),
 }).pipe(
   Type.def({

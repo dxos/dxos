@@ -34,36 +34,54 @@ svg {
       }
     }
 
+    g.dx-subgraphs {
+      path.dx-subgraph {
+        @apply stroke-red-500 fill-neutral-100 dark:fill-neutral-900 [stroke-dasharray:4_4];
+      }
+    }
+
     g.dx-nodes {
       g.dx-node {
         circle {
-          @apply fill-neutral-200 stroke-neutral-500 dark:fill-neutral-500 dark:stroke-none;
+          @apply fill-neutral-200 stroke-neutral-700 dark:fill-neutral-500 dark:stroke-none;
         }
-        rect {
-          @apply invisible;
-        }
-        text {
-          @apply invisible;
+        &.dx-selected {
+          circle {
+            @apply !fill-red-500 stroke-2 stroke-neutral-900 dark:stroke-neutral-200;
+          }
         }
 
-        &.selected {
-          circle {
-            @apply fill-red-500;
-          }
+        g.dx-label {
+          @apply hidden;
         }
       }
 
+      g[data-color="1"].dx-node { circle { @apply fill-violet-300 dark:fill-violet-500; } }
+      g[data-color="2"].dx-node { circle { @apply fill-green-300  dark:fill-green-500   } }
+      g[data-color="3"].dx-node { circle { @apply fill-blue-300   dark:fill-blue-500;   } }
+      g[data-color="4"].dx-node { circle { @apply fill-orange-300 dark:fill-orange-500; } }
+      g[data-color="5"].dx-node { circle { @apply fill-pink-300   dark:fill-pink-500;   } }
+      g[data-color="6"].dx-node { circle { @apply fill-indigo-300 dark:fill-indigo-500; } }
+
       g.dx-dragging,
-      g.dx-node:hover {
+      g.dx-highlight {
         circle {
-          @apply opacity-50;
+          @apply stroke-2 stroke-neutral-900 dark:stroke-neutral-200 cursor-pointer;
         }
-        rect {
-          @apply visible stroke-neutral-700 dark:stroke-neutral-700;
+
+        g.dx-label {
+          @apply block;
+
+          line {
+            @apply stroke-2 stroke-neutral-500;
+          }
+          rect {
+            @apply stroke-1 stroke-neutral-500 fill-inverseSurface;
+          }
+          text {
+            @apply fill-inverseSurfaceText;
+          }
         }
-        text {
-          @apply visible fill-neutral-200 dark:fill-neutral-500;
-        }      
       }
     }
 
@@ -71,6 +89,12 @@ svg {
       g.dx-edge {
         path {
           @apply stroke-1 stroke-neutral-300 dark:stroke-neutral-600;
+        }
+
+        &.dx-dashed {
+          path {
+            @apply [stroke-dasharray:4_4];
+          }
         }
       }
     }

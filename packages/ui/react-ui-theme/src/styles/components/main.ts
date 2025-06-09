@@ -22,14 +22,8 @@ export const mainPadding = 'dx-main-content-padding';
 
 export const mainPaddingTransitions = 'dx-main-content-padding-transitions';
 
-export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce, handlesFocus }, ...etc) =>
-  mx(
-    mainPadding,
-    mainPaddingTransitions,
-    bounce && 'dx-main-bounce-layout',
-    handlesFocus && 'dx-focus-ring-inset-over-all',
-    ...etc,
-  );
+export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce }, ...etc) =>
+  mx(mainPadding, mainPaddingTransitions, bounce && 'dx-main-bounce-layout', 'dx-focus-ring-main', ...etc);
 
 export const mainIntrinsicSize = 'dx-main-intrinsic-size';
 
