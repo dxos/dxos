@@ -28,15 +28,15 @@ const RefPopoverProvider = ({ children, onLookup }: RefPopoverProviderProps) => 
 
   const handleDxRefTagActivate = useCallback(
     (event: DxRefTagActivate) => {
-      const { ref, label, trigger: dxTrigger } = event;
+      const { refId, label, trigger: dxTrigger } = event;
       setValue((value) => ({
         ...value,
-        link: { label, ref },
+        link: { label, ref: refId },
         pending: true,
       }));
       trigger.current = dxTrigger;
       queueMicrotask(() => setOpen(true));
-      void onLookup?.({ label, ref }).then((target) =>
+      void onLookup?.({ label, ref: refId }).then((target) =>
         setValue((value) => ({
           ...value,
           target: target ?? undefined,

@@ -78,13 +78,13 @@ export const PreviewPlugin = () =>
       activatesOn: Events.Startup,
       activate: (context) => {
         // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
-        const handleDxRefTagActivate = async ({ ref, label, trigger }: DxRefTagActivate) => {
+        const handleDxRefTagActivate = async ({ refId, label, trigger }: DxRefTagActivate) => {
           const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const client = context.getCapability(ClientCapabilities.Client);
           const [layout] = context.getCapabilities(Capabilities.Layout);
           const { spaceId } = parseId(layout.workspace);
           const space = (spaceId && client.spaces.get(spaceId)) ?? client.spaces.default;
-          const result = await handlePreviewLookup(client, space, { ref, label });
+          const result = await handlePreviewLookup(client, space, { ref: refId, label });
           if (!result) {
             return;
           }

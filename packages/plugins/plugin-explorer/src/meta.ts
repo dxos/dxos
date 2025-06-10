@@ -12,6 +12,6 @@ export const meta: PluginMeta = {
   description: 'Install this plugin to view a hypergraph of all objects inside of your Space.',
   icon: 'ph--graph--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-explorer',
-  tags: ['experimental'],
+  tags: ['labs'],
   screenshots: ['https://dxos.network/plugin-details-explorer-dark.png'],
 };
