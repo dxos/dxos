@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Graph } from '@dxos/graph';
+import { type SelectionModel, type Graph } from '@dxos/graph';
 
 import { Projector, type ProjectorOptions } from './projector';
 import { type SVGContext } from '../../hooks';
@@ -18,12 +18,18 @@ export abstract class GraphProjector<NodeData = any, Options extends GraphProjec
   GraphLayout<NodeData>,
   Options
 > {
-  protected readonly _layout: GraphLayout<NodeData>;
+  private readonly _layout: GraphLayout<NodeData>;
 
-  constructor(context: SVGContext, options?: Options, layout?: GraphLayout<NodeData>) {
+  // TODO(burdon): Change to object props.
+  constructor(
+    context: SVGContext,
+    options?: Options,
+    private readonly _selection?: SelectionModel,
+    layout?: GraphLayout<NodeData>,
+  ) {
     super(context, options);
     this._layout = {
-      id: Math.random().toString().slice(2, 10),
+      id: (Math.random() * 10).toString().slice(8),
       graph: {
         nodes: [...(layout?.graph.nodes ?? [])],
         edges: [...(layout?.graph.edges ?? [])],
@@ -35,14 +41,18 @@ export abstract class GraphProjector<NodeData = any, Options extends GraphProjec
     return this._layout;
   }
 
-  reset() {
-    this._layout.graph.nodes = [];
-    this._layout.graph.edges = [];
-    this.emitUpdate();
+  get selection() {
+    return this._selection;
   }
 
   numChildren(node: GraphLayoutNode) {
     return this._layout.graph.edges.filter((edge) => edge.source.id === this.options.idAccessor(node)).length;
+  }
+
+  reset() {
+    this._layout.graph.nodes = [];
+    this._layout.graph.edges = [];
+    this.emitUpdate();
   }
 
   /**

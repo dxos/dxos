@@ -32,12 +32,13 @@ import { SVG, type SVGGridProps } from '../SVG';
 import '../../../styles/graph.css';
 
 type ProjectorType = 'force' | 'radial' | 'hierarchy';
-const projectorTypes: ProjectorType[] = ['force', 'radial', 'hierarchy'];
+const projectorTypes: ProjectorType[] = ['force', 'hierarchy', 'radial'];
 
 type DefaultStoryProps = GraphProps & {
   debug?: boolean;
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
+  singleSelect?: boolean;
   graph: () => Graph;
   projectorType?: ProjectorType;
   projectorOptions?: GraphForceProjectorOptions | GraphRadialProjectorOptions | GraphHierarchyProjectorOptions;
@@ -47,6 +48,7 @@ const DefaultStory = ({
   debug,
   grid,
   inspect,
+  singleSelect,
   graph: _graph,
   projectorType: _projectorType = 'force',
   projectorOptions,
@@ -57,7 +59,7 @@ const DefaultStory = ({
 
   // Models.
   const [model, setModel] = useState<GraphModel | undefined>(() => new TestGraphModel(_graph?.()));
-  const selected = useMemo(() => new SelectionModel(), []);
+  const selection = useMemo(() => new SelectionModel(singleSelect), [singleSelect]);
 
   // Projector.
   const [projectorType, setProjectorType] = useState<ProjectorType>(_projectorType);
@@ -69,16 +71,22 @@ const DefaultStory = ({
 
     switch (projectorType) {
       case 'force':
-        setProjector((projector) => new GraphForceProjector(context.current, projectorOptions, projector?.layout));
+        setProjector(
+          (projector) => new GraphForceProjector(context.current, projectorOptions, selection, projector?.layout),
+        );
         break;
       case 'radial':
-        setProjector((projector) => new GraphRadialProjector(context.current, projectorOptions, projector?.layout));
+        setProjector(
+          (projector) => new GraphRadialProjector(context.current, projectorOptions, selection, projector?.layout),
+        );
         break;
       case 'hierarchy':
-        setProjector((projector) => new GraphHierarchyProjector(context.current, projectorOptions, projector?.layout));
+        setProjector(
+          (projector) => new GraphHierarchyProjector(context.current, projectorOptions, selection, projector?.layout),
+        );
         break;
     }
-  }, [context.current, projectorType, projectorOptions]);
+  }, [context.current, selection, projectorType, projectorOptions]);
 
   const popoverAnchorRef = useRef<HTMLButtonElement | null>(null);
   const [popover, setPopover] = useState<any>();
@@ -104,15 +112,15 @@ const DefaultStory = ({
 
   const handleSelect = useCallback<GraphProps['onSelect']>(
     (node) => {
-      if (selected.contains(node.id)) {
-        selected.remove(node.id);
+      if (selection.contains(node.id)) {
+        selection.remove(node.id);
       } else {
-        selected.add(node.id);
+        selection.add(node.id);
       }
 
       graphRef.current?.repaint();
     },
-    [selected, projector],
+    [selection, projector],
   );
 
   const handleAdd = useCallback(() => {
@@ -185,7 +193,7 @@ const DefaultStory = ({
                     color: node.data.type,
                   },
                   classes: {
-                    'dx-selected': selected.contains(node.id),
+                    'dx-selected': selection.contains(node.id),
                   },
                 }),
               }}
@@ -199,7 +207,7 @@ const DefaultStory = ({
         {debug && (
           <Debug
             model={model}
-            selected={selected}
+            selection={selection}
             projector={projectorType}
             onToggleProjector={handleToggleProjector}
             onRefresh={handleRefresh}
@@ -223,7 +231,7 @@ const DefaultStory = ({
 
 const Debug = ({
   model,
-  selected,
+  selection,
   projector,
   onToggleProjector,
   onRefresh,
@@ -234,7 +242,7 @@ const Debug = ({
   onDelete,
 }: {
   model?: GraphModel;
-  selected: SelectionModel;
+  selection: SelectionModel;
   projector: ProjectorType;
   onToggleProjector: () => void;
   onRefresh: () => void;
@@ -249,11 +257,11 @@ const Debug = ({
     effect(() => {
       setData({
         projector,
-        selected: selected.toJSON(),
+        selection: selection.toJSON(),
         model: model?.toJSON(),
       });
     });
-  }, [model, selected, projector]);
+  }, [model, selection, projector]);
 
   return (
     <div className='flex flex-col overflow-hidden'>
@@ -298,10 +306,11 @@ export const Radial: Story = {
     debug: true,
     drag: true,
     arrows: true,
+    singleSelect: true,
     projectorType: 'hierarchy',
     projectorOptions: {
       radius: 300,
-      duration: 500,
+      duration: 300,
       forces: {
         center: true,
         // radial: {

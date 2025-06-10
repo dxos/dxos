@@ -40,7 +40,9 @@ export abstract class Projector<NodeData, Layout, Options extends ProjectorOptio
     return this._options;
   }
 
-  refresh(dragging = false) {}
+  refresh(dragging = false) {
+    this.onRefresh(dragging);
+  }
 
   updateData(data?: NodeData) {
     this.onUpdate(data);
@@ -62,6 +64,7 @@ export abstract class Projector<NodeData, Layout, Options extends ProjectorOptio
     await this.onStop();
   }
 
+  protected onRefresh(dragging = false): void {}
   protected onUpdate(data?: NodeData): void {}
   protected async onClear(): Promise<void> {}
   protected async onStart(): Promise<void> {}
