@@ -5,9 +5,9 @@
 import { drag, pointer, select } from 'd3';
 
 import { type GraphProjector } from './graph-projector';
-import { type GraphLayoutNode } from './types';
-import { type SVGContext } from '../hooks';
-import { type Point } from '../util';
+import { type SVGContext } from '../../hooks';
+import { type Point } from '../../util';
+import { type GraphLayoutNode } from '../types';
 
 enum Mode {
   MOVE = 0,
@@ -30,8 +30,7 @@ const defaultDragOptions: DragOptions<any> = {
 /**
  * Create drag handler.
  */
-// TODO(burdon): Stop centering force while dragging.
-export const createDrag = <NodeData>(
+export const createGraphDrag = <NodeData>(
   context: SVGContext,
   projector: GraphProjector<NodeData>,
   options: DragOptions<NodeData> = defaultDragOptions,
@@ -40,6 +39,7 @@ export const createDrag = <NodeData>(
   let source: GraphLayoutNode<NodeData>;
   let target: GraphLayoutNode<NodeData> | undefined;
   let offset: Point | undefined;
+  let moved = false;
 
   const keyMod = (event: MouseEvent, key: string): boolean => {
     const modKey = options?.[key] ?? defaultDragOptions[key];
@@ -76,6 +76,7 @@ export const createDrag = <NodeData>(
           event.subject.x = event.subject.fx = point[0];
           event.subject.y = event.subject.fy = point[1];
           projector.refresh(true);
+          moved = true;
           break;
         }
 
@@ -114,6 +115,10 @@ export const createDrag = <NodeData>(
       source = undefined;
       target = undefined;
       offset = undefined;
-      projector.refresh(false);
+
+      if (moved) {
+        projector.refresh(false);
+        moved = false;
+      }
     });
 };
