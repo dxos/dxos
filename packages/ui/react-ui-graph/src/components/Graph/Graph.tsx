@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 import React, { type JSX, type Ref, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
-import { type CleanupFn, combine, timeout } from '@dxos/async';
+import { combine } from '@dxos/async';
 import { type BaseGraphEdge, type BaseGraphNode, type GraphModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -15,6 +15,7 @@ import {
   createDrag,
   GraphForceProjector,
   type GraphLayoutNode,
+  type GraphProjector,
   GraphRenderer,
   type GraphRendererOptions,
 } from '../../graph';
@@ -28,11 +29,10 @@ export type GraphController = {
 export type GraphProps<Node extends BaseGraphNode = any, Edge extends BaseGraphEdge = any> = ThemedClassName<
   Pick<GraphRendererOptions<Node>, 'labels' | 'subgraphs' | 'attributes'> & {
     model?: GraphModel<Node, Edge>;
-    projector?: GraphForceProjector<Node>;
+    projector?: GraphProjector<Node>;
     renderer?: GraphRenderer<Node>;
     drag?: boolean;
     arrows?: boolean;
-    delay?: number;
     onSelect?: (node: GraphLayoutNode<Node>, event: MouseEvent) => void;
     onInspect?: (node: GraphLayoutNode<Node>, event: MouseEvent) => void;
   }
@@ -46,7 +46,6 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
     renderer: _renderer,
     drag,
     arrows,
-    delay,
     onSelect,
     onInspect,
     ...props
@@ -57,54 +56,57 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
   const graphRef = useRef<SVGGElement>();
 
   const { projector, renderer } = useMemo(() => {
-    const projector = _projector ?? new GraphForceProjector<Node>(context);
-    const renderer =
-      _renderer ??
-      new GraphRenderer<Node>(context, graphRef, {
+    let projector = _projector;
+    if (!projector) {
+      projector = new GraphForceProjector<Node>(context);
+    }
+
+    let renderer = _renderer;
+    if (!renderer) {
+      renderer = new GraphRenderer<Node>(context, graphRef, {
         ...props,
-        drag: drag ? createDrag(context, projector.simulation) : undefined,
+        drag: drag ? createDrag(context, projector) : undefined, // TODO(burdon): Replace drag when projector is updated.
         arrows: { end: arrows },
         onNodeClick: onSelect ? (node: GraphLayoutNode, event) => onSelect(node, event) : undefined,
         onNodePointerEnter: onInspect ? (node: GraphLayoutNode, event) => onInspect(node, event) : undefined,
       });
+    }
 
     return { projector, renderer };
   }, [context, _projector, _renderer, drag]);
 
+  // External API.
   useImperativeHandle(
     forwardedRef,
     () => ({
       refresh: () => {
-        projector.update(model?.graph);
+        projector.updateData(model?.graph);
       },
       repaint: () => {
-        renderer.update(projector.layout);
+        renderer.render(projector.layout);
       },
     }),
-    [projector, model],
+    [projector, renderer, model],
   );
 
+  // Subscriptions.
   useEffect(() => {
-    let unsubscribe: CleanupFn | undefined;
     return combine(
-      effect(() => {
-        projector.update(model?.graph);
+      projector.updated.on(({ layout }) => {
+        try {
+          renderer.render(layout);
+        } catch (error) {
+          void projector.stop();
+          log.catch(error);
+        }
       }),
-      timeout(() => {
-        // Delay rendering until projector has settled.
-        unsubscribe = projector.updated.on(({ layout }) => {
-          try {
-            renderer.update(layout);
-          } catch (error) {
-            void projector.stop();
-            log.catch(error);
-          }
-        });
-      }, delay),
-      () => unsubscribe?.(),
+      effect(() => {
+        projector.updateData(model?.graph);
+      }),
     );
   }, [projector, renderer, model]);
 
+  // Start.
   useEffect(() => {
     void projector.start();
     return () => {

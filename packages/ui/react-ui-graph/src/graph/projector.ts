@@ -13,35 +13,45 @@ export type ProjectorOptions = {
 /**
  * Generates a layout to be rendered.
  */
-export abstract class Projector<DATA, LAYOUT, OPTIONS extends ProjectorOptions> {
-  public readonly updated = new EventEmitter<{ layout: LAYOUT }>();
+export abstract class Projector<NodeData, Layout, Options extends ProjectorOptions> {
+  public readonly updated = new EventEmitter<{ layout: Layout }>();
 
-  private readonly _options: OPTIONS;
+  private readonly _options: Options;
 
   constructor(
     private readonly _context: SVGContext,
-    options?: Partial<OPTIONS>,
+    options?: Partial<Options>,
   ) {
     this._options = Object.assign(
       {
         idAccessor: defaultIdAccessor,
       },
       options,
-    ) as OPTIONS;
+    ) as Options;
   }
 
-  abstract get layout(): LAYOUT;
+  abstract get layout(): Layout;
 
   get context(): SVGContext {
     return this._context;
   }
 
-  get options(): OPTIONS {
+  get options(): Options {
     return this._options;
   }
 
-  update(data?: DATA, selected?: string) {
+  refresh(dragging = false) {}
+
+  updateData(data?: NodeData, selected?: string) {
     this.onUpdate(data, selected);
+  }
+
+  emitUpdate() {
+    this.updated.emit({ layout: this.layout });
+  }
+
+  async clear() {
+    await this.onClear();
   }
 
   async start() {
@@ -52,7 +62,8 @@ export abstract class Projector<DATA, LAYOUT, OPTIONS extends ProjectorOptions> 
     await this.onStop();
   }
 
-  protected onUpdate(data?: DATA, selected?: string): void {}
+  protected onUpdate(data?: NodeData, selected?: string): void {}
+  protected async onClear(): Promise<void> {}
   protected async onStart(): Promise<void> {}
   protected async onStop(): Promise<void> {}
 }
