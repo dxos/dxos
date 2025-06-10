@@ -198,7 +198,8 @@ export class QueryResult<T extends BaseObject = any> {
 
   /**
    * Subscribe to query results.
-   * Queries that have at least one subscriber are updated reactively when the underlying data changes.
+   * Updates only when the identity or the order of the objects changes.
+   * Does not update when the object properties change.
    */
   // TODO(burdon): Change to SubscriptionHandle (make uniform).
   subscribe(callback?: (query: QueryResult<T>) => void, opts?: QuerySubscriptionOptions): CleanupFn {
