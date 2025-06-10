@@ -157,12 +157,18 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
   // https://github.com/d3/d3-force
   private _simulation = forceSimulation<GraphLayoutNode, GraphLayoutEdge>();
 
+  private _timeout?: NodeJS.Timeout;
+
   get forces() {
     return this.options.forces ?? defaultForceOptions;
   }
 
   get simulation() {
     return this._simulation;
+  }
+
+  restart() {
+    this._simulation.alpha(1).restart();
   }
 
   override findNode(x: number, y: number, radius: number): GraphLayoutNode<NodeData> | undefined {
@@ -179,10 +185,8 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
       }
     }
 
-    this._simulation.alpha(1).restart();
+    this.restart();
   }
-
-  private _timeout?: NodeJS.Timeout;
 
   override async onStart() {
     clearTimeout(this._timeout);
@@ -196,7 +200,7 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
       this.updateForces(forces);
       this._timeout = setTimeout(() => {
         this.updateForces(this.forces);
-        this._simulation.alpha(1).restart();
+        this.restart();
         this._timeout = setTimeout(() => {
           propagating = true;
         }, delay);
@@ -222,12 +226,12 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this._simulation.stop();
     this.mergeData(graph);
-    this.updateLayout(graph);
+    this.updateLayout();
     this.updateForces(this.forces);
-    this._simulation.alpha(1).restart();
+    this.restart();
   }
 
-  private updateLayout(graph?: Graph) {
+  private updateLayout() {
     // Guides.
     this._layout.guides = this.options.guides
       ? [
@@ -296,7 +300,6 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
             const force = forceLink()
               .id((d: GraphLayoutNode) => d.id)
               .links(this._layout.graph.edges.filter((edge) => edge.linkForce));
-
             if (config.distance != null) {
               force.distance(config.distance);
             }
@@ -306,7 +309,6 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
             if (config.iterations != null) {
               force.iterations(config.iterations);
             }
-
             return force;
           },
           forces?.link === false ? undefined : {},
