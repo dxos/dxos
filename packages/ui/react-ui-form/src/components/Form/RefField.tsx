@@ -147,7 +147,7 @@ export const RefField = ({
             <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
           ) : (
             items.map((item) => (
-              <DxRefTag key={item.id} refId={item.id} rootClassName='mie-1'>
+              <DxRefTag key={item.id} refid={item.id} rootclassname='mie-1' style={{ marginInlineEnd: '.25rem' }}>
                 {item.label}
               </DxRefTag>
             ))
