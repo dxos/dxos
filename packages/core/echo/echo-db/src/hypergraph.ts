@@ -7,7 +7,9 @@ import { Context } from '@dxos/context';
 import { raise, StackTrace } from '@dxos/debug';
 import { Reference } from '@dxos/echo-protocol';
 import {
+  Filter,
   ImmutableSchema,
+  Query,
   RuntimeSchemaRegistry,
   type BaseObject,
   type BaseSchema,
@@ -30,7 +32,6 @@ import {
   QueryResult,
   ResultFormat,
   SpaceQuerySource,
-  type FilterSource,
   type QueryContext,
   type QueryFn,
   type QueryOptions,
@@ -126,10 +127,8 @@ export class Hypergraph {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(filter?: FilterSource, options?: QueryOptions) {
-    const spaces = options?.spaces;
-    invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
-
+  private _query(query: Query.Any | Filter.Any, options?: QueryOptions) {
+    query = Filter.is(query) ? Query.select(query) : query;
     // TODO(dmaretskyi): Consider plain format by default.
     const resultFormat = options?.format ?? ResultFormat.Live;
 
@@ -138,17 +137,19 @@ export class Hypergraph {
     }
 
     switch (resultFormat) {
+      // TODO(dmaretskyi): Remove.
       case ResultFormat.Plain: {
         const spaceIds = options?.spaceIds;
         invariant(spaceIds && spaceIds.length === 1, 'Plain format requires a single space.');
         return new QueryResult(
           this._createPlainObjectQueryContext(spaceIds[0] as SpaceId),
-          normalizeQuery(filter, options),
+          normalizeQuery(query, options),
         );
       }
       case ResultFormat.Live: {
-        return new QueryResult(this._createLiveObjectQueryContext(), normalizeQuery(filter, options));
+        return new QueryResult(this._createLiveObjectQueryContext(), normalizeQuery(query, options));
       }
+      // TODO(dmaretskyi): Remove.
       case ResultFormat.AutomergeDocAccessor: {
         throw new Error('Not implemented: ResultFormat.AutomergeDocAccessor');
       }
@@ -191,7 +192,7 @@ export class Hypergraph {
         }
         const {
           objects: [obj],
-        } = await hostDb.query({ id: dxn.parts[1] }).run();
+        } = await hostDb.query(Filter.ids(dxn.parts[1])).run();
         if (obj) {
           return middleware(obj);
         } else {

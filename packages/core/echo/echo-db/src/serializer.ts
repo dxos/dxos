@@ -10,6 +10,7 @@ import { ObjectCore } from './core-db';
 import { getObjectCore, type AnyLiveObject } from './echo-handler';
 import { type EchoDatabase } from './proxy-db';
 import type { SerializedObject, SerializedSpace } from './serialized-space';
+import { Filter } from '@dxos/echo-schema';
 
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
 
@@ -34,7 +35,7 @@ export class Serializer {
 
     const loadedObjects: Array<AnyLiveObject<any> | undefined> = [];
     for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
-      const { objects } = await database.query({ id: chunk }).run({ timeout: 60_000 });
+      const { objects } = await database.query(Filter.ids(...chunk)).run({ timeout: 60_000 });
       loadedObjects.push(...objects);
     }
 

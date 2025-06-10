@@ -115,7 +115,7 @@ describe('Queries', () => {
 
     test('options', async () => {
       {
-        const { objects } = await db.query({ label: 'red' }).run();
+        const { objects } = await db.query(Query.select(Filter.type(Expando, { label: 'red' }))).run();
         expect(objects).to.have.length(3);
         for (const object of objects) {
           db.remove(object);
@@ -124,23 +124,27 @@ describe('Queries', () => {
       }
 
       {
-        const { objects } = await db.query().run();
+        const { objects } = await db.query(Query.select(Filter.everything())).run();
         expect(objects).to.have.length(7);
       }
 
       {
-        const { objects } = await db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED }).run();
+        const { objects } = await db
+          .query(Query.select(Filter.everything()), { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED })
+          .run();
         expect(objects).to.have.length(7);
       }
 
       {
-        const { objects } = await db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED }).run();
+        const { objects } = await db
+          .query(Query.select(Filter.everything()), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED })
+          .run();
         expect(objects).to.have.length(10);
       }
 
       {
         const { objects } = await db
-          .query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY })
+          .query(Query.select(Filter.everything()), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY })
           .run();
         expect(objects).to.have.length(3);
       }
@@ -162,14 +166,14 @@ describe('Queries', () => {
       const db = await peer.createDatabase(spaceKey);
       await createObjects(peer, db, { count: 3 });
 
-      expect((await db.query().run()).objects.length).to.eq(3);
+      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(3);
       root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url;
     }
 
     {
       const peer = await builder.createPeer({ kv });
       const db = await peer.openDatabase(spaceKey, root);
-      expect((await db.query().run()).objects.length).to.eq(3);
+      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(3);
     }
   });
 
@@ -189,7 +193,7 @@ describe('Queries', () => {
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
-      expect((await db.query().run()).objects.length).to.eq(2);
+      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
       rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
@@ -202,7 +206,7 @@ describe('Queries', () => {
     {
       const peer = await builder.createPeer({ kv });
       const db = await peer.openDatabase(spaceKey, root);
-      const queryResult = (await db.query().run()).objects;
+      const queryResult = (await db.query(Query.select(Filter.everything())).run()).objects;
       expect(queryResult.length).to.eq(1);
       expect(queryResult[0].id).to.eq(expectedObjectId);
     }
@@ -223,7 +227,7 @@ describe('Queries', () => {
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
-      expect((await db.query().run()).objects.length).to.eq(2);
+      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
       anotherDocHandle.change((doc: DatabaseDirectory) => {
@@ -243,7 +247,7 @@ describe('Queries', () => {
 
     {
       const db = await peer.openDatabase(spaceKey, root);
-      const queryResult = (await db.query().run()).objects;
+      const queryResult = (await db.query(Query.select(Filter.everything())).run()).objects;
       expect(queryResult.length).to.eq(2);
       const object = queryResult.find((o) => o.id === assertion.objectId)!;
       expect(getObjectCore(object).docHandle!.url).to.eq(assertion.documentUrl);
@@ -266,7 +270,7 @@ describe('Queries', () => {
 
     db.remove(obj2);
 
-    const queryResult = (await db.query().run()).objects;
+    const queryResult = (await db.query(Query.select(Filter.everything())).run()).objects;
     expect(queryResult.length).to.eq(1);
     expect(queryResult[0].id).to.eq(obj1.id);
   });
@@ -286,7 +290,7 @@ describe('Queries', () => {
     const obj2Core = getObjectCore(obj1);
     obj2Core.docHandle!.delete(); // Deleted handle access throws an exception.
 
-    await expect(db.query().run()).rejects.toBeInstanceOf(Error);
+    await expect(db.query(Query.select(Filter.everything())).run()).rejects.toBeInstanceOf(Error);
   });
 
   test('query objects with different versions', async () => {
@@ -745,7 +749,7 @@ test('map over refs in query result', async () => {
     folder.objects.push(Ref.make(object));
   }
 
-  const queryResult = await db.query({ name: 'folder' }).run();
+  const queryResult = await db.query(Filter.type(Expando, { name: 'folder' })).run();
   const result = queryResult.objects.flatMap(({ objects }) => objects.map((o: Ref<any>) => o.target));
 
   for (const i in objects) {
