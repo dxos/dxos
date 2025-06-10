@@ -8,7 +8,7 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
-import { getSchema, createQueueDxn } from '@dxos/echo-schema';
+import { getSchema, createQueueDxn, Query } from '@dxos/echo-schema';
 import { EchoObject, Expando, TypedObject, foreignKey, getTypeReference, Ref, type Ref$ } from '@dxos/echo-schema';
 import { Testing, prepareAstForCompare } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -227,7 +227,7 @@ describe('Reactive Object with ECHO database', () => {
       peer.client.graph.schemaRegistry.addSchema([Testing.TestType]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.query({ id }).first()) as AnyLiveObject<Testing.TestSchema>;
+      const obj = (await db.query(Query.select(Filter.ids(id))).first()) as AnyLiveObject<Testing.TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -262,7 +262,7 @@ describe('Reactive Object with ECHO database', () => {
       const peer = await builder.createPeer({ kv });
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.query({ id }).first()) as AnyLiveObject<Testing.TestSchema>;
+      const obj = (await db.query(Filter.ids(id)).first()) as AnyLiveObject<Testing.TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -632,7 +632,7 @@ describe('Reactive Object with ECHO database', () => {
       {
         const peer = await builder.createPeer({ kv });
         const db = await peer.openDatabase(spaceKey, root.url);
-        const obj = (await db.query({ id }).first()) as AnyLiveObject<Testing.TestSchema>;
+        const obj = (await db.query(Filter.ids(id)).first()) as AnyLiveObject<Testing.TestSchema>;
         expect(getMeta(obj).keys).to.deep.eq([metaKey]);
       }
     });

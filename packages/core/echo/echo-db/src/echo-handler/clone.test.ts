@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Expando, Ref } from '@dxos/echo-schema';
+import { Expando, Filter, Query, Ref } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 
 import { clone } from './clone';
@@ -98,7 +98,10 @@ describe('clone', () => {
     expect(task2.assignee.target !== task1.assignee.target).to.be.true;
     expect(task2.assignee.target?.id).to.equal(task1.assignee.target?.id);
     expect(task2.assignee.target?.name).to.equal(task1.assignee.target?.name);
-    expect((await db2.query({ type: 'Person' }).run()).objects[0] === task2.assignee.target).to.be.true;
+    expect(
+      (await db2.query(Query.select(Filter.type(Expando, { type: 'Person' }))).run()).objects[0] ===
+        task2.assignee.target,
+    ).to.be.true;
   });
 
   test('clone with nested text objects', async () => {

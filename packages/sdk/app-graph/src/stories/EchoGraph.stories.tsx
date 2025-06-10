@@ -9,7 +9,17 @@ import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
 import { Option, pipe } from 'effect';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { live, isSpace, Query, type QueryResult, type Space, SpaceState, Expando, type Live } from '@dxos/client/echo';
+import {
+  live,
+  isSpace,
+  Query,
+  type QueryResult,
+  type Space,
+  SpaceState,
+  Expando,
+  type Live,
+  Filter,
+} from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -117,7 +127,9 @@ const getRandomSpace = (client: Client): Space | undefined => {
 
 const getSpaceWithObjects = async (client: Client): Promise<Space | undefined> => {
   const readySpaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY);
-  const spaceQueries = await Promise.all(readySpaces.map((space) => space.db.query({ type: 'test' }).run()));
+  const spaceQueries = await Promise.all(
+    readySpaces.map((space) => space.db.query(Filter.type(Expando, { type: 'test' })).run()),
+  );
   const spaces = readySpaces.filter((space, index) => spaceQueries[index].objects.length > 0);
   return spaces[Math.floor(Math.random() * spaces.length)];
 };
@@ -147,7 +159,7 @@ const runAction = async (client: Client, action: Action) => {
     case Action.REMOVE_OBJECT: {
       const space = await getSpaceWithObjects(client);
       if (space) {
-        const { objects } = await space.db.query({ type: 'test' }).run();
+        const { objects } = await space.db.query(Filter.type(Expando, { type: 'test' })).run();
         space.db.remove(objects[Math.floor(Math.random() * objects.length)]);
       }
       break;
@@ -156,7 +168,7 @@ const runAction = async (client: Client, action: Action) => {
     case Action.RENAME_OBJECT: {
       const space = await getSpaceWithObjects(client);
       if (space) {
-        const { objects } = await space.db.query({ type: 'test' }).run();
+        const { objects } = await space.db.query(Filter.type(Expando, { type: 'test' })).run();
         objects[Math.floor(Math.random() * objects.length)].name = faker.commerce.productName();
       }
       break;

@@ -18,7 +18,7 @@ export class EchoDataSource implements DataSource {
   @log.method()
   async getNodes({ label }: { label?: string }): Promise<Node[]> {
     if (!label) {
-      const { objects } = await this._db.query().run();
+      const { objects } = await this._db.query(Filter.everything()).run();
       return objects.map(this._objectToNode);
     }
 

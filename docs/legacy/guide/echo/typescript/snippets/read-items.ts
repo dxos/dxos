@@ -3,6 +3,7 @@
 //
 
 import { Client } from '@dxos/client';
+import { Expando, Filter } from '@dxos/client/echo';
 
 const client = new Client();
 
@@ -16,13 +17,8 @@ async () => {
   const space = spaces[0];
 
   // get all items
-  const allObjects = await space.db.query().run();
+  const allObjects = await space.db.query(Filter.everything()).run();
 
   // get items that match a filter
-  const tasks = await space.db.query({ type: 'task' }).run();
-
-  // get items that match a predicate
-  const finishedTasks = await space.db
-    .query((doc: any) => doc.type === 'task' && doc.completed)
-    .run();
+  const tasks = await space.db.query(Filter.type(Expando, { type: 'task' })).run();
 };

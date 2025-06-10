@@ -6,7 +6,7 @@ import { Effect, Schema } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
 import { Message, type Tool, ToolTypes } from '@dxos/ai';
-import { getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
+import { Filter, getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
@@ -240,7 +240,7 @@ export const registry: Record<NodeType, Executable> = {
 
             const {
               objects: [container],
-            } = yield* Effect.promise(() => spaceService.db.query({ id: echoId }).run());
+            } = yield* Effect.promise(() => spaceService.db.query(Filter.ids(echoId)).run());
             if (isInstanceOf(TableType, container)) {
               const schema = yield* Effect.promise(async () =>
                 spaceService.db.schemaRegistry

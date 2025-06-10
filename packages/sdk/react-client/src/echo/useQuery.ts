@@ -14,9 +14,6 @@ const noop = () => {};
 interface UseQueryFn {
   <Q extends Query.Any>(spaceOrEcho: Space | Echo | undefined, query: Q, deps?: any[]): Live<Query.Type<Q>>[];
 
-  /**
-   * @deprecated Pass `Query` instead.
-   */
   <F extends Filter.Any>(spaceOrEcho: Space | Echo | undefined, filter: F, deps?: any[]): Live<Filter.Type<F>>[];
 }
 

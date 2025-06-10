@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
-import { toEffectSchema } from '@dxos/echo-schema';
+import { Filter, toEffectSchema } from '@dxos/echo-schema';
 import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
@@ -55,7 +55,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
     const staticSchema = space.db.graph.schemaRegistry.schemas;
 
     // Create object map.
-    const { objects } = await space.db.query().run();
+    const { objects } = await space.db.query(Filter.everything()).run();
     const objectMap = sortKeys(
       objects.reduce<Record<string, number>>((map, obj) => {
         const type = getTypename(obj);
