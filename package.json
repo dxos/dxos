@@ -71,7 +71,7 @@
     "@storybook/react": "~8.3.6",
     "@storybook/test": "~8.3.6",
     "@swc-node/register": "1.9.1",
-    "@swc/core": "1.5.7",
+    "@swc/core": "1.11.31",
     "@swc/types": "^0.1.5",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.0.1",
