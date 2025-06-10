@@ -146,7 +146,7 @@ export const plugins = ({ appKey, config, services, observability, isDev, isLabs
     DeckPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
-    FilesPlugin(),
+    isLabs && FilesPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
