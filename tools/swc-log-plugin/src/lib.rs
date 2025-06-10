@@ -2,31 +2,30 @@ use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
+use swc_core::common::SyntaxContext;
+use swc_core::ecma::ast::{ExprOrSpread, NewExpr, Pass};
+use swc_core::ecma::transforms::testing::Tester;
+use swc_core::ecma::visit::{visit_mut_pass, Fold};
 use swc_core::{
-    common::{DUMMY_SP, SourceMapper, Spanned},
+    common::{SourceMapper, Spanned, DUMMY_SP},
     ecma::{
         ast::{
-            BindingIdent, CallExpr, Expr, Id, Ident,
-            ImportDecl, ImportSpecifier, Lit, ModuleExportName,
-            ModuleItem, Pat, Program, Stmt,
-            Str, VarDecl, VarDeclarator,
+            BindingIdent, CallExpr, Expr, Id, Ident, ImportDecl, ImportSpecifier, Lit,
+            ModuleExportName, ModuleItem, Pat, Program, Stmt, Str, VarDecl, VarDeclarator,
         },
         transforms::testing::test,
-        visit::{as_folder, FoldWith, VisitMut, VisitMutWith},
+        visit::{FoldWith, VisitMut, VisitMutWith},
     },
     plugin::{metadata::TransformPluginProgramMetadata, plugin_transform},
 };
-use swc_core::ecma::ast::{ExprOrSpread, NewExpr};
-use swc_core::ecma::transforms::testing::Tester;
-use swc_core::ecma::visit::Fold;
 
 use config::Config;
 
 use crate::config::TransformIdLookup;
 use crate::param_transform::{add_meta_to_params, Metadata, TransformSpec};
 
-mod param_transform;
 mod config;
+mod param_transform;
 
 pub struct TransformVisitor {
     pub config: Config,
@@ -57,19 +56,19 @@ impl VisitMut for TransformVisitor {
             &self.metadata,
             transform_spec,
             &mut n.args,
-            &n.span
+            &n.span,
         );
     }
 
     // Visit every import to collect identifiers for transform targets.
     fn visit_mut_import_decl(&mut self, n: &mut ImportDecl) {
         let package_name = format!("{}", &n.src.value);
-        let transform_in_package: HashMap<&String, &TransformSpec> = HashMap::from_iter(self
-            .config
-            .to_transform
-            .iter()
-            .filter(|s| s.package == package_name)
-            .map(|spec| (&spec.name, spec))
+        let transform_in_package: HashMap<&String, &TransformSpec> = HashMap::from_iter(
+            self.config
+                .to_transform
+                .iter()
+                .filter(|s| s.package == package_name)
+                .map(|spec| (&spec.name, spec)),
         );
 
         if transform_in_package.is_empty() {
@@ -112,7 +111,7 @@ impl VisitMut for TransformVisitor {
                 let vector = Vec::new();
                 n.args = Some(vector);
                 &mut n.args.clone().unwrap()
-            },
+            }
         };
 
         add_meta_to_params(
@@ -120,12 +119,12 @@ impl VisitMut for TransformVisitor {
             &self.metadata,
             transform_spec,
             args,
-            &n.span
+            &n.span,
         );
     }
 
     fn visit_mut_program(&mut self, n: &mut Program) {
-        let filename_id = Ident::new("__dxlog_file".into(), DUMMY_SP);
+        let filename_id = Ident::new_private("__dxlog_file".into(), DUMMY_SP);
 
         let filename = match &self.config.filename {
             Some(filename) => filename.clone(),
@@ -133,7 +132,6 @@ impl VisitMut for TransformVisitor {
         };
 
         let filename_decl_stmt = Stmt::Decl(swc_core::ecma::ast::Decl::Var(Box::new(VarDecl {
-            span: DUMMY_SP,
             kind: swc_core::ecma::ast::VarDeclKind::Var,
             declare: false,
             decls: vec![VarDeclarator {
@@ -149,6 +147,7 @@ impl VisitMut for TransformVisitor {
                 })))),
                 definite: false,
             }],
+            ..Default::default()
         })));
         self.filename_id = Some(filename_id.clone());
 
@@ -173,14 +172,26 @@ impl VisitMut for TransformVisitor {
 /// `__transform_plugin_process_impl
 /// Refer swc_plugin_macro to see how does it work internally.
 #[plugin_transform]
-pub fn process_transform(program: Program, metadata: TransformPluginProgramMetadata) -> Program {
-    let config: Config = serde_json::from_str(&metadata.get_transform_plugin_config().expect("no config provided")).expect("failed to deserialize config");
-    program.fold_with(&mut as_folder(TransformVisitor {
+pub fn process_transform(
+    mut program: Program,
+    metadata: TransformPluginProgramMetadata,
+) -> Program {
+    let config: Config = serde_json::from_str(
+        &metadata
+            .get_transform_plugin_config()
+            .expect("no config provided"),
+    )
+    .expect("failed to deserialize config");
+    program.visit_mut_with(&mut TransformVisitor {
         config,
-        metadata: Metadata { source_map: Arc::new(metadata.source_map) },
+        metadata: Metadata {
+            source_map: Arc::new(metadata.source_map),
+        },
         transform_spec_map: HashMap::new(),
         filename_id: None,
-    }))
+    });
+
+    program
 }
 
 fn create_test_config() -> Config {
@@ -215,12 +226,14 @@ fn create_test_config() -> Config {
     }
 }
 
-fn test_factory(t: &mut Tester) -> impl Fold {
-    as_folder(TransformVisitor {
+fn test_factory(t: &mut Tester) -> impl Pass {
+    visit_mut_pass(TransformVisitor {
         filename_id: None,
         transform_spec_map: HashMap::new(),
         config: create_test_config(),
-        metadata: Metadata { source_map: t.cm.clone() },
+        metadata: Metadata {
+            source_map: t.cm.clone(),
+        },
     })
 }
 

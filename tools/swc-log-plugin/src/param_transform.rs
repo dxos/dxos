@@ -2,8 +2,12 @@ use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
 use serde::Deserialize;
-use swc_core::common::{DUMMY_SP, SourceMapper, Span, Spanned};
-use swc_core::ecma::ast::{ArrayLit, ArrowExpr, BindingIdent, Callee, CallExpr, Expr, ExprOrSpread, Ident, KeyValueProp, Lit, Number, ObjectLit, Pat, Prop, PropName, PropOrSpread, Str, ThisExpr, UnaryExpr, UnaryOp};
+use swc_core::common::{SourceMapper, Span, Spanned, DUMMY_SP};
+use swc_core::ecma::ast::{
+    ArrayLit, ArrowExpr, BindingIdent, CallExpr, Callee, Expr, ExprOrSpread, Ident, IdentName,
+    KeyValueProp, Lit, Number, ObjectLit, Pat, Prop, PropName, PropOrSpread, Str, ThisExpr,
+    UnaryExpr, UnaryOp,
+};
 
 pub struct Metadata {
     pub source_map: Arc<dyn SourceMapper>,
@@ -71,12 +75,12 @@ fn create_meta_props(
 
     if let Some(filename_id) = &filename_id {
         props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-            key: PropName::Ident(Ident::new("F".into(), DUMMY_SP)),
+            key: PropName::Ident(IdentName::new("F".into(), DUMMY_SP)),
             value: Box::new(Expr::Ident(filename_id.clone())),
         }))));
     }
     props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-        key: PropName::Ident(Ident::new("L".into(), DUMMY_SP)),
+        key: PropName::Ident(IdentName::new("L".into(), DUMMY_SP)),
         value: Box::new(Expr::Lit(Lit::Num(Number {
             span: DUMMY_SP,
             value: line as f64,
@@ -85,13 +89,13 @@ fn create_meta_props(
     }))));
     if config.include_scope {
         props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-            key: PropName::Ident(Ident::new("S".into(), DUMMY_SP)),
+            key: PropName::Ident(IdentName::new("S".into(), DUMMY_SP)),
             value: Box::new(Expr::This(ThisExpr { span: DUMMY_SP })),
         }))));
     }
     if config.include_call_site {
         props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-            key: PropName::Ident(Ident::new("C".into(), DUMMY_SP)),
+            key: PropName::Ident(IdentName::new("C".into(), DUMMY_SP)),
             value: Box::new(Expr::Arrow(create_call_site_arrow())),
         }))));
     }
@@ -105,7 +109,7 @@ fn create_meta_props(
         });
 
         props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-            key: PropName::Ident(Ident::new("A".into(), DUMMY_SP)),
+            key: PropName::Ident(IdentName::new("A".into(), DUMMY_SP)),
             value: Box::new(Expr::Array(ArrayLit {
                 span: DUMMY_SP,
                 elems: arg_snippets
@@ -128,10 +132,9 @@ fn create_meta_props(
 }
 
 fn create_call_site_arrow() -> ArrowExpr {
-    let id_fn = Ident::new("f".into(), DUMMY_SP);
-    let id_args = Ident::new("a".into(), DUMMY_SP);
+    let id_fn = Ident::new_no_ctxt("f".into(), DUMMY_SP);
+    let id_args = Ident::new_no_ctxt("a".into(), DUMMY_SP);
     ArrowExpr {
-        span: DUMMY_SP,
         params: vec![
             Pat::Ident(BindingIdent {
                 id: id_fn.clone(),
@@ -144,18 +147,15 @@ fn create_call_site_arrow() -> ArrowExpr {
         ],
         body: Box::new(swc_core::ecma::ast::BlockStmtOrExpr::Expr(Box::new(
             Expr::Call(CallExpr {
-                span: DUMMY_SP,
                 callee: Callee::Expr(Box::new(Expr::Ident(id_fn))),
                 args: vec![ExprOrSpread {
                     spread: Some(DUMMY_SP),
                     expr: Box::new(Expr::Ident(id_args)),
                 }],
                 type_args: None,
+                ..Default::default()
             }),
         ))),
-        is_async: false,
-        is_generator: false,
-        type_params: None,
-        return_type: None,
+        ..Default::default()
     }
 }
