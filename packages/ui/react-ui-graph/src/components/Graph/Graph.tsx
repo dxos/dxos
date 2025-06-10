@@ -3,10 +3,10 @@
 //
 
 import { effect } from '@preact/signals-core';
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
+import React, { type JSX, type Ref, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
-import { type GraphModel } from '@dxos/graph';
+import { type BaseGraphEdge, type BaseGraphNode, type GraphModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -15,6 +15,7 @@ import {
   createDrag,
   GraphForceProjector,
   type GraphLayoutNode,
+  type GraphProjector,
   GraphRenderer,
   type GraphRendererOptions,
 } from '../../graph';
@@ -22,90 +23,103 @@ import { useSvgContext } from '../../hooks';
 
 export type GraphController = {
   refresh: () => void;
+  repaint: () => void;
 };
 
-export type GraphProps = ThemedClassName<
-  Pick<GraphRendererOptions<any>, 'labels' | 'subgraphs' | 'attributes'> & {
-    model?: GraphModel;
-    projector?: GraphForceProjector;
-    renderer?: GraphRenderer<any>;
-    delay?: number;
+export type GraphProps<Node extends BaseGraphNode = any, Edge extends BaseGraphEdge = any> = ThemedClassName<
+  Pick<GraphRendererOptions<Node>, 'labels' | 'subgraphs' | 'attributes'> & {
+    model?: GraphModel<Node, Edge>;
+    projector?: GraphProjector<Node>;
+    renderer?: GraphRenderer<Node>;
     drag?: boolean;
     arrows?: boolean;
-    onSelect?: (node: GraphLayoutNode<any>) => void;
+    onSelect?: (node: GraphLayoutNode<Node>, event: MouseEvent) => void;
+    onInspect?: (node: GraphLayoutNode<Node>, event: MouseEvent) => void;
   }
 >;
 
-/**
- * SVG Graph controller.
- */
-export const Graph = forwardRef<GraphController, GraphProps>(
-  (
-    { classNames, model, projector: _projector, renderer: _renderer, delay, drag, arrows, onSelect, ...props },
+export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGraphEdge = any>(
+  {
+    classNames,
+    model,
+    projector: _projector,
+    renderer: _renderer,
+    drag,
+    arrows,
+    onSelect,
+    onInspect,
+    ...props
+  }: GraphProps<Node, Edge>,
+  forwardedRef: Ref<GraphController>,
+) => {
+  const context = useSvgContext();
+  const graphRef = useRef<SVGGElement>();
+
+  const { projector, renderer } = useMemo(() => {
+    let projector = _projector;
+    if (!projector) {
+      projector = new GraphForceProjector<Node>(context);
+    }
+
+    let renderer = _renderer;
+    if (!renderer) {
+      renderer = new GraphRenderer<Node>(context, graphRef, {
+        ...props,
+        drag: drag ? createDrag(context, projector) : undefined, // TODO(burdon): Replace drag when projector is updated.
+        arrows: { end: arrows },
+        onNodeClick: onSelect ? (node: GraphLayoutNode, event) => onSelect(node, event) : undefined,
+        onNodePointerEnter: onInspect ? (node: GraphLayoutNode, event) => onInspect(node, event) : undefined,
+      });
+    }
+
+    return { projector, renderer };
+  }, [context, _projector, _renderer, drag]);
+
+  // External API.
+  useImperativeHandle(
     forwardedRef,
-  ) => {
-    const context = useSvgContext();
-    const graphRef = useRef<SVGGElement>();
+    () => ({
+      refresh: () => {
+        projector.updateData(model?.graph);
+      },
+      repaint: () => {
+        renderer.render(projector.layout);
+      },
+    }),
+    [projector, renderer, model],
+  );
 
-    const { projector, renderer } = useMemo(() => {
-      const projector = _projector ?? new GraphForceProjector(context);
-      const renderer =
-        _renderer ??
-        new GraphRenderer(context, graphRef, {
-          ...props,
-          drag: drag ? createDrag(context, projector.simulation) : undefined,
-          arrows: { end: arrows },
-          onNodeClick: onSelect ? (node: GraphLayoutNode) => onSelect(node) : undefined,
-        });
-
-      return {
-        projector,
-        renderer,
-      };
-    }, [context, _projector, _renderer, drag]);
-
-    useImperativeHandle(
-      forwardedRef,
-      () => ({
-        refresh: () => {
-          renderer.update(projector.layout);
-        },
+  // Subscriptions.
+  useEffect(() => {
+    return combine(
+      projector.updated.on(({ layout }) => {
+        try {
+          renderer.render(layout);
+        } catch (error) {
+          void projector.stop();
+          log.catch(error);
+        }
       }),
-      [projector, model],
+      effect(() => {
+        projector.updateData(model?.graph);
+      }),
     );
+  }, [projector, renderer, model]);
 
-    useEffect(() => {
-      projector.update(model?.graph);
+  // Start.
+  useEffect(() => {
+    void projector.start();
+    return () => {
+      void projector.stop();
+    };
+  }, [projector]);
 
-      let unsubscribe: (() => void) | undefined;
-      const t = setTimeout(() => {
-        // Delay rendering until projector has settled.
-        unsubscribe = projector.updated.on(({ layout }) => {
-          try {
-            renderer.update(layout);
-          } catch (error) {
-            log.catch(error);
-            void projector.stop();
-          }
-        });
-      }, delay);
+  return <g ref={graphRef} className={mx('dx-graph', classNames)} />;
+};
 
-      return combine(
-        effect(() => projector.update(model?.graph)),
-        () => {
-          clearTimeout(t);
-          unsubscribe?.();
-        },
-      );
-    }, [projector, renderer, model]);
-
-    useEffect(() => {
-      void projector.start();
-      return () => {
-        void projector.stop();
-      };
-    }, [projector]);
-
-    return <g ref={graphRef} className={mx('dx-graph', classNames)} />;
-  },
-);
+/**
+ * SVG Graph.
+ */
+export const Graph = forwardRef(GraphInner) as <Node extends BaseGraphNode = any, Edge extends BaseGraphEdge = any>(
+  props: GraphProps<Node, Edge> & { ref?: Ref<GraphController> },
+) => JSX.Element;

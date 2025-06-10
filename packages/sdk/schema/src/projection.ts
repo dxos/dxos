@@ -394,7 +394,7 @@ export class ViewProjection {
         oneOf !== undefined && oneOf?.length !== 0 && oneOf?.every((p) => typeof p.const === 'string');
       if (hasLegacyOptions) {
         const options = (oneOf as any[]).map(({ const: id, title, color }) => ({ id, title, color }));
-        log.info('Migrating legacy single-select format', options);
+        log('migrating legacy single-select format', options);
         makeSingleSelectAnnotations(jsonProperty, options);
         jsonProperty.oneOf = [];
       }

@@ -15,18 +15,27 @@ import {
 } from 'd3';
 
 import { type Graph } from '@dxos/graph';
+import { log } from '@dxos/log';
 
-import { Projector, type ProjectorOptions } from './projector';
-import { emptyGraph, type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from './types';
+import { forcePoint } from './graph-forces';
+import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
+import { type GraphLayoutEdge, type GraphLayoutNode } from './types';
 
 /**
  * Return value or invoke function.
- * @param v
- * @param cb
+ * @param valueOrFunction
+ * @param invoker
  * @param defaultValue
  */
-const getValue = <T>(v: T | ((...args: any[]) => T) | undefined, cb, defaultValue: T) => {
-  return typeof v === 'function' ? cb(v) : v ?? defaultValue;
+const getValue = <T>(
+  valueOrFunction: T | ((...args: any[]) => T) | undefined,
+  invoker: (fn: (...args: any[]) => T) => T,
+  defaultValue: T,
+) => {
+  return (
+    (typeof valueOrFunction === 'function' ? invoker(valueOrFunction as (...args: any[]) => T) : valueOrFunction) ??
+    defaultValue
+  );
 };
 
 /**
@@ -74,6 +83,8 @@ export type ForceManyBodyOptions = {
  * https://github.com/d3/d3-force#centering
  */
 export type ForceCenterOptions = {
+  x?: number;
+  y?: number;
   strength?: number;
 };
 
@@ -100,7 +111,8 @@ export type ForceRadialOptions = {
  * https://github.com/d3/d3-force#positioning
  */
 export type ForcePositioningOptions = {
-  value?: number;
+  x?: number;
+  y?: number;
   strength?: number;
 };
 
@@ -109,63 +121,117 @@ export type ForcePositioningOptions = {
  * NOTE: A value of `true` enables the force with the default option.
  */
 // TODO(burdon): Options for alpha, etc.
+// TODO(burdon): Change to map of forces by type (i.e., support multiple forces of the same type).
 export type ForceOptions = {
   link?: boolean | ForceLinkOptions;
   manyBody?: boolean | ForceManyBodyOptions;
   center?: boolean | ForceCenterOptions;
   collide?: boolean | ForceCollideOptions;
   radial?: boolean | ForceRadialOptions;
-  x?: ForcePositioningOptions;
-  y?: ForcePositioningOptions;
+  point?: boolean | ForcePositioningOptions;
+  x?: boolean | ForcePositioningOptions;
+  y?: boolean | ForcePositioningOptions;
 };
 
 export const defaultForceOptions: ForceOptions = {
   link: true,
   manyBody: true,
+  // center: true,
+  point: true,
 };
 
-export type GraphForceProjectorOptions = ProjectorOptions &
-  Partial<{
-    guides?: boolean;
-    forces?: ForceOptions;
-    radius?: number;
-    attributes?: {
-      radius: number | ((node: GraphLayoutNode<any>, children: number) => number);
-    };
-  }>;
+export type GraphForceProjectorOptions = GraphProjectorOptions & {
+  guides?: boolean;
+  forces?: ForceOptions;
+  radius?: number;
+  attributes?: {
+    radius?: number | ((node: GraphLayoutNode<any>, children: number) => number);
+    linkForce?: boolean | ((edge: GraphLayoutEdge<any>) => boolean);
+  };
+};
 
 /**
- * D3 force layout.
+ * D3 force directed graph layout using d3 simulation..
  */
-export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForceProjectorOptions> {
+export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData, GraphForceProjectorOptions> {
   // https://github.com/d3/d3-force
-  _simulation = forceSimulation<GraphLayoutNode, GraphLayoutEdge>();
+  private _simulation = forceSimulation<GraphLayoutNode, GraphLayoutEdge>();
 
-  // Current layout.
-  _layout: GraphLayout = {
-    graph: {
-      nodes: [],
-      edges: [],
-    },
-  };
+  private _timeout?: NodeJS.Timeout;
 
-  get layout() {
-    return this._layout;
+  get forces() {
+    return this.options.forces ?? defaultForceOptions;
   }
 
   get simulation() {
     return this._simulation;
   }
 
-  numChildren(node: GraphLayoutNode) {
-    return this._layout.graph.edges.filter((edge) => edge.source.id === this.options.idAccessor(node)).length;
+  restart() {
+    this._simulation.alpha(1).restart();
   }
 
-  override onUpdate(data?: Graph) {
-    this.mergeData(data);
-    this._simulation.stop();
-    this.updateForces(this.options.forces);
+  override findNode(x: number, y: number, radius: number): GraphLayoutNode<NodeData> | undefined {
+    return this._simulation.find(x, y, radius);
+  }
 
+  override refresh(dragging = false) {
+    // Disable centering force while dragging.
+    if (this.forces.center) {
+      if (dragging) {
+        this._simulation.force('center', null);
+      } else {
+        this.updateForces(this.forces);
+      }
+    }
+
+    this.restart();
+  }
+
+  override async onStart() {
+    clearTimeout(this._timeout);
+    let propagating = true;
+
+    // Delay radial force until other forces have settled.
+    const { radial, ...forces } = this.forces;
+    const delay = typeof radial === 'object' ? radial.delay : undefined;
+    if (delay) {
+      propagating = false;
+      this.updateForces(forces);
+      this._timeout = setTimeout(() => {
+        this.updateForces(this.forces);
+        this.restart();
+        this._timeout = setTimeout(() => {
+          propagating = true;
+        }, delay);
+      }, delay);
+    } else {
+      this.updateForces(this.forces);
+    }
+
+    this._simulation
+      .on('tick', () => propagating && this.emitUpdate())
+      .velocityDecay(0.3)
+      .alphaDecay(1 - Math.pow(0.001, 1 / 300))
+      .alpha(1)
+      .restart();
+  }
+
+  override async onStop() {
+    clearTimeout(this._timeout);
+    this._simulation.stop();
+  }
+
+  override onUpdate(graph?: Graph) {
+    log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
+    this._simulation.stop();
+    this.mergeData(graph);
+    this.updateLayout();
+    this.updateForces(this.forces);
+    this.restart();
+  }
+
+  private updateLayout() {
     // Guides.
     this._layout.guides = this.options.guides
       ? [
@@ -182,144 +248,72 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
     // Initialize nodes.
     this._layout.graph.nodes.forEach((node) => {
       if (!node.initialized) {
-        // Get starting point from edgeed element.
+        // Get starting point from linked element.
         const edge = this._layout.graph.edges.find((edge) => edge.target.id === this.options.idAccessor(node));
+        const a = 2 * Math.PI * Math.random();
+        const r = this.options.radius ?? 200;
 
         // Initial positions.
         Object.assign(node, {
           initialized: true,
+
           // Position around center or parent; must have delta to avoid spike.
-          x: edge?.source?.x + (Math.random() - 0.5) * (this.options.radius ?? 100),
-          y: edge?.source?.y + (Math.random() - 0.5) * (this.options.radius ?? 100),
+          x: edge?.source?.x ?? Math.cos(a) * r,
+          y: edge?.source?.y ?? Math.sin(a) * r,
         });
       }
 
-      const children = this.numChildren(node);
+      // TODO(burdon): Ignored by renderer?
       Object.assign(node, {
-        r: getValue<number>(this.options?.attributes?.radius, (f) => f(node, children), 6),
+        r: getValue<number>(this.options?.attributes?.radius, (fn) => fn(node, this.numChildren(node)), 6),
       });
     });
 
-    // https://github.com/d3/d3-force#simulation_force
-    const forces = this.options.forces;
-
-    // Update simulation.
-    this._simulation
-      .stop()
-
-      // Nodes
-      // https://github.com/d3/d3-force#simulation_nodes
-      .nodes(this._layout.graph.nodes)
-
-      // Edges.
-      // https://github.com/d3/d3-force#forceLink
-      .force(
-        'link',
-        maybeForce<ForceLinkOptions>(
-          forces?.link,
-          (config: ForceLinkOptions) => {
-            const force = forceLink()
-              .id((d: GraphLayoutNode) => d.id)
-              .links(this._layout.graph.edges);
-
-            if (config.distance != null) {
-              force.distance(config.distance);
-            }
-
-            if (config.strength != null) {
-              force.strength(config.strength);
-            }
-
-            if (config.iterations != null) {
-              force.iterations(config.iterations);
-            }
-
-            return force;
-          },
-          forces?.link === false ? undefined : {},
-        ),
-      )
-
-      .alphaTarget(0)
-      .alpha(1)
-      .restart();
-  }
-
-  /**
-   * Merge external data with internal representation (e.g., so force properties like position are preserved).
-   * @param data
-   */
-  private mergeData(data: Graph = emptyGraph): GraphLayout {
-    // Merge nodes.
-    const nodes: GraphLayoutNode[] = data.nodes.map((node) => {
-      let existing: GraphLayoutNode = this._layout.graph.nodes.find((n) => n.id === this.options.idAccessor(node));
-      if (!existing) {
-        existing = {
-          id: this.options.idAccessor(node),
-        };
-      }
-
-      existing.data = node;
-      return existing;
+    // Initialize edges.
+    this._layout.graph.edges.forEach((edge) => {
+      Object.assign(edge, {
+        linkForce: getValue<boolean>(this.options.attributes?.linkForce, (fn) => fn(edge), true),
+      });
     });
-
-    // Replace edges.
-    const edges = data.edges
-      .map((edge) => ({
-        id: edge.id,
-        source: nodes.find((n) => n.id === edge.source),
-        target: nodes.find((n) => n.id === edge.target),
-      }))
-      .filter((edge) => edge.source && edge.target);
-
-    this._layout = {
-      graph: {
-        nodes,
-        edges,
-      },
-    };
-
-    return this._layout;
-  }
-
-  override async onStart() {
-    // TODO(burdon): Generalize.
-    // Delay radial force until other forces have settled.
-    const { radial, ...forces } = this.options.forces ?? {};
-    if (typeof radial === 'boolean' || !radial?.delay) {
-      this.updateForces(this.options.forces);
-    } else {
-      this.updateForces(forces);
-      setTimeout(() => {
-        this._simulation.alphaTarget(0).alpha(1).restart();
-        this.updateForces(this.options.forces);
-      }, radial.delay);
-    }
-
-    this._simulation
-      .on('tick', () => {
-        this.updated.emit({ layout: this._layout });
-      })
-      .on('end', () => {
-        // alpha < alphaMin
-      })
-
-      // .alphaDecay(1 - Math.pow(0.001, 1 / 300))
-      .alphaTarget(0)
-      .alpha(1)
-      .restart();
-  }
-
-  override async onStop() {
-    this._simulation.stop();
   }
 
   /**
    * Update all forces.
    */
   private updateForces(forces: ForceOptions) {
+    log('updateForces', { forces });
+
     // https://github.com/d3/d3-force#simulation_force
     this._simulation
+
+      // Nodes
+      // https://github.com/d3/d3-force#simulation_nodes
+      .nodes(this._layout.graph.nodes)
+
+      // Links.
+      // https://github.com/d3/d3-force#forceLink
+      .force(
+        'link',
+        maybeForce<ForceLinkOptions>(
+          forces?.link,
+          (config) => {
+            const force = forceLink()
+              .id((d: GraphLayoutNode) => d.id)
+              .links(this._layout.graph.edges.filter((edge) => edge.linkForce));
+            if (config.distance != null) {
+              force.distance(config.distance);
+            }
+            if (config.strength != null) {
+              force.strength(config.strength);
+            }
+            if (config.iterations != null) {
+              force.iterations(config.iterations);
+            }
+            return force;
+          },
+          forces?.link === false ? undefined : {},
+        ),
+      )
 
       // Repulsion.
       // https://github.com/d3/d3-force#forceManyBody
@@ -327,7 +321,7 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
         'manyBody',
         maybeForce<ForceManyBodyOptions>(
           forces?.manyBody,
-          (config: ForceManyBodyOptions) => {
+          (config) => {
             const force = forceManyBody();
             if (config.distanceMax != null) {
               force.distanceMax(config.distanceMax);
@@ -341,24 +335,11 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
         ),
       )
 
-      // Centering (average center of mass).
-      // https://github.com/d3/d3-force#centering
-      .force(
-        'center',
-        maybeForce<ForceCenterOptions>(forces?.center, (config: ForceCenterOptions) => {
-          const force = forceCenter();
-          if (config.strength != null) {
-            force.strength(config.strength);
-          }
-          return force;
-        }),
-      )
-
-      // Collision
+      // Collision.
       // https://github.com/d3/d3-force#forceCollide
       .force(
         'collide',
-        maybeForce<ForceCollideOptions>(forces?.collide, (config: ForceCollideOptions) => {
+        maybeForce<ForceCollideOptions>(forces?.collide, (config) => {
           const force = forceCollide();
           force.radius(config.radius ?? 8);
           if (config.strength != null) {
@@ -368,12 +349,12 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
         }),
       )
 
-      // Radial
+      // Radial.
       // https://github.com/d3/d3-force#forceRadial
       .force(
         'radial',
-        maybeForce<ForceRadialOptions>(forces?.radial, (config: ForceRadialOptions) => {
-          const force = forceRadial(config.radius ?? 0, config.x ?? 0, config.y ?? 0);
+        maybeForce<ForceRadialOptions>(forces?.radial, (config) => {
+          const force = forceRadial(config.radius ?? 100, config.x ?? 0, config.y ?? 0);
           if (config.strength != null) {
             force.strength(config.strength);
           }
@@ -381,12 +362,35 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
         }),
       )
 
-      // Positioning
-      // https://github.com/d3/d3-force#positioning
+      // Centering.
+      // NOTE: This moves all nodes such that the center of mass is at the origin.
+      // It is different from the positional force which attracts nodes to a point.
+      // https://github.com/d3/d3-force#centering
+      .force(
+        'center',
+        maybeForce<ForceCenterOptions>(forces?.center, (config) => {
+          const force = forceCenter()
+            .x(config.x ?? 0)
+            .y(config.y ?? 0);
+          if (config.strength != null) {
+            force.strength(config.strength);
+          }
+          return force;
+        }),
+      )
+
+      // Positioning.
+      // https://github.com/d3/d3-force#forcePoint
+      .force(
+        'point',
+        maybeForce<ForcePositioningOptions>(forces?.point, ({ x = 0, y = 0, strength }) => {
+          return forcePoint({ x, y, strength });
+        }),
+      )
       .force(
         'x',
         maybeForce<ForcePositioningOptions>(forces?.x, (config: ForcePositioningOptions) => {
-          const force = forceX(config.value ?? 0);
+          const force = forceX(config.x ?? 0);
           if (config.strength != null) {
             force.strength(config.strength);
           }
@@ -396,14 +400,12 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
       .force(
         'y',
         maybeForce<ForcePositioningOptions>(forces?.y, (config: ForcePositioningOptions) => {
-          const force = forceY(config.value ?? 0);
+          const force = forceY(config.y ?? 0);
           if (config.strength != null) {
             force.strength(config.strength);
           }
           return force;
         }),
-      )
-
-      .restart();
+      );
   }
 }

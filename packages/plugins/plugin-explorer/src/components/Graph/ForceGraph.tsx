@@ -13,7 +13,7 @@ import { type SpaceGraphModel } from '@dxos/schema';
 import { GraphAdapter } from './adapter';
 
 export type ForceGraphProps = {
-  model: SpaceGraphModel;
+  model?: SpaceGraphModel;
   match?: RegExp;
 };
 
@@ -63,8 +63,6 @@ export const ForceGraph: FC<ForceGraphProps> = ({ model, match }) => {
         // .d3Force('center', forceCenter().strength(0.9))
         .d3Force('link', forceLink().distance(160).strength(0.5))
         .d3Force('charge', forceManyBody().strength(-30))
-        // .d3AlphaDecay(0.0228)
-        // .d3VelocityDecay(0.4)
 
         .graphData(new GraphAdapter(model))
         .warmupTicks(100)

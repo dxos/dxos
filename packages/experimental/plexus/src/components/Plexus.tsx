@@ -101,7 +101,7 @@ export const Plexus = <N,>({ model, slots, onSelect, onTransition }: PlexusProps
     if (graphRef.current) {
       // TODO(burdon): !!!
       // projector.update(model.graph, model.selected);
-      renderer.update(projector.layout);
+      renderer.render(projector.layout);
     }
   }, [graphRef, data]);
 

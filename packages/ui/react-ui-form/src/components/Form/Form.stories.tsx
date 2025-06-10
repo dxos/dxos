@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 import React, { useCallback, useState } from 'react';
 
 import { ContactType } from '@dxos/client/testing';
@@ -20,20 +20,18 @@ import translations from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
 
 const AddressSchema = Schema.Struct({
-  street: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Street' })),
-  city: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'City' })),
-  zip: Schema.optional(
-    Schema.String.pipe(Schema.pattern(/^\d{5}(-\d{4})?$/)).annotations({ [SchemaAST.TitleAnnotationId]: 'ZIP' }),
-  ),
-  location: Schema.optional(Format.GeoPoint.annotations({ [SchemaAST.TitleAnnotationId]: 'Location' })),
-}).annotations({ [SchemaAST.TitleAnnotationId]: 'Address' });
+  street: Schema.optional(Schema.String.annotations({ title: 'Street' })),
+  city: Schema.optional(Schema.String.annotations({ title: 'City' })),
+  zip: Schema.optional(Schema.String.pipe(Schema.pattern(/^\d{5}(-\d{4})?$/)).annotations({ title: 'ZIP' })),
+  location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
+}).annotations({ title: 'Address' });
 
 // TODO(burdon): Translations?
 const TestSchema = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Name' })),
-  active: Schema.optional(Schema.Boolean.annotations({ [SchemaAST.TitleAnnotationId]: 'Active' })),
-  rank: Schema.optional(Schema.Number.annotations({ [SchemaAST.TitleAnnotationId]: 'Rank' })),
-  website: Schema.optional(Format.URL.annotations({ [SchemaAST.TitleAnnotationId]: 'Website' })),
+  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
+  rank: Schema.optional(Schema.Number.annotations({ title: 'Rank' })),
+  website: Schema.optional(Format.URL.annotations({ title: 'Website' })),
   address: Schema.optional(AddressSchema),
 }).pipe(Schema.mutable);
 
@@ -133,16 +131,14 @@ const ShapeSchema = Schema.Struct({
   shape: Schema.optional(
     Schema.Union(
       Schema.Struct({
-        type: Schema.Literal('circle').annotations({ [SchemaAST.TitleAnnotationId]: 'Type' }),
-        radius: Schema.optional(Schema.Number.annotations({ [SchemaAST.TitleAnnotationId]: 'Radius' })),
+        type: Schema.Literal('circle').annotations({ title: 'Type' }),
+        radius: Schema.optional(Schema.Number.annotations({ title: 'Radius' })),
       }),
       Schema.Struct({
-        type: Schema.Literal('square').annotations({ [SchemaAST.TitleAnnotationId]: 'Type' }),
-        size: Schema.optional(
-          Schema.Number.pipe(Schema.nonNegative()).annotations({ [SchemaAST.TitleAnnotationId]: 'Size' }),
-        ),
+        type: Schema.Literal('square').annotations({ title: 'Type' }),
+        size: Schema.optional(Schema.Number.pipe(Schema.nonNegative()).annotations({ title: 'Size' })),
       }),
-    ).annotations({ [SchemaAST.TitleAnnotationId]: 'Shape' }),
+    ).annotations({ title: 'Shape' }),
   ),
 }).pipe(Schema.mutable);
 
@@ -229,7 +225,7 @@ export const Arrays: StoryObj<FormProps<ArraysType>> = {
 
 const ColorSchema = Schema.Struct({
   color: Schema.Union(Schema.Literal('red'), Schema.Literal('green'), Schema.Literal('blue')).annotations({
-    [SchemaAST.TitleAnnotationId]: 'Color',
+    title: 'Color',
   }),
 }).pipe(Schema.mutable);
 

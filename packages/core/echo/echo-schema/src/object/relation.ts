@@ -17,6 +17,7 @@ export const RelationTargetId: unique symbol = Symbol('@dxos/echo-db/RelationTar
 /**
  * Source and target props on relations.
  */
+// TODO(burdon): any?
 export type RelationSourceTargetRefs<Source = any, Target = any> = {
   /**
    * Source ECHO live object.

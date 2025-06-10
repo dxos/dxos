@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo-db';
@@ -21,10 +21,10 @@ const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
 
 const ViewMetaSchema = Schema.Struct({
   name: Schema.String.annotations({
-    [SchemaAST.TitleAnnotationId]: 'View',
+    title: 'View',
   }),
   typename: Format.URL.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Typename',
+    title: 'Typename',
   }),
 }).pipe(Schema.mutable);
 

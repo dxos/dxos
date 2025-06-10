@@ -15,7 +15,7 @@ export type HintOptions = {
 export const hintViewPlugin = ({ onHint }: HintOptions) =>
   ViewPlugin.fromClass(
     class {
-      deco = Decoration.none;
+      decorations = Decoration.none;
       update(update: ViewUpdate) {
         const builder = new RangeSetBuilder<Decoration>();
         const cState = update.view.state.field(commandState, false);
@@ -28,20 +28,20 @@ export const hintViewPlugin = ({ onHint }: HintOptions) =>
           if (selection.from === selection.to && line.from === line.to) {
             const hint = onHint();
             if (hint) {
-              builder.add(selection.from, selection.to, Decoration.widget({ widget: new CommandHint(hint) }));
+              builder.add(selection.from, selection.to, Decoration.widget({ widget: new Hint(hint) }));
             }
           }
         }
 
-        this.deco = builder.finish();
+        this.decorations = builder.finish();
       }
     },
     {
-      provide: (plugin) => [EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none)],
+      provide: (plugin) => [EditorView.decorations.of((view) => view.plugin(plugin)?.decorations ?? Decoration.none)],
     },
   );
 
-class CommandHint extends WidgetType {
+export class Hint extends WidgetType {
   constructor(readonly content: string | HTMLElement) {
     super();
   }

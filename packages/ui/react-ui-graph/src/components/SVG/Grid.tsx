@@ -7,25 +7,14 @@ import React from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useGrid } from '../../hooks';
+import { useGrid, type GridOptions } from '../../hooks';
 
-export type GridSlots = {
-  path?: {
-    className?: string;
-  };
-};
-
-export type GridProps = ThemedClassName<{
-  axis?: boolean;
-  slots?: GridSlots;
-}>;
+export type GridProps = ThemedClassName<GridOptions>;
 
 /**
  * SVG grid wrapper.
- * @constructor
  */
-export const Grid = ({ classNames, axis }: GridProps) => {
-  const { ref } = useGrid({ axis });
-
+export const Grid = ({ classNames, ...props }: GridProps) => {
+  const { ref } = useGrid(props);
   return <g ref={ref} className={mx('dx-grid', classNames)} />;
 };
