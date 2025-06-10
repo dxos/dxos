@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ChangeSpec, EditorSelection, EditorState, type Extension, Prec, type Range } from '@codemirror/state';
+import { type EditorState, type Extension, Prec, type Range } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 
 import { commands } from './commands';
-import { selectionCompartment, selectionFacet, getSelection, selectionEquals } from './selection';
+import { editor } from './editor';
+import { selectionCompartment, selectionFacet, selectionEquals } from './selection';
 import { outlinerTree, treeFacet } from './tree';
+import { decorateMarkdown } from '../markdown/decorate';
 
 // ISSUES:
 // TODO(burdon): Remove requirement for continuous lines to be indented (so that user's can't accidentally delete them and break the layout).
@@ -28,8 +29,6 @@ import { outlinerTree, treeFacet } from './tree';
 // TODO(burdon): Menu.
 // TODO(burdon): DND.
 
-const listItemRegex = /^\s*- (\[ \]|\[x\])? /;
-
 /**
  * Outliner extension.
  * - Stores outline as a standard markdown document with task and list markers.
@@ -38,128 +37,29 @@ const listItemRegex = /^\s*- (\[ \]|\[x\])? /;
  * - Supports smart cut-and-paste.
  */
 export const outliner = (): Extension => [
+  // Commands.
+  Prec.highest(commands()),
+
   // State.
   outlinerTree(),
 
   // Selection.
   selectionCompartment.of(selectionFacet.of([])),
 
-  // Commands.
-  Prec.highest(commands()),
-
   // Filter and possibly modify changes.
-  EditorState.transactionFilter.of((tr) => {
-    const tree = tr.state.facet(treeFacet);
+  editor(),
 
-    // Check cursor is in a valid position.
-    if (!tr.docChanged) {
-      const current = getSelection(tr.state).from;
-      if (current != null) {
-        const currentItem = tree.find(current);
-        if (!currentItem) {
-          return [];
-        }
+  // Line decorations.
+  decorations(),
 
-        // Check if outside of editable range.
-        if (current < currentItem.contentRange.from || current > currentItem.contentRange.to) {
-          const prev = getSelection(tr.startState).from;
-          const prevItem = prev != null ? tree.find(prev) : undefined;
-          if (!prevItem) {
-            return [{ selection: EditorSelection.cursor(currentItem.contentRange.from) }];
-          } else {
-            if (currentItem.index < prevItem.index) {
-              // Moving up.
-              return [{ selection: EditorSelection.cursor(currentItem.contentRange.to) }];
-            } else if (currentItem.index > prevItem.index) {
-              // Moving down.
-              return [{ selection: EditorSelection.cursor(currentItem.contentRange.from) }];
-            } else {
-              if (current < prev) {
-                // Moving left.
-                if (currentItem.index === 0) {
-                  return [];
-                } else {
-                  return [{ selection: EditorSelection.cursor(currentItem.lineRange.from - 1) }];
-                }
-              }
-            }
-          }
-        }
-      }
+  // Default markdown decorations.
+  decorateMarkdown({ listPaddingLeft: 8 }),
+];
 
-      return tr;
-    }
-
-    let cancel = false;
-    const changes: ChangeSpec[] = [];
-    tr.changes.iterChanges((fromA, toA, fromB, toB, insert) => {
-      const line = tr.startState.doc.lineAt(fromA);
-      const match = line.text.match(listItemRegex);
-      if (match) {
-        const start = line.from + (match?.[0]?.length ?? 0);
-
-        // Detect and cancel replacement of task marker with continuation indent.
-        // Task markers are atomic so will be deleted when backspace is pressed.
-        // The markdown extension inserts 2 or 6 spaces when deleting a list or task marker in order to create a continuation.
-        // - [ ] <- backspace here deletes the task marker.
-        // - [ ] <- backspace here inserts 6 spaces (creates continuation).
-        //   - [ ] <- backspace here deletes the task marker.
-        const replace = start === toA && toA - fromA === insert.length;
-        if (replace) {
-          changes.push({ from: line.from - 1, to: toA });
-          return;
-        }
-
-        // Detect deletion of marker.
-        if (fromB === toB) {
-          if (toA === line.to) {
-            const line = tr.state.doc.lineAt(fromA);
-            if (line.text.match(/^\s*$/)) {
-              if (line.from === 0) {
-                // Don't delete first line.
-                cancel = true;
-                return;
-              } else {
-                // Delete indent and marker.
-                changes.push({ from: line.from - 1, to: toA });
-                return;
-              }
-            }
-          }
-          return;
-        }
-
-        // Prevent newline if line is empty.
-        const item = tree.find(fromA);
-        if (item?.contentRange.from === item?.contentRange.to && fromA === toA) {
-          cancel = true;
-          return;
-        }
-
-        log('change', {
-          item,
-          line: { from: line.from, to: line.to },
-          a: [fromA, toA],
-          b: [fromB, toB],
-          insert: { text: insert.toString(), length: insert.length },
-        });
-      }
-    });
-
-    if (changes.length > 0) {
-      log('modified,', { changes });
-      return [{ changes }];
-    } else if (cancel) {
-      log('cancel');
-      return [];
-    }
-
-    return tr;
-  }),
-
-  /**
-   * Line decorations (for border and selection).
-   */
+/**
+ * Line decorations (for border and selection).
+ */
+const decorations = () => [
   ViewPlugin.fromClass(
     class {
       decorations: DecorationSet = Decoration.none;
@@ -214,6 +114,7 @@ export const outliner = (): Extension => [
     },
   ),
 
+  // Theme.
   EditorView.theme({
     '.cm-list-item': {
       borderLeft: '1px solid var(--dx-separator)',
@@ -224,6 +125,10 @@ export const outliner = (): Extension => [
       borderRadius: '0',
     },
 
+    '.cm-list-item::after': {
+      content: '!!!',
+    },
+
     '.cm-list-item-start': {
       borderTop: '1px solid var(--dx-separator)',
       borderTopLeftRadius: '4px',
@@ -231,6 +136,7 @@ export const outliner = (): Extension => [
       paddingTop: '4px',
       marginTop: '8px',
     },
+
     '.cm-list-item-end': {
       borderBottom: '1px solid var(--dx-separator)',
       borderBottomLeftRadius: '4px',

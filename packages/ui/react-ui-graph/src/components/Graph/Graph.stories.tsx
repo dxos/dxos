@@ -17,16 +17,16 @@ import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
 import {
   GraphForceProjector,
-  GraphRadialProjector,
-  GraphHierarchicalProjector,
-  GraphRelationalProjector,
-  type GraphRadialProjectorOptions,
   type GraphForceProjectorOptions,
-  type GraphLayoutNode,
-  type GraphProjector,
+  GraphHierarchicalProjector,
   type GraphHierarchicalProjectorOptions,
+  GraphRadialProjector,
+  type GraphRadialProjectorOptions,
+  GraphRelationalProjector,
   type GraphRelationalProjectorOptions,
   type GraphLayoutEdge,
+  type GraphLayoutNode,
+  type GraphProjector,
 } from '../../graph';
 import { type SVGContext } from '../../hooks';
 import { convertTreeToGraph, createGraph, createNode, createTree, TestGraphModel, type TestNode } from '../../testing';
@@ -47,7 +47,7 @@ const projectorTypes: Record<ProjectorType, Factory> = {
   relational: GraphRelationalProjector as Factory,
 };
 
-type DefaultStoryProps = GraphProps & {
+type StoryProps = GraphProps & {
   debug?: boolean;
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
@@ -56,8 +56,8 @@ type DefaultStoryProps = GraphProps & {
   projectorType?: ProjectorType;
   projectorOptions?:
     | GraphForceProjectorOptions
-    | GraphRadialProjectorOptions
     | GraphHierarchicalProjectorOptions
+    | GraphRadialProjectorOptions
     | GraphRelationalProjectorOptions;
 };
 
@@ -70,7 +70,7 @@ const DefaultStory = ({
   projectorType: _projectorType = 'force',
   projectorOptions,
   ...props
-}: DefaultStoryProps) => {
+}: StoryProps) => {
   const graphRef = useRef<GraphController | null>(null);
   const context = useRef<SVGContext>(null);
 
@@ -277,7 +277,7 @@ const Debug = ({
         <IconButton onClick={onToggleProjector} size={5} label='Projector' icon='ph--graph--regular' iconOnly />
         <IconButton onClick={onRefresh} size={5} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
         <IconButton onClick={onRepaint} size={5} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
-        <IconButton onClick={onRegenerate} size={5} label='Regenerate' icon='ph--dice-six--regular' iconOnly />
+        <IconButton onClick={onRegenerate} size={5} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
         <IconButton onClick={onClear} size={5} label='Clear' icon='ph--trash--regular' iconOnly />
         <IconButton onClick={onAdd} size={5} label='Add' icon='ph--plus--regular' iconOnly />
         <IconButton onClick={onDelete} size={5} label='Delete' icon='ph--x--regular' iconOnly />
@@ -287,7 +287,7 @@ const Debug = ({
   );
 };
 
-const meta: Meta<DefaultStoryProps> = {
+const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-graph/Graph',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
@@ -295,7 +295,7 @@ const meta: Meta<DefaultStoryProps> = {
 
 export default meta;
 
-type Story = StoryObj<DefaultStoryProps>;
+type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
@@ -309,7 +309,7 @@ export const Default: Story = {
   },
 };
 
-export const Radial: Story = {
+export const Projector: Story = {
   args: {
     debug: true,
     drag: true,
@@ -321,18 +321,6 @@ export const Radial: Story = {
     },
     graph: () => convertTreeToGraph(createTree({ depth: 4 })),
   },
-};
-
-export const Empty: Story = {
-  render: () => (
-    <SVG.Root>
-      <SVG.Markers />
-      <SVG.Grid axis />
-      <SVG.Zoom extent={[1 / 4, 4]}>
-        <GraphComponent />
-      </SVG.Zoom>
-    </SVG.Root>
-  ),
 };
 
 export const Force: Story = {
@@ -421,4 +409,16 @@ export const WithPopover: Story = {
     },
     graph: () => createGraph(30, 10),
   },
+};
+
+export const Empty: Story = {
+  render: () => (
+    <SVG.Root>
+      <SVG.Markers />
+      <SVG.Grid axis />
+      <SVG.Zoom extent={[1 / 4, 4]}>
+        <GraphComponent />
+      </SVG.Zoom>
+    </SVG.Root>
+  ),
 };
