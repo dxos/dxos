@@ -158,7 +158,7 @@ export const EmojiPickerBlock = ({
         </Popover.Content>
       </Popover.Root>
       <Tooltip.Trigger asChild content={t('clear label')} side='right'>
-        <Button variant={triggerVariant} onClick={onClickClear} disabled={disabled}>
+        <Button variant={triggerVariant} onClick={onClickClear} disabled={disabled} classNames='self-stretch'>
           <span className='sr-only'>{t('clear label')}</span>
           <Icon icon='ph--arrow-counter-clockwise--regular' size={5} />
         </Button>
