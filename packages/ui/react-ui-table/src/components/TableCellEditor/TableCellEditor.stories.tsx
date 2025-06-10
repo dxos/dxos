@@ -61,7 +61,8 @@ const DefaultStory = ({ editing }: StoryProps) => {
   const model = useTableModel({ table, projection, features });
 
   const handleQuery: TableCellEditorProps['onQuery'] = async ({ field }) => {
-    const { objects } = await space.db.query(schema).run();
+    // TODO(dmaretskyi): If no schema query nothing
+    const { objects } = await space.db.query(schema ? Filter.type(schema) : Filter.everything()).run();
     return objects.map((obj) => {
       const label = obj[field.referencePath ?? 'id'];
       return {

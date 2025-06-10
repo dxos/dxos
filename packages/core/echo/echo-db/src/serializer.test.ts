@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Expando, getSchema, Ref } from '@dxos/echo-schema';
+import { Expando, getSchema, Query, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -57,7 +57,7 @@ describe('Serializer', () => {
         db.add(obj);
         await db.flush();
 
-        const { objects } = await db.query().run();
+        const { objects } = await db.query(Query.select(Filter.everything())).run();
         expect(objects).to.have.length(1);
 
         data = await serializer.export(db);
@@ -76,7 +76,7 @@ describe('Serializer', () => {
         const { db } = await builder.createDatabase();
         await serializer.import(db, data);
 
-        const { objects } = await db.query().run();
+        const { objects } = await db.query(Query.select(Filter.everything())).run();
         expect(objects).to.have.length(1);
         expect(objects[0].title).to.eq('Test');
       }
@@ -110,7 +110,7 @@ describe('Serializer', () => {
         const { db } = await builder.createDatabase();
         await serializer.import(db, data);
 
-        const { objects } = await db.query().run();
+        const { objects } = await db.query(Query.select(Filter.everything())).run();
         expect(objects).to.have.length(1);
         expect(objects[0].value).to.eq(42);
       }
@@ -182,7 +182,7 @@ describe('Serializer', () => {
         graph.schemaRegistry.addSchema([Testing.Contact]);
 
         await new Serializer().import(db, data);
-        expect((await db.query().run()).objects).to.have.length(1);
+        expect((await db.query(Query.select(Filter.everything())).run()).objects).to.have.length(1);
 
         const {
           objects: [contact],
@@ -227,7 +227,7 @@ describe('Serializer', () => {
 });
 
 const assertNestedObjects = async (db: EchoDatabase) => {
-  const { objects } = await db.query().run();
+  const { objects } = await db.query(Query.select(Filter.everything())).run();
   expect(objects).to.have.length(4);
   const main = objects.find((object) => object.title === 'Main task')!;
   expect(main).to.exist;

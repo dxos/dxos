@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 
 import { SpaceState } from '@dxos/client/echo';
 import { type NetworkStatus } from '@dxos/client/mesh';
-import { type FilterParams } from '@dxos/echo-db';
 import { type EchoStatsDiagnostic, type EchoDataStats } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
@@ -37,7 +36,8 @@ export type MemoryInfo = {
  * Represents the @info props in QueryState.
  */
 export type QueryInfo = {
-  filter: FilterParams;
+  // TODO(dmaretskyi): Remove.
+  filter: any;
   metrics: any;
   active: boolean;
 };
