@@ -12,7 +12,6 @@ import type { Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import type { FilterSource } from './deprecated';
 import { type QueryResult } from './query-result';
 
 export { Filter, Query };
@@ -24,20 +23,7 @@ export interface QueryFn {
   // TODO(dmaretskyi): Remove query options.
   <Q extends Query.Any>(query: Q, options?: QueryOptions | undefined): QueryResult<Live<Query.Type<Q>>>;
 
-  /**
-   * @deprecated Pass `Query` instead.
-   */
-  (): QueryResult;
-
-  /**
-   * @deprecated Pass `Query` instead.
-   */
   <F extends Filter.Any>(filter: F, options?: QueryOptions | undefined): QueryResult<Live<Filter.Type<F>>>;
-
-  /**
-   * @deprecated Pass `Query` instead.
-   */
-  (filter?: FilterSource | undefined, options?: QueryOptions | undefined): QueryResult<Live<any>>;
 }
 
 /**
