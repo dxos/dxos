@@ -252,6 +252,12 @@ export class QueryResult<T extends BaseObject = any> {
       this._objectCache.length !== objects.length ||
       this._objectCache.some((obj, index) => obj.id !== objects[index].id);
 
+    log('recomputeResult', {
+      old: this._objectCache?.map((obj) => obj.id),
+      new: objects.map((obj) => obj.id),
+      changed,
+    });
+
     this._resultCache = results;
     this._objectCache = objects;
     return changed;
