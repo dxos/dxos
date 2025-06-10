@@ -67,7 +67,7 @@ export const FormField = ({
   });
 
   if (FoundComponent) {
-    return <div role='none'>{FoundComponent}</div>;
+    return FoundComponent;
   }
 
   const jsonPath = createJsonPath(path ?? []);
