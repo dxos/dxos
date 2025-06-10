@@ -9,11 +9,6 @@ export default [
     'en-US': {
       [REGISTRY_PLUGIN]: {
         'plugin name': 'Registry',
-        'reload required message': 'Reload required.',
-        'settings show experimental label': 'Show experimental plugins',
-        'settings section installed label': 'Enabled',
-        'settings section recommended label': 'Recommended',
-        'settings section experimental label': 'Experimental',
         'details label': 'Details',
         'home page label': 'Website',
         'source label': 'Source',
@@ -21,7 +16,7 @@ export default [
         'all plugins label': 'All',
         'installed plugins label': 'Enabled',
         'recommended plugins label': 'Recommended',
-        'experimental plugins label': 'Experimental',
+        'labs plugins label': 'Labs',
         'community plugins label': 'Community',
         'load by url label': 'Load by URL (soon)',
         'coming soon label': 'Coming soon!',
