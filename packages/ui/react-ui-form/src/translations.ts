@@ -21,6 +21,8 @@ export default [
         'add field': 'Add field',
         'delete field': 'Delete field',
         'field limit reached': 'Maximum number of fields reached',
+        'boolean input true value': 'Yes',
+        'boolean input false value': 'No',
 
         // TODO(burdon): Factor out?
         'button cancel': 'Cancel',

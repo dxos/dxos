@@ -14,6 +14,7 @@ import {
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
+import { DxRefTag } from '@dxos/lit-ui/react';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { TagPicker, type TagPickerMode, type TagPickerItemData } from '@dxos/react-ui-tag-picker';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
@@ -141,8 +142,16 @@ export const RefField = ({
         </InputHeader>
       )}
       <div data-no-submit>
-        {disabled && items.length < 1 ? (
-          <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
+        {disabled ? (
+          items.length < 1 ? (
+            <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
+          ) : (
+            items.map((item) => (
+              <DxRefTag key={item.id} refId={item.id} rootClassName='mie-1'>
+                {item.label}
+              </DxRefTag>
+            ))
+          )
         ) : (
           <TagPicker
             readonly={disabled}

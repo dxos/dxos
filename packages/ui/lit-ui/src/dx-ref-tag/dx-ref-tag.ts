@@ -11,12 +11,12 @@ import { customElement, property } from 'lit/decorators.js';
 import { makeId } from '@dxos/react-hooks';
 
 export class DxRefTagActivate extends Event {
-  public readonly ref: string;
+  public readonly refId: string;
   public readonly label: string;
   public readonly trigger: DxRefTag;
-  constructor(props: { ref: string; label: string; trigger: DxRefTag }) {
+  constructor(props: { refId: string; label: string; trigger: DxRefTag }) {
     super('dx-ref-tag-activate');
-    this.ref = props.ref;
+    this.refId = props.refId;
     this.label = props.label;
     this.trigger = props.trigger;
   }
@@ -25,7 +25,7 @@ export class DxRefTagActivate extends Event {
 @customElement('dx-ref-tag')
 export class DxRefTag extends LitElement {
   @property({ type: String })
-  ref: string = makeId('dx-ref-tag');
+  refId: string = makeId('dx-ref-tag');
 
   @property({ type: String })
   rootClassName: string | undefined = undefined;
@@ -47,7 +47,7 @@ export class DxRefTag extends LitElement {
 
   private handleActivate(event: { type: string }) {
     this.dispatchEvent(
-      new DxRefTagActivate({ ref: this.ref, label: this.textContent ?? '', trigger: this }),
+      new DxRefTagActivate({ refId: this.refId, label: this.textContent ?? '', trigger: this }),
     );
   }
 

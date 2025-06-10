@@ -4,10 +4,10 @@
 
 import React, { useCallback, useEffect, useRef } from 'react';
 
-import { Icon, Input, Select } from '@dxos/react-ui';
-import { TagPickerItem } from '@dxos/react-ui-tag-picker';
+import { Input, Select, useTranslation } from '@dxos/react-ui';
 
 import { type InputProps, InputHeader } from './Input';
+import { translationKey } from '../../translations';
 
 export const TextInput = ({
   type,
@@ -23,7 +23,7 @@ export const TextInput = ({
   const { status, error } = getStatus();
 
   return disabled && !getValue() ? null : disabled && inputOnly ? (
-    <TagPickerItem label={getValue() ?? ''} />
+    <p>{getValue() ?? ''}</p>
   ) : (
     <Input.Root validationValence={status}>
       {!inputOnly && (
@@ -32,7 +32,7 @@ export const TextInput = ({
         </InputHeader>
       )}
       {disabled ? (
-        <TagPickerItem label={getValue() ?? ''} />
+        <p>{getValue() ?? ''}</p>
       ) : (
         <Input.TextInput
           disabled={disabled}
@@ -61,7 +61,7 @@ export const NumberInput = ({
   const { status, error } = getStatus();
 
   return disabled && !getValue() ? null : disabled && inputOnly ? (
-    <TagPickerItem label={getValue() ?? ''} />
+    <p>{getValue() ?? ''}</p>
   ) : (
     <Input.Root validationValence={status}>
       {!inputOnly && (
@@ -70,7 +70,7 @@ export const NumberInput = ({
         </InputHeader>
       )}
       {disabled ? (
-        <TagPickerItem label={getValue() ?? ''} />
+        <p>{getValue() ?? ''}</p>
       ) : (
         <Input.TextInput
           type='number'
@@ -89,6 +89,7 @@ export const NumberInput = ({
 export const BooleanInput = ({ type, label, inputOnly, getStatus, getValue, onValueChange, disabled }: InputProps) => {
   const { status, error } = getStatus();
   const checked = Boolean(getValue());
+  const { t } = useTranslation(translationKey);
 
   return (
     <Input.Root validationValence={status}>
@@ -98,7 +99,7 @@ export const BooleanInput = ({ type, label, inputOnly, getStatus, getValue, onVa
         </InputHeader>
       )}
       {disabled ? (
-        <Icon icon={checked ? 'ph--check--regular' : 'ph--x--regular'} size={5} />
+        <p>{t(checked ? 'boolean input true value' : 'boolean input false value')}</p>
       ) : (
         <Input.Switch checked={checked} onCheckedChange={(value) => onValueChange(type, value)} />
       )}
@@ -135,11 +136,7 @@ export const SelectInput = ({
         </InputHeader>
       )}
       {disabled ? (
-        <TagPickerItem
-          key={value}
-          itemId={value}
-          label={options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}
-        />
+        <p>{options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}</p>
       ) : (
         <Select.Root value={value} onValueChange={handleValueChange}>
           {/* TODO(burdon): Placeholder not working? */}
@@ -205,17 +202,21 @@ export const MarkdownInput = ({
           <Input.Label>{label}</Input.Label>
         </InputHeader>
       )}
-      <Input.TextArea
-        ref={textareaRef}
-        disabled={disabled}
-        placeholder={placeholder}
-        value={getValue() ?? ''}
-        classNames={'min-bs-auto max-h-40 overflow-auto'}
-        onChange={(event) => onValueChange(type, event.target.value)}
-        onBlur={onBlur}
-        style={{ resize: 'none' }}
-        spellCheck={false}
-      />
+      {disabled ? (
+        <p>{getValue() ?? ''}</p>
+      ) : (
+        <Input.TextArea
+          ref={textareaRef}
+          disabled={disabled}
+          placeholder={placeholder}
+          value={getValue() ?? ''}
+          classNames={'min-bs-auto max-h-40 overflow-auto'}
+          onChange={(event) => onValueChange(type, event.target.value)}
+          onBlur={onBlur}
+          style={{ resize: 'none' }}
+          spellCheck={false}
+        />
+      )}
       {inputOnly && <Input.Validation>{error}</Input.Validation>}
     </Input.Root>
   );
