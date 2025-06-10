@@ -56,6 +56,7 @@ export const PluginItem = ({
       // TODO(burdon): Use Rail vars.
       classNames='is-full bs-full grid grid-cols-[48px_1fr_48px] grid-rows-[40px_1fr_32px] p-1 border border-separator rounded-md'
     >
+      {/* Header. */}
       <div className='flex flex-col grow justify-center items-center'>
         <Icon icon={icon} size={6} onClick={handleClick} classNames='text-subdued cursor-pointer' />
       </div>
