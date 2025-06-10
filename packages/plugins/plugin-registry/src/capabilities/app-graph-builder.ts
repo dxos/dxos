@@ -89,14 +89,14 @@ export default (context: PluginContext) =>
                     },
                   },
                   {
-                    id: `${REGISTRY_KEY}+experimental`,
+                    id: `${REGISTRY_KEY}+labs`,
                     type: 'category',
-                    data: `${REGISTRY_KEY}+experimental`,
+                    data: `${REGISTRY_KEY}+labs`,
                     properties: {
-                      label: ['experimental plugins label', { ns: REGISTRY_PLUGIN }],
+                      label: ['labs plugins label', { ns: REGISTRY_PLUGIN }],
                       icon: 'ph--flask--regular',
                       key: REGISTRY_KEY,
-                      testId: 'pluginRegistry.experimental',
+                      testId: 'pluginRegistry.labs',
                     },
                   },
                 ],

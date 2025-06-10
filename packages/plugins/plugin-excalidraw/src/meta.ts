@@ -12,6 +12,6 @@ export const meta: PluginMeta = {
   description: 'Excalidraw is a popular diagraming tool powered by Excalidraw’s open source graph editor.',
   icon: 'ph--compass-tool--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-excalidraw',
-  tags: ['experimental'],
+  tags: ['labs'],
   screenshots: ['https://dxos.network/plugin-details-excalidraw-dark.png'],
 };

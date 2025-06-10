@@ -12,6 +12,6 @@ export const meta: PluginMeta = {
   description:
     'Kanban allows you to explore Table data in sorted columns defined by your custom schema. You can use Kanbans to track progress or trigger custom automations when cards are moved from one state to another.',
   icon: 'ph--kanban--regular',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-kanban',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-kanban',
   screenshots: ['https://dxos.network/plugin-details-kanban-dark.png'],
 };
