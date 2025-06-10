@@ -30,7 +30,7 @@ export type ClientDocHandleEvents<T> = {
  */
 export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> implements IDocHandle<T> {
   private readonly _ready = new Trigger();
-  private _doc: A.Doc<T>;
+  private _doc?: A.Doc<T> = undefined;
 
   private _lastSentHeads: A.Heads = [];
   /**
@@ -72,6 +72,9 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   doc(): A.Doc<T> {
+    if (!this._doc) {
+      throw new Error('DocHandleProxy.doc called on deleted doc');
+    }
     return this._doc;
   }
 
@@ -116,7 +119,9 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     invariant(this._doc, 'DocHandleProxy.update called on deleted doc');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
-    this._doc = updateCallback(this._doc);
+    const newDoc = updateCallback(this._doc);
+    invariant(newDoc, 'DocHandleProxy.update returned undefined doc');
+    this._doc = newDoc;
     this.emit('change', {
       handle: this,
       doc: this._doc,
@@ -128,7 +133,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   delete(): void {
     this._callbacks?.onDelete();
     this.emit('delete', { handle: this });
-    this._doc = undefined as any as Doc<T>;
+    this._doc = undefined;
   }
 
   /**

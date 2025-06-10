@@ -137,7 +137,15 @@ export class ObjectCore {
   }
 
   getDoc() {
-    return this.doc ?? this.docHandle?.doc() ?? failedInvariant('Invalid state');
+    if (this.doc) {
+      return this.doc;
+    }
+
+    if (this.docHandle) {
+      return this.docHandle.doc();
+    }
+
+    throw new Error('Invalid ObjectCore state');
   }
 
   getObjectStructure(): ObjectStructure {
