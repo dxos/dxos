@@ -4,7 +4,17 @@
 
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { Schema } from 'effect';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  onTestFinished,
+  test,
+  type TestContext,
+} from 'vitest';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
@@ -533,11 +543,11 @@ describe('Queries', () => {
 
 // TODO(wittjosiah): 2/3 of these tests fail. They reproduce issues that we want to fix.
 describe('Query reactivity', () => {
-  let builder: EchoTestBuilder;
-  let db: EchoDatabase;
-  let objects: AnyLiveObject<any>[];
+  const setup = async (ctx: TestContext) => {
+    let builder: EchoTestBuilder;
+    let db: EchoDatabase;
+    let objects: AnyLiveObject<any>[];
 
-  beforeAll(async () => {
     builder = await new EchoTestBuilder().open();
     ({ db } = await builder.createDatabase());
 
@@ -547,15 +557,18 @@ describe('Query reactivity', () => {
     }
 
     await db.flush();
-  });
 
-  afterAll(async () => {
-    await builder.close();
-  });
+    ctx.onTestFinished(async () => {
+      await builder.close();
+    });
+
+    return { builder, db, objects };
+  };
 
   // TODO(dmaretskyi): Fires twice.
-  test.skip('fires only once when new objects are added', async () => {
-    const query = db.query({ label: 'red' });
+  test('fires only once when new objects are added', async (ctx) => {
+    const { db } = await setup(ctx);
+    const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
 
     let count = 0;
     let lastResult;
@@ -571,11 +584,15 @@ describe('Query reactivity', () => {
     expect(lastResult).to.have.length(4);
   });
 
-  test.skip('fires only once when objects are removed', async () => {
-    const query = db.query({ label: 'red' });
+  test('fires only once when objects are removed', async (ctx) => {
+    const { db, objects } = await setup(ctx);
+    const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
+    query.subscribe();
+    console.log('query.objects', query.objects);
     expect(query.objects).to.have.length(3);
     let count = 0;
     query.subscribe(() => {
+      console.log('query.objects', query.objects);
       count++;
       expect(query.objects).to.have.length(2);
     });
@@ -584,8 +601,10 @@ describe('Query reactivity', () => {
     expect(count).to.equal(1);
   });
 
-  test.skip('does not fire on object updates', async () => {
-    const query = db.query({ label: 'red' });
+  test('does not fire on object updates', async (ctx) => {
+    const { db, objects } = await setup(ctx);
+    const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
+    query.subscribe();
     expect(query.objects).to.have.length(3);
     query.subscribe(() => {
       throw new Error('Should not be called.');
@@ -594,8 +613,9 @@ describe('Query reactivity', () => {
     await sleep(10);
   });
 
-  test('can unsubscribe and resubscribe', async () => {
-    const query = db.query({ label: 'red' });
+  test('can unsubscribe and resubscribe', async (ctx) => {
+    const { db, objects } = await setup(ctx);
+    const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
 
     let count = 0;
     let lastCount = 0;
@@ -635,6 +655,27 @@ describe('Query reactivity', () => {
       lastCount = count;
       expect(lastResult).to.have.length(6);
     }
+  });
+
+  test('multiple queries do not influence each other', async (ctx) => {
+    const { db } = await setup(ctx);
+    const query1 = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
+    const query2 = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
+
+    let count1 = 0;
+    let count2 = 0;
+    query1.subscribe(() => {
+      count1++;
+    });
+    query2.subscribe(() => {
+      count2++;
+    });
+
+    db.add(createTestObject(6, 'red'));
+    await db.flush({ updates: true });
+
+    expect(count1).to.be.greaterThan(0);
+    expect(count2).to.be.greaterThan(0);
   });
 });
 

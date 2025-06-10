@@ -8,3 +8,4 @@ export * from './query-result';
 export * from './subscription';
 export * from './api';
 export * from './util';
+export * from './graph-query-context';
