@@ -47,7 +47,7 @@ const DefaultStory = <T extends BaseObject>({ schema, values: initialValues, ...
 
   return (
     <TestLayout json={{ values, schema: schema.ast.toJSON() }}>
-      <TestPanel>
+      <TestPanel classNames='bg-white'>
         <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
       </TestPanel>
     </TestLayout>

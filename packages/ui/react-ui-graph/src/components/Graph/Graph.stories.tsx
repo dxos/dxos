@@ -277,7 +277,7 @@ const Debug = ({
         <IconButton onClick={onToggleProjector} size={5} label='Projector' icon='ph--graph--regular' iconOnly />
         <IconButton onClick={onRefresh} size={5} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
         <IconButton onClick={onRepaint} size={5} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
-        <IconButton onClick={onRegenerate} size={5} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
+        <IconButton onClick={onRegenerate} size={5} label='Regenerate' icon='ph--dice-six--regular' iconOnly />
         <IconButton onClick={onClear} size={5} label='Clear' icon='ph--trash--regular' iconOnly />
         <IconButton onClick={onAdd} size={5} label='Add' icon='ph--plus--regular' iconOnly />
         <IconButton onClick={onDelete} size={5} label='Delete' icon='ph--x--regular' iconOnly />
