@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 
 import { forcePoint } from './graph-forces';
 import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
-import { type GraphLayoutEdge, type GraphLayoutNode } from './types';
+import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
 
 /**
  * Return value or invoke function.
@@ -175,19 +175,6 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
     return this._simulation.find(x, y, radius);
   }
 
-  override refresh(dragging = false) {
-    // Disable centering force while dragging.
-    if (this.forces.center) {
-      if (dragging) {
-        this._simulation.force('center', null);
-      } else {
-        this.updateForces(this.forces);
-      }
-    }
-
-    this.restart();
-  }
-
   override async onStart() {
     clearTimeout(this._timeout);
     let propagating = true;
@@ -222,6 +209,19 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
     this._simulation.stop();
   }
 
+  override onRefresh(dragging = false) {
+    // Disable centering force while dragging.
+    if (this.forces.center) {
+      if (dragging) {
+        this._simulation.force('center', null);
+      } else {
+        this.updateForces(this.forces);
+      }
+    }
+
+    this.restart();
+  }
+
   override onUpdate(graph?: Graph) {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this._simulation.stop();
@@ -233,7 +233,7 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
 
   private updateLayout() {
     // Guides.
-    this._layout.guides = this.options.guides
+    this.layout.guides = this.options.guides
       ? [
           {
             id: 'g-1',
@@ -246,10 +246,10 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
       : undefined;
 
     // Initialize nodes.
-    this._layout.graph.nodes.forEach((node) => {
+    this.layout.graph.nodes.forEach((node) => {
       if (!node.initialized) {
         // Get starting point from linked element.
-        const edge = this._layout.graph.edges.find((edge) => edge.target.id === this.options.idAccessor(node));
+        // const edge = this.layout.graph.edges.find((edge) => edge.target.id === this.options.idAccessor(node));
         const a = 2 * Math.PI * Math.random();
         const r = this.options.radius ?? 200;
 
@@ -257,9 +257,12 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
         Object.assign(node, {
           initialized: true,
 
+          // TODO(burdon): Only when new nodes added to initial layout.
           // Position around center or parent; must have delta to avoid spike.
-          x: edge?.source?.x ?? Math.cos(a) * r,
-          y: edge?.source?.y ?? Math.sin(a) * r,
+          // x: edge?.source?.x ?? Math.cos(a) * r,
+          // y: edge?.source?.y ?? Math.sin(a) * r,
+          x: Math.cos(a) * r,
+          y: Math.sin(a) * r,
         });
       }
 
@@ -270,7 +273,7 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
     });
 
     // Initialize edges.
-    this._layout.graph.edges.forEach((edge) => {
+    this.layout.graph.edges.forEach((edge) => {
       Object.assign(edge, {
         linkForce: getValue<boolean>(this.options.attributes?.linkForce, (fn) => fn(edge), true),
       });
@@ -288,7 +291,7 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
 
       // Nodes
       // https://github.com/d3/d3-force#simulation_nodes
-      .nodes(this._layout.graph.nodes)
+      .nodes(this.layout.graph.nodes)
 
       // Links.
       // https://github.com/d3/d3-force#forceLink
@@ -299,7 +302,7 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
           (config) => {
             const force = forceLink()
               .id((d: GraphLayoutNode) => d.id)
-              .links(this._layout.graph.edges.filter((edge) => edge.linkForce));
+              .links(this.layout.graph.edges.filter((edge) => edge.linkForce));
             if (config.distance != null) {
               force.distance(config.distance);
             }
