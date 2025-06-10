@@ -12,7 +12,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
-  createDrag,
+  createGraphDrag,
   GraphForceProjector,
   type GraphLayoutNode,
   type GraphProjector,
@@ -65,7 +65,8 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
     if (!renderer) {
       renderer = new GraphRenderer<Node>(context, graphRef, {
         ...props,
-        drag: drag ? createDrag(context, projector) : undefined, // TODO(burdon): Replace drag when projector is updated.
+        // TODO(burdon): Replace drag when projector is updated.
+        drag: drag ? createGraphDrag(context, projector) : undefined,
         arrows: { end: arrows },
         onNodeClick: onSelect ? (node: GraphLayoutNode, event) => onSelect(node, event) : undefined,
         onNodePointerEnter: onInspect ? (node: GraphLayoutNode, event) => onInspect(node, event) : undefined,

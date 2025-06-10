@@ -20,7 +20,7 @@ import {
   GraphRenderer,
   type GraphForceProjectorOptions,
   createMarkers,
-  createDrag,
+  createGraphDrag,
   linkerRenderer,
 } from '../graph';
 import { useSvgContext, useZoom, useGrid } from '../hooks';
@@ -68,7 +68,7 @@ const StoryComponent = ({
     if (!link) {
       renderer = new GraphRenderer(context, graphRef);
     } else {
-      const drag = createDrag(context, projector, {
+      const drag = createGraphDrag(context, projector, {
         onDrag: (source, target, point) => {
           select(graphRef.current).call(linkerRenderer, { source, target, point });
         },
