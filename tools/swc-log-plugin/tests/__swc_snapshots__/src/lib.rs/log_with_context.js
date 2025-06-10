@@ -1,4 +1,4 @@
-var __dxlog_file = "input.js";
+var __dxlog_file = "input.ts";
 import { log } from '@dxos/log';
 log('foo', {
     key: 'value'

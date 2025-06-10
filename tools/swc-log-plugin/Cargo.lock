@@ -1343,6 +1343,7 @@ dependencies = [
  "serde",
  "serde_json",
  "swc_core",
+ "swc_ecma_lexer",
 ]
 
 [[package]]

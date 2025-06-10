@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use swc_core::ecma::ast::{ExprOrSpread, NewExpr, Pass};
+use swc_core::ecma::ast::{Decorator, ExprOrSpread, NewExpr, Pass};
 use swc_core::ecma::transforms::testing::Tester;
 use swc_core::ecma::visit::visit_mut_pass;
 use swc_core::{
@@ -18,6 +18,7 @@ use swc_core::{
 };
 
 use config::Config;
+use swc_ecma_lexer::{Syntax, TsSyntax};
 
 use crate::config::TransformIdLookup;
 use crate::param_transform::{add_meta_to_params, Metadata, TransformSpec};
@@ -108,7 +109,7 @@ impl VisitMut for TransformVisitor {
             None => {
                 let vector = Vec::new();
                 n.args = Some(vector);
-                &mut n.args.clone().unwrap()
+                &mut n.args.clone().expect("new expr has no args")
             }
         };
 
@@ -194,7 +195,7 @@ pub fn process_transform(
 
 fn create_test_config() -> Config {
     Config {
-        filename: Some("input.js".into()),
+        filename: Some("input.ts".into()),
         to_transform: vec![
             TransformSpec {
                 name: "log".into(),

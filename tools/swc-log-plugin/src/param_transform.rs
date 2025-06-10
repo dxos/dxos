@@ -65,10 +65,12 @@ fn create_meta_props(
     args: &mut Vec<ExprOrSpread>,
     span: &Span,
 ) -> Vec<PropOrSpread> {
-    let span_lines = metadata.source_map.deref().span_to_lines(*span);
-    let line = match span_lines {
-        Ok(span_lines) => span_lines.lines[0].line_index + 1,
-        Err(_) => 0,
+    let line = match span.is_dummy() {
+        false => match metadata.source_map.deref().span_to_lines(*span) {
+            Ok(span_lines) => span_lines.lines[0].line_index + 1,
+            Err(_) => 0,
+        },
+        true => 0,
     };
 
     let mut props = vec![];
