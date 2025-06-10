@@ -12,5 +12,5 @@ export const meta: PluginMeta = {
   description: 'DXOS theme editor.',
   icon: 'ph--palette--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-theme-editor',
-  tags: ['experimental'],
+  tags: ['labs'],
 };

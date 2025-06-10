@@ -64,7 +64,7 @@ const booleanInputSurface =
 const booleanInputSurfaceHover =
   'hover:bg-unAccentHover hover:aria-checked:bg-accentSurfaceHover hover:aria-[checked=mixed]:bg-accentSurfaceHover';
 
-export const inputTextLabel = 'text-sm font-medium';
+export const inputTextLabel = 'text-xs font-medium';
 
 export const inputValence = (valence?: MessageValence) => {
   switch (valence) {

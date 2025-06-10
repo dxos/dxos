@@ -13,5 +13,5 @@ export const meta: PluginMeta = {
   description: 'Search ECHO spaces for content.',
   icon: 'ph--magnifying-glass--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-search',
-  tags: ['experimental'],
+  tags: ['labs'],
 };
