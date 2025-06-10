@@ -1,4 +1,4 @@
-use std::ops::{Deref, DerefMut};
+use std::ops::Deref;
 use std::sync::Arc;
 
 use serde::Deserialize;
@@ -102,7 +102,6 @@ fn create_meta_props(
     if config.include_args {
         let arg_snippets = args.iter().map(|a| {
             metadata
-                .deref()
                 .source_map
                 .span_to_snippet(a.span())
                 .unwrap_or("".into())

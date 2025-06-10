@@ -1,20 +1,18 @@
 use std::collections::HashMap;
-use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
-use swc_core::common::SyntaxContext;
 use swc_core::ecma::ast::{ExprOrSpread, NewExpr, Pass};
 use swc_core::ecma::transforms::testing::Tester;
-use swc_core::ecma::visit::{visit_mut_pass, Fold};
+use swc_core::ecma::visit::visit_mut_pass;
 use swc_core::{
-    common::{SourceMapper, Spanned, DUMMY_SP},
+    common::{Spanned, DUMMY_SP},
     ecma::{
         ast::{
             BindingIdent, CallExpr, Expr, Id, Ident, ImportDecl, ImportSpecifier, Lit,
             ModuleExportName, ModuleItem, Pat, Program, Stmt, Str, VarDecl, VarDeclarator,
         },
         transforms::testing::test,
-        visit::{FoldWith, VisitMut, VisitMutWith},
+        visit::{VisitMut, VisitMutWith},
     },
     plugin::{metadata::TransformPluginProgramMetadata, plugin_transform},
 };
@@ -237,7 +235,7 @@ fn test_factory(t: &mut Tester) -> impl Pass {
     })
 }
 
-/// Invoke `UPDATE=1 cargo test` to update expected test outputs.
+// Invoke `UPDATE=1 cargo test` to update expected test outputs.
 test!(
     Default::default(),
     test_factory,
