@@ -2,17 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import defaultsDeep from 'lodash.defaultsdeep';
-
-import { getObjectCore, QueryOptions } from '@dxos/client/echo';
 import { type AnyLiveObject } from '@dxos/client/echo';
 import { type WithTypeUrl, type Any } from '@dxos/codec-protobuf';
-import { cancelWithContext } from '@dxos/context';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
-import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
-import { isNonNullable } from '@dxos/util';
+import { type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
 
 import { Plugin } from '../plugin';
 
@@ -82,7 +77,7 @@ export class QueryPlugin extends Plugin {
   }
 }
 
-const createSnapshot = (item: AnyLiveObject<any>): EchoObjectProto => {
+const _createSnapshot = (item: AnyLiveObject<any>): EchoObjectProto => {
   // const item = getEchoObjectItem(object[base] as any)!;
   let model: WithTypeUrl<Any> | undefined;
   // if (!item?.modelMeta?.snapshotCodec) {

@@ -4,9 +4,10 @@
 
 import { expect, onTestFinished, test } from 'vitest';
 
+import { Filter } from '@dxos/echo-schema';
+
 import { fromAgent } from './agent';
 import { Client } from '../client';
-import { Filter } from '@dxos/echo-schema';
 
 // Requires running CLI daemon
 test.skip('connect to local CLI', async () => {
