@@ -8,7 +8,6 @@ import { getObjectCore, QueryOptions } from '@dxos/client/echo';
 import { type AnyLiveObject } from '@dxos/client/echo';
 import { type WithTypeUrl, type Any } from '@dxos/codec-protobuf';
 import { cancelWithContext } from '@dxos/context';
-import { DeprecatedFilter } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
@@ -45,40 +44,41 @@ export class QueryPlugin extends Plugin {
   }
 
   private async _processRequest(request: QueryRequest) {
-    const filter = DeprecatedFilter.fromProto(
-      defaultsDeep({}, { options: { dataLocation: QueryOptions.DataLocation.LOCAL } }, request.filter),
-    );
-    const { results: queryResults } = await this.context.client.spaces.query(filter, filter.options).run();
+    throw new Error('Not implemented');
+    // const filter = DeprecatedFilter.fromProto(
+    //   defaultsDeep({}, { options: { dataLocation: QueryOptions.DataLocation.LOCAL } }, request.filter),
+    // );
+    // const { results: queryResults } = await this.context.client.spaces.query(filter, filter.options).run();
 
-    const response: QueryResponse = {
-      queryId: request.queryId,
-      results:
-        queryResults
-          .map((result) => {
-            if (!result.object) {
-              return null;
-            }
+    // const response: QueryResponse = {
+    //   queryId: request.queryId,
+    //   results:
+    //     queryResults
+    //       .map((result) => {
+    //         if (!result.object) {
+    //           return null;
+    //         }
 
-            const objectCore = getObjectCore(result.object);
-            return {
-              id: result.id,
-              documentId: objectCore.docHandle!.documentId,
-              spaceId: result.spaceId,
-              spaceKey: result.spaceKey,
-              rank: result.match?.rank ?? 0,
-            };
-          })
-          .filter(isNonNullable) ?? [],
-      objects: queryResults.map((result) => createSnapshot(result.object!)) ?? [],
-    };
+    //         const objectCore = getObjectCore(result.object);
+    //         return {
+    //           id: result.id,
+    //           documentId: objectCore.docHandle!.documentId,
+    //           spaceId: result.spaceId,
+    //           spaceKey: result.spaceKey,
+    //           rank: result.match?.rank ?? 0,
+    //         };
+    //       })
+    //       .filter(isNonNullable) ?? [],
+    //   objects: queryResults.map((result) => createSnapshot(result.object!)) ?? [],
+    // };
 
-    await cancelWithContext(
-      this._ctx,
-      this.context.client!.spaces.default.postMessage(QUERY_CHANNEL, {
-        '@type': 'dxos.agent.query.QueryResponse',
-        ...response,
-      }),
-    );
+    // await cancelWithContext(
+    //   this._ctx,
+    //   this.context.client!.spaces.default.postMessage(QUERY_CHANNEL, {
+    //     '@type': 'dxos.agent.query.QueryResponse',
+    //     ...response,
+    //   }),
+    // );
   }
 }
 

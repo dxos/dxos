@@ -6,6 +6,7 @@ import { expect, onTestFinished, test } from 'vitest';
 
 import { fromAgent } from './agent';
 import { Client } from '../client';
+import { Filter } from '@dxos/echo-schema';
 
 // Requires running CLI daemon
 test.skip('connect to local CLI', async () => {
@@ -31,7 +32,7 @@ test.skip('connect to local CLI', async () => {
   const space = client.spaces.get()[0];
   await space.waitUntilReady();
 
-  const { objects } = space.db.query({});
+  const { objects } = space.db.query(Filter.everything());
   // console.log(objects.length);
   expect(objects).to.exist;
 

@@ -7,7 +7,7 @@ import { afterAll, onTestFinished, beforeAll, describe, expect, test } from 'vit
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
-import { type AnyLiveObject, type Live } from '@dxos/client/echo';
+import { Expando, type AnyLiveObject, type Live } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { Filter, Query, type QueryResult } from '@dxos/echo-db';
 import { TestSchemaType, createSpaceObjectGenerator } from '@dxos/echo-generator';
@@ -191,7 +191,7 @@ describe('QueryPlugin', () => {
 
     test('Text query', async () => {
       const results = await waitForQueryResults(
-        client.spaces.query(testName, {
+        client.spaces.query(Filter.type(Expando, { name: testName }), {
           dataLocation: QueryOptions.DataLocation.REMOTE,
         }),
       );
@@ -211,12 +211,9 @@ describe('QueryPlugin', () => {
     });
 
     test('Property query', async () => {
-      const query = client.spaces.query(
-        { name: testName },
-        {
-          dataLocation: QueryOptions.DataLocation.REMOTE,
-        },
-      );
+      const query = client.spaces.query(Filter.type(Expando, { name: testName }), {
+        dataLocation: QueryOptions.DataLocation.REMOTE,
+      });
       const results = await waitForQueryResults(query);
 
       expect(results.length >= 0).to.be.true;

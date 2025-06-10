@@ -11,6 +11,7 @@ import { type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 
 import { BaseCommand } from '../../base';
+import { Filter } from '@dxos/echo-schema';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
@@ -67,7 +68,7 @@ export default class List extends BaseCommand<typeof List> {
           update.emit();
         },
       });
-      const sub2 = space.db.query().subscribe(() => {
+      const sub2 = space.db.query(Filter.everything()).subscribe(() => {
         update.emit();
       });
       return {
