@@ -85,7 +85,7 @@
     "@lezer/common": "^1.2.2",
     "@lezer/highlight": "^1.2.1",
     "@octokit/core": "^4.0.4",
-    "@preact/signals-core": "^1.6.0",
+    "@preact/signals-core": "^1.9.0",
     "@typescript/vfs": "^1.6.0",
     "@valtown/codemirror-continue": "^2.3.1",
     "@valtown/codemirror-ts": "^2.2.0",

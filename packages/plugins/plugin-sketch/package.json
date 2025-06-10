@@ -65,7 +65,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.6.0",
+    "@preact/signals-core": "^1.9.0",
     "@tldraw/assets": "^3.0.0",
     "@tldraw/editor": "^3.0.0",
     "@tldraw/state": "^3.0.0",

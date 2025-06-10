@@ -70,7 +70,7 @@
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.6.0",
+    "@preact/signals-core": "^1.9.0",
     "@tldraw/tldraw": "^3.0.0",
     "date-fns": "^3.3.1",
     "react-json-tree": "^0.18.0",

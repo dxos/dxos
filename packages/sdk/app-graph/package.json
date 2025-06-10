@@ -32,7 +32,7 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.6.0",
+    "@preact/signals-core": "^1.9.0",
     "main-thread-scheduling": "^14.1.1"
   },
   "devDependencies": {

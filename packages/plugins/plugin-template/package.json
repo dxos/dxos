@@ -40,7 +40,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
-    "@preact/signals-core": "^1.6.0",
+    "@preact/signals-core": "^1.9.0",
     "effect": "3.14.21"
   },
   "devDependencies": {

@@ -27,7 +27,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.6.0",
+    "@preact/signals-core": "^1.9.0",
     "react-markdown": "^8.0.5"
   },
   "devDependencies": {
