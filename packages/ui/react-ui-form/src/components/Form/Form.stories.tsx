@@ -53,7 +53,7 @@ const meta: Meta<StoryProps<any>> = {
   title: 'ui/react-ui-form/Form',
   component: Form,
   render: DefaultStory,
-  decorators: [withTheme, withSurfaceVariantsLayout()],
+  decorators: [withSurfaceVariantsLayout(), withTheme],
   parameters: {
     translations,
   },
