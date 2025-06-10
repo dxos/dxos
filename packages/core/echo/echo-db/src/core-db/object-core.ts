@@ -17,7 +17,7 @@ import {
   type DatabaseDirectory,
 } from '@dxos/echo-protocol';
 import { ObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';

@@ -11,12 +11,12 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { type ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
+import type { QueryContext, QueryResultEntry, QueryRunOptions } from './query-result';
+import { getTargetSpacesForQuery, isTrivialSelectionQuery } from './util';
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
 import { type AnyLiveObject } from '../echo-handler';
 import { prohibitSignalActions } from '../guarded-scope';
 import { type EchoDatabaseImpl } from '../proxy-db';
-import type { QueryContext, QueryResultEntry, QueryRunOptions } from './query-result';
-import { getTargetSpacesForQuery, isTrivialSelectionQuery } from './util';
 
 export type GraphQueryContextParams = {
   // TODO(dmaretskyi): Make async.

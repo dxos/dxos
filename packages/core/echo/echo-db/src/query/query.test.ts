@@ -4,17 +4,7 @@
 
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { Schema } from 'effect';
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  onTestFinished,
-  test,
-  type TestContext,
-} from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test, type TestContext } from 'vitest';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
@@ -29,7 +19,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { Filter, Query } from './api';
-import { type AnyLiveObject, getObjectCore } from '../echo-handler';
+import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
 
@@ -544,14 +534,10 @@ describe('Queries', () => {
 // TODO(wittjosiah): 2/3 of these tests fail. They reproduce issues that we want to fix.
 describe('Query reactivity', () => {
   const setup = async (ctx: TestContext) => {
-    let builder: EchoTestBuilder;
-    let db: EchoDatabase;
-    let objects: AnyLiveObject<any>[];
+    const builder = await new EchoTestBuilder().open();
+    const { db } = await builder.createDatabase();
 
-    builder = await new EchoTestBuilder().open();
-    ({ db } = await builder.createDatabase());
-
-    objects = range(3).map((idx) => createTestObject(idx, 'red'));
+    const objects = range(3).map((idx) => createTestObject(idx, 'red'));
     for (const object of objects) {
       db.add(object);
     }
@@ -616,7 +602,7 @@ describe('Query reactivity', () => {
   });
 
   test('can unsubscribe and resubscribe', async (ctx) => {
-    const { db, objects } = await setup(ctx);
+    const { db } = await setup(ctx);
     const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
 
     let count = 0;
