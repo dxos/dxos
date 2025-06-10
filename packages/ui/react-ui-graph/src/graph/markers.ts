@@ -13,7 +13,7 @@ export type MarkerOptions = {
 };
 
 const createArrow =
-  (length: number, offset: number, start: boolean): D3Callable =>
+  (length: number, offset: number, start: boolean, root: Element): D3Callable =>
   (el) => {
     const height = length * 0.5;
     const path = createLine([
@@ -28,17 +28,29 @@ const createArrow =
       .attr('orient', 'auto')
       .attr('refX', offset)
       .append('path')
+      .attr('fill', 'none')
+      .attr('stroke', () => {
+        const path = select(root).select('path[data-color]');
+        const color = path.attr('data-color');
+        return color ? `var(--${color})` : 'currentColor';
+      })
       .attr('d', path);
   };
 
 const createDot =
-  (size: number): D3Callable =>
+  (size: number, root: Element): D3Callable =>
   (el) => {
     el.attr('markerWidth', size * 2)
       .attr('markerHeight', size * 2)
       .attr('viewBox', `-${size},-${size},${size * 2},${size * 2}`)
       .attr('orient', 'auto')
       .append('circle')
+      .attr('fill', 'none')
+      .attr('stroke', () => {
+        const path = select(root).select('path[data-color]');
+        const color = path.attr('data-color');
+        return color ? `var(--${color})` : 'currentColor';
+      })
       .attr('r', size / 2 - 1);
   };
 
@@ -55,17 +67,30 @@ export const createMarkers =
       .data([
         {
           id: 'marker-arrow-start',
-          generator: createArrow(arrowSize, -0.5, true),
+          generator: createArrow(
+            arrowSize,
+            -0.5,
+            true,
+            group.node()?.ownerSVGElement ?? document.createElementNS('http://www.w3.org/2000/svg', 'svg'),
+          ),
           className: 'dx-arrow',
         },
         {
           id: 'marker-arrow-end',
-          generator: createArrow(arrowSize, 0.5, false),
+          generator: createArrow(
+            arrowSize,
+            0.5,
+            false,
+            group.node()?.ownerSVGElement ?? document.createElementNS('http://www.w3.org/2000/svg', 'svg'),
+          ),
           className: 'dx-arrow',
         },
         {
           id: 'marker-dot',
-          generator: createDot(6),
+          generator: createDot(
+            6,
+            group.node()?.ownerSVGElement ?? document.createElementNS('http://www.w3.org/2000/svg', 'svg'),
+          ),
           className: 'dx-dot',
         },
       ])

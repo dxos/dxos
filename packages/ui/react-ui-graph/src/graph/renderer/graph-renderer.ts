@@ -24,7 +24,7 @@ export type AttributesOptions<NodeData = any, EdgeData = any> = {
     data?: Record<string, string>;
   };
 
-  link?: (edge: GraphLayoutEdge<NodeData, EdgeData>) => {
+  edge?: (edge: GraphLayoutEdge<NodeData, EdgeData>) => {
     classes?: Record<string, boolean>;
     data?: Record<string, string>;
   };
@@ -80,7 +80,6 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
           (update) => update,
           (exit) => exit.transition().duration(500).attr('r', 0).remove(),
         )
-        .attr('class', (d) => d.classes?.circle)
         .attr('cx', (d) => d.cx)
         .attr('cy', (d) => d.cy)
         .attr('r', (d) => d.r);
@@ -306,12 +305,7 @@ const updateNode: D3Callable = <NodeData = any, EdgeData = any>(
     : group;
 
   // Update circles.
-  groupOrTransition
-    .select<SVGCircleElement>('circle')
-    .attr('class', function () {
-      return (select(this.parentNode as any).datum() as GraphLayoutNode<NodeData>).classes?.circle;
-    })
-    .attr('r', (d) => d.r ?? 16);
+  groupOrTransition.select<SVGCircleElement>('circle').attr('r', (d) => d.r ?? 16);
 
   // Update labels.
   if (options.labels) {
@@ -323,12 +317,7 @@ const updateNode: D3Callable = <NodeData = any, EdgeData = any>(
 
     groupOrTransition
       .select<SVGTextElement>('text')
-      .attr('class', function () {
-        return (select(this.parentNode as any).datum() as GraphLayoutNode<NodeData>).classes?.text;
-      })
-      .text((d) => {
-        return options.labels.text(d);
-      })
+      .text((d) => options.labels.text(d))
       .style('text-anchor', (d) => (d.x > 0 ? 'start' : 'end'))
       .attr('dx', (d) => dx(d, offset))
       .attr('dy', 1)
@@ -354,7 +343,6 @@ const updateNode: D3Callable = <NodeData = any, EdgeData = any>(
 
         select(this.parentElement)
           .select('line')
-          .classed('stroke-neutral-500', true)
           .attr('x1', dx(d, 1))
           .attr('y1', 0)
           .attr('x2', dx(d, offset - (bx + px)))
@@ -377,7 +365,7 @@ const createEdge: D3Callable = <NodeData = any, EdgeData = any>(
     // Shadow path with wide stroke for click handler.
     group
       .append('path')
-      .attr('class', 'click')
+      .classed('dx-click', true)
       .on('click', (event: MouseEvent) => {
         const edge = select<SVGLineElement, GraphLayoutEdge<NodeData, EdgeData>>(
           event.target as SVGLineElement,
@@ -388,13 +376,13 @@ const createEdge: D3Callable = <NodeData = any, EdgeData = any>(
 
   group
     .append('path')
-    .classed('edge', true)
+    .classed('stroke-current', true)
+    // .attr('data-color', 'red-500')
+    // .attr('style', '--red-500: rgb(239 68 68);')
+    // .attr('stroke', 'color: var(--red-500);')
     .attr('pointer-events', 'none')
     .attr('marker-start', () => (options.arrows?.start ? 'url(#marker-arrow-start)' : undefined))
-    .attr('marker-end', () => (options.arrows?.end ? 'url(#marker-arrow-end)' : undefined))
-    .attr('class', function () {
-      return (select(this.parentNode as any).datum() as GraphLayoutEdge<NodeData, EdgeData>).classes?.path;
-    });
+    .attr('marker-end', () => (options.arrows?.end ? 'url(#marker-arrow-end)' : undefined));
 };
 
 /**
@@ -411,7 +399,7 @@ const updateEdge: D3Callable = <NodeData = any, EdgeData = any>(
   group.each((d, i, edges) => {
     const edge = select(edges[i]);
     edge.classed('dx-dashed', d.linkForce === false);
-    const { classes, data } = options.attributes?.link?.(d) ?? {};
+    const { classes, data } = options.attributes?.edge?.(d) ?? {};
     if (classes) {
       applyClasses(edge, classes);
     }

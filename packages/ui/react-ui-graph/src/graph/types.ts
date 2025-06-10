@@ -42,6 +42,7 @@ export type GraphGuide = {
 
 export type GraphLayoutNode<NodeData = any> = {
   id: string;
+  type?: string;
   data?: NodeData;
   x?: number;
   y?: number;
@@ -57,6 +58,7 @@ export type GraphLayoutNode<NodeData = any> = {
 
 export type GraphLayoutEdge<NodeData = any, EdgeData = any> = {
   id: string;
+  type?: string;
   source: GraphLayoutNode<NodeData>;
   target: GraphLayoutNode<NodeData>;
   data?: EdgeData;

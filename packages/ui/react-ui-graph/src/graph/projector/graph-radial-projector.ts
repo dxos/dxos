@@ -34,10 +34,6 @@ export class GraphRadialProjector<
   }
 
   protected animate() {
-    this._timer?.stop();
-
-    console.log(this.options.duration);
-
     const start = Date.now();
     if (this.options.duration) {
       this._timer = timer(() => {

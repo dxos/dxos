@@ -26,6 +26,7 @@ import {
   type GraphProjector,
   type GraphHierarchicalProjectorOptions,
   type GraphRelationalProjectorOptions,
+  type GraphLayoutEdge,
 } from '../../graph';
 import { type SVGContext } from '../../hooks';
 import { convertTreeToGraph, createGraph, createNode, createTree, TestGraphModel, type TestNode } from '../../testing';
@@ -192,10 +193,15 @@ const DefaultStory = ({
               attributes={{
                 node: (node: GraphLayoutNode<TestNode>) => ({
                   data: {
-                    color: node.data.type,
+                    color: node.data.type ?? node.type,
                   },
                   classes: {
                     'dx-selected': selection.contains(node.id),
+                  },
+                }),
+                edge: (edge: GraphLayoutEdge<TestNode>) => ({
+                  data: {
+                    color: edge.type,
                   },
                 }),
               }}
@@ -311,8 +317,7 @@ export const Radial: Story = {
     singleSelect: true,
     projectorType: 'hierarchical',
     projectorOptions: {
-      radius: 300,
-      duration: 300,
+      duration: 500,
       forces: {
         center: true,
         // radial: {
@@ -322,7 +327,7 @@ export const Radial: Story = {
         // },
       },
     },
-    graph: () => convertTreeToGraph(createTree({ depth: 4 })),
+    graph: () => convertTreeToGraph(createTree({ depth: 2 })),
   },
 };
 
