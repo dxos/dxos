@@ -7,7 +7,6 @@ import { capitalize } from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
-import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
@@ -68,7 +67,7 @@ export const FormField = ({
   });
 
   if (FoundComponent) {
-    return <div role='none'>{FoundComponent}</div>;
+    return FoundComponent;
   }
 
   const jsonPath = createJsonPath(path ?? []);
@@ -124,17 +123,15 @@ export const FormField = ({
   const InputComponent = getInputComponent(type, format);
   if (InputComponent) {
     return (
-      <div role='none'>
-        <InputComponent
-          type={type}
-          format={format}
-          label={label}
-          inputOnly={inline}
-          placeholder={placeholder}
-          disabled={readonly}
-          {...inputProps}
-        />
-      </div>
+      <InputComponent
+        type={type}
+        format={format}
+        label={label}
+        inputOnly={inline}
+        placeholder={placeholder}
+        disabled={readonly}
+        {...inputProps}
+      />
     );
   }
 
@@ -144,18 +141,16 @@ export const FormField = ({
 
   if (options) {
     return (
-      <div role='none'>
-        <SelectInput
-          type={type}
-          format={format}
-          disabled={readonly}
-          inputOnly={inline}
-          label={label}
-          options={options.map((option) => ({ value: option, label: String(option) }))}
-          placeholder={placeholder}
-          {...inputProps}
-        />
-      </div>
+      <SelectInput
+        type={type}
+        format={format}
+        disabled={readonly}
+        inputOnly={inline}
+        label={label}
+        options={options.map((option) => ({ value: option, label: String(option) }))}
+        placeholder={placeholder}
+        {...inputProps}
+      />
     );
   }
 
@@ -171,8 +166,8 @@ export const FormField = ({
 
     if (typeLiteral) {
       return (
-        <div role='none'>
-          {!inline && <h3 className='text-lg mbs-2 mbe-1'>{label}</h3>}
+        <>
+          {!inline && <h3 className='text-lg mbs-2 mbe-1 first:mbs-0'>{label}</h3>}
           <FormFields
             schema={Schema.make(typeLiteral)}
             path={path}
@@ -181,7 +176,7 @@ export const FormField = ({
             Custom={Custom}
             lookupComponent={lookupComponent}
           />
-        </div>
+        </>
       );
     }
   }
@@ -220,7 +215,7 @@ export const FormFields = ({
   }, [schema, values, filter, sort]);
 
   return (
-    <div role='form' className={mx('flex flex-col w-full gap-2')}>
+    <div role='form' className='is-full'>
       {properties
         .map((property) => {
           return (

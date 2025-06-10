@@ -9,7 +9,7 @@ import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
 
 import { DxThemeEditor as NaturalDxThemeEditor } from '@dxos/lit-theme-editor';
 import '@dxos/lit-theme-editor/dx-theme-editor.pcss';
-import { createComponent } from '@dxos/lit-ui';
+import { createComponent } from '@dxos/lit-ui/react';
 import { type ThemeMode, ThemeProvider, Tooltip, Dialog, IconButton } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { PARAM_KEY } from '@dxos/theme-editor-addon';
