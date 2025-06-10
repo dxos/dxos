@@ -6,7 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
 import { Capabilities, contributes, createIntent, SettingsAction, type PluginContext } from '@dxos/app-framework';
-import { createExtension } from '@dxos/plugin-graph';
+import { createExtension, ROOT_ID } from '@dxos/plugin-graph';
 
 import { REGISTRY_ID, REGISTRY_KEY, REGISTRY_PLUGIN } from '../meta';
 
@@ -128,24 +128,28 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
-    // createExtension({
-    //   id: `${REGISTRY_PLUGIN}/plugins`,
-    //   resolver: ({ id }) => {
-    //     const manager = context.requestCapability(Capabilities.PluginManager);
-    //     const plugin = manager.plugins.find((plugin) => plugin.meta.id === id.replaceAll(':', '/'));
-    //     if (!plugin) {
-    //       return;
-    //     }
-
-    //     return {
-    //       id,
-    //       type: 'dxos.org/plugin',
-    //       data: plugin,
-    //       properties: {
-    //         label: plugin.meta.name ?? plugin.meta.id,
-    //         icon: plugin.meta.icon ?? 'ph--circle--regular',
-    //       },
-    //     };
-    //   },
-    // }),
+    createExtension({
+      id: `${REGISTRY_PLUGIN}/plugins`,
+      connector: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => (node.id === REGISTRY_ID ? Option.some(node) : Option.none())),
+            Option.map(() => {
+              const manager = context.getCapability(Capabilities.PluginManager);
+              return manager.plugins.map((plugin) => ({
+                id: plugin.meta.id.replaceAll('/', ':'),
+                type: 'dxos.org/plugin',
+                data: plugin,
+                properties: {
+                  label: plugin.meta.name ?? plugin.meta.id,
+                  icon: plugin.meta.icon ?? 'ph--circle--regular',
+                  disposition: 'hidden',
+                },
+              }));
+            }),
+            Option.getOrElse(() => []),
+          ),
+        ),
+    }),
   ]);

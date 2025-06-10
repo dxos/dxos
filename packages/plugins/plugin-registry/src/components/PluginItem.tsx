@@ -29,7 +29,7 @@ export const PluginItem = ({
   onSettings,
 }: PluginItemProps) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
-  const { id, name, description, icon = 'ph--circle--regular' } = plugin.meta;
+  const { id, name, description, tags, icon = 'ph--circle--regular' } = plugin.meta;
   const isEnabled = enabled.includes(id);
   const inputId = `${id}-input`;
   const labelId = `${id}-label`;
@@ -71,11 +71,11 @@ export const PluginItem = ({
 
       {/* Body. */}
       <div />
-      {(description || homePage || source) && (
+      {(description || tags) && (
         <div id={descriptionId} className='col-span-2 flex flex-col w-full justify-between gap-2 pb-2'>
-          {plugin?.meta?.tags && plugin.meta.tags.length > 0 && (
+          {tags && tags.length > 0 && (
             <div>
-              {plugin.meta.tags.map((tag) => (
+              {tags.map((tag) => (
                 <Tag key={tag} palette={'indigo'} classNames='text-xs capitalize'>
                   {tag}
                 </Tag>
