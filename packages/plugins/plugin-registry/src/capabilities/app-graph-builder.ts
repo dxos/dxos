@@ -6,7 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
 import { Capabilities, contributes, createIntent, SettingsAction, type PluginContext } from '@dxos/app-framework';
-import { createExtension, ROOT_ID } from '@dxos/plugin-graph';
+import { createExtension } from '@dxos/plugin-graph';
 
 import { REGISTRY_ID, REGISTRY_KEY, REGISTRY_PLUGIN } from '../meta';
 
