@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { faker } from '@dxos/random';
 
 import { Select } from './Select';
-import { withVariants, withTheme } from '../../testing';
+import { withSurfaceVariants, withTheme } from '../../testing';
 
 faker.seed(1234);
 
@@ -50,6 +50,6 @@ export const Default: StoryObj<StoryProps> = {
 export default {
   title: 'ui/react-ui-core/Select',
   render: DefaultStory,
-  decorators: [withVariants(), withTheme],
+  decorators: [withSurfaceVariants(), withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };
