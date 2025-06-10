@@ -102,10 +102,10 @@ export class ZoomHandler {
  */
 export const useZoom = (options: ZoomOptions = defaultZoomOptions): ZoomHandler => {
   const context = useSvgContext();
+  const ref = useRef<SVGGElement>(null);
   const handler = useDeepCompareMemo(() => new ZoomHandler(ref, context, options), [context, options]);
 
   // TODO(burdon): Distinguish between zoom and pan.
-  const ref = useRef<SVGGElement>(null);
   useEffect(() => {
     // Transform container.
     handler.zoom.on('zoom', ({ transform }: { transform: ZoomTransform }) => {

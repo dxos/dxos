@@ -3,18 +3,19 @@
 //
 
 import { type Decorator } from '@storybook/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { raise } from '@dxos/debug';
+import { log } from '@dxos/log';
 
 import { createApp, type CreateAppOptions } from '../App';
 import { Capabilities, Events } from '../common';
 import {
-  type ActivationEvent,
-  type AnyCapability,
   contributes,
   defineModule,
   definePlugin,
+  type ActivationEvent,
+  type AnyCapability,
   PluginManager,
   type PluginContext,
 } from '../core';
@@ -62,17 +63,15 @@ export type WithPluginManagerOptions = CreateAppOptions & {
 
 /**
  * Wraps a story with a plugin manager.
+ * NOTE: This builds up and tears down the plugin manager on every render.
  */
 export const withPluginManager = (options: WithPluginManagerOptions = {}): Decorator => {
-  const pluginManager = setupPluginManager(options);
-  const App = createApp({ pluginManager });
-
-  options.fireEvents?.forEach((event) => {
-    void pluginManager.activate(event);
-  });
-
   return (Story, context) => {
+    const pluginManager = useMemo(() => setupPluginManager(options), [options]);
+
+    // Set-up root capability.
     useEffect(() => {
+      log('setup capabilities...');
       const capability = contributes(Capabilities.ReactRoot, {
         id: context.id,
         root: () => <Story />,
@@ -83,8 +82,25 @@ export const withPluginManager = (options: WithPluginManagerOptions = {}): Decor
         module: 'dxos.org/app-framework/withPluginManager',
       });
 
-      return () => pluginManager.context.removeCapability(capability.interface, capability.implementation);
-    }, []);
+      return () => {
+        log('removing capability...');
+        pluginManager.context.removeCapability(capability.interface, capability.implementation);
+      };
+    }, [pluginManager, context]);
+
+    // Fire events.
+    useEffect(() => {
+      log('firing events...');
+      options.fireEvents?.forEach((event) => {
+        void pluginManager.activate(event);
+      });
+    }, [pluginManager]);
+
+    // Create app.
+    const App = useMemo(() => {
+      log('creating app...');
+      return createApp({ pluginManager });
+    }, [pluginManager]);
 
     return <App />;
   };

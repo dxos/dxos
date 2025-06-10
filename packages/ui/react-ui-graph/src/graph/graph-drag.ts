@@ -2,11 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import { drag, pointer, select, type Simulation } from 'd3';
+import { drag, pointer, select } from 'd3';
 
-import { type GraphLayoutEdge, type GraphLayoutNode } from './types';
+import { type GraphProjector } from './graph-projector';
+import { type GraphLayoutNode } from './types';
 import { type SVGContext } from '../hooks';
 import { type Point } from '../util';
+
+enum Mode {
+  MOVE = 0,
+  LINK = 1,
+}
 
 export interface DragOptions<N> {
   dragMod?: string;
@@ -21,23 +27,18 @@ const defaultDragOptions: DragOptions<any> = {
   freezeMod: 'shiftKey',
 };
 
-enum Mode {
-  MOVE = 0,
-  LINK = 1,
-}
-
 /**
  * Create drag handler.
  */
-export const createDrag = <N>(
+// TODO(burdon): Stop centering force while dragging.
+export const createDrag = <NodeData>(
   context: SVGContext,
-  // TODO(burdon): Factor out dependency vis callback.
-  simulation: Simulation<GraphLayoutNode<N>, GraphLayoutEdge<N>>,
-  options: DragOptions<N> = defaultDragOptions,
+  projector: GraphProjector<NodeData>,
+  options: DragOptions<NodeData> = defaultDragOptions,
 ) => {
   let mode: Mode;
-  let source: GraphLayoutNode<N>;
-  let target: GraphLayoutNode<N>;
+  let source: GraphLayoutNode<NodeData>;
+  let target: GraphLayoutNode<NodeData> | undefined;
   let offset: Point | undefined;
 
   const keyMod = (event: MouseEvent, key: string): boolean => {
@@ -45,7 +46,7 @@ export const createDrag = <N>(
     return modKey === undefined || event[modKey];
   };
 
-  return drag<SVGElement, GraphLayoutNode<N>>()
+  return drag<SVGElement, GraphLayoutNode<NodeData>>()
     .filter((event: MouseEvent) => !event.ctrlKey)
     .on('start', function (event, d) {
       source = d;
@@ -74,15 +75,14 @@ export const createDrag = <N>(
           // Freeze node while dragging.
           event.subject.x = event.subject.fx = point[0];
           event.subject.y = event.subject.fy = point[1];
-
-          simulation.alphaTarget(0).alpha(1).restart();
+          projector.refresh(true);
           break;
         }
 
         case Mode.LINK: {
           // Get drop target.
           if (options?.onDrag) {
-            target = simulation.find(event.x, event.y, 16);
+            target = projector.findNode(event.x, event.y, 16);
             if (source === target) {
               select(context.svg).attr('cursor', undefined);
               options?.onDrag?.();
@@ -114,5 +114,6 @@ export const createDrag = <N>(
       source = undefined;
       target = undefined;
       offset = undefined;
+      projector.refresh(false);
     });
 };

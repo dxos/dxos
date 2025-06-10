@@ -6,7 +6,7 @@ import { batch } from '@preact/signals-core';
 
 import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
-import { getSource, getTarget, isRelation, type AnyLiveObject } from '@dxos/echo-db';
+import { getSource, getTarget, isRelation, type AnyLiveRelation, type AnyLiveObject } from '@dxos/echo-db';
 import { Filter, getSchema, getSchemaDXN, type EchoSchema, getLabel, Query } from '@dxos/echo-schema';
 import { Ref } from '@dxos/echo-schema';
 import { type GraphEdge, AbstractGraphBuilder, type Graph, ReactiveGraphModel, type GraphNode } from '@dxos/graph';
@@ -35,6 +35,8 @@ const defaultFilter: Filter<any> = Filter.everything();
 
 export type SpaceGraphModelOptions = {
   showSchema?: boolean;
+  onCreateNode?: (node: SpaceGraphNode, object: AnyLiveObject<any>) => void;
+  onCreateEdge?: (edge: SpaceGraphEdge, relation: AnyLiveRelation<any>) => void;
 };
 
 /**
@@ -145,7 +147,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     log('update', { nodes: this._graph.nodes.length, edges: this._graph.edges.length });
 
     // TOOD(burdon): Merge edges also?
-    const currentNodes = [...this._graph.nodes];
+    const currentNodes: SpaceGraphNode[] = [...this._graph.nodes] as SpaceGraphNode[];
 
     // TOOD(burdon): Causes D3 graph to reset since live? Batch preact changes?
     this.clear();
@@ -156,17 +158,18 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
       }
 
       if (typename) {
-        const current = currentNodes.find((node) => node.id === typename);
-        this._graph.nodes.push(
-          current ??
-            ({
-              id: typename,
-              type: 'schema',
-              data: {
-                label: typename,
-              },
-            } satisfies SpaceGraphNode),
-        );
+        let node = currentNodes.find((node) => node.id === typename);
+        if (!node) {
+          node = {
+            id: typename,
+            type: 'schema',
+            data: {
+              label: typename,
+            },
+          };
+        }
+
+        this._graph.nodes.push(node);
       }
     };
 
@@ -193,28 +196,38 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
         return;
       }
 
+      // Relation.
       if (isRelation(object) as boolean) {
-        this.addEdge({
+        const edge = this.addEdge({
           id: object.id,
           type: 'relation',
           source: getSource(object).id,
           target: getTarget(object).id,
+          data: {
+            object,
+          },
         });
+
+        this._options?.onCreateEdge?.(edge, object);
       } else {
+        // Object.
         const typename = getSchemaDXN(schema)?.typename;
         if (typename) {
-          const current = currentNodes.find((node) => node.id === object.id);
-          this._graph.nodes.push(
-            current ??
-              ({
-                id: object.id,
-                type: 'object',
-                data: {
-                  label: getLabel(schema, object) ?? object.id,
-                  object,
-                },
-              } satisfies SpaceGraphNode),
-          );
+          let node: SpaceGraphNode | undefined = currentNodes.find((node) => node.id === object.id);
+          if (!node) {
+            node = {
+              id: object.id,
+              type: 'object',
+              data: {
+                object,
+                label: getLabel(schema, object) ?? object.id,
+              },
+            };
+
+            this._options?.onCreateNode?.(node, object);
+          }
+
+          this._graph.nodes.push(node);
 
           // Link to schema.
           if (this._options?.showSchema) {
@@ -229,6 +242,9 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
                 type: 'schema',
                 source: object.id,
                 target: schemaNode.id,
+                data: {
+                  force: false,
+                },
               });
             }
           }
@@ -239,11 +255,15 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
             if (!ref.target) {
               continue;
             }
+
             this.addEdge({
               id: `${object.id}-${ref.dxn.toString()}`,
               type: 'ref',
               source: object.id,
               target: ref.target.id,
+              data: {
+                force: true,
+              },
             });
           }
         }

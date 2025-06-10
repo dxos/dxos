@@ -90,6 +90,12 @@ svg {
         path {
           @apply stroke-1 stroke-neutral-300 dark:stroke-neutral-600;
         }
+
+        &.dx-dashed {
+          path {
+            @apply [stroke-dasharray:4_4];
+          }
+        }
       }
     }
 
