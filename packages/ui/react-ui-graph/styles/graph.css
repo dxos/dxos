@@ -87,10 +87,10 @@ svg {
 
     g.dx-edges {
       g.dx-edge {
-        /* path { */
+        path {
           /** NOTE: Set text- so that current color is picked up by marker. */
-          /* @apply stroke-1 stroke-current text-neutral-700 dark:text-neutral-700; */
-        /* } */
+          @apply stroke-1 stroke-current text-neutral-700 dark:text-neutral-700;
+        }
 
         &.dx-dashed {
           path {
