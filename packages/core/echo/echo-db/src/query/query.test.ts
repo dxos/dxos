@@ -569,6 +569,7 @@ describe('Query reactivity', () => {
   test('fires only once when new objects are added', async (ctx) => {
     const { db } = await setup(ctx);
     const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
+    expect(query.runSync()).to.have.length(3);
 
     let count = 0;
     let lastResult;
@@ -579,17 +580,16 @@ describe('Query reactivity', () => {
     expect(count).to.equal(0);
 
     db.add(createTestObject(3, 'red'));
-    await db.flush({ updates: true });
-    expect(count).to.be.greaterThan(1);
+    await db.flush({ updates: true, indexes: true });
+    expect(count).to.equal(1);
     expect(lastResult).to.have.length(4);
   });
 
   test('fires only once when objects are removed', async (ctx) => {
     const { db, objects } = await setup(ctx);
     const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
-    query.subscribe();
-    console.log('query.objects', query.objects);
-    expect(query.objects).to.have.length(3);
+    expect(query.runSync()).to.have.length(3);
+
     let count = 0;
     query.subscribe(() => {
       console.log('query.objects', query.objects);
@@ -597,20 +597,22 @@ describe('Query reactivity', () => {
       expect(query.objects).to.have.length(2);
     });
     db.remove(objects[0]);
-    await sleep(10);
+    await db.flush({ updates: true, indexes: true });
     expect(count).to.equal(1);
   });
 
   test('does not fire on object updates', async (ctx) => {
     const { db, objects } = await setup(ctx);
     const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
-    query.subscribe();
-    expect(query.objects).to.have.length(3);
+    expect(query.runSync()).to.have.length(3);
+
+    let updateCount = 0;
     query.subscribe(() => {
-      throw new Error('Should not be called.');
+      updateCount++;
     });
     objects[0].title = 'Task 0a';
     await sleep(10);
+    expect(updateCount).to.equal(0);
   });
 
   test('can unsubscribe and resubscribe', async (ctx) => {
@@ -672,10 +674,10 @@ describe('Query reactivity', () => {
     });
 
     db.add(createTestObject(6, 'red'));
-    await db.flush({ updates: true });
+    await db.flush({ updates: true, indexes: true });
 
-    expect(count1).to.be.greaterThan(0);
-    expect(count2).to.be.greaterThan(0);
+    expect(count1).toEqual(1);
+    expect(count2).toEqual(1);
   });
 });
 

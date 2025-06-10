@@ -40,6 +40,9 @@ export interface QuerySource {
   // TODO(dmaretskyi): Make async.
   close(): void;
 
+  /**
+   * Synchronous query.
+   */
   getResults(): QueryResultEntry[];
 
   /**
