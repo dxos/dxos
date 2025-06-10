@@ -20,7 +20,7 @@ export class GraphHierarchicalProjector<
   Options extends GraphHierarchicalProjectorOptions = any,
 > extends GraphRadialProjector<NodeData, Options> {
   protected override onUpdate(graph?: Graph) {
-    log.info('onUpdate', {
+    log('onUpdate', {
       graph: { nodes: graph?.nodes.length, edges: graph?.edges.length },
       selection: this.selection?.selected.value,
     });

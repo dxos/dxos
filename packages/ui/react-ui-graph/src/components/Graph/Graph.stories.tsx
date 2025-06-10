@@ -87,7 +87,7 @@ const DefaultStory = ({
     }
 
     const Projector = projectorTypes[projectorType];
-    setProjector(new Projector(context.current, projectorOptions, selection));
+    setProjector((projector) => new Projector(context.current, projectorOptions, selection, projector?.layout));
   }, [context.current, selection, projectorType, projectorOptions]);
 
   const popoverAnchorRef = useRef<HTMLButtonElement | null>(null);
@@ -318,14 +318,6 @@ export const Radial: Story = {
     projectorType: 'hierarchical',
     projectorOptions: {
       duration: 500,
-      forces: {
-        center: true,
-        // radial: {
-        //   delay: 500,
-        //   radius: 200,
-        //   strength: 0.5,
-        // },
-      },
     },
     graph: () => convertTreeToGraph(createTree({ depth: 4 })),
   },

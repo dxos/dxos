@@ -20,7 +20,7 @@ export class GraphRelationalProjector<
   Options extends GraphRelationalProjectorOptions = any,
 > extends GraphRadialProjector<NodeData, Options> {
   protected override onUpdate(graph?: Graph) {
-    log.info('onUpdate', {
+    log('onUpdate', {
       graph: { nodes: graph?.nodes.length, edges: graph?.edges.length },
       selection: this.selection?.selected.value,
     });
@@ -43,9 +43,6 @@ export class GraphRelationalProjector<
       return;
     }
 
-    // Root.
-    updateNode(selected, [0, 0], 30);
-
     // TODO(burdon): Generate edge types.
     const r2 =
       this.options.radius ??
@@ -53,11 +50,15 @@ export class GraphRelationalProjector<
     const r1 = r2 * 0.5;
 
     this.layout.graph.nodes.forEach((node) => (node.type = undefined));
-    this.layout.graph.edges.forEach((edge) => (edge.type = undefined));
+    this.layout.graph.edges.forEach((edge) => {
+      edge.order = 0;
+      edge.type = undefined;
+    });
 
     const children = this.layout.graph.edges
       .filter((edge) => edge.source.id === selected.id)
       .map((edge) => {
+        edge.order = 1;
         edge.type = '1';
         edge.target.type = '1';
         return edge.target;
@@ -66,10 +67,14 @@ export class GraphRelationalProjector<
     const parents = this.layout.graph.edges
       .filter((edge) => edge.target.id === selected.id)
       .map((edge) => {
+        edge.order = 2;
         edge.type = '2';
         edge.source.type = '2';
         return edge.source;
       });
+
+    // Root.
+    updateNode(selected, [0, 0], 30);
 
     // Children.
     {

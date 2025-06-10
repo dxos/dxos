@@ -180,7 +180,8 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
               select(this).remove();
             });
         },
-      );
+      )
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
     //
     // Edges
@@ -198,7 +199,8 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
             .call(createEdge, this.options),
         (update) => update.call(updateEdge, this.options, nodeGroup).each((d) => {}),
         (exit) => exit.remove(),
-      );
+      )
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   }
 
   /**
