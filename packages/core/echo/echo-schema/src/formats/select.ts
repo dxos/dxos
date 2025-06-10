@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { S } from '@dxos/effect';
+import { Schema } from 'effect';
 
 /** Schema for a single select option. Used to define choices in a {single|multi}-select field. */
-export const SelectOptionSchema = S.Struct({
+export const SelectOptionSchema = Schema.Struct({
   /** Stable identifier for the option. */
-  id: S.NonEmptyString,
-  title: S.String,
+  id: Schema.NonEmptyString,
+  title: Schema.String,
   /** Color palette used for visual styling. */
-  color: S.String,
-}).pipe(S.mutable);
+  color: Schema.String,
+}).pipe(Schema.mutable);
 
-export type SelectOption = S.Schema.Type<typeof SelectOptionSchema>;
+export type SelectOption = Schema.Schema.Type<typeof SelectOptionSchema>;

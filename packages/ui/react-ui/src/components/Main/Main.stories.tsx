@@ -22,11 +22,11 @@ const ComplementarySidebarToggle = () => {
   return <Button onClick={toggleComplementarySidebar}>Toggle complementary sidebar</Button>;
 };
 
-const StoryMain = (_args: StoryMainArgs) => {
+const DefaultStory = (_args: StoryMainArgs) => {
   return (
     <Main.Root>
       <Main.Overlay />
-      <Main.NavigationSidebar classNames='p-4'>
+      <Main.NavigationSidebar label='Navigation' classNames='p-4'>
         <p>Navigation sidebar content, hi!</p>
         <NavigationSidebarToggle />
       </Main.NavigationSidebar>
@@ -37,7 +37,7 @@ const StoryMain = (_args: StoryMainArgs) => {
           <NavigationSidebarToggle />
         </div>
       </Main.Content>
-      <Main.ComplementarySidebar classNames='p-4'>
+      <Main.ComplementarySidebar label='Complementary content' classNames='p-4'>
         <p>Complementary sidebar content, hello!</p>
         <ComplementarySidebarToggle />
       </Main.ComplementarySidebar>
@@ -48,7 +48,7 @@ const StoryMain = (_args: StoryMainArgs) => {
 export default {
   title: 'ui/react-ui-core/Main',
   component: Main.Root,
-  render: StoryMain,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

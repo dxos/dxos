@@ -8,7 +8,7 @@ import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { unsafeStatic, html as staticHtml } from 'lit/static-html.js';
 
-import { defaultSizeCol, defaultSizeRow } from './defs';
+import { defaultColSize, defaultRowSize } from './defs';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import './dx-grid-axis-resize-handle';
 import {
@@ -58,6 +58,7 @@ import {
   resolveColPlane,
   resolveFrozenPlane,
   isSameCell,
+  isReadonly,
 } from './util';
 
 @customElement('dx-grid')
@@ -84,12 +85,12 @@ export class DxGrid extends LitElement {
 
   @property({ type: Object })
   rowDefault: DxGridPlaneRecord<DxGridFrozenRowsPlane, DxGridAxisMetaProps> = {
-    grid: { size: defaultSizeRow },
+    grid: { size: defaultRowSize },
   };
 
   @property({ type: Object })
   columnDefault: DxGridPlaneRecord<DxGridFrozenColsPlane, DxGridAxisMetaProps> = {
-    grid: { size: defaultSizeCol },
+    grid: { size: defaultColSize },
   };
 
   @property({ type: Object })
@@ -166,13 +167,13 @@ export class DxGrid extends LitElement {
   private binInlineMin = 0;
 
   @state()
-  private binInlineMax = defaultSizeCol;
+  private binInlineMax = defaultColSize;
 
   @state()
   private binBlockMin = 0;
 
   @state()
-  private binBlockMax = defaultSizeRow;
+  private binBlockMax = defaultRowSize;
 
   //
   // `vis`, short for ‘visible’, is the range in numeric index of the columns or rows which should be rendered within
@@ -261,15 +262,17 @@ export class DxGrid extends LitElement {
     this.snapPosToFocusedCell();
     if (!this.cellReadonly(this.focusedCell.col, this.focusedCell.row, this.focusedCell.plane)) {
       // Without deferring, the event dispatches before `focusedCellBox` can get updated bounds of the cell, hence:
-      queueMicrotask(() =>
-        this.dispatchEvent(
+      queueMicrotask(() => {
+        const cellIndex = toCellIndex(this.focusedCell);
+        return this.dispatchEvent(
           new DxEditRequest({
-            cellIndex: toCellIndex(this.focusedCell),
+            cellIndex,
             cellBox: this.focusedCellBox(),
+            cellElement: this.focusedCellElement(),
             initialContent,
           }),
-        ),
-      );
+        );
+      });
     }
   }
 
@@ -494,12 +497,12 @@ export class DxGrid extends LitElement {
 
   private colSize(c: number | string, plane: DxGridPlane) {
     const resolvedPlane = resolveColPlane(plane);
-    return this.colSizes?.[resolvedPlane]?.[c] ?? this.columnDefault[resolvedPlane]?.size ?? defaultSizeCol;
+    return this.colSizes?.[resolvedPlane]?.[c] ?? this.columnDefault[resolvedPlane]?.size ?? defaultColSize;
   }
 
   private rowSize(r: number | string, plane: DxGridPlane) {
     const resolvedPlane = resolveRowPlane(plane);
-    return this.rowSizes?.[resolvedPlane]?.[r] ?? this.rowDefault[resolvedPlane]?.size ?? defaultSizeRow;
+    return this.rowSizes?.[resolvedPlane]?.[r] ?? this.rowDefault[resolvedPlane]?.size ?? defaultRowSize;
   }
 
   private cell(c: number | string, r: number | string, plane: DxGridPlane): DxGridCellValue | undefined {
@@ -1016,6 +1019,10 @@ export class DxGrid extends LitElement {
     this.updatePosBlock(this.blockOffset(row, 'grid'));
   }
 
+  scrollToEndRow() {
+    this.updatePosBlock(Infinity);
+  }
+
   //
   // Map scroll DOM methods to virtualized value.
   //
@@ -1222,21 +1229,44 @@ export class DxGrid extends LitElement {
     const colPlane = resolveColPlane(plane);
     const rowPlane = resolveRowPlane(plane);
 
+    // Check cell-specific setting first.
     const cellReadonly = this.cell(col, row, plane)?.readonly;
     if (cellReadonly !== undefined) {
-      return cellReadonly;
+      return isReadonly(cellReadonly);
     }
 
-    return (
-      (this.columns?.[colPlane]?.[col]?.readonly ?? this.columnDefault?.[colPlane]?.readonly) ||
-      (this.rows?.[rowPlane]?.[row]?.readonly ?? this.rowDefault?.[rowPlane]?.readonly)
-    );
+    // Check column/row defaults.
+    const colReadOnly = this.columns?.[colPlane]?.[col]?.readonly ?? this.columnDefault?.[colPlane]?.readonly;
+    const rowReadOnly = this.rows?.[rowPlane]?.[row]?.readonly ?? this.rowDefault?.[rowPlane]?.readonly;
+
+    return isReadonly(colReadOnly) || isReadonly(rowReadOnly);
+  }
+
+  /**
+   * Determines if the cell's text content should be selectable based on its readonly value.
+   * @returns true if the cells text content is selectable, false otherwise.
+   */
+  private cellTextSelectable(col: number, row: number, plane: DxGridPlane): boolean {
+    const colPlane = resolveColPlane(plane);
+    const rowPlane = resolveRowPlane(plane);
+
+    // Check cell-specific setting first.
+    const cellReadonly = this.cell(col, row, plane)?.readonly;
+    if (cellReadonly !== undefined) {
+      return cellReadonly === 'text-select';
+    }
+
+    // Check column/row defaults.
+    const colReadonly = this.columns?.[colPlane]?.[col]?.readonly ?? this.columnDefault?.[colPlane]?.readonly;
+    const rowReadonly = this.rows?.[rowPlane]?.[row]?.readonly ?? this.rowDefault?.[rowPlane]?.readonly;
+    return colReadonly === 'text-select' || rowReadonly === 'text-select';
   }
 
   private renderCell(col: number, row: number, plane: DxGridPlane, selected?: boolean, visCol = col, visRow = row) {
     const cell = this.cell(col, row, plane);
     const active = this.cellActive(col, row, plane);
     const readonly = this.cellReadonly(col, row, plane);
+    const textSelectable = this.cellTextSelectable(col, row, plane);
     const resizeIndex = cell?.resizeHandle ? (cell.resizeHandle === 'col' ? col : row) : undefined;
     const resizePlane = cell?.resizeHandle ? resolveFrozenPlane(cell.resizeHandle, plane) : undefined;
     const accessory = cell?.accessoryHtml ? staticHtml`${unsafeStatic(cell.accessoryHtml)}` : null;
@@ -1248,6 +1278,7 @@ export class DxGrid extends LitElement {
       class=${cell?.className ?? nothing}
       data-refs=${cell?.dataRefs ?? nothing}
       ?data-dx-active=${active}
+      data-text-selectable=${textSelectable ? 'true' : 'false'}
       data-dx-grid-action="cell"
       aria-colindex=${col}
       aria-rowindex=${row}

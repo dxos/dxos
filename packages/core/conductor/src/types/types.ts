@@ -2,14 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
 //
 // Base types
 //
 
-export const createInputSchema = (schema: S.Schema<any>): S.Schema<any> => S.Struct({ [DEFAULT_INPUT]: schema });
-export const createOutputSchema = (schema: S.Schema<any>): S.Schema<any> => S.Struct({ [DEFAULT_OUTPUT]: schema });
+export const createInputSchema = (schema: Schema.Schema.AnyNoContext): Schema.Schema.AnyNoContext =>
+  Schema.Struct({ [DEFAULT_INPUT]: schema });
+export const createOutputSchema = (schema: Schema.Schema.AnyNoContext): Schema.Schema.AnyNoContext =>
+  Schema.Struct({ [DEFAULT_OUTPUT]: schema });
 
 export type InputType<INPUT = any> = {
   [DEFAULT_INPUT]: INPUT;
@@ -26,8 +28,8 @@ export type OutputType<OUTPUT = any> = {
 export const DEFAULT_INPUT = 'input';
 export const DEFAULT_OUTPUT = 'result';
 
-export const DefaultInput = S.Struct({ [DEFAULT_INPUT]: S.Any });
-export const DefaultOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Any });
+export const DefaultInput = Schema.Struct({ [DEFAULT_INPUT]: Schema.Any });
+export const DefaultOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Any });
 
 export type DefaultInput<T> = { [DEFAULT_INPUT]: T };
 export type DefaultOutput<T> = { [DEFAULT_OUTPUT]: T };
@@ -36,18 +38,18 @@ export type DefaultOutput<T> = { [DEFAULT_OUTPUT]: T };
 // Void
 //
 
-export const VoidInput = S.Struct({});
-export const VoidOutput = S.Struct({});
+export const VoidInput = Schema.Struct({});
+export const VoidOutput = Schema.Struct({});
 
-export type VoidInput = S.Schema.Type<typeof VoidInput>;
-export type VoidOutput = S.Schema.Type<typeof VoidOutput>;
+export type VoidInput = Schema.Schema.Type<typeof VoidInput>;
+export type VoidOutput = Schema.Schema.Type<typeof VoidOutput>;
 
 //
 // Any
 //
 
-export const AnyInput = S.Struct({ [DEFAULT_INPUT]: S.Any });
-export const AnyOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Any });
+export const AnyInput = Schema.Struct({ [DEFAULT_INPUT]: Schema.Any });
+export const AnyOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Any });
 
-export type AnyInput = S.Schema.Type<typeof AnyInput>;
-export type AnyOutput = S.Schema.Type<typeof AnyOutput>;
+export type AnyInput = Schema.Schema.Type<typeof AnyInput>;
+export type AnyOutput = Schema.Schema.Type<typeof AnyOutput>;

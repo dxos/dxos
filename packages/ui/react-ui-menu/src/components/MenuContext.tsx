@@ -5,7 +5,7 @@
 import { createContextScope, type Scope } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo } from 'react';
 
-import { type MenuContextValue, type MenuItem, type MenuItemGroup } from '../defs';
+import { type MenuContextValue, type MenuItem, type MenuItemGroup } from '../types';
 
 export type MenuScopedProps<P> = P & { __menuScope?: Scope };
 
@@ -17,28 +17,20 @@ const [MenuContextProvider, useMenu] = createMenuContext<MenuContextValue>(MENU_
 
 export const menuContextDefaults: MenuContextValue = {
   iconSize: 5,
-  onAction: () => {},
-  resolveGroupItems: () => null,
+  useGroupItems: () => null,
 };
 
 const useMenuScope = createMenuScope();
 
 const MenuProvider = ({
   children,
-  resolveGroupItems = menuContextDefaults.resolveGroupItems,
-  onAction = menuContextDefaults.onAction,
+  useGroupItems = menuContextDefaults.useGroupItems,
   iconSize = menuContextDefaults.iconSize,
   attendableId,
 }: PropsWithChildren<Partial<MenuContextValue>>) => {
   const { scope } = useMenuScope(undefined);
   return (
-    <MenuContextProvider
-      resolveGroupItems={resolveGroupItems}
-      onAction={onAction}
-      iconSize={iconSize}
-      attendableId={attendableId}
-      scope={scope}
-    >
+    <MenuContextProvider useGroupItems={useGroupItems} iconSize={iconSize} attendableId={attendableId} scope={scope}>
       {children}
     </MenuContextProvider>
   );
@@ -50,8 +42,9 @@ export const useMenuItems = (
   consumerName: string = 'useMenuItemConsumer',
   __menuScope?: Scope,
 ) => {
-  const { resolveGroupItems } = useMenu(consumerName, __menuScope);
-  return useMemo(() => propsItems ?? resolveGroupItems?.(group) ?? undefined, [propsItems, group, resolveGroupItems]);
+  const { useGroupItems } = useMenu(consumerName, __menuScope);
+  const groupItems = useGroupItems(group);
+  return useMemo(() => propsItems ?? groupItems ?? undefined, [propsItems, groupItems]);
 };
 
 export { useMenu, createMenuScope, MenuProvider };

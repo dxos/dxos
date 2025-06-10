@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type Client } from '../client';
-import { create, Expando, SpaceState } from '../echo';
+import { live, Expando, SpaceState } from '../echo';
 import { createInitializedClientsWithContext, performInvitation, waitForSpace } from '../testing';
 
 describe('Lazy Space Loading', () => {
@@ -104,7 +104,7 @@ describe('Lazy Space Loading', () => {
     const guestSpace = await inviteMember(createdSpace, guest);
 
     await reload(host);
-    const guestObject = guestSpace.db.add(create(Expando, {}));
+    const guestObject = guestSpace.db.add(live(Expando, {}));
 
     const hostSpace = findClientSpace(host, createdSpace);
     await openAndWaitReady(hostSpace);

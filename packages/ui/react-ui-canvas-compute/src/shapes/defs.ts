@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AST } from '@effect/schema';
+import { Schema, SchemaAST } from 'effect';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { ObjectId, S } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/echo-schema';
 import { Polygon } from '@dxos/react-ui-canvas-editor';
 import { type MakeOptional } from '@dxos/util';
 
@@ -15,8 +15,8 @@ import { type MakeOptional } from '@dxos/util';
 
 export type PropertyKind = 'input' | 'output';
 
-export const getProperties = (ast: AST.AST) =>
-  AST.getPropertySignatures(ast).map(({ name }) => ({ name: name.toString() }));
+export const getProperties = (ast: SchemaAST.AST) =>
+  SchemaAST.getPropertySignatures(ast).map(({ name }) => ({ name: name.toString() }));
 
 export const createAnchorId = (kind: PropertyKind, property = kind === 'input' ? DEFAULT_INPUT : DEFAULT_OUTPUT) =>
   [kind, property].join('.');
@@ -32,15 +32,15 @@ export const parseAnchorId = (id: string): [PropertyKind | undefined, string] =>
 
 export type CreateShapeProps<S extends Polygon> = Omit<MakeOptional<S, 'id' | 'size'>, 'type' | 'node'>;
 
-export const ComputeShape = S.extend(
+export const ComputeShape = Schema.extend(
   Polygon,
-  S.Struct({
+  Schema.Struct({
     // TODO(burdon): Rename computeNode?
-    node: S.optional(ObjectId.annotations({ [AST.DescriptionAnnotationId]: 'Compute node id' })),
-  }).pipe(S.mutable),
+    node: Schema.optional(ObjectId.annotations({ description: 'Compute node id' })),
+  }).pipe(Schema.mutable),
 );
 
-export type ComputeShape = S.Schema.Type<typeof ComputeShape>;
+export type ComputeShape = Schema.Schema.Type<typeof ComputeShape>;
 
 export const createShape = <S extends ComputeShape>({ id, ...rest }: CreateShapeProps<S> & { type: string }): S => {
   return {

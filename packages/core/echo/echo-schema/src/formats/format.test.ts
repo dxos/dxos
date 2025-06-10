@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, test } from 'vitest';
-
-import { S } from '@dxos/effect';
 
 import { Format } from './format';
 import { FormatEnum, TypeEnum, getTypeEnum } from './types';
@@ -12,17 +11,17 @@ import { toJsonSchema } from '../json';
 
 describe('formats', () => {
   test('annotations', ({ expect }) => {
-    const TestSchema = S.Struct({
-      name: S.String,
-      email: S.optional(Format.Email),
-      salary: S.optional(Format.Currency({ decimals: 2, code: 'usd' })),
-      website: S.optional(Format.URL),
-      birthday: S.optional(Format.Date),
-      started: S.optional(Format.DateTime),
-      active: S.optional(S.Boolean),
-    }).pipe(S.mutable);
+    const TestSchema = Schema.Struct({
+      name: Schema.String,
+      email: Schema.optional(Format.Email),
+      salary: Schema.optional(Format.Currency({ decimals: 2, code: 'usd' })),
+      website: Schema.optional(Format.URL),
+      birthday: Schema.optional(Format.Date),
+      started: Schema.optional(Format.DateTime),
+      active: Schema.optional(Schema.Boolean),
+    }).pipe(Schema.mutable);
 
-    type TestType = S.Schema.Type<typeof TestSchema>;
+    type TestType = Schema.Schema.Type<typeof TestSchema>;
 
     const jsonSchema = toJsonSchema(TestSchema);
 
@@ -32,7 +31,7 @@ describe('formats', () => {
       birthday: '1999-06-11',
     };
 
-    const validate = S.validateSync(TestSchema);
+    const validate = Schema.validateSync(TestSchema);
     validate(data);
 
     {

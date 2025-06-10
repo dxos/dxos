@@ -5,18 +5,18 @@
 import React, { useCallback } from 'react';
 
 import { IconButton, List, ListItem, useTranslation } from '@dxos/react-ui';
-import { type AccessTokenType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { TOKEN_MANAGER_PLUGIN } from '../meta';
 
 export type TokenManagerProps = {
-  tokens: AccessTokenType[];
-  onDelete?: (token: AccessTokenType) => void;
+  tokens: DataType.AccessToken[];
+  onDelete?: (token: DataType.AccessToken) => void;
 };
 
 export const TokenManager = ({ tokens, onDelete }: TokenManagerProps) => {
   return (
-    <List classNames='flex flex-col gap-2'>
+    <List classNames='space-y-2'>
       {tokens.map((token) => (
         <TokenItem key={token.id} token={token} onDelete={onDelete} />
       ))}
@@ -25,8 +25,8 @@ export const TokenManager = ({ tokens, onDelete }: TokenManagerProps) => {
 };
 
 type TokenItemProps = {
-  token: AccessTokenType;
-  onDelete?: (token: AccessTokenType) => void;
+  token: DataType.AccessToken;
+  onDelete?: (token: DataType.AccessToken) => void;
 };
 
 const TokenItem = ({ token, onDelete }: TokenItemProps) => {
@@ -38,7 +38,7 @@ const TokenItem = ({ token, onDelete }: TokenItemProps) => {
 
   return (
     <ListItem.Root>
-      <ListItem.Heading classNames='flex flex-col grow truncate'>
+      <ListItem.Heading classNames='grow truncate'>
         <div>{token.note}</div>
         <div className='text-description text-sm truncate'>{token.source}</div>
       </ListItem.Heading>

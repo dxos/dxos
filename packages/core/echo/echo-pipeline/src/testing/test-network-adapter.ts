@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Message, NetworkAdapter, type PeerId } from '@automerge/automerge-repo';
+
 import { Trigger, sleep } from '@dxos/async';
-import { type Message, NetworkAdapter, type PeerId } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -27,10 +28,12 @@ export class TestAdapter extends NetworkAdapter {
     super();
   }
 
-  // NOTE: Emitting `ready` event in NetworkAdapter`s constructor causes a race condition
-  //       because `Repo` waits for `ready` event (which it never receives) before it starts using the adapter.
-  ready() {
-    this.emit('ready', { network: this });
+  override isReady(): boolean {
+    return true;
+  }
+
+  override whenReady(): Promise<void> {
+    return Promise.resolve();
   }
 
   override connect(peerId: PeerId) {

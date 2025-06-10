@@ -1,6 +1,6 @@
 {
   "name": "@dxos/migrations",
-  "version": "0.7.4",
+  "version": "0.8.1",
   "description": "",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,7 +24,8 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/automerge": "workspace:*",
+    "@automerge/automerge": "3.0.0-beta.0",
+    "@automerge/automerge-repo": "2.0.0",
     "@dxos/client": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",

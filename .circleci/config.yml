@@ -34,11 +34,6 @@ aliases:
     auth:
       username: dxos-bot
       password: $GH_TOKEN
-  - &docker_image_go
-    image: ghcr.io/dxos/circleci-node-go:20.12.1
-    auth:
-      username: dxos-bot
-      password: $GH_TOKEN
   - &cache_restore
     restore_cache:
       keys:
@@ -145,36 +140,6 @@ jobs:
       # - *codecov_upload
       - *store_test_results
 
-  # TODO(dmaretskyi): Remove.
-  check_go:
-    docker:
-      - *docker_image_go
-
-    # https://circleci.com/docs/configuration-reference/#docker-execution-environment
-    resource_class: xlarge
-
-    environment:
-      DX_ENVIRONMENT: circleci
-
-    # Run the job on ramdisk for optimal performance.
-    # https://support.circleci.com/hc/en-us/articles/360056323651-How-to-optimize-the-restore-cache-step-for-Node-projects
-    steps:
-      - checkout
-      - *cache_restore
-      - run: pnpm set verify-store-integrity false
-      - run: pnpm install --prefer-offline
-      - *cache_save
-      - nx/set-shas
-      - run: pnpm check-dependencies
-      - run: .circleci/scripts/enable-nx-go.sh
-      - run: pnpm nx run-many --target=go-test
-      # Remove file that CircleCI creates? and disable the nx-go plugin.
-      - run: rm -f index.js && git checkout nx.json
-      - run: git add .
-      # Check for any out-of-data generated Go protobuf code.
-      - run: git status
-      - run: git diff --exit-code --cached
-
   #
   # End-to-end playwright UI testing.
   #
@@ -196,11 +161,11 @@ jobs:
       - run: pnpm install-playwright
       - *cache_save
       - nx/set-shas
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=2
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --browser=all --parallel=1
           # TODO(wittjosiah): Playwright tests not outputting as they run currently only after they finish.
-          no_output_timeout: 20m
+          no_output_timeout: 30m
       # TODO(wittjosiah): Disabled because it was not working and we weren't using it.
       # - run:
       #     command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
@@ -281,17 +246,6 @@ jobs:
       - run: date +%s > "pnpm-lock.yaml"
       - *cache_save
 
-  #
-  # Check for dead local links
-  #
-  dead_links_check:
-    docker:
-      - image: 'lycheeverse/lychee:0.14.3'
-
-    steps:
-      - checkout
-      - run: lychee --offline ./docs/content/composer ./docs/content/guide
-
 workflows:
   default:
     when:
@@ -305,12 +259,6 @@ workflows:
           matrix:
             parameters:
               node-version: *node-version
-      # - check_go:
-      #     context:
-      #       - Github
-      - dead_links_check:
-          context:
-            - Github
       # Only run e2e and browser tests on pushes to main & release branches.
       - e2e:
           filters:

@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, type PluginsContext } from '@dxos/app-framework';
+import { contributes, type PluginContext } from '@dxos/app-framework';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { WnfsCapabilities } from './capabilities';
 import { image } from '../extensions';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(MarkdownCapabilities.Extensions, [
     ({ document }) => {
-      const blockstore = context.requestCapability(WnfsCapabilities.Blockstore);
-      const instances = context.requestCapability(WnfsCapabilities.Instances);
+      const blockstore = context.getCapability(WnfsCapabilities.Blockstore);
+      const instances = context.getCapability(WnfsCapabilities.Instances);
 
       if (document) {
         const space = getSpace(document);

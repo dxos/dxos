@@ -2,19 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S } from '@dxos/effect';
+import { Schema } from 'effect';
 
-import { EchoObject } from '../ast';
+import { EchoObject } from './entity';
 
 export const EXPANDO_TYPENAME = 'dxos.org/type/Expando';
 
+const ExpandoSchema = Schema.Struct({}, { key: Schema.String, value: Schema.Any }).pipe(
+  EchoObject({ typename: EXPANDO_TYPENAME, version: '0.1.0' }),
+);
+
 /**
- * Marker value to be passed to `object` constructor to create an ECHO object with a generated ID.
+ * Expando object is an object with an arbitrary set of properties.
  */
-export const ExpandoMarker = Symbol.for('@dxos/schema/Expando');
+// TODO(dmaretskyi): Can we consider expando a top-type, i.e. have a ref to expando potentially be a valid ref to any object?
+export interface Expando extends Schema.Schema.Type<typeof ExpandoSchema> {}
 
-const ExpandoSchema = S.Struct({}, { key: S.String, value: S.Any }).pipe(EchoObject(EXPANDO_TYPENAME, '0.1.0'));
-
-export interface Expando extends S.Schema.Type<typeof ExpandoSchema> {}
-
-export const Expando: S.Schema<Expando> & { [ExpandoMarker]: true } = ExpandoSchema as any;
+export const Expando: Schema.Schema<Expando> = ExpandoSchema;

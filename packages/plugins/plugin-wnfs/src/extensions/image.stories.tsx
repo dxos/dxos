@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import type { Blockstore } from 'interface-blockstore';
-import React, { useEffect, useState } from 'react';
+import React, { type ChangeEvent, useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { useSpace } from '@dxos/react-client/echo';
@@ -63,7 +63,7 @@ const Story = () => {
     [themeMode, blockstore, space],
   );
 
-  const onFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (blockstore) {

@@ -172,3 +172,30 @@ jobs:
         uses: lycheeverse/lychee-action@v1
         with:
           args: --offline ./docs/content/composer ./docs/content/guide
+
+  check-cycles:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.12.1
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        shell: bash
+
+      - name: Check for import cycles
+        run: pnpm run check-cycles

@@ -27,6 +27,7 @@ export default [
         'add section after label': 'Add after',
         'expand label': 'Expand',
         'collapse label': 'Collapse',
+        'open chat thread label': 'Open chat thread',
         'drag handle label': 'Press space or enter to begin dragging this item.',
       },
     },

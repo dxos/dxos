@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Trigger } from '@dxos/async';
+import { asyncTimeout, Trigger } from '@dxos/async';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   brokenAutomergeReplicatorFactory,
@@ -13,26 +14,27 @@ import {
 } from '@dxos/echo-pipeline/testing';
 import {
   Expando,
-  getObjectAnnotation,
+  getTypeAnnotation,
   getSchemaTypename,
   getTypeReference,
   RelationSourceId,
   RelationTargetId,
-  S,
   TypedObject,
   type ObjectId,
+  Ref,
 } from '@dxos/echo-schema';
-import { Contact, HasManager, updateCounter } from '@dxos/echo-schema/testing';
+import { getSchema } from '@dxos/echo-schema';
+import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
-import { create, getSchema, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
 import { getSource, getTarget } from '../echo-handler/relations';
-import { Filter } from '../query';
+import { Filter, Query } from '../query';
 
 registerSignalsRuntime();
 
@@ -145,7 +147,7 @@ describe('Integration tests', () => {
     {
       await using db = await peer.createDatabase();
       const inner = db.add({ name: 'inner' });
-      const outer = db.add({ inner: makeRef(inner) });
+      const outer = db.add({ inner: Ref.make(inner) });
       outerId = outer.id;
       await db.flush();
     }
@@ -153,7 +155,7 @@ describe('Integration tests', () => {
     await peer.reload();
     {
       await using db = await peer.openLastDatabase();
-      const outer = (await db.query({ id: outerId }).first()) as any;
+      const outer = (await db.query(Filter.ids(outerId)).first()) as any;
       const loaded = new Trigger();
       using updates = updateCounter(() => {
         if (outer.inner.target) {
@@ -178,7 +180,7 @@ describe('Integration tests', () => {
       await using db = await peer.createDatabase(spaceKey);
       rootUrl = db.rootUrl!;
       const inner = db.add({ name: 'inner' });
-      const outer = db.add({ inner: makeRef(inner) });
+      const outer = db.add({ inner: Ref.make(inner) });
       outerId = outer.id;
       await db.flush();
     }
@@ -186,7 +188,7 @@ describe('Integration tests', () => {
     await peer.reload();
     {
       await using db = await peer.openDatabase(spaceKey, rootUrl);
-      const outer = (await db.query({ id: outerId }).first()) as any;
+      const outer = (await db.query(Filter.ids(outerId)).first()) as any;
       expect(outer.inner.target).to.eq(undefined);
 
       const target = await outer.inner.load();
@@ -283,7 +285,7 @@ describe('Integration tests', () => {
     await db1.flush();
     const heads = await db1.coreDatabase.getDocumentHeads();
 
-    await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+    await using db2 = await asyncTimeout(peer2.openDatabase(spaceKey, db1.rootUrl!), 1_000);
     await db2.coreDatabase.waitUntilHeadsReplicated(heads);
     await db2.coreDatabase.updateIndexes();
     await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
@@ -318,7 +320,7 @@ describe('Integration tests', () => {
 
     await teleportConnections[0].whenOpen(true);
     await using db1 = await peer1.createDatabase(spaceKey);
-    db1.add(create(Expando, {}));
+    db1.add(live(Expando, {}));
     await teleportConnections[0].whenOpen(false);
   });
 
@@ -377,7 +379,7 @@ describe('Integration tests', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
 
     const obj1 = db1.add(
-      create({
+      live({
         content: 'test',
       }),
     );
@@ -392,22 +394,22 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      db.graph.schemaRegistry.addSchema([Contact, HasManager]);
+      db.graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager]);
 
       let relationId!: ObjectId;
       {
         const alice = db.add(
-          create(Contact, {
+          live(Testing.Contact, {
             name: 'Alice',
           }),
         );
         const bob = db.add(
-          create(Contact, {
+          live(Testing.Contact, {
             name: 'Bob',
           }),
         );
         const hasManager = db.add(
-          create(HasManager, {
+          live(Testing.HasManager, {
             [RelationSourceId]: bob,
             [RelationTargetId]: alice,
             since: '2022',
@@ -422,7 +424,7 @@ describe('Integration tests', () => {
         await using db = await peer.openLastDatabase({ reactiveSchemaQuery: false, preloadSchemaOnOpen: false });
         const {
           objects: [obj],
-        } = await db.query({ id: relationId }).run();
+        } = await db.query(Filter.ids(relationId)).run();
         log.info('xxx', { obj });
         expect(getSource(obj).name).toEqual('Bob');
         expect(getTarget(obj).name).toEqual('Alice');
@@ -441,12 +443,12 @@ describe('Integration tests', () => {
         rootUrl = db.rootUrl!;
 
         class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-          field: S.String,
+          field: Schema.String,
         }) {}
         const [stored] = await db.schemaRegistry.register([TestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
-        const object = db.add(create(stored, { field: 'test' }));
+        const object = db.add(live(stored, { field: 'test' }));
         expect(getSchema(object)).to.eq(stored);
 
         db.add({ text: 'Expando object' }); // Add Expando object to test filtering
@@ -457,7 +459,7 @@ describe('Integration tests', () => {
       {
         // Objects with stored schema get included in queries that select all objects..
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const { objects } = await db.query().run();
+        const { objects } = await db.query(Query.select(Filter.everything())).run();
         expect(objects.length).to.eq(3);
       }
 
@@ -465,9 +467,9 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema DXN.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const { objects } = await db.query(Filter.typeDXN(schemaDxn)).run();
+        const { objects } = await db.query(Query.select(Filter.typeDXN(DXN.parse(schemaDxn)))).run();
         expect(objects.length).to.eq(1);
-        expect(getObjectAnnotation(getSchema(objects[0])!)).to.include({
+        expect(getTypeAnnotation(getSchema(objects[0])!)).to.include({
           typename: 'example.com/type/Test',
           version: '0.1.0',
         });
@@ -479,9 +481,9 @@ describe('Integration tests', () => {
         await using db = await peer.openDatabase(spaceKey, rootUrl);
         const schema = db.schemaRegistry.getSchema('example.com/type/Test');
 
-        const { objects } = await db.query(Filter.schema(schema!)).run();
+        const { objects } = await db.query(Filter.type(schema!)).run();
         expect(objects.length).to.eq(1);
-        expect(getObjectAnnotation(getSchema(objects[0])!)).to.include({
+        expect(getTypeAnnotation(getSchema(objects[0])!)).to.include({
           typename: 'example.com/type/Test',
           version: '0.1.0',
         });
@@ -498,9 +500,9 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      const [schema] = await db.schemaRegistry.register([Contact]);
+      const [schema] = await db.schemaRegistry.register([Testing.Contact]);
       typeDXN = getTypeReference(schema)!.toDXN();
-      db.add(create(schema, { name: 'Bob' }));
+      db.add(live(schema, { name: 'Bob' }));
       await db.flush({ indexes: true });
     }
 
@@ -509,10 +511,10 @@ describe('Integration tests', () => {
       await using db = await peer.openLastDatabase({ reactiveSchemaQuery: false, preloadSchemaOnOpen: false });
       const {
         objects: [obj],
-      } = await db.query(Filter.typeDXN(typeDXN.toString())).run();
+      } = await db.query(Query.select(Filter.typeDXN(typeDXN))).run();
       log.info('xxx', { typeDXN, obj });
       expect(getSchema(obj)).toBeDefined();
-      expect(getSchemaTypename(getSchema(obj)!)).toEqual(Contact.typename);
+      expect(getSchemaTypename(getSchema(obj)!)).toEqual(Testing.Contact.typename);
     }
   });
 });

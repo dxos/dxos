@@ -2,7 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { createContext, useContext, useEffect, type FocusEvent, type PropsWithChildren } from 'react';
+import React, {
+  createContext,
+  type RefObject,
+  useContext,
+  useEffect,
+  useMemo,
+  type FocusEvent,
+  type PropsWithChildren,
+} from 'react';
 
 import { raise } from '@dxos/debug';
 import { type BaseObject, getValue } from '@dxos/echo-schema';
@@ -34,12 +42,16 @@ export type FormInputStateProps = {
 export const useInputProps = (path: (string | number)[] = []): FormInputStateProps => {
   const { getStatus, getValue: getFormValue, onValueChange, onTouched } = useFormContext();
 
-  return {
-    getStatus: () => getStatus(path),
-    getValue: () => getFormValue(path),
-    onValueChange: (type: SimpleType, value: any) => onValueChange(path, type, value),
-    onBlur: () => onTouched(path),
-  };
+  const stablePath = useMemo(() => path, [Array.isArray(path) ? path.join('.') : path]);
+  return useMemo(
+    () => ({
+      getStatus: () => getStatus(stablePath),
+      getValue: () => getFormValue(stablePath),
+      onValueChange: (type: SimpleType, value: any) => onValueChange(stablePath, type, value),
+      onBlur: () => onTouched(stablePath),
+    }),
+    [getStatus, getFormValue, onValueChange, onTouched, stablePath],
+  );
 };
 
 export const FormProvider = ({
@@ -49,7 +61,7 @@ export const FormProvider = ({
   ...formOptions
 }: PropsWithChildren<
   FormOptions<any> & {
-    formRef?: React.RefObject<HTMLDivElement>;
+    formRef?: RefObject<HTMLDivElement>;
     autoSave?: boolean;
   }
 >) => {
@@ -64,7 +76,9 @@ export const FormProvider = ({
       const keyIsEnter = event.key === 'Enter';
       const modifierUsed = event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
       const inputIsTextarea = (event.target as HTMLElement).tagName.toLowerCase() === 'textarea';
-      const inputOptOut = (event.target as HTMLElement).hasAttribute('data-no-submit');
+      const inputOptOut =
+        (event.target as HTMLElement).hasAttribute('data-no-submit') ||
+        (event.target as HTMLElement).closest('[data-no-submit]') !== null;
 
       // Regular inputs: Submit on Enter (no modifiers).
       const shouldSubmitRegularInput = !inputIsTextarea && keyIsEnter && !modifierUsed;

@@ -3,13 +3,29 @@
 //
 
 import { type Decorator } from '@storybook/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { raise } from '@dxos/debug';
+import { log } from '@dxos/log';
 
 import { createApp, type CreateAppOptions } from '../App';
 import { Capabilities, Events } from '../common';
-import { type AnyCapability, contributes, defineModule, definePlugin, PluginManager } from '../core';
+import {
+  contributes,
+  defineModule,
+  definePlugin,
+  type ActivationEvent,
+  type AnyCapability,
+  PluginManager,
+  type PluginContext,
+} from '../core';
+
+// TODO(burdon): Factor out (use consistently in plugin framework?)
+export type Provider<C, R> = (context: C) => R;
+export type ProviderOrValue<C, R> = Provider<C, R> | R;
+export const getValue = <C, R>(providerOrValue: ProviderOrValue<C, R>, context: C): R => {
+  return typeof providerOrValue === 'function' ? (providerOrValue as Provider<C, R>)(context) : providerOrValue;
+};
 
 /**
  * @internal
@@ -19,7 +35,7 @@ export const setupPluginManager = ({
   plugins = [],
   core = plugins.map(({ meta }) => meta.id),
   ...options
-}: CreateAppOptions & { capabilities?: AnyCapability[] } = {}) => {
+}: CreateAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
   const pluginManager = new PluginManager({
     pluginLoader: () => raise(new Error('Not implemented')),
     plugins: [StoryPlugin(), ...plugins],
@@ -28,7 +44,7 @@ export const setupPluginManager = ({
   });
 
   if (capabilities) {
-    capabilities.forEach((capability) => {
+    getValue(capabilities, pluginManager.context).forEach((capability) => {
       pluginManager.context.contributeCapability({
         interface: capability.interface,
         implementation: capability.implementation,
@@ -40,15 +56,22 @@ export const setupPluginManager = ({
   return pluginManager;
 };
 
+export type WithPluginManagerOptions = CreateAppOptions & {
+  capabilities?: ProviderOrValue<PluginContext, AnyCapability[]>;
+  fireEvents?: (ActivationEvent | string)[];
+};
+
 /**
  * Wraps a story with a plugin manager.
+ * NOTE: This builds up and tears down the plugin manager on every render.
  */
-export const withPluginManager = (options: CreateAppOptions & { capabilities?: AnyCapability[] } = {}): Decorator => {
-  const pluginManager = setupPluginManager(options);
-  const App = createApp({ pluginManager });
-
+export const withPluginManager = (options: WithPluginManagerOptions = {}): Decorator => {
   return (Story, context) => {
+    const pluginManager = useMemo(() => setupPluginManager(options), [options]);
+
+    // Set-up root capability.
     useEffect(() => {
+      log('setup capabilities...');
       const capability = contributes(Capabilities.ReactRoot, {
         id: context.id,
         root: () => <Story />,
@@ -59,8 +82,25 @@ export const withPluginManager = (options: CreateAppOptions & { capabilities?: A
         module: 'dxos.org/app-framework/withPluginManager',
       });
 
-      return () => pluginManager.context.removeCapability(capability.interface, capability.implementation);
-    }, []);
+      return () => {
+        log('removing capability...');
+        pluginManager.context.removeCapability(capability.interface, capability.implementation);
+      };
+    }, [pluginManager, context]);
+
+    // Fire events.
+    useEffect(() => {
+      log('firing events...');
+      options.fireEvents?.forEach((event) => {
+        void pluginManager.activate(event);
+      });
+    }, [pluginManager]);
+
+    // Create app.
+    const App = useMemo(() => {
+      log('creating app...');
+      return createApp({ pluginManager });
+    }, [pluginManager]);
 
     return <App />;
   };
@@ -70,6 +110,6 @@ export const withPluginManager = (options: CreateAppOptions & { capabilities?: A
 // This is necessary because `createApp` expects the startup event to complete before the app is ready.
 const STORY_PLUGIN = 'dxos.org/app-framework/story';
 const StoryPlugin = () =>
-  definePlugin({ id: STORY_PLUGIN }, [
+  definePlugin({ id: STORY_PLUGIN, name: 'Story' }, [
     defineModule({ id: STORY_PLUGIN, activatesOn: Events.Startup, activate: () => [] }),
   ]);

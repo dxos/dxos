@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
 import { Args, Command, type Config as OclifConfig, Flags, type Interfaces, settings } from '@oclif/core';
 import chalk from 'chalk';
+import { type Schema } from 'effect';
 import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
@@ -386,19 +386,20 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
    */
   override async finally() {
     const endTime = new Date();
-    // TODO(nf): move to observability
+    // TODO(nf): Move to observability.
     const installationId = this._observability?.getTag('installationId');
     const did = this._observability?.getTag('did');
     if (this._observability) {
-      this._observability?.event({
+      this._observability?.track({
         installationId: installationId?.value,
         did: did?.value,
-        name: 'cli.command.run',
+        action: 'cli.command.run',
         properties: {
           status: this._failing ? 'failure' : 'success',
           duration: endTime.getTime() - this._startTime.getTime(),
         },
       });
+
       await this._observability.close();
     }
     if (process.env.DX_TRACK_LEAKS) {
@@ -407,7 +408,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
     }
 
     const stopFailsafe = setTimeout(() => {
-      // TODO: log filter not correctly applied for this
+      // TODO(burdon): Log filter not correctly applied for this.
       if (settings.debug) {
         this.log('timeout waiting for all promises to resolve, forcing exit');
       }
@@ -525,13 +526,28 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
     }
   }
 
+  async getSpaceById(client: Client, id: string, { wait = true }: { wait?: boolean } = {}): Promise<Space> {
+    await client.spaces.waitUntilReady();
+    const spaces = await this.getSpaces(client, { wait: false });
+    const space = spaces.find((space) => space.id.startsWith(id!));
+    if (!space) {
+      this.catch(`Invalid space: ${id}`);
+    }
+
+    if (wait) {
+      await space.waitUntilReady();
+    }
+
+    return space;
+  }
+
   /**
    * Execute callback with the given space(s).
    */
   // TODO(burdon): Convert most commands to work with this.
   async execWithSpace<T>(
     callback: (props: { client: Client; space: Space }) => Promise<T | void>,
-    options: { spaceKeys?: string[]; all?: boolean; types?: S.Schema<any>[]; verbose?: boolean } = {},
+    options: { spaceKeys?: string[]; all?: boolean; types?: Schema.Schema.AnyNoContext[]; verbose?: boolean } = {},
   ): Promise<T[] | void> {
     const client = await this.getClient();
     await this.onClientInit(client);

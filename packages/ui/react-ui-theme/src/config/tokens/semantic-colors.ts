@@ -4,8 +4,9 @@
 
 import type { HelicalArcValue, SemanticLayer } from '@ch-ui/tokens';
 
-import { codeMirrorSememes } from './sememes-codemirror';
-import { peerSememes } from './sememes-peer';
+import { callsSememes } from './sememes-calls';
+import { codemirrorSememes } from './sememes-codemirror';
+import { hueSememes } from './sememes-hue';
 import { sheetSememes } from './sememes-sheet';
 import { systemSememes } from './sememes-system';
 
@@ -16,9 +17,10 @@ export const semanticColors = {
   },
   sememes: {
     // Please define each set of sememes in its own file.
+    ...callsSememes,
+    ...codemirrorSememes,
     ...sheetSememes,
-    ...codeMirrorSememes,
-    ...peerSememes,
+    ...hueSememes,
     ...systemSememes,
   },
   namespace: 'dx-',

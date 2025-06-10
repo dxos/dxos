@@ -2,24 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React from 'react';
 
 import { DEFAULT_INPUT } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { useAudioStream, Chaos, shaderPresets } from '@dxos/react-ui-sfx';
 
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
 
-export const ScopeShape = S.extend(
+export const ScopeShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('scope'),
+  Schema.Struct({
+    type: Schema.Literal('scope'),
   }),
 );
 
-export type ScopeShape = S.Schema.Type<typeof ScopeShape>;
+export type ScopeShape = Schema.Schema.Type<typeof ScopeShape>;
 
 export type CreateScopeProps = CreateShapeProps<ScopeShape>;
 

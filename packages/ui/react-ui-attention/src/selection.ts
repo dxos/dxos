@@ -4,7 +4,7 @@
 
 import { untracked } from '@preact/signals-core';
 
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 
 /**
  * Manages selection state for different contexts.
@@ -12,7 +12,7 @@ import { create, type ReactiveObject } from '@dxos/live-object';
  */
 // TODO(burdon): Review/remove this abstraction. Selection should be managed by specific components.
 export class SelectionManager {
-  private readonly _state = create<{ selections: Record<string, Set<string>> }>({ selections: {} });
+  private readonly _state = live<{ selections: Record<string, Set<string>> }>({ selections: {} });
 
   constructor(initial: Record<string, Set<string>> = {}) {
     if (Object.keys(initial).length > 0) {
@@ -22,7 +22,7 @@ export class SelectionManager {
     }
   }
 
-  get selections(): ReactiveObject<Record<string, Set<string>>> {
+  get selections(): Live<Record<string, Set<string>>> {
     return this._state.selections;
   }
 

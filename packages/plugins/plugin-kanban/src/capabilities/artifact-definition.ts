@@ -2,20 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import { Schema, pipe } from 'effect';
 
+import { defineTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
+import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { isInstanceOf, S } from '@dxos/echo-schema';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 import { KanbanType } from '@dxos/react-ui-kanban';
 
+import { meta } from '../meta';
 import { KanbanAction } from '../types';
 
-const QualifiedId = S.String.annotations({
+const QualifiedId = Schema.String.annotations({
   description: 'The fully qualified ID of the kanban `spaceID:objectID`',
 });
 
@@ -28,25 +30,26 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: 'plugin-kanban',
+    id: `artifact:${meta.id}`,
+    name: meta.name,
     instructions: `
-        When working with kanban boards here are some additional instructions:
-        - Before adding items to a kanban board, inspect the board to see its schema
-        - When adding items, you must not include the 'id' field -- it is automatically generated
-        - BEFORE adding items, always make sure the board has been shown to the user!
-      `,
+      - Before adding items to a kanban board, inspect the board to see its schema
+      - When adding items, you must not include the 'id' field -- it is automatically generated
+      - BEFORE adding items, always make sure the board has been shown to the user!
+    `,
     schema: KanbanType,
     tools: [
-      defineTool({
-        name: 'kanban_new',
+      defineTool(meta.id, {
+        name: 'create',
         description: `
             Create a new kanban board using an existing schema.
             Use schema_create first to create a schema, or schema_list to choose an existing one.`,
-        schema: S.Struct({
-          typename: S.String.annotations({
+        caption: 'Creating kanban board...',
+        schema: Schema.Struct({
+          typename: Schema.String.annotations({
             description: 'The fully qualified typename of the schema to use for the kanban cards.',
           }),
-          pivotColumn: S.optional(S.String).annotations({
+          pivotColumn: Schema.optional(Schema.String).annotations({
             description: 'Optional field name to use as the column pivot.',
           }),
         }),
@@ -63,7 +66,7 @@ export default () => {
           const intent = pipe(
             createIntent(KanbanAction.Create, {
               space: extensions.space,
-              initialSchema: typename,
+              typename,
               initialPivotColumn: pivotColumn,
             }),
             chain(SpaceAction.AddObject, { target: extensions.space }),
@@ -77,21 +80,22 @@ export default () => {
           return ToolResult.Success(createArtifactElement(data.id));
         },
       }),
-      defineTool({
-        name: 'kanban_list',
+      defineTool(meta.id, {
+        name: 'list',
         description: 'List all kanban boards in the current space.',
-        schema: S.Struct({}),
+        caption: 'Listing kanban boards...',
+        schema: Schema.Struct({}),
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: boards } = await space.db.query(Filter.schema(KanbanType)).run();
+          const { objects: boards } = await space.db.query(Filter.type(KanbanType)).run();
 
           const boardInfo = await Promise.all(
             boards.map(async (board: KanbanType) => {
               const view = await board.cardView?.load();
               return {
                 id: fullyQualifiedId(board),
-                typename: view?.query.type,
+                typename: view?.query.typename,
               };
             }),
           );
@@ -99,21 +103,22 @@ export default () => {
           return ToolResult.Success(boardInfo);
         },
       }),
-      defineTool({
-        name: 'kanban_inspect',
+      defineTool(meta.id, {
+        name: 'inspect',
         description: 'Get details about a specific kanban board.',
-        schema: S.Struct({ id: QualifiedId }),
+        caption: 'Inspecting kanban board...',
+        schema: Schema.Struct({ id: QualifiedId }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: boards } = await space.db.query(Filter.schema(KanbanType)).run();
+          const { objects: boards } = await space.db.query(Filter.type(KanbanType)).run();
           const board = boards.find((board: KanbanType) => fullyQualifiedId(board) === id);
           invariant(isInstanceOf(KanbanType, board));
 
           const view = await board.cardView?.load();
           invariant(view);
 
-          const typename = view.query.type;
+          const typename = view.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
 

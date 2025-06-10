@@ -1,6 +1,6 @@
 @layer dx-components {
   .dx-dialog__overlay {
-    @apply fixed z-50 inset-inline-0 block-start-0 bs-dvh bg-scrim overflow-auto grid place-items-center pbs-[env(safe-area-inset-top)];
+    @apply fixed z-50 inset-inline-0 block-start-0 bs-dvh bg-scrimSurface overflow-auto grid place-items-center pbs-[env(safe-area-inset-top)];
     @media (min-width: theme('screens.sm')) {
       @apply p-[calc(env(safe-area-inset-top)+.6rem)];
     }
@@ -31,7 +31,7 @@
       @apply is-[95vw] border rounded-lg border-separator;
     }
     @media (min-width: theme('screens.md')) {
-      @apply max-is-[24rem]
+      @apply max-is-[24rem];
     }
   }
   .dx-dialog__title {

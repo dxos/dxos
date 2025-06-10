@@ -2,13 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
-import { isInstanceOf, S } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
-import { fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
+import { pipe, Schema } from 'effect';
 
-import { DocumentType } from '../types';
+import { defineTool, ToolResult } from '@dxos/ai';
+import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { ArtifactId, defineArtifact } from '@dxos/artifact';
+import { createArtifactElement } from '@dxos/assistant';
+import { isInstanceOf } from '@dxos/echo-schema';
+import { invariant, assertArgument } from '@dxos/invariant';
+import { SpaceAction } from '@dxos/plugin-space/types';
+import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
+
+import { meta } from '../meta';
+import { DocumentType, MarkdownAction } from '../types';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -20,22 +26,57 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: 'plugin-markdown',
+    id: `artifact:${meta.id}`,
+    name: meta.name,
     instructions: `
-      The markdown plugin allows you to work with text documents in the current space.
-      Use these tools to interact with documents, including listing available documents and retrieving their content.
-      Documents are stored in Markdown format.
+      - The markdown plugin allows you to work with text documents in the current space.
+      - Use these tools to interact with documents, including listing available documents and retrieving their content.
+      - Documents are stored in Markdown format.
     `,
     schema: DocumentType,
     tools: [
-      defineTool({
-        name: 'document_list',
+      defineTool(meta.id, {
+        name: 'create',
+        description: 'Create a new markdown document',
+        caption: 'Creating document...',
+        schema: Schema.Struct({
+          name: Schema.optional(Schema.String).annotations({
+            description: 'Optional name for the document.',
+          }),
+          content: Schema.String.annotations({
+            description: 'The content of the document.',
+          }),
+        }),
+        execute: async ({ name, content }, { extensions }) => {
+          invariant(extensions?.space, 'No space');
+          invariant(extensions?.dispatch, 'No intent dispatcher');
+
+          const intent = pipe(
+            createIntent(MarkdownAction.Create, {
+              spaceId: extensions.space.id,
+              name,
+              content,
+            }),
+            chain(SpaceAction.AddObject, { target: extensions.space }),
+          );
+
+          const { data, error } = await extensions.dispatch(intent);
+          if (!data || error) {
+            return ToolResult.Error(error?.message ?? 'Failed to create document');
+          }
+
+          return ToolResult.Success(createArtifactElement(data.id));
+        },
+      }),
+      defineTool(meta.id, {
+        name: 'list',
         description: 'List all markdown documents in the current space.',
-        schema: S.Struct({}),
+        caption: 'Listing markdown documents...',
+        schema: Schema.Struct({}),
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: documents } = await space.db.query(Filter.schema(DocumentType)).run();
+          const { objects: documents } = await space.db.query(Filter.type(DocumentType)).run();
           const documentInfo = documents.map((doc) => {
             invariant(isInstanceOf(DocumentType, doc));
             return {
@@ -48,24 +89,17 @@ export default () => {
           return ToolResult.Success(documentInfo);
         },
       }),
-      defineTool({
-        name: 'document_read',
+      defineTool(meta.id, {
+        name: 'inspect',
         description: 'Read the content of a markdown document.',
-        schema: S.Struct({
-          id: S.String.annotations({
-            description: 'The fully qualified ID of the document `spaceID:objectID`',
-          }),
+        caption: 'Inspecting markdown document...',
+        schema: Schema.Struct({
+          id: ArtifactId,
         }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const space = extensions.space;
-          const { objects: documents } = await space.db.query(Filter.schema(DocumentType)).run();
-          const document = documents.find((doc) => fullyQualifiedId(doc) === id);
-          if (!document) {
-            return ToolResult.Error(`Document not found: ${id}`);
-          }
-
-          invariant(isInstanceOf(DocumentType, document));
+          const document = await extensions.space.db.query(Filter.ids(ArtifactId.toDXN(id).toString())).first();
+          assertArgument(isInstanceOf(DocumentType, document), 'Invalid type');
 
           const { content } = await document.content?.load();
           return ToolResult.Success({

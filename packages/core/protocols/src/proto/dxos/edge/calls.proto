@@ -4,6 +4,8 @@
 
 syntax = "proto3";
 
+import "google/protobuf/struct.proto";
+
 import "dxos/keys.proto";
 
 package dxos.edge.calls;
@@ -25,22 +27,28 @@ message UserState {
   bool speaking = 5;
   bool joined = 6;
   Tracks tracks = 7;
-  optional Transcription transcription = 8;
+  map<string, Activity> activities = 8;
 }
 
 /**
- * Transcription settings.
+ * Activity state.
  * It will be merged across all users in the room based on the Lamport timestamp (last one wins).
  */
-message Transcription {
-  bool enabled = 1;
+message Activity {
+  LamportTimestamp lamport_timestamp = 1;
 
-  LamportTimestamp lamport_timestamp = 2;
+  google.protobuf.Struct payload = 10;
+}
 
-  /**
-   * Transcription queue DXN.
-   */
-  string queue_dxn = 3;
+/**
+ * Meeting state.
+ *
+ * Used to encode/decode the Any payload of a call activity for the meeting plugin.
+ */
+message MeetingPayload {
+  string meeting_id = 1;
+  string transcript_dxn = 2;
+  bool transcription_enabled = 3;
 }
 
 /**

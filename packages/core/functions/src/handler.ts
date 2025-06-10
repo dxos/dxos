@@ -2,16 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import { type Effect } from 'effect';
+import { Schema, type Context, type Effect } from 'effect';
 
-import { type Client, PublicKey } from '@dxos/client';
-import { type Space, type SpaceId } from '@dxos/client/echo';
-import type { CoreDatabase, EchoDatabase, QueryResult, ReactiveEchoObject } from '@dxos/echo-db';
+import { type AIServiceClient } from '@dxos/ai';
+// import { type Space } from '@dxos/client/echo';
+import type { CoreDatabase, EchoDatabase } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
-import { type DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { isNonNullable } from '@dxos/util';
+import { type SpaceId, type DXN } from '@dxos/keys';
+import { type QueryResult } from '@dxos/protocols';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -21,19 +19,30 @@ import { isNonNullable } from '@dxos/util';
 /**
  * Function handler.
  */
-export type FunctionHandler<TData = {}, TMeta = {}, TOutput = any> = (params: {
-  context: FunctionContext;
-  event: FunctionEvent<TData, TMeta>;
+export type FunctionHandler<TData = {}, TOutput = any> = (params: {
   /**
-   * @deprecated
+   * Services and context available to the function.
    */
-  response: FunctionResponse;
+  context: FunctionContext;
+
+  /**
+   * Data passed as the input to the function.
+   * Must match the function's input schema.
+   * This will be the payload from the trigger or other data passed into the function in a workflow.
+   */
+  data: TData;
 }) => TOutput | Promise<TOutput> | Effect.Effect<TOutput, any>;
 
 /**
  * Function context.
  */
 export interface FunctionContext {
+  /**
+   * Resolves a service available to the function.
+   * @throws if the service is not available.
+   */
+  getService: <T extends Context.Tag<any, any>>(tag: T) => Context.Tag.Service<T>;
+
   getSpace: (spaceId: SpaceId) => Promise<SpaceAPI>;
 
   /**
@@ -41,46 +50,13 @@ export interface FunctionContext {
    */
   space: SpaceAPI | undefined;
 
-  ai: FunctionContextAi;
-
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Limit access to individual space.
-  client: Client;
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Replace with storage service abstraction.
-  dataDir?: string;
+  ai: AIServiceClient;
 }
 
 export interface FunctionContextAi {
   // TODO(dmaretskyi): Refer to cloudflare AI docs for more comprehensive typedefs.
   run(model: string, inputs: any, options?: any): Promise<any>;
 }
-
-/**
- * Event payload.
- */
-// TODO(dmaretskyi): Update type definitions to match the actual payload.
-export type FunctionEvent<TData = {}, TMeta = {}> = {
-  data: FunctionEventMeta<TMeta> & TData;
-};
-
-/**
- * Metadata from trigger.
- */
-export type FunctionEventMeta<TMeta = {}> = {
-  meta: TMeta;
-};
-
-/**
- * Function response.
- */
-export type FunctionResponse = {
-  status(code: number): FunctionResponse;
-};
 
 //
 // API.
@@ -107,28 +83,21 @@ export interface SpaceAPI {
   get queues(): QueuesAPI;
 }
 
-// TODO(wittjosiah): Fix this.
+// TODO(wittjosiah): Queues are incompatible.
 const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
   // const _: SpaceAPI = {} as Space;
 };
 
-export type FunctionDefinition = {
+export type FunctionDefinition<T = {}, O = any> = {
   description?: string;
-  inputSchema: S.Schema.AnyNoContext;
-  outputSchema?: S.Schema.AnyNoContext;
-  handler: FunctionHandler<any>;
-};
-
-export type DefineFunctionParams<T, O = any> = {
-  description?: string;
-  inputSchema: S.Schema<T, any>;
-  outputSchema?: S.Schema<O, any>;
-  handler: FunctionHandler<T, any, O>;
+  inputSchema: Schema.Schema<T, any>;
+  outputSchema?: Schema.Schema<O, any>;
+  handler: FunctionHandler<T, O>;
 };
 
 // TODO(dmaretskyi): Bind input type to function handler.
-export const defineFunction = <T, O>(params: DefineFunctionParams<T, O>): FunctionDefinition => {
-  if (!S.isSchema(params.inputSchema)) {
+export const defineFunction = <T, O>(params: FunctionDefinition<T, O>): FunctionDefinition<T, O> => {
+  if (!Schema.isSchema(params.inputSchema)) {
     throw new Error('Input schema must be a valid schema');
   }
   if (typeof params.handler !== 'function') {
@@ -138,71 +107,7 @@ export const defineFunction = <T, O>(params: DefineFunctionParams<T, O>): Functi
   return {
     description: params.description,
     inputSchema: params.inputSchema,
-    outputSchema: params.outputSchema ?? S.Any,
+    outputSchema: params.outputSchema ?? Schema.Any,
     handler: params.handler,
   };
-};
-
-//
-// Subscription utils.
-//
-
-export type RawSubscriptionData = {
-  spaceKey?: string;
-  objects?: string[];
-};
-
-export type SubscriptionData = {
-  space?: Space;
-  objects?: ReactiveEchoObject<any>[];
-};
-
-/**
- * Handler wrapper for subscription events; extracts space and objects.
- *
- * To test:
- * ```
- * curl -s -X POST -H "Content-Type: application/json" --data '{"space": "0446...1cbb"}' http://localhost:7100/dev/email-extractor
- * ```
- *
- * NOTE: Get space key from devtools or `dx space list --json`
- */
-// TODO(burdon): Evolve into plugin definition like Composer.
-export const subscriptionHandler = <TMeta>(
-  handler: FunctionHandler<SubscriptionData, TMeta>,
-  types?: S.Schema<any>[],
-): FunctionHandler<RawSubscriptionData, TMeta> => {
-  return async ({ event: { data }, context, response, ...rest }) => {
-    const { client } = context;
-    const space = data.spaceKey ? client.spaces.get(PublicKey.from(data.spaceKey)) : undefined;
-    if (!space) {
-      log.error('Invalid space');
-      return response.status(500);
-    }
-
-    registerTypes(space, types);
-    const objects = space
-      ? data.objects
-          ?.map<ReactiveEchoObject<any> | undefined>((id) => space!.db.getObjectById(id))
-          .filter(isNonNullable)
-      : [];
-
-    if (!!data.spaceKey && !space) {
-      log.warn('invalid space', { data });
-    } else {
-      log.info('handler', { space: space?.key.truncate(), objects: objects?.length });
-    }
-
-    return handler({ event: { data: { ...data, space, objects } }, context, response, ...rest });
-  };
-};
-
-// TODO(burdon): Evolve types as part of function metadata.
-const registerTypes = (space: Space, types: S.Schema<any>[] = []) => {
-  const registry = space.db.graph.schemaRegistry;
-  for (const type of types) {
-    if (!registry.hasSchema(type)) {
-      registry.addSchema([type]);
-    }
-  }
 };

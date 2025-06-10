@@ -25,10 +25,10 @@
       "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/echo-signals"
     },
     {
-      "path": "../../sdk/schema"
+      "path": "../../core/echo/live-object"
     },
     {
       "path": "../async"

@@ -13,6 +13,9 @@
       "sharedworker"
     ]
   },
+  "exclude": [
+    "src/playwright/playwright.config.cts"
+  ],
   "include": [
     "src"
   ],

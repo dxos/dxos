@@ -8,7 +8,7 @@ import {
   createIntent,
   LayoutAction,
   SettingsAction,
-  type PluginsContext,
+  type PluginContext,
 } from '@dxos/app-framework';
 import { setupTelemetryListeners, type Observability } from '@dxos/observability';
 
@@ -17,16 +17,16 @@ import { OBSERVABILITY_PLUGIN } from '../meta';
 import { ObservabilityAction } from '../types';
 
 type ClientReadyOptions = {
-  context: PluginsContext;
+  context: PluginContext;
   namespace: string;
   observability: Observability;
 };
 
 export default async ({ context, namespace, observability }: ClientReadyOptions) => {
-  const manager = context.requestCapability(Capabilities.PluginManager);
-  const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-  const state = context.requestCapability(ObservabilityCapabilities.State);
-  const client = context.requestCapability(ClientCapability);
+  const manager = context.getCapability(Capabilities.PluginManager);
+  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+  const state = context.getCapability(ObservabilityCapabilities.State);
+  const client = context.getCapability(ClientCapability);
 
   const sendPrivacyNotice = async () => {
     const environment = client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
@@ -61,7 +61,6 @@ export default async ({ context, namespace, observability }: ClientReadyOptions)
     createIntent(ObservabilityAction.SendEvent, {
       name: 'page.load',
       properties: {
-        href: window.location.href,
         // TODO(wittjosiah): These apis are deprecated. Is there a better way to find this information?
         loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
       },

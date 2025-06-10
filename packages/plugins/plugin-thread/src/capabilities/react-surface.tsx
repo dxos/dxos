@@ -4,58 +4,90 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useLayout } from '@dxos/app-framework';
-import { type Ref } from '@dxos/echo-schema';
+import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { isInstanceOf, type Ref } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
-import { ChannelType, type ThreadType } from '@dxos/plugin-space/types';
+import { ThreadType } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { ThreadContainer, ThreadComplementary, ThreadSettings } from '../components';
+import { ThreadCapabilities } from './capabilities';
+import {
+  CallSidebar,
+  CallDebugPanel,
+  ChannelContainer,
+  ThreadComplementary,
+  ThreadSettings,
+  ChatContainer,
+} from '../components';
 import { THREAD_PLUGIN } from '../meta';
-import { type ThreadSettingsProps } from '../types';
+import { ChannelType, type ThreadSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${THREAD_PLUGIN}/channel`,
       role: 'article',
-      filter: (data): data is { subject: ChannelType } =>
-        data.subject instanceof ChannelType && !!data.subject.threads[0],
-      component: ({ data, role }) => {
-        const layout = useLayout();
-        const channel = data.subject;
-        void channel.threads[0].load();
-        const thread = channel.threads[0].target;
-        if (!thread) {
+      filter: (data): data is { subject: ChannelType } => data.subject instanceof ChannelType,
+      component: ({ data: { subject: channel }, role }) => <ChannelContainer channel={channel} role={role} />,
+    }),
+    createSurface({
+      id: `${THREAD_PLUGIN}/chat-companion`,
+      role: 'article',
+      filter: (data): data is { companionTo: ChannelType; subject: 'chat' } =>
+        data.companionTo instanceof ChannelType && data.subject === 'chat',
+      component: ({ data: { companionTo: channel } }) => {
+        const space = getSpace(channel);
+        const thread = channel.defaultThread.target;
+        if (!space || !thread) {
           return null;
         }
 
-        const currentPosition = layout.active.findIndex((id) => id === channel.id);
-        if (currentPosition > 0) {
-          const objectToTheLeft = layout.active[currentPosition - 1];
-          const context = getSpace(channel)?.db.getObjectById(objectToTheLeft);
-          return <ThreadContainer role={role} thread={thread} context={context} />;
-        }
-
-        return <ThreadContainer role={role} thread={thread} />;
+        return <ChatContainer thread={thread} space={space} />;
       },
     }),
     createSurface({
       id: `${THREAD_PLUGIN}/thread`,
-      role: 'complementary--comments',
-      filter: (data): data is { subject: { threads: Ref<ThreadType>[] } } =>
-        !!data.subject &&
-        typeof data.subject === 'object' &&
-        'threads' in data.subject &&
-        Array.isArray(data.subject.threads) &&
-        !(data.subject instanceof ChannelType),
-      component: ({ data }) => <ThreadComplementary subject={data.subject} />,
+      role: 'article',
+      filter: (data): data is { subject: ThreadType } => isInstanceOf(ThreadType, data.subject),
+      component: ({ data: { subject: thread } }) => {
+        const space = getSpace(thread);
+        if (!space || !thread) {
+          return null;
+        }
+
+        return <ChatContainer thread={thread} space={space} />;
+      },
     }),
     createSurface({
-      id: `${THREAD_PLUGIN}/settings`,
+      id: `${THREAD_PLUGIN}/comments`,
+      role: 'article',
+      filter: (data): data is { companionTo: { threads: Ref<ThreadType>[] } } =>
+        data.subject === 'comments' &&
+        !!data.companionTo &&
+        typeof data.companionTo === 'object' &&
+        'threads' in data.companionTo &&
+        Array.isArray(data.companionTo.threads),
+      // TODO(wittjosiah): This isn't scrolling properly in a plank.
+      component: ({ data }) => <ThreadComplementary subject={data.companionTo} />,
+    }),
+    createSurface({
+      id: `${THREAD_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<ThreadSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === THREAD_PLUGIN,
       component: ({ data: { subject } }) => <ThreadSettings settings={subject.value} />,
+    }),
+    createSurface({
+      id: `${THREAD_PLUGIN}/assistant`,
+      role: 'deck-companion--active-call',
+      component: () => <CallSidebar />,
+    }),
+    createSurface({
+      id: `${THREAD_PLUGIN}/devtools-overview`,
+      role: 'devtools-overview',
+      component: () => {
+        const call = useCapability(ThreadCapabilities.CallManager);
+        return <CallDebugPanel state={call.state} />;
+      },
     }),
   ]);

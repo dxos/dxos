@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema } from 'effect';
 
 import { defineComputeNode, VoidInput, VoidOutput } from '../types';
 
@@ -11,10 +11,10 @@ export const NODE_OUTPUT = 'dxn:node:output';
 
 export const inputNode = defineComputeNode({
   input: VoidInput,
-  output: S.Record({ key: S.String, value: S.Any }),
+  output: Schema.Record({ key: Schema.String, value: Schema.Any }),
 });
 
 export const outputNode = defineComputeNode({
-  input: S.Record({ key: S.String, value: S.Any }),
+  input: Schema.Record({ key: Schema.String, value: Schema.Any }),
   output: VoidOutput,
 });

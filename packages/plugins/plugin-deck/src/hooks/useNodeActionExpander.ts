@@ -4,19 +4,14 @@
 
 import { useEffect } from 'react';
 
-import { ACTION_GROUP_TYPE, ACTION_TYPE, getGraph, type Node } from '@dxos/plugin-graph';
-
-const expandNodeActions = async (node: Node) => {
-  const graph = getGraph(node);
-  await graph.expand(node, 'outbound', ACTION_GROUP_TYPE);
-  await graph.expand(node, 'outbound', ACTION_TYPE);
-};
+import { getGraph, type Node } from '@dxos/plugin-graph';
 
 export const useNodeActionExpander = (node?: Node) => {
   useEffect(() => {
     if (node) {
       const frame = requestAnimationFrame(() => {
-        void expandNodeActions(node);
+        const graph = getGraph(node);
+        void graph.expand(node.id);
       });
       return () => cancelAnimationFrame(frame);
     }

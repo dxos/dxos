@@ -18,5 +18,7 @@ export * from './listener';
 export * from './markdown';
 export * from './mention';
 export * from './modes';
+export * from './outliner';
+export * from './preview';
 export * from './selection';
 export * from './typewriter';

@@ -25,7 +25,7 @@ const FileContainer = ({ file, role }: { file: FileType; role: string }) => {
       invariant(space);
       const { directory, forest } = await loadWnfs({ blockstore, instances, space });
       const path = filePath(file.cid.toString(), space);
-      const url = await getBlobUrl({ wnfsUrl: wnfsUrl(path), blockstore, directory, forest });
+      const url = await getBlobUrl({ wnfsUrl: wnfsUrl(path), blockstore, directory, forest, type: file.type });
       setBlobUrl(url);
     });
 
@@ -37,7 +37,7 @@ const FileContainer = ({ file, role }: { file: FileType; role: string }) => {
   }
 
   return (
-    <StackItem.Content role={role} toolbar={false}>
+    <StackItem.Content role={role}>
       <FilePreview type={file.type} url={blobUrl} />
     </StackItem.Content>
   );

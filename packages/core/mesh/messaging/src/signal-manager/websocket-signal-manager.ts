@@ -9,6 +9,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RateLimitExceededError, TimeoutError, trace } from '@dxos/protocols';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { type JoinRequest, type LeaveRequest, type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
 import { BitField, safeAwaitAll } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
@@ -102,17 +104,21 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
   }
 
   @synchronized
-  async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
+  async join({ topic, peer }: JoinRequest) {
     log('join', { topic, peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
     await this._forEachServer((server) => server.join({ topic, peer }));
   }
 
   @synchronized
-  async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
+  async leave({ topic, peer }: LeaveRequest) {
     log('leaving', { topic, peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
     await this._forEachServer((server) => server.leave({ topic, peer }));
+  }
+
+  async query({ topic }: QueryRequest): Promise<SwarmResponse> {
+    throw new Error('Not implemented');
   }
 
   async sendMessage({ author, recipient, payload }: Message): Promise<void> {

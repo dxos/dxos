@@ -2,23 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React from 'react';
 
-import { S } from '@dxos/echo-schema';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
 import { Box } from './common';
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 
-export const TextToImageShape = S.extend(
+export const TextToImageShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('text-to-image'),
+  Schema.Struct({
+    type: Schema.Literal('text-to-image'),
   }),
 );
 
-export type TextToImageShape = S.Schema.Type<typeof TextToImageShape>;
+export type TextToImageShape = Schema.Schema.Type<typeof TextToImageShape>;
 
 export type CreateTextToImageProps = CreateShapeProps<TextToImageShape>;
 

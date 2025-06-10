@@ -2,32 +2,35 @@
 // Copyright 2024 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
-import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-protocol';
+import { ObjectStructure, Reference } from '@dxos/echo-protocol';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { openAndClose } from '@dxos/test-utils';
 
-import { IndexMetadataStore } from './index-metadata-store';
-import { IndexStore } from './index-store';
 import { Indexer } from './indexer';
+import { IndexMetadataStore, IndexStore } from './store';
 import { type ObjectSnapshot } from './types';
 
 describe('Indexer', () => {
   const setup = async () => {
     const schemaURI = '@example.org/schema/Contact';
 
-    const objects: Partial<ObjectStructure>[] = [
-      {
+    const objects: ObjectStructure[] = [
+      ObjectStructure.makeObject({
+        // TODO(dmaretskyi): Fix references
+        type: Reference.localObjectReference(schemaURI).toDXN().toString(),
+        keys: [],
         data: { name: 'John' },
-        system: { type: encodeReference(new Reference(schemaURI)) },
-      },
-      {
+      }),
+      ObjectStructure.makeObject({
+        // TODO(dmaretskyi): Fix references
+        type: Reference.localObjectReference('@example.org/schema/Document').toDXN().toString(),
+        keys: [],
         data: { title: 'first document' },
-        system: { type: encodeReference(new Reference('@example.org/schema/Document')) },
-      },
+      }),
     ];
     const documents: ObjectSnapshot[] = objects.map((object, index) => ({
       id: String(index),
@@ -55,7 +58,7 @@ describe('Indexer', () => {
 
     {
       const doneIndexing = indexer.updated.waitForCount(1);
-      indexer.setConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
+      void indexer.setConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
       await indexer.open();
       await asyncTimeout(doneIndexing, 1000);
     }

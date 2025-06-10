@@ -4,16 +4,15 @@
 
 import defaulstDeep from 'lodash.defaultsdeep';
 
-import { type Point, type SVGContext } from '@dxos/gem-core';
+import { type GraphEdge, type GraphModel } from '@dxos/graph';
 import {
-  type GraphData,
+  type Point,
+  type SVGContext,
   type GraphLayout,
-  type GraphLayoutLink,
   type GraphLayoutNode,
-  type GraphLink,
   Projector,
   type ProjectorOptions,
-} from '@dxos/gem-spore';
+} from '@dxos/react-ui-graph';
 
 export type TreeProjectorOptions = ProjectorOptions &
   Partial<{
@@ -50,11 +49,11 @@ const defaultOptions: Partial<TreeProjectorOptions> = {
   },
 };
 
-export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, TreeProjectorOptions> {
+export class TreeProjector<N> extends Projector<GraphModel, GraphLayout<N>, TreeProjectorOptions> {
   _layout: GraphLayout<N> = {
     graph: {
       nodes: [],
-      links: [],
+      edges: [],
     },
   };
 
@@ -66,12 +65,12 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
     return this._layout;
   }
 
-  override onUpdate(data?: GraphData<N>, selected?: string) {
+  override onUpdate(data?: GraphModel, selected?: string) {
     if (!selected) {
       return {
         graph: {
           nodes: [],
-          links: [],
+          edges: [],
         },
       };
     }
@@ -112,23 +111,23 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
     const parents: N[] = [];
     const lateral: N[] = [];
     if (this.options.show?.parents || this.options.show?.lateral) {
-      data?.links.forEach((link) => {
-        const source = getNode(link.source)!;
-        const target = getNode(link.target)!;
+      data?.edges.forEach((edge) => {
+        const source = getNode(edge.source)!;
+        const target = getNode(edge.target)!;
 
-        if (link.source === selected) {
+        if (edge.source === selected) {
           if (getChildren(target).find((node) => this.options.idAccessor(node) === selected)) {
             parents.push(target);
           } else {
-            if (!getChildren(rootNode).find((node) => this.options.idAccessor(node) === link.target)) {
+            if (!getChildren(rootNode).find((node) => this.options.idAccessor(node) === edge.target)) {
               lateral.push(target);
             }
           }
-        } else if (link.target === selected) {
+        } else if (edge.target === selected) {
           if (getChildren(source).find((node) => this.options.idAccessor(node) === selected)) {
             parents.push(source);
           } else {
-            if (!getChildren(rootNode).find((node) => this.options.idAccessor(node) === link.source)) {
+            if (!getChildren(rootNode).find((node) => this.options.idAccessor(node) === edge.source)) {
               lateral.push(source);
             }
           }
@@ -148,18 +147,18 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
 
     // Create or update links.
     const links: GraphLayoutLink<N>[] =
-      (data?.links
-        .map((link: GraphLink) => {
-          const source = nodes.find((node) => node.id === link.source);
-          const target = nodes.find((node) => node.id === link.target);
+      (data?.edges
+        .map((edge: GraphEdge) => {
+          const source = nodes.find((node) => node.id === edge.source);
+          const target = nodes.find((node) => node.id === edge.target);
           if (source && target) {
-            const existing = this._layout.graph.links.find(({ id }) => id === link.id);
+            const existing = this._layout.graph.edges.find(({ id }) => id === edge.id);
             if (existing) {
               return existing;
             }
 
             return {
-              id: link.id,
+              id: edge.id,
               source,
               target,
               sourceStart: source.last,

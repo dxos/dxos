@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, pipe } from 'effect';
+import { SchemaAST, type Schema, Option, pipe } from 'effect';
 import React, { useState } from 'react';
 
-import { AST, type S, findProperty } from '@dxos/effect';
+import { findProperty } from '@dxos/effect';
 import { Input, type ThemedClassName, type TextInputProps as NativeTextInputProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type ViewType, getFieldValue, setFieldValue } from '@dxos/schema';
@@ -13,7 +13,7 @@ import { type ViewType, getFieldValue, setFieldValue } from '@dxos/schema';
 export type DeprecatedFormProps<T extends {} = {}> = ThemedClassName<{
   view: ViewType;
   object: T;
-  schema?: S.Schema<T>;
+  schema?: Schema.Schema<T>;
   readonly?: boolean;
 }>;
 
@@ -31,16 +31,16 @@ export const DeprecatedForm = <T extends {} = {}>({
     <div role='none' className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
       {view.fields.map((field) => {
         const prop = schema && findProperty(schema, field.path);
-        const title = (prop && pipe(AST.getTitleAnnotation(prop), Option.getOrUndefined)) ?? '';
-        const description = (prop && pipe(AST.getDescriptionAnnotation(prop), Option.getOrUndefined)) ?? title;
+        const title = (prop && pipe(SchemaAST.getTitleAnnotation(prop), Option.getOrUndefined)) ?? '';
+        const description = (prop && pipe(SchemaAST.getDescriptionAnnotation(prop), Option.getOrUndefined)) ?? title;
         // const format =
-        //   (prop && (getPatternAnnotation(prop) ?? (AST.isNumberKeyword(prop) && RealNumberFormat))) || undefined;
+        //   (prop && (getPatternAnnotation(prop) ?? (SchemaAST.isNumberKeyword(prop) && RealNumberFormat))) || undefined;
 
         //
         // Boolean
         //
 
-        if (prop && AST.isBooleanKeyword(prop)) {
+        if (prop && SchemaAST.isBooleanKeyword(prop)) {
           const value = object && getFieldValue(object, field);
           const onChange = (checked: boolean) => {
             setFieldValue(object, field, checked);

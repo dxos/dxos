@@ -4,15 +4,14 @@
 
 import { pipe } from 'effect';
 
-import { contributes, Capabilities, type PluginsContext, chain, createIntent } from '@dxos/app-framework';
+import { contributes, Capabilities, type PluginContext, chain, createIntent } from '@dxos/app-framework';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
 
-import { MARKDOWN_PLUGIN } from '../meta';
 import translations from '../translations';
 import { MarkdownAction, DocumentType } from '../types';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphSerializer, [
     {
       inputType: DocumentType.typename,
@@ -22,7 +21,8 @@ export default (context: PluginsContext) =>
         const doc = node.data;
         const content = await doc.content.load();
         return {
-          name: doc.name || doc.fallbackName || translations[0]['en-US'][MARKDOWN_PLUGIN]['document title placeholder'],
+          name:
+            doc.name || doc.fallbackName || translations[0]['en-US'][DocumentType.typename]['object name placeholder'],
           data: content.content,
           type: 'text/markdown',
         };
@@ -36,10 +36,10 @@ export default (context: PluginsContext) =>
           return;
         }
 
-        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
         const result = await dispatch(
           pipe(
-            createIntent(MarkdownAction.Create, { name: data.name, content: data.data }),
+            createIntent(MarkdownAction.Create, { spaceId: space.id, name: data.name, content: data.data }),
             chain(SpaceAction.AddObject, { target }),
           ),
         );

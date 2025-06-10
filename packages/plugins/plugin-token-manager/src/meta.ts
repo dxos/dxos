@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const TOKEN_MANAGER_PLUGIN = 'dxos.org/plugin/token-manager';
 
-export const meta = {
+export const meta: PluginMeta = {
   id: TOKEN_MANAGER_PLUGIN,
   name: 'Tokens',
-} satisfies PluginMeta;
+};

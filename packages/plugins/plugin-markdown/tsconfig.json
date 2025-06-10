@@ -46,13 +46,22 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/artifact"
+    },
+    {
+      "path": "../../core/assistant"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../../experimental/artifact"
     },
     {
       "path": "../../sdk/app-framework"
@@ -62,6 +71,9 @@
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../ui/lit-ui"
     },
     {
       "path": "../../ui/primitives/react-hooks"
@@ -94,10 +106,19 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-deck"
+    },
+    {
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-preview"
+    },
+    {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-storybook-layout"
     },
     {
       "path": "../plugin-theme"

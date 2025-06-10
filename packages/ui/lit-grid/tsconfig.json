@@ -2,9 +2,11 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
+    "experimentalDecorators": true,
     "types": [
       "node"
-    ]
+    ],
+    "useDefineForClassFields": false
   },
   "include": [
     "src/**/*.ts",

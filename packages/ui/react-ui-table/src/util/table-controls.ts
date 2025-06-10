@@ -44,7 +44,7 @@ const renderInput = (
   return `<input type="checkbox" class="${baseClass}" ${renderAttributes(attrs)} ${checked ? 'checked' : ''} ${preventToggle ? 'onclick="return false"' : ''} ${disabled ? 'disabled' : ''} data-testid="${testId}"/>`;
 };
 
-export const renderCheckbox = ({
+export const CheckboxStory = ({
   rowIndex,
   header = false,
   checked = false,
@@ -59,7 +59,7 @@ export const renderCheckbox = ({
   return renderInput(BASE_CLASSES.checkbox, attrs, checked, disabled, true, 'table-selection');
 };
 
-export const renderSwitch = ({ colIndex, rowIndex, checked = false, disabled = false }: RenderSwitchProps): string => {
+export const SwitchStory = ({ colIndex, rowIndex, checked = false, disabled = false }: RenderSwitchProps): string => {
   const attrs = {
     [CONTROL_IDENTIFIERS.switch]: '',
     'data-row-index': rowIndex.toString(),
@@ -72,7 +72,7 @@ export const renderSwitch = ({ colIndex, rowIndex, checked = false, disabled = f
 export const tableControls = {
   checkbox: {
     attr: CONTROL_IDENTIFIERS.checkbox,
-    render: renderCheckbox,
+    render: CheckboxStory,
     getData: (el: HTMLElement): Extract<ControlData, { type: 'checkbox' }> => ({
       type: 'checkbox',
       rowIndex: Number(el.getAttribute('data-row-index')),
@@ -81,7 +81,7 @@ export const tableControls = {
   },
   switch: {
     attr: CONTROL_IDENTIFIERS.switch,
-    render: renderSwitch,
+    render: SwitchStory,
     getData: (el: HTMLElement): Extract<ControlData, { type: 'switch' }> => ({
       type: 'switch',
       rowIndex: Number(el.getAttribute('data-row-index')),

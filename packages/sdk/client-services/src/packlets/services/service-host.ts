@@ -125,6 +125,10 @@ export class ClientServicesHost {
       this._runtimeParams.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
     }
 
+    if (this._runtimeParams.enableVectorIndexing === undefined) {
+      this._runtimeParams.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
+    }
+
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
     }
@@ -329,7 +333,11 @@ export class ClientServicesHost {
       DataService: this._serviceContext.echoHost.dataService,
       QueryService: this._serviceContext.echoHost.queryService,
 
-      NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
+      NetworkService: new NetworkServiceImpl(
+        this._serviceContext.networkManager,
+        this._serviceContext.signalManager,
+        this._edgeConnection,
+      ),
 
       LoggingService: this._loggingService,
       TracingService: this._tracingService,

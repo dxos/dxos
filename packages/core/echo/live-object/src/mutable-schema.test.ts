@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { SchemaAST, Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { PropertyMeta, getObjectAnnotation, getPropertyMetaAnnotation, TypedObject } from '@dxos/echo-schema';
-import { AST, S } from '@dxos/effect';
+import { PropertyMeta, getTypeAnnotation, getPropertyMetaAnnotation, TypedObject } from '@dxos/echo-schema';
 
 import { createEchoSchema } from './testing/echo-schema';
 
@@ -21,14 +21,14 @@ describe('dynamic schema', () => {
       typename: 'example.com/type/Test',
       version: '0.1.0',
     })({
-      field1: S.String,
-      field2: S.Boolean,
+      field1: Schema.String,
+      field2: Schema.Boolean,
     }) {}
 
     const registered = createEchoSchema(TestSchema);
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
-      ['field1', AST.stringKeyword],
-      ['field2', AST.booleanKeyword],
+      ['field1', SchemaAST.stringKeyword],
+      ['field2', SchemaAST.booleanKeyword],
     ]);
   });
 
@@ -37,40 +37,40 @@ describe('dynamic schema', () => {
       typename: 'example.com/type/Test',
       version: '0.1.0',
     })({
-      field1: S.String,
+      field1: Schema.String,
     }) {}
 
     const registered = createEchoSchema(TestSchema);
-    registered.addFields({ field2: S.Boolean });
+    registered.addFields({ field2: Schema.Boolean });
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
-      ['field1', AST.stringKeyword],
-      ['field2', AST.booleanKeyword],
+      ['field1', SchemaAST.stringKeyword],
+      ['field2', SchemaAST.booleanKeyword],
     ]);
   });
 
   test('updateColumns preserves order of existing and appends new fields', async () => {
     const registered = createEchoSchema(EmptySchemaType);
-    registered.addFields({ field1: S.String });
-    registered.addFields({ field2: S.Boolean });
-    registered.addFields({ field3: S.Number });
-    registered.updateFields({ field4: S.Boolean, field2: S.String });
+    registered.addFields({ field1: Schema.String });
+    registered.addFields({ field2: Schema.Boolean });
+    registered.addFields({ field3: Schema.Number });
+    registered.updateFields({ field4: Schema.Boolean, field2: Schema.String });
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
-      ['field1', AST.stringKeyword],
-      ['field2', AST.stringKeyword],
-      ['field3', AST.numberKeyword],
-      ['field4', AST.booleanKeyword],
+      ['field1', SchemaAST.stringKeyword],
+      ['field2', SchemaAST.stringKeyword],
+      ['field3', SchemaAST.numberKeyword],
+      ['field4', SchemaAST.booleanKeyword],
     ]);
   });
 
   test('removeColumns', async () => {
     const registered = createEchoSchema(EmptySchemaType);
-    registered.addFields({ field1: S.String });
-    registered.addFields({ field2: S.Boolean });
-    registered.addFields({ field3: S.Number });
+    registered.addFields({ field1: Schema.String });
+    registered.addFields({ field2: Schema.Boolean });
+    registered.addFields({ field3: Schema.Number });
     registered.removeFields(['field2']);
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
-      ['field1', AST.stringKeyword],
-      ['field3', AST.numberKeyword],
+      ['field1', SchemaAST.stringKeyword],
+      ['field3', SchemaAST.numberKeyword],
     ]);
   });
 
@@ -79,13 +79,13 @@ describe('dynamic schema', () => {
     const metaInfo = { maxLength: 10 };
     const registered = createEchoSchema(EmptySchemaType);
     registered.addFields({
-      field1: S.String.pipe(PropertyMeta(metaNamespace, metaInfo)),
-      field2: S.String,
+      field1: Schema.String.pipe(PropertyMeta(metaNamespace, metaInfo)),
+      field2: Schema.String,
     });
-    registered.addFields({ field3: S.String });
-    registered.updateFields({ field3: S.Boolean });
+    registered.addFields({ field3: Schema.String });
+    registered.updateFields({ field3: Schema.Boolean });
     registered.removeFields(['field2']);
-    expect(getObjectAnnotation(registered)).to.deep.contain({
+    expect(getTypeAnnotation(registered)).to.deep.contain({
       typename: 'example.com/type/Empty',
       version: '0.1.0',
     });
@@ -97,8 +97,8 @@ describe('dynamic schema', () => {
     const registered = createEchoSchema(EmptySchemaType);
     const originalVersion = registered.storedSchema.version;
     registered.addFields({
-      name: S.String.pipe(PropertyMeta('test', { maxLength: 10 })),
-      age: S.Number,
+      name: Schema.String.pipe(PropertyMeta('test', { maxLength: 10 })),
+      age: Schema.Number,
     });
 
     // First update.
@@ -128,7 +128,7 @@ describe('dynamic schema', () => {
     expect(registered.typename).toBe(newTypename2);
     expect(registered.jsonSchema.$id).toBe(`dxn:type:${newTypename2}`);
     expect(registered.jsonSchema.typename).toBe(newTypename2);
-    expect(getObjectAnnotation(registered)).to.deep.contain({
+    expect(getTypeAnnotation(registered)).to.deep.contain({
       typename: 'example.com/type/Person',
       version: '0.1.0',
     });

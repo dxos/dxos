@@ -5,13 +5,13 @@
 import { Reference } from '@dxos/echo-protocol';
 import { type BaseObject, type ForeignKey } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getMeta, getProxyTarget, type ReactiveObject } from '@dxos/live-object';
+import { getMeta, getProxyTarget, type Live } from '@dxos/live-object';
 
-import { isEchoObject, type ReactiveEchoObject } from './create';
+import { isEchoObject, type AnyLiveObject } from './create';
 import { symbolInternals, type ProxyTarget } from './echo-proxy-target';
 import { type EchoDatabase } from '../proxy-db';
 
-export const getDatabaseFromObject = (obj: ReactiveObject<any>): EchoDatabase | undefined => {
+export const getDatabaseFromObject = (obj: Live<any>): EchoDatabase | undefined => {
   if (!isEchoObject(obj)) {
     return undefined;
   }
@@ -21,18 +21,15 @@ export const getDatabaseFromObject = (obj: ReactiveObject<any>): EchoDatabase | 
   return target[symbolInternals].database;
 };
 
-export const getReferenceWithSpaceKey = (obj: ReactiveEchoObject<any>): Reference | undefined => {
+export const getReferenceWithSpaceKey = (obj: AnyLiveObject<any>): Reference | undefined => {
   invariant(obj);
   const db = getDatabaseFromObject(obj);
-  return db && new Reference(obj.id, undefined, db.spaceKey.toHex());
+  return db && Reference.fromObjectIdAndSpaceKey(obj.id, db.spaceKey);
 };
 
 // TODO(burdon): Factor out.
 // TODO(burdon): Impl query by meta.
-export const findObjectWithForeignKey = <T extends BaseObject>(
-  objects: ReactiveEchoObject<T>[],
-  foreignKey: ForeignKey,
-) => {
+export const findObjectWithForeignKey = <T extends BaseObject>(objects: AnyLiveObject<T>[], foreignKey: ForeignKey) => {
   return objects.find((result) => {
     return getMeta(result).keys.find(({ source, id }) => source === foreignKey.source && id === foreignKey.id);
   });

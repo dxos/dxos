@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { type ReactiveEchoObject, fullyQualifiedId } from '@dxos/client/echo';
+import { type AnyLiveObject, fullyQualifiedId } from '@dxos/client/echo';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { CollectionType } from '@dxos/plugin-space/types';
 
@@ -26,16 +27,9 @@ export const StackPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: StackViewType.typename,
-          metadata: {
-            placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
-            icon: 'ph--stack-simple--regular',
-          },
-        }),
-        contributes(Capabilities.Metadata, {
           id: SECTION_IDENTIFIER,
           metadata: {
-            parse: (section: { object: ReactiveEchoObject<any> }, type: string) => {
+            parse: (section: { object: AnyLiveObject<any> }, type: string) => {
               switch (type) {
                 case 'node':
                   // TODO(wittjosiah): Remove cast.
@@ -64,7 +58,8 @@ export const StackPlugin = () =>
           createSurface({
             id: `${STACK_PLUGIN}/article`,
             role: 'article',
-            filter: (data): data is { id?: string; subject: CollectionType } => data.subject instanceof CollectionType,
+            filter: (data): data is { id?: string; subject: CollectionType } =>
+              isInstanceOf(CollectionType, data.subject),
             component: ({ data }) => {
               // This allows the id to be overridden by the surface for situations where the id of the collection
               // is not the same as the id of what is being represented (e.g., a space with a root collection).

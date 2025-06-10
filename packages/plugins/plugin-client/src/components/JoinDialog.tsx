@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { type InvitationResult } from '@dxos/react-client/invitations';
-import { Dialog } from '@dxos/react-ui';
+import { Dialog, useTranslation } from '@dxos/react-ui';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 
 import { CLIENT_PLUGIN } from '../meta';
@@ -17,6 +17,7 @@ export const JOIN_DIALOG = `${CLIENT_PLUGIN}/JoinDialog`;
 
 export const JoinDialog = (props: JoinPanelProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { t } = useTranslation(CLIENT_PLUGIN);
 
   const handleCancelResetStorage = useCallback(() => dispatch(createIntent(ClientAction.ShareIdentity)), [dispatch]);
 
@@ -38,6 +39,7 @@ export const JoinDialog = (props: JoinPanelProps) => {
 
   return (
     <Dialog.Content>
+      <Dialog.Title classNames='sr-only'>{t('join space label', { ns: 'os' })}</Dialog.Title>
       <JoinPanel
         mode='halo-only'
         {...props}

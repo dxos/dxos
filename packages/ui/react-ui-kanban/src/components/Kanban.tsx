@@ -4,7 +4,9 @@
 
 import React, { type ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type JsonPath, setValue } from '@dxos/echo-schema';
+import { Surface } from '@dxos/app-framework';
+import { debounce } from '@dxos/async';
+import { getSnapshot, getTypename, type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
@@ -21,39 +23,16 @@ export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   onRemoveCard?: (card: T) => void;
 };
 
+const getColumnDropElement = (stackElement: HTMLDivElement) => {
+  return stackElement.closest('.kanban-drop') as HTMLDivElement;
+};
+
 export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
-  const { select, clear } = useSelectionActions([model.id, model.cardSchema.typename]);
+  const { select, clear } = useSelectionActions([model.id, getTypename(model.schema)!]);
   const selectedItems = useSelectedItems(model.id);
-  const [focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
+  const [_focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
   useEffect(() => () => clear(), []);
-
-  // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
-  //   omit fields from the form?
-  const Custom: ComponentProps<typeof Form>['Custom'] = useMemo(() => {
-    if (!model.columnFieldPath) {
-      return undefined;
-    }
-    return {
-      [model.columnFieldPath]: () => <></>,
-    };
-  }, [model.columnFieldPath]);
-
-  const handleSave = useCallback(
-    (values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
-      const id = values.id;
-      invariant(typeof id === 'string');
-      const object = model.items.find((obj) => obj.id === id);
-      invariant(object);
-
-      const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
-      for (const path of changedPaths) {
-        const value = values[path];
-        setValue(object, path, value);
-      }
-    },
-    [model.items],
-  );
 
   const handleAddCard = useCallback(
     (columnValue: string | undefined) => {
@@ -75,22 +54,26 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       itemsCount={model.arrangedCards.length}
       {...autoScrollRootAttributes}
     >
-      {model.arrangedCards.map(({ columnValue, cards }) => {
+      {model.arrangedCards.map(({ columnValue, cards }, index, array) => {
         const { color, title } = model.getPivotAttributes(columnValue);
         const uncategorized = columnValue === UNCATEGORIZED_VALUE;
+        const prevSiblingId = index > 0 ? array[index - 1].columnValue : undefined;
+        const nextSiblingId = index < array.length - 1 ? array[index + 1].columnValue : undefined;
         return (
           <StackItem.Root
             key={columnValue}
             item={{ id: columnValue }}
             size={20}
-            classNames='flex flex-col pli-1 plb-2 drag-preview-p-0'
+            classNames='flex flex-col pli-2 plb-2'
             disableRearrange={uncategorized}
             focusIndicatorVariant='group'
+            prevSiblingId={prevSiblingId}
+            nextSiblingId={nextSiblingId}
           >
             <div
               role='none'
               className={mx(
-                'shrink min-bs-0 bg-groupSurface rounded-lg grid dx-focus-ring-group-x-indicator',
+                'shrink min-bs-0 border border-separator bg-baseSurface rounded-lg grid dx-focus-ring-group-x-indicator kanban-drop',
                 railGridHorizontalContainFitContent,
               )}
             >
@@ -99,32 +82,36 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 orientation='vertical'
                 size='contain'
                 rail={false}
-                classNames='pbe-1 drag-preview-p-0'
+                classNames={
+                  /* NOTE(thure): Do not let this element have zero intrinsic size, otherwise the drop indicator will not display. See #9035. */
+                  ['plb-1', cards.length > 0 && 'plb-2 relative -block-start-1 z-[1] -mbe-1']
+                }
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
+                getDropElement={getColumnDropElement}
               >
-                {cards.map((card) => (
+                {cards.map((card, cardIndex, cardsArray) => (
                   <StackItem.Root
                     key={card.id}
                     item={card}
-                    classNames={'contain-layout plb-1 pli-2 drag-preview-p-0'}
+                    classNames='contain-layout pli-2 plb-1 first-of-type:pbs-0 last-of-type:pbe-0'
                     focusIndicatorVariant='group'
                     onClick={() => select([card.id])}
+                    prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
+                    nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
                   >
                     <div
                       role='none'
-                      className={mx(
-                        'rounded bg-baseSurface dx-focus-ring-group-y-indicator',
-                        selectedItems.has(card.id) && 'dx-focus-ring',
-                      )}
+                      className='rounded overflow-hidden bg-cardSurface dx-focus-ring-group-y-indicator relative min-bs-[--rail-item]'
                     >
-                      <div role='none' className='flex items-center'>
+                      <div role='none' className='flex items-center absolute block-start-0 inset-inline-0'>
                         <StackItem.DragHandle asChild>
                           <IconButton
                             iconOnly
                             icon='ph--dots-six-vertical--regular'
                             variant='ghost'
                             label={t('card drag handle label')}
+                            classNames='pli-2'
                           />
                         </StackItem.DragHandle>
                         <AttentionGlyph attended={selectedItems.has(card.id)} />
@@ -141,29 +128,45 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           </>
                         )}
                       </div>
-                      <Form
-                        values={card}
-                        schema={model.cardSchema}
-                        Custom={Custom}
-                        onSave={handleSave}
-                        autoFocus={card.id === focusedCardId}
-                        autoSave
-                      />
+                      <Surface role='card--kanban' limit={1} data={{ subject: card }} />
                     </div>
+                    <StackItem.DragPreview>
+                      {({ item }) => (
+                        <div className='p-2'>
+                          <div className='rounded overflow-hidden bg-cardSurface ring-focusLine ring-accentFocusIndicator relative min-bs-[--rail-item]'>
+                            <div role='none' className='flex items-center absolute block-start-0 inset-inline-0'>
+                              <IconButton
+                                iconOnly
+                                icon='ph--dots-six-vertical--regular'
+                                variant='ghost'
+                                label={t('card drag handle label')}
+                                classNames='pli-2'
+                              />
+                            </div>
+                            <Surface role='card--kanban' limit={1} data={{ subject: item }} />
+                          </div>
+                        </div>
+                      )}
+                    </StackItem.DragPreview>
                   </StackItem.Root>
                 ))}
               </Stack>
+
               {onAddCard && (
-                <div role='none' className='plb-2 pli-2'>
+                <div
+                  role='none'
+                  className='plb-2 pli-2 relative before:absolute before:inset-inline-2 before:block-start-0 before:bs-px before:bg-separator'
+                >
                   <IconButton
                     icon='ph--plus--regular'
                     label={t('add card label')}
                     onClick={() => handleAddCard(columnValue)}
-                    classNames='is-full bg-baseSurface'
+                    classNames='is-full'
                   />
                 </div>
               )}
-              <StackItem.Heading classNames='pli-2 order-first'>
+
+              <StackItem.Heading classNames='pli-2 order-first rounded-t-md bg-transparent'>
                 {!uncategorized && (
                   <StackItem.DragHandle asChild>
                     <IconButton
@@ -194,6 +197,69 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 )} */}
               </StackItem.Heading>
             </div>
+            <StackItem.DragPreview>
+              {({ item }) => {
+                // Find the column data for this item
+                const columnData = model.arrangedCards.find((col) => col.columnValue === item.id);
+                if (!columnData) {
+                  return null;
+                }
+
+                const { cards, columnValue } = columnData;
+                const { color, title } = model.getPivotAttributes(columnValue);
+                const uncategorized = columnValue === UNCATEGORIZED_VALUE;
+
+                return (
+                  <div className='p-2'>
+                    <div className='rounded-lg max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface ring-focusLine ring-accentFocusIndicator flex flex-col'>
+                      {/* Column Header */}
+                      <div className='flex items-center p-2'>
+                        <IconButton
+                          iconOnly
+                          icon='ph--dots-six-vertical--regular'
+                          variant='ghost'
+                          label={t('column drag handle label')}
+                          classNames='pli-2'
+                        />
+                        <Tag
+                          palette={color as any}
+                          data-uncategorized={uncategorized}
+                          classNames='mis-1 data-[uncategorized="true"]:mis-2'
+                        >
+                          {title}
+                        </Tag>
+                      </div>
+
+                      {/* Cards Container */}
+                      <div
+                        className={mx(
+                          'overflow-y-auto flex-1 pli-2 flex flex-col gap-2',
+                          'plb-1',
+                          cards.length > 0 && 'plb-2 relative -block-start-1 z-[1] -mbe-1',
+                        )}
+                      >
+                        {cards.map((card) => (
+                          <div
+                            key={card.id}
+                            role='none'
+                            className='flex-none rounded overflow-hidden bg-cardSurface dx-focus-ring-group-y-indicator relative min-bs-[--rail-item]'
+                          >
+                            <Surface role='card--kanban' limit={1} data={{ subject: card }} />
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Add Card Button */}
+                      {onAddCard && (
+                        <div className='p-2 border-t border-separator'>
+                          <IconButton icon='ph--plus--regular' label={t('add card label')} classNames='is-full' />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              }}
+            </StackItem.DragPreview>
           </StackItem.Root>
         );
       })}
@@ -231,5 +297,58 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
         </StackItem.Root>
       )} */}
     </Stack>
+  );
+};
+
+type CardFormProps<T extends BaseKanbanItem> = {
+  card: T;
+  model: KanbanModel;
+  autoFocus: boolean;
+};
+
+const _CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardFormProps<T>) => {
+  const handleSave = useCallback(
+    debounce((values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
+      const id = values.id;
+      invariant(typeof id === 'string');
+      const object = model.items.find((obj) => obj.id === id);
+      invariant(object);
+
+      const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
+      for (const path of changedPaths) {
+        const value = values[path];
+        setValue(object, path, value);
+      }
+    }, 500),
+    [model.items],
+  );
+
+  const initialValue = useMemo(() => getSnapshot(card), [JSON.stringify(card)]); // TODO(burdon): Avoid stringify.
+
+  // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
+  //   omit fields from the form?
+  const Custom: ComponentProps<typeof Form>['Custom'] = useMemo(() => {
+    if (!model.columnFieldPath) {
+      return undefined;
+    }
+
+    const custom: ComponentProps<typeof Form>['Custom'] = {};
+    custom[model.columnFieldPath] = () => <></>;
+    for (const field of model.kanban.cardView?.target?.hiddenFields ?? []) {
+      custom[field.path] = () => <></>;
+    }
+
+    return custom;
+  }, [model.columnFieldPath, JSON.stringify(model.kanban.cardView?.target?.hiddenFields)]);
+
+  return (
+    <Form
+      values={initialValue}
+      schema={model.schema}
+      Custom={Custom}
+      onSave={handleSave}
+      autoFocus={autoFocus}
+      autoSave
+    />
   );
 };

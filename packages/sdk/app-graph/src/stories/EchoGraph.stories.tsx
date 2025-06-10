@@ -4,36 +4,36 @@
 
 import '@dxos-theme';
 
+import { Rx, useRxValue } from '@effect-rx/rx-react';
 import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
-import React, { useEffect, useState } from 'react';
+import { Option, pipe } from 'effect';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import {
-  create,
-  type Echo,
-  type ReactiveEchoObject,
-  type FilterSource,
+  live,
+  isSpace,
+  Query,
+  type QueryResult,
   type Space,
   SpaceState,
-  isSpace,
-  type QueryOptions,
-  type Query,
+  Expando,
+  type Live,
+  Filter,
 } from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Button, Input, Select, useAsyncEffect } from '@dxos/react-ui';
+import { Button, Input, Select } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 import { safeParseInt } from '@dxos/util';
 
 import { Tree } from './Tree';
-import { type Graph } from '../graph';
-import { GraphBuilder, cleanup, createExtension, memoize, toSignal } from '../graph-builder';
-import { type Node } from '../node';
+import { type ExpandableGraph, ROOT_ID } from '../graph';
+import { GraphBuilder, createExtension, rxFromObservable, rxFromSignal } from '../graph-builder';
+import { rxFromQuery } from '../testing';
 
 const DEFAULT_PERIOD = 500;
-
-const EMPTY_ARRAY: never[] = [];
 
 enum Action {
   CREATE_SPACE = 'CREATE_SPACE',
@@ -53,70 +53,61 @@ const actionWeights = {
   [Action.RENAME_OBJECT]: 4,
 };
 
-// TODO(wittjosiah): Factor out.
-const memoizeQuery = <T extends ReactiveEchoObject<any>>(
-  spaceOrEcho?: Space | Echo,
-  filter?: FilterSource<T>,
-  options?: QueryOptions,
-): T[] => {
-  const key = isSpace(spaceOrEcho) ? spaceOrEcho.id : undefined;
-  const query = memoize(
-    () =>
-      isSpace(spaceOrEcho)
-        ? spaceOrEcho.db.query(filter, options)
-        : (spaceOrEcho?.query(filter, options) as Query<T> | undefined),
-    key,
-  );
-  const unsubscribe = memoize(() => query?.subscribe(), key);
-  cleanup(() => unsubscribe?.());
-
-  return query?.objects ?? EMPTY_ARRAY;
-};
-
-const createGraph = async (client: Client): Promise<Graph> => {
+const createGraph = (client: Client): ExpandableGraph => {
   const spaceBuilderExtension = createExtension({
     id: 'space',
-    filter: (node): node is Node<null> => node.id === 'root',
-    connector: ({ node }) => {
-      const spaces = toSignal(
-        (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
-        () => client.spaces.get(),
-      );
-      if (!spaces) {
-        return;
-      }
-
-      return spaces
-        .filter((space) => space.state.get() === SpaceState.SPACE_READY)
-        .map((space) => ({
-          id: space.id,
-          type: 'dxos.org/type/Space',
-          properties: { label: space.properties.name },
-          data: space,
-        }));
-    },
+    connector: (node) =>
+      Rx.make((get) =>
+        pipe(
+          get(node),
+          Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+          Option.map(() => {
+            const spaces = get(rxFromObservable(client.spaces)) ?? [];
+            return spaces
+              .filter((space) => get(rxFromObservable(space.state)) === SpaceState.SPACE_READY)
+              .map((space) => ({
+                id: space.id,
+                type: 'dxos.org/type/Space',
+                properties: { label: get(rxFromSignal(() => space.properties.name)) },
+                data: space,
+              }));
+          }),
+          Option.getOrElse(() => []),
+        ),
+      ),
   });
 
   const objectBuilderExtension = createExtension({
     id: 'object',
-    filter: (node): node is Node<Space> => isSpace(node.data),
-    connector: ({ node }) => {
-      const objects = memoizeQuery(node.data, { type: 'test' });
-      return objects.map((object) => ({
-        id: object.id,
-        type: 'dxos.org/type/test',
-        properties: { label: object.name },
-        data: object,
-      }));
+    connector: (node) => {
+      let query: QueryResult<Live<Expando>> | undefined;
+      return Rx.make((get) =>
+        pipe(
+          get(node),
+          Option.flatMap((node) => (isSpace(node.data) ? Option.some(node.data) : Option.none())),
+          Option.map((space) => {
+            if (!query) {
+              query = space.db.query(Query.type(Expando, { type: 'test' }));
+            }
+            return get(rxFromQuery(query)).map((object) => ({
+              id: object.id,
+              type: 'dxos.org/type/test',
+              properties: { label: object.name },
+              data: object,
+            }));
+          }),
+          Option.getOrElse(() => []),
+        ),
+      );
     },
   });
 
   const graph = new GraphBuilder().addExtension(spaceBuilderExtension).addExtension(objectBuilderExtension).graph;
-  graph.subscribeTraverse({
-    visitor: (node) => {
-      void graph.expand(node);
-    },
+  graph.onNodeChanged.on(({ id }) => {
+    console.log('onNodeChanged', { id });
+    graph.expand(id);
   });
+  graph.expand(ROOT_ID);
 
   return graph;
 };
@@ -136,7 +127,9 @@ const getRandomSpace = (client: Client): Space | undefined => {
 
 const getSpaceWithObjects = async (client: Client): Promise<Space | undefined> => {
   const readySpaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY);
-  const spaceQueries = await Promise.all(readySpaces.map((space) => space.db.query({ type: 'test' }).run()));
+  const spaceQueries = await Promise.all(
+    readySpaces.map((space) => space.db.query(Filter.type(Expando, { type: 'test' })).run()),
+  );
   const spaces = readySpaces.filter((space, index) => spaceQueries[index].objects.length > 0);
   return spaces[Math.floor(Math.random() * spaces.length)];
 };
@@ -160,13 +153,13 @@ const runAction = async (client: Client, action: Action) => {
     }
 
     case Action.ADD_OBJECT:
-      getRandomSpace(client)?.db.add(create({ type: 'test', name: faker.commerce.productName() }));
+      getRandomSpace(client)?.db.add(live({ type: 'test', name: faker.commerce.productName() }));
       break;
 
     case Action.REMOVE_OBJECT: {
       const space = await getSpaceWithObjects(client);
       if (space) {
-        const { objects } = await space.db.query({ type: 'test' }).run();
+        const { objects } = await space.db.query(Filter.type(Expando, { type: 'test' })).run();
         space.db.remove(objects[Math.floor(Math.random() * objects.length)]);
       }
       break;
@@ -175,7 +168,7 @@ const runAction = async (client: Client, action: Action) => {
     case Action.RENAME_OBJECT: {
       const space = await getSpaceWithObjects(client);
       if (space) {
-        const { objects } = await space.db.query({ type: 'test' }).run();
+        const { objects } = await space.db.query(Filter.type(Expando, { type: 'test' })).run();
         objects[Math.floor(Math.random() * objects.length)].name = faker.commerce.productName();
       }
       break;
@@ -189,10 +182,8 @@ const DefaultStory = () => {
   const [action, setAction] = useState<Action>();
 
   const client = useClient();
-  const [graph, setGraph] = useState<Graph>();
-  useAsyncEffect(async () => {
-    setGraph(await createGraph(client));
-  }, [client]);
+  const graph = useMemo(() => createGraph(client), [client]);
+  const data = useRxValue(graph.json());
 
   useEffect(() => {
     if (!generating) {
@@ -244,7 +235,7 @@ const DefaultStory = () => {
           </Select.Portal>
         </Select.Root>
       </div>
-      {graph && <Tree data={graph.toJSON()} />}
+      {data && <Tree data={data} />}
     </>
   );
 };
@@ -256,7 +247,7 @@ export default {
     withTheme,
     withClientProvider({
       createIdentity: true,
-      onInitialized: async (client: Client) => {
+      onIdentityCreated: async ({ client }) => {
         await client.spaces.create();
         await client.spaces.create();
       },

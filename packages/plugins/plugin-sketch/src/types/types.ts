@@ -3,8 +3,7 @@
 //
 
 import { type TLStore } from '@tldraw/tlschema';
-
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
 import { DiagramType } from './diagram';
 import { SKETCH_PLUGIN } from '../meta';
@@ -12,13 +11,13 @@ import { SKETCH_PLUGIN } from '../meta';
 export namespace SketchAction {
   const SKETCH_ACTION = `${SKETCH_PLUGIN}/action`;
 
-  export class Create extends S.TaggedClass<Create>()(`${SKETCH_ACTION}/create`, {
-    input: S.Struct({
-      name: S.optional(S.String),
-      schema: S.optional(S.String),
-      content: S.optional(S.Record({ key: S.String, value: S.Any })),
+  export class Create extends Schema.TaggedClass<Create>()(`${SKETCH_ACTION}/create`, {
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
+      schema: Schema.optional(Schema.String),
+      content: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
     }),
-    output: S.Struct({
+    output: Schema.Struct({
       object: DiagramType,
     }),
   }) {}
@@ -28,13 +27,14 @@ export interface SketchModel {
   store: TLStore;
 }
 
-export const SketchGridSchema = S.Literal('mesh', 'dotted');
-export type SketchGridType = S.Schema.Type<typeof SketchGridSchema>;
+export const SketchGridSchema = Schema.Literal('mesh', 'dotted');
+export type SketchGridType = Schema.Schema.Type<typeof SketchGridSchema>;
 
-export const SketchSettingsSchema = S.mutable(
-  S.Struct({
-    gridType: S.optional(SketchGridSchema),
+export const SketchSettingsSchema = Schema.mutable(
+  Schema.Struct({
+    showGrid: Schema.optional(Schema.Boolean),
+    gridType: Schema.optional(SketchGridSchema),
   }),
 );
 
-export type SketchSettingsProps = S.Schema.Type<typeof SketchSettingsSchema>;
+export type SketchSettingsProps = Schema.Schema.Type<typeof SketchSettingsSchema>;

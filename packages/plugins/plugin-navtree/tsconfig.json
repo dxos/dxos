@@ -45,6 +45,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -69,6 +72,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
       "path": "../../ui/react-ui-list"
     },
     {
@@ -87,13 +93,19 @@
       "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../plugin-client"
+      "path": "../plugin-attention"
+    },
+    {
+      "path": "../plugin-deck"
     },
     {
       "path": "../plugin-graph"
     },
     {
       "path": "../plugin-observability"
+    },
+    {
+      "path": "../plugin-storybook-layout"
     },
     {
       "path": "../plugin-theme"

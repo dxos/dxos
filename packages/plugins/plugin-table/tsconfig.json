@@ -27,16 +27,25 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/artifact"
+    },
+    {
+      "path": "../../core/assistant"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../../experimental/artifact"
-    },
-    {
-      "path": "../../experimental/assistant"
     },
     {
       "path": "../../sdk/app-framework"
@@ -66,9 +75,6 @@
       "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../experimental/plugin-search"
-    },
-    {
       "path": "../plugin-client"
     },
     {
@@ -76,6 +82,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-search"
     },
     {
       "path": "../plugin-space"

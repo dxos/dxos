@@ -25,6 +25,7 @@ module.exports = {
     'vite.config.ts',
     'vitest.config.ts',
     'vitest.shared.ts',
+    'playwright.config.cts',
 
     // Dependencies
     'node_modules',
@@ -35,30 +36,27 @@ module.exports = {
 
     // Docs snippets
     'docs/content/**/*',
+    '**/typedoc/assets/**/*',
   ],
   overrides: [
     {
-      files: '**/*.{ts,mts,tsx,js,jsx}',
       extends: ['plugin:@dxos/recommended'],
+      files: '**/*.{ts,mts,tsx,js,jsx}',
       rules: {
         camelcase: 'off',
       },
     },
     {
-      files: '**/*.{ts,mts,tsx}',
       extends: ['plugin:@dxos/typescript'],
+      files: '**/*.{ts,mts,tsx}',
     },
     {
-      files: '**/*.{tsx,jsx}',
       extends: ['plugin:@dxos/react'],
-      rules: {
-        'react/react-in-jsx-scope': 0,
-        'react/jsx-uses-react': 0,
-      },
+      files: '**/*.{tsx,jsx}',
     },
     {
-      files: '**/*.test.{ts,tsx,js,jsx}',
       extends: ['plugin:@dxos/test'],
+      files: '**/*.test.{ts,tsx,js,jsx}',
     },
     {
       files: '**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}',

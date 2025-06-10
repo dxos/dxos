@@ -2,9 +2,6 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "lib": [
-      "DOM"
-    ],
     "types": [
       "@dxos/typings",
       "node"
@@ -28,6 +25,9 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -35,6 +35,9 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/random"
     },
     {
       "path": "../../common/storybook-utils"
@@ -52,9 +55,6 @@
       "path": "../../core/conductor"
     },
     {
-      "path": "../../core/echo/automerge"
-    },
-    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -68,6 +68,9 @@
     },
     {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../core/functions"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -85,12 +88,6 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../experimental/gem-core"
-    },
-    {
-      "path": "../../experimental/gem-spore"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
@@ -103,16 +100,25 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-edge-client"
+    },
+    {
       "path": "../../ui/primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-graph"
+    },
+    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/react-ui-theme"

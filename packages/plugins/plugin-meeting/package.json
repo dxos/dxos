@@ -1,0 +1,103 @@
+{
+  "name": "@dxos/plugin-meeting",
+  "version": "0.8.1",
+  "description": "Video calls plugin for DXOS Composer",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./types": {
+      "types": "./dist/types/src/types/index.d.ts",
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": "./dist/lib/node-esm/types/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "types": [
+        "dist/types/src/types/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/artifact": "workspace:*",
+    "@dxos/assistant": "workspace:*",
+    "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/display-name": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/live-object": "workspace:*",
+    "@dxos/local-storage": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-deck": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-thread": "workspace:*",
+    "@dxos/plugin-transcription": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-edge-client": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/react-ui-tabs": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/tracing": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
+    "date-fns": "^3.3.1"
+  },
+  "devDependencies": {
+    "@dxos/plugin-theme": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
+    "@effect-rx/rx-react": "^0.34.1",
+    "@effect/platform": "0.80.12",
+    "@types/react": "~18.2.0",
+    "effect": "3.14.21",
+    "preact": "~10.11.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
+    "tailwindcss": "~3.4.1"
+  },
+  "optionalDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@effect-rx/rx-react": "^0.34.1",
+    "@effect/platform": "0.80.12",
+    "effect": "^3.13.3",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

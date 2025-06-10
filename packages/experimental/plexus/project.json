@@ -7,16 +7,16 @@
   "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
   "targets": {
-    "build": {},
-    "compile": {
+    "__build": {},
+    "__compile": {
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts"
         ]
       }
     },
-    "lint": {},
-    "pack": {}
+    "__lint": {},
+    "__pack": {}
   },
   "implicitDependencies": [
     "esbuild",

@@ -6,6 +6,9 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -24,16 +27,19 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../experimental/artifact"
-    },
-    {
-      "path": "../../experimental/assistant"
-    },
-    {
       "path": "../../ui/react-ui-kanban"
     },
     {
       "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../ai"
+    },
+    {
+      "path": "../artifact"
+    },
+    {
+      "path": "../assistant"
     },
     {
       "path": "../echo/echo-db"

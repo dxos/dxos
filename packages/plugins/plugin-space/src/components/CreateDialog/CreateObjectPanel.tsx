@@ -4,41 +4,19 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Surface, isSurfaceAvailable, usePluginManager } from '@dxos/app-framework';
-import { getObjectAnnotation, type ObjectAnnotation, type S } from '@dxos/echo-schema';
+import { getTypeAnnotation, type TypeAnnotation } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type Space } from '@dxos/react-client/echo';
 import { Icon, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Form, type InputProps } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable, type MaybePromise } from '@dxos/util';
 
+import { useInputSurfaceLookup } from '../../hooks';
 import { SPACE_PLUGIN } from '../../meta';
 import { type ObjectForm, type CollectionType } from '../../types';
 import { getSpaceDisplayName } from '../../util';
-
-// TODO(ZaymonFC): Move this if you find yourself needing it elsewhere.
-/**
- * Creates a surface input component based on plugin context.
- * @param baseData Additional data that will be merged with form data and passed to the surface.
- * This allows providing more context to the surface than what's available from the form itself.
- */
-const useInputSurfaceLookup = (baseData?: Record<string, any>) => {
-  const pluginManager = usePluginManager();
-
-  return useCallback(
-    ({ prop, schema, inputProps }: { prop: string; schema: S.Schema<any>; inputProps: InputProps }) => {
-      const composedData = { prop, schema, ...baseData };
-      if (!isSurfaceAvailable(pluginManager.context, { role: 'form-input', data: composedData })) {
-        return undefined;
-      }
-
-      return <Surface role='form-input' data={composedData} {...inputProps} />;
-    },
-    [pluginManager, baseData],
-  );
-};
 
 export type CreateObjectPanelProps = ThemedClassName<{
   forms: ObjectForm[];
@@ -69,9 +47,9 @@ export const CreateObjectPanel = ({
   const { t } = useTranslation(SPACE_PLUGIN);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const [target, setTarget] = useState<Space | CollectionType | undefined>(initialTarget);
-  const form = forms.find((form) => getObjectAnnotation(form.objectSchema)?.typename === typename);
-  const options: ObjectAnnotation[] = forms
-    .map((form) => getObjectAnnotation(form.objectSchema))
+  const form = forms.find((form) => getTypeAnnotation(form.objectSchema)?.typename === typename);
+  const options: TypeAnnotation[] = forms
+    .map((form) => getTypeAnnotation(form.objectSchema))
     .filter(isNonNullable)
     .sort((a, b) => {
       const nameA = t('typename label', { ns: a.typename, defaultValue: a.typename });
@@ -92,7 +70,7 @@ export const CreateObjectPanel = ({
   const handleSetTypename = useCallback(
     async (typename: string) => {
       invariant(target, 'target is required');
-      const form = forms.find((form) => getObjectAnnotation(form.objectSchema)?.typename === typename);
+      const form = forms.find((form) => getTypeAnnotation(form.objectSchema)?.typename === typename);
       if (form && !form.formSchema) {
         await onCreateObject?.({ form, target });
       } else {
@@ -170,7 +148,7 @@ const SelectSchema = ({
   resolve,
   onChange,
 }: {
-  options: ObjectAnnotation[];
+  options: TypeAnnotation[];
   onChange: (type: string) => void;
 } & Pick<CreateObjectPanelProps, 'resolve'>) => {
   const { t } = useTranslation(SPACE_PLUGIN);

@@ -2,16 +2,33 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Ref, S, TypedObject } from '@dxos/echo-schema';
-import { ThreadType } from '@dxos/plugin-space/types';
-import { TextType } from '@dxos/schema';
+import { Schema } from 'effect';
 
-export class DocumentType extends TypedObject({ typename: 'dxos.org/type/Document', version: '0.1.0' })({
-  name: S.optional(S.String),
-  fallbackName: S.optional(S.String),
-  content: Ref(TextType),
-  threads: S.mutable(S.Array(Ref(ThreadType))),
-}) {}
+import { Type } from '@dxos/echo';
+import { Expando, LabelAnnotation, Ref } from '@dxos/echo-schema';
+import { makeRef, live } from '@dxos/live-object';
+import { ThreadType } from '@dxos/plugin-space/types';
+import { DataType } from '@dxos/schema';
+
+export const DocumentSchema = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  fallbackName: Schema.optional(Schema.String),
+  content: Ref(DataType.Text),
+  threads: Schema.mutable(Schema.Array(Ref(ThreadType))),
+  assistantChatQueue: Schema.optional(Ref(Expando)),
+}).pipe(LabelAnnotation.set(['name', 'fallbackName']));
+
+export const DocumentType = DocumentSchema.pipe(
+  Type.def({
+    typename: 'dxos.org/type/Document',
+    version: '0.1.0',
+  }),
+);
+export type DocumentType = Schema.Schema.Type<typeof DocumentType>;
+
+// TODO(burdon): Replace when defaults are supported.
+export const createDocument = ({ name, content }: { name: string; content: string }) =>
+  live(DocumentType, { name, content: makeRef(live(DataType.Text, { content })), threads: [] });
 
 /**
  * Checks if an object conforms to the interface needed to render an editor.

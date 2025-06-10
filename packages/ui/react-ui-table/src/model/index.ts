@@ -5,3 +5,4 @@
 export * from './table-model';
 export * from './modal-controller';
 export * from './table-presentation';
+export type { SelectionMode } from './selection-model';

@@ -8,16 +8,15 @@ import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hi
 import { createContext } from '@radix-ui/react-context';
 import React, { type ReactNode, useCallback, useEffect, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
-
-import { idle, type ItemState, type ListItemRecord } from './ListItem';
+import { idle, type ItemDragState, type ListItemRecord } from './ListItem';
 
 type ListContext<T extends ListItemRecord> = {
-  isItem: (item: any) => boolean;
-  getId?: (item: T) => string; // TODO(burdon): Require if T doesn't conform to type.
+  // TODO(burdon): Rename drag state.
+  state: ItemDragState & { item?: T };
+  setState: (state: ItemDragState & { item?: T }) => void;
   dragPreview?: boolean;
-  state: ItemState & { item?: T };
-  setState: (state: ItemState & { item?: T }) => void;
+  isItem?: (item: any) => boolean;
+  getId?: (item: T) => string; // TODO(burdon): Require if T doesn't conform to type.
 };
 
 const LIST_NAME = 'List';
@@ -29,17 +28,15 @@ export type ListRendererProps<T extends ListItemRecord> = {
   items: T[];
 };
 
-export type ListRootProps<T extends ListItemRecord> = ThemedClassName<{
+const defaultGetId = <T extends ListItemRecord>(item: T) => (item as any)?.id;
+
+export type ListRootProps<T extends ListItemRecord> = {
   children?: (props: ListRendererProps<T>) => ReactNode;
   items?: T[];
   onMove?: (fromIndex: number, toIndex: number) => void;
-}> &
-  Pick<ListContext<T>, 'isItem' | 'getId' | 'dragPreview'>;
-
-const defaultGetId = <T extends ListItemRecord>(item: T) => (item as any)?.id;
+} & Pick<ListContext<T>, 'isItem' | 'getId' | 'dragPreview'>;
 
 export const ListRoot = <T extends ListItemRecord>({
-  classNames,
   children,
   items,
   isItem,
@@ -71,7 +68,7 @@ export const ListRoot = <T extends ListItemRecord>({
     }
 
     return monitorForElements({
-      canMonitor: ({ source }) => isItem(source.data),
+      canMonitor: ({ source }) => isItem?.(source.data) ?? false,
       onDrop: ({ location, source }) => {
         const target = location.current.dropTargets[0];
         if (!target) {
@@ -81,7 +78,7 @@ export const ListRoot = <T extends ListItemRecord>({
         const sourceData = source.data;
         const targetData = target.data;
 
-        if (!isItem(sourceData) || !isItem(targetData)) {
+        if (!isItem?.(sourceData) || !isItem?.(targetData)) {
           return;
         }
 
@@ -104,6 +101,6 @@ export const ListRoot = <T extends ListItemRecord>({
   }, [items, isEqual, onMove]);
 
   return (
-    <ListProvider {...{ isItem, state, setState, ...props }}>{children?.({ state, items: items ?? [] })}</ListProvider>
+    <ListProvider {...{ state, setState, isItem, ...props }}>{children?.({ state, items: items ?? [] })}</ListProvider>
   );
 };

@@ -5,8 +5,8 @@
 import { effect } from '@preact/signals-core';
 import localforage from 'localforage';
 
-import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
+import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { SubscriptionList } from '@dxos/async';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -16,20 +16,18 @@ import { FILES_PLUGIN } from '../meta';
 import { LocalFilesAction, type FilesSettingsProps, type FilesState } from '../types';
 import { findFile, handleToLocalDirectory, handleToLocalFile, PREFIX } from '../util';
 
-export default async (context: PluginsContext) => {
+export default async (context: PluginContext) => {
   const state = new LocalStorageStore<FilesState>(FILES_PLUGIN, {
     exportRunning: false,
     files: [],
     current: undefined,
   });
 
-  const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-  const attention = context.requestCapability(AttentionCapabilities.Attention);
-  const settings = context
-    .requestCapability(Capabilities.SettingsStore)
-    .getStore<FilesSettingsProps>(FILES_PLUGIN)!.value;
+  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+  const attention = context.getCapability(AttentionCapabilities.Attention);
+  const settings = context.getCapability(Capabilities.SettingsStore).getStore<FilesSettingsProps>(FILES_PLUGIN)!.value;
 
-  const subscriptions = new EventSubscriptions();
+  const subscriptions = new SubscriptionList();
 
   const value = await localforage.getItem<FileSystemHandle[]>(FILES_PLUGIN);
   if (Array.isArray(value) && settings.openLocalFiles) {

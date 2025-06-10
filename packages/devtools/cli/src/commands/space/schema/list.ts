@@ -5,7 +5,7 @@
 import { Flags, ux } from '@oclif/core';
 
 import { FLAG_SPACE_KEYS, table, TABLE_FLAGS, type TableFlags } from '@dxos/cli-base';
-import { getObjectAnnotation } from '@dxos/echo-schema';
+import { getTypeAnnotation } from '@dxos/echo-schema';
 
 import { BaseCommand } from '../../../base';
 
@@ -32,12 +32,12 @@ export default class List extends BaseCommand<typeof List> {
       const typenameFilter = createTypenameFilter(this.flags.typename);
 
       const echoSchema = await space.db.schemaRegistry.query().run();
-      const runtimeSchema = await space.db.graph.schemaRegistry.schemas;
+      const runtimeSchema = space.db.graph.schemaRegistry.schemas;
 
       const schemas = [
         ...echoSchema.map((schema): SchemaEntry => schema),
         ...runtimeSchema.map((schema): SchemaEntry => {
-          const schemaAnnotation = getObjectAnnotation(schema)!;
+          const schemaAnnotation = getTypeAnnotation(schema)!;
           return {
             typename: schemaAnnotation.typename,
             version: schemaAnnotation.version,

@@ -2,41 +2,37 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React from 'react';
 
-import { DXOS } from '@dxos/brand';
-import { Button, Icon, Input } from '@dxos/react-ui';
+import { Composer } from '@dxos/brand';
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Factor out SettingsDialog.
-export const Options = () => {
-  const [text, setText] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-  const handleSearch = () => {
-    inputRef.current?.focus();
-  };
+export type OptionsProps = ThemedClassName<{}>;
+
+export const Options = ({ classNames }: OptionsProps) => {
+  const { t } = useTranslation('composer');
+
+  const handleAuth = () => {};
 
   return (
-    <div className='flex flex-col w-full p-4'>
-      <div className='flex w-full gap-2 items-center'>
-        <DXOS className='w-[32px] h-[32px]' />
-        <h1 className='text-2xl font-thin'>Composer</h1>
+    <div className={mx('flex flex-col grow gap-4 overflow-y-auto bg-baseSurface', classNames)}>
+      <div className='grid grid-cols-[8rem_1fr] p-4'>
+        <a href='https://dxos.org/composer' target='_blank' rel='noreferrer'>
+          <Composer className='w-[8rem] h-[8rem]' />
+        </a>
+        <div className='grid grid-rows-[1fr_1fr]'>
+          <div />
+          <div>
+            <h1 className='text-2xl'>{t('composer.title')}</h1>
+            <p className='text-sm text-subdued'>{t('composer.description')}</p>
+          </div>
+        </div>
       </div>
 
-      <div className='flex flex-col w-full my-4 gap-2 divide-y divide-separator'>
-        <div className='flex w-full gap-2 items-center'>
-          <Input.Root>
-            <Input.TextInput
-              ref={inputRef}
-              autoFocus
-              placeholder='Enter'
-              value={text}
-              onChange={(ev) => setText(ev.target.value)}
-              onKeyDown={(ev) => ev.key === 'Enter' && handleSearch()}
-            />
-          </Input.Root>
-          <Button onClick={handleSearch}>
-            <Icon icon='ph--magnifying-glass--regular' size={5} />
-          </Button>
+      <div className='flex flex-col gap-4'>
+        <div className='flex justify-center'>
+          <IconButton icon='ph--user--regular' label={t('button.auth')} size={5} onClick={handleAuth} />
         </div>
       </div>
     </div>

@@ -4,9 +4,8 @@
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
+import { type Heads, type Prop } from '@automerge/automerge';
 import { Annotation, StateEffect, type StateField, type EditorState, type Transaction } from '@codemirror/state';
-
-import { type Heads, type Prop } from '@dxos/automerge/automerge';
 
 export type State = {
   path: Prop[];

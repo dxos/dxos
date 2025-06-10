@@ -4,9 +4,16 @@
 
 module.exports = {
   extends: ['semistandard'],
-  plugins: ['prettier', 'unused-imports', '@stayradiated/prefer-arrow-functions', '@dxos/rules'],
+  plugins: [
+    // prettier-ignore
+    '@dxos/rules',
+    '@stayradiated/prefer-arrow-functions',
+    'prettier',
+    // TOOD(burdon): Configure eslint-plugin-simple-import-sort
+    // 'simple-import-sort',
+    'unused-imports',
+  ],
   rules: {
-    'no-console': 'error',
     '@dxos/rules/comment': 'off',
     '@dxos/rules/header': 'error',
     '@dxos/rules/no-empty-promise-catch': 'error',
@@ -36,9 +43,15 @@ module.exports = {
     //  https://github.com/import-js/eslint-plugin-import/blob/main/docs/rules/no-cycle.md
     // 'import/no-cycle': 1,
     'import/no-self-import': 2,
+    // TODO(burdon): Change to: https://github.com/lydell/eslint-plugin-simple-import-sort
     'import/order': [
       'error',
       {
+        alphabetize: {
+          order: 'asc',
+        },
+        groups: [['builtin', 'external'], 'internal'],
+        'newlines-between': 'always',
         pathGroups: [
           {
             pattern: '@{dxos,braneframe}/**',
@@ -46,19 +59,18 @@ module.exports = {
             position: 'before',
           },
         ],
-        pathGroupsExcludedImportTypes: ['@{dxos,braneframe}/**', '@{mui,material-ui}/**'],
-        'newlines-between': 'always',
-        groups: [['builtin', 'external'], 'internal'],
-        alphabetize: {
-          order: 'asc',
-        },
+        pathGroupsExcludedImportTypes: ['@{dxos,braneframe}/**'],
       },
     ],
     indent: 'off',
+    'mocha/handle-done-callback': 'off',
     'multiline-ternary': 'off',
+    'n/handle-callback-err': 'off',
     'n/no-callback-literal': 'off',
     'node/no-callback-literal': 'off',
+    'no-console': 'error',
     'no-extra-parens': 'off',
+    'no-labels': 'off',
     'no-lone-blocks': 'off',
     'no-restricted-imports': [
       'error',
@@ -76,22 +88,20 @@ module.exports = {
         allowAsStatement: true,
       },
     ],
-    'quote-props': 'off',
     'padded-blocks': 'off',
     'prettier/prettier': 'error',
+    'quote-props': 'off',
     'space-before-function-paren': 'off',
     'standard/no-callback-literal': 'off',
     'unused-imports/no-unused-imports': 'error',
     'unused-imports/no-unused-vars': [
       'error',
       {
+        args: 'none',
         vars: 'all',
         varsIgnorePattern: '^_',
-        args: 'none',
       },
     ],
     'yield-star-spacing': 'off',
-    'n/handle-callback-err': 'off',
-    'no-labels': 'off',
   },
 };

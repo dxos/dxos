@@ -15,24 +15,30 @@ import {
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
-import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import { type EchoClient, type FilterSource, type Query, type QueryOptions } from '@dxos/echo-db';
-import { invariant } from '@dxos/invariant';
+import { failUndefined, inspectObject } from '@dxos/debug';
+import { Filter, Query, type EchoClient, type QueryOptions, type QueuesService, type QueryFn } from '@dxos/echo-db';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
-import { Invitation, SpaceState, type Space as SerializedSpace } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  Invitation,
+  SpaceState,
+  type Space as SerializedSpace,
+  type SpaceArchive,
+} from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 
-import { AgentQuerySourceProvider } from './agent-query-source-provider';
+import { AgentQuerySourceProvider } from './agent';
 import { SpaceProxy } from './space-proxy';
 import { RPC_TIMEOUT } from '../common';
 import { type HaloProxy } from '../halo/halo-proxy';
 import { InvitationsProxy } from '../invitations';
+
+const ENABLE_AGENT_QUERY_SOURCE = false;
 
 @trace.resource()
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
@@ -55,6 +61,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _echoClient: EchoClient,
     private readonly _halo: HaloProxy,
+    // TODO(dmaretskyi): Move into services provider.
+    private readonly _queuesService: QueuesService,
     /**
      * @internal
      */
@@ -126,7 +134,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
         let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
         if (!spaceProxy) {
-          spaceProxy = new SpaceProxy(this._serviceProvider, space, this._echoClient);
+          spaceProxy = new SpaceProxy(this._serviceProvider, space, this._echoClient, this._queuesService);
 
           if (this._shouldOpenSpace(space)) {
             this._openSpaceAsync(spaceProxy);
@@ -160,18 +168,20 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     });
     this._ctx.onDispose(() => spacesStream.close());
 
-    const subscription = this._isReady.subscribe(async (ready) => {
-      if (!ready) {
-        return;
-      }
+    if (ENABLE_AGENT_QUERY_SOURCE) {
+      const subscription = this._isReady.subscribe(async (ready) => {
+        if (!ready) {
+          return;
+        }
 
-      const agentQuerySourceProvider = new AgentQuerySourceProvider(this.default);
-      await agentQuerySourceProvider.open();
-      this._echoClient.graph.registerQuerySourceProvider(agentQuerySourceProvider);
-      this._ctx.onDispose(() => agentQuerySourceProvider.close());
-      subscription.unsubscribe();
-    });
-    this._ctx.onDispose(() => subscription.unsubscribe());
+        const agentQuerySourceProvider = new AgentQuerySourceProvider(this.default);
+        await agentQuerySourceProvider.open();
+        this._echoClient.graph.registerQuerySourceProvider(agentQuerySourceProvider);
+        this._ctx.onDispose(() => agentQuerySourceProvider.close());
+        subscription.unsubscribe();
+      });
+      this._ctx.onDispose(() => subscription.unsubscribe());
+    }
 
     // TODO(nf): implement/verify works
     // TODO(nf): trigger automatically? feedback on how many were resumed?
@@ -300,7 +310,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spaceProxy = this._findProxy(space);
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
-    spaceProxy.db.add(create(PropertiesType, meta ?? {}), { placeIn: 'root-doc' });
+    spaceProxy.db.add(live(PropertiesType, meta ?? {}), { placeIn: 'root-doc' });
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 
@@ -311,23 +321,20 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /**
    * @internal
    */
-  // TODO(burdon): ?
-  async clone(snapshot: SpaceSnapshot): Promise<Space> {
-    return todo();
-    // invariant(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
-    // const space = await this._serviceProvider.services.SpaceService.cloneSpace(snapshot);
+  async import(archive: SpaceArchive): Promise<Space> {
+    invariant(this._serviceProvider.services.SpacesService, 'SpaceService is not available.');
+    const { newSpaceId } = await this._serviceProvider.services.SpacesService.importSpace(
+      { archive },
+      { timeout: CREATE_SPACE_TIMEOUT },
+    );
+    invariant(SpaceId.isValid(newSpaceId), 'Invalid space ID');
+    await this._spaceCreated.waitForCondition(() => {
+      return this.get().some((space) => space.id === newSpaceId);
+    });
 
-    // const proxy = new Trigger<SpaceProxy>();
-    // const unsubscribe = this._spaceCreated.on((spaceKey) => {
-    //   if (spaceKey.equals(space.publicKey)) {
-    //     const spaceProxy = this._spaces.get(space.publicKey)!;
-    //     proxy.wake(spaceProxy);
-    //   }
-    // });
-
-    // const spaceProxy = await proxy.wait();
-    // unsubscribe();
-    // return spaceProxy;
+    const spaceProxy = this.get(newSpaceId) ?? failedInvariant();
+    await spaceProxy.waitUntilReady();
+    return spaceProxy;
   }
 
   join(invitation: Invitation | string) {
@@ -344,13 +351,18 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._findProxy(response.space);
   }
 
+  // Odd way to define methods types from a typedef.
   /**
    * Query all spaces.
-   * @param filter
-   * @param options
    */
-  query<T extends {} = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
-    return this._echoClient.graph.query(filter, options);
+  declare query: QueryFn;
+  static {
+    this.prototype.query = this.prototype._query;
+  }
+
+  private _query(query: Query.Any | Filter.Any, options?: QueryOptions) {
+    query = Filter.is(query) ? Query.select(query) : query;
+    return this._echoClient.graph.query(query, options);
   }
 
   private _findProxy(space: SerializedSpace): SpaceProxy {

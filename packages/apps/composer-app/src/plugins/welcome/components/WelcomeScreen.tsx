@@ -19,15 +19,17 @@ import { activateAccount, signup } from '../credentials';
 export const WELCOME_SCREEN = 'WelcomeScreen';
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
+  const searchParams = new URLSearchParams(window.location.search);
+  const spaceInvitationCode = searchParams.get('spaceInvitationCode') ?? undefined;
+
   const client = useClient();
   const identity = useIdentity();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const [state, setState] = useState<WelcomeState>(WelcomeState.INIT);
+  const [state, setState] = useState<WelcomeState>(
+    spaceInvitationCode ? WelcomeState.SPACE_INVITATION : WelcomeState.INIT,
+  );
   const [error, setError] = useState(false);
   const pendingRef = useRef(false);
-
-  const searchParams = new URLSearchParams(window.location.search);
-  const spaceInvitationCode = searchParams.get('spaceInvitationCode') ?? undefined;
 
   const handleSignup = useCallback(
     async (email: string) => {
@@ -42,8 +44,8 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       try {
         // Prevent multiple signups.
         pendingRef.current = true;
-        await signup({ hubUrl, email, identity, redirectUrl: location.origin });
-        setState(WelcomeState.EMAIL_SENT);
+        const login = await signup({ hubUrl, email, identity, redirectUrl: location.origin });
+        setState(login ? WelcomeState.LOGIN_SENT : WelcomeState.EMAIL_SENT);
       } catch (err) {
         log.catch(err);
         setError(true);
@@ -69,6 +71,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const handleSpaceInvitation = async () => {
     let identityCreated = true;
     await dispatch(createIntent(ClientAction.CreateIdentity)).catch(() => {
+      // This will happen if the identity already exists.
       identityCreated = false;
     });
     const identity = client.halo.identity.get();
@@ -93,7 +96,6 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       );
 
       if (identityCreated) {
-        await dispatch(createIntent(ClientAction.CreateRecoveryCode));
         await dispatch(createIntent(ClientAction.CreateAgent));
       }
 
@@ -126,16 +128,23 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     spaceInvitationCode && removeQueryParamByValue(spaceInvitationCode);
   };
 
+  const handleGoToLogin = useCallback(() => {
+    setState(WelcomeState.INIT);
+    // TODO(wittjosiah): Attempt to preserve the invitation code through the login flow.
+    spaceInvitationCode && removeQueryParamByValue(spaceInvitationCode);
+  }, []);
+
   return (
     <Welcome
       state={state}
-      identity={identity}
       error={error}
+      identity={identity}
       onSignup={handleSignup}
-      onPasskey={!identity && !spaceInvitationCode ? handlePasskey : undefined}
-      onJoinIdentity={!identity && !spaceInvitationCode ? handleJoinIdentity : undefined}
-      onRecoverIdentity={!identity && !spaceInvitationCode ? handleRecoverIdentity : undefined}
+      onPasskey={!identity ? handlePasskey : undefined}
+      onJoinIdentity={!identity ? handleJoinIdentity : undefined}
+      onRecoverIdentity={!identity ? handleRecoverIdentity : undefined}
       onSpaceInvitation={spaceInvitationCode ? handleSpaceInvitation : undefined}
+      onGoToLogin={handleGoToLogin}
     />
   );
 };

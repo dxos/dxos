@@ -79,6 +79,9 @@
       "path": "../../sdk/observability"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../cli-base"
     }
   ],

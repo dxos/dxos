@@ -9,7 +9,7 @@ import './dx-grid-multiselect-cell.ts';
 
 import { html, nothing } from 'lit';
 
-import { defaultSizeRow } from './defs.js';
+import { defaultRowSize } from './defs.js';
 import { type DxGridFrozenPlane, type DxGridPlaneCells, type DxGridProps } from './types';
 import { colToA1Notation, rowToA1Notation } from './util';
 
@@ -70,11 +70,11 @@ Basic.args = {
   } satisfies DxGridProps['columnDefault']),
   rowDefault: JSON.stringify({
     grid: {
-      size: defaultSizeRow,
+      size: defaultRowSize,
       resizeable: true,
     },
     frozenRowsStart: {
-      size: defaultSizeRow,
+      size: defaultRowSize,
       resizeable: true,
     },
   } satisfies DxGridProps['rowDefault']),
@@ -172,7 +172,7 @@ Limits.args = {
   } satisfies DxGridProps['columnDefault']),
   rowDefault: JSON.stringify({
     grid: {
-      size: defaultSizeRow,
+      size: defaultRowSize,
       resizeable: true,
     },
   } satisfies DxGridProps['rowDefault']),

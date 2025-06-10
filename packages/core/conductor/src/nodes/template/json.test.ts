@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AST } from '@effect/schema';
+import { SchemaAST } from 'effect';
 import { describe, it, expect } from 'vitest';
 
 import { getObjectTemplateInputSchema, applyObjectTemplate } from './json';
@@ -16,7 +16,7 @@ describe('json template', () => {
       };
 
       const schema = getObjectTemplateInputSchema(template);
-      expect(AST.getPropertySignatures(schema.ast).map(({ name }) => name)).toEqual(['name', 'age']);
+      expect(SchemaAST.getPropertySignatures(schema.ast).map(({ name }) => name)).toEqual(['name', 'age']);
     });
 
     it('should extract variables from nested object', () => {
@@ -30,7 +30,7 @@ describe('json template', () => {
       };
 
       const schema = getObjectTemplateInputSchema(template);
-      expect(AST.getPropertySignatures(schema.ast).map(({ name }) => name)).toEqual(['name', 'age']);
+      expect(SchemaAST.getPropertySignatures(schema.ast).map(({ name }) => name)).toEqual(['name', 'age']);
     });
 
     it('should handle non-string values', () => {
@@ -41,7 +41,7 @@ describe('json template', () => {
       };
 
       const schema = getObjectTemplateInputSchema(template);
-      expect(AST.getPropertySignatures(schema.ast).map(({ name }) => name)).toEqual(['name']);
+      expect(SchemaAST.getPropertySignatures(schema.ast).map(({ name }) => name)).toEqual(['name']);
     });
   });
 

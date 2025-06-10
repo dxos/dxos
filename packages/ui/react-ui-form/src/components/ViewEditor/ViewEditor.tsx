@@ -2,10 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo-db';
-import { AST, Format, type EchoSchema, S } from '@dxos/echo-schema';
+import { Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, inputTextLabel, mx } from '@dxos/react-ui-theme';
@@ -17,25 +19,25 @@ import { Form } from '../Form';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
 
-const ViewMetaSchema = S.Struct({
-  name: S.String.annotations({
-    [AST.TitleAnnotationId]: 'View',
+const ViewMetaSchema = Schema.Struct({
+  name: Schema.String.annotations({
+    title: 'View',
   }),
   typename: Format.URL.annotations({
-    [AST.TitleAnnotationId]: 'Typename',
+    title: 'Typename',
   }),
-}).pipe(S.mutable);
+}).pipe(Schema.mutable);
 
-type ViewMetaType = S.Schema.Type<typeof ViewMetaSchema>;
+type ViewMetaType = Schema.Schema.Type<typeof ViewMetaSchema>;
 
 export type ViewEditorProps = ThemedClassName<{
-  schema: EchoSchema;
+  schema: Schema.Schema.AnyNoContext;
   view: ViewType;
   registry?: SchemaRegistry;
   readonly?: boolean;
   showHeading?: boolean;
-  onTypenameChanged: (typename: string) => void;
-  onDelete: (fieldId: string) => void;
+  onTypenameChanged?: (typename: string) => void;
+  onDelete?: (fieldId: string) => void;
 }>;
 
 /**
@@ -52,8 +54,9 @@ export const ViewEditor = ({
   onDelete,
 }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
-  const projection = useMemo(() => new ViewProjection(schema, view), [schema, view]);
+  const projection = useMemo(() => new ViewProjection(toJsonSchema(schema), view), [schema, view]);
   const [field, setField] = useState<FieldType>();
+  const immutable = readonly || !isMutable(schema);
 
   // TODO(burdon): Should be reactive.
   const viewValues = useMemo(() => {
@@ -61,51 +64,93 @@ export const ViewEditor = ({
       name: view.name,
       // TODO(burdon): Need to warn user of possible consequences of editing.
       // TODO(burdon): Settings should have domain name owned by user.
-      typename: view.query.type,
+      typename: view.query.typename,
     };
   }, [view]);
-
-  const handleViewUpdate = useCallback(
-    ({ name, typename }: ViewMetaType) => {
-      requestAnimationFrame(() => {
-        if (view.name !== name) {
-          view.name = name;
-        }
-        if (view.query.type !== typename) {
-          onTypenameChanged(typename);
-        }
-      });
-    },
-    [view, schema, onTypenameChanged],
-  );
 
   const handleSelect = useCallback((field: FieldType) => {
     setField((f) => (f === field ? undefined : field));
   }, []);
 
+  // TODO(burdon): Check if mutable; variant of useCallback that return undefined if readonly?
+
   const handleAdd = useCallback(() => {
+    invariant(!immutable);
     const field = projection.createFieldProjection();
     setField(field);
-  }, [view]);
+  }, [schema, view]);
+
+  const handleUpdate = useCallback(
+    ({ name, typename }: ViewMetaType) => {
+      invariant(!immutable);
+      requestAnimationFrame(() => {
+        if (view.name !== name) {
+          view.name = name;
+        }
+
+        if (view.query.typename !== typename) {
+          onTypenameChanged?.(typename);
+        }
+      });
+    },
+    [schema, view, onTypenameChanged],
+  );
+
+  const handleDelete = useCallback(
+    (fieldId: string) => {
+      invariant(!immutable);
+      if (fieldId === field?.id) {
+        setField(undefined);
+      }
+
+      onDelete?.(fieldId);
+    },
+    [schema, field, onDelete],
+  );
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
+      invariant(!immutable);
       // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
       const fields = [...view.fields];
       const [moved] = fields.splice(fromIndex, 1);
       fields.splice(toIndex, 0, moved);
       view.fields = fields;
     },
-    [view.fields],
+    [schema, view.fields],
   );
 
   const handleClose = useCallback(() => setField(undefined), []);
 
-  return (
-    <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
-      <Form<ViewMetaType> autoSave schema={ViewMetaSchema} values={viewValues} onSave={handleViewUpdate} />
+  const hiddenProperties = projection.getHiddenProperties();
 
-      <div>
+  const handleHide = useCallback(
+    (fieldId: string) => {
+      setField(undefined);
+      projection.hideFieldProjection(fieldId);
+    },
+    [projection],
+  );
+
+  const handleShow = useCallback(
+    (property: string) => {
+      setField(undefined);
+      projection.showFieldProjection(property as JsonProp);
+    },
+    [projection],
+  );
+
+  return (
+    <div role='none' className={mx('overflow-y-auto', classNames)}>
+      <Form<ViewMetaType>
+        autoSave
+        schema={ViewMetaSchema}
+        values={viewValues}
+        onSave={immutable ? undefined : handleUpdate}
+        classNames='min-bs-0 overflow-y-auto'
+      />
+
+      <div role='none' className='border-bs border-separator min-bs-0 overflow-y-auto'>
         {/* TODO(burdon): Clean up common form ux. */}
         <div role='none' className='p-2'>
           <label className={mx(inputTextLabel)}>{t('fields label')}</label>
@@ -113,9 +158,9 @@ export const ViewEditor = ({
 
         <List.Root<FieldType>
           items={view.fields}
-          isItem={S.is(FieldSchema)}
+          isItem={Schema.is(FieldSchema)}
           getId={(field) => field.id}
-          onMove={handleMove}
+          onMove={immutable ? undefined : handleMove}
         >
           {({ items: fields }) => (
             <>
@@ -131,13 +176,56 @@ export const ViewEditor = ({
                   <List.Item<FieldType> key={field.id} item={field} classNames={mx(grid, ghostHover, 'cursor-pointer')}>
                     <List.ItemDragHandle />
                     <List.ItemTitle onClick={() => handleSelect(field)}>{field.path}</List.ItemTitle>
-                    <List.ItemDeleteButton disabled={view.fields.length <= 1} onClick={() => onDelete(field.id)} />
+                    <div className='flex items-center gap-2 -ml-4'>
+                      <List.ItemButton
+                        icon='ph--eye-slash--regular'
+                        disabled={view.fields.length <= 1}
+                        onClick={() => handleHide(field.id)}
+                      />
+                      {!immutable && (
+                        <List.ItemDeleteButton
+                          icon='ph--trash--regular'
+                          disabled={view.fields.length <= 1}
+                          onClick={() => handleDelete(field.id)}
+                        />
+                      )}
+                    </div>
                   </List.Item>
                 ))}
               </div>
             </>
           )}
         </List.Root>
+
+        {hiddenProperties.length > 0 && (
+          <div>
+            <div role='none' className='p-2'>
+              <label className={mx(inputTextLabel)}>{t('hidden fields label')}</label>
+            </div>
+
+            <List.Root<string>
+              items={hiddenProperties}
+              isItem={(item): item is string => typeof item === 'string'}
+              getId={(property) => property}
+            >
+              {({ items: properties }) => (
+                <div role='list' className='flex flex-col w-full'>
+                  {properties?.map((property) => (
+                    <List.Item<string>
+                      key={property}
+                      item={property}
+                      classNames={mx(grid, ghostHover, 'cursor-pointer')}
+                    >
+                      <div />
+                      <List.ItemTitle>{property}</List.ItemTitle>
+                      <List.ItemButton icon='ph--eye--regular' onClick={() => handleShow(property)} />
+                    </List.Item>
+                  ))}
+                </div>
+              )}
+            </List.Root>
+          </div>
+        )}
       </div>
 
       {field && (
@@ -152,13 +240,14 @@ export const ViewEditor = ({
       )}
 
       {!readonly && !field && (
-        <div className='flex p-2 justify-center'>
+        <div role='none' className='p-2'>
           <IconButton
             icon='ph--plus--regular'
             label={t('button add property')}
-            onClick={handleAdd}
+            onClick={immutable ? undefined : handleAdd}
             // TODO(burdon): Show field limit in ux (not tooltip).
             disabled={view.fields.length >= VIEW_FIELD_LIMIT}
+            classNames='flex is-full'
           />
         </div>
       )}

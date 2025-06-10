@@ -2,49 +2,48 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { getSchema, TypedObject } from '@dxos/echo-schema';
-import { S } from '@dxos/effect';
+import { EchoObject, getSchema, TypedObject } from '@dxos/echo-schema';
 
-import { create } from './object';
+import { live } from './object';
 
-class Org extends TypedObject({
-  typename: 'example.com/type/Org',
-  version: '0.1.0',
-})({
-  name: S.String,
-}) {}
+const Organization = Schema.Struct({
+  name: Schema.String,
+}).pipe(
+  EchoObject({
+    typename: 'example.com/type/Organization',
+    version: '0.1.0',
+  }),
+);
+interface Organization extends Schema.Schema.Type<typeof Organization> {}
 
-class Contact extends TypedObject({
-  typename: 'example.com/type/Contact',
-  version: '0.1.0',
-})(
+const Contact = Schema.Struct(
   {
-    name: S.String,
+    name: Schema.String,
   },
-  {
-    partial: true,
-    record: true,
-  },
-) {}
+  { key: Schema.String, value: Schema.Any },
+).pipe(
+  Schema.partial,
+  EchoObject({
+    typename: 'example.com/type/Contact',
+    version: '0.1.0',
+  }),
+);
+interface Contact extends Schema.Schema.Type<typeof Contact> {}
 
-const TEST_ORG: Omit<Org, 'id'> = { name: 'Test' };
+const TEST_ORG: Omit<Organization, 'id'> = { name: 'Test' };
 
 describe('EchoObject class DSL', () => {
-  test('static isInstance check', async () => {
-    const obj = create(Org, TEST_ORG);
-    expect(obj instanceof Org).to.be.true;
-  });
-
   test('can get object schema', async () => {
-    const obj = create(Org, TEST_ORG);
-    expect(getSchema(obj)).to.deep.eq(Org);
+    const obj = live(Organization, TEST_ORG);
+    expect(getSchema(obj)).to.deep.eq(Organization);
   });
 
   describe('class options', () => {
     test('can assign undefined to partial fields', async () => {
-      const person = create(Contact, { name: 'John' });
+      const person = live(Contact, { name: 'John' });
       person.name = undefined;
       person.recordField = 'hello';
       expect(person.name).to.be.undefined;
@@ -53,30 +52,30 @@ describe('EchoObject class DSL', () => {
   });
 
   test('record', () => {
-    const schema = S.mutable(
-      S.Struct({
-        meta: S.optional(S.mutable(S.Any)),
-        // NOTE: S.Record only supports shallow values.
+    const schema = Schema.mutable(
+      Schema.Struct({
+        meta: Schema.optional(Schema.mutable(Schema.Any)),
+        // NOTE: Schema.Record only supports shallow values.
         // https://www.npmjs.com/package/@effect/schema#mutable-records
-        // meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
-        // meta: S.optional(S.mutable(S.object)),
+        // meta: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
+        // meta: Schema.optional(Schema.mutable(Schema.object)),
       }),
     );
 
     {
-      const object = create(schema, {});
+      const object = live(schema, {});
       (object.meta ??= {}).test = 100;
       expect(object.meta.test).to.eq(100);
     }
 
     {
-      const object = create(schema, {});
+      const object = live(schema, {});
       object.meta = { test: { value: 300 } };
       expect(object.meta.test.value).to.eq(300);
     }
 
     {
-      type Test1 = S.Schema.Type<typeof schema>;
+      type Test1 = Schema.Schema.Type<typeof schema>;
 
       const object: Test1 = {};
       (object.meta ??= {}).test = 100;
@@ -88,10 +87,10 @@ describe('EchoObject class DSL', () => {
         typename: 'dxos.org/type/FunctionTrigger',
         version: '0.1.0',
       })({
-        meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
+        meta: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
       }) {}
 
-      const object = create(Test2, {});
+      const object = live(Test2, {});
       (object.meta ??= {}).test = 100;
       expect(object.meta.test).to.eq(100);
     }

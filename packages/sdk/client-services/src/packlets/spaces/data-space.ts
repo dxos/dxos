@@ -2,6 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { save } from '@automerge/automerge';
+import { type DocHandle } from '@automerge/automerge-repo';
+
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
@@ -13,11 +16,12 @@ import {
   createMappedFeedWriter,
   type MetadataStore,
   type Space,
+  FIND_PARAMS,
 } from '@dxos/echo-pipeline';
-import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
+import { SpaceDocVersion, type DatabaseDirectory } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
-import { failedInvariant } from '@dxos/invariant';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -349,6 +353,18 @@ export class DataSpace {
     log('space is ready');
   }
 
+  async *getAllDocuments(): AsyncIterable<[string, Uint8Array]> {
+    invariant(this._databaseRoot, 'Space is not ready');
+    const doc = this._databaseRoot.doc() ?? failedInvariant();
+    const root = save(doc);
+    yield [this._databaseRoot.documentId, root];
+
+    for (const documentUrl of this._databaseRoot.getAllLinkedDocuments()) {
+      const data = await this._echoHost.exportDoc(Context.default(), documentUrl);
+      yield [documentUrl.replace(/^automerge:/, ''), data];
+    }
+  }
+
   private async _enterReadyState() {
     await this._callbacks.beforeReady?.();
 
@@ -446,12 +462,16 @@ export class DataSpace {
   private _onNewAutomergeRoot(rootUrl: string) {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
 
-    const handle = this._echoHost.automergeRepo.find<SpaceDoc>(rootUrl as any);
+    let handle: DocHandle<DatabaseDirectory>;
 
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
     queueMicrotask(async () => {
       try {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
+          handle = await cancelWithContext(
+            this._ctx,
+            this._echoHost.automergeRepo.find<DatabaseDirectory>(rootUrl as any, FIND_PARAMS),
+          );
           await cancelWithContext(this._ctx, handle.whenReady());
         });
         if (this._ctx.disposed) {
@@ -462,7 +482,7 @@ export class DataSpace {
         using _guard = await this._epochProcessingMutex.acquire();
 
         // Attaching space keys to legacy documents.
-        const doc = handle.docSync() ?? failedInvariant();
+        const doc = handle.doc() ?? failedInvariant();
         if (!doc.access?.spaceKey) {
           handle.change((doc: any) => {
             doc.access = { spaceKey: this.key.toHex() };

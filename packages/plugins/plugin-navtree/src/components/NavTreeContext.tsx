@@ -10,4 +10,4 @@ import { type NavTreeContextValue } from './types';
 
 export const NavTreeContext = createContext<NavTreeContextValue | null>(null);
 
-export const useNavTreeContext = () => useContext(NavTreeContext) ?? raise(new Error('NavTreeContext not found'));
+export const useNavTreeContext = () => useContext(NavTreeContext) ?? raise(new Error('Missing NavTreeContext'));

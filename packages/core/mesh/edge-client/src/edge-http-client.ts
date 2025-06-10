@@ -25,6 +25,10 @@ import {
   type ExecuteWorkflowResponseBody,
   type QueueQuery,
   type QueryResult,
+  type InitiateOAuthFlowRequest,
+  type InitiateOAuthFlowResponse,
+  type CreateSpaceRequest,
+  type CreateSpaceResponseBody,
 } from '@dxos/protocols';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -108,12 +112,19 @@ export class EdgeHttpClient {
   }
 
   public async uploadFunction(
-    pathParts: { spaceId: SpaceId; functionId?: string },
+    pathParts: { functionId?: string },
     body: UploadFunctionRequest,
     args?: EdgeHttpGetArgs,
   ): Promise<UploadFunctionResponseBody> {
-    const path = ['functions', pathParts.spaceId, ...(pathParts.functionId ? [pathParts.functionId] : [])].join('/');
+    const path = ['functions', ...(pathParts.functionId ? [pathParts.functionId] : [])].join('/');
     return this._call(path, { ...args, body, method: 'PUT' });
+  }
+
+  public async initiateOAuthFlow(
+    body: InitiateOAuthFlowRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<InitiateOAuthFlowResponse> {
+    return this._call('/oauth/initiate', { ...args, body, method: 'POST' });
   }
 
   public async queryQueue(
@@ -171,6 +182,10 @@ export class EdgeHttpClient {
       query: { ids: objectIds.join(',') },
       method: 'DELETE',
     });
+  }
+
+  async createSpace(body: CreateSpaceRequest, args?: EdgeHttpGetArgs): Promise<CreateSpaceResponseBody> {
+    return this._call('/spaces/create', { ...args, body, method: 'POST' });
   }
 
   private async _call<T>(path: string, args: EdgeHttpCallArgs): Promise<T> {

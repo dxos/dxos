@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S } from '@dxos/effect';
+import { Schema } from 'effect';
 
-export const Point = S.Struct({ x: S.Number, y: S.Number });
-export const Dimension = S.Struct({ width: S.Number, height: S.Number });
-export const Rect = S.extend(Point, Dimension);
+export const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
+export const Dimension = Schema.Struct({ width: Schema.Number, height: Schema.Number });
+export const Rect = Schema.extend(Point, Dimension);
 
-export type Point = S.Schema.Type<typeof Point>;
-export type Dimension = S.Schema.Type<typeof Dimension>;
-export type Rect = S.Schema.Type<typeof Rect>;
+export type Point = Schema.Schema.Type<typeof Point>;
+export type Dimension = Schema.Schema.Type<typeof Dimension>;
+export type Rect = Schema.Schema.Type<typeof Rect>;

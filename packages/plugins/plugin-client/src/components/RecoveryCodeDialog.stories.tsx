@@ -15,7 +15,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { RecoveryCodeDialog, type RecoveryCodeDialogProps } from './RecoveryCodeDialog';
 import translations from '../translations';
 
-const Render = () => {
+const DefaultStory = () => {
   const client = useClient();
   const [recoveryCode, setRecoveryCode] = useState<string>();
   useAsyncEffect(async () => {
@@ -35,8 +35,8 @@ const Render = () => {
 const meta: Meta<RecoveryCodeDialogProps> = {
   title: 'plugins/plugin-client/RecoveryCodeDialog',
   component: RecoveryCodeDialog,
-  render: Render,
-  decorators: [withClientProvider({ createIdentity: true }), withTheme, withLayout({ tooltips: true })],
+  render: DefaultStory,
+  decorators: [withClientProvider({ createIdentity: true }), withTheme, withLayout()],
   parameters: {
     layout: 'fullscreen',
     translations,

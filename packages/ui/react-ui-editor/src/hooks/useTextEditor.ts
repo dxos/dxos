@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EditorState, type EditorStateConfig } from '@codemirror/state';
+import { EditorState, type EditorStateConfig, type Text } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { useFocusableGroup } from '@fluentui/react-tabster';
+import { useFocusableGroup, type TabsterTypes } from '@fluentui/react-tabster';
 import {
   type DependencyList,
   type KeyboardEventHandler,
@@ -19,14 +19,14 @@ import {
 import { log } from '@dxos/log';
 import { getProviderValue, isNotFalsy, type MaybeProvider } from '@dxos/util';
 
-import { editorInputMode, type EditorSelection, documentId, createEditorStateTransaction } from '../extensions';
+import { type EditorSelection, documentId, createEditorStateTransaction, editorInputMode } from '../extensions';
 import { debugDispatcher } from '../util';
 
 export type UseTextEditor = {
   // TODO(burdon): Rename.
   parentRef: RefObject<HTMLDivElement>;
   view?: EditorView;
-  focusAttributes: ReturnType<typeof useFocusableGroup> & {
+  focusAttributes?: TabsterTypes.TabsterDOMAttribute & {
     tabIndex: 0;
     onKeyUp: KeyboardEventHandler<HTMLDivElement>;
   };
@@ -43,6 +43,7 @@ export type CursorInfo = {
 
 export type UseTextEditorProps = Pick<EditorStateConfig, 'extensions'> & {
   id?: string;
+  doc?: Text;
   initialValue?: string;
   className?: string;
   autoFocus?: boolean;
@@ -55,13 +56,13 @@ export type UseTextEditorProps = Pick<EditorStateConfig, 'extensions'> & {
 let instanceCount = 0;
 
 /**
- * Hook for creating editor.
+ * Creates codemirror text editor.
  */
 export const useTextEditor = (
   props: MaybeProvider<UseTextEditorProps> = {},
   deps: DependencyList = [],
 ): UseTextEditor => {
-  const { id, initialValue, extensions, autoFocus, scrollTo, selection, moveToEndOfLine, debug } =
+  const { id, doc, initialValue, extensions, autoFocus, scrollTo, selection, moveToEndOfLine, debug } =
     useMemo<UseTextEditorProps>(() => getProviderValue(props), deps ?? []);
 
   // NOTE: Increments by 2 in strict mode.
@@ -87,7 +88,7 @@ export const useTextEditor = (
 
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
       const state = EditorState.create({
-        doc: initialValue,
+        doc: doc ?? initialValue,
         // selection: initialSelection,
         extensions: [
           id && documentId.of(id),
@@ -155,9 +156,11 @@ export const useTextEditor = (
     }
   }, [autoFocus, view]);
 
-  const focusableGroup = useFocusableGroup({
+  const focusableGroupAttrs = useFocusableGroup({
     tabBehavior: 'limited',
-    ignoreDefaultKeydown: { Escape: view?.state.facet(editorInputMode).noTabster },
+    ignoreDefaultKeydown: {
+      Escape: view?.state.facet(editorInputMode).noTabster,
+    },
   });
 
   // Focus editor on Enter (e.g., when tabbing to this component).
@@ -176,6 +179,13 @@ export const useTextEditor = (
     [view],
   );
 
-  const focusAttributes = { tabIndex: 0 as const, ...focusableGroup, onKeyUp: handleKeyUp };
-  return { parentRef, view, focusAttributes };
+  return {
+    parentRef,
+    view,
+    focusAttributes: {
+      tabIndex: 0 as const,
+      ...focusableGroupAttrs,
+      onKeyUp: handleKeyUp,
+    },
+  };
 };

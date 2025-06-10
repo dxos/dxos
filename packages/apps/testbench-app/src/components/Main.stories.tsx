@@ -4,26 +4,34 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react';
+
 import { withMultiClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Main } from './Main';
-import { ItemType } from '../data';
+import { Item } from '../data';
 
-export default {
+const meta: Meta<typeof Main> = {
   title: 'apps/testbench-app/Main',
   component: Main,
   decorators: [
-    withMultiClientProvider({ numClients: 2, types: [ItemType], createIdentity: true, createSpace: true }),
+    withMultiClientProvider({
+      numClients: 2,
+      types: [Item],
+      createIdentity: true,
+      createSpace: true,
+    }),
     withLayout({
       fullscreen: true,
       classNames: ['grid grid-rows-2 h-full divide-y divide-separator grow overflow-hidden'],
     }),
     withTheme,
   ],
-  parameters: {
-    layout: 'fullscreen',
-  },
 };
 
-export const Default = {};
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

@@ -2,41 +2,61 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
-import { Button, Icon, Input } from '@dxos/react-ui';
+import { IconButton, Input, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-export const Popup = () => {
+export type PopupProps = ThemedClassName<{
+  onAdd?: () => Promise<string | null>;
+  onSearch?: (text: string) => Promise<string | null>;
+  onLaunch?: () => void;
+}>;
+
+export const Popup = ({ classNames, onAdd, onSearch, onLaunch }: PopupProps) => {
+  const { t } = useTranslation('composer');
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
-  const handleSearch = () => {
-    inputRef.current?.focus();
-  };
+  const [result, setResult] = useState<string | null>(null);
 
-  const handleLaunch = () => {
-    window.open('https://composer.space');
-  };
+  const handleSearch = useCallback(async () => {
+    const str = text.trim();
+    if (str.length > 0) {
+      const result = await onSearch?.(text);
+      if (result) {
+        setResult(result);
+      }
+    }
+
+    inputRef.current?.focus();
+  }, [text, onSearch]);
+
+  const handleAdd = useCallback(async () => {
+    const result = await onAdd?.();
+    if (result) {
+      setResult(result);
+    }
+
+    inputRef.current?.focus();
+  }, [text, onAdd]);
 
   return (
-    <div className='flex flex-col w-[300px] p-2 gap-2 bg-baseSurface'>
-      <div className='flex gap-2 items-center'>
-        <Button onClick={handleLaunch}>
-          <Icon icon='ph--copyright--thin' size={5} />
-        </Button>
+    <div className={mx('flex flex-col gap-2 bg-baseSurface', classNames)}>
+      <Toolbar.Root>
+        <IconButton icon='ph--arrow-square-out--regular' iconOnly label={t('button.launch')} onClick={onLaunch} />
         <Input.Root>
           <Input.TextInput
             ref={inputRef}
             autoFocus
-            placeholder='Enter'
+            placeholder={t('input.placeholder')}
             value={text}
             onChange={(ev) => setText(ev.target.value)}
             onKeyDown={(ev) => ev.key === 'Enter' && handleSearch()}
           />
         </Input.Root>
-        <Button onClick={handleSearch}>
-          <Icon icon='ph--magnifying-glass--regular' size={5} />
-        </Button>
-      </div>
+        <IconButton icon='ph--plus--regular' iconOnly label={t('button.add')} onClick={handleAdd} />
+      </Toolbar.Root>
+      {result && <div className='p-2'>{result}</div>}
     </div>
   );
 };

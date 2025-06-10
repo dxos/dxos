@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/context"
     },
     {
@@ -36,10 +39,13 @@
       "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../plugins/experimental/plugin-search"
+      "path": "../../plugins/plugin-search"
     },
     {
       "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/react-client"

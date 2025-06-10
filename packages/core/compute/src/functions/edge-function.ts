@@ -3,11 +3,12 @@
 //
 
 import { effect } from '@preact/signals-core';
+import { SchemaAST } from 'effect';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 
 import { Filter, getMeta } from '@dxos/client/echo';
-import { AST, toEffectSchema } from '@dxos/echo-schema';
+import { toEffectSchema } from '@dxos/echo-schema';
 import { FunctionType, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
@@ -35,7 +36,7 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
 
         const {
           objects: [fn],
-        } = await space.db.query(Filter.schema(FunctionType, { binding })).run();
+        } = await space.db.query(Filter.type(FunctionType, { binding })).run();
         if (!fn) {
           log.info('Function not found', { binding });
           return new CellError(ErrorType.REF, 'Function not found');
@@ -57,7 +58,7 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
         const body: Record<string, any> = {};
         if (fn.inputSchema) {
           const schema = toEffectSchema(fn.inputSchema);
-          AST.getPropertySignatures(schema.ast).forEach(({ name }, index) => {
+          SchemaAST.getPropertySignatures(schema.ast).forEach(({ name }, index) => {
             body[name.toString()] = args[index];
           });
         } else {

@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { cbor } from '@automerge/automerge-repo';
 import type Redis from 'ioredis';
 
 import { scheduleMicroTask } from '@dxos/async';
-import { cbor } from '@dxos/automerge/automerge-repo';
 import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { type RpcPort } from '@dxos/rpc';

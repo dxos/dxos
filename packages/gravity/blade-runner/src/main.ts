@@ -15,13 +15,14 @@ import {
   EmptyTestPlan,
   StorageTestPlan,
   TransportTestPlan,
-  SignalTestPlan,
   QueryTestPlan,
   ReplicationTestPlan,
+  AutomergeTestPlan,
 } from './spec';
 
 const plans: { [key: string]: () => TestPlan<any, any> } = {
-  signal: () => new SignalTestPlan(),
+  automerge: () => new AutomergeTestPlan(),
+  // signal: () => new SignalTestPlan(),
   transport: () => new TransportTestPlan(),
   query: () => new QueryTestPlan(),
   replication: () => new ReplicationTestPlan(),
@@ -32,11 +33,10 @@ const plans: { [key: string]: () => TestPlan<any, any> } = {
 /**
  * Requirements:
  * - Configure Redis (e.g., via Docker desktop) and export port.
- * - Install Go version 19.
- * - Set the KUBE_HOME environment variable to the root of the kube repo.
  *
- * Example: KUBE_HOME=~/Code/dxos/kube p run-tests echo
+ * Example: p run-tests echo
  */
+// TODO(mykola): Support edge signaling.
 const start = async () => {
   // Entry point for Replicant node process.
   if (process.env.DX_RUN_PARAMS) {

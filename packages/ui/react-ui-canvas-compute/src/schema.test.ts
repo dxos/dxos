@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { create } from '@dxos/client/echo';
-import { S } from '@dxos/echo-schema';
+import { live } from '@dxos/client/echo';
 import { BaseGraphNode, Graph } from '@dxos/graph';
 import {
   Polygon,
@@ -24,12 +24,12 @@ describe('compute', () => {
     // const model = CanvasGraphModel.create<ComputeShape>();
     const node = createSwitch({ id: 'x', center: { x: 0, y: 0 }, size: { width: 80, height: 80 } });
     console.log(JSON.stringify(node, null, 2));
-    expect(S.is(ComputeShape)(node)).toBe(true);
-    expect(S.is(Polygon)(node)).toBe(true);
-    expect(S.is(Shape)(node)).toBe(true);
-    expect(S.is(BaseGraphNode)(node)).toBe(true);
+    expect(Schema.is(ComputeShape)(node)).toBe(true);
+    expect(Schema.is(Polygon)(node)).toBe(true);
+    expect(Schema.is(Shape)(node)).toBe(true);
+    expect(Schema.is(BaseGraphNode)(node)).toBe(true);
 
-    const graph = create(Graph, { nodes: [], edges: [] });
+    const graph = live(Graph, { nodes: [], edges: [] });
     graph.nodes.push(node); // Throws.
 
     // model.createNode(node);

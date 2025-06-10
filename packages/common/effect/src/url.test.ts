@@ -2,18 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { ParamKeyAnnotation, UrlParser } from './url';
 
-const Invitation = S.Struct({
-  accessToken: S.String,
-  deviceInvitationCode: S.String.pipe(ParamKeyAnnotation({ key: 'deviceInvitationCode' })),
-  spaceInvitationCode: S.String,
-  experimental: S.Boolean,
-  testing: S.Boolean,
-  timeout: S.Number,
+const Invitation = Schema.Struct({
+  accessToken: Schema.String,
+  deviceInvitationCode: Schema.String.pipe(ParamKeyAnnotation({ key: 'deviceInvitationCode' })),
+  spaceInvitationCode: Schema.String,
+  experimental: Schema.Boolean,
+  testing: Schema.Boolean,
+  timeout: Schema.Number,
 });
 
 describe('Params', () => {

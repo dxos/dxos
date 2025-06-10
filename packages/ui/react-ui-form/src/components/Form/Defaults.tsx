@@ -4,9 +4,10 @@
 
 import React, { useCallback, useEffect, useRef } from 'react';
 
-import { Input, Select } from '@dxos/react-ui';
+import { Input, Select, useTranslation } from '@dxos/react-ui';
 
 import { type InputProps, InputHeader } from './Input';
+import { translationKey } from '../../translations';
 
 export const TextInput = ({
   type,
@@ -21,20 +22,26 @@ export const TextInput = ({
 }: InputProps) => {
   const { status, error } = getStatus();
 
-  return (
+  return disabled && !getValue() ? null : disabled && inputOnly ? (
+    <p>{getValue() ?? ''}</p>
+  ) : (
     <Input.Root validationValence={status}>
       {!inputOnly && (
         <InputHeader error={error}>
           <Input.Label>{label}</Input.Label>
         </InputHeader>
       )}
-      <Input.TextInput
-        disabled={disabled}
-        placeholder={placeholder}
-        value={getValue() ?? ''}
-        onChange={(event) => onValueChange(type, event.target.value)}
-        onBlur={onBlur}
-      />
+      {disabled ? (
+        <p>{getValue() ?? ''}</p>
+      ) : (
+        <Input.TextInput
+          disabled={disabled}
+          placeholder={placeholder}
+          value={getValue() ?? ''}
+          onChange={(event) => onValueChange(type, event.target.value)}
+          onBlur={onBlur}
+        />
+      )}
       {inputOnly && <Input.Validation>{error}</Input.Validation>}
     </Input.Root>
   );
@@ -53,29 +60,36 @@ export const NumberInput = ({
 }: InputProps) => {
   const { status, error } = getStatus();
 
-  return (
+  return disabled && !getValue() ? null : disabled && inputOnly ? (
+    <p>{getValue() ?? ''}</p>
+  ) : (
     <Input.Root validationValence={status}>
       {!inputOnly && (
         <InputHeader error={error}>
           <Input.Label>{label}</Input.Label>
         </InputHeader>
       )}
-      <Input.TextInput
-        type='number'
-        disabled={disabled}
-        placeholder={placeholder}
-        value={getValue() ?? 0}
-        onChange={(event) => onValueChange(type, event.target.value)}
-        onBlur={onBlur}
-      />
+      {disabled ? (
+        <p>{getValue() ?? ''}</p>
+      ) : (
+        <Input.TextInput
+          type='number'
+          disabled={disabled}
+          placeholder={placeholder}
+          value={getValue() ?? 0}
+          onChange={(event) => onValueChange(type, event.target.value)}
+          onBlur={onBlur}
+        />
+      )}
       {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };
 
-export const BooleanInput = ({ type, label, inputOnly, getStatus, getValue, onValueChange }: InputProps) => {
+export const BooleanInput = ({ type, label, inputOnly, getStatus, getValue, onValueChange, disabled }: InputProps) => {
   const { status, error } = getStatus();
   const checked = Boolean(getValue());
+  const { t } = useTranslation(translationKey);
 
   return (
     <Input.Root validationValence={status}>
@@ -84,7 +98,11 @@ export const BooleanInput = ({ type, label, inputOnly, getStatus, getValue, onVa
           <Input.Label>{label}</Input.Label>
         </InputHeader>
       )}
-      <Input.Switch checked={checked} onCheckedChange={(value) => onValueChange(type, value)} />
+      {disabled ? (
+        <p>{t(checked ? 'boolean input true value' : 'boolean input false value')}</p>
+      ) : (
+        <Input.Switch checked={checked} onCheckedChange={(value) => onValueChange(type, value)} />
+      )}
       {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
@@ -107,29 +125,36 @@ export const SelectInput = ({
 }: SelectInputOptions) => {
   const { status, error } = getStatus();
 
-  return (
+  const value = getValue() as string | undefined;
+  const handleValueChange = useCallback((value: string | number) => onValueChange(type, value), [type, onValueChange]);
+
+  return disabled && !value ? null : (
     <Input.Root validationValence={status}>
       {!inputOnly && (
         <InputHeader error={error}>
           <Input.Label>{label}</Input.Label>
         </InputHeader>
       )}
-      <Select.Root value={getValue()} onValueChange={(value) => onValueChange(type, value)}>
-        {/* TODO(burdon): Placeholder not working? */}
-        <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              {options?.map(({ value, label }) => (
-                // NOTE: Numeric values are converted to and from strings.
-                <Select.Option key={String(value)} value={String(value)}>
-                  {label ?? String(value)}
-                </Select.Option>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
+      {disabled ? (
+        <p>{options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}</p>
+      ) : (
+        <Select.Root value={value} onValueChange={handleValueChange}>
+          {/* TODO(burdon): Placeholder not working? */}
+          <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {options?.map(({ value, label }) => (
+                  // NOTE: Numeric values are converted to and from strings.
+                  <Select.Option key={String(value)} value={String(value)}>
+                    {label ?? String(value)}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+      )}
       {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
@@ -177,17 +202,21 @@ export const MarkdownInput = ({
           <Input.Label>{label}</Input.Label>
         </InputHeader>
       )}
-      <Input.TextArea
-        ref={textareaRef}
-        disabled={disabled}
-        placeholder={placeholder}
-        value={getValue() ?? ''}
-        classNames={'min-bs-auto max-h-40 overflow-auto'}
-        onChange={(event) => onValueChange(type, event.target.value)}
-        onBlur={onBlur}
-        style={{ resize: 'none' }}
-        spellCheck={false}
-      />
+      {disabled ? (
+        <p>{getValue() ?? ''}</p>
+      ) : (
+        <Input.TextArea
+          ref={textareaRef}
+          disabled={disabled}
+          placeholder={placeholder}
+          value={getValue() ?? ''}
+          classNames={'min-bs-auto max-h-40 overflow-auto'}
+          onChange={(event) => onValueChange(type, event.target.value)}
+          onBlur={onBlur}
+          style={{ resize: 'none' }}
+          spellCheck={false}
+        />
+      )}
       {inputOnly && <Input.Validation>{error}</Input.Validation>}
     </Input.Root>
   );

@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Doc, next as am } from '@dxos/automerge/automerge';
+import { type Doc, next as am } from '@automerge/automerge';
+
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

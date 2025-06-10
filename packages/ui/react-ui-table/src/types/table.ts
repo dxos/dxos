@@ -2,21 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Ref, ObjectId, S, TypedObject, Expando } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
 // import { ThreadType } from '@dxos/plugin-space/types';
+import { ObjectId, Ref, Expando, EchoObject, LabelAnnotation } from '@dxos/echo-schema';
 import { ViewType } from '@dxos/schema';
 
-export const TableSchema = S.Struct({
-  id: ObjectId, // TODO(burdon): Where should this be?
-  name: S.optional(S.String),
-  view: S.optional(Ref(ViewType)),
-  // TODO(burdon): Should not import from plugin. Either factor out type or use reverse deps when supported.
-  threads: S.optional(S.Array(Ref(Expando /* ThreadType */))), // TODO(dmaretskyi): Breaks edge because plugin-space depends on react-client.
-});
+export const TableSchema = Schema.Struct({
+  id: ObjectId,
+  name: Schema.optional(Schema.String),
+  view: Schema.optional(Ref(ViewType)),
+  // TODO(burdon): Document why threads is included here?
+  threads: Schema.optional(Schema.Array(Ref(Expando /* ThreadType */))),
+}).pipe(LabelAnnotation.set(['name']));
 
-// type TableType = S.Schema.Type<typeof TableSchema>;
-
-export class TableType extends TypedObject({
-  typename: 'dxos.org/type/Table',
-  version: '0.1.0',
-})(TableSchema.fields) {}
+// TODO(burdon): Move out of react-ui-xxx.
+export const TableType = TableSchema.pipe(
+  EchoObject({
+    typename: 'dxos.org/type/Table',
+    version: '0.1.0',
+  }),
+);
+export interface TableType extends Schema.Schema.Type<typeof TableType> {}

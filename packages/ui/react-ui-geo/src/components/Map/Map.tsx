@@ -6,7 +6,7 @@
 import 'leaflet/dist/leaflet.css';
 
 import L, { Control, DomEvent, DomUtil, latLngBounds, type ControlPosition, type LatLngExpression } from 'leaflet';
-import { forwardRef, useEffect, useImperativeHandle, type PropsWithChildren } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, type PropsWithChildren } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { MapContainerProps } from 'react-leaflet';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';

@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { SPACE_PLUGIN } from '../meta';
 import translations from '../translations';
-import { CollectionType, SpaceAction } from '../types';
-import { SPACES, SPACE_TYPE } from '../util';
+import { CollectionType, SpaceAction, SPACE_TYPE } from '../types';
+import { SPACES } from '../util';
 
 // https://stackoverflow.com/a/19016910
 const DIRECTORY_TYPE = 'text/directory';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphSerializer, [
     {
       inputType: SPACES,
@@ -37,7 +37,7 @@ export default (context: PluginsContext) =>
         type: DIRECTORY_TYPE,
       }),
       deserialize: async (data) => {
-        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
         const result = await dispatch(createIntent(SpaceAction.Create, { name: data.name, edgeReplication: true }));
         return result.data?.space;
       },
@@ -46,8 +46,8 @@ export default (context: PluginsContext) =>
       inputType: CollectionType.typename,
       outputType: DIRECTORY_TYPE,
       serialize: (node) => ({
-        name: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
-        data: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
+        name: node.data.name ?? translations[0]['en-US'][CollectionType.typename]['object name placeholder'],
+        data: node.data.name ?? translations[0]['en-US'][CollectionType.typename]['object name placeholder'],
         type: DIRECTORY_TYPE,
       }),
       deserialize: async (data, ancestors) => {
@@ -59,11 +59,11 @@ export default (context: PluginsContext) =>
           return;
         }
 
-        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
         const result = await dispatch(
           createIntent(SpaceAction.AddObject, {
             target: collection,
-            object: create(CollectionType, { name: data.name, objects: [], views: {} }),
+            object: live(CollectionType, { name: data.name, objects: [], views: {} }),
           }),
         );
 

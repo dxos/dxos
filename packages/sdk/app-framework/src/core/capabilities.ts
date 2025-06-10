@@ -1,16 +1,12 @@
-/**
- * Interface definition for a capability.
- */
 //
 // Copyright 2025 DXOS.org
 //
 
-import { effect, untracked } from '@preact/signals-core';
-import { type Effect } from 'effect';
+import { type Registry, Rx } from '@effect-rx/rx-react';
+import { Effect } from 'effect';
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
@@ -34,7 +30,8 @@ export const defineCapability = <T>(identifier: string) => {
 };
 
 /**
- * Functionality contributed to the application by a plugin module.
+ * A unique string identifier with a Typescript type associated with it.
+ * When a capability is contributed to the application an implementation of the interface is provided.
  */
 export type Capability<T> = {
   /**
@@ -56,8 +53,9 @@ export type Capability<T> = {
 export type AnyCapability = Capability<any>;
 
 type PluginsContextOptions = {
-  activate: (event: ActivationEvent) => MaybePromise<boolean>;
-  reset: (event: ActivationEvent) => MaybePromise<boolean>;
+  registry: Registry.Registry;
+  activate: (event: ActivationEvent) => Effect.Effect<boolean, Error>;
+  reset: (event: ActivationEvent) => Effect.Effect<boolean, Error>;
 };
 
 // NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
@@ -95,10 +93,31 @@ export const lazy =
   };
 
 /**
- * Context which is passed to plugins, allowing them to interact with each other.
+ * Facilitates the dependency injection between [plugin modules](#pluginmodule) by allowing them contribute and request capabilities from each other.
+ * It tracks the capabilities that are contributed in an in-memory live object.
+ * This allows the application to subscribe to this state and incorporate plugins which are added dynamically.
  */
-export class PluginsContext {
-  private readonly _definedCapabilities = new Map<string, CapabilityImpl<unknown>[]>();
+export class PluginContext {
+  private readonly _registry: Registry.Registry;
+
+  private readonly _capabilityImpls = Rx.family<string, Rx.Writable<CapabilityImpl<unknown>[]>>(() => {
+    return Rx.make<CapabilityImpl<unknown>[]>([]).pipe(Rx.keepAlive);
+  });
+
+  readonly _capabilities = Rx.family<string, Rx.Rx<unknown[]>>((id: string) => {
+    return Rx.make((get) => {
+      const current = get(this._capabilityImpls(id));
+      return current.map((c) => c.implementation);
+    });
+  });
+
+  readonly _capability = Rx.family<string, Rx.Rx<unknown>>((id: string) => {
+    return Rx.make((get) => {
+      const current = get(this._capabilities(id));
+      invariant(current.length > 0, `No capability found for ${id}`);
+      return current[0];
+    });
+  });
 
   /**
    * Activates plugins based on the activation event.
@@ -114,7 +133,8 @@ export class PluginsContext {
    */
   readonly reset: PluginsContextOptions['reset'];
 
-  constructor({ activate, reset }: PluginsContextOptions) {
+  constructor({ registry, activate, reset }: PluginsContextOptions) {
+    this._registry = registry;
     this.activate = activate;
     this.reset = reset;
   }
@@ -131,18 +151,17 @@ export class PluginsContext {
     interface: InterfaceDef<T>;
     implementation: T;
   }) {
-    let current = this._definedCapabilities.get(interfaceDef.identifier);
-    if (!current) {
-      const object = create<{ value: CapabilityImpl<unknown>[] }>({ value: [] });
-      current = untracked(() => object.value);
-      this._definedCapabilities.set(interfaceDef.identifier, current);
+    const current = this._registry.get(this._capabilityImpls(interfaceDef.identifier));
+    const capability = new CapabilityImpl(moduleId, implementation);
+    if (current.includes(capability)) {
+      return;
     }
 
-    current.push(new CapabilityImpl(moduleId, implementation));
+    this._registry.set(this._capabilityImpls(interfaceDef.identifier), [...current, capability]);
     log('capability contributed', {
       id: interfaceDef.identifier,
       moduleId,
-      count: untracked(() => current.length),
+      count: current.length,
     });
   }
 
@@ -150,73 +169,86 @@ export class PluginsContext {
    * @internal
    */
   removeCapability<T>(interfaceDef: InterfaceDef<T>, implementation: T) {
-    const current = this._definedCapabilities.get(interfaceDef.identifier);
-    if (!current) {
+    const current = this._registry.get(this._capabilityImpls(interfaceDef.identifier));
+    if (current.length === 0) {
       return;
     }
 
-    const index = current.findIndex((i) => i.implementation === implementation);
-    if (index !== -1) {
-      current.splice(index, 1);
-      log('capability removed', { id: interfaceDef.identifier, count: untracked(() => current.length) });
+    const next = current.filter((c) => c.implementation !== implementation);
+    if (next.length !== current.length) {
+      this._registry.set(this._capabilityImpls(interfaceDef.identifier), next);
+      log('capability removed', { id: interfaceDef.identifier, count: current.length });
     } else {
       log.warn('capability not removed', { id: interfaceDef.identifier });
     }
   }
 
   /**
-   * Requests capabilities from the plugin context.
-   * @returns An array of capabilities.
-   * @reactive
+   * Get the Rx reference to the available capabilities for a given interface.
+   * Primarily useful for deriving other Rx values based on the capabilities or
+   * for subscribing to changes in the capabilities.
+   * @returns An Rx reference to the available capabilities.
    */
-  requestCapabilities<T, U extends T = T>(
-    interfaceDef: InterfaceDef<T>,
-    filter?: (capability: T, moduleId: string) => capability is U,
-  ): U[] {
-    let current = this._definedCapabilities.get(interfaceDef.identifier);
-    if (!current) {
-      const object = create<{ value: CapabilityImpl<unknown>[] }>({ value: [] });
-      current = untracked(() => object.value);
-      this._definedCapabilities.set(interfaceDef.identifier, current);
-    }
-
+  capabilities<T>(interfaceDef: InterfaceDef<T>): Rx.Rx<T[]> {
     // NOTE: This the type-checking for capabilities is done at the time of contribution.
-    const capabilities = filter ? current.filter((c) => filter(c.implementation as T, c.moduleId)) : current;
-    return capabilities.map((c) => c.implementation) as U[];
+    return this._capabilities(interfaceDef.identifier) as Rx.Rx<T[]>;
+  }
+
+  /**
+   * Get the Rx reference to the available capabilities for a given interface.
+   * Primarily useful for deriving other Rx values based on the capability or
+   * for subscribing to changes in the capability.
+   * @returns An Rx reference to the available capability.
+   * @throws If no capability is found.
+   */
+  capability<T>(interfaceDef: InterfaceDef<T>): Rx.Rx<T> {
+    // NOTE: This the type-checking for capabilities is done at the time of contribution.
+    return this._capability(interfaceDef.identifier) as Rx.Rx<T>;
+  }
+
+  /**
+   * Get capabilities from the plugin context.
+   * @returns An array of capabilities.
+   */
+  getCapabilities<T>(interfaceDef: InterfaceDef<T>): T[] {
+    return this._registry.get(this.capabilities(interfaceDef));
   }
 
   /**
    * Requests a single capability from the plugin context.
    * @returns The capability.
    * @throws If no capability is found.
-   * @reactive
    */
-  requestCapability<T, U extends T = T>(
-    interfaceDef: InterfaceDef<T>,
-    filter?: (capability: T, moduleId: string) => capability is U,
-  ): U {
-    const capability = this.requestCapabilities(interfaceDef, filter)[0];
-    invariant(capability, `No capability found for ${interfaceDef.identifier}`);
-    return capability;
+  getCapability<T>(interfaceDef: InterfaceDef<T>): T {
+    return this._registry.get(this.capability(interfaceDef));
   }
 
   /**
-   * Waits for a capability to be contributed.
+   * Waits for a capability to be available.
    * @returns The capability.
    */
-  async waitForCapability<T, U extends T = T>(
-    interfaceDef: InterfaceDef<T>,
-    filter?: (capability: T) => capability is U,
-  ): Promise<U> {
-    const trigger = new Trigger<U>();
-    const unsubscribe = effect(() => {
-      const capabilities = this.requestCapabilities(interfaceDef, filter);
-      if (capabilities[0]) {
+  async waitForCapability<T>(interfaceDef: InterfaceDef<T>): Promise<T> {
+    const [capability] = this.getCapabilities(interfaceDef);
+    if (capability) {
+      return capability;
+    }
+
+    const trigger = new Trigger<T>();
+    const cancel = this._registry.subscribe(this.capabilities(interfaceDef), (capabilities) => {
+      if (capabilities.length > 0) {
         trigger.wake(capabilities[0]);
       }
     });
-    const capability = await trigger.wait();
-    unsubscribe();
-    return capability;
+    const result = await trigger.wait();
+    cancel();
+    return result;
+  }
+
+  async activatePromise(event: ActivationEvent): Promise<boolean> {
+    return this.activate(event).pipe(Effect.runPromise);
+  }
+
+  async resetPromise(event: ActivationEvent): Promise<boolean> {
+    return this.reset(event).pipe(Effect.runPromise);
   }
 }

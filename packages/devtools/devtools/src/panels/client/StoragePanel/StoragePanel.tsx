@@ -23,7 +23,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { BitField } from '@dxos/util';
 
 import { Bitbar, JsonView, PanelContainer } from '../../../components';
-import { styles } from '../../../styles';
 
 // TODO(burdon): Rewrite this panel as a table.
 
@@ -207,38 +206,9 @@ export const StoragePanel = () => {
 
   const selectedValue = selected?.value as SelectionValue | undefined;
 
-  const DataItems: FC<{ items: Node[] }> = ({ items = [] }) => {
-    return (
-      <>
-        {items.map((item) => {
-          const { id, Icon, Element, items } = item;
-          return (
-            <TreeItem.Root key={id} collapsible={!!items?.length} open>
-              <div role='none' className='flex grow items-center gap-2 font-mono' onClick={() => setSelected(item)}>
-                <Icon />
-                {Element}
-              </div>
-              <TreeItem.Body className='pis-4'>
-                <Tree.Branch>{items && <DataItems items={items} />}</Tree.Branch>
-              </TreeItem.Body>
-            </TreeItem.Root>
-          );
-        })}
-      </>
-    );
-  };
-
-  const DataTree: FC<{ items: Node[] }> = ({ items = [] }) => {
-    return (
-      <Tree.Root>
-        <DataItems items={items} />
-      </Tree.Root>
-    );
-  };
-
   return (
     <PanelContainer
-      classNames={mx('flex-row divide-x', styles.border)}
+      classNames={mx('grid grid-cols-2 divide-x divide-separator')}
       toolbar={
         <Toolbar.Root>
           <Toolbar.Button onClick={refresh} disabled={isRefreshing}>
@@ -268,12 +238,10 @@ export const StoragePanel = () => {
         </Toolbar.Root>
       }
     >
-      <div className='flex w-1/3 overflow-auto p-2'>
-        <DataTree items={items} />
-      </div>
+      <DataTree items={items} onSelect={setSelected} />
 
       {selectedValue && (
-        <div className='flex flex-col grow w-2/3 overflow-auto'>
+        <div className='flex flex-col divide-y divide-separator grow overflow-auto scrollbar-thin'>
           {selectedValue.kind === 'blob' && (
             <>
               <div className='p-1'>Downloaded {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>
@@ -326,3 +294,32 @@ const TreeItemText = ({ primary, secondary }: TreeItemTextProps) => (
     <span className='text-neutral-400'>{secondary}</span>
   </div>
 );
+
+const DataTree: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ items = [], onSelect }) => {
+  return (
+    <Tree.Root classNames='p-2'>
+      <DataItems items={items} onSelect={onSelect} />
+    </Tree.Root>
+  );
+};
+
+const DataItems: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ items = [], onSelect }) => {
+  return (
+    <>
+      {items.map((item) => {
+        const { id, Icon, Element, items } = item;
+        return (
+          <TreeItem.Root key={id} collapsible={!!items?.length} open>
+            <div role='none' className='flex grow items-center gap-2 font-mono' onClick={() => onSelect(item)}>
+              <Icon />
+              {Element}
+            </div>
+            <TreeItem.Body className='pis-4'>
+              <Tree.Branch>{items && <DataItems items={items} onSelect={onSelect} />}</Tree.Branch>
+            </TreeItem.Body>
+          </TreeItem.Root>
+        );
+      })}
+    </>
+  );
+};

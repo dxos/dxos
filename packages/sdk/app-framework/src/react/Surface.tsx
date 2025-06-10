@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { memo, forwardRef, Suspense, useMemo } from 'react';
+import React, { memo, forwardRef, Suspense, useMemo, Fragment } from 'react';
 
 import { useDefaultValue } from '@dxos/react-hooks';
 import { byPosition } from '@dxos/util';
@@ -10,7 +10,9 @@ import { byPosition } from '@dxos/util';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useCapabilities } from './useCapabilities';
 import { Capabilities, type SurfaceDefinition, type SurfaceProps } from '../common';
-import { type PluginsContext } from '../core';
+import { type PluginContext } from '../core';
+
+const DEFAULT_PLACEHOLDER = <Fragment />;
 
 /**
  * @internal
@@ -32,8 +34,8 @@ const findCandidates = (surfaces: SurfaceDefinition[], { role, data }: Pick<Surf
 /**
  * @returns `true` if there is a contributed surface which matches the specified role & data, `false` otherwise.
  */
-export const isSurfaceAvailable = (context: PluginsContext, { role, data }: Pick<SurfaceProps, 'role' | 'data'>) => {
-  const surfaces = context.requestCapabilities(Capabilities.ReactSurface);
+export const isSurfaceAvailable = (context: PluginContext, { role, data }: Pick<SurfaceProps, 'role' | 'data'>) => {
+  const surfaces = context.getCapabilities(Capabilities.ReactSurface);
   const candidates = findCandidates(surfaces.flat(), { role, data });
   return candidates.length > 0;
 };
@@ -43,7 +45,7 @@ export const isSurfaceAvailable = (context: PluginsContext, { role, data }: Pick
  */
 export const Surface = memo(
   forwardRef<HTMLElement, SurfaceProps>(
-    ({ id: _id, role, data: _data, limit, fallback, placeholder, ...rest }, forwardedRef) => {
+    ({ id: _id, role, data: _data, limit, fallback, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
       // TODO(wittjosiah): This will make all surfaces depend on a single signal.
       //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.
       //   This effectively means that plugin modules which contribute surfaces need to all be activated at startup.
@@ -59,7 +61,7 @@ export const Surface = memo(
         <Component ref={forwardedRef} key={id} id={id} role={role} data={data} limit={limit} {...rest} />
       ));
 
-      const suspense = placeholder ? <Suspense fallback={placeholder}>{nodes}</Suspense> : nodes;
+      const suspense = <Suspense fallback={placeholder}>{nodes}</Suspense>;
 
       return fallback ? (
         <ErrorBoundary data={data} fallback={fallback}>

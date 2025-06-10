@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema } from 'effect';
 
-export class Log extends S.TaggedClass<Log>()('dxos.org/test/logger/log', {
-  input: S.Struct({
-    message: S.String,
+export class Log extends Schema.TaggedClass<Log>()('dxos.org/test/logger/log', {
+  input: Schema.Struct({
+    message: Schema.String,
   }),
-  output: S.Void,
+  output: Schema.Void,
 }) {}

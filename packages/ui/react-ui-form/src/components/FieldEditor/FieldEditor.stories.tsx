@@ -37,7 +37,7 @@ const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-form/FieldEditor',
   component: FieldEditor,
   render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true, tooltips: true }), withTheme],
+  decorators: [withLayout({ fullscreen: true }), withTheme],
   parameters: {
     translations,
   },
@@ -49,7 +49,7 @@ type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
-    projection: new ViewProjection(createEchoSchema(TestSchema), testView),
+    projection: new ViewProjection(createEchoSchema(TestSchema).jsonSchema, testView),
     view: testView,
     field: testView.fields[0],
   },

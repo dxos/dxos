@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, TypedObject } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { Type } from '@dxos/echo';
+import { TypedObject } from '@dxos/echo-schema';
 
 export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
 
@@ -12,10 +15,14 @@ export class PropertiesType extends TypedObject({
   version: '0.1.0',
 })(
   {
-    name: S.optional(S.String),
+    name: Schema.optional(Schema.String),
+    // TODO(wittjosiah): Make generic?
+    hue: Schema.optional(Schema.String),
+    icon: Schema.optional(Schema.String),
+    invocationTraceQueue: Schema.optional(Type.Ref(Type.Expando)),
   },
   { record: true },
 ) {}
 
 // TODO(burdon): Remove? Use PropertiesType instead?
-export type PropertiesTypeProps = Pick<PropertiesType, 'name'>;
+export type PropertiesTypeProps = Pick<PropertiesType, 'name' | 'hue' | 'icon' | 'invocationTraceQueue'>;

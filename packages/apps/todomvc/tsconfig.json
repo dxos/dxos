@@ -14,6 +14,7 @@
     ]
   },
   "exclude": [
+    "src/playwright/playwright.config.cts",
     "vite.config.ts"
   ],
   "include": [
@@ -33,7 +34,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../sdk/config"

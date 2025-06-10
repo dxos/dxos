@@ -15,8 +15,13 @@ package dxos.echo.query;
 
 message QueryRequest {
   optional string queryId = 1;
-  dxos.echo.filter.Filter filter = 2;
   QueryReactivity reactivity = 3;
+
+  /// JSON-encoded `QueryAST.Query`.
+  string query = 5;
+
+  /// @deprecated Use `query` instead.
+  optional dxos.echo.filter.Filter filter = 2;
 }
 
 /**
@@ -38,7 +43,7 @@ message QueryResult {
   optional bytes document_automerge = 11;
   
   /// @deprecated Use spaceId.
-  dxos.keys.PublicKey spaceKey = 2;
+  optional dxos.keys.PublicKey spaceKey = 2;
 }
 
 enum QueryReactivity {

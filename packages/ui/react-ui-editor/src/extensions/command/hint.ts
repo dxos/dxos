@@ -5,11 +5,43 @@
 import { RangeSetBuilder } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
-import { type CommandOptions } from './command';
 import { commandState } from './state';
 import { clientRectsFor, flattenRect } from '../../util';
 
-class CommandHint extends WidgetType {
+export type HintOptions = {
+  onHint: () => string | undefined;
+};
+
+export const hintViewPlugin = ({ onHint }: HintOptions) =>
+  ViewPlugin.fromClass(
+    class {
+      decorations = Decoration.none;
+      update(update: ViewUpdate) {
+        const builder = new RangeSetBuilder<Decoration>();
+        const cState = update.view.state.field(commandState, false);
+        if (!cState?.tooltip) {
+          const selection = update.view.state.selection.main;
+          const line = update.view.state.doc.lineAt(selection.from);
+          // Only show if blank line.
+          // TODO(burdon): Clashes with placeholder if pos === 0.
+          // TODO(burdon): Show after delay or if blank line above?
+          if (selection.from === selection.to && line.from === line.to) {
+            const hint = onHint();
+            if (hint) {
+              builder.add(selection.from, selection.to, Decoration.widget({ widget: new Hint(hint) }));
+            }
+          }
+        }
+
+        this.decorations = builder.finish();
+      }
+    },
+    {
+      provide: (plugin) => [EditorView.decorations.of((view) => view.plugin(plugin)?.decorations ?? Decoration.none)],
+    },
+  );
+
+export class Hint extends WidgetType {
   constructor(readonly content: string | HTMLElement) {
     super();
   }
@@ -24,6 +56,7 @@ class CommandHint extends WidgetType {
     } else {
       wrap.setAttribute('aria-hidden', 'true');
     }
+
     return wrap;
   }
 
@@ -32,12 +65,14 @@ class CommandHint extends WidgetType {
     if (!rects.length) {
       return null;
     }
+
     const style = window.getComputedStyle(dom.parentNode as HTMLElement);
     const rect = flattenRect(rects[0], style.direction !== 'rtl');
     const lineHeight = parseInt(style.lineHeight);
     if (rect.bottom - rect.top > lineHeight * 1.5) {
       return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.top + lineHeight };
     }
+
     return rect;
   }
 
@@ -45,32 +80,3 @@ class CommandHint extends WidgetType {
     return false;
   }
 }
-
-export const hintViewPlugin = ({ onHint }: CommandOptions) =>
-  ViewPlugin.fromClass(
-    class {
-      deco = Decoration.none;
-      update(update: ViewUpdate) {
-        const builder = new RangeSetBuilder<Decoration>();
-        const cState = update.view.state.field(commandState, false);
-        if (!cState?.tooltip) {
-          const selection = update.view.state.selection.main;
-          const line = update.view.state.doc.lineAt(selection.from);
-          // Only show if blank line.
-          // TODO(burdon): Clashes with placeholder if pos === 0.
-          // TODO(burdon): Show after delay or if blank line above?
-          if (selection.from === selection.to && line.from === line.to) {
-            const hint = onHint();
-            if (hint) {
-              builder.add(selection.from, selection.to, Decoration.widget({ widget: new CommandHint(hint) }));
-            }
-          }
-        }
-
-        this.deco = builder.finish();
-      }
-    },
-    {
-      provide: (plugin) => [EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none)],
-    },
-  );

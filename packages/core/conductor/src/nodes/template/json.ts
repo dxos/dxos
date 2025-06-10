@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema } from 'effect';
 
 import { deepMapValues } from '@dxos/util';
 
@@ -10,8 +10,8 @@ import { findHandlebarVariables } from './text';
 
 // TODO(dmaretskyi): https://www.npmjs.com/package/json-templates.
 
-export const getObjectTemplateInputSchema = (template: unknown): S.Schema.AnyNoContext => {
-  const inputs: Record<string, S.Schema.AnyNoContext> = {};
+export const getObjectTemplateInputSchema = (template: unknown): Schema.Schema.AnyNoContext => {
+  const inputs: Record<string, Schema.Schema.AnyNoContext> = {};
 
   const go = (value: unknown) => {
     switch (typeof value) {
@@ -25,7 +25,7 @@ export const getObjectTemplateInputSchema = (template: unknown): S.Schema.AnyNoC
       case 'string': {
         const variables = findHandlebarVariables(value);
         for (const variable of variables) {
-          inputs[variable] = S.Any;
+          inputs[variable] = Schema.Any;
         }
         break;
       }
@@ -36,7 +36,7 @@ export const getObjectTemplateInputSchema = (template: unknown): S.Schema.AnyNoC
 
   go(template);
 
-  return S.Struct(inputs);
+  return Schema.Struct(inputs);
 };
 
 export const applyObjectTemplate = (template: unknown, props: Record<string, unknown>): unknown => {

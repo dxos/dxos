@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import React, { useCallback } from 'react';
 
 import { contributes, Capabilities, createSurface } from '@dxos/app-framework';
-import { type S } from '@dxos/echo-schema';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { type InputProps } from '@dxos/react-ui-form';
 
@@ -18,14 +19,17 @@ export default () =>
     createSurface({
       id: `${WNFS_PLUGIN}/article`,
       role: ['article', 'section', 'slide'],
-      filter: (data): data is { subject: FileType } => data.subject instanceof FileType,
+      filter: (data): data is { subject: FileType } => isInstanceOf(FileType, data.subject),
       component: ({ data, role }) => <FileContainer role={role} file={data.subject} />,
     }),
     createSurface({
       id: `${WNFS_PLUGIN}/create-form`,
       role: 'form-input',
-      filter: (data): data is { prop: string; schema: S.Schema.Any } => {
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, WnfsAction.UploadAnnotationId);
+      filter: (data): data is { prop: string; schema: Schema.Schema.Any } => {
+        const annotation = findAnnotation<boolean>(
+          (data.schema as Schema.Schema.All).ast,
+          WnfsAction.UploadAnnotationId,
+        );
         return !!annotation;
       },
       component: ({ data: { prop, schema }, ...props }) => {

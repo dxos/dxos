@@ -1,0 +1,85 @@
+{
+  "name": "@dxos/react-ui-graph",
+  "version": "0.8.1",
+  "description": "GEM Graph.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
+    },
+    "./styles/graph.css": "./styles/graph.css"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "testing.d.ts",
+    "testing.js",
+    "dist",
+    "src",
+    "styles"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
+    "@dxos/graph": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
+    "d3": "^7.9.0",
+    "d3-force": "~3.0.0",
+    "immutability-helper": "^3.0.2",
+    "js-clipper": "1.0.1",
+    "lodash.defaultsdeep": "^4.6.1",
+    "react-resize-detector": "^11.0.1",
+    "topojson-client": "^3.1.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@types/d3": "^7.4.3",
+    "@types/lodash.defaultsdeep": "^4.6.6",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
+    "@types/topojson-client": "^3.1.4",
+    "@types/topojson-specification": "^1.0.5",
+    "postcss": "^8.4.41",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
+  },
+  "optionalDependencies": {
+    "@dxos/random": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

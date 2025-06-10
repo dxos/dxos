@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
+import { type Registry } from '@effect-rx/rx-react';
+import { type Schema } from 'effect';
 import { type FC, type PropsWithChildren } from 'react';
 
-import { type GraphBuilder } from '@dxos/app-graph';
-import { type ArtifactDefinition, type Tool } from '@dxos/artifact';
+import { type Tool } from '@dxos/ai';
+import { type GraphBuilder, type BuilderExtensions } from '@dxos/app-graph';
+import { type ArtifactDefinition } from '@dxos/artifact';
 import { type Space } from '@dxos/client-protocol';
 import { type RootSettingsStore } from '@dxos/local-storage';
 
@@ -21,6 +23,8 @@ export namespace Capabilities {
   export const PluginManager = defineCapability<PluginManager>('dxos.org/app-framework/capability/plugin-manager');
 
   export const Null = defineCapability<null>('dxos.org/app-framework/capability/null');
+
+  export const RxRegistry = defineCapability<Registry.Registry>('dxos.org/app-framework/capability/rx-registry');
 
   export type ReactContext = Readonly<{ id: string; dependsOn?: string[]; context: FC<PropsWithChildren> }>;
   export const ReactContext = defineCapability<ReactContext>('dxos.org/app-framework/capability/react-context');
@@ -68,7 +72,7 @@ export namespace Capabilities {
     'dxos.org/app-framework/capability/app-graph',
   );
 
-  export const AppGraphBuilder = defineCapability<Parameters<GraphBuilder['addExtension']>[0]>(
+  export const AppGraphBuilder = defineCapability<BuilderExtensions>(
     'dxos.org/app-framework/capability/app-graph-builder',
   );
 
@@ -82,7 +86,7 @@ export namespace Capabilities {
   // export type Settings = Parameters<RootSettingsStore['createStore']>[0];
   // export type Settings<T extends SettingsValue = SettingsValue> = SettingsProps<T>;
   export type Settings = {
-    schema: S.Schema.All;
+    schema: Schema.Schema.All;
     prefix: string;
     value?: Record<string, any>;
   };

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AST } from '@effect/schema';
+import { SchemaAST } from 'effect';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 
@@ -12,8 +12,8 @@ import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 
 export type PropertyKind = 'input' | 'output';
 
-export const getProperties = (ast: AST.AST) =>
-  AST.getPropertySignatures(ast).map(({ name }) => ({ name: name.toString() }));
+export const getProperties = (ast: SchemaAST.AST) =>
+  SchemaAST.getPropertySignatures(ast).map(({ name }) => ({ name: name.toString() }));
 
 export const createAnchorId = (kind: PropertyKind, property = kind === 'input' ? DEFAULT_INPUT : DEFAULT_OUTPUT) =>
   [kind, property].join('.');

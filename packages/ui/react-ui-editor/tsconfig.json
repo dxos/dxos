@@ -45,9 +45,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/automerge"
-    },
-    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -69,6 +66,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../lit-ui"
+    },
+    {
       "path": "../primitives/react-hooks"
     },
     {
@@ -76,6 +76,9 @@
     },
     {
       "path": "../react-ui-menu"
+    },
+    {
+      "path": "../react-ui-syntax-highlighter"
     },
     {
       "path": "../react-ui-theme"

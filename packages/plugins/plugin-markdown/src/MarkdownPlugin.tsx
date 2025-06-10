@@ -3,25 +3,25 @@
 //
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { type BaseObject } from '@dxos/echo-schema';
+import { isInstanceOf, type BaseObject } from '@dxos/echo-schema';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import {
+  AppGraphSerializer,
+  ArtifactDefinition,
+  IntentResolver,
   MarkdownState,
   MarkdownSettings,
   ReactSurface,
-  IntentResolver,
-  AppGraphSerializer,
   Thread,
-  ArtifactDefinition,
 } from './capabilities';
 import { MarkdownEvents } from './events';
-import { MARKDOWN_PLUGIN, meta } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { DocumentType, MarkdownAction } from './types';
 import { serializer } from './util';
@@ -53,8 +53,8 @@ export const MarkdownPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: DocumentType.typename,
           metadata: {
-            label: (object: any) => (object instanceof DocumentType ? object.name || object.fallbackName : undefined),
-            placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
+            label: (object: any) =>
+              isInstanceOf(DocumentType, object) ? object.name || object.fallbackName : undefined,
             icon: 'ph--text-aa--regular',
             graphProps: {
               managesAutofocus: true,
@@ -74,14 +74,14 @@ export const MarkdownPlugin = () =>
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: DocumentType,
-            getIntent: () => createIntent(MarkdownAction.Create),
+            getIntent: (_, { space }) => createIntent(MarkdownAction.Create, { spaceId: space.id }),
           }),
         ),
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [TextType]),
+      activate: () => contributes(ClientCapabilities.Schema, [DataType.Text]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

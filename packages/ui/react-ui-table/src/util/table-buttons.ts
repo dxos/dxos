@@ -15,7 +15,6 @@ export const BUTTON_IDENTIFIERS: { [K in TableButton]: string } = {
 type ButtonData =
   | { type: 'columnSettings'; fieldId: string }
   | { type: 'newColumn'; disabled?: boolean }
-  | { type: 'referencedCell'; schemaId: string; targetId: string }
   | { type: 'rowMenu'; rowIndex: number }
   | { type: 'sort'; fieldId: string; direction?: 'asc' | 'desc' };
 
@@ -39,7 +38,7 @@ const createButton = ({
     .join(' ');
 
   const positionClass = type === 'primary' ? 'inline-end-2' : 'inline-end-9';
-  return `<button ${attr} data-testid="${testId}" class="dx-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 ${positionClass}" ${dataAttrs} ${disabled ? 'disabled' : ''}><svg><use href="/icons.svg#${icon}"/></svg></button>`;
+  return `<button ${attr} data-testid="${testId}" class="dx-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 ${positionClass}" ${dataAttrs} ${disabled ? 'disabled' : ''}><svg data-size="4"><use href="/icons.svg#${icon}"/></svg></button>`;
 };
 
 const addColumnButton = {
@@ -73,27 +72,6 @@ const columnSettingsButton = {
   getData: (el: HTMLElement): Extract<ButtonData, { type: 'columnSettings' }> => ({
     type: 'columnSettings',
     fieldId: el.getAttribute('data-field-id')!,
-  }),
-} as const;
-
-const referencedCellButton = {
-  attr: BUTTON_IDENTIFIERS.referencedCell,
-  icon: 'ph--link-simple-horizontal--regular',
-  render: ({ targetId, schemaId }: Omit<Extract<ButtonData, { type: 'referencedCell' }>, 'type'>) => {
-    return createButton({
-      attr: BUTTON_IDENTIFIERS.referencedCell,
-      icon: referencedCellButton.icon,
-      data: {
-        'data-target-id': targetId,
-        'data-schema-id': schemaId,
-      },
-      testId: 'table-ref-cell-button',
-    });
-  },
-  getData: (el: HTMLElement): Extract<ButtonData, { type: 'referencedCell' }> => ({
-    type: 'referencedCell',
-    targetId: el.getAttribute('data-target-id')!,
-    schemaId: el.getAttribute('data-schema-id')!,
   }),
 } as const;
 
@@ -143,7 +121,6 @@ const sortButton = {
 export const tableButtons = {
   addColumn: addColumnButton,
   columnSettings: columnSettingsButton,
-  referencedCell: referencedCellButton,
   rowMenu: rowMenuButton,
   sort: sortButton,
 } as const;

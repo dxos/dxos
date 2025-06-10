@@ -228,11 +228,7 @@ export const Default = {
       </Clipboard.Provider>
     );
   },
-  decorators: [
-    withMultiClientProvider({ numClients: 3 }),
-    withLayout({ tooltips: true, classNames: 'grid grid-cols-3' }),
-    withTheme,
-  ],
+  decorators: [withMultiClientProvider({ numClients: 3 }), withLayout({ classNames: 'grid grid-cols-3' }), withTheme],
   parameters: {
     chromatic: { disableSnapshot: true },
     translations: [osTranslations],

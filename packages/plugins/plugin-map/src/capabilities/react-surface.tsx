@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
-import { FormatEnum, isInstanceOf, type S } from '@dxos/echo-schema';
+import { FormatEnum, isInstanceOf } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
@@ -16,14 +17,14 @@ import { MapCapabilities } from './capabilities';
 import { MapContainer, MapControl } from '../components';
 import { MapViewEditor } from '../components/MapViewEditor';
 import { MAP_PLUGIN } from '../meta';
-import { InitialSchemaAnnotationId, MapType, LocationPropertyAnnotationId } from '../types';
+import { TypenameAnnotationId, MapType, LocationAnnotationId } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${MAP_PLUGIN}/map`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: MapType } => data.subject instanceof MapType,
+      filter: (data): data is { subject: MapType } => isInstanceOf(MapType, data.subject),
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
         const [lng = 0, lat = 0] = data.subject?.coordinates ?? [];
@@ -57,16 +58,18 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${MAP_PLUGIN}/settings`,
-      role: 'complementary--settings',
-      filter: (data): data is { subject: MapType } => data.subject instanceof MapType,
+      id: `${MAP_PLUGIN}/object-settings`,
+      role: 'object-settings',
+      filter: (data): data is { subject: MapType } => isInstanceOf(MapType, data.subject),
       component: ({ data }) => <MapViewEditor map={data.subject} />,
     }),
     createSurface({
       id: `${MAP_PLUGIN}/create-initial-schema-form-[schema]`,
       role: 'form-input',
-      filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, InitialSchemaAnnotationId);
+      filter: (
+        data,
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
+        const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, TypenameAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
@@ -75,16 +78,18 @@ export default () =>
         if (!space) {
           return null;
         }
-        const schemata = space?.db.schemaRegistry.query().runSync();
 
+        const schemata = space?.db.schemaRegistry.query().runSync();
         return <SelectInput {...props} options={schemata.map((schema) => ({ value: schema.typename }))} />;
       },
     }),
     createSurface({
       id: `${MAP_PLUGIN}/create-initial-schema-form-[property-of-interest]`,
       role: 'form-input',
-      filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, LocationPropertyAnnotationId);
+      filter: (
+        data,
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
+        const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, LocationAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {

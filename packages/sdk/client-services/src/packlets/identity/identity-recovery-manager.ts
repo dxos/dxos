@@ -32,19 +32,26 @@ export class EdgeIdentityRecoveryManager {
     private readonly _acceptRecoveredIdentity: (params: JoinIdentityParams) => Promise<Identity>,
   ) {}
 
-  public async createRecoveryCredential({ recoveryKey, algorithm }: CreateRecoveryCredentialRequest) {
+  public async createRecoveryCredential({ data }: CreateRecoveryCredentialRequest) {
     const identity = this._identityProvider();
     invariant(identity);
 
+    let recoveryKey: PublicKey;
+    let lookupKey: PublicKey;
+    let algorithm: string;
     let recoveryCode: string | undefined;
-    if (!recoveryKey) {
+    if (data) {
+      recoveryKey = data.recoveryKey;
+      lookupKey = data.lookupKey;
+      algorithm = data.algorithm;
+    } else {
       recoveryCode = generateSeedPhrase();
       const keypair = keyPairFromSeedPhrase(recoveryCode);
       recoveryKey = PublicKey.from(keypair.publicKey);
+      lookupKey = PublicKey.from(keypair.publicKey);
       algorithm = 'ED25519';
     }
 
-    invariant(algorithm, 'Algorithm is required.');
     const identityKey = identity.identityKey;
     const credential = await identity.getIdentityCredentialSigner().createCredential({
       subject: identityKey,
@@ -53,6 +60,7 @@ export class EdgeIdentityRecoveryManager {
         recoveryKey,
         identityKey,
         algorithm,
+        lookupKey,
       },
     });
 
@@ -88,7 +96,7 @@ export class EdgeIdentityRecoveryManager {
   }
 
   public async recoverIdentityWithExternalSignature({
-    identityDid,
+    lookupKey,
     deviceKey,
     controlFeedKey,
     signature,
@@ -98,7 +106,7 @@ export class EdgeIdentityRecoveryManager {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const request: EdgeRecoverIdentityRequest = {
-      identityDid,
+      lookupKey: lookupKey.toHex(),
       deviceKey: deviceKey.toHex(),
       controlFeedKey: controlFeedKey.toHex(),
       signature:
@@ -124,6 +132,33 @@ export class EdgeIdentityRecoveryManager {
     });
   }
 
+  /**
+   * Recovery identity using an opaque token sent to the user's email.
+   */
+  public async recoverIdentityWithToken({ token }: { token: string }) {
+    invariant(this._edgeClient, 'Not connected to EDGE.');
+
+    const deviceKey = await this._keyring.createKey();
+    const controlFeedKey = await this._keyring.createKey();
+    const request: EdgeRecoverIdentityRequest = {
+      deviceKey: deviceKey.toHex(),
+      controlFeedKey: controlFeedKey.toHex(),
+      token,
+    };
+
+    const response = await this._edgeClient.recoverIdentity(request);
+
+    await this._acceptRecoveredIdentity({
+      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
+      haloGenesisFeedKey: PublicKey.fromHex(response.genesisFeedKey),
+      haloSpaceKey: PublicKey.fromHex(response.haloSpaceKey),
+      identityKey: PublicKey.fromHex(response.identityKey),
+      deviceKey,
+      controlFeedKey,
+      dataFeedKey: await this._keyring.createKey(),
+    });
+  }
+
   public async recoverIdentity({ recoveryCode }: { recoveryCode: string }) {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
@@ -132,7 +167,7 @@ export class EdgeIdentityRecoveryManager {
     const deviceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const request: EdgeRecoverIdentityRequest = {
-      recoveryKey: recoveryKey.toHex(),
+      lookupKey: recoveryKey.toHex(),
       deviceKey: deviceKey.toHex(),
       controlFeedKey: controlFeedKey.toHex(),
     };

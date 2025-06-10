@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as A } from '@dxos/automerge/automerge';
+import { next as A } from '@automerge/automerge';
+
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -86,7 +87,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     // Initialize the component store with the automerge doc records.
     //
     {
-      const map: Record<string, Element> = getDeep(accessor.handle.docSync(), accessor.path) ?? {};
+      const map: Record<string, Element> = getDeep(accessor.handle.doc(), accessor.path) ?? {};
       const records = Object.values(map);
       if (records.length === 0) {
         // If the automerge doc is empty, initialize the automerge doc with the default store records.
@@ -109,7 +110,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     //
     {
       const updateModel = () => {
-        const doc = accessor.handle.docSync()!;
+        const doc = accessor.handle.doc()!;
         const map: Record<string, Element> = getDeep(doc, accessor.path);
 
         const updated = new Set<Element['id']>();

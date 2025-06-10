@@ -3,15 +3,15 @@
 //
 
 import { type IconProps } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
 import { useClipboard } from './ClipboardProvider';
-import { Button, type ButtonProps } from '../Buttons';
+import { Button, type ButtonProps, IconButton } from '../Buttons';
 import { Icon } from '../Icon';
 import { useTranslation } from '../ThemeProvider';
-import { Tooltip } from '../Tooltip';
+import { type TooltipScopedProps, useTooltipContext } from '../Tooltip';
 
 export type CopyButtonProps = ButtonProps & {
   value: string;
@@ -48,31 +48,29 @@ type CopyButtonIconOnlyProps = CopyButtonProps & {
   label?: string;
 };
 
-export const CopyButtonIconOnly = ({ value, classNames, iconProps, variant, ...props }: CopyButtonIconOnlyProps) => {
+export const CopyButtonIconOnly = ({
+  __scopeTooltip,
+  value,
+  classNames,
+  iconProps,
+  variant,
+  ...props
+}: TooltipScopedProps<CopyButtonIconOnlyProps>) => {
   const { t } = useTranslation('os');
   const { textValue, setTextValue } = useClipboard();
   const isCopied = textValue === value;
   const label = isCopied ? t('copy success label') : props.label ?? t('copy label');
-  const [open, setOpen] = useState(false);
+  const { onOpen } = useTooltipContext('CopyButton', __scopeTooltip);
   return (
-    <Tooltip.Root delayDuration={1500} open={open} onOpenChange={setOpen}>
-      <Tooltip.Portal>
-        <Tooltip.Content side='bottom' sideOffset={12}>
-          <span>{label}</span>
-          <Tooltip.Arrow />
-        </Tooltip.Content>
-      </Tooltip.Portal>
-      <Tooltip.Trigger
-        aria-label={label}
-        {...props}
-        onClick={() => setTextValue(value).then(() => setOpen(true))}
-        data-testid='copy-invitation'
-        asChild
-      >
-        <Button variant={variant} classNames={['inline-flex flex-col justify-center', classNames]}>
-          <Icon icon='ph--copy--regular' size={5 as any} {...iconProps} />
-        </Button>
-      </Tooltip.Trigger>
-    </Tooltip.Root>
+    <IconButton
+      iconOnly
+      label={label!}
+      icon='ph--copy--regular'
+      size={5}
+      variant={variant}
+      classNames={['inline-flex flex-col justify-center', classNames]}
+      onClick={() => setTextValue(value).then(onOpen)}
+      data-testid='copy-invitation'
+    />
   );
 };

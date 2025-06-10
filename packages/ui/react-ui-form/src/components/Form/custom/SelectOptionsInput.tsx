@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState, type ChangeEvent, useRef } from 'react';
+import React, { type ChangeEvent, type KeyboardEvent, useCallback, useEffect, useState, useRef } from 'react';
 
 import { type SelectOption } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -89,7 +89,7 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
     [options, type, onValueChange],
   );
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       setSelectedId(null);
     }
@@ -154,7 +154,11 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
                               data-no-submit
                             />
                             <Toolbar.Root classNames='p-0 m-0 !is-auto'>
-                              <HuePicker value={item.color} onChange={handleColorChange(item.id)} />
+                              <HuePicker
+                                value={item.color}
+                                onChange={handleColorChange(item.id)}
+                                rootVariant='toolbar-button'
+                              />
                             </Toolbar.Root>
                             <IconButton
                               icon='ph--trash--fill'

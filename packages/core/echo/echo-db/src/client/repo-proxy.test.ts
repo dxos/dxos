@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
+import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
-import { next as A } from '@dxos/automerge/automerge';
-import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-pipeline';
 import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
 import { IndexMetadataStore } from '@dxos/indexing';
@@ -24,7 +24,7 @@ describe('RepoProxy', () => {
     await openAndClose(clientRepo);
 
     const clientHandle = clientRepo.create<{ text: string }>();
-    const hostHandle = host.repo!.find<{ text: string }>(clientHandle.url);
+    const hostHandle = await host.repo!.find<{ text: string }>(clientHandle.url);
     const text = 'Hello World!';
     clientHandle.change((doc: any) => {
       doc.text = text;
@@ -33,7 +33,7 @@ describe('RepoProxy', () => {
     const receivedChange = new Trigger();
     hostHandle.once('change', () => receivedChange.wake());
     await receivedChange.wait();
-    expect(hostHandle.docSync()?.text).to.equal(text);
+    expect(hostHandle.doc()?.text).to.equal(text);
 
     {
       // Change from another peer.
@@ -44,7 +44,7 @@ describe('RepoProxy', () => {
         doc.text = text;
       });
       await receivedChange.wait();
-      expect(clientHandle.docSync().text).to.equal(text);
+      expect(clientHandle.doc()!.text).to.equal(text);
     }
   });
 
@@ -58,7 +58,7 @@ describe('RepoProxy', () => {
     const clientHandle = clientRepo.find<{ text: string }>(hostHandle.url);
     await asyncTimeout(clientHandle.whenReady(), 1000);
 
-    expect(clientHandle.docSync()?.text).to.equal(text);
+    expect(clientHandle.doc()?.text).to.equal(text);
   });
 
   test('two peers exchange document', async () => {
@@ -78,8 +78,8 @@ describe('RepoProxy', () => {
     const handle1 = repo1.create<{ text: string }>({ text });
 
     const handle2 = repo2.find<{ text: string }>(handle1.url);
-    await handle2.doc();
-    expect(handle2.docSync()?.text).to.equal(text);
+    await handle2.whenReady();
+    expect(handle2.doc()?.text).to.equal(text);
     await peer1.host.repo.flush();
 
     {
@@ -91,7 +91,7 @@ describe('RepoProxy', () => {
         doc.text = text;
       });
       await receivedChange.wait();
-      expect(handle1.docSync().text).to.equal(text);
+      expect(handle1.doc().text).to.equal(text);
     }
   });
 
@@ -126,7 +126,7 @@ describe('RepoProxy', () => {
       const clientHandle = clientRepo.find<{ text: string }>(url);
       await asyncTimeout(clientHandle.whenReady(), 1000);
 
-      expect(clientHandle.docSync()?.text).to.equal('Hello World!');
+      expect(clientHandle.doc()?.text).to.equal('Hello World!');
     }
   });
 
@@ -136,8 +136,7 @@ describe('RepoProxy', () => {
     await openAndClose(clientRepo);
 
     const handle = clientRepo.create<{ client: number; host: number }>();
-    const hostHandle = host.repo!.find<{ client: number; host: number }>(handle.url);
-    await hostHandle.whenReady();
+    const hostHandle = await host.repo!.find<{ client: number; host: number }>(handle.url);
 
     const numberOfUpdates = 1000;
     for (let i = 1; i <= numberOfUpdates; i++) {
@@ -150,8 +149,8 @@ describe('RepoProxy', () => {
       });
     }
 
-    expect(handle.docSync()?.host).to.equal(undefined);
-    expect(hostHandle.docSync()?.client).to.equal(undefined);
+    expect(handle.doc()?.host).to.equal(undefined);
+    expect(hostHandle.doc()?.client).to.equal(undefined);
 
     const [receiveChanges, inc] = latch({ count: 2, timeout: 1000 });
     handle.once('change', inc);
@@ -159,9 +158,9 @@ describe('RepoProxy', () => {
 
     await receiveChanges();
     await handle.whenReady();
-    expect(handle.docSync()?.host).to.equal(numberOfUpdates);
+    expect(handle.doc()?.host).to.equal(numberOfUpdates);
     await hostHandle.whenReady();
-    expect(handle.docSync()?.client).to.equal(numberOfUpdates);
+    expect(handle.doc()?.client).to.equal(numberOfUpdates);
   });
 
   test('import doc gets replicated', async () => {
@@ -172,13 +171,14 @@ describe('RepoProxy', () => {
     const text = 'Hello World!';
     const handle = clientRepo.create<{ text: string }>({ text });
 
-    const cloneHandle = clientRepo.import<{ text: string }>(A.save(handle.docSync()));
+    const cloneHandle = clientRepo.import<{ text: string }>(A.save(handle.doc()));
     await cloneHandle.whenReady();
-    expect(cloneHandle.docSync()?.text).to.equal(text);
+    expect(cloneHandle.doc()?.text).to.equal(text);
 
-    const hostHandle = host.repo!.find<{ text: string }>(cloneHandle.url);
+    const hostHandle = await host.repo!.find<{ text: string }>(cloneHandle.url);
 
-    await expect.poll(() => hostHandle.docSync()?.text).toEqual(text);
+    await hostHandle.whenReady();
+    await expect.poll(() => hostHandle.doc()?.text).toEqual(text);
   });
 
   test('create N documents', async () => {
@@ -203,14 +203,14 @@ describe('RepoProxy', () => {
     }
 
     for (const handle of handles) {
-      expect(handle.docSync()).to.not.equal(text);
+      expect(handle.doc()).to.not.equal(text);
     }
 
-    const hostHandles = handles.map((handle) => host.repo!.find<{ text: string }>(handle.url));
-    await Promise.all(hostHandles.map((handle) => handle.whenReady()));
+    const hostHandles = await Promise.all(handles.map(async (handle) => host.repo!.find<{ text: string }>(handle.url)));
 
     for (const handle of hostHandles) {
-      await expect.poll(() => handle.docSync()?.text, { timeout: 1000 }).toEqual(text);
+      await handle.whenReady();
+      await expect.poll(() => handle.doc()?.text, { timeout: 1000 }).toEqual(text);
     }
   });
 
@@ -264,8 +264,9 @@ describe('RepoProxy', () => {
 
     // Check that all documents are replicated.
     for (const handle of [...handles1, ...handles2]) {
-      await expect.poll(async () => handle.docSync()?.text1, { timeout: 1000 }).toEqual(text1);
-      await expect.poll(async () => handle.docSync()?.text2, { timeout: 1000 }).toEqual(text2);
+      await handle.whenReady();
+      await expect.poll(async () => handle.doc()?.text1, { timeout: 1000 }).toEqual(text1);
+      await expect.poll(async () => handle.doc()?.text2, { timeout: 1000 }).toEqual(text2);
     }
   });
 });

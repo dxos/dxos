@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type Doc } from '@automerge/automerge';
+import { interpretAsDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+
 import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { type Doc } from '@dxos/automerge/automerge';
-import { type AutomergeUrl, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { PropertiesType, TYPE_PROPERTIES } from '@dxos/client-protocol';
-import { LifecycleState, Resource, cancelWithContext } from '@dxos/context';
+import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
   createAdmissionCredentials,
   getCredentialAssertion,
@@ -15,6 +16,7 @@ import {
   type MemberInfo,
 } from '@dxos/credentials';
 import {
+  DatabaseRoot,
   findInlineObjectOfType,
   type EchoEdgeReplicator,
   type EchoHost,
@@ -26,14 +28,21 @@ import {
   type SpaceManager,
   type SpaceProtocol,
   type SpaceProtocolSession,
+  FIND_PARAMS,
 } from '@dxos/echo-pipeline';
-import { SpaceDocVersion, encodeReference, type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
-import { createObjectId, getTypeReference } from '@dxos/echo-schema';
+import {
+  SpaceDocVersion,
+  createIdFromSpaceKey,
+  encodeReference,
+  type ObjectStructure,
+  type DatabaseDirectory,
+} from '@dxos/echo-protocol';
+import { ObjectId, getTypeReference } from '@dxos/echo-schema';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages, type FeedStore } from '@dxos/feed-store';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
@@ -117,6 +126,11 @@ export type DataSpaceManagerRuntimeParams = {
   disableP2pReplication?: boolean;
 };
 
+export type CreateSpaceOptions = {
+  rootUrl?: AutomergeUrl;
+  documents?: Record<DocumentId, Uint8Array>;
+};
+
 @trackLeaks('open', 'close')
 export class DataSpaceManager extends Resource {
   public readonly updated = new Event();
@@ -160,24 +174,29 @@ export class DataSpaceManager extends Resource {
       id: 'spaces',
       name: 'Spaces',
       fetch: async () => {
-        return Array.from(this._spaces.values()).map((space) => {
-          const rootUrl = space.automergeSpaceState.rootUrl;
-          const rootHandle = rootUrl ? this._echoHost.automergeRepo.find(rootUrl as AutomergeUrl) : undefined;
-          const rootDoc = rootHandle?.docSync() as Doc<SpaceDoc> | undefined;
+        return Promise.all(
+          Array.from(this._spaces.values()).map(async (space) => {
+            const rootUrl = space.automergeSpaceState.rootUrl;
+            const rootHandle = rootUrl
+              ? await this._echoHost.automergeRepo.find<Doc<DatabaseDirectory>>(rootUrl as AutomergeUrl, FIND_PARAMS)
+              : undefined;
+            await rootHandle?.whenReady();
+            const rootDoc = rootHandle?.doc();
 
-          const properties = rootDoc && findInlineObjectOfType(rootDoc, TYPE_PROPERTIES);
+            const properties = rootDoc && findInlineObjectOfType(rootDoc, TYPE_PROPERTIES);
 
-          return {
-            key: space.key.toHex(),
-            state: SpaceState[space.state],
-            name: properties?.[1].data.name ?? null,
-            inlineObjects: rootDoc ? Object.keys(rootDoc.objects ?? {}).length : null,
-            linkedObjects: rootDoc ? Object.keys(rootDoc.links ?? {}).length : null,
-            credentials: space.inner.spaceState.credentials.length,
-            members: space.inner.spaceState.members.size,
-            rootUrl,
-          };
-        });
+            return {
+              key: space.key.toHex(),
+              state: SpaceState[space.state],
+              name: properties?.[1].data.name ?? null,
+              inlineObjects: rootDoc ? Object.keys(rootDoc.objects ?? {}).length : null,
+              linkedObjects: rootDoc ? Object.keys(rootDoc.links ?? {}).length : null,
+              credentials: space.inner.spaceState.credentials.length,
+              members: space.inner.spaceState.members.size,
+              rootUrl,
+            };
+          }),
+        );
       },
     });
   }
@@ -185,6 +204,10 @@ export class DataSpaceManager extends Resource {
   // TODO(burdon): Remove.
   get spaces() {
     return this._spaces;
+  }
+
+  getSpaceById(spaceId: SpaceId): DataSpace | undefined {
+    return [...this._spaces.values()].find((space) => space.id === spaceId);
   }
 
   @synchronized
@@ -220,11 +243,16 @@ export class DataSpaceManager extends Resource {
    * Creates a new space writing the genesis credentials to the control feed.
    */
   @synchronized
-  async createSpace() {
-    invariant(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
+  async createSpace(options: CreateSpaceOptions = {}) {
+    assertArgument(!!options.rootUrl === !!options.documents, 'root url must be required when providing documents');
+
+    assertState(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
     const spaceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
+
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+
     const metadata: SpaceMetadata = {
       key: spaceKey,
       genesisFeedKey: controlFeedKey,
@@ -233,11 +261,44 @@ export class DataSpaceManager extends Resource {
       state: SpaceState.SPACE_ACTIVE,
     };
 
-    log('creating space...', { spaceKey });
+    log('creating space...', { spaceId, spaceKey });
 
-    const root = await this._echoHost.createSpaceRoot(spaceKey);
+    // New document IDs for the space.
+    const documentIdMapping: Record<DocumentId, DocumentId> = {};
+    if (options.documents) {
+      invariant(
+        Object.keys(options.documents).every((documentId) => /^[a-zA-Z0-9]+$/.test(documentId)),
+        'Invalid document IDs',
+      );
+
+      await Promise.all(
+        Object.entries(options.documents).map(async ([documentId, data]) => {
+          log('creating document...', { documentId });
+          const newDoc = await this._echoHost.createDoc(data, { preserveHistory: true });
+          documentIdMapping[documentId as DocumentId] = newDoc.documentId;
+        }),
+      );
+    }
+
+    log('opening space...', { spaceKey });
+
+    let root: DatabaseRoot;
+    if (options.rootUrl) {
+      const newRootDocId = documentIdMapping[interpretAsDocumentId(options.rootUrl)] ?? failedInvariant();
+      const rootDocHandle = await this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), newRootDocId);
+      DatabaseRoot.mapLinks(rootDocHandle, documentIdMapping);
+
+      root = await this._echoHost.openSpaceRoot(spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
+    } else {
+      root = await this._echoHost.createSpaceRoot(spaceKey);
+    }
+
+    log('constructing space...', { spaceKey });
+
     const space = await this._constructSpace(metadata);
     await space.open();
+
+    log('adding space...', { spaceKey });
 
     const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, root.url);
     await this._metadataStore.addSpace(metadata);
@@ -247,6 +308,8 @@ export class DataSpaceManager extends Resource {
     await this._signingContext.recordCredential(memberCredential);
 
     await space.initializeDataPipeline();
+
+    log('space ready.', { spaceId, spaceKey });
 
     this.updated.emit();
     return space;
@@ -258,7 +321,11 @@ export class DataSpaceManager extends Resource {
     }
     switch (space.databaseRoot.getVersion()) {
       case SpaceDocVersion.CURRENT: {
-        const [_, properties] = findInlineObjectOfType(space.databaseRoot.docSync()!, TYPE_PROPERTIES) ?? [];
+        if (!space.databaseRoot.handle.isReady()) {
+          log.warn('waiting for space root to be ready', { spaceId: space.id });
+          await space.databaseRoot.handle.whenReady();
+        }
+        const [_, properties] = findInlineObjectOfType(space.databaseRoot.doc()!, TYPE_PROPERTIES) ?? [];
         return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
       }
       case SpaceDocVersion.LEGACY: {
@@ -288,8 +355,8 @@ export class DataSpaceManager extends Resource {
       },
     };
 
-    const propertiesId = createObjectId();
-    document.change((doc: SpaceDoc) => {
+    const propertiesId = ObjectId.random();
+    document.change((doc: DatabaseDirectory) => {
       setDeep(doc, ['objects', propertiesId], properties);
     });
 
@@ -297,10 +364,10 @@ export class DataSpaceManager extends Resource {
     return space;
   }
 
-  private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<SpaceDoc>> {
+  private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<DatabaseDirectory>> {
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = this._echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
+    const document = await this._echoHost.automergeRepo.find<DatabaseDirectory>(automergeIndex as any, FIND_PARAMS);
     await document.whenReady();
     return document;
   }

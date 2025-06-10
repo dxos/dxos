@@ -2,33 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, S } from '@dxos/effect';
+import { SchemaAST, Schema } from 'effect';
 
-import { FormatAnnotationId, FormatEnum } from './types';
-
-/**
- * Decentralized name.
- */
-export const DXN = S.NonEmptyString.pipe(
-  S.pattern(/^dxn:([^:]+):(?:[^:]+:?)+[^:]$/),
-  S.annotations({
-    [FormatAnnotationId]: FormatEnum.DXN,
-    [AST.TitleAnnotationId]: 'DXN',
-    [AST.DescriptionAnnotationId]: 'DXN URI',
-    [AST.ExamplesAnnotationId]: ['dxn:type:example.com/type/MyType', 'dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6'],
-  }),
-);
+import { FormatAnnotation, FormatEnum } from './types';
 
 /**
  * Email address (RFC 5321)
  * https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.2
  */
-export const Email = S.String.pipe(
-  S.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
-  S.annotations({
-    [FormatAnnotationId]: FormatEnum.Email,
-    [AST.TitleAnnotationId]: 'Email',
-    [AST.DescriptionAnnotationId]: 'Email address',
+export const Email = Schema.String.pipe(
+  Schema.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
+  FormatAnnotation.set(FormatEnum.Email),
+  Schema.annotations({
+    title: 'Email',
+    description: 'Email address',
   }),
 );
 
@@ -36,33 +23,25 @@ export const Email = S.String.pipe(
  *
  */
 // TODO(burdon): Implement.
-export const Formula = S.String.annotations({
-  [FormatAnnotationId]: FormatEnum.Formula,
-});
+export const Formula = Schema.String.pipe(FormatAnnotation.set(FormatEnum.Formula));
 
 /**
  *
  */
 // TODO(burdon): Implement.
-export const Hostname = S.String.annotations({
-  [FormatAnnotationId]: FormatEnum.Hostname,
-});
+export const Hostname = Schema.String.pipe(FormatAnnotation.set(FormatEnum.Hostname));
 
 /**
  *
  */
 // TODO(burdon): Implement.
-export const JSON = S.String.annotations({
-  [FormatAnnotationId]: FormatEnum.JSON,
-});
+export const JSON = Schema.String.pipe(FormatAnnotation.set(FormatEnum.JSON));
 
 /**
  *
  */
 // TODO(burdon): Implement.
-export const Markdown = S.String.annotations({
-  [FormatAnnotationId]: FormatEnum.Markdown,
-});
+export const Markdown = Schema.String.pipe(FormatAnnotation.set(FormatEnum.Markdown));
 
 /**
  * Regex
@@ -70,19 +49,17 @@ export const Markdown = S.String.annotations({
  * https://ecma-international.org/publications-and-standards/standards/ecma-262
  */
 // TODO(burdon): Implement.
-export const Regex = S.String.annotations({
-  [FormatAnnotationId]: FormatEnum.Regex,
-});
+export const Regex = Schema.String.pipe(FormatAnnotation.set(FormatEnum.Regex));
 
 /**
  * https://datatracker.ietf.org/doc/html/rfc3986#section-1.1.3
  */
-export const URL = S.String.pipe(
-  S.pattern(/^(\w+?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i),
-  S.annotations({
-    [FormatAnnotationId]: FormatEnum.URL,
-    [AST.TitleAnnotationId]: 'URL',
-    [AST.DescriptionAnnotationId]: 'URL',
+export const URL = Schema.String.pipe(
+  Schema.pattern(/^(\w+?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i),
+  FormatAnnotation.set(FormatEnum.URL),
+  Schema.annotations({
+    title: 'URL',
+    description: 'URL',
   }),
 );
 
@@ -90,7 +67,9 @@ export const URL = S.String.pipe(
  * UUID (RFC 4122)
  * https://datatracker.ietf.org/doc/html/rfc4122
  */
-export const UUID = S.UUID.annotations({
-  [FormatAnnotationId]: FormatEnum.UUID,
-  [AST.ExamplesAnnotationId]: ['3e4666bf-d5e5-4aa7-b8ce-cefe41c7568a'],
-});
+export const UUID = Schema.UUID.pipe(
+  FormatAnnotation.set(FormatEnum.UUID),
+  Schema.annotations({
+    [SchemaAST.ExamplesAnnotationId]: ['3e4666bf-d5e5-4aa7-b8ce-cefe41c7568a'],
+  }),
+);

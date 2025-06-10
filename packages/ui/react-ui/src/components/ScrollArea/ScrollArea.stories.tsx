@@ -14,7 +14,7 @@ import { withTheme } from '../../testing';
 
 faker.seed(1234);
 
-const StorybookScrollArea = ({ children }: PropsWithChildren<{}>) => {
+const DefaultStory = ({ children }: PropsWithChildren<{}>) => {
   return (
     <ScrollArea.Root
       classNames={['is-[300px] bs-[400px] rounded', groupSurface, surfaceShadow({ elevation: 'positioned' })]}
@@ -36,7 +36,7 @@ const StorybookScrollArea = ({ children }: PropsWithChildren<{}>) => {
 export default {
   title: 'ui/react-ui-core/Scroll area',
   component: ScrollArea,
-  render: StorybookScrollArea,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

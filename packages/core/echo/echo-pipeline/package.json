@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-pipeline",
-  "version": "0.7.4",
+  "version": "0.8.1",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -18,6 +18,11 @@
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
+    },
+    "./filter": {
+      "types": "./dist/types/src/filter/index.d.ts",
+      "browser": "./dist/lib/browser/filter/index.mjs",
+      "node": "./dist/lib/node-esm/filter/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -35,8 +40,9 @@
     "src"
   ],
   "dependencies": {
+    "@automerge/automerge": "3.0.0-beta.0",
+    "@automerge/automerge-repo": "2.0.0",
     "@dxos/async": "workspace:*",
-    "@dxos/automerge": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
@@ -45,6 +51,7 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/hypercore": "workspace:*",
     "@dxos/indexing": "workspace:*",
@@ -68,6 +75,7 @@
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
     "crc-32": "^1.2.2",
+    "effect": "3.14.21",
     "level-transcoder": "^1.0.1",
     "lodash.isequal": "^4.5.0"
   },
