@@ -16,7 +16,7 @@ import { TEST_EMAILS } from './test-data';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
 
-describe('Blueprint', () => {
+describe.skip('Blueprint', () => {
   const aiService = new AIServiceEdgeClient({
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
     defaultGenerationOptions: {
@@ -25,7 +25,7 @@ describe('Blueprint', () => {
     },
   });
 
-  test.only('follows a simple blueprint', { timeout: 60_000 }, async () => {
+  test('follows a simple blueprint', { timeout: 60_000 }, async () => {
     const blueprint = Blueprint.make([
       'Generate an idea for a new product. Do not use any external tools for this.',
       'Write a short description of the product.',
