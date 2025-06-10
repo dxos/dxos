@@ -36,6 +36,8 @@ export class GraphRadialProjector<
   protected animate() {
     this._timer?.stop();
 
+    console.log(this.options.duration);
+
     const start = Date.now();
     if (this.options.duration) {
       this._timer = timer(() => {
@@ -111,12 +113,23 @@ export const updateNode = (node: GraphLayoutNode, [tx, ty]: Point, tr = 8) => {
 };
 
 /**
- * Get radial position generator.
+ * Radial position generator.
  */
 export const layoutRadial = (x: number, y: number, r: number, n: number, start = -Math.PI / 2) => {
   const da = (2 * Math.PI) / n;
   return (i: number): Point => {
     const a = start + i * da;
     return [x + Math.cos(a) * r, y + Math.sin(a) * r];
+  };
+};
+
+/**
+ * Vertical position generator.
+ */
+export const layoutVertical = (x: number, y: number, h: number, n: number) => {
+  const dy = n > 1 ? h / (n - 1) : 0;
+  const sy = y - ((n - 1) * dy) / 2;
+  return (i: number): Point => {
+    return [x, sy + i * dy];
   };
 };

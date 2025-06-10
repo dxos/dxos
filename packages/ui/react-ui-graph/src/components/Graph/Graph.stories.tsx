@@ -18,12 +18,14 @@ import { Graph as GraphComponent, type GraphController, type GraphProps } from '
 import {
   GraphForceProjector,
   GraphRadialProjector,
+  GraphHierarchicalProjector,
+  GraphRelationalProjector,
   type GraphRadialProjectorOptions,
   type GraphForceProjectorOptions,
   type GraphLayoutNode,
   type GraphProjector,
-  GraphHierarchyProjector,
-  type GraphHierarchyProjectorOptions,
+  type GraphHierarchicalProjectorOptions,
+  type GraphRelationalProjectorOptions,
 } from '../../graph';
 import { type SVGContext } from '../../hooks';
 import { convertTreeToGraph, createGraph, createNode, createTree, TestGraphModel, type TestNode } from '../../testing';
@@ -31,8 +33,18 @@ import { SVG, type SVGGridProps } from '../SVG';
 
 import '../../../styles/graph.css';
 
-type ProjectorType = 'force' | 'radial' | 'hierarchy';
-const projectorTypes: ProjectorType[] = ['force', 'hierarchy', 'radial'];
+type ProjectorType = 'force' | 'radial' | 'hierarchical' | 'relational';
+
+type Factory = {
+  new (...args: ConstructorParameters<typeof GraphProjector>): GraphProjector<TestNode>;
+};
+
+const projectorTypes: Record<ProjectorType, Factory> = {
+  force: GraphForceProjector as Factory,
+  radial: GraphRadialProjector as Factory,
+  hierarchical: GraphHierarchicalProjector as Factory,
+  relational: GraphRelationalProjector as Factory,
+};
 
 type DefaultStoryProps = GraphProps & {
   debug?: boolean;
@@ -41,7 +53,11 @@ type DefaultStoryProps = GraphProps & {
   singleSelect?: boolean;
   graph: () => Graph;
   projectorType?: ProjectorType;
-  projectorOptions?: GraphForceProjectorOptions | GraphRadialProjectorOptions | GraphHierarchyProjectorOptions;
+  projectorOptions?:
+    | GraphForceProjectorOptions
+    | GraphRadialProjectorOptions
+    | GraphHierarchicalProjectorOptions
+    | GraphRelationalProjectorOptions;
 };
 
 const DefaultStory = ({
@@ -69,23 +85,8 @@ const DefaultStory = ({
       return;
     }
 
-    switch (projectorType) {
-      case 'force':
-        setProjector(
-          (projector) => new GraphForceProjector(context.current, projectorOptions, selection, projector?.layout),
-        );
-        break;
-      case 'radial':
-        setProjector(
-          (projector) => new GraphRadialProjector(context.current, projectorOptions, selection, projector?.layout),
-        );
-        break;
-      case 'hierarchy':
-        setProjector(
-          (projector) => new GraphHierarchyProjector(context.current, projectorOptions, selection, projector?.layout),
-        );
-        break;
-    }
+    const Projector = projectorTypes[projectorType];
+    setProjector(new Projector(context.current, projectorOptions, selection));
   }, [context.current, selection, projectorType, projectorOptions]);
 
   const popoverAnchorRef = useRef<HTMLButtonElement | null>(null);
@@ -168,8 +169,9 @@ const DefaultStory = ({
 
   const handleToggleProjector = useCallback(() => {
     setProjectorType((projectorType) => {
-      const index = projectorTypes.indexOf(projectorType);
-      return projectorTypes[index + 1] ?? projectorTypes[0];
+      const keys = Object.keys(projectorTypes) as ProjectorType[];
+      const index = keys.indexOf(projectorType);
+      return keys[index + 1] ?? keys[0];
     });
   }, []);
 
@@ -307,7 +309,7 @@ export const Radial: Story = {
     drag: true,
     arrows: true,
     singleSelect: true,
-    projectorType: 'hierarchy',
+    projectorType: 'hierarchical',
     projectorOptions: {
       radius: 300,
       duration: 300,
