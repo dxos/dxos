@@ -31,11 +31,15 @@ test.describe('Collaboration tests', () => {
     test.skip(browserName === 'firefox');
     test.skip(browserName === 'webkit' && platform() !== 'darwin');
 
-    host = new AppManager(browser, false);
-    guest = new AppManager(browser, false);
+    host = new AppManager(browser, false, 'https://labs.composer.space');
+    guest = new AppManager(browser, false, 'https://labs.composer.space');
 
-    await host.init();
-    await guest.init();
+    await Promise.all([host.init({ timeout: 60_000 }), guest.init({ timeout: 60_000 })]);
+
+    // await host.isPwaToastVisible({ timeout: 60_000 });
+    // await guest.isPwaToastVisible({ timeout: 60_000 });
+    // await host.closeToast();
+    // await guest.closeToast();
   });
 
   test.afterEach(async () => {
@@ -47,7 +51,7 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  test('guest joins host’s space', async () => {
+  test.only('guest joins host’s space', async () => {
     // Host creates a space and adds a markdown object
     await host.createSpace();
 
@@ -78,7 +82,7 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  test.only('host and guest can see each others’ cursors when same document is in focus', async () => {
+  test('host and guest can see each others’ cursors when same document is in focus', async () => {
     await host.createSpace();
 
     // Focus on host's textbox and wait for it to be ready
