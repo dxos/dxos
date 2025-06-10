@@ -27,7 +27,9 @@
   "types": "dist/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "react": ["./dist/types/src/react.d.ts"]
+      "react": [
+        "./dist/types/src/react.d.ts"
+      ]
     }
   },
   "files": [
