@@ -22,7 +22,7 @@ export async function processFiles(dirname, wasmModule) {
             [
               wasmModule,
               {
-                filename,
+                // filename,
                 to_transform: [
                   {
                     name: 'log',

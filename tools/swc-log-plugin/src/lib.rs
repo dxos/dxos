@@ -126,7 +126,16 @@ impl VisitMut for TransformVisitor {
 
         let filename = match &self.config.filename {
             Some(filename) => filename.clone(),
-            None => format!("{}", self.metadata.source_map.span_to_filename(n.span())),
+            None => format!(
+                "{}",
+                // source_map.span_to_filename panics
+                self.metadata
+                    .source_map
+                    .span_to_string(n.span())
+                    .split(':')
+                    .next()
+                    .unwrap_or("")
+            ),
         };
 
         let filename_decl_stmt = Stmt::Decl(swc_core::ecma::ast::Decl::Var(Box::new(VarDecl {
