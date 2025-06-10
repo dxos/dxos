@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use swc_core::ecma::ast::{Decorator, ExprOrSpread, NewExpr, Pass};
+use swc_core::ecma::ast::{ExprOrSpread, NewExpr, Pass};
 use swc_core::ecma::transforms::testing::Tester;
 use swc_core::ecma::visit::visit_mut_pass;
 use swc_core::{
@@ -18,7 +18,6 @@ use swc_core::{
 };
 
 use config::Config;
-use swc_ecma_lexer::{Syntax, TsSyntax};
 
 use crate::config::TransformIdLookup;
 use crate::param_transform::{add_meta_to_params, Metadata, TransformSpec};
