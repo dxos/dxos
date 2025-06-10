@@ -327,7 +327,7 @@ export const Radial: Story = {
         // },
       },
     },
-    graph: () => convertTreeToGraph(createTree({ depth: 2 })),
+    graph: () => convertTreeToGraph(createTree({ depth: 4 })),
   },
 };
 

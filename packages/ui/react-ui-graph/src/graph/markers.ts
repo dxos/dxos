@@ -23,7 +23,8 @@ const createArrow =
       .attr('refX', offset)
       .append('path')
       .attr('fill', 'none')
-      .attr('stroke', 'currentColor')
+      // Inherit stroke from path.
+      .attr('stroke', 'context-stroke')
       .attr(
         'd',
         createLine([
@@ -42,7 +43,8 @@ const createDot =
       .attr('viewBox', `-${size},-${size},${size * 2},${size * 2}`)
       .attr('orient', 'auto')
       .append('circle')
-      .attr('stroke', 'currentColor')
+      // Inherit stroke from path.
+      .attr('fill', 'context-stroke')
       .attr('r', size / 2 - 1);
   };
 

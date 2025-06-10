@@ -120,6 +120,17 @@ export const layoutRadial = (x: number, y: number, r: number, n: number, start =
 };
 
 /**
+ * Horizontal position generator.
+ */
+export const layoutHorizontal = (x: number, y: number, w: number, n: number) => {
+  const dx = n > 1 ? w / (n - 1) : 0;
+  const sx = x - ((n - 1) * dx) / 2;
+  return (i: number): Point => {
+    return [sx + i * dx, y];
+  };
+};
+
+/**
  * Vertical position generator.
  */
 export const layoutVertical = (x: number, y: number, h: number, n: number) => {

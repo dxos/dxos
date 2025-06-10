@@ -6,7 +6,7 @@ import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { type GraphProjectorOptions } from './graph-projector';
-import { GraphRadialProjector, layoutRadial, layoutVertical, updateNode } from './graph-radial-projector';
+import { GraphRadialProjector, layoutHorizontal, layoutRadial, updateNode } from './graph-radial-projector';
 import { type GraphLayoutNode } from '../types';
 
 export type GraphRelationalProjectorOptions = GraphProjectorOptions & {
@@ -50,8 +50,7 @@ export class GraphRelationalProjector<
     const r2 =
       this.options.radius ??
       Math.min(this.context.size.width, this.context.size.height) / 2 - (this.options.margin ?? 80);
-    const h = (r2 * 2) / 3;
-    const x = (r2 * 2) / 3;
+    const r1 = r2 * 0.5;
 
     this.layout.graph.nodes.forEach((node) => (node.type = undefined));
     this.layout.graph.edges.forEach((edge) => (edge.type = undefined));
@@ -74,7 +73,7 @@ export class GraphRelationalProjector<
 
     // Children.
     {
-      const vertical = layoutVertical(x, 0, h, children.length);
+      const vertical = layoutHorizontal(0, r1, r1 * 2, children.length);
       children.forEach((node, i) => {
         const [tx, ty] = vertical(i);
         updateNode(node, [tx, ty], 20);
@@ -83,7 +82,7 @@ export class GraphRelationalProjector<
 
     // Parents.
     {
-      const vertical = layoutVertical(-x, 0, h, parents.length);
+      const vertical = layoutHorizontal(0, -r1, r1, parents.length);
       parents.forEach((node, i) => {
         const [tx, ty] = vertical(i);
         updateNode(node, [tx, ty], 20);
@@ -92,7 +91,7 @@ export class GraphRelationalProjector<
 
     // Outer.
     {
-      const radial = layoutRadial(0, 0, r2, this.layout.graph.nodes.length - 1 - children.length);
+      const radial = layoutRadial(0, 0, r2, this.layout.graph.nodes.length - 1 - children.length - parents.length);
       this.layout.graph.nodes
         .filter((node) => node.id !== selected.id && !children.includes(node) && !parents.includes(node))
         .forEach((node, i) => {

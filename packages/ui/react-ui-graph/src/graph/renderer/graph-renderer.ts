@@ -376,7 +376,6 @@ const createEdge: D3Callable = <NodeData = any, EdgeData = any>(
 
   group
     .append('path')
-    .classed('stroke-current', true)
     .attr('pointer-events', 'none')
     .attr('marker-start', () => (options.arrows?.start ? 'url(#marker-arrow-start)' : undefined))
     .attr('marker-end', () => (options.arrows?.end ? 'url(#marker-arrow-end)' : undefined));
