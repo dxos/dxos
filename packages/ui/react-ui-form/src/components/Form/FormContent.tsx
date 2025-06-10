@@ -166,8 +166,8 @@ export const FormField = ({
 
     if (typeLiteral) {
       return (
-        <div role='none'>
-          {!inline && <h3 className='text-lg mbs-2 mbe-1'>{label}</h3>}
+        <>
+          {!inline && <h3 className='text-lg mbs-2 mbe-1 first:mbs-0'>{label}</h3>}
           <FormFields
             schema={Schema.make(typeLiteral)}
             path={path}
@@ -176,7 +176,7 @@ export const FormField = ({
             Custom={Custom}
             lookupComponent={lookupComponent}
           />
-        </div>
+        </>
       );
     }
   }
@@ -215,7 +215,7 @@ export const FormFields = ({
   }, [schema, values, filter, sort]);
 
   return (
-    <div role='form' className='contents'>
+    <div role='form' className='is-full'>
       {properties
         .map((property) => {
           return (
