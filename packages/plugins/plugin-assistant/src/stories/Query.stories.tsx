@@ -76,9 +76,11 @@ const DefaultStory = ({ mode, spec, ...props }: DefaultStoryProps) => {
     return combine(
       timeout(async () => {
         if (spec) {
+          log.info('generating test data');
           const createObjects = createObjectFactory(space.db, generator);
           await createObjects(spec);
         } else {
+          log.info('adding test data');
           addTestData(space);
         }
 
