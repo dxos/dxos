@@ -11,8 +11,9 @@ import React, { useCallback, useState } from 'react';
 import { ContactType } from '@dxos/client/testing';
 import { type BaseObject, Expando, Format, getDXN, Ref, type TypeAnnotation } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
+import { withSurfaceVariantsLayout } from '@dxos/react-ui/testing';
 import { Testing } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SelectInput } from './Defaults';
 import { Form, type FormProps } from './Form';
@@ -45,20 +46,14 @@ const DefaultStory = <T extends BaseObject>({ schema, values: initialValues, ...
     setValues(values);
   }, []);
 
-  return (
-    <TestLayout json={{ values, schema: schema.ast.toJSON() }}>
-      <TestPanel>
-        <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
-      </TestPanel>
-    </TestLayout>
-  );
+  return <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />;
 };
 
 const meta: Meta<StoryProps<any>> = {
   title: 'ui/react-ui-form/Form',
   component: Form,
   render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true }), withTheme],
+  decorators: [withTheme, withSurfaceVariantsLayout()],
   parameters: {
     translations,
   },

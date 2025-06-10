@@ -9,7 +9,7 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import React from 'react';
 
 import { Button, ButtonGroup, type ButtonProps } from './Button';
-import { withSurfaceVariants, withTheme } from '../../testing';
+import { withSurfaceVariantsLayout, withTheme } from '../../testing';
 
 const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   return (
@@ -36,7 +36,7 @@ const meta: Meta<typeof Button> = {
   title: 'ui/react-ui-core/Button',
   component: Button,
   render: DefaultStory,
-  decorators: [withSurfaceVariants(), withTheme],
+  decorators: [withSurfaceVariantsLayout(), withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };
 

@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Decorator } from '@storybook/react';
 import React from 'react';
 
@@ -15,7 +13,7 @@ type Config = {
   densities?: Density[];
 };
 
-export const withSurfaceVariants = ({
+export const withSurfaceVariantsLayout = ({
   elevations = [
     { elevation: 'base', surface: 'bg-baseSurface' },
     { elevation: 'positioned', surface: 'bg-cardSurface' },
@@ -24,8 +22,8 @@ export const withSurfaceVariants = ({
   densities = ['coarse'],
 }: Config = {}): Decorator => {
   return (Story) => (
-    <div className='grid grid-cols-2 gap-4'>
-      <div className='light' data-token-root={true}>
+    <div className='fixed inset-0 grid grid-cols-2 grid-rows-[min-content] overflow-y-auto'>
+      <div className='light p-4'>
         {elevations.map(({ elevation, surface }) =>
           densities.map((density) => (
             <div
@@ -37,7 +35,7 @@ export const withSurfaceVariants = ({
           )),
         )}
       </div>
-      <div className='dark' data-token-root={true}>
+      <div className='dark p-4'>
         {elevations.map(({ elevation, surface }) =>
           densities.map((density) => (
             <div
