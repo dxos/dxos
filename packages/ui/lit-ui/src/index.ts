@@ -6,5 +6,3 @@ export * from './dx-avatar';
 export * from './dx-tag-picker';
 export * from './dx-ref-tag';
 export * from './dx-icon';
-
-export { createComponent, type EventName } from '@lit/react';
