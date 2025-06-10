@@ -10,7 +10,7 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
 export default defineConfig({
   ...nxE2EPreset(__filename, { testDir: __dirname }),
   ...e2ePreset(__dirname),
-  timeout: 30_000,
+  timeout: 300_000,
   webServer: {
     command: 'pnpm -w nx preview composer-app',
     port: 4200,

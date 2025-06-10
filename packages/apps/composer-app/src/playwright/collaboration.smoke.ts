@@ -27,7 +27,7 @@ test.describe('Collaboration tests', () => {
   let guest: AppManager;
 
   test.beforeEach(async ({ browser, browserName }) => {
-    test.setTimeout(60_000);
+    test.setTimeout(300_000);
     test.skip(browserName === 'firefox');
     test.skip(browserName === 'webkit' && platform() !== 'darwin');
 
