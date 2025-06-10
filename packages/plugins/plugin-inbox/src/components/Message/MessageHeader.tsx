@@ -31,7 +31,7 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
         button.dispatchEvent(
           new DxRefTagActivate({
             trigger: button as DxRefTag,
-            ref: contactDxn,
+            refId: contactDxn,
             label: message.sender.name ?? 'never',
           }),
         );
