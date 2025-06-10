@@ -141,7 +141,7 @@ export const ViewEditor = ({
   );
 
   return (
-    <div role='none' className={mx(classNames)}>
+    <div role='none' className={mx('overflow-y-auto', classNames)}>
       <Form<ViewMetaType>
         autoSave
         schema={ViewMetaSchema}

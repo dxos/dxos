@@ -105,6 +105,7 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
                 iconOnly
                 label={t('button remove')}
                 onClick={() => handleRemove(index)}
+                classNames='self-center'
               />
             </Fragment>
           );
