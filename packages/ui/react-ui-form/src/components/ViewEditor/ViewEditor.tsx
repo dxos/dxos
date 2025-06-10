@@ -141,7 +141,7 @@ export const ViewEditor = ({
   );
 
   return (
-    <div role='none' className={mx('grid grid-rows-[1fr_1fr] min-bs-0', classNames)}>
+    <div role='none' className={mx('overflow-y-auto', classNames)}>
       <Form<ViewMetaType>
         autoSave
         schema={ViewMetaSchema}
@@ -240,13 +240,14 @@ export const ViewEditor = ({
       )}
 
       {!readonly && !field && (
-        <div className='flex p-2 justify-center'>
+        <div role='none' className='p-2'>
           <IconButton
             icon='ph--plus--regular'
             label={t('button add property')}
             onClick={immutable ? undefined : handleAdd}
             // TODO(burdon): Show field limit in ux (not tooltip).
             disabled={view.fields.length >= VIEW_FIELD_LIMIT}
+            classNames='flex is-full'
           />
         </div>
       )}

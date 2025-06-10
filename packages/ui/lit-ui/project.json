@@ -16,6 +16,7 @@
       "executor": "@nx/js:tsc",
       "options": {
         "entryPoints": [
+          "{proejctRoot}/src/react.ts",
           "{projectRoot}/src/index.ts",
           "{projectRoot}/src/testing/index.ts"
         ],
