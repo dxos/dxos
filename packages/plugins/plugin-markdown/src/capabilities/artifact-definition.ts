@@ -98,7 +98,7 @@ export default () => {
         }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const document = await extensions.space.db.query({ id: ArtifactId.toDXN(id).toString() }).first();
+          const document = await extensions.space.db.query(Filter.ids(ArtifactId.toDXN(id).toString())).first();
           assertArgument(isInstanceOf(DocumentType, document), 'Invalid type');
 
           const { content } = await document.content?.load();
