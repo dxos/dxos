@@ -16,7 +16,7 @@ import { TEST_EMAILS } from './test-data';
 import { createExaTool } from '../research/exa';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { DataType, DataTypes } from '@dxos/schema';
-import { createGraphWriteTool } from '../research';
+import { createGraphWriteTool, createLocalSearchTool } from '../research';
 import { create } from '@dxos/echo-schema';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
@@ -106,12 +106,22 @@ describe('Blueprint', () => {
         description: 'An AI-powered search engine company building search infrastructure for AI agents',
       }),
     );
+    const cresta = db.add(
+      create(DataType.Organization, {
+        name: 'Cresta',
+        website: 'https://cresta.ai',
+        description: 'A company that builds AI agents',
+      }),
+    );
     await db.flush({ indexes: true });
 
     const blueprint = BlueprintBuilder.begin()
-      .step('Research founders or organization')
+      .step('Research founders of the organization. Do deep research.')
       .withTool(createExaTool({ apiKey: EXA_API_KEY }))
+      .step('Based on your research select matching entires that are already in the graph')
+      .withTool(createLocalSearchTool(db))
       .step('Add researched data to the graph')
+      .withTool(createLocalSearchTool(db))
       .withTool(createGraphWriteTool({ db, schemaTypes: DataTypes }))
       .end();
 
