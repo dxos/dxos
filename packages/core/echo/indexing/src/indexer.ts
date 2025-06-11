@@ -104,6 +104,7 @@ export class Indexer extends Resource {
   async setConfig(config: IndexConfig): Promise<void> {
     this._indexConfig = config;
     if (this._lifecycleState === LifecycleState.OPEN) {
+      log.warn('Setting index config after initialization, this is unstable', { config });
       for (const kind of this._engine.indexKinds) {
         if (!config.indexes?.some((kind) => isEqual(kind, kind))) {
           this._engine.deleteIndex(kind);
