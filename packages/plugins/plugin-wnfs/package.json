@@ -51,6 +51,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@ipld/car": "^5.3.3",
+    "@preact-signals/safe-react": "^0.9.0",
     "blockstore-core": "^5.0.1",
     "blockstore-idb": "^2.0.0",
     "debounce": "^2.2.0",
