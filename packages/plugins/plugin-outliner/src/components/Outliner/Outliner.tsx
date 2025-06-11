@@ -13,7 +13,6 @@ import {
   useTextEditor,
   createThemeExtensions,
   outliner,
-  editorSlots,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
@@ -32,7 +31,7 @@ export const Outliner = ({ classNames, text }: OutlinerProps) => {
         createDataExtensions({ id: text.id, text: createDocAccessor(text, ['content']) }),
         createBasicExtensions({ readOnly: false }),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, slots: editorSlots }),
+        createThemeExtensions({ themeMode }),
         outliner(),
       ],
     }),

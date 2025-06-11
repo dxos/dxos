@@ -6544,9 +6544,6 @@ importers:
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../core/echo/echo-generator
-      '@dxos/plugin-outliner':
-        specifier: workspace:*
-        version: link:../plugin-outliner
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
