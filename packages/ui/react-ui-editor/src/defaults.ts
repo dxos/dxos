@@ -8,7 +8,8 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { fontMono } from './styles';
 
-const margin = '!mt-[1rem]';
+// TODO(burdon): Better way to implement top margin? Add padding to cm-scroller?
+const margin = ''; // '!mt-[1rem]';
 
 /**
  * CodeMirror content width.
@@ -30,7 +31,7 @@ export const editorGutter = EditorView.theme({
   // Match margin from content.
   // Gutter = 2rem + 1rem margin.
   '.cm-gutters': {
-    marginTop: '1rem',
+    // marginTop: '1rem',
     paddingRight: '1rem',
   },
 });
