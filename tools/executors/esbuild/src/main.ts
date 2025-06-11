@@ -3,13 +3,13 @@
 //
 
 import type { ExecutorContext } from '@nx/devkit';
+import type * as Swc from '@swc/core';
 import { build, type Format, type Platform, type Plugin } from 'esbuild';
 import glsl from 'esbuild-plugin-glsl';
 import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
-import * as Swc from '@swc/core';
 
 import { NodeExternalPlugin } from '@dxos/esbuild-plugins';
 

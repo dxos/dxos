@@ -4,7 +4,6 @@
 
 import { type StorybookConfig } from '@storybook/react-vite';
 import ReactPlugin from '@vitejs/plugin-react-swc';
-import flatten from 'lodash.flatten';
 import { resolve } from 'path';
 import { type InlineConfig, mergeConfig } from 'vite';
 import InspectPlugin from 'vite-plugin-inspect';
@@ -63,70 +62,67 @@ export const config = (
       console.log(JSON.stringify({ config, configType }, null, 2));
     }
 
-    return mergeConfig(
-      config,
-      {
-        publicDir: resolve(__dirname, '../static'),
-        build: {
-          assetsInlineLimit: 0,
-          rollupOptions: {
-            output: {
-              assetFileNames: 'assets/[name].[hash][extname]', // Unique asset names
-            },
+    return mergeConfig(config, {
+      publicDir: resolve(__dirname, '../static'),
+      build: {
+        assetsInlineLimit: 0,
+        rollupOptions: {
+          output: {
+            assetFileNames: 'assets/[name].[hash][extname]', // Unique asset names
           },
         },
-        // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
-        server: {
-          headers: {
-            'Cache-Control': 'no-store',
-          },
-          hmr: {
-            overlay: false,
-          },
+      },
+      // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
+      server: {
+        headers: {
+          'Cache-Control': 'no-store',
         },
-        worker: {
-          format: 'es',
-          plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
+        hmr: {
+          overlay: false,
         },
-        plugins: [
-          // https://github.com/antfu-collective/vite-plugin-inspect#readme
-          // Open: http://localhost:5173/__inspect
-          isTrue(process.env.DX_INSPECT) && InspectPlugin(),
-          ReactPlugin({
-            tsDecorators: true,
-            plugins: [
-              [
-                '@preact-signals/safe-react/swc',
-                {
-                  // you should use `auto` mode to track only components which uses `.value` access.
-                  // Can be useful to avoid tracking of server side components
-                  mode: 'all',
-                },
-              ],
+      },
+      worker: {
+        format: 'es',
+        plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
+      },
+      plugins: [
+        // https://github.com/antfu-collective/vite-plugin-inspect#readme
+        // Open: http://localhost:5173/__inspect
+        isTrue(process.env.DX_INSPECT) && InspectPlugin(),
+        ReactPlugin({
+          tsDecorators: true,
+          plugins: [
+            [
+              '@preact-signals/safe-react/swc',
+              {
+                // you should use `auto` mode to track only components which uses `.value` access.
+                // Can be useful to avoid tracking of server side components
+                mode: 'all',
+              },
             ],
-          }),
-          IconsPlugin({
-            symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
-            assetPath: (name, variant) =>
-              `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
-            spriteFile: 'icons.svg',
-            contentPaths: [resolve(packages, '**/src/**', contentFiles)],
-          }),
-          ThemePlugin({
-            root: __dirname,
-            content: [
-              resolve(packages, 'app/*/src/**', contentFiles),
-              resolve(packages, 'experimental/*/src/**', contentFiles),
-              resolve(packages, 'plugins/*/src/**', contentFiles),
-              resolve(packages, 'sdk/*/src/**', contentFiles),
-              resolve(packages, 'ui/*/src/**', contentFiles),
-            ],
-          }),
-          TopLevelAwaitPlugin(),
-          TurbosnapPlugin({ rootDir: turbosnapRootDir ?? config.root ?? __dirname }),
-          WasmPlugin(),
-        ],
-      } satisfies InlineConfig,
-    );
+          ],
+        }),
+        IconsPlugin({
+          symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+          assetPath: (name, variant) =>
+            `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+          spriteFile: 'icons.svg',
+          contentPaths: [resolve(packages, '**/src/**', contentFiles)],
+        }),
+        ThemePlugin({
+          root: __dirname,
+          content: [
+            resolve(packages, 'app/*/src/**', contentFiles),
+            resolve(packages, 'experimental/*/src/**', contentFiles),
+            resolve(packages, 'plugins/*/src/**', contentFiles),
+            resolve(packages, 'sdk/*/src/**', contentFiles),
+            resolve(packages, 'ui/*/src/**', contentFiles),
+          ],
+        }),
+        TopLevelAwaitPlugin(),
+        TurbosnapPlugin({ rootDir: turbosnapRootDir ?? config.root ?? __dirname }),
+        WasmPlugin(),
+      ],
+    } satisfies InlineConfig);
   },
 });
