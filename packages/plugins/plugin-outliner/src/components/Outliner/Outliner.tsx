@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   createMarkdownExtensions,
   createBasicExtensions,
@@ -15,13 +15,14 @@ import {
   outliner,
   editorSlots,
 } from '@dxos/react-ui-editor';
+import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
-export type OutlinerProps = {
+export type OutlinerProps = ThemedClassName<{
   text: DataType.Text;
-};
+}>;
 
-export const Outliner = ({ text }: OutlinerProps) => {
+export const Outliner = ({ classNames, text }: OutlinerProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
@@ -38,5 +39,5 @@ export const Outliner = ({ text }: OutlinerProps) => {
     [text, themeMode],
   );
 
-  return <div ref={parentRef} {...focusAttributes} className='flex w-full justify-center' />;
+  return <div ref={parentRef} {...focusAttributes} className={mx('flex w-full justify-center', classNames)} />;
 };

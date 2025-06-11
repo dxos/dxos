@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { Ref } from '@dxos/echo-schema';
+import { Ref, RefArray } from '@dxos/echo-schema';
 import { live, makeRef } from '@dxos/live-object';
 import { DataType } from '@dxos/schema';
 
@@ -33,7 +33,7 @@ export interface OutlineType extends Schema.Schema.Type<typeof OutlineType> {}
 
 export const JournalEntryType = Schema.Struct({
   date: Schema.String, // TODO(burdon): Date.
-  content: DataType.Text,
+  content: Ref(DataType.Text), // TODO(burdon): Breaks unless this is a reference.
 }).pipe(
   Type.def({
     typename: 'dxos.org/type/JournalEntry',
@@ -55,6 +55,10 @@ export const JournalType = Schema.Struct({
 
 export interface JournalType extends Schema.Schema.Type<typeof JournalType> {}
 
+//
+// Helpers
+//
+
 export const createOutline = (name?: string, content?: string): OutlineType => {
   return live(OutlineType, {
     name,
@@ -72,11 +76,11 @@ export const createJournal = (name?: string): JournalType => {
 export const createJournalEntry = (date = new Date()): JournalEntryType => {
   return live(JournalEntryType, {
     date: getDateString(date),
-    content: live(DataType.Text, { content: '' }),
+    content: makeRef(live(DataType.Text, { content: '' })),
   });
 };
 
-// export const getJournalEntries = (journal: JournalType, date: Date): JournalEntryType[] => {
-//   const str = getDateString(date);
-//   return RefArray.targets(journal.entries).filter((entry) => entry.date === str);
-// };
+export const getJournalEntries = (journal: JournalType, date: Date): JournalEntryType[] => {
+  const str = getDateString(date);
+  return RefArray.targets(journal.entries).filter((entry) => entry.date === str);
+};
