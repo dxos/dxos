@@ -91,7 +91,6 @@ const DefaultStory = ({
       log.warn('no space');
       return;
     }
-    log.info('space', { space });
   }, [space]);
 
   // Entity extraction.
@@ -206,11 +205,10 @@ const meta: Meta<typeof DefaultStory> = {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
-            await seedTestData(client.spaces.default);
             // TODO(mykola): Make API easier to use.
             // TODO(mykola): Delete after enabling vector indexing by default.
             // Enable vector indexing.
-            await client.services.services.QueryService?.setConfig({
+            await client.services.services.QueryService!.setConfig({
               enabled: true,
               indexes: [
                 //
@@ -219,6 +217,8 @@ const meta: Meta<typeof DefaultStory> = {
                 { kind: IndexKind.Kind.VECTOR },
               ],
             });
+            await client.services.services.QueryService!.reindex();
+            await seedTestData(client.spaces.default);
           },
         }),
         SpacePlugin(),
@@ -254,7 +254,7 @@ export const Default: Story = {
 
 export const EntityExtraction: Story = {
   args: {
-    detectSpeaking: false,
+    detectSpeaking: true,
     entityExtraction: 'ner',
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,

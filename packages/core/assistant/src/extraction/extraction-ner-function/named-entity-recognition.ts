@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { log } from '@dxos/log';
 import {
   type TokenClassificationOutput,
   type TokenClassificationSingle,
@@ -17,7 +18,10 @@ let _ner: Promise<TokenClassificationPipelineType>;
  */
 export const getNer = () => {
   if (!_ner) {
-    _ner = pipeline('ner', 'Xenova/bert-base-NER');
+    _ner = pipeline('ner', 'Xenova/bert-base-NER').then((ner) => {
+      log.info('NER model is ready');
+      return ner;
+    });
   }
   return _ner;
 };
