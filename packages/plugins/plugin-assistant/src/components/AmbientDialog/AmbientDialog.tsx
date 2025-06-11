@@ -17,6 +17,7 @@ export type AmbientDialogProps = PropsWithChildren<{
   title?: string;
   resizeable?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onEscape?: () => void;
 }>;
 
 export const AmbientDialog = ({
@@ -25,6 +26,7 @@ export const AmbientDialog = ({
   title,
   resizeable = true,
   onOpenChange,
+  onEscape,
 }: AmbientDialogProps) => {
   const [resizeKey, setReizeKey] = useState(0);
   const [size, setSize] = useState<Size>('min-content');
@@ -61,6 +63,7 @@ export const AmbientDialog = ({
           ...(resizeable ? sizeStyle(size, 'vertical', true) : {}),
           maxBlockSize: 'calc(100dvh - env(safe-area-inset-bottom) - env(safe-area-inset-top) - 9rem)',
         }}
+        onEscapeKeyDown={onEscape}
         onInteractOutside={preventDefault}
       >
         {(resizeable && (

@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { defaultIdAccessor, type IdAccessor } from './types';
-import { type SVGContext } from '../hooks';
-import { EventEmitter } from '../util';
+import { type SVGContext } from '../../hooks';
+import { EventEmitter } from '../../util';
+import { defaultIdAccessor, type IdAccessor } from '../types';
 
 export type ProjectorOptions = {
   idAccessor?: IdAccessor;
@@ -40,10 +40,12 @@ export abstract class Projector<NodeData, Layout, Options extends ProjectorOptio
     return this._options;
   }
 
-  refresh(dragging = false) {}
+  refresh(dragging = false) {
+    this.onRefresh(dragging);
+  }
 
-  updateData(data?: NodeData, selected?: string) {
-    this.onUpdate(data, selected);
+  updateData(data?: NodeData) {
+    this.onUpdate(data);
   }
 
   emitUpdate() {
@@ -62,7 +64,8 @@ export abstract class Projector<NodeData, Layout, Options extends ProjectorOptio
     await this.onStop();
   }
 
-  protected onUpdate(data?: NodeData, selected?: string): void {}
+  protected onRefresh(dragging = false): void {}
+  protected onUpdate(data?: NodeData): void {}
   protected async onClear(): Promise<void> {}
   protected async onStart(): Promise<void> {}
   protected async onStop(): Promise<void> {}

@@ -17,7 +17,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { createAutocompleteExtension, type AutocompleteOptions } from './autocomplete';
+import { autocompleteExtension, type AutocompleteOptions } from './autocomplete';
 import { promptReferences, type ReferencesProvider } from './references';
 
 // TODO(burdon): Handle object references.
@@ -59,6 +59,7 @@ export const Prompt = forwardRef<PromptController, PromptProps>(
         debug: true,
         autoFocus,
         extensions: [
+          autocompleteExtension({ onSubmit, onSuggest, onCancel }),
           createBasicExtensions({
             bracketMatching: false,
             lineWrapping,
@@ -66,7 +67,6 @@ export const Prompt = forwardRef<PromptController, PromptProps>(
           }),
           createThemeExtensions({ themeMode }),
           references ? promptReferences({ provider: references }) : [],
-          createAutocompleteExtension({ onSubmit, onSuggest, onCancel }),
           Prec.highest(
             keymap.of([
               {

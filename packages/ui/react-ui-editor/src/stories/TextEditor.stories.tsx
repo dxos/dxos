@@ -5,10 +5,10 @@
 import '@dxos-theme';
 
 import { javascript } from '@codemirror/lang-javascript';
-import { markdown } from '@codemirror/lang-markdown';
 import { openSearchPanel } from '@codemirror/search';
 import React from 'react';
 
+import { log } from '@dxos/log';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import {
@@ -17,16 +17,13 @@ import {
   content,
   defaultExtensions,
   global,
-  headings,
   largeWithImages,
   links,
   longText,
   names,
   renderLinkButton,
-  renderLinkTooltip,
-  str,
   text,
-} from './story-utils';
+} from './util';
 import { editorMonospace } from '../defaults';
 import {
   InputModeExtensions,
@@ -34,20 +31,18 @@ import {
   decorateMarkdown,
   folding,
   image,
-  linkTooltip,
+  listener,
   mention,
-  outliner,
   selectionState,
   staticCompletion,
-  table,
   typeahead,
 } from '../extensions';
-import { listItemToString, treeFacet } from '../extensions/outliner/tree';
+import { str } from '../testing';
 
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/TextEditor',
-  decorators: [withTheme, withLayout({ fullscreen: true })],
   render: EditorStory,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { layout: 'fullscreen' },
 };
 
@@ -107,12 +102,38 @@ export const Vim = {
 };
 
 //
-// Scrolling
+// Listener
+//
+
+export const Listener = {
+  render: () => (
+    <EditorStory
+      text={str('# Listener', '', content.footer)}
+      extensions={[
+        listener({
+          onFocus: (focusing) => {
+            log.info('listener', { focusing });
+          },
+          onChange: (text) => {
+            log.info('listener', { text });
+          },
+        }),
+      ]}
+    />
+  ),
+};
+
+//
+// Folding
 //
 
 export const Folding = {
   render: () => <EditorStory text={text} extensions={[folding()]} />,
 };
+
+//
+// Scrolling
+//
 
 export const Scrolling = {
   render: () => (
@@ -147,158 +168,6 @@ export const ScrollTo = {
       />
     );
   },
-};
-
-//
-// Markdown
-//
-
-export const Blockquote = {
-  render: () => (
-    <EditorStory
-      text={str('> Blockquote', 'continuation', content.footer)}
-      extensions={decorateMarkdown()}
-      debug='raw'
-    />
-  ),
-};
-
-export const Headings = {
-  render: () => <EditorStory text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />,
-};
-
-export const Links = {
-  render: () => <EditorStory text={str(content.links, content.footer)} extensions={[linkTooltip(renderLinkTooltip)]} />,
-};
-
-export const Image = {
-  render: () => <EditorStory text={str(content.image, content.footer)} extensions={[image()]} />,
-};
-
-export const Code = {
-  render: () => <EditorStory text={str(content.codeblocks, content.footer)} extensions={[decorateMarkdown()]} />,
-};
-
-export const Lists = {
-  render: () => (
-    <EditorStory
-      text={str(content.tasks, '', content.bullets, '', content.numbered, content.footer)}
-      extensions={[decorateMarkdown()]}
-    />
-  ),
-};
-
-//
-// Bullet List
-//
-
-export const BulletList = {
-  render: () => <EditorStory text={str(content.bullets, content.footer)} extensions={[decorateMarkdown()]} />,
-};
-
-//
-// Ordered List
-//
-
-export const OrderedList = {
-  render: () => <EditorStory text={str(content.numbered, content.footer)} extensions={[decorateMarkdown()]} />,
-};
-
-//
-// Task List
-//
-
-export const TaskList = {
-  render: () => (
-    <EditorStory text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug='raw+tree' />
-  ),
-};
-
-//
-// Outliner
-//
-
-const lists = {
-  simple: str(
-    //
-    '- [ ] A',
-    '- [ ] B',
-    '- [ ] C',
-    '- [ ] D',
-    '- [ ] E',
-    '- [ ] F',
-    '- [ ] G',
-  ),
-  nested: str(
-    //
-    '- [ ] A',
-    '  - [ ] B',
-    '- [ ] C',
-    '  - [ ] D',
-    '    - [ ] E',
-    '    - [ ] F',
-    '- [ ] G',
-  ),
-  complex: str(
-    //
-    '- [ ] A',
-    '- [ ] B',
-    'Continuation line.',
-    '- [ ] C',
-    '',
-    '- [ ] D',
-    '- [ ] E',
-    '- [ ] F',
-    '- [ ] G',
-    '',
-  ),
-};
-
-export const Outliner = {
-  render: () => (
-    <EditorStory
-      text={lists.nested}
-      extensions={[
-        //
-        decorateMarkdown({ listPaddingLeft: 8 }),
-        outliner(),
-      ]}
-      debug='raw+tree'
-      debugCustom={(view) => {
-        const tree = view.state.facet(treeFacet);
-        const lines: string[] = [];
-        tree.traverse((item) => {
-          lines.push(listItemToString(item));
-        });
-        return <pre className='p-1 text-xs text-green-800 dark:text-green-200 overflow-auto'>{lines.join('\n')}</pre>;
-      }}
-    />
-  ),
-};
-
-//
-// Table
-//
-
-export const Table = {
-  render: () => <EditorStory text={str(content.table, content.footer)} extensions={[decorateMarkdown(), table()]} />,
-};
-
-//
-// Commented out
-//
-
-export const CommentedOut = {
-  render: () => (
-    <EditorStory
-      text={str('# Commented out', '', content.comment, content.footer)}
-      extensions={[
-        decorateMarkdown(),
-        markdown(),
-        // commentBlock()
-      ]}
-    />
-  ),
 };
 
 //

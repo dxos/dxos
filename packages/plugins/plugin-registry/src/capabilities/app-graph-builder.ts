@@ -89,14 +89,14 @@ export default (context: PluginContext) =>
                     },
                   },
                   {
-                    id: `${REGISTRY_KEY}+experimental`,
+                    id: `${REGISTRY_KEY}+labs`,
                     type: 'category',
-                    data: `${REGISTRY_KEY}+experimental`,
+                    data: `${REGISTRY_KEY}+labs`,
                     properties: {
-                      label: ['experimental plugins label', { ns: REGISTRY_PLUGIN }],
+                      label: ['labs plugins label', { ns: REGISTRY_PLUGIN }],
                       icon: 'ph--flask--regular',
                       key: REGISTRY_KEY,
-                      testId: 'pluginRegistry.experimental',
+                      testId: 'pluginRegistry.labs',
                     },
                   },
                 ],
@@ -128,24 +128,28 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
-    // createExtension({
-    //   id: `${REGISTRY_PLUGIN}/plugins`,
-    //   resolver: ({ id }) => {
-    //     const manager = context.requestCapability(Capabilities.PluginManager);
-    //     const plugin = manager.plugins.find((plugin) => plugin.meta.id === id.replaceAll(':', '/'));
-    //     if (!plugin) {
-    //       return;
-    //     }
-
-    //     return {
-    //       id,
-    //       type: 'dxos.org/plugin',
-    //       data: plugin,
-    //       properties: {
-    //         label: plugin.meta.name ?? plugin.meta.id,
-    //         icon: plugin.meta.icon ?? 'ph--circle--regular',
-    //       },
-    //     };
-    //   },
-    // }),
+    createExtension({
+      id: `${REGISTRY_PLUGIN}/plugins`,
+      connector: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => (node.id === REGISTRY_ID ? Option.some(node) : Option.none())),
+            Option.map(() => {
+              const manager = context.getCapability(Capabilities.PluginManager);
+              return manager.plugins.map((plugin) => ({
+                id: plugin.meta.id.replaceAll('/', ':'),
+                type: 'dxos.org/plugin',
+                data: plugin,
+                properties: {
+                  label: plugin.meta.name ?? plugin.meta.id,
+                  icon: plugin.meta.icon ?? 'ph--circle--regular',
+                  disposition: 'hidden',
+                },
+              }));
+            }),
+            Option.getOrElse(() => []),
+          ),
+        ),
+    }),
   ]);
