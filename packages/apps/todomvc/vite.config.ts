@@ -59,14 +59,8 @@ export default defineConfig({
     ReactPlugin({
       tsDecorators: true,
       plugins: [
-        [
-          '@preact-signals/safe-react/swc',
-          {
-            // you should use `auto` mode to track only components which uses `.value` access.
-            // Can be useful to avoid tracking of server side components
-            mode: 'all',
-          },
-        ],
+        // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
+        ['@preact-signals/safe-react/swc', { mode: 'all' }],
       ],
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite

@@ -98,12 +98,8 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
               ];
 
               if (options.preactSignalTracking) {
-                yield [
-                  '@preact-signals/safe-react/swc',
-                  {
-                    mode: 'all',
-                  },
-                ];
+                // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
+                yield ['@preact-signals/safe-react/swc', { mode: 'all' }];
               }
             })(),
           ],
