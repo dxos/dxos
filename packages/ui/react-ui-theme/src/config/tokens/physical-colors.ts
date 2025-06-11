@@ -108,9 +108,9 @@ export const physicalColors: ColorsPhysicalLayer = {
     accompanyingSeries: { reflectiveRelation },
   },
   conditions: {
-    srgb: [':root'],
-    p3: ['@media (color-gamut: p3)', ':root'],
-    rec2020: ['@media (color-gamut: rec2020)', ':root'],
+    srgb: [':root, .dark'],
+    p3: ['@media (color-gamut: p3)', ':root, .dark'],
+    rec2020: ['@media (color-gamut: rec2020)', ':root, .dark'],
   },
   series: Object.entries(physicalSeries).reduce((acc: ColorsPhysicalLayer['series'], [id]) => {
     acc[id] = gamuts.reduce((acc: PhysicalSeries<Gamut & string, HelicalArcSeries>, gamut) => {

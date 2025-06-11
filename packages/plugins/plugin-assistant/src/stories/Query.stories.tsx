@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -27,7 +27,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { addTestData } from './test-data';
 import { testPlugins } from './testing';
-import { AmbientDialog, PromptBar, type PromptBarProps } from '../components';
+import { AmbientDialog, PromptBar, type PromptController, type PromptBarProps } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { createFilter, type Expression, QueryParser } from '../parser';
 import translations from '../translations';
@@ -111,9 +111,11 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     [space],
   );
 
+  const promptRef = useRef<PromptController>(null);
   const handleCancel = useCallback<NonNullable<PromptBarProps['onCancel']>>(() => {
     setAst(undefined);
     setFilter(undefined);
+    promptRef.current?.setText('');
   }, []);
 
   // TODO(burdon): Match against expression grammar.
@@ -177,19 +179,15 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
           </div>
         )}
       </div>
-      {/* TODO(burdon): Dialog currently prevent drag events. */}
       <Dialog.Root modal={false} open>
-        <AmbientDialog resizeable={false}>
-          {/* <div className='fixed bottom-8 left-1/2 -translate-x-1/2'> */}
-          <div className='w-[40rem] p-1 bg-groupSurface border border-separator rounded'>
-            <PromptBar
-              placeholder={t('search input placeholder')}
-              extensions={extensions}
-              onSubmit={handleSubmit}
-              onCancel={handleCancel}
-            />
-          </div>
-          {/* </div> */}
+        <AmbientDialog resizeable={false} onEscape={handleCancel}>
+          <PromptBar
+            ref={promptRef}
+            placeholder={t('search input placeholder')}
+            extensions={extensions}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+          />
         </AmbientDialog>
       </Dialog.Root>
     </div>

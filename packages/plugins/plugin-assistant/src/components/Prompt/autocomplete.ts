@@ -38,8 +38,9 @@ export type AutocompleteOptions = {
  * Creates an autocomplete extension that shows inline suggestions.
  * Pressing Tab will complete the suggestion.
  */
-export const createAutocompleteExtension = ({ onSubmit, onSuggest, onCancel }: AutocompleteOptions): Extension => {
-  const suggestionPlugin = ViewPlugin.fromClass(
+// TODO(burdon): Move to react-ui-editor.
+export const autocompleteExtension = ({ onSubmit, onSuggest, onCancel }: AutocompleteOptions): Extension => {
+  const suggest = ViewPlugin.fromClass(
     class {
       _decorations: DecorationSet;
       _currentSuggestion: string | null = null;
@@ -108,21 +109,20 @@ export const createAutocompleteExtension = ({ onSubmit, onSuggest, onCancel }: A
   );
 
   return [
-    suggestionPlugin,
+    suggest,
     EditorView.theme({
       '.cm-inline-suggestion': {
         opacity: 0.4,
       },
     }),
 
-    // Accept the current suggestion.
     Prec.highest(
       keymap.of([
         {
           key: 'Tab',
           preventDefault: true,
           run: (view) => {
-            const plugin = view.plugin(suggestionPlugin);
+            const plugin = view.plugin(suggest);
             return plugin?.completeSuggestion(view) ?? false;
           },
         },
@@ -135,7 +135,7 @@ export const createAutocompleteExtension = ({ onSubmit, onSuggest, onCancel }: A
               return false;
             }
 
-            const plugin = view.plugin(suggestionPlugin);
+            const plugin = view.plugin(suggest);
             return plugin?.completeSuggestion(view) ?? false;
           },
         },
@@ -183,6 +183,7 @@ export const createAutocompleteExtension = ({ onSubmit, onSuggest, onCancel }: A
           key: 'Escape',
           preventDefault: true,
           run: (view) => {
+            console.log('Escape');
             // Clear the entire document.
             view.dispatch({
               changes: {
