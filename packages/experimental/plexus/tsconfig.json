@@ -9,29 +9,7 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../common/graph"
-    },
-    {
-      "path": "../../common/node-std"
-    },
-    {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../ui/react-ui-graph"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
-    }
-  ],
+  "references": [],
   "ts-node": {
     "compilerOptions": {
       "module": "CommonJS"
