@@ -25,7 +25,7 @@ const meta: Meta<typeof Outliner> = {
     const space = useSpace();
     const text = useMemo(() => space?.db.add(_text), [space, _text]);
     if (text) {
-      return <Outliner text={text} />;
+      return <Outliner id={text.id} text={text} />;
     }
   }),
   decorators: [
