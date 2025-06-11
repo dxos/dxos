@@ -286,6 +286,9 @@
       "@dxos/react-ui": [
         "packages/ui/react-ui/src/index.ts"
       ],
+      "@dxos/react-ui/testing": [
+        "packages/ui/react-ui/src/testing/index.ts"
+      ],
       "@dxos/react-ui-attention": [
         "packages/ui/react-ui-attention/src/index.ts"
       ],

@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { AIServiceEdgeClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
-import { processTranscriptMessage } from '@dxos/assistant';
+import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
@@ -19,6 +19,8 @@ import { faker } from '@dxos/random';
 import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
+import { FunctionExecutor } from '@dxos/functions';
+import { ServiceContext } from '@dxos/client-services';
 
 // TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
 export const TestItem = Schema.Struct({
@@ -99,6 +101,8 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
   });
 
+  executor = new FunctionExecutor(new ServiceContext().setServices({ ai: { client: this.aiService } }));
+
   space: Space | undefined;
   currentMessage: number = 0;
   transcriptMessages: DataType.Message[] = [];
@@ -126,11 +130,9 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     this.currentMessage = this.currentMessage % this.transcriptMessages.length;
 
     const { message: enhancedMessage } = await processTranscriptMessage({
-      message,
-      aiService: this.aiService,
-      context: {
-        objects,
-      },
+      input: { message },
+      executor: this.executor,
+      function: extractionAnthropicFn,
     });
 
     return enhancedMessage;

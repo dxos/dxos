@@ -7,7 +7,7 @@ import { type Schema } from 'effect';
 import { AIServiceEdgeClient, type AIServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { processTranscriptMessage } from '@dxos/assistant';
+import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
 import { Filter, getSchemaTypename, Query, type BaseEchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -25,6 +25,8 @@ import { DataType } from '@dxos/schema';
 import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
 import { MeetingType, type MeetingSettingsProps } from '../types';
+import { FunctionExecutor } from '@dxos/functions';
+import { ServiceContext } from '@dxos/client-services';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
@@ -101,18 +103,22 @@ type EntityExtractionEnricherFactoryOptions = {
 };
 
 const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
+  const executor = new FunctionExecutor(new ServiceContext().setServices({ ai: { client: aiClient } }));
+
   return async (message: DataType.Message) => {
     const { objects } = await space.db
       .query(Query.select(Filter.or(...contextTypes.map((s) => Filter.type(s as Schema.Schema<BaseEchoObject>)))))
       .run();
+
     log.info('context', { objects });
 
     const { message: enhancedMessage, timeElapsed } = await processTranscriptMessage({
-      aiService: aiClient,
-      message,
-      context: {
-        objects: await Promise.all(objects.map((o) => processContextObject(o))),
+      input: {
+        message,
+        objects: await Promise.all(objects.map((obj) => processContextObject(obj))),
       },
+      function: extractionAnthropicFn,
+      executor,
       options: { timeout: ENTITY_EXTRACTOR_TIMEOUT, fallbackToRaw: true },
     });
 
