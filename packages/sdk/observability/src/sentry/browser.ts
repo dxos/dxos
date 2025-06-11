@@ -58,10 +58,12 @@ export const init = (options: InitOptions) => {
       },
     });
 
-    TRACE_PROCESSOR.remoteMetrics.registerProcessor(metrics);
-    TRACE_PROCESSOR.remoteTracing.registerProcessor({
-      startSpan: startInactiveSpan,
-    });
+    if (options.tracing) {
+      TRACE_PROCESSOR.remoteMetrics.registerProcessor(metrics);
+      TRACE_PROCESSOR.remoteTracing.registerProcessor({
+        startSpan: startInactiveSpan,
+      });
+    }
 
     Object.entries(options.properties ?? {}).forEach(([key, value]) => {
       setTag(key, value);
