@@ -215,9 +215,12 @@ export const sanitizeObjects = async (
 
       return create(entry.schema, data);
     })
-    .filter((object) => !existingIds.has(object.id));
+    .filter((object) => !existingIds.has(object.id)); // TODO(dmaretskyi): This dissallows updating existing objects.
+
+  console.log('everything', await db.query(Filter.everything()).run());
 
   const { objects } = await db.query(Query.select(Filter.ids(...existingIds))).run();
+  log.info('objects', { objects, existingIds });
   const missing = Array.from(existingIds).filter((id) => !objects.some((object) => object.id === id));
   if (missing.length > 0) {
     throw new Error(`Object IDs do not point to existing objects: ${missing.join(', ')}`);

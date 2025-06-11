@@ -19,6 +19,7 @@ import { EchoClient } from '../client';
 import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Filter, Query } from '../query';
+import type { Schema } from 'effect';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
@@ -29,6 +30,7 @@ type OpenDatabaseOptions = {
 type PeerOptions = {
   kv?: LevelDB;
   indexing?: Partial<EchoHostIndexingConfig>;
+  types?: Schema.Schema.AnyNoContext[];
 };
 
 export class EchoTestBuilder extends Resource {
@@ -55,6 +57,9 @@ export class EchoTestBuilder extends Resource {
   async createDatabase(options: PeerOptions = {}) {
     const peer = await this.createPeer(options);
     const db = await peer.createDatabase(PublicKey.random());
+    if (options.types) {
+      db.graph.schemaRegistry.addSchema(options.types);
+    }
     return {
       peer,
       host: peer.host,

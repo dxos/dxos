@@ -15,8 +15,9 @@ import { BlueprintMachine } from './machine';
 import { TEST_EMAILS } from './test-data';
 import { createExaTool } from '../research/exa';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { DataTypes } from '@dxos/schema';
+import { DataType, DataTypes } from '@dxos/schema';
 import { createGraphWriteTool } from '../research';
+import { create } from '@dxos/echo-schema';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
 
@@ -94,12 +95,21 @@ describe('Blueprint', () => {
     await machine.runToCompletion({ aiService, input: TEST_EMAILS[0] });
   });
 
-  test.only('research', { timeout: 60_000 }, async () => {
+  test.only('research', { timeout: 120_000 }, async () => {
     const builder = await new EchoTestBuilder().open();
-    const { db } = await builder.createDatabase({ indexing: { vector: true } });
+    const { db } = await builder.createDatabase({ indexing: { vector: true }, types: DataTypes });
+
+    const exaAi = db.add(
+      create(DataType.Organization, {
+        name: 'Exa',
+        website: 'https://exa.ai',
+        description: 'An AI-powered search engine company building search infrastructure for AI agents',
+      }),
+    );
+    await db.flush({ indexes: true });
 
     const blueprint = BlueprintBuilder.begin()
-      .step('Research who founded exa.ai')
+      .step('Research founders or organization')
       .withTool(createExaTool({ apiKey: EXA_API_KEY }))
       .step('Add researched data to the graph')
       .withTool(createGraphWriteTool({ db, schemaTypes: DataTypes }))
@@ -107,6 +117,6 @@ describe('Blueprint', () => {
 
     const machine = new BlueprintMachine(blueprint);
     setConsolePrinter(machine, true);
-    await machine.runToCompletion({ aiService });
+    await machine.runToCompletion({ aiService, input: exaAi });
   });
 });
