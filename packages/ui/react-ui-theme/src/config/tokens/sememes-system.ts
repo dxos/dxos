@@ -21,100 +21,65 @@ const getMapValue = <T>(map: Record<string, T>, key: string, defaultValue: () =>
 type Sememe = ColorSememes[string];
 
 const applyAlpha = (sememe: Sememe, alpha: number): Sememe => {
-  return {
-    light: [sememe.light![0], `${sememe.light![1]}/${alpha}`],
-    dark: [sememe.dark![0], `${sememe.dark![1]}/${alpha}`],
-  };
+  if (alpha >= 1) {
+    return sememe;
+  } else {
+    return {
+      light: [sememe.light![0], `${sememe.light![1]}/${alpha}`],
+      dark: [sememe.dark![0], `${sememe.dark![1]}/${alpha}`],
+    };
+  }
 };
 
 const STEPS = 8;
 
 const DARK_MIN = 850;
 const DARK_MAX = 700;
-const darkCadence = (step: number) => Math.floor(DARK_MIN + (DARK_MAX - DARK_MIN) * (step / STEPS));
+const darkElevationCadence = (step: number) => Math.floor(DARK_MIN + (DARK_MAX - DARK_MIN) * (step / STEPS));
 
 const LIGHT_MIN = 10;
 const LIGHT_MAX = 180;
-const lightCadence = (step: number) => Math.floor(LIGHT_MIN + (LIGHT_MAX - LIGHT_MIN) * (step / STEPS));
+const lightElevationCadence = (step: number) => Math.floor(LIGHT_MIN + (LIGHT_MAX - LIGHT_MIN) * (step / STEPS));
 
-/**
- * Surface cadence sememes (in contrast-order)
- */
-const surface: Record<string, Sememe> = {
-  '0': {
-    light: ['neutral', lightCadence(0)],
-    dark: ['neutral', darkCadence(0)],
-  },
-  '10': {
-    light: ['neutral', lightCadence(0.8)],
-    dark: ['neutral', darkCadence(0.8)],
-  },
-  '20': {
-    light: ['neutral', lightCadence(1.6)],
-    dark: ['neutral', darkCadence(1.6)],
-  },
-  '30': {
-    light: ['neutral', lightCadence(2.8)],
-    dark: ['neutral', darkCadence(3)],
-  },
-  '35': {
-    light: ['neutral', lightCadence(3.5)],
-    dark: ['neutral', darkCadence(3.5)],
-  },
-  '40': {
-    light: ['neutral', lightCadence(4)],
-    dark: ['neutral', darkCadence(4)],
-  },
-  '50': {
-    light: ['neutral', lightCadence(5)],
-    dark: ['neutral', darkCadence(5)],
-  },
-  '60': {
-    light: ['neutral', lightCadence(6)],
-    dark: ['neutral', darkCadence(6)],
-  },
-  '70': {
-    light: ['neutral', lightCadence(7)],
-    dark: ['neutral', darkCadence(7)],
-  },
-  '80': {
-    light: ['neutral', lightCadence(8)],
-    dark: ['neutral', darkCadence(8)],
-  },
-
-  // TODO(burdon): Why are these the same for light/dark?
-  '400': {
-    light: ['neutral', 400],
-    dark: ['neutral', 400],
-  },
-  '450': {
-    light: ['neutral', 450],
-    dark: ['neutral', 450],
-  },
-};
+const elevationCadence = (lightDp: number, darkDp: number = lightDp, alpha: number = 1): Sememe =>
+  applyAlpha(
+    {
+      light: ['neutral', lightElevationCadence(lightDp)],
+      dark: ['neutral', darkElevationCadence(darkDp)],
+    },
+    alpha,
+  );
 
 export const systemSememes = {
   //
   // Surfaces (bg-)
   //
+  'surface-0': elevationCadence(0),
+  'surface-10': elevationCadence(0.8),
+  'surface-20': elevationCadence(1.6),
+  'surface-30': elevationCadence(2.8, 3),
+  'surface-35': elevationCadence(3.5),
+  'surface-40': elevationCadence(4),
+  'surface-50': elevationCadence(5),
+  'surface-60': elevationCadence(6),
+  'surface-70': elevationCadence(7),
+  'surface-80': elevationCadence(8),
 
-  'surface-0': surface['0'],
-  'surface-10': surface['10'],
-  'surface-10t': applyAlpha(surface['10'], 0.65),
-  'surface-20': surface['20'],
-  'surface-30': surface['30'],
-  'surface-35': surface['35'],
-  'surface-40': surface['40'],
-  'surface-50': surface['50'],
-  'surface-60': surface['60'],
-  'surface-70': surface['70'],
-  'surface-80': surface['80'],
+  // Screen overlay for modal dialogs.
+  scrimSurface: elevationCadence(0.8, 0.8, 0.65),
 
-  // TODO(burdon): Confusing mix of -NN with light and dark valence (above), and -400/450 that have the same value.
-  //   I assume 10,20,30, etc. are on a nominal 0-100 "intensity" range and 400/450 are in the 0-1000 light-to-darkrange?
-  'surface-400': surface['400'],
-  'surface-450': surface['450'],
-  'surface-450t': applyAlpha(surface['450'], 0.1),
+  'surface-400': {
+    light: ['neutral', 400],
+    dark: ['neutral', 400],
+  },
+  'surface-450': {
+    light: ['neutral', 450],
+    dark: ['neutral', 450],
+  },
+  hoverOverlay: {
+    light: ['neutral', '450/.1'],
+    dark: ['neutral', '450/.1'],
+  },
 
   //
   // Special surfaces.
@@ -133,18 +98,8 @@ export const systemSememes = {
     dark: ['primary', 500],
   },
 
-  //
-  // Special surfaces (intentionally not part of contrast-order cadence).
-  //
-
-  ['deckSurface' as const]: {
-    light: surface['60'].light,
-    dark: surface['10'].dark,
-  },
-  ['inverseSurface' as const]: {
-    light: ['neutral', darkCadence(2)],
-    dark: ['neutral', lightCadence(2)],
-  },
+  ['deckSurface' as const]: elevationCadence(6, 0.8),
+  ['inverseSurface' as const]: elevationCadence(2),
 
   //
   // Text (text-)
@@ -194,12 +149,12 @@ type SememeName = keyof typeof systemSememes;
 /**
  * Alias map.
  */
-const aliasDefs: Record<string, { root?: SememeName; attention?: SememeName }> = {
+const aliasDefs: Record<string, Record<string, SememeName>> = {
   // Base surface for text (e.g., Document, Table, Sheet.)
-  baseSurface: { root: 'surface-20', attention: 'surface-0' },
+  baseSurface: { root: 'surface-20' },
 
   // Currented / selected items, other surfaces needing special contrast against baseSurface. TODO(thure): Rename.
-  groupSurface: { root: 'surface-50', attention: 'surface-40' },
+  groupSurface: { root: 'surface-50' },
 
   // Main sidebar panel.
   sidebarSurface: { root: 'surface-30' },
@@ -208,32 +163,22 @@ const aliasDefs: Record<string, { root?: SememeName; attention?: SememeName }> =
   modalSurface: { root: 'surface-50' },
 
   // Plank header.
-  headerSurface: { root: 'surface-30', attention: 'surface-20' },
+  headerSurface: { root: 'surface-30' },
 
   // Forms, cards, etc.
-  cardSurface: { root: 'surface-30', attention: 'surface-20' },
+  cardSurface: { root: 'surface-30' },
 
   // Toolbars, table/sheet headers, etc.
-  toolbarSurface: { root: 'surface-30', attention: 'surface-20' },
+  toolbarSurface: { root: 'surface-30' },
 
-  // Mouse-over hover.
-  hoverSurface: { root: 'surface-70', attention: 'surface-60' },
-
-  // Screen overlay for modal dialogs.
-  scrimSurface: { root: 'surface-10t' },
-
-  //
-  // TODO(burdon): Why are these here, but not deck, text, above? Are these all surfaces?
-  //
+  // Opaque hover
+  hoverSurface: { root: 'surface-70' },
 
   attention: { root: 'surface-10' },
 
   currentRelated: { root: 'accentSurfaceRelated' },
 
-  // TODO(burdon): Different from hoverSurface?
-  hoverOverlay: { root: 'surface-450t' },
-
-  input: { root: 'surface-35', attention: 'surface-35' },
+  input: { root: 'surface-35' },
 
   separator: { root: 'surface-50' },
   subduedSeparator: { root: 'surface-30' },
