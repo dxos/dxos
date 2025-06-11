@@ -32,12 +32,9 @@ export default () =>
     createResolver({
       intent: OutlinerAction.CreateTask,
       resolve: ({ text }) => {
-        const task = live(DataType.Task, {
-          text,
-        });
         return {
           data: {
-            object: task,
+            object: live(DataType.Task, { text }),
           },
         };
       },

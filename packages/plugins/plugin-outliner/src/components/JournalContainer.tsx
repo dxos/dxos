@@ -4,6 +4,9 @@
 
 import React from 'react';
 
+import { StackItem } from '@dxos/react-ui-stack';
+
+import { Journal } from './Journal';
 import { type JournalType } from '../types';
 
 export type JournalContainerProps = {
@@ -12,5 +15,11 @@ export type JournalContainerProps = {
 };
 
 export const JournalContainer = ({ role, journal }: JournalContainerProps) => {
-  return <div>JournalContainer</div>;
+  return (
+    <StackItem.Content role={role} classNames='container-max-width'>
+      <Journal journal={journal} />
+    </StackItem.Content>
+  );
 };
+
+export default JournalContainer;

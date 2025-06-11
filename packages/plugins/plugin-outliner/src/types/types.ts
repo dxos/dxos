@@ -27,13 +27,6 @@ export const OutlineType = Schema.Struct({
 
 export interface OutlineType extends Schema.Schema.Type<typeof OutlineType> {}
 
-export const createOutline = (name?: string): OutlineType => {
-  return live(OutlineType, {
-    name,
-    content: makeRef(live(DataType.Text, { content: '' })),
-  });
-};
-
 //
 // Journal
 //
@@ -61,6 +54,13 @@ export const JournalType = Schema.Struct({
 );
 
 export interface JournalType extends Schema.Schema.Type<typeof JournalType> {}
+
+export const createOutline = (name?: string): OutlineType => {
+  return live(OutlineType, {
+    name,
+    content: makeRef(live(DataType.Text, { content: '' })),
+  });
+};
 
 export const createJournalEntry = (date = new Date()): JournalEntryType => {
   return live(JournalEntryType, {

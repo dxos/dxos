@@ -6477,6 +6477,9 @@ importers:
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object

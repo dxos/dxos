@@ -4,6 +4,9 @@
 
 import React from 'react';
 
+import { StackItem } from '@dxos/react-ui-stack';
+
+import { Outliner } from './Outliner';
 import { type OutlineType } from '../types';
 
 export type OutlinerContainerProps = {
@@ -12,5 +15,11 @@ export type OutlinerContainerProps = {
 };
 
 export const OutlinerContainer = ({ role, outline }: OutlinerContainerProps) => {
-  return <div>OutlinerContainer</div>;
+  return (
+    <StackItem.Content role={role} classNames='container-max-width'>
+      <Outliner outline={outline} />
+    </StackItem.Content>
+  );
 };
+
+export default OutlinerContainer;
