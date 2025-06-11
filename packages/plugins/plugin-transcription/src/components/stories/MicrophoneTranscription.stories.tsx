@@ -53,7 +53,11 @@ const RECORDER_CONFIG = {
   interval: 200,
 };
 
-type DefaultStoryProps = {
+const aiService = new AIServiceEdgeClient({
+  endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+});
+
+type StoryProps = {
   detectSpeaking?: boolean;
   transcriberConfig: TranscriberParams['config'];
   recorderConfig: MediaStreamRecorderParams['config'];
@@ -67,7 +71,7 @@ const DefaultStory = ({
   transcriberConfig,
   recorderConfig,
   audioConstraints,
-}: DefaultStoryProps) => {
+}: StoryProps) => {
   const [running, setRunning] = useState(false);
 
   // Audio.

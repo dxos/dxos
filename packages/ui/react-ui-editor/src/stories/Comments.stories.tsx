@@ -9,15 +9,17 @@ import React, { type FC } from 'react';
 
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { EditorStory, str, content, longText } from './story-utils';
+import { EditorStory, content, longText } from './util';
 import { annotations, comments, createExternalCommentSync } from '../extensions';
+import { str } from '../testing';
 import { type Comment } from '../types';
 import { createRenderer } from '../util';
 
 const meta: Meta<typeof EditorStory> = {
-  title: 'ui/react-ui-editor/TextEditor',
+  title: 'ui/react-ui-editor/Comments',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: EditorStory,
   parameters: { layout: 'fullscreen' },
@@ -52,14 +54,11 @@ export const Comments = {
             onSelect: (state) => {
               const debug = false;
               if (debug) {
-                console.log(
-                  'update',
-                  JSON.stringify({
-                    comments: state.comments.length,
-                    active: state.selection.current?.slice(0, 8),
-                    closest: state.selection.closest?.slice(0, 8),
-                  }),
-                );
+                log.info('update', {
+                  comments: state.comments.length,
+                  active: state.selection.current?.slice(0, 8),
+                  closest: state.selection.closest?.slice(0, 8),
+                });
               }
             },
           }),

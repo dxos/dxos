@@ -12,5 +12,5 @@ export const meta: PluginMeta = {
   description: 'Hierarchical note editor.',
   icon: 'ph--tree-structure--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-outliner',
-  tags: ['experimental'],
+  tags: ['labs'],
 };

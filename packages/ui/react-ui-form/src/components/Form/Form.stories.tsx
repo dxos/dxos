@@ -11,13 +11,13 @@ import React, { useCallback, useState } from 'react';
 import { ContactType } from '@dxos/client/testing';
 import { type BaseObject, Expando, Format, getDXN, Ref, type TypeAnnotation } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
+import { withSurfaceVariantsLayout } from '@dxos/react-ui/testing';
 import { Testing } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SelectInput } from './Defaults';
 import { Form, type FormProps } from './Form';
 import translations from '../../translations';
-import { TestLayout, TestPanel } from '../testing';
 
 const AddressSchema = Schema.Struct({
   street: Schema.optional(Schema.String.annotations({ title: 'Street' })),
@@ -45,22 +45,28 @@ const DefaultStory = <T extends BaseObject>({ schema, values: initialValues, ...
     setValues(values);
   }, []);
 
-  return (
-    <TestLayout json={{ values, schema: schema.ast.toJSON() }}>
-      <TestPanel>
-        <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
-      </TestPanel>
-    </TestLayout>
-  );
+  return <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />;
+  // TODO(thure): Restore TestLayout uses.
+  // <TestLayout json={{ values, schema: schema.ast.toJSON() }}>
+  // <TestPanel>
+  // <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
+  // </TestPanel>
+  // </TestLayout>
 };
 
 const meta: Meta<StoryProps<any>> = {
   title: 'ui/react-ui-form/Form',
   component: Form,
   render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true }), withTheme],
+  decorators: [withSurfaceVariantsLayout(), withTheme],
   parameters: {
     translations,
+  },
+  argTypes: {
+    readonly: {
+      control: 'boolean',
+      description: 'Readonly',
+    },
   },
 };
 
@@ -78,6 +84,7 @@ export const Default: Story<TestType> = {
         zip: '11205',
       },
     },
+    readonly: false,
   },
 };
 
@@ -88,6 +95,7 @@ export const Organization: Story<Testing.Organization> = {
       name: 'DXOS',
       // website: 'https://dxos.org',
     },
+    readonly: false,
   },
 };
 
@@ -99,6 +107,7 @@ export const OrganizationAutoSave: Story<Testing.Organization> = {
       // website: 'https://dxos.org',
     },
     autoSave: true,
+    readonly: false,
   },
 };
 
@@ -137,33 +146,51 @@ type ShapeType = Schema.Schema.Type<typeof ShapeSchema>;
 
 type DiscriminatedUnionStoryProps = FormProps<ShapeType>;
 
-const DiscriminatedUnionStory = ({ values: initialValues }: DiscriminatedUnionStoryProps) => {
+const DiscriminatedUnionStory = ({ values: initialValues, readonly }: DiscriminatedUnionStoryProps) => {
   const [values, setValues] = useState(initialValues);
   const handleSave = useCallback<NonNullable<FormProps<ShapeType>['onSave']>>((values) => {
     setValues(values);
   }, []);
 
   return (
-    <TestLayout json={{ values, schema: ShapeSchema.ast.toJSON() }}>
-      <TestPanel>
-        <Form<ShapeType>
-          schema={ShapeSchema}
-          values={values}
-          onSave={handleSave}
-          Custom={{
-            ['shape.type' as const]: (props) => (
-              <SelectInput
-                {...props}
-                options={['circle', 'square'].map((value) => ({
-                  value,
-                  label: value,
-                }))}
-              />
-            ),
-          }}
-        />
-      </TestPanel>
-    </TestLayout>
+    <Form<ShapeType>
+      schema={ShapeSchema}
+      values={values}
+      onSave={handleSave}
+      Custom={{
+        ['shape.type' as const]: (props) => (
+          <SelectInput
+            {...props}
+            options={['circle', 'square'].map((value) => ({
+              value,
+              label: value,
+            }))}
+          />
+        ),
+      }}
+      readonly={readonly}
+    />
+    // <TestLayout json={{ values, schema: ShapeSchema.ast.toJSON() }}>
+    //   <TestPanel>
+    //     <Form<ShapeType>
+    //       schema={ShapeSchema}
+    //       values={values}
+    //       onSave={handleSave}
+    //       Custom={{
+    //         ['shape.type' as const]: (props) => (
+    //           <SelectInput
+    //             {...props}
+    //             options={['circle', 'square'].map((value) => ({
+    //               value,
+    //               label: value,
+    //             }))}
+    //           />
+    //         ),
+    //       }}
+    //       readonly={readonly}
+    //     />
+    //   </TestPanel>
+    // </TestLayout>
   );
 };
 
@@ -176,6 +203,7 @@ export const DiscriminatedShape: StoryObj<DiscriminatedUnionStoryProps> = {
         radius: 5,
       },
     },
+    readonly: false,
   },
 };
 
@@ -186,18 +214,19 @@ const ArraysSchema = Schema.Struct({
 
 type ArraysType = Schema.Schema.Type<typeof ArraysSchema>;
 
-const ArraysStory = ({ values: initialValues }: FormProps<ArraysType>) => {
+const ArraysStory = ({ values: initialValues, readonly }: FormProps<ArraysType>) => {
   const [values, setValues] = useState(initialValues);
   const handleSave = useCallback<NonNullable<FormProps<ArraysType>['onSave']>>((values) => {
     setValues(values);
   }, []);
 
   return (
-    <TestLayout json={{ values, schema: ArraysSchema.ast.toJSON() }}>
-      <TestPanel>
-        <Form<ArraysType> schema={ArraysSchema} values={values} onSave={handleSave} />
-      </TestPanel>
-    </TestLayout>
+    <Form<ArraysType> schema={ArraysSchema} values={values} onSave={handleSave} readonly={readonly} />
+    // <TestLayout json={{ values, schema: ArraysSchema.ast.toJSON() }}>
+    //     <TestPanel>
+    //       <Form<ArraysType> schema={ArraysSchema} values={values} onSave={handleSave} readonly={readonly} />
+    //     </TestPanel>
+    //   </TestLayout>
   );
 };
 
@@ -208,6 +237,7 @@ export const Arrays: StoryObj<FormProps<ArraysType>> = {
       names: ['Alice', 'Bob'],
       addresses: [],
     },
+    readonly: false,
   },
 };
 
@@ -219,18 +249,19 @@ const ColorSchema = Schema.Struct({
 
 type ColorType = Schema.Schema.Type<typeof ColorSchema>;
 
-const EnumStory = ({ values: initialValues }: FormProps<ColorType>) => {
+const EnumStory = ({ values: initialValues, readonly }: FormProps<ColorType>) => {
   const [values, setValues] = useState(initialValues);
   const handleSave = useCallback<NonNullable<FormProps<ColorType>['onSave']>>((values) => {
     setValues(values);
   }, []);
 
   return (
-    <TestLayout json={{ values, schema: ColorSchema.ast.toJSON() }}>
-      <TestPanel>
-        <Form<ColorType> schema={ColorSchema} values={values} onSave={handleSave} />
-      </TestPanel>
-    </TestLayout>
+    <Form<ColorType> schema={ColorSchema} values={values} onSave={handleSave} readonly={readonly} />
+    // <TestLayout json={{ values, schema: ColorSchema.ast.toJSON() }}>
+    //     <TestPanel>
+    //       <Form<ColorType> schema={ColorSchema} values={values} onSave={handleSave} readonly={readonly} />
+    //     </TestPanel>
+    //   </TestLayout>
   );
 };
 
@@ -240,6 +271,7 @@ export const Enum: StoryObj<FormProps<ColorType>> = {
     values: {
       color: 'red',
     },
+    readonly: false,
   },
 };
 
@@ -250,14 +282,14 @@ const RefSchema = Schema.Struct({
   unknownExpando: Schema.optional(Ref(Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' })),
 });
 
-const RefStory = ({ values: initialValues }: FormProps<any>) => {
+const contact1 = live(ContactType, { identifiers: [] });
+const contact2 = live(ContactType, { identifiers: [] });
+
+const RefStory = ({ values: initialValues, readonly }: FormProps<any>) => {
   const [values, setValues] = useState(initialValues);
   const handleSave = useCallback<NonNullable<FormProps<any>['onSave']>>((values) => {
     setValues(values);
   }, []);
-
-  const contact1 = live(ContactType, { identifiers: [] });
-  const contact2 = live(ContactType, { identifiers: [] });
 
   const onQueryRefOptions = useCallback((typeInfo: TypeAnnotation) => {
     switch (typeInfo.typename) {
@@ -272,15 +304,31 @@ const RefStory = ({ values: initialValues }: FormProps<any>) => {
   }, []);
 
   return (
-    <TestLayout json={{ values, schema: RefSchema.ast.toJSON() }}>
-      <TestPanel>
-        <Form schema={RefSchema} values={values} onSave={handleSave} onQueryRefOptions={onQueryRefOptions} />
-      </TestPanel>
-    </TestLayout>
+    <Form
+      schema={RefSchema}
+      values={values}
+      onSave={handleSave}
+      onQueryRefOptions={onQueryRefOptions}
+      readonly={readonly}
+    />
+    // <TestLayout json={{ values, schema: RefSchema.ast.toJSON() }}>
+    //   <TestPanel>
+    //     <Form
+    //       schema={RefSchema}
+    //       values={values}
+    //       onSave={handleSave}
+    //       onQueryRefOptions={onQueryRefOptions}
+    //       readonly={readonly}
+    //     />
+    //   </TestPanel>
+    // </TestLayout>
   );
 };
 
 export const Refs: StoryObj<FormProps<ContactType>> = {
   render: RefStory,
-  args: { values: {} },
+  args: {
+    values: { refArray: [Ref.make(contact1), Ref.make(contact2)] } as any,
+    readonly: false,
+  },
 };

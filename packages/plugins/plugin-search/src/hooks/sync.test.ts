@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
-import { Expando } from '@dxos/echo-schema';
+import { Expando, Filter } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
@@ -29,7 +29,7 @@ describe('Search', () => {
       return space.db.add(live(Expando, { title: faker.lorem.sentence(), content }));
     });
 
-    const { objects } = await space.db.query().run();
+    const { objects } = await space.db.query(Filter.everything()).run();
     const results = filterObjectsSync(objects, new RegExp(match, 'i'));
     expect(results).to.have.length(1);
   });

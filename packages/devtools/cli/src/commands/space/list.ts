@@ -9,6 +9,7 @@ import { mapSpaces, printSpaces, TABLE_FLAGS } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
+import { Filter } from '@dxos/echo-schema';
 
 import { BaseCommand } from '../../base';
 
@@ -67,7 +68,7 @@ export default class List extends BaseCommand<typeof List> {
           update.emit();
         },
       });
-      const sub2 = space.db.query().subscribe(() => {
+      const sub2 = space.db.query(Filter.everything()).subscribe(() => {
         update.emit();
       });
       return {

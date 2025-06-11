@@ -13,7 +13,7 @@ export default [
         'object name placeholder': 'New channel',
       },
       [THREAD_PLUGIN]: {
-        'plugin name': 'Threads',
+        'plugin name': 'Chat',
         'channel title label': 'Title',
         'message placeholder': 'Reply…',
         'activity message': 'Processing…',

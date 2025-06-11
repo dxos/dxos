@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { createIdFromSpaceKey, SpaceDocVersion, type DatabaseDirectory } from '@dxos/echo-protocol';
-import { Expando, ObjectId, Ref } from '@dxos/echo-schema';
+import { Expando, Filter, ObjectId, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -249,7 +249,7 @@ describe('CoreDatabase', () => {
 
       await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
 
-      await db.query({ id: obj.id }).first();
+      await db.query(Filter.ids(obj.id)).first();
     });
 
     test('multiple object update', async () => {
@@ -278,7 +278,7 @@ describe('CoreDatabase', () => {
 
       objectsToAdd.forEach((o) => addObjectToDoc(newRootDocHandle, o));
       for (const obj of loadedLinks) {
-        await db.query({ id: obj.id }).first();
+        await db.query(Filter.ids(obj.id)).first();
       }
       for (const obj of partiallyLoadedLinks) {
         db.getObjectById(obj.id);
@@ -318,7 +318,7 @@ describe('CoreDatabase', () => {
       {
         const testPeer = await testBuilder.createPeer({ kv });
         const db = await testPeer.openDatabase(spaceKey, rootUrl);
-        await db.query({ id: objectId }).first();
+        await db.query(Filter.ids(objectId)).first();
         const object = db.getObjectById(objectId);
         expect(object).not.to.be.undefined;
         expect((object as any).title).to.eq('first object');
@@ -328,7 +328,7 @@ describe('CoreDatabase', () => {
     test('load object', async () => {
       const object = createExpando({ title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(object);
-      await db.query({ id: object.id }).first();
+      await db.query(Filter.ids(object.id)).first();
       const loadedObject = db.getObjectById(object.id);
       expect(loadedObject).to.deep.eq(object);
     });

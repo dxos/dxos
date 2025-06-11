@@ -15,6 +15,7 @@ import {
 import { Event } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { type ObjectId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import type { Blueprint, BlueprintStep } from './blueprint';
 import { AISession } from '../session';
@@ -46,6 +47,9 @@ type ExecutionOptions = {
   input?: unknown;
 };
 
+/**
+ *
+ */
 export class BlueprintMachine {
   public readonly begin = new Event<void>();
   public readonly end = new Event<void>();
@@ -58,15 +62,18 @@ export class BlueprintMachine {
 
   state: BlueprintMachineState = structuredClone(INITIAL_STATE);
 
-  async runToCompletion(opts: ExecutionOptions): Promise<void> {
+  async runToCompletion(options: ExecutionOptions): Promise<void> {
+    log.info('runToCompletion', options);
+
     this.begin.emit();
     let firstStep = true;
     while (this.state.state !== 'done') {
-      const input = firstStep ? opts.input : undefined;
+      const input = firstStep ? options.input : undefined;
+
       firstStep = false;
       this.state = await this._execStep(this.state, {
         input,
-        aiService: opts.aiService,
+        aiService: options.aiService,
       });
 
       this.stepComplete.emit(this.blueprint.steps.find((step) => step.id === this.state.trace.at(-1)?.stepId)!);
@@ -79,7 +86,7 @@ export class BlueprintMachine {
     this.end.emit();
   }
 
-  private async _execStep(state: BlueprintMachineState, opts: ExecutionOptions): Promise<BlueprintMachineState> {
+  private async _execStep(state: BlueprintMachineState, options: ExecutionOptions): Promise<BlueprintMachineState> {
     const prevStep = this.blueprint.steps.findIndex((step) => step.id === this.state.trace.at(-1)?.stepId);
     if (prevStep === this.blueprint.steps.length - 1) {
       throw new Error('Done execution blueprint');
@@ -113,11 +120,11 @@ export class BlueprintMachine {
     session.message.pipeInto(this.message);
     session.block.pipeInto(this.block);
 
-    const inputMessages = opts.input
+    const inputMessages = options.input
       ? [
           create(Message, {
             role: 'user',
-            content: [taggedDataBlock('input', opts.input)],
+            content: [taggedDataBlock('input', options.input)],
           }),
         ]
       : [];
@@ -125,19 +132,19 @@ export class BlueprintMachine {
 
     const messages = await session.run({
       systemPrompt: `
-               You are a smart Rule-Following Agent.
-               Rule-Following Agent executes the command that the user sent in the last message.
-               After doing the work, the Rule-Following Agent calls report tool.
-               If the Rule-Following agent believes that no action is needed, it calls the report tool with "skipped" status.
-               If the Rule-Following Agent is unable to perform the task, it calls the report tool with "bail" status.
-               Rule-Following Agent explains the reason it is unable to perform the task before bailing.
-               The Rule-Following Agent can express creativity and imagination in the way it performs the task.
-               The Rule-Following Agent precisely follows the instructions.
-             `,
+        You are a smart Rule-Following Agent.
+        Rule-Following Agent executes the command that the user sent in the last message.
+        After doing the work, the Rule-Following Agent calls report tool.
+        If the Rule-Following agent believes that no action is needed, it calls the report tool with "skipped" status.
+        If the Rule-Following Agent is unable to perform the task, it calls the report tool with "bail" status.
+        Rule-Following Agent explains the reason it is unable to perform the task before bailing.
+        The Rule-Following Agent can express creativity and imagination in the way it performs the task.
+        The Rule-Following Agent precisely follows the instructions.
+      `,
       history: [...state.history, ...inputMessages],
       tools: [...nextStep.tools, report],
       artifacts: [],
-      client: opts.aiService,
+      client: options.aiService,
       prompt: nextStep.instructions,
     });
 

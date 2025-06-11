@@ -9,35 +9,86 @@ import { type StoryObj } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
-import { Popover, Toolbar } from '@dxos/react-ui';
+import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
-import { GraphForceProjector, type GraphForceProjectorOptions, type GraphLayoutNode } from '../../graph';
+import {
+  GraphForceProjector,
+  type GraphForceProjectorOptions,
+  GraphHierarchicalProjector,
+  type GraphHierarchicalProjectorOptions,
+  GraphRadialProjector,
+  type GraphRadialProjectorOptions,
+  GraphRelationalProjector,
+  type GraphRelationalProjectorOptions,
+  type GraphLayoutEdge,
+  type GraphLayoutNode,
+  type GraphProjector,
+} from '../../graph';
 import { type SVGContext } from '../../hooks';
-import { convertTreeToGraph, createGraph, createTree, TestGraphModel, type TestNode } from '../../testing';
-import { SVG } from '../SVG';
+import { convertTreeToGraph, createGraph, createNode, createTree, TestGraphModel, type TestNode } from '../../testing';
+import { SVG, type SVGGridProps } from '../SVG';
 
 import '../../../styles/graph.css';
 
-type DefaultStoryProps = GraphProps & {
-  debug?: boolean;
-  grid?: boolean;
-  inspect?: boolean;
-  graph: Graph;
-  projectorOptions?: GraphForceProjectorOptions;
+type ProjectorType = 'force' | 'radial' | 'hierarchical' | 'relational';
+
+type Factory = {
+  new (...args: ConstructorParameters<typeof GraphProjector>): GraphProjector<TestNode>;
 };
 
-const DefaultStory = ({ debug, grid, inspect, graph, projectorOptions, ...props }: DefaultStoryProps) => {
+const projectorTypes: Record<ProjectorType, Factory> = {
+  force: GraphForceProjector as Factory,
+  radial: GraphRadialProjector as Factory,
+  hierarchical: GraphHierarchicalProjector as Factory,
+  relational: GraphRelationalProjector as Factory,
+};
+
+type StoryProps = GraphProps & {
+  debug?: boolean;
+  grid?: boolean | SVGGridProps;
+  inspect?: boolean;
+  singleSelect?: boolean;
+  graph: () => Graph;
+  projectorType?: ProjectorType;
+  projectorOptions?:
+    | GraphForceProjectorOptions
+    | GraphHierarchicalProjectorOptions
+    | GraphRadialProjectorOptions
+    | GraphRelationalProjectorOptions;
+};
+
+const DefaultStory = ({
+  debug,
+  grid,
+  inspect,
+  singleSelect,
+  graph: _graph,
+  projectorType: _projectorType = 'force',
+  projectorOptions,
+  ...props
+}: StoryProps) => {
   const graphRef = useRef<GraphController | null>(null);
-  const model = useMemo(() => new TestGraphModel(graph), [graph]);
   const context = useRef<SVGContext>(null);
-  const projector = useMemo<GraphForceProjector>(
-    () => context.current && projectorOptions && new GraphForceProjector(context.current, projectorOptions),
-    [context.current, projectorOptions],
-  );
+
+  // Models.
+  const [model, setModel] = useState<GraphModel | undefined>(() => new TestGraphModel(_graph?.()));
+  const selection = useMemo(() => new SelectionModel(singleSelect), [singleSelect]);
+
+  // Projector.
+  const [projectorType, setProjectorType] = useState<ProjectorType>(_projectorType);
+  const [projector, setProjector] = useState<GraphProjector<TestNode>>();
+  useEffect(() => {
+    if (!context.current) {
+      return;
+    }
+
+    const Projector = projectorTypes[projectorType];
+    setProjector((projector) => new Projector(context.current, projectorOptions, selection, projector?.layout));
+  }, [context.current, selection, projectorType, projectorOptions]);
 
   const popoverAnchorRef = useRef<HTMLButtonElement | null>(null);
   const [popover, setPopover] = useState<any>();
@@ -61,16 +112,68 @@ const DefaultStory = ({ debug, grid, inspect, graph, projectorOptions, ...props 
     });
   }, []);
 
-  const selected = useMemo(() => new SelectionModel(), []);
+  const handleSelect = useCallback<GraphProps['onSelect']>(
+    (node) => {
+      if (selection.contains(node.id)) {
+        selection.remove(node.id);
+      } else {
+        selection.add(node.id);
+      }
 
-  const handleSelect = useCallback<GraphProps['onSelect']>((node) => {
-    if (selected.contains(node.id)) {
-      selected.remove(node.id);
-    } else {
-      selected.add(node.id);
+      graphRef.current?.repaint();
+    },
+    [selection, projector],
+  );
+
+  const handleAdd = useCallback(() => {
+    if (model) {
+      const graph = model.graph;
+      if (Math.random() < 0.5) {
+        model.addNode(createNode());
+      } else if (graph.nodes.length) {
+        const source = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
+        const target = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
+        if (source !== target) {
+          model.addEdge({ source: source.id, target: target.id });
+        }
+      }
     }
+  }, [model]);
 
+  const handleDelete = useCallback(() => {
+    if (model) {
+      const graph = model.graph;
+      if (graph) {
+        const node = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
+        if (node) {
+          model.removeNode(node.id);
+        }
+      }
+    }
+  }, [model]);
+
+  const handleRegenerate = useCallback(() => {
+    setModel(new TestGraphModel(_graph?.()));
+  }, [_graph]);
+
+  const handleClear = useCallback(() => {
+    setModel(undefined);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    graphRef.current?.refresh();
+  }, []);
+
+  const handleRepaint = useCallback(() => {
     graphRef.current?.repaint();
+  }, []);
+
+  const handleToggleProjector = useCallback(() => {
+    setProjectorType((projectorType) => {
+      const keys = Object.keys(projectorTypes) as ProjectorType[];
+      const index = keys.indexOf(projectorType);
+      return keys[index + 1] ?? keys[0];
+    });
   }, []);
 
   return (
@@ -78,7 +181,7 @@ const DefaultStory = ({ debug, grid, inspect, graph, projectorOptions, ...props 
       <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
         <SVG.Root ref={context}>
           <SVG.Markers />
-          {grid && <SVG.Grid axis />}
+          {grid && <SVG.Grid {...(typeof grid === 'boolean' ? { axis: grid } : grid)} />}
           <SVG.Zoom extent={[1 / 4, 4]}>
             <GraphComponent
               ref={graphRef}
@@ -90,10 +193,15 @@ const DefaultStory = ({ debug, grid, inspect, graph, projectorOptions, ...props 
               attributes={{
                 node: (node: GraphLayoutNode<TestNode>) => ({
                   data: {
-                    color: node.data.type,
+                    color: node.data.type ?? node.type,
                   },
                   classes: {
-                    'dx-selected': selected.contains(node.id),
+                    'dx-selected': selection.contains(node.id),
+                  },
+                }),
+                edge: (edge: GraphLayoutEdge<TestNode>) => ({
+                  data: {
+                    color: edge.type,
                   },
                 }),
               }}
@@ -107,26 +215,15 @@ const DefaultStory = ({ debug, grid, inspect, graph, projectorOptions, ...props 
         {debug && (
           <Debug
             model={model}
-            selected={selected}
-            onRefresh={() => {
-              graphRef.current?.refresh();
-            }}
-            onAdd={() => {
-              if (graph.nodes.length) {
-                const source = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
-                const target = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
-                if (source !== target) {
-                  model.addEdge({ source: source.id, target: target.id });
-                }
-              }
-            }}
-            onDelete={() => {
-              const node = graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
-              if (node) {
-                // TODO(burdon): Throws error.
-                model.removeNode(node.id);
-              }
-            }}
+            selection={selection}
+            projector={projectorType}
+            onToggleProjector={handleToggleProjector}
+            onRefresh={handleRefresh}
+            onRepaint={handleRepaint}
+            onRegenerate={handleRegenerate}
+            onClear={handleClear}
+            onAdd={handleAdd}
+            onDelete={handleDelete}
           />
         )}
       </div>
@@ -142,14 +239,24 @@ const DefaultStory = ({ debug, grid, inspect, graph, projectorOptions, ...props 
 
 const Debug = ({
   model,
-  selected,
+  selection,
+  projector,
+  onToggleProjector,
   onRefresh,
+  onRepaint,
+  onRegenerate,
+  onClear,
   onAdd,
   onDelete,
 }: {
-  model: GraphModel;
-  selected: SelectionModel;
+  model?: GraphModel;
+  selection: SelectionModel;
+  projector: ProjectorType;
+  onToggleProjector: () => void;
   onRefresh: () => void;
+  onRepaint: () => void;
+  onRegenerate: () => void;
+  onClear: () => void;
   onAdd: () => void;
   onDelete: () => void;
 }) => {
@@ -157,25 +264,30 @@ const Debug = ({
   useEffect(() => {
     effect(() => {
       setData({
-        selected: selected.toJSON(),
-        model: model.toJSON(),
+        projector,
+        selection: selection.toJSON(),
+        model: model?.toJSON(),
       });
     });
-  }, [model, selected]);
+  }, [model, selection, projector]);
 
   return (
     <div className='flex flex-col overflow-hidden'>
-      <JsonFilter data={data} classNames='text-sm' />
       <Toolbar.Root>
-        <Toolbar.Button onClick={onRefresh}>Refresh</Toolbar.Button>
-        <Toolbar.Button onClick={onAdd}>Add</Toolbar.Button>
-        <Toolbar.Button onClick={onDelete}>Delete</Toolbar.Button>
+        <IconButton onClick={onToggleProjector} size={5} label='Projector' icon='ph--graph--regular' iconOnly />
+        <IconButton onClick={onRefresh} size={5} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
+        <IconButton onClick={onRepaint} size={5} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
+        <IconButton onClick={onRegenerate} size={5} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
+        <IconButton onClick={onClear} size={5} label='Clear' icon='ph--trash--regular' iconOnly />
+        <IconButton onClick={onAdd} size={5} label='Add' icon='ph--plus--regular' iconOnly />
+        <IconButton onClick={onDelete} size={5} label='Delete' icon='ph--x--regular' iconOnly />
       </Toolbar.Root>
+      <JsonFilter data={data} classNames='text-sm' />
     </div>
   );
 };
 
-const meta: Meta<DefaultStoryProps> = {
+const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-graph/Graph',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
@@ -183,38 +295,38 @@ const meta: Meta<DefaultStoryProps> = {
 
 export default meta;
 
-type Story = StoryObj<DefaultStoryProps>;
-
-// TODO(burdon): Enable filtering of links that affect the force.
+type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
     debug: true,
-    graph: convertTreeToGraph(createTree({ depth: 4 })),
+    grid: {
+      axis: true,
+    },
     drag: true,
     arrows: true,
-    grid: true,
+    graph: () => convertTreeToGraph(createTree({ depth: 3 })),
   },
 };
 
-export const Empty: Story = {
-  render: () => (
-    <SVG.Root>
-      <SVG.Markers />
-      <SVG.Grid axis />
-      <SVG.Zoom extent={[1 / 4, 4]}>
-        <GraphComponent />
-      </SVG.Zoom>
-    </SVG.Root>
-  ),
+export const Projector: Story = {
+  args: {
+    debug: true,
+    drag: true,
+    arrows: true,
+    singleSelect: true,
+    projectorType: 'hierarchical',
+    projectorOptions: {
+      duration: 500,
+    },
+    graph: () => convertTreeToGraph(createTree({ depth: 4 })),
+  },
 };
 
 export const Force: Story = {
   args: {
     debug: true,
-    graph: convertTreeToGraph(createTree({ depth: 5 })),
     drag: true,
-    delay: 500,
     projectorOptions: {
       guides: true,
       attributes: {
@@ -222,9 +334,6 @@ export const Force: Story = {
       },
       radius: 400,
       forces: {
-        center: {
-          strength: 0.6,
-        },
         collide: {
           strength: 1,
         },
@@ -243,13 +352,13 @@ export const Force: Story = {
         },
       },
     },
+    graph: () => convertTreeToGraph(createTree({ depth: 5 })),
   },
 };
 
 export const Select: Story = {
   args: {
     debug: false,
-    graph: createGraph(100, 30, ['1', '2', '3', '4', '5', '6']),
     drag: true,
     grid: true,
     subgraphs: true,
@@ -264,13 +373,13 @@ export const Select: Story = {
         },
       },
     },
+    graph: () => createGraph(100, 30, ['1', '2', '3', '4', '5', '6']),
   },
 };
 
 export const WithSubgraphs: Story = {
   args: {
     debug: true,
-    graph: createGraph(50, 30),
     drag: true,
     subgraphs: true,
     projectorOptions: {
@@ -281,13 +390,13 @@ export const WithSubgraphs: Story = {
         },
       },
     },
+    graph: () => createGraph(50, 30),
   },
 };
 
 export const WithPopover: Story = {
   args: {
     debug: false,
-    graph: createGraph(30, 10),
     drag: true,
     inspect: true,
     grid: true,
@@ -298,5 +407,18 @@ export const WithPopover: Story = {
         point: true,
       },
     },
+    graph: () => createGraph(30, 10),
   },
+};
+
+export const Empty: Story = {
+  render: () => (
+    <SVG.Root>
+      <SVG.Markers />
+      <SVG.Grid axis />
+      <SVG.Zoom extent={[1 / 4, 4]}>
+        <GraphComponent />
+      </SVG.Zoom>
+    </SVG.Root>
+  ),
 };

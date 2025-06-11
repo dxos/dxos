@@ -27,7 +27,7 @@ const organizations: DataType.Organization[] = [
 const people: DataType.Person[] = [
   { id: 'rich_burdon', fullName: 'Rich Burdon' },
   { id: 'josiah_witt', fullName: 'Josiah Witt' },
-  { id: 'dima_dmaretskyi', fullName: 'Dima Dmaretskyi' },
+  { id: 'dima_dmaretskyi', fullName: 'Dima Maretskyi' },
   { id: 'chad_fowler', fullName: 'Chad Fowler' },
   { id: 'ciaran_oleary', fullName: "Ciarán O'Leary" },
   { id: 'jason_whitmire', fullName: 'Jason Whitmire' },
