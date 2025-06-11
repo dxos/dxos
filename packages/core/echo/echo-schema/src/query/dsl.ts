@@ -319,6 +319,11 @@ class FilterClass implements Filter<any> {
       ids.every((id) => ObjectId.isValid(id)),
       'ids must be valid',
     );
+
+    if (ids.length === 0) {
+      return Filter.nothing();
+    }
+
     return new FilterClass({
       type: 'object',
       typename: null,

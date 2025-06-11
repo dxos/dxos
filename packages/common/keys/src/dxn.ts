@@ -8,7 +8,8 @@ import type { inspect, InspectOptionsStylized } from 'node:util';
 import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
-import type { SpaceId } from './space-id';
+import { SpaceId } from './space-id';
+import { ObjectId } from './object-id';
 
 /**
  * Tags for ECHO DXNs that should resolve the object ID in the local space.
@@ -20,6 +21,8 @@ export const QueueSubspaceTags = Object.freeze({
   DATA: 'data',
   TRACE: 'trace',
 });
+
+export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubspaceTags];
 
 /**
  * DXN unambiguously names a resource like an ECHO object, schema definition, plugin, etc.
@@ -131,6 +134,14 @@ export class DXN {
    */
   static fromLocalObjectId(id: string) {
     return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, id]);
+  }
+
+  static fromQueue(subspaceTag: QueueSubspaceTag, spaceId: SpaceId, queueId: ObjectId, objectId?: ObjectId) {
+    invariant(SpaceId.isValid(spaceId));
+    invariant(ObjectId.isValid(queueId));
+    invariant(!objectId || ObjectId.isValid(objectId));
+
+    return new DXN(DXN.kind.QUEUE, [subspaceTag, spaceId, queueId, ...(objectId ? [objectId] : [])]);
   }
 
   #kind: string;

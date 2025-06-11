@@ -445,12 +445,14 @@ const meta: Meta<typeof DefaultStory> = {
   decorators: [
     withPluginManager({
       plugins: testPlugins({
-        runtime: {
-          client: {
-            storage: {
-              persistent: true,
+        config: {
+          runtime: {
+            client: {
+              storage: {
+                persistent: true,
+              },
+              enableVectorIndexing: true,
             },
-            enableVectorIndexing: true,
           },
         },
       }),

@@ -17,8 +17,12 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { Config } from '@dxos/react-client';
 import { DataTypes } from '@dxos/schema';
+import type { Schema } from 'effect';
 
-export const testPlugins = (config?: ConfigProto) => [
+export const testPlugins = ({
+  config,
+  types = [],
+}: { config?: ConfigProto; types?: Schema.Schema.AnyNoContext[] } = {}) => [
   ClientPlugin({
     config: new Config(
       defaulstDeep({}, config, {
@@ -33,6 +37,8 @@ export const testPlugins = (config?: ConfigProto) => [
     ),
     types: DataTypes,
     onClientInitialized: async (_, client) => {
+      client.addTypes(types);
+
       if (!client.halo.identity.get()) {
         await client.halo.createIdentity();
       }

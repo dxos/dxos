@@ -5,7 +5,13 @@
 import { Schema } from 'effect';
 
 import { type EchoDatabase } from '@dxos/echo-db';
-import { EntityKind, getSchemaTypename, getTypeAnnotation, getTypeIdentifierAnnotation } from '@dxos/echo-schema';
+import {
+  EntityKind,
+  getSchemaTypename,
+  getTypeAnnotation,
+  getTypeIdentifierAnnotation,
+  type AnyEchoObject,
+} from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 
 import { identity, Option, SchemaAST } from 'effect';
@@ -217,9 +223,8 @@ export const sanitizeObjects = async (
     })
     .filter((object) => !existingIds.has(object.id)); // TODO(dmaretskyi): This dissallows updating existing objects.
 
-  console.log('everything', await db.query(Filter.everything()).run());
-
   const { objects } = await db.query(Query.select(Filter.ids(...existingIds))).run();
+  // TODO(dmaretskyi): Returns everything if IDs are empty!
   log.info('objects', { objects, existingIds });
   const missing = Array.from(existingIds).filter((id) => !objects.some((object) => object.id === id));
   if (missing.length > 0) {
@@ -273,9 +278,11 @@ const preprocessSchema = (schema: Schema.Schema.AnyNoContext) => {
 export const createGraphWriteTool = ({
   db,
   schemaTypes,
+  onDone = async (x) => x,
 }: {
   db: EchoDatabase;
   schemaTypes: Schema.Schema.AnyNoContext[];
+  onDone?: (data: AnyEchoObject[]) => Promise<any>;
 }) => {
   return defineTool('graph', {
     name: 'write',
@@ -283,7 +290,7 @@ export const createGraphWriteTool = ({
     schema: createExtractionSchema(schemaTypes),
     execute: async (input) => {
       const data = await sanitizeObjects(schemaTypes, input as any, db);
-      return ToolResult.Success(data);
+      return ToolResult.Success(await onDone(data as AnyEchoObject[]));
     },
   });
 };

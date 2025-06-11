@@ -10,13 +10,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { combine, timeout } from '@dxos/async';
-import { type AnyEchoObject, getLabelForObject, getSchemaTypename, Query } from '@dxos/echo-schema';
+import { type AnyEchoObject, create, getLabelForObject, getSchemaTypename, Query, Ref } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
-import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
-import { Dialog, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Filter, Queue, useQuery, useSpace } from '@dxos/react-client/echo';
+import { Dialog, IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
 import { matchCompletion, staticCompletion, typeahead, type TypeaheadOptions } from '@dxos/react-ui-editor';
 import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
@@ -43,6 +43,9 @@ import {
 import { EXA_API_KEY, SpyAIService } from '@dxos/ai/testing';
 import { AIServiceEdgeClient } from '@dxos/ai';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
+import { Schema } from 'effect';
+import { DXN, Type } from '@dxos/echo';
+import { ObjectId, QueueSubspaceTags } from '@dxos/keys';
 
 faker.seed(1);
 
@@ -82,6 +85,23 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
+
+  const [researchGraph, setResearchGraph] = useAsyncState(async () => {
+    if (!space) {
+      return undefined;
+    }
+    const { objects } = await space.db.query(Filter.type(ResearchGraph)).run();
+    if (objects.length > 0) {
+      return objects[0];
+    } else {
+      return space.db.add(
+        create(ResearchGraph, {
+          // TODO(dmaretskyi): Ref.make(queue)
+          queue: Ref.fromDXN(space.queues.create().dxn),
+        }),
+      );
+    }
+  }, [space]);
 
   // TODO(burdon): Hook.
   const [aiClient] = useState(
@@ -176,16 +196,15 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     [space],
   );
 
-  // TODO(burdon): Trigger research blueprint (to update graph).
-  const handleResearch = useCallback(async () => {
-    const selected = selection.selected.value;
-    log.info('research', { selected: selection.selected.value });
+  console.log('researchGraph', researchGraph);
 
-    invariant(space);
+  const researchBlueprint = useMemo(() => {
+    if (!space) {
+      return undefined;
+    }
     const db = space.db;
 
-    const { objects } = await db.query(Filter.ids(...selected)).run();
-
+    // TODO(dmaretskyi): make db available through services (same as function executor).
     const blueprint = BlueprintBuilder.begin()
       .step('Research information and entities related to the selected objects.')
       .withTool(createExaTool({ apiKey: EXA_API_KEY }))
@@ -193,13 +212,37 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       .withTool(createLocalSearchTool(db))
       .step('Add researched data to the graph. Make connections to existing objects.')
       .withTool(createLocalSearchTool(db))
-      .withTool(createGraphWriteTool({ db, schemaTypes: DataTypes }))
+      .withTool(
+        createGraphWriteTool({
+          db,
+          schemaTypes: DataTypes,
+          onDone: async (objects) => {
+            if (!space || !researchGraph) {
+              return;
+            }
+            const queue = space.queues.get(researchGraph.queue.dxn);
+            queue.append(objects);
+
+            log.info('research queue', { items: queue.items });
+          },
+        }),
+      )
       .end();
 
-    const machine = new BlueprintMachine(blueprint);
+    return blueprint;
+  }, [space, researchGraph]);
+
+  // TODO(burdon): Trigger research blueprint (to update graph).
+  const handleResearch = useCallback(async () => {
+    const selected = selection.selected.value;
+    log.info('research', { selected: selection.selected.value });
+    const { objects } = await space!.db.query(Filter.ids(...selected)).run();
+
+    invariant(researchBlueprint);
+    const machine = new BlueprintMachine(researchBlueprint);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiService: aiClient, input: objects });
-  }, [selection, space, aiClient]);
+  }, [selection, space, aiClient, researchBlueprint]);
 
   const extensions = useMemo(() => [typeahead({ onComplete: handleMatch })], [handleMatch]);
 
@@ -243,6 +286,21 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   );
 };
 
+/**
+ * Container for a set of ephemeral research results.
+ */
+const ResearchGraph = Schema.Struct({
+  /**
+   * Reference
+   */
+  queue: Ref(Queue),
+}).pipe(
+  Type.def({
+    typename: 'dxos.org/type/ResearchGraph',
+    version: '0.1.0',
+  }),
+);
+
 // TODO(burdon): Cards.
 const ItemList = ({
   items = [],
@@ -277,7 +335,7 @@ const meta: Meta<typeof DefaultStory> = {
   render: DefaultStory,
   decorators: [
     withPluginManager({
-      plugins: testPlugins(),
+      plugins: testPlugins({ types: [ResearchGraph] }),
       fireEvents: [Events.SetupArtifactDefinition],
     }),
     withTheme,
