@@ -27,7 +27,7 @@ import { ChannelType, ThreadAction, ThreadType } from './types';
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
 
-// TODO(wittjosiah): Consider renaming plugin. Possible options: chat, conversation, messaging, message.
+// TODO(wittjosiah): Rename to ChatPlugin.
 // TODO(wittjosiah): Enabling comments should likely be factored out of this plugin but depend on it's capabilities.
 export const ThreadPlugin = () =>
   definePlugin(meta, [

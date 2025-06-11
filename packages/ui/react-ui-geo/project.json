@@ -14,7 +14,8 @@
         "entryPoints": [
           "{projectRoot}/src/data.ts",
           "{projectRoot}/src/index.ts"
-        ]
+        ],
+        "preactSignalTracking": true
       }
     },
     "lint": {},

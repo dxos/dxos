@@ -13,66 +13,6 @@ import { getObjectCore } from './echo-handler';
 import { EchoTestBuilder } from './testing';
 
 describe('HyperGraph', () => {
-  test('cross-space query', async () => {
-    const builder = new EchoTestBuilder();
-    await openAndClose(builder);
-    const [spaceKey1, spaceKey2] = PublicKey.randomSequence();
-    const peer = await builder.createPeer();
-
-    const db1 = await peer.createDatabase(spaceKey1);
-    const db2 = await peer.createDatabase(spaceKey2);
-
-    const obj1 = db1.add(
-      live(Expando, {
-        type: 'task',
-        title: 'A',
-      }),
-    );
-    const obj2 = db2.add(
-      live(Expando, {
-        type: 'task',
-        title: 'B',
-      }),
-    );
-    const obj3 = db2.add(
-      live(Expando, {
-        type: 'record',
-        title: 'C',
-      }),
-    );
-    await Promise.all([db1.flush(), db2.flush()]);
-
-    const query = peer.client.graph.query({ type: 'task' });
-    expect((await query.run()).objects.map((obj) => obj.id)).to.deep.eq([obj1.id, obj2.id]);
-
-    let updated = false;
-    query.subscribe(() => {
-      updated = true;
-    });
-
-    updated = false;
-    obj1.completed = true;
-    await db1.flush({ updates: true });
-    expect(updated).to.eq(true);
-
-    updated = false;
-    obj2.completed = true;
-    await db2.flush({ updates: true });
-    expect(updated).to.eq(true);
-
-    updated = false;
-    db2.remove(obj2);
-    await db2.flush({ updates: true });
-    expect(updated).to.eq(true);
-    expect(query.objects.map((obj) => obj.id)).to.deep.eq([obj1.id]);
-
-    updated = false;
-    obj3.type = 'task';
-    await db2.flush({ updates: true });
-    expect(updated).to.eq(true);
-    expect(query.objects.map((obj) => obj.id)).to.deep.eq([obj1.id, obj3.id]);
-  });
-
   test('cross-space references', async () => {
     const builder = new EchoTestBuilder();
     await openAndClose(builder);

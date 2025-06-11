@@ -55,7 +55,7 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.6.0"
+    "@preact/signals-core": "^1.9.0"
   },
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",

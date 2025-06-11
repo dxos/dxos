@@ -10,7 +10,7 @@ import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { getObjectCore } from '@dxos/echo-db';
-import { Expando, type HasId, Ref } from '@dxos/echo-schema';
+import { Expando, Filter, type HasId, Ref } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -111,7 +111,7 @@ describe('Spaces', () => {
       expect(SpaceId.isValid(space.id)).to.be.true;
       await space.waitUntilReady();
 
-      const obj = await space.db.query({ id: objectId }).first();
+      const obj = await space.db.query(Filter.ids(objectId)).first();
       expect(obj).to.exist;
     }
 
@@ -440,7 +440,7 @@ describe('Spaces', () => {
 
     const [wait, inc] = latch({ count: 2, timeout: 1000 });
 
-    spaceA.db.query().subscribe(
+    spaceA.db.query(Filter.everything()).subscribe(
       ({ objects }) => {
         expect(objects).to.have.length(2);
         expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === TYPE_PROPERTIES)).to.be.true;
@@ -450,7 +450,7 @@ describe('Spaces', () => {
       { fire: true },
     );
 
-    spaceB.db.query().subscribe(
+    spaceB.db.query(Filter.everything()).subscribe(
       ({ objects }) => {
         expect(objects).to.have.length(2);
         expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === TYPE_PROPERTIES)).to.be.true;
@@ -524,7 +524,7 @@ describe('Spaces', () => {
 
     const importedSpace = await client2.spaces.import(archive);
     expect(importedSpace.id).not.toEqual(space.id);
-    expect((await importedSpace.db.query({ id: doc1.id }).first()).title).toEqual(doc1.title);
+    expect((await importedSpace.db.query(Filter.ids(doc1.id)).first()).title).toEqual(doc1.title);
   });
 
   const createInitializedClients = async (

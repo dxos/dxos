@@ -10,7 +10,7 @@ import { Dialog } from './Dialog';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
-type DefaultStoryProps = Partial<{
+type StoryProps = Partial<{
   title: string;
   description: string;
   body: string;
@@ -19,7 +19,7 @@ type DefaultStoryProps = Partial<{
   blockAlign: 'center' | 'start';
 }>;
 
-const DefaultStory = ({ title, openTrigger, description, body, closeTrigger, blockAlign }: DefaultStoryProps) => {
+const DefaultStory = ({ title, openTrigger, description, body, closeTrigger, blockAlign }: StoryProps) => {
   return (
     <Dialog.Root defaultOpen>
       <Dialog.Trigger asChild>

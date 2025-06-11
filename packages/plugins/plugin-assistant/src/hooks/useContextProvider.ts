@@ -48,7 +48,7 @@ export const useContextProvider = (space?: Space): ContextProvider | undefined =
         );
       },
       resolveMetadata: async ({ uri }) => {
-        const object = await space.db.query({ id: uri }).first();
+        const object = await space.db.query(Filter.ids(uri)).first();
         return {
           uri,
           label: getLabel(Type.getSchema(object)!, object) ?? '',

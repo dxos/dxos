@@ -24,8 +24,8 @@ export default (context: PluginContext) =>
             get(node),
             Option.flatMap((node) => (isInstanceOf(MailboxType, node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => {
-              const state = context.getCapability(InboxCapabilities.MailboxState);
-              const message = get(rxFromSignal(() => state[node.id]));
+              const state = get(context.capabilities(InboxCapabilities.MailboxState))[0];
+              const message = get(rxFromSignal(() => state?.[node.id]));
               return [
                 {
                   id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}message`,

@@ -21,7 +21,8 @@ Migrations.define('test', [
   {
     version: '1970-01-02',
     next: async ({ space, builder }) => {
-      const { objects } = await space.db.query({ namespace: 'test' }).run();
+      // TODO(dmaretskyi): Is this intended to query only expando objects? Change to `Filter.type(Expando, { namespace: 'test' })`
+      const { objects } = await space.db.query(Filter._props<any>({ namespace: 'test' })).run();
       for (const object of objects) {
         await builder.migrateObject(object.id, ({ data }) => ({
           schema: Expando,
@@ -33,7 +34,8 @@ Migrations.define('test', [
   {
     version: '1970-01-03',
     next: async ({ space, builder }) => {
-      const { objects } = await space.db.query({ namespace: 'test' }).run();
+      // TODO(dmaretskyi): Is this intended to query only expando objects? Change to `Filter.type(Expando, { namespace: 'test' })`
+      const { objects } = await space.db.query(Filter._props<any>({ namespace: 'test' })).run();
       for (const object of objects) {
         await builder.migrateObject(object.id, ({ data }) => ({
           schema: Expando,
