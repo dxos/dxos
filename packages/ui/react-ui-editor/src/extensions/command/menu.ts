@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type BlockInfo, type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { closeEffect, openCommand, openEffect } from './action';
 import { type RenderCallback } from '../../types';
 
 export type FloatingMenuOptions = {
+  height: number;
   renderMenu: RenderCallback<{ onAction: () => void }>;
 };
 
@@ -64,12 +65,12 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
 
       updateButtonPosition() {
         const pos = this.view.state.selection.main.head;
-        const lineBlock: BlockInfo = this.view.lineBlockAt(pos);
-        const domInfo = this.view.domAtPos(lineBlock.from);
+        const { from, height } = this.view.lineBlockAt(pos);
+        const { node: el } = this.view.domAtPos(from);
 
-        // Find nearest HTMLElement for the line block
-        let node: Node | null = domInfo.node;
-        while (node && !(node instanceof HTMLElement)) {
+        // Find nearest HTMLElement for the line block.
+        let node = el;
+        while (node && !(node instanceof HTMLElement) && node.parentNode) {
           node = node.parentNode;
         }
 
@@ -81,8 +82,10 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
         const lineRect = (node as HTMLElement).getBoundingClientRect();
         const containerRect = this.view.scrollDOM.getBoundingClientRect();
 
+        const dy = (options.height - height) / 2;
+
         // Account for scroll and padding/margin in scrollDOM.
-        const offsetTop = lineRect.top - containerRect.top + this.view.scrollDOM.scrollTop;
+        const offsetTop = lineRect.top - containerRect.top + this.view.scrollDOM.scrollTop - dy;
         const offsetLeft = this.view.scrollDOM.clientWidth + this.view.scrollDOM.scrollLeft - lineRect.x;
 
         // TODO(burdon): Position is incorrect if cursor is in fenced code block.
