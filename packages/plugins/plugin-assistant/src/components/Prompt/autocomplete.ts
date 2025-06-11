@@ -183,7 +183,6 @@ export const autocompleteExtension = ({ onSubmit, onSuggest, onCancel }: Autocom
           key: 'Escape',
           preventDefault: true,
           run: (view) => {
-            console.log('Escape');
             // Clear the entire document.
             view.dispatch({
               changes: {
