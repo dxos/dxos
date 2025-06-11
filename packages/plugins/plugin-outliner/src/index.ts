@@ -3,4 +3,3 @@
 //
 
 export * from './meta';
-export * from './OutlinerPlugin';
