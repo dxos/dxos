@@ -9,6 +9,7 @@ import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
+import * as Swc from '@swc/core';
 
 import { NodeExternalPlugin } from '@dxos/esbuild-plugins';
 
@@ -31,6 +32,7 @@ export interface EsbuildExecutorOptions {
   platforms: Platform[];
   sourcemap: boolean;
   watch: boolean;
+  preactSignalTracking: boolean;
 }
 
 export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
@@ -61,38 +63,49 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         },
         experimental: {
           plugins: [
-            [
-              require.resolve('@dxos/swc-log-plugin'),
-              {
-                filename: filePath,
-                to_transform: [
+            ...(function* (): Iterable<Swc.WasmPlugin> {
+              yield [
+                require.resolve('@dxos/swc-log-plugin'),
+                {
+                  filename: filePath,
+                  to_transform: [
+                    {
+                      name: 'log',
+                      package: '@dxos/log',
+                      param_index: 2,
+                      include_args: false,
+                      include_call_site: true,
+                      include_scope: true,
+                    },
+                    {
+                      name: 'invariant',
+                      package: '@dxos/invariant',
+                      param_index: 2,
+                      include_args: true,
+                      include_call_site: false,
+                      include_scope: true,
+                    },
+                    {
+                      name: 'Context',
+                      package: '@dxos/context',
+                      param_index: 1,
+                      include_args: false,
+                      include_call_site: false,
+                      include_scope: false,
+                    },
+                  ],
+                },
+              ];
+
+              if (options.preactSignalTracking) {
+                yield [
+                  '@preact-signals/safe-react/swc',
                   {
-                    name: 'log',
-                    package: '@dxos/log',
-                    param_index: 2,
-                    include_args: false,
-                    include_call_site: true,
-                    include_scope: true,
+                    mode: 'all',
                   },
-                  {
-                    name: 'invariant',
-                    package: '@dxos/invariant',
-                    param_index: 2,
-                    include_args: true,
-                    include_call_site: false,
-                    include_scope: true,
-                  },
-                  {
-                    name: 'Context',
-                    package: '@dxos/context',
-                    param_index: 1,
-                    include_args: false,
-                    include_call_site: false,
-                    include_scope: false,
-                  },
-                ],
-              },
-            ],
+                ];
+              }
+            })(),
           ],
         },
         target: 'es2022',
