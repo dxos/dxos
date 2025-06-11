@@ -35,12 +35,12 @@ const DEPTH_SCALE = 8;
 
 const DARK_MIN = 850;
 const DARK_MAX = 700;
-const darkElevationCadence = (depth: number) => Math.floor(DARK_MIN + (DARK_MAX - DARK_MIN) * (depth / DEPTH_SCALE));
+const darkElevationCadence = (depth: number) => Math.round(DARK_MIN + (DARK_MAX - DARK_MIN) * (depth / DEPTH_SCALE));
 
 const LIGHT_MIN = 10;
 const LIGHT_MAX = 180;
 const lightElevationCadence = (depth: number) =>
-  Math.floor(LIGHT_MIN + (LIGHT_MAX - LIGHT_MIN) * (depth / DEPTH_SCALE));
+  Math.round(LIGHT_MIN + (LIGHT_MAX - LIGHT_MIN) * (depth / DEPTH_SCALE));
 
 const elevationCadence = (lightDepth: number, darkDepth: number = lightDepth, alpha: number = 1): Sememe =>
   applyAlpha(
@@ -55,7 +55,6 @@ export const systemSememes = {
   //
   // Surfaces (bg-)
   //
-  'surface-0': elevationCadence(0),
   'surface-10': elevationCadence(0.8),
   'surface-20': elevationCadence(1.6),
   'surface-30': elevationCadence(2.8, 3),
