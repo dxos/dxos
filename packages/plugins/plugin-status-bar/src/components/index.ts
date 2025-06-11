@@ -4,3 +4,4 @@
 
 export * from './StatusBar';
 export * from './StatusBarPanel';
+export * from './VersionNumber';

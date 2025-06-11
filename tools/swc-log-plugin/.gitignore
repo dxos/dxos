@@ -7,3 +7,8 @@
 !/target/wasm32-wasi/release
 /target/wasm32-wasi/release/*
 !/target/wasm32-wasi/release/swc_log_plugin.wasm
+!/target/wasm32-wasip1
+/target/wasm32-wasip1/*
+!/target/wasm32-wasip1/release
+/target/wasm32-wasip1/release/*
+!/target/wasm32-wasip1/release/swc_log_plugin.wasm
