@@ -48,10 +48,10 @@ const DefaultStory = <T extends BaseObject>({ schema, values: initialValues, ...
   return <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />;
   // TODO(thure): Restore TestLayout uses.
   // <TestLayout json={{ values, schema: schema.ast.toJSON() }}>
-  //       <TestPanel>
-  //         <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
-  //       </TestPanel>
-  //     </TestLayout>
+  // <TestPanel>
+  // <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
+  // </TestPanel>
+  // </TestLayout>
 };
 
 const meta: Meta<StoryProps<any>> = {

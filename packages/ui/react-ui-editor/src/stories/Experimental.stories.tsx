@@ -11,39 +11,18 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { EditorStory, str, content } from './story-utils';
-import { typewriter, blast, defaultOptions, dropFile, listener } from '../extensions';
+import { EditorStory, content } from './util';
+import { typewriter, blast, defaultOptions, dropFile } from '../extensions';
+import { str } from '../testing';
 
 const meta: Meta<typeof EditorStory> = {
-  title: 'ui/react-ui-editor/TextEditor',
+  title: 'ui/react-ui-editor/Experimental',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: EditorStory,
   parameters: { layout: 'fullscreen' },
 };
 
 export default meta;
-
-//
-// Listener
-//
-
-export const Listener = {
-  render: () => (
-    <EditorStory
-      text={str('# Listener', '', content.footer)}
-      extensions={[
-        listener({
-          onFocus: (focusing) => {
-            console.log({ focusing });
-          },
-          onChange: (text) => {
-            console.log({ text });
-          },
-        }),
-      ]}
-    />
-  ),
-};
 
 //
 // Typewriter

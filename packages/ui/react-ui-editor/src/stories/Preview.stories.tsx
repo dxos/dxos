@@ -11,7 +11,7 @@ import { Button, Icon, IconButton, Input, Popover } from '@dxos/react-ui';
 import { mx, hoverableHidden } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { EditorStory, str } from './story-utils';
+import { EditorStory } from './util';
 import { editorWidth } from '../defaults';
 import {
   preview,
@@ -23,11 +23,11 @@ import {
   type PreviewRenderProps,
   type Action,
 } from '../extensions';
-import { RefPopover, useRefPopover } from '../testing';
+import { RefPopover, str, useRefPopover } from '../testing';
 import { createRenderer } from '../util';
 
 const meta: Meta<typeof EditorStory> = {
-  title: 'ui/react-ui-editor/TextEditor',
+  title: 'ui/react-ui-editor/Preview',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: EditorStory,
   parameters: { layout: 'fullscreen' },

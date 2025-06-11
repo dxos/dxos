@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
-import { IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Dialog, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { matchCompletion, staticCompletion, typeahead, type TypeaheadOptions } from '@dxos/react-ui-editor';
 import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
@@ -27,7 +27,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { addTestData } from './test-data';
 import { testPlugins } from './testing';
-import { PromptBar, type PromptBarProps } from '../components';
+import { AmbientDialog, PromptBar, type PromptController, type PromptBarProps } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { createFilter, type Expression, QueryParser } from '../parser';
 import translations from '../translations';
@@ -39,9 +39,9 @@ const generator = faker as any as ValueGenerator;
 
 type Mode = 'graph' | 'list';
 
-type DefaultStoryProps = { mode?: Mode; spec?: TypeSpec[] } & D3ForceGraphProps;
+type StoryProps = { mode?: Mode; spec?: TypeSpec[] } & D3ForceGraphProps;
 
-const DefaultStory = ({ mode, spec, ...props }: DefaultStoryProps) => {
+const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   const { t } = useTranslation(ASSISTANT_PLUGIN);
   const showList = mode !== 'graph';
   const showGraph = mode !== 'list';
@@ -111,9 +111,11 @@ const DefaultStory = ({ mode, spec, ...props }: DefaultStoryProps) => {
     [space],
   );
 
+  const promptRef = useRef<PromptController>(null);
   const handleCancel = useCallback<NonNullable<PromptBarProps['onCancel']>>(() => {
     setAst(undefined);
     setFilter(undefined);
+    promptRef.current?.setText('');
   }, []);
 
   // TODO(burdon): Match against expression grammar.
@@ -177,21 +179,17 @@ const DefaultStory = ({ mode, spec, ...props }: DefaultStoryProps) => {
           </div>
         )}
       </div>
-      {/* TODO(burdon): Dialog currently prevent drag events. */}
-      {/* <Dialog.Root open>
-        <AmbientDialog resizeable={false}> */}
-      <div className='fixed bottom-8 left-1/2 -translate-x-1/2'>
-        <div className='w-[40rem] p-1 bg-groupSurface border border-separator rounded'>
+      <Dialog.Root modal={false} open>
+        <AmbientDialog resizeable={false} onEscape={handleCancel}>
           <PromptBar
+            ref={promptRef}
             placeholder={t('search input placeholder')}
             extensions={extensions}
             onSubmit={handleSubmit}
             onCancel={handleCancel}
           />
-        </div>
-      </div>
-      {/* </AmbientDialog>
-      </Dialog.Root> */}
+        </AmbientDialog>
+      </Dialog.Root>
     </div>
   );
 };
