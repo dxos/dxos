@@ -117,20 +117,17 @@ const decorations = () => [
   // Theme.
   EditorView.theme({
     '.cm-list-item': {
-      borderLeft: '1px solid var(--dx-separator)',
-      borderRight: '1px solid var(--dx-separator)',
+      borderLeftWidth: '1px',
+      borderRightWidth: '1px',
       paddingLeft: '32px',
+      borderColor: 'transparent',
     },
     '.cm-list-item.cm-codeblock-start': {
       borderRadius: '0',
     },
 
-    '.cm-list-item::after': {
-      content: '!!!',
-    },
-
     '.cm-list-item-start': {
-      borderTop: '1px solid var(--dx-separator)',
+      borderTopWidth: '1px',
       borderTopLeftRadius: '4px',
       borderTopRightRadius: '4px',
       paddingTop: '4px',
@@ -138,7 +135,7 @@ const decorations = () => [
     },
 
     '.cm-list-item-end': {
-      borderBottom: '1px solid var(--dx-separator)',
+      borderBottomWidth: '1px',
       borderBottomLeftRadius: '4px',
       borderBottomRightRadius: '4px',
       paddingBottom: '4px',
@@ -146,7 +143,7 @@ const decorations = () => [
     },
 
     '.cm-list-item-selected': {
-      borderColor: 'var(--dx-cmSeparator)',
+      borderColor: 'var(--dx-focus-ring)',
     },
   }),
 ];

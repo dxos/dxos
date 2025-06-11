@@ -4,72 +4,24 @@
 
 import '@dxos-theme';
 
-import React, { useState, useEffect, type FC, type KeyboardEvent } from 'react';
+import React, { useState, useEffect, type FC } from 'react';
 
 import { faker } from '@dxos/random';
-import { Button, Icon, IconButton, Input, Popover } from '@dxos/react-ui';
-import { mx, hoverableHidden } from '@dxos/react-ui-theme';
+import { IconButton, Popover } from '@dxos/react-ui';
+import { hoverableHidden } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory } from './util';
-import { editorWidth } from '../defaults';
 import {
   preview,
-  command,
   image,
   type PreviewOptions,
   type PreviewLinkRef,
   type PreviewLinkTarget,
   type PreviewRenderProps,
-  type Action,
 } from '../extensions';
 import { RefPopover, str, useRefPopover } from '../testing';
 import { createRenderer } from '../util';
-
-const meta: Meta<typeof EditorStory> = {
-  title: 'ui/react-ui-editor/Preview',
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: EditorStory,
-  parameters: { layout: 'fullscreen' },
-};
-
-export default meta;
-
-//
-// Preview
-//
-
-export const Preview = {
-  render: () => (
-    <RefPopover.Provider onLookup={handlePreviewLookup}>
-      <EditorStory
-        text={str(
-          '# Preview',
-          '',
-          'This project is part of the [DXOS][dxn:queue:data:123] SDK.',
-          '',
-          '![DXOS][?dxn:queue:data:123]',
-          '',
-          'It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].',
-          '',
-          '## Deep dive',
-          '',
-          '![ECHO][dxn:queue:data:echo]',
-          '',
-          '',
-        )}
-        extensions={[
-          image(),
-          preview({
-            renderBlock: createRenderer(PreviewBlock),
-            onLookup: handlePreviewLookup,
-          }),
-        ]}
-      />
-      <PreviewCard />
-    </RefPopover.Provider>
-  ),
-};
 
 const handlePreviewLookup = async ({ label, ref }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
   // Random text.
@@ -82,7 +34,7 @@ const handlePreviewLookup = async ({ label, ref }: PreviewLinkRef): Promise<Prev
 };
 
 // Async lookup.
-// TODO(burdon): Handle error.s
+// TODO(burdon): Handle errors.
 const useRefTarget = (link: PreviewLinkRef, onLookup: PreviewOptions['onLookup']): PreviewLinkTarget | undefined => {
   const [target, setTarget] = useState<PreviewLinkTarget | undefined>();
   useEffect(() => {
@@ -96,7 +48,7 @@ const PreviewCard = () => {
   const { link, target } = useRefPopover('PreviewCard');
   return (
     <Popover.Portal>
-      <Popover.Content classNames='popover-card-width' onOpenAutoFocus={(e) => e.preventDefault()}>
+      <Popover.Content classNames='popover-card-width' onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
           <div className='grow truncate'>{link?.label}</div>
           {target && <div className='line-clamp-3'>{target.text}</div>}
@@ -153,87 +105,44 @@ const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLook
   );
 };
 
-//
-// Command
-//
+const meta: Meta<typeof EditorStory> = {
+  title: 'ui/react-ui-editor/Preview',
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+  render: EditorStory,
+  parameters: { layout: 'fullscreen' },
+};
 
-export const Command = {
+export default meta;
+
+export const Default = {
   render: () => (
-    <EditorStory
-      text={str(
-        '# Preview',
-        '',
-        'This project is part of the [DXOS][dxn:queue:data:123] SDK.',
-        '',
-        '![DXOS][dxn:queue:data:123]',
-        '',
-      )}
-      extensions={[
-        preview({
-          renderBlock: createRenderer(PreviewBlock),
-          onLookup: handlePreviewLookup,
-        }),
-        command({
-          renderMenu: createRenderer(CommandMenu),
-          renderDialog: createRenderer(CommandDialog),
-          onHint: () => 'Press / for commands.',
-        }),
-      ]}
-    />
-  ),
-};
-
-const CommandMenu = ({ onAction }: { onAction: () => void }) => {
-  return (
-    <Button classNames='p-1 aspect-square' onClick={onAction}>
-      <Icon icon='ph--sparkle--regular' size={5} />
-    </Button>
-  );
-};
-
-const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) => {
-  const [text, setText] = useState('');
-
-  const handleInsert = () => {
-    // TODO(burdon): Use queue ref.
-    const link = `[${text}](dxn:queue:data:123)`;
-    onAction(text.length ? { type: 'insert', text: link } : undefined);
-  };
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    switch (event.key) {
-      case 'Enter': {
-        handleInsert();
-        break;
-      }
-      case 'Escape': {
-        onAction();
-        break;
-      }
-    }
-  };
-
-  return (
-    <div className='flex w-full justify-center'>
-      <div
-        className={mx(
-          'flex w-full p-2 gap-2 items-center bg-modalSurface border border-separator rounded-md',
-          editorWidth,
+    <RefPopover.Provider onLookup={handlePreviewLookup}>
+      <EditorStory
+        text={str(
+          '# Preview',
+          '',
+          'This project is part of the [DXOS][dxn:queue:data:123] SDK.',
+          '',
+          '![DXOS][?dxn:queue:data:123]',
+          '',
+          'It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].',
+          '',
+          '## Deep dive',
+          '',
+          '![ECHO][dxn:queue:data:echo]',
+          '',
+          '',
+          '',
         )}
-      >
-        <Input.Root>
-          <Input.TextInput
-            autoFocus={true}
-            placeholder='Ask a question...'
-            value={text}
-            onChange={(ev) => setText(ev.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-        </Input.Root>
-        <Button variant='ghost' classNames='pli-0' onClick={() => onAction({ type: 'cancel' })}>
-          <Icon icon='ph--x--regular' size={5} />
-        </Button>
-      </div>
-    </div>
-  );
+        extensions={[
+          image(),
+          preview({
+            renderBlock: createRenderer(PreviewBlock),
+            onLookup: handlePreviewLookup,
+          }),
+        ]}
+      />
+      <PreviewCard />
+    </RefPopover.Provider>
+  ),
 };
