@@ -8,14 +8,14 @@ import glsl from 'esbuild-plugin-glsl';
 import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 import { NodeExternalPlugin } from '@dxos/esbuild-plugins';
 
 import { bundleDepsPlugin } from './bundle-deps-plugin';
 import { esmOutputToCjs } from './esm-output-to-cjs-plugin';
 import { fixRequirePlugin } from './fix-require-plugin';
-import { LogTransformer } from './log-transform-plugin';
+import { SwcTransformPlugin } from './swc-transform-plugin';
 
 export interface EsbuildExecutorOptions {
   bundle: boolean;
@@ -48,7 +48,57 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   const packagePath = join(context.workspace!.projects[context.projectName!].root, 'package.json');
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
-  const logTransformer = new LogTransformer({ isVerbose: context.isVerbose });
+  const swcTransformPlugin = new SwcTransformPlugin({
+    isVerbose: context.isVerbose,
+    getTranspilerOptions: ({ filePath }) => ({
+      filename: basename(filePath),
+      sourceMaps: 'inline',
+      minify: false,
+      jsc: {
+        parser: {
+          syntax: 'typescript',
+          decorators: true,
+        },
+        experimental: {
+          plugins: [
+            [
+              require.resolve('@dxos/swc-log-plugin'),
+              {
+                filename: filePath,
+                to_transform: [
+                  {
+                    name: 'log',
+                    package: '@dxos/log',
+                    param_index: 2,
+                    include_args: false,
+                    include_call_site: true,
+                    include_scope: true,
+                  },
+                  {
+                    name: 'invariant',
+                    package: '@dxos/invariant',
+                    param_index: 2,
+                    include_args: true,
+                    include_call_site: false,
+                    include_scope: true,
+                  },
+                  {
+                    name: 'Context',
+                    package: '@dxos/context',
+                    param_index: 1,
+                    include_args: false,
+                    include_call_site: false,
+                    include_scope: false,
+                  },
+                ],
+              },
+            ],
+          ],
+        },
+        target: 'es2022',
+      },
+    }),
+  });
 
   const configurations = options.platforms.flatMap((platform) => {
     return platform === 'node'
@@ -99,7 +149,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
             ignore: options.ignorePackages,
             alias: options.alias,
           }),
-          logTransformer.createPlugin(),
+          swcTransformPlugin.createPlugin(),
           RawPlugin(),
           // Substitute '/*?url' imports with empty string.
           {
