@@ -35,6 +35,7 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
   const { url, bridgeLogs, viewportSize } = options;
 
   const context = 'newContext' in browser ? await browser.newContext() : browser;
+  await context.grantPermissions(['clipboard-write', 'clipboard-read']);
   const page = await context.newPage();
 
   if (viewportSize) {

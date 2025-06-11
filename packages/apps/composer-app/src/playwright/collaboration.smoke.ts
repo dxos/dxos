@@ -6,17 +6,17 @@ import { test, expect } from '@playwright/test';
 import { platform } from 'node:os';
 
 import { sleep } from '@dxos/async';
+import { log } from '@dxos/log';
 
 import { AppManager } from './app-manager';
 import { Markdown } from './plugins';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
   await host.shareSpace();
-  const invitationCode = await host.createSpaceInvitation();
-  const authCode = await host.getAuthCode();
+  const invitationCode = await host.createSpaceInvitation('delegated');
+  log.info('got invitation code', { invitationCode });
   await guest.joinSpace();
   await guest.shell.acceptSpaceInvitation(invitationCode);
-  await guest.shell.authenticate(authCode);
   await host.navigateToObject();
 };
 
@@ -36,10 +36,11 @@ test.describe('Collaboration tests', () => {
 
     await Promise.all([host.init({ timeout: 60_000 }), guest.init({ timeout: 60_000 })]);
 
-    // await host.isPwaToastVisible({ timeout: 60_000 });
-    // await guest.isPwaToastVisible({ timeout: 60_000 });
-    // await host.closeToast();
-    // await guest.closeToast();
+    // Handle Privacy toast
+    await host.isToastVisible({ timeout: 60_000 });
+    await guest.isToastVisible({ timeout: 60_000 });
+    await host.closeToast();
+    await guest.closeToast();
   });
 
   test.afterEach(async () => {
@@ -51,7 +52,7 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  test.only('guest joins host’s space', async () => {
+  test('guest joins host’s space', async () => {
     // Host creates a space and adds a markdown object
     await host.createSpace();
 

@@ -87,7 +87,7 @@ export class AppManager {
   /**
    * Returns promise that resolves when the PWA toast is visible.
    */
-  isPwaToastVisible({ timeout = 60_000 }: { timeout?: number } = {}) {
+  isToastVisible({ timeout = 60_000 }: { timeout?: number } = {}) {
     return this.page
       .getByTestId('toast.close')
       .waitFor({ timeout })
@@ -134,13 +134,23 @@ export class AppManager {
     await this.page.keyboard.press(shortcut);
   }
 
-  async createSpaceInvitation(): Promise<string> {
+  async createSpaceInvitation(type: 'delegated' | 'interactive' = 'interactive'): Promise<string> {
     this._invitationCode = new Trigger<string>();
     this._authCode = new Trigger<string>();
     await this.page.getByTestId('membersContainer.createInvitation.more').click();
-    await this.page.getByTestId('membersContainer.inviteOne').click();
-    await this.page.getByTestId('membersContainer.createInvitation').click();
-    return await this._invitationCode.wait();
+    switch (type) {
+      case 'interactive':
+        await this.page.getByTestId('membersContainer.inviteOne').click();
+        await this.page.getByTestId('membersContainer.createInvitation').click();
+        return await this._invitationCode.wait();
+      case 'delegated':
+        await this.page.getByTestId('membersContainer.inviteMany').click();
+        await this.page.getByTestId('membersContainer.createInvitation').click();
+        await this.page.getByTestId('copy-invitation').click();
+        return await (await this.page.evaluateHandle(() => navigator.clipboard.readText())).jsonValue();
+      default:
+        throw new Error(`Invalid invitation type: ${type}`);
+    }
   }
 
   async confirmRecoveryCode() {
