@@ -108,8 +108,6 @@ export const defaultTheme: ThemeStyles = {
    */
   '.cm-cursor, .cm-dropCursor': {
     borderLeft: '2px solid var(--dx-cmCursor)',
-    /** HACK: Fix height when cursor is at the start of an empty task. */
-    height: '19.5px !important',
   },
   '.cm-placeholder': {
     color: 'var(--dx-subdued)',
