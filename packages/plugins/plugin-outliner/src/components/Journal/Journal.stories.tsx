@@ -21,6 +21,9 @@ const meta: Meta<typeof Journal> = {
   component: Journal,
   render: render(({ journal: _journal }) => {
     const space = useSpace();
+    // TODO(burdon): Throws:
+    //  Uncaught InvariantViolation: invariant violation: assignFromLocalState [doc] at packages/core/echo/echo-db/src/core-db/object-core.ts:126
+    //  Uncaught Error: Object references must be wrapped with `Ref.make`
     const journal = useMemo(() => space?.db.add(_journal), [space, _journal]);
     if (journal) {
       return <Journal journal={journal} />;
