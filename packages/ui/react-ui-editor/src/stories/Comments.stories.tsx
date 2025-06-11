@@ -12,8 +12,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { EditorStory, str, content, longText } from './utils';
+import { EditorStory, content, longText } from './util';
 import { annotations, comments, createExternalCommentSync } from '../extensions';
+import { str } from '../testing';
 import { type Comment } from '../types';
 import { createRenderer } from '../util';
 

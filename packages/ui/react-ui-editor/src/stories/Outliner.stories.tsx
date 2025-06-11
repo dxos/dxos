@@ -8,9 +8,10 @@ import React from 'react';
 
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { EditorStory, str } from './utils';
+import { EditorStory } from './util';
 import { outliner } from '../extensions';
 import { listItemToString, treeFacet } from '../extensions/outliner/tree';
+import { str } from '../testing';
 
 type StoryProps = {
   text: string;

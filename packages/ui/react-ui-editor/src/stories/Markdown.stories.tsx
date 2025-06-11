@@ -9,8 +9,9 @@ import React from 'react';
 
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, str, text } from './utils';
+import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, text } from './util';
 import { decorateMarkdown, image, linkTooltip, table } from '../extensions';
+import { str } from '../testing';
 
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/Markdown',

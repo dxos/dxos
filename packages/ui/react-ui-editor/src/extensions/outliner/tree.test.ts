@@ -6,7 +6,7 @@ import { EditorState } from '@codemirror/state';
 import { describe, test } from 'vitest';
 
 import { outlinerTree, treeFacet, listItemToString, type Item } from './tree';
-import { str } from '../../stories';
+import { str } from '../../testing';
 import { type Range } from '../../types';
 import { createMarkdownExtensions } from '../markdown';
 

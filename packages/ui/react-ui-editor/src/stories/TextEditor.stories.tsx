@@ -22,9 +22,8 @@ import {
   longText,
   names,
   renderLinkButton,
-  str,
   text,
-} from './utils';
+} from './util';
 import { editorMonospace } from '../defaults';
 import {
   InputModeExtensions,
@@ -38,6 +37,7 @@ import {
   staticCompletion,
   typeahead,
 } from '../extensions';
+import { str } from '../testing';
 
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/TextEditor',
