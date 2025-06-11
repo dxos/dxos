@@ -21,7 +21,7 @@ import { matchCompletion, staticCompletion, typeahead, type TypeaheadOptions } f
 import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
-import { DataType, SpaceGraphModel } from '@dxos/schema';
+import { DataType, DataTypes, SpaceGraphModel } from '@dxos/schema';
 import { createObjectFactory, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -31,8 +31,23 @@ import { AmbientDialog, PromptBar, type PromptController, type PromptBarProps } 
 import { ASSISTANT_PLUGIN } from '../meta';
 import { createFilter, type Expression, QueryParser } from '../parser';
 import translations from '../translations';
+import { invariant } from '@dxos/invariant';
+import {
+  BlueprintBuilder,
+  BlueprintMachine,
+  createExaTool,
+  createGraphWriteTool,
+  createLocalSearchTool,
+  setConsolePrinter,
+} from '@dxos/assistant';
+import { EXA_API_KEY, SpyAIService } from '@dxos/ai/testing';
+import { AIServiceEdgeClient } from '@dxos/ai';
+import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 
 faker.seed(1);
+
+const LOCAL = false;
+const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
 
 // TODO(burdon): Evolve dxos/random to support this directly.
 const generator = faker as any as ValueGenerator;
@@ -67,6 +82,20 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
+
+  // TODO(burdon): Hook.
+  const [aiClient] = useState(
+    () =>
+      new SpyAIService(
+        new AIServiceEdgeClient({
+          endpoint: endpoints.ai,
+          defaultGenerationOptions: {
+            // model: '@anthropic/claude-sonnet-4-20250514',
+            model: '@anthropic/claude-3-5-sonnet-20241022',
+          },
+        }),
+      ),
+  );
 
   useEffect(() => {
     if (!space) {
@@ -148,9 +177,29 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   );
 
   // TODO(burdon): Trigger research blueprint (to update graph).
-  const handleResearch = useCallback(() => {
+  const handleResearch = useCallback(async () => {
+    const selected = selection.selected.value;
     log.info('research', { selected: selection.selected.value });
-  }, [selection]);
+
+    invariant(space);
+    const db = space.db;
+
+    const { objects } = await db.query(Filter.ids(...selected)).run();
+
+    const blueprint = BlueprintBuilder.begin()
+      .step('Research information and entities related to the selected objects.')
+      .withTool(createExaTool({ apiKey: EXA_API_KEY }))
+      .step('Based on your research find matching entires that are already in the graph. Do exaustive research.')
+      .withTool(createLocalSearchTool(db))
+      .step('Add researched data to the graph. Make connections to existing objects.')
+      .withTool(createLocalSearchTool(db))
+      .withTool(createGraphWriteTool({ db, schemaTypes: DataTypes }))
+      .end();
+
+    const machine = new BlueprintMachine(blueprint);
+    setConsolePrinter(machine, true);
+    await machine.runToCompletion({ aiService: aiClient, input: objects });
+  }, [selection, space, aiClient]);
 
   const extensions = useMemo(() => [typeahead({ onComplete: handleMatch })], [handleMatch]);
 

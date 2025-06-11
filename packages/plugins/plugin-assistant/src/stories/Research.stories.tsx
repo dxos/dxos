@@ -363,7 +363,7 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
       const { result } = await executor.invoke(fn, input);
       return ToolResult.Success(
         'Research completed. The results are placed in the conversation and already presented to the user. No need to present them again.',
-        result.objects.map((obj) => ({
+        result.objects.map((obj: any) => ({
           type: 'json',
           json: JSON.stringify(obj),
           disposition: 'graph',

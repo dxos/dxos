@@ -55,7 +55,13 @@ export const toFunctionParameterSchema = (jsonSchema: Type.JsonSchema) => {
       }
     }
     if (jsonSchema.items) {
-      go(jsonSchema.items);
+      if (Array.isArray(jsonSchema.items)) {
+        for (const item of jsonSchema.items) {
+          go(item);
+        }
+      } else {
+        go(jsonSchema.items as Type.JsonSchema);
+      }
     }
   };
 
