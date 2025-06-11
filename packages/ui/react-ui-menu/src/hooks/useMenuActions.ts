@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext, useRxValue } from '@effect-rx/rx-react';
-import { useSignalEffect } from '@preact/signals-react';
-import { useCallback, useContext, useState } from 'react';
+import { RegistryContext, type Rx, useRxValue } from '@effect-rx/rx-react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 
 import { type Edge, type Edges, Graph, type NodeArg, type Node, ROOT_ID } from '@dxos/app-graph';
 
@@ -41,24 +40,22 @@ export type ActionGraphNodes = NodeArg<any>[];
 export type ActionGraphEdges = Edge[];
 export type ActionGraphProps = { nodes: ActionGraphNodes; edges: ActionGraphEdges };
 
-export const useMenuActions = (actionCreator: () => ActionGraphProps) => {
+export const useMenuActions = (props: Rx.Rx<ActionGraphProps>) => {
   const registry = useContext(RegistryContext);
-  const initialMenuGraphProps = actionCreator();
+  const menuGraphProps = useRxValue(props);
 
   const [graph] = useState(
     new Graph({
       registry,
-      nodes: initialMenuGraphProps.nodes as Node[],
-      edges: edgesArrayToRecord(initialMenuGraphProps.edges),
+      nodes: menuGraphProps.nodes as Node[],
+      edges: edgesArrayToRecord(menuGraphProps.edges),
     }),
   );
 
-  // TODO(wittjosiah): Remove dependence on signals.
-  useSignalEffect(() => {
-    const menuGraphProps = actionCreator();
+  useEffect(() => {
     graph.addNodes(menuGraphProps.nodes);
     graph.addEdges(menuGraphProps.edges);
-  });
+  }, [menuGraphProps]);
 
   const useGroupItems = useCallback(
     (sourceNode?: MenuItemGroup) => {

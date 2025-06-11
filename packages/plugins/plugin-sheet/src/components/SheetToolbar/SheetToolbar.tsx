@@ -2,16 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback } from 'react';
+import { Rx } from '@effect-rx/rx-react';
+import React, { type PropsWithChildren, useMemo } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { useAppGraph } from '@dxos/app-framework';
 import { type CompleteCellRange } from '@dxos/compute';
-import { ThreadAction } from '@dxos/plugin-thread/types';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { createGapSeparator, MenuProvider, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  type ActionGraphEdges,
+  type ActionGraphNodes,
+  type ActionGraphProps,
+  createGapSeparator,
+  MenuProvider,
+  rxFromSignal,
+  ToolbarMenu,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 
 import { createAlign, useAlignState } from './align';
-import { createComment, useCommentState } from './comment';
 import { createStyle, useStyleState } from './style';
 import { type ToolbarState, useToolbarState } from './useToolbarState';
 import { type SheetModel } from '../../model';
@@ -21,52 +29,55 @@ import { useSheetContext } from '../SheetContext';
 // Root
 //
 
-export type SheetToolbarProps = ThemedClassName<PropsWithChildren<{ attendableId?: string }>>;
+export type SheetToolbarProps = ThemedClassName<PropsWithChildren<{ id: string }>>;
 
 const createToolbarActions = (
   model: SheetModel,
   state: ToolbarState,
-  onComment: (cellContent: string, cursor: string) => void,
   cursorFallbackRange?: CompleteCellRange,
+  customActions?: Rx.Rx<ActionGraphProps>,
 ) => {
-  const align = createAlign(model, state, cursorFallbackRange);
-  const style = createStyle(model, state, cursorFallbackRange);
-  const gap = createGapSeparator();
-  const comment = createComment(model, state, onComment, cursorFallbackRange);
-  return {
-    nodes: [...align.nodes, ...style.nodes, ...gap.nodes, ...comment.nodes],
-    edges: [...align.edges, ...style.edges, ...gap.edges, ...comment.edges],
-  };
+  return Rx.make((get) => {
+    const align = get(rxFromSignal(() => createAlign(model, state, cursorFallbackRange)));
+    const style = get(rxFromSignal(() => createStyle(model, state, cursorFallbackRange)));
+    const gap = createGapSeparator();
+    const nodes: ActionGraphNodes = [...align.nodes, ...style.nodes, ...gap.nodes];
+    const edges: ActionGraphEdges = [...align.edges, ...style.edges, ...gap.edges];
+    if (customActions) {
+      const custom = get(customActions);
+      nodes.push(...custom.nodes);
+      edges.push(...custom.edges);
+    }
+    return {
+      nodes,
+      edges,
+    };
+  });
 };
 
-export const SheetToolbar = ({ attendableId, classNames }: SheetToolbarProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+export const SheetToolbar = ({ id, classNames }: SheetToolbarProps) => {
   const { model, cursorFallbackRange } = useSheetContext();
   const state = useToolbarState({});
   useAlignState(state);
   useStyleState(state);
-  useCommentState(state);
 
-  const handleComment = useCallback(
-    (name: string, cursor: string) =>
-      dispatch(
-        createIntent(ThreadAction.Create, {
-          cursor,
-          name,
-          subject: model.sheet,
-        }),
-      ),
-    [model.sheet, dispatch],
-  );
+  const { graph } = useAppGraph();
+  const customActions = useMemo(() => {
+    return Rx.make((get) => {
+      const actions = get(graph.actions(id));
+      const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
+      return { nodes, edges: nodes.map((node) => ({ source: 'root', target: node.id })) };
+    });
+  }, [graph]);
 
-  const actionsCreator = useCallback(
-    () => createToolbarActions(model, state, handleComment, cursorFallbackRange),
-    [model, state, handleComment, cursorFallbackRange],
+  const actionsCreator = useMemo(
+    () => createToolbarActions(model, state, cursorFallbackRange, customActions),
+    [model, state, cursorFallbackRange, customActions],
   );
   const menu = useMenuActions(actionsCreator);
 
   return (
-    <MenuProvider {...menu} attendableId={attendableId}>
+    <MenuProvider {...menu} attendableId={id}>
       <ToolbarMenu classNames={classNames} />
     </MenuProvider>
   );

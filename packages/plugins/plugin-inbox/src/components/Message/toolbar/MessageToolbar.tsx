@@ -2,9 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Rx } from '@effect-rx/rx-react';
 import { type Signal } from '@preact/signals-react';
+import { useMemo } from 'react';
 
-import { createMenuAction, createMenuItemGroup, type MenuAction, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  createMenuAction,
+  createMenuItemGroup,
+  type MenuAction,
+  rxFromSignal,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 
 import { INBOX_PLUGIN } from '../../../meta';
 import { type ViewMode } from '../MessageHeader';
@@ -39,32 +47,42 @@ export const useMessageToolbarActions = (
   existingContact: Signal<any | undefined>,
   onExtractContact: () => void,
 ) => {
-  return useMenuActions(() => {
-    const nodes = [];
-    const edges = [];
+  const creator = useMemo(
+    () =>
+      Rx.make((get) =>
+        get(
+          rxFromSignal(() => {
+            const nodes = [];
+            const edges = [];
 
-    const rootGroup = createMenuItemGroup('root', {
-      label: ['mailbox toolbar label', { ns: INBOX_PLUGIN }],
-    });
-    nodes.push(rootGroup);
+            const rootGroup = createMenuItemGroup('root', {
+              label: ['mailbox toolbar label', { ns: INBOX_PLUGIN }],
+            });
+            nodes.push(rootGroup);
 
-    // Create action based on viewMode
-    const viewModeAction = createViewModeAction(viewMode);
+            // Create action based on viewMode
+            const viewModeAction = createViewModeAction(viewMode);
 
-    nodes.push(viewModeAction);
-    edges.push({ source: 'root', target: viewModeAction.id });
+            nodes.push(viewModeAction);
+            edges.push({ source: 'root', target: viewModeAction.id });
 
-    const extractContactAction = createMenuAction('extractContact', onExtractContact, {
-      label: existingContact.value
-        ? ['contact already exists label', { ns: INBOX_PLUGIN }]
-        : ['extract contact label', { ns: INBOX_PLUGIN }],
-      icon: 'ph--user-plus--regular',
-      disabled: !!existingContact.value,
-    });
+            const extractContactAction = createMenuAction('extractContact', onExtractContact, {
+              label: existingContact.value
+                ? ['contact already exists label', { ns: INBOX_PLUGIN }]
+                : ['extract contact label', { ns: INBOX_PLUGIN }],
+              icon: 'ph--user-plus--regular',
+              disabled: !!existingContact.value,
+            });
 
-    nodes.push(extractContactAction);
-    edges.push({ source: 'root', target: extractContactAction.id });
+            nodes.push(extractContactAction);
+            edges.push({ source: 'root', target: extractContactAction.id });
 
-    return { nodes, edges };
-  });
+            return { nodes, edges };
+          }),
+        ),
+      ),
+    [viewMode, existingContact, onExtractContact],
+  );
+
+  return useMenuActions(creator);
 };

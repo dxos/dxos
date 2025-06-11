@@ -5,22 +5,28 @@
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { live, makeRef } from '@dxos/live-object';
-import { type ThreadType } from '@dxos/plugin-space/types';
-import { fullyQualifiedId, type Space, useMembers } from '@dxos/react-client/echo';
+import { type AnyLiveObject, fullyQualifiedId, type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
-import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
+import {
+  MessageTextbox,
+  type MessageTextboxProps,
+  Thread,
+  ThreadFooter,
+  threadLayout,
+  type ThreadProps,
+} from '@dxos/react-ui-thread';
 import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
-import { type ThreadContainerProps } from './types';
 import { useStatus } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
+import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
 
 export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
@@ -35,10 +41,12 @@ export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
   );
 };
 
-export type ChatContainerProps = Omit<ThreadContainerProps, 'thread'> & {
+export type ChatContainerProps = {
   space: Space;
   thread: ThreadType;
-};
+  context?: AnyLiveObject<any>;
+  autoFocusTextbox?: boolean;
+} & Pick<ThreadProps, 'current'>;
 
 export const ChatContainer = ({ space, thread, context, current, autoFocusTextbox }: ChatContainerProps) => {
   const id = fullyQualifiedId(thread);

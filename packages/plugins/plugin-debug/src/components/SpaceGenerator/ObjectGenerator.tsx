@@ -43,7 +43,6 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
           live(DocumentType, {
             name: faker.commerce.productName(),
             content: makeRef(live(DataType.Text, { content: faker.lorem.sentences(5) })),
-            threads: [],
           }),
         );
       });
