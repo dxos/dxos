@@ -1,5 +1,5 @@
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import ReactPlugin from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react-swc';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
@@ -33,6 +33,18 @@ export default defineConfig({
     ConfigPlugin(),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
-    ReactPlugin({ jsxRuntime: 'classic' })
+    ReactPlugin({
+      tsDecorators: true,
+      plugins: [
+        [
+          '@preact-signals/safe-react/swc',
+          {
+            // you should use `auto` mode to track only components which uses `.value` access.
+            // Can be useful to avoid tracking of server side components
+            mode: 'all',
+          },
+        ],
+      ],
+    }),
   ],
 });

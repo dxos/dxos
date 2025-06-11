@@ -3,7 +3,7 @@
 //
 
 // import { sentryVitePlugin } from '@sentry/vite-plugin';
-import ReactPlugin from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import sourceMaps from 'rollup-plugin-sourcemaps';
@@ -84,8 +84,50 @@ export default defineConfig(
           content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
         }),
         WasmPlugin(),
-        // https://github.com/preactjs/signals/issues/269
-        ReactPlugin({ jsxRuntime: 'classic' }),
+        ReactPlugin({
+          tsDecorators: true,
+          plugins: [
+            [
+              '@dxos/swc-log-plugin',
+              {
+                to_transform: [
+                  {
+                    name: 'log',
+                    package: '@dxos/log',
+                    param_index: 2,
+                    include_args: false,
+                    include_call_site: true,
+                    include_scope: true,
+                  },
+                  {
+                    name: 'invariant',
+                    package: '@dxos/invariant',
+                    param_index: 2,
+                    include_args: true,
+                    include_call_site: false,
+                    include_scope: true,
+                  },
+                  {
+                    name: 'Context',
+                    package: '@dxos/context',
+                    param_index: 1,
+                    include_args: false,
+                    include_call_site: false,
+                    include_scope: false,
+                  },
+                ],
+              },
+            ],
+            [
+              '@preact-signals/safe-react/swc',
+              {
+                // you should use `auto` mode to track only components which uses `.value` access.
+                // Can be useful to avoid tracking of server side components
+                mode: 'all',
+              },
+            ],
+          ],
+        }),
         // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
         // https://www.npmjs.com/package/@sentry/vite-plugin
         // sentryVitePlugin({

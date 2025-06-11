@@ -3,7 +3,7 @@
 //
 
 import { sentryVitePlugin } from '@sentry/vite-plugin';
-import ReactPlugin from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react-swc';
 import { join, resolve } from 'node:path';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
@@ -55,8 +55,19 @@ export default defineConfig({
     ConfigPlugin({ env: ['DX_VAULT'] }),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
-    // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    ReactPlugin({
+      tsDecorators: true,
+      plugins: [
+        [
+          '@preact-signals/safe-react/swc',
+          {
+            // you should use `auto` mode to track only components which uses `.value` access.
+            // Can be useful to avoid tracking of server side components
+            mode: 'all',
+          },
+        ],
+      ],
+    }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
     // https://www.npmjs.com/package/@sentry/vite-plugin
     sentryVitePlugin({
