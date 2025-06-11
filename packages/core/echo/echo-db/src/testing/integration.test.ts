@@ -155,7 +155,7 @@ describe('Integration tests', () => {
     await peer.reload();
     {
       await using db = await peer.openLastDatabase();
-      const outer = (await db.query({ id: outerId }).first()) as any;
+      const outer = (await db.query(Filter.ids(outerId)).first()) as any;
       const loaded = new Trigger();
       using updates = updateCounter(() => {
         if (outer.inner.target) {
@@ -188,7 +188,7 @@ describe('Integration tests', () => {
     await peer.reload();
     {
       await using db = await peer.openDatabase(spaceKey, rootUrl);
-      const outer = (await db.query({ id: outerId }).first()) as any;
+      const outer = (await db.query(Filter.ids(outerId)).first()) as any;
       expect(outer.inner.target).to.eq(undefined);
 
       const target = await outer.inner.load();
@@ -424,7 +424,7 @@ describe('Integration tests', () => {
         await using db = await peer.openLastDatabase({ reactiveSchemaQuery: false, preloadSchemaOnOpen: false });
         const {
           objects: [obj],
-        } = await db.query({ id: relationId }).run();
+        } = await db.query(Filter.ids(relationId)).run();
         log.info('xxx', { obj });
         expect(getSource(obj).name).toEqual('Bob');
         expect(getTarget(obj).name).toEqual('Alice');
@@ -459,7 +459,7 @@ describe('Integration tests', () => {
       {
         // Objects with stored schema get included in queries that select all objects..
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const { objects } = await db.query().run();
+        const { objects } = await db.query(Query.select(Filter.everything())).run();
         expect(objects.length).to.eq(3);
       }
 

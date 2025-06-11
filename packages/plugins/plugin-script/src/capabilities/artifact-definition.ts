@@ -11,7 +11,7 @@ import { createArtifactElement } from '@dxos/assistant';
 import { ScriptType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { live, makeRef, type Space } from '@dxos/react-client/echo';
+import { Filter, live, makeRef, type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -184,7 +184,7 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
 
-          const script = (await extensions.space.db.query({ id }).first()) as ScriptType;
+          const script = (await extensions.space.db.query(Filter.ids(id)).first()) as ScriptType;
           const { content } = await script.source.load();
 
           return ToolResult.Success({
@@ -206,7 +206,7 @@ export default () => {
         execute: async ({ id, code }, { extensions }) => {
           invariant(extensions?.space, 'No space');
 
-          const script = (await extensions.space.db.query({ id }).first()) as ScriptType;
+          const script = (await extensions.space.db.query(Filter.ids(id)).first()) as ScriptType;
           const source = await script.source.load();
           if (!source) {
             return ToolResult.Error('Script not found');

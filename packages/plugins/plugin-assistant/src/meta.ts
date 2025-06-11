@@ -14,5 +14,5 @@ export const meta: PluginMeta = {
   description: 'The Assistant tab allows you to chat with your spaces inside of Composer.',
   icon: 'ph--atom--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-assistant',
-  tags: ['experimental'],
+  tags: ['labs'],
 };

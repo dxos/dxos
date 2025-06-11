@@ -9,7 +9,7 @@ import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
 
 import { DxThemeEditor as NaturalDxThemeEditor } from '@dxos/lit-theme-editor';
 import '@dxos/lit-theme-editor/dx-theme-editor.pcss';
-import { createComponent } from '@dxos/lit-ui';
+import { createComponent } from '@dxos/lit-ui/react';
 import { type ThemeMode, ThemeProvider, Tooltip, Dialog, IconButton } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { PARAM_KEY } from '@dxos/theme-editor-addon';
@@ -54,15 +54,16 @@ export const withTheme: Decorator = (Story, context) => {
     <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={context?.parameters?.translations} noCache>
       <Tooltip.Provider>
         <MemoizedStory />
-        <Dialog.Root open={editorOpen} onOpenChange={handleOpenChange}>
+        <Dialog.Root open={editorOpen} onOpenChange={handleOpenChange} modal={false}>
           <div
             role='none'
             className='dx-dialog__overlay bg-transparent pointer-events-none'
             style={{ placeContent: 'end' }}
           >
             <Dialog.Content
-              classNames='relative box-content py-0 px-2 md:is-[35rem] md:max-is-none overflow-y-auto layout-contain'
+              classNames='relative box-content py-0 px-2 md:is-[35rem] md:max-is-none overflow-y-auto layout-contain pointer-events-auto'
               style={{ maxBlockSize: '50dvh' }}
+              onInteractOutside={(event) => event.preventDefault()}
             >
               <Dialog.Title srOnly>Theme Editor</Dialog.Title>
               {editorOpen && <DxThemeEditor />}

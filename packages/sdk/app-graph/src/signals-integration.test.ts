@@ -88,7 +88,7 @@ describe('signals integration', () => {
       await peer.reload();
       {
         await using db = await peer.openLastDatabase();
-        const outer = (await db.query({ id: outerId }).first()) as any;
+        const outer = (await db.query(Filter.ids(outerId)).first()) as any;
         const innerRx = rxFromSignal(() => outer.inner.target);
 
         const loaded = new Trigger();
@@ -128,7 +128,7 @@ describe('signals integration', () => {
 
       {
         await using db = await peer.openLastDatabase();
-        const outer = (await db.query({ id: outerId }).first()) as any;
+        const outer = (await db.query(Filter.ids(outerId)).first()) as any;
         const innerRx = rxFromSignal(() => outer.inner.target);
         const inner = registry.get(innerRx);
         expect(inner).to.eq(undefined);

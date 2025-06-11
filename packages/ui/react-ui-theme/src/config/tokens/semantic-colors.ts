@@ -13,7 +13,7 @@ import { systemSememes } from './sememes-system';
 export const semanticColors = {
   conditions: {
     light: [':root'],
-    dark: [':root.dark, :root .dark'],
+    dark: ['.dark'],
   },
   sememes: {
     // Please define each set of sememes in its own file.

@@ -18,7 +18,7 @@ import { type ArtifactDefinition } from '@dxos/artifact';
 import { AISession, type ArtifactDiffResolver } from '@dxos/assistant';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { getVersion, type Space } from '@dxos/react-client/echo';
+import { Filter, getVersion, type Space } from '@dxos/react-client/echo';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -218,7 +218,7 @@ export class ChatProcessor {
       artifacts.map(async (artifact) => {
         const {
           objects: [object],
-        } = await space.db.query({ id: artifact.id }).run();
+        } = await space.db.query(Filter.ids(artifact.id)).run();
         if (!object) {
           return;
         }

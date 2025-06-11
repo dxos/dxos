@@ -12,5 +12,5 @@ export const meta: PluginMeta = {
   description: 'Manages your email, calendar, and contacts.',
   icon: 'ph--address-book-tabs--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-inbox',
-  tags: ['experimental'],
+  tags: ['labs'],
 };
