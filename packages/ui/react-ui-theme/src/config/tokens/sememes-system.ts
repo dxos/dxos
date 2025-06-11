@@ -130,7 +130,7 @@ export const systemSememes = {
     light: ['primary', 500],
     dark: ['primary', 350],
   },
-  ['accentFocusIndicator' as const]: {
+  ['neutralFocusIndicator' as const]: {
     light: ['neutral', 350],
     dark: ['neutral', 450],
   },
