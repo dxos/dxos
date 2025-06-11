@@ -33,10 +33,8 @@ import {
   table,
 } from '../extensions';
 import { useTextEditor, type UseTextEditorProps } from '../hooks';
+import { str } from '../testing';
 import { createRenderer } from '../util';
-
-// Utility functions
-export const str = (...lines: string[]) => lines.join('\n');
 
 export const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
 
