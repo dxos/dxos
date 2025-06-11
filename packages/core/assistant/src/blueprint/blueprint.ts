@@ -2,33 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Tool } from '@dxos/ai';
+import { Tool } from '@dxos/ai';
 import { assertState } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import { Schema } from 'effect';
 
-export type Blueprint = {
-  steps: BlueprintStep[];
-};
-
-export const Blueprint = Object.freeze({
-  make: (steps: string[]): Blueprint => {
-    return {
-      steps: steps.map(
-        (step, index): BlueprintStep => ({
-          id: ObjectId.random(),
-          instructions: step,
-          tools: [],
-        }),
-      ),
-    };
-  },
+export const BlueprintStep = Schema.Struct({
+  id: Schema.String,
+  instructions: Schema.String,
+  tools: Schema.Array(Tool).pipe(Schema.mutable),
 });
+export interface BlueprintStep extends Schema.Schema.Type<typeof BlueprintStep> {}
 
-export type BlueprintStep = {
-  id: ObjectId;
-  instructions: string;
-  tools: Tool[];
-};
+export const Blueprint = Schema.Struct({
+  steps: Schema.Array(BlueprintStep).pipe(Schema.mutable),
+});
+export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
 
 export namespace BlueprintBuilder {
   interface Begin {

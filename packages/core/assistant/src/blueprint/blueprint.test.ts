@@ -9,7 +9,7 @@ import { AIServiceEdgeClient, defineTool, ToolResult } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { ArtifactId } from '@dxos/artifact';
 
-import { Blueprint, BlueprintBuilder } from './blueprint';
+import { BlueprintBuilder } from './blueprint';
 import { setConsolePrinter } from './logger';
 import { BlueprintMachine } from './machine';
 import { TEST_EMAILS } from './test-data';
@@ -26,12 +26,12 @@ describe.skip('Blueprint', () => {
   });
 
   test('follows a simple blueprint', { timeout: 60_000 }, async () => {
-    const blueprint = Blueprint.make([
-      'Generate an idea for a new product. Do not use any external tools for this.',
-      'Write a short description of the product.',
-      'Run a market research to see if the product is viable. Do not use any external tools for this.',
-      'Write a pitch deck for the product',
-    ]);
+    const blueprint = BlueprintBuilder.begin()
+      .step('Generate an idea for a new product. Do not use any external tools for this.')
+      .step('Write a short description of the product.')
+      .step('Run a market research to see if the product is viable. Do not use any external tools for this.')
+      .step('Write a pitch deck for the product')
+      .end();
 
     const machine = new BlueprintMachine(blueprint);
     setConsolePrinter(machine, true);
