@@ -5,6 +5,7 @@
 import { CheckCircle, X } from '@phosphor-icons/react';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
+import { RelationSourceId } from '@dxos/echo-schema';
 import { RefArray } from '@dxos/live-object';
 import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -17,14 +18,22 @@ import {
   hoverableFocusedWithinControls,
   mx,
 } from '@dxos/react-ui-theme';
-import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, ThreadHeading } from '@dxos/react-ui-thread';
+import {
+  MessageTextbox,
+  type MessageTextboxProps,
+  Thread,
+  ThreadFooter,
+  ThreadHeading,
+  type ThreadProps,
+} from '@dxos/react-ui-thread';
+import { type AnchoredTo } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
-import { type ThreadContainerProps } from './types';
 import { useStatus } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
+import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
 
 const sizeClass = getSize(4);
@@ -74,19 +83,29 @@ const DeleteThreadButton = ({ onDelete }: { onDelete: () => void }) => {
   );
 };
 
+export type CommentContainerProps = {
+  anchor: AnchoredTo;
+  onAttend?: (anchor: AnchoredTo) => void;
+  onComment?: (anchor: AnchoredTo, message: string) => void;
+  onResolve?: (anchor: AnchoredTo) => void;
+  onMessageDelete?: (anchor: AnchoredTo, messageId: string) => void;
+  onThreadDelete?: (anchor: AnchoredTo) => void;
+} & Pick<ThreadProps, 'current'>;
+
 export const CommentContainer = ({
-  thread,
-  detached,
+  anchor,
   current,
   onAttend,
   onComment,
   onResolve,
   onMessageDelete,
   onThreadDelete,
-}: ThreadContainerProps) => {
+}: CommentContainerProps) => {
   const identity = useIdentity()!;
-  const space = getSpace(thread);
+  const space = getSpace(anchor);
   const members = useMembers(space?.key);
+  const detached = !anchor.anchor;
+  const thread = anchor[RelationSourceId] as ThreadType;
   const activity = useStatus(space, fullyQualifiedId(thread));
   const { t } = useTranslation(THREAD_PLUGIN);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
@@ -111,23 +130,23 @@ export const CommentContainer = ({
   const scrollToEnd = (behavior: ScrollBehavior) =>
     setTimeout(() => threadScrollRef.current?.scrollIntoView({ behavior, block: 'end' }), 10);
 
-  const handleAttend = useCallback(() => onAttend?.(thread), [onAttend, thread]);
-  const handleResolve = useCallback(() => onResolve?.(thread), [onResolve, thread]);
-  const handleMessageDelete = useCallback((id: string) => onMessageDelete?.(thread, id), [onMessageDelete, thread]);
-  const handleThreadDelete = useCallback(() => onThreadDelete?.(thread), [onThreadDelete, thread]);
+  const handleAttend = useCallback(() => onAttend?.(anchor), [onAttend, anchor]);
+  const handleResolve = useCallback(() => onResolve?.(anchor), [onResolve, anchor]);
+  const handleMessageDelete = useCallback((id: string) => onMessageDelete?.(anchor, id), [onMessageDelete, anchor]);
+  const handleThreadDelete = useCallback(() => onThreadDelete?.(anchor), [onThreadDelete, anchor]);
 
   const handleComment: MessageTextboxProps['onSend'] = useCallback(() => {
     if (!messageRef.current) {
       return false;
     }
 
-    onComment?.(thread, messageRef.current);
+    onComment?.(anchor, messageRef.current);
     messageRef.current = '';
     scrollToEnd('instant');
     rerenderEditor();
 
     return true;
-  }, [thread, identity]);
+  }, [anchor, identity]);
 
   return (
     <Thread onClickCapture={handleAttend} onFocusCapture={handleAttend} current={current} id={fullyQualifiedId(thread)}>

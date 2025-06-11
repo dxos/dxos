@@ -70,7 +70,9 @@ export const useTableModel = <T extends TableRow = TableRow>({
     }
   }, [model, rows]);
 
-  const { select, clear } = useSelectionActions([table?.id, table?.view?.target?.query.typename].filter(isNonNullable));
+  const { multiSelect, clear } = useSelectionActions(
+    [table?.id, table?.view?.target?.query.typename].filter(isNonNullable),
+  );
 
   useEffect(() => {
     if (!model) {
@@ -79,7 +81,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
 
     const unsubscribe = effect(() => {
       const selectedItems = [...model.selection.selection.value];
-      select(selectedItems);
+      multiSelect(selectedItems);
       onSelectionChanged?.(selectedItems);
     });
 

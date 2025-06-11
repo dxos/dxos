@@ -7,6 +7,7 @@ import React from 'react';
 import { createSurface, contributes, Capabilities, useCapability } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
@@ -23,6 +24,7 @@ export default () =>
       filter: (data): data is { subject: DocumentType; variant: undefined } =>
         isInstanceOf(DocumentType, data.subject) && !data.variant,
       component: ({ data, role }) => {
+        const selectionManager = useCapability(AttentionCapabilities.Selection);
         const settingsStore = useCapability(Capabilities.SettingsStore);
         const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
         const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
@@ -34,6 +36,7 @@ export default () =>
             object={data.subject}
             role={role}
             settings={settings}
+            selectionManager={selectionManager}
             extensionProviders={state.extensionProviders}
             viewMode={viewMode}
             editorStateStore={editorState}
@@ -48,6 +51,7 @@ export default () =>
       filter: (data): data is { id: string; subject: DataType.Text } =>
         typeof data.id === 'string' && isInstanceOf(DataType.Text, data.subject),
       component: ({ data, role }) => {
+        const selectionManager = useCapability(AttentionCapabilities.Selection);
         const settingsStore = useCapability(Capabilities.SettingsStore);
         const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
         const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
@@ -58,6 +62,7 @@ export default () =>
             object={data.subject}
             role={role}
             settings={settings}
+            selectionManager={selectionManager}
             extensionProviders={state.extensionProviders}
             viewMode={getViewMode(data.id)}
             editorStateStore={editorState}
@@ -71,6 +76,7 @@ export default () =>
       role: ['article', 'section'],
       filter: (data): data is { subject: { id: string; text: string } } => isEditorModel(data.subject),
       component: ({ data, role }) => {
+        const selectionManager = useCapability(AttentionCapabilities.Selection);
         const settingsStore = useCapability(Capabilities.SettingsStore);
         const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
         const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
@@ -81,6 +87,7 @@ export default () =>
             object={data.subject}
             role={role}
             settings={settings}
+            selectionManager={selectionManager}
             extensionProviders={state.extensionProviders}
             viewMode={getViewMode(data.subject.id)}
             editorStateStore={editorState}

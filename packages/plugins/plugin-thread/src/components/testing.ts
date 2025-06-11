@@ -4,10 +4,11 @@
 
 import { IdentityDid } from '@dxos/keys';
 import { live, makeRef } from '@dxos/live-object';
-import { ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { type Identity } from '@dxos/react-client/halo';
 import { DataType } from '@dxos/schema';
+
+import { ThreadType } from '../types';
 
 export const createCommentThread = (identity: Identity) => {
   return live(ThreadType, {

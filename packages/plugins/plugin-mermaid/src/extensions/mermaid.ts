@@ -150,6 +150,6 @@ const styles = EditorView.theme({
   // },
   '& .cm-mermaid-error': {
     display: 'inline-block',
-    color: 'var(--dx-error)',
+    color: 'var(--dx-errorText)',
   },
 });

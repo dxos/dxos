@@ -68,6 +68,8 @@ export const typeahead = ({ onComplete }: TypeaheadOptions = {}): Extension => {
         decorations: (v) => v.decorations,
       },
     ),
+
+    // Keys.
     Prec.highest(
       keymap.of([
         {

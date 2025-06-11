@@ -225,7 +225,9 @@ export default (context: PluginContext) =>
             intents: [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: first })],
           };
         } else {
-          const [item] = graph.getConnections(subject).filter((node) => !isActionLike(node));
+          const [item] = graph
+            .getConnections(subject)
+            .filter((node) => !isActionLike(node) && node.properties.disposition !== 'hidden');
           if (item) {
             return {
               intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] })],
