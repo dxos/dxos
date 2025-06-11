@@ -88,10 +88,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   }
 
   async setConfig(config: IndexConfig): Promise<void> {
-    if (this._params.indexer.initialized) {
-      log.warn('Setting index config, but indexer is already initialized.');
-    }
-    void this._params.indexer.setConfig(config);
+    await this._params.indexer.setConfig(config);
   }
 
   execQuery(request: QueryRequest): Stream<QueryResponse> {
