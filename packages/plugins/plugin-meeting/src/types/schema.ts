@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Ref, TypedObject } from '@dxos/echo-schema';
-import { ThreadType } from '@dxos/plugin-space/types';
+import { ThreadType } from '@dxos/plugin-thread/types';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
 import { DataType } from '@dxos/schema';
 

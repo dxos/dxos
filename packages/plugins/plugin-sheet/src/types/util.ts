@@ -76,7 +76,6 @@ export const createSheet = ({ name, cells, ...size }: CreateSheetOptions = {}): 
     rowMeta: {},
     columnMeta: {},
     ranges: [],
-    threads: [],
   });
 
   initialize(sheet, size);

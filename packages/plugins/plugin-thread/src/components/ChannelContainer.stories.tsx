@@ -10,7 +10,6 @@ import React from 'react';
 import { contributes } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { ThreadType } from '@dxos/plugin-space/types';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 import { withLayout, ColumnContainer } from '@dxos/storybook-utils';
@@ -18,7 +17,7 @@ import { withLayout, ColumnContainer } from '@dxos/storybook-utils';
 import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 import { createThreadPlugins } from '../testing';
 import translations from '../translations';
-import { ChannelType } from '../types';
+import { ChannelType, ThreadType } from '../types';
 
 // TODO(wittjosiah): Channel doesn't render full height.
 const Story = () => {

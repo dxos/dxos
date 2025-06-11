@@ -6,9 +6,8 @@ import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import { createIntent, type FileInfo, useIntentDispatcher } from '@dxos/app-framework';
+import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type DNDOptions,
@@ -26,12 +25,11 @@ import {
   editorGutter,
   processEditorPayload,
   stackItemContentEditorClassNames,
-  useCommentState,
-  useCommentClickListener,
   useFormattingState,
   useTextEditor,
   useEditorToolbarState,
   addLink,
+  type EditorToolbarActionGraphProps,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNotFalsy, isNonNullable } from '@dxos/util';
@@ -46,8 +44,8 @@ export type MarkdownEditorProps = {
   inputMode?: EditorInputMode;
   scrollPastEnd?: boolean;
   toolbar?: boolean;
+  customActions?: EditorToolbarActionGraphProps['customActions'];
   // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
-  comment?: boolean;
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
@@ -69,7 +67,7 @@ export const MarkdownEditor = ({
   extensionProviders,
   scrollPastEnd,
   toolbar,
-  comment = true,
+  customActions,
   viewMode,
   editorStateStore,
   onFileUpload,
@@ -77,7 +75,6 @@ export const MarkdownEditor = ({
 }: MarkdownEditorProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const toolbarState = useEditorToolbarState({ viewMode });
   const formattingObserver = useFormattingState(toolbarState);
 
@@ -90,18 +87,6 @@ export const MarkdownEditor = ({
     () => extensionProviders?.flatMap((provider) => provider({})).filter(isNonNullable),
     [extensionProviders],
   );
-
-  // TODO(Zan): Factor out to thread plugin.
-  const commentObserver = useCommentState(toolbarState);
-  const onCommentClick = useCallback(async () => {
-    await dispatch(
-      createIntent(DeckAction.ChangeCompanion, {
-        primary: id,
-        companion: `${id}${ATTENDABLE_PATH_SEPARATOR}comments`,
-      }),
-    );
-  }, [dispatch]);
-  const commentClickObserver = useCommentClickListener(onCommentClick);
 
   // TODO(wittjosiah): Factor out to file uploader plugin.
   // Drag files.
@@ -122,8 +107,6 @@ export const MarkdownEditor = ({
       initialValue,
       extensions: [
         formattingObserver,
-        comment && commentObserver,
-        comment && commentClickObserver,
         createBasicExtensions({
           readOnly: viewMode === 'readonly',
           placeholder: t('editor placeholder'),
@@ -145,7 +128,7 @@ export const MarkdownEditor = ({
         moveToEndOfLine: true,
       }),
     }),
-    [id, formattingObserver, comment, viewMode, themeMode, extensions, providerExtensions],
+    [id, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
   );
 
   useTest(editorView);
@@ -202,8 +185,8 @@ export const MarkdownEditor = ({
             attendableId={id}
             role={role}
             state={toolbarState}
+            customActions={customActions}
             getView={getView}
-            comment={comment}
             image={handleImageUpload}
             viewMode={handleViewModeChange}
           />

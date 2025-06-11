@@ -16,6 +16,7 @@ import * as Text$ from './text';
 
 // TODO(burdon): Remove (fix The inferred type of 'DeleteMessage' cannot be named without a reference.)
 export * from './message';
+export * from './relations';
 export * from './task';
 
 // TODO(burdon): Replace instanceof checks.

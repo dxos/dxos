@@ -3,5 +3,4 @@
 //
 
 export * from './collection';
-export * from './thread';
 export * from './types';

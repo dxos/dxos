@@ -14,7 +14,7 @@ import { SheetToolbar } from './SheetToolbar';
 import translations from '../../translations';
 
 const DefaultStory = () => {
-  return <SheetToolbar classNames={textBlockWidth} />;
+  return <SheetToolbar id='test' classNames={textBlockWidth} />;
 };
 
 export const Default = {};

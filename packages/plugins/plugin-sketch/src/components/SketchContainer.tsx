@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { ThreadAction } from '@dxos/plugin-thread/types';
+import { useAppGraph } from '@dxos/app-framework';
+import { useActions } from '@dxos/plugin-graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -22,7 +22,6 @@ export type SketchContainerProps = {
 export const SketchContainer = ({ role, sketch, settings }: SketchContainerProps) => {
   const id = fullyQualifiedId(sketch);
   const { hasAttention } = useAttention(id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const props = {
     readonly: role === 'slide',
@@ -30,10 +29,10 @@ export const SketchContainer = ({ role, sketch, settings }: SketchContainerProps
     maxZoom: role === 'slide' ? 1.5 : undefined,
   };
 
-  const handleThreadCreate = useCallback(() => {
-    // TODO(Zan): Consider a more appropriate anchor format.
-    void dispatch(createIntent(ThreadAction.Create, { subject: sketch, cursor: Date.now().toString() }));
-  }, [dispatch, sketch]);
+  // TODO(wittjosiah): Genericize tldraw toolbar actions w/ graph.
+  const { graph } = useAppGraph();
+  const actions = useActions(graph, fullyQualifiedId(sketch));
+  const handleThreadCreate = actions.find((action) => action.id === `${fullyQualifiedId(sketch)}/comment`)?.data;
 
   return (
     // NOTE: Min 500px height (for tools palette to be visible).

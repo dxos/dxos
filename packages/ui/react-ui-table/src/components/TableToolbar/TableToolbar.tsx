@@ -2,11 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import { Rx } from '@effect-rx/rx-react';
+import React, { useMemo } from 'react';
 
 import { live } from '@dxos/live-object';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
+  type ActionGraphEdges,
+  type ActionGraphNodes,
+  type ActionGraphProps,
   createGapSeparator,
   createMenuAction,
   type MenuAction,
@@ -14,6 +18,7 @@ import {
   ToolbarMenu,
   useMenuActions,
 } from '@dxos/react-ui-menu';
+import { rxFromSignal } from '@dxos/react-ui-menu';
 
 import { translationKey } from '../../translations';
 
@@ -26,41 +31,67 @@ export type TableToolbarActionType = 'add-row' | 'comment' | 'save-view';
 type TableToolbarState = Partial<{ viewDirty: boolean }>;
 
 export type TableToolbarProps = ThemedClassName<
-  TableToolbarState & { onAction: (action: TableToolbarAction) => void; attendableId?: string }
+  TableToolbarState & {
+    onAdd: () => void;
+    onSave: () => void;
+    attendableId?: string;
+    customActions?: Rx.Rx<ActionGraphProps>;
+  }
 >;
 
-const createTableToolbarActions = (state: TableToolbarState, onAction: (action: TableToolbarAction) => void) => {
-  const add = createMenuAction<TableToolbarActionProperties>('add-row', () => onAction(add), {
-    type: 'add-row' as const,
-    icon: 'ph--plus--regular',
-    label: ['add row', { ns: translationKey }],
-    testId: 'table.toolbar.add-row',
+const createTableToolbarActions = ({
+  state,
+  onAdd,
+  onSave,
+  customActions,
+}: {
+  state: TableToolbarState;
+  onAdd: () => void;
+  onSave: () => void;
+  customActions?: Rx.Rx<ActionGraphProps>;
+}) =>
+  Rx.make((get) => {
+    const add = createMenuAction<TableToolbarActionProperties>('add-row', onAdd, {
+      type: 'add-row' as const,
+      icon: 'ph--plus--regular',
+      label: ['add row', { ns: translationKey }],
+      testId: 'table.toolbar.add-row',
+    });
+    const save = createMenuAction<TableToolbarActionProperties>('save-view', onSave, {
+      type: 'save-view' as const,
+      icon: 'ph--floppy-disk--regular',
+      label: ['save view label', { ns: translationKey }],
+      testId: 'table.toolbar.save-view',
+      iconOnly: false,
+      hidden: get(rxFromSignal(() => !state.viewDirty)),
+    });
+    const gap = createGapSeparator();
+    const nodes: ActionGraphNodes = [add, save, ...gap.nodes];
+    const edges: ActionGraphEdges = nodes.map(({ id: target }) => ({ source: 'root', target }));
+    if (customActions) {
+      const custom = get(customActions);
+      nodes.push(...custom.nodes);
+      edges.push(...custom.edges);
+    }
+    return {
+      nodes,
+      edges,
+    };
   });
-  const save = createMenuAction<TableToolbarActionProperties>('save-view', () => onAction(save), {
-    type: 'save-view' as const,
-    icon: 'ph--floppy-disk--regular',
-    label: ['save view label', { ns: translationKey }],
-    testId: 'table.toolbar.save-view',
-    iconOnly: false,
-    hidden: !state.viewDirty,
-  });
-  const gap = createGapSeparator();
-  const comment = createMenuAction('comment', () => onAction(comment), {
-    type: 'comment' as const,
-    icon: 'ph--chat-text--regular',
-    label: ['create comment', { ns: translationKey }],
-    testId: 'table.toolbar.comment',
-  });
-  const nodes = [add, save, ...gap.nodes, comment];
-  return {
-    nodes,
-    edges: nodes.map(({ id: target }) => ({ source: 'root', target })),
-  };
-};
 
-export const TableToolbar = ({ classNames, viewDirty, attendableId, onAction }: TableToolbarProps) => {
+export const TableToolbar = ({
+  classNames,
+  viewDirty,
+  attendableId,
+  onAdd,
+  onSave,
+  customActions,
+}: TableToolbarProps) => {
   const state = useMemo(() => live<TableToolbarState>({ viewDirty }), []);
-  const actionsCreator = useCallback(() => createTableToolbarActions(state, onAction), [state, onAction]);
+  const actionsCreator = useMemo(
+    () => createTableToolbarActions({ state, onAdd, onSave, customActions }),
+    [state, onAdd, onSave, customActions],
+  );
   const menu = useMenuActions(actionsCreator);
 
   return (
