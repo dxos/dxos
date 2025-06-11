@@ -14,6 +14,9 @@ import { setConsolePrinter } from './logger';
 import { BlueprintMachine } from './machine';
 import { TEST_EMAILS } from './test-data';
 import { createExaTool } from '../research/exa';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { DataTypes } from '@dxos/schema';
+import { createGraphWriteTool } from '../research';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
 
@@ -92,9 +95,14 @@ describe('Blueprint', () => {
   });
 
   test.only('research', { timeout: 60_000 }, async () => {
+    const builder = await new EchoTestBuilder().open();
+    const { db } = await builder.createDatabase({ indexing: { vector: true } });
+
     const blueprint = BlueprintBuilder.begin()
       .step('Research who founded exa.ai')
       .withTool(createExaTool({ apiKey: EXA_API_KEY }))
+      .step('Add researched data to the graph')
+      .withTool(createGraphWriteTool({ db, schemaTypes: DataTypes }))
       .end();
 
     const machine = new BlueprintMachine(blueprint);
