@@ -23,7 +23,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "testing": ["./dist/types/src/testing/index.d.ts"]
+      "testing": [
+        "./dist/types/src/testing/index.d.ts"
+      ]
     }
   },
   "files": [

@@ -6,17 +6,18 @@ import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
 import { AIServiceEdgeClient, defineTool, ToolResult } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
+import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { ArtifactId } from '@dxos/artifact';
 
 import { BlueprintBuilder } from './blueprint';
 import { setConsolePrinter } from './logger';
 import { BlueprintMachine } from './machine';
 import { TEST_EMAILS } from './test-data';
+import { createExaTool } from '../research/exa';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
 
-describe.skip('Blueprint', () => {
+describe('Blueprint', () => {
   const aiService = new AIServiceEdgeClient({
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
     defaultGenerationOptions: {
@@ -88,5 +89,16 @@ describe.skip('Blueprint', () => {
     const machine = new BlueprintMachine(blueprint);
     setConsolePrinter(machine);
     await machine.runToCompletion({ aiService, input: TEST_EMAILS[0] });
+  });
+
+  test.only('research', { timeout: 60_000 }, async () => {
+    const blueprint = BlueprintBuilder.begin()
+      .step('Research who founded exa.ai')
+      .withTool(createExaTool({ apiKey: EXA_API_KEY }))
+      .end();
+
+    const machine = new BlueprintMachine(blueprint);
+    setConsolePrinter(machine, true);
+    await machine.runToCompletion({ aiService });
   });
 });
