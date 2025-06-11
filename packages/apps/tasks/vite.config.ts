@@ -14,6 +14,8 @@ export default defineConfig({
     },
   },
   build: {
+    // TODO(wittjosiah): Minification is causing issues with the app.
+    minify: false,
     outDir: 'out/tasks',
     rollupOptions: {
       input: {

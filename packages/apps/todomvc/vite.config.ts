@@ -33,7 +33,8 @@ export default defineConfig({
     },
   },
   build: {
-    sourcemap: true,
+    // TODO(wittjosiah): Minification is causing issues with the app.
+    minify: false,
     rollupOptions: {
       input: {
         main: resolve(__dirname, './index.html'),
