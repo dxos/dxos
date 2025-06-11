@@ -10,7 +10,6 @@ import React, { useEffect, useState } from 'react';
 import { Capabilities, contributes, createSurface, IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { makeRef } from '@dxos/live-object';
-import { ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { live, type Space } from '@dxos/react-client/echo';
@@ -22,7 +21,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ChatContainer } from './ChatContainer';
 import translations from '../translations';
-import { ChannelType } from '../types';
+import { ChannelType, ThreadType } from '../types';
 
 faker.seed(1);
 

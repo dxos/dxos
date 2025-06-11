@@ -18,7 +18,6 @@ export default () =>
           object: live(DiagramType, {
             name,
             canvas: makeRef(live(CanvasType, { schema, content })),
-            threads: [],
           }),
         },
       }),

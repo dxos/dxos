@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Rx } from '@effect-rx/rx-react';
 import { useEffect } from 'react';
 
 import {
@@ -65,7 +66,7 @@ export const createActions = (params?: CreateActionsParams) => {
   );
 };
 
-export const createNestedActions = () => {
+export const createNestedActions = Rx.make(() => {
   const result: ActionGraphProps = { edges: [], nodes: [] };
   const actionGroups = createActions({ type: ACTION_GROUP_TYPE });
   actionGroups.forEach((group) => {
@@ -77,7 +78,7 @@ export const createNestedActions = () => {
     );
   });
   return result;
-};
+});
 
 export const createNestedActionsResolver = (groupParams?: CreateActionsParams, params?: CreateActionsParams) => {
   const graph = new Graph();
