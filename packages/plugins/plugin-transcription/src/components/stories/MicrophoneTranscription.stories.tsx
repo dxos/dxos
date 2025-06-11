@@ -51,10 +51,6 @@ const RECORDER_CONFIG = {
   interval: 200,
 };
 
-const aiService = new AIServiceEdgeClient({
-  endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-});
-
 type StoryProps = {
   detectSpeaking?: boolean;
   transcriberConfig: TranscriberParams['config'];
