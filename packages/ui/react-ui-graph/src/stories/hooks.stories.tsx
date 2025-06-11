@@ -28,7 +28,7 @@ import { convertTreeToGraph, createTree, TestGraphModel, type TestNode } from '.
 
 import '../../styles/graph.css';
 
-type DefaultStoryProps = PropsWithChildren<{
+type StoryProps = PropsWithChildren<{
   model: TestGraphModel;
   projectorOptions?: GraphForceProjectorOptions;
   count?: number;
@@ -37,7 +37,7 @@ type DefaultStoryProps = PropsWithChildren<{
   grid?: boolean;
 }>;
 
-const DefaultStory = ({ children, ...props }: DefaultStoryProps) => {
+const DefaultStory = ({ children, ...props }: StoryProps) => {
   return (
     <>
       <SVG.Root>
@@ -55,7 +55,7 @@ const StoryComponent = ({
   interval = 200,
   link = false,
   grid: showGrid = false,
-}: DefaultStoryProps) => {
+}: StoryProps) => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>();
   const markersRef = useRef<SVGGElement>();
