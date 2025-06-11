@@ -80,7 +80,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
           <Toolbar.Button>Test</Toolbar.Button>
         </Toolbar.Root>
 
-        <div className={mx(container, 'm-2 bg-groupSurface')}>
+        <div className={mx(container, 'm-2 bg-activeSurface')}>
           <Input.Root>
             <Input.Label>Level 1 (group)</Input.Label>
           </Input.Root>

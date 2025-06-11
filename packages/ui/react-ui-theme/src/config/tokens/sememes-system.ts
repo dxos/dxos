@@ -31,21 +31,22 @@ const applyAlpha = (sememe: Sememe, alpha: number): Sememe => {
   }
 };
 
-const STEPS = 8;
+const DEPTH_SCALE = 8;
 
 const DARK_MIN = 850;
 const DARK_MAX = 700;
-const darkElevationCadence = (step: number) => Math.floor(DARK_MIN + (DARK_MAX - DARK_MIN) * (step / STEPS));
+const darkElevationCadence = (depth: number) => Math.floor(DARK_MIN + (DARK_MAX - DARK_MIN) * (depth / DEPTH_SCALE));
 
 const LIGHT_MIN = 10;
 const LIGHT_MAX = 180;
-const lightElevationCadence = (step: number) => Math.floor(LIGHT_MIN + (LIGHT_MAX - LIGHT_MIN) * (step / STEPS));
+const lightElevationCadence = (depth: number) =>
+  Math.floor(LIGHT_MIN + (LIGHT_MAX - LIGHT_MIN) * (depth / DEPTH_SCALE));
 
-const elevationCadence = (lightDp: number, darkDp: number = lightDp, alpha: number = 1): Sememe =>
+const elevationCadence = (lightDepth: number, darkDepth: number = lightDepth, alpha: number = 1): Sememe =>
   applyAlpha(
     {
-      light: ['neutral', lightElevationCadence(lightDp)],
-      dark: ['neutral', darkElevationCadence(darkDp)],
+      light: ['neutral', lightElevationCadence(lightDepth)],
+      dark: ['neutral', darkElevationCadence(darkDepth)],
     },
     alpha,
   );
@@ -85,60 +86,60 @@ export const systemSememes = {
   // Special surfaces.
   //
 
-  ['accentSurfaceRelated' as const]: {
+  accentSurfaceRelated: {
     light: ['primary', '300/.1'],
     dark: ['primary', '400/.1'],
   },
-  ['accentSurfaceHover' as const]: {
+  accentSurfaceHover: {
     light: ['primary', 600],
     dark: ['primary', 475],
   },
-  ['accentSurface' as const]: {
+  accentSurface: {
     light: ['primary', 500],
     dark: ['primary', 500],
   },
 
-  ['deckSurface' as const]: elevationCadence(6, 0.8),
-  ['inverseSurface' as const]: elevationCadence(2),
+  deckSurface: elevationCadence(6, 0.8),
+  inverseSurface: elevationCadence(2),
 
   //
   // Text (text-)
   // TODO(thure): Establish contrast-order cadence for text.
   //
 
-  ['baseText' as const]: {
+  baseText: {
     light: ['neutral', 1000],
     dark: ['neutral', 50],
   },
-  ['inverseSurfaceText' as const]: {
+  inverseSurfaceText: {
     light: ['neutral', 50],
     dark: ['neutral', 1000],
   },
-  ['description' as const]: {
+  description: {
     light: ['neutral', 500],
     dark: ['neutral', 400],
   },
-  ['subdued' as const]: {
+  subdued: {
     light: ['neutral', 700],
     dark: ['neutral', 300],
   },
-  ['accentText' as const]: {
+  accentText: {
     light: ['primary', 550],
     dark: ['primary', 400],
   },
-  ['accentTextHover' as const]: {
+  accentTextHover: {
     light: ['primary', 500],
     dark: ['primary', 350],
   },
-  ['neutralFocusIndicator' as const]: {
+  neutralFocusIndicator: {
     light: ['neutral', 350],
     dark: ['neutral', 450],
   },
-  ['unAccentHover' as const]: {
+  unAccentHover: {
     light: ['neutral', 400],
     dark: ['neutral', 500],
   },
-  ['accentSurfaceText' as const]: {
+  accentSurfaceText: {
     light: ['neutral', 0],
     dark: ['neutral', 0],
   },
@@ -153,8 +154,8 @@ const aliasDefs: Record<string, Record<string, SememeName>> = {
   // Base surface for text (e.g., Document, Table, Sheet.)
   baseSurface: { root: 'surface-20' },
 
-  // Currented / selected items, other surfaces needing special contrast against baseSurface. TODO(thure): Rename.
-  groupSurface: { root: 'surface-50' },
+  // Selected items, current items, other surfaces needing special contrast against baseSurface.
+  activeSurface: { root: 'surface-50' },
 
   // Main sidebar panel.
   sidebarSurface: { root: 'surface-30' },
@@ -181,7 +182,6 @@ const aliasDefs: Record<string, Record<string, SememeName>> = {
   input: { root: 'surface-35' },
 
   separator: { root: 'surface-50' },
-  subduedSeparator: { root: 'surface-30' },
 
   unAccent: { root: 'surface-400' },
   unAccentHover: { root: 'surface-450' },

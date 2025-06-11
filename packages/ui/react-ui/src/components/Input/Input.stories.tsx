@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React from 'react';
 
-import { baseSurface, modalSurface, groupSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
+import { baseSurface, modalSurface, activeSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
 import { type MessageValence } from '@dxos/react-ui-types';
 
 import {
@@ -78,7 +78,7 @@ const DefaultStory = (props: BaseProps) => {
       <div className={mx(baseSurface, 'p-4')}>
         <Wrapper {...props} />
       </div>
-      <div className={mx(groupSurface, 'p-4 rounded-lg', surfaceShadow({ elevation: 'positioned' }))}>
+      <div className={mx(activeSurface, 'p-4 rounded-lg', surfaceShadow({ elevation: 'positioned' }))}>
         <Wrapper {...props} />
       </div>
       <div className={mx(modalSurface, 'p-4 rounded-lg', surfaceShadow({ elevation: 'dialog' }))}>
