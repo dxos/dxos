@@ -15,14 +15,14 @@ export type FloatingMenuOptions = {
 export const floatingMenu = (options: FloatingMenuOptions) =>
   ViewPlugin.fromClass(
     class {
-      button: HTMLElement;
       view: EditorView;
+      button: HTMLElement;
       rafId: number | null = null;
 
       constructor(view: EditorView) {
         this.view = view;
 
-        // Position context: scrollDOM
+        // Position context.
         const container = view.scrollDOM;
         if (getComputedStyle(container).position === 'static') {
           container.style.position = 'relative';
@@ -53,20 +53,12 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
         }
       }
 
-      scheduleUpdate() {
-        if (this.rafId != null) {
-          cancelAnimationFrame(this.rafId);
-        }
-
-        this.rafId = requestAnimationFrame(this.updateButtonPosition.bind(this));
-      }
-
       updateButtonPosition() {
         const pos = this.view.state.selection.main.head;
         const line = this.view.lineBlockAt(pos);
 
-        const contentRect = this.view.contentDOM.getBoundingClientRect();
         const scrollRect = this.view.scrollDOM.getBoundingClientRect();
+        const contentRect = this.view.contentDOM.getBoundingClientRect();
 
         // Center the menu.
         const dy = options.height ? (line.height - options.height) / 2 : 0;
@@ -80,6 +72,14 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
 
         // TODO(burdon): Position is incorrect if cursor is in fenced code block.
         // console.log('offsetTop', lineRect, containerRect);
+      }
+
+      scheduleUpdate() {
+        if (this.rafId != null) {
+          cancelAnimationFrame(this.rafId);
+        }
+
+        this.rafId = requestAnimationFrame(this.updateButtonPosition.bind(this));
       }
 
       destroy() {

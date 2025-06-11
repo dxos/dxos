@@ -10,7 +10,6 @@ import { useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createThemeExtensions,
-  editorFullWidth,
   editorMonospace,
   useTextEditor,
   EditorView,
@@ -42,9 +41,6 @@ export const JsonEditor = (_: JsonEditorProps) => {
         createThemeExtensions({
           themeMode,
           syntaxHighlighting: true,
-          slots: {
-            content: { className: editorFullWidth },
-          },
         }),
         folding(),
         // NOTE: Not using default editor gutter because folding for code works best right beside text.

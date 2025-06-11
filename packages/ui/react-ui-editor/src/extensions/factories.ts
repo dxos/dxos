@@ -11,6 +11,7 @@ import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import {
   EditorView,
   type KeyBinding,
+  ViewPlugin,
   drawSelection,
   dropCursor,
   highlightActiveLine,
@@ -149,6 +150,9 @@ export type ThemeExtensionsOptions = {
     editor?: {
       className?: string;
     };
+    scroll?: {
+      className?: string;
+    };
     content?: {
       className?: string;
     };
@@ -179,6 +183,14 @@ export const createThemeExtensions = ({
       (themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle)),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
+    slots.scroll?.className &&
+      ViewPlugin.fromClass(
+        class {
+          constructor(view: EditorView) {
+            view.scrollDOM.classList.add(slots.scroll.className);
+          }
+        },
+      ),
   ].filter(isNotFalsy);
 };
 
