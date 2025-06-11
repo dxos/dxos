@@ -110,7 +110,7 @@ export class Indexer extends Resource {
           this._engine.deleteIndex(kind);
         }
       }
-      this._loadIndexes();
+      await this._loadIndexes();
       this._run.schedule();
     }
   }
