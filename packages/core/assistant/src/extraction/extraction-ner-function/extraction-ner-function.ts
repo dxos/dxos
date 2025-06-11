@@ -6,12 +6,12 @@ import { asyncTimeout } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { extractFullEntities } from './named-entity-recognition';
 import { ExtractionInput, ExtractionOutput } from '../extraction';
 import { findQuotes, insertReferences } from '../quotes';
-import { log } from '@dxos/log';
 
 // TODO(mykola): Make it use vector index to query objects and not pass objects as input.
 export const extractionNerFn = defineFunction({

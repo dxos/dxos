@@ -13,15 +13,15 @@ import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import {
   extractionAnthropicFn,
-  ExtractionFunction,
-  ExtractionInput,
-  ExtractionOutput,
+  type ExtractionFunction,
   extractionNerFn,
   processTranscriptMessage,
   getNer,
 } from '@dxos/assistant';
-import { Filter, MemoryQueue, QueryResult } from '@dxos/echo-db';
-import { BaseObject, create, createQueueDxn, Expando, Query } from '@dxos/echo-schema';
+import { Filter, MemoryQueue } from '@dxos/echo-db';
+import { create, createQueueDxn, type Expando } from '@dxos/echo-schema';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -41,8 +41,6 @@ import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '../../hooks
 import { TestItem } from '../../testing';
 import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
 import { renderMarkdown } from '../Transcript';
-import { FunctionDefinition, FunctionExecutor, ServiceContainer } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
 
 const TRANSCRIBER_CONFIG = {
   transcribeAfterChunksAmount: 50,
@@ -89,7 +87,6 @@ const DefaultStory = ({
   useEffect(() => {
     if (!space) {
       log.warn('no space');
-      return;
     }
   }, [space]);
 
