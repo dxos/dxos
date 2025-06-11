@@ -47,7 +47,7 @@ const aiService = new AIServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.REMOTE,
 });
 
-type DefaultStoryProps = {
+type StoryProps = {
   detectSpeaking?: boolean;
   entityExtraction?: boolean;
   transcriberConfig: TranscriberParams['config'];
@@ -61,7 +61,7 @@ const DefaultStory = ({
   transcriberConfig,
   recorderConfig,
   audioConstraints,
-}: DefaultStoryProps) => {
+}: StoryProps) => {
   const [running, setRunning] = useState(false);
 
   // Audio.

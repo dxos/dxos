@@ -4,27 +4,29 @@
 
 import '@dxos-theme';
 
+import { type StoryObj } from '@storybook/react';
 import React, { useCallback, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { useThemeContext } from '@dxos/react-ui';
 import { attentionSurface, mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { EditorToolbar, useEditorToolbarState } from '..';
+import { EditorToolbar, useEditorToolbarState } from '../components';
+import { editorWidth } from '../defaults';
 import {
   type EditorInputMode,
-  decorateMarkdown,
+  type EditorViewMode,
+  InputModeExtensions,
   createMarkdownExtensions,
-  formattingKeymap,
-  useFormattingState,
   createBasicExtensions,
   createThemeExtensions,
-  InputModeExtensions,
-  type EditorViewMode,
-} from '../../extensions';
-import { useTextEditor, type UseTextEditorProps } from '../../hooks';
-import translations from '../../translations';
+  decorateMarkdown,
+  formattingKeymap,
+  useFormattingState,
+} from '../extensions';
+import { useTextEditor, type UseTextEditorProps } from '../hooks';
+import translations from '../translations';
 
 type StoryProps = { placeholder?: string } & UseTextEditorProps;
 
@@ -67,24 +69,28 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
   return (
     <div role='none' className={mx('fixed inset-0 flex flex-col')}>
       {toolbarState && <EditorToolbar state={toolbarState} getView={getView} viewMode={handleViewModeChange} />}
-      <div role='none' className='grow overflow-hidden'>
-        <div className={attentionSurface} ref={parentRef} />
+      <div role='none' className={mx('grow overflow-hidden', attentionSurface)}>
+        <div className={mx(editorWidth)} ref={parentRef} />
       </div>
     </div>
   );
 };
 
-export const Default = {
+const meta: Meta<StoryProps> = {
+  title: 'ui/react-ui-editor/EditorToolbar',
+  render: DefaultStory,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: { translations, layout: 'fullscreen' },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     autoFocus: true,
     placeholder: 'Text...',
     initialValue: '# Demo\n\nThis is a document.\n\n',
   },
-};
-
-export default {
-  title: 'ui/react-ui-editor/EditorToolbar',
-  render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { translations, layout: 'fullscreen' },
 };
