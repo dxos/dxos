@@ -19,8 +19,7 @@ import { faker } from '@dxos/random';
 import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
-import { FunctionExecutor } from '@dxos/functions';
-import { ServiceContext } from '@dxos/client-services';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 
 // TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
 export const TestItem = Schema.Struct({
@@ -101,7 +100,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
   });
 
-  executor = new FunctionExecutor(new ServiceContext().setServices({ ai: { client: this.aiService } }));
+  executor = new FunctionExecutor(new ServiceContainer().setServices({ ai: { client: this.aiService } }));
 
   space: Space | undefined;
   currentMessage: number = 0;
