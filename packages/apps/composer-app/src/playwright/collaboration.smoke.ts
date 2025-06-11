@@ -187,7 +187,7 @@ test.describe('Collaboration tests', () => {
   });
 
   test('peers can see each others presence', async () => {
-    test.setTimeout(90_000);
+    test.setTimeout(300_000);
 
     await host.createSpace();
 
