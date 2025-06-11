@@ -19,7 +19,8 @@
         "platforms": [
           "browser",
           "node"
-        ]
+        ],
+        "preactSignalTracking": true
       }
     },
     "lint": {},
