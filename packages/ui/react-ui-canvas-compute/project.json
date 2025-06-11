@@ -13,7 +13,8 @@
         "entryPoints": [
           "{projectRoot}/src/index.ts"
         ],
-        "injectGlobals": true
+        "injectGlobals": true,
+        "preactSignalTracking": true
       }
     },
     "lint": {},

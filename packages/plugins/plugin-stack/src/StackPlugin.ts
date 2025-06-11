@@ -2,16 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
-
-import { Capabilities, contributes, createSurface, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { type AnyLiveObject, fullyQualifiedId } from '@dxos/client/echo';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { type AnyLiveObject } from '@dxos/client/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { CollectionType } from '@dxos/plugin-space/types';
 
-import { StackMain } from './components';
-import { meta, SECTION_IDENTIFIER, STACK_PLUGIN } from './meta';
+import { ReactSurface } from './capabilities';
+import { meta, SECTION_IDENTIFIER } from './meta';
 import translations from './translations';
 import { StackViewType } from './types';
 
@@ -52,25 +48,6 @@ export const StackPlugin = () =>
     defineModule({
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupReactSurface,
-      activate: () =>
-        contributes(
-          Capabilities.ReactSurface,
-          createSurface({
-            id: `${STACK_PLUGIN}/article`,
-            role: 'article',
-            filter: (data): data is { id?: string; subject: CollectionType } =>
-              isInstanceOf(CollectionType, data.subject),
-            component: ({ data }) => {
-              // This allows the id to be overridden by the surface for situations where the id of the collection
-              // is not the same as the id of what is being represented (e.g., a space with a root collection).
-              const id = typeof data.id === 'string' ? data.id : undefined;
-              return (
-                <div role='none' className='overflow-auto' style={{ contain: 'layout' }}>
-                  <StackMain id={id ?? fullyQualifiedId(data.subject)} collection={data.subject} />
-                </div>
-              );
-            },
-          }),
-        ),
+      activate: ReactSurface,
     }),
   ]);
