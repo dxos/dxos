@@ -3,10 +3,11 @@
 //
 
 import { type StorybookConfig } from '@storybook/react-vite';
-import ReactPlugin from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react-swc';
 import flatten from 'lodash.flatten';
 import { resolve } from 'path';
 import { type InlineConfig, mergeConfig } from 'vite';
+import InspectPlugin from 'vite-plugin-inspect';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import TurbosnapPlugin from 'vite-plugin-turbosnap';
 import WasmPlugin from 'vite-plugin-wasm';
@@ -17,6 +18,7 @@ import { IconsPlugin } from '@dxos/vite-plugin-icons';
 export const packages = resolve(__dirname, '../../../packages');
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
+const isTrue = (str?: string) => str === 'true' || str === '1';
 const contentFiles = '*.{ts,tsx,js,jsx,css}';
 
 /**
@@ -62,24 +64,8 @@ export const config = (
     }
 
     return mergeConfig(
-      configType === 'PRODUCTION'
-        ? {
-            ...config,
-            // TODO(thure): build fails for @preact/signals-react: https://github.com/preactjs/signals/issues/269
-            plugins: flatten(config.plugins).map((plugin: any) => {
-              return plugin.name === 'vite:react-babel'
-                ? ReactPlugin({
-                    jsxRuntime: 'classic',
-                  })
-                : plugin.name === 'vite:react-jsx'
-                  ? undefined
-                  : plugin;
-            }),
-          }
-        : config,
+      config,
       {
-        // When `jsxRuntime` is set to 'classic', top-level awaits are rejected unless build.target is 'esnext'
-        ...(configType === 'PRODUCTION' && { build: { target: 'esnext' } }),
         publicDir: resolve(__dirname, '../static'),
         build: {
           assetsInlineLimit: 0,
@@ -103,6 +89,22 @@ export const config = (
           plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
         },
         plugins: [
+          // https://github.com/antfu-collective/vite-plugin-inspect#readme
+          // Open: http://localhost:5173/__inspect
+          isTrue(process.env.DX_INSPECT) && InspectPlugin(),
+          ReactPlugin({
+            tsDecorators: true,
+            plugins: [
+              [
+                '@preact-signals/safe-react/swc',
+                {
+                  // you should use `auto` mode to track only components which uses `.value` access.
+                  // Can be useful to avoid tracking of server side components
+                  mode: 'all',
+                },
+              ],
+            ],
+          }),
           IconsPlugin({
             symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
             assetPath: (name, variant) =>
