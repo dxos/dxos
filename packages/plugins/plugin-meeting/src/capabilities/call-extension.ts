@@ -25,8 +25,7 @@ import { DataType } from '@dxos/schema';
 import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
 import { MeetingType, type MeetingSettingsProps } from '../types';
-import { FunctionExecutor } from '@dxos/functions';
-import { ServiceContext } from '@dxos/client-services';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
@@ -103,7 +102,7 @@ type EntityExtractionEnricherFactoryOptions = {
 };
 
 const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
-  const executor = new FunctionExecutor(new ServiceContext().setServices({ ai: { client: aiClient } }));
+  const executor = new FunctionExecutor(new ServiceContainer().setServices({ ai: { client: aiClient } }));
 
   return async (message: DataType.Message) => {
     const { objects } = await space.db

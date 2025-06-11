@@ -13,13 +13,13 @@ import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { Type } from '@dxos/echo';
 import { create, createQueueDxn, ObjectId } from '@dxos/echo-schema';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 
 // TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
 export const TestItem = Schema.Struct({
