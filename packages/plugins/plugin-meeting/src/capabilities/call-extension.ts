@@ -9,6 +9,7 @@ import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
 import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
 import { Filter, getSchemaTypename, Query, type BaseEchoObject } from '@dxos/echo-schema';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -25,7 +26,6 @@ import { DataType } from '@dxos/schema';
 import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
 import { MeetingType, type MeetingSettingsProps } from '../types';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
