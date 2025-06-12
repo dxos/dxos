@@ -4,15 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { EchoObject, EchoRelation, Ref } from '@dxos/echo-schema';
-
-// TODO(dmaretskyi): Move those out.
-const Type = {
-  def: EchoObject,
-};
-const Relation = {
-  def: EchoRelation,
-};
+import { Type, Ref } from '@dxos/echo';
 
 //
 // Example schema
@@ -44,7 +36,7 @@ export interface Organization extends Schema.Schema.Type<typeof Organization> {}
 export const WorksFor = Schema.Struct({
   since: Schema.String,
 }).pipe(
-  Relation.def({
+  Type.Relation({
     typename: 'dxos.org/type/WorksFor',
     version: '0.1.0',
     source: Person,
