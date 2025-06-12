@@ -19,7 +19,7 @@ export const editorWidth = '!mli-auto is-full max-is-[min(50rem,100%-4rem)]';
 
 export const editorSlots: ThemeExtensionsOptions['slots'] = {
   scroll: {
-    className: 'pbs-1',
+    className: 'pbs-2',
   },
   content: {
     className: editorWidth,
