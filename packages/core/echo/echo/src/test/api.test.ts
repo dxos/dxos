@@ -8,14 +8,14 @@ import { describe, test } from 'vitest';
 import { raise } from '@dxos/debug';
 import { FormatEnum, FormatAnnotation } from '@dxos/echo-schema';
 
-import { Obj, Ref, Type } from '.';
+import { Obj, Ref, Type, type Live } from '../index';
 
 namespace Testing {
   export const Organization = Schema.Struct({
     id: Type.ObjectId,
     name: Schema.String,
   }).pipe(
-    Type.def({
+    Type.Obj({
       typename: 'example.com/type/Organization',
       version: '0.1.0',
     }),
@@ -29,7 +29,7 @@ namespace Testing {
     email: Schema.optional(Schema.String.pipe(FormatAnnotation.set(FormatEnum.Email))),
     organization: Schema.optional(Type.Ref(Organization)),
   }).pipe(
-    Type.def({
+    Type.Obj({
       typename: 'example.com/type/Person',
       version: '0.1.0',
     }),
@@ -62,7 +62,7 @@ namespace Testing {
     role: Schema.String,
   }).pipe(
     // Relation.def
-    Type.def({
+    Type.Obj({
       typename: 'example.com/type/WorksFor',
       version: '0.1.0',
       // source: Person,
@@ -84,7 +84,7 @@ namespace Testing {
   });
 
   export const Message = MessageStruct.pipe(
-    Type.def({
+    Type.Obj({
       typename: 'example.com/type/Message',
       version: '0.1.0',
     }),
@@ -95,7 +95,7 @@ namespace Testing {
 
 describe('Experimental API review', () => {
   test('type checks', ({ expect }) => {
-    const contact = Obj.create(Testing.Person, { name: 'Test' });
+    const contact = Obj.make(Testing.Person, { name: 'Test' });
     const type: Schema.Schema<Testing.Person> = Obj.getSchema(contact) ?? raise(new Error('No schema found'));
 
     expect(Type.getDXN(type)?.typename).to.eq(Testing.Person.typename);
@@ -109,20 +109,20 @@ describe('Experimental API review', () => {
   });
 
   test('instance checks', ({ expect }) => {
-    const organization: Obj.Obj.Live<Testing.Organization> = Obj.create(Testing.Organization, { name: 'DXOS' });
-    const contact: Obj.Obj.Live<Testing.Person> = Obj.create(Testing.Person, {
+    const organization: Live<Testing.Organization> = Obj.make(Testing.Organization, { name: 'DXOS' });
+    const contact: Live<Testing.Person> = Obj.make(Testing.Person, {
       name: 'Test',
       organization: Ref.make(organization),
     });
 
     expect(Schema.is(Testing.Person)(contact)).to.be.true;
     expect(Testing.Person.instanceOf(contact)).to.be.true;
-    expect(Type.instanceOf(Testing.Person, contact)).to.be.true;
-    expect(Type.instanceOf(Testing.Organization, organization)).to.be.true;
+    expect(Obj.instanceOf(Testing.Person)(contact)).to.be.true;
+    expect(Obj.instanceOf(Testing.Organization)(organization)).to.be.true;
   });
 
   test('default props', ({ expect }) => {
-    const message = Obj.create(Testing.Message, Testing.MessageStruct.make({}));
+    const message = Obj.make(Testing.Message, Testing.MessageStruct.make({}));
     expect(message.timestamp).to.exist;
   });
 });
