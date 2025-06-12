@@ -89,8 +89,8 @@ export const systemSememes = {
   //
 
   inputSurface: contrastCadence(0.4),
-  hoverSurface: contrastCadence(1),
-  separator: contrastCadence(2),
+  separator: contrastCadence(0.8),
+  hoverSurface: contrastCadence(1.2),
   unAccent: contrastCadence(3),
   unAccentHover: contrastCadence(4),
   hoverOverlay: contrastCadence(4, 4, 0.1),
