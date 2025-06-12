@@ -27,7 +27,8 @@
         "entryPoints": [
           "{projectRoot}/src/react.ts",
           "{projectRoot}/src/testing/index.ts"
-        ]
+        ],
+        "preactSignalTracking": true
       }
     },
     "e2e": {

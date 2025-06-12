@@ -9,7 +9,7 @@ import { SPACES } from '@dxos/plugin-space';
 import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from '../../../constants';
 
 export default async (context: PluginContext) => {
-  const { createQueueDxn, fullyQualifiedId, live, Ref } = await import('@dxos/react-client/echo');
+  const { fullyQualifiedId, live, Ref } = await import('@dxos/react-client/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
   const { DocumentType } = await import('@dxos/plugin-markdown/types');
   const { CollectionType } = await import('@dxos/plugin-space/types');
@@ -27,8 +27,6 @@ export default async (context: PluginContext) => {
         content: INITIAL_CONTENT.join('\n\n'),
       }),
     ),
-    assistantChatQueue: Ref.fromDXN(createQueueDxn(defaultSpace.id)),
-    threads: [],
   });
 
   const defaultSpaceCollection = defaultSpace.properties[CollectionType.typename].target;

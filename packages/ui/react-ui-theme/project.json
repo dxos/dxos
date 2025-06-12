@@ -53,7 +53,8 @@
         "outputPath": "{projectRoot}/dist/plugin",
         "platforms": [
           "node"
-        ]
+        ],
+        "preactSignalTracking": true
       },
       "outputs": [
         "{options.outputPath}"

@@ -51,6 +51,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "0.80.12",
+    "@preact-signals/safe-react": "^0.9.0",
     "chess.js": "^1.0.0"
   },
   "devDependencies": {

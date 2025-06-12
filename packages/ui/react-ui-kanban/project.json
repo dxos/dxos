@@ -13,7 +13,8 @@
         "entryPoints": [
           "{projectRoot}/src/defs/kanban.ts",
           "{projectRoot}/src/index.ts"
-        ]
+        ],
+        "preactSignalTracking": true
       }
     },
     "lint": {},

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState, type ChangeEvent } from 'react';
+import { Rx } from '@effect-rx/rx-react';
+import React, { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react';
 
 import { useCapabilities, useCapability } from '@dxos/app-framework';
 import { Context } from '@dxos/context';
@@ -157,25 +158,31 @@ const DisplayNameMissing = () => {
 };
 
 const useChannelToolbarActions = (onJoinCall?: () => void) => {
-  return useMenuActions(() => {
-    const nodes = [];
-    const edges = [];
+  const creator = useMemo(
+    () =>
+      Rx.make(() => {
+        const nodes = [];
+        const edges = [];
 
-    const rootGroup = createMenuItemGroup('root', {
-      label: ['channel toolbar title', { ns: THREAD_PLUGIN }],
-    });
-    nodes.push(rootGroup);
+        const rootGroup = createMenuItemGroup('root', {
+          label: ['channel toolbar title', { ns: THREAD_PLUGIN }],
+        });
+        nodes.push(rootGroup);
 
-    const sortAction = createMenuAction('video-call', () => onJoinCall?.(), {
-      label: ['start video call label', { ns: THREAD_PLUGIN }],
-      icon: 'ph--video-camera--regular',
-      type: 'video-call',
-    });
-    nodes.push(sortAction);
-    edges.push({ source: 'root', target: sortAction.id });
+        const sortAction = createMenuAction('video-call', () => onJoinCall?.(), {
+          label: ['start video call label', { ns: THREAD_PLUGIN }],
+          icon: 'ph--video-camera--regular',
+          type: 'video-call',
+        });
+        nodes.push(sortAction);
+        edges.push({ source: 'root', target: sortAction.id });
 
-    return { nodes, edges };
-  });
+        return { nodes, edges };
+      }),
+    [],
+  );
+
+  return useMenuActions(creator);
 };
 
 type ChannelToolbarProps = {

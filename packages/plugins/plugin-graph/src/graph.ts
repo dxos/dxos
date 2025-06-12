@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Option, Record } from 'effect';
+import { Record } from 'effect';
 
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
 import { flattenExtensions, GraphBuilder, type ExpandableGraph, ROOT_ID } from '@dxos/app-graph';
 
+// TODO(wittjosiah): Remove or restore graph caching.
 // import { GRAPH_PLUGIN } from './meta';
 
 // const KEY = `${GRAPH_PLUGIN}/app-graph`;
@@ -30,12 +31,6 @@ export default async (context: PluginContext) => {
     { immediate: true },
   );
 
-  // TODO(wittjosiah): Stop expanding the graph eagerly.
-  builder.graph.onNodeChanged.on(({ id, node }) => {
-    if (Option.isSome(node)) {
-      void builder.graph.expand(id);
-    }
-  });
   // await builder.initialize();
   void builder.graph.expand(ROOT_ID);
 

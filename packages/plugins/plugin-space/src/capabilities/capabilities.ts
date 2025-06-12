@@ -17,12 +17,3 @@ export namespace SpaceCapabilities {
 
   export const ObjectForm = defineCapability<ObjectForm<any>>(`${SPACE_PLUGIN}/capability/object-form`);
 }
-
-// TODO(wittjosiah): Factor out.
-export namespace ThreadCapabilities {
-  type ThreadCapability<T = any> = {
-    predicate: (obj: any) => obj is T;
-    createSort: (obj: T) => (anchorA: string | undefined, anchorB: string | undefined) => number;
-  };
-  export const Thread = defineCapability<ThreadCapability>(`${SPACE_PLUGIN}/capability/thread`);
-}
