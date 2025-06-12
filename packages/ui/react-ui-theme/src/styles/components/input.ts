@@ -56,7 +56,7 @@ export const errorInputValence = 'shadow-rose-500/50 dark:shadow-rose-600/50';
 const textInputSurfaceFocus =
   'transition-colors bg-transparent focus:bg-focusSurface border border-inputSurface focus:border-transparent';
 
-const textInputSurfaceHover = 'hover:bg-inputSurface focus:hover:bg-focusSurface';
+const textInputSurfaceHover = 'hover:bg-hoverSurface focus:hover:bg-focusSurface';
 
 const booleanInputSurface =
   'shadow-inner transition-colors bg-unAccent aria-checked:bg-accentSurface aria-[checked=mixed]:bg-accentSurface';
