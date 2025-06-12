@@ -16,7 +16,7 @@ import translations from '../../translations';
 import { Tree, TreeType } from '../../types';
 
 const meta: Meta<typeof NodeEditor> = {
-  title: 'plugins/plugin-outliner/NodeEditor',
+  title: 'plugins/plugin-outliner-deprecated/NodeEditor',
   component: NodeEditor,
   render: (args) => {
     const space = useSpace();
