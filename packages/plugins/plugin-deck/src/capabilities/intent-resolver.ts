@@ -107,9 +107,11 @@ export default (context: PluginContext) =>
       resolve: ({ subject, options }) => {
         const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         layout.dialogOpen = options.state ?? Boolean(subject);
-        layout.dialogContent = subject ? { component: subject, props: options.props } : null;
-        layout.dialogBlockAlign = options.blockAlign ?? 'center';
         layout.dialogType = options.type ?? 'default';
+        layout.dialogBlockAlign = options.blockAlign ?? 'center';
+        layout.dialogOverlayClasses = options.overlayClasses;
+        layout.dialogOverlayStyle = options.overlayStyle;
+        layout.dialogContent = subject ? { component: subject, props: options.props } : null;
       },
     }),
     createResolver({
@@ -225,7 +227,9 @@ export default (context: PluginContext) =>
             intents: [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: first })],
           };
         } else {
-          const [item] = graph.getConnections(subject).filter((node) => !isActionLike(node));
+          const [item] = graph
+            .getConnections(subject)
+            .filter((node) => !isActionLike(node) && node.properties.disposition !== 'hidden');
           if (item) {
             return {
               intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] })],

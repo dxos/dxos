@@ -7318,9 +7318,6 @@ importers:
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.9.0
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       react-dropzone:
         specifier: ^14.2.3
         version: 14.2.3(react@18.2.0)
@@ -7343,6 +7340,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -7352,6 +7355,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7403,6 +7409,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -10580,6 +10589,9 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/primitives/react-hooks
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../schema
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -12025,9 +12037,15 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -12698,9 +12716,6 @@ importers:
       codemirror:
         specifier: ^6.0.1
         version: 6.0.1
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       lib0:
         specifier: ^0.2.65
         version: 0.2.78
@@ -12750,6 +12765,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -12783,6 +12804,9 @@ importers:
       chai-dom:
         specifier: ^1.11.0
         version: 1.11.0(chai@4.4.1)(mocha@10.6.0)
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       happy-dom:
         specifier: ^13.3.1
         version: 13.3.4
@@ -13949,9 +13973,6 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       lodash.orderby:
         specifier: ^4.6.0
         version: 4.6.0
@@ -13974,6 +13995,12 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -13986,6 +14013,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       fast-check:
         specifier: ^3.19.0
         version: 3.19.0

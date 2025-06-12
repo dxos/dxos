@@ -5,7 +5,6 @@
 import { Schema } from 'effect';
 
 import { Ref, TypedObject } from '@dxos/echo-schema';
-import { ThreadType } from '@dxos/plugin-space/types';
 
 export const TLDRAW_SCHEMA = 'tldraw.com/2';
 
@@ -18,7 +17,6 @@ export class CanvasType extends TypedObject({ typename: 'dxos.org/type/Canvas', 
 export class DiagramType extends TypedObject({ typename: 'dxos.org/type/Diagram', version: '0.1.0' })({
   name: Schema.optional(Schema.String),
   canvas: Ref(CanvasType),
-  threads: Schema.optional(Schema.mutable(Schema.Array(Ref(ThreadType)))),
 }) {}
 
 export const isDiagramType = (object: any, schema: string): object is DiagramType =>

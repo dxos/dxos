@@ -10,7 +10,7 @@ import { Testing } from '@dxos/echo-schema/testing';
 import { live } from '@dxos/live-object';
 
 import type { EchoDatabase } from './database';
-import { getSource, getTarget, isRelation } from '../echo-handler/relations';
+import { getSource, getTarget, isRelation } from '../echo-handler';
 import type { Hypergraph } from '../hypergraph';
 import { EchoTestBuilder } from '../testing';
 

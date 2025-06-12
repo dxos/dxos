@@ -9,8 +9,7 @@ import { SheetType } from './types';
 
 export const serializer: TypedObjectSerializer<SheetType> = {
   serialize: async ({ object }): Promise<string> => {
-    const { threads: _threads, ...sheet } = object;
-    return JSON.stringify(sheet, null, 2);
+    return JSON.stringify(object, null, 2);
   },
 
   deserialize: async ({ content, newId }) => {

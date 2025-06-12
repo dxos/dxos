@@ -61,7 +61,6 @@ const data = (() => {
         content: faker.lorem.paragraphs(3),
       }),
     ),
-    threads: [],
   });
 
   return { document };

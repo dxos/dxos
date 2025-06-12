@@ -5,11 +5,10 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { ThreadType } from '@dxos/plugin-space/types';
 import { EchoObjectSchema } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { AnchoredTo, DataType } from '@dxos/schema';
 
-import { ChannelType } from './schema';
+import { ChannelType, ThreadType } from './schema';
 import { THREAD_PLUGIN } from '../meta';
 
 export namespace ThreadAction {
@@ -40,19 +39,17 @@ export namespace ThreadAction {
   export class Create extends Schema.TaggedClass<Create>()(`${THREAD_ACTION}/create`, {
     input: Schema.Struct({
       name: Schema.optional(Schema.String),
-      cursor: Schema.String,
+      anchor: Schema.optional(Schema.String),
       subject: EchoObjectSchema,
     }),
-    output: Schema.Struct({
-      object: ThreadType,
-    }),
+    output: Schema.Void,
   }) {}
 
   export class Delete extends Schema.TaggedClass<Delete>()(`${THREAD_ACTION}/delete`, {
     input: Schema.Struct({
-      thread: ThreadType,
+      anchor: AnchoredTo,
       subject: EchoObjectSchema,
-      cursor: Schema.optional(Schema.String),
+      thread: Schema.optional(ThreadType),
     }),
     output: Schema.Void,
   }) {}
@@ -74,7 +71,7 @@ export namespace ThreadAction {
   export class AddMessage extends Schema.TaggedClass<AddMessage>()(`${THREAD_ACTION}/add-message`, {
     input: Schema.Struct({
       subject: EchoObjectSchema,
-      thread: ThreadType,
+      anchor: AnchoredTo,
       sender: DataType.Actor,
       text: Schema.String,
     }),
@@ -83,7 +80,7 @@ export namespace ThreadAction {
 
   export class DeleteMessage extends Schema.TaggedClass<DeleteMessage>()(`${THREAD_ACTION}/delete-message`, {
     input: Schema.Struct({
-      thread: ThreadType,
+      anchor: AnchoredTo,
       subject: EchoObjectSchema,
       messageId: Schema.String,
       message: Schema.optional(DataType.Message),
@@ -105,9 +102,9 @@ export type ViewState = { showResolvedThreads: boolean };
 export type ViewStore = Record<SubjectId, ViewState>;
 
 export type ThreadState = {
-  /** Current channel activity. */
-  activities: Record<string, string | undefined>;
+  /** Object toolbar state. */
+  toolbar: Record<string, boolean>;
   /** In-memory draft threads. */
-  drafts: Record<string, ThreadType[]>;
+  drafts: Record<string, AnchoredTo[]>;
   current?: string | undefined;
 };

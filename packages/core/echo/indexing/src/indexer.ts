@@ -100,18 +100,17 @@ export class Indexer extends Resource {
   }
 
   @synchronized
+  // TODO(mykola): Make it iterative (e.g. `initConfig(<index1>); initConfig(<index2>); ...`).
   async setConfig(config: IndexConfig): Promise<void> {
-    if (this._indexConfig) {
-      log.warn('Index config is already set');
-      return;
-    }
     this._indexConfig = config;
     if (this._lifecycleState === LifecycleState.OPEN) {
+      log.warn('Setting index config after initialization, this is unstable', { config });
       for (const kind of this._engine.indexKinds) {
         if (!config.indexes?.some((kind) => isEqual(kind, kind))) {
           this._engine.deleteIndex(kind);
         }
       }
+      await this._loadIndexes();
       this._run.schedule();
     }
   }
