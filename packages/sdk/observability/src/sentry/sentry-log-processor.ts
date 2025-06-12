@@ -149,7 +149,7 @@ const convertLevel = (level: LogLevel): SeverityLevel => {
   }
 };
 
-const never = (never: never) => {
+const never = (_: never) => {
   return new Error('unhandled value');
 };
 
