@@ -15,9 +15,13 @@ export type OutlinerContainerProps = {
 };
 
 export const OutlinerContainer = ({ role, outline }: OutlinerContainerProps) => {
+  if (!outline.content.target) {
+    return null;
+  }
+
   return (
     <StackItem.Content role={role} classNames='container-max-width'>
-      <Outliner id={outline.content.target!.id} text={outline.content.target!} />
+      <Outliner id={outline.content.target.id} text={outline.content.target} />
     </StackItem.Content>
   );
 };

@@ -73,13 +73,17 @@ type JournalEntryProps = ThemedClassName<{
 const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
   const date = parseDateString(entry.date);
   const isToday = getDateString() === entry.date;
+  if (!entry.content.target) {
+    return null;
+  }
+
   return (
     <div className={mx('flex flex-col', classNames)}>
       <div className='flex gap-2 items-baseline'>
         <div className={mx('text-lg', isToday && 'text-primary-500')}>{format(date, 'MMM d, yyyy')}</div>
         <div className='text-sm text-subdued pbe-[1px]'>{format(date, 'EEEE')}</div>
       </div>
-      <Outliner id={entry.id} text={entry.content.target!} classNames='pbs-2 pbe-2' {...props} />
+      <Outliner id={entry.id} text={entry.content.target} classNames='pbs-2 pbe-2' {...props} />
     </div>
   );
 };

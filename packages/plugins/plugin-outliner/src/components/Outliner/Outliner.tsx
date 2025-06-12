@@ -11,9 +11,9 @@ import {
   createMarkdownExtensions,
   createBasicExtensions,
   createDataExtensions,
-  useTextEditor,
   createThemeExtensions,
   outliner,
+  useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
