@@ -104,7 +104,8 @@ const decorations = () => [
                   'cm-list-item',
                   lineFrom.number === line.number && 'cm-list-item-start',
                   lineTo.number === line.number && 'cm-list-item-end',
-                  hasFocus && isSelected && 'cm-list-item-selected',
+                  isSelected && 'cm-list-item-selected',
+                  hasFocus && 'cm-list-item-focused',
                 ),
               }).range(line.from, line.from),
             );
@@ -147,8 +148,10 @@ const decorations = () => [
       marginBottom: '8px',
     },
 
-    // TODO(burdon): Focus state.
     '.cm-list-item-selected': {
+      borderColor: 'var(--dx-separator)',
+    },
+    '.cm-list-item-focused': {
       borderColor: 'var(--dx-focus-ring)',
     },
   }),
