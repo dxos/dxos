@@ -16,7 +16,7 @@ export const sidebarSurface = 'sidebar-surface backdrop-blur-md dark:backdrop-bl
 export const sidebarBorder = 'border-separator';
 
 // Generic grouping style.
-export const groupSurface = 'base-surface';
+export const activeSurface = 'base-surface';
 export const groupBorder = 'border-separator';
 
 // Tooltips, popovers, menus, dialogs, etc.
