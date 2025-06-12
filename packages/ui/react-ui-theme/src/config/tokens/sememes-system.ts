@@ -41,11 +41,11 @@ const DARK_TRANSITION = 750;
 const DARK_CONTRAST = 500;
 
 const LIGHT_ELEVATION = 10;
-const LIGHT_TRANSITION = 60;
+const LIGHT_TRANSITION = 80;
 const LIGHT_CONTRAST = 450;
 
-const ELEVATION_SCALE = 4;
-const CONTRAST_SCALE = 5;
+const ELEVATION_SCALE = 3;
+const CONTRAST_SCALE = 4;
 
 const darkElevationCadence = (depth: number) =>
   Math.round(DARK_TRANSITION + (DARK_ELEVATION - DARK_TRANSITION) * ((ELEVATION_SCALE - depth) / ELEVATION_SCALE));
@@ -88,9 +88,8 @@ export const systemSememes = {
   // Contrast cadence tokens
   //
 
-  separator: contrastCadence(0),
+  separator: contrastCadence(0.2),
   inputSurface: contrastCadence(0.4),
-  hoverSurface: contrastCadence(0.8),
   unAccent: contrastCadence(3),
   unAccentHover: contrastCadence(4),
   hoverOverlay: contrastCadence(4, 4, 0.1),
@@ -181,6 +180,9 @@ const aliasDefs: Record<string, Record<string, SememeName>> = {
 
   // Selected items, current items, other surfaces needing special contrast against baseSurface.
   activeSurface: { root: 'inputSurface' },
+
+  // Hovered items
+  hoverSurface: { root: 'separator' },
 
   // Main sidebar panel.
   sidebarSurface: { root: 'groupSurface' },
