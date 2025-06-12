@@ -6,29 +6,16 @@ import '@dxos-theme';
 
 import React, { useState, type KeyboardEvent } from 'react';
 
-import { Button, Icon, IconButton, Input, Popover } from '@dxos/react-ui';
+import { Button, Icon, Input, Popover } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory } from './util';
 import { editorWidth } from '../defaults';
 import { command, type Action } from '../extensions';
-import { RefPopover, str, useRefPopover } from '../testing';
+import { floatingMenu } from '../extensions/command/menu';
+import { RefPopover, str } from '../testing';
 import { createRenderer } from '../util';
-
-// TODO(burdon): Actual menu.
-const CommandMenu = ({ onAction }: { onAction: () => void }) => {
-  return (
-    <IconButton
-      icon='ph--sparkle--regular'
-      label='menu'
-      size={4}
-      iconOnly
-      classNames='p-0 aspect-square'
-      onClick={onAction}
-    />
-  );
-};
 
 const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) => {
   const [text, setText] = useState('');
@@ -77,13 +64,18 @@ const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) =>
   );
 };
 
-const PreviewCard = () => {
-  const { target } = useRefPopover('PreviewCard');
+// TODO(burdon): Close?
+const MenuPopover = () => {
   return (
     <Popover.Portal>
-      <Popover.Content classNames='popover-card-width p-2' onOpenAutoFocus={(event) => event.preventDefault()}>
+      <Popover.Content>
         <Popover.Viewport>
-          <Button>MENU</Button>
+          <Button onClick={() => console.log('!')}>Test</Button>
+          {/* <DropdownMenu.Root>
+            <DropdownMenu.Content>
+              <DropdownMenu.Item>Test</DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root> */}
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
@@ -95,19 +87,19 @@ const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/Command',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: () => (
+    // TODO(burdon): Create MenuPopover.
     <RefPopover.Provider>
       <EditorStory
         text={str('# Command', '', '', '')}
         extensions={[
+          floatingMenu(),
           command({
-            height: 32,
-            renderMenu: createRenderer(CommandMenu),
             renderDialog: createRenderer(CommandDialog),
             onHint: () => 'Press / for commands.',
           }),
         ]}
       />
-      <PreviewCard />
+      <MenuPopover />
     </RefPopover.Provider>
   ),
   parameters: { layout: 'fullscreen' },

@@ -5,18 +5,16 @@
 import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { closeEffect, openEffect } from './action';
-import { type RenderCallback } from '../../types';
 
 export type FloatingMenuOptions = {
-  height?: number;
-  renderMenu: RenderCallback<{ onAction: () => void }>;
+  icon?: string;
 };
 
-export const floatingMenu = (options: FloatingMenuOptions) =>
+export const floatingMenu = (options: FloatingMenuOptions = {}) => [
   ViewPlugin.fromClass(
     class {
       view: EditorView;
-      button: HTMLElement;
+      tag: HTMLElement;
       rafId: number | null = null;
 
       constructor(view: EditorView) {
@@ -28,19 +26,18 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
           container.style.position = 'relative';
         }
 
-        // Render menu externally.
-        // this.button = document.createElement('div'); // TODO(burdon) ref-tag.
-        // this.button.style.position = 'absolute';
-        // this.button.style.zIndex = '10';
-        // this.button.style.display = 'none';
-
-        this.button = document.createElement('dx-ref-tag');
         const icon = document.createElement('dx-icon');
-        icon.setAttribute('icon', 'ph--x--regular');
-        this.button.appendChild(icon);
+        icon.setAttribute('icon', options.icon ?? 'ph--dots-three-outline--regular');
 
-        // options.renderMenu(this.button, { onAction: () => openCommand(view) }, view);
-        container.appendChild(this.button);
+        const button = document.createElement('button');
+        button.appendChild(icon);
+        button.classList.add('grid', 'items-center', 'justify-center', 'w-8', 'h-8');
+
+        // TODO(burdon): Change to menu.
+        this.tag = document.createElement('dx-ref-tag');
+        this.tag.classList.add('border-none', 'absolute', 'p-0');
+        this.tag.appendChild(button);
+        container.appendChild(this.tag);
 
         // Listen for scroll events.
         container.addEventListener('scroll', this.scheduleUpdate.bind(this));
@@ -50,33 +47,34 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
       update(update: ViewUpdate) {
         // TODO(burdon): Timer to fade in/out.
         if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(openEffect)))) {
-          this.button.style.display = 'none';
+          this.tag.style.display = 'none';
         } else if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(closeEffect)))) {
-          this.button.style.display = 'block';
+          this.tag.style.display = 'block';
         } else if (update.selectionSet || update.viewportChanged || update.docChanged || update.geometryChanged) {
           this.scheduleUpdate();
         }
       }
 
       updateButtonPosition() {
+        const height = 32;
+        const { width } = this.view.contentDOM.getBoundingClientRect();
+
         const pos = this.view.state.selection.main.head;
         const line = this.view.lineBlockAt(pos);
+        const coords = this.view.coordsAtPos(line.from);
+        if (!coords) {
+          return;
+        }
 
-        const scrollRect = this.view.scrollDOM.getBoundingClientRect();
-        const contentRect = this.view.contentDOM.getBoundingClientRect();
+        const lineHeight = coords.bottom - coords.top;
+        const dy = (lineHeight - height) / 2;
 
-        // Center the menu.
-        const dy = options.height ? (line.height - options.height) / 2 : 0;
+        const offsetTop = coords.top + dy;
+        const offsetLeft = coords.left + width;
 
-        const offsetTop = scrollRect.top + line.top + dy;
-        const offsetLeft = scrollRect.width - contentRect.x;
-
-        this.button.style.top = `${offsetTop}px`;
-        this.button.style.left = `${offsetLeft}px`;
-        this.button.style.display = 'block';
-
-        // TODO(burdon): Position is incorrect if cursor is in fenced code block.
-        // console.log('offsetTop', lineRect, containerRect);
+        this.tag.style.top = `${offsetTop}px`;
+        this.tag.style.left = `${offsetLeft}px`;
+        this.tag.style.display = 'block';
       }
 
       scheduleUpdate() {
@@ -88,10 +86,11 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
       }
 
       destroy() {
-        this.button.remove();
+        this.tag.remove();
         if (this.rafId != null) {
           cancelAnimationFrame(this.rafId);
         }
       }
     },
-  );
+  ),
+];
