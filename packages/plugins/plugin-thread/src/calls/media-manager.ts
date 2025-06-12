@@ -316,10 +316,10 @@ export class MediaManager extends Resource {
           throw new Error(`Invalid track kind: ${track?.kind}`);
       }
     } catch (err) {
-      log.warn('failed to pull track', { err, name });
+      log.verbose('failed to pull track', { err, name });
       void ctx.dispose();
       await cancelWithContext(this._ctx, sleep(RETRY_INTERVAL));
-      log.warn('retrying pull track', { name });
+      log.verbose('retrying pull track', { name });
       this._pullTracksTask!.schedule();
     }
   }
