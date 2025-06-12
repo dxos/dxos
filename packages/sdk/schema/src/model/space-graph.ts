@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { batch } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 
 import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
-import { getSource, getTarget, isRelation, type AnyLiveRelation, type AnyLiveObject } from '@dxos/echo-db';
+import { getSource, getTarget, isRelation, type AnyLiveRelation, type AnyLiveObject, type Queue } from '@dxos/echo-db';
 import { Filter, getSchema, getSchemaDXN, type EchoSchema, getLabel, Query } from '@dxos/echo-schema';
 import { Ref } from '@dxos/echo-schema';
 import { type GraphEdge, AbstractGraphBuilder, type Graph, ReactiveGraphModel, type GraphNode } from '@dxos/graph';
@@ -50,7 +50,11 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   private _schema?: EchoSchema[];
   private _schemaSubscription?: CleanupFn;
   private _objects?: AnyLiveObject<any>[];
+  private _queueItems?: AnyLiveObject<any>[];
   private _objectsSubscription?: CleanupFn;
+  private _queueSubscription?: CleanupFn;
+
+  private _queue?: Queue;
 
   override get builder() {
     return new SpaceGraphBuilder(this);
@@ -86,13 +90,14 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     return this;
   }
 
-  async open(space: Space, selected?: string): Promise<this> {
+  async open(space: Space, queue?: Queue): Promise<this> {
     log('open');
     if (this.isOpen()) {
       await this.close();
     }
 
     this._space = space;
+    this._queue = queue;
     const schemaaQuery = space.db.schemaRegistry.query({});
     const schemas = await schemaaQuery.run();
 
@@ -132,6 +137,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
   private _subscribe() {
     this._objectsSubscription?.();
+    this._queueSubscription?.();
 
     invariant(this._space);
     this._objectsSubscription = this._space.db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
@@ -141,6 +147,16 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
       },
       { fire: true },
     );
+
+    if (this._queue) {
+      this._queueSubscription = effect(() => {
+        const items = this._queue?.items;
+        if (items) {
+          this._queueItems = [...items];
+        }
+        this.invalidate();
+      });
+    }
   }
 
   private _update() {
@@ -190,7 +206,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     });
 
     // Database Objects.
-    this._objects?.forEach((object) => {
+    [...(this._objects ?? []), ...(this._queueItems ?? [])].forEach((object) => {
       const schema = getSchema(object);
       if (!schema) {
         return;

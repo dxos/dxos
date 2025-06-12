@@ -132,13 +132,14 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
           addTestData(space);
         }
 
+        // void model?.open(space, researchGraph && space.queues.get(researchGraph.queue.dxn));
         void model?.open(space);
       }),
       () => {
         void model?.close();
       },
     );
-  }, [space, model]);
+  }, [space, model, researchGraph?.queue.dxn.toString()]);
 
   const handleRefresh = useCallback(() => {
     model?.invalidate();
@@ -197,7 +198,11 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     [space],
   );
 
-  console.log('researchGraph', researchGraph);
+  console.log('Query.stories.tsx', {
+    space: space?.id,
+    allItems: items,
+    researchGraph,
+  });
 
   const researchBlueprint = useMemo(() => {
     if (!space) {
@@ -338,14 +343,15 @@ const meta: Meta<typeof DefaultStory> = {
     withPluginManager({
       plugins: testPlugins({
         types: [ResearchGraph],
-        indexConfig: {
-          enabled: true,
-          indexes: [
-            { kind: IndexKind.Kind.SCHEMA_MATCH },
-            { kind: IndexKind.Kind.GRAPH },
-            { kind: IndexKind.Kind.FULL_TEXT },
-            { kind: IndexKind.Kind.VECTOR },
-          ],
+        config: {
+          runtime: {
+            client: {
+              storage: {
+                persistent: true,
+              },
+              enableVectorIndexing: true,
+            },
+          },
         },
       }),
       fireEvents: [Events.SetupArtifactDefinition],
