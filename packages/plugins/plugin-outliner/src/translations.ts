@@ -24,6 +24,7 @@ export default [
         'menu label': 'Menu',
 
         'meeting notes label': 'Notes',
+        'today label': 'Today',
 
         // TODO(burdon): Move to plugin-task.
         'task action': 'Convert to task',

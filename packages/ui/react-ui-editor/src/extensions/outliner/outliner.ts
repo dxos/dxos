@@ -18,7 +18,6 @@ import { decorateMarkdown } from '../markdown/decorate';
 // TODO(burdon): Prevent unterminated fenced code from breaking subsequent items ("firewall" markdown parsing within each item?)
 // TODO(burdon): What if a different editor "breaks" the layout?
 // TODO(burdon): Check Automerge recognizes text that is moved/indented (e.g., concurrent editing item while being moved).
-// TODO(burdon): Rendered cursor is not full height if there is not text on the task line.
 
 // NEXT:
 // TODO(burdon): Update selection when adding/removing items.
@@ -73,12 +72,18 @@ const decorations = () => [
           update.startState.facet(selectionFacet),
         );
 
-        if (update.docChanged || update.viewportChanged || update.selectionSet || selectionChanged) {
+        if (
+          update.focusChanged ||
+          update.docChanged ||
+          update.viewportChanged ||
+          update.selectionSet ||
+          selectionChanged
+        ) {
           this.updateDecorations(update.state, update.view);
         }
       }
 
-      private updateDecorations(state: EditorState, { viewport: { from, to } }: EditorView) {
+      private updateDecorations(state: EditorState, { viewport: { from, to }, hasFocus }: EditorView) {
         const selection = state.facet(selectionFacet);
         const tree = state.facet(treeFacet);
         const current = tree.find(state.selection.ranges[state.selection.mainIndex]?.from);
@@ -99,7 +104,7 @@ const decorations = () => [
                   'cm-list-item',
                   lineFrom.number === line.number && 'cm-list-item-start',
                   lineTo.number === line.number && 'cm-list-item-end',
-                  isSelected && 'cm-list-item-selected',
+                  hasFocus && isSelected && 'cm-list-item-selected',
                 ),
               }).range(line.from, line.from),
             );
@@ -142,6 +147,7 @@ const decorations = () => [
       marginBottom: '8px',
     },
 
+    // TODO(burdon): Focus state.
     '.cm-list-item-selected': {
       borderColor: 'var(--dx-focus-ring)',
     },
