@@ -51,7 +51,7 @@ interface Organization extends Schema.Schema.Type<typeof Organization> {}
 const WorksFor = Schema.Struct({
   since: Schema.String,
 }).pipe(
-  Relation.def({
+  Type.Relation({
     typename: 'dxos.org/type/WorksFor',
     version: '0.1.0',
     source: Person,

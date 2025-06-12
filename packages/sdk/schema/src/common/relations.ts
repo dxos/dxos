@@ -21,7 +21,7 @@ export const Employer = Schema.Struct({
   endDate: Schema.optional(Schema.Date),
 })
   .pipe(
-    Relation.def({
+    Type.Relation({
       typename: 'dxos.org/relation/Employer',
       version: '0.1.0',
       source: Person,
@@ -46,7 +46,7 @@ export const HasConnection = Schema.Struct({
   }),
 })
   .pipe(
-    Relation.def({
+    Type.Relation({
       typename: 'dxos.org/relation/HasConnection',
       version: '0.1.0',
       source: Organization,
@@ -71,7 +71,7 @@ export const HasRelationship = Schema.Struct({
   }),
 })
   .pipe(
-    Relation.def({
+    Type.Relation({
       typename: 'dxos.org/relation/HasRelationship',
       version: '0.1.0',
       source: Person,
@@ -92,7 +92,7 @@ export const AnchoredTo = Schema.Struct({
   id: Type.ObjectId,
   anchor: Schema.optional(Schema.String),
 }).pipe(
-  Relation.def({
+  Type.Relation({
     typename: 'dxos.org/relation/AnchoredTo',
     version: '0.1.0',
     source: Type.Expando,

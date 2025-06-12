@@ -45,7 +45,7 @@ namespace Testing {
   //   ...Provenance({ source: 'duckduckgo.com', confidence: 0.9 }), // keys
   //   ...Relation.make({ source: Contact, target: Organization }),
   // }).pipe(
-  //   Relation.def({
+  //   Type.Relation({
   //     typename: 'example.com/relation/WorksFor',
   //     version: '0.1.0',
   //   }),
@@ -61,7 +61,7 @@ namespace Testing {
     // id: Type.ObjectId,
     role: Schema.String,
   }).pipe(
-    // Relation.def
+    // Type.Relation
     Type.Obj({
       typename: 'example.com/type/WorksFor',
       version: '0.1.0',

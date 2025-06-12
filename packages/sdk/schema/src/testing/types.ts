@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Format, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { FieldLookupAnnotationId, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo-schema';
 
 import { IconAnnotation } from '../annotations';
@@ -40,10 +40,10 @@ export namespace Testing {
     name: Schema.String.pipe(GeneratorAnnotation.set('company.name')),
     description: Schema.optional(Schema.String),
     image: Schema.optional(
-      Format.URL.pipe(Schema.annotations({ title: 'Preview image' }), GeneratorAnnotation.set('image.url')),
+      Type.Format.URL.pipe(Schema.annotations({ title: 'Preview image' }), GeneratorAnnotation.set('image.url')),
     ),
     website: Schema.optional(
-      Format.URL.pipe(Schema.annotations({ title: 'Website' }), GeneratorAnnotation.set('internet.url')),
+      Type.Format.URL.pipe(Schema.annotations({ title: 'Website' }), GeneratorAnnotation.set('internet.url')),
     ),
   }).pipe(
     Schema.annotations({ title: 'Organization' }),
@@ -84,9 +84,9 @@ export namespace Testing {
     id: Type.ObjectId,
     name: Schema.String.pipe(GeneratorAnnotation.set('person.fullName')),
     image: Schema.optional(
-      Format.URL.pipe(Schema.annotations({ title: 'Preview image' }), GeneratorAnnotation.set('image.url')),
+      Type.Format.URL.pipe(Schema.annotations({ title: 'Preview image' }), GeneratorAnnotation.set('image.url')),
     ),
-    email: Schema.optional(Format.Email.pipe(GeneratorAnnotation.set('internet.email'))),
+    email: Schema.optional(Type.Format.Email.pipe(GeneratorAnnotation.set('internet.email'))),
     organization: Schema.optional(
       Type.Ref(Organization).annotations({
         [FieldLookupAnnotationId]: 'name',
@@ -119,7 +119,7 @@ export namespace Testing {
     id: Type.ObjectId,
     name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName')),
     description: Schema.optional(Schema.String),
-    image: Schema.optional(Format.URL.pipe(GeneratorAnnotation.set('image.url'))),
+    image: Schema.optional(Type.Format.URL.pipe(GeneratorAnnotation.set('image.url'))),
   }).pipe(
     Schema.annotations({ title: 'Project' }),
     LabelAnnotation.set(['name']),

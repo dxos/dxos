@@ -48,6 +48,6 @@ export interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
 export const Task = Schema.Struct({
   title: Schema.String,
   createdAt: Schema.String,
-  assignee: Ref(Person),
+  assignee: Type.Ref(Person),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/Task', version: '0.1.0' }));
 export interface Task extends Schema.Schema.Type<typeof Task> {}

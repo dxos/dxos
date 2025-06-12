@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Ref, Type, Expando } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { type Space, live } from '@dxos/react-client/echo';
 
 export const Todo = Schema.Struct({
