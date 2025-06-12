@@ -18,11 +18,13 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { Config } from '@dxos/react-client';
 import { DataTypes } from '@dxos/schema';
+import { IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 
 export const testPlugins = ({
   config,
   types = [],
-}: { config?: ConfigProto; types?: Schema.Schema.AnyNoContext[] } = {}) => [
+  indexConfig,
+}: { config?: ConfigProto; types?: Schema.Schema.AnyNoContext[]; indexConfig?: IndexConfig } = {}) => [
   ClientPlugin({
     config: new Config(
       defaulstDeep({}, config, {
@@ -41,6 +43,10 @@ export const testPlugins = ({
 
       if (!client.halo.identity.get()) {
         await client.halo.createIdentity();
+      }
+
+      if (indexConfig) {
+        await client.services.services.QueryService!.setConfig(indexConfig);
       }
     },
   }),

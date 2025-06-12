@@ -29,7 +29,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
-import { Filter, Queue, useQuery, useSpace } from '@dxos/react-client/echo';
+import { Filter, IndexKind, Queue, useQuery, useSpace, useSpaces } from '@dxos/react-client/echo';
 import { Dialog, IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
 import { matchCompletion, staticCompletion, typeahead, type TypeaheadOptions } from '@dxos/react-ui-editor';
 import { List } from '@dxos/react-ui-list';
@@ -153,7 +153,9 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
         const filter = createFilter(ast);
         setFilter(filter);
       } catch (err) {
-        // Ignore invalid filters.
+        // TODO(mykola): Make hybrid search.
+        const filter = Filter.text(text, { type: 'vector' });
+        setFilter(filter);
       }
     },
     [space],
@@ -334,7 +336,18 @@ const meta: Meta<typeof DefaultStory> = {
   render: DefaultStory,
   decorators: [
     withPluginManager({
-      plugins: testPlugins({ types: [ResearchGraph] }),
+      plugins: testPlugins({
+        types: [ResearchGraph],
+        indexConfig: {
+          enabled: true,
+          indexes: [
+            { kind: IndexKind.Kind.SCHEMA_MATCH },
+            { kind: IndexKind.Kind.GRAPH },
+            { kind: IndexKind.Kind.FULL_TEXT },
+            { kind: IndexKind.Kind.VECTOR },
+          ],
+        },
+      }),
       fireEvents: [Events.SetupArtifactDefinition],
     }),
     withTheme,
