@@ -15,10 +15,8 @@ import { Ref } from '../ref';
 
 // TODO(dmaretskyi): Move those out.
 const Type = {
-  def: EchoObject,
-};
-const Relation = {
-  def: EchoRelation,
+  Obj: EchoObject,
+  Relation: EchoRelation,
 };
 
 //
