@@ -12,6 +12,7 @@ export {
   Expando,
   JsonSchemaType as JsonSchema,
   toJsonSchema,
+  Format,
 } from '@dxos/echo-schema';
 
 export {

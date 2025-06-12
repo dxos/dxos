@@ -110,4 +110,4 @@ export const isMutable = (schema: Obj.Any | Relation.Any): boolean => {
   return EchoSchema.isMutable(schema);
 };
 
-export { SpaceId, ObjectId } from '@dxos/keys';
+export { SpaceId, ObjectId, DXN } from '@dxos/keys';

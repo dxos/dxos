@@ -72,7 +72,7 @@ namespace Testing {
 
   export interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
 
-  // TODO(burdon): Fix (Type.def currently removes TypeLiteral that implements the `make` function).
+  // TODO(burdon): Fix (Type.Obj currently removes TypeLiteral that implements the `make` function).
   //  Property 'make' does not exist on type 'EchoObjectSchema<Struct<{ timestamp: PropertySignature<":", string, never, ":", string, true, never>; }>>'.ts(2339)
   export const MessageStruct = Schema.Struct({
     // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
