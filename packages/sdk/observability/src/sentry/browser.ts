@@ -45,6 +45,7 @@ export const init = (options: InitOptions) => {
         breadcrumbsIntegration({ console: false, fetch: false }),
         httpClientIntegration({
           failedRequestStatusCodes: [
+            // 401 errors are omitted as they happen as a part of the EDGE authentication flow.
             [400, 400],
             [402, 599],
           ],

@@ -16,6 +16,7 @@ import { type Client } from '@dxos/react-client';
 import { DeviceType, type Credential, type Identity } from '@dxos/react-client/halo';
 
 import { WELCOME_SCREEN } from './components';
+import { OVERLAY_CLASSES, OVERLAY_STYLE } from './components/Welcome/Welcome';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
 import { WELCOME_PLUGIN } from './meta';
 import { queryAllCredentials, removeQueryParamByValue } from '../../util';
@@ -234,19 +235,18 @@ export class OnboardingManager {
   private async _showWelcome() {
     // NOTE: Active parts cannot contain '/' characters currently.
     await this._dispatch(
-      createIntent(LayoutAction.SetLayoutMode, {
-        part: 'mode',
-        subject: `surface:${WELCOME_SCREEN}`,
-        options: { mode: 'fullscreen' },
+      createIntent(LayoutAction.UpdateDialog, {
+        part: 'dialog',
+        subject: WELCOME_SCREEN,
+        options: { type: 'alert', overlayClasses: OVERLAY_CLASSES, overlayStyle: OVERLAY_STYLE },
       }),
     );
   }
 
   private async _closeWelcome() {
     await this._dispatch(
-      createIntent(LayoutAction.Close, {
-        part: 'main',
-        subject: [`surface:${WELCOME_SCREEN}`],
+      createIntent(LayoutAction.UpdateDialog, {
+        part: 'dialog',
         options: { state: false },
       }),
     );

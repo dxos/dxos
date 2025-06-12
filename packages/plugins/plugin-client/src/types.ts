@@ -25,10 +25,14 @@ const IdentitySchema = Schema.Struct({
 
 const CLIENT_ACTION = `${CLIENT_PLUGIN}/action`;
 export namespace ClientAction {
+  const ProfileSchema = Schema.Struct({
+    displayName: Schema.optional(Schema.String),
+    avatarCid: Schema.optional(Schema.String),
+    data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  });
+
   export class CreateIdentity extends Schema.TaggedClass<CreateIdentity>()(`${CLIENT_ACTION}/create-identity`, {
-    input: Schema.Struct({
-      displayName: Schema.optional(Schema.String),
-    }),
+    input: ProfileSchema,
     output: IdentitySchema,
   }) {}
 
