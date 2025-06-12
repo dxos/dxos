@@ -38,7 +38,7 @@ export const hueSememes: ColorSememes = [...Object.keys(huePalettes), 'neutral',
 
 const valenceAliasSememeStems = ['Text', 'Surface', 'SurfaceText', 'Fill', 'Cursor'];
 const valenceMapping = {
-  emerald: ['success', 'active'],
+  emerald: ['success'],
   cyan: ['info'],
   amber: ['warning'],
   rose: ['error'],
