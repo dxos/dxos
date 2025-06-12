@@ -10,7 +10,7 @@ import { ghostHover } from './hover';
 
 export const ghostSelectedCurrent = [
   ghostHover,
-  'aria-[current]:bg-input hover:aria-[current]:bg-hoverSurface',
+  'aria-[current]:bg-inputSurface hover:aria-[current]:bg-hoverSurface',
   'aria-selected:bg-primary-100 dark:aria-selected:bg-primary-850 hover:aria-selected:bg-primary-150 hover:dark:aria-selected:bg-primary-800',
   'aria-[current]:aria-selected:bg-primary-200 dark:aria-[current]:aria-selected:bg-primary-750 hover:aria-[current]:aria-selected:bg-primary-200 hover:dark:aria-[current]:aria-selected:bg-primary-750',
 ];
@@ -35,7 +35,7 @@ export const staticGhostSelectedCurrent: ComponentFragment<SelectedStyleProps> =
   current && selected
     ? 'bg-primary-200 dark:bg-primary-750 hover:bg-primary-200 hover:dark:bg-primary-750'
     : current
-      ? 'bg-input hover:bg-hoverSurface'
+      ? 'bg-inputSurface hover:bg-hoverSurface'
       : selected
         ? 'bg-primary-100 dark:bg-primary-850 hover:bg-primary-150 hover:dark:bg-primary-800'
         : ghostHover,
