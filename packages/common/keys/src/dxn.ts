@@ -8,8 +8,8 @@ import type { inspect, InspectOptionsStylized } from 'node:util';
 import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
-import { SpaceId } from './space-id';
 import { ObjectId } from './object-id';
+import { SpaceId } from './space-id';
 
 /**
  * Tags for ECHO DXNs that should resolve the object ID in the local space.

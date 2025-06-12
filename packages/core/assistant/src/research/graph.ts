@@ -2,23 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Schema, identity, Option, SchemaAST } from 'effect';
 
+import { defineTool, ToolResult } from '@dxos/ai';
 import { type EchoDatabase } from '@dxos/echo-db';
+import { isEncodedReference } from '@dxos/echo-protocol';
 import {
   EntityKind,
   getSchemaTypename,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
   type AnyEchoObject,
-} from '@dxos/echo-schema';
-import { DXN } from '@dxos/keys';
-
-import { identity, Option, SchemaAST } from 'effect';
-
-import { defineTool, ToolResult } from '@dxos/ai';
-import { isEncodedReference } from '@dxos/echo-protocol';
-import {
   create,
   Filter,
   getEntityKind,
@@ -31,6 +25,7 @@ import {
   type BaseObject,
 } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
 

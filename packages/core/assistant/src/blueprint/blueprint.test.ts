@@ -8,16 +8,16 @@ import { describe, test } from 'vitest';
 import { AIServiceEdgeClient, defineTool, ToolResult } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { ArtifactId } from '@dxos/artifact';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { create } from '@dxos/echo-schema';
+import { DataType, DataTypes } from '@dxos/schema';
 
 import { BlueprintBuilder } from './blueprint';
 import { setConsolePrinter } from './logger';
 import { BlueprintMachine } from './machine';
 import { TEST_EMAILS } from './test-data';
-import { createExaTool } from '../research/exa';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { DataType, DataTypes } from '@dxos/schema';
 import { createGraphWriteTool, createLocalSearchTool } from '../research';
-import { create } from '@dxos/echo-schema';
+import { createExaTool } from '../research/exa';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
 

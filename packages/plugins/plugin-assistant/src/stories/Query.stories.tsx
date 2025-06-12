@@ -5,13 +5,27 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
+import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { AIServiceEdgeClient } from '@dxos/ai';
+import { EXA_API_KEY, SpyAIService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
+import {
+  BlueprintBuilder,
+  BlueprintMachine,
+  createExaTool,
+  createGraphWriteTool,
+  createLocalSearchTool,
+  setConsolePrinter,
+} from '@dxos/assistant';
 import { combine, timeout } from '@dxos/async';
+import { Type } from '@dxos/echo';
 import { type AnyEchoObject, create, getLabelForObject, getSchemaTypename, Query, Ref } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
@@ -31,21 +45,6 @@ import { AmbientDialog, PromptBar, type PromptController, type PromptBarProps } 
 import { ASSISTANT_PLUGIN } from '../meta';
 import { createFilter, type Expression, QueryParser } from '../parser';
 import translations from '../translations';
-import { invariant } from '@dxos/invariant';
-import {
-  BlueprintBuilder,
-  BlueprintMachine,
-  createExaTool,
-  createGraphWriteTool,
-  createLocalSearchTool,
-  setConsolePrinter,
-} from '@dxos/assistant';
-import { EXA_API_KEY, SpyAIService } from '@dxos/ai/testing';
-import { AIServiceEdgeClient } from '@dxos/ai';
-import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { Schema } from 'effect';
-import { DXN, Type } from '@dxos/echo';
-import { ObjectId, QueueSubspaceTags } from '@dxos/keys';
 
 faker.seed(1);
 

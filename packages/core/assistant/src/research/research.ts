@@ -2,29 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { identity, Option, Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 
-import { AgentStatusReport, ConsolePrinter, defineTool, ToolResult } from '@dxos/ai';
-import { type EchoDatabase } from '@dxos/echo-db';
-import { isEncodedReference } from '@dxos/echo-protocol';
-import {
-  create,
-  getEntityKind,
-  getSchemaDXN,
-  Filter,
-  ObjectId,
-  Query,
-  ReferenceAnnotationId,
-  RelationSourceId,
-  RelationTargetId,
-  type BaseObject,
-} from '@dxos/echo-schema';
-import { mapAst } from '@dxos/effect';
+import { AgentStatusReport, ConsolePrinter } from '@dxos/ai';
+import { create } from '@dxos/echo-schema';
 import { AiService, CredentialsService, DatabaseService, defineFunction, TracingService } from '@dxos/functions';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataTypes } from '@dxos/schema';
-import { deepMapValues } from '@dxos/util';
 
 import { createExaTool, createMockExaTool } from './exa';
 import { createGraphWriteTool } from './graph';

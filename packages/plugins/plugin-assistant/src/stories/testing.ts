@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import type { Schema } from 'effect';
 import defaulstDeep from 'lodash.defaultsdeep';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -17,7 +18,6 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { Config } from '@dxos/react-client';
 import { DataTypes } from '@dxos/schema';
-import type { Schema } from 'effect';
 
 export const testPlugins = ({
   config,

@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { Tool } from '@dxos/ai';
 import { assertState } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { Schema } from 'effect';
 
 export const BlueprintStep = Schema.Struct({
   id: Schema.String,

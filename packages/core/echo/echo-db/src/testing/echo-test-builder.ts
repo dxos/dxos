@@ -3,6 +3,7 @@
 //
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
+import type { Schema } from 'effect';
 import isEqual from 'lodash.isequal';
 
 import { waitForCondition } from '@dxos/async';
@@ -19,7 +20,6 @@ import { EchoClient } from '../client';
 import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Filter, Query } from '../query';
-import type { Schema } from 'effect';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
