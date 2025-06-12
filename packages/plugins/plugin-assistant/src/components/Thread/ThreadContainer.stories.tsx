@@ -46,7 +46,7 @@ import translations from '../../translations';
 const endpoints = remoteServiceEndpoints;
 
 type RenderProps = {
-  items?: Type.AnyObject[];
+  items?: Type.Obj.Any[];
   prompts?: string[];
 } & Pick<ThreadProps, 'debug'>;
 

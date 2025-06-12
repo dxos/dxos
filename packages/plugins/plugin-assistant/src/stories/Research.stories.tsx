@@ -66,7 +66,7 @@ const LOCAL = false;
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
 
 type RenderProps = {
-  items?: Type.AnyObject[];
+  items?: Type.Obj.Any[];
   prompts?: string[];
 } & Pick<ThreadProps, 'debug'>;
 

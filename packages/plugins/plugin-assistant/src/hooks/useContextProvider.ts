@@ -35,15 +35,15 @@ export const useContextProvider = (space?: Space): ContextProvider | undefined =
         return (
           objects
             .map((object) => {
-              log.info('object', { object, label: getLabel(Type.getSchema(object)!, object) });
+              log.info('object', { object, label: getLabel(Obj.getSchema(object)!, object) });
               return object;
             })
-            .filter((object) => stringMatch(query, getLabel(Type.getSchema(object)!, object) ?? ''))
+            .filter((object) => stringMatch(query, getLabel(Obj.getSchema(object)!, object) ?? ''))
             // TODO(dmaretskyi): `Type.getDXN` (at the point of writing) didn't work here as it was schema-only.
             .filter((object) => !!getDXN(object))
             .map((object) => ({
               uri: getDXN(object as any)!.toString(),
-              label: getLabel(Type.getSchema(object)!, object) ?? '',
+              label: getLabel(Obj.getSchema(object)!, object) ?? '',
             }))
         );
       },
@@ -51,7 +51,7 @@ export const useContextProvider = (space?: Space): ContextProvider | undefined =
         const object = await space.db.query(Filter.ids(uri)).first();
         return {
           uri,
-          label: getLabel(Type.getSchema(object)!, object) ?? '',
+          label: getLabel(Obj.getSchema(object)!, object) ?? '',
         };
       },
     };

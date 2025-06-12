@@ -8,11 +8,11 @@ import React from 'react';
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
 import { isImage } from '@dxos/conductor';
-import { Format, Type, Obj } from '@dxos/echo';
+import { Type, Obj } from '@dxos/echo';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 export const MapSchema = Schema.Struct({
-  coordinates: Format.GeoPoint,
+  coordinates: Type.Format.GeoPoint,
 }).pipe(
   Type.Obj({
     typename: 'example.com/type/Map',
