@@ -6,7 +6,7 @@ import { format } from 'date-fns/format';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { makeRef, RefArray } from '@dxos/live-object';
-import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { Button, IconButton, Toolbar, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { OUTLINER_PLUGIN } from '../../meta';
@@ -81,10 +81,10 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
 
   return (
     <div className={mx('flex flex-col', classNames)}>
-      <div className='flex gap-2 items-baseline'>
-        <div className={mx('text-lg', isToday && 'text-primary-500')}>{format(date, 'MMM d, yyyy')}</div>
-        <div className='text-sm text-subdued pbe-[1px]'>{format(date, 'EEEE')}</div>
-      </div>
+      <Toolbar.Root>
+        <Button variant={isToday ? 'outline' : 'ghost'}>{format(date, 'MMM d, yyyy')}</Button>
+        <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>
+      </Toolbar.Root>
       <Outliner id={entry.id} text={entry.content.target} classNames='pbs-2 pbe-2' {...props} />
     </div>
   );
