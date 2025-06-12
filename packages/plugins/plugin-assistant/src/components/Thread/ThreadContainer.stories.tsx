@@ -19,7 +19,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { DXN, Type } from '@dxos/echo';
+import { Type, Obj } from '@dxos/echo';
 import { createQueueDxn, create, Query, Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
@@ -46,7 +46,7 @@ import translations from '../../translations';
 const endpoints = remoteServiceEndpoints;
 
 type RenderProps = {
-  items?: Type.Obj.Any[];
+  items?: Obj.Any[];
   prompts?: string[];
 } & Pick<ThreadProps, 'debug'>;
 
@@ -82,7 +82,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
   // Queue.
   const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
-  const queue = useQueue<Message>(DXN.tryParse(queueDxn));
+  const queue = useQueue<Message>(Type.DXN.tryParse(queueDxn));
 
   useEffect(() => {
     if (space) {
