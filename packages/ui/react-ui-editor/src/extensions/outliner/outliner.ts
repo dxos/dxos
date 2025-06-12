@@ -18,7 +18,6 @@ import { decorateMarkdown } from '../markdown/decorate';
 // TODO(burdon): Prevent unterminated fenced code from breaking subsequent items ("firewall" markdown parsing within each item?)
 // TODO(burdon): What if a different editor "breaks" the layout?
 // TODO(burdon): Check Automerge recognizes text that is moved/indented (e.g., concurrent editing item while being moved).
-// TODO(burdon): Rendered cursor is not full height if there is not text on the task line.
 
 // NEXT:
 // TODO(burdon): Update selection when adding/removing items.
