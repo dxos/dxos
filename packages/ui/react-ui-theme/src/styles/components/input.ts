@@ -143,7 +143,7 @@ export const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disa
 export const inputSwitchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx(
     getSize(size === 'px' ? 'px' : ((size - 2) as Size)),
-    'block bg-white rounded-full border-separator transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%]',
+    'block bg-white rounded-full transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%]',
     ...etc,
   );
 
