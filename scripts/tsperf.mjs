@@ -47,6 +47,12 @@ const argv = yargs(hideBin(process.argv))
     description: 'Show detailed diagnostics about the TypeScript project state',
     default: false
   })
+  .option('summary', {
+    alias: 's',
+    type: 'boolean',
+    description: 'Show only a summary of completion statistics',
+    default: false
+  })
   .help()
   .alias('help', 'h')
   .argv;
@@ -78,8 +84,9 @@ function findTsConfig(filePath) {
  * @param {boolean} includeAutoImports - Whether to include auto-import suggestions
  * @param {number} position - Character position in file to get completions at
  * @param {boolean} showDiagnostics - Whether to show detailed diagnostics
+ * @param {boolean} showSummary - Whether to show only summary statistics
  */
-async function getCompletions(filePath, verbose, limit, includeAutoImports, position, showDiagnostics) {
+async function getCompletions(filePath, verbose, limit, includeAutoImports, position, showDiagnostics, showSummary) {
   const resolvedFilePath = resolve(filePath);
   
   if (!existsSync(resolvedFilePath)) {
@@ -232,8 +239,80 @@ async function getCompletions(filePath, verbose, limit, includeAutoImports, posi
       return;
     }
 
-    // Display results
-    console.log(chalk.bold.green(`\nFound ${completions.entries.length} completions at position ${position}:`));
+    // Calculate statistics for summary mode
+    const totalCompletions = completions.entries.length;
+    const autoImportEntries = completions.entries.filter(c => c.hasAction || c.source);
+    const autoImportCount = autoImportEntries.length;
+    
+    // Count unique source files for auto-imports
+    const uniqueSources = new Set();
+    autoImportEntries.forEach(entry => {
+      if (entry.source) {
+        uniqueSources.add(entry.source);
+      }
+    });
+    const uniqueSourceCount = uniqueSources.size;
+
+    // Group completions by kind for statistics
+    const kindStats = {};
+    completions.entries.forEach(completion => {
+      kindStats[completion.kind] = (kindStats[completion.kind] || 0) + 1;
+    });
+
+    // Show summary if requested
+    if (showSummary) {
+      console.log(chalk.bold.green(`\n📊 Completion Summary`));
+      console.log(chalk.gray(`File: ${relative(process.cwd(), resolvedFilePath)}`));
+      console.log(chalk.gray(`Position: ${position}`));
+      console.log();
+      
+      console.log(chalk.bold.cyan(`📋 Total Completions: ${chalk.white(totalCompletions)}`));
+      
+      if (includeAutoImports) {
+        console.log(chalk.bold.yellow(`📥 Auto-import Suggestions: ${chalk.white(autoImportCount)}`));
+        console.log(chalk.bold.blue(`📁 Unique Import Sources: ${chalk.white(uniqueSourceCount)}`));
+        
+        if (uniqueSourceCount > 0 && verbose) {
+          const sourceList = Array.from(uniqueSources).slice(0, 5);
+          console.log(chalk.gray(`   Sources: ${sourceList.join(', ')}${uniqueSourceCount > 5 ? ` (+${uniqueSourceCount - 5} more)` : ''}`));
+        }
+      }
+      
+      console.log();
+      console.log(chalk.bold.magenta(`🏷️  Completion Types:`));
+      Object.entries(kindStats)
+        .sort((a, b) => b[1] - a[1]) // Sort by count descending
+        .forEach(([kind, count]) => {
+          const percentage = ((count / totalCompletions) * 100).toFixed(1);
+          console.log(`   ${chalk.cyan(kind.padEnd(12))} ${chalk.white(count.toString().padStart(4))} ${chalk.gray(`(${percentage}%)`)}`);
+        });
+      
+      if (includeAutoImports && autoImportCount > 0) {
+        console.log();
+        console.log(chalk.bold.green(`✨ Auto-import Summary:`));
+        console.log(`   ${chalk.gray('Percentage of total:')} ${chalk.white(((autoImportCount / totalCompletions) * 100).toFixed(1))}%`);
+        
+        if (autoImportCount > 0) {
+          const autoImportByKind = {};
+          autoImportEntries.forEach(entry => {
+            autoImportByKind[entry.kind] = (autoImportByKind[entry.kind] || 0) + 1;
+          });
+          
+          console.log(`   ${chalk.gray('Top auto-import types:')}`);
+          Object.entries(autoImportByKind)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3)
+            .forEach(([kind, count]) => {
+              console.log(`     ${chalk.cyan(kind)} ${chalk.white(count)}`);
+            });
+        }
+      }
+      
+      return; // Exit early in summary mode
+    }
+
+    // Display detailed results (non-summary mode)
+    console.log(chalk.bold.green(`\nFound ${totalCompletions} completions at position ${position}:`));
     console.log(chalk.gray(`File: ${relative(process.cwd(), resolvedFilePath)}`));
     console.log(chalk.gray(`TSConfig: ${relative(process.cwd(), tsconfigPath)}`));
     console.log();
@@ -317,14 +396,16 @@ async function getCompletions(filePath, verbose, limit, includeAutoImports, posi
 
     // Show auto-import details if enabled
     if (includeAutoImports) {
-      const autoImportEntries = sortedCompletions.filter(c => c.hasAction || c.source);
-      if (autoImportEntries.length > 0) {
-        console.log(chalk.bold.green(`\nAuto-import suggestions found: ${autoImportEntries.length} entries`));
+      if (autoImportCount > 0) {
+        console.log(chalk.bold.green(`\nAuto-import suggestions found: ${autoImportCount} entries`));
         
         if (verbose) {
           console.log(chalk.bold.yellow(`\nAuto-import details (showing first 10):`));
           
-          for (const entry of autoImportEntries.slice(0, 10)) {
+          // Use auto-import entries from the sorted/limited completions for details
+          const limitedAutoImportEntries = sortedCompletions.filter(c => c.hasAction || c.source);
+          
+          for (const entry of limitedAutoImportEntries.slice(0, 10)) {
             console.log(chalk.cyan(`  ${entry.name}:`));
             if (entry.source) {
               console.log(chalk.gray(`    Source: ${entry.source}`));
@@ -366,8 +447,8 @@ async function getCompletions(filePath, verbose, limit, includeAutoImports, posi
             console.log();
           }
           
-          if (autoImportEntries.length > 10) {
-            console.log(chalk.yellow(`    ... and ${autoImportEntries.length - 10} more auto-import entries`));
+          if (limitedAutoImportEntries.length > 10) {
+            console.log(chalk.yellow(`    ... and ${limitedAutoImportEntries.length - 10} more auto-import entries`));
           }
         }
       } else {
@@ -394,7 +475,7 @@ async function main() {
   try {
     const startTime = Date.now();
     
-    await getCompletions(argv.file, argv.verbose, argv.limit, argv['auto-imports'], argv.position, argv.diagnostics);
+    await getCompletions(argv.file, argv.verbose, argv.limit, argv['auto-imports'], argv.position, argv.diagnostics, argv.summary);
     
     if (argv.verbose) {
       const duration = Date.now() - startTime;
