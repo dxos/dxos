@@ -4,7 +4,7 @@
 
 import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { closeEffect, openCommand, openEffect } from './action';
+import { closeEffect, openEffect } from './action';
 import { type RenderCallback } from '../../types';
 
 export type FloatingMenuOptions = {
@@ -29,12 +29,17 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
         }
 
         // Render menu externally.
-        this.button = document.createElement('div');
-        this.button.style.position = 'absolute';
-        this.button.style.zIndex = '10';
-        this.button.style.display = 'none';
+        // this.button = document.createElement('div'); // TODO(burdon) ref-tag.
+        // this.button.style.position = 'absolute';
+        // this.button.style.zIndex = '10';
+        // this.button.style.display = 'none';
 
-        options.renderMenu(this.button, { onAction: () => openCommand(view) }, view);
+        this.button = document.createElement('dx-ref-tag');
+        const icon = document.createElement('dx-icon');
+        icon.setAttribute('icon', 'ph--x--regular');
+        this.button.appendChild(icon);
+
+        // options.renderMenu(this.button, { onAction: () => openCommand(view) }, view);
         container.appendChild(this.button);
 
         // Listen for scroll events.

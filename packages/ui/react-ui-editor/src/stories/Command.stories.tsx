@@ -6,38 +6,15 @@ import '@dxos-theme';
 
 import React, { useState, type KeyboardEvent } from 'react';
 
-import { Button, Icon, IconButton, Input } from '@dxos/react-ui';
+import { Button, Icon, IconButton, Input, Popover } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory } from './util';
 import { editorWidth } from '../defaults';
 import { command, type Action } from '../extensions';
-import { str } from '../testing';
+import { RefPopover, str, useRefPopover } from '../testing';
 import { createRenderer } from '../util';
-
-const meta: Meta<typeof EditorStory> = {
-  title: 'ui/react-ui-editor/Command',
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: () => (
-    <EditorStory
-      text={str('# Command', '', '', '')}
-      extensions={[
-        command({
-          height: 32,
-          renderMenu: createRenderer(CommandMenu),
-          renderDialog: createRenderer(CommandDialog),
-          onHint: () => 'Press / for commands.',
-        }),
-      ]}
-    />
-  ),
-  parameters: { layout: 'fullscreen' },
-};
-
-export default meta;
-
-export const Default = {};
 
 // TODO(burdon): Actual menu.
 const CommandMenu = ({ onAction }: { onAction: () => void }) => {
@@ -99,3 +76,43 @@ const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) =>
     </div>
   );
 };
+
+const PreviewCard = () => {
+  const { target } = useRefPopover('PreviewCard');
+  return (
+    <Popover.Portal>
+      <Popover.Content classNames='popover-card-width p-2' onOpenAutoFocus={(event) => event.preventDefault()}>
+        <Popover.Viewport>
+          <Button>MENU</Button>
+        </Popover.Viewport>
+        <Popover.Arrow />
+      </Popover.Content>
+    </Popover.Portal>
+  );
+};
+
+const meta: Meta<typeof EditorStory> = {
+  title: 'ui/react-ui-editor/Command',
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+  render: () => (
+    <RefPopover.Provider>
+      <EditorStory
+        text={str('# Command', '', '', '')}
+        extensions={[
+          command({
+            height: 32,
+            renderMenu: createRenderer(CommandMenu),
+            renderDialog: createRenderer(CommandDialog),
+            onHint: () => 'Press / for commands.',
+          }),
+        ]}
+      />
+      <PreviewCard />
+    </RefPopover.Provider>
+  ),
+  parameters: { layout: 'fullscreen' },
+};
+
+export default meta;
+
+export const Default = {};

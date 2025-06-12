@@ -45,12 +45,12 @@ const useRefTarget = (link: PreviewLinkRef, onLookup: PreviewOptions['onLookup']
 };
 
 const PreviewCard = () => {
-  const { link, target } = useRefPopover('PreviewCard');
+  const { target } = useRefPopover('PreviewCard');
   return (
     <Popover.Portal>
-      <Popover.Content classNames='popover-card-width' onOpenAutoFocus={(event) => event.preventDefault()}>
+      <Popover.Content classNames='popover-card-width p-2' onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
-          <div className='grow truncate'>{link?.label}</div>
+          <h2 className='grow truncate'>{target?.label}</h2>
           {target && <div className='line-clamp-3'>{target.text}</div>}
         </Popover.Viewport>
         <Popover.Arrow />
