@@ -73,12 +73,18 @@ const decorations = () => [
           update.startState.facet(selectionFacet),
         );
 
-        if (update.docChanged || update.viewportChanged || update.selectionSet || selectionChanged) {
+        if (
+          update.focusChanged ||
+          update.docChanged ||
+          update.viewportChanged ||
+          update.selectionSet ||
+          selectionChanged
+        ) {
           this.updateDecorations(update.state, update.view);
         }
       }
 
-      private updateDecorations(state: EditorState, { viewport: { from, to } }: EditorView) {
+      private updateDecorations(state: EditorState, { viewport: { from, to }, hasFocus }: EditorView) {
         const selection = state.facet(selectionFacet);
         const tree = state.facet(treeFacet);
         const current = tree.find(state.selection.ranges[state.selection.mainIndex]?.from);
@@ -99,7 +105,7 @@ const decorations = () => [
                   'cm-list-item',
                   lineFrom.number === line.number && 'cm-list-item-start',
                   lineTo.number === line.number && 'cm-list-item-end',
-                  isSelected && 'cm-list-item-selected',
+                  hasFocus && isSelected && 'cm-list-item-selected',
                 ),
               }).range(line.from, line.from),
             );
@@ -142,6 +148,7 @@ const decorations = () => [
       marginBottom: '8px',
     },
 
+    // TODO(burdon): Focus state.
     '.cm-list-item-selected': {
       borderColor: 'var(--dx-focus-ring)',
     },
