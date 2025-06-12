@@ -25,7 +25,7 @@ export type ExtractInputBlock = {
  */
 export const extractTextBlocks = (object: Partial<ObjectStructure>): ExtractInputBlock[] => {
   const type = ObjectStructure.getTypeReference(object as any);
-  const dxnType = decodeReference(type).toDXN();
+  const dxnType = type && decodeReference(type).toDXN();
 
   if (IGNORED_TYPENAMES.includes(dxnType?.asTypeDXN()?.type ?? '')) {
     return [];
