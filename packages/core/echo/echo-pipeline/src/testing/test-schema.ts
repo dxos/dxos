@@ -24,7 +24,7 @@ export const Person = Schema.Struct({
   email: Schema.optional(Schema.String),
   age: Schema.optional(Schema.Number),
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Person',
     version: '0.1.0',
   }),
@@ -34,7 +34,7 @@ export interface Person extends Schema.Schema.Type<typeof Person> {}
 export const Organization = Schema.Struct({
   name: Schema.String,
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Organization',
     version: '0.1.0',
   }),
@@ -57,5 +57,5 @@ export const Task = Schema.Struct({
   title: Schema.String,
   createdAt: Schema.String,
   assignee: Ref(Person),
-}).pipe(Type.def({ typename: 'dxos.org/type/Task', version: '0.1.0' }));
+}).pipe(Type.Obj({ typename: 'dxos.org/type/Task', version: '0.1.0' }));
 export interface Task extends Schema.Schema.Type<typeof Task> {}

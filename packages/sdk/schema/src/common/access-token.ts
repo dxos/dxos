@@ -27,7 +27,7 @@ export const AccessToken = Schema.Struct({
   Schema.annotations({
     description: 'A credential or token for accessing a service.',
   }),
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/AccessToken',
     version: '0.1.0',
   }),

@@ -11,7 +11,7 @@ const TextSchema = Schema.Struct({
 });
 
 export const Text = TextSchema.pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Text',
     version: '0.1.0',
   }),

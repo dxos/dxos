@@ -23,7 +23,7 @@ export namespace Testing {
     name: Schema.String,
     content: Schema.String,
   }).pipe(
-    Type.def({
+    Type.Obj({
       typename: 'dxos.org/example/Document',
       version: '0.1.0',
     }),
@@ -54,7 +54,7 @@ export namespace Testing {
   // export type OrgSchemaType = Schema.Schema.Type<typeof OrgSchema>;
 
   export const Organization = OrganizationSchema.pipe(
-    Type.def({
+    Type.Obj({
       typename: 'example.com/type/Organization',
       version: '0.1.0',
     }),
@@ -103,7 +103,7 @@ export namespace Testing {
   // export type ContactSchemaType = Schema.Schema.Type<typeof ContactSchema>;
 
   export const Contact = ContactSchema.pipe(
-    Type.def({
+    Type.Obj({
       typename: 'example.com/type/Contact',
       version: '0.1.0',
     }),
@@ -129,7 +129,7 @@ export namespace Testing {
   // export type ProjectSchemaType = Schema.Schema.Type<typeof ProjectSchema>;
 
   export const Project = ProjectSchema.pipe(
-    Type.def({
+    Type.Obj({
       typename: 'example.com/type/Project',
       version: '0.1.0',
     }),
@@ -150,7 +150,7 @@ export namespace Testing {
   // export type MessageSchemaType = Schema.Schema.Type<typeof MessageSchema>;
 
   export const Message = MessageSchema.pipe(
-    Type.def({
+    Type.Obj({
       typename: 'example.com/type/Message',
       version: '0.1.0',
     }),

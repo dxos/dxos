@@ -22,7 +22,7 @@ const EventSchema = Schema.Struct({
 });
 
 export const Event = EventSchema.pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Event',
     version: '0.1.0',
   }),
