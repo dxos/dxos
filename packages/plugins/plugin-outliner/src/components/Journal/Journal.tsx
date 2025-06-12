@@ -6,7 +6,7 @@ import { format } from 'date-fns/format';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { makeRef, RefArray } from '@dxos/live-object';
-import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { Button, IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { OUTLINER_PLUGIN } from '../../meta';
@@ -73,6 +73,7 @@ type JournalEntryProps = ThemedClassName<
 >;
 
 const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
+  const { t } = useTranslation(OUTLINER_PLUGIN);
   const date = parseDateString(entry.date);
   const isToday = getDateString() === entry.date;
   if (!entry.content.target) {
@@ -81,9 +82,10 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
 
   return (
     <div className={mx('flex flex-col', classNames)}>
-      <div className='flex gap-2 items-baseline'>
-        <div className={mx('text-lg', isToday && 'text-primary-500')}>{format(date, 'MMM d, yyyy')}</div>
-        <div className='text-sm text-subdued pbe-[1px]'>{format(date, 'EEEE')}</div>
+      <div className='flex items-center gap-2 bg-transparent'>
+        <Button>{format(date, 'MMM d, yyyy')}</Button>
+        <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>
+        {isToday && <div className='text-xs'>{t('today label')}</div>}
       </div>
       <Outliner id={entry.id} text={entry.content.target} classNames='pbs-2 pbe-2' {...props} />
     </div>
