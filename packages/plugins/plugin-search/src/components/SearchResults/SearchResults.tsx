@@ -49,7 +49,7 @@ export const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>((item, for
   return (
     <Card.Root
       ref={forwardRef}
-      classNames={mx('mx-2 mt-2 cursor-pointer', selected && '!bg-groupSurface', ghostHover)}
+      classNames={mx('mx-2 mt-2 cursor-pointer', selected && '!bg-activeSurface', ghostHover)}
       onClick={() => onSelect?.(id)}
     >
       {objectType && (

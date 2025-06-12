@@ -236,7 +236,7 @@ export const defaultTheme: ThemeStyles = {
     backgroundColor: 'var(--dx-input)',
   },
   '.cm-panel input:focus, .cm-panel button:focus': {
-    outline: '1px solid var(--dx-accentFocusIndicator)',
+    outline: '1px solid var(--dx-neutralFocusIndicator)',
   },
   '.cm-panel label': {
     display: 'inline-flex',
@@ -249,7 +249,7 @@ export const defaultTheme: ThemeStyles = {
     height: '8px',
     marginRight: '6px !important',
     padding: '2px !important',
-    color: 'var(--dx-accentFocusIndicator)',
+    color: 'var(--dx-neutralFocusIndicator)',
   },
   '.cm-panel button': {
     '&:hover': {
