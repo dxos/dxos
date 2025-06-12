@@ -18,13 +18,13 @@ import {
   type JournalType,
   type JournalEntryType,
 } from '../../types';
-import { Outliner } from '../Outliner';
+import { Outliner, type OutlinerProps } from '../Outliner';
 
 type JournalProps = ThemedClassName<{
   journal: JournalType;
 }>;
 
-// TODO(burdon): Convert into single grid.
+// TODO(burdon): Virtualize.
 export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
   const date = new Date();
@@ -59,16 +59,18 @@ export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
       )}
       {RefArray.targets(journal?.entries ?? [])
         .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0))
-        .map((entry) => (
-          <JournalEntry key={entry.id} entry={entry} classNames='pbs-4 pbe-4' {...props} />
+        .map((entry, i) => (
+          <JournalEntry key={entry.id} entry={entry} classNames='pbs-4 pbe-4' {...props} autoFocus={i === 0} />
         ))}
     </div>
   );
 };
 
-type JournalEntryProps = ThemedClassName<{
-  entry: JournalEntryType;
-}>;
+type JournalEntryProps = ThemedClassName<
+  {
+    entry: JournalEntryType;
+  } & Pick<OutlinerProps, 'autoFocus'>
+>;
 
 const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
   const date = parseDateString(entry.date);

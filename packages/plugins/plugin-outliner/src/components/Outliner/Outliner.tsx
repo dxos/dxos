@@ -14,21 +14,24 @@ import {
   createThemeExtensions,
   outliner,
   useTextEditor,
+  type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
-export type OutlinerProps = ThemedClassName<{
-  id: string;
-  text: DataType.Text;
-}>;
+export type OutlinerProps = ThemedClassName<
+  {
+    id: string;
+    text: DataType.Text;
+  } & Pick<UseTextEditorProps, 'id' | 'autoFocus'>
+>;
 
-export const Outliner = ({ classNames, id, text }: OutlinerProps) => {
+export const Outliner = ({ classNames, text, id, autoFocus }: OutlinerProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       id,
-      autoFocus: true,
+      autoFocus,
       // TODO(burdon): Make this optional.
       initialValue: text.content,
       // Auto select end of document.
@@ -41,7 +44,7 @@ export const Outliner = ({ classNames, id, text }: OutlinerProps) => {
         outliner(),
       ],
     }),
-    [text, themeMode],
+    [id, text, autoFocus, themeMode],
   );
 
   return <div ref={parentRef} {...focusAttributes} className={mx('flex w-full justify-center', classNames)} />;
