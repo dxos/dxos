@@ -81,15 +81,21 @@ export const systemSememes = {
   //
   rootSurface: elevationCadence(0),
   baseSurface: elevationCadence(1),
-  groupSurface: elevationCadence(2, 1.8),
-  modalSurface: elevationCadence(3, 2.6),
+  groupSurface: elevationCadence(2),
+  modalSurface: elevationCadence(3),
 
   //
   // Contrast cadence tokens
   //
 
-  inputSurface: contrastCadence(0.25),
-  hoverSurface: contrastCadence(0.35),
+  hoverSurfaceBase: contrastCadence(1.1, 0.7),
+  hoverSurfaceGroup: contrastCadence(0.9, 0.9),
+  hoverSurfaceModal: contrastCadence(0.7, 1.3),
+
+  inputSurfaceBase: contrastCadence(0.7, 0.3),
+  inputSurfaceGroup: contrastCadence(0.5, 0.5),
+  inputSurfaceModal: contrastCadence(0.3, 0.9),
+
   unAccent: contrastCadence(3),
   unAccentHover: contrastCadence(4),
   hoverOverlay: contrastCadence(4, 4, 0.1),
@@ -178,11 +184,15 @@ const aliasDefs: Record<string, Record<string, SememeName>> = {
   // The background color appearing in overscroll and between planks when Deck is enabled.
   deckSurface: { root: 'rootSurface' },
 
+  // Secondary aliases
+  inputSurface: { root: 'inputSurfaceBase', group: 'inputSurfaceGroup', modal: 'inputSurfaceModal' },
+  hoverSurface: { root: 'hoverSurfaceBase', group: 'hoverSurfaceGroup', modal: 'hoverSurfaceModal' },
+
   // Selected items, current items, other surfaces needing special contrast against baseSurface.
-  activeSurface: { root: 'inputSurface' },
+  activeSurface: { root: 'inputSurface' as any /* TODO(thure): strongly type secondary aliases. */ },
 
   // Hovered items
-  separator: { root: 'hoverSurface' },
+  separator: { root: 'hoverSurface' as any /* TODO(thure): strongly type secondary aliases. */ },
 
   // Main sidebar panel.
   sidebarSurface: { root: 'groupSurface' },
