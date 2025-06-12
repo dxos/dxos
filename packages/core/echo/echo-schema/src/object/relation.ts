@@ -17,21 +17,21 @@ export const RelationTargetId: unique symbol = Symbol('@dxos/echo-db/RelationTar
 /**
  * Source and target props on relations.
  */
-export type RelationSourceTargetRefs<TSource = any, TTarget = any> = {
+// TODO(burdon): any?
+export type RelationSourceTargetRefs<Source = any, Target = any> = {
   /**
    * Source ECHO live object.
    */
-  [RelationSourceId]: TSource;
+  [RelationSourceId]: Source;
 
   /**
    * Target ECHO live object.
    */
-  [RelationTargetId]: TTarget;
+  [RelationTargetId]: Target;
 };
 
-export type RelationSource<R> = R extends RelationSourceTargetRefs<infer TSource, infer _TTarget> ? TSource : never;
-
-export type RelationTarget<R> = R extends RelationSourceTargetRefs<infer _TSource, infer TTarget> ? TTarget : never;
+export type RelationSource<R> = R extends RelationSourceTargetRefs<infer Source, infer _Target> ? Source : never;
+export type RelationTarget<R> = R extends RelationSourceTargetRefs<infer _Source, infer Target> ? Target : never;
 
 /**
  * Property name for relation source when object is serialized to JSON.

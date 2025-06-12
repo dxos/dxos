@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { Fragment, type PropsWithChildren, forwardRef, useRef, useState } from 'react';
+import React, { Fragment, type PropsWithChildren, forwardRef, useState } from 'react';
 
 import { type ActionLike } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
@@ -62,7 +62,6 @@ export type StackItemSigilProps = PropsWithChildren<
 export const StackItemSigil = forwardRef<HTMLButtonElement, StackItemSigilProps>(
   ({ actions: actionGroups, onAction, triggerLabel, attendableId, icon, related, children }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const suppressNextTooltip = useRef(false);
 
     const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
@@ -87,17 +86,7 @@ export const StackItemSigil = forwardRef<HTMLButtonElement, StackItemSigilProps>
     }
 
     return (
-      <DropdownMenu.Root
-        {...{
-          open: optionsMenuOpen,
-          onOpenChange: (nextOpen: boolean) => {
-            if (!nextOpen) {
-              suppressNextTooltip.current = true;
-            }
-            return setOptionsMenuOpen(nextOpen);
-          },
-        }}
-      >
+      <DropdownMenu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
         <DropdownMenu.Trigger asChild ref={forwardedRef}>
           {button}
         </DropdownMenu.Trigger>
@@ -127,7 +116,6 @@ export const StackItemSigil = forwardRef<HTMLButtonElement, StackItemSigilProps>
                             }
                             event.stopPropagation();
                             // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                            suppressNextTooltip.current = true;
                             setOptionsMenuOpen(false);
                             onAction?.(action);
                           }}

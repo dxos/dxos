@@ -12,7 +12,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  editorContent,
+  editorSlots,
   preview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
@@ -50,7 +50,7 @@ export const Message = ({ space, message, viewMode, contactDxn, classNames }: Me
       return [
         createBasicExtensions({ readOnly: true, lineWrapping: true }),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, slots: { content: { className: editorContent } } }),
+        createThemeExtensions({ themeMode, slots: editorSlots }),
         decorateMarkdown(),
         preview(),
       ];

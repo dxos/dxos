@@ -4,7 +4,7 @@
 
 import { line, select } from 'd3';
 
-import { type D3Callable } from '../typings';
+import { type D3Callable } from '../util';
 
 const createLine = line();
 
@@ -16,19 +16,23 @@ const createArrow =
   (length: number, offset: number, start: boolean): D3Callable =>
   (el) => {
     const height = length * 0.5;
-    const path = createLine([
-      start ? [length, height] : [-length, -height],
-      [0, 0],
-      start ? [length, -height] : [-length, height],
-    ]);
-
     el.attr('markerWidth', length * 2)
       .attr('markerHeight', height * 2)
       .attr('viewBox', `-${length},-${height},${length * 2},${height * 2}`)
       .attr('orient', 'auto')
       .attr('refX', offset)
       .append('path')
-      .attr('d', path);
+      .attr('fill', 'none')
+      // Inherit stroke from path.
+      .attr('stroke', 'context-stroke')
+      .attr(
+        'd',
+        createLine([
+          start ? [length, height] : [-length, -height],
+          [0, 0],
+          start ? [length, -height] : [-length, height],
+        ]),
+      );
   };
 
 const createDot =
@@ -39,6 +43,8 @@ const createDot =
       .attr('viewBox', `-${size},-${size},${size * 2},${size * 2}`)
       .attr('orient', 'auto')
       .append('circle')
+      // Inherit stroke from path.
+      .attr('fill', 'context-stroke')
       .attr('r', size / 2 - 1);
   };
 

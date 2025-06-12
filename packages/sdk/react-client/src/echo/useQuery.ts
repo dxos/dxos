@@ -6,13 +6,14 @@ import { useMemo, useSyncExternalStore } from 'react';
 
 import { type Echo, Filter, type Live, Query, type Space, isSpace } from '@dxos/client/echo';
 
+const EMPTY_ARRAY: never[] = [];
+
+const noop = () => {};
+
 // TODO(dmaretskyi): Queries are fully serializable, so we can remove `deps` argument.
 interface UseQueryFn {
   <Q extends Query.Any>(spaceOrEcho: Space | Echo | undefined, query: Q, deps?: any[]): Live<Query.Type<Q>>[];
 
-  /**
-   * @deprecated Pass `Query` instead.
-   */
   <F extends Filter.Any>(spaceOrEcho: Space | Echo | undefined, filter: F, deps?: any[]): Live<Filter.Type<F>>[];
 }
 
@@ -46,14 +47,10 @@ export const useQuery: UseQueryFn = (
         };
       },
     };
-  }, [spaceOrEcho, ...JSON.stringify(query.ast), ...(deps ?? [])]);
+  }, [spaceOrEcho, JSON.stringify(query.ast), ...(deps ?? [])]);
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
   // NOTE: This hook will resubscribe whenever the callback passed to the first argument changes; make sure it is stable.
   const objects = useSyncExternalStore<Live<unknown>[] | undefined>(subscribe, getObjects);
   return objects ?? [];
 };
-
-const noop = () => {};
-
-const EMPTY_ARRAY: never[] = [];

@@ -72,8 +72,9 @@ export const formattingStyles = EditorView.theme({
    * Task list.
    */
   '& .cm-task': {
-    display: 'inline-block',
+    display: 'inline-flex',
     width: `${bulletListIndentationWidth}px`,
+    height: '20px',
   },
   '& .cm-task-checkbox': {
     display: 'grid',

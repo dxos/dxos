@@ -143,7 +143,7 @@ type StoryProps = {
 //
 
 const meta: Meta<StoryProps> = {
-  title: 'ui/plugin-kanban/Kanban',
+  title: 'plugins/plugin-kanban/Kanban',
   component: StorybookKanban,
   render: () => <StorybookKanban />,
   parameters: { translations },

@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { useSelectedItems } from '@dxos/react-ui-attention';
+import { useSelected } from '@dxos/react-ui-attention';
 import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 import { type ViewType } from '@dxos/schema';
 
@@ -26,8 +26,8 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   // NOTE(ZaymonFC): Since selection is currently a set, the order these objects show
   //   up in will not necessarily match the order in the selected context.
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
-  const selectedRows = useSelectedItems(objectId);
-  const selectedObjects = queriedObjects.filter((obj) => selectedRows.has(obj.id));
+  const selectedRows = useSelected(objectId, 'multi');
+  const selectedObjects = queriedObjects.filter((obj) => selectedRows.includes(obj.id));
 
   const handleSave = useCallback(
     (values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {

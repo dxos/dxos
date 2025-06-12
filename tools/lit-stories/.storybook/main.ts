@@ -41,23 +41,22 @@ export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConf
   viteFinal: async (config) => {
     return mergeConfig(config, {
       plugins: [
-        ThemePlugin({
-          root: __dirname,
-          content: [
-            resolve(packages, 'app/*/src/**', contentFiles),
-            resolve(packages, 'experimental/*/src/**', contentFiles),
-            resolve(packages, 'plugins/*/src/**', contentFiles),
-            resolve(packages, 'plugins/experimental/*/src/**', contentFiles),
-            resolve(packages, 'sdk/*/src/**', contentFiles),
-            resolve(packages, 'ui/*/src/**', contentFiles),
-          ],
-        }),
         IconsPlugin({
           symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           assetPath: (name, variant) =>
             `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
           spriteFile: resolve(__dirname, '../static/icons.svg'),
           contentPaths: [join(packages, '/**/src/**/*.{ts,tsx}')],
+        }),
+        ThemePlugin({
+          root: __dirname,
+          content: [
+            resolve(packages, 'app/*/src/**', contentFiles),
+            resolve(packages, 'experimental/*/src/**', contentFiles),
+            resolve(packages, 'plugins/*/src/**', contentFiles),
+            resolve(packages, 'sdk/*/src/**', contentFiles),
+            resolve(packages, 'ui/*/src/**', contentFiles),
+          ],
         }),
         // https://github.com/antfu-collective/vite-plugin-inspect#readme
         // Open: http://localhost:5173/__inspect

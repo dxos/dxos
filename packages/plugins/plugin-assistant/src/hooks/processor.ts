@@ -11,13 +11,14 @@ import {
   type Message,
   type MessageContentBlock,
   type Tool,
+  type ToolUseContentBlock,
 } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import { AISession, type ArtifactDiffResolver } from '@dxos/assistant';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { getVersion, type Space } from '@dxos/react-client/echo';
+import { Filter, getVersion, type Space } from '@dxos/react-client/echo';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -128,6 +129,33 @@ export class ChatProcessor {
       this._pending.value = [...this._pending.value, message];
     });
 
+    this._session.toolStatusReport.on(({ message, status }) => {
+      const msg = this._pending.peek().find((m) => m.id === message.id);
+      const toolUse = msg?.content.find((block) => block.type === 'tool_use');
+      if (!toolUse) {
+        return;
+      }
+
+      const block = msg?.content.find(
+        (block): block is ToolUseContentBlock => block.type === 'tool_use' && block.id === toolUse.id,
+      );
+      if (block) {
+        this._pending.value = this._pending.value.map((m) => {
+          if (m.id === message.id) {
+            return {
+              ...m,
+              content: m.content.map((b) =>
+                b.type === 'tool_use' && b.id === toolUse.id ? { ...b, currentStatus: status } : b,
+              ),
+            };
+          }
+          return m;
+        });
+      } else {
+        log.warn('no block for status report');
+      }
+    });
+
     try {
       const messages = await this._session.run({
         client: this._ai,
@@ -190,7 +218,7 @@ export class ChatProcessor {
       artifacts.map(async (artifact) => {
         const {
           objects: [object],
-        } = await space.db.query({ id: artifact.id }).run();
+        } = await space.db.query(Filter.ids(artifact.id)).run();
         if (!object) {
           return;
         }

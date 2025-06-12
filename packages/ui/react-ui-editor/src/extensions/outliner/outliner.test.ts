@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { indentItemLess, indentItemMore, moveItemDown, moveItemUp } from './commands';
 import { listItemToString, outlinerTree, treeFacet } from './tree';
-import { str } from '../../stories';
+import { str } from '../../testing';
 import { createMarkdownExtensions } from '../markdown';
 
 const lines = [

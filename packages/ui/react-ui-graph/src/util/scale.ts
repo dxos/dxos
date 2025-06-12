@@ -4,7 +4,10 @@
 
 import { type ZoomTransform, zoomIdentity } from 'd3';
 
-import { type Bounds, type Fraction, FractionUtil, type ScreenBounds, type Point, type Vertex } from '../util';
+import { FractionUtil } from './fraction';
+import { type Fraction } from './fraction';
+import { type Point, type Rect } from './types';
+import { type Bounds, type Vertex } from './vector';
 
 /**
  * Scale to map vector space to view (screen) space.
@@ -22,8 +25,17 @@ export class Scale {
     return this._transform || zoomIdentity;
   }
 
-  setTransform(transform: ZoomTransform) {
+  setTransform(transform: ZoomTransform): boolean {
+    if (
+      this._transform?.x === transform.x &&
+      this._transform?.y === transform.y &&
+      this._transform?.k === transform.k
+    ) {
+      return false;
+    }
+
     this._transform = transform;
+    return true;
   }
 
   /**
@@ -66,7 +78,7 @@ export class Scale {
       return [x, y === 0 ? 0 : -y]; // Prevent -0.
     },
 
-    toBounds: ({ x, y, width, height }: Bounds): ScreenBounds => {
+    toBounds: ({ x, y, width, height }: Bounds): Rect => {
       const point = this.model.toPoint({ x, y });
       const [width2, height2] = this.model.toValues([width, height]);
 
@@ -89,7 +101,7 @@ export class Scale {
     snapPoint: ([x, y]: [number, number]): Point =>
       [x, y].map((n) => Math.round(n / this._gridSize) * this._gridSize) as Point,
 
-    snapBounds: ({ x, y, width, height }: { x: number; y: number; width: number; height: number }): ScreenBounds => {
+    snapBounds: ({ x, y, width, height }: { x: number; y: number; width: number; height: number }): Rect => {
       [x, y, width, height] = this.screen.snapValues([x, y, width, height]);
       return { x, y, width, height };
     },
@@ -110,7 +122,7 @@ export class Scale {
       };
     },
 
-    toBounds: (bounds: ScreenBounds): Bounds => {
+    toBounds: (bounds: Rect): Bounds => {
       const { x, y } = this.screen.toVertex([bounds.x, bounds.y]);
       const [width, height] = this.screen.toValues([bounds.width, bounds.height]);
 

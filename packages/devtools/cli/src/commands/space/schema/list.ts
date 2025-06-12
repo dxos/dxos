@@ -32,7 +32,7 @@ export default class List extends BaseCommand<typeof List> {
       const typenameFilter = createTypenameFilter(this.flags.typename);
 
       const echoSchema = await space.db.schemaRegistry.query().run();
-      const runtimeSchema = await space.db.graph.schemaRegistry.schemas;
+      const runtimeSchema = space.db.graph.schemaRegistry.schemas;
 
       const schemas = [
         ...echoSchema.map((schema): SchemaEntry => schema),

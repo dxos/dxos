@@ -2,28 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type BlockInfo, type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { closeEffect, openCommand, openEffect } from './action';
 import { type RenderCallback } from '../../types';
 
 export type FloatingMenuOptions = {
+  height?: number;
   renderMenu: RenderCallback<{ onAction: () => void }>;
 };
 
-// TODO(burdon): Trigger completion on click.
-// TODO(burdon): Hide when dialog is open.
 export const floatingMenu = (options: FloatingMenuOptions) =>
   ViewPlugin.fromClass(
     class {
-      button: HTMLElement;
       view: EditorView;
+      button: HTMLElement;
       rafId: number | null = null;
 
       constructor(view: EditorView) {
         this.view = view;
 
-        // Position context: scrollDOM
+        // Position context.
         const container = view.scrollDOM;
         if (getComputedStyle(container).position === 'static') {
           container.style.position = 'relative';
@@ -54,43 +53,33 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
         }
       }
 
+      updateButtonPosition() {
+        const pos = this.view.state.selection.main.head;
+        const line = this.view.lineBlockAt(pos);
+
+        const scrollRect = this.view.scrollDOM.getBoundingClientRect();
+        const contentRect = this.view.contentDOM.getBoundingClientRect();
+
+        // Center the menu.
+        const dy = options.height ? (line.height - options.height) / 2 : 0;
+
+        const offsetTop = scrollRect.top + line.top + dy;
+        const offsetLeft = scrollRect.width - contentRect.x;
+
+        this.button.style.top = `${offsetTop}px`;
+        this.button.style.left = `${offsetLeft}px`;
+        this.button.style.display = 'block';
+
+        // TODO(burdon): Position is incorrect if cursor is in fenced code block.
+        // console.log('offsetTop', lineRect, containerRect);
+      }
+
       scheduleUpdate() {
         if (this.rafId != null) {
           cancelAnimationFrame(this.rafId);
         }
 
         this.rafId = requestAnimationFrame(this.updateButtonPosition.bind(this));
-      }
-
-      updateButtonPosition() {
-        const pos = this.view.state.selection.main.head;
-        const lineBlock: BlockInfo = this.view.lineBlockAt(pos);
-        const domInfo = this.view.domAtPos(lineBlock.from);
-
-        // Find nearest HTMLElement for the line block
-        let node: Node | null = domInfo.node;
-        while (node && !(node instanceof HTMLElement)) {
-          node = node.parentNode;
-        }
-
-        if (!node) {
-          this.button.style.display = 'none';
-          return;
-        }
-
-        const lineRect = (node as HTMLElement).getBoundingClientRect();
-        const containerRect = this.view.scrollDOM.getBoundingClientRect();
-
-        // Account for scroll and padding/margin in scrollDOM.
-        const offsetTop = lineRect.top - containerRect.top + this.view.scrollDOM.scrollTop;
-        const offsetLeft = this.view.scrollDOM.clientWidth + this.view.scrollDOM.scrollLeft - lineRect.x;
-
-        // TODO(burdon): Position is incorrect if cursor is in fenced code block.
-        // console.log('offsetTop', lineRect, containerRect);
-
-        this.button.style.top = `${offsetTop}px`;
-        this.button.style.left = `${offsetLeft}px`;
-        this.button.style.display = 'block';
       }
 
       destroy() {

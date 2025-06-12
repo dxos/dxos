@@ -2,8 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import { inspect } from 'node:util';
+
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
+import { inspectObject } from '@dxos/debug';
 import { type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -34,14 +37,7 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import {
-  Filter,
-  type FilterSource,
-  type DeprecatedPropertyFilter,
-  type QueryFn,
-  type QueryOptions,
-  Query,
-} from '../query';
+import { Filter, type QueryFn, type QueryOptions, Query } from '../query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -71,6 +67,8 @@ export interface EchoDatabase {
   get spaceKey(): PublicKey;
   get spaceId(): SpaceId;
 
+  toJSON(): object;
+
   getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): AnyLiveObject<T> | undefined;
 
   /**
@@ -80,9 +78,8 @@ export interface EchoDatabase {
 
   /**
    * Update objects.
-   * @deprecated Query then update.
    */
-  update(filter: DeprecatedPropertyFilter, operation: UpdateOperation): Promise<void>;
+  update(filter: Filter.Any, operation: UpdateOperation): Promise<void>;
 
   /**
    * Insert new objects.
@@ -176,6 +173,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     });
   }
 
+  [inspect.custom]() {
+    return inspectObject(this);
+  }
+
+  toJSON() {
+    return this._coreDatabase.toJSON();
+  }
+
   get spaceId(): SpaceId {
     return this._coreDatabase.spaceId;
   }
@@ -245,18 +250,18 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(filter?: FilterSource, options?: QueryOptions) {
-    return this._coreDatabase.graph.query(filter, {
+  private _query(query: Query.Any | Filter.Any, options?: QueryOptions) {
+    query = Filter.is(query) ? Query.select(query) : query;
+    return this._coreDatabase.graph.query(query, {
       ...options,
       spaceIds: [this.spaceId],
-      spaces: [this.spaceKey],
     });
   }
 
   /**
    * Update objects.
    */
-  async update(filter: DeprecatedPropertyFilter, operation: UpdateOperation) {
+  async update(filter: Filter.Any, operation: UpdateOperation) {
     await this._coreDatabase.update(filter, operation);
   }
 

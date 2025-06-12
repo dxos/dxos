@@ -20,7 +20,7 @@ import {
   GraphRenderer,
   type GraphForceProjectorOptions,
   createMarkers,
-  createDrag,
+  createGraphDrag,
   linkerRenderer,
 } from '../graph';
 import { useSvgContext, useZoom, useGrid } from '../hooks';
@@ -28,7 +28,7 @@ import { convertTreeToGraph, createTree, TestGraphModel, type TestNode } from '.
 
 import '../../styles/graph.css';
 
-type DefaultStoryProps = PropsWithChildren<{
+type StoryProps = PropsWithChildren<{
   model: TestGraphModel;
   projectorOptions?: GraphForceProjectorOptions;
   count?: number;
@@ -37,7 +37,7 @@ type DefaultStoryProps = PropsWithChildren<{
   grid?: boolean;
 }>;
 
-const DefaultStory = ({ children, ...props }: DefaultStoryProps) => {
+const DefaultStory = ({ children, ...props }: StoryProps) => {
   return (
     <>
       <SVG.Root>
@@ -55,7 +55,7 @@ const StoryComponent = ({
   interval = 200,
   link = false,
   grid: showGrid = false,
-}: DefaultStoryProps) => {
+}: StoryProps) => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>();
   const markersRef = useRef<SVGGElement>();
@@ -68,7 +68,7 @@ const StoryComponent = ({
     if (!link) {
       renderer = new GraphRenderer(context, graphRef);
     } else {
-      const drag = createDrag(context, projector.simulation, {
+      const drag = createGraphDrag(context, projector, {
         onDrag: (source, target, point) => {
           select(graphRef.current).call(linkerRenderer, { source, target, point });
         },
@@ -97,7 +97,7 @@ const StoryComponent = ({
         onNodeClick: (node: GraphLayoutNode<TestNode>, event: MouseEvent) => {
           renderer.fireBullet(node);
         },
-        onEdgeClick: (edge: GraphLayoutEdge<TestNode>, event: MouseEvent) => {
+        onLinkClick: (edge: GraphLayoutEdge<TestNode>, event: MouseEvent) => {
           if (event.metaKey) {
             model.removeEdge(edge.id);
           }
@@ -118,8 +118,8 @@ const StoryComponent = ({
   useEffect(() => {
     void projector.start();
     return combine(
-      model.subscribe((graph) => projector.update(graph)),
-      projector.updated.on(({ layout }) => renderer.update(layout)),
+      model.subscribe((graph) => projector.updateData(graph)),
+      projector.updated.on(({ layout }) => renderer.render(layout)),
       () => projector.stop(),
     );
   }, []);

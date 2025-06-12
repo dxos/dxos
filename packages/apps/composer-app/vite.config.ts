@@ -107,10 +107,9 @@ export default defineConfig((env) => ({
       content: [
         join(__dirname, './index.html'),
         join(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/devtools/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/plugins/*/src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/plugins/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/sdk/*/src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
@@ -164,6 +163,8 @@ export default defineConfig((env) => ({
             ],
           },
         ],
+        // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
+        ['@preact-signals/safe-react/swc', { mode: 'all' }],
       ],
     }),
     importMapPlugin({

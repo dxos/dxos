@@ -11,16 +11,24 @@ import { AIServiceEdgeClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { processTranscriptMessage } from '@dxos/assistant';
+import {
+  extractionAnthropicFn,
+  type ExtractionFunction,
+  extractionNerFn,
+  processTranscriptMessage,
+  getNer,
+} from '@dxos/assistant';
 import { Filter, MemoryQueue } from '@dxos/echo-db';
-import { create, createQueueDxn } from '@dxos/echo-schema';
+import { create, createQueueDxn, type Expando } from '@dxos/echo-schema';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { useSpace } from '@dxos/react-client/echo';
+import { IndexKind, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { seedTestData, Testing } from '@dxos/schema/testing';
@@ -43,25 +51,21 @@ const RECORDER_CONFIG = {
   interval: 200,
 };
 
-const aiService = new AIServiceEdgeClient({
-  endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-});
-
-type DefaultStoryProps = {
+type StoryProps = {
   detectSpeaking?: boolean;
-  entityExtraction?: boolean;
   transcriberConfig: TranscriberParams['config'];
   recorderConfig: MediaStreamRecorderParams['config'];
   audioConstraints?: MediaTrackConstraints;
+  entityExtraction: 'none' | 'ner' | 'llm';
 };
 
 const DefaultStory = ({
   detectSpeaking,
-  entityExtraction,
+  entityExtraction = 'none',
   transcriberConfig,
   recorderConfig,
   audioConstraints,
-}: DefaultStoryProps) => {
+}: StoryProps) => {
   const [running, setRunning] = useState(false);
 
   // Audio.
@@ -76,37 +80,74 @@ const DefaultStory = ({
   const model = useQueueModelAdapter(renderMarkdown([]), queue);
   const space = useSpace();
 
+  useEffect(() => {
+    if (!space) {
+      log.warn('no space');
+    }
+  }, [space]);
+
+  // Entity extraction.
+  const { extractionFunction, executor, objects } = useMemo(() => {
+    if (!space) {
+      log.warn('no space');
+      return {};
+    }
+
+    let executor: FunctionExecutor | undefined;
+    let extractionFunction: ExtractionFunction | undefined;
+    let objects: Promise<Expando[]> | undefined;
+
+    if (entityExtraction === 'ner') {
+      // Init model loading. Takes time.
+      void getNer();
+      extractionFunction = extractionNerFn;
+    } else if (entityExtraction === 'llm') {
+      extractionFunction = extractionAnthropicFn;
+      objects = space.db
+        .query(
+          Filter.or(
+            Filter.type(DataType.Person),
+            Filter.type(DataType.Organization),
+            Filter.type(Testing.DocumentType),
+          ),
+        )
+        .run()
+        .then((result) => result.objects);
+    }
+    if (entityExtraction !== 'none') {
+      const aiService = new AIServiceEdgeClient({
+        endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+      });
+      executor = new FunctionExecutor(
+        new ServiceContainer().setServices({ ai: { client: aiService }, database: { db: space!.db } }),
+      );
+    }
+
+    return { extractionFunction, executor, objects };
+  }, [entityExtraction, space]);
+
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
       const message = create(DataType.Message, { sender: { name: 'You' }, created: new Date().toISOString(), blocks });
+      if (!space) {
+        void queue.append([message]);
+        return;
+      }
 
-      if (entityExtraction) {
-        if (!space) {
-          log.warn('no space');
-          return;
-        }
-        // TODO(dmaretskyi): Move to vector search index.
-        const { objects } = await space.db
-          .query(
-            Filter.or(
-              Filter.type(DataType.Person),
-              Filter.type(DataType.Organization),
-              Filter.type(Testing.DocumentType),
-            ),
-          )
-          .run();
-
-        log.info('context', { objects });
-
+      if (entityExtraction !== 'none') {
+        invariant(extractionFunction, 'extractionFunction is required');
+        invariant(executor, 'executor is required');
         const result = await processTranscriptMessage({
-          message,
-          aiService,
-          context: {
-            objects,
+          executor,
+          function: extractionFunction,
+          input: {
+            message,
+            objects: await objects,
           },
           options: {
             fallbackToRaw: true,
+            timeout: 30_000,
           },
         });
         void queue.append([result.message]);
@@ -157,6 +198,19 @@ const meta: Meta<typeof DefaultStory> = {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
+            // TODO(mykola): Make API easier to use.
+            // TODO(mykola): Delete after enabling vector indexing by default.
+            // Enable vector indexing.
+            await client.services.services.QueryService!.setConfig({
+              enabled: true,
+              indexes: [
+                //
+                { kind: IndexKind.Kind.SCHEMA_MATCH },
+                { kind: IndexKind.Kind.GRAPH },
+                { kind: IndexKind.Kind.VECTOR },
+              ],
+            });
+            await client.services.services.QueryService!.reindex();
             await seedTestData(client.spaces.default);
           },
         }),
@@ -180,7 +234,7 @@ type Story = StoryObj<typeof DefaultStory>;
 export const Default: Story = {
   args: {
     detectSpeaking: false,
-    entityExtraction: false,
+    entityExtraction: 'none',
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,
     audioConstraints: {
@@ -193,14 +247,14 @@ export const Default: Story = {
 
 export const EntityExtraction: Story = {
   args: {
-    detectSpeaking: false,
-    entityExtraction: true,
+    detectSpeaking: true,
+    entityExtraction: 'ner',
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,
     audioConstraints: {
-      echoCancellation: false,
-      noiseSuppression: false,
-      autoGainControl: false,
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
     },
   },
 };
@@ -208,6 +262,7 @@ export const EntityExtraction: Story = {
 export const SpeechDetection: Story = {
   args: {
     detectSpeaking: true,
+    entityExtraction: 'none',
     transcriberConfig: TRANSCRIBER_CONFIG,
     recorderConfig: RECORDER_CONFIG,
     audioConstraints: {

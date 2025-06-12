@@ -2,17 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { pipe, Schema } from 'effect';
 
 import { defineTool, ToolResult } from '@dxos/ai';
-import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
+import { createArtifactElement } from '@dxos/assistant';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { invariant, assertArgument } from '@dxos/invariant';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
-import { DocumentType } from '../types';
+import { DocumentType, MarkdownAction } from '../types';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -33,6 +35,39 @@ export default () => {
     `,
     schema: DocumentType,
     tools: [
+      defineTool(meta.id, {
+        name: 'create',
+        description: 'Create a new markdown document',
+        caption: 'Creating document...',
+        schema: Schema.Struct({
+          name: Schema.optional(Schema.String).annotations({
+            description: 'Optional name for the document.',
+          }),
+          content: Schema.String.annotations({
+            description: 'The content of the document.',
+          }),
+        }),
+        execute: async ({ name, content }, { extensions }) => {
+          invariant(extensions?.space, 'No space');
+          invariant(extensions?.dispatch, 'No intent dispatcher');
+
+          const intent = pipe(
+            createIntent(MarkdownAction.Create, {
+              spaceId: extensions.space.id,
+              name,
+              content,
+            }),
+            chain(SpaceAction.AddObject, { target: extensions.space }),
+          );
+
+          const { data, error } = await extensions.dispatch(intent);
+          if (!data || error) {
+            return ToolResult.Error(error?.message ?? 'Failed to create document');
+          }
+
+          return ToolResult.Success(createArtifactElement(data.id));
+        },
+      }),
       defineTool(meta.id, {
         name: 'list',
         description: 'List all markdown documents in the current space.',
@@ -63,7 +98,7 @@ export default () => {
         }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const document = await extensions.space.db.query({ id: ArtifactId.toDXN(id).toString() }).first();
+          const document = await extensions.space.db.query(Filter.ids(ArtifactId.toDXN(id).toString())).first();
           assertArgument(isInstanceOf(DocumentType, document), 'Invalid type');
 
           const { content } = await document.content?.load();

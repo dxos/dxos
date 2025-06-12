@@ -3,7 +3,7 @@
 //
 
 import { sentryVitePlugin } from '@sentry/vite-plugin';
-import ReactPlugin from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react-swc';
 import { join, resolve } from 'node:path';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
@@ -33,7 +33,8 @@ export default defineConfig({
     },
   },
   build: {
-    sourcemap: true,
+    // TODO(wittjosiah): Minification is causing issues with the app.
+    minify: false,
     rollupOptions: {
       input: {
         main: resolve(__dirname, './index.html'),
@@ -55,8 +56,13 @@ export default defineConfig({
     ConfigPlugin({ env: ['DX_VAULT'] }),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
-    // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    ReactPlugin({
+      tsDecorators: true,
+      plugins: [
+        // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
+        ['@preact-signals/safe-react/swc', { mode: 'all' }],
+      ],
+    }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
     // https://www.npmjs.com/package/@sentry/vite-plugin
     sentryVitePlugin({

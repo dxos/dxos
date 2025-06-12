@@ -64,6 +64,9 @@
     },
     {
       "path": "../client-protocol"
+    },
+    {
+      "path": "../schema"
     }
   ],
   "ts-node": {

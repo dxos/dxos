@@ -20,8 +20,8 @@ import { isNonNullable } from '@dxos/util';
 
 import { type AnyLiveObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
-import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '../hypergraph';
-import { type QueryResultEntry } from '../query';
+import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
+import { type QueryResultEntry, type QuerySource } from '../query';
 import { getTargetSpacesForQuery } from '../query/util';
 
 export type LoadObjectParams = {

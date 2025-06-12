@@ -17,7 +17,7 @@ import { ClientRepeater, type ClientRepeatedComponentProps } from '@dxos/react-c
 import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { editorContent } from '../../defaults';
+import { editorSlots } from '../../defaults';
 import { useTextEditor } from '../../hooks';
 import translations from '../../translations';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '../factories';
@@ -42,12 +42,7 @@ const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
       initialValue: DocAccessor.getValue(source),
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...' }),
-        createThemeExtensions({
-          themeMode,
-          slots: {
-            editor: { className: editorContent },
-          },
-        }),
+        createThemeExtensions({ themeMode, slots: editorSlots }),
         createDataExtensions({ id: 'test', text: source, space, identity }),
       ],
       autoFocus,

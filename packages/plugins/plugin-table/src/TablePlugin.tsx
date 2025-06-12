@@ -38,6 +38,7 @@ export const TablePlugin = () =>
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (table: TableType) => [], // loadObjectReferences(table, (table) => [table.schema]),
             serializer,
+            comments: 'unanchored',
           },
         }),
     }),
