@@ -8,6 +8,8 @@ import { closeEffect, openEffect } from './action';
 
 export type FloatingMenuOptions = {
   icon?: string;
+  height?: number;
+  padding?: number;
 };
 
 export const floatingMenu = (options: FloatingMenuOptions = {}) => [
@@ -56,8 +58,7 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
       }
 
       updateButtonPosition() {
-        const height = 32;
-        const { width } = this.view.contentDOM.getBoundingClientRect();
+        const { x, width } = this.view.contentDOM.getBoundingClientRect();
 
         const pos = this.view.state.selection.main.head;
         const line = this.view.lineBlockAt(pos);
@@ -67,10 +68,10 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
         }
 
         const lineHeight = coords.bottom - coords.top;
-        const dy = (lineHeight - height) / 2;
+        const dy = (lineHeight - (options.height ?? 32)) / 2;
 
         const offsetTop = coords.top + dy;
-        const offsetLeft = coords.left + width;
+        const offsetLeft = x + width + (options.padding ?? 8);
 
         this.tag.style.top = `${offsetTop}px`;
         this.tag.style.left = `${offsetLeft}px`;

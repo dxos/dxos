@@ -11,7 +11,7 @@ import { commands } from './commands';
 import { editor } from './editor';
 import { selectionCompartment, selectionFacet, selectionEquals } from './selection';
 import { outlinerTree, treeFacet } from './tree';
-import { decorateMarkdown } from '../markdown/decorate';
+import { decorateMarkdown } from '../markdown';
 
 // ISSUES:
 // TODO(burdon): Remove requirement for continuous lines to be indented (so that user's can't accidentally delete them and break the layout).
@@ -53,6 +53,9 @@ export const outliner = (): Extension => [
 
   // Default markdown decorations.
   decorateMarkdown({ listPaddingLeft: 8 }),
+
+  // Max width with room for menu.
+  EditorView.contentAttributes.of({ class: '!mli-auto is-full max-is-[min(50rem,100%-6rem)]' }),
 ];
 
 /**
@@ -97,15 +100,13 @@ const decorations = () => [
             const lineFrom = doc.lineAt(item.contentRange.from);
             const lineTo = doc.lineAt(item.contentRange.to);
             const isSelected = selection.includes(item.index) || item === current;
-
             decorations.push(
               Decoration.line({
                 class: mx(
                   'cm-list-item',
                   lineFrom.number === line.number && 'cm-list-item-start',
                   lineTo.number === line.number && 'cm-list-item-end',
-                  isSelected && 'cm-list-item-selected',
-                  hasFocus && 'cm-list-item-focused',
+                  isSelected && (hasFocus ? 'cm-list-item-focused' : 'cm-list-item-selected'),
                 ),
               }).range(line.from, line.from),
             );
