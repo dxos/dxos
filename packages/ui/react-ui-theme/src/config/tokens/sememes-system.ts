@@ -80,16 +80,16 @@ export const systemSememes = {
   // Elevation cadence tokens
   //
   rootSurface: elevationCadence(0),
-  baseSurface: elevationCadence(1, 1.2),
-  groupSurface: elevationCadence(2, 2.4),
-  modalSurface: elevationCadence(3),
+  baseSurface: elevationCadence(1),
+  groupSurface: elevationCadence(2, 1.8),
+  modalSurface: elevationCadence(3, 2.6),
 
   //
   // Contrast cadence tokens
   //
 
-  separator: contrastCadence(0.2),
-  inputSurface: contrastCadence(0.4),
+  inputSurface: contrastCadence(0.25),
+  hoverSurface: contrastCadence(0.35),
   unAccent: contrastCadence(3),
   unAccentHover: contrastCadence(4),
   hoverOverlay: contrastCadence(4, 4, 0.1),
@@ -182,7 +182,7 @@ const aliasDefs: Record<string, Record<string, SememeName>> = {
   activeSurface: { root: 'inputSurface' },
 
   // Hovered items
-  hoverSurface: { root: 'separator' },
+  separator: { root: 'hoverSurface' },
 
   // Main sidebar panel.
   sidebarSurface: { root: 'groupSurface' },
