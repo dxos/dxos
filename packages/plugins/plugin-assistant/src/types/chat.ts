@@ -13,7 +13,7 @@ export const AIChatType = Schema.Struct({
   // TODO(wittjosiah): Should be a ref to a Queue.
   queue: Ref(Expando),
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/AIChat',
     version: '0.2.0',
   }),
@@ -23,7 +23,7 @@ export interface AIChatType extends Schema.Schema.Type<typeof AIChatType> {}
 export const CompanionTo = Schema.Struct({
   id: Type.ObjectId,
 }).pipe(
-  Relation.def({
+  Type.Relation({
     typename: 'dxos.org/relation/CompanionTo',
     version: '0.1.0',
     source: AIChatType,

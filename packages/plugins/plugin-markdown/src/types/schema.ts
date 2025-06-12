@@ -16,7 +16,7 @@ export const DocumentSchema = Schema.Struct({
 }).pipe(LabelAnnotation.set(['name', 'fallbackName']));
 
 export const DocumentType = DocumentSchema.pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Document',
     version: '0.1.0',
   }),
