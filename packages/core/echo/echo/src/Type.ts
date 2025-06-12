@@ -111,3 +111,11 @@ export const isMutable = (schema: Obj.Any | Relation.Any): boolean => {
 };
 
 export { SpaceId, ObjectId, DXN } from '@dxos/keys';
+
+export {
+  //
+  Expando,
+  JsonSchemaType as JsonSchema,
+  toJsonSchema,
+  Format,
+} from '@dxos/echo-schema';

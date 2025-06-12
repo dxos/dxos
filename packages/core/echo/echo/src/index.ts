@@ -9,13 +9,5 @@ export * as Ref from './Ref';
 
 export {
   //
-  Expando,
-  JsonSchemaType as JsonSchema,
-  toJsonSchema,
-  Format,
-} from '@dxos/echo-schema';
-
-export {
-  //
   type Live,
 } from '@dxos/live-object';
