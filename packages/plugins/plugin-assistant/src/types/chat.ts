@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Relation, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { Expando, Ref } from '@dxos/echo-schema';
 
 export const AIChatType = Schema.Struct({

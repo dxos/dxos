@@ -4,10 +4,10 @@
 
 import { Schema } from 'effect';
 
+import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { getTypeAnnotation } from './annotations';
-import { assertArgument } from '@dxos/invariant';
 
 /**
  * For attaching schema to objects.

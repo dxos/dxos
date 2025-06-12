@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Relation, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 
 import { Organization } from './organization';
 import { Person } from './person';

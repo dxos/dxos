@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Type, Ref } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 
 //
 // Example schema

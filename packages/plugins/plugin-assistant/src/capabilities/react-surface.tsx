@@ -6,7 +6,7 @@ import { Effect } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
-import { Type, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { Filter, isInstanceOf, Query } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
 import { SpaceAction } from '@dxos/plugin-space/types';

@@ -28,7 +28,7 @@ export const TypeSymbol = Symbol.for('@dxos/schema/Type');
 
 /**
  * Gets the typename of the object without the version.
-*/
+ */
 export const getTypename = (obj: BaseObject): string | undefined => {
   let typename = (obj as any)[TYPENAME_SYMBOL];
   if (typename === undefined) {

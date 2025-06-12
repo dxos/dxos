@@ -9,7 +9,6 @@ import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
 import type { SpaceId } from './space-id';
-import type { ObjectId } from './object-id';
 
 /**
  * Tags for ECHO DXNs that should resolve the object ID in the local space.

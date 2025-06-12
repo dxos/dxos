@@ -6,7 +6,7 @@ import { X } from '@phosphor-icons/react';
 import React from 'react';
 
 import { createDocAccessor } from '@dxos/client/echo';
-import { Type, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { getMeta } from '@dxos/live-object';
 import { Button, Input, useThemeContext } from '@dxos/react-ui';
 import {

@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { StoredSchema, TypedObject } from '@dxos/echo-schema';
+import { type StoredSchema, TypedObject } from '@dxos/echo-schema';
 import { createStoredSchema, type Live } from '@dxos/live-object';
 
 import { createView, type ViewType } from '../view';

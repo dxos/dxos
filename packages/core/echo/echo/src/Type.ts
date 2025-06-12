@@ -7,7 +7,7 @@ import { type Schema } from 'effect';
 import type { EncodedReference } from '@dxos/echo-protocol';
 import * as EchoSchema from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import * as Keys from '@dxos/keys';
+import type * as Keys from '@dxos/keys';
 
 /**
  * New EchoObject schema.

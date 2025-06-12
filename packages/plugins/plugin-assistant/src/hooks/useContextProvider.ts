@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { Filter, type Space } from '@dxos/client/echo';
-import { Type, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { type BaseEchoObject, getDXN, getLabel } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 

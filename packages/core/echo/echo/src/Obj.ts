@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';
 import * as LiveObject from '@dxos/live-object';
-import { Schema, Function } from 'effect';
-import * as Type from './Type';
+
+import type * as Type from './Type';
 
 export type Any = EchoSchema.AnyEchoObject;
 
@@ -30,13 +32,13 @@ export const isObject = (obj: unknown): obj is Any => {
 export const instanceOf: {
   <S extends Type.Relation.Any | Type.Obj.Any>(schema: S): (value: unknown) => value is S;
   <S extends Type.Relation.Any | Type.Obj.Any>(schema: S, value: unknown): value is S;
-} = function () {
-  if (arguments.length === 1) {
-    return (obj: unknown) => EchoSchema.isInstanceOf(arguments[0], obj);
+} = ((...args: any[]) => {
+  if (args.length === 1) {
+    return (obj: unknown) => EchoSchema.isInstanceOf(args[0], obj);
   }
 
-  return EchoSchema.isInstanceOf(arguments[0], arguments[1]);
-} as any;
+  return EchoSchema.isInstanceOf(args[0], args[1]);
+}) as any;
 
 export const getSchema = EchoSchema.getSchema;
 

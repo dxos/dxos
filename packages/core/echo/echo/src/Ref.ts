@@ -3,6 +3,7 @@
 //
 
 import * as EchoSchema from '@dxos/echo-schema';
+
 import type * as Obj from './Obj';
 
 export type Any = EchoSchema.Ref<Obj.Any>;

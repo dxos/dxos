@@ -19,7 +19,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { Type, Obj } from '@dxos/echo';
+import { Type, type Obj } from '@dxos/echo';
 import { createQueueDxn, create, Query, Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';

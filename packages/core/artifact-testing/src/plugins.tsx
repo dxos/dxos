@@ -8,7 +8,7 @@ import React from 'react';
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
 import { isImage } from '@dxos/conductor';
-import { Type, Obj } from '@dxos/echo';
+import { Type, type Obj } from '@dxos/echo';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 export const MapSchema = Schema.Struct({
