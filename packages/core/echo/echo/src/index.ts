@@ -7,7 +7,5 @@ export * as Obj from './Obj';
 export * as Relation from './Relation';
 export * as Ref from './Ref';
 
-export {
-  //
-  type Live,
-} from '@dxos/live-object';
+export { type Live } from '@dxos/live-object';
+export { Filter, Query } from '@dxos/echo-schema';
