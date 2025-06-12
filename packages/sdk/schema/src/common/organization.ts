@@ -49,7 +49,7 @@ const OrganizationSchema = Schema.Struct({
   // TODO(wittjosiah): Format.URL (currently breaks schema validation). Support ref?
   image: Schema.optional(Schema.String.annotations({ title: 'Image' })),
   website: Schema.optional(
-    Format.URL.annotations({
+    Type.Format.URL.annotations({
       title: 'Website',
     }).pipe(GeneratorAnnotation.set('internet.url')),
   ),
