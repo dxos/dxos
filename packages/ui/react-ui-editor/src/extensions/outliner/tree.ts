@@ -14,7 +14,7 @@ import { type Range } from '../../types';
 /**
  * Represents a single item in the tree.
  */
-export type Item = {
+export interface Item {
   type: 'root' | 'bullet' | 'task' | 'unknown';
   index: number;
   level: number;
@@ -34,6 +34,10 @@ export type Item = {
    * This doesn't include the list or task marker or indentation.
    */
   contentRange: Range;
+}
+
+export const itemToJSON = ({ type, index, level, lineRange, contentRange, children }: Item): any => {
+  return { type, index, level, lineRange, contentRange, children: children.map(itemToJSON) };
 };
 
 /**
@@ -52,6 +56,10 @@ export class Tree implements Item {
     this.node = node;
     this.lineRange = { from: node.from, to: node.to };
     this.contentRange = this.lineRange;
+  }
+
+  toJSON() {
+    return itemToJSON(this);
   }
 
   get root(): Item {
@@ -183,6 +191,7 @@ export type TreeOptions = {};
 /**
  * Creates a shadow tree of `ListItem` nodes whenever the document changes.
  * This adds overhead relative to the markdown AST, but allows for efficient traversal of the list items.
+ * NOTE: Requires markdown parser to be enabled.
  */
 export const outlinerTree = (options: TreeOptions = {}): Extension => {
   const buildTree = (state: EditorState): Tree => {
