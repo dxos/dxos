@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
 import { describe, test } from 'vitest';
 
 import { outlinerTree, treeFacet, listItemToString, type Item } from './tree';
 import { str } from '../../testing';
 import { type Range } from '../../types';
-import { createMarkdownExtensions } from '../markdown';
 
 const lines = [
   '- [ ] 1',
@@ -26,7 +26,7 @@ const getPos = (line: number) => {
   return lines.slice(0, line).reduce((acc, line) => acc + line.length + 1, 0);
 };
 
-const extensions = [createMarkdownExtensions(), outlinerTree()];
+const extensions = [markdown({ base: markdownLanguage }), outlinerTree()];
 
 describe('tree (boundary conditions)', () => {
   test('empty', ({ expect }) => {
@@ -35,14 +35,38 @@ describe('tree (boundary conditions)', () => {
     expect(tree).to.exist;
   });
 
+  test('content range', ({ expect }) => {
+    const state = EditorState.create({ doc: '- [ ] A', extensions });
+    const tree = state.facet(treeFacet);
+    console.log(JSON.stringify(tree, null, 2));
+    expect(tree.toJSON()).to.deep.eq({
+      type: 'root',
+      index: -1,
+      level: -1,
+      lineRange: { from: 0, to: -1 },
+      contentRange: { from: 0, to: -1 },
+      children: [
+        {
+          type: 'task',
+          index: 0,
+          level: 0,
+          lineRange: { from: 0, to: 7 },
+          contentRange: { from: 6, to: 7 },
+          children: [],
+        },
+      ],
+    });
+
+    const item = tree.find(0);
+    expect(item?.contentRange).to.include({ from: 6, to: state.doc.length });
+  });
+
   test('empty continuation', ({ expect }) => {
     const state = EditorState.create({ doc: str('- [ ] A', '  '), extensions });
     const tree = state.facet(treeFacet);
     tree.traverse((item, level) => {
       console.log(listItemToString(item, level));
     });
-    const item = tree.find(0);
-    expect(item?.contentRange).to.include({ from: 6, to: state.doc.length });
   });
 });
 
