@@ -25,10 +25,12 @@ import { Type } from '@dxos/echo';
 import { type AnyEchoObject, create, getLabelForObject, getSchemaTypename, Query, Ref } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
+import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
-import { Filter, Queue, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
+import { useClient } from '@dxos/react-client';
+import { Filter, Queue, type Space, useQuery, useQueue } from '@dxos/react-client/echo';
 import { Dialog, IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
 import { matchCompletion, staticCompletion, typeahead, type TypeaheadOptions } from '@dxos/react-ui-editor';
 import { List } from '@dxos/react-ui-list';
@@ -64,21 +66,30 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const [ast, setAst] = useState<Expression | undefined>();
   const [filter, setFilter] = useState<Filter.Any>();
-  const selection = useMemo(() => new SelectionModel(), []);
-  const [model] = useState<SpaceGraphModel | undefined>(() =>
-    showGraph
-      ? new SpaceGraphModel().setOptions({
-          onCreateEdge: (edge, relation) => {
-            // TODO(burdon): Check type.
-            if (relation.active === false) {
-              edge.data.force = false;
-            }
-          },
-        })
-      : undefined,
-  );
 
-  const space = useSpace();
+  const selection = useMemo(() => new SelectionModel(), []);
+  const [model] = useState<SpaceGraphModel | undefined>(() => {
+    if (showGraph) {
+      return new SpaceGraphModel().setOptions({
+        onCreateEdge: (edge, relation) => {
+          // TODO(burdon): Check type.
+          if (relation.active === false) {
+            edge.data.force = false;
+          }
+        },
+      });
+    }
+  });
+
+  const client = useClient();
+  const [space, setSpace] = useState<Space | undefined>();
+  useEffect(() => {
+    const spaces = client.spaces.get();
+    if (spaces.length) {
+      setSpace(spaces[0]);
+    }
+  }, [client]);
+
   const items = useQuery(space, Query.select(filter ?? Filter.everything()));
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
@@ -128,6 +139,27 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     };
   }, [space, model, researchGraph?.queue.dxn.toString()]);
 
+  const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1000 });
+  const researchBlueprint = useBlueprint(space, researchGraph?.queue.dxn);
+
+  //
+  // Handlers
+  //
+
+  const handleRefresh = useCallback(() => {
+    model?.invalidate();
+  }, [model]);
+
+  const handleResearch = useCallback(async () => {
+    const selected = selection.selected.value;
+    log.info('research', { selected: selection.selected.value });
+    const { objects } = await space!.db.query(Filter.ids(...selected)).run();
+    invariant(researchBlueprint);
+    const machine = new BlueprintMachine(researchBlueprint);
+    setConsolePrinter(machine, true);
+    await machine.runToCompletion({ aiService: aiClient, input: objects });
+  }, [space, aiClient, selection, researchBlueprint]);
+
   const handleGenerate = useCallback(async () => {
     if (!space) {
       return;
@@ -141,11 +173,12 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       log.info('adding test data');
       addTestData(space);
     }
-  }, [space, spec, generator]);
+  }, [space, generator, spec]);
 
-  const handleRefresh = useCallback(() => {
-    model?.invalidate();
-  }, [model]);
+  const handleReset = useCallback(async () => {
+    const space = await client.spaces.create();
+    setSpace(space);
+  }, [client]);
 
   const handleSubmit = useCallback<NonNullable<PromptBarProps['onSubmit']>>(
     (text) => {
@@ -200,19 +233,59 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     [space],
   );
 
-  const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1000 });
+  const extensions = useMemo(() => [typeahead({ onComplete: handleMatch })], [handleMatch]);
 
-  console.log('Query.stories.tsx', {
-    space: space?.id,
-    allItems: items,
-    researchGraph: researchGraph?.id,
-    researchQueue: researchQueue?.items,
-  });
+  return (
+    <div className='grow grid overflow-hidden'>
+      <div className={mx('grow grid overflow-hidden', !mode && 'grid-cols-[1fr_30rem]')}>
+        {showGraph && (
+          <D3ForceGraph classNames='border-ie border-separator' model={model} selection={selection} {...props} />
+        )}
 
-  const researchBlueprint = useMemo(() => {
+        {showList && (
+          <div className='grow grid grid-rows-[min-content_1fr_1fr] overflow-hidden divide-y divide-separator'>
+            <Toolbar.Root>
+              <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='refresh' onClick={handleRefresh} />
+              <IconButton icon='ph--sparkle--regular' iconOnly label='research' onClick={handleResearch} />
+              <IconButton icon='ph--plus--regular' iconOnly label='generate' onClick={handleGenerate} />
+              <IconButton icon='ph--trash--regular' iconOnly label='reset' onClick={handleReset} />
+            </Toolbar.Root>
+            <ItemList items={items} getTitle={(item) => getLabelForObject(item)} />
+            <JsonFilter
+              data={{
+                db: space?.db.toJSON(),
+                items: items.length,
+                queue: researchQueue?.items.length,
+                model: model?.toJSON(),
+                selection: selection.toJSON(),
+                ast,
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      <Dialog.Root modal={false} open>
+        <AmbientDialog resizeable={false} onEscape={handleCancel}>
+          <PromptBar
+            ref={promptRef}
+            placeholder={t('search input placeholder')}
+            extensions={extensions}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+          />
+        </AmbientDialog>
+      </Dialog.Root>
+    </div>
+  );
+};
+
+const useBlueprint = (space: Space | undefined, queueDxn: DXN | undefined) => {
+  return useMemo(() => {
     if (!space) {
       return undefined;
     }
+
     const db = space.db;
 
     // TODO(burdon): Text-DSL that references tools?
@@ -229,12 +302,12 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
           db,
           schemaTypes: DataTypes,
           onDone: async (objects) => {
-            if (!space || !researchGraph) {
+            if (!space || !queueDxn) {
               log.warn('failed to add objects to research queue');
               return;
             }
 
-            const queue = space.queues.get(researchGraph.queue.dxn);
+            const queue = space.queues.get(queueDxn);
             queue.append(objects);
             log.info('research queue', { items: queue.items });
           },
@@ -243,60 +316,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       .end();
 
     return blueprint;
-  }, [space, researchGraph]);
-
-  // TODO(burdon): Trigger research blueprint (to update graph).
-  const handleResearch = useCallback(async () => {
-    const selected = selection.selected.value;
-    log.info('research', { selected: selection.selected.value });
-    const { objects } = await space!.db.query(Filter.ids(...selected)).run();
-    invariant(researchBlueprint);
-    const machine = new BlueprintMachine(researchBlueprint);
-    setConsolePrinter(machine, true);
-    await machine.runToCompletion({ aiService: aiClient, input: objects });
-  }, [selection, space, aiClient, researchBlueprint]);
-
-  const extensions = useMemo(() => [typeahead({ onComplete: handleMatch })], [handleMatch]);
-
-  return (
-    <div className='grow grid overflow-hidden'>
-      <div className={mx('grow grid overflow-hidden', !mode && 'grid-cols-[1fr_30rem]')}>
-        {showGraph && (
-          <D3ForceGraph classNames='border-ie border-separator' model={model} selection={selection} {...props} />
-        )}
-        {showList && (
-          <div className='grow grid grid-rows-[min-content_1fr_1fr] overflow-hidden divide-y divide-separator'>
-            <Toolbar.Root>
-              <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='refresh' onClick={handleRefresh} />
-              <IconButton icon='ph--sparkle--regular' iconOnly label='research' onClick={handleResearch} />
-              <IconButton icon='ph--plus--regular' iconOnly label='generate' onClick={handleGenerate} />
-            </Toolbar.Root>
-            <ItemList items={items} getTitle={(item) => getLabelForObject(item)} />
-            <JsonFilter
-              data={{
-                model: model?.toJSON(),
-                db: space?.db.toJSON(),
-                selection: selection.toJSON(),
-                items: items.length,
-                ast,
-              }}
-            />
-          </div>
-        )}
-      </div>
-      <Dialog.Root modal={false} open>
-        <AmbientDialog resizeable={false} onEscape={handleCancel}>
-          <PromptBar
-            ref={promptRef}
-            placeholder={t('search input placeholder')}
-            extensions={extensions}
-            onSubmit={handleSubmit}
-            onCancel={handleCancel}
-          />
-        </AmbientDialog>
-      </Dialog.Root>
-    </div>
-  );
+  }, [space, queueDxn]);
 };
 
 /**
