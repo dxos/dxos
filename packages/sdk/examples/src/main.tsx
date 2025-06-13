@@ -56,7 +56,6 @@ const main = async () => {
       space.db.add(
         live(DocumentType, {
           content: Ref.make(live(DataType.Text, { content: '## Type here...\n\ntry the airplane mode switch.' })),
-          threads: [],
         }),
       );
     },

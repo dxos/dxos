@@ -22,7 +22,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  editorContent,
+  editorSlots,
   formattingKeymap,
   translations,
   useComments,
@@ -49,7 +49,7 @@ const DefaultStory: FC<{ content?: string }> = ({ content = '' }) => {
         formattingObserver,
         createBasicExtensions({ readOnly: toolbarState.viewMode === 'readonly' }),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: { editor: { className: editorContent } } }),
+        createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: editorSlots }),
         createDataExtensions({ id: text.id, text: createDocAccessor(text, ['content']) }),
         comments({
           onCreate: ({ cursor }) => {

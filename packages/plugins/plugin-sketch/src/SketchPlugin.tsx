@@ -37,6 +37,7 @@ export const SketchPlugin = () =>
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: async (diagram: DiagramType) => await RefArray.loadAll([diagram.canvas]),
             serializer,
+            comments: 'unanchored',
           },
         }),
     }),

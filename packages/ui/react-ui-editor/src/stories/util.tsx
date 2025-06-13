@@ -16,7 +16,7 @@ import { useThemeContext, Icon } from '@dxos/react-ui';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
-import { editorContent, editorGutter } from '../defaults';
+import { editorSlots, editorGutter } from '../defaults';
 import {
   type DebugNode,
   type EditorSelectionState,
@@ -31,6 +31,7 @@ import {
   image,
   linkTooltip,
   table,
+  type ThemeExtensionsOptions,
 } from '../extensions';
 import { useTextEditor, type UseTextEditorProps } from '../hooks';
 import { str } from '../testing';
@@ -256,7 +257,8 @@ export type StoryProps = {
   placeholder?: string;
   lineNumbers?: boolean;
   onReady?: (view: EditorView) => void;
-} & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'>;
+} & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'> &
+  Pick<ThemeExtensionsOptions, 'slots'>;
 
 // Default story component
 export const EditorStory = ({
@@ -264,12 +266,13 @@ export const EditorStory = ({
   debug,
   debugCustom,
   text,
-  extensions,
   readOnly,
   placeholder = 'New document.',
+  lineNumbers,
   scrollTo,
   selection,
-  lineNumbers,
+  extensions,
+  slots = editorSlots,
   onReady,
 }: StoryProps) => {
   const [object] = useState(createObject(live(Expando, { content: text ?? '' })));
@@ -286,11 +289,7 @@ export const EditorStory = ({
         createThemeExtensions({
           themeMode,
           syntaxHighlighting: true,
-          slots: {
-            content: {
-              className: editorContent,
-            },
-          },
+          slots,
         }),
         editorGutter,
         extensions || [],

@@ -97,7 +97,7 @@ export const DatabaseDirectory = Object.freeze({
  */
 export type ObjectStructure = {
   // TODO(dmaretskyi): Missing in some cases.
-  system: ObjectSystem;
+  system?: ObjectSystem;
 
   meta: ObjectMeta;
   /**
@@ -113,28 +113,28 @@ export const ObjectStructure = Object.freeze({
    * @throws On invalid object structure.
    */
   getTypeReference: (object: ObjectStructure): EncodedReference | undefined => {
-    return object.system.type;
+    return object.system?.type;
   },
 
   /**
    * @throws On invalid object structure.
    */
   getEntityKind: (object: ObjectStructure): 'object' | 'relation' => {
-    const kind = object.system.kind ?? 'object';
+    const kind = object.system?.kind ?? 'object';
     invariant(kind === 'object' || kind === 'relation', 'Invalid kind');
     return kind;
   },
 
   isDeleted: (object: ObjectStructure): boolean => {
-    return object.system.deleted ?? false;
+    return object.system?.deleted ?? false;
   },
 
   getRelationSource: (object: ObjectStructure): EncodedReference | undefined => {
-    return object.system.source;
+    return object.system?.source;
   },
 
   getRelationTarget: (object: ObjectStructure): EncodedReference | undefined => {
-    return object.system.target;
+    return object.system?.target;
   },
 
   /**

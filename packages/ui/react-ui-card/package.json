@@ -24,6 +24,7 @@
     "src"
   ],
   "dependencies": {
+    "@preact-signals/safe-react": "^0.9.0",
     "@radix-ui/react-primitive": "2.0.2"
   },
   "devDependencies": {

@@ -6,7 +6,6 @@ import { Schema } from 'effect';
 
 import { DataType } from '@dxos/schema';
 
-import { TreeNodeType } from './tree';
 import { JournalType, OutlineType } from './types';
 import { OUTLINER_PLUGIN } from '../meta';
 
@@ -34,7 +33,7 @@ export namespace OutlinerAction {
   // TODO(burdon): Move to plugin-task.
   export class CreateTask extends Schema.TaggedClass<CreateTask>()(`${OUTLINER_ACTION}/create-task`, {
     input: Schema.Struct({
-      node: TreeNodeType,
+      text: Schema.String,
     }),
     output: Schema.Struct({
       object: DataType.Task,

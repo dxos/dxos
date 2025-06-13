@@ -22,7 +22,7 @@ import { safeParseJson } from '@dxos/util';
 import { ToolBlock, isToolMessage } from './ToolInvocations';
 import { ToolboxContainer } from '../Toolbox';
 
-const panelClassNames = 'flex flex-col w-full px-2 bg-groupSurface rounded-md';
+const panelClassNames = 'flex flex-col w-full px-2 bg-activeSurface rounded-md';
 const userClassNames = 'bg-[--user-fill] text-accentSurfaceText';
 
 const ToggleContainer = (props: ToggleContainerProps) => {

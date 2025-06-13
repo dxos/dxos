@@ -9,7 +9,7 @@ import { debounce } from '@dxos/async';
 import { getSnapshot, getTypename, type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation, Tag, useDeepCompareMemo } from '@dxos/react-ui';
-import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
+import { useSelectionActions, useSelected, AttentionGlyph } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Stack, StackItem, autoScrollRootAttributes, railGridHorizontalContainFitContent } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
@@ -29,8 +29,8 @@ const getColumnDropElement = (stackElement: HTMLDivElement) => {
 
 export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
-  const { select, clear } = useSelectionActions([model.id, getTypename(model.schema)!]);
-  const selectedItems = useSelectedItems(model.id);
+  const { singleSelect, clear } = useSelectionActions([model.id, getTypename(model.schema)!]);
+  const selected = useSelected(model.id, 'single');
   const [_focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
   useEffect(() => () => clear(), []);
 
@@ -96,7 +96,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     item={card}
                     classNames='contain-layout pli-2 plb-1 first-of-type:pbs-0 last-of-type:pbe-0'
                     focusIndicatorVariant='group'
-                    onClick={() => select([card.id])}
+                    onClick={() => singleSelect(card.id)}
                     prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
                     nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
                   >
@@ -114,7 +114,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                             classNames='pli-2'
                           />
                         </StackItem.DragHandle>
-                        <AttentionGlyph attended={selectedItems.has(card.id)} />
+                        <AttentionGlyph attended={selected === card.id} />
                         {onRemoveCard && (
                           <>
                             <span role='separator' className='grow' />
@@ -133,7 +133,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     <StackItem.DragPreview>
                       {({ item }) => (
                         <div className='p-2'>
-                          <div className='rounded overflow-hidden bg-cardSurface ring-focusLine ring-accentFocusIndicator relative min-bs-[--rail-item]'>
+                          <div className='rounded overflow-hidden bg-cardSurface ring-focusLine ring-neutralFocusIndicator relative min-bs-[--rail-item]'>
                             <div role='none' className='flex items-center absolute block-start-0 inset-inline-0'>
                               <IconButton
                                 iconOnly
@@ -211,7 +211,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
 
                 return (
                   <div className='p-2'>
-                    <div className='rounded-lg max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface ring-focusLine ring-accentFocusIndicator flex flex-col'>
+                    <div className='rounded-lg max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface ring-focusLine ring-neutralFocusIndicator flex flex-col'>
                       {/* Column Header */}
                       <div className='flex items-center p-2'>
                         <IconButton

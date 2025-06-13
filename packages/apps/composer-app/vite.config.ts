@@ -163,6 +163,8 @@ export default defineConfig((env) => ({
             ],
           },
         ],
+        // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
+        ['@preact-signals/safe-react/swc', { mode: 'all' }],
       ],
     }),
     importMapPlugin({
