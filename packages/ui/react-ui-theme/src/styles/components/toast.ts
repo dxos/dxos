@@ -14,13 +14,14 @@ export type ToastStyleProps = Partial<{
 export const toastViewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
     // TODO(burdon): block-end should take into account status bar.
-    'z-40 fixed block-end-[calc(env(safe-area-inset-bottom)+1rem)] inset-start-[calc(env(safe-area-inset-left)+1rem)] inset-end-[calc(env(safe-area-inset-right)+1rem)] w-auto md:inline-end-[calc(env(safe-area-inset-right)+1rem)] md:inline-start-auto md:w-full md:max-w-sm rounded-lg flex flex-col gap-2',
+    'z-40 fixed block-end-[calc(env(safe-area-inset-bottom)+1rem)] inset-start-[calc(env(safe-area-inset-left)+1rem)] inset-end-[calc(env(safe-area-inset-right)+1rem)] w-auto md:inline-end-[calc(env(safe-area-inset-right)+1rem)] md:inline-start-auto md:w-full md:max-w-sm',
+    'rounded-md flex flex-col gap-2',
     ...etc,
   );
 
 export const toastRoot: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
-    'rounded-lg flex p-2 gap-2',
+    'rounded-md flex p-2 gap-2',
     modalSurface,
     surfaceShadow({ elevation: 'toast' }),
     'radix-state-open:animate-toast-slide-in-bottom md:radix-state-open:animate-toast-slide-in-right',
