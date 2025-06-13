@@ -301,7 +301,7 @@ const ResearchGraph = Schema.Struct({
    */
   queue: Ref(Queue),
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/ResearchGraph',
     version: '0.1.0',
   }),
