@@ -89,8 +89,13 @@ export const editor = () => [
     tr.changes.iterChanges((fromA, toA, fromB, toB, insert) => {
       const line = tr.startState.doc.lineAt(fromA);
       const match = line.text.match(LIST_ITEM_REGEX);
+      const currentItem = tree.find(tr.state.selection.main.from);
       if (match) {
         const start = line.from + (match?.[0]?.length ?? 0);
+        if (!currentItem?.contentRange) {
+          cancel = true;
+          return;
+        }
 
         // Detect and cancel replacement of task marker with continuation indent.
         // Task markers are atomic so will be deleted when backspace is pressed.
