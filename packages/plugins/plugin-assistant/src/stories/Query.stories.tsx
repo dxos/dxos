@@ -21,7 +21,6 @@ import {
   createLocalSearchTool,
   setConsolePrinter,
 } from '@dxos/assistant';
-import { combine, timeout } from '@dxos/async';
 import { Type } from '@dxos/echo';
 import { type AnyEchoObject, create, getLabelForObject, getSchemaTypename, Query, Ref } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
@@ -29,7 +28,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
-import { Filter, IndexKind, Queue, useQuery, useQueue, useSpace, useSpaces } from '@dxos/react-client/echo';
+import { Filter, Queue, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
 import { Dialog, IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
 import { matchCompletion, staticCompletion, typeahead, type TypeaheadOptions } from '@dxos/react-ui-editor';
 import { List } from '@dxos/react-ui-list';
@@ -65,6 +64,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const [ast, setAst] = useState<Expression | undefined>();
   const [filter, setFilter] = useState<Filter.Any>();
+  const selection = useMemo(() => new SelectionModel(), []);
   const [model] = useState<SpaceGraphModel | undefined>(() =>
     showGraph
       ? new SpaceGraphModel().setOptions({
@@ -77,7 +77,6 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
         })
       : undefined,
   );
-  const selection = useMemo(() => new SelectionModel(), []);
 
   const space = useSpace();
   const items = useQuery(space, Query.select(filter ?? Filter.everything()));
@@ -85,10 +84,11 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
 
-  const [researchGraph, setResearchGraph] = useAsyncState(async () => {
+  const [researchGraph] = useAsyncState(async () => {
     if (!space) {
       return undefined;
     }
+
     const { objects } = await space.db.query(Filter.type(ResearchGraph)).run();
     if (objects.length > 0) {
       return objects[0];
@@ -102,7 +102,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     }
   }, [space]);
 
-  // TODO(burdon): Hook.
+  // TODO(burdon): Create hook.
   const [aiClient] = useState(
     () =>
       new SpyAIService(
@@ -115,6 +115,18 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
         }),
       ),
   );
+
+  useEffect(() => {
+    if (!space) {
+      return;
+    }
+
+    const queue = researchGraph?.queue && space.queues.get(researchGraph.queue.dxn);
+    void model?.open(space, queue);
+    return () => {
+      void model?.close();
+    };
+  }, [space, model, researchGraph?.queue.dxn.toString()]);
 
   const handleGenerate = useCallback(async () => {
     if (!space) {
@@ -130,18 +142,6 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       addTestData(space);
     }
   }, [space, spec, generator]);
-
-  useEffect(() => {
-    if (!space) {
-      return;
-    }
-
-    const queue = researchGraph?.queue && space.queues.get(researchGraph.queue.dxn);
-    void model?.open(space, queue);
-    return () => {
-      void model?.close();
-    };
-  }, [space, model, researchGraph?.queue.dxn.toString()]);
 
   const handleRefresh = useCallback(() => {
     model?.invalidate();
@@ -204,8 +204,8 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   console.log('Query.stories.tsx', {
     space: space?.id,
-    researchGraph: researchGraph?.id,
     allItems: items,
+    researchGraph: researchGraph?.id,
     researchQueue: researchQueue?.items,
   });
 
@@ -215,6 +215,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     }
     const db = space.db;
 
+    // TODO(burdon): Text-DSL that references tools?
     // TODO(dmaretskyi): make db available through services (same as function executor).
     const blueprint = BlueprintBuilder.begin()
       .step('Research information and entities related to the selected objects.')
@@ -232,9 +233,9 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
               log.warn('failed to add objects to research queue');
               return;
             }
+
             const queue = space.queues.get(researchGraph.queue.dxn);
             queue.append(objects);
-
             log.info('research queue', { items: queue.items });
           },
         }),
@@ -249,7 +250,6 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     const selected = selection.selected.value;
     log.info('research', { selected: selection.selected.value });
     const { objects } = await space!.db.query(Filter.ids(...selected)).run();
-
     invariant(researchBlueprint);
     const machine = new BlueprintMachine(researchBlueprint);
     setConsolePrinter(machine, true);
@@ -303,9 +303,6 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
  * Container for a set of ephemeral research results.
  */
 const ResearchGraph = Schema.Struct({
-  /**
-   * Reference
-   */
   queue: Ref(Queue),
 }).pipe(
   Type.Obj({
