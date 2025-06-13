@@ -37,7 +37,7 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
 
         // TODO(burdon): Custom tag/styles?
         this.tag = document.createElement('dx-ref-tag');
-        this.tag.classList.add('border-none', 'absolute', 'p-0');
+        this.tag.classList.add('border-none', 'fixed', 'p-0');
         this.tag.appendChild(button);
         container.appendChild(this.tag);
 
