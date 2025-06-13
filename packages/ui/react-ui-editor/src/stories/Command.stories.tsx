@@ -6,52 +6,16 @@ import '@dxos-theme';
 
 import React, { useState, type KeyboardEvent } from 'react';
 
-import { Button, Icon, IconButton, Input } from '@dxos/react-ui';
+import { Button, Icon, Input, DropdownMenu } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory } from './util';
+import { RefDropdownMenu } from '../components';
 import { editorWidth } from '../defaults';
-import { command, type Action } from '../extensions';
+import { command, type Action, floatingMenu } from '../extensions';
 import { str } from '../testing';
 import { createRenderer } from '../util';
-
-const meta: Meta<typeof EditorStory> = {
-  title: 'ui/react-ui-editor/Command',
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: () => (
-    <EditorStory
-      text={str('# Command', '', '', '')}
-      extensions={[
-        command({
-          height: 32,
-          renderMenu: createRenderer(CommandMenu),
-          renderDialog: createRenderer(CommandDialog),
-          onHint: () => 'Press / for commands.',
-        }),
-      ]}
-    />
-  ),
-  parameters: { layout: 'fullscreen' },
-};
-
-export default meta;
-
-export const Default = {};
-
-// TODO(burdon): Actual menu.
-const CommandMenu = ({ onAction }: { onAction: () => void }) => {
-  return (
-    <IconButton
-      icon='ph--sparkle--regular'
-      label='menu'
-      size={4}
-      iconOnly
-      classNames='p-0 aspect-square'
-      onClick={onAction}
-    />
-  );
-};
 
 const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) => {
   const [text, setText] = useState('');
@@ -99,3 +63,35 @@ const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) =>
     </div>
   );
 };
+
+const meta: Meta<typeof EditorStory> = {
+  title: 'ui/react-ui-editor/Command',
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+  render: () => (
+    <RefDropdownMenu.Provider>
+      <EditorStory
+        text={str('# Command', '', '', '')}
+        extensions={[
+          floatingMenu(),
+          command({
+            renderDialog: createRenderer(CommandDialog),
+            onHint: () => 'Press / for commands.',
+          }),
+        ]}
+      />
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content>
+          <DropdownMenu.Viewport>
+            <DropdownMenu.Item onClick={() => console.log('!')}>Test</DropdownMenu.Item>
+          </DropdownMenu.Viewport>
+          <DropdownMenu.Arrow />
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </RefDropdownMenu.Provider>
+  ),
+  parameters: { layout: 'fullscreen' },
+};
+
+export default meta;
+
+export const Default = {};
