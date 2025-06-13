@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Format, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import {
   FormatAnnotation,
   FormatEnum,
@@ -49,7 +49,7 @@ const OrganizationSchema = Schema.Struct({
   // TODO(wittjosiah): Format.URL (currently breaks schema validation). Support ref?
   image: Schema.optional(Schema.String.annotations({ title: 'Image' })),
   website: Schema.optional(
-    Format.URL.annotations({
+    Type.Format.URL.annotations({
       title: 'Website',
     }).pipe(GeneratorAnnotation.set('internet.url')),
   ),
@@ -60,7 +60,7 @@ const OrganizationSchema = Schema.Struct({
 );
 
 export const Organization = OrganizationSchema.pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Organization',
     version: '0.1.0',
   }),

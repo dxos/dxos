@@ -2,8 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { isEncodedReference, type ObjectStructure } from '@dxos/echo-protocol';
+import { decodeReference, isEncodedReference, ObjectStructure } from '@dxos/echo-protocol';
 import { visitValues } from '@dxos/util';
+
+/**
+ * Types that are excluded from text indexing.
+ */
+const IGNORED_TYPENAMES: string[] = ['dxos.org/type/Canvas'];
 
 export type ExtractInputBlock = {
   content: string;
@@ -19,6 +24,13 @@ export type ExtractInputBlock = {
  * Extracts all text field values from an object.
  */
 export const extractTextBlocks = (object: Partial<ObjectStructure>): ExtractInputBlock[] => {
+  const type = ObjectStructure.getTypeReference(object as any);
+  const dxnType = type && decodeReference(type).toDXN();
+
+  if (IGNORED_TYPENAMES.includes(dxnType?.asTypeDXN()?.type ?? '')) {
+    return [];
+  }
+
   const blocks: ExtractInputBlock[] = [];
 
   const go = (value: any, _key: string | number) => {

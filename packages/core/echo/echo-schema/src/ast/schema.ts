@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import { Schema } from 'effect';
 
+import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { getTypeAnnotation } from './annotations';
@@ -40,6 +41,8 @@ export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext) => {
 
 // TODO(dmaretskyi): Unify with `getTypeReference`.
 export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
+  assertArgument(Schema.isSchema(schema), 'schema must be a schema');
+
   // TODO(dmaretskyi): Add support for dynamic schema.
   const objectAnnotation = getTypeAnnotation(schema);
   if (!objectAnnotation) {

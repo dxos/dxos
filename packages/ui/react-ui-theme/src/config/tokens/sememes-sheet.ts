@@ -56,5 +56,5 @@ export const sheetSememes = {
 } satisfies ColorSememes;
 
 export const sheetAliases = {
-  groupSurface: { root: ['gridLine'] },
+  activeSurface: { root: ['gridLine'] },
 } satisfies ColorAliases;

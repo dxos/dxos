@@ -16,7 +16,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { findRelatedSchema, researchFn, type RelatedSchema } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
-import { DXN, Type } from '@dxos/echo';
+import { Type, type Obj } from '@dxos/echo';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -66,7 +66,7 @@ const LOCAL = false;
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
 
 type RenderProps = {
-  items?: Type.AnyObject[];
+  items?: Obj.Any[];
   prompts?: string[];
 } & Pick<ThreadProps, 'debug'>;
 
@@ -97,7 +97,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
   // Queue.
   const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
-  const queue = useQueue<Message>(DXN.tryParse(queueDxn));
+  const queue = useQueue<Message>(Type.DXN.tryParse(queueDxn));
 
   // Function executor.
   const serviceContainer = useMemo(
@@ -385,15 +385,15 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
 // TODO(dmaretskyi): Move into core.
 const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
   const schema =
-    db.graph.schemaRegistry.getSchemaByDXN(DXN.parse(getTypename(object as any)!)) ??
+    db.graph.schemaRegistry.getSchemaByDXN(Type.DXN.parse(getTypename(object as any)!)) ??
     raise(new Error('Schema not found'));
 
   let { id, [ATTR_RELATION_SOURCE]: source, [ATTR_RELATION_TARGET]: target, ...props } = object as any;
   if (source) {
-    source = db.getObjectById(DXN.parse(source).asEchoDXN()!.echoId) ?? raise(new Error('Source not found'));
+    source = db.getObjectById(Type.DXN.parse(source).asEchoDXN()!.echoId) ?? raise(new Error('Source not found'));
   }
   if (target) {
-    target = db.getObjectById(DXN.parse(target).asEchoDXN()!.echoId) ?? raise(new Error('Target not found'));
+    target = db.getObjectById(Type.DXN.parse(target).asEchoDXN()!.echoId) ?? raise(new Error('Target not found'));
   }
 
   return live(schema, {

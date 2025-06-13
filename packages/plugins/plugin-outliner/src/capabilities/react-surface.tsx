@@ -24,8 +24,7 @@ export default () => [
       role: ['article', 'section'],
       filter: (data): data is { subject: OutlineType } => isInstanceOf(OutlineType, data.subject),
       component: ({ data, role }) => {
-        const outline = data.subject;
-        return outline.tree.target ? <OutlinerContainer tree={outline.tree.target} role={role} /> : null;
+        return <OutlinerContainer outline={data.subject} role={role} />;
       },
     }),
   ]),

@@ -21,11 +21,11 @@ export type MenuStyleProps = Partial<{
 }>;
 
 export const menuViewport: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
-  mx('rounded-md p-1 max-bs-[--radix-dropdown-menu-content-available-height] overflow-y-auto', ...etc);
+  mx('rounded p-1 max-bs-[--radix-dropdown-menu-content-available-height] overflow-y-auto', ...etc);
 
 export const menuContent: ComponentFunction<MenuStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'is-48 rounded-md md:is-56 border border-separator',
+    'is-48 rounded md:is-56 border border-separator',
     surfaceZIndex({ elevation, level: 'menu' }),
     surfaceShadow({ elevation: 'positioned' }),
     modalSurface,
