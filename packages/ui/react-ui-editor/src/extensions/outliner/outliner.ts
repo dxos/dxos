@@ -39,11 +39,11 @@ export const outliner = (): Extension => [
   // Commands.
   Prec.highest(commands()),
 
-  // State.
-  outlinerTree(),
-
   // Selection.
   selectionCompartment.of(selectionFacet.of([])),
+
+  // State.
+  outlinerTree(),
 
   // Filter and possibly modify changes.
   editor(),
