@@ -30,7 +30,7 @@ export const PopoverRenameSpace = ({ space }: { space: Space }) => {
 
   // TODO(thure): Why does the input value need to be uncontrolled to work?
   return (
-    <div role='none' className='p-1 flex gap-2'>
+    <div role='none' className='p-2 flex gap-2'>
       <div role='none' className='flex-1'>
         <Input.Root>
           <Input.Label srOnly>{t('space name label')}</Input.Label>

@@ -36,26 +36,36 @@ const applyAlpha = (sememe: Sememe, alpha: number): Sememe => {
 // Both elevation cadences go from darker to lighter from “elevation” 0 to `ELEVATION_SCALE`,
 // whereas both contrast cadences go from highest contrast at 0 to lowest contrast at `CONTRAST_SCALE`.
 
-const DARK_ELEVATION = 850;
-const DARK_TRANSITION = 750;
-const DARK_CONTRAST = 500;
+const DARK_ELEVATION_MIN = 855;
+const DARK_ELEVATION_MAX = 731;
 
-const LIGHT_ELEVATION = 10;
-const LIGHT_TRANSITION = 80;
-const LIGHT_CONTRAST = 450;
+const DARK_CONTRAST_MIN = 750;
+const DARK_CONTRAST_MAX = 665;
 
-const ELEVATION_SCALE = 3;
-const CONTRAST_SCALE = 4;
+const LIGHT_ELEVATION_MIN = 0;
+const LIGHT_ELEVATION_MAX = 0;
+
+const LIGHT_CONTRAST_MIN = 82;
+const LIGHT_CONTRAST_MAX = 24;
+
+const ELEVATION_SCALE = 2;
+const CONTRAST_SCALE = 3;
 
 const darkElevationCadence = (depth: number) =>
-  Math.round(DARK_TRANSITION + (DARK_ELEVATION - DARK_TRANSITION) * ((ELEVATION_SCALE - depth) / ELEVATION_SCALE));
+  Math.round(
+    DARK_ELEVATION_MAX + (DARK_ELEVATION_MIN - DARK_ELEVATION_MAX) * ((ELEVATION_SCALE - depth) / ELEVATION_SCALE),
+  );
 const darkContrastCadence = (depth: number) =>
-  Math.round(DARK_CONTRAST + (DARK_TRANSITION - DARK_CONTRAST) * ((ELEVATION_SCALE - depth) / ELEVATION_SCALE));
+  Math.round(
+    DARK_CONTRAST_MAX + (DARK_CONTRAST_MIN - DARK_CONTRAST_MAX) * ((ELEVATION_SCALE - depth) / ELEVATION_SCALE),
+  );
 
 const lightElevationCadence = (depth: number) =>
-  Math.round(LIGHT_ELEVATION + (LIGHT_TRANSITION - LIGHT_ELEVATION) * ((CONTRAST_SCALE - depth) / CONTRAST_SCALE));
+  Math.round(
+    LIGHT_ELEVATION_MIN + (LIGHT_ELEVATION_MAX - LIGHT_ELEVATION_MIN) * ((CONTRAST_SCALE - depth) / CONTRAST_SCALE),
+  );
 const lightContrastCadence = (depth: number) =>
-  Math.round(LIGHT_TRANSITION + (LIGHT_CONTRAST - LIGHT_TRANSITION) * (depth / CONTRAST_SCALE));
+  Math.round(LIGHT_CONTRAST_MAX + (LIGHT_CONTRAST_MIN - LIGHT_CONTRAST_MAX) * (depth / CONTRAST_SCALE));
 
 const elevationCadence = (lightDepth: number, darkDepth: number = lightDepth, alpha: number = 1): Sememe =>
   applyAlpha(
@@ -79,33 +89,51 @@ export const systemSememes = {
   //
   // Elevation cadence tokens
   //
-  rootSurface: elevationCadence(0),
-  baseSurface: elevationCadence(1),
-  groupSurface: elevationCadence(2),
-  modalSurface: elevationCadence(3),
+  baseSurface: elevationCadence(0),
+  groupSurface: elevationCadence(1),
+  modalSurface: elevationCadence(2),
 
   //
   // Contrast cadence tokens
   //
 
-  hoverSurfaceBase: contrastCadence(1.1, 0.7),
-  hoverSurfaceGroup: contrastCadence(0.9, 0.9),
-  hoverSurfaceModal: contrastCadence(0.7, 1.3),
+  textInputSurfaceBase: contrastCadence(0, 0),
+  textInputSurfaceGroup: contrastCadence(0, 0.5),
+  textInputSurfaceModal: contrastCadence(0, 1),
 
-  inputSurfaceBase: contrastCadence(0.7, 0.3),
-  inputSurfaceGroup: contrastCadence(0.5, 0.5),
-  inputSurfaceModal: contrastCadence(0.3, 0.9),
+  inputSurfaceBase: contrastCadence(1, 0.5),
+  inputSurfaceGroup: contrastCadence(1, 1),
+  inputSurfaceModal: contrastCadence(1, 1.5),
 
-  unAccent: contrastCadence(3),
-  unAccentHover: contrastCadence(4),
-  hoverOverlay: contrastCadence(4, 4, 0.1),
+  hoverSurfaceBase: contrastCadence(2, 1.5),
+  hoverSurfaceGroup: contrastCadence(2, 2),
+  hoverSurfaceModal: contrastCadence(2, 2.5),
+
+  separatorBase: contrastCadence(3, 2),
+  separatorGroup: contrastCadence(3, 2.5),
+  separatorModal: contrastCadence(3, 3),
+
+  subduedSeparator: contrastCadence(1, 1),
+
+  unAccent: {
+    light: ['neutral', 400],
+    dark: ['neutral', 400],
+  },
+  unAccentHover: {
+    light: ['neutral', 450],
+    dark: ['neutral', 450],
+  },
+  hoverOverlay: {
+    light: ['neutral', '450/.1'],
+    dark: ['neutral', '450/.1'],
+  },
 
   //
   // Special surfaces.
   //
 
   // Screen overlay for modal dialogs.
-  scrimSurface: applyAlpha({ light: ['neutral', LIGHT_CONTRAST], dark: ['neutral', DARK_ELEVATION] }, 0.65),
+  scrimSurface: applyAlpha({ light: ['neutral', LIGHT_CONTRAST_MAX], dark: ['neutral', DARK_ELEVATION_MIN] }, 0.65),
 
   // High contrast for focused interactive elements. (Technically this is part of the surface cadence, but the contrast cadence is on the opposite side of the elevation cadence as this point.)
   focusSurface: {
@@ -115,8 +143,8 @@ export const systemSememes = {
 
   // For tooltips only; the highest elevation from the opposite theme
   inverseSurface: {
-    light: ['neutral', DARK_ELEVATION],
-    dark: ['neutral', LIGHT_ELEVATION],
+    light: ['neutral', DARK_ELEVATION_MIN],
+    dark: ['neutral', LIGHT_ELEVATION_MIN],
   },
 
   //
@@ -166,8 +194,12 @@ export const systemSememes = {
     dark: ['primary', 350],
   },
   neutralFocusIndicator: {
-    light: ['neutral', 350],
+    light: ['neutral', 300],
     dark: ['neutral', 450],
+  },
+  accentFocusIndicator: {
+    light: ['primary', 300],
+    dark: ['primary', 450],
   },
   accentSurfaceText: {
     light: ['neutral', 0],
@@ -182,17 +214,16 @@ type SememeName = keyof typeof systemSememes;
  */
 const aliasDefs: Record<string, Record<string, SememeName>> = {
   // The background color appearing in overscroll and between planks when Deck is enabled.
-  deckSurface: { root: 'rootSurface' },
+  deckSurface: { root: 'groupSurface' },
 
   // Secondary aliases
+  textInputSurface: { root: 'textInputSurfaceBase', group: 'textInputSurfaceGroup', modal: 'textInputSurfaceModal' },
   inputSurface: { root: 'inputSurfaceBase', group: 'inputSurfaceGroup', modal: 'inputSurfaceModal' },
   hoverSurface: { root: 'hoverSurfaceBase', group: 'hoverSurfaceGroup', modal: 'hoverSurfaceModal' },
+  separator: { root: 'separatorBase', group: 'separatorGroup', modal: 'separatorModal' },
 
   // Selected items, current items, other surfaces needing special contrast against baseSurface.
   activeSurface: { root: 'inputSurface' as any /* TODO(thure): strongly type secondary aliases. */ },
-
-  // Hovered items
-  separator: { root: 'hoverSurface' as any /* TODO(thure): strongly type secondary aliases. */ },
 
   // Main sidebar panel.
   sidebarSurface: { root: 'groupSurface' },
