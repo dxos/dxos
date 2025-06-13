@@ -6,7 +6,8 @@ import { batch, effect } from '@preact/signals-core';
 
 import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
-import { getSource, getTarget, isRelation, type AnyLiveRelation, type AnyLiveObject, type Queue } from '@dxos/echo-db';
+import { Relation } from '@dxos/echo';
+import { type AnyLiveObject, type Queue } from '@dxos/echo-db';
 import { Filter, getSchema, getSchemaDXN, type EchoSchema, getLabel, Query } from '@dxos/echo-schema';
 import { Ref } from '@dxos/echo-schema';
 import { type GraphEdge, AbstractGraphBuilder, type Graph, ReactiveGraphModel, type GraphNode } from '@dxos/graph';
@@ -36,7 +37,7 @@ const defaultFilter: Filter<any> = Filter.everything();
 export type SpaceGraphModelOptions = {
   showSchema?: boolean;
   onCreateNode?: (node: SpaceGraphNode, object: AnyLiveObject<any>) => void;
-  onCreateEdge?: (edge: SpaceGraphEdge, relation: AnyLiveRelation<any>) => void;
+  onCreateEdge?: (edge: SpaceGraphEdge, relation: Relation.Any) => void;
 };
 
 /**
@@ -218,12 +219,12 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
       }
 
       // Relation.
-      if (isRelation(object) as boolean) {
+      if (Relation.isRelation(object)) {
         const edge = this.addEdge({
           id: object.id,
           type: 'relation',
-          source: getSource(object).id,
-          target: getTarget(object).id,
+          source: Relation.getSource(object).id,
+          target: Relation.getTarget(object).id,
           data: {
             object,
           },

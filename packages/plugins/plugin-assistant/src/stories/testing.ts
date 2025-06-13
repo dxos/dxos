@@ -9,7 +9,6 @@ import defaulstDeep from 'lodash.defaultsdeep';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { type ConfigProto } from '@dxos/config';
-import { Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -18,7 +17,7 @@ import { MapPlugin } from '@dxos/plugin-map';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
-import { IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { Config } from '@dxos/react-client';
 import { DataTypes } from '@dxos/schema';
 
@@ -42,16 +41,15 @@ export const testPlugins = ({
     types: DataTypes,
     onClientInitialized: async (_, client) => {
       log.info('testPlugins.onClientInitialized', { types });
-      client.addTypes(types);
 
       if (!client.halo.identity.get()) {
         await client.halo.createIdentity();
       }
 
-      const { objects: allItems } = await client.spaces.default.db.query(Filter.everything()).run();
-      log.info('allItems on startup', { allItems });
+      client.addTypes(types);
 
       if (indexConfig) {
+        // TODO(burdon): services.services?
         await client.services.services.QueryService!.setConfig(indexConfig);
       }
     },

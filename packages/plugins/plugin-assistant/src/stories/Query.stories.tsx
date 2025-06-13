@@ -22,7 +22,7 @@ import {
   setConsolePrinter,
 } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
-import { type AnyEchoObject, create, getLabelForObject, getSchemaTypename, Query, Ref } from '@dxos/echo-schema';
+import { type AnyEchoObject, create, getLabelForObject, Query, Ref } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
@@ -83,9 +83,8 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const client = useClient();
   const [space, setSpace] = useState<Space | undefined>();
-  console.log('!!!', space?.id);
   useEffect(() => {
-    const spaces = client.spaces.get();
+    const spaces = client.spaces.get().filter((space) => space.isOpen);
     if (spaces.length) {
       setSpace(spaces[0]);
     }
@@ -129,14 +128,14 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   );
 
   useEffect(() => {
-    if (!space) {
+    if (!space || !model) {
       return;
     }
 
     const queue = researchGraph?.queue && space.queues.get(researchGraph.queue.dxn);
-    void model?.open(space, queue);
+    void model.open(space, queue);
     return () => {
-      void model?.close();
+      void model.close();
     };
   }, [space, model, researchGraph?.queue.dxn.toString()]);
 
@@ -228,7 +227,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
         if (match) {
           const part = match[1];
           for (const schema of space?.db.graph.schemaRegistry.schemas ?? []) {
-            const typename = getSchemaTypename(schema);
+            const typename = Type.getTypename(schema);
             if (typename) {
               const completion = matchCompletion(typename, part);
               if (completion) {
