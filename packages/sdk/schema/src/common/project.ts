@@ -24,7 +24,7 @@ const ProjectSchema = Schema.Struct({
 );
 
 export const Project = ProjectSchema.pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Project',
     version: '0.1.0',
   }),
