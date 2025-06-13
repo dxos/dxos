@@ -17,7 +17,7 @@ import {
   BlueprintBuilder,
   BlueprintMachine,
   createExaTool,
-  createGraphWriteTool,
+  createGraphWriterTool,
   createLocalSearchTool,
   setConsolePrinter,
 } from '@dxos/assistant';
@@ -139,7 +139,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     };
   }, [space, model, researchGraph?.queue.dxn.toString()]);
 
-  const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1000 });
+  const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1_000 });
   const researchBlueprint = useBlueprint(space, researchGraph?.queue.dxn);
 
   //
@@ -309,7 +309,7 @@ const useBlueprint = (space: Space | undefined, queueDxn: DXN | undefined) => {
       .step('Add researched data to the graph. Make connections to existing objects.')
       .withTool(createLocalSearchTool(db))
       .withTool(
-        createGraphWriteTool({
+        createGraphWriterTool({
           db,
           schemaTypes: DataTypes,
           onDone: async (objects) => {

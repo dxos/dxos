@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { DataTypes } from '@dxos/schema';
 
 import { createExaTool, createMockExaTool } from './exa';
-import { createGraphWriteTool } from './graph';
+import { createGraphWriterTool } from './graph';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up
 import PROMPT from './instructions-research.tpl?raw';
 import { AISession } from '../session';
@@ -60,7 +60,7 @@ export const researchFn = defineFunction({
     });
     session.streamEvent.on((event) => log('stream', { event }));
 
-    const graphWriteTool = createGraphWriteTool({ db, schemaTypes: DataTypes });
+    const graphWriteTool = createGraphWriterTool({ db, schemaTypes: DataTypes });
     log.info('graphWriteTool', { schema: graphWriteTool.parameters });
 
     // TODO(dmaretskyi): Consider adding this pattern as the "Graph" output mode for the session.

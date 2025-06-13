@@ -270,7 +270,7 @@ const preprocessSchema = (schema: Schema.Schema.AnyNoContext) => {
   );
 };
 
-export const createGraphWriteTool = ({
+export const createGraphWriterTool = ({
   db,
   schemaTypes,
   onDone = async (x) => x,

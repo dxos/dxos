@@ -16,7 +16,7 @@ import { BlueprintBuilder } from './blueprint';
 import { setConsolePrinter } from './logger';
 import { BlueprintMachine } from './machine';
 import { TEST_EMAILS } from './test-data';
-import { createGraphWriteTool, createLocalSearchTool } from '../research';
+import { createGraphWriterTool, createLocalSearchTool } from '../research';
 import { createExaTool } from '../research/exa';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
@@ -99,20 +99,23 @@ describe('Blueprint', () => {
     const builder = await new EchoTestBuilder().open();
     const { db } = await builder.createDatabase({ indexing: { vector: true }, types: DataTypes });
 
-    const exaAi = db.add(
-      create(DataType.Organization, {
-        name: 'Exa',
-        website: 'https://exa.ai',
-        description: 'An AI-powered search engine company building search infrastructure for AI agents',
-      }),
-    );
-    const cresta = db.add(
-      create(DataType.Organization, {
-        name: 'Cresta',
-        website: 'https://cresta.ai',
-        description: 'A company that builds AI agents',
-      }),
-    );
+    const [org1, org2] = [
+      db.add(
+        create(DataType.Organization, {
+          name: 'Exa',
+          website: 'https://exa.ai',
+          description: 'An AI-powered search engine company building search infrastructure for AI agents',
+        }),
+      ),
+      db.add(
+        create(DataType.Organization, {
+          name: 'Cresta',
+          website: 'https://cresta.ai',
+          description: 'A company that builds AI agents',
+        }),
+      ),
+    ];
+
     await db.flush({ indexes: true });
 
     const blueprint = BlueprintBuilder.begin()
@@ -122,11 +125,11 @@ describe('Blueprint', () => {
       .withTool(createLocalSearchTool(db))
       .step('Add researched data to the graph')
       .withTool(createLocalSearchTool(db))
-      .withTool(createGraphWriteTool({ db, schemaTypes: DataTypes }))
+      .withTool(createGraphWriterTool({ db, schemaTypes: DataTypes }))
       .end();
 
     const machine = new BlueprintMachine(blueprint);
     setConsolePrinter(machine, true);
-    await machine.runToCompletion({ aiService, input: exaAi });
+    await machine.runToCompletion({ aiService, input: org1 });
   });
 });
