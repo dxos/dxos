@@ -83,6 +83,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const client = useClient();
   const [space, setSpace] = useState<Space | undefined>();
+  console.log('!!!', space?.id);
   useEffect(() => {
     const spaces = client.spaces.get();
     if (spaces.length) {
@@ -151,9 +152,13 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   }, [model]);
 
   const handleResearch = useCallback(async () => {
+    if (!space) {
+      return;
+    }
+
     const selected = selection.selected.value;
     log.info('research', { selected: selection.selected.value });
-    const { objects } = await space!.db.query(Filter.ids(...selected)).run();
+    const { objects } = await space.db.query(Filter.ids(...selected)).run();
     invariant(researchBlueprint);
     const machine = new BlueprintMachine(researchBlueprint);
     setConsolePrinter(machine, true);
@@ -176,9 +181,16 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   }, [space, generator, spec]);
 
   const handleReset = useCallback(async () => {
-    const space = await client.spaces.create();
-    setSpace(space);
-  }, [client]);
+    if (space) {
+      await space.close();
+    }
+
+    const newSpace = await client.spaces.create();
+    setSpace(newSpace);
+    setFilter(undefined);
+    setAst(undefined);
+    promptRef.current?.setText('');
+  }, [space, client]);
 
   const handleSubmit = useCallback<NonNullable<PromptBarProps['onSubmit']>>(
     (text) => {
