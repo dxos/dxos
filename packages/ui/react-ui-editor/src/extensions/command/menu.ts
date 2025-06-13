@@ -35,7 +35,7 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
         button.appendChild(icon);
         button.classList.add('grid', 'items-center', 'justify-center', 'w-8', 'h-8');
 
-        // TODO(burdon): Change to menu.
+        // TODO(burdon): Custom tag/styles?
         this.tag = document.createElement('dx-ref-tag');
         this.tag.classList.add('border-none', 'absolute', 'p-0');
         this.tag.appendChild(button);
