@@ -73,7 +73,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       return new SpaceGraphModel().setOptions({
         onCreateEdge: (edge, relation) => {
           // TODO(burdon): Check type.
-          if (relation.active === false) {
+          if ((relation as any).active === false) {
             edge.data.force = false;
           }
         },
