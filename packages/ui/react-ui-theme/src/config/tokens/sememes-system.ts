@@ -194,8 +194,12 @@ export const systemSememes = {
     dark: ['primary', 350],
   },
   neutralFocusIndicator: {
-    light: ['neutral', 350],
+    light: ['neutral', 300],
     dark: ['neutral', 450],
+  },
+  accentFocusIndicator: {
+    light: ['primary', 300],
+    dark: ['primary', 450],
   },
   accentSurfaceText: {
     light: ['neutral', 0],
