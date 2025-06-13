@@ -63,6 +63,7 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
         const pos = this.view.state.selection.main.head;
         const line = this.view.lineBlockAt(pos);
         const coords = this.view.coordsAtPos(line.from);
+        console.log('coords', coords);
         if (!coords) {
           return;
         }
