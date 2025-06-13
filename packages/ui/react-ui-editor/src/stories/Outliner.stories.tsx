@@ -6,39 +6,20 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { Button, Popover } from '@dxos/react-ui';
+import { DropdownMenu } from '@dxos/react-ui';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory } from './util';
 import { outliner, listItemToString, treeFacet, floatingMenu } from '../extensions';
-import { RefPopover, str } from '../testing';
+import { RefDropdownMenu, str } from '../testing';
 
 type StoryProps = {
   text: string;
 };
 
-// TODO(burdon): Close?
-const MenuPopover = () => {
-  return (
-    <Popover.Portal>
-      <Popover.Content>
-        <Popover.Viewport>
-          <Button onClick={() => console.log('!')}>Test</Button>
-          {/* <DropdownMenu.Root>
-            <DropdownMenu.Content>
-              <DropdownMenu.Item>Test</DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root> */}
-        </Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
-    </Popover.Portal>
-  );
-};
-
 const DefaultStory = ({ text }: StoryProps) => {
   return (
-    <RefPopover.Provider>
+    <RefDropdownMenu.Provider>
       <EditorStory
         text={text}
         extensions={[outliner(), floatingMenu()]}
@@ -51,8 +32,15 @@ const DefaultStory = ({ text }: StoryProps) => {
           return <pre className='p-1 text-xs text-green-800 dark:text-green-200 overflow-auto'>{lines.join('\n')}</pre>;
         }}
       />
-      <MenuPopover />
-    </RefPopover.Provider>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content>
+          <DropdownMenu.Viewport>
+            <DropdownMenu.Item onClick={() => console.log('!')}>Test</DropdownMenu.Item>
+          </DropdownMenu.Viewport>
+          <DropdownMenu.Arrow />
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </RefDropdownMenu.Provider>
   );
 };
 

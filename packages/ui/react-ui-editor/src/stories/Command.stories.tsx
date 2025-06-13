@@ -6,15 +6,14 @@ import '@dxos-theme';
 
 import React, { useState, type KeyboardEvent } from 'react';
 
-import { Button, Icon, Input, Popover } from '@dxos/react-ui';
+import { Button, Icon, Input, DropdownMenu } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory } from './util';
 import { editorWidth } from '../defaults';
-import { command, type Action } from '../extensions';
-import { floatingMenu } from '../extensions/command/menu';
-import { RefPopover, str } from '../testing';
+import { command, type Action, floatingMenu } from '../extensions';
+import { str, RefDropdownMenu } from '../testing';
 import { createRenderer } from '../util';
 
 const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) => {
@@ -64,31 +63,11 @@ const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) =>
   );
 };
 
-// TODO(burdon): Close?
-const MenuPopover = () => {
-  return (
-    <Popover.Portal>
-      <Popover.Content>
-        <Popover.Viewport>
-          <Button onClick={() => console.log('!')}>Test</Button>
-          {/* <DropdownMenu.Root>
-            <DropdownMenu.Content>
-              <DropdownMenu.Item>Test</DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root> */}
-        </Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
-    </Popover.Portal>
-  );
-};
-
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/Command',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: () => (
-    // TODO(burdon): Create MenuPopover.
-    <RefPopover.Provider>
+    <RefDropdownMenu.Provider>
       <EditorStory
         text={str('# Command', '', '', '')}
         extensions={[
@@ -99,8 +78,15 @@ const meta: Meta<typeof EditorStory> = {
           }),
         ]}
       />
-      <MenuPopover />
-    </RefPopover.Provider>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content>
+          <DropdownMenu.Viewport>
+            <DropdownMenu.Item onClick={() => console.log('!')}>Test</DropdownMenu.Item>
+          </DropdownMenu.Viewport>
+          <DropdownMenu.Arrow />
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </RefDropdownMenu.Provider>
   ),
   parameters: { layout: 'fullscreen' },
 };
