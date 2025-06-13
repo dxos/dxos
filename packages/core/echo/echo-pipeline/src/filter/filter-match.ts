@@ -133,6 +133,23 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
   }
 };
 
+/**
+ * Compares typename DXNs.
+ * @returns true if they match
+ *
+ * Compares typename string.
+ * Missing version (on either actual or expected) matches any version.
+ * non `type` DXNs are compared exactly.
+ *
+ * Examples: (expected) (actual)
+ *
+ * dxn:type:example.org/type/Task       !== dxn:type:example.org/type/Contact
+ * dxn:type:example.org/type/Task       === dxn:type:example.org/type/Task
+ * dxn:type:example.org/type/Task:0.1.0 !== dxn:type:example.org/type/Task:0.2.0
+ * dxn:type:example.org/type/Task       === dxn:type:example.org/type/Task:0.1.0
+ * dxn:type:example.org/type/Task:0.1.0 === dxn:type:example.org/type/Task
+ *
+ */
 const compareTypename = (expectedDXN: DXN, actualDXN: DXN): boolean => {
   const expectedTypeDXN = expectedDXN.asTypeDXN();
   if (expectedTypeDXN) {
@@ -142,7 +159,9 @@ const compareTypename = (expectedDXN: DXN, actualDXN: DXN): boolean => {
     }
     if (
       actualTypeDXN.type !== expectedTypeDXN.type ||
-      (expectedTypeDXN.version !== undefined && actualTypeDXN.version !== expectedTypeDXN.version)
+      (expectedTypeDXN.version !== undefined &&
+        actualTypeDXN.version !== undefined &&
+        actualTypeDXN.version !== expectedTypeDXN.version)
     ) {
       return false;
     }
