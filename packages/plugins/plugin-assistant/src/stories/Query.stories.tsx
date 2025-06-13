@@ -116,29 +116,30 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       ),
   );
 
+  const handleGenerate = useCallback(async () => {
+    if (!space) {
+      return;
+    }
+
+    if (spec) {
+      log.info('generating test data');
+      const createObjects = createObjectFactory(space.db, generator);
+      await createObjects(spec);
+    } else {
+      log.info('adding test data');
+      addTestData(space);
+    }
+  }, [space, spec, generator]);
+
   useEffect(() => {
     if (!space) {
       return;
     }
 
-    return combine(
-      timeout(async () => {
-        if (spec) {
-          log.info('generating test data');
-          const createObjects = createObjectFactory(space.db, generator);
-          await createObjects(spec);
-        } else {
-          log.info('adding test data');
-          addTestData(space);
-        }
-
-        // void model?.open(space, researchGraph && space.queues.get(researchGraph.queue.dxn));
-        void model?.open(space);
-      }),
-      () => {
-        void model?.close();
-      },
-    );
+    void model?.open(space);
+    return () => {
+      void model?.close();
+    };
   }, [space, model, researchGraph?.queue.dxn.toString()]);
 
   const handleRefresh = useCallback(() => {
@@ -263,6 +264,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
             <Toolbar.Root>
               <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='refresh' onClick={handleRefresh} />
               <IconButton icon='ph--sparkle--regular' iconOnly label='research' onClick={handleResearch} />
+              <IconButton icon='ph--plus--regular' iconOnly label='generate' onClick={handleGenerate} />
             </Toolbar.Root>
             <ItemList items={items} getTitle={(item) => getLabelForObject(item)} />
             <JsonFilter
