@@ -26,7 +26,6 @@ import { decorateMarkdown } from '../markdown';
 // TODO(burdon): Handle backspace at start of line (or empty line).
 // TODO(burdon): Convert to task object and insert link (menu button).
 // TODO(burdon): Smart Cut-and-paste.
-// TODO(burdon): Menu.
 // TODO(burdon): DND.
 
 /**

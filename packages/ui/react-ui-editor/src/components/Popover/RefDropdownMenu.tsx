@@ -17,6 +17,7 @@ const customEventOptions = { capture: true, passive: false };
 
 // Create a context for the dxn value.
 type RefDropdownMenuValue = Partial<{ link: PreviewLinkRef; target: PreviewLinkTarget; pending: boolean }>;
+
 const REF_DROPDOWN_MENU = 'RefDropdownMenu';
 const [RefDropdownMenuContextProvider, useRefDropdownMenu] = createContext<RefDropdownMenuValue>(REF_DROPDOWN_MENU, {});
 

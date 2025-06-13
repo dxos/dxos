@@ -24,9 +24,9 @@ const DefaultStory = ({ text }: StoryProps) => {
       <EditorStory
         text={text}
         extensions={[outliner()]}
-        debug='raw+tree'
         placeholder=''
         slots={{}}
+        debug='raw+tree'
         debugCustom={(view) => {
           const tree = view.state.facet(treeFacet);
           const lines: string[] = [];

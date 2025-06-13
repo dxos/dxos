@@ -15,6 +15,7 @@ const customEventOptions = { capture: true, passive: false };
 
 // Create a context for the dxn value.
 type RefPopoverValue = Partial<{ link: PreviewLinkRef; target: PreviewLinkTarget; pending: boolean }>;
+
 const REF_POPOVER = 'RefPopover';
 const [RefPopoverContextProvider, useRefPopover] = createContext<RefPopoverValue>(REF_POPOVER, {});
 
