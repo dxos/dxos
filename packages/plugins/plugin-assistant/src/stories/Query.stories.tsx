@@ -29,7 +29,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
-import { Filter, IndexKind, Queue, useQuery, useSpace, useSpaces } from '@dxos/react-client/echo';
+import { Filter, IndexKind, Queue, useQuery, useQueue, useSpace, useSpaces } from '@dxos/react-client/echo';
 import { Dialog, IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
 import { matchCompletion, staticCompletion, typeahead, type TypeaheadOptions } from '@dxos/react-ui-editor';
 import { List } from '@dxos/react-ui-list';
@@ -199,10 +199,13 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     [space],
   );
 
+  const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1000 });
+
   console.log('Query.stories.tsx', {
     space: space?.id,
-    allItems: items,
     researchGraph: researchGraph?.id,
+    allItems: items,
+    researchQueue: researchQueue?.items,
   });
 
   const researchBlueprint = useMemo(() => {
@@ -225,6 +228,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
           schemaTypes: DataTypes,
           onDone: async (objects) => {
             if (!space || !researchGraph) {
+              log.warn('failed to add objects to research queue');
               return;
             }
             const queue = space.queues.get(researchGraph.queue.dxn);
