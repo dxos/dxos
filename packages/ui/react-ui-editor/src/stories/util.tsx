@@ -31,6 +31,7 @@ import {
   image,
   linkTooltip,
   table,
+  type ThemeExtensionsOptions,
 } from '../extensions';
 import { useTextEditor, type UseTextEditorProps } from '../hooks';
 import { str } from '../testing';
@@ -256,7 +257,8 @@ export type StoryProps = {
   placeholder?: string;
   lineNumbers?: boolean;
   onReady?: (view: EditorView) => void;
-} & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'>;
+} & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'> &
+  Pick<ThemeExtensionsOptions, 'slots'>;
 
 // Default story component
 export const EditorStory = ({
@@ -270,6 +272,7 @@ export const EditorStory = ({
   scrollTo,
   selection,
   extensions,
+  slots = editorSlots,
   onReady,
 }: StoryProps) => {
   const [object] = useState(createObject(live(Expando, { content: text ?? '' })));
@@ -286,7 +289,7 @@ export const EditorStory = ({
         createThemeExtensions({
           themeMode,
           syntaxHighlighting: true,
-          slots: editorSlots,
+          slots,
         }),
         editorGutter,
         extensions || [],

@@ -88,7 +88,14 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
         <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>
         {isToday && <div className='text-xs'>{t('today label')}</div>}
       </div>
-      <Outliner ref={outlinerRef} id={entry.id} text={entry.content.target} classNames='pbs-2 pbe-2' {...props} />
+      <Outliner
+        ref={outlinerRef}
+        id={entry.id}
+        text={entry.content.target}
+        classNames='pbs-2 pbe-2'
+        scrollable={false}
+        {...props}
+      />
     </div>
   );
 };

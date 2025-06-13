@@ -12,6 +12,7 @@ import { hoverableHidden } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory } from './util';
+import { RefPopover, useRefPopover } from '../components';
 import {
   preview,
   image,
@@ -20,7 +21,7 @@ import {
   type PreviewLinkTarget,
   type PreviewRenderProps,
 } from '../extensions';
-import { RefPopover, str, useRefPopover } from '../testing';
+import { str } from '../testing';
 import { createRenderer } from '../util';
 
 const handlePreviewLookup = async ({ label, ref }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
@@ -45,12 +46,12 @@ const useRefTarget = (link: PreviewLinkRef, onLookup: PreviewOptions['onLookup']
 };
 
 const PreviewCard = () => {
-  const { link, target } = useRefPopover('PreviewCard');
+  const { target } = useRefPopover('PreviewCard');
   return (
     <Popover.Portal>
-      <Popover.Content classNames='popover-card-width' onOpenAutoFocus={(event) => event.preventDefault()}>
+      <Popover.Content classNames='popover-card-width p-2' onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
-          <div className='grow truncate'>{link?.label}</div>
+          <h2 className='grow truncate'>{target?.label}</h2>
           {target && <div className='line-clamp-3'>{target.text}</div>}
         </Popover.Viewport>
         <Popover.Arrow />
