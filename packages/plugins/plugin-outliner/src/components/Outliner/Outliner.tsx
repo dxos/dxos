@@ -31,11 +31,12 @@ export type OutlinerProps = ThemedClassName<
   {
     id: string;
     text: DataType.Text;
+    scrollable?: boolean;
   } & Pick<UseTextEditorProps, 'id' | 'autoFocus'>
 >;
 
 export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
-  ({ classNames, text, id, autoFocus }, forwardedRef) => {
+  ({ classNames, text, id, autoFocus, scrollable = true }, forwardedRef) => {
     const { t } = useTranslation(OUTLINER_PLUGIN);
     const { themeMode } = useThemeContext();
     const { parentRef, focusAttributes, view } = useTextEditor(
@@ -50,7 +51,7 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
           createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
           createBasicExtensions({ readOnly: false }),
           createMarkdownExtensions({ themeMode }),
-          createThemeExtensions({ themeMode }),
+          createThemeExtensions({ themeMode, slots: { scroll: { className: scrollable ? '' : '!overflow-hidden' } } }),
           outliner(),
         ],
       }),
