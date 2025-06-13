@@ -6,7 +6,7 @@
     &[aria-checked='true'],
     &[aria-checked='mixed'],
     &:checked {
-      @apply bg-accentSurface accent-accentSurface;
+      @apply bg-accentSurface accent-accentSurface border-accentSurface;
     }
 
     &:not([disabled]),
@@ -16,7 +16,7 @@
         &[aria-checked='true'],
         &[aria-checked='mixed'],
         &:checked {
-          @apply bg-accentSurfaceHover accent-accentSurfaceHover;
+          @apply bg-accentSurfaceHover accent-accentSurfaceHover border-accentSurfaceHover;
         }
       }
     }
