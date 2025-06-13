@@ -3,4 +3,5 @@
 //
 
 export * from './RefPopover';
+export * from './RefDropdownMenu';
 export * from './util';
