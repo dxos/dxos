@@ -97,10 +97,18 @@ export namespace LayoutAction {
       ),
       options: Schema.Struct({
         state: Schema.optional(Schema.Boolean.annotations({ description: 'Whether the dialog is open or closed.' })),
+        type: Schema.optional(Schema.Literal('default', 'alert').annotations({ description: 'The type of dialog.' })),
         blockAlign: Schema.optional(
           Schema.Literal('start', 'center', 'end').annotations({ description: 'The alignment of the dialog.' }),
         ),
-        type: Schema.optional(Schema.Literal('default', 'alert').annotations({ description: 'The type of dialog.' })),
+        overlayClasses: Schema.optional(
+          Schema.String.annotations({ description: 'Additional classes for the dialog overlay.' }),
+        ),
+        overlayStyle: Schema.optional(
+          Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({
+            description: 'Additional styles for the dialog overlay.',
+          }),
+        ),
         props: Schema.optional(
           Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({
             description: 'Additional props for the dialog.',

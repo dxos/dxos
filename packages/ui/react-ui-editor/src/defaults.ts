@@ -19,7 +19,7 @@ export const editorWidth = '!mli-auto is-full max-is-[min(50rem,100%-4rem)]';
 
 export const editorSlots: ThemeExtensionsOptions['slots'] = {
   scroll: {
-    className: 'pbs-1',
+    className: 'pbs-2',
   },
   content: {
     className: editorWidth,
@@ -49,6 +49,6 @@ export const stackItemContentEditorClassNames = (role?: string) =>
 
 export const stackItemContentToolbarClassNames = (role?: string) =>
   mx(
-    'relative z-[1] flex is-full bg-toolbarSurface border-be border-separator',
+    'relative z-[1] flex is-full bg-toolbarSurface border-be border-subduedSeparator',
     role === 'section' && 'sticky block-start-0 -mbe-px min-is-0',
   );

@@ -133,7 +133,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     <StackItem.DragPreview>
                       {({ item }) => (
                         <div className='p-2'>
-                          <div className='rounded overflow-hidden bg-cardSurface ring-focusLine ring-accentFocusIndicator relative min-bs-[--rail-item]'>
+                          <div className='rounded overflow-hidden bg-cardSurface ring-focusLine ring-neutralFocusIndicator relative min-bs-[--rail-item]'>
                             <div role='none' className='flex items-center absolute block-start-0 inset-inline-0'>
                               <IconButton
                                 iconOnly
@@ -211,7 +211,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
 
                 return (
                   <div className='p-2'>
-                    <div className='rounded-lg max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface ring-focusLine ring-accentFocusIndicator flex flex-col'>
+                    <div className='rounded-lg max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface ring-focusLine ring-neutralFocusIndicator flex flex-col'>
                       {/* Column Header */}
                       <div className='flex items-center p-2'>
                         <IconButton

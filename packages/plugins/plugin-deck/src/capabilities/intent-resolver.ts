@@ -107,9 +107,11 @@ export default (context: PluginContext) =>
       resolve: ({ subject, options }) => {
         const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         layout.dialogOpen = options.state ?? Boolean(subject);
-        layout.dialogContent = subject ? { component: subject, props: options.props } : null;
-        layout.dialogBlockAlign = options.blockAlign ?? 'center';
         layout.dialogType = options.type ?? 'default';
+        layout.dialogBlockAlign = options.blockAlign ?? 'center';
+        layout.dialogOverlayClasses = options.overlayClasses;
+        layout.dialogOverlayStyle = options.overlayStyle;
+        layout.dialogContent = subject ? { component: subject, props: options.props } : null;
       },
     }),
     createResolver({

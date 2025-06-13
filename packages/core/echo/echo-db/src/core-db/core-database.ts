@@ -571,7 +571,7 @@ export class CoreDatabase {
     };
 
     if (type !== undefined) {
-      newStruct.system.type = encodeReference(Reference.fromDXN(type));
+      newStruct.system!.type = encodeReference(Reference.fromDXN(type));
     }
 
     core.setDecoded([], newStruct);

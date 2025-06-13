@@ -6,7 +6,7 @@ import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
 import { live, makeRef } from '@dxos/live-object';
 import { DataType } from '@dxos/schema';
 
-import { OutlinerAction, JournalType, OutlineType, createJournalEntry, createTree } from '../types';
+import { OutlinerAction, JournalType, createJournalEntry, createOutline } from '../types';
 
 export default () =>
   contributes(Capabilities.IntentResolver, [
@@ -25,22 +25,16 @@ export default () =>
       intent: OutlinerAction.CreateOutline,
       resolve: ({ name }) => ({
         data: {
-          object: live(OutlineType, {
-            name,
-            tree: makeRef(createTree()),
-          }),
+          object: createOutline(name),
         },
       }),
     }),
     createResolver({
       intent: OutlinerAction.CreateTask,
-      resolve: ({ node }) => {
-        const task = live(DataType.Task, {
-          text: node.data.text,
-        });
+      resolve: ({ text }) => {
         return {
           data: {
-            object: task,
+            object: live(DataType.Task, { text }),
           },
         };
       },

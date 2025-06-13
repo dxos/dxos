@@ -7,22 +7,25 @@ import React, { type PropsWithChildren, useRef, useState, useEffect, useCallback
 
 import { addEventListener } from '@dxos/async';
 import { type DxRefTag, type DxRefTagActivate } from '@dxos/lit-ui';
-import { Popover } from '@dxos/react-ui';
+import { DropdownMenu } from '@dxos/react-ui';
 
-import { type PreviewLinkRef, type PreviewLinkTarget, type PreviewLookup } from '../extensions';
+import { type PreviewLinkRef, type PreviewLinkTarget, type PreviewLookup } from '../../extensions';
+
+// TODO(burdon): Reconcile with RefPopover?
 
 const customEventOptions = { capture: true, passive: false };
 
 // Create a context for the dxn value.
-type RefPopoverValue = Partial<{ link: PreviewLinkRef; target: PreviewLinkTarget; pending: boolean }>;
-const REF_POPOVER = 'RefPopover';
-const [RefPopoverContextProvider, useRefPopover] = createContext<RefPopoverValue>(REF_POPOVER, {});
+type RefDropdownMenuValue = Partial<{ link: PreviewLinkRef; target: PreviewLinkTarget; pending: boolean }>;
 
-type RefPopoverProviderProps = PropsWithChildren<{ onLookup?: PreviewLookup }>;
+const REF_DROPDOWN_MENU = 'RefDropdownMenu';
+const [RefDropdownMenuContextProvider, useRefDropdownMenu] = createContext<RefDropdownMenuValue>(REF_DROPDOWN_MENU, {});
 
-const RefPopoverProvider = ({ children, onLookup }: RefPopoverProviderProps) => {
+type RefDropdownMenuProviderProps = PropsWithChildren<{ onLookup?: PreviewLookup }>;
+
+const RefDropdownMenuProvider = ({ children, onLookup }: RefDropdownMenuProviderProps) => {
   const trigger = useRef<DxRefTag | null>(null);
-  const [value, setValue] = useState<RefPopoverValue>({});
+  const [value, setValue] = useState<RefDropdownMenuValue>({});
   const [rootRef, setRootRef] = useState<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -54,21 +57,21 @@ const RefPopoverProvider = ({ children, onLookup }: RefPopoverProviderProps) => 
   }, [rootRef]);
 
   return (
-    <RefPopoverContextProvider pending={value.pending} link={value.link} target={value.target}>
-      <Popover.Root open={open} onOpenChange={setOpen}>
-        <Popover.VirtualTrigger virtualRef={trigger as unknown as RefObject<HTMLButtonElement>} />
+    <RefDropdownMenuContextProvider pending={value.pending} link={value.link} target={value.target}>
+      <DropdownMenu.Root open={open} onOpenChange={setOpen}>
+        <DropdownMenu.VirtualTrigger virtualRef={trigger as unknown as RefObject<HTMLButtonElement>} />
         <div role='none' className='contents' ref={setRootRef}>
           {children}
         </div>
-      </Popover.Root>
-    </RefPopoverContextProvider>
+      </DropdownMenu.Root>
+    </RefDropdownMenuContextProvider>
   );
 };
 
-export const RefPopover = {
-  Provider: RefPopoverProvider,
+export const RefDropdownMenu = {
+  Provider: RefDropdownMenuProvider,
 };
 
-export { useRefPopover };
+export { useRefDropdownMenu };
 
-export type { RefPopoverProviderProps, RefPopoverValue };
+export type { RefDropdownMenuProviderProps, RefDropdownMenuValue };

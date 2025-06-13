@@ -43,13 +43,6 @@ export const JsonEditor = (_: JsonEditorProps) => {
           syntaxHighlighting: true,
         }),
         folding(),
-        // NOTE: Not using default editor gutter because folding for code works best right beside text.
-        EditorView.theme({
-          '.cm-gutters': {
-            // Match margin from content.
-            marginTop: '16px',
-          },
-        }),
         [editorMonospace, json()],
         EditorView.updateListener.of(handleUpdate),
       ],
