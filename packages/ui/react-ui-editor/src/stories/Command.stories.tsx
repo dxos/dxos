@@ -11,9 +11,10 @@ import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory } from './util';
+import { RefDropdownMenu } from '../components';
 import { editorWidth } from '../defaults';
 import { command, type Action, floatingMenu } from '../extensions';
-import { str, RefDropdownMenu } from '../testing';
+import { str } from '../testing';
 import { createRenderer } from '../util';
 
 const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) => {

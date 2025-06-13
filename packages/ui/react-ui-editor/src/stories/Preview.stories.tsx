@@ -12,6 +12,7 @@ import { hoverableHidden } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory } from './util';
+import { RefPopover, useRefPopover } from '../components';
 import {
   preview,
   image,
@@ -20,7 +21,7 @@ import {
   type PreviewLinkTarget,
   type PreviewRenderProps,
 } from '../extensions';
-import { RefPopover, str, useRefPopover } from '../testing';
+import { str } from '../testing';
 import { createRenderer } from '../util';
 
 const handlePreviewLookup = async ({ label, ref }: PreviewLinkRef): Promise<PreviewLinkTarget> => {

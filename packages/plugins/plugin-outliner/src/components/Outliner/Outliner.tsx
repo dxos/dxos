@@ -5,8 +5,9 @@
 import { EditorSelection } from '@codemirror/state';
 import React, { forwardRef, useImperativeHandle } from 'react';
 
+import { log } from '@dxos/log';
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { DropdownMenu, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createMarkdownExtensions,
   createBasicExtensions,
@@ -14,10 +15,13 @@ import {
   createThemeExtensions,
   outliner,
   useTextEditor,
+  RefDropdownMenu,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
+
+import { OUTLINER_PLUGIN } from '../../meta';
 
 export type OutlinerController = {
   focus: () => void;
@@ -32,6 +36,7 @@ export type OutlinerProps = ThemedClassName<
 
 export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
   ({ classNames, text, id, autoFocus }, forwardedRef) => {
+    const { t } = useTranslation(OUTLINER_PLUGIN);
     const { themeMode } = useThemeContext();
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
@@ -60,6 +65,22 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
       [view],
     );
 
-    return <div ref={parentRef} {...focusAttributes} className={mx('flex w-full justify-center', classNames)} />;
+    const handleDeleteRow = () => {
+      log.info('delete row');
+    };
+
+    return (
+      <RefDropdownMenu.Provider>
+        <div ref={parentRef} {...focusAttributes} className={mx('flex w-full justify-center', classNames)} />
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content>
+            <DropdownMenu.Viewport>
+              <DropdownMenu.Item onClick={handleDeleteRow}>{t('delete row')}</DropdownMenu.Item>
+            </DropdownMenu.Viewport>
+            <DropdownMenu.Arrow />
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </RefDropdownMenu.Provider>
+    );
   },
 );

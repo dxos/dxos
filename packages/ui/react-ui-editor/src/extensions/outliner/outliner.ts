@@ -11,6 +11,7 @@ import { commands } from './commands';
 import { editor } from './editor';
 import { selectionCompartment, selectionFacet, selectionEquals } from './selection';
 import { outlinerTree, treeFacet } from './tree';
+import { floatingMenu } from '../command';
 import { decorateMarkdown } from '../markdown';
 
 // ISSUES:
@@ -48,14 +49,17 @@ export const outliner = (): Extension => [
   // Filter and possibly modify changes.
   editor(),
 
+  // Floating menu.
+  floatingMenu(),
+
   // Line decorations.
   decorations(),
 
   // Default markdown decorations.
   decorateMarkdown({ listPaddingLeft: 8 }),
 
-  // Max width with room for menu.
-  EditorView.contentAttributes.of({ class: '!mli-auto is-full max-is-[min(50rem,100%-6rem)]' }),
+  // Researve space for menu.
+  EditorView.contentAttributes.of({ class: 'is-full !mr-[3rem]' }),
 ];
 
 /**

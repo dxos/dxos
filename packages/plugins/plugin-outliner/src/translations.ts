@@ -28,6 +28,7 @@ export default [
 
         // TODO(burdon): Move to plugin-task.
         'task action': 'Convert to task',
+        'delete row': 'Delete row',
       },
     },
   },
