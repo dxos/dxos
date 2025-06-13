@@ -14,7 +14,7 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { Filter, fullyQualifiedId, getSchema, getSpace, isEchoObject, type AnyLiveObject } from '@dxos/client/echo';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { isInstanceOf, type JsonPath, setValue } from '@dxos/echo-schema';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { TableType } from '@dxos/react-ui-table';
@@ -31,7 +31,7 @@ export default () =>
     // Specific schema types.
     //
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover`,
+      id: `${PREVIEW_PLUGIN}/schema-popover--contact`,
       role: ['popover', 'card--kanban', 'card'],
       filter: (data): data is { subject: DataType.Person } => isInstanceOf(DataType.Person, data.subject),
       component: ({ data, role }) => {
@@ -72,7 +72,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover`,
+      id: `${PREVIEW_PLUGIN}/schema-popover--organization`,
       role: ['popover', 'card--kanban', 'card'],
       filter: (data): data is { subject: DataType.Organization } => isInstanceOf(DataType.Organization, data.subject),
       component: ({ data, role }) => (
@@ -82,7 +82,7 @@ export default () =>
       ),
     }),
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover`,
+      id: `${PREVIEW_PLUGIN}/schema-popover--project`,
       role: ['popover', 'card--kanban', 'card'],
       filter: (data): data is { subject: DataType.Project } => isInstanceOf(DataType.Project, data.subject),
       component: ({ data, role }) => <ProjectCard subject={data.subject} role={role} />,
@@ -103,11 +103,21 @@ export default () =>
           return <p className={descriptionMessage}>{t('unable to create preview message')}</p>;
         }
 
+        const handleSave = useCallback((values: any, { changed }: { changed: Record<string, boolean> }) => {
+          const changedPaths = Object.keys(changed).filter((path) => changed[path]);
+          for (const path of changedPaths) {
+            const value = values[path];
+            setValue(data.subject, path as JsonPath, value);
+          }
+        }, []);
+
         return (
           <Form
             schema={schema}
             values={data.subject}
             readonly={role === 'popover'}
+            onSave={handleSave}
+            autoSave
             {...(role === 'card--kanban' && { classNames: kanbanCardWithoutPoster })}
           />
         );

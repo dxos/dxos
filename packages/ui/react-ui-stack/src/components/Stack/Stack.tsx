@@ -4,7 +4,15 @@
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
-import React, { Children, type CSSProperties, type ComponentPropsWithRef, forwardRef, useState, useMemo } from 'react';
+import React, {
+  Children,
+  type CSSProperties,
+  type ComponentPropsWithRef,
+  forwardRef,
+  useState,
+  useMemo,
+  useCallback,
+} from 'react';
 
 import { type ThemedClassName, ListItem } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -20,6 +28,7 @@ export type StackProps = Omit<ThemedClassName<ComponentPropsWithRef<'div'>>, 'ar
   Partial<StackContextValue> & {
     itemsCount?: number;
     getDropElement?: (stackElement: HTMLDivElement) => HTMLDivElement;
+    separatorOnScroll?: number;
   };
 
 export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
@@ -45,6 +54,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       onRearrange,
       itemsCount = Children.count(children),
       getDropElement,
+      separatorOnScroll,
       ...props
     },
     forwardedRef,
@@ -68,6 +78,15 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       orientation,
       onRearrange,
     });
+
+    const handleScroll = useCallback(() => {
+      if (stackElement && Number.isFinite(separatorOnScroll)) {
+        const scrollPosition = orientation === 'horizontal' ? stackElement.scrollLeft : stackElement.scrollTop;
+        stackElement
+          .closest('[data-scroll-separator]')
+          ?.setAttribute('data-scroll-separator', String(scrollPosition > separatorOnScroll!));
+      }
+    }, [stackElement, separatorOnScroll, orientation]);
 
     const gridClasses = useMemo(() => {
       if (!rail) {
@@ -98,6 +117,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
           aria-orientation={orientation}
           style={styles}
           ref={composedItemRef}
+          {...(Number.isFinite(separatorOnScroll) && { onScroll: handleScroll })}
         >
           {children}
           {selfDroppable && dropping && (
