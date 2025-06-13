@@ -24,7 +24,6 @@ import {
 import { Type } from '@dxos/echo';
 import { type AnyEchoObject, create, getLabelForObject, Query, Ref } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
-import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
@@ -140,7 +139,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   }, [space, model, researchGraph?.queue.dxn.toString()]);
 
   const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1_000 });
-  const researchBlueprint = useBlueprint(space, researchGraph?.queue.dxn);
+  const blueprint = useBlueprint(space, researchGraph?.queue.dxn);
 
   //
   // Handlers
@@ -151,18 +150,17 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   }, [model]);
 
   const handleResearch = useCallback(async () => {
-    if (!space) {
+    if (!space || !blueprint) {
       return;
     }
 
     const selected = selection.selected.value;
-    log.info('research', { selected: selection.selected.value });
+    log.info('research', { selected });
     const { objects } = await space.db.query(Filter.ids(...selected)).run();
-    invariant(researchBlueprint);
-    const machine = new BlueprintMachine(researchBlueprint);
+    const machine = new BlueprintMachine(blueprint);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiService: aiClient, input: objects });
-  }, [space, aiClient, selection, researchBlueprint]);
+  }, [space, aiClient, blueprint, selection]);
 
   const handleGenerate = useCallback(async () => {
     if (!space) {
