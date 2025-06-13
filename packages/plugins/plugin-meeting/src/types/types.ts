@@ -31,6 +31,15 @@ export namespace MeetingAction {
     }),
   }) {}
 
+  export class HandlePayload extends Schema.TaggedClass<HandlePayload>()(`${MEETING_ACTION}/handle-payload`, {
+    input: Schema.Struct({
+      meetingId: Schema.optional(Schema.String),
+      transcriptDxn: Schema.optional(Schema.String),
+      transcriptionEnabled: Schema.optional(Schema.Boolean),
+    }),
+    output: Schema.Void,
+  }) {}
+
   export class Summarize extends Schema.TaggedClass<Summarize>()(`${MEETING_ACTION}/summarize`, {
     input: Schema.Struct({
       meeting: MeetingType,
