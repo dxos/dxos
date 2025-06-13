@@ -201,6 +201,7 @@ export class CallManager extends Resource {
     this._swarmSynchronizer.setJoined(false);
     await this._swarmSynchronizer.leave();
     await this._mediaManager.leave();
+    this.roomId && this.left.emit(this.roomId);
   }
 
   private _onCallStateUpdated(state: CallState) {
