@@ -18,7 +18,7 @@ export const OutlineType = Schema.Struct({
   name: Schema.optional(Schema.String),
   tree: Ref(TreeType),
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Outline',
     version: '0.1.0',
   }),
@@ -34,7 +34,7 @@ export const JournalEntryType = Schema.Struct({
   date: Schema.String, // TODO(burdon): Date.
   tree: Ref(TreeType),
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/JournalEntry',
     version: '0.1.0',
   }),
@@ -46,7 +46,7 @@ export const JournalType = Schema.Struct({
   name: Schema.optional(Schema.String),
   entries: Schema.mutable(Schema.Array(Ref(JournalEntryType))),
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Journal',
     version: '0.1.0',
   }),
