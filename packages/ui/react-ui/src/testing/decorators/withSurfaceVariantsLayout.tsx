@@ -28,7 +28,7 @@ export const withSurfaceVariantsLayout = ({
           densities.map((density) => (
             <div
               key={`${elevation}--${density}`}
-              className={mx('p-4 mlb-4 rounded', surface, surfaceShadow({ elevation }))}
+              className={mx('p-4 mlb-4 rounded-md border border-separator', surface, surfaceShadow({ elevation }))}
             >
               <Story />
             </div>
@@ -40,7 +40,7 @@ export const withSurfaceVariantsLayout = ({
           densities.map((density) => (
             <div
               key={`${elevation}--${density}`}
-              className={mx('p-4 mlb-4 rounded', surface, surfaceShadow({ elevation }))}
+              className={mx('p-4 mlb-4 rounded-md border border-separator', surface, surfaceShadow({ elevation }))}
             >
               <Story />
             </div>
