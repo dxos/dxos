@@ -75,10 +75,10 @@ export const TableValueEditor = ({
   }, [model, editing]);
 
   if (fieldProjection?.props.type === TypeEnum.Array) {
-    return <FormCellEditor fieldProjection={fieldProjection} model={model} schema={schema} __gridScope={__gridScope} />;
+    return <FormCellEditor model={model} schema={schema} fieldProjection={fieldProjection} __gridScope={__gridScope} />;
   }
 
-  // For all other types, use the existing cell editor
+  // For all other types, use the existing cell editor.
   return (
     <TableCellEditor
       model={model}
