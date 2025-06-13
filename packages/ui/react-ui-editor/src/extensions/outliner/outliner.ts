@@ -153,7 +153,7 @@ const decorations = () => [
       borderColor: 'var(--dx-separator)',
     },
     '.cm-list-item-focused': {
-      borderColor: 'var(--dx-focus-ring)',
+      borderColor: 'var(--dx-accentFocusIndicator)',
     },
   }),
 ];
