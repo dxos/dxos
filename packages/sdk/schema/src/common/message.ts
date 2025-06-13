@@ -139,7 +139,7 @@ const MessageSchema = Schema.Struct({
 });
 
 export const Message = MessageSchema.pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Message',
     version: '0.2.0',
   }),

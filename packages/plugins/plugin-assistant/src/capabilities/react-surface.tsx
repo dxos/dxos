@@ -6,7 +6,7 @@ import { Effect } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { Filter, isInstanceOf, Query } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -42,7 +42,7 @@ export default () =>
       id: `${ASSISTANT_PLUGIN}/chat`,
       role: 'article',
       filter: (data): data is { subject: AIChatType; variant: undefined } =>
-        Type.instanceOf(AIChatType, data.subject) && data.variant !== 'assistant-chat',
+        Obj.instanceOf(AIChatType, data.subject) && data.variant !== 'assistant-chat',
       component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
     }),
     createSurface({
@@ -102,13 +102,13 @@ export default () =>
     createSurface({
       id: `${ASSISTANT_PLUGIN}/template`,
       role: 'article',
-      filter: (data): data is { subject: TemplateType } => Type.instanceOf(TemplateType, data.subject),
+      filter: (data): data is { subject: TemplateType } => Obj.instanceOf(TemplateType, data.subject),
       component: ({ data, role }) => <TemplateContainer role={role} template={data.subject} />,
     }),
     createSurface({
       id: `${ASSISTANT_PLUGIN}/prompt-settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: TemplateType } => Type.instanceOf(TemplateType, data.subject),
+      filter: (data): data is { subject: TemplateType } => Obj.instanceOf(TemplateType, data.subject),
       component: ({ data }) => <PromptSettings template={data.subject} />,
     }),
   ]);

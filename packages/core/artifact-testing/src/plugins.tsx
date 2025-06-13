@@ -8,13 +8,13 @@ import React from 'react';
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
 import { isImage } from '@dxos/conductor';
-import { Format, Type } from '@dxos/echo';
+import { Type, type Obj } from '@dxos/echo';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 export const MapSchema = Schema.Struct({
-  coordinates: Format.GeoPoint,
+  coordinates: Type.Format.GeoPoint,
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'example.com/type/Map',
     version: '0.1.0',
   }),
@@ -24,9 +24,9 @@ export type MapSchema = Schema.Schema.Type<typeof MapSchema>;
 
 // TODO(burdon): Move to ECHO def.
 export type ArtifactsContext = {
-  items: Type.AnyObject[];
-  getArtifacts: () => Type.AnyObject[];
-  addArtifact: (artifact: Type.AnyObject) => void;
+  items: Obj.Any[];
+  getArtifacts: () => Obj.Any[];
+  addArtifact: (artifact: Obj.Any) => void;
 };
 
 declare global {
