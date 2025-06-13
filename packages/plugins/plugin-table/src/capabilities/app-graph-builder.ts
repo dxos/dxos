@@ -8,7 +8,7 @@ import { Option, pipe } from 'effect';
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { createExtension } from '@dxos/plugin-graph';
+import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { isEchoObject } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 import { ViewType } from '@dxos/schema';
@@ -55,10 +55,15 @@ export default (context: PluginContext) =>
 
               const subject = node.data;
               // TODO(ZaymonFC): Unify the path of view between table and kanban.
-              const hasValidView = subject.view?.target instanceof ViewType;
-              const hasValidCardView = subject.cardView?.target instanceof ViewType;
+              const hasValidView = get(
+                rxFromSignal(() => {
+                  const hasValidView = subject.view?.target instanceof ViewType;
+                  const hasValidCardView = subject.cardView?.target instanceof ViewType;
+                  return hasValidView || hasValidCardView;
+                }),
+              );
 
-              return hasValidView || hasValidCardView ? Option.some(node) : Option.none();
+              return hasValidView ? Option.some(node) : Option.none();
             }),
             Option.map((node) => [
               {
