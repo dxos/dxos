@@ -108,7 +108,11 @@
         "{options.outputPath}"
       ]
     },
-    "e2e": {},
+    "e2e": {
+      "options": {
+        "config": "{projectRoot}/src/playwright/playwright.config.cts"
+      }
+    },
     "lint": {},
     "pack": {},
     "prebuild": {
@@ -131,6 +135,29 @@
       "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "composer-app:bundle"
+      }
+    },
+    "smoketest": {
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ],
+      "executor": "@nx/playwright:playwright",
+      "inputs": [
+        {
+          "env": "CI"
+        },
+        {
+          "env": "LOG_LEVEL"
+        },
+        {
+          "env": "LOG_PROCESSOR"
+        },
+        "^production",
+        "default"
+      ],
+      "options": {
+        "config": "{projectRoot}/src/playwright/playwright-smoke.config.cts"
       }
     },
     "storybook": {

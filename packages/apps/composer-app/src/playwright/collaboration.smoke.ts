@@ -6,17 +6,17 @@ import { test, expect } from '@playwright/test';
 import { platform } from 'node:os';
 
 import { sleep } from '@dxos/async';
+import { log } from '@dxos/log';
 
 import { AppManager } from './app-manager';
 import { Markdown } from './plugins';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
   await host.shareSpace();
-  const invitationCode = await host.createSpaceInvitation();
-  const authCode = await host.getAuthCode();
+  const invitationCode = await host.createSpaceInvitation('delegated');
+  log.info('got invitation code', { invitationCode });
   await guest.joinSpace();
   await guest.shell.acceptSpaceInvitation(invitationCode);
-  await guest.shell.authenticate(authCode);
   await host.navigateToObject();
 };
 
@@ -27,15 +27,20 @@ test.describe('Collaboration tests', () => {
   let guest: AppManager;
 
   test.beforeEach(async ({ browser, browserName }) => {
-    test.setTimeout(60_000);
+    test.setTimeout(300_000);
     test.skip(browserName === 'firefox');
     test.skip(browserName === 'webkit' && platform() !== 'darwin');
 
-    host = new AppManager(browser, false);
-    guest = new AppManager(browser, false);
+    host = new AppManager(browser, false, 'https://labs.composer.space');
+    guest = new AppManager(browser, false, 'https://labs.composer.space');
 
-    await host.init();
-    await guest.init();
+    await Promise.all([host.init({ timeout: 60_000 }), guest.init({ timeout: 60_000 })]);
+
+    // Handle Privacy toast
+    await host.isToastVisible({ timeout: 60_000 });
+    await guest.isToastVisible({ timeout: 60_000 });
+    await host.closeToast();
+    await guest.closeToast();
   });
 
   test.afterEach(async () => {
@@ -78,7 +83,7 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  test.only('host and guest can see each others’ cursors when same document is in focus', async () => {
+  test('host and guest can see each others’ cursors when same document is in focus', async () => {
     await host.createSpace();
 
     // Focus on host's textbox and wait for it to be ready
@@ -183,7 +188,7 @@ test.describe('Collaboration tests', () => {
   });
 
   test('peers can see each others presence', async () => {
-    test.setTimeout(90_000);
+    test.setTimeout(300_000);
 
     await host.createSpace();
 

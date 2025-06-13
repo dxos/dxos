@@ -32,20 +32,21 @@ export class AppManager {
   constructor(
     private readonly _browser: Browser,
     inIframe?: boolean,
+    private readonly _url = INITIAL_URL,
   ) {
     this._inIframe = inIframe;
   }
 
-  async init() {
+  async init({ timeout = 15_000 }: { timeout?: number } = {}) {
     if (this._initialized) {
       return;
     }
 
-    const { page } = await setupPage(this._browser, { url: INITIAL_URL });
+    const { page } = await setupPage(this._browser, { url: this._url });
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
 
-    await this.isAuthenticated({ timeout: 15_000 });
+    await this.isAuthenticated({ timeout });
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
@@ -78,6 +79,17 @@ export class AppManager {
   isAuthenticated({ timeout = 5_000 } = {}) {
     return this.page
       .getByTestId('treeView.userAccount')
+      .waitFor({ timeout })
+      .then(() => true)
+      .catch(() => false);
+  }
+
+  /**
+   * Returns promise that resolves when the PWA toast is visible.
+   */
+  isToastVisible({ timeout = 60_000 }: { timeout?: number } = {}) {
+    return this.page
+      .getByTestId('toast.close')
       .waitFor({ timeout })
       .then(() => true)
       .catch(() => false);
@@ -122,13 +134,23 @@ export class AppManager {
     await this.page.keyboard.press(shortcut);
   }
 
-  async createSpaceInvitation(): Promise<string> {
+  async createSpaceInvitation(type: 'delegated' | 'interactive' = 'interactive'): Promise<string> {
     this._invitationCode = new Trigger<string>();
     this._authCode = new Trigger<string>();
     await this.page.getByTestId('membersContainer.createInvitation.more').click();
-    await this.page.getByTestId('membersContainer.inviteOne').click();
-    await this.page.getByTestId('membersContainer.createInvitation').click();
-    return await this._invitationCode.wait();
+    switch (type) {
+      case 'interactive':
+        await this.page.getByTestId('membersContainer.inviteOne').click();
+        await this.page.getByTestId('membersContainer.createInvitation').click();
+        return await this._invitationCode.wait();
+      case 'delegated':
+        await this.page.getByTestId('membersContainer.inviteMany').click();
+        await this.page.getByTestId('membersContainer.createInvitation').click();
+        await this.page.getByTestId('copy-invitation').click();
+        return await (await this.page.evaluateHandle(() => navigator.clipboard.readText())).jsonValue();
+      default:
+        throw new Error(`Invalid invitation type: ${type}`);
+    }
   }
 
   async confirmRecoveryCode() {
