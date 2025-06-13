@@ -13,6 +13,7 @@ import {
   StoredSchema,
   toJsonSchema,
   type TypeAnnotation,
+  getSchemaTypename,
 } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -137,5 +138,29 @@ describe('schema registry', () => {
     expect(echoSchema.getProperties().length).to.eq(1);
     echoSchema.addFields({ newField: Schema.Number });
     expect(echoSchema.getProperties().length).to.eq(2);
+  });
+
+  test('reactive schema query after reload', async (ctx) => {
+    await using peer = await builder.createPeer();
+
+    {
+      await using db = await peer.createDatabase();
+      await db.schemaRegistry.register([Contact]);
+    }
+
+    await peer.reload();
+    {
+      await using db = await peer.openLastDatabase();
+      const query = db.schemaRegistry.query({ typename: getSchemaTypename(Contact) });
+      const schema = await new Promise<EchoSchema>((resolve) => {
+        const unsubscribe = query.subscribe(() => {
+          if (query.results.length > 0) {
+            resolve(query.results[0]);
+          }
+        });
+        ctx.onTestFinished(unsubscribe);
+      });
+      expect(getSchemaTypename(schema)).toEqual(getSchemaTypename(Contact));
+    }
   });
 });

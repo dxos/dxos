@@ -65,6 +65,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     { reactiveQuery = true, preloadSchemaOnOpen = true }: EchoSchemaRegistryOptions = {},
   ) {
     super();
+    log.info('EchoSchemaRegistry', { reactiveQuery, preloadSchemaOnOpen });``
     this._reactiveQuery = reactiveQuery;
     this._preloadSchemaOnOpen = preloadSchemaOnOpen;
   }
