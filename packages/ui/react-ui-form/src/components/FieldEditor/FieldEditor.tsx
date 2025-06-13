@@ -129,7 +129,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
     onSave();
   }, [onSave]);
 
-  const Custom: Partial<Record<string, InputComponent>> = useMemo(
+  const custom: Partial<Record<string, InputComponent>> = useMemo(
     () => ({
       ['format' satisfies keyof PropertyType]: (props) => (
         <SelectInput
@@ -187,7 +187,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
       onValidate={handleValidate}
       onSave={handleSave}
       onCancel={handleCancel}
-      Custom={Custom}
+      Custom={custom}
     />
   );
 };
