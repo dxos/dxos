@@ -71,7 +71,7 @@ export const withPluginManager = (options: WithPluginManagerOptions = {}): Decor
 
     // Set-up root capability.
     useEffect(() => {
-      log('setup capabilities...');
+      log.info('setup capabilities...');
       const capability = contributes(Capabilities.ReactRoot, {
         id: context.id,
         root: () => <Story />,
@@ -83,14 +83,14 @@ export const withPluginManager = (options: WithPluginManagerOptions = {}): Decor
       });
 
       return () => {
-        log('removing capability...');
+        log.info('removing capability...');
         pluginManager.context.removeCapability(capability.interface, capability.implementation);
       };
     }, [pluginManager, context]);
 
     // Fire events.
     useEffect(() => {
-      log('firing events...');
+      log.info('firing events...');
       options.fireEvents?.forEach((event) => {
         void pluginManager.activate(event);
       });
@@ -98,7 +98,7 @@ export const withPluginManager = (options: WithPluginManagerOptions = {}): Decor
 
     // Create app.
     const App = useMemo(() => {
-      log('creating app...');
+      log.info('creating app...');
       return createApp({ pluginManager });
     }, [pluginManager]);
 

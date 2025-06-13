@@ -201,7 +201,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   console.log('Query.stories.tsx', {
     space: space?.id,
     allItems: items,
-    researchGraph,
+    researchGraph: researchGraph?.id,
   });
 
   const researchBlueprint = useMemo(() => {

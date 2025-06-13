@@ -19,6 +19,7 @@ import { TablePlugin } from '@dxos/plugin-table';
 import { Config } from '@dxos/react-client';
 import { DataTypes } from '@dxos/schema';
 import { IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { log } from '@dxos/log';
 
 export const testPlugins = ({
   config,
@@ -39,6 +40,7 @@ export const testPlugins = ({
     ),
     types: DataTypes,
     onClientInitialized: async (_, client) => {
+      log.info('testPlugins.onClientInitialized', { types });
       client.addTypes(types);
 
       if (!client.halo.identity.get()) {
