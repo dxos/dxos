@@ -11,7 +11,8 @@ import { commands } from './commands';
 import { editor } from './editor';
 import { selectionCompartment, selectionFacet, selectionEquals } from './selection';
 import { outlinerTree, treeFacet } from './tree';
-import { decorateMarkdown } from '../markdown/decorate';
+import { floatingMenu } from '../command';
+import { decorateMarkdown } from '../markdown';
 
 // ISSUES:
 // TODO(burdon): Remove requirement for continuous lines to be indented (so that user's can't accidentally delete them and break the layout).
@@ -25,7 +26,6 @@ import { decorateMarkdown } from '../markdown/decorate';
 // TODO(burdon): Handle backspace at start of line (or empty line).
 // TODO(burdon): Convert to task object and insert link (menu button).
 // TODO(burdon): Smart Cut-and-paste.
-// TODO(burdon): Menu.
 // TODO(burdon): DND.
 
 /**
@@ -48,11 +48,17 @@ export const outliner = (): Extension => [
   // Filter and possibly modify changes.
   editor(),
 
+  // Floating menu.
+  floatingMenu(),
+
   // Line decorations.
   decorations(),
 
   // Default markdown decorations.
   decorateMarkdown({ listPaddingLeft: 8 }),
+
+  // Researve space for menu.
+  EditorView.contentAttributes.of({ class: 'is-full !mr-[3rem]' }),
 ];
 
 /**
@@ -97,14 +103,13 @@ const decorations = () => [
             const lineFrom = doc.lineAt(item.contentRange.from);
             const lineTo = doc.lineAt(item.contentRange.to);
             const isSelected = selection.includes(item.index) || item === current;
-
             decorations.push(
               Decoration.line({
                 class: mx(
                   'cm-list-item',
                   lineFrom.number === line.number && 'cm-list-item-start',
                   lineTo.number === line.number && 'cm-list-item-end',
-                  hasFocus && isSelected && 'cm-list-item-selected',
+                  isSelected && (hasFocus ? 'cm-list-item-focused' : 'cm-list-item-selected'),
                 ),
               }).range(line.from, line.from),
             );
@@ -147,9 +152,11 @@ const decorations = () => [
       marginBottom: '8px',
     },
 
-    // TODO(burdon): Focus state.
     '.cm-list-item-selected': {
-      borderColor: 'var(--dx-focus-ring)',
+      borderColor: 'var(--dx-separator)',
+    },
+    '.cm-list-item-focused': {
+      borderColor: 'var(--dx-accentFocusIndicator)',
     },
   }),
 ];
