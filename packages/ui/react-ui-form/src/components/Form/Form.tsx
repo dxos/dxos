@@ -39,7 +39,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
     // TODO(burdon): Change to JsonPath includes/excludes.
     filter?: PropsFilter<T>;
     sort?: PropertyKey<T>[];
-    autoSave?: boolean;
+    autoSave?: boolean | 'keypress' | 'blur';
     testId?: string;
     onCancel?: () => void;
     onQueryRefOptions?: QueryRefOptions;
@@ -61,7 +61,7 @@ export const Form = <T extends BaseObject>({
   readonly,
   filter,
   sort,
-  autoSave,
+  autoSave: propsAutoSave,
   testId,
   onValuesChanged,
   onValidate,
@@ -71,8 +71,9 @@ export const Form = <T extends BaseObject>({
   lookupComponent,
   Custom,
 }: FormProps<T>) => {
+  const autoSave = propsAutoSave === 'blur' ? 'blur' : propsAutoSave ? 'keypress' : undefined;
   const formRef = useRef<HTMLDivElement>(null);
-  const onValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
+  const onValid = useMemo(() => (autoSave === 'keypress' ? onSave : undefined), [autoSave, onSave]);
 
   // Focus the first input element within this form.
   useEffect(() => {

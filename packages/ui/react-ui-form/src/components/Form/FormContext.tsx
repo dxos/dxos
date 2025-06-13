@@ -10,6 +10,7 @@ import React, {
   useMemo,
   type FocusEvent,
   type PropsWithChildren,
+  useCallback,
 } from 'react';
 
 import { raise } from '@dxos/debug';
@@ -62,17 +63,13 @@ export const FormProvider = ({
 }: PropsWithChildren<
   FormOptions<any> & {
     formRef?: RefObject<HTMLDivElement>;
-    autoSave?: boolean;
+    autoSave?: 'keypress' | 'blur';
   }
 >) => {
   const form = useForm(formOptions);
 
-  useEffect(() => {
-    if (!formRef?.current) {
-      return;
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
       const keyIsEnter = event.key === 'Enter';
       const modifierUsed = event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
       const inputIsTextarea = (event.target as HTMLElement).tagName.toLowerCase() === 'textarea';
@@ -87,19 +84,36 @@ export const FormProvider = ({
       const shouldSubmitTextarea = inputIsTextarea && keyIsEnter && event.metaKey;
 
       if ((shouldSubmitRegularInput || shouldSubmitTextarea) && !inputOptOut) {
-        if (!autoSave && form.canSave) {
+        if (autoSave !== 'keypress' && form.canSave) {
           form.handleSave();
         }
-        if (autoSave && form.formIsValid) {
+        if (autoSave === 'keypress' && form.formIsValid) {
           (event.target as HTMLElement).blur();
         }
       }
-    };
+    },
+    [form, autoSave],
+  );
+
+  const handleBlur = useCallback(() => {
+    if (autoSave === 'blur' && form.formIsValid) {
+      form.handleSave();
+    }
+  }, [form, autoSave]);
+
+  useEffect(() => {
+    if (!formRef?.current) {
+      return;
+    }
 
     const formElement = formRef.current;
 
     formElement.addEventListener('keydown', handleKeyDown);
-    return () => formElement.removeEventListener('keydown', handleKeyDown);
+    formElement.addEventListener('focusout', handleBlur);
+    return () => {
+      formElement.removeEventListener('keydown', handleKeyDown);
+      formElement.removeEventListener('focusout', handleBlur);
+    };
   }, [formRef, form.canSave, form.formIsValid, form.handleSave, autoSave]);
 
   return <FormContext.Provider value={form}>{children}</FormContext.Provider>;
