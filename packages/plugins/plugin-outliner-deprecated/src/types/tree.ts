@@ -24,7 +24,7 @@ export const TreeType = Schema.Struct({
   root: ObjectId,
   nodes: Schema.mutable(Schema.Record({ key: ObjectId, value: TreeNodeType })),
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Tree',
     version: '0.1.0',
   }),

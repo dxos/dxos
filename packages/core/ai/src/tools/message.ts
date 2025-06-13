@@ -170,7 +170,7 @@ const MessageSchema = Schema.Struct({
  */
 // TODO(burdon): Reconcile with Chat/Message types?
 export const Message = MessageSchema.pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Message',
     version: '0.1.0',
   }),
