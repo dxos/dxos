@@ -160,7 +160,12 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   }
 
   private _update() {
-    log('update', { nodes: this._graph.nodes.length, edges: this._graph.edges.length });
+    log('update', {
+      nodes: this._graph.nodes.length,
+      edges: this._graph.edges.length,
+      objects: this._objects?.length,
+      queueItems: this._queueItems?.length,
+    });
 
     // TOOD(burdon): Merge edges also?
     const currentNodes: SpaceGraphNode[] = [...this._graph.nodes] as SpaceGraphNode[];

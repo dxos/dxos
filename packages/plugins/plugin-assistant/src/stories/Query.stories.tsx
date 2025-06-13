@@ -136,7 +136,8 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       return;
     }
 
-    void model?.open(space);
+    const queue = researchGraph?.queue && space.queues.get(researchGraph.queue.dxn);
+    void model?.open(space, queue);
     return () => {
       void model?.close();
     };
