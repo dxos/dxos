@@ -140,12 +140,13 @@ describe('schema registry', () => {
     expect(echoSchema.getProperties().length).to.eq(2);
   });
 
-  test('reactive schema query after reload', async (ctx) => {
+  test('reactive schema query after reload', { timeout: 500 }, async (ctx) => {
     await using peer = await builder.createPeer();
 
     {
       await using db = await peer.createDatabase();
       await db.schemaRegistry.register([Contact]);
+      await db.flush({ indexes: true });
     }
 
     await peer.reload();
@@ -153,6 +154,12 @@ describe('schema registry', () => {
       await using db = await peer.openLastDatabase();
       const query = db.schemaRegistry.query({ typename: getSchemaTypename(Contact) });
       const schema = await new Promise<EchoSchema>((resolve) => {
+        const immediate = query.runSync();
+        if (immediate.length > 0) {
+          resolve(immediate[0]);
+          return;
+        }
+
         const unsubscribe = query.subscribe(() => {
           if (query.results.length > 0) {
             resolve(query.results[0]);
