@@ -140,7 +140,7 @@ describe('schema registry', () => {
     expect(echoSchema.getProperties().length).to.eq(2);
   });
 
-  test('reactive schema query after reload', { timeout: 500 }, async (ctx) => {
+  test('reactive schema query after reload', async (ctx) => {
     await using peer = await builder.createPeer();
 
     {
