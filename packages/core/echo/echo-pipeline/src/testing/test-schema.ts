@@ -4,15 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { EchoObject, EchoRelation, Ref } from '@dxos/echo-schema';
-
-// TODO(dmaretskyi): Move those out.
-const Type = {
-  def: EchoObject,
-};
-const Relation = {
-  def: EchoRelation,
-};
+import { Type } from '@dxos/echo';
 
 //
 // Example schema
@@ -24,7 +16,7 @@ export const Person = Schema.Struct({
   email: Schema.optional(Schema.String),
   age: Schema.optional(Schema.Number),
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Person',
     version: '0.1.0',
   }),
@@ -34,7 +26,7 @@ export interface Person extends Schema.Schema.Type<typeof Person> {}
 export const Organization = Schema.Struct({
   name: Schema.String,
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Organization',
     version: '0.1.0',
   }),
@@ -44,7 +36,7 @@ export interface Organization extends Schema.Schema.Type<typeof Organization> {}
 export const WorksFor = Schema.Struct({
   since: Schema.String,
 }).pipe(
-  Relation.def({
+  Type.Relation({
     typename: 'dxos.org/type/WorksFor',
     version: '0.1.0',
     source: Person,
@@ -56,6 +48,6 @@ export interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
 export const Task = Schema.Struct({
   title: Schema.String,
   createdAt: Schema.String,
-  assignee: Ref(Person),
-}).pipe(Type.def({ typename: 'dxos.org/type/Task', version: '0.1.0' }));
+  assignee: Type.Ref(Person),
+}).pipe(Type.Obj({ typename: 'dxos.org/type/Task', version: '0.1.0' }));
 export interface Task extends Schema.Schema.Type<typeof Task> {}

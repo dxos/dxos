@@ -45,7 +45,7 @@ export const RefTypeId: unique symbol = Symbol('@dxos/echo-schema/Ref');
 export interface Ref$<T extends WithId> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
 
 // Type of the `Ref` function and extra methods attached to it.
-interface RefFn {
+export interface RefFn {
   <S extends Schema.Schema.Any>(schema: S): Ref$<Schema.Schema.Type<S>>;
 
   /**

@@ -36,7 +36,7 @@ export type TypedObjectProps = TypeMeta & {
 
 /**
  * Base class factory for typed objects.
- * @deprecated Use pipe(Type.def) instead.
+ * @deprecated Use pipe(Type.Obj) instead.
  */
 export const TypedObject = ({ typename: _typename, version: _version, disableValidation }: TypedObjectProps) => {
   const typename = Typename.make(_typename, { disableValidation });

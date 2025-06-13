@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
-import { DXN } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import {
   FunctionType,
   FunctionTriggerSchema,
@@ -54,7 +54,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
 
         const handleOnValueChange = useCallback(
           (_type: any, dxnString: string) => {
-            const dxn = DXN.parse(dxnString);
+            const dxn = Type.DXN.parse(dxnString);
             if (dxn) {
               const ref = Ref.fromDXN(dxn);
               props.onValueChange('object', ref);
