@@ -502,7 +502,7 @@ describe('Queries', () => {
     });
 
     test('full-text', async () => {
-      const { db, graph } = await builder.createDatabase();
+      const { db, graph } = await builder.createDatabase({ indexing: { fullText: true } });
       graph.schemaRegistry.addSchema([Testing.Task]);
 
       db.add(live(Testing.Task, { title: 'apples' }));
