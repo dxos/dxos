@@ -98,7 +98,6 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
   const handleLeave = useCallback(async () => {
     try {
       void leaveSound.play();
-      await Promise.all(extensions.map((extension) => extension.onLeave?.(roomId)));
     } catch (err) {
       // TODO(burdon): Error sound.
       log.catch(err);

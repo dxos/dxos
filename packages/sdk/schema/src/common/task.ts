@@ -31,7 +31,7 @@ const TaskSchema = Schema.Struct({
 }).pipe(LabelAnnotation.set(['text']));
 
 export const Task = TaskSchema.pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Task',
     version: '0.1.0',
   }),

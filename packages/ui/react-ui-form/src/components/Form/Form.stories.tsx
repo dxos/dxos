@@ -18,6 +18,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { SelectInput } from './Defaults';
 import { Form, type FormProps } from './Form';
 import translations from '../../translations';
+import { TestLayout, TestPanel } from '../testing';
 
 const AddressSchema = Schema.Struct({
   street: Schema.optional(Schema.String.annotations({ title: 'Street' })),
@@ -46,19 +47,28 @@ const DefaultStory = <T extends BaseObject>({ schema, values: initialValues, ...
   }, []);
 
   return <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />;
-  // TODO(thure): Restore TestLayout uses.
-  // <TestLayout json={{ values, schema: schema.ast.toJSON() }}>
-  // <TestPanel>
-  // <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
-  // </TestPanel>
-  // </TestLayout>
+};
+
+const DebugStory = <T extends BaseObject>({ schema, values: initialValues, ...props }: StoryProps<T>) => {
+  const [values, setValues] = useState(initialValues);
+  const handleSave = useCallback<NonNullable<FormProps<T>['onSave']>>((values) => {
+    setValues(values);
+  }, []);
+
+  return (
+    <TestLayout json={{ values, schema: schema.ast.toJSON() }}>
+      <TestPanel>
+        <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
+      </TestPanel>
+    </TestLayout>
+  );
 };
 
 const meta: Meta<StoryProps<any>> = {
   title: 'ui/react-ui-form/Form',
   component: Form,
-  render: DefaultStory,
-  decorators: [withSurfaceVariantsLayout(), withTheme],
+  render: DebugStory,
+  decorators: [withTheme],
   parameters: {
     translations,
   },
@@ -75,6 +85,8 @@ export default meta;
 type Story<T extends BaseObject> = StoryObj<StoryProps<T>>;
 
 export const Default: Story<TestType> = {
+  render: DefaultStory,
+  decorators: [withSurfaceVariantsLayout(), withTheme],
   args: {
     schema: TestSchema,
     values: {
@@ -93,7 +105,7 @@ export const Organization: Story<Testing.Organization> = {
     schema: Testing.OrganizationSchema,
     values: {
       name: 'DXOS',
-      // website: 'https://dxos.org',
+      website: 'https://dxos.org',
     },
     readonly: false,
   },
@@ -104,7 +116,7 @@ export const OrganizationAutoSave: Story<Testing.Organization> = {
     schema: Testing.OrganizationSchema,
     values: {
       name: 'DXOS',
-      // website: 'https://dxos.org',
+      website: 'https://dxos.org',
     },
     autoSave: true,
     readonly: false,
@@ -123,10 +135,6 @@ export const OrganizationAutoSave: Story<Testing.Organization> = {
 //   },
 // };
 
-//
-// TODO(burdon): Move into separate storybook and use test types.
-//
-
 const ShapeSchema = Schema.Struct({
   shape: Schema.optional(
     Schema.Union(
@@ -144,66 +152,27 @@ const ShapeSchema = Schema.Struct({
 
 type ShapeType = Schema.Schema.Type<typeof ShapeSchema>;
 
-type DiscriminatedUnionStoryProps = FormProps<ShapeType>;
-
-const DiscriminatedUnionStory = ({ values: initialValues, readonly }: DiscriminatedUnionStoryProps) => {
-  const [values, setValues] = useState(initialValues);
-  const handleSave = useCallback<NonNullable<FormProps<ShapeType>['onSave']>>((values) => {
-    setValues(values);
-  }, []);
-
-  return (
-    <Form<ShapeType>
-      schema={ShapeSchema}
-      values={values}
-      onSave={handleSave}
-      Custom={{
-        ['shape.type' as const]: (props) => (
-          <SelectInput
-            {...props}
-            options={['circle', 'square'].map((value) => ({
-              value,
-              label: value,
-            }))}
-          />
-        ),
-      }}
-      readonly={readonly}
-    />
-    // <TestLayout json={{ values, schema: ShapeSchema.ast.toJSON() }}>
-    //   <TestPanel>
-    //     <Form<ShapeType>
-    //       schema={ShapeSchema}
-    //       values={values}
-    //       onSave={handleSave}
-    //       Custom={{
-    //         ['shape.type' as const]: (props) => (
-    //           <SelectInput
-    //             {...props}
-    //             options={['circle', 'square'].map((value) => ({
-    //               value,
-    //               label: value,
-    //             }))}
-    //           />
-    //         ),
-    //       }}
-    //       readonly={readonly}
-    //     />
-    //   </TestPanel>
-    // </TestLayout>
-  );
-};
-
-export const DiscriminatedShape: StoryObj<DiscriminatedUnionStoryProps> = {
-  render: DiscriminatedUnionStory,
+export const DiscriminatedShape: Story<ShapeType> = {
   args: {
+    schema: ShapeSchema,
+    readonly: false,
     values: {
       shape: {
         type: 'circle',
         radius: 5,
       },
     },
-    readonly: false,
+    Custom: {
+      ['shape.type' as const]: (props) => (
+        <SelectInput
+          {...props}
+          options={['circle', 'square'].map((value) => ({
+            value,
+            label: value,
+          }))}
+        />
+      ),
+    },
   },
 };
 
@@ -214,30 +183,14 @@ const ArraysSchema = Schema.Struct({
 
 type ArraysType = Schema.Schema.Type<typeof ArraysSchema>;
 
-const ArraysStory = ({ values: initialValues, readonly }: FormProps<ArraysType>) => {
-  const [values, setValues] = useState(initialValues);
-  const handleSave = useCallback<NonNullable<FormProps<ArraysType>['onSave']>>((values) => {
-    setValues(values);
-  }, []);
-
-  return (
-    <Form<ArraysType> schema={ArraysSchema} values={values} onSave={handleSave} readonly={readonly} />
-    // <TestLayout json={{ values, schema: ArraysSchema.ast.toJSON() }}>
-    //     <TestPanel>
-    //       <Form<ArraysType> schema={ArraysSchema} values={values} onSave={handleSave} readonly={readonly} />
-    //     </TestPanel>
-    //   </TestLayout>
-  );
-};
-
 export const Arrays: StoryObj<FormProps<ArraysType>> = {
-  render: ArraysStory,
   args: {
+    schema: ArraysSchema,
+    readonly: false,
     values: {
       names: ['Alice', 'Bob'],
       addresses: [],
     },
-    readonly: false,
   },
 };
 
@@ -249,29 +202,13 @@ const ColorSchema = Schema.Struct({
 
 type ColorType = Schema.Schema.Type<typeof ColorSchema>;
 
-const EnumStory = ({ values: initialValues, readonly }: FormProps<ColorType>) => {
-  const [values, setValues] = useState(initialValues);
-  const handleSave = useCallback<NonNullable<FormProps<ColorType>['onSave']>>((values) => {
-    setValues(values);
-  }, []);
-
-  return (
-    <Form<ColorType> schema={ColorSchema} values={values} onSave={handleSave} readonly={readonly} />
-    // <TestLayout json={{ values, schema: ColorSchema.ast.toJSON() }}>
-    //     <TestPanel>
-    //       <Form<ColorType> schema={ColorSchema} values={values} onSave={handleSave} readonly={readonly} />
-    //     </TestPanel>
-    //   </TestLayout>
-  );
-};
-
 export const Enum: StoryObj<FormProps<ColorType>> = {
-  render: EnumStory,
   args: {
+    schema: ColorSchema,
+    readonly: false,
     values: {
       color: 'red',
     },
-    readonly: false,
   },
 };
 
@@ -304,31 +241,26 @@ const RefStory = ({ values: initialValues, readonly }: FormProps<any>) => {
   }, []);
 
   return (
-    <Form
-      schema={RefSchema}
-      values={values}
-      onSave={handleSave}
-      onQueryRefOptions={onQueryRefOptions}
-      readonly={readonly}
-    />
-    // <TestLayout json={{ values, schema: RefSchema.ast.toJSON() }}>
-    //   <TestPanel>
-    //     <Form
-    //       schema={RefSchema}
-    //       values={values}
-    //       onSave={handleSave}
-    //       onQueryRefOptions={onQueryRefOptions}
-    //       readonly={readonly}
-    //     />
-    //   </TestPanel>
-    // </TestLayout>
+    <TestLayout json={{ values, schema: RefSchema.ast.toJSON() }}>
+      <TestPanel>
+        <Form
+          schema={RefSchema}
+          values={values}
+          readonly={readonly}
+          onSave={handleSave}
+          onQueryRefOptions={onQueryRefOptions}
+        />
+      </TestPanel>
+    </TestLayout>
   );
 };
 
 export const Refs: StoryObj<FormProps<ContactType>> = {
   render: RefStory,
   args: {
-    values: { refArray: [Ref.make(contact1), Ref.make(contact2)] } as any,
     readonly: false,
+    values: {
+      refArray: [Ref.make(contact1), Ref.make(contact2)],
+    } as any,
   },
 };
