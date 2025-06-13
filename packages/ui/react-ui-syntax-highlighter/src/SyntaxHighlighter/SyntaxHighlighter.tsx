@@ -38,7 +38,7 @@ export const SyntaxHighlighter = ({
 
   return (
     <NativeSyntaxHighlighter
-      className={mx('w-full p-0 bg-inputSurface', classNames)}
+      className={mx('w-full p-0 bg-inputSurface font-thin', classNames)}
       style={themeMode === 'dark' ? dark : light}
       {...props}
     >
