@@ -81,6 +81,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   const [filter, setFilter] = useState<Filter.Any>();
 
   const selection = useMemo(() => new SelectionModel(), []);
+
   const [model] = useState<SpaceGraphModel | undefined>(() => {
     if (showGraph) {
       return new SpaceGraphModel().setOptions({
@@ -170,11 +171,9 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     }
 
     if (spec) {
-      log.info('generating test data');
       const createObjects = createObjectFactory(space.db, generator);
       await createObjects(spec);
     } else {
-      log.info('adding test data');
       addTestData(space);
     }
   }, [space, generator, spec]);
