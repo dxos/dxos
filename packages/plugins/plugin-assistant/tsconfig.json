@@ -24,7 +24,13 @@
       "path": "../../common/context"
     },
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/invariant"
@@ -46,6 +52,18 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/artifact"
+    },
+    {
+      "path": "../../core/artifact-testing"
+    },
+    {
+      "path": "../../core/assistant"
     },
     {
       "path": "../../core/compute"
@@ -75,19 +93,16 @@
       "path": "../../core/mesh/edge-client"
     },
     {
-      "path": "../../experimental/artifact"
-    },
-    {
-      "path": "../../experimental/artifact-testing"
-    },
-    {
-      "path": "../../experimental/assistant"
+      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
@@ -120,7 +135,13 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-graph"
+    },
+    {
       "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-sfx"
@@ -144,6 +165,9 @@
       "path": "../plugin-deck"
     },
     {
+      "path": "../plugin-explorer"
+    },
+    {
       "path": "../plugin-graph"
     },
     {
@@ -154,6 +178,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-script"

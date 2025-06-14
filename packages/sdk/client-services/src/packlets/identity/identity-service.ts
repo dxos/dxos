@@ -49,7 +49,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
   }
 
   async createIdentity(request: CreateIdentityRequest): Promise<IdentityProto> {
-    await this._createIdentity({ displayName: request.profile?.displayName, deviceProfile: request.deviceProfile });
+    await this._createIdentity({ profile: request.profile, deviceProfile: request.deviceProfile });
     const dataSpaceManager = this._dataSpaceManagerProvider();
     await this._createDefaultSpace(dataSpaceManager);
     return this._getIdentity()!;

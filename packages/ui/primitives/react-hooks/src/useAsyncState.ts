@@ -13,13 +13,17 @@ export const useAsyncState = <T>(
 ): [T | undefined, Dispatch<SetStateAction<T | undefined>>] => {
   const [value, setValue] = useState<T | undefined>();
   useEffect(() => {
-    const t = setTimeout(async () => {
+    let disposed = false;
+    queueMicrotask(async () => {
       const data = await cb();
-      // TODO(dmaretskyi): Potential race condition here.
-      setValue(data);
+      if (!disposed) {
+        setValue(data);
+      }
     });
 
-    return () => clearTimeout(t);
+    return () => {
+      disposed = true;
+    };
   }, deps);
 
   return [value, setValue];

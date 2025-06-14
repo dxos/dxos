@@ -9,10 +9,12 @@ import { Resource } from '@dxos/context';
 import { type ObjectStructure } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import type { ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
+import { extractTextBlocks } from './text';
 import {
   type IndexQuery,
   staticImplements,
@@ -27,7 +29,7 @@ import {
 
 type OramaSchemaType = Orama.Orama<
   {
-    // TODO(mykola): Fix type to support full text search for documents.
+    chunks: 'string[]';
   },
   Orama.IIndex<Orama.components.index.Index>,
   Orama.IDocumentsStore<Orama.components.documentsStore.DocumentsStore>
@@ -45,7 +47,7 @@ export class IndexText extends Resource implements Index {
   override async _open() {
     this._orama = await Orama.create({
       schema: {
-        // TODO(mykola): Fix type to support full text search for documents.
+        chunks: 'string[]',
       },
     });
   }
@@ -56,7 +58,15 @@ export class IndexText extends Resource implements Index {
 
   @trace.span({ showInBrowserTimeline: true })
   async update(id: ObjectPointerEncoded, object: Partial<ObjectStructure>): Promise<boolean> {
-    throw new Error('Method not implemented.');
+    const blocks = extractTextBlocks(object);
+
+    invariant(this._orama, 'Index is not initialized');
+    await Orama.remove(this._orama, id);
+    await Orama.insert(this._orama, {
+      id,
+      chunks: blocks.map((block) => block.content),
+    });
+    return true;
   }
 
   async remove(id: ObjectPointerEncoded) {
@@ -66,7 +76,28 @@ export class IndexText extends Resource implements Index {
 
   @trace.span({ showInBrowserTimeline: true })
   async find(filter: IndexQuery): Promise<FindResult[]> {
-    throw new Error('Method not implemented.');
+    invariant(filter.typenames.length === 0, 'Typenames are not supported');
+    invariant(!filter.inverted, 'Inverted search is not supported');
+    invariant(!filter.graph, 'Graph search is not supported');
+    invariant(typeof filter.text?.query === 'string');
+    invariant(filter.text?.kind === 'text');
+
+    invariant(this._orama, 'Index is not initialized');
+    const results = await Orama.search(this._orama, {
+      mode: 'fulltext',
+      term: filter.text.query,
+
+      // TODO(dmaretskyi): Add a way to configure these.
+      limit: 10, // Defaults to `10`
+      offset: 0, // Defaults to `0`
+    });
+
+    log.info('Text search results', { query: filter.text.query, results });
+
+    return results.hits.map((hit) => ({
+      id: hit.id,
+      rank: hit.score,
+    })); // TODO(dmaretskyi): This re-runs all queries even if nothing changed.
   }
 
   @trace.span({ showInBrowserTimeline: true })

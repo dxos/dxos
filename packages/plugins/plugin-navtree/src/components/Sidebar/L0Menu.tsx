@@ -231,8 +231,8 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
           'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded',
           // TODO(burdon): Create reusable button/component and/or create var for size.
           pinned
-            ? 'bg-transparent w-[50px] p-2 group-hover/l0item:bg-groupSurface'
-            : 'bg-groupSurface w-[50px] h-[50px]',
+            ? 'bg-transparent w-[50px] p-2 group-hover/l0item:bg-activeSurface'
+            : 'bg-activeSurface w-[50px] h-[50px]',
         )}
         {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
       >
@@ -313,14 +313,13 @@ export type L0MenuProps = {
 
 export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountItem, parent, path }: L0MenuProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
-  const suppressNextTooltip = useRef(true);
 
   return (
     <Tabs.Tablist
       classNames={[
         'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg',
         'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] gap-1 contain-layout',
-        '!is-[--l0-size] bg-baseSurface border-ie border-separator app-drag pbe-[env(safe-area-inset-bottom)]',
+        '!is-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
       ]}
     >
       <div role='none' className='flex justify-center p-1'>
@@ -336,7 +335,6 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
                 label={t('app menu label')}
                 tooltipSide='right'
                 classNames='w-[50px] _bg-primary-500'
-                suppressNextTooltip={suppressNextTooltip}
                 data-testid='spacePlugin.addSpace'
               />
             </DropdownMenu.Trigger>

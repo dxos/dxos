@@ -60,6 +60,15 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/artifact"
+    },
+    {
+      "path": "../../core/assistant"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -72,13 +81,10 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../core/functions"
+    },
+    {
       "path": "../../core/protocols"
-    },
-    {
-      "path": "../../experimental/artifact"
-    },
-    {
-      "path": "../../experimental/assistant"
     },
     {
       "path": "../../sdk/app-framework"
@@ -138,9 +144,6 @@
       "path": "../plugin-markdown"
     },
     {
-      "path": "../plugin-meeting"
-    },
-    {
       "path": "../plugin-preview"
     },
     {
@@ -151,6 +154,9 @@
     },
     {
       "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-thread"
     }
   ]
 }

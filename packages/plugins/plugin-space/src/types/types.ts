@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
-import { type Expando, type BaseObject, type TypedObject } from '@dxos/echo-schema';
+import { Expando, type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
@@ -234,6 +234,21 @@ export namespace SpaceAction {
       id: Schema.String,
       subject: Schema.Array(Schema.String),
       object: EchoObjectSchema,
+    }),
+  }) {}
+
+  export class AddRelation extends Schema.TaggedClass<AddRelation>()(`${SPACE_ACTION}/add-relation`, {
+    input: Schema.Struct({
+      space: SpaceSchema,
+      // TODO(wittjosiah): Relation schema.
+      schema: Schema.Any,
+      source: Expando,
+      target: Expando,
+      // TODO(wittjosiah): Type based on relation schema.
+      fields: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+    }),
+    output: Schema.Struct({
+      relation: Schema.Any,
     }),
   }) {}
 

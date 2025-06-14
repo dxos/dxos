@@ -15,10 +15,12 @@ import {
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
+import { isInstanceOf, RelationSourceId } from '@dxos/echo-schema';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { ThreadAction } from '@dxos/plugin-thread/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { ThreadAction, ThreadType } from '@dxos/plugin-thread/types';
+import { Filter, fullyQualifiedId, getSpace, Query, useQuery } from '@dxos/react-client/echo';
 import { type DxGridElement, type DxGridPosition, type GridContentProps } from '@dxos/react-ui-grid';
+import { AnchoredTo } from '@dxos/schema';
 
 import { useSheetContext } from '../components';
 import { SHEET_PLUGIN } from '../meta';
@@ -77,23 +79,19 @@ export const useSelectThreadOnCellFocus = () => {
   const { model, cursor } = useSheetContext();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
-  const threads = useMemo(
-    () => model.sheet.threads?.filter((thread): thread is NonNullable<typeof thread> => !!thread) ?? [],
-    [
-      // TODO(thure): Surely we can find a better dependency for this…
-      JSON.stringify(model.sheet.threads),
-    ],
-  );
+  const space = getSpace(model.sheet);
+  const anchors = useQuery(space, Query.select(Filter.ids(model.sheet.id)).targetOf(AnchoredTo));
 
   const selectClosestThread = useCallback(
     (cellAddress: CellAddress) => {
-      if (!cellAddress || !threads) {
+      if (!cellAddress) {
         return;
       }
 
-      const closestThread = threads?.find((ref) => {
-        if (ref.target?.anchor) {
-          const range = parseThreadAnchorAsCellRange(ref.target!.anchor);
+      const closestThread = anchors.find((anchor) => {
+        const source = anchor[RelationSourceId];
+        if (anchor.anchor && isInstanceOf(ThreadType, source)) {
+          const range = parseThreadAnchorAsCellRange(anchor.anchor);
           return range ? inRange(range, cellAddress) : false;
         } else {
           return false;
@@ -109,7 +107,7 @@ export const useSelectThreadOnCellFocus = () => {
         void dispatch(intent);
       }
     },
-    [dispatch, threads],
+    [dispatch, anchors],
   );
 
   const debounced = useMemo(() => {

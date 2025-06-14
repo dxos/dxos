@@ -8,7 +8,7 @@ import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/a
 import { type AssociatedArtifact } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { makeRef, refFromDXN } from '@dxos/live-object';
+import { refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -22,7 +22,7 @@ export type ThreadContainerProps = {
   settings?: AssistantSettingsProps;
   part?: 'deck' | 'dialog';
   associatedArtifact?: AssociatedArtifact;
-} & Pick<ThreadProps, 'debug' | 'transcription' | 'onOpenChange'>;
+} & Pick<ThreadProps, 'debug' | 'transcription' | 'onOpenChange' | 'onAddToGraph'>;
 
 // TODO(burdon): Since this only wraps Thread, just separate out hook?
 export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
@@ -49,9 +49,8 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
       if (space && chat && message && dispatch && associatedArtifact) {
         void dispatch(
           createIntent(CollaborationActions.InsertContent, {
-            spaceId: space.id,
-            target: makeRef(associatedArtifact),
-            object: refFromDXN(new DXN(DXN.kind.QUEUE, [...chat.assistantChatQueue.dxn.parts, message.id])),
+            target: associatedArtifact,
+            object: refFromDXN(new DXN(DXN.kind.QUEUE, [...chat.queue.dxn.parts, message.id])),
             label: 'View proposal',
           }),
         );

@@ -53,7 +53,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.6.0",
+    "@preact/signals-core": "^1.9.0",
     "effect": "3.14.21",
     "hyperformula": "^2.7.1",
     "lodash.defaultsdeep": "^4.6.1"

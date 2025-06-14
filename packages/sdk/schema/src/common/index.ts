@@ -10,11 +10,13 @@ import * as Organization$ from './organization';
 import * as Person$ from './person';
 import * as PostalAddress$ from './postal-address';
 import * as Project$ from './project';
+import * as Relations$ from './relations';
 import * as Task$ from './task';
 import * as Text$ from './text';
 
 // TODO(burdon): Remove (fix The inferred type of 'DeleteMessage' cannot be named without a reference.)
 export * from './message';
+export * from './relations';
 export * from './task';
 
 // TODO(burdon): Replace instanceof checks.
@@ -116,5 +118,34 @@ export namespace DataType {
   export const Text = Text$.Text;
   export type Text = Text$.Text;
 
+  //
+  // Relations
+  //
+
+  export const Employer = Relations$.Employer;
+  export type Employer = Relations$.Employer;
+
+  export const HasConnection = Relations$.HasConnection;
+  export type HasConnection = Relations$.HasConnection;
+
+  export const HasRelationship = Relations$.HasRelationship;
+  export type HasRelationship = Relations$.HasRelationship;
+
   // TOOD(burdon): Move Thread from plugin-space?
 }
+
+export const DataTypes = [
+  // Objects
+  DataType.AccessToken,
+  DataType.Event,
+  DataType.Organization,
+  DataType.Person,
+  DataType.Project,
+  DataType.Task,
+  DataType.Text,
+
+  // Relations
+  DataType.Employer,
+  DataType.HasRelationship,
+  DataType.HasConnection,
+];

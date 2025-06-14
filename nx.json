@@ -47,6 +47,7 @@
         { "env": "DX_HOST" },
         { "env": "DX_PWA" },
         { "env": "NODE_ENV" },
+        { "env": "NODE_OPTIONS" },
         { "env": "REMOTE_SOURCE" },
         { "env": "DX_HUB_URL" },
         { "env": "LOG_FILTER" },

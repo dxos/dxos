@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo-db';
@@ -21,10 +21,10 @@ const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
 
 const ViewMetaSchema = Schema.Struct({
   name: Schema.String.annotations({
-    [SchemaAST.TitleAnnotationId]: 'View',
+    title: 'View',
   }),
   typename: Format.URL.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Typename',
+    title: 'Typename',
   }),
 }).pipe(Schema.mutable);
 
@@ -141,7 +141,7 @@ export const ViewEditor = ({
   );
 
   return (
-    <div role='none' className={mx('grid grid-rows-[1fr_1fr] min-bs-0', classNames)}>
+    <div role='none' className={mx('overflow-y-auto', classNames)}>
       <Form<ViewMetaType>
         autoSave
         schema={ViewMetaSchema}
@@ -240,13 +240,14 @@ export const ViewEditor = ({
       )}
 
       {!readonly && !field && (
-        <div className='flex p-2 justify-center'>
+        <div role='none' className='p-2'>
           <IconButton
             icon='ph--plus--regular'
             label={t('button add property')}
             onClick={immutable ? undefined : handleAdd}
             // TODO(burdon): Show field limit in ux (not tooltip).
             disabled={view.fields.length >= VIEW_FIELD_LIMIT}
+            classNames='flex is-full'
           />
         </div>
       )}

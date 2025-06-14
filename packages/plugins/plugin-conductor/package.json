@@ -33,6 +33,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/conductor": "workspace:*",
@@ -48,6 +49,7 @@
     "@dxos/react-ui-canvas-compute": "workspace:*",
     "@dxos/react-ui-canvas-editor": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
+    "@preact-signals/safe-react": "^0.9.0",
     "effect": "3.14.21"
   },
   "devDependencies": {

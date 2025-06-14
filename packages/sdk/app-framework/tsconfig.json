@@ -36,6 +36,12 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/artifact"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -43,9 +49,6 @@
     },
     {
       "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../../experimental/artifact"
     },
     {
       "path": "../../ui/primitives/react-hooks"
@@ -61,6 +64,9 @@
     },
     {
       "path": "../client-protocol"
+    },
+    {
+      "path": "../schema"
     }
   ],
   "ts-node": {

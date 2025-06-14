@@ -21,7 +21,7 @@ export const OrganizationCard = ({
       {image ? (
         <img className='aspect-video object-cover is-full bs-auto' src={image} alt={name} />
       ) : (
-        <div role='image' className='grid aspect-video place-items-center bg-input text-subdued'>
+        <div role='image' className='grid aspect-video place-items-center bg-inputSurface text-subdued'>
           <Icon icon='ph--building-office--regular' size={10} />
         </div>
       )}
@@ -29,7 +29,13 @@ export const OrganizationCard = ({
       {description && <p className={mx(previewProse, 'line-clamp-2')}>{description}</p>}
       {website && (
         <div role='none' className={previewChrome}>
-          <a className='dx-button dx-focus-ring gap-2' href={website} target='_blank' rel='noreferrer'>
+          <a
+            className='dx-button dx-focus-ring gap-2'
+            data-variant='ghost'
+            href={website}
+            target='_blank'
+            rel='noreferrer'
+          >
             <Icon icon='ph--link--regular' size={5} classNames='text-subdued' />
             <span className='grow'>{website}</span>
             <Icon icon='ph--arrow-square-out--regular' />

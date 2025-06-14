@@ -25,10 +25,14 @@ const IdentitySchema = Schema.Struct({
 
 const CLIENT_ACTION = `${CLIENT_PLUGIN}/action`;
 export namespace ClientAction {
+  const ProfileSchema = Schema.Struct({
+    displayName: Schema.optional(Schema.String),
+    avatarCid: Schema.optional(Schema.String),
+    data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  });
+
   export class CreateIdentity extends Schema.TaggedClass<CreateIdentity>()(`${CLIENT_ACTION}/create-identity`, {
-    input: Schema.Struct({
-      displayName: Schema.optional(Schema.String),
-    }),
+    input: ProfileSchema,
     output: IdentitySchema,
   }) {}
 
@@ -102,6 +106,11 @@ export type ClientPluginOptions = ClientOptions & {
    * Run after the client has been initialized.
    */
   onClientInitialized?: (context: PluginContext, client: Client) => MaybePromise<void>;
+
+  /**
+   * Called when spaces are ready.
+   */
+  onSpacesReady?: (context: PluginContext, client: Client) => MaybePromise<void>;
 
   /**
    * Called when the client is reset.

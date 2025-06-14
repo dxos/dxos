@@ -3,8 +3,9 @@
 //
 
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
+import { Match } from 'effect';
 
-import { Context, LifecycleState, Resource } from '@dxos/context';
+import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { DatabaseDirectory, isEncodedReference, ObjectStructure, type QueryAST } from '@dxos/echo-protocol';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -190,6 +191,10 @@ export class QueryExecutor extends Resource {
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const trace = ExecutionTrace.makeEmpty();
     for (const step of plan.steps) {
+      if (this._ctx.disposed) {
+        throw new ContextDisposedError();
+      }
+
       const result = await this._execStep(step, workingSet);
       workingSet = result.workingSet;
       trace.children.push(result.trace);
@@ -266,8 +271,16 @@ export class QueryExecutor extends Resource {
         break;
       }
       case 'IdSelector': {
-        // For object id filters, we select nothing as those are handled by the SpaceQuerySource.
-        // TODO(dmaretskyi): Implement this properly.
+        const beginLoad = performance.now();
+        const items = await Promise.all(
+          step.selector.objectIds.map((id) =>
+            this._loadFromDXN(DXN.fromLocalObjectId(id), { sourceSpaceId: step.spaces[0] }),
+          ),
+        );
+        trace.documentLoadTime += performance.now() - beginLoad;
+
+        workingSet.push(...items.filter(isNonNullable));
+        trace.objectCount = workingSet.length;
         break;
       }
       case 'TypeSelector': {
@@ -294,7 +307,33 @@ export class QueryExecutor extends Resource {
         break;
       }
       case 'TextSelector': {
-        // TODO(dmaretskyi): Implement this properly.
+        const beginIndexQuery = performance.now();
+        const indexHits = await this._indexer.execQuery({
+          typenames: [],
+          text: {
+            query: step.selector.text,
+            kind: Match.type<QueryPlan.TextSearchKind>().pipe(
+              Match.withReturnType<'text' | 'vector'>(),
+              Match.when('full-text', () => 'text'),
+              Match.when('vector', () => 'vector'),
+              Match.orElseAbsurd,
+            )(step.selector.searchKind),
+          },
+        });
+        trace.indexHits = +indexHits.length;
+        trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+        if (this._ctx.disposed) {
+          return { workingSet, trace };
+        }
+
+        const documentLoadStart = performance.now();
+        const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+        trace.documentsLoaded += results.length;
+        trace.documentLoadTime += performance.now() - documentLoadStart;
+
+        workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
+        trace.objectCount = workingSet.length;
         break;
       }
       default:
@@ -579,7 +618,7 @@ export class QueryExecutor extends Resource {
     }
 
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), link as AutomergeUrl);
-    const doc = handle.docSync();
+    const doc = handle.doc();
     if (!doc) {
       return null;
     }

@@ -14,13 +14,16 @@ import {
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { Input } from '@dxos/react-ui';
+import { DxRefTag } from '@dxos/lit-ui/react';
+import { Input, useTranslation } from '@dxos/react-ui';
 import { TagPicker, type TagPickerMode, type TagPickerItemData } from '@dxos/react-ui-tag-picker';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { TextInput } from './Defaults';
 import { InputHeader, type InputProps } from './Input';
 import { type QueryRefOptions, useQueryRefOptions } from '../../hooks';
+import { translationKey } from '../../translations';
 
 type RefFieldProps = InputProps & {
   ast?: SchemaAST.AST;
@@ -42,6 +45,7 @@ export const RefField = ({
   onValueChange,
   ...restInputProps
 }: RefFieldProps) => {
+  const { t } = useTranslation(translationKey);
   const refTypeInfo = useMemo(
     () => (ast ? findAnnotation<ReferenceAnnotationValue>(ast, ReferenceAnnotationId) : undefined),
     [ast],
@@ -127,7 +131,10 @@ export const RefField = ({
 
   const { status, error } = restInputProps.getStatus();
 
-  return (
+  const items = handleGetValue();
+
+  // NOTE(thure): I left both predicates in-place in case we decide to add variants which do render readonly but empty values.
+  return disabled && items.length < 1 ? null : (
     <Input.Root validationValence={status}>
       {!inputOnly && (
         <InputHeader error={error}>
@@ -135,14 +142,27 @@ export const RefField = ({
         </InputHeader>
       )}
       <div data-no-submit>
-        <TagPicker
-          items={handleGetValue()}
-          mode={tagPickerMode}
-          onBlur={(event) => onBlur(event as unknown as FocusEvent<HTMLElement>)}
-          onUpdate={handleUpdate}
-          onSearch={handleSearch}
-          classNames='rounded-sm bg-input p-1.5'
-        />
+        {disabled ? (
+          items.length < 1 ? (
+            <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
+          ) : (
+            items.map((item) => (
+              <DxRefTag key={item.id} refid={item.id} rootclassname='mie-1' style={{ marginInlineEnd: '.25rem' }}>
+                {item.label}
+              </DxRefTag>
+            ))
+          )
+        ) : (
+          <TagPicker
+            readonly={disabled}
+            items={items}
+            mode={tagPickerMode}
+            onBlur={(event) => onBlur(event as unknown as FocusEvent<HTMLElement>)}
+            onUpdate={handleUpdate}
+            onSearch={handleSearch}
+            classNames='rounded-sm bg-inputSurface p-1.5'
+          />
+        )}
       </div>
       {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>

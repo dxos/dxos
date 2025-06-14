@@ -13,19 +13,20 @@ import { clearUndefined, orderKeys } from '@dxos/util';
 
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
-  ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
-  ECHO_ANNOTATIONS_NS_KEY,
-  EntityKind,
-  EntityKindSchema,
-  getNormalizedEchoAnnotations,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
+  type TypeAnnotation,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
+} from '../ast';
+import { EntityKind, EntityKindSchema } from '../ast';
+import {
+  ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
+  ECHO_ANNOTATIONS_NS_KEY,
+  getNormalizedEchoAnnotations,
   type JsonSchemaEchoAnnotations,
   type JsonSchemaType,
-  type TypeAnnotation,
-} from '../ast';
+} from '../json-schema';
 import { Expando } from '../object';
 import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
 
@@ -73,14 +74,21 @@ export const toPropType = (type?: PropType): string => {
   }
 };
 
+const JSON_SCHEMA_URL = 'http://json-schema.org/draft-07/schema#';
+
 /**
  * Convert effect schema to JSON Schema.
  * @param schema
  */
 export const toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
   invariant(schema);
-  const schemaWithRefinements = Schema.make(withEchoRefinements(schema.ast, '#'));
-  let jsonSchema = JSONSchema.make(schemaWithRefinements) as JsonSchemaType;
+  const withRefinements = withEchoRefinements(schema.ast, '#');
+  let jsonSchema = JSONSchema.fromAST(withRefinements, {
+    definitions: {},
+  }) as JsonSchemaType;
+
+  jsonSchema.$schema = JSON_SCHEMA_URL;
+
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
     jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']);

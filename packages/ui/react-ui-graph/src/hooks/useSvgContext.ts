@@ -3,12 +3,17 @@
 //
 
 import { type ZoomTransform } from 'd3';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext } from 'react';
 import { type RefObject, createRef } from 'react';
 
 import { raise } from '@dxos/debug';
 
 import { EventEmitter, type Point, Scale, type Size } from '../util';
+
+export type SVGContextOptions = {
+  scale?: Scale;
+  centered?: boolean;
+};
 
 /**
  * Contains a reference to the root SVG element and objects and configuration required by child nodes.
@@ -16,15 +21,17 @@ import { EventEmitter, type Point, Scale, type Size } from '../util';
 export class SVGContext {
   private readonly _ref = createRef<SVGSVGElement>();
 
+  private _scale: Scale;
+  private _centered: boolean;
   private _size?: Size;
   private _center?: Point;
 
   readonly resized = new EventEmitter<SVGContext>();
 
-  constructor(
-    private readonly _scale: Scale = new Scale(),
-    private readonly _centered = true,
-  ) {}
+  constructor({ scale = new Scale(), centered = true }: SVGContextOptions) {
+    this._scale = scale;
+    this._centered = centered;
+  }
 
   get ref(): RefObject<SVGSVGElement> {
     return this._ref;
@@ -61,8 +68,9 @@ export class SVGContext {
   }
 
   setTransform(transform: ZoomTransform) {
-    this._scale.setTransform(transform);
-    this.resized.emit(this);
+    if (this._scale.setTransform(transform)) {
+      this.resized.emit(this);
+    }
   }
 
   /**
@@ -79,14 +87,6 @@ export class SVGContext {
 const SVGContextType = createContext<SVGContext | undefined>(undefined);
 
 export const SVGContextProvider = SVGContextType.Provider;
-
-/**
- * Create new context (as hook).
- */
-export const createSvgContext = (scale?: Scale, centered = true): SVGContext => {
-  const [context] = useState(new SVGContext(scale, centered));
-  return context;
-};
 
 /**
  * Get SVG context from the React context.

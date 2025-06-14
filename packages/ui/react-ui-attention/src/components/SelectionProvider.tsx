@@ -3,11 +3,12 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
+import { Match } from 'effect';
 import React, { useCallback, useMemo, type PropsWithChildren } from 'react';
 
 import { useDefaultValue } from '@dxos/react-ui';
 
-import { SelectionManager } from '../selection';
+import { defaultSelection, SelectionManager, type Selection, type SelectionMode } from '../selection';
 
 const SELECTION_NAME = 'Selection';
 
@@ -22,7 +23,6 @@ const [SelectionContextProvider, useSelectionContext] = createContext<SelectionC
 /**
  * Manages selection state across the app for multiple contexts.
  */
-// TODO(burdon): Review/remove this.
 // TODO(burdon): When is the selection removed?
 export const SelectionProvider = ({
   children,
@@ -32,25 +32,61 @@ export const SelectionProvider = ({
   return <SelectionContextProvider selection={selection}>{children}</SelectionContextProvider>;
 };
 
-const emptySet = new Set<string>();
-
-// TODO(burdon): Return array?
-export const useSelectedItems = (contextId?: string): Set<string> => {
+export const useSelected = <T extends SelectionMode>(
+  contextId?: string,
+  mode: T = 'multi' as T,
+): T extends 'single'
+  ? string | undefined
+  : T extends 'multi'
+    ? string[]
+    : T extends 'range'
+      ? { from: string; to: string } | undefined
+      : T extends 'multi-range'
+        ? { from: string; to: string }[]
+        : never => {
   const { selection } = useSelectionContext(SELECTION_NAME);
-  return contextId ? selection.getSelection(contextId) : emptySet;
+  if (contextId) {
+    return selection.getSelected(contextId, mode);
+  }
+
+  return Match.type<Selection>().pipe(
+    Match.when({ mode: 'single' }, (s) => s.id),
+    Match.when({ mode: 'multi' }, (s) => s.ids),
+    Match.when({ mode: 'range' }, (s) => (s.from && s.to ? { from: s.from, to: s.to } : undefined)),
+    Match.when({ mode: 'multi-range' }, (s) => s.ranges),
+    Match.exhaustive,
+  )(defaultSelection(mode)) as any;
 };
 
 /**
  * Provides functions to manage the selection state for multiple contexts.
  */
-export const useSelectionActions = (contextIds: string[]) => {
-  const stableContextIds = useMemo(() => contextIds, [JSON.stringify(contextIds)]);
+export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 'multi') => {
+  const stableContextIds = useMemo(() => contextIds, [JSON.stringify(contextIds)]); // TODO(burdon): Avoid stringify.
   const { selection } = useSelectionContext(SELECTION_NAME);
 
-  const select = useCallback(
+  const singleSelect = useCallback(
+    (id: string) => {
+      for (const contextId of stableContextIds) {
+        selection.updateSingle(contextId, id);
+      }
+    },
+    [selection, stableContextIds],
+  );
+
+  const multiSelect = useCallback(
     (ids: string[]) => {
       for (const contextId of stableContextIds) {
-        selection.updateSelection(contextId, ids);
+        selection.updateMulti(contextId, ids);
+      }
+    },
+    [selection, stableContextIds],
+  );
+
+  const rangeSelect = useCallback(
+    (from: string, to: string) => {
+      for (const contextId of stableContextIds) {
+        selection.updateRange(contextId, from, to);
       }
     },
     [selection, stableContextIds],
@@ -71,5 +107,5 @@ export const useSelectionActions = (contextIds: string[]) => {
     }
   }, [selection, stableContextIds]);
 
-  return { select, toggle, clear };
+  return { singleSelect, multiSelect, rangeSelect, toggle, clear };
 };

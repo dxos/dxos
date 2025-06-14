@@ -15,7 +15,7 @@ export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${WELCOME_PLUGIN}/welcome`,
-      role: 'main',
+      role: 'dialog',
       filter: (data): data is any => data.component === WELCOME_SCREEN,
       component: () => {
         const client = useClient();

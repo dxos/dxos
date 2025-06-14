@@ -8,4 +8,6 @@ export { type ProxyTarget } from './echo-proxy-target';
 export * from './util';
 export * from './clone';
 export * from './edit-history';
+export * from './relations';
 export * from './version';
+export * from './relations';

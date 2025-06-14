@@ -22,9 +22,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/context"
     },
     {
@@ -38,6 +35,9 @@
     },
     {
       "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/local-storage"
     },
     {
       "path": "../../common/log"
@@ -58,6 +58,15 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/artifact"
+    },
+    {
+      "path": "../../core/assistant"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -70,19 +79,13 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../core/functions"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/protocols"
-    },
-    {
-      "path": "../../devtools/devtools"
-    },
-    {
-      "path": "../../experimental/artifact"
-    },
-    {
-      "path": "../../experimental/assistant"
     },
     {
       "path": "../../sdk/app-framework"
@@ -106,13 +109,10 @@
       "path": "../../ui/react-ui-components"
     },
     {
-      "path": "../../ui/react-ui-dnd"
-    },
-    {
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-sfx"
+      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-stack"
@@ -140,6 +140,15 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-thread"
+    },
+    {
+      "path": "../plugin-transcription"
     }
   ]
 }

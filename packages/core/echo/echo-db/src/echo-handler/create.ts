@@ -31,7 +31,8 @@ import { ObjectInternals, type ProxyTarget, symbolInternals, symbolNamespace, sy
 import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
-export type AnyLiveObject<T extends BaseObject> = Live<T> & BaseEchoObject;
+// TODO(burdon): Any shouldn't be generic (use namespace).
+export type AnyLiveObject<T extends BaseObject = any> = Live<T> & BaseEchoObject;
 
 /**
  * @returns True if `value` is a reactive object with an EchoHandler backend.

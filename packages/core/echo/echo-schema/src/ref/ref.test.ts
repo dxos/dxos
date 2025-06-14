@@ -8,8 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { DXN, ObjectId } from '@dxos/keys';
 
 import { Ref } from './ref';
-import { EchoObject } from '../ast';
-import { create } from '../object';
+import { EchoObject, create } from '../object';
 import { getDXN } from '../types';
 
 const Task = Schema.Struct({

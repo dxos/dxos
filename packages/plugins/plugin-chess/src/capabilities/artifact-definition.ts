@@ -5,8 +5,9 @@
 import { Chess } from 'chess.js';
 import { pipe, Schema } from 'effect';
 
+import { defineTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { ArtifactId, defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
+import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { createArtifactElement, VersionPin } from '@dxos/assistant';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -79,7 +80,7 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const game = await extensions.space.db
-            .query({ id: ArtifactId.toDXN(id, extensions.space.id).toString() })
+            .query(Filter.ids(ArtifactId.toDXN(id, extensions.space.id).toString()))
             .first();
           invariant(isInstanceOf(ChessType, game));
 
@@ -100,7 +101,7 @@ export default () => {
         execute: async ({ id, move }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const game = await extensions.space.db
-            .query({ id: ArtifactId.toDXN(id, extensions.space.id).toString() })
+            .query(Filter.ids(ArtifactId.toDXN(id, extensions.space.id).toString()))
             .first();
           invariant(isInstanceOf(ChessType, game));
 

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { signal } from '@preact/signals-core';
+
 import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { QueueImpl, type Queue } from '@dxos/echo-db';
@@ -52,7 +54,7 @@ export class TranscriptionManager extends Resource {
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
   private _queue?: Queue<DataType.Message> = undefined;
-  private _enabled = false;
+  private _enabled = signal(false);
 
   constructor(options: TranscriptionManagerOptions) {
     super();
@@ -66,6 +68,11 @@ export class TranscriptionManager extends Resource {
 
   protected override async _close() {
     void this._transcriber?.close();
+  }
+
+  /** @reactive */
+  get enabled() {
+    return this._enabled.value;
   }
 
   setQueue(queueDxn: DXN): TranscriptionManager {
@@ -84,7 +91,7 @@ export class TranscriptionManager extends Resource {
   }
 
   setRecording(recording?: boolean): TranscriptionManager {
-    if (!this.isOpen || !this._enabled) {
+    if (!this.isOpen || !this._enabled.value) {
       return this;
     }
 
@@ -102,11 +109,11 @@ export class TranscriptionManager extends Resource {
    */
   @synchronized
   async setEnabled(enabled?: boolean) {
-    if (this._enabled === enabled) {
+    if (this._enabled.value === enabled) {
       return;
     }
 
-    this._enabled = enabled ?? false;
+    this._enabled.value = enabled ?? false;
     // TODO(burdon): Why is toggle called here?
     this.isOpen && (await this._toggleTranscriber());
   }
@@ -126,7 +133,7 @@ export class TranscriptionManager extends Resource {
     await this._maybeReinitTranscriber();
 
     // Open or close transcriber if transcription is enabled or disabled.
-    if (this._enabled) {
+    if (this._enabled.value) {
       await this._transcriber?.open();
       // TODO(burdon): Started and stopped blocks appear twice.
       const block = create(DataType.Message, {
@@ -147,7 +154,7 @@ export class TranscriptionManager extends Resource {
   }
 
   private async _maybeReinitTranscriber() {
-    if (!this._audioStreamTrack || !this._enabled) {
+    if (!this._audioStreamTrack || !this._enabled.value) {
       return;
     }
 
@@ -156,7 +163,7 @@ export class TranscriptionManager extends Resource {
     if (this._audioStreamTrack !== this._mediaRecorder?.mediaStreamTrack) {
       this._mediaRecorder = new MediaStreamRecorder({
         mediaStreamTrack: this._audioStreamTrack,
-        interval: RECORD_INTERVAL,
+        config: { interval: RECORD_INTERVAL },
       });
       needReinit = true;
     }

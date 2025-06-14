@@ -83,7 +83,7 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
     >
       {item.id === currentItemId && (
         <>
-          <h2 className='flex items-center border-be border-separator app-drag pli-1'>
+          <h2 className='flex items-center border-be border-subduedSeparator app-drag pli-1'>
             {backCapable ? (
               <TitleButton title={title} onClick={handleBack} />
             ) : (

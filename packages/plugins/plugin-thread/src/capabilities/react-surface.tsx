@@ -4,54 +4,66 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useLayout } from '@dxos/app-framework';
-import { type Ref } from '@dxos/echo-schema';
-import { DXN } from '@dxos/keys';
+import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { isInstanceOf, type Ref } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
-import { ChannelType, type ThreadType } from '@dxos/plugin-space/types';
-import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
+import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
-import { ChatContainer, ThreadComplementary, ThreadSettings } from '../components';
+import { ThreadCapabilities } from './capabilities';
+import {
+  CallSidebar,
+  CallDebugPanel,
+  ChannelContainer,
+  ThreadComplementary,
+  ThreadSettings,
+  ChatContainer,
+} from '../components';
 import { THREAD_PLUGIN } from '../meta';
-import { type ThreadSettingsProps } from '../types';
+import { ChannelType, ThreadType, type ThreadSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${THREAD_PLUGIN}/channel`,
       role: 'article',
-      filter: (data): data is { subject: ChannelType } => data.subject instanceof ChannelType,
-      component: ({ data: { subject: channel }, role }) => {
-        const layout = useLayout();
-        const currentPosition = layout.active.findIndex((id) => id === channel.id);
-        const objectToTheLeft = layout.active[currentPosition - 1];
-        const context = currentPosition > 0 ? getSpace(channel)?.db.getObjectById(objectToTheLeft) : undefined;
+      filter: (data): data is { subject: ChannelType } => isInstanceOf(ChannelType, data.subject),
+      component: ({ data: { subject: channel }, role }) => <ChannelContainer channel={channel} role={role} />,
+    }),
+    createSurface({
+      id: `${THREAD_PLUGIN}/chat-companion`,
+      role: 'article',
+      filter: (data): data is { companionTo: ChannelType; subject: 'chat' } =>
+        isInstanceOf(ChannelType, data.companionTo) && data.subject === 'chat',
+      component: ({ data: { companionTo: channel } }) => {
         const space = getSpace(channel);
-        if (!space) {
+        const thread = channel.defaultThread.target;
+        if (!space || !thread) {
           return null;
         }
 
-        return <ChatContainer space={space} dxn={channel.queue.dxn} context={context} />;
+        return <ChatContainer thread={thread} space={space} />;
+      },
+    }),
+    createSurface({
+      id: `${THREAD_PLUGIN}/thread`,
+      role: 'article',
+      filter: (data): data is { subject: ThreadType } => isInstanceOf(ThreadType, data.subject),
+      component: ({ data: { subject: thread } }) => {
+        const space = getSpace(thread);
+        if (!space || !thread) {
+          return null;
+        }
+
+        return <ChatContainer thread={thread} space={space} />;
       },
     }),
     createSurface({
       id: `${THREAD_PLUGIN}/comments`,
       role: 'article',
       filter: (data): data is { companionTo: { threads: Ref<ThreadType>[] } } =>
-        data.subject === 'comments' &&
-        !!data.companionTo &&
-        typeof data.companionTo === 'object' &&
-        'threads' in data.companionTo &&
-        Array.isArray(data.companionTo.threads),
+        data.subject === 'comments' && isEchoObject(data.companionTo),
       // TODO(wittjosiah): This isn't scrolling properly in a plank.
       component: ({ data }) => <ThreadComplementary subject={data.companionTo} />,
-    }),
-    createSurface({
-      id: `${THREAD_PLUGIN}/tabpanel`,
-      role: 'tabpanel',
-      filter: (data): data is { subject: DXN; space: Space } =>
-        data.subject instanceof DXN && data.type === 'chat' && isSpace(data.space),
-      component: ({ data: { subject: dxn, space } }) => <ChatContainer dxn={dxn} space={space} />,
     }),
     createSurface({
       id: `${THREAD_PLUGIN}/plugin-settings`,
@@ -59,5 +71,18 @@ export default () =>
       filter: (data): data is { subject: SettingsStore<ThreadSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === THREAD_PLUGIN,
       component: ({ data: { subject } }) => <ThreadSettings settings={subject.value} />,
+    }),
+    createSurface({
+      id: `${THREAD_PLUGIN}/assistant`,
+      role: 'deck-companion--active-call',
+      component: () => <CallSidebar />,
+    }),
+    createSurface({
+      id: `${THREAD_PLUGIN}/devtools-overview`,
+      role: 'devtools-overview',
+      component: () => {
+        const call = useCapability(ThreadCapabilities.CallManager);
+        return <CallDebugPanel state={call.state} />;
+      },
     }),
   ]);

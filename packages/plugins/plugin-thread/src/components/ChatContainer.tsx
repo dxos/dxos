@@ -4,23 +4,29 @@
 
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { create } from '@dxos/echo-schema';
-import { type DXN } from '@dxos/keys';
-import { makeRef } from '@dxos/live-object';
-import { type Space, useMembers, useQueue } from '@dxos/react-client/echo';
+import { live, makeRef } from '@dxos/live-object';
+import { type AnyLiveObject, fullyQualifiedId, type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
-import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
+import {
+  MessageTextbox,
+  type MessageTextboxProps,
+  Thread,
+  ThreadFooter,
+  threadLayout,
+  type ThreadProps,
+} from '@dxos/react-ui-thread';
 import { DataType } from '@dxos/schema';
+import { isNonNullable } from '@dxos/util';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
-import { type ThreadContainerProps } from './types';
 import { useStatus } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
+import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
 
 export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
@@ -35,16 +41,17 @@ export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
   );
 };
 
-export type ChatContainerProps = Omit<ThreadContainerProps, 'thread'> & {
+export type ChatContainerProps = {
   space: Space;
-  dxn: DXN;
-};
+  thread: ThreadType;
+  context?: AnyLiveObject<any>;
+  autoFocusTextbox?: boolean;
+} & Pick<ThreadProps, 'current'>;
 
-export const ChatContainer = ({ space, dxn, context, current, autoFocusTextbox }: ChatContainerProps) => {
-  const id = dxn.toString();
+export const ChatContainer = ({ space, thread, context, current, autoFocusTextbox }: ChatContainerProps) => {
+  const id = fullyQualifiedId(thread);
   const identity = useIdentity()!;
   const members = useMembers(space?.key);
-  const queue = useQueue<DataType.Message>(dxn, { pollInterval: 1_000 });
   const activity = useStatus(space, id);
   const { t } = useTranslation(THREAD_PLUGIN);
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
@@ -79,18 +86,20 @@ export const ChatContainer = ({ space, dxn, context, current, autoFocusTextbox }
 
   // TODO(burdon): Change to model.
   const handleCreate: MessageTextboxProps['onSend'] = () => {
-    if (!messageRef.current?.length || !queue) {
+    if (!messageRef.current?.length) {
       return false;
     }
 
-    queue.append([
-      create(DataType.Message, {
-        sender: { identityDid: identity.did },
-        created: new Date().toISOString(),
-        blocks: [{ type: 'text', text: messageRef.current }],
-        properties: context ? { context: makeRef(context) } : undefined,
-      }),
-    ]);
+    thread.messages.push(
+      makeRef(
+        live(DataType.Message, {
+          sender: { identityDid: identity.did },
+          created: new Date().toISOString(),
+          blocks: [{ type: 'text', text: messageRef.current }],
+          properties: context ? { context: makeRef(context) } : undefined,
+        }),
+      ),
+    );
 
     messageRef.current = '';
     setAutoFocus(true);
@@ -108,9 +117,12 @@ export const ChatContainer = ({ space, dxn, context, current, autoFocusTextbox }
       <ScrollArea.Root classNames='col-span-2'>
         <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px after:-mbs-px [&>div]:min-bs-full [&>div]:!grid [&>div]:grid-rows-[1fr_0]'>
           <div role='none' className={mx(threadLayout, 'place-self-end')}>
-            {(queue?.items ?? []).map((message) => (
-              <MessageContainer key={message.id} message={message} members={members} />
-            ))}
+            {thread.messages
+              .map((message) => message.target)
+              .filter(isNonNullable)
+              .map((message) => (
+                <MessageContainer key={message.id} message={message} members={members} />
+              ))}
           </div>
           {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
           <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />

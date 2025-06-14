@@ -21,6 +21,12 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../core/artifact"
+    },
+    {
+      "path": "../../core/assistant"
+    },
+    {
       "path": "../../core/conductor"
     },
     {
@@ -34,12 +40,6 @@
     },
     {
       "path": "../../sdk/app-framework"
-    },
-    {
-      "path": "../artifact"
-    },
-    {
-      "path": "../assistant"
     }
   ]
 }

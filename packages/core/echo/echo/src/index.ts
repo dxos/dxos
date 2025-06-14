@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-export { Format, FormatEnum } from '@dxos/echo-schema';
-export { DXN } from '@dxos/keys';
+export * as Type from './Type';
+export * as Obj from './Obj';
+export * as Relation from './Relation';
+export * as Ref from './Ref';
 
-export * from './type';
+export { type Live } from '@dxos/live-object';
+export { Filter, Query } from '@dxos/echo-schema';

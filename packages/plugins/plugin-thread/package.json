@@ -15,16 +15,16 @@
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./types": {
-      "types": "./dist/types/src/types.d.ts",
-      "browser": "./dist/lib/browser/types.mjs",
-      "node": "./dist/lib/node-esm/types.mjs"
+      "types": "./dist/types/src/types/index.d.ts",
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "types": [
-        "dist/types/src/types.d.ts"
+        "dist/types/src/types/index.d.ts"
       ]
     }
   },
@@ -38,6 +38,9 @@
     "@codemirror/view": "^6.34.1",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/devtools": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
@@ -53,21 +56,32 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-sfx": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/react-ui-thread": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.6.0",
+    "@peermetrics/webrtc-stats": "5.7.1",
+    "@preact-signals/safe-react": "^0.9.0",
+    "@preact/signals-core": "^1.9.0",
     "date-fns": "^3.3.1",
-    "lodash.get": "^4.4.2"
+    "extendable-media-recorder": "^9.2.19",
+    "extendable-media-recorder-wav-encoder": "^7.0.123",
+    "md5-hex": "5.0.0",
+    "react-resize-detector": "^12.0.2",
+    "wavefile": "^11.0.0"
   },
   "devDependencies": {
+    "@dxos/plugin-theme": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
@@ -75,7 +89,6 @@
     "@effect-rx/rx-react": "^0.34.1",
     "@effect/platform": "0.80.12",
     "@phosphor-icons/react": "^2.1.5",
-    "@types/lodash.get": "^4.4.7",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "effect": "3.14.21",

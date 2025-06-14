@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 
-import { Format, Type } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { type StoredSchema, TypedObject } from '@dxos/echo-schema';
 import { createStoredSchema, type Live } from '@dxos/live-object';
 
 import { createView, type ViewType } from '../view';
@@ -18,11 +18,11 @@ export class TestSchema extends TypedObject({
   name: Schema.optional(
     Schema.String.pipe(
       Schema.annotations({
-        [SchemaAST.DescriptionAnnotationId]: 'Full name.',
+        description: 'Full name.',
       }),
     ),
   ),
-  email: Format.Email.pipe(Schema.optional),
+  email: Type.Format.Email.pipe(Schema.optional),
   // TODO(burdon): Define transforms for objects?
   // address: Schema.optional(
   //   Schema.Struct({
@@ -31,7 +31,7 @@ export class TestSchema extends TypedObject({
   //       Schema.String.pipe(
   //         Schema.pattern(/^[0-9]{5}(?:-[0-9]{4})?$/),
   //         Schema.annotations({
-  //           [SchemaAST.DescriptionAnnotationId]: 'ZIP code.',
+  //           description: 'ZIP code.',
   //         }),
   //       ),
   //     ),
@@ -43,7 +43,7 @@ export class TestSchema extends TypedObject({
 
 export type TestType = Schema.Schema.Type<typeof TestSchema>;
 
-export const testSchema: Live<Type.StoredType> = createStoredSchema(
+export const testSchema: Live<StoredSchema> = createStoredSchema(
   {
     typename: 'example.com/type/Test',
     version: '0.1.0',

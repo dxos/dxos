@@ -4,7 +4,7 @@
 
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { Schema } from 'effect';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test, type TestContext } from 'vitest';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
@@ -12,14 +12,14 @@ import { Expando, RelationSourceId, RelationTargetId, TypedObject, Ref } from '@
 import { Testing } from '@dxos/echo-schema/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live, getMeta } from '@dxos/live-object';
+import { live, getMeta, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { Filter, Query } from './api';
-import { type AnyLiveObject, getObjectCore } from '../echo-handler';
+import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
 
@@ -115,7 +115,7 @@ describe('Queries', () => {
 
     test('options', async () => {
       {
-        const { objects } = await db.query({ label: 'red' }).run();
+        const { objects } = await db.query(Query.select(Filter.type(Expando, { label: 'red' }))).run();
         expect(objects).to.have.length(3);
         for (const object of objects) {
           db.remove(object);
@@ -124,23 +124,27 @@ describe('Queries', () => {
       }
 
       {
-        const { objects } = await db.query().run();
+        const { objects } = await db.query(Query.select(Filter.everything())).run();
         expect(objects).to.have.length(7);
       }
 
       {
-        const { objects } = await db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED }).run();
+        const { objects } = await db
+          .query(Query.select(Filter.everything()), { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED })
+          .run();
         expect(objects).to.have.length(7);
       }
 
       {
-        const { objects } = await db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED }).run();
+        const { objects } = await db
+          .query(Query.select(Filter.everything()), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED })
+          .run();
         expect(objects).to.have.length(10);
       }
 
       {
         const { objects } = await db
-          .query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY })
+          .query(Query.select(Filter.everything()), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY })
           .run();
         expect(objects).to.have.length(3);
       }
@@ -158,18 +162,18 @@ describe('Queries', () => {
 
     let root: AutomergeUrl;
     {
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       const db = await peer.createDatabase(spaceKey);
       await createObjects(peer, db, { count: 3 });
 
-      expect((await db.query().run()).objects.length).to.eq(3);
+      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(3);
       root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url;
     }
 
     {
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       const db = await peer.openDatabase(spaceKey, root);
-      expect((await db.query().run()).objects.length).to.eq(3);
+      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(3);
     }
   });
 
@@ -185,11 +189,11 @@ describe('Queries', () => {
     let root: AutomergeUrl;
     let expectedObjectId: string;
     {
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
-      expect((await db.query().run()).objects.length).to.eq(2);
+      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
       rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
@@ -200,9 +204,9 @@ describe('Queries', () => {
     }
 
     {
-      const peer = await builder.createPeer(kv);
+      const peer = await builder.createPeer({ kv });
       const db = await peer.openDatabase(spaceKey, root);
-      const queryResult = (await db.query().run()).objects;
+      const queryResult = (await db.query(Query.select(Filter.everything())).run()).objects;
       expect(queryResult.length).to.eq(1);
       expect(queryResult[0].id).to.eq(expectedObjectId);
     }
@@ -223,7 +227,7 @@ describe('Queries', () => {
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
-      expect((await db.query().run()).objects.length).to.eq(2);
+      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
       anotherDocHandle.change((doc: DatabaseDirectory) => {
@@ -243,7 +247,7 @@ describe('Queries', () => {
 
     {
       const db = await peer.openDatabase(spaceKey, root);
-      const queryResult = (await db.query().run()).objects;
+      const queryResult = (await db.query(Query.select(Filter.everything())).run()).objects;
       expect(queryResult.length).to.eq(2);
       const object = queryResult.find((o) => o.id === assertion.objectId)!;
       expect(getObjectCore(object).docHandle!.url).to.eq(assertion.documentUrl);
@@ -260,13 +264,13 @@ describe('Queries', () => {
       await builder.close();
     });
 
-    const peer = await builder.createPeer(kv);
+    const peer = await builder.createPeer({ kv });
     const db = await peer.createDatabase(spaceKey);
     const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
     db.remove(obj2);
 
-    const queryResult = (await db.query().run()).objects;
+    const queryResult = (await db.query(Query.select(Filter.everything())).run()).objects;
     expect(queryResult.length).to.eq(1);
     expect(queryResult[0].id).to.eq(obj1.id);
   });
@@ -286,7 +290,7 @@ describe('Queries', () => {
     const obj2Core = getObjectCore(obj1);
     obj2Core.docHandle!.delete(); // Deleted handle access throws an exception.
 
-    await expect(db.query().run()).rejects.toBeInstanceOf(Error);
+    await expect(db.query(Query.select(Filter.everything())).run()).rejects.toBeInstanceOf(Error);
   });
 
   test('query objects with different versions', async () => {
@@ -379,18 +383,20 @@ describe('Queries', () => {
   describe('traversals', () => {
     let db: EchoDatabase;
 
+    let alice: Live<Testing.Contact>, bob: Live<Testing.Contact>;
+
     beforeEach(async () => {
       const { db: db1, graph } = await builder.createDatabase();
       db = db1;
       graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager, Testing.Task]);
 
       // TODO(dmaretskyi): Better test data.
-      const alice = db.add(
+      alice = db.add(
         live(Testing.Contact, {
           name: 'Alice',
         }),
       );
-      const bob = db.add(
+      bob = db.add(
         live(Testing.Contact, {
           name: 'Bob',
         }),
@@ -454,34 +460,105 @@ describe('Queries', () => {
         { title: 'Task 2' },
       ]);
     });
+
+    test('traverse query started from id', async () => {
+      const { objects } = await db.query(Query.select(Filter.ids(bob.id)).sourceOf(Testing.HasManager).target()).run();
+
+      expect(objects).toMatchObject([{ name: 'Alice' }]);
+    });
+  });
+
+  describe('text search', () => {
+    beforeEach(async () => {});
+
+    test.skipIf(process.env.CI)('vector', async () => {
+      const { db, graph } = await builder.createDatabase({ indexing: { vector: true } });
+      graph.schemaRegistry.addSchema([Testing.Task]);
+
+      db.add(live(Testing.Task, { title: 'apples' }));
+      db.add(live(Testing.Task, { title: 'giraffes' }));
+
+      await db.flush({ indexes: true });
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('apples', { type: 'vector' }))).run();
+        expect(objects[0].title).toEqual('apples');
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('giraffes', { type: 'vector' }))).run();
+        expect(objects[0].title).toEqual('giraffes');
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('vegetable', { type: 'vector' }))).run();
+        expect(objects[0].title).toEqual('apples');
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('animal', { type: 'vector' }))).run();
+        expect(objects[0].title).toEqual('giraffes');
+      }
+    });
+
+    // TODO(wittjosiah): Currently disabled by default because it's expensive.
+    test.skip('full-text', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.schemaRegistry.addSchema([Testing.Task]);
+
+      db.add(live(Testing.Task, { title: 'apples' }));
+      db.add(live(Testing.Task, { title: 'giraffes' }));
+
+      await db.flush({ indexes: true });
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('apples', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('apples');
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('giraffes', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('giraffes');
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('vegetable', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(0);
+      }
+
+      {
+        const { objects } = await db.query(Query.select(Filter.text('animal', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(0);
+      }
+    });
   });
 });
 
-// TODO(wittjosiah): 2/3 of these tests fail. They reproduce issues that we want to fix.
 describe('Query reactivity', () => {
-  let builder: EchoTestBuilder;
-  let db: EchoDatabase;
-  let objects: AnyLiveObject<any>[];
+  const setup = async (ctx: TestContext) => {
+    const builder = await new EchoTestBuilder().open();
+    const { db } = await builder.createDatabase();
 
-  beforeAll(async () => {
-    builder = await new EchoTestBuilder().open();
-    ({ db } = await builder.createDatabase());
-
-    objects = range(3).map((idx) => createTestObject(idx, 'red'));
+    const objects = range(3).map((idx) => createTestObject(idx, 'red'));
     for (const object of objects) {
       db.add(object);
     }
 
     await db.flush();
-  });
 
-  afterAll(async () => {
-    await builder.close();
-  });
+    ctx.onTestFinished(async () => {
+      await builder.close();
+    });
 
-  // TODO(dmaretskyi): Fires twice.
-  test.skip('fires only once when new objects are added', async () => {
-    const query = db.query({ label: 'red' });
+    return { builder, db, objects };
+  };
+
+  test('fires only once when new objects are added', async (ctx) => {
+    const { db } = await setup(ctx);
+    const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
+    expect(query.runSync()).to.have.length(3);
 
     let count = 0;
     let lastResult;
@@ -492,36 +569,44 @@ describe('Query reactivity', () => {
     expect(count).to.equal(0);
 
     db.add(createTestObject(3, 'red'));
-    await db.flush({ updates: true });
-    expect(count).to.be.greaterThan(1);
+    await db.flush({ updates: true, indexes: true });
+    expect(count).to.equal(1);
     expect(lastResult).to.have.length(4);
   });
 
-  test.skip('fires only once when objects are removed', async () => {
-    const query = db.query({ label: 'red' });
-    expect(query.objects).to.have.length(3);
+  test('fires only once when objects are removed', async (ctx) => {
+    const { db, objects } = await setup(ctx);
+    const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
+    expect(query.runSync()).to.have.length(3);
+
     let count = 0;
     query.subscribe(() => {
+      console.log('query.objects', query.objects);
       count++;
       expect(query.objects).to.have.length(2);
     });
     db.remove(objects[0]);
-    await sleep(10);
+    await db.flush({ updates: true, indexes: true });
     expect(count).to.equal(1);
   });
 
-  test.skip('does not fire on object updates', async () => {
-    const query = db.query({ label: 'red' });
-    expect(query.objects).to.have.length(3);
+  test('does not fire on object updates', async (ctx) => {
+    const { db, objects } = await setup(ctx);
+    const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
+    expect(query.runSync()).to.have.length(3);
+
+    let updateCount = 0;
     query.subscribe(() => {
-      throw new Error('Should not be called.');
+      updateCount++;
     });
     objects[0].title = 'Task 0a';
     await sleep(10);
+    expect(updateCount).to.equal(0);
   });
 
-  test('can unsubscribe and resubscribe', async () => {
-    const query = db.query({ label: 'red' });
+  test('can unsubscribe and resubscribe', async (ctx) => {
+    const { db } = await setup(ctx);
+    const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
 
     let count = 0;
     let lastCount = 0;
@@ -561,6 +646,27 @@ describe('Query reactivity', () => {
       lastCount = count;
       expect(lastResult).to.have.length(6);
     }
+  });
+
+  test('multiple queries do not influence each other', async (ctx) => {
+    const { db } = await setup(ctx);
+    const query1 = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
+    const query2 = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
+
+    let count1 = 0;
+    let count2 = 0;
+    query1.subscribe(() => {
+      count1++;
+    });
+    query2.subscribe(() => {
+      count2++;
+    });
+
+    db.add(createTestObject(6, 'red'));
+    await db.flush({ updates: true, indexes: true });
+
+    expect(count1).toEqual(1);
+    expect(count2).toEqual(1);
   });
 });
 
@@ -642,7 +748,7 @@ test('map over refs in query result', async () => {
     folder.objects.push(Ref.make(object));
   }
 
-  const queryResult = await db.query({ name: 'folder' }).run();
+  const queryResult = await db.query(Filter.type(Expando, { name: 'folder' })).run();
   const result = queryResult.objects.flatMap(({ objects }) => objects.map((o: Ref<any>) => o.target));
 
   for (const i in objects) {

@@ -8,14 +8,14 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Schema } from 'effect';
 import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
-import { getSchemaTypename, getTypename } from '@dxos/echo-schema';
-import { createGraph } from '@dxos/graph';
+import { getSchemaTypename, getTypename, Filter } from '@dxos/echo-schema';
 import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { createGraph } from '@dxos/schema';
 import { createObjectFactory, Testing, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -51,11 +51,11 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
 
     // Load objects.
     const t = setTimeout(async () => {
-      const { objects } = await space.db
-        .query((object: Live<any>) => types.some((type) => type.typename === getTypename(object)))
-        .run();
+      const { objects } = await space.db.query(Filter.everything()).run();
 
-      const model = await doLayout(createGraph(objects));
+      const model = await doLayout(
+        createGraph(objects.filter((object: Live<any>) => types.some((type) => type.typename === getTypename(object)))),
+      );
       setGraph(model);
     });
 

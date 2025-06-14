@@ -10,7 +10,7 @@ import { getTypeAnnotation, EchoSchema, getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { live, isLiveObject, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
-import { range } from '@dxos/util';
+import { entries, range } from '@dxos/util';
 
 import { type TestSchemaType } from './data';
 import {
@@ -23,6 +23,7 @@ import {
 
 /**
  * Typed object generator.
+ * @deprecated
  */
 export class TestObjectGenerator<T extends string = TestSchemaType> {
   // prettier-ignore
@@ -57,6 +58,11 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
 
   // TODO(burdon): Based on dependencies (e.g., organization before contact).
   async createObjects(map: Partial<Record<T, number>>) {
+    const results: Live<any>[] = [];
+    for (const [type, count] of entries(map)) {
+      results.push(...(await Promise.all(range(count ?? 0, () => this.createObject({ types: [type as T] })))));
+    }
+
     const tasks = Object.entries<number>(map as any)
       .map(([type, count]) => {
         return range(count, () => this.createObject({ types: [type as T] }));
@@ -79,7 +85,8 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   ) {
     super(schemaMap, generators, async (type: T) => {
       const schema = this.getSchema(type);
-      return (schema && (await this._space.db.query(Filter.type(schema)).run()).objects) ?? [];
+      const { objects } = await this._space.db.query(schema ? Filter.type(schema) : Filter.nothing()).run();
+      return objects;
     });
   }
 

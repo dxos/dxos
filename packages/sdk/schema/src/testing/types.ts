@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 
-import { Format, Type } from '@dxos/echo';
-import { FieldLookupAnnotationId, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { FieldLookupAnnotationId, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo-schema';
 
-import { IconAnnotationId } from '../annotations';
+import { IconAnnotation } from '../annotations';
 
 /**
  * @deprecated
@@ -23,7 +23,7 @@ export namespace Testing {
     name: Schema.String,
     content: Schema.String,
   }).pipe(
-    Type.def({
+    Type.Obj({
       typename: 'dxos.org/example/Document',
       version: '0.1.0',
     }),
@@ -37,32 +37,24 @@ export namespace Testing {
 
   export const OrganizationSchema = Schema.Struct({
     id: Type.ObjectId,
-    name: Schema.String.annotations({
-      [GeneratorAnnotationId]: 'company.name',
-    }),
+    name: Schema.String.pipe(GeneratorAnnotation.set('company.name')),
     description: Schema.optional(Schema.String),
     image: Schema.optional(
-      Format.URL.annotations({
-        [SchemaAST.TitleAnnotationId]: 'Preview image',
-        [GeneratorAnnotationId]: 'image.url',
-      }),
+      Type.Format.URL.pipe(Schema.annotations({ title: 'Preview image' }), GeneratorAnnotation.set('image.url')),
     ),
     website: Schema.optional(
-      Format.URL.annotations({
-        [SchemaAST.TitleAnnotationId]: 'Website',
-        [GeneratorAnnotationId]: 'internet.url',
-      }),
+      Type.Format.URL.pipe(Schema.annotations({ title: 'Website' }), GeneratorAnnotation.set('internet.url')),
     ),
-  }).annotations({
-    [SchemaAST.TitleAnnotationId]: 'Organization',
-    [LabelAnnotationId]: 'name',
-    [IconAnnotationId]: 'ph--building--regular',
-  });
+  }).pipe(
+    Schema.annotations({ title: 'Organization' }),
+    LabelAnnotation.set(['name']),
+    IconAnnotation.set('ph--building--regular'),
+  );
 
   // export type OrgSchemaType = Schema.Schema.Type<typeof OrgSchema>;
 
   export const Organization = OrganizationSchema.pipe(
-    Type.def({
+    Type.Obj({
       typename: 'example.com/type/Organization',
       version: '0.1.0',
     }),
@@ -90,16 +82,11 @@ export namespace Testing {
 
   export const ContactSchema = Schema.Struct({
     id: Type.ObjectId,
-    name: Schema.String.annotations({
-      [GeneratorAnnotationId]: 'person.fullName',
-    }),
+    name: Schema.String.pipe(GeneratorAnnotation.set('person.fullName')),
     image: Schema.optional(
-      Format.URL.annotations({
-        [SchemaAST.TitleAnnotationId]: 'Preview image',
-        [GeneratorAnnotationId]: 'image.url',
-      }),
+      Type.Format.URL.pipe(Schema.annotations({ title: 'Preview image' }), GeneratorAnnotation.set('image.url')),
     ),
-    email: Schema.optional(Format.Email.annotations({ [GeneratorAnnotationId]: 'internet.email' })),
+    email: Schema.optional(Type.Format.Email.pipe(GeneratorAnnotation.set('internet.email'))),
     organization: Schema.optional(
       Type.Ref(Organization).annotations({
         [FieldLookupAnnotationId]: 'name',
@@ -107,16 +94,16 @@ export namespace Testing {
     ),
     // TODO(burdon): This breaks the table view.
     // address: Schema.optional(AddressSchema),
-  }).annotations({
-    [SchemaAST.TitleAnnotationId]: 'Contact',
-    [LabelAnnotationId]: 'name',
-    [IconAnnotationId]: 'ph--user--regular',
-  });
+  }).pipe(
+    Schema.annotations({ title: 'Contact' }),
+    LabelAnnotation.set(['name']),
+    IconAnnotation.set('ph--user--regular'),
+  );
 
   // export type ContactSchemaType = Schema.Schema.Type<typeof ContactSchema>;
 
   export const Contact = ContactSchema.pipe(
-    Type.def({
+    Type.Obj({
       typename: 'example.com/type/Contact',
       version: '0.1.0',
     }),
@@ -130,19 +117,19 @@ export namespace Testing {
 
   export const ProjectSchema = Schema.Struct({
     id: Type.ObjectId,
-    name: Schema.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
+    name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName')),
     description: Schema.optional(Schema.String),
-    image: Schema.optional(Format.URL.annotations({ [GeneratorAnnotationId]: 'image.url' })),
-  }).annotations({
-    [SchemaAST.TitleAnnotationId]: 'Project',
-    [LabelAnnotationId]: 'name',
-    [IconAnnotationId]: 'ph--kanban--regular',
-  });
+    image: Schema.optional(Type.Format.URL.pipe(GeneratorAnnotation.set('image.url'))),
+  }).pipe(
+    Schema.annotations({ title: 'Project' }),
+    LabelAnnotation.set(['name']),
+    IconAnnotation.set('ph--kanban--regular'),
+  );
 
   // export type ProjectSchemaType = Schema.Schema.Type<typeof ProjectSchema>;
 
   export const Project = ProjectSchema.pipe(
-    Type.def({
+    Type.Obj({
       typename: 'example.com/type/Project',
       version: '0.1.0',
     }),
@@ -158,15 +145,12 @@ export namespace Testing {
     created: Schema.String,
     title: Schema.String,
     content: Schema.String,
-  }).annotations({
-    [SchemaAST.TitleAnnotationId]: 'Message',
-    [LabelAnnotationId]: 'title',
-  });
+  }).pipe(Schema.annotations({ title: 'Message' }), LabelAnnotation.set(['name']));
 
   // export type MessageSchemaType = Schema.Schema.Type<typeof MessageSchema>;
 
   export const Message = MessageSchema.pipe(
-    Type.def({
+    Type.Obj({
       typename: 'example.com/type/Message',
       version: '0.1.0',
     }),

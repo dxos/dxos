@@ -2,16 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 import { useEffect, useMemo, useState } from 'react';
 
-import { AIServiceEdgeClient } from '@dxos/assistant';
-import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
+import { AIServiceEdgeClient } from '@dxos/ai';
+import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
+import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { Type } from '@dxos/echo';
 import { create, createQueueDxn, ObjectId } from '@dxos/echo-schema';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -19,20 +21,18 @@ import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
 
-import { processTranscriptMessage } from '../entity-extraction';
-
 // TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
 export const TestItem = Schema.Struct({
   title: Schema.String.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Title',
-    [SchemaAST.DescriptionAnnotationId]: 'Product title',
+    title: 'Title',
+    description: 'Product title',
   }),
   description: Schema.String.annotations({
-    [SchemaAST.TitleAnnotationId]: 'Description',
-    [SchemaAST.DescriptionAnnotationId]: 'Product description',
+    title: 'Description',
+    description: 'Product description',
   }),
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Test',
     version: '0.1.0',
   }),
@@ -100,6 +100,8 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
   });
 
+  executor = new FunctionExecutor(new ServiceContainer().setServices({ ai: { client: this.aiService } }));
+
   space: Space | undefined;
   currentMessage: number = 0;
   transcriptMessages: DataType.Message[] = [];
@@ -127,11 +129,9 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     this.currentMessage = this.currentMessage % this.transcriptMessages.length;
 
     const { message: enhancedMessage } = await processTranscriptMessage({
-      message,
-      aiService: this.aiService,
-      context: {
-        objects,
-      },
+      input: { message },
+      executor: this.executor,
+      function: extractionAnthropicFn,
     });
 
     return enhancedMessage;

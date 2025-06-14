@@ -4,6 +4,15 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@dxos/storybook-utils": [
+        "packages/common/storybook-utils/src/index.ts"
+      ],
+      "@dxos/artifact-testing": [
+        "packages/core/artifact-testing/src/index.ts"
+      ],
+      "@dxos/assistant": [
+        "packages/core/assistant/src/index.ts"
+      ],
       "@dxos/compute": [
         "packages/core/compute/src/index.ts"
       ],
@@ -27,15 +36,6 @@
       ],
       "@dxos/devtools": [
         "packages/devtools/devtools/src/index.ts"
-      ],
-      "@dxos/artifact-testing": [
-        "packages/experimental/artifact-testing/src/index.ts"
-      ],
-      "@dxos/assistant": [
-        "packages/experimental/assistant/src/index.ts"
-      ],
-      "@dxos/assistant/testing": [
-        "packages/experimental/assistant/src/testing/index.ts"
       ],
       "@dxos/plugin-assistant": [
         "packages/plugins/plugin-assistant/src/index.ts"
@@ -157,6 +157,12 @@
       "@dxos/plugin-outliner/types": [
         "packages/plugins/plugin-outliner/src/types/index.ts"
       ],
+      "@dxos/plugin-outliner-deprecated": [
+        "packages/plugins/plugin-outliner-deprecated/src/index.ts"
+      ],
+      "@dxos/plugin-outliner-deprecated/types": [
+        "packages/plugins/plugin-outliner-deprecated/src/types/index.ts"
+      ],
       "@dxos/plugin-presenter": [
         "packages/plugins/plugin-presenter/src/index.ts"
       ],
@@ -236,7 +242,7 @@
         "packages/plugins/plugin-thread/src/index.ts"
       ],
       "@dxos/plugin-thread/types": [
-        "packages/plugins/plugin-thread/src/types.ts"
+        "packages/plugins/plugin-thread/src/types/index.ts"
       ],
       "@dxos/plugin-token-manager": [
         "packages/plugins/plugin-token-manager/src/index.ts"
@@ -285,6 +291,9 @@
       ],
       "@dxos/react-ui": [
         "packages/ui/react-ui/src/index.ts"
+      ],
+      "@dxos/react-ui/testing": [
+        "packages/ui/react-ui/src/testing/index.ts"
       ],
       "@dxos/react-ui-attention": [
         "packages/ui/react-ui-attention/src/index.ts"

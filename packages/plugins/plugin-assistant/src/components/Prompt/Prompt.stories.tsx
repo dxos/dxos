@@ -7,17 +7,65 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
+import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { log } from '@dxos/log';
+import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Prompt } from './Prompt';
-import { PromptBar } from './PromptBar';
+import { PromptBar, type PromptBarProps } from './PromptBar';
 import type { ReferenceData } from './references';
 import translations from '../../translations';
 
+const references: ReferenceData[] = [
+  {
+    uri: 'dxn:echo:@:AAAAAAAA',
+    label: 'Meeting Notes',
+  },
+  {
+    uri: 'dxn:echo:@:BBBBBBBB',
+    label: 'Project Plan',
+  },
+  {
+    uri: 'dxn:echo:@:CCCCCCCC',
+    label: 'Meeting Plan',
+  },
+];
+
+const DefaultStory = (props: PromptBarProps) => {
+  const [processing, setProcessing] = useState(false);
+  useEffect(() => {
+    let t: NodeJS.Timeout;
+    if (processing) {
+      t = setTimeout(() => setProcessing(false), 10_000);
+    }
+    return () => clearTimeout(t);
+  }, [processing]);
+
+  return (
+    <PromptBar
+      classNames='w-[25rem] p-1 overflow-hidden border border-gray-200 rounded'
+      microphone
+      processing={processing}
+      onSubmit={() => setProcessing(true)}
+      onCancel={() => setProcessing(false)}
+      {...props}
+    />
+  );
+};
+
 const meta: Meta<typeof Prompt> = {
-  title: 'plugins/plugin-automation/Prompt',
+  title: 'plugins/plugin-assistant/Prompt',
   component: Prompt,
-  decorators: [withTheme, withLayout()],
+  render: DefaultStory,
+  decorators: [
+    withPluginManager({
+      plugins: [IntentPlugin(), SettingsPlugin(), TranscriptionPlugin()],
+    }),
+    withTheme,
+    withLayout(),
+  ],
   parameters: {
     layout: 'centered',
     translations,
@@ -26,14 +74,14 @@ const meta: Meta<typeof Prompt> = {
 
 export default meta;
 
-type Story = StoryObj<typeof Prompt>;
+type Story = StoryObj<typeof DefaultStory>;
 
-export const Default: Story = {
+export const Default: Story = {};
+
+export const WithSuggestions: Story = {
   args: {
-    classNames: 'w-96 p-4 rounded outline outline-gray-200',
-    autoFocus: true,
     onSubmit: (text) => {
-      console.log('onEnter', text);
+      log('onSubmit', { text });
     },
     onSuggest: (text) => {
       const trimmed = text.trim().toLowerCase();
@@ -54,60 +102,19 @@ export const Default: Story = {
   },
 };
 
-export const Toolbar: Story = {
-  render: (args) => {
-    const [processing, setProcessing] = useState(false);
-    useEffect(() => {
-      let t: NodeJS.Timeout;
-      if (processing) {
-        t = setTimeout(() => setProcessing(false), 10_000);
-      }
-      return () => clearTimeout(t);
-    }, [processing]);
-    console.log('processing', processing);
-
-    return (
-      <PromptBar
-        classNames='w-[25rem] p-1 overflow-hidden border border-gray-200 rounded'
-        microphone
-        processing={processing}
-        onSubmit={() => setProcessing(true)}
-        onCancel={() => setProcessing(false)}
-        {...args}
-      />
-    );
-  },
-};
-
-export const Includes: Story = {
+export const WithReferences: Story = {
   args: {
-    classNames: 'w-96 p-4 rounded outline outline-gray-200',
     references: {
       getReferences: async ({ query }) => {
         const res = references.filter((i) => i.label.toLowerCase().startsWith(query.toLowerCase()));
-        console.log('getReferences', { query, res });
+        log('getReferences', { query, res });
         return res;
       },
       resolveReference: async ({ uri }) => {
         const res = references.find((i) => i.uri === uri);
-        console.log('resolveReference', { uri, res });
+        log('resolveReference', { uri, res });
         return res ?? null;
       },
     },
   },
 };
-
-const references: ReferenceData[] = [
-  {
-    uri: 'dxn:echo:@:AAAAAAAA',
-    label: 'Meeting Notes',
-  },
-  {
-    uri: 'dxn:echo:@:BBBBBBBB',
-    label: 'Project Plan',
-  },
-  {
-    uri: 'dxn:echo:@:CCCCCCCC',
-    label: 'Meeting Plan',
-  },
-];

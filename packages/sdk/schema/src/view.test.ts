@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST, String, pipe } from 'effect';
+import { Schema, String, pipe } from 'effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Format, Ref } from '@dxos/echo';
+import { Type, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { getTypename, toJsonSchema } from '@dxos/echo-schema';
 import { live, createStoredSchema } from '@dxos/live-object';
@@ -70,9 +70,9 @@ describe('View', () => {
       },
       toJsonSchema(
         Schema.Struct({
-          name: Schema.optional(Schema.String).annotations({ [SchemaAST.TitleAnnotationId]: 'Name' }),
-          email: Schema.optional(Format.Email),
-          salary: Schema.optional(Format.Currency({ code: 'usd', decimals: 2 })),
+          name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
+          email: Schema.optional(Type.Format.Email),
+          salary: Schema.optional(Type.Format.Currency({ code: 'usd', decimals: 2 })),
         }),
       ),
     );

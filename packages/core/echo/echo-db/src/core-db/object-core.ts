@@ -17,7 +17,7 @@ import {
   type DatabaseDirectory,
 } from '@dxos/echo-protocol';
 import { ObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -137,7 +137,15 @@ export class ObjectCore {
   }
 
   getDoc() {
-    return this.doc ?? this.docHandle?.doc() ?? failedInvariant('Invalid state');
+    if (this.doc) {
+      return this.doc;
+    }
+
+    if (this.docHandle) {
+      return this.docHandle.doc();
+    }
+
+    throw new Error('Invalid ObjectCore state');
   }
 
   getObjectStructure(): ObjectStructure {

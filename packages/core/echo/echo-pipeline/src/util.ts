@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { decodeReference, type ObjectStructure, type DatabaseDirectory } from '@dxos/echo-protocol';
+import { decodeReference, ObjectStructure, type DatabaseDirectory } from '@dxos/echo-protocol';
 
 /**
  * Assumes properties are at root.
@@ -13,7 +13,8 @@ export const findInlineObjectOfType = (
 ): [string, ObjectStructure] | undefined => {
   for (const id in spaceDoc.objects ?? {}) {
     const obj = spaceDoc.objects![id];
-    if (obj.system.type && decodeReference(obj.system.type).objectId === typename) {
+    const objType = ObjectStructure.getTypeReference(obj);
+    if (objType && decodeReference(objType).objectId === typename) {
       return [id, obj];
     }
   }

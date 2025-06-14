@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
-import { toEffectSchema } from '@dxos/echo-schema';
+import { Filter, toEffectSchema } from '@dxos/echo-schema';
 import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
@@ -18,10 +18,10 @@ import { getTypename, type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { initializeTable, TableType } from '@dxos/react-ui-table';
-import { Testing } from '@dxos/schema/testing';
+import { DataType } from '@dxos/schema';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
-import { type ObjectGenerator, createGenerator, staticGenerators } from './ObjectGenerator';
+import { createGenerator, staticGenerators, type ObjectGenerator } from './ObjectGenerator';
 import { SchemaTable } from './SchemaTable';
 import { presets } from './presets';
 
@@ -34,7 +34,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const staticTypes = [DocumentType, DiagramType, SheetType, ComputeGraph]; // TODO(burdon): Make extensible.
-  const mutableTypes = [Testing.Organization, Testing.Project, Testing.Contact, Testing.Message];
+  const mutableTypes = [DataType.Organization, DataType.Project, DataType.Person, DataType.Message];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
 
@@ -55,7 +55,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
     const staticSchema = space.db.graph.schemaRegistry.schemas;
 
     // Create object map.
-    const { objects } = await space.db.query().run();
+    const { objects } = await space.db.query(Filter.everything()).run();
     const objectMap = sortKeys(
       objects.reduce<Record<string, number>>((map, obj) => {
         const type = getTypename(obj);

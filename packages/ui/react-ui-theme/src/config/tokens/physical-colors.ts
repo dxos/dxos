@@ -58,7 +58,10 @@ export const huePalettes = {
 };
 
 /**
- * The keyPoint represents the LCH value (Lightness: 0-1, Chroma: 0-1, Hue: 0-360 [0=Red, 120=Green, 240=Blue]).
+ * The keyPoint represents the LCH value:
+ * - Lightness: 0-1, should usually set the keyPoint at or near 0.5
+ * - Chroma: min 0, max 0.08–0.5 depending on hue and gamut, theme will clamp final value to within gamut’s range
+ * - Hue: 0-360 (~26 “red”, ~141 “green”, ~262 “blue”)
  *
  * NOTE: Rebuild the theme and restart the dev server to see changes.
  *
@@ -71,7 +74,7 @@ export const huePalettes = {
  */
 const systemPalettes = {
   neutral: {
-    keyPoint: [0, 0.01, 260],
+    keyPoint: [0.5, 0.001, 260],
     lowerCp: 0,
     upperCp: 0,
     torsion: 0,
@@ -99,14 +102,22 @@ const physicalSeries = {
 
 export const physicalColors: ColorsPhysicalLayer = {
   namespace: 'dx-',
-  conditions: {
-    srgb: [':root'],
-    p3: ['@media (color-gamut: p3)', ':root'],
-    rec2020: ['@media (color-gamut: rec2020)', ':root'],
+  definitions: {
+    // @ts-ignore
+    series: physicalSeries,
+    accompanyingSeries: { reflectiveRelation },
   },
-  series: Object.entries(physicalSeries).reduce((acc: ColorsPhysicalLayer['series'], [id, arc]) => {
+  conditions: {
+    srgb: [':root, .dark'],
+    p3: ['@media (color-gamut: p3)', ':root, .dark'],
+    rec2020: ['@media (color-gamut: rec2020)', ':root, .dark'],
+  },
+  series: Object.entries(physicalSeries).reduce((acc: ColorsPhysicalLayer['series'], [id]) => {
     acc[id] = gamuts.reduce((acc: PhysicalSeries<Gamut & string, HelicalArcSeries>, gamut) => {
-      acc[gamut] = { ...arc, physicalValueRelation: reflectiveRelation };
+      acc[gamut] = {
+        extends: id,
+        physicalValueRelation: { extends: 'reflectiveRelation' },
+      };
       return acc;
     }, {});
     return acc;

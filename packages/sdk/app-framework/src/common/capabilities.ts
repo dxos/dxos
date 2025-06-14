@@ -6,10 +6,12 @@ import { type Registry } from '@effect-rx/rx-react';
 import { type Schema } from 'effect';
 import { type FC, type PropsWithChildren } from 'react';
 
+import { type Tool } from '@dxos/ai';
 import { type GraphBuilder, type BuilderExtensions } from '@dxos/app-graph';
-import { type ArtifactDefinition, type Tool } from '@dxos/artifact';
+import { type ArtifactDefinition } from '@dxos/artifact';
 import { type Space } from '@dxos/client-protocol';
 import { type RootSettingsStore } from '@dxos/local-storage';
+import { type AnchoredTo } from '@dxos/schema';
 
 import { type FileInfo } from './file';
 import { type NodeSerializer } from './graph';
@@ -101,4 +103,10 @@ export namespace Capabilities {
 
   export type FileUploader = (file: File, space: Space) => Promise<FileInfo | undefined>;
   export const FileUploader = defineCapability<FileUploader>('dxos.org/app-framework/capability/file-uploader');
+
+  type AnchorSort = {
+    key: string;
+    sort: (anchorA: AnchoredTo, anchorB: AnchoredTo) => number;
+  };
+  export const AnchorSort = defineCapability<AnchorSort>('dxos.org/app-framework/capability/anchor-sort');
 }

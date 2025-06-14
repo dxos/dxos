@@ -4,8 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Tool, Message } from '@dxos/artifact';
-import { type GenerationStreamEvent } from '@dxos/assistant';
+import { type GenerationStreamEvent, Message, Tool } from '@dxos/ai';
 import { ObjectId } from '@dxos/echo-schema';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../types';
@@ -32,9 +31,7 @@ export const QueueOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Messag
 // Function
 //
 
-export const FunctionInput = Schema.Struct({
-  [DEFAULT_INPUT]: Schema.Any,
-});
+export const FunctionInput = Schema.Struct({ [DEFAULT_INPUT]: Schema.Any });
 export type FunctionInput = Schema.Schema.Type<typeof FunctionInput>;
 
 export const TemplateInput = Schema.Record({ key: Schema.String, value: Schema.Any });

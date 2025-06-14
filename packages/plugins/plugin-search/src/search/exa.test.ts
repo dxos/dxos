@@ -4,14 +4,13 @@
 
 import { describe, test } from 'vitest';
 
-import { AIServiceEdgeClient, OllamaClient } from '@dxos/assistant';
-import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
+import { AIServiceEdgeClient, OllamaClient } from '@dxos/ai';
+import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 import { Testing } from '@dxos/schema/testing';
 
 import { search } from './exa';
 
-const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 const REMOTE_AI = true;
 
 const aiService = REMOTE_AI

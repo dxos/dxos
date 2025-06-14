@@ -2,77 +2,54 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EditorState, type Extension, StateField } from '@codemirror/state';
-import { Decoration, EditorView } from '@codemirror/view';
+import { type Extension, RangeSetBuilder } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { isNotFalsy } from '@dxos/util';
-
-import { Cursor } from '../util';
-
-type Annotation = {
-  cursor: string;
-};
+const annotationMark = Decoration.mark({ class: 'cm-annotation' });
 
 export type AnnotationOptions = {
   match?: RegExp; // TODO(burdon): Update via hook (e.g., for search).
 };
 
-const annotationMark = Decoration.mark({ class: 'cm-annotation' });
-
-export const annotations = (options: AnnotationOptions = {}): Extension => {
-  // TODO(burdon): Build index of matches and cursors (in background function).
-  //  Define annotation action in prompt. E.g., extract company names. Find links, etc.
-  //  Show popover card. A16Z chain demo. Identify, extract, research, link. Multi-agent.
-  const match = (state: EditorState) => {
-    const annotations: Annotation[] = [];
-    const text = state.doc.toString();
-    if (options.match) {
-      const matches = text.matchAll(options.match);
-      for (const match of matches) {
-        const from = match.index!;
-        const to = from + match[0].length;
-        const cursor = Cursor.getCursorFromRange(state, { from, to });
-        annotations.push({ cursor });
-      }
-    }
-
-    return annotations;
-  };
-
-  const annotationsState = StateField.define<Annotation[]>({
-    create: (state) => {
-      return match(state);
-    },
-    update: (value, tr) => {
-      if (!tr.changes.empty) {
-        return match(tr.state);
-      }
-
-      return value;
-    },
-  });
-
+/**
+ *
+ */
+export const annotations = ({ match }: AnnotationOptions = {}): Extension => {
   return [
-    annotationsState,
-    EditorView.decorations.compute([annotationsState], (state) => {
-      const annotations = state.field(annotationsState);
-      const decorations = annotations
-        .map((annotation) => {
-          const range = Cursor.getRangeFromCursor(state, annotation.cursor);
-          return range && annotationMark.range(range.from, range.to);
-        })
-        .filter(isNotFalsy);
+    ViewPlugin.fromClass(
+      class {
+        decorations: DecorationSet = Decoration.none;
+        update(update: ViewUpdate) {
+          const builder = new RangeSetBuilder<Decoration>();
+          if (match) {
+            // Only process visible lines.
+            const { from, to } = update.view.viewport;
+            const text = update.state.doc.sliceString(from, to);
+            const matches = text.matchAll(match);
+            for (const m of matches) {
+              if (m.index !== undefined) {
+                // Adjust match position relative to viewport.
+                const start = from + m.index;
+                const end = start + m[0].length;
+                builder.add(start, end, annotationMark);
+              }
+            }
+          }
 
-      return Decoration.set(decorations);
+          this.decorations = builder.finish();
+        }
+      },
+      {
+        decorations: (v) => v.decorations,
+      },
+    ),
+
+    EditorView.theme({
+      '.cm-annotation': {
+        textDecoration: 'underline',
+        textDecorationStyle: 'wavy',
+        textDecorationColor: 'var(--dx-errorText)',
+      },
     }),
-    styles,
   ];
 };
-
-const styles = EditorView.theme({
-  '.cm-annotation': {
-    textDecoration: 'underline',
-    textDecorationStyle: 'wavy',
-    textDecorationColor: 'var(--dx-error)',
-  },
-});

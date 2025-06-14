@@ -17,7 +17,7 @@ import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
-import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
 import { DataServiceImpl } from './data-service';
@@ -38,15 +38,30 @@ import {
   type RootDocumentSpaceKeyProvider,
 } from '../automerge';
 
-const INDEXER_CONFIG: IndexConfig = {
-  enabled: true,
-  indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }, { kind: IndexKind.Kind.GRAPH }],
+export interface EchoHostIndexingConfig {
+  /**
+   * @default true
+   */
+  fullText: boolean;
+
+  /**
+   * @default false
+   */
+  vector: boolean;
+}
+
+const DEFAULT_INDEXING_CONFIG: EchoHostIndexingConfig = {
+  // TODO(dmaretskyi): Disabled by default since embedding generation is expensive.
+  fullText: false,
+  vector: false,
 };
 
 export type EchoHostParams = {
   kv: LevelDB;
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
+
+  indexing?: Partial<EchoHostIndexingConfig>;
 };
 
 /**
@@ -64,13 +79,13 @@ export class EchoHost extends Resource {
   private readonly _spaceStateManager = new SpaceStateManager();
   private readonly _echoDataMonitor: EchoDataMonitor;
 
-  constructor({ kv, peerIdProvider, getSpaceKeyByRootDocumentId }: EchoHostParams) {
+  constructor({ kv, indexing = {}, peerIdProvider, getSpaceKeyByRootDocumentId }: EchoHostParams) {
     super();
 
+    const indexingConfig = { ...DEFAULT_INDEXING_CONFIG, ...indexing };
+
     this._indexMetadataStore = new IndexMetadataStore({ db: kv.sublevel('index-metadata') });
-
     this._echoDataMonitor = new EchoDataMonitor();
-
     this._automergeHost = new AutomergeHost({
       db: kv,
       dataMonitor: this._echoDataMonitor,
@@ -86,7 +101,17 @@ export class EchoHost extends Resource {
       loadDocuments: createSelectedDocumentsIterator(this._automergeHost),
       indexCooldownTime: process.env.NODE_ENV === 'test' ? 0 : undefined,
     });
-    void this._indexer.setConfig(INDEXER_CONFIG);
+    void this._indexer.setConfig({
+      enabled: true,
+      indexes: [
+        //
+        { kind: IndexKind.Kind.SCHEMA_MATCH },
+        { kind: IndexKind.Kind.GRAPH },
+
+        ...(indexingConfig.fullText ? [{ kind: IndexKind.Kind.FULL_TEXT }] : []),
+        ...(indexingConfig.vector ? [{ kind: IndexKind.Kind.VECTOR }] : []),
+      ],
+    });
 
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,

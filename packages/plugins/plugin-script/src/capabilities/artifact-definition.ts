@@ -4,13 +4,14 @@
 
 import { Schema } from 'effect';
 
+import { defineTool, ToolResult } from '@dxos/ai';
 import { Capabilities, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
+import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
 import { ScriptType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { live, makeRef, type Space } from '@dxos/react-client/echo';
+import { Filter, live, makeRef, type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -178,13 +179,12 @@ export default () => {
         description: 'Inspect a script. Returns the artifact definition for the script',
         caption: 'Inspecting script...',
         schema: Schema.Struct({
-          // TODO(wittjosiah): ObjectId schema should be used here but it's not working.
-          id: Schema.String.annotations({ description: 'The ID of the script' }),
+          id: ArtifactId,
         }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
 
-          const script = (await extensions.space.db.query({ id }).first()) as ScriptType;
+          const script = (await extensions.space.db.query(Filter.ids(id)).first()) as ScriptType;
           const { content } = await script.source.load();
 
           return ToolResult.Success({
@@ -198,8 +198,7 @@ export default () => {
         description: 'Update a script. Returns the artifact definition for the script',
         caption: 'Updating script...',
         schema: Schema.Struct({
-          // TODO(wittjosiah): ObjectId schema should be used here but it's not working.
-          id: Schema.String.annotations({ description: 'The ID of the script to update' }),
+          id: ArtifactId,
           code: Schema.String.annotations({
             description: 'The full code of the script in JavaScript or TypeScript. Must be valid executable code.',
           }),
@@ -207,7 +206,7 @@ export default () => {
         execute: async ({ id, code }, { extensions }) => {
           invariant(extensions?.space, 'No space');
 
-          const script = (await extensions.space.db.query({ id }).first()) as ScriptType;
+          const script = (await extensions.space.db.query(Filter.ids(id)).first()) as ScriptType;
           const source = await script.source.load();
           if (!source) {
             return ToolResult.Error('Script not found');

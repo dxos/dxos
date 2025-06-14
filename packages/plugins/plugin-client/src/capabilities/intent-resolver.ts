@@ -34,10 +34,10 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ClientAction.CreateIdentity,
-      resolve: async () => {
+      resolve: async (profile) => {
         const manager = context.getCapability(Capabilities.PluginManager);
         const client = context.getCapability(ClientCapabilities.Client);
-        const data = await client.halo.createIdentity();
+        const data = await client.halo.createIdentity(profile);
         await manager.activate(ClientEvents.IdentityCreated);
         return {
           data,

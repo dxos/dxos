@@ -11,6 +11,6 @@ export const meta: PluginMeta = {
   name: 'Transformer',
   description: 'Run local transformers.',
   icon: 'ph--cpu--regular',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-transformer',
-  tags: ['experimental'],
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-transformer',
+  tags: ['labs'],
 };

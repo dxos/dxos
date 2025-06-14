@@ -2,16 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
 import { describe, test } from 'vitest';
 
 import { outlinerTree, treeFacet, listItemToString, type Item } from './tree';
-import { str } from '../../stories';
+import { str } from '../../testing';
 import { type Range } from '../../types';
-import { createMarkdownExtensions } from '../markdown';
 
-const doc = str(
-  //
+const lines = [
   '- [ ] 1',
   '- [ ] 2',
   '  - [ ] 2.1',
@@ -21,9 +20,13 @@ const doc = str(
   '    - 2.2.3',
   '  - [ ] 2.3',
   '- [ ] 3',
-);
+];
 
-const extensions = [createMarkdownExtensions(), outlinerTree()];
+const getPos = (line: number) => {
+  return lines.slice(0, line).reduce((acc, line) => acc + line.length + 1, 0);
+};
+
+const extensions = [markdown({ base: markdownLanguage }), outlinerTree()];
 
 describe('tree (boundary conditions)', () => {
   test('empty', ({ expect }) => {
@@ -32,19 +35,43 @@ describe('tree (boundary conditions)', () => {
     expect(tree).to.exist;
   });
 
+  test('content range', ({ expect }) => {
+    const state = EditorState.create({ doc: '- [ ] A', extensions });
+    const tree = state.facet(treeFacet);
+    console.log(JSON.stringify(tree, null, 2));
+    expect(tree.toJSON()).to.deep.eq({
+      type: 'root',
+      index: -1,
+      level: -1,
+      lineRange: { from: 0, to: -1 },
+      contentRange: { from: 0, to: -1 },
+      children: [
+        {
+          type: 'task',
+          index: 0,
+          level: 0,
+          lineRange: { from: 0, to: 7 },
+          contentRange: { from: 6, to: 7 },
+          children: [],
+        },
+      ],
+    });
+
+    const item = tree.find(0);
+    expect(item?.contentRange).to.include({ from: 6, to: state.doc.length });
+  });
+
   test('empty continuation', ({ expect }) => {
     const state = EditorState.create({ doc: str('- [ ] A', '  '), extensions });
     const tree = state.facet(treeFacet);
     tree.traverse((item, level) => {
       console.log(listItemToString(item, level));
     });
-    const item = tree.find(0);
-    expect(item?.contentRange).to.include({ from: 6, to: state.doc.length });
   });
 });
 
 describe('tree (advanced)', () => {
-  const state = EditorState.create({ doc, extensions });
+  const state = EditorState.create({ doc: str(...lines), extensions });
 
   test('traverse', ({ expect }) => {
     const tree = state.facet(treeFacet);
@@ -76,11 +103,13 @@ describe('tree (advanced)', () => {
 
   test('find', ({ expect }) => {
     const tree = state.facet(treeFacet);
+
     expect(tree.find(0)).to.include({ type: 'task' });
-    expect(tree.find(8)).to.include({ type: 'task' });
-    expect(tree.find(8)).toBe(tree.find(10));
-    expect(tree.find(70)).to.include({ type: 'bullet' });
     expect(tree.find(state.doc.length)).to.include({ type: 'task' });
+
+    expect(tree.find(getPos(1))).to.include({ type: 'task' });
+    expect(tree.find(getPos(1))).toBe(tree.find(getPos(1) + 4));
+    expect(tree.find(getPos(5))).to.include({ type: 'bullet' });
   });
 
   test('siblings', ({ expect }) => {
@@ -118,12 +147,17 @@ describe('tree (advanced)', () => {
   test('lastDescendant', ({ expect }) => {
     const tree = state.facet(treeFacet);
     {
-      const item = tree.find(0)!;
+      const item = tree.find(getPos(0))!;
       expect(tree.lastDescendant(item).index).toBe(item.index);
     }
     {
-      const item = tree.find(8)!;
-      const last = tree.find(76)!;
+      const item = tree.find(getPos(1))!;
+      const last = tree.find(getPos(7))!;
+      expect(tree.lastDescendant(item).index).toBe(last.index);
+    }
+    {
+      const item = tree.find(getPos(3))!;
+      const last = tree.find(getPos(6))!;
       expect(tree.lastDescendant(item).index).toBe(last.index);
     }
   });

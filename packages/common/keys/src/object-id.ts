@@ -8,7 +8,10 @@ import { ulid } from 'ulidx';
 // TODO(dmaretskyi): Make brand.
 // export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');
 // export const ObjectIdSchema = Schema.ULID.pipe(S.brand(ObjectIdBrand));
-const ObjectIdSchema = Schema.ULID;
+const ObjectIdSchema = Schema.String.pipe(Schema.pattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i)).annotations({
+  description: 'a Universally Unique Lexicographically Sortable Identifier',
+  pattern: '^[0-7][0-9A-HJKMNP-TV-Z]{25}$',
+});
 
 export type ObjectId = typeof ObjectIdSchema.Type;
 

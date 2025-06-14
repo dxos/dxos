@@ -3,7 +3,7 @@
 //
 
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type MouseEvent, type MutableRefObject, useCallback } from 'react';
+import React, { type MouseEvent, useCallback } from 'react';
 
 import { DropdownMenu as NaturalDropdownMenu, Icon, type DropdownMenuRootProps } from '@dxos/react-ui';
 
@@ -14,7 +14,6 @@ import { type MenuAction, type MenuItem, type MenuItemGroup } from '../types';
 export type DropdownMenuProps = DropdownMenuRootProps & {
   group?: MenuItemGroup;
   items?: MenuItem[];
-  suppressNextTooltip?: MutableRefObject<boolean>;
   caller?: string;
 };
 
@@ -49,7 +48,6 @@ const DropdownMenuRoot = ({
   open,
   defaultOpen,
   onOpenChange,
-  suppressNextTooltip,
   caller,
   children,
   __menuScope,
@@ -68,30 +66,16 @@ const DropdownMenuRoot = ({
       }
       event.stopPropagation();
       // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-      if (suppressNextTooltip) {
-        suppressNextTooltip.current = true;
-      }
       setOptionsMenuOpen(false);
       void action.data?.({ parent: group, caller });
     },
-    [suppressNextTooltip, group, caller],
+    [group, caller],
   );
 
   const items = useMenuItems(group, propsItems);
 
   return (
-    <NaturalDropdownMenu.Root
-      {...{
-        open: optionsMenuOpen,
-        onOpenChange: (nextOpen: boolean) => {
-          if (!nextOpen && suppressNextTooltip) {
-            suppressNextTooltip.current = true;
-          }
-          return setOptionsMenuOpen(nextOpen);
-        },
-      }}
-      {...naturalProps}
-    >
+    <NaturalDropdownMenu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen} {...naturalProps}>
       {children}
       <NaturalDropdownMenu.Portal>
         <NaturalDropdownMenu.Content>

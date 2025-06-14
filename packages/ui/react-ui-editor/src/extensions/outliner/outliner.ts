@@ -2,159 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import { indentMore } from '@codemirror/commands';
-import { getIndentUnit } from '@codemirror/language';
-import {
-  type ChangeSpec,
-  EditorSelection,
-  EditorState,
-  type Extension,
-  Prec,
-  type Range,
-  type SelectionRange,
-} from '@codemirror/state';
-import {
-  type Command,
-  Decoration,
-  type DecorationSet,
-  EditorView,
-  ViewPlugin,
-  type ViewUpdate,
-  keymap,
-} from '@codemirror/view';
+import { type EditorState, type Extension, Prec, type Range } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 
-import { getRange, outlinerTree, treeFacet } from './tree';
+import { commands } from './commands';
+import { editor } from './editor';
+import { selectionCompartment, selectionFacet, selectionEquals } from './selection';
+import { outlinerTree, treeFacet } from './tree';
+import { floatingMenu } from '../command';
+import { decorateMarkdown } from '../markdown';
 
 // ISSUES:
 // TODO(burdon): Remove requirement for continuous lines to be indented (so that user's can't accidentally delete them and break the layout).
 // TODO(burdon): Prevent unterminated fenced code from breaking subsequent items ("firewall" markdown parsing within each item?)
-// TODO(burdon): When selecting across items, select entire items (don't show selection that spans the gaps).
 // TODO(burdon): What if a different editor "breaks" the layout?
 // TODO(burdon): Check Automerge recognizes text that is moved/indented (e.g., concurrent editing item while being moved).
-// TODO(burdon): Rendered cursor is not full height if there is not text on the task line.
 
 // NEXT:
+// TODO(burdon): Update selection when adding/removing items.
+// TODO(burdon): When selecting across items, select entire items (don't show selection that spans the gaps).
 // TODO(burdon): Handle backspace at start of line (or empty line).
-// TODO(burdon): Smart Cut-and-paste.
-// TODO(burdon): Menu option to toggle list/task mode
 // TODO(burdon): Convert to task object and insert link (menu button).
+// TODO(burdon): Smart Cut-and-paste.
 // TODO(burdon): DND.
-
-const listItemRegex = /^\s*- (\[ \]|\[x\])? /;
-
-const getSelection = (view: EditorView): SelectionRange => view.state.selection.ranges[view.state.selection.mainIndex];
-
-//
-// Indentation comnmands.
-//
-
-export const indentItemMore: Command = (view: EditorView) => {
-  const pos = getSelection(view).from;
-  const tree = view.state.facet(treeFacet);
-  const current = tree.find(pos);
-  if (current) {
-    const previous = tree.prev(current);
-    if (previous && current.level <= previous.level) {
-      // TODO(burdon): Indent descendants?
-      indentMore(view);
-    }
-  }
-
-  return true;
-};
-
-export const indentItemLess: Command = (view: EditorView) => {
-  const pos = getSelection(view).from;
-  const tree = view.state.facet(treeFacet);
-  const current = tree.find(pos);
-  if (current) {
-    if (current.level > 0) {
-      // Unindent current line and all descendants.
-      // NOTE: The markdown extension doesn't provide an indentation service.
-      const indentUnit = getIndentUnit(view.state);
-      const changes: ChangeSpec[] = [];
-      tree.traverse(current, (item) => {
-        const line = view.state.doc.lineAt(item.lineRange.from);
-        changes.push({ from: line.from, to: line.from + indentUnit });
-      });
-
-      if (changes.length > 0) {
-        view.dispatch({ changes });
-      }
-    }
-  }
-
-  return true;
-};
-
-//
-// Moving commands.
-//
-
-export const moveItemDown: Command = (view: EditorView) => {
-  const pos = getSelection(view)?.from;
-  const tree = view.state.facet(treeFacet);
-  const current = tree.find(pos);
-  if (current && current.nextSibling) {
-    const next = current.nextSibling;
-    const currentContent = view.state.doc.sliceString(...getRange(tree, current));
-    const nextContent = view.state.doc.sliceString(...getRange(tree, next));
-    const changes: ChangeSpec[] = [
-      {
-        from: current.lineRange.from,
-        to: current.lineRange.from + currentContent.length,
-        insert: nextContent,
-      },
-      {
-        from: next.lineRange.from,
-        to: next.lineRange.from + nextContent.length,
-        insert: currentContent,
-      },
-    ];
-
-    view.dispatch({
-      changes,
-      selection: EditorSelection.cursor(pos + nextContent.length + 1),
-      scrollIntoView: true,
-    });
-  }
-
-  return true;
-};
-
-export const moveItemUp: Command = (view: EditorView) => {
-  const pos = getSelection(view)?.from;
-  const tree = view.state.facet(treeFacet);
-  const current = tree.find(pos);
-  if (current && current.prevSibling) {
-    const prev = current.prevSibling;
-    const currentContent = view.state.doc.sliceString(...getRange(tree, current));
-    const prevContent = view.state.doc.sliceString(...getRange(tree, prev));
-    const changes: ChangeSpec[] = [
-      {
-        from: prev.lineRange.from,
-        to: prev.lineRange.from + prevContent.length,
-        insert: currentContent,
-      },
-      {
-        from: current.lineRange.from,
-        to: current.lineRange.from + currentContent.length,
-        insert: prevContent,
-      },
-    ];
-
-    view.dispatch({
-      changes,
-      selection: EditorSelection.cursor(pos - prevContent.length - 1),
-      scrollIntoView: true,
-    });
-  }
-
-  return true;
-};
 
 /**
  * Outliner extension.
@@ -164,110 +36,35 @@ export const moveItemUp: Command = (view: EditorView) => {
  * - Supports smart cut-and-paste.
  */
 export const outliner = (): Extension => [
+  // Commands.
+  Prec.highest(commands()),
+
+  // Selection.
+  selectionCompartment.of(selectionFacet.of([])),
+
+  // State.
   outlinerTree(),
-  EditorState.transactionFilter.of((tr) => {
-    const tree = tr.state.facet(treeFacet);
 
-    // Check cursor is in a valid position.
-    if (!tr.docChanged) {
-      const prev = tr.startState.selection.ranges[tr.startState.selection.mainIndex]?.from;
-      const pos = tr.selection?.ranges[tr.selection?.mainIndex]?.from;
-      const item = pos != null ? tree.find(pos) : undefined;
-      if (pos != null) {
-        if (item) {
-          if (pos < item.contentRange.from || pos > item.contentRange.to) {
-            if (pos - prev < 0) {
-              const prev = tree.prev(item);
-              if (prev) {
-                return [{ selection: EditorSelection.cursor(prev.contentRange.to) }];
-              } else {
-                const first = tree.next(tree.root);
-                if (first) {
-                  return [{ selection: EditorSelection.cursor(first.contentRange.from) }];
-                }
+  // Filter and possibly modify changes.
+  editor(),
 
-                return [];
-              }
-            } else {
-              return [{ selection: EditorSelection.cursor(item.contentRange.from) }];
-            }
-          }
-        }
-      }
+  // Floating menu.
+  floatingMenu(),
 
-      return tr;
-    }
+  // Line decorations.
+  decorations(),
 
-    let cancel = false;
-    const changes: ChangeSpec[] = [];
-    tr.changes.iterChanges((fromA, toA, fromB, toB, insert) => {
-      const line = tr.startState.doc.lineAt(fromA);
-      const match = line.text.match(listItemRegex);
-      if (match) {
-        const start = line.from + (match?.[0]?.length ?? 0);
+  // Default markdown decorations.
+  decorateMarkdown({ listPaddingLeft: 8 }),
 
-        // Detect and cancel replacement of task marker with continuation indent.
-        // Task markers are atomic so will be deleted when backspace is pressed.
-        // The markdown extension inserts 2 or 6 spaces when deleting a list or task marker in order to create a continuation.
-        // - [ ] <- backspace here deletes the task marker.
-        // - [ ] <- backspace here inserts 6 spaces (creates continuation).
-        //   - [ ] <- backspace here deletes the task marker.
-        const replace = start === toA && toA - fromA === insert.length;
-        if (replace) {
-          changes.push({ from: line.from - 1, to: toA });
-          return;
-        }
+  // Researve space for menu.
+  EditorView.contentAttributes.of({ class: 'is-full !mr-[3rem]' }),
+];
 
-        // Detect deletion of marker.
-        if (fromB === toB) {
-          if (toA === line.to) {
-            const line = tr.state.doc.lineAt(fromA);
-            if (line.text.match(/^\s*$/)) {
-              if (line.from === 0) {
-                // Don't delete first line.
-                cancel = true;
-                return;
-              } else {
-                // Delete indent and marker.
-                changes.push({ from: line.from - 1, to: toA });
-                return;
-              }
-            }
-          }
-          return;
-        }
-
-        // Prevent newline if line is empty.
-        const item = tree.find(fromA);
-        if (item?.contentRange.from === item?.contentRange.to && fromA === toA) {
-          cancel = true;
-          return;
-        }
-
-        log('change', {
-          item,
-          line: { from: line.from, to: line.to },
-          a: [fromA, toA],
-          b: [fromB, toB],
-          insert: { text: insert.toString(), length: insert.length },
-        });
-      }
-    });
-
-    if (changes.length > 0) {
-      log('modified,', { changes });
-      return [{ changes }];
-    } else if (cancel) {
-      log('cancel');
-      return [];
-    }
-
-    return tr;
-  }),
-
-  /**
-   * Line decorations (for border and selection).
-   */
+/**
+ * Line decorations (for border and selection).
+ */
+const decorations = () => [
   ViewPlugin.fromClass(
     class {
       decorations: DecorationSet = Decoration.none;
@@ -276,12 +73,24 @@ export const outliner = (): Extension => [
       }
 
       update(update: ViewUpdate) {
-        if (update.docChanged || update.viewportChanged || update.selectionSet) {
+        const selectionChanged = !selectionEquals(
+          update.state.facet(selectionFacet),
+          update.startState.facet(selectionFacet),
+        );
+
+        if (
+          update.focusChanged ||
+          update.docChanged ||
+          update.viewportChanged ||
+          update.selectionSet ||
+          selectionChanged
+        ) {
           this.updateDecorations(update.state, update.view);
         }
       }
 
-      private updateDecorations(state: EditorState, { viewport: { from, to } }: EditorView) {
+      private updateDecorations(state: EditorState, { viewport: { from, to }, hasFocus }: EditorView) {
+        const selection = state.facet(selectionFacet);
         const tree = state.facet(treeFacet);
         const current = tree.find(state.selection.ranges[state.selection.mainIndex]?.from);
         const doc = state.doc;
@@ -293,14 +102,14 @@ export const outliner = (): Extension => [
           if (item) {
             const lineFrom = doc.lineAt(item.contentRange.from);
             const lineTo = doc.lineAt(item.contentRange.to);
-
+            const isSelected = selection.includes(item.index) || item === current;
             decorations.push(
               Decoration.line({
                 class: mx(
                   'cm-list-item',
                   lineFrom.number === line.number && 'cm-list-item-start',
                   lineTo.number === line.number && 'cm-list-item-end',
-                  item === current && 'cm-list-item-selected',
+                  isSelected && (hasFocus ? 'cm-list-item-focused' : 'cm-list-item-selected'),
                 ),
               }).range(line.from, line.from),
             );
@@ -315,90 +124,39 @@ export const outliner = (): Extension => [
     },
   ),
 
-  /**
-   * Key bindings.
-   */
-  Prec.highest(
-    keymap.of([
-      {
-        key: 'Tab',
-        preventDefault: true,
-        run: indentItemMore,
-        shift: indentItemLess,
-      },
-      {
-        key: 'Enter',
-        shift: (view) => {
-          const pos = getSelection(view).from;
-          const insert = '\n  '; // TODO(burdon): Fix parsing.
-          view.dispatch({
-            changes: [{ from: pos, to: pos, insert }],
-            selection: EditorSelection.cursor(pos + insert.length),
-          });
-          return true;
-        },
-      },
-      {
-        key: 'ArrowDown',
-        // Jump to next item.
-        run: (view) => {
-          const tree = view.state.facet(treeFacet);
-          const item = tree.find(getSelection(view).from);
-          if (
-            item &&
-            view.state.doc.lineAt(item.lineRange.to).number - view.state.doc.lineAt(item.lineRange.from).number === 0
-          ) {
-            const next = tree.next(item);
-            if (next) {
-              view.dispatch({ selection: EditorSelection.cursor(next.contentRange.from) });
-              return true;
-            }
-          }
-
-          return false;
-        },
-      },
-      {
-        key: 'Alt-ArrowDown',
-        preventDefault: true,
-        run: moveItemDown,
-      },
-      {
-        key: 'Alt-ArrowUp',
-        preventDefault: true,
-        run: moveItemUp,
-      },
-    ]),
-  ),
-
+  // Theme.
   EditorView.theme({
     '.cm-list-item': {
-      borderLeft: '1px solid var(--dx-separator)',
-      borderRight: '1px solid var(--dx-separator)',
-
-      // TODO(burdon): Increase indent padding by configuring decorate extension.
+      borderLeftWidth: '1px',
+      borderRightWidth: '1px',
       paddingLeft: '32px',
+      borderColor: 'transparent',
     },
     '.cm-list-item.cm-codeblock-start': {
       borderRadius: '0',
     },
 
     '.cm-list-item-start': {
-      borderTop: '1px solid var(--dx-separator)',
+      borderTopWidth: '1px',
       borderTopLeftRadius: '4px',
       borderTopRightRadius: '4px',
       paddingTop: '4px',
       marginTop: '8px',
     },
+
     '.cm-list-item-end': {
-      borderBottom: '1px solid var(--dx-separator)',
+      borderBottomWidth: '1px',
       borderBottomLeftRadius: '4px',
       borderBottomRightRadius: '4px',
       paddingBottom: '4px',
       marginBottom: '8px',
     },
+
     '.cm-list-item-selected': {
-      borderColor: 'var(--dx-cmSeparator)',
+      borderColor: 'var(--dx-separator)',
+    },
+    '.cm-list-item-focused': {
+      borderColor: 'var(--dx-accentFocusIndicator)',
     },
   }),
 ];

@@ -64,6 +64,11 @@
       "type": "object",
       "description": "Alias imports",
       "default": {}
+    },
+    "preactSignalTracking": {
+      "type": "boolean",
+      "description": "Transpile React components with @preact-signals/safe-react to enable automatic signal tracking",
+      "default": false
     }
   },
   "required": ["entryPoints", "outputPath"]

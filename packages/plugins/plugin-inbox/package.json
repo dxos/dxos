@@ -37,6 +37,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/artifact": "workspace:*",
     "@dxos/assistant": "workspace:*",
@@ -69,10 +70,10 @@
     "@dxos/react-ui-tag-picker": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.6.0",
-    "@preact/signals-react": "^1.3.8",
+    "@preact-signals/safe-react": "^0.9.0",
+    "@preact/signals-core": "^1.9.0",
+    "@preact/signals-react": "^3.2.0",
     "date-fns": "^3.3.1",
-    "lodash.get": "^4.4.2",
     "react-resize-detector": "^12.0.2"
   },
   "devDependencies": {
@@ -85,7 +86,6 @@
     "@effect-rx/rx-react": "^0.34.1",
     "@effect/platform": "0.80.12",
     "@phosphor-icons/react": "^2.1.5",
-    "@types/lodash.get": "^4.4.7",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "effect": "3.14.21",

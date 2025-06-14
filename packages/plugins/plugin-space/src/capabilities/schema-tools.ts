@@ -4,8 +4,8 @@
 
 import { Schema, SchemaAST } from 'effect';
 
+import { defineTool, ToolResult } from '@dxos/ai';
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineTool, ToolResult } from '@dxos/artifact';
 import { type Space } from '@dxos/client/echo';
 import { FormatEnum, FormatEnums, SelectOptionSchema, GeoPoint, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -24,8 +24,8 @@ declare global {
 export const TypeNameSchema = Schema.String.pipe(
   Schema.pattern(/^\w+\.\w{2,}\/[\w/]+$/i),
   Schema.annotations({
-    [SchemaAST.TitleAnnotationId]: 'TypeName',
-    [SchemaAST.DescriptionAnnotationId]:
+    title: 'TypeName',
+    description:
       'Domain-style type name path. Dashes are not allowed. Use camel case for the final component of the type name.',
     [SchemaAST.ExamplesAnnotationId]: ['example.com/type/Document', 'example.com/type/FlightList'],
   }),
@@ -37,9 +37,9 @@ const formatDescription = `The format of the property. Additional information:
 
 // TODO(ZaymonFC): All properties are default optional, but maybe we should allow for required properties.
 const PropertyDefinitionSchema = Schema.Struct({
-  name: Schema.String.annotations({ [SchemaAST.DescriptionAnnotationId]: 'The name of the property.' }),
+  name: Schema.String.annotations({ description: 'The name of the property.' }),
   format: Schema.Union(...FormatEnums.map((format) => Schema.Literal(format))).annotations({
-    [SchemaAST.DescriptionAnnotationId]: formatDescription,
+    description: formatDescription,
   }),
   config: Schema.optional(
     Schema.Struct({
