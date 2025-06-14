@@ -61,41 +61,17 @@ export type ClientOptions = {
 @trace.resource()
 export class Client {
   /**
-   * The version of this client API.
-   */
-  @trace.info()
-  readonly version = DXOS_VERSION;
-
-  /**
    * Emitted after the client is reset and the services have finished restarting.
    */
   readonly reloaded = new Event<void>();
 
-  private readonly _options: ClientOptions;
-  private _ctx = new Context();
-  private _config?: Config;
-
-  @trace.info()
-  private _services?: ClientServicesProvider;
-
-  private _runtime?: ClientRuntime;
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
-
-  @trace.info()
-  private _initialized = false;
-
-  @trace.info()
-  private _resetting = false;
-
-  private _statusStream?: Stream<QueryStatusResponse>;
-  private _statusTimeout?: NodeJS.Timeout;
-  private _status = MulticastObservable.from(this._statusUpdate, null);
-  private _iframeManager?: IFrameManager;
-  private _shellManager?: ShellManager;
-  private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
+  private readonly _status = MulticastObservable.from(this._statusUpdate, null);
 
   private readonly _echoClient = new EchoClient();
+
+  private readonly _options: ClientOptions;
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -103,6 +79,30 @@ export class Client {
   @trace.info()
   private readonly _instanceId = PublicKey.random().toHex();
 
+  /**
+   * The version of this client API.
+   */
+  @trace.info()
+  readonly version = DXOS_VERSION;
+
+  @trace.info()
+  private _services?: ClientServicesProvider;
+
+  @trace.info()
+  private _initialized = false;
+
+  @trace.info()
+  private _resetting = false;
+
+  private _runtime?: ClientRuntime;
+
+  private _ctx = new Context();
+  private _config?: Config;
+  private _statusStream?: Stream<QueryStatusResponse>;
+  private _statusTimeout?: NodeJS.Timeout;
+  private _iframeManager?: IFrameManager;
+  private _shellManager?: ShellManager;
+  private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
   private _edgeClient?: EdgeHttpClient = undefined;
   private _queuesService?: QueuesService = undefined;
 
@@ -173,7 +173,6 @@ export class Client {
   /**
    * Returns true if the client has been initialized. Initialize by calling `.initialize()`.
    */
-  // TODO(burdon): Rename isOpen.
   get initialized() {
     return this._initialized;
   }
@@ -211,7 +210,6 @@ export class Client {
 
   /**
    * EDGE client.
-   *
    * This API is experimental and subject to change.
    */
   get edge(): EdgeHttpClient {
@@ -220,7 +218,7 @@ export class Client {
   }
 
   /**
-   *
+   * Shell API.
    */
   get shell(): Shell {
     invariant(this._runtime, 'Client not initialized.');
