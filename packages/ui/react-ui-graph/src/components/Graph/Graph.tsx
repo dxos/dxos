@@ -93,6 +93,11 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
   // Subscriptions.
   useEffect(() => {
     return combine(
+      effect(() => {
+        // TODO(burdon): This doesn't get updated.
+        console.log('updateData', model?.graph.nodes.length);
+        projector.updateData(model?.graph);
+      }),
       projector.updated.on(({ layout }) => {
         try {
           renderer.render(layout);
@@ -100,9 +105,6 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
           void projector.stop();
           log.catch(error);
         }
-      }),
-      effect(() => {
-        projector.updateData(model?.graph);
       }),
     );
   }, [projector, renderer, model]);

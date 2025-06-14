@@ -103,13 +103,6 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     }
   }, [client]);
 
-  const aiClient = useMemo(() => new SpyAIService(new AIServiceEdgeClient(aiConfig)), []);
-
-  const items = useQuery(space, Query.select(filter ?? Filter.everything()));
-  useEffect(() => {
-    model?.setFilter(filter ?? Filter.everything());
-  }, [model, filter]);
-
   const [researchGraph] = useAsyncState(async () => {
     if (!space) {
       return undefined;
@@ -119,14 +112,20 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     if (objects.length > 0) {
       return objects[0];
     } else {
+      const queue = space.queues.create();
       return space.db.add(
         create(ResearchGraph, {
           // TODO(dmaretskyi): Ref.make(queue)
-          queue: Ref.fromDXN(space.queues.create().dxn),
+          queue: Ref.fromDXN(queue.dxn),
         }),
       );
     }
   }, [space]);
+
+  const items = useQuery(space, Query.select(filter ?? Filter.everything()));
+  useEffect(() => {
+    model?.setFilter(filter ?? Filter.everything());
+  }, [model, filter]);
 
   useEffect(() => {
     if (!space || !model) {
@@ -142,6 +141,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1_000 });
   const blueprint = useBlueprint(space, researchGraph?.queue.dxn);
+  const aiClient = useMemo(() => new SpyAIService(new AIServiceEdgeClient(aiConfig)), []);
 
   //
   // Handlers
