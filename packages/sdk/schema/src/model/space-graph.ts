@@ -6,10 +6,9 @@ import { batch, effect } from '@preact/signals-core';
 
 import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
-import { Relation } from '@dxos/echo';
+import { Relation, Obj, Type, Filter, Query, Ref } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { Obj, Type, Filter, Query, Ref } from '@dxos/echo';
-import { type EchoSchema, getLabel } from '@dxos/echo-schema';
+import { type EchoSchema, getLabel, getTypename } from '@dxos/echo-schema';
 import { type GraphEdge, AbstractGraphBuilder, type Graph, ReactiveGraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -143,6 +142,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     invariant(this._space);
     this._objectsSubscription = this._space.db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
       ({ objects }) => {
+        log.info('update', { objects: objects.length });
         this._objects = [...objects];
         this.invalidate();
       },
@@ -229,11 +229,11 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
         this._options?.onCreateEdge?.(edge, object);
       } else {
-        // Object.
-        const typename = Obj.getTypename(object);
+        // TODO(burdon): Obj.getTypename returns undefined for the same object.
+        // const typename = Obj.getTypename(object);
+        const typename = getTypename(object);
         if (typename) {
           let node: SpaceGraphNode | undefined = currentNodes.find((node) => node.id === object.id);
-
           if (!node) {
             node = {
               id: object.id,

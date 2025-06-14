@@ -4,11 +4,11 @@
 
 import { next as A } from '@automerge/automerge';
 import {
+  type AnyDocumentId,
   type DocumentId,
   generateAutomergeUrl,
-  parseAutomergeUrl,
   interpretAsDocumentId,
-  type AnyDocumentId,
+  parseAutomergeUrl,
 } from '@automerge/automerge-repo';
 
 import { Event, UpdateScheduler } from '@dxos/async';
@@ -18,8 +18,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  type DataService,
   type BatchedDocumentUpdates,
+  type DataService,
   type DocumentUpdate,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
@@ -126,13 +126,11 @@ export class RepoProxy extends Resource {
   protected override async _close() {
     await this._sendUpdatesJob?.join();
     this._sendUpdatesJob = undefined;
-
     for (const handle of Object.values(this._handles)) {
       handle.off('change');
     }
 
     this._handles = {};
-
     await this._subscription?.close();
     this._subscription = undefined;
   }
@@ -143,9 +141,9 @@ export class RepoProxy extends Resource {
     isNew,
     initialValue,
   }: {
-    /** The documentId of the handle to look up or create */
+    /** The documentId of the handle to look up or create. */
     documentId: DocumentId;
-    /** If we know we're creating a new document, specify this so we can have access to it immediately */
+    /** If we know we're creating a new document, specify this so we can have access to it immediately. */
     isNew: boolean;
     initialValue?: T;
   }): DocHandleProxy<T> {
@@ -153,7 +151,7 @@ export class RepoProxy extends Resource {
     if (this._handles[documentId]) {
       return this._handles[documentId];
     }
-    // If not, create a new handle, cache it, and return it
+    // If not, create a new handle, cache it, and return it.
     if (!documentId) {
       throw new Error(`Invalid documentId ${documentId}`);
     }
@@ -172,6 +170,14 @@ export class RepoProxy extends Resource {
   }): DocHandleProxy<T> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
+    // TODO(burdon): Called even if not mutations.
+    const onChange = () => {
+      log.info('onChange', { documentId });
+      this._pendingUpdateIds.add(documentId);
+      this._sendUpdatesJob!.trigger();
+      this._emitSaveStateEvent();
+    };
+
     const handle = new DocHandleProxy<T>(
       documentId,
       { isNew, initialValue },
@@ -180,18 +186,12 @@ export class RepoProxy extends Resource {
           this._pendingRemoveIds.add(documentId);
           handle.off('change', onChange);
           this._sendUpdatesJob?.trigger();
-
           delete this._handles[documentId];
         },
       },
     );
-    this._handles[documentId] = handle;
 
-    const onChange = () => {
-      this._pendingUpdateIds.add(documentId);
-      this._sendUpdatesJob!.trigger();
-      this._emitSaveStateEvent();
-    };
+    this._handles[documentId] = handle;
     handle.on('change', onChange);
 
     if (!isNew) {

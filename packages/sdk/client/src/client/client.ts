@@ -164,7 +164,7 @@ export class Client {
   /**
    * Current client services provider.
    */
-  // TODO(burdon): Return services.services.
+  // TODO(burdon): Return services.services. Move to debug endpoint.
   get services(): ClientServicesProvider {
     invariant(this._services, 'Client not initialized.');
     return this._services;

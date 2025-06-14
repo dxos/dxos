@@ -82,6 +82,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const selection = useMemo(() => new SelectionModel(), []);
 
+  // Reactive graph model.
   const [model] = useState<SpaceGraphModel | undefined>(() => {
     if (showGraph) {
       return new SpaceGraphModel().setOptions({
@@ -176,6 +177,9 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     } else {
       addTestData(space);
     }
+
+    // TODO(burdon): Why is this needed?
+    await space.db.flush({ indexes: true });
   }, [space, generator, spec]);
 
   const handleReset = useCallback(async () => {

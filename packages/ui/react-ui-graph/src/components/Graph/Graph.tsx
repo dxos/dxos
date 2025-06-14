@@ -28,7 +28,7 @@ export type GraphController = {
 
 export type GraphProps<Node extends BaseGraphNode = any, Edge extends BaseGraphEdge = any> = ThemedClassName<
   Pick<GraphRendererOptions<Node>, 'labels' | 'subgraphs' | 'attributes'> & {
-    model?: GraphModel<Node, Edge>;
+    model?: GraphModel<Node, Edge>; // TODO(burdon): ReactiveGraphModel
     projector?: GraphProjector<Node>;
     renderer?: GraphRenderer<Node>;
     drag?: boolean;
@@ -94,8 +94,6 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
   useEffect(() => {
     return combine(
       effect(() => {
-        // TODO(burdon): This doesn't get updated.
-        console.log('updateData', model?.graph.nodes.length);
         projector.updateData(model?.graph);
       }),
       projector.updated.on(({ layout }) => {

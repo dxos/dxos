@@ -41,16 +41,16 @@ export const testPlugins = ({
     types: DataTypes,
     onClientInitialized: async (_, client) => {
       log.info('testPlugins.onClientInitialized', { types });
-
       if (!client.halo.identity.get()) {
         await client.halo.createIdentity();
       }
 
       client.addTypes(types);
 
+      // TODO(burdon): Not working.
       if (indexConfig) {
-        // TODO(burdon): services.services?
-        await client.services.services.QueryService!.setConfig(indexConfig);
+        // TODO(burdon): Rename services.services?
+        // await client.services.services.QueryService!.setConfig(indexConfig);
       }
     },
   }),
