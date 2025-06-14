@@ -217,6 +217,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
       // Relation.
       if (Relation.isRelation(object)) {
+        console.log(JSON.stringify(object));
         const edge = this.addEdge({
           id: object.id,
           type: 'relation',

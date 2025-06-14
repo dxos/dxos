@@ -124,6 +124,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     }
   }, [space]);
 
+  // TODO(burdon): Filter by object/relation?
   const items = useQuery(space, Query.select(filter ?? Filter.everything()));
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
