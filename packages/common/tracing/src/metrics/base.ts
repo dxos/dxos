@@ -15,7 +15,7 @@ export abstract class BaseCounter {
   /**
    * @internal
    */
-  _assign(instance: any, name: string) {
+  _assign(instance: any, name: string): void {
     this._instance = instance;
     this.name = name;
   }

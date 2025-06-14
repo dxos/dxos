@@ -75,13 +75,13 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService }: ConnectToServiceParams) {
+  connectToService({ dataService, queryService }: ConnectToServiceParams): void {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
   }
 
-  disconnectFromService() {
+  disconnectFromService(): void {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = undefined;
     this._queryService = undefined;
@@ -117,7 +117,7 @@ export class EchoClient extends Resource {
     reactiveSchemaQuery,
     preloadSchemaOnOpen,
     spaceKey,
-  }: ConstructDatabaseParams) {
+  }: ConstructDatabaseParams): EchoDatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new EchoDatabaseImpl({

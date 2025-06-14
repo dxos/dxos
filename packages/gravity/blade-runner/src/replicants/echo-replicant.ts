@@ -40,7 +40,7 @@ export class EchoReplicant {
   constructor(private readonly env: ReplicantEnv) {}
 
   @trace.span()
-  async open() {
+  async open(): Promise<void> {
     log.trace('dxos.echo-replicant.open');
     this._testPeer = new EchoTestPeer(createTestLevel(this.env.params.planRunDir));
     await this._testPeer.open();
@@ -88,7 +88,7 @@ export class EchoReplicant {
     size: number;
     insertions: number;
     mutationsSize: number;
-  }) {
+  }): Promise<void> {
     performance.mark('create:begin');
 
     invariant(this._db, 'Database not initialized.');
@@ -137,7 +137,7 @@ export class EchoReplicant {
   }: {
     expectedAmount: number;
     queryResolution?: Exclude<QueryResult<Text>['resolution'], undefined>['source'];
-  }) {
+  }): Promise<void> {
     log.trace('dxos.echo-replicant.query.init', { expectedAmount, queryResolution });
     performance.mark('query:begin');
     invariant(this._db, 'Database not initialized.');
@@ -193,7 +193,7 @@ export class EchoReplicant {
     return { peerId: this._replicator.context.peerId };
   }
 
-  async peerId() {
+  async peerId(): Promise<string> {
     invariant(this._replicator?.context, 'Replicator not connected.');
     return this._replicator.context.peerId;
   }
@@ -210,7 +210,7 @@ export class EchoReplicant {
     otherPeerId: string;
     readQueue: string;
     writeQueue: string;
-  }) {
+  }): Promise<void> {
     log.trace('dxos.echo-replicant.connect', { otherPeerId, readQueue, writeQueue });
     invariant(this._replicator?.context, 'Replicator not connected.');
 
@@ -230,7 +230,7 @@ export class EchoReplicant {
   }
 
   @trace.span()
-  async disconnect({ otherPeerId }: { otherPeerId: string }) {
+  async disconnect({ otherPeerId }: { otherPeerId: string }): Promise<void> {
     log.trace('dxos.echo-replicant.disconnect', { otherPeerId });
     invariant(this._replicator?.context, 'Replicator not connected.');
     const connection = this._connections.get(otherPeerId);

@@ -46,13 +46,13 @@ export class RtcTransportChannel extends Resource implements Transport {
     return this._isChannelCreationInProgress;
   }
 
-  public onConnectionError(error: Error) {
+  public onConnectionError(error: Error): void {
     if (this.isOpen) {
       this.errors.raise(error);
     }
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     invariant(!this._isChannelCreationInProgress);
     this._isChannelCreationInProgress = true;
     this._connection
@@ -81,7 +81,7 @@ export class RtcTransportChannel extends Resource implements Transport {
       });
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     if (this._channel) {
       this._safeCloseChannel(this._channel);
       this._channel = undefined;
@@ -92,7 +92,7 @@ export class RtcTransportChannel extends Resource implements Transport {
     log('closed');
   }
 
-  private _initChannel(channel: RTCDataChannel) {
+  private _initChannel(channel: RTCDataChannel): void {
     Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
       onopen: () => {
         if (!this.isOpen) {
@@ -148,7 +148,7 @@ export class RtcTransportChannel extends Resource implements Transport {
     });
   }
 
-  private async _handleChannelWrite(chunk: any, callback: PendingStreamFlushedCallback) {
+  private async _handleChannelWrite(chunk: any, callback: PendingStreamFlushedCallback): Promise<void> {
     if (!this._channel) {
       log.warn('writing to a channel after a connection was closed');
       return;
@@ -179,7 +179,7 @@ export class RtcTransportChannel extends Resource implements Transport {
     }
   }
 
-  private _safeCloseChannel(channel: RTCDataChannel) {
+  private _safeCloseChannel(channel: RTCDataChannel): void {
     try {
       channel.close();
     } catch (error: any) {

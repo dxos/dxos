@@ -129,7 +129,7 @@ export class Muxer {
     });
   }
 
-  setSessionId(sessionId: PublicKey) {
+  setSessionId(sessionId: PublicKey): void {
     this._sessionId = sessionId;
   }
 
@@ -262,7 +262,7 @@ export class Muxer {
 
   // initiate graceful close
 
-  async close(err?: Error) {
+  async close(err?: Error): Promise<void> {
     if (this._destroying) {
       log('already destroying, ignoring graceful close request');
       return;
@@ -294,7 +294,7 @@ export class Muxer {
 
   // force close without confirmation
 
-  async destroy(err?: Error) {
+  async destroy(err?: Error): Promise<void> {
     if (this._destroying) {
       log('already destroying, ignoring destroy request');
       return;
@@ -326,7 +326,7 @@ export class Muxer {
 
   // complete the termination, graceful or otherwise
 
-  async _dispose(err?: Error) {
+  async _dispose(err?: Error): Promise<void> {
     if (this._disposed) {
       log('already destroyed, ignoring dispose request');
       return;
@@ -349,7 +349,7 @@ export class Muxer {
     this._channelsByTag.clear();
   }
 
-  private async _handleCommand(cmd: Command) {
+  private async _handleCommand(cmd: Command): Promise<void> {
     if (this._disposed) {
       log.warn('Received command after disposed', { cmd });
       return;
@@ -396,7 +396,7 @@ export class Muxer {
     }
   }
 
-  private async _sendCommand(cmd: Command, channelId = -1, timeout = DEFAULT_SEND_COMMAND_TIMEOUT) {
+  private async _sendCommand(cmd: Command, channelId = -1, timeout = DEFAULT_SEND_COMMAND_TIMEOUT): Promise<void> {
     if (this._disposed) {
       // log.info('ignoring sendCommand after disposed', { cmd });
       return;
@@ -460,7 +460,7 @@ export class Muxer {
     );
   }
 
-  private _destroyChannel(channel: Channel, err?: Error) {
+  private _destroyChannel(channel: Channel, err?: Error): void {
     if (err) {
       log.warn('destroying channel with error', { err });
     }
@@ -472,7 +472,7 @@ export class Muxer {
     this._channelsByTag.delete(channel.tag);
   }
 
-  private async _emitStats() {
+  private async _emitStats(): Promise<void> {
     if (this._disposed || this._destroying) {
       if (!this._lastStats) {
         return;

@@ -47,7 +47,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     this._edgeConnection = edgeConnection;
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     this._ctx.onDispose(this._edgeConnection.onMessage((message) => this._onMessage(message)));
     this._ctx.onDispose(
       this._edgeConnection.onReconnected(() => {
@@ -142,7 +142,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     // No-op.
   }
 
-  private _onMessage(message: EdgeMessage) {
+  private _onMessage(message: EdgeMessage): void {
     switch (message.serviceId) {
       case EdgeService.SWARM: {
         this._processSwarmResponse(message);
@@ -154,7 +154,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     }
   }
 
-  private _processSwarmResponse(message: EdgeMessage) {
+  private _processSwarmResponse(message: EdgeMessage): void {
     invariant(protocol.getPayloadType(message) === SwarmResponseSchema.typeName, 'Wrong payload type');
     const payload = protocol.getPayload(message, SwarmResponseSchema);
     this.swarmState.emit(payload);
@@ -192,7 +192,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     this._swarmPeers.get(topic)!.joinedPeers = newPeers;
   }
 
-  private _processMessage(message: EdgeMessage) {
+  private _processMessage(message: EdgeMessage): void {
     invariant(protocol.getPayloadType(message) === bufWkt.AnySchema.typeName, 'Wrong payload type');
     const payload = protocol.getPayload(message, bufWkt.AnySchema);
     invariant(message.source, 'source is missing');
@@ -209,13 +209,13 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     });
   }
 
-  private _matchSelfPeerInfo(peer: PeerInfo) {
+  private _matchSelfPeerInfo(peer: PeerInfo): boolean {
     return (
       peer && (peer.peerKey === this._edgeConnection.peerKey || peer.identityKey === this._edgeConnection.identityKey)
     );
   }
 
-  private async _rejoinAllSwarms() {
+  private async _rejoinAllSwarms(): Promise<void> {
     log('rejoin swarms', { swarms: Array.from(this._swarmPeers.keys()) });
     for (const [topic, { lastState }] of this._swarmPeers.entries()) {
       await this.join({

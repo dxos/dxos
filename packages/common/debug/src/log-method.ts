@@ -6,7 +6,7 @@ export function logMethod(
   target: any,
   propertyName: string,
   descriptor: TypedPropertyDescriptor<(...args: any) => any>,
-) {
+): void {
   const method = descriptor.value!;
   descriptor.value = function (this: any, ...args: any) {
     console.log(`Called ${target.constructor.name}.${propertyName} ${args}`);

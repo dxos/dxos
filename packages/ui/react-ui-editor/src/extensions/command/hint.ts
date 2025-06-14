@@ -46,7 +46,7 @@ export class Hint extends WidgetType {
     super();
   }
 
-  toDOM() {
+  toDOM(): HTMLSpanElement {
     const wrap = document.createElement('span');
     wrap.className = 'cm-placeholder';
     wrap.style.pointerEvents = 'none';
@@ -76,7 +76,7 @@ export class Hint extends WidgetType {
     return rect;
   }
 
-  override ignoreEvent() {
+  override ignoreEvent(): boolean {
     return false;
   }
 }

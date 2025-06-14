@@ -301,7 +301,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     return result;
   }
 
-  private _unregister(id: string) {
+  private _unregister(id: string): void {
     const schema = this._schemaById.get(id);
     if (schema != null) {
       this._schemaById.delete(id);
@@ -322,7 +322,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     };
   }
 
-  private _notifySchemaListChanged() {
+  private _notifySchemaListChanged(): void {
     const list = [...this._schemaById.values()];
     this._schemaSubscriptionCallbacks.forEach((s) => s(list));
   }

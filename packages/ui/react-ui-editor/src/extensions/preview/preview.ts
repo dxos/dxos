@@ -180,11 +180,11 @@ class PreviewInlineWidget extends WidgetType {
   //   return false;
   // }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return this._link.ref === other._link.ref && this._link.label === other._link.label;
   }
 
-  override toDOM(view: EditorView) {
+  override toDOM(view: EditorView): HTMLElement {
     const root = document.createElement('dx-ref-tag');
     root.textContent = this._link.label;
     root.setAttribute('refId', this._link.ref);
@@ -208,11 +208,11 @@ class PreviewBlockWidget extends WidgetType {
   //   return true;
   // }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return this._link.ref === other._link.ref;
   }
 
-  override toDOM(view: EditorView) {
+  override toDOM(view: EditorView): HTMLDivElement {
     const root = document.createElement('div');
     root.classList.add('cm-preview-block');
 

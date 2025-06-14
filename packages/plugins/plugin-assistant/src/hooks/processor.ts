@@ -100,7 +100,7 @@ export class ChatProcessor {
   /**
    * Update tools.
    */
-  setTools(tools: Tool[]) {
+  setTools(tools: Tool[]): void {
     this._tools = tools;
   }
 

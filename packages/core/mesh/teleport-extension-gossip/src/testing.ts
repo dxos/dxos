@@ -35,12 +35,12 @@ export class TestAgent extends TestPeerBase {
     void this.presence.open();
   }
 
-  override async onOpen(connection: TestConnection) {
+  override async onOpen(connection: TestConnection): Promise<void> {
     const extension = this.gossip.createExtension({ remotePeerId: connection.teleport!.remotePeerId });
     connection.teleport.addExtension('dxos.mesh.teleport.gossip', extension);
   }
 
-  waitForAgentsOnline(agents: TestAgent[], timeout = 1000) {
+  waitForAgentsOnline(agents: TestAgent[], timeout = 1000): Promise<void> {
     invariant(agents.length > 0, 'At least one agent is required.'); // We will wait for .updated event from the agent itself. And with zero connections it will never happen.
     return asyncTimeout(
       this.presence.updated.waitFor(() => {
@@ -52,7 +52,7 @@ export class TestAgent extends TestPeerBase {
     );
   }
 
-  override async destroy() {
+  override async destroy(): Promise<void> {
     await super.destroy();
     await this.gossip.close();
     await this.presence.close();
