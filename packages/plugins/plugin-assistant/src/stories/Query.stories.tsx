@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { AIServiceEdgeClient, type AIServiceEdgeClientOptions } from '@dxos/ai';
 import { EXA_API_KEY, SpyAIService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -54,11 +54,19 @@ import translations from '../translations';
 
 faker.seed(1);
 
+// TODO(burdon): Evolve dxos/random to support this directly.
+const generator = faker as any as ValueGenerator;
+
 const LOCAL = false;
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
 
-// TODO(burdon): Evolve dxos/random to support this directly.
-const generator = faker as any as ValueGenerator;
+const aiConfig: AIServiceEdgeClientOptions = {
+  endpoint: endpoints.ai,
+  defaultGenerationOptions: {
+    model: '@anthropic/claude-3-5-sonnet-20241022',
+    // model: '@anthropic/claude-sonnet-4-20250514',
+  },
+};
 
 type Mode = 'graph' | 'list';
 
@@ -95,6 +103,8 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     }
   }, [client]);
 
+  const aiClient = useMemo(() => new SpyAIService(new AIServiceEdgeClient(aiConfig)), []);
+
   const items = useQuery(space, Query.select(filter ?? Filter.everything()));
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
@@ -117,20 +127,6 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       );
     }
   }, [space]);
-
-  // TODO(burdon): Create hook.
-  const [aiClient] = useState(
-    () =>
-      new SpyAIService(
-        new AIServiceEdgeClient({
-          endpoint: endpoints.ai,
-          defaultGenerationOptions: {
-            // model: '@anthropic/claude-sonnet-4-20250514',
-            model: '@anthropic/claude-3-5-sonnet-20241022',
-          },
-        }),
-      ),
-  );
 
   useEffect(() => {
     if (!space || !model) {
