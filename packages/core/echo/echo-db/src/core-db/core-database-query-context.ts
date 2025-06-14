@@ -22,7 +22,7 @@ import { isNonNullable } from '@dxos/util';
 
 import type { CoreDatabase } from './core-database';
 import type { ObjectCore } from './object-core';
-import { isTrivialSelectionQuery, type QueryContext, type QueryJoinSpec, type QueryResultEntry } from '../query';
+import { isSimpleSelectionQuery, type QueryContext, type QueryJoinSpec, type QueryResultEntry } from '../query';
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
@@ -58,7 +58,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
     const start = Date.now();
 
     // Special case for object id filter.
-    const trivial = isTrivialSelectionQuery(query);
+    const trivial = isSimpleSelectionQuery(query);
     if (!trivial) {
       return [];
     }

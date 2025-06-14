@@ -22,7 +22,7 @@ import {
   setConsolePrinter,
 } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
-import { type AnyEchoObject, create, getLabelForObject, Query, Ref } from '@dxos/echo-schema';
+import { type AnyEchoObject, create, getLabelForObject, getTypename, Query, Ref } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -349,6 +349,22 @@ const ResearchGraph = Schema.Struct({
   }),
 );
 
+const getColor = (type: string) => {
+  const colors = [
+    'text-red-500',
+    'text-green-500',
+    'text-blue-500',
+    'text-yellow-500',
+    'text-purple-500',
+    'text-pink-500',
+    'text-orange-500',
+    'text-violet-500',
+  ];
+
+  const hash = type.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[hash % colors.length];
+};
+
 // TODO(burdon): Cards.
 const ItemList = ({
   items = [],
@@ -366,9 +382,12 @@ const ItemList = ({
             <List.Item<AnyEchoObject>
               key={item.id}
               item={item}
-              classNames='grid grid-cols-[4rem_1fr] min-h-[32px] items-center'
+              classNames='grid grid-cols-[4rem_16rem_1fr] min-h-[32px] items-center'
             >
-              <div className='text-xs font-mono truncate px-1'>{item.id}</div>
+              <div className='text-xs font-mono font-thin px-1 text-subdued'>{item.id.slice(-6)}</div>
+              <div className={mx('text-xs font-mono font-thin truncate px-1', getColor(getTypename(item)!))}>
+                {getTypename(item)}
+              </div>
               <List.ItemTitle>{getTitle(item)}</List.ItemTitle>
             </List.Item>
           ))}

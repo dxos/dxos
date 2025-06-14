@@ -1,8 +1,4 @@
 //
-// Copyright 2024 DXOS.org
-//
-
-//
 // Copyright 2025 DXOS.org
 //
 
@@ -311,6 +307,14 @@ class FilterClass implements Filter<any> {
         typename: null,
         props: {},
       },
+    });
+  }
+
+  static relation() {
+    return new FilterClass({
+      type: 'object',
+      typename: null,
+      props: {},
     });
   }
 
