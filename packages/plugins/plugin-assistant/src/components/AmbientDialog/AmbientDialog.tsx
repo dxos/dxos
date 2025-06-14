@@ -56,7 +56,7 @@ export const AmbientDialog = ({
   return (
     <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
       <Dialog.Content
-        classNames='relative box-content py-0 px-2 md:is-[35rem] md:max-is-none overflow-hidden pointer-events-auto transition-[block-size] ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200'
+        classNames='relative box-content p-0 md:is-[35rem] md:max-is-none overflow-hidden pointer-events-auto transition-[block-size] ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200'
         inOverlayLayout
         {...resizeAttributes}
         style={{

@@ -12,15 +12,5 @@
     "src",
     "vite.config.ts"
   ],
-  "references": [
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../core/halo/credentials"
-    },
-    {
-      "path": "../../core/halo/keyring"
-    }
-  ]
+  "references": []
 }

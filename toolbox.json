@@ -64,6 +64,6 @@
         "packages/ui/react-ui*"
       ]
     },
-    "noProjectReferences": false
+    "noProjectReferences": true
   }
 }

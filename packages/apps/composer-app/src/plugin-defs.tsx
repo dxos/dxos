@@ -69,7 +69,7 @@ export type PluginConfig = State & {
   isStrict?: boolean;
 };
 
-export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
+export const getCore = ({ isPwa, isSocket }: PluginConfig): string[] =>
   [
     ATTENTION_PLUGIN,
     AUTOMATION_PLUGIN,
@@ -95,7 +95,7 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
     .filter(isNotFalsy)
     .flat();
 
-export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
+export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
   [
     // Default
     KANBAN_PLUGIN,
@@ -121,7 +121,7 @@ export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     .filter(isNotFalsy)
     .flat();
 
-export const plugins = ({ appKey, config, services, observability, isDev, isLabs, isPwa, isSocket }: PluginConfig) =>
+export const getPlugins = ({ appKey, config, services, observability, isDev, isLabs, isPwa, isSocket }: PluginConfig) =>
   [
     AssistantPlugin(),
     AttentionPlugin(),

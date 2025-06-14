@@ -6,17 +6,22 @@ import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
 import { AIServiceEdgeClient, defineTool, ToolResult } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
+import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { ArtifactId } from '@dxos/artifact';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { create } from '@dxos/echo-schema';
+import { DataType, DataTypes } from '@dxos/schema';
 
-import { Blueprint, BlueprintBuilder } from './blueprint';
+import { BlueprintBuilder } from './blueprint';
 import { setConsolePrinter } from './logger';
 import { BlueprintMachine } from './machine';
 import { TEST_EMAILS } from './test-data';
+import { createGraphWriterTool, createLocalSearchTool } from '../research';
+import { createExaTool } from '../research/exa';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
 
-describe.skip('Blueprint', () => {
+describe('Blueprint', () => {
   const aiService = new AIServiceEdgeClient({
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
     defaultGenerationOptions: {
@@ -26,12 +31,12 @@ describe.skip('Blueprint', () => {
   });
 
   test('follows a simple blueprint', { timeout: 60_000 }, async () => {
-    const blueprint = Blueprint.make([
-      'Generate an idea for a new product. Do not use any external tools for this.',
-      'Write a short description of the product.',
-      'Run a market research to see if the product is viable. Do not use any external tools for this.',
-      'Write a pitch deck for the product',
-    ]);
+    const blueprint = BlueprintBuilder.begin()
+      .step('Generate an idea for a new product. Do not use any external tools for this.')
+      .step('Write a short description of the product.')
+      .step('Run a market research to see if the product is viable. Do not use any external tools for this.')
+      .step('Write a pitch deck for the product')
+      .end();
 
     const machine = new BlueprintMachine(blueprint);
     setConsolePrinter(machine, true);
@@ -88,5 +93,43 @@ describe.skip('Blueprint', () => {
     const machine = new BlueprintMachine(blueprint);
     setConsolePrinter(machine);
     await machine.runToCompletion({ aiService, input: TEST_EMAILS[0] });
+  });
+
+  test.only('research', { timeout: 120_000 }, async () => {
+    const builder = await new EchoTestBuilder().open();
+    const { db } = await builder.createDatabase({ indexing: { vector: true }, types: DataTypes });
+
+    const [org1, org2] = [
+      db.add(
+        create(DataType.Organization, {
+          name: 'Exa',
+          website: 'https://exa.ai',
+          description: 'An AI-powered search engine company building search infrastructure for AI agents',
+        }),
+      ),
+      db.add(
+        create(DataType.Organization, {
+          name: 'Cresta',
+          website: 'https://cresta.ai',
+          description: 'A company that builds AI agents',
+        }),
+      ),
+    ];
+
+    await db.flush({ indexes: true });
+
+    const blueprint = BlueprintBuilder.begin()
+      .step('Research founders of the organization. Do deep research.')
+      .withTool(createExaTool({ apiKey: EXA_API_KEY }))
+      .step('Based on your research select matching entires that are already in the graph')
+      .withTool(createLocalSearchTool(db))
+      .step('Add researched data to the graph')
+      .withTool(createLocalSearchTool(db))
+      .withTool(createGraphWriterTool({ db, schemaTypes: DataTypes }))
+      .end();
+
+    const machine = new BlueprintMachine(blueprint);
+    setConsolePrinter(machine, true);
+    await machine.runToCompletion({ aiService, input: org1 });
   });
 });

@@ -73,7 +73,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             <div
               role='none'
               className={mx(
-                'shrink min-bs-0 border border-separator bg-baseSurface rounded-lg grid dx-focus-ring-group-x-indicator kanban-drop',
+                'shrink min-bs-0 border border-separator bg-baseSurface rounded-md grid dx-focus-ring-group-x-indicator kanban-drop',
                 railGridHorizontalContainFitContent,
               )}
             >
@@ -211,7 +211,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
 
                 return (
                   <div className='p-2'>
-                    <div className='rounded-lg max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface ring-focusLine ring-neutralFocusIndicator flex flex-col'>
+                    <div className='flex flex-col max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface ring-focusLine ring-neutralFocusIndicator rounded-md'>
                       {/* Column Header */}
                       <div className='flex items-center p-2'>
                         <IconButton

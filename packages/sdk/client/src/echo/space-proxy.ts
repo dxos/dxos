@@ -109,7 +109,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
-  private readonly _queues = new QueueFactory();
+  private readonly _queues = new QueueFactory(this.id);
 
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;

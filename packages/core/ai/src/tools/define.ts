@@ -46,15 +46,30 @@ export const parseToolName = (name: string) => {
  * Adapts schemas to be able to pass to AI providers.
  */
 export const toFunctionParameterSchema = (jsonSchema: Type.JsonSchema) => {
+  const go = (jsonSchema: Type.JsonSchema) => {
+    delete jsonSchema.propertyOrder;
+    delete jsonSchema.annotations;
+    if (jsonSchema.properties) {
+      for (const key in jsonSchema.properties) {
+        go(jsonSchema.properties![key]);
+      }
+    }
+    if (jsonSchema.items) {
+      if (Array.isArray(jsonSchema.items)) {
+        for (const item of jsonSchema.items) {
+          go(item);
+        }
+      } else {
+        go(jsonSchema.items as Type.JsonSchema);
+      }
+    }
+  };
+
   delete jsonSchema.anyOf;
   delete jsonSchema.$id;
   jsonSchema.type = 'object';
   jsonSchema.properties ??= {};
-  for (const key in jsonSchema.properties) {
-    if (typeof jsonSchema.properties![key].description !== 'string') {
-      throw new Error(`Property missing description: ${key}`);
-    }
-  }
+  go(jsonSchema);
 
   return jsonSchema;
 };

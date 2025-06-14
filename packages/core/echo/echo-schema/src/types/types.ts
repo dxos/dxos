@@ -20,7 +20,6 @@ export const ECHO_ATTR_META = '@meta';
  * NOTE: This describes the base type for all database objects.
  * It is stricter than `T extends {}` or `T extends object`.
  */
-// TODO(burdon): Consider moving to lower-level base type lib.
 // TODO(dmaretskyi): Rename AnyProperties.
 export type BaseObject = Record<string, any>;
 
