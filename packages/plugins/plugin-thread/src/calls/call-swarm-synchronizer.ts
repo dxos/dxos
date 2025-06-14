@@ -84,11 +84,11 @@ export class CallSwarmSynchronizer extends Resource {
   /**
    * @internal
    */
-  _getState() {
+  _getState(): CallState {
     return this._state;
   }
 
-  setRaisedHand(raisedHand: boolean) {
+  setRaisedHand(raisedHand: boolean): void {
     if (this._state.raisedHand === raisedHand) {
       return;
     }
@@ -97,7 +97,7 @@ export class CallSwarmSynchronizer extends Resource {
     this._notifyAndSchedule();
   }
 
-  setSpeaking(speaking: boolean) {
+  setSpeaking(speaking: boolean): void {
     if (this._state.speaking === speaking) {
       return;
     }
@@ -106,7 +106,7 @@ export class CallSwarmSynchronizer extends Resource {
     this._notifyAndSchedule();
   }
 
-  setJoined(joined: boolean) {
+  setJoined(joined: boolean): void {
     if (this._state.joined === joined) {
       return;
     }
@@ -115,12 +115,12 @@ export class CallSwarmSynchronizer extends Resource {
     this._notifyAndSchedule();
   }
 
-  setTracks(tracks: UserState['tracks']) {
+  setTracks(tracks: UserState['tracks']): void {
     this._state.tracks = { ...this._state.tracks, ...tracks };
     this._notifyAndSchedule();
   }
 
-  setActivity(key: string, payload: ActivityState['payload']) {
+  setActivity(key: string, payload: ActivityState['payload']): void {
     const lamportTimestamp = LamportTimestampCrdt.increment(
       this._state.activities?.[key]?.lamportTimestamp ?? { id: this._deviceKey },
     );
@@ -132,7 +132,7 @@ export class CallSwarmSynchronizer extends Resource {
   /**
    * @internal
    */
-  _setIdentity(identity: Identity) {
+  _setIdentity(identity: Identity): void {
     this._identityKey = identity.identityKey.toHex();
     this._displayName = identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
   }
@@ -140,14 +140,14 @@ export class CallSwarmSynchronizer extends Resource {
   /**
    * @internal
    */
-  _setDevice(device: Device) {
+  _setDevice(device: Device): void {
     this._deviceKey = device.deviceKey.toHex();
   }
 
   /**
    * @internal
    */
-  _setRoomId(roomId?: string) {
+  _setRoomId(roomId?: string): void {
     if (this._swarmCtx) {
       log.verbose('joined to a different room', { roomId });
       return;
@@ -156,7 +156,7 @@ export class CallSwarmSynchronizer extends Resource {
     this._state.roomId = roomId;
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     this._sendStateTask = new DeferredTask(this._ctx, async () => {
       await this._sendState();
     });
@@ -166,13 +166,13 @@ export class CallSwarmSynchronizer extends Resource {
     });
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     this._sendStateTask = undefined;
     this._reconcileSwarmStateTask = undefined;
   }
 
   @synchronized
-  async join() {
+  async join(): Promise<void> {
     invariant(this._state.roomId);
     invariant(!this._swarmCtx, 'Already joined');
 
@@ -202,7 +202,7 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   @synchronized
-  async leave() {
+  async leave(): Promise<void> {
     if (!this._swarmCtx) {
       return;
     }
@@ -223,14 +223,14 @@ export class CallSwarmSynchronizer extends Resource {
   /**
    * Notify and schedule send state task.
    */
-  private _notifyAndSchedule() {
+  private _notifyAndSchedule(): void {
     this.stateUpdated.emit(this._state);
     if (this._state.joined) {
       this._sendStateTask?.schedule();
     }
   }
 
-  private async _sendState() {
+  private async _sendState(): Promise<void> {
     if (!this._state.roomId || !this._identityKey || !this._deviceKey || !this._state.joined) {
       return;
     }
@@ -259,7 +259,7 @@ export class CallSwarmSynchronizer extends Resource {
     });
   }
 
-  private _processSwarmEvent(swarmEvent: SwarmResponse) {
+  private _processSwarmEvent(swarmEvent: SwarmResponse): void {
     if (!this._state.joined) {
       return;
     }
@@ -268,7 +268,7 @@ export class CallSwarmSynchronizer extends Resource {
     this._reconcileSwarmStateTask!.schedule();
   }
 
-  private async _reconcileSwarmState() {
+  private async _reconcileSwarmState(): Promise<void> {
     const swarmEvent = this._lastSwarmEvent;
     invariant(swarmEvent);
     // We include inactive peers that were disconnected abruptly and have not yet reconnected to not drop them from call.

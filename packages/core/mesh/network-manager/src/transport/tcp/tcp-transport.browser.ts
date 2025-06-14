@@ -23,15 +23,15 @@ export class TcpTransport implements Transport {
     return true;
   }
 
-  async open() {
+  async open(): Promise<this> {
     return this;
   }
 
-  async close() {
+  async close(): Promise<this> {
     return this;
   }
 
-  async onSignal() {
+  async onSignal(): Promise<void> {
     throw new Error('Method not implemented.');
   }
 

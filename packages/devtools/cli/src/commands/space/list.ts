@@ -51,7 +51,7 @@ export default class List extends BaseCommand<typeof List> {
     });
   }
 
-  async _startLiveUpdate(client: Client) {
+  async _startLiveUpdate(client: Client): Promise<void> {
     const ctx = new Context();
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
     ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));

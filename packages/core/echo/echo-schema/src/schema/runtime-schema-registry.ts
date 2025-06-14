@@ -63,7 +63,7 @@ export class RuntimeSchemaRegistry {
   }
 
   // TODO(burdon): TypedObject
-  addSchema(types: Schema.Schema.AnyNoContext[]) {
+  addSchema(types: Schema.Schema.AnyNoContext[]): void {
     types.forEach((schema) => {
       const typename = getTypenameOrThrow(schema);
       const version = getSchemaVersion(schema) ?? raise(new TypeError('Schema has no version.'));

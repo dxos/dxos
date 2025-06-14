@@ -24,7 +24,7 @@ export class DefaultSpaceStateMachine implements CredentialProcessor {
     return this._spaceId;
   }
 
-  async processCredential(credential: Credential) {
+  async processCredential(credential: Credential): Promise<void> {
     const assertion = getCredentialAssertion(credential);
     switch (assertion['@type']) {
       case 'dxos.halo.credentials.DefaultSpace': {

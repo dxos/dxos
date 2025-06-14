@@ -265,7 +265,10 @@ export class AISession {
     return this._pending;
   }
 
-  async runStructured<S extends Schema.Schema.AnyNoContext>(schema: S, options: SessionRunOptions) {
+  async runStructured<S extends Schema.Schema.AnyNoContext>(
+    schema: S,
+    options: SessionRunOptions,
+  ): Promise<Schema.Schema.Type<S>> {
     const parser = structuredOutputParser(schema);
     const result = await this.run({
       ...options,
@@ -312,7 +315,7 @@ export class AISession {
     });
   }
 
-  private _createQueryArtifactsTool(artifacts: ArtifactDefinition[]) {
+  private _createQueryArtifactsTool(artifacts: ArtifactDefinition[]): Tool {
     return defineTool('system', {
       name: 'query_artifact_definitions',
       description: 'Query the available artifact definitions',
@@ -332,7 +335,7 @@ export class AISession {
   private _createRequireTool(
     artifacts: ArtifactDefinition[],
     onRequire: (artifactDefinitionIds: readonly string[]) => void,
-  ) {
+  ): Tool {
     return defineTool('system', {
       name: 'require_artifact_definitions',
       description:
@@ -360,7 +363,7 @@ export class AISession {
     });
   }
 
-  private _createPlanningTool(options: SessionRunOptions) {
+  private _createPlanningTool(options: SessionRunOptions): Tool {
     return defineTool('system', {
       name: 'create_plan',
       description:
@@ -448,7 +451,7 @@ export class AISession {
     this.toolStatusReport.emit({ message, status });
   }
 
-  abort() {
+  abort(): void {
     this._stream?.abort();
   }
 }

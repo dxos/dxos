@@ -66,7 +66,7 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
     await this._rpc?.abort();
   }
 
-  close() {
+  close(): void {
     this._extensionContext?.close();
   }
 }

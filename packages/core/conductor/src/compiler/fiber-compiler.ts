@@ -191,7 +191,7 @@ export class GraphExecutor {
   /**
    * Clone the graph and the topology but discard the runtime state.
    */
-  clone() {
+  clone(): GraphExecutor {
     const executor = new GraphExecutor({
       computeMetaResolver: this._computeMetaResolver,
       computeNodeResolver: this._computeNodeResolver,
@@ -200,7 +200,7 @@ export class GraphExecutor {
     return executor;
   }
 
-  async load(graph: ComputeGraphModel) {
+  async load(graph: ComputeGraphModel): Promise<void> {
     this._computeCache.clear();
     this._topology = await createTopology({
       graph,
@@ -242,11 +242,11 @@ export class GraphExecutor {
    * Set outputs for a node.
    * When values are polled, this node will not be computed.
    */
-  setOutputs(nodeId: string, outputs: ComputeEffect<ValueBag<any>>) {
+  setOutputs(nodeId: string, outputs: ComputeEffect<ValueBag<any>>): void {
     this._computeCache.set(nodeId, outputs);
   }
 
-  setInputs(nodeId: string, inputs: ComputeEffect<ValueBag<any>>) {
+  setInputs(nodeId: string, inputs: ComputeEffect<ValueBag<any>>): void {
     this._computeCache.set(nodeId, inputs);
   }
 

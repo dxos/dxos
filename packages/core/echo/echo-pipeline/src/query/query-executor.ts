@@ -140,9 +140,9 @@ export class QueryExecutor extends Resource {
     return this._trace;
   }
 
-  protected override async _open(ctx: Context) {}
+  protected override async _open(ctx: Context): Promise<void> {}
 
-  protected override async _close(ctx: Context) {}
+  protected override async _close(ctx: Context): Promise<void> {}
 
   getResults(): QueryResult[] {
     return this._lastResultSet.map(

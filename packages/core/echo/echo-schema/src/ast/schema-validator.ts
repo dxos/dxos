@@ -15,7 +15,7 @@ export class SchemaValidator {
    * Recursively check that schema specifies constructions we can handle.
    * Validates there are no ambiguous discriminated union types.
    */
-  public static validateSchema(schema: Schema.Schema.AnyNoContext) {
+  public static validateSchema(schema: Schema.Schema.AnyNoContext): void {
     const visitAll = (nodes: SchemaAST.AST[]) => nodes.forEach((node) => this.validateSchema(Schema.make(node)));
     if (SchemaAST.isUnion(schema.ast)) {
       const typeAstList = schema.ast.types.filter((type) => SchemaAST.isTypeLiteral(type)) as SchemaAST.TypeLiteral[];

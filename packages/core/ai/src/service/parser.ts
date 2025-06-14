@@ -39,7 +39,7 @@ export class MixedStreamParser {
    */
   private _message?: Message | undefined;
 
-  private _emitBlock(contentBlock: MessageContentBlock, streamBlock?: StreamBlock) {
+  private _emitBlock(contentBlock: MessageContentBlock, streamBlock?: StreamBlock): void {
     const messageBlock = streamBlock ? mergeMessageBlock(contentBlock, streamBlock) : contentBlock;
     if (messageBlock) {
       if (messageBlock.type === 'text' && messageBlock.text.length === 0) {
@@ -52,7 +52,7 @@ export class MixedStreamParser {
     }
   }
 
-  private _emitUpdate(contentBlock: MessageContentBlock, streamBlock: StreamBlock) {
+  private _emitUpdate(contentBlock: MessageContentBlock, streamBlock: StreamBlock): void {
     const messageBlock = mergeMessageBlock(contentBlock, streamBlock);
     if (messageBlock) {
       messageBlock.pending = true;

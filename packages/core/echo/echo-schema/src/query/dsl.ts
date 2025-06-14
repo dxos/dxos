@@ -295,7 +295,7 @@ class FilterClass implements Filter<any> {
     return typeof value === 'object' && value !== null && '~Filter' in value;
   }
 
-  static everything() {
+  static everything(): FilterClass {
     return new FilterClass({
       type: 'object',
       typename: null,
@@ -303,7 +303,7 @@ class FilterClass implements Filter<any> {
     });
   }
 
-  static nothing() {
+  static nothing(): FilterClass {
     return new FilterClass({
       type: 'not',
       filter: {

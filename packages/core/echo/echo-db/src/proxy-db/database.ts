@@ -220,7 +220,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   @synchronized
-  async setSpaceRoot(rootUrl: string) {
+  async setSpaceRoot(rootUrl: string): Promise<void> {
     log('setSpaceRoot', { rootUrl });
     const firstTime = this._rootUrl === undefined;
     this._rootUrl = rootUrl;
@@ -261,7 +261,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Update objects.
    */
-  async update(filter: Filter.Any, operation: UpdateOperation) {
+  async update(filter: Filter.Any, operation: UpdateOperation): Promise<void> {
     await this._coreDatabase.update(filter, operation);
   }
 

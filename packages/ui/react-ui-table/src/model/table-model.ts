@@ -202,7 +202,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   // Initialisation
   //
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     this.initializeColumnMeta();
     this.initializeEffects();
     this._selection = new SelectionModel(this._sorting.sortedRows, this._features.selection.mode ?? 'multiple', () =>
