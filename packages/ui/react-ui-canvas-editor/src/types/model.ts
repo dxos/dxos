@@ -16,7 +16,7 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
   CanvasGraphModel<S>,
   CanvasGraphBuilder<S>
 > {
-  static create<S extends Shape>(graph?: Partial<Graph>) {
+  static create<S extends Shape>(graph?: Partial<Graph>): CanvasGraphModel<S> {
     if (isLiveObject(graph) as any) {
       return new CanvasGraphModel<S>(graph as Graph);
     }
@@ -32,7 +32,7 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
     return new CanvasGraphBuilder(this);
   }
 
-  override copy(graph?: Partial<Graph>) {
+  override copy(graph?: Partial<Graph>): CanvasGraphModel<S> {
     return CanvasGraphModel.create<S>(graph);
   }
 

@@ -97,7 +97,7 @@ export class QueueImpl<T extends BaseEchoObject = BaseEchoObject> implements Que
    * Overrides optimistic updates.
    */
   // TODO(dmaretskyi): Split optimistic into separate state so it doesn't get overridden.
-  async refresh() {
+  async refresh(): Promise<void> {
     const thisRefreshId = ++this._refreshId;
     let changed = false;
     try {

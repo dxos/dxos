@@ -43,7 +43,7 @@ export class IndexSchema extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async update(id: ObjectPointerEncoded, object: Partial<ObjectStructure>) {
+  async update(id: ObjectPointerEncoded, object: Partial<ObjectStructure>): Promise<boolean> {
     if (this._index.get(getTypeFromObject(object))?.has(id)) {
       return false;
     }
@@ -51,7 +51,7 @@ export class IndexSchema extends Resource implements Index {
     return true;
   }
 
-  async remove(id: ObjectPointerEncoded) {
+  async remove(id: ObjectPointerEncoded): Promise<void> {
     for (const [_, ids] of this._index.entries()) {
       if (ids.has(id)) {
         ids.delete(id);

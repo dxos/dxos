@@ -24,7 +24,7 @@ export class QueueFactory extends Resource implements QueueAPI {
     super();
   }
 
-  setService(service: QueuesService) {
+  setService(service: QueuesService): void {
     this._service = service;
   }
 

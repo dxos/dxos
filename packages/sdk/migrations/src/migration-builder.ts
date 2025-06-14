@@ -54,7 +54,7 @@ export class MigrationBuilder {
   async migrateObject(
     id: string,
     migrate: (objectStructure: ObjectStructure) => MaybePromise<{ schema: Schema.Schema.AnyNoContext; props: any }>,
-  ) {
+  ): Promise<void> {
     const objectStructure = await this.findObject(id);
     if (!objectStructure) {
       return;
@@ -88,7 +88,7 @@ export class MigrationBuilder {
     this._addHandleToFlushList(newHandle);
   }
 
-  async addObject(schema: Schema.Schema.AnyNoContext, props: any) {
+  async addObject(schema: Schema.Schema.AnyNoContext, props: any): Promise<string> {
     const core = this._createObject({ schema, props });
     return core.id;
   }
@@ -97,11 +97,11 @@ export class MigrationBuilder {
     return encodeReference(Reference.localObjectReference(id));
   }
 
-  deleteObject(id: string) {
+  deleteObject(id: string): void {
     this._deleteObjects.push(id);
   }
 
-  changeProperties(changeFn: (properties: ObjectStructure) => void) {
+  changeProperties(changeFn: (properties: ObjectStructure) => void): void {
     if (!this._newRoot) {
       this._buildNewRoot();
     }
@@ -117,7 +117,7 @@ export class MigrationBuilder {
   /**
    * @internal
    */
-  async _commit() {
+  async _commit(): Promise<void> {
     if (!this._newRoot) {
       this._buildNewRoot();
     }
@@ -143,7 +143,7 @@ export class MigrationBuilder {
     return docHandle;
   }
 
-  private _buildNewRoot() {
+  private _buildNewRoot(): void {
     const links = { ...(this._rootDoc.links ?? {}) };
     for (const id of this._deleteObjects) {
       delete links[id];
@@ -164,7 +164,15 @@ export class MigrationBuilder {
     this._addHandleToFlushList(this._newRoot);
   }
 
-  private _createObject({ id, schema, props }: { id?: string; schema: Schema.Schema.AnyNoContext; props: any }) {
+  private _createObject({
+    id,
+    schema,
+    props,
+  }: {
+    id?: string;
+    schema: Schema.Schema.AnyNoContext;
+    props: any;
+  }): ObjectCore {
     const core = new ObjectCore();
     if (id) {
       core.id = id;
@@ -187,7 +195,7 @@ export class MigrationBuilder {
     return core;
   }
 
-  private _addHandleToFlushList(handle: DocHandleProxy<any>) {
+  private _addHandleToFlushList(handle: DocHandleProxy<any>): void {
     this._flushIds.push(handle.documentId);
   }
 }

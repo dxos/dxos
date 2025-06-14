@@ -38,7 +38,7 @@ export class ServiceContainer {
    * @param services - Services to set.
    * @returns The container instance.
    */
-  setServices(services: Partial<Services>) {
+  setServices(services: Partial<Services>): this {
     this._services = { ...this._services, ...services };
     return this;
   }
@@ -52,7 +52,7 @@ export class ServiceContainer {
     return service as Context.Tag.Service<T>;
   }
 
-  clone() {
+  clone(): ServiceContainer {
     return new ServiceContainer().setServices({ ...this._services });
   }
 }

@@ -57,7 +57,7 @@ export class EdgeHttpClient {
     return this._baseUrl;
   }
 
-  setIdentity(identity: EdgeIdentity) {
+  setIdentity(identity: EdgeIdentity): void {
     if (this._edgeIdentity?.identityKey !== identity.identityKey || this._edgeIdentity?.peerKey !== identity.peerKey) {
       this._edgeIdentity = identity;
       this._authHeader = undefined;
@@ -246,7 +246,7 @@ export class EdgeHttpClient {
     }
   }
 
-  private async _handleUnauthorized(response: Response) {
+  private async _handleUnauthorized(response: Response): Promise<string> {
     if (!this._edgeIdentity) {
       log.warn('edge unauthorized response received before identity was set');
       throw EdgeCallFailedError.fromHttpFailure(response);

@@ -61,7 +61,7 @@ export class MMSTTopology implements Topology {
     }
   }
 
-  forceUpdate() {
+  forceUpdate(): void {
     this._lastAction = new Date(0);
     this.update();
   }
@@ -78,7 +78,7 @@ export class MMSTTopology implements Topology {
     // Nothing to do.
   }
 
-  private _runAlgorithm() {
+  private _runAlgorithm(): void {
     invariant(this._controller, 'Not initialized');
     const { connected, candidates, ownPeerId } = this._controller.getState();
 
@@ -125,7 +125,7 @@ export class MMSTTopology implements Topology {
     }
   }
 
-  toString() {
+  toString(): string {
     return 'MMSTTopology';
   }
 }

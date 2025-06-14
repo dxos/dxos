@@ -94,7 +94,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   // Lifecycle.
   //
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     this.initializeEffects();
   }
 
@@ -154,7 +154,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   // Private logic.
   //
 
-  private _getSelectOptions() {
+  private _getSelectOptions(): { id: string; title: string; color: string }[] {
     if (this._kanban.columnFieldId === undefined) {
       return [];
     }
@@ -181,7 +181,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   /**
    * Moves items with invalid column values to uncategorized by setting their column field to undefined.
    */
-  private _moveInvalidItemsToUncategorized() {
+  private _moveInvalidItemsToUncategorized(): void {
     const validColumnValues = new Set(this._getSelectOptions()?.map((opt) => opt.id));
     const columnPath = this.columnFieldPath;
     for (const item of this._items.value) {
@@ -194,7 +194,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   }
 
   /** Find a column by ID in the arrangement, checking both column values and card IDs. */
-  private _findColumn(id: string, arrangement: ArrangedCards<T>) {
+  private _findColumn(id: string, arrangement: ArrangedCards<T>): { columnValue: string; cards: T[] } | undefined {
     return arrangement.find(({ columnValue, cards }) => columnValue === id || cards.some((card) => card.id === id));
   }
 
@@ -202,7 +202,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
    * Updates the field projection options to reorder columns. Updating the arrangement
    * is not necessary as it's done automatically when the field projection updates.
    */
-  private _handleColumnReorder(source: { id: string }, target: { id: string }, closestEdge: 'left' | 'right') {
+  private _handleColumnReorder(source: { id: string }, target: { id: string }, closestEdge: 'left' | 'right'): void {
     if (source.id === UNCATEGORIZED_VALUE || target.id === UNCATEGORIZED_VALUE) {
       return;
     }
@@ -236,7 +236,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     source: { id: string; type: 'card' | 'column' },
     target: { id: string; type: 'card' | 'column' },
     closestEdge: 'top' | 'bottom',
-  ) {
+  ): void {
     const sourceCardIndex = sourceColumn.cards.findIndex((card) => card.id === source.id);
     const targetCardIndex = targetColumn.cards.findIndex((card) => card.id === target.id);
 

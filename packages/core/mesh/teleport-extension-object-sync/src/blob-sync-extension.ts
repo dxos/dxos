@@ -141,7 +141,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
   }
 
   @synchronized
-  async push(data: BlobChunk) {
+  async push(data: BlobChunk): Promise<void> {
     if (this._ctx.disposed) {
       return;
     }
@@ -149,7 +149,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
     await this.rpc.BlobSyncService.push(data);
   }
 
-  updateWantList(wantList: WantList) {
+  updateWantList(wantList: WantList): void {
     if (this._ctx.disposed) {
       return;
     }
@@ -157,7 +157,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
     this._updateWantList.schedule();
   }
 
-  reconcileUploads() {
+  reconcileUploads(): void {
     if (this._ctx.disposed) {
       return;
     }

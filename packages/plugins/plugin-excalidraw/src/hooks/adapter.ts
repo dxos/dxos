@@ -30,11 +30,11 @@ export class ExcalidrawStoreAdapter extends AbstractAutomergeStoreAdapter<Excali
     super();
   }
 
-  override getElements() {
+  override getElements(): ExcalidrawElement[] {
     return Array.from(this._elements.values());
   }
 
-  protected override onUpdate({ updated, deleted }: Batch<ExcalidrawElement>) {
+  protected override onUpdate({ updated, deleted }: Batch<ExcalidrawElement>): void {
     updated?.forEach((element) => {
       this._elements.set(element.id, element);
       this._versions.set(element.id, element.version);
@@ -50,7 +50,7 @@ export class ExcalidrawStoreAdapter extends AbstractAutomergeStoreAdapter<Excali
     });
   }
 
-  save() {
+  save(): void {
     if (!this.isOpen) {
       return;
     }

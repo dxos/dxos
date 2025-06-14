@@ -33,7 +33,7 @@ export class SystemDaemon implements Daemon {
     // no-op.
   }
 
-  async disconnect() {
+  async disconnect(): Promise<void> {
     // no-op.
   }
 

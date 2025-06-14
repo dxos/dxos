@@ -28,21 +28,26 @@ export class TestBuilder {
     return Array.from(this._servers.values());
   }
 
-  async createPeer(params: TestAgentParams) {
+  async createPeer(params: TestAgentParams): Promise<TestPeer> {
     const peer = new TestPeer(params);
     await peer.start();
     this._peers.set(peer.peerId, peer);
     return peer;
   }
 
-  async createSignalServer(num: number, outFolder: string, signalArguments: string[], onError?: (err: any) => void) {
+  async createSignalServer(
+    num: number,
+    outFolder: string,
+    signalArguments: string[],
+    onError?: (err: any) => void,
+  ): Promise<void> {
     const server = await runSignal(num, outFolder, signalArguments, onError);
     await server.waitUntilStarted();
     this._servers.set(server.url(), server);
     return server;
   }
 
-  async destroy() {
+  async destroy(): Promise<void> {
     await Promise.all([...this._peers.values()].map((p) => p.destroy()));
     await Promise.all([...this._servers.values()].map((s) => s.stop()));
   }
@@ -64,11 +69,11 @@ export class TestPeer {
     this.peerId = peerId;
   }
 
-  regeneratePeerId() {
+  regeneratePeerId(): void {
     this.peerId = PublicKey.random();
   }
 
-  async start() {
+  async start(): Promise<void> {
     if (this._ctx.disposed) {
       throw new Error('Agent already destroyed');
     }
@@ -112,7 +117,7 @@ export class TestPeer {
     await this.signalManager.subscribeMessages(this.peerId);
   }
 
-  async destroy() {
+  async destroy(): Promise<void> {
     log.trace(
       'dxos.test.signal.start',
       checkType<TraceEvent>({
@@ -124,11 +129,11 @@ export class TestPeer {
     await this.signalManager.close();
   }
 
-  static hash(agent: TestPeer) {
+  static hash(agent: TestPeer): string {
     return agent.peerId.toHex();
   }
 
-  async joinTopic(topic: PublicKey) {
+  async joinTopic(topic: PublicKey): Promise<void> {
     log.trace(
       'dxos.test.signal',
       checkType<TraceEvent>({
@@ -140,7 +145,7 @@ export class TestPeer {
     await this.signalManager.join({ topic, peerId: this.peerId });
   }
 
-  async leaveTopic(topic: PublicKey) {
+  async leaveTopic(topic: PublicKey): Promise<void> {
     log.trace(
       'dxos.test.signal',
       checkType<TraceEvent>({
@@ -152,7 +157,7 @@ export class TestPeer {
     await this.signalManager.leave({ topic, peerId: this.peerId });
   }
 
-  async sendMessage(to: PublicKey) {
+  async sendMessage(to: PublicKey): Promise<void> {
     const message: Message = {
       author: this.peerId,
       recipient: to,

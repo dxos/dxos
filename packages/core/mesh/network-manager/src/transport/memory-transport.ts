@@ -70,7 +70,7 @@ export class MemoryTransport implements Transport {
     return !this._closed;
   }
 
-  async open() {
+  async open(): Promise<this> {
     log('opening...');
 
     // Initiator will send a signal, the receiver will receive the unique ID and connect the streams.
@@ -126,7 +126,7 @@ export class MemoryTransport implements Transport {
     return this;
   }
 
-  async close() {
+  async close(): Promise<this> {
     log('closing...');
     this._closed = true;
 
@@ -159,7 +159,7 @@ export class MemoryTransport implements Transport {
     return this;
   }
 
-  async onSignal({ payload }: Signal) {
+  async onSignal({ payload }: Signal): Promise<void> {
     log('received signal', { payload });
     if (!payload?.transportId) {
       return;
@@ -173,11 +173,16 @@ export class MemoryTransport implements Transport {
     }
   }
 
-  async getDetails() {
+  async getDetails(): Promise<string> {
     return this._instanceId.toHex();
   }
 
-  async getStats() {
+  async getStats(): Promise<{
+    bytesSent: number;
+    bytesReceived: number;
+    packetsSent: number;
+    packetsReceived: number;
+  }> {
     return {
       bytesSent: 0,
       bytesReceived: 0,

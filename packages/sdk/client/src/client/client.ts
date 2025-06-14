@@ -135,11 +135,11 @@ export class Client {
     }
   }
 
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return this.toString();
   }
 
-  toString() {
+  toString(): string {
     return `Client(${this._instanceId})`;
   }
 
@@ -237,7 +237,7 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  addTypes(types: Schema.Schema.AnyNoContext[]) {
+  addTypes(types: Schema.Schema.AnyNoContext[]): this {
     log('addTypes', { schema: types.map((type) => getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
@@ -339,7 +339,7 @@ export class Client {
    * Required before using the Client instance.
    */
   @synchronized
-  async initialize() {
+  async initialize(): Promise<void> {
     if (this._initialized) {
       return;
     }
@@ -368,7 +368,7 @@ export class Client {
     log.trace('dxos.sdk.client.open', Trace.end({ id: this._instanceId }));
   }
 
-  private async _open() {
+  private async _open(): Promise<void> {
     log('opening...');
     invariant(this._services);
     const { SpaceList } = await import('../echo/space-list');
@@ -488,7 +488,7 @@ export class Client {
    * Open/close is re-entrant.
    */
   @synchronized
-  async destroy() {
+  async destroy(): Promise<void> {
     if (!this._initialized) {
       return;
     }
@@ -501,7 +501,7 @@ export class Client {
     this._initialized = false;
   }
 
-  private async _close() {
+  private async _close(): Promise<void> {
     log('closing...');
     this._statusTimeout && clearTimeout(this._statusTimeout);
     await this._statusStream?.close();
@@ -529,7 +529,7 @@ export class Client {
    * Re-using the client after reset is not currently supported.
    */
   @synchronized
-  async reset() {
+  async reset(): Promise<void> {
     if (!this._initialized) {
       throw new ApiError('Client not open.');
     }
