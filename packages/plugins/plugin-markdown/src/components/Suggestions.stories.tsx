@@ -77,6 +77,7 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
     invariant(queue);
     queue.append([create(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
     const message = queue.objects.at(-1);
+    invariant(message);
 
     const text = await doc.content.load();
     const accessor = createDocAccessor(text, ['content']);
@@ -90,7 +91,6 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
 
     // {
     //   const ref = refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id]));
-
     //   const message = deref(ref);
     // }
 

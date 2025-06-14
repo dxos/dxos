@@ -58,7 +58,7 @@ export const useInvocationSpans = ({ space, script }: { space?: Space; script?: 
   const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn, {
     pollInterval: 1000,
   });
-  const invocationSpans = useMemo(() => createInvocationSpans(invocationsQueue?.items), [invocationsQueue?.items]);
+  const invocationSpans = useMemo(() => createInvocationSpans(invocationsQueue?.objects), [invocationsQueue?.objects]);
   const scopedInvocationSpans = useMemo(() => {
     if (functionsForScript) {
       return invocationSpans.filter((span) => {

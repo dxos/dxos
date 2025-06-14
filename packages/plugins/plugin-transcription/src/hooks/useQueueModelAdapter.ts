@@ -26,7 +26,7 @@ export const useQueueModelAdapter = <T extends Chunk>(
     }
 
     const update = () => {
-      for (const block of queue?.items ?? []) {
+      for (const block of queue?.objects ?? []) {
         model.appendChunk(block);
       }
 
@@ -56,7 +56,9 @@ export const useQueueModelAdapter = <T extends Chunk>(
     }
 
     const chunk = queue.objects.at(-1);
-    model.appendChunk(chunk);
+    if (chunk) {
+      model.appendChunk(chunk);
+    }
   }, [model, loaded, queue?.objects.length]);
 
   return model;

@@ -50,7 +50,7 @@ export const LogPanel: FC<LogPanelProps> = ({ span }) => {
   );
 
   const rows = useMemo(() => {
-    if (!eventQueue?.items?.length) {
+    if (!eventQueue?.objects?.length) {
       return [];
     }
 

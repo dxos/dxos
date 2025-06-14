@@ -21,7 +21,7 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
   const eventQueue = useQueue<TraceEvent>(traceQueueDxn, { pollInterval: 2000 });
 
   const errorLogs = useMemo(() => {
-    if (!eventQueue?.items?.length) {
+    if (!eventQueue?.objects?.length) {
       return [];
     }
 
