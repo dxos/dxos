@@ -20,7 +20,7 @@ import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { EchoClient, type QueuesService, QueueServiceImpl, QueueServiceStub } from '@dxos/echo-db';
+import { EchoClient, type QueuesService, QueueServiceImpl, QueueServiceStub, type Hypergraph } from '@dxos/echo-db';
 import { getTypename } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -218,19 +218,19 @@ export class Client {
   }
 
   /**
+   * @deprecated Temporary.
+   */
+  get graph(): Hypergraph {
+    return this._echoClient.graph;
+  }
+
+  /**
    * Shell API.
    */
   get shell(): Shell {
     invariant(this._runtime, 'Client not initialized.');
     invariant(this._runtime.shell, 'Shell not available.');
     return this._runtime.shell;
-  }
-
-  /**
-   * @deprecated Temporary.
-   */
-  get graph() {
-    return this._echoClient.graph;
   }
 
   /**

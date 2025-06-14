@@ -186,8 +186,8 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
     const newSpace = await client.spaces.create();
     setSpace(newSpace);
-    setFilter(undefined);
     setAst(undefined);
+    setFilter(undefined);
     promptRef.current?.setText('');
   }, [space, client]);
 
