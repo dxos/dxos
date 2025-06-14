@@ -20,6 +20,7 @@ export * from './stream-to-array';
 export * from './task-scheduling';
 export * from './test-stream';
 export * from './testing';
+export * from './throttle';
 export * from './timeout';
 export * from './timer';
 export * from './track-leaks';
