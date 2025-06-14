@@ -109,8 +109,6 @@ jobs:
         uses: ./.github/actions/setup
         with:
           node-version: 20.18.1
-          # TODO(wittjosiah): Nx Agents were flaky.
-          # stop-agents-after: build
 
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
