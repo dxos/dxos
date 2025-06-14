@@ -93,7 +93,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
                 getDropElement={getColumnDropElement}
-                separatorOnScroll={8}
+                separatorOnScroll={9}
               >
                 {cards.map((card, cardIndex, cardsArray) => (
                   <StackItem.Root
@@ -157,7 +157,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
               {onAddCard && (
                 <div
                   role='none'
-                  className='plb-2 pli-2 relative before:absolute before:inset-inline-2 before:block-start-0 before:bs-px before:bg-subduedSeparator'
+                  className='plb-2 mli-2 border-bs border-transparent [[data-scroll-separator-end="true"]_&]:border-subduedSeparator'
                 >
                   <IconButton
                     icon='ph--plus--regular'

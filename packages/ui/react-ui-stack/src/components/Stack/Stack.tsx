@@ -82,9 +82,16 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     const handleScroll = useCallback(() => {
       if (stackElement && Number.isFinite(separatorOnScroll)) {
         const scrollPosition = orientation === 'horizontal' ? stackElement.scrollLeft : stackElement.scrollTop;
-        stackElement
-          .closest('[data-scroll-separator]')
-          ?.setAttribute('data-scroll-separator', String(scrollPosition > separatorOnScroll!));
+        const scrollSize = orientation === 'horizontal' ? stackElement.scrollWidth : stackElement.scrollHeight;
+        const clientSize = orientation === 'horizontal' ? stackElement.clientWidth : stackElement.clientHeight;
+        const separatorHost = stackElement.closest('[data-scroll-separator]');
+        if (separatorHost) {
+          separatorHost.setAttribute('data-scroll-separator', String(scrollPosition > separatorOnScroll!));
+          separatorHost.setAttribute(
+            'data-scroll-separator-end',
+            String(scrollSize - (scrollPosition + clientSize) > separatorOnScroll!),
+          );
+        }
       }
     }, [stackElement, separatorOnScroll, orientation]);
 
