@@ -12,6 +12,7 @@ import { type DXN } from '@dxos/keys';
  */
 export type Queue<T extends BaseEchoObject = BaseEchoObject> = {
   dxn: DXN;
+  // TODO(burdon): Rename objects.
   items: T[]; // TODO(burdon): Make readonly.
   isLoading: boolean;
   error: Error | null;
