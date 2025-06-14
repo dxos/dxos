@@ -80,11 +80,11 @@ export class ClientRpcServer {
     });
   }
 
-  async open() {
+  async open(): Promise<void> {
     await this._rpcPeer.open();
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this._rpcPeer.close();
   }
 

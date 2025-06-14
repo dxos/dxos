@@ -41,7 +41,7 @@ export class MixedBlockstore extends BaseBlockstore {
     this.#flushQueue = debounce(this.#flushQueueInt, 5000);
   }
 
-  async open() {
+  async open(): Promise<void> {
     await this.#localStore.open();
     await this.#restoreQueue();
 
@@ -55,7 +55,7 @@ export class MixedBlockstore extends BaseBlockstore {
     });
   }
 
-  url(apiHost: string, cid?: CID) {
+  url(apiHost: string, cid?: CID): string {
     const path = cid ? cid.toString() : '';
     return `${apiHost}/api/file${path.length ? '/' + path : ''}`;
   }
@@ -122,7 +122,7 @@ export class MixedBlockstore extends BaseBlockstore {
 
   // REMOTE
 
-  async putRemote(key: CID, val: Uint8Array) {
+  async putRemote(key: CID, val: Uint8Array): Promise<void> {
     if (this.#apiHost) {
       await fetch(this.url(this.#apiHost, key), {
         method: 'POST',
@@ -131,7 +131,7 @@ export class MixedBlockstore extends BaseBlockstore {
     }
   }
 
-  async putCarRemote(car: Uint8Array) {
+  async putCarRemote(car: Uint8Array): Promise<void> {
     if (this.#apiHost) {
       await fetch(this.url(this.#apiHost), {
         method: 'POST',
@@ -147,11 +147,11 @@ export class MixedBlockstore extends BaseBlockstore {
 
   readonly queueCacheName = `${storeName()}/state/queue`;
 
-  async #addToQueue(key: CID) {
+  async #addToQueue(key: CID): Promise<void> {
     await this.#saveQueue([...this.#queue, key.toString()]);
   }
 
-  async #flushQueueInt() {
+  async #flushQueueInt(): Promise<void> {
     if (!this.#isConnected || !this.#apiHost) {
       return;
     }
@@ -186,7 +186,7 @@ export class MixedBlockstore extends BaseBlockstore {
     await this.#saveQueue(queue);
   }
 
-  async #restoreQueue() {
+  async #restoreQueue(): Promise<void> {
     const fromCache = await IDB.get(this.queueCacheName);
     if (fromCache && Array.isArray(fromCache)) {
       this.#queue = fromCache;
@@ -194,7 +194,7 @@ export class MixedBlockstore extends BaseBlockstore {
     }
   }
 
-  async #saveQueue(items: string[]) {
+  async #saveQueue(items: string[]): Promise<void> {
     const arr = [...items];
     this.#queue = arr;
     await IDB.set(this.queueCacheName, arr);
@@ -202,7 +202,7 @@ export class MixedBlockstore extends BaseBlockstore {
 
   // 🛠️
 
-  async #createCar(blocks: Block[]) {
+  async #createCar(blocks: Block[]): Promise<Uint8Array> {
     const { writer, out } = CarWriter.create();
     const outPromise = all(out);
 

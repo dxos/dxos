@@ -182,7 +182,7 @@ export class InvitationsManager {
     return [...this._acceptInvitations.values()].map((i) => i.get());
   }
 
-  onPersistentInvitationsLoaded(ctx: Context, callback: () => void) {
+  onPersistentInvitationsLoaded(ctx: Context, callback: () => void): void {
     if (this._persistentInvitationsLoaded) {
       callback();
     } else {
@@ -231,7 +231,10 @@ export class InvitationsManager {
     } satisfies Invitation;
   }
 
-  private _createObservableInvitation(handler: InvitationProtocol, invitation: Invitation) {
+  private _createObservableInvitation(
+    handler: InvitationProtocol,
+    invitation: Invitation,
+  ): { ctx: Context; stream: PushStream<Invitation>; observableInvitation: CancellableInvitation } {
     const stream = new PushStream<Invitation>();
     const ctx = new Context({
       onError: (err) => {
@@ -254,7 +257,15 @@ export class InvitationsManager {
     return { ctx, stream, observableInvitation };
   }
 
-  private _createObservableAcceptingInvitation(handler: InvitationProtocol, initialState: Invitation) {
+  private _createObservableAcceptingInvitation(
+    handler: InvitationProtocol,
+    initialState: Invitation,
+  ): {
+    ctx: Context;
+    invitation: AuthenticatingInvitation;
+    stream: PushStream<Invitation>;
+    otpEnteredTrigger: Trigger<string>;
+  } {
     const otpEnteredTrigger = new Trigger<string>();
     const stream = new PushStream<Invitation>();
     const ctx = new Context({
@@ -310,7 +321,7 @@ export class InvitationsManager {
     }
   }
 
-  private _onInvitationComplete(invitation: CancellableInvitation, callback: () => void) {
+  private _onInvitationComplete(invitation: CancellableInvitation, callback: () => void): void {
     invitation.subscribe(
       () => {},
       () => {},

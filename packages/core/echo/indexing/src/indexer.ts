@@ -204,7 +204,7 @@ export class Indexer extends Resource {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async reindex(idToHeads: IdToHeads) {
+  async reindex(idToHeads: IdToHeads): Promise<void> {
     const batch = this._db.batch();
     this._metadataStore.markDirty(idToHeads, batch);
     this._metadataStore.dropFromClean(Array.from(idToHeads.keys()), batch);
@@ -215,11 +215,11 @@ export class Indexer extends Resource {
   /**
    * Perform any pending index updates.
    */
-  async updateIndexes() {
+  async updateIndexes(): Promise<void> {
     await this._run.runBlocking();
   }
 
-  private async _loadIndexes() {
+  private async _loadIndexes(): Promise<void> {
     const kinds = await this._engine.loadIndexKindsFromDisk();
     for (const [identifier, kind] of kinds.entries()) {
       if (!this._indexConfig || this._indexConfig.indexes?.some((configKind) => isEqual(configKind, kind))) {
@@ -248,13 +248,13 @@ export class Indexer extends Resource {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _promoteNewIndexes() {
+  private async _promoteNewIndexes(): Promise<void> {
     await this._engine.promoteNewIndexes();
     this.updated.emit();
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _indexUpdatedObjects() {
+  private async _indexUpdatedObjects(): Promise<void> {
     if (this._ctx.disposed) {
       return;
     }

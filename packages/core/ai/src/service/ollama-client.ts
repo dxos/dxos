@@ -74,7 +74,7 @@ export class OllamaClient implements AIServiceClient {
     this._maxToolInvocations = maxToolInvocations ?? 3;
   }
 
-  private _getEmbededTools(clientTools: Tool[]) {
+  private _getEmbededTools(clientTools: Tool[]): Tool[] {
     return [
       ...this._tools,
       ...clientTools

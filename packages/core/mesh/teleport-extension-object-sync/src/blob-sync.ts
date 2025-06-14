@@ -38,9 +38,9 @@ export class BlobSync {
 
   constructor(private readonly _params: BlobSyncParams) {}
 
-  async open() {}
+  async open(): Promise<void> {}
 
-  async close() {
+  async close(): Promise<void> {
     await this._ctx.dispose();
   }
 
@@ -98,7 +98,7 @@ export class BlobSync {
     return ctx ? cancelWithContext(ctx, request.trigger.wait()) : request.trigger.wait();
   }
 
-  createExtension() {
+  createExtension(): BlobSyncExtension {
     const extension = new BlobSyncExtension({
       blobStore: this._params.blobStore,
       onOpen: async () => {
@@ -138,7 +138,7 @@ export class BlobSync {
   /**
    * Notify extensions that a blob with the given id was added to the blob store.
    */
-  async notifyBlobAdded(_id: Uint8Array) {
+  async notifyBlobAdded(_id: Uint8Array): Promise<void> {
     this._reconcileUploads();
   }
 
@@ -148,13 +148,13 @@ export class BlobSync {
     };
   }
 
-  private _reconcileUploads() {
+  private _reconcileUploads(): void {
     for (const extension of this._extensions) {
       extension.reconcileUploads();
     }
   }
 
-  private _updateExtensionsWantList() {
+  private _updateExtensionsWantList(): void {
     for (const extension of this._extensions) {
       extension.updateWantList(this._getWantList());
     }

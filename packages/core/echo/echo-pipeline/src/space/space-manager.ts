@@ -83,10 +83,10 @@ export class SpaceManager {
   }
 
   @synchronized
-  async open() {}
+  async open(): Promise<void> {}
 
   @synchronized
-  async close() {
+  async close(): Promise<void> {
     await Promise.all([...this._spaces.values()].map((space) => space.close()));
   }
 
@@ -98,7 +98,7 @@ export class SpaceManager {
     onDelegatedInvitationStatusChange,
     onMemberRolesChanged,
     memberKey,
-  }: ConstructSpaceParams) {
+  }: ConstructSpaceParams): Promise<Space> {
     log.trace('dxos.echo.space-manager.construct-space', trace.begin({ id: this._instanceId }));
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 

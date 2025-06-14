@@ -232,7 +232,7 @@ export class InvitationHostExtension
     };
   }
 
-  override async onOpen(context: ExtensionContext) {
+  override async onOpen(context: ExtensionContext): Promise<void> {
     await super.onOpen(context);
 
     try {
@@ -272,7 +272,7 @@ export class InvitationHostExtension
     return invitation;
   }
 
-  private _assertInvitationState(stateOrMany: Invitation.State | Invitation.State[]) {
+  private _assertInvitationState(stateOrMany: Invitation.State | Invitation.State[]): void {
     const invitation = this._requireActiveInvitation();
     const validStates = Array.isArray(stateOrMany) ? stateOrMany : [stateOrMany];
     if (!validStates.includes(invitation.state)) {
@@ -283,15 +283,15 @@ export class InvitationHostExtension
     }
   }
 
-  override async onClose() {
+  override async onClose(): Promise<void> {
     await this._destroy();
   }
 
-  override async onAbort() {
+  override async onAbort(): Promise<void> {
     await this._destroy();
   }
 
-  private async _destroy() {
+  private async _destroy(): Promise<void> {
     await this._ctx.dispose();
     if (this._invitationFlowLock != null) {
       this._invitationFlowLock?.release();

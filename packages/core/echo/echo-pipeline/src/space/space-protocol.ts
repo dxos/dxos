@@ -124,7 +124,7 @@ export class SpaceProtocol {
   }
 
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
-  async addFeed(feed: FeedWrapper<FeedMessage>) {
+  async addFeed(feed: FeedWrapper<FeedMessage>): Promise<void> {
     log('addFeed', { key: feed.key });
 
     this._feeds.add(feed);
@@ -136,7 +136,7 @@ export class SpaceProtocol {
   }
 
   // TODO(burdon): Rename open? Common open/close interfaces for all services?
-  async start() {
+  async start(): Promise<void> {
     if (this._connection) {
       return;
     }
@@ -158,11 +158,11 @@ export class SpaceProtocol {
     log('started');
   }
 
-  public updateTopology() {
+  public updateTopology(): void {
     this._topology.forceUpdate();
   }
 
-  async stop() {
+  async stop(): Promise<void> {
     await this.blobSync.close();
 
     if (this._connection) {

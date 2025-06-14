@@ -106,7 +106,7 @@ export class ChessModel implements BoardModel<ChessPiece> {
     return this._game.fen();
   }
 
-  initialize(fen?: string) {
+  initialize(fen?: string): void {
     this._pieces.value = {};
     this._game = new Chess(fen ? (validateFen(fen).ok ? fen : undefined) : undefined);
     this._update();
@@ -148,7 +148,7 @@ export class ChessModel implements BoardModel<ChessPiece> {
   /**
    * Update pieces preserving identity.
    */
-  private _update() {
+  private _update(): void {
     const pieces: PieceMap<ChessPiece> = {};
     this._game.board().flatMap((row) =>
       row.forEach((record) => {

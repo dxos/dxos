@@ -41,7 +41,7 @@ export class DxGridAxisResizeHandle extends LitElement {
 
   private cleanup: CleanupFn | null = null;
 
-  private dispatchResize(location: DragLocationHistory, state: 'dragging' | 'dropped') {
+  private dispatchResize(location: DragLocationHistory, state: 'dragging' | 'dropped'): void {
     const client = this.axis === 'row' ? 'clientY' : 'clientX';
     const event = new DxAxisResizeInternal({
       axis: this.axis,
@@ -54,7 +54,7 @@ export class DxGridAxisResizeHandle extends LitElement {
     this.dispatchEvent(event);
   }
 
-  private mount(element?: Element) {
+  private mount(element?: Element): void {
     this.cleanup?.();
     const host = this;
     if (element) {
@@ -80,12 +80,12 @@ export class DxGridAxisResizeHandle extends LitElement {
     }
   }
 
-  override disconnectedCallback() {
+  override disconnectedCallback(): void {
     super.disconnectedCallback();
     this.cleanup?.();
   }
 
-  override createRenderRoot() {
+  override createRenderRoot(): this {
     return this;
   }
 }

@@ -25,7 +25,7 @@ class TagWidget extends WidgetType {
     super();
   }
 
-  toDOM() {
+  toDOM(): HTMLSpanElement {
     const span = document.createElement('span');
     span.className = 'cm-tag';
     span.textContent = this._text;

@@ -181,7 +181,7 @@ export class LogPrinter {
     private readonly _filePrefix: string,
   ) {}
 
-  logReport(report: LogReport, options: LogOptions = { skipPassing: true, skipText: true }) {
+  logReport(report: LogReport, options: LogOptions = { skipPassing: true, skipText: true }): void {
     // TODO(burdon): Other metadata.
     this._logSection(report.jobUrl, false);
 
@@ -214,7 +214,7 @@ export class LogPrinter {
     });
   }
 
-  _logSection(text: string, newline = true) {
+  _logSection(text: string, newline = true): void {
     newline && this._logger();
     this._logger(chalk.grey('##'));
     this._logger(`${chalk.grey('##')} ${text}`);

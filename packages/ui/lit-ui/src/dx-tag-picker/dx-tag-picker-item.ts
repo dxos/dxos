@@ -35,11 +35,11 @@ export class DxTagPickerItem extends LitElement {
   @property({ type: String })
   removeLabel: string | undefined = undefined;
 
-  private handleClickActivate() {
+  private handleClickActivate(): void {
     this.dispatchEvent(new DxTagPickerItemClick({ itemId: this.itemId, action: 'activate' }));
   }
 
-  private handleClickRemove() {
+  private handleClickRemove(): void {
     this.dispatchEvent(new DxTagPickerItemClick({ itemId: this.itemId, action: 'remove' }));
   }
 
@@ -53,7 +53,7 @@ export class DxTagPickerItem extends LitElement {
     >`;
   }
 
-  override createRenderRoot() {
+  override createRenderRoot(): this {
     return this;
   }
 }

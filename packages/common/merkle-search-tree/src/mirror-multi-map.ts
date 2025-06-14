@@ -59,7 +59,7 @@ export class MirrorMultiMap<T> {
     }
   }
 
-  async setLocalBatch(pairs: (readonly [Key, T])[]) {
+  async setLocalBatch(pairs: (readonly [Key, T])[]): Promise<void> {
     const updates = pairs.map(([key, value]) => [key, this.#encode(value)] as const);
     this.#currentRoot = await this.#forest.setBatch(this.#currentRoot, updates);
   }
@@ -84,7 +84,7 @@ export class MirrorMultiMap<T> {
     }
   }
 
-  async setForBatch(actorId: ActorID, pairs: [Key, T][]) {
+  async setForBatch(actorId: ActorID, pairs: [Key, T][]): Promise<void> {
     const remoteState = this.#remoteStates.get(actorId) ?? initSyncState();
     const updates = pairs.map(([key, value]) => [key, this.#encode(value)] as const);
     const prevRoot = remoteState.remoteRoot ?? (await this.#forest.createTree([]));
@@ -160,7 +160,7 @@ export class MirrorMultiMap<T> {
     return result;
   }
 
-  clearActorState(actorId: ActorID) {
+  clearActorState(actorId: ActorID): void {
     this.#remoteStates.delete(actorId);
   }
 

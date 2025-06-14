@@ -62,7 +62,7 @@ export type AddFileOptions = {
 export class LogReader implements Iterable<SerializedLogEntry> {
   private _logs: any[] = [];
 
-  addFile(path: string, { preprocessor }: AddFileOptions = {}) {
+  addFile(path: string, { preprocessor }: AddFileOptions = {}): void {
     // TODO(dmaretskyi): Read files chunk by chunk.
     this._logs = [
       ...this._logs,

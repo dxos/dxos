@@ -17,7 +17,7 @@ export class MessageCollector {
     return this._pendingMessage;
   }
 
-  push(event: GenerationStreamEvent) {
+  push(event: GenerationStreamEvent): void {
     switch (event.type) {
       case 'message_start':
         this._pendingMessage = event.message;
@@ -67,7 +67,7 @@ export class MessageCollector {
     }
   }
 
-  pushMessage(message: Message) {
+  pushMessage(message: Message): void {
     this._messages.push(message);
   }
 }

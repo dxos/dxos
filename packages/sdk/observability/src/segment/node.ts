@@ -30,7 +30,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
     }
   }
 
-  identify(options: IdentifyParams) {
+  identify(options: IdentifyParams): void {
     if (!this._analytics) {
       log('Analytics not initialized', { action: 'identify' });
       return;
@@ -43,7 +43,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
     }
   }
 
-  page(options: PageOptions) {
+  page(options: PageOptions): void {
     if (!this._analytics) {
       log('Analytics not initialized', { action: 'page' });
       return;
@@ -56,7 +56,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
     }
   }
 
-  track(options: TrackOptions) {
+  track(options: TrackOptions): void {
     if (!this._analytics) {
       log('Analytics not initialized', { action: 'track' });
       return;
@@ -70,7 +70,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
     }
   }
 
-  async flush() {
+  async flush(): Promise<void> {
     if (!this._analytics) {
       log('Analytics not initialized', { action: 'flush' });
       return;
@@ -84,7 +84,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
     }
   }
 
-  async close() {
+  async close(): Promise<void> {
     if (!this._analytics) {
       return;
     }

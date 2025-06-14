@@ -229,7 +229,7 @@ export class QueryResult<T extends BaseObject = any> {
     return unsubscribe;
   }
 
-  private _ensureCachePresent() {
+  private _ensureCachePresent(): void {
     if (!this._resultCache) {
       prohibitSignalActions(() => {
         // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
@@ -283,7 +283,7 @@ export class QueryResult<T extends BaseObject = any> {
       });
   }
 
-  private _handleQueryLifecycle() {
+  private _handleQueryLifecycle(): void {
     if (this._subscribers === 0 && this._isActive) {
       log('stop query', { filter: this._query.ast });
       this._stop();
@@ -293,19 +293,19 @@ export class QueryResult<T extends BaseObject = any> {
     }
   }
 
-  private _start() {
+  private _start(): void {
     this._isActive = true;
     this._queryContext.start();
     this._diagnostic.isActive = true;
   }
 
-  private _stop() {
+  private _stop(): void {
     this._queryContext.stop();
     this._isActive = false;
     this._diagnostic.isActive = false;
   }
 
-  private _checkQueryIsRunning() {
+  private _checkQueryIsRunning(): void {
     if (!this._isActive) {
       throw new Error(
         'Query must have at least 1 subscriber for `.objects` and `.results` to be used. Use query.run() for single-use result retrieval.',

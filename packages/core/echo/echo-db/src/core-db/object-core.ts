@@ -87,18 +87,18 @@ export class ObjectCore {
    */
   public readonly updates = new Event();
 
-  toString() {
+  toString(): string {
     return `ObjectCore { id: ${this.id} }`;
   }
 
-  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect) {
+  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect): string {
     return `ObjectCore ${inspectFn({ id: this.id }, options)}`;
   }
 
   /**
    * Create local doc with initial state from this object.
    */
-  initNewObject(initialProps?: unknown, opts?: ObjectCoreOptions) {
+  initNewObject(initialProps?: unknown, opts?: ObjectCoreOptions): void {
     invariant(!this.docHandle && !this.doc);
 
     initialProps ??= {};
@@ -113,7 +113,7 @@ export class ObjectCore {
     });
   }
 
-  bind(options: BindOptions) {
+  bind(options: BindOptions): void {
     invariant(options.docHandle.isReady());
     this.database = options.db;
     this.docHandle = options.docHandle;
@@ -136,7 +136,7 @@ export class ObjectCore {
     this.notifyUpdate();
   }
 
-  getDoc() {
+  getDoc(): Doc<unknown> {
     if (this.doc) {
       return this.doc;
     }
@@ -155,7 +155,7 @@ export class ObjectCore {
   /**
    * Do not take into account mountPath.
    */
-  change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>) {
+  change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>): void {
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -318,7 +318,7 @@ export class ObjectCore {
     return value;
   }
 
-  arrayPush(path: KeyPath, items: DecodedAutomergeValue[]) {
+  arrayPush(path: KeyPath, items: DecodedAutomergeValue[]): number {
     const itemsEncoded = items.map((item) => this.encode(item));
 
     let newLength: number = -1;
@@ -332,7 +332,7 @@ export class ObjectCore {
     return newLength;
   }
 
-  private _getRaw(path: KeyPath) {
+  private _getRaw(path: KeyPath): Doc<ObjectStructure> | Doc<DatabaseDirectory> {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();
@@ -343,7 +343,7 @@ export class ObjectCore {
     return value;
   }
 
-  private _setRaw(path: KeyPath, value: any) {
+  private _setRaw(path: KeyPath, value: any): void {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
@@ -357,14 +357,14 @@ export class ObjectCore {
   }
 
   // TODO(dmaretskyi): Rename to `set`.
-  setDecoded(path: KeyPath, value: DecodedAutomergePrimaryValue) {
+  setDecoded(path: KeyPath, value: DecodedAutomergePrimaryValue): void {
     this._setRaw(path, this.encode(value));
   }
 
   /**
    * Deletes key at path.
    */
-  delete(path: KeyPath) {
+  delete(path: KeyPath): void {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
@@ -378,7 +378,7 @@ export class ObjectCore {
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setKind(kind: EntityKind) {
+  setKind(kind: EntityKind): void {
     this._setRaw([SYSTEM_NAMESPACE, 'kind'], kind);
   }
 
@@ -389,7 +389,7 @@ export class ObjectCore {
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setSource(ref: Reference) {
+  setSource(ref: Reference): void {
     this.setDecoded([SYSTEM_NAMESPACE, 'source'], ref);
   }
 
@@ -400,7 +400,7 @@ export class ObjectCore {
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setTarget(ref: Reference) {
+  setTarget(ref: Reference): void {
     this.setDecoded([SYSTEM_NAMESPACE, 'target'], ref);
   }
 
@@ -414,7 +414,7 @@ export class ObjectCore {
     return value;
   }
 
-  setType(reference: Reference) {
+  setType(reference: Reference): void {
     this._setRaw([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
   }
 
@@ -422,16 +422,16 @@ export class ObjectCore {
     return this.getDecoded([META_NAMESPACE]) as ObjectMeta;
   }
 
-  setMeta(meta: ObjectMeta) {
+  setMeta(meta: ObjectMeta): void {
     this._setRaw([META_NAMESPACE], this.encode(meta));
   }
 
-  isDeleted() {
+  isDeleted(): boolean {
     const value = this._getRaw([SYSTEM_NAMESPACE, 'deleted']);
     return typeof value === 'boolean' ? value : false;
   }
 
-  setDeleted(value: boolean) {
+  setDeleted(value: boolean): void {
     this._setRaw([SYSTEM_NAMESPACE, 'deleted'], value);
   }
 

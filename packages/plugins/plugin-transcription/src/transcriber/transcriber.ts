@@ -97,7 +97,7 @@ export class Transcriber extends Resource {
     this._onSegments = onSegments;
   }
 
-  protected override async _open(ctx: Context) {
+  protected override async _open(ctx: Context): Promise<void> {
     log.info('opening');
     this._recorder.setOnChunk((chunk) => this._saveAudioChunk(chunk));
     await this._recorder.start();
@@ -105,14 +105,14 @@ export class Transcriber extends Resource {
     this._openTrigger.wake();
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     log.info('closing');
     this._recording = false;
     this._transcribeTask = undefined;
     await this._recorder.stop();
   }
 
-  startChunksRecording() {
+  startChunksRecording(): void {
     log.info('starting');
     if (this._lifecycleState !== LifecycleState.OPEN) {
       return;
@@ -121,7 +121,7 @@ export class Transcriber extends Resource {
     this._recording = true;
   }
 
-  stopChunksRecording() {
+  stopChunksRecording(): void {
     if (this._lifecycleState !== LifecycleState.OPEN || !this._recording) {
       return;
     }
@@ -131,7 +131,7 @@ export class Transcriber extends Resource {
     log.info('stopped');
   }
 
-  private _saveAudioChunk(chunk: AudioChunk) {
+  private _saveAudioChunk(chunk: AudioChunk): void {
     log('saving audio chunk', { chunk });
     this._audioChunks.push(chunk);
 
@@ -147,7 +147,7 @@ export class Transcriber extends Resource {
     }
   }
 
-  private async _transcribe() {
+  private async _transcribe(): Promise<void> {
     log('transcribing', { chunks: this._audioChunks.length });
     const chunks = this._audioChunks;
     this._audioChunks = this._dropOldChunks();
@@ -167,14 +167,14 @@ export class Transcriber extends Resource {
     }
   }
 
-  private _dropOldChunks() {
+  private _dropOldChunks(): AudioChunk[] {
     return this._config.prefixBufferChunksAmount > 0
       ? this._audioChunks.slice(-this._config.prefixBufferChunksAmount)
       : [];
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _mergeAudioChunks(chunks: AudioChunk[]) {
+  private async _mergeAudioChunks(chunks: AudioChunk[]): Promise<string> {
     const file = new WaveFile();
     const wavConfig = this._recorder.wavConfig;
 
@@ -189,7 +189,7 @@ export class Transcriber extends Resource {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _fetchTranscription(audio: string) {
+  private async _fetchTranscription(audio: string): Promise<WhisperSegment[]> {
     if (audio.length === 0) {
       this._audioChunks = [];
       throw new Error('No audio to send for transcribing');
