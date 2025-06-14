@@ -78,27 +78,26 @@ export class RepoProxy extends Resource {
     return this._handles;
   }
 
-  create<T>(initialValue?: T): DocHandleProxy<T> {
-    // Generate a new UUID and store it in the buffer
-    const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
-    const handle = this._getHandle<T>({
-      documentId,
-      isNew: true,
-      initialValue,
-    });
-    return handle;
-  }
-
   find<T>(id: AnyDocumentId): DocHandleProxy<T> {
     if (typeof id !== 'string') {
       throw new TypeError(`Invalid documentId ${id}`);
     }
+
     const documentId = interpretAsDocumentId(id);
-    const handle = this._getHandle<T>({
+    return this._getHandle<T>({
       documentId,
       isNew: false,
     });
-    return handle;
+  }
+
+  create<T>(initialValue?: T): DocHandleProxy<T> {
+    // Generate a new UUID and store it in the buffer.
+    const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
+    return this._getHandle<T>({
+      documentId,
+      isNew: true,
+      initialValue,
+    });
   }
 
   import<T>(dump: Uint8Array): DocHandleProxy<T> {
@@ -194,10 +193,10 @@ export class RepoProxy extends Resource {
     this._handles[documentId] = handle;
     handle.on('change', onChange);
 
-    if (!isNew) {
-      this._pendingAddIds.add(documentId);
-    } else {
+    if (isNew) {
       this._pendingCreateIds.add(documentId);
+    } else {
+      this._pendingAddIds.add(documentId);
     }
     this._sendUpdatesJob!.trigger();
 
@@ -208,6 +207,7 @@ export class RepoProxy extends Resource {
     if (!updates) {
       return;
     }
+
     for (const update of updates) {
       const { documentId, mutation } = update;
       const handle = this._handles[documentId];
