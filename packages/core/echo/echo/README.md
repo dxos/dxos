@@ -63,16 +63,9 @@ Obj.getSchemaDXN(obj) === DXN.parse('dxn:type:example.com/type/Person:0.1.0');
 /**
  * @deprecated
  **/
+// TODO(dmaretskyi): Consider keeping it as a shorthand for zType.getTypename(Obj.getSchema(obj)) ?? Obj.getSchemaDXN(obj)?.asTypeDXN()?.type`
 Obj.getTypename(obj) === 'example.com/type/Person'
 ```
-
-~~ISSUE: Define nouns: Object, Relation, Ref; Obj, Objekt, Entity~~
-
-~~ISSUE: Return type of `getTypename`: string | DXN ??~~
-
-~~ISSUE: Better any schema types: id, typename, meta? fields enforced~~
-
-~~ISSUE: Better any instance types~~
 
 ISSUE: Create vs live: Is it fundamentally the same thing?
 
@@ -112,3 +105,26 @@ Relation.make(
   },
 );
 ```
+
+## Object model representation.
+
+Defines attributes and encoding placed on objects.
+
+|                  | Optional               | Runtime prop                        | Runtime type           | JSON prop                   | JSON type | Description                          |
+| ---------------- | ---------------------- | ----------------------------------- | ---------------------- | --------------------------- | --------- | ------------------------------------ |
+| Id               | No                     | `id`                                | `ObjectID` ULID string | `id`                        | string    | Unique object ID                     |
+| Self DXN         | Yes                    | `Symbol(@dxos/echo/Self)`           | `DXN`                  | `@self`                     | string    | DXN to the object itself             |
+| Typename         | No                     | `Symbol(@dxos/echo/Typename)`       | `DXN`                  | `@type`                     | string    | DXN to the object type               |
+| Tombstone marker | Yes                    | `Symbol(@dxos/echo/Deleted)`        | `boolean`              | `@deleted`                  | boolean   | Deletion marker                      |
+| Metadata         | Yes                    | `Symbol(@dxos/echo/Meta)`           | Metadata object        | `@meta`                     | object    | Metadata section                     |
+| Entity kind      | No                     | `Symbol(@dxos/echo/EntityKind)`     | `EntityKind`           | (inferred from other props) | string    | Obj vs Relation                      |
+| Relation Source  | No (only on relations) | `Symbol(@dxos/echo/RelationSource)` | `DXN`                  | `@relationSource`           | string    | Relation source DXN                  |
+| Relation Target  | No (only on relations) | `Symbol(@dxos/echo/RelationTarget)` | `DXN`                  | `@relationTarget`           | string    | Relation target DXN                  |
+| Hypergraph       | Yes                    | `Symbol(@dxos/echo/Hypergraph)`     | `Hypergraph`           | -                           | -         | Pointer to runtime hypergraph object |
+| Database         | Yes                    | `Symbol(@dxos/echo/Database)`       | `Database`             | -                           | -         | Pointer to runtime database object   |
+
+### Value representation
+
+|           | Runtime | JSON                 |
+| --------- | ------- | -------------------- |
+| Reference | `Ref`   | `{ "/": "dxn:..." }` |

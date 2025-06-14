@@ -7,9 +7,9 @@ import { batch, effect } from '@preact/signals-core';
 import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { Relation } from '@dxos/echo';
-import { type AnyLiveObject, type Queue } from '@dxos/echo-db';
-import { Filter, getSchema, getSchemaDXN, type EchoSchema, getLabel, Query } from '@dxos/echo-schema';
-import { Ref } from '@dxos/echo-schema';
+import { type Queue } from '@dxos/echo-db';
+import { Obj, Type, Filter, Query, Ref } from '@dxos/echo';
+import { type EchoSchema, getLabel } from '@dxos/echo-schema';
 import { type GraphEdge, AbstractGraphBuilder, type Graph, ReactiveGraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -24,7 +24,7 @@ import { visitValues } from '@dxos/util';
 
 export type SpaceGraphNode = GraphNode.Required<{
   label: string;
-  object?: AnyLiveObject<any>;
+  object?: Obj.Any;
 }>;
 
 // TODO(burdon): Differentiate between refs and relations.
@@ -36,7 +36,7 @@ const defaultFilter: Filter<any> = Filter.everything();
 
 export type SpaceGraphModelOptions = {
   showSchema?: boolean;
-  onCreateNode?: (node: SpaceGraphNode, object: AnyLiveObject<any>) => void;
+  onCreateNode?: (node: SpaceGraphNode, object: Obj.Any) => void;
   onCreateEdge?: (edge: SpaceGraphEdge, relation: Relation.Any) => void;
 };
 
@@ -50,8 +50,8 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   private _space?: Space;
   private _schema?: EchoSchema[];
   private _schemaSubscription?: CleanupFn;
-  private _objects?: AnyLiveObject<any>[];
-  private _queueItems?: AnyLiveObject<any>[];
+  private _objects?: Obj.Any[];
+  private _queueItems?: Obj.Any[];
   private _objectsSubscription?: CleanupFn;
   private _queueSubscription?: CleanupFn;
 
@@ -65,7 +65,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     return new SpaceGraphModel(graph);
   }
 
-  get objects(): AnyLiveObject<any>[] {
+  get objects(): Obj.Any[] {
     return this._objects ?? [];
   }
 
@@ -161,7 +161,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   }
 
   private _update() {
-    log('update', {
+    log.info('update', {
       nodes: this._graph.nodes.length,
       edges: this._graph.edges.length,
       objects: this._objects?.length,
@@ -197,7 +197,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
     // Runtime schema.
     this._space?.db.graph.schemaRegistry.schemas.forEach((schema) => {
-      const typename = getSchemaDXN(schema)?.typename;
+      const typename = Type.getDXN(schema)?.typename;
       if (typename) {
         addSchema(typename);
       }
@@ -205,7 +205,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
     // Database Schema.
     this._schema?.forEach((schema) => {
-      const typename = getSchemaDXN(schema)?.typename;
+      const typename = Type.getDXN(schema)?.typename;
       if (typename) {
         addSchema(typename);
       }
@@ -213,10 +213,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
     // Database Objects.
     [...(this._objects ?? []), ...(this._queueItems ?? [])].forEach((object) => {
-      const schema = getSchema(object);
-      if (!schema) {
-        return;
-      }
+      const schema = Obj.getSchema(object);
 
       // Relation.
       if (Relation.isRelation(object)) {
@@ -233,16 +230,17 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
         this._options?.onCreateEdge?.(edge, object);
       } else {
         // Object.
-        const typename = getSchemaDXN(schema)?.typename;
+        const typename = Obj.getTypename(object);
         if (typename) {
           let node: SpaceGraphNode | undefined = currentNodes.find((node) => node.id === object.id);
+
           if (!node) {
             node = {
               id: object.id,
               type: 'object',
               data: {
                 object,
-                label: getLabel(schema, object) ?? object.id,
+                label: (schema && getLabel(schema, object)) ?? object.id,
               },
             };
 
@@ -294,8 +292,8 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   }
 }
 
-const getOutgoingReferences = (object: AnyLiveObject): Ref<any>[] => {
-  const refs: Ref<any>[] = [];
+const getOutgoingReferences = (object: Obj.Any): Ref.Any[] => {
+  const refs: Ref.Any[] = [];
   const go = (value: unknown) => {
     if (Ref.isRef(value)) {
       refs.push(value);

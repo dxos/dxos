@@ -67,7 +67,8 @@ export const getSchemaDXN = (obj: Any): DXN => {
 export const getTypename = (obj: Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema == null) {
-    return undefined;
+    // Try to extract typename from DXN.
+    return getSchemaDXN(obj)?.asTypeDXN()?.type;
   }
 
   return EchoSchema.getTypename(schema);
