@@ -108,6 +108,13 @@ Relation.make(
 
 ## Object model representation.
 
+### JSON serialization
+
+```ts
+Obj.toJSON(obj);
+Obj.fromJSON(json, { graph, db });
+```
+
 Defines attributes and encoding placed on objects.
 
 |                  | Optional               | Runtime prop                        | Runtime type           | JSON prop                   | JSON type | Description                          |

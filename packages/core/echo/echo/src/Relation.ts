@@ -19,9 +19,6 @@ export const isRelation = (value: unknown): value is Any => {
   }
 
   const kind = (value as any)[EchoSchema.EntityKindPropertyId];
-  if (kind === undefined) {
-    throw new TypeError('Provided value is not a valid ECHO object or relation');
-  }
   return kind === EchoSchema.EntityKind.Relation;
 };
 
