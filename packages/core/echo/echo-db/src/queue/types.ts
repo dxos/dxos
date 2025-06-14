@@ -10,13 +10,14 @@ import { type DXN } from '@dxos/keys';
 /**
  * Client-side view onto an EDGE queue.
  */
-export type Queue<T extends BaseEchoObject = BaseEchoObject> = {
+export interface Queue<T extends BaseEchoObject = BaseEchoObject> {
   dxn: DXN;
-  // TODO(burdon): Rename objects.
-  items: T[]; // TODO(burdon): Make readonly.
   isLoading: boolean;
   error: Error | null;
-  append(items: T[]): void;
+  // TODO(burdon): Make readonly.
+  // TODO(burdon): Rename objects.
+  items: T[];
+  append(objects: T[]): void;
   delete(ids: string[]): void;
 
   /**
@@ -24,7 +25,7 @@ export type Queue<T extends BaseEchoObject = BaseEchoObject> = {
    */
   // TODO(dmaretskyi): Remove.
   refresh(): Promise<void>;
-};
+}
 
 // TODO(dmaretskyi): Implement.
 const isQueue = (value: unknown): value is Queue => {
