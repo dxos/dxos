@@ -21,12 +21,12 @@ export type LabelOptions<NodeData = any> = {
 export type AttributesOptions<NodeData = any, EdgeData = any> = {
   node?: (node: GraphLayoutNode<NodeData>) => {
     classes?: Record<string, boolean>;
-    data?: Record<string, string>;
+    data?: Record<string, string | undefined>;
   };
 
   edge?: (edge: GraphLayoutEdge<NodeData, EdgeData>) => {
     classes?: Record<string, boolean>;
-    data?: Record<string, string>;
+    data?: Record<string, string | undefined>;
   };
 };
 

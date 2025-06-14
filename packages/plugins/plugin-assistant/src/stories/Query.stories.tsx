@@ -40,7 +40,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
+import { getHashColor, mx } from '@dxos/react-ui-theme';
 import { DataType, DataTypes, SpaceGraphModel } from '@dxos/schema';
 import { createObjectFactory, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -350,22 +350,6 @@ const ResearchGraph = Schema.Struct({
   }),
 );
 
-const getColor = (type: string) => {
-  const colors = [
-    'text-red-500',
-    'text-green-500',
-    'text-blue-500',
-    'text-yellow-500',
-    'text-purple-500',
-    'text-pink-500',
-    'text-orange-500',
-    'text-violet-500',
-  ];
-
-  const hash = type.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return colors[hash % colors.length];
-};
-
 // TODO(burdon): Cards.
 const ItemList = ({
   items = [],
@@ -386,7 +370,7 @@ const ItemList = ({
               classNames='grid grid-cols-[4rem_16rem_1fr] min-h-[32px] items-center'
             >
               <div className='text-xs font-mono font-thin px-1 text-subdued'>{item.id.slice(-6)}</div>
-              <div className={mx('text-xs font-mono font-thin truncate px-1', getColor(getTypename(item)!))}>
+              <div className={mx('text-xs font-mono font-thin truncate px-1', getHashColor(getTypename(item))?.text)}>
                 {getTypename(item)}
               </div>
               <List.ItemTitle>{getTitle(item)}</List.ItemTitle>
