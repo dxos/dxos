@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Obj } from '@dxos/echo';
-import { getTypename, type BaseEchoObject, type HasId } from '@dxos/echo-schema';
+import { type AnyEchoObject, type HasId, getTypename } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type SpaceId } from '@dxos/keys';
@@ -14,9 +13,7 @@ import type { Queue } from './types';
 /**
  * Client-side view onto an EDGE queue.
  */
-// TODO(burdon): Move to echo-queue.
-// TODO(burdon): T should be constrained to EchoObject.
-export class QueueImpl<T extends BaseEchoObject = BaseEchoObject> implements Queue<T> {
+export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue<T> {
   private readonly _signal = compositeRuntime.createSignal();
 
   private readonly _subspaceTag: string;
@@ -42,6 +39,7 @@ export class QueueImpl<T extends BaseEchoObject = BaseEchoObject> implements Que
     return this._dxn;
   }
 
+  // TODO(burdon): Rename to objects.
   get items(): T[] {
     this._signal.notifyRead();
     return this._items;
@@ -106,7 +104,7 @@ export class QueueImpl<T extends BaseEchoObject = BaseEchoObject> implements Que
         return;
       }
 
-      changed = objectSetChanged(this._items, objects as Obj.Any[]);
+      changed = objectSetChanged(this._items, objects as AnyEchoObject[]);
       this._items = objects as T[];
     } catch (err) {
       this._error = err as Error;
@@ -119,7 +117,7 @@ export class QueueImpl<T extends BaseEchoObject = BaseEchoObject> implements Que
   }
 }
 
-const objectSetChanged = (before: Obj.Any[], after: Obj.Any[]) => {
+const objectSetChanged = (before: AnyEchoObject[], after: AnyEchoObject[]) => {
   if (before.length !== after.length) {
     return true;
   }
