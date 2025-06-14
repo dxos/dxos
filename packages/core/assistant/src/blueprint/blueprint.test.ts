@@ -21,7 +21,8 @@ import { createExaTool } from '../research/exa';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
 
-describe('Blueprint', () => {
+// TODO(burdon): Don't run on CI.
+describe.skip('Blueprint', () => {
   const aiService = new AIServiceEdgeClient({
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
     defaultGenerationOptions: {
