@@ -162,24 +162,18 @@ export class Client {
   }
 
   /**
-   * Internal Echo client.
-   */
-  get echoClient() {
-    return this._echoClient;
-  }
-
-  /**
    * Current client services provider.
    */
+  // TODO(burdon): Return services.services.
   get services(): ClientServicesProvider {
     invariant(this._services, 'Client not initialized.');
     return this._services;
   }
 
-  // TODO(burdon): Rename isOpen.
   /**
    * Returns true if the client has been initialized. Initialize by calling `.initialize()`.
    */
+  // TODO(burdon): Rename isOpen.
   get initialized() {
     return this._initialized;
   }
@@ -191,7 +185,9 @@ export class Client {
     return this._status;
   }
 
-  // TODO(burdon): Comment
+  /**
+   * ECHO Spaces.
+   */
   get spaces(): Echo {
     invariant(this._runtime, 'Client not initialized.');
     return this._runtime.spaces;

@@ -25,13 +25,11 @@ import {
   Filter,
   getSchema,
   getSchemaDXN,
-  getSchemaTypename,
   getTypename,
   isInstanceOf,
   RelationSourceId,
   RelationTargetId,
   toJsonSchema,
-  type BaseEchoObject,
   type BaseObject,
 } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
@@ -212,7 +210,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   );
 
   // TODO(dmaretskyi): Pull in relations automatically.
-  const handleAddToGraph = useCallback(async (object: BaseEchoObject) => {
+  const handleAddToGraph = useCallback(async (object: BaseObject) => {
     space.db.add(instantiate(space.db, object));
     await space.db.flush({ indexes: true });
     forceUpdate({});
@@ -310,7 +308,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 };
 
 type ResearchPromptsProps = {
-  object: BaseEchoObject;
+  object: BaseObject;
   onResearch: (object: BaseObject, relatedSchema: RelatedSchema) => void;
 };
 
@@ -327,7 +325,7 @@ const ResearchPrompts = ({ object, onResearch }: ResearchPromptsProps) => {
           onClick={() => onResearch(object, schema)}
           className='border border-separator rounded px-2 py-1 m-1'
         >
-          Research more of {getSchemaTypename(schema.schema)}
+          Research more of {Type.getTypename(schema.schema)}
         </button>
       ))}
     </div>

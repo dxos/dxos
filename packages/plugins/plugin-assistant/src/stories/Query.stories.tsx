@@ -216,7 +216,6 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   }, []);
 
   const handleMatch = useCallback<NonNullable<TypeaheadOptions['onComplete']>>(createMatcher(space), [space]);
-
   const extensions = useMemo(() => [typeahead({ onComplete: handleMatch })], [handleMatch]);
 
   return (
@@ -377,6 +376,7 @@ const meta: Meta<typeof DefaultStory> = {
   render: DefaultStory,
   decorators: [
     withPluginManager({
+      fireEvents: [Events.SetupArtifactDefinition],
       plugins: testPlugins({
         types: [ResearchGraph],
         config: {
@@ -390,7 +390,6 @@ const meta: Meta<typeof DefaultStory> = {
           },
         },
       }),
-      fireEvents: [Events.SetupArtifactDefinition],
     }),
     withTheme,
     withLayout({ fullscreen: true }),
