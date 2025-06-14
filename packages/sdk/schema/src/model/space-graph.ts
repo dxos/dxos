@@ -153,7 +153,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
     if (this._queue) {
       this._queueSubscription = effect(() => {
-        const items = this._queue?.items;
+        const items = this._queue?.objects;
         if (items) {
           this._queueItems = [...items];
         }

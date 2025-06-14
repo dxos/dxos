@@ -76,7 +76,7 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
     invariant(space);
     invariant(queue);
     queue.append([create(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
-    const message = queue.items[queue.items.length - 1];
+    const message = queue.objects.at(-1);
 
     const text = await doc.content.load();
     const accessor = createDocAccessor(text, ['content']);

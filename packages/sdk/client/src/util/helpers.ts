@@ -32,7 +32,7 @@ export const resolveRef = async <T extends BaseEchoObject = BaseEchoObject>(
     invariant(objectId, 'objectId missing');
     const queue = client.spaces.get(spaceId)?.queues.get<T>(dxn);
     invariant(queue, 'queue missing');
-    return queue.items.find((item) => item.id === objectId);
+    return queue.objects.find((object) => object.id === objectId);
   }
 
   return undefined;

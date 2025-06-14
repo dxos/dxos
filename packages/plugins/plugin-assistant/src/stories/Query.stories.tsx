@@ -244,7 +244,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
                 db: space?.db.toJSON(),
                 queue: {
                   dxn: researchGraph?.queue.dxn.toString(),
-                  items: researchQueue?.items.length,
+                  items: researchQueue?.objects.length,
                 },
                 items: items.length,
                 model: model?.toJSON(),
@@ -328,7 +328,7 @@ const useBlueprint = (space: Space | undefined, queueDxn: DXN | undefined) => {
 
             const queue = space.queues.get(queueDxn);
             queue.append(objects);
-            log.info('research queue', { items: queue.items });
+            log.info('research queue', { items: queue.objects });
           },
         }),
       )

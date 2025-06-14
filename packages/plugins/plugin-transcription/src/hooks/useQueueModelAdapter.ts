@@ -51,13 +51,13 @@ export const useQueueModelAdapter = <T extends Chunk>(
 
   // TODO(burdon): Can we listen for queue events?
   useEffect(() => {
-    if (!loaded || !queue || model.chunks.length === queue.items.length) {
+    if (!loaded || !queue || model.chunks.length === queue.objects.length) {
       return;
     }
 
-    const chunk = queue.items[queue.items.length - 1];
+    const chunk = queue.objects.at(-1);
     model.appendChunk(chunk);
-  }, [model, loaded, queue?.items.length]);
+  }, [model, loaded, queue?.objects.length]);
 
   return model;
 };

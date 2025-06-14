@@ -14,9 +14,7 @@ export interface Queue<T extends BaseEchoObject = BaseEchoObject> {
   dxn: DXN;
   isLoading: boolean;
   error: Error | null;
-  // TODO(burdon): Make readonly.
-  // TODO(burdon): Rename objects.
-  items: T[];
+  objects: T[];
   append(objects: T[]): void;
   delete(ids: string[]): void;
 

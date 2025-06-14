@@ -146,7 +146,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [aiClient, tools, space, dispatch]);
 
   useEffect(() => {
-    if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
+    if (queue?.objects.length === 0 && !queue.isLoading && prompts.length > 0) {
       queue.append([
         create(Message, {
           role: 'assistant',
@@ -161,12 +161,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         }),
       ]);
     }
-  }, [queueDxn, prompts, queue?.items.length, queue?.isLoading]);
+  }, [queueDxn, prompts, queue?.objects.length, queue?.isLoading]);
 
   // State.
   const objects = useQuery(space, Filter.or(...DataTypes.map((type) => Filter.type(type))));
   const messages = [
-    ...(queue?.items.filter((item) => isInstanceOf(Message, item)) ?? []),
+    ...(queue?.objects.filter((item) => isInstanceOf(Message, item)) ?? []),
     ...(processor?.messages.value ?? []),
   ];
 
@@ -183,7 +183,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
           invariant(queue);
           await processor.request(message, {
-            history: queue.items,
+            history: queue.objects,
             onComplete: (messages) => {
               queue.append(messages);
             },
