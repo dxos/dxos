@@ -19,7 +19,7 @@ const TypenameSpecifier = Schema.Union(DXN.Schema, Schema.Null).annotations({
  *
  * Clauses are combined using logical AND.
  */
-
+// TODO(burdon): Filter object vs. relation.
 const FilterObject_ = Schema.Struct({
   type: Schema.Literal('object'),
 
@@ -35,6 +35,7 @@ const FilterObject_ = Schema.Struct({
     key: Schema.String.annotations({ description: 'Property name' }),
     value: Schema.suspend(() => Filter),
   }),
+
   /**
    * Objects that have any of the given foreign keys.
    */

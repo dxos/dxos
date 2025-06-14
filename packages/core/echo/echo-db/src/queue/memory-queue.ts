@@ -36,6 +36,7 @@ export class MemoryQueue<T extends BaseEchoObject = BaseEchoObject> implements Q
     if (items) {
       void queue.append(items);
     }
+
     return queue;
   }
 

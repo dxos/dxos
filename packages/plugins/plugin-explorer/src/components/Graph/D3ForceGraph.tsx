@@ -22,26 +22,24 @@ export type D3ForceGraphProps = ThemedClassName<
 
 export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selection: _selection, grid, ...props }) => {
   const context = useRef<SVGContext>(null);
-  const projector = useMemo<GraphForceProjector | undefined>(
-    () =>
-      context.current
-        ? new GraphForceProjector(context.current, {
-            attributes: {
-              linkForce: (edge) => {
-                // TODO(burdon): Check type (currently assumes Employee property).
-                // Edge shouldn't contribute to force if it's not active.
-                return edge.data?.object?.active !== false;
-              },
-            },
-            forces: {
-              point: {
-                strength: 0.01,
-              },
-            },
-          })
-        : undefined,
-    [context.current],
-  );
+  const projector = useMemo<GraphForceProjector | undefined>(() => {
+    if (context.current) {
+      return new GraphForceProjector(context.current, {
+        attributes: {
+          linkForce: (edge) => {
+            // TODO(burdon): Check type (currently assumes Employee property).
+            // Edge shouldn't contribute to force if it's not active.
+            return edge.data?.object?.active !== false;
+          },
+        },
+        forces: {
+          point: {
+            strength: 0.01,
+          },
+        },
+      });
+    }
+  }, [context.current]);
 
   const graph = useRef<GraphController>(null);
   const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);

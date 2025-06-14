@@ -12,7 +12,7 @@ import { type ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import type { QueryContext, QueryResultEntry, QueryRunOptions } from './query-result';
-import { getTargetSpacesForQuery, isTrivialSelectionQuery } from './util';
+import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
 import { type AnyLiveObject } from '../echo-handler';
 import { prohibitSignalActions } from '../guarded-scope';
@@ -180,7 +180,7 @@ export class SpaceQuerySource implements QuerySource {
       const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
         const core = this._database.coreDatabase.getObjectCoreById(objectId, { load: false });
 
-        const trivial = isTrivialSelectionQuery(this._query!);
+        const trivial = isSimpleSelectionQuery(this._query!);
         if (!trivial) {
           return false;
         }
@@ -206,15 +206,13 @@ export class SpaceQuerySource implements QuerySource {
       return [];
     }
 
-    const trivial = isTrivialSelectionQuery(query);
-    if (!trivial) {
+    const simple = isSimpleSelectionQuery(query);
+    if (!simple) {
       return [];
     }
 
-    const { filter, options } = trivial;
-
+    const { filter, options } = simple;
     const results: QueryResultEntry<AnyLiveObject<any>>[] = [];
-
     if (isObjectIdFilter(filter)) {
       results.push(
         ...(await this._database._coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as ObjectId[]))
@@ -242,7 +240,7 @@ export class SpaceQuerySource implements QuerySource {
       return [];
     }
 
-    const trivial = isTrivialSelectionQuery(this._query);
+    const trivial = isSimpleSelectionQuery(this._query);
     if (!trivial) {
       return [];
     }

@@ -169,8 +169,10 @@ export class Hypergraph {
     return {
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (dxn, load, onLoad) => {
+        // TODO(dmaretskyi): Add queues.
+
         if (dxn.kind !== DXN.kind.ECHO) {
-          throw new Error('Unsupported DXN kind');
+          return undefined; // Unsupported DXN kind.
         }
 
         const ref = Reference.fromDXN(dxn);

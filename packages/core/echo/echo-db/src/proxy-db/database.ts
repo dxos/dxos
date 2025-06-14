@@ -84,6 +84,7 @@ export interface EchoDatabase {
   /**
    * Insert new objects.
    */
+  // TODO(burdon): Shouldn't have both insert and add.
   // TODO(dmaretskyi): Support meta.
   insert(data: InsertData): Promise<AnyObjectData>;
   insert(data: InsertBatch): Promise<AnyObjectData[]>;

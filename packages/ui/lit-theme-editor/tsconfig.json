@@ -13,21 +13,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/test-utils"
-    },
-    {
-      "path": "../lit-ui"
-    },
-    {
-      "path": "../primitives/react-hooks"
-    },
-    {
-      "path": "../react-ui-theme"
-    }
-  ]
+  "references": []
 }

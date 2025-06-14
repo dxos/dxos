@@ -12,9 +12,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../node-std"
-    }
-  ]
+  "references": []
 }

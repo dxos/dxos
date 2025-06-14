@@ -31,6 +31,7 @@ import { ObjectInternals, type ProxyTarget, symbolInternals, symbolNamespace, sy
 import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
+/** @deprecated Use {@link @dxos/echo#AnyLiveObject} instead. */
 // TODO(burdon): Any shouldn't be generic (use namespace).
 export type AnyLiveObject<T extends BaseObject = any> = Live<T> & BaseEchoObject;
 

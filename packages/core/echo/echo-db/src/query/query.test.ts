@@ -503,7 +503,7 @@ describe('Queries', () => {
 
     // TODO(wittjosiah): Currently disabled by default because it's expensive.
     test.skip('full-text', async () => {
-      const { db, graph } = await builder.createDatabase();
+      const { db, graph } = await builder.createDatabase({ indexing: { fullText: true } });
       graph.schemaRegistry.addSchema([Testing.Task]);
 
       db.add(live(Testing.Task, { title: 'apples' }));
