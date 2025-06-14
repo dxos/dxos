@@ -85,7 +85,7 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
               const obj = node.data?.data.object;
               return {
                 data: {
-                  color: getHashColor(obj && getTypename(obj))?.text,
+                  color: getHashColor(obj && getTypename(obj))?.color,
                 },
                 classes: {
                   'dx-selected': selection.contains(node.id),

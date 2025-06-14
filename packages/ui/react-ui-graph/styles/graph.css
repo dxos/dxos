@@ -56,12 +56,14 @@ svg {
         }
       }
 
-      g[data-color="1"].dx-node { circle { @apply fill-blue-300   dark:fill-blue-500;   } }
-      g[data-color="2"].dx-node { circle { @apply fill-green-300  dark:fill-green-500   } }
-      g[data-color="3"].dx-node { circle { @apply fill-violet-300 dark:fill-violet-500; } }
-      g[data-color="4"].dx-node { circle { @apply fill-orange-300 dark:fill-orange-500; } }
-      g[data-color="5"].dx-node { circle { @apply fill-pink-300   dark:fill-pink-500;   } }
-      g[data-color="6"].dx-node { circle { @apply fill-indigo-300 dark:fill-indigo-500; } }
+      g[data-color="red"   ].dx-node { circle { @apply fill-red-300    dark:fill-red-500;    } }
+      g[data-color="green" ].dx-node { circle { @apply fill-green-300  dark:fill-green-500   } }
+      g[data-color="blue"  ].dx-node { circle { @apply fill-blue-300   dark:fill-blue-500;   } }
+      g[data-color="yellow"].dx-node { circle { @apply fill-yellow-300 dark:fill-yellow-500; } }
+      g[data-color="purple"].dx-node { circle { @apply fill-purple-300 dark:fill-purple-500; } }
+      g[data-color="pink"  ].dx-node { circle { @apply fill-pink-300   dark:fill-pink-500;   } }
+      g[data-color="orange"].dx-node { circle { @apply fill-orange-300 dark:fill-orange-500; } }
+      g[data-color="violet"].dx-node { circle { @apply fill-violet-300 dark:fill-violet-500; } }
 
       g.dx-dragging,
       g.dx-highlight {
@@ -99,12 +101,14 @@ svg {
         }
       }
 
-      g[data-color="1"].dx-edge { path { @apply stroke-blue-300   dark:stroke-blue-500;   } }
-      g[data-color="2"].dx-edge { path { @apply stroke-green-300  dark:stroke-green-500   } }
-      g[data-color="3"].dx-edge { path { @apply stroke-violet-300 dark:stroke-violet-500; } }
-      g[data-color="4"].dx-edge { path { @apply stroke-orange-300 dark:stroke-orange-500; } }
-      g[data-color="5"].dx-edge { path { @apply stroke-pink-300   dark:stroke-pink-500;   } }
-      g[data-color="6"].dx-edge { path { @apply stroke-indigo-300 dark:stroke-indigo-500; } }
+      g[data-color="red"   ].dx-edge { path { @apply stroke-red-300    dark:stroke-red-500;    } }
+      g[data-color="green" ].dx-edge { path { @apply stroke-green-300  dark:stroke-green-500   } }
+      g[data-color="blue"  ].dx-edge { path { @apply stroke-blue-300   dark:stroke-blue-500;   } }
+      g[data-color="yellow"].dx-edge { path { @apply stroke-yellow-300 dark:stroke-yellow-500; } }
+      g[data-color="purple"].dx-edge { path { @apply stroke-purple-300 dark:stroke-purple-500; } }
+      g[data-color="pink"  ].dx-edge { path { @apply stroke-pink-300   dark:stroke-pink-500;   } }
+      g[data-color="orange"].dx-edge { path { @apply stroke-orange-300 dark:stroke-orange-500; } }
+      g[data-color="violet"].dx-edge { path { @apply stroke-violet-300 dark:stroke-violet-500; } }
     }
 
     .dx-linker {
