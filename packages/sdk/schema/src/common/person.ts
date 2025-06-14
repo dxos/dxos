@@ -103,7 +103,7 @@ const PersonSchema = Schema.Struct({
 });
 
 export const Person = PersonSchema.pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Person',
     version: '0.1.0',
   }),

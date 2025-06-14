@@ -27,7 +27,7 @@ import {
   type DatabaseDirectory,
   type SpaceState,
 } from '@dxos/echo-protocol';
-import { type ObjectId, Ref, type AnyObjectData } from '@dxos/echo-schema';
+import { type ObjectId, Ref, type AnyObjectData, type Filter } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -51,8 +51,7 @@ import { getInlineAndLinkChanges } from './util';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { DeprecatedFilter, normalizeQuery, QueryResult, type QueryFn } from '../query';
-import type { PropertyFilter } from '../query/deprecated/filter';
+import { normalizeQuery, QueryResult, type QueryFn } from '../query';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -422,12 +421,12 @@ export class CoreDatabase {
   /**
    * Update objects.
    */
-  async update(filter: PropertyFilter, operation: UpdateOperation): Promise<void> {
-    const filterObj = DeprecatedFilter.fromFilterJson(filter);
-    if (!filterObj.isObjectIdFilter() && filterObj.objectIds?.length !== 1) {
-      throw new Error('Need to specify exactly one object id in the filter');
+  async update(filter: Filter.Any, operation: UpdateOperation): Promise<void> {
+    const ast = filter.ast;
+    if (ast.type !== 'object' || ast.id?.length !== 1) {
+      throw new Error('Only object id filters with one id are currently supported');
     }
-    const id = filterObj.objectIds![0];
+    const id = ast.id[0];
 
     const core = this.getObjectCoreById(id);
     if (!core) {
@@ -572,7 +571,7 @@ export class CoreDatabase {
     };
 
     if (type !== undefined) {
-      newStruct.system.type = encodeReference(Reference.fromDXN(type));
+      newStruct.system!.type = encodeReference(Reference.fromDXN(type));
     }
 
     core.setDecoded([], newStruct);

@@ -4,7 +4,7 @@
 
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { Schema } from 'effect';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test, type TestContext } from 'vitest';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
@@ -19,7 +19,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { Filter, Query } from './api';
-import { type AnyLiveObject, getObjectCore } from '../echo-handler';
+import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
 
@@ -115,7 +115,7 @@ describe('Queries', () => {
 
     test('options', async () => {
       {
-        const { objects } = await db.query({ label: 'red' }).run();
+        const { objects } = await db.query(Query.select(Filter.type(Expando, { label: 'red' }))).run();
         expect(objects).to.have.length(3);
         for (const object of objects) {
           db.remove(object);
@@ -124,23 +124,27 @@ describe('Queries', () => {
       }
 
       {
-        const { objects } = await db.query().run();
+        const { objects } = await db.query(Query.select(Filter.everything())).run();
         expect(objects).to.have.length(7);
       }
 
       {
-        const { objects } = await db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED }).run();
+        const { objects } = await db
+          .query(Query.select(Filter.everything()), { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED })
+          .run();
         expect(objects).to.have.length(7);
       }
 
       {
-        const { objects } = await db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED }).run();
+        const { objects } = await db
+          .query(Query.select(Filter.everything()), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED })
+          .run();
         expect(objects).to.have.length(10);
       }
 
       {
         const { objects } = await db
-          .query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY })
+          .query(Query.select(Filter.everything()), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY })
           .run();
         expect(objects).to.have.length(3);
       }
@@ -162,14 +166,14 @@ describe('Queries', () => {
       const db = await peer.createDatabase(spaceKey);
       await createObjects(peer, db, { count: 3 });
 
-      expect((await db.query().run()).objects.length).to.eq(3);
+      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(3);
       root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url;
     }
 
     {
       const peer = await builder.createPeer({ kv });
       const db = await peer.openDatabase(spaceKey, root);
-      expect((await db.query().run()).objects.length).to.eq(3);
+      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(3);
     }
   });
 
@@ -189,7 +193,7 @@ describe('Queries', () => {
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
-      expect((await db.query().run()).objects.length).to.eq(2);
+      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
       rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
@@ -202,7 +206,7 @@ describe('Queries', () => {
     {
       const peer = await builder.createPeer({ kv });
       const db = await peer.openDatabase(spaceKey, root);
-      const queryResult = (await db.query().run()).objects;
+      const queryResult = (await db.query(Query.select(Filter.everything())).run()).objects;
       expect(queryResult.length).to.eq(1);
       expect(queryResult[0].id).to.eq(expectedObjectId);
     }
@@ -223,7 +227,7 @@ describe('Queries', () => {
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
-      expect((await db.query().run()).objects.length).to.eq(2);
+      expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
       anotherDocHandle.change((doc: DatabaseDirectory) => {
@@ -243,7 +247,7 @@ describe('Queries', () => {
 
     {
       const db = await peer.openDatabase(spaceKey, root);
-      const queryResult = (await db.query().run()).objects;
+      const queryResult = (await db.query(Query.select(Filter.everything())).run()).objects;
       expect(queryResult.length).to.eq(2);
       const object = queryResult.find((o) => o.id === assertion.objectId)!;
       expect(getObjectCore(object).docHandle!.url).to.eq(assertion.documentUrl);
@@ -266,7 +270,7 @@ describe('Queries', () => {
 
     db.remove(obj2);
 
-    const queryResult = (await db.query().run()).objects;
+    const queryResult = (await db.query(Query.select(Filter.everything())).run()).objects;
     expect(queryResult.length).to.eq(1);
     expect(queryResult[0].id).to.eq(obj1.id);
   });
@@ -286,7 +290,7 @@ describe('Queries', () => {
     const obj2Core = getObjectCore(obj1);
     obj2Core.docHandle!.delete(); // Deleted handle access throws an exception.
 
-    await expect(db.query().run()).rejects.toBeInstanceOf(Error);
+    await expect(db.query(Query.select(Filter.everything())).run()).rejects.toBeInstanceOf(Error);
   });
 
   test('query objects with different versions', async () => {
@@ -497,7 +501,8 @@ describe('Queries', () => {
       }
     });
 
-    test('full-text', async () => {
+    // TODO(wittjosiah): Currently disabled by default because it's expensive.
+    test.skip('full-text', async () => {
       const { db, graph } = await builder.createDatabase();
       graph.schemaRegistry.addSchema([Testing.Task]);
 
@@ -531,31 +536,29 @@ describe('Queries', () => {
   });
 });
 
-// TODO(wittjosiah): 2/3 of these tests fail. They reproduce issues that we want to fix.
 describe('Query reactivity', () => {
-  let builder: EchoTestBuilder;
-  let db: EchoDatabase;
-  let objects: AnyLiveObject<any>[];
+  const setup = async (ctx: TestContext) => {
+    const builder = await new EchoTestBuilder().open();
+    const { db } = await builder.createDatabase();
 
-  beforeAll(async () => {
-    builder = await new EchoTestBuilder().open();
-    ({ db } = await builder.createDatabase());
-
-    objects = range(3).map((idx) => createTestObject(idx, 'red'));
+    const objects = range(3).map((idx) => createTestObject(idx, 'red'));
     for (const object of objects) {
       db.add(object);
     }
 
     await db.flush();
-  });
 
-  afterAll(async () => {
-    await builder.close();
-  });
+    ctx.onTestFinished(async () => {
+      await builder.close();
+    });
 
-  // TODO(dmaretskyi): Fires twice.
-  test.skip('fires only once when new objects are added', async () => {
-    const query = db.query({ label: 'red' });
+    return { builder, db, objects };
+  };
+
+  test('fires only once when new objects are added', async (ctx) => {
+    const { db } = await setup(ctx);
+    const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
+    expect(query.runSync()).to.have.length(3);
 
     let count = 0;
     let lastResult;
@@ -566,36 +569,44 @@ describe('Query reactivity', () => {
     expect(count).to.equal(0);
 
     db.add(createTestObject(3, 'red'));
-    await db.flush({ updates: true });
-    expect(count).to.be.greaterThan(1);
+    await db.flush({ updates: true, indexes: true });
+    expect(count).to.equal(1);
     expect(lastResult).to.have.length(4);
   });
 
-  test.skip('fires only once when objects are removed', async () => {
-    const query = db.query({ label: 'red' });
-    expect(query.objects).to.have.length(3);
+  test('fires only once when objects are removed', async (ctx) => {
+    const { db, objects } = await setup(ctx);
+    const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
+    expect(query.runSync()).to.have.length(3);
+
     let count = 0;
     query.subscribe(() => {
+      console.log('query.objects', query.objects);
       count++;
       expect(query.objects).to.have.length(2);
     });
     db.remove(objects[0]);
-    await sleep(10);
+    await db.flush({ updates: true, indexes: true });
     expect(count).to.equal(1);
   });
 
-  test.skip('does not fire on object updates', async () => {
-    const query = db.query({ label: 'red' });
-    expect(query.objects).to.have.length(3);
+  test('does not fire on object updates', async (ctx) => {
+    const { db, objects } = await setup(ctx);
+    const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
+    expect(query.runSync()).to.have.length(3);
+
+    let updateCount = 0;
     query.subscribe(() => {
-      throw new Error('Should not be called.');
+      updateCount++;
     });
     objects[0].title = 'Task 0a';
     await sleep(10);
+    expect(updateCount).to.equal(0);
   });
 
-  test('can unsubscribe and resubscribe', async () => {
-    const query = db.query({ label: 'red' });
+  test('can unsubscribe and resubscribe', async (ctx) => {
+    const { db } = await setup(ctx);
+    const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
 
     let count = 0;
     let lastCount = 0;
@@ -635,6 +646,27 @@ describe('Query reactivity', () => {
       lastCount = count;
       expect(lastResult).to.have.length(6);
     }
+  });
+
+  test('multiple queries do not influence each other', async (ctx) => {
+    const { db } = await setup(ctx);
+    const query1 = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
+    const query2 = db.query(Query.select(Filter.type(Expando, { label: 'red' })));
+
+    let count1 = 0;
+    let count2 = 0;
+    query1.subscribe(() => {
+      count1++;
+    });
+    query2.subscribe(() => {
+      count2++;
+    });
+
+    db.add(createTestObject(6, 'red'));
+    await db.flush({ updates: true, indexes: true });
+
+    expect(count1).toEqual(1);
+    expect(count2).toEqual(1);
   });
 });
 
@@ -716,7 +748,7 @@ test('map over refs in query result', async () => {
     folder.objects.push(Ref.make(object));
   }
 
-  const queryResult = await db.query({ name: 'folder' }).run();
+  const queryResult = await db.query(Filter.type(Expando, { name: 'folder' })).run();
   const result = queryResult.objects.flatMap(({ objects }) => objects.map((o: Ref<any>) => o.target));
 
   for (const i in objects) {

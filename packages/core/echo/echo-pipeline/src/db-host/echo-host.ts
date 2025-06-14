@@ -52,7 +52,7 @@ export interface EchoHostIndexingConfig {
 
 const DEFAULT_INDEXING_CONFIG: EchoHostIndexingConfig = {
   // TODO(dmaretskyi): Disabled by default since embedding generation is expensive.
-  fullText: true,
+  fullText: false,
   vector: false,
 };
 

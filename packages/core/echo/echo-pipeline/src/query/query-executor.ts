@@ -5,7 +5,7 @@
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 import { Match } from 'effect';
 
-import { Context, LifecycleState, Resource } from '@dxos/context';
+import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { DatabaseDirectory, isEncodedReference, ObjectStructure, type QueryAST } from '@dxos/echo-protocol';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -191,6 +191,10 @@ export class QueryExecutor extends Resource {
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const trace = ExecutionTrace.makeEmpty();
     for (const step of plan.steps) {
+      if (this._ctx.disposed) {
+        throw new ContextDisposedError();
+      }
+
       const result = await this._execStep(step, workingSet);
       workingSet = result.workingSet;
       trace.children.push(result.trace);

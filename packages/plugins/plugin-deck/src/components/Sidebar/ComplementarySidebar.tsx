@@ -90,7 +90,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       <Tabs.Root orientation='vertical' verticalVariant='stateless' value={internalValue} classNames='contents'>
         <div
           role='none'
-          className='absolute z-[1] inset-block-0 inline-end-0 !is-[--r0-size] pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)] border-is border-separator grid grid-cols-1 grid-rows-[1fr_min-content] bg-baseSurface contain-layout app-drag'
+          className='absolute z-[1] inset-block-0 inline-end-0 !is-[--r0-size] pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)] border-is border-subduedSeparator grid grid-cols-1 grid-rows-[1fr_min-content] bg-baseSurface contain-layout app-drag'
         >
           <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-[--rail-action] p-1 gap-1 !overflow-y-auto'>
             {companions.map((companion) => (
@@ -169,7 +169,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
 
   return (
     <>
-      <h2 className='flex items-center pli-2 border-separator border-be font-medium'>
+      <h2 className='flex items-center pli-2 border-subduedSeparator border-be font-medium'>
         {toLocalizedString(companion.properties.label, t)}
       </h2>
       <Wrapper>
@@ -183,7 +183,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
       {!hoistStatusbar && (
         <div
           role='contentinfo'
-          className='flex flex-wrap justify-center items-center border-bs border-separator pbs-1 pbe-[max(env(safe-area-inset-bottom),0.25rem)]'
+          className='flex flex-wrap justify-center items-center border-bs border-subduedSeparator pbs-1 pbe-[max(env(safe-area-inset-bottom),0.25rem)]'
         >
           <Surface role='status-bar--r1-footer' limit={1} />
         </div>

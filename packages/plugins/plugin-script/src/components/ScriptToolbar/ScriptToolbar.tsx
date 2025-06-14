@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import { Rx } from '@effect-rx/rx-react';
+import React, { useMemo } from 'react';
 
 import { type ScriptType } from '@dxos/functions';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ElevationProvider, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
-import { createGapSeparator, MenuProvider, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
+import { createGapSeparator, MenuProvider, rxFromSignal, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
 
 import {
   type CreateDeployOptions,
@@ -26,24 +27,26 @@ export type ScriptToolbarProps = ThemedClassName<{
   state: ScriptToolbarState;
 }>;
 
-const createToolbar = ({ state, script, ...options }: CreateDeployOptions) => {
-  const templateSelect = createTemplateSelect(script);
-  const format = createFormat(script);
-  const gap = createGapSeparator();
-  const deploy = createDeploy({ state, script, ...options });
-  return {
-    nodes: [...templateSelect.nodes, ...format.nodes, ...gap.nodes, ...deploy.nodes],
-    edges: [...templateSelect.edges, ...format.edges, ...gap.edges, ...deploy.edges],
-  };
-};
+const createToolbar = ({ state, script, ...options }: CreateDeployOptions) =>
+  Rx.make((get) =>
+    get(
+      rxFromSignal(() => {
+        const templateSelect = createTemplateSelect(script);
+        const format = createFormat(script);
+        const gap = createGapSeparator();
+        const deploy = createDeploy({ state, script, ...options });
+        return {
+          nodes: [...templateSelect.nodes, ...format.nodes, ...gap.nodes, ...deploy.nodes],
+          edges: [...templateSelect.edges, ...format.edges, ...gap.edges, ...deploy.edges],
+        };
+      }),
+    ),
+  );
 
 export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbarProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const options = useDeployDeps({ script });
-  const toolbarCreator = useCallback(
-    () => createToolbar({ state, script, t, ...options }),
-    [state, script, options, t],
-  );
+  const toolbarCreator = useMemo(() => createToolbar({ state, script, t, ...options }), [state, script, options, t]);
   const menu = useMenuActions(toolbarCreator);
 
   return (

@@ -3,3 +3,4 @@
 //
 
 export * from './outliner';
+export * from './tree';

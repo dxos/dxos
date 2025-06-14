@@ -22,7 +22,7 @@ const CalendarEventSchema = Schema.Struct({
   endTime: Schema.String,
   description: Schema.String,
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'example.com/type/CalendarEvent',
     version: '0.1.0',
   }),

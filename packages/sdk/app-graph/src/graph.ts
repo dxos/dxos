@@ -414,7 +414,7 @@ export class Graph implements WritableGraph {
         const typeChanged = node.type !== type;
         const dataChanged = node.data !== data;
         const propertiesChanged = Object.keys(properties).some((key) => node.properties[key] !== properties[key]);
-        log('existing node', { typeChanged, dataChanged, propertiesChanged });
+        log('existing node', { id, typeChanged, dataChanged, propertiesChanged });
         if (typeChanged || dataChanged || propertiesChanged) {
           log('updating node', { id, type, data, properties });
           const newNode = Option.some({ ...node, type, data, properties: { ...node.properties, ...properties } });

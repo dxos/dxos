@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { type Client } from '@dxos/client';
-import { Serializer, normalizeSerializedObjectData } from '@dxos/echo-db';
+import { Filter, Serializer, normalizeSerializedObjectData } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 
 export type SpacesDump = {
@@ -29,7 +29,7 @@ export class SpacesDumper {
 
     for (const space of client.spaces.get()) {
       await space.waitUntilReady();
-      const { objects } = await space.db.query().run();
+      const { objects } = await space.db.query(Filter.everything()).run();
 
       dump[space.id] = {};
       for (const object of objects) {

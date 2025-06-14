@@ -23,7 +23,6 @@ export {
   type EchoDatabase,
   Query,
   Filter,
-  type FilterSource,
   type Hypergraph,
   type IDocHandle,
   ObjectVersion,
@@ -39,10 +38,11 @@ export {
   createSubscription,
   defineObjectMigration,
   fromCursor,
-  hasType,
   isEchoObject,
   getObjectCore,
   getRangeFromCursor,
+  getSource,
+  getTarget,
   getTextInRange,
   getVersion,
   loadObjectReferences,
@@ -50,8 +50,6 @@ export {
   toCursorRange,
   updateText,
   isRelation,
-  getSource,
-  getTarget,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.

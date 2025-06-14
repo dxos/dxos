@@ -6,11 +6,11 @@ import { type Schema } from 'effect';
 
 import { AIServiceEdgeClient, type AIServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { processTranscriptMessage } from '@dxos/assistant';
+import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
 import { Filter, getSchemaTypename, Query, type BaseEchoObject } from '@dxos/echo-schema';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DocumentType } from '@dxos/plugin-markdown/types';
@@ -24,13 +24,14 @@ import { DataType } from '@dxos/schema';
 
 import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
-import { MeetingType, type MeetingSettingsProps } from '../types';
+import { MeetingAction, MeetingType, type MeetingSettingsProps } from '../types';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
 type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 
 export default (context: PluginContext) => {
+  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const client = context.getCapability(ClientCapabilities.Client);
   const state = context.getCapability(MeetingCapabilities.State);
   const settings = context
@@ -80,12 +81,7 @@ export default (context: PluginContext) => {
       }
 
       const payload: MeetingPayload = activity.payload;
-      const enabled = !!payload.transcriptionEnabled;
-      if (payload.transcriptDxn) {
-        // NOTE: Must set queue before enabling transcription.
-        state.transcriptionManager?.setQueue(DXN.parse(payload.transcriptDxn));
-      }
-      await state.transcriptionManager?.setEnabled(enabled);
+      await dispatch(createIntent(MeetingAction.HandlePayload, payload));
     },
     onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
       void state.transcriptionManager?.setAudioTrack(mediaState.audioTrack);
@@ -101,18 +97,22 @@ type EntityExtractionEnricherFactoryOptions = {
 };
 
 const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
+  const executor = new FunctionExecutor(new ServiceContainer().setServices({ ai: { client: aiClient } }));
+
   return async (message: DataType.Message) => {
     const { objects } = await space.db
       .query(Query.select(Filter.or(...contextTypes.map((s) => Filter.type(s as Schema.Schema<BaseEchoObject>)))))
       .run();
+
     log.info('context', { objects });
 
     const { message: enhancedMessage, timeElapsed } = await processTranscriptMessage({
-      aiService: aiClient,
-      message,
-      context: {
-        objects: await Promise.all(objects.map((o) => processContextObject(o))),
+      input: {
+        message,
+        objects: await Promise.all(objects.map((obj) => processContextObject(obj))),
       },
+      function: extractionAnthropicFn,
+      executor,
       options: { timeout: ENTITY_EXTRACTOR_TIMEOUT, fallbackToRaw: true },
     });
 

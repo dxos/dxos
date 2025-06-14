@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { Rx } from '@effect-rx/rx-react';
 import { type Meta, type StoryObj } from '@storybook/react';
 import { Option, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -13,9 +14,9 @@ import { EXA_API_KEY, SpyAIService } from '@dxos/ai/testing';
 import { Capabilities, contributes, createSurface, Events, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { findRelatedSchema, researchFn, TYPES, type RelatedSchema } from '@dxos/assistant';
+import { findRelatedSchema, researchFn, type RelatedSchema } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
-import { DXN, Type } from '@dxos/echo';
+import { Type, type Obj } from '@dxos/echo';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -48,9 +49,11 @@ import {
   useMenuActions,
   type ActionGraphProps,
   type ToolbarMenuActionGroupProperties,
+  rxFromSignal,
 } from '@dxos/react-ui-menu';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
+import { DataTypes } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { testPlugins } from './testing';
@@ -63,7 +66,7 @@ const LOCAL = false;
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
 
 type RenderProps = {
-  items?: Type.AnyObject[];
+  items?: Obj.Any[];
   prompts?: string[];
 } & Pick<ThreadProps, 'debug'>;
 
@@ -89,12 +92,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const space = client.spaces.default;
   const model = useGraphModel(space);
 
-  const actionCreator = useCallback(() => createToolbar(aiClient), [aiClient]);
+  const actionCreator = useMemo(() => createToolbar(aiClient), [aiClient]);
   const menuProps = useMenuActions(actionCreator);
 
   // Queue.
   const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
-  const queue = useQueue<Message>(DXN.tryParse(queueDxn));
+  const queue = useQueue<Message>(Type.DXN.tryParse(queueDxn));
 
   // Function executor.
   const serviceContainer = useMemo(
@@ -163,7 +166,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [queueDxn, prompts, queue?.items.length, queue?.isLoading]);
 
   // State.
-  const objects = useQuery(space, Filter.or(...TYPES.map((t) => Filter.type(t))));
+  const objects = useQuery(space, Filter.or(...DataTypes.map((type) => Filter.type(type))));
   const messages = [
     ...(queue?.items.filter((item) => isInstanceOf(Message, item)) ?? []),
     ...(processor?.messages.value ?? []),
@@ -218,9 +221,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const handleResearchMore = useCallback((object: BaseObject, relatedSchema: RelatedSchema) => {
     const prompt = `
       Research more about objects related to the object in terms of the by the specific relation schema:
-
       <object>${JSON.stringify(object, null, 2)}</object>
-      
       <schema>
         <description>${SchemaAST.getDescriptionAnnotation(relatedSchema.schema.ast).pipe(Option.getOrElse(() => ''))}</description>
         <json>
@@ -384,15 +385,15 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
 // TODO(dmaretskyi): Move into core.
 const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
   const schema =
-    db.graph.schemaRegistry.getSchemaByDXN(DXN.parse(getTypename(object as any)!)) ??
+    db.graph.schemaRegistry.getSchemaByDXN(Type.DXN.parse(getTypename(object as any)!)) ??
     raise(new Error('Schema not found'));
 
   let { id, [ATTR_RELATION_SOURCE]: source, [ATTR_RELATION_TARGET]: target, ...props } = object as any;
   if (source) {
-    source = db.getObjectById(DXN.parse(source).asEchoDXN()!.echoId) ?? raise(new Error('Source not found'));
+    source = db.getObjectById(Type.DXN.parse(source).asEchoDXN()!.echoId) ?? raise(new Error('Source not found'));
   }
   if (target) {
-    target = db.getObjectById(DXN.parse(target).asEchoDXN()!.echoId) ?? raise(new Error('Target not found'));
+    target = db.getObjectById(Type.DXN.parse(target).asEchoDXN()!.echoId) ?? raise(new Error('Target not found'));
   }
 
   return live(schema, {
@@ -403,42 +404,43 @@ const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
   });
 };
 
-const createToolbar = (aiClient: SpyAIService) => {
-  const result: ActionGraphProps = { nodes: [], edges: [] };
-  const save = createMenuAction('save', () => aiClient.saveEvents(), {
-    label: 'Save events',
-    icon: 'ph--floppy-disk--regular',
+const createToolbar = (aiClient: SpyAIService) =>
+  Rx.make((get) => {
+    const result: ActionGraphProps = { nodes: [], edges: [] };
+    const save = createMenuAction('save', () => aiClient.saveEvents(), {
+      label: 'Save events',
+      icon: 'ph--floppy-disk--regular',
+    });
+    const load = createMenuAction('load', () => aiClient.loadEvents(), {
+      label: 'Load events',
+      icon: 'ph--folder-open--regular',
+    });
+    const modes = createMenuItemGroup('mode', {
+      variant: 'dropdownMenu',
+      applyActive: true,
+      selectCardinality: 'single',
+      value: get(rxFromSignal(() => aiClient.mode)),
+    } as ToolbarMenuActionGroupProperties);
+    const spy = createMenuAction('spy', () => aiClient.setMode('spy'), {
+      label: 'Spy',
+      icon: 'ph--detective--regular',
+      checked: get(rxFromSignal(() => aiClient.mode === 'spy')),
+    });
+    const mock = createMenuAction('mock', () => aiClient.setMode('mock'), {
+      label: 'Mock',
+      icon: 'ph--rewind--regular',
+      checked: get(rxFromSignal(() => aiClient.mode === 'mock')),
+    });
+    result.nodes.push(save, load, modes, spy, mock);
+    result.edges.push(
+      { source: 'root', target: save.id },
+      { source: 'root', target: load.id },
+      { source: 'root', target: modes.id },
+      { source: modes.id, target: spy.id },
+      { source: modes.id, target: mock.id },
+    );
+    return result;
   });
-  const load = createMenuAction('load', () => aiClient.loadEvents(), {
-    label: 'Load events',
-    icon: 'ph--folder-open--regular',
-  });
-  const modes = createMenuItemGroup('mode', {
-    variant: 'dropdownMenu',
-    applyActive: true,
-    selectCardinality: 'single',
-    value: aiClient.mode,
-  } as ToolbarMenuActionGroupProperties);
-  const spy = createMenuAction('spy', () => aiClient.setMode('spy'), {
-    label: 'Spy',
-    icon: 'ph--detective--regular',
-    checked: aiClient.mode === 'spy',
-  });
-  const mock = createMenuAction('mock', () => aiClient.setMode('mock'), {
-    label: 'Mock',
-    icon: 'ph--rewind--regular',
-    checked: aiClient.mode === 'mock',
-  });
-  result.nodes.push(save, load, modes, spy, mock);
-  result.edges.push(
-    { source: 'root', target: save.id },
-    { source: 'root', target: load.id },
-    { source: 'root', target: modes.id },
-    { source: modes.id, target: spy.id },
-    { source: modes.id, target: mock.id },
-  );
-  return result;
-};
 
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-assistant/Research',

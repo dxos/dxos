@@ -13,6 +13,6 @@ export const meta: PluginMeta = {
     'Activate Maps to plot data from your tables on an interactive globe. Just add Lat/Long fields to your schema to see them on a map. You can also plot points on the map while chatting with your AI assistant.',
   icon: 'ph--compass--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-map',
-  tags: ['experimental'],
+  tags: ['labs'],
   screenshots: ['https://dxos.network/plugin-details-map-dark.png'],
 };

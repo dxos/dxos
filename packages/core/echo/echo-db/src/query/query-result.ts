@@ -126,13 +126,13 @@ export class QueryResult<T extends BaseObject = any> {
     this._query = query;
 
     this._queryContext.changed.on(() => {
-      this._resultCache = undefined;
-      this._objectCache = undefined;
-      // Clear `prohibitSignalActions` to allow the signal to be emitted.
-      compositeRuntime.untracked(() => {
-        this._event.emit(this);
-        this._signal.notifyWrite();
-      });
+      if (this._recomputeResult()) {
+        // Clear `prohibitSignalActions` to allow the signal to be emitted.
+        compositeRuntime.untracked(() => {
+          this._event.emit(this);
+          this._signal.notifyWrite();
+        });
+      }
     });
     this._queryContext.update(query.ast);
 
@@ -198,7 +198,8 @@ export class QueryResult<T extends BaseObject = any> {
 
   /**
    * Subscribe to query results.
-   * Queries that have at least one subscriber are updated reactively when the underlying data changes.
+   * Updates only when the identity or the order of the objects changes.
+   * Does not update when the object properties change.
    */
   // TODO(burdon): Change to SubscriptionHandle (make uniform).
   subscribe(callback?: (query: QueryResult<T>) => void, opts?: QuerySubscriptionOptions): CleanupFn {
@@ -233,11 +234,34 @@ export class QueryResult<T extends BaseObject = any> {
       prohibitSignalActions(() => {
         // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
         compositeRuntime.untracked(() => {
-          this._resultCache = this._queryContext.getResults();
-          this._objectCache = this._uniqueObjects(this._resultCache);
+          this._recomputeResult();
         });
       });
     }
+  }
+
+  /**
+   * @returns true if the result cache was updated.
+   */
+  private _recomputeResult(): boolean {
+    // TODO(dmaretskyi): Make results unique too.
+    const results = this._queryContext.getResults();
+    const objects = this._uniqueObjects(results);
+
+    const changed =
+      !this._objectCache ||
+      this._objectCache.length !== objects.length ||
+      this._objectCache.some((obj, index) => obj.id !== objects[index].id);
+
+    log('recomputeResult', {
+      old: this._objectCache?.map((obj) => obj.id),
+      new: objects.map((obj) => obj.id),
+      changed,
+    });
+
+    this._resultCache = results;
+    this._objectCache = objects;
+    return changed;
   }
 
   private _uniqueObjects(results: QueryResultEntry<T>[]): T[] {

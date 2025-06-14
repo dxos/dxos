@@ -5,18 +5,23 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { getTypename, isInstanceOf } from '@dxos/echo-schema';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
-import { fullyQualifiedId, isLiveObject } from '@dxos/react-client/echo';
+import { fullyQualifiedId, isEchoObject } from '@dxos/react-client/echo';
 
 import { ThreadCapabilities } from './capabilities';
 import { meta, THREAD_PLUGIN } from '../meta';
-import { ChannelType } from '../types';
+import { ChannelType, ThreadAction } from '../types';
+import { getAnchor } from '../util';
 
-export default (context: PluginContext) =>
-  contributes(Capabilities.AppGraphBuilder, [
+export default (context: PluginContext) => {
+  const resolve = (typename: string) =>
+    context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+
+  return contributes(Capabilities.AppGraphBuilder, [
     createExtension({
       id: `${THREAD_PLUGIN}/active-call`,
       connector: (node) =>
@@ -88,17 +93,18 @@ export default (context: PluginContext) =>
       },
     }),
     createExtension({
-      id: `${meta.id}/comments`,
+      id: `${meta.id}/comments-companion`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) =>
-              // TODO(wittjosiah): Support comments on any object.
-              isLiveObject(node.data) && Array.isArray(node.data.threads) && !isInstanceOf(ChannelType, node.data)
-                ? Option.some(node)
-                : Option.none(),
-            ),
+            Option.flatMap((node) => {
+              if (!isEchoObject(node.data) || isInstanceOf(ChannelType, node.data)) {
+                return Option.none();
+              }
+              const metadata = resolve(getTypename(node.data)!);
+              return typeof metadata.comments === 'string' ? Option.some(node) : Option.none();
+            }),
             Option.map((node) => [
               {
                 id: [node.id, 'comments'].join(ATTENDABLE_PATH_SEPARATOR),
@@ -116,4 +122,59 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
+    createExtension({
+      id: `${meta.id}/comment-toolbar`,
+      actions: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => {
+              if (!isEchoObject(node.data) || isInstanceOf(ChannelType, node.data)) {
+                return Option.none();
+              }
+              const metadata = resolve(getTypename(node.data)!);
+              return typeof metadata.comments === 'string' ? Option.some(node.data) : Option.none();
+            }),
+            Option.map((object) => {
+              const selectionManager = context.getCapability(AttentionCapabilities.Selection);
+              const toolbar = get(context.capabilities(ThreadCapabilities.State))[0]?.state.toolbar ?? {};
+              const disabled = get(
+                rxFromSignal(() => {
+                  const metadata = resolve(getTypename(object)!);
+                  const selection = selectionManager.getSelection(fullyQualifiedId(object), metadata.selectionMode);
+                  const anchor = getAnchor(selection);
+                  const invalidSelection = !anchor;
+                  const overlappingComment = toolbar[fullyQualifiedId(object)];
+                  return (metadata.comments === 'anchored' && invalidSelection) || overlappingComment;
+                }),
+              );
+
+              return [
+                {
+                  id: `${fullyQualifiedId(object)}/comment`,
+                  data: () => {
+                    const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+                    const metadata = resolve(getTypename(object)!);
+                    const selection = selectionManager.getSelection(fullyQualifiedId(object));
+                    // TODO(wittjosiah): Use presence of selection to determine if the comment should be anchored.
+                    // Requires all components which support selection (e.g. table/kanban) to support anchored comments.
+                    const anchor = metadata.comments === 'anchored' ? getAnchor(selection) : Date.now().toString();
+                    const name = metadata.getAnchorLabel?.(object, anchor);
+                    void dispatch(createIntent(ThreadAction.Create, { anchor, name, subject: object }));
+                  },
+                  properties: {
+                    label: ['add comment label', { ns: meta.id }],
+                    icon: 'ph--chat-text--regular',
+                    disposition: 'toolbar',
+                    disabled,
+                    testId: 'thread.comment.add',
+                  },
+                },
+              ];
+            }),
+            Option.getOrElse(() => []),
+          ),
+        ),
+    }),
   ]);
+};

@@ -162,6 +162,10 @@ interface FilterAPI {
    */
   nothing(): Filter<any>;
 
+  /**
+   * Filter by object IDs.
+   */
+  // TODO(dmaretskyi): Rename to `Filter.id`.
   ids(...id: ObjectId[]): Filter<any>;
 
   /**

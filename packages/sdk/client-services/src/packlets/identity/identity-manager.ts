@@ -62,7 +62,7 @@ export type JoinIdentityParams = {
 };
 
 export type CreateIdentityOptions = {
-  displayName?: string;
+  profile?: ProfileDocument;
   // device profile for device creating the identity.
   deviceProfile?: DeviceProfileDocument;
 };
@@ -135,7 +135,7 @@ export class IdentityManager {
     await this._identity?.close(new Context());
   }
 
-  async createIdentity({ displayName, deviceProfile }: CreateIdentityOptions = {}): Promise<Identity> {
+  async createIdentity({ profile, deviceProfile }: CreateIdentityOptions = {}): Promise<Identity> {
     // TODO(nf): populate using context from ServiceContext?
     invariant(!this._identity, 'Identity already exists.');
     log('creating identity...');
@@ -171,8 +171,8 @@ export class IdentityManager {
         ),
       ];
 
-      if (displayName) {
-        credentials.push(await generator.createProfileCredential({ displayName }));
+      if (profile) {
+        credentials.push(await generator.createProfileCredential(profile));
       }
 
       // Device authorization (writes device chain).

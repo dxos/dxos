@@ -64,7 +64,7 @@ describe('Database', () => {
     const obj2 = db.add(obj1);
     await db.flush();
     expect(obj1).to.eq(obj2);
-    const { objects } = await db.query().run();
+    const { objects } = await db.query(Query.select(Filter.everything())).run();
     expect(objects).to.have.length(1);
   });
 
@@ -109,14 +109,14 @@ describe('Database', () => {
       }
       await db.flush();
 
-      const { objects } = await db.query().run();
+      const { objects } = await db.query(Query.select(Filter.everything())).run();
       expect(objects.length).to.eq(add);
     }
 
     // Remove objects.
     const remove = 3;
     {
-      const { objects } = await db.query().run();
+      const { objects } = await db.query(Query.select(Filter.everything())).run();
       for (const obj of objects.slice(0, remove)) {
         db.remove(obj);
       }
@@ -124,7 +124,7 @@ describe('Database', () => {
     }
 
     {
-      const { objects } = await db.query().run();
+      const { objects } = await db.query(Query.select(Filter.everything())).run();
       expect(objects.length).to.eq(add - remove);
     }
   });
@@ -137,12 +137,12 @@ describe('Database', () => {
     await db.flush({ indexes: true });
 
     {
-      const { objects } = await db.query({ id: obj1.id }).run();
+      const { objects } = await db.query(Filter.ids(obj1.id)).run();
       expect(objects).toEqual([obj1]);
     }
 
     {
-      const { objects } = await db.query({ id: obj2.id }).run();
+      const { objects } = await db.query(Filter.ids(obj2.id)).run();
       expect(objects).toEqual([obj2]);
     }
   });
@@ -166,7 +166,7 @@ describe('Database', () => {
     {
       const db = await peer.openDatabase(spaceKey, rootUrl);
 
-      const query = db.query({ id });
+      const query = db.query(Filter.ids(id));
       const loaded = new Trigger();
       query.subscribe();
       using updates = updateCounter(() => {

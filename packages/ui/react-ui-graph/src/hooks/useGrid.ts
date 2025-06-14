@@ -57,50 +57,24 @@ const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
     });
   }
 
-  // Scale grid size.
-  const mod = (n: number, size: number, delta = 0) => Math.floor(n / size + delta) * size;
+  // Grid.
+  if (options.grid) {
+    // Scale grid size.
+    const mod = (n: number, size: number, delta = 0) => Math.floor(n / size + delta) * size;
 
-  // Major grid lines.
-  const majorSize = context.scale.gridSize;
-  const xMajor = range(-mod((x + width / 2) * s, majorSize), mod((-x + width / 2) * s, majorSize, 1), majorSize);
-  const yMajor = range(-mod((y + height / 2) * s, majorSize), mod((-y + height / 2) * s, majorSize, 1), majorSize);
-  const major = [
-    ...xMajor
-      .filter((x) => !options.axis || x)
-      .map((x) => [
-        [x, dy],
-        [x, dy + h],
-      ]),
-    ...yMajor
-      .filter((y) => !options.axis || y)
-      .map((y) => [
-        [dx, y],
-        [dx + w, y],
-      ]),
-  ];
-
-  paths.push({
-    id: 'major',
-    class: 'dx-major',
-    path: major.map((line) => createLine(line as any)).join(),
-  });
-
-  // Minor grid lines.
-  // Find nearest power of 2 to gridSize.
-  // TODO(burdon): Doesn't work is scale is not power of 2.
-  const minorSize = Math.pow(2, Math.round(Math.log2(s * context.scale.gridSize)));
-  if (majorSize > minorSize) {
-    const xMinor = range(-mod((x + width / 2) * s, minorSize), mod((-x + width / 2) * s, minorSize, 1), minorSize);
-    const yMinor = range(-mod((y + height / 2) * s, minorSize), mod((-y + height / 2) * s, minorSize, 1), minorSize);
-    const minor = [
-      ...xMinor
-        .filter((x) => xMajor.indexOf(x) === -1)
+    // Major grid lines.
+    const majorSize = context.scale.gridSize;
+    const xMajor = range(-mod((x + width / 2) * s, majorSize), mod((-x + width / 2) * s, majorSize, 1), majorSize);
+    const yMajor = range(-mod((y + height / 2) * s, majorSize), mod((-y + height / 2) * s, majorSize, 1), majorSize);
+    const major = [
+      ...xMajor
+        .filter((x) => !options.axis || x)
         .map((x) => [
           [x, dy],
           [x, dy + h],
         ]),
-      ...yMinor
-        .filter((y) => yMajor.indexOf(y) === -1)
+      ...yMajor
+        .filter((y) => !options.axis || y)
         .map((y) => [
           [dx, y],
           [dx + w, y],
@@ -108,10 +82,39 @@ const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
     ];
 
     paths.push({
-      id: 'minor',
-      class: 'dx-minor',
-      path: minor.map((line) => createLine(line as any)).join(),
+      id: 'major',
+      class: 'dx-major',
+      path: major.map((line) => createLine(line as any)).join(),
     });
+
+    // Minor grid lines.
+    // Find nearest power of 2 to gridSize.
+    // TODO(burdon): Doesn't work is scale is not power of 2.
+    const minorSize = Math.pow(2, Math.round(Math.log2(s * context.scale.gridSize)));
+    if (majorSize > minorSize) {
+      const xMinor = range(-mod((x + width / 2) * s, minorSize), mod((-x + width / 2) * s, minorSize, 1), minorSize);
+      const yMinor = range(-mod((y + height / 2) * s, minorSize), mod((-y + height / 2) * s, minorSize, 1), minorSize);
+      const minor = [
+        ...xMinor
+          .filter((x) => xMajor.indexOf(x) === -1)
+          .map((x) => [
+            [x, dy],
+            [x, dy + h],
+          ]),
+        ...yMinor
+          .filter((y) => yMajor.indexOf(y) === -1)
+          .map((y) => [
+            [dx, y],
+            [dx + w, y],
+          ]),
+      ];
+
+      paths.push({
+        id: 'minor',
+        class: 'dx-minor',
+        path: minor.map((line) => createLine(line as any)).join(),
+      });
+    }
   }
 
   return paths;
@@ -120,11 +123,13 @@ const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
 export type GridOptions = {
   visible?: boolean;
   axis?: boolean;
+  grid?: boolean;
 };
 
 const defaultGridOptions: GridOptions = {
   visible: true,
   axis: true,
+  grid: true,
 };
 
 export class GridController {
@@ -184,13 +189,6 @@ export const useGrid = (options: GridOptions = defaultGridOptions): GridControll
   const ref = useRef<SVGGElement>(null);
   const context = useSvgContext();
   const controller = useMemo(() => new GridController(ref, context, options), []);
-  useEffect(
-    () =>
-      context.resized.on(() => {
-        controller.draw();
-      }),
-    [context, controller],
-  );
-
+  useEffect(() => context.resized.on(() => controller.draw()), [context, controller]);
   return controller;
 };

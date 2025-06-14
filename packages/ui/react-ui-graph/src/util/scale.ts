@@ -25,8 +25,17 @@ export class Scale {
     return this._transform || zoomIdentity;
   }
 
-  setTransform(transform: ZoomTransform): void {
+  setTransform(transform: ZoomTransform): boolean {
+    if (
+      this._transform?.x === transform.x &&
+      this._transform?.y === transform.y &&
+      this._transform?.k === transform.k
+    ) {
+      return false;
+    }
+
     this._transform = transform;
+    return true;
   }
 
   /**

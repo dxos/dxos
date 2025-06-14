@@ -12,9 +12,9 @@ import {
   createResolver,
   type PluginContext,
 } from '@dxos/app-framework';
-import { createQueueDxn, isInstanceOf } from '@dxos/echo-schema';
-import { makeRef, live, refFromDXN } from '@dxos/live-object';
-import { createDocAccessor, getRangeFromCursor } from '@dxos/react-client/echo';
+import { isInstanceOf } from '@dxos/echo-schema';
+import { live } from '@dxos/live-object';
+import { createDocAccessor, getRangeFromCursor, Ref } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
@@ -24,12 +24,10 @@ export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MarkdownAction.Create,
-      resolve: ({ name, spaceId, content }) => {
+      resolve: ({ name, content }) => {
         const doc = live(DocumentType, {
           name,
-          content: makeRef(live(DataType.Text, { content: content ?? '' })),
-          assistantChatQueue: refFromDXN(createQueueDxn(spaceId)),
-          threads: [],
+          content: Ref.make(live(DataType.Text, { content: content ?? '' })),
         });
 
         return { data: { object: doc } };

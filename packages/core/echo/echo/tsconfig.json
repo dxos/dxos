@@ -31,9 +31,6 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../echo-db"
-    },
-    {
       "path": "../echo-protocol"
     },
     {

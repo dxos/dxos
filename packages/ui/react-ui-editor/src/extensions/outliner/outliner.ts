@@ -2,22 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ChangeSpec, EditorSelection, EditorState, type Extension, Prec, type Range } from '@codemirror/state';
+import { type EditorState, type Extension, Prec, type Range } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 
 import { commands } from './commands';
-import { selectionCompartment, selectionFacet, getSelection, selectionEquals } from './selection';
+import { editor } from './editor';
+import { selectionCompartment, selectionFacet, selectionEquals } from './selection';
 import { outlinerTree, treeFacet } from './tree';
+import { floatingMenu } from '../command';
+import { decorateMarkdown } from '../markdown';
 
 // ISSUES:
 // TODO(burdon): Remove requirement for continuous lines to be indented (so that user's can't accidentally delete them and break the layout).
 // TODO(burdon): Prevent unterminated fenced code from breaking subsequent items ("firewall" markdown parsing within each item?)
 // TODO(burdon): What if a different editor "breaks" the layout?
 // TODO(burdon): Check Automerge recognizes text that is moved/indented (e.g., concurrent editing item while being moved).
-// TODO(burdon): Rendered cursor is not full height if there is not text on the task line.
 
 // NEXT:
 // TODO(burdon): Update selection when adding/removing items.
@@ -25,10 +26,7 @@ import { outlinerTree, treeFacet } from './tree';
 // TODO(burdon): Handle backspace at start of line (or empty line).
 // TODO(burdon): Convert to task object and insert link (menu button).
 // TODO(burdon): Smart Cut-and-paste.
-// TODO(burdon): Menu.
 // TODO(burdon): DND.
-
-const listItemRegex = /^\s*- (\[ \]|\[x\])? /;
 
 /**
  * Outliner extension.
@@ -38,128 +36,35 @@ const listItemRegex = /^\s*- (\[ \]|\[x\])? /;
  * - Supports smart cut-and-paste.
  */
 export const outliner = (): Extension => [
-  // State.
-  outlinerTree(),
+  // Commands.
+  Prec.highest(commands()),
 
   // Selection.
   selectionCompartment.of(selectionFacet.of([])),
 
-  // Commands.
-  Prec.highest(commands()),
+  // State.
+  outlinerTree(),
 
   // Filter and possibly modify changes.
-  EditorState.transactionFilter.of((tr) => {
-    const tree = tr.state.facet(treeFacet);
+  editor(),
 
-    // Check cursor is in a valid position.
-    if (!tr.docChanged) {
-      const current = getSelection(tr.state).from;
-      if (current != null) {
-        const currentItem = tree.find(current);
-        if (!currentItem) {
-          return [];
-        }
+  // Floating menu.
+  floatingMenu(),
 
-        // Check if outside of editable range.
-        if (current < currentItem.contentRange.from || current > currentItem.contentRange.to) {
-          const prev = getSelection(tr.startState).from;
-          const prevItem = prev != null ? tree.find(prev) : undefined;
-          if (!prevItem) {
-            return [{ selection: EditorSelection.cursor(currentItem.contentRange.from) }];
-          } else {
-            if (currentItem.index < prevItem.index) {
-              // Moving up.
-              return [{ selection: EditorSelection.cursor(currentItem.contentRange.to) }];
-            } else if (currentItem.index > prevItem.index) {
-              // Moving down.
-              return [{ selection: EditorSelection.cursor(currentItem.contentRange.from) }];
-            } else {
-              if (current < prev) {
-                // Moving left.
-                if (currentItem.index === 0) {
-                  return [];
-                } else {
-                  return [{ selection: EditorSelection.cursor(currentItem.lineRange.from - 1) }];
-                }
-              }
-            }
-          }
-        }
-      }
+  // Line decorations.
+  decorations(),
 
-      return tr;
-    }
+  // Default markdown decorations.
+  decorateMarkdown({ listPaddingLeft: 8 }),
 
-    let cancel = false;
-    const changes: ChangeSpec[] = [];
-    tr.changes.iterChanges((fromA, toA, fromB, toB, insert) => {
-      const line = tr.startState.doc.lineAt(fromA);
-      const match = line.text.match(listItemRegex);
-      if (match) {
-        const start = line.from + (match?.[0]?.length ?? 0);
+  // Researve space for menu.
+  EditorView.contentAttributes.of({ class: 'is-full !mr-[3rem]' }),
+];
 
-        // Detect and cancel replacement of task marker with continuation indent.
-        // Task markers are atomic so will be deleted when backspace is pressed.
-        // The markdown extension inserts 2 or 6 spaces when deleting a list or task marker in order to create a continuation.
-        // - [ ] <- backspace here deletes the task marker.
-        // - [ ] <- backspace here inserts 6 spaces (creates continuation).
-        //   - [ ] <- backspace here deletes the task marker.
-        const replace = start === toA && toA - fromA === insert.length;
-        if (replace) {
-          changes.push({ from: line.from - 1, to: toA });
-          return;
-        }
-
-        // Detect deletion of marker.
-        if (fromB === toB) {
-          if (toA === line.to) {
-            const line = tr.state.doc.lineAt(fromA);
-            if (line.text.match(/^\s*$/)) {
-              if (line.from === 0) {
-                // Don't delete first line.
-                cancel = true;
-                return;
-              } else {
-                // Delete indent and marker.
-                changes.push({ from: line.from - 1, to: toA });
-                return;
-              }
-            }
-          }
-          return;
-        }
-
-        // Prevent newline if line is empty.
-        const item = tree.find(fromA);
-        if (item?.contentRange.from === item?.contentRange.to && fromA === toA) {
-          cancel = true;
-          return;
-        }
-
-        log('change', {
-          item,
-          line: { from: line.from, to: line.to },
-          a: [fromA, toA],
-          b: [fromB, toB],
-          insert: { text: insert.toString(), length: insert.length },
-        });
-      }
-    });
-
-    if (changes.length > 0) {
-      log('modified,', { changes });
-      return [{ changes }];
-    } else if (cancel) {
-      log('cancel');
-      return [];
-    }
-
-    return tr;
-  }),
-
-  /**
-   * Line decorations (for border and selection).
-   */
+/**
+ * Line decorations (for border and selection).
+ */
+const decorations = () => [
   ViewPlugin.fromClass(
     class {
       decorations: DecorationSet = Decoration.none;
@@ -173,12 +78,18 @@ export const outliner = (): Extension => [
           update.startState.facet(selectionFacet),
         );
 
-        if (update.docChanged || update.viewportChanged || update.selectionSet || selectionChanged) {
+        if (
+          update.focusChanged ||
+          update.docChanged ||
+          update.viewportChanged ||
+          update.selectionSet ||
+          selectionChanged
+        ) {
           this.updateDecorations(update.state, update.view);
         }
       }
 
-      private updateDecorations(state: EditorState, { viewport: { from, to } }: EditorView) {
+      private updateDecorations(state: EditorState, { viewport: { from, to }, hasFocus }: EditorView) {
         const selection = state.facet(selectionFacet);
         const tree = state.facet(treeFacet);
         const current = tree.find(state.selection.ranges[state.selection.mainIndex]?.from);
@@ -192,14 +103,13 @@ export const outliner = (): Extension => [
             const lineFrom = doc.lineAt(item.contentRange.from);
             const lineTo = doc.lineAt(item.contentRange.to);
             const isSelected = selection.includes(item.index) || item === current;
-
             decorations.push(
               Decoration.line({
                 class: mx(
                   'cm-list-item',
                   lineFrom.number === line.number && 'cm-list-item-start',
                   lineTo.number === line.number && 'cm-list-item-end',
-                  isSelected && 'cm-list-item-selected',
+                  isSelected && (hasFocus ? 'cm-list-item-focused' : 'cm-list-item-selected'),
                 ),
               }).range(line.from, line.from),
             );
@@ -214,25 +124,28 @@ export const outliner = (): Extension => [
     },
   ),
 
+  // Theme.
   EditorView.theme({
     '.cm-list-item': {
-      borderLeft: '1px solid var(--dx-separator)',
-      borderRight: '1px solid var(--dx-separator)',
+      borderLeftWidth: '1px',
+      borderRightWidth: '1px',
       paddingLeft: '32px',
+      borderColor: 'transparent',
     },
     '.cm-list-item.cm-codeblock-start': {
       borderRadius: '0',
     },
 
     '.cm-list-item-start': {
-      borderTop: '1px solid var(--dx-separator)',
+      borderTopWidth: '1px',
       borderTopLeftRadius: '4px',
       borderTopRightRadius: '4px',
       paddingTop: '4px',
       marginTop: '8px',
     },
+
     '.cm-list-item-end': {
-      borderBottom: '1px solid var(--dx-separator)',
+      borderBottomWidth: '1px',
       borderBottomLeftRadius: '4px',
       borderBottomRightRadius: '4px',
       paddingBottom: '4px',
@@ -240,7 +153,10 @@ export const outliner = (): Extension => [
     },
 
     '.cm-list-item-selected': {
-      borderColor: 'var(--dx-cmSeparator)',
+      borderColor: 'var(--dx-separator)',
+    },
+    '.cm-list-item-focused': {
+      borderColor: 'var(--dx-accentFocusIndicator)',
     },
   }),
 ];

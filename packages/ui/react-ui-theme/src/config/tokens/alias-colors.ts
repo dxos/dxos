@@ -8,8 +8,15 @@ import { valenceAliases } from './sememes-hue';
 import { sheetAliases } from './sememes-sheet';
 import { systemAliases } from './sememes-system';
 
+const groupAliases = ['groupSurface', ...(systemAliases.groupSurface?.root ?? [])];
+const modalAliases = ['modalSurface', ...(systemAliases.modalSurface?.root ?? [])];
+
 export const aliasColors = {
-  conditions: { root: [':root'], attention: ['[data-is-attention-source], .current-related[aria-current]'] },
+  conditions: {
+    root: [':root, .dark'],
+    group: [groupAliases.map((alias) => `.bg-${alias}, .dark .bg-${alias}`).join(', ')],
+    modal: [modalAliases.map((alias) => `.bg-${alias}, .dark .bg-${alias}`).join(', ')],
+  },
   aliases: {
     // TODO(thure): Aliases should be merged more elegantly, this causes overwrites.
     ...sheetAliases,

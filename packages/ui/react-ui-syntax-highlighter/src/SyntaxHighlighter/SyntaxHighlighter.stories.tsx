@@ -4,32 +4,38 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react';
+
 import { withTheme } from '@dxos/storybook-utils';
 
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 
-export default {
+const meta: Meta<typeof SyntaxHighlighter> = {
   title: 'ui/react-ui-syntax-highlighter/SyntaxHighlighter',
   component: SyntaxHighlighter,
   decorators: [withTheme],
 };
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof SyntaxHighlighter>;
+
+export const Default: Story = {
   args: {
     language: 'json',
-    className: 'text-sm',
+    classNames: 'text-sm',
     children: JSON.stringify({ message: 'DXOS', initialized: true }, null, 2),
   },
 };
 
-export const Typescript = {
+export const Typescript: Story = {
   args: {
     language: 'ts',
     children: 'const x = 100;',
   },
 };
 
-export const Empty = {
+export const Empty: Story = {
   args: {
     children: false,
   },

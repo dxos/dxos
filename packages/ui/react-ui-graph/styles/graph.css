@@ -7,11 +7,11 @@
 svg {
   marker {
     &.dx-arrow path {
-      @apply stroke-neutral-300 dark:stroke-neutral-600 fill-none stroke-1;
+      @apply fill-none;
     }
 
     &.dx-dot circle {
-      @apply fill-none stroke-red-500 stroke-2;
+      @apply fill-none;
     }
   }
 
@@ -56,9 +56,9 @@ svg {
         }
       }
 
-      g[data-color="1"].dx-node { circle { @apply fill-violet-300 dark:fill-violet-500; } }
+      g[data-color="1"].dx-node { circle { @apply fill-blue-300   dark:fill-blue-500;   } }
       g[data-color="2"].dx-node { circle { @apply fill-green-300  dark:fill-green-500   } }
-      g[data-color="3"].dx-node { circle { @apply fill-blue-300   dark:fill-blue-500;   } }
+      g[data-color="3"].dx-node { circle { @apply fill-violet-300 dark:fill-violet-500; } }
       g[data-color="4"].dx-node { circle { @apply fill-orange-300 dark:fill-orange-500; } }
       g[data-color="5"].dx-node { circle { @apply fill-pink-300   dark:fill-pink-500;   } }
       g[data-color="6"].dx-node { circle { @apply fill-indigo-300 dark:fill-indigo-500; } }
@@ -88,9 +88,23 @@ svg {
     g.dx-edges {
       g.dx-edge {
         path {
-          @apply stroke-1 stroke-neutral-300 dark:stroke-neutral-600;
+          /** NOTE: Set text- so that current color is picked up by marker. */
+          @apply stroke-1 stroke-neutral-700 dark:stroke-neutral-700;
+        }
+
+        &.dx-dashed {
+          path {
+            @apply [stroke-dasharray:4_4];
+          }
         }
       }
+
+      g[data-color="1"].dx-edge { path { @apply stroke-blue-300   dark:stroke-blue-500;   } }
+      g[data-color="2"].dx-edge { path { @apply stroke-green-300  dark:stroke-green-500   } }
+      g[data-color="3"].dx-edge { path { @apply stroke-violet-300 dark:stroke-violet-500; } }
+      g[data-color="4"].dx-edge { path { @apply stroke-orange-300 dark:stroke-orange-500; } }
+      g[data-color="5"].dx-edge { path { @apply stroke-pink-300   dark:stroke-pink-500;   } }
+      g[data-color="6"].dx-edge { path { @apply stroke-indigo-300 dark:stroke-indigo-500; } }
     }
 
     .dx-linker {

@@ -3,6 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
+import { type Rx } from '@effect-rx/rx-react';
 import { useMemo } from 'react';
 
 import { type Action } from '@dxos/app-graph';
@@ -21,8 +22,7 @@ import {
 import type { EditorAction, EditorViewMode, Formatting } from '../../extensions';
 import { translationKey } from '../../translations';
 
-export type EditorToolbarState = Formatting &
-  Partial<{ comment: boolean; viewMode: EditorViewMode; selection: boolean }>;
+export type EditorToolbarState = Formatting & Partial<{ viewMode: EditorViewMode }>;
 
 export const useEditorToolbarState = (initialState: Partial<EditorToolbarState> = {}) => {
   return useMemo(() => live<EditorToolbarState>(initialState), []);
@@ -35,7 +35,6 @@ export type EditorToolbarFeatureFlags = Partial<{
   blocks: boolean;
   search: boolean;
   // TODO(wittjosiah): Factor out. Depend on plugin-level capabilities.
-  comment: boolean;
   image: () => void;
   viewMode: (mode: EditorViewMode) => void;
 }>;
@@ -44,7 +43,7 @@ export type EditorToolbarActionGraphProps = {
   state: Live<EditorToolbarState>;
   getView: () => EditorView;
   // TODO(wittjosiah): Control positioning.
-  customActions?: () => ActionGraphProps;
+  customActions?: Rx.Rx<ActionGraphProps>;
 };
 
 export type EditorToolbarProps = ThemedClassName<

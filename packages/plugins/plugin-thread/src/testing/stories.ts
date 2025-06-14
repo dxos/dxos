@@ -7,14 +7,13 @@ import { live } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { ThreadType } from '@dxos/plugin-space/types';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { Config } from '@dxos/react-client';
 import { Ref } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 
 import { ThreadPlugin } from '../ThreadPlugin';
-import { ChannelType } from '../types';
+import { ChannelType, ThreadType } from '../types';
 
 export const createThreadPlugins = async () => [
   ThemePlugin({ tx: defaultTx }),

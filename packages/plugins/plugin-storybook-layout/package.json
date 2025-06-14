@@ -33,6 +33,7 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/live-object": "workspace:*",
+    "@preact-signals/safe-react": "^0.9.0",
     "effect": "^3.13.3"
   },
   "devDependencies": {

@@ -74,6 +74,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     // TODO(dmaretskyi): Does this change with strong object deps.
     if (this._preloadSchemaOnOpen) {
       const { objects } = await this._db.query(Filter.type(StoredSchema)).run();
+
       objects.forEach((object) => this._registerSchema(object));
     }
 
@@ -153,6 +154,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
           .runSync()
           .map((result) => result.object)
           .filter((object) => object != null);
+
         const results = filterOrderResults(
           objects.map((stored) => {
             return self._register(stored);
@@ -284,7 +286,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     }
 
     const meta = getTypeAnnotation(schema);
-    invariant(meta, 'use Schema.Struct({}).pipe(Type.def()) or class syntax to create a valid schema');
+    invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
     const schemaToStore = createStoredSchema(meta);
     const updatedSchema = schema.annotations({
       [TypeAnnotationId]: meta,

@@ -224,7 +224,7 @@ const RawTreeItem = <T extends HasId = any>({
         aria-labelledby={`${id}__label`}
         parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
         classNames={mx(
-          'grid grid-cols-subgrid col-[tree-row] mbs-0.5 aria-[current]:bg-groupSurface',
+          'grid grid-cols-subgrid col-[tree-row] mbs-0.5 aria-[current]:bg-activeSurface',
           hoverableControls,
           hoverableFocusedKeyboardControls,
           hoverableFocusedWithinControls,

@@ -23,7 +23,7 @@ import { SpaceAction } from '../types';
 import { COMPOSER_SPACE_LOCK, SHARED } from '../util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
-const WAIT_FOR_OBJECT_TIMEOUT = 1000;
+const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
 
 export default async (context: PluginContext) => {
   const subscriptions = new SubscriptionList();

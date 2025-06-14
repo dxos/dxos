@@ -68,8 +68,9 @@ export class SVGContext {
   }
 
   setTransform(transform: ZoomTransform): void {
-    this._scale.setTransform(transform);
-    this.resized.emit(this);
+    if (this._scale.setTransform(transform)) {
+      this.resized.emit(this);
+    }
   }
 
   /**
