@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
-
 import { Capabilities, contributes, Events, defineModule, definePlugin } from '@dxos/app-framework';
 
 import { IntentResolver, type LayoutState, State } from './capabilities';
@@ -24,7 +22,7 @@ export const StorybookLayoutPlugin = ({ initialState }: { initialState?: LayoutS
       activate: () =>
         contributes(Capabilities.ReactContext, {
           id: 'storybook-layout',
-          context: ({ children }) => <Layout>{children}</Layout>,
+          context: Layout,
         }),
     }),
     defineModule({
