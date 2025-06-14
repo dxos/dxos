@@ -117,7 +117,7 @@ export default () =>
             values={data.subject}
             readonly={role === 'popover'}
             onSave={handleSave}
-            autoSave='blur'
+            autoSave
             {...(role === 'card--kanban' && { classNames: kanbanCardWithoutPoster })}
           />
         );

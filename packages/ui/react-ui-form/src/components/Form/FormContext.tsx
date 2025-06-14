@@ -63,7 +63,7 @@ export const FormProvider = ({
 }: PropsWithChildren<
   FormOptions<any> & {
     formRef?: RefObject<HTMLDivElement>;
-    autoSave?: 'keypress' | 'blur';
+    autoSave?: boolean;
   }
 >) => {
   const form = useForm(formOptions);
@@ -84,22 +84,16 @@ export const FormProvider = ({
       const shouldSubmitTextarea = inputIsTextarea && keyIsEnter && event.metaKey;
 
       if ((shouldSubmitRegularInput || shouldSubmitTextarea) && !inputOptOut) {
-        if (autoSave !== 'keypress' && form.canSave) {
+        if (!autoSave && form.canSave) {
           form.handleSave();
         }
-        if (autoSave === 'keypress' && form.formIsValid) {
+        if (autoSave && form.formIsValid) {
           (event.target as HTMLElement).blur();
         }
       }
     },
     [form, autoSave],
   );
-
-  const handleBlur = useCallback(() => {
-    if (autoSave === 'blur' && form.formIsValid) {
-      form.handleSave();
-    }
-  }, [form, autoSave]);
 
   useEffect(() => {
     if (!formRef?.current) {
@@ -109,11 +103,7 @@ export const FormProvider = ({
     const formElement = formRef.current;
 
     formElement.addEventListener('keydown', handleKeyDown);
-    formElement.addEventListener('focusout', handleBlur);
-    return () => {
-      formElement.removeEventListener('keydown', handleKeyDown);
-      formElement.removeEventListener('focusout', handleBlur);
-    };
+    return () => formElement.removeEventListener('keydown', handleKeyDown);
   }, [formRef, form.canSave, form.formIsValid, form.handleSave, autoSave]);
 
   return <FormContext.Provider value={form}>{children}</FormContext.Provider>;
