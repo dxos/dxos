@@ -87,7 +87,7 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
         renderer.render(projector.layout);
       },
     }),
-    [projector, renderer, model],
+    [model, projector, renderer],
   );
 
   // Subscriptions.
@@ -107,7 +107,7 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
         }
       }),
     );
-  }, [projector, renderer, model]);
+  }, [model, projector, renderer]);
 
   // Start.
   useEffect(() => {
