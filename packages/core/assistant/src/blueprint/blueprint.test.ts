@@ -99,7 +99,7 @@ describe('Blueprint', () => {
     const builder = await new EchoTestBuilder().open();
     const { db } = await builder.createDatabase({ indexing: { vector: true }, types: DataTypes });
 
-    const [org1, org2] = [
+    const [org1] = [
       db.add(
         create(DataType.Organization, {
           name: 'Exa',

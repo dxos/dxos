@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Obj } from '@dxos/echo';
 import { getTypename, type BaseEchoObject, type HasId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type SpaceId } from '@dxos/keys';
-import { Obj } from '@dxos/echo';
 
 import type { QueuesService } from './queue-service';
 import type { Queue } from './types';
