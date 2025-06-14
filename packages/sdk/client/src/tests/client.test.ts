@@ -8,7 +8,8 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Filter } from '@dxos/echo-db';
-import { live, makeRef } from '@dxos/live-object';
+import { Ref } from '@dxos/echo-schema';
+import { live } from '@dxos/live-object';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
@@ -133,11 +134,11 @@ describe('Client', () => {
 
     const client1 = new Client({
       services: testBuilder.createLocalClientServices(),
-      types: [ThreadType, MessageType, TextV0Type],
+      types: [MessageType, ThreadType, TextV0Type],
     });
     const client2 = new Client({
       services: testBuilder.createLocalClientServices(),
-      types: [ThreadType, MessageType, TextV0Type],
+      types: [MessageType, ThreadType, TextV0Type],
     });
 
     await client1.initialize();
@@ -155,7 +156,7 @@ describe('Client', () => {
     await space1.waitUntilReady();
     const spaceKey = space1.key;
 
-    const query = space1.db.query(Filter.schema(ThreadType));
+    const query = space1.db.query(Filter.type(ThreadType));
     query.subscribe(
       ({ objects }) => {
         if (objects.length === 1) {
@@ -177,10 +178,10 @@ describe('Client', () => {
     const text = 'Hello world';
     const message = space2.db.add(
       live(MessageType, {
-        blocks: [{ timestamp: new Date().toISOString(), content: makeRef(live(TextV0Type, { content: text })) }],
+        blocks: [{ timestamp: new Date().toISOString(), content: Ref.make(live(TextV0Type, { content: text })) }],
       }),
     );
-    thread2.messages.push(makeRef(message));
+    thread2.messages.push(Ref.make(message));
     await space2.db.flush();
 
     await expect.poll(() => thread1.messages.length, { timeout: 1_000 }).toEqual(1);

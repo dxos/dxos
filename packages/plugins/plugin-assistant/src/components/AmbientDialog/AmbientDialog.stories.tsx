@@ -19,7 +19,7 @@ import { AmbientDialog } from './AmbientDialog';
 import translations from '../../translations';
 
 const meta: Meta<typeof AmbientDialog> = {
-  title: 'plugins/plugin-automation/AmbientDialog',
+  title: 'plugins/plugin-assistant/AmbientDialog',
   component: AmbientDialog,
   render: () => {
     const [open, setOpen] = useState(true);
@@ -69,7 +69,7 @@ const meta: Meta<typeof AmbientDialog> = {
       plugins: [IntentPlugin()],
     }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ fullscreen: true }),
   ],
   parameters: {
     translations,

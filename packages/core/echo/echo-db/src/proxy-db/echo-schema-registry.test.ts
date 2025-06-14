@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
@@ -9,10 +10,10 @@ import {
   EchoSchema,
   EntityKind,
   TypeAnnotationId,
-  S,
   StoredSchema,
   toJsonSchema,
   type TypeAnnotation,
+  getSchemaTypename,
 } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -20,9 +21,9 @@ import { log } from '@dxos/log';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
-const Organization = S.Struct({
-  name: S.String,
-  address: S.String,
+const Organization = Schema.Struct({
+  name: Schema.String,
+  address: Schema.String,
 }).annotations({
   [TypeAnnotationId]: {
     kind: EntityKind.Object,
@@ -31,8 +32,8 @@ const Organization = S.Struct({
   } satisfies TypeAnnotation,
 });
 
-const Contact = S.Struct({
-  name: S.String,
+const Contact = Schema.Struct({
+  name: Schema.String,
 }).annotations({
   [TypeAnnotationId]: {
     kind: EntityKind.Object,
@@ -112,7 +113,7 @@ describe('schema registry', () => {
   test('get all raw stored schemas', async () => {
     const { db, registry } = await setupTest();
     const schemas = await registry.register([Organization, Contact]);
-    const retrieved = (await db.query(Filter.schema(StoredSchema)).run()).objects;
+    const retrieved = (await db.query(Filter.type(StoredSchema)).run()).objects;
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
       expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;
@@ -124,7 +125,7 @@ describe('schema registry', () => {
     const schemaToStore = live(StoredSchema, {
       typename: 'example.com/type/Test',
       version: '0.1.0',
-      jsonSchema: toJsonSchema(S.Struct({ field: S.Number })),
+      jsonSchema: toJsonSchema(Schema.Struct({ field: Schema.Number })),
     });
     expect(registry.hasSchema(new EchoSchema(schemaToStore))).to.be.false;
     const storedSchema = db.add(schemaToStore);
@@ -135,7 +136,38 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Contact]);
     expect(echoSchema.getProperties().length).to.eq(1);
-    echoSchema.addFields({ newField: S.Number });
+    echoSchema.addFields({ newField: Schema.Number });
     expect(echoSchema.getProperties().length).to.eq(2);
+  });
+
+  test('reactive schema query after reload', async (ctx) => {
+    await using peer = await builder.createPeer();
+
+    {
+      await using db = await peer.createDatabase();
+      await db.schemaRegistry.register([Contact]);
+      await db.flush({ indexes: true });
+    }
+
+    await peer.reload();
+    {
+      await using db = await peer.openLastDatabase();
+      const query = db.schemaRegistry.query({ typename: getSchemaTypename(Contact) });
+      const schema = await new Promise<EchoSchema>((resolve) => {
+        const immediate = query.runSync();
+        if (immediate.length > 0) {
+          resolve(immediate[0]);
+          return;
+        }
+
+        const unsubscribe = query.subscribe(() => {
+          if (query.results.length > 0) {
+            resolve(query.results[0]);
+          }
+        });
+        ctx.onTestFinished(unsubscribe);
+      });
+      expect(getSchemaTypename(schema)).toEqual(getSchemaTypename(Contact));
+    }
   });
 });

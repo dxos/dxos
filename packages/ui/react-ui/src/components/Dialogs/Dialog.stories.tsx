@@ -10,7 +10,7 @@ import { Dialog } from './Dialog';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
-type StorybookDialogProps = Partial<{
+type StoryProps = Partial<{
   title: string;
   description: string;
   body: string;
@@ -19,7 +19,7 @@ type StorybookDialogProps = Partial<{
   blockAlign: 'center' | 'start';
 }>;
 
-const StorybookDialog = ({ title, openTrigger, description, body, closeTrigger, blockAlign }: StorybookDialogProps) => {
+const DefaultStory = ({ title, openTrigger, description, body, closeTrigger, blockAlign }: StoryProps) => {
   return (
     <Dialog.Root defaultOpen>
       <Dialog.Trigger asChild>
@@ -42,7 +42,7 @@ const StorybookDialog = ({ title, openTrigger, description, body, closeTrigger, 
 export default {
   title: 'ui/react-ui-core/Dialog',
   component: Dialog,
-  render: StorybookDialog,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

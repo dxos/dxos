@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { cbor, type PeerId } from '@automerge/automerge-repo';
 import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { sleep, Trigger, waitForCondition } from '@dxos/async';
-import { cbor, type PeerId } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SyncMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';

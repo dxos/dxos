@@ -3,7 +3,6 @@
 //
 
 export * from './context';
-export * from './selection';
 
 export * from './useActionHandler';
 export * from './useDragMonitor';

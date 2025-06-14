@@ -2,21 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
-export const TestItemSchema = S.Struct({
-  id: S.String,
-  name: S.String,
+export const TestItemSchema = Schema.Struct({
+  id: ObjectId,
+  name: Schema.String,
 });
 
-export type TestItemType = S.Schema.Type<typeof TestItemSchema>;
+export type TestItemType = Schema.Schema.Type<typeof TestItemSchema>;
 
-export const TestList = S.Struct({
-  items: S.mutable(S.Array(TestItemSchema)),
+export const TestList = Schema.Struct({
+  items: Schema.mutable(Schema.Array(TestItemSchema)),
 });
 
-export type TestList = S.Schema.Type<typeof TestList>;
+export type TestList = Schema.Schema.Type<typeof TestList>;
 
 export const createList = (n = 10): TestList => ({
   items: faker.helpers.multiple(

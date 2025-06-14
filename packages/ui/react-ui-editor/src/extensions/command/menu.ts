@@ -2,41 +2,44 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type BlockInfo, type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { closeEffect, openCommand, openEffect } from './action';
-import { type RenderCallback } from '../../types';
+import { closeEffect, openEffect } from './action';
 
 export type FloatingMenuOptions = {
-  renderMenu: RenderCallback<{ onAction: () => void }>;
+  icon?: string;
+  height?: number;
+  padding?: number;
 };
 
-// TODO(burdon): Trigger completion on click.
-// TODO(burdon): Hide when dialog is open.
-export const floatingMenu = (options: FloatingMenuOptions) =>
+export const floatingMenu = (options: FloatingMenuOptions = {}) => [
   ViewPlugin.fromClass(
     class {
-      button: HTMLElement;
       view: EditorView;
+      tag: HTMLElement;
       rafId: number | null = null;
 
       constructor(view: EditorView) {
         this.view = view;
 
-        // Position context: scrollDOM
+        // Position context.
         const container = view.scrollDOM;
         if (getComputedStyle(container).position === 'static') {
           container.style.position = 'relative';
         }
 
-        // Render menu externally.
-        this.button = document.createElement('div');
-        this.button.style.position = 'absolute';
-        this.button.style.zIndex = '10';
-        this.button.style.display = 'none';
+        const icon = document.createElement('dx-icon');
+        icon.setAttribute('icon', options.icon ?? 'ph--dots-three-outline--regular');
 
-        options.renderMenu(this.button, { onAction: () => openCommand(view) }, view);
-        container.appendChild(this.button);
+        const button = document.createElement('button');
+        button.appendChild(icon);
+        button.classList.add('grid', 'items-center', 'justify-center', 'w-8', 'h-8');
+
+        // TODO(burdon): Custom tag/styles?
+        this.tag = document.createElement('dx-ref-tag');
+        this.tag.classList.add('border-none', 'fixed', 'p-0');
+        this.tag.appendChild(button);
+        container.appendChild(this.tag);
 
         // Listen for scroll events.
         container.addEventListener('scroll', this.scheduleUpdate.bind(this));
@@ -46,12 +49,33 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
       update(update: ViewUpdate) {
         // TODO(burdon): Timer to fade in/out.
         if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(openEffect)))) {
-          this.button.style.display = 'none';
+          this.tag.style.display = 'none';
         } else if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(closeEffect)))) {
-          this.button.style.display = 'block';
+          this.tag.style.display = 'block';
         } else if (update.selectionSet || update.viewportChanged || update.docChanged || update.geometryChanged) {
           this.scheduleUpdate();
         }
+      }
+
+      updateButtonPosition() {
+        const { x, width } = this.view.contentDOM.getBoundingClientRect();
+
+        const pos = this.view.state.selection.main.head;
+        const line = this.view.lineBlockAt(pos);
+        const coords = this.view.coordsAtPos(line.from);
+        if (!coords) {
+          return;
+        }
+
+        const lineHeight = coords.bottom - coords.top;
+        const dy = (lineHeight - (options.height ?? 32)) / 2;
+
+        const offsetTop = coords.top + dy;
+        const offsetLeft = x + width + (options.padding ?? 8);
+
+        this.tag.style.top = `${offsetTop}px`;
+        this.tag.style.left = `${offsetLeft}px`;
+        this.tag.style.display = 'block';
       }
 
       scheduleUpdate() {
@@ -62,42 +86,12 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
         this.rafId = requestAnimationFrame(this.updateButtonPosition.bind(this));
       }
 
-      updateButtonPosition() {
-        const pos = this.view.state.selection.main.head;
-        const lineBlock: BlockInfo = this.view.lineBlockAt(pos);
-        const domInfo = this.view.domAtPos(lineBlock.from);
-
-        // Find nearest HTMLElement for the line block
-        let node: Node | null = domInfo.node;
-        while (node && !(node instanceof HTMLElement)) {
-          node = node.parentNode;
-        }
-
-        if (!node) {
-          this.button.style.display = 'none';
-          return;
-        }
-
-        const lineRect = (node as HTMLElement).getBoundingClientRect();
-        const containerRect = this.view.scrollDOM.getBoundingClientRect();
-
-        // Account for scroll and padding/margin in scrollDOM.
-        const offsetTop = lineRect.top - containerRect.top + this.view.scrollDOM.scrollTop;
-        const offsetLeft = this.view.scrollDOM.clientWidth + this.view.scrollDOM.scrollLeft - lineRect.x;
-
-        // TODO(burdon): Position is incorrect if cursor is in fenced code block.
-        // console.log('offsetTop', lineRect, containerRect);
-
-        this.button.style.top = `${offsetTop}px`;
-        this.button.style.left = `${offsetLeft}px`;
-        this.button.style.display = 'block';
-      }
-
       destroy() {
-        this.button.remove();
+        this.tag.remove();
         if (this.rafId != null) {
           cancelAnimationFrame(this.rafId);
         }
       }
     },
-  );
+  ),
+];

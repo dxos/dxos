@@ -3,8 +3,7 @@
 //
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { ObjectId } from '@dxos/echo-schema';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { createQueueDxn } from '@dxos/echo-schema';
 import { live, refFromDXN } from '@dxos/live-object';
 
 import { AssistantAction, AIChatType, TemplateType } from '../types';
@@ -14,12 +13,11 @@ export default () => [
     Capabilities.IntentResolver,
     createResolver({
       intent: AssistantAction.CreateChat,
-      resolve: ({ spaceId, name }) => ({
+      resolve: ({ space, name }) => ({
         data: {
           object: live(AIChatType, {
-            assistantChatQueue: refFromDXN(
-              new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()]),
-            ),
+            name,
+            queue: refFromDXN(createQueueDxn(space.id)),
           }),
         },
       }),

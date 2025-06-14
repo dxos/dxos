@@ -42,8 +42,8 @@ export const DatabasePanel = ({ database, ...props }: CustomPanelProps<{ databas
         <tbody>
           {info.map(([entity, quantity], i) => (
             <tr key={i}>
-              <td className='p-1 overflow-hidden'>{entity}</td>
-              <td className='p-1 text-right'>{quantity}</td>
+              <td className='p-1 truncate'>{entity}</td>
+              <td className='p-1 truncate text-right'>{quantity}</td>
             </tr>
           ))}
         </tbody>

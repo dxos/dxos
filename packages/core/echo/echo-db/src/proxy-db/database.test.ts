@@ -6,12 +6,11 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { type BaseObject, Expando } from '@dxos/echo-schema';
-import { getSchema } from '@dxos/echo-schema';
+import { type BaseObject, Expando, getSchema, getTypename, Query, Ref } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
-import { live, dangerouslySetProxyId, getMeta, getType, makeRef, type Live } from '@dxos/live-object';
+import { dangerouslySetProxyId, getMeta, getType, live, type Live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -30,6 +29,18 @@ describe('Database', () => {
 
   afterEach(async () => {
     await builder.close();
+  });
+
+  test('create database and query nothing', { timeout: 1_000 }, async () => {
+    await using peer = await builder.createPeer();
+    await using db = await peer.createDatabase(PublicKey.random(), {
+      reactiveSchemaQuery: false,
+      preloadSchemaOnOpen: false,
+    });
+
+    const { objects } = await db.query(Query.select(Filter.nothing())).run();
+    expect(objects).to.have.length(0);
+    await db.close();
   });
 
   test('flush', async () => {
@@ -53,7 +64,7 @@ describe('Database', () => {
     const obj2 = db.add(obj1);
     await db.flush();
     expect(obj1).to.eq(obj2);
-    const { objects } = await db.query().run();
+    const { objects } = await db.query(Query.select(Filter.everything())).run();
     expect(objects).to.have.length(1);
   });
 
@@ -98,14 +109,14 @@ describe('Database', () => {
       }
       await db.flush();
 
-      const { objects } = await db.query().run();
+      const { objects } = await db.query(Query.select(Filter.everything())).run();
       expect(objects.length).to.eq(add);
     }
 
     // Remove objects.
     const remove = 3;
     {
-      const { objects } = await db.query().run();
+      const { objects } = await db.query(Query.select(Filter.everything())).run();
       for (const obj of objects.slice(0, remove)) {
         db.remove(obj);
       }
@@ -113,7 +124,7 @@ describe('Database', () => {
     }
 
     {
-      const { objects } = await db.query().run();
+      const { objects } = await db.query(Query.select(Filter.everything())).run();
       expect(objects.length).to.eq(add - remove);
     }
   });
@@ -126,12 +137,12 @@ describe('Database', () => {
     await db.flush({ indexes: true });
 
     {
-      const { objects } = await db.query({ id: obj1.id }).run();
+      const { objects } = await db.query(Filter.ids(obj1.id)).run();
       expect(objects).toEqual([obj1]);
     }
 
     {
-      const { objects } = await db.query({ id: obj2.id }).run();
+      const { objects } = await db.query(Filter.ids(obj2.id)).run();
       expect(objects).toEqual([obj2]);
     }
   });
@@ -155,7 +166,7 @@ describe('Database', () => {
     {
       const db = await peer.openDatabase(spaceKey, rootUrl);
 
-      const query = db.query({ id });
+      const query = db.query(Filter.ids(id));
       const loaded = new Trigger();
       query.subscribe();
       using updates = updateCounter(() => {
@@ -195,13 +206,14 @@ describe('Database', () => {
     expect(task.id).to.exist;
     expect(() => getObjectCore(task)).to.throw();
     expect(getSchema(task)?.ast).to.eq(Testing.Task.ast);
-    expect(getType(task)?.objectId).to.eq('example.com/type/Task');
+    expect(getType(task)?.toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
+    expect(getTypename(task)).to.eq('example.com/type/Task');
 
     db.add(task);
     await db.flush();
     expect(getObjectCore(task).database).to.exist;
 
-    const { objects: tasks } = await db.query(Filter.schema(Testing.Task)).run();
+    const { objects: tasks } = await db.query(Filter.type(Testing.Task)).run();
     expect(tasks).to.have.length(1);
     expect(tasks[0].id).to.eq(task.id);
   });
@@ -215,26 +227,26 @@ describe('Database', () => {
     }
 
     {
-      const { objects } = await db.query(Filter.schema(Testing.Container)).run();
+      const { objects } = await db.query(Filter.type(Testing.Container)).run();
       const [container] = objects;
       expect(container.records).to.have.length(1);
       expect(container.records![0].type).to.eq(Testing.RecordType.WORK);
     }
   });
 
-  test('dxos.schema.Expando', async () => {
+  test('dxoSchema.Schema.Expando', async () => {
     const { db } = await createDbWithTypes();
 
     {
       const container = db.add(live(Testing.Container, { objects: [] }));
       await db.flush();
 
-      container.objects!.push(makeRef(live(Expando, { foo: 100 })));
-      container.objects!.push(makeRef(live(Expando, { bar: 200 })));
+      container.objects!.push(Ref.make(live(Expando, { foo: 100 })));
+      container.objects!.push(Ref.make(live(Expando, { bar: 200 })));
     }
 
     {
-      const { objects } = await db.query(Filter.schema(Testing.Container)).run();
+      const { objects } = await db.query(Filter.type(Testing.Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
       expect(container.objects![0].target!.foo).to.equal(100);
@@ -242,23 +254,23 @@ describe('Database', () => {
     }
   });
 
-  test('dxos.schema.TextObject', async () => {
+  test('dxoSchema.Schema.TextObject', async () => {
     const { db } = await createDbWithTypes();
 
     {
       const container = db.add(live(Testing.Container, { objects: [] }));
       await db.flush();
 
-      container.objects!.push(makeRef(live(Testing.Task, {})));
-      container.objects!.push(makeRef(live(Testing.Contact, {})));
+      container.objects!.push(Ref.make(live(Testing.Task, {})));
+      container.objects!.push(Ref.make(live(Testing.Contact, {})));
     }
 
     {
-      const { objects } = await db.query(Filter.schema(Testing.Container)).run();
+      const { objects } = await db.query(Filter.type(Testing.Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
-      expect(getType(container.objects![0].target!)?.objectId).to.equal(Testing.Task.typename);
-      expect(getType(container.objects![1].target!)?.objectId).to.equal(Testing.Contact.typename);
+      expect(getTypename(container.objects![0].target!)).to.equal(Testing.Task.typename);
+      expect(getTypename(container.objects![1].target!)).to.equal(Testing.Contact.typename);
     }
   });
 
@@ -294,19 +306,6 @@ describe('Database', () => {
     expect(() => db1.add(task1)).to.throw;
   });
 
-  test('operator-based filters', async () => {
-    const { db } = await createDbWithTypes();
-
-    db.add(live(Testing.Task, { title: 'foo 1' }));
-    db.add(live(Testing.Task, { title: 'foo 2' }));
-    db.add(live(Testing.Task, { title: 'bar 3' }));
-
-    expect(
-      (await db.query(Filter.schema(Testing.Task, (task: Testing.Task) => task.title?.startsWith('foo'))).run())
-        .objects,
-    ).to.have.length(2);
-  });
-
   test('Database works with old PublicKey IDs and new Ulid IDs', async () => {
     const { db } = await builder.createDatabase();
     const obj = db.add(live(Expando, { string: 'foo' })); // Ulid by default
@@ -326,14 +325,14 @@ describe('Database', () => {
     test('add with a reference to echo reactive proxy', async () => {
       const { db } = await createDbWithTypes();
       const firstTask = db.add(live(Testing.Task, { title: 'foo' }));
-      const secondTask = db.add(live(Testing.Task, { title: 'bar', previous: makeRef(firstTask) }));
+      const secondTask = db.add(live(Testing.Task, { title: 'bar', previous: Ref.make(firstTask) }));
       expect(secondTask.previous?.target).to.eq(firstTask);
     });
 
     test('add with a reference to a reactive proxy', async () => {
       const { db } = await createDbWithTypes();
       const task = db.add(
-        live(Testing.Task, { title: 'first', previous: makeRef(live(Testing.Task, { title: 'second' })) }),
+        live(Testing.Task, { title: 'first', previous: Ref.make(live(Testing.Task, { title: 'second' })) }),
       );
       expect(task.title).to.eq('first');
       expect(task.previous?.target?.id).to.be.a('string');
@@ -345,11 +344,11 @@ describe('Database', () => {
     const task = db.add(
       live(Testing.Task, {
         title: 'Main task',
-        subTasks: [makeRef(live(Testing.Task, { title: 'Sub task' }))],
+        subTasks: [Ref.make(live(Testing.Task, { title: 'Sub task' }))],
       }),
     );
 
-    expect(getType(task.subTasks![0].target)?.objectId).to.eq('example.com/type/Task');
+    expect(getTypename(task.subTasks![0].target!)).to.eq('example.com/type/Task');
     expect(JSON.parse(JSON.stringify(task.subTasks![0].target))['@type']['/']).to.eq(
       'dxn:type:example.com/type/Task:0.1.0',
     );
@@ -360,8 +359,8 @@ describe('Database', () => {
       const root = newTask();
       expect(root.subTasks).to.have.length(0);
 
-      range(3).forEach(() => root.subTasks!.push(makeRef(newTask())));
-      root.subTasks!.push(makeRef(newTask()), makeRef(newTask()));
+      range(3).forEach(() => root.subTasks!.push(Ref.make(newTask())));
+      root.subTasks!.push(Ref.make(newTask()), Ref.make(newTask()));
 
       expect(root.subTasks).to.have.length(5);
       expect(root.subTasks!.length).to.eq(5);
@@ -373,9 +372,9 @@ describe('Database', () => {
       expect(Array.from(root.subTasks!.values())).to.have.length(5);
 
       root.subTasks = [
-        makeRef(live(Testing.Task, {})),
-        makeRef(live(Testing.Task, {})),
-        makeRef(live(Testing.Task, {})),
+        Ref.make(live(Testing.Task, {})),
+        Ref.make(live(Testing.Task, {})),
+        Ref.make(live(Testing.Task, {})),
       ];
       expect(root.subTasks.length).to.eq(3);
 
@@ -384,8 +383,8 @@ describe('Database', () => {
 
     test('splice', async () => {
       const root = newTask();
-      root.subTasks = range(3).map((i) => makeRef(newTask()));
-      root.subTasks.splice(0, 2, makeRef(newTask()));
+      root.subTasks = range(3).map((i) => Ref.make(newTask()));
+      root.subTasks.splice(0, 2, Ref.make(newTask()));
       expect(root.subTasks).to.have.length(2);
       await addToDatabase(root);
     });
@@ -394,12 +393,12 @@ describe('Database', () => {
       const root = live(Testing.Container, { records: [] });
       root.records!.push({
         title: 'test',
-        contacts: [makeRef(live(Testing.Contact, { name: 'tester' }))],
+        contacts: [Ref.make(live(Testing.Contact, { name: 'tester' }))],
       });
       const { db } = await addToDatabase(root);
 
       expect(root.records).to.have.length(1);
-      const queriedContainer = (await db.query(Filter.schema(Testing.Container)).run()).objects[0]!;
+      const queriedContainer = (await db.query(Filter.type(Testing.Container)).run()).objects[0]!;
       expect(queriedContainer.records!.length).to.equal(1);
       expect(queriedContainer.records![0]!.contacts![0]!.target!.name).to.equal('tester');
     });

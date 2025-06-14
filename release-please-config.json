@@ -194,6 +194,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/theme-editor-addon/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/timeframe/package.json",
           "jsonpath": "$.version"
         },
@@ -219,17 +224,32 @@
         },
         {
           "type": "json",
+          "path": "packages/core/ai/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/artifact/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/artifact-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/assistant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/core/conductor/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/automerge/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -394,21 +414,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/artifact/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/artifact-testing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/assistant/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/cf-labs/package.json",
           "jsonpath": "$.version"
         },
@@ -420,16 +425,6 @@
         {
           "type": "json",
           "path": "packages/experimental/env-tests/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/gem-core/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/gem-spore/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -585,6 +580,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-outliner/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-outliner-deprecated/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -769,6 +769,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/lit-theme-editor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/lit-ui/package.json",
           "jsonpath": "$.version"
         },
@@ -845,6 +850,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-geo/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-graph/package.json",
           "jsonpath": "$.version"
         },
         {

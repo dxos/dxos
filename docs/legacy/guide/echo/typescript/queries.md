@@ -46,13 +46,13 @@ It's possible to receive strongly typed results from `query`. This is done by de
 
 ::: details Benefits of schema declarations
 
-* ability to generate type-safe data access code, which makes development faster and safer.
+- ability to generate type-safe data access code, which makes development faster and safer.
   :::
 
 Consider this expression of schema declared with Effect Schema:
 
 ```ts file=./snippets/schema.ts#L5-
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
 import { TypedObject } from '@dxos/echo-schema';
 
@@ -60,8 +60,8 @@ export class TaskType extends TypedObject({
   typename: 'dxos.org/type/Task',
   version: '0.1.0',
 })({
-  name: S.String,
-  completed: S.optional(S.Boolean),
+  name: Schema.String,
+  completed: Schema.optional(Schema.Boolean),
 }) {}
 ```
 
@@ -85,7 +85,7 @@ async () => {
   const space = spaces[0];
 
   // get items that match a filter: type inferred from Task.filter()
-  const tasks = await space.db.query(Filter.schema(TaskType)).run();
+  const tasks = await space.db.query(Filter.type(TaskType)).run();
 };
 ```
 

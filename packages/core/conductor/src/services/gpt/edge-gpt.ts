@@ -5,14 +5,16 @@
 import type { Context } from 'effect';
 import { Effect, Stream } from 'effect';
 
-import { type Tool, type Message, type ImageContentBlock } from '@dxos/artifact';
 import {
   DEFAULT_EDGE_MODEL,
-  MixedStreamParser,
   type AIServiceClient,
   type GenerateRequest,
   type GenerationStreamEvent,
-} from '@dxos/assistant';
+  type Tool,
+  type Message,
+  MixedStreamParser,
+  type ImageContentBlock,
+} from '@dxos/ai';
 import { makePushIterable } from '@dxos/async';
 import { ObjectId, ECHO_ATTR_TYPE } from '@dxos/echo-schema';
 import { log } from '@dxos/log';

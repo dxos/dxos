@@ -12,11 +12,13 @@ import { type Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 
 import { type ThemeMode } from '@dxos/react-ui';
+import { isNotFalsy } from '@dxos/util';
 
 import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
 
 export type MarkdownBundleOptions = {
   themeMode?: ThemeMode;
+  indentWithTab?: boolean;
 };
 
 /**
@@ -27,7 +29,7 @@ export type MarkdownBundleOptions = {
  * https://codemirror.net/docs/community
  * https://codemirror.net/docs/ref/#codemirror.basicSetup
  */
-export const createMarkdownExtensions = ({ themeMode }: MarkdownBundleOptions = {}): Extension[] => {
+export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): Extension[] => {
   return [
     // Main extension.
     // https://github.com/codemirror/lang-markdown
@@ -56,14 +58,16 @@ export const createMarkdownExtensions = ({ themeMode }: MarkdownBundleOptions = 
     // Custom styles.
     syntaxHighlighting(markdownHighlightStyle()),
 
-    keymap.of([
-      // https://codemirror.net/docs/ref/#commands.indentWithTab
-      indentWithTab,
+    keymap.of(
+      [
+        // https://codemirror.net/docs/ref/#commands.indentWithTab
+        options.indentWithTab !== false && indentWithTab,
 
-      // https://codemirror.net/docs/ref/#commands.defaultKeymap
-      ...defaultKeymap,
-      ...completionKeymap,
-      ...lintKeymap,
-    ]),
+        // https://codemirror.net/docs/ref/#commands.defaultKeymap
+        ...defaultKeymap,
+        ...completionKeymap,
+        ...lintKeymap,
+      ].filter(isNotFalsy),
+    ),
   ];
 };

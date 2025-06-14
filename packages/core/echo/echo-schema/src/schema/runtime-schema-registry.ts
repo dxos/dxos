@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
+import { type Schema } from 'effect';
 
 import { raise } from '@dxos/debug';
 import type { DXN } from '@dxos/keys';
@@ -17,25 +17,25 @@ import { getTypenameOrThrow } from '../types';
  */
 // TODO(burdon): Reconcile with EchoSchemaRegistry.
 export class RuntimeSchemaRegistry {
-  private readonly _registry = new Map<string, S.Schema.AnyNoContext[]>();
+  private readonly _registry = new Map<string, Schema.Schema.AnyNoContext[]>();
 
   constructor() {
     this._registry.set(StoredSchema.typename, [StoredSchema]);
   }
 
   // TODO(burdon): Rename types, hasType, etc.
-  get schemas(): S.Schema.AnyNoContext[] {
+  get schemas(): Schema.Schema.AnyNoContext[] {
     return Array.from(this._registry.values()).flat();
   }
 
   // TODO(burdon): TypedObject
-  hasSchema<S extends S.Schema.AnyNoContext>(schema: S): boolean {
+  hasSchema<S extends Schema.Schema.AnyNoContext>(schema: S): boolean {
     const typename = getTypenameOrThrow(schema);
     const arr = this._registry.get(typename);
     return arr?.some((s) => getSchemaVersion(s) === getSchemaVersion(schema)) ?? false;
   }
 
-  getSchemaByDXN(dxn: DXN): S.Schema.AnyNoContext | undefined {
+  getSchemaByDXN(dxn: DXN): Schema.Schema.AnyNoContext | undefined {
     const components = dxn.asTypeDXN();
     if (!components) {
       return undefined;
@@ -58,12 +58,12 @@ export class RuntimeSchemaRegistry {
    * @deprecated Use getSchemaByDXN.
    */
   // TODO(burdon): TypedObject
-  getSchema(typename: string): S.Schema.AnyNoContext | undefined {
+  getSchema(typename: string): Schema.Schema.AnyNoContext | undefined {
     return this._registry.get(typename)?.[0];
   }
 
   // TODO(burdon): TypedObject
-  addSchema(types: S.Schema.AnyNoContext[]) {
+  addSchema(types: Schema.Schema.AnyNoContext[]) {
     types.forEach((schema) => {
       const typename = getTypenameOrThrow(schema);
       const version = getSchemaVersion(schema) ?? raise(new TypeError('Schema has no version.'));

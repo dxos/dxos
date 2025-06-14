@@ -85,15 +85,27 @@ Intents have typed inputs and outputs as well as a string identifier and are con
 export namespace MapAction {
   const MAP_ACTION = `${MAP_PLUGIN}/action`;
 
-  export class Create extends S.TaggedClass<Create>()(`${MAP_ACTION}/create`, {
-    input: S.extend(S.Struct({ space: SpaceSchema, coordinates: S.optional(GeoPoint) }), CreateMapSchema),
-    output: S.Struct({ object: MapType }),
-  }) {}
+  export class Create extends Schema.TaggedClass<Create>()(
+    `${MAP_ACTION}/create`,
+    {
+      input: Schema.extend(
+        Schema.Struct({
+          space: SpaceSchema,
+          coordinates: Schema.optional(GeoPoint),
+        }),
+        CreateMapSchema,
+      ),
+      output: Schema.Struct({ object: MapType }),
+    },
+  ) {}
 
-  export class Toggle extends S.TaggedClass<Toggle>()(`${MAP_ACTION}/toggle`, {
-    input: S.Void,
-    output: S.Void,
-  }) {}
+  export class Toggle extends Schema.TaggedClass<Toggle>()(
+    `${MAP_ACTION}/toggle`,
+    {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  ) {}
 }
 // ...
 ```
@@ -118,7 +130,13 @@ export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MapAction.Create,
-      resolve: async ({ space, name, coordinates, initialSchema, locationProperty }) => {
+      resolve: async ({
+        space,
+        name,
+        coordinates,
+        initialSchema,
+        locationProperty,
+      }) => {
         const { map } = await initializeMap({
           space,
           name,
@@ -177,8 +195,9 @@ defineModule({
   id: `${meta.id}/module/schema`,
   activatesOn: ClientEvents.SetupSchema,
   activate: () => contributes(ClientCapabilities.Schema, [CustomSchema]),
-})
+});
 ```
+
 </Aside>
 
 ## Surfaces
@@ -291,7 +310,9 @@ export default (context: PluginsContext) =>
           {
             id: `${MAP_PLUGIN}/toggle`,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+              const { dispatchPromise: dispatch } = context.requestCapability(
+                Capabilities.IntentDispatcher,
+              );
               await dispatch(createIntent(MapAction.Toggle));
             },
             properties: {
@@ -341,10 +362,12 @@ export default () => {
         name: 'list',
         description: 'Query maps.',
         caption: 'Listing maps...',
-        schema: S.Struct({}),
+        schema: Schema.Struct({}),
         execute: async (_, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const { objects } = await extensions.space.db.query(Filter.schema(MapType)).run();
+          const { objects } = await extensions.space.db
+            .query(Filter.type(MapType))
+            .run();
           invariant(objects.length > 0, 'No maps found');
           return ToolResult.Success(objects);
         },

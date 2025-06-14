@@ -2,36 +2,30 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Rx } from '@effect-rx/rx-react';
+
 import { createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type BaseObject, type Expando } from '@dxos/echo-schema';
+import { type BaseObject, EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { isLiveObject, makeRef } from '@dxos/live-object';
+import { makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import {
   ACTION_GROUP_TYPE,
   ACTION_TYPE,
-  cleanup,
-  getGraph,
-  memoize,
+  type ReadableGraph,
   type ActionData,
-  type Graph,
   type InvokeParams,
   type Node,
   type NodeArg,
 } from '@dxos/plugin-graph';
 import {
-  Filter,
   fullyQualifiedId,
   getSpace,
   isEchoObject,
-  isSpace,
+  type QueryResult,
   SpaceState,
-  type Echo,
-  type FilterSource,
-  type Query,
-  type QueryOptions,
-  type ReactiveEchoObject,
+  type AnyLiveObject,
   type Space,
 } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
@@ -44,36 +38,19 @@ export const COMPOSER_SPACE_LOCK = 'dxos.org/plugin/space/lock';
 // TODO(wittjosiah): Remove.
 export const SHARED = 'shared-spaces';
 
-const EMPTY_ARRAY: never[] = [];
-
 /**
- *
- * @param spaceOrEcho
- * @param filter
- * @param options
- * @returns
+ * Convert a query result to an Rx value of the objects.
  */
-export const memoizeQuery = <T extends BaseObject>(
-  spaceOrEcho?: Space | Echo,
-  filter?: FilterSource<T>,
-  options?: QueryOptions,
-): T[] => {
-  const key = JSON.stringify({
-    space: isSpace(spaceOrEcho) ? spaceOrEcho.id : undefined,
-    filter: Filter.from(filter).toProto(),
+export const rxFromQuery = <T extends BaseObject>(query: QueryResult<T>): Rx.Rx<T[]> => {
+  return Rx.make((get) => {
+    const unsubscribe = query.subscribe((result) => {
+      get.setSelf(result.objects);
+    });
+
+    get.addFinalizer(() => unsubscribe());
+
+    return query.objects;
   });
-
-  const query = memoize(
-    () =>
-      isSpace(spaceOrEcho)
-        ? spaceOrEcho.db.query(filter, options)
-        : (spaceOrEcho?.query(filter, options) as Query<T> | undefined),
-    key,
-  );
-  const unsubscribe = memoize(() => query?.subscribe(), key);
-  cleanup(() => unsubscribe?.());
-
-  return query?.objects ?? EMPTY_ARRAY;
 };
 
 // TODO(wittjosiah): Factor out? Expose via capability?
@@ -109,7 +86,7 @@ const getCollectionGraphNodePartials = ({
       // Change on disk.
       collection.objects = nextOrder.filter(isEchoObject).map(makeRef);
     },
-    onTransferStart: (child: Node<ReactiveEchoObject<any>>, index?: number) => {
+    onTransferStart: (child: Node<AnyLiveObject<any>>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
       // if (space && childSpace && !childSpace.key.equals(space.key)) {
@@ -138,7 +115,7 @@ const getCollectionGraphNodePartials = ({
 
       // }
     },
-    onTransferEnd: (child: Node<ReactiveEchoObject<any>>, destination: Node) => {
+    onTransferEnd: (child: Node<AnyLiveObject<any>>, destination: Node) => {
       // Remove child from origin collection.
       const index = collection.objects.findIndex((object) => object.target === child.data);
       if (index > -1) {
@@ -154,7 +131,7 @@ const getCollectionGraphNodePartials = ({
       //   childSpace.db.remove(child.data);
       // }
     },
-    onCopy: async (child: Node<ReactiveEchoObject<any>>, index?: number) => {
+    onCopy: async (child: Node<AnyLiveObject<any>>, index?: number) => {
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data, resolve, space);
       space.db.add(newObject);
@@ -309,8 +286,8 @@ export const constructSpaceActions = ({
       {
         id: getId(SpaceAction.Rename._tag),
         type: ACTION_TYPE,
-        data: async (params: InvokeParams) => {
-          await dispatch(createIntent(SpaceAction.Rename, { space, caller: params.caller }));
+        data: async (params?: InvokeParams) => {
+          await dispatch(createIntent(SpaceAction.Rename, { space, caller: params?.caller }));
         },
         properties: {
           label: ['rename space label', { ns: SPACE_PLUGIN }],
@@ -333,7 +310,7 @@ export const createObjectNode = ({
   navigable = false,
   resolve,
 }: {
-  object: ReactiveEchoObject<any>;
+  object: AnyLiveObject<any>;
   space: Space;
   navigable?: boolean;
   resolve: (typename: string) => Record<string, any>;
@@ -371,15 +348,16 @@ export const createObjectNode = ({
 };
 
 export const constructObjectActions = ({
-  node,
+  object,
+  graph,
   dispatch,
   navigable = false,
 }: {
-  node: Node<ReactiveEchoObject<any>>;
+  object: AnyLiveObject<any>;
+  graph: ReadableGraph;
   dispatch: PromiseIntentDispatcher;
   navigable?: boolean;
 }) => {
-  const object = node.data;
   const space = getSpace(object);
   invariant(space, 'Space not found');
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
@@ -404,8 +382,8 @@ export const constructObjectActions = ({
     {
       id: getId(SpaceAction.RenameObject._tag),
       type: ACTION_TYPE,
-      data: async (params: InvokeParams) => {
-        await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params.caller }));
+      data: async (params?: InvokeParams) => {
+        await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params?.caller }));
       },
       properties: {
         label: [
@@ -413,8 +391,10 @@ export const constructObjectActions = ({
           { ns: SPACE_PLUGIN },
         ],
         icon: 'ph--pencil-simple-line--regular',
-        // TODO(wittjosiah): Doesn't work.
-        // keyBinding: 'shift+F6',
+        // TODO(wittjosiah): Need's focus.
+        keyBinding: {
+          macos: 'shift+F6',
+        },
         testId: 'spacePlugin.renameObject',
       },
     },
@@ -422,9 +402,8 @@ export const constructObjectActions = ({
       id: getId(SpaceAction.RemoveObjects._tag),
       type: ACTION_TYPE,
       data: async () => {
-        const graph = getGraph(node);
         const collection = graph
-          .nodes(node, { relation: 'inbound' })
+          .getConnections(fullyQualifiedId(object), 'inbound')
           .find(({ data }) => data instanceof CollectionType)?.data;
         await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
       },
@@ -474,28 +453,12 @@ export const constructObjectActions = ({
 };
 
 /**
- * @deprecated
- */
-export const getActiveSpace = (graph: Graph, active?: string) => {
-  if (!active) {
-    return;
-  }
-
-  const node = graph.findNode(active);
-  if (!node || !isLiveObject(node.data)) {
-    return;
-  }
-
-  return getSpace(node.data);
-};
-
-/**
  * @deprecated This is a temporary solution.
  */
 export const getNestedObjects = async (
-  object: ReactiveEchoObject<any>,
+  object: AnyLiveObject<any>,
   resolve: (typename: string) => Record<string, any>,
-): Promise<ReactiveEchoObject<any>[]> => {
+): Promise<AnyLiveObject<any>[]> => {
   const type = getTypename(object);
   if (!type) {
     return [];
@@ -507,7 +470,7 @@ export const getNestedObjects = async (
     return [];
   }
 
-  const objects: ReactiveEchoObject<any>[] = await loadReferences(object);
+  const objects: AnyLiveObject<any>[] = await loadReferences(object);
   const nested = await Promise.all(objects.map((object) => getNestedObjects(object, resolve)));
   return [...objects, ...nested.flat()];
 };

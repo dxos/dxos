@@ -2,16 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
+
 import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { getSnapshot } from '@dxos/live-object';
-import { type MakeOptional, isNotFalsy, removeBy, stripUndefined } from '@dxos/util';
+import { type Live, live } from '@dxos/live-object';
+import { type MakeOptional, isNotFalsy, removeBy } from '@dxos/util';
 
-import { type Graph, type GraphNode, type GraphEdge, type BaseGraphNode, type BaseGraphEdge } from './types';
+import { type BaseGraphEdge, type BaseGraphNode, type Graph, type GraphEdge, type GraphNode } from './types';
 import { createEdgeId } from './util';
 
 /**
- * Wrapper class contains reactive nodes and edges.
+ * Readonly Graph wrapper.
  */
 export class ReadonlyGraphModel<
   Node extends BaseGraphNode = BaseGraphNode,
@@ -23,7 +25,10 @@ export class ReadonlyGraphModel<
    * NOTE: Pass in simple Graph or Live.
    */
   constructor(graph?: Graph) {
-    this._graph = graph ?? { nodes: [], edges: [] };
+    this._graph = graph ?? {
+      nodes: [],
+      edges: [],
+    };
   }
 
   [inspectCustom]() {
@@ -33,12 +38,11 @@ export class ReadonlyGraphModel<
   /**
    * Return stable sorted JSON representation of graph.
    */
-  // TODO(burdon): Create separate toJson method with computed signal.
   toJSON() {
-    const { id, nodes, edges } = getSnapshot(this._graph);
-    nodes.sort(({ id: a }, { id: b }) => a.localeCompare(b));
-    edges.sort(({ id: a }, { id: b }) => a.localeCompare(b));
-    return stripUndefined({ id, nodes, edges });
+    return {
+      nodes: this.nodes.length,
+      edges: this.edges.length,
+    };
   }
 
   get graph(): Graph {
@@ -65,7 +69,7 @@ export class ReadonlyGraphModel<
     return this.findNode(id) ?? failedInvariant();
   }
 
-  filterNodes({ type }: Partial<GraphNode> = {}): Node[] {
+  filterNodes({ type }: Partial<GraphNode.Any> = {}): Node[] {
     return this.nodes.filter((node) => !type || type === node.type);
   }
 
@@ -111,13 +115,13 @@ export class ReadonlyGraphModel<
 }
 
 /**
- * Typed wrapper.
+ * Mutable Graph wrapper.
  */
 export abstract class AbstractGraphModel<
-  Node extends BaseGraphNode,
-  Edge extends BaseGraphEdge,
-  Model extends AbstractGraphModel<Node, Edge, Model, Builder>,
-  Builder extends AbstractGraphBuilder<Node, Edge, Model>,
+  Node extends BaseGraphNode = BaseGraphNode,
+  Edge extends BaseGraphEdge = BaseGraphEdge,
+  Model extends AbstractGraphModel<Node, Edge, Model, Builder> = any,
+  Builder extends AbstractGraphBuilder<Node, Edge, Model> = AbstractGraphBuilder<Node, Edge, Model>,
 > extends ReadonlyGraphModel<Node, Edge> {
   /**
    * Allows chaining.
@@ -177,8 +181,8 @@ export abstract class AbstractGraphModel<
   }
 
   removeNode(id: string): Model {
-    const nodes = removeBy<Node>(this._graph.nodes as Node[], (node) => node.id === id);
     const edges = removeBy<Edge>(this._graph.edges as Edge[], (edge) => edge.source === id || edge.target === id);
+    const nodes = removeBy<Node>(this._graph.nodes as Node[], (node) => node.id === id);
     return this.copy({ nodes, edges });
   }
 
@@ -199,7 +203,7 @@ export abstract class AbstractGraphModel<
 }
 
 /**
- * Chainable wrapper
+ * Chainable builder wrapper
  */
 export abstract class AbstractGraphBuilder<
   Node extends BaseGraphNode,
@@ -242,6 +246,9 @@ export abstract class AbstractGraphBuilder<
   }
 }
 
+/**
+ * Basic model.
+ */
 export class GraphModel<
   Node extends BaseGraphNode = BaseGraphNode,
   Edge extends BaseGraphEdge = BaseGraphEdge,
@@ -255,6 +262,50 @@ export class GraphModel<
   }
 }
 
+export type GraphModelSubscription = (model: GraphModel, graph: Live<Graph>) => void;
+
+/**
+ * Subscription.
+ * NOTE: Requires `registerSignalsRuntime` to be called.
+ */
+export const subscribe = (model: GraphModel, cb: GraphModelSubscription, fire = false) => {
+  if (fire) {
+    cb(model, model.graph);
+  }
+
+  return effect(() => {
+    cb(model, model.graph);
+  });
+};
+
+/**
+ * Basic reactive model.
+ */
+export class ReactiveGraphModel<
+  Node extends BaseGraphNode = BaseGraphNode,
+  Edge extends BaseGraphEdge = BaseGraphEdge,
+> extends GraphModel<Node, Edge> {
+  constructor(graph?: Partial<Graph>) {
+    super(
+      live({
+        nodes: graph?.nodes ?? [],
+        edges: graph?.edges ?? [],
+      }),
+    );
+  }
+
+  override copy(graph?: Partial<Graph>) {
+    return new ReactiveGraphModel<Node, Edge>(graph);
+  }
+
+  subscribe(cb: GraphModelSubscription, fire = false): () => void {
+    return subscribe(this, cb, fire);
+  }
+}
+
+/**
+ * Basic builder.
+ */
 export class GraphBuilder<
   Node extends BaseGraphNode = BaseGraphNode,
   Edge extends BaseGraphEdge = BaseGraphEdge,

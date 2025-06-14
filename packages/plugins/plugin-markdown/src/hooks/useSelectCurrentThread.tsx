@@ -3,10 +3,10 @@
 //
 
 import { EditorView } from '@codemirror/view';
+import { Schema } from 'effect';
 import { useMemo } from 'react';
 
 import { createResolver, LayoutAction, useIntentResolver } from '@dxos/app-framework';
-import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Cursor, setSelection } from '@dxos/react-ui-editor';
 
@@ -22,7 +22,7 @@ export const useSelectCurrentThread = (editorView: EditorView | undefined, docum
         intent: LayoutAction.UpdateLayout,
         position: 'hoist',
         filter: (data): data is { part: 'current'; subject: string; options: { cursor: string } } => {
-          if (!S.is(LayoutAction.ScrollIntoView.fields.input)(data)) {
+          if (!Schema.is(LayoutAction.ScrollIntoView.fields.input)(data)) {
             return false;
           }
 

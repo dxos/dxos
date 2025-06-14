@@ -3,3 +3,4 @@
 //
 
 export * from './EditorToolbar';
+export * from './Popover';

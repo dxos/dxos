@@ -3,15 +3,15 @@
 //
 
 // @ts-ignore
-import { defineFunction, S } from 'dxos:functions';
+import { S, defineFunction } from 'dxos:functions';
 import {
   HttpClient,
   HttpClientRequest,
   FetchHttpClient,
   // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.13.3';
+} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21';
 // @ts-ignore
-import { Effect, Schedule } from 'https://esm.sh/effect@3.13.3';
+import { Effect, Schedule } from 'https://esm.sh/effect@3.14.21';
 
 export default defineFunction({
   description: 'Returns the exchange rate between two currencies.',
@@ -23,11 +23,7 @@ export default defineFunction({
 
   outputSchema: S.String.annotations({ description: 'The exchange rate between the two currencies' }),
 
-  handler: async ({
-    event: {
-      data: { from, to },
-    },
-  }: any) =>
+  handler: async ({ data: { from, to } }: any) =>
     Effect.gen(function* () {
       const res = yield* HttpClientRequest.get(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`).pipe(
         HttpClient.execute,

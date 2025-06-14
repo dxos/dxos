@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event, asyncTimeout } from '@dxos/async';
 import {
   getBackend,
   getHeads,
@@ -11,7 +10,7 @@ import {
   save,
   type Doc,
   type Heads,
-} from '@dxos/automerge/automerge';
+} from '@automerge/automerge';
 import {
   type DocHandleChangePayload,
   Repo,
@@ -24,9 +23,12 @@ import {
   type StorageAdapterInterface,
   type StorageKey,
   interpretAsDocumentId,
-} from '@dxos/automerge/automerge-repo';
+  type HandleState,
+} from '@automerge/automerge-repo';
+
+import { Event, asyncTimeout } from '@dxos/async';
 import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
-import { type CollectionId, type SpaceDoc } from '@dxos/echo-protocol';
+import { DatabaseDirectory, type CollectionId } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -70,6 +72,10 @@ export type CreateDocOptions = {
    * Import the document together with its history.
    */
   preserveHistory?: boolean;
+};
+
+export const FIND_PARAMS = {
+  allowableStates: ['ready', 'requesting'] satisfies HandleState[],
 };
 
 /**
@@ -215,7 +221,7 @@ export class AutomergeHost extends Resource {
       handle = this._repo.handles[documentId as DocumentId];
     }
     if (!handle) {
-      handle = this._repo.find(documentId as DocumentId);
+      handle = await this._repo.find(documentId as DocumentId, FIND_PARAMS);
     }
 
     // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
@@ -279,30 +285,28 @@ export class AutomergeHost extends Resource {
     if (headsToWait.length > 0) {
       await Promise.all(
         headsToWait.map(async (entry, index) => {
-          const handle = await this.loadDoc<SpaceDoc>(Context.default(), entry.documentId as DocumentId);
+          const handle = await this.loadDoc<DatabaseDirectory>(Context.default(), entry.documentId as DocumentId);
           await waitForHeads(handle, entry.heads!);
         }),
       );
     }
 
     // Flush to disk handles loaded to memory also so that the indexer can pick up the changes.
-    await this._repo.flush(documentIds.filter((documentId) => !!this._repo.handles[documentId]));
+    await this._repo.flush(
+      documentIds.filter((documentId) => this._repo.handles[documentId] && this._repo.handles[documentId].isReady()),
+    );
   }
 
   async reIndexHeads(documentIds: DocumentId[]) {
     for (const documentId of documentIds) {
       log.info('re-indexing heads for document', { documentId });
-      const handle = this._repo.find(documentId);
-      await handle.whenReady(['ready', 'requesting']);
-      if (handle.inState(['requesting'])) {
+      const handle = await this._repo.find(documentId, FIND_PARAMS);
+      if (!handle.isReady()) {
         log.warn('document is not available locally, skipping', { documentId });
         continue; // Handle not available locally.
       }
 
-      const doc = handle.docSync();
-      invariant(doc);
-
-      const heads = getHeads(doc);
+      const heads = handle.heads();
       const batch = this._db.batch();
       this._headsStore.setHeads(documentId, heads, batch);
       await batch.write();
@@ -333,10 +337,10 @@ export class AutomergeHost extends Resource {
 
   private async _beforeSave({ path, batch }: BeforeSaveParams) {
     const handle = this._repo.handles[path[0] as DocumentId];
-    if (!handle) {
+    if (!handle || !handle.isReady()) {
       return;
     }
-    const doc = handle.docSync();
+    const doc = handle.doc();
     if (!doc) {
       return;
     }
@@ -344,7 +348,7 @@ export class AutomergeHost extends Resource {
     const heads = getHeads(doc);
     this._headsStore.setHeads(handle.documentId, heads, batch);
 
-    const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
+    const spaceKey = DatabaseDirectory.getSpaceKey(doc) ?? undefined;
     const objectIds = Object.keys(doc.objects ?? {});
     const encodedIds = objectIds.map((objectId) =>
       objectPointerCodec.encode({ documentId: handle.documentId, objectId, spaceKey }),
@@ -369,7 +373,7 @@ export class AutomergeHost extends Resource {
     this._indexMetadataStore.notifyMarkedDirty();
 
     const documentId = path[0] as DocumentId;
-    const document = this._repo.handles[documentId]?.docSync();
+    const document = this._repo.handles[documentId]?.doc();
     if (document) {
       const heads = getHeads(document);
       this._onHeadsChanged(documentId, heads);
@@ -393,9 +397,12 @@ export class AutomergeHost extends Resource {
   }
 
   private async _getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null> {
-    const doc = this._repo.handles[documentId as any]?.docSync();
-    if (doc) {
-      const spaceKeyHex = getSpaceKeyFromDoc(doc);
+    const handle = this._repo.handles[documentId as any];
+    if (handle.state === 'loading') {
+      await handle.whenReady();
+    }
+    if (handle && handle.isReady() && handle.doc()) {
+      const spaceKeyHex = DatabaseDirectory.getSpaceKey(handle.doc());
       if (spaceKeyHex) {
         return PublicKey.from(spaceKeyHex);
       }
@@ -420,9 +427,10 @@ export class AutomergeHost extends Resource {
   async flush({ documentIds }: FlushRequest = {}): Promise<void> {
     // Note: Sync protocol for client and services ensures that all handles should have all changes.
 
-    const loadedDocuments = documentIds?.filter(
-      (documentId): documentId is DocumentId => !!this._repo.handles[documentId as DocumentId],
-    );
+    const loadedDocuments = documentIds?.filter((documentId): documentId is DocumentId => {
+      const handle = this._repo.handles[documentId as DocumentId];
+      return handle && handle.isReady();
+    });
     await this._repo.flush(loadedDocuments);
   }
 
@@ -431,9 +439,9 @@ export class AutomergeHost extends Resource {
     const storeRequestIds: DocumentId[] = [];
     const storeResultIndices: number[] = [];
     for (const documentId of documentIds) {
-      const doc = this._repo.handles[documentId]?.docSync();
-      if (doc) {
-        result.push(getHeads(doc));
+      const handle = this._repo.handles[documentId];
+      if (handle && handle.isReady() && handle.doc()) {
+        result.push(getHeads(handle.doc()!));
       } else {
         storeRequestIds.push(documentId);
         storeResultIndices.push(result.length);
@@ -555,7 +563,7 @@ export class AutomergeHost extends Resource {
 
     // Load the documents so they will start syncing.
     for (const documentId of toReplicate) {
-      this._repo.find(documentId);
+      this._repo.findWithProgress(documentId);
     }
   }
 
@@ -576,24 +584,14 @@ export class AutomergeHost extends Resource {
   }
 }
 
-export const getSpaceKeyFromDoc = (doc: Doc<SpaceDoc>): string | null => {
-  // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey
-  const rawSpaceKey = doc.access?.spaceKey ?? (doc as any).experimental_spaceKey;
-  if (rawSpaceKey == null) {
-    return null;
-  }
-
-  return String(rawSpaceKey);
-};
-
-const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
+const waitForHeads = async (handle: DocHandle<DatabaseDirectory>, heads: Heads) => {
   const unavailableHeads = new Set(heads);
 
   await handle.whenReady();
-  await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitForCondition(() => {
+  await Event.wrap<DocHandleChangePayload<DatabaseDirectory>>(handle, 'change').waitForCondition(() => {
     // Check if unavailable heads became available.
     for (const changeHash of unavailableHeads.values()) {
-      if (changeIsPresentInDoc(handle.docSync()!, changeHash)) {
+      if (changeIsPresentInDoc(handle.doc()!, changeHash)) {
         unavailableHeads.delete(changeHash);
       }
     }

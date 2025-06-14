@@ -2,20 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { Type } from '@dxos/echo';
 import {
-  S,
-  Format,
-  AST,
-  GeneratorAnnotationId,
-  LabelAnnotationId,
+  FormatAnnotation,
+  FormatEnum,
+  GeneratorAnnotation,
+  LabelAnnotation,
   PropertyMetaAnnotationId,
-  FormatAnnotationId,
 } from '@dxos/echo-schema';
 
-import { IconAnnotationId } from '../annotations';
+import { IconAnnotation } from '../annotations';
 
-export const organizationStatusOptions = [
+// TODO(burdon): Remove (specific to kanban demo).
+export const OrganizationStatusOptions = [
   { id: 'prospect', title: 'Prospect', color: 'indigo' },
   { id: 'qualified', title: 'Qualified', color: 'purple' },
   { id: 'active', title: 'Active', color: 'amber' },
@@ -24,49 +25,45 @@ export const organizationStatusOptions = [
 ];
 
 /**
- * Organization schema.
+ * https://schema.org/Organization
  */
-export const OrganizationSchema = S.Struct({
+const OrganizationSchema = Schema.Struct({
   id: Type.ObjectId,
-  name: S.optional(S.String.annotations({ title: 'Name', [GeneratorAnnotationId]: 'company.name' })),
-  description: S.optional(S.String.annotations({ title: 'Description' })),
-  // TODO(wittjosiah): Remove.
-  status: S.optional(
-    S.Union(
-      S.Literal('prospect'),
-      S.Literal('qualified'),
-      S.Literal('active'),
-      S.Literal('commit'),
-      S.Literal('reject'),
-    ).annotations({
-      title: 'Status',
-      [PropertyMetaAnnotationId]: {
-        singleSelect: {
-          options: organizationStatusOptions,
+  name: Schema.optional(
+    Schema.String.pipe(Schema.annotations({ title: 'Name' }), GeneratorAnnotation.set(['company.name', 1])),
+  ),
+  description: Schema.optional(Schema.String.annotations({ title: 'Description' })),
+  // TODO(wittjosiah): Remove; 1change to relation.
+  status: Schema.optional(
+    Schema.Literal('prospect', 'qualified', 'active', 'commit', 'reject')
+      .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
+      .annotations({
+        title: 'Status',
+        [PropertyMetaAnnotationId]: {
+          singleSelect: {
+            options: OrganizationStatusOptions,
+          },
         },
-      },
-      [FormatAnnotationId]: 'single-select',
-    }),
+      }),
   ),
   // TODO(wittjosiah): Format.URL (currently breaks schema validation). Support ref?
-  image: S.optional(S.String.annotations({ title: 'Image' })),
-  website: S.optional(
-    Format.URL.annotations({
+  image: Schema.optional(Schema.String.annotations({ title: 'Image' })),
+  website: Schema.optional(
+    Type.Format.URL.annotations({
       title: 'Website',
-      [GeneratorAnnotationId]: 'internet.url',
-    }),
+    }).pipe(GeneratorAnnotation.set('internet.url')),
   ),
-}).annotations({
-  [AST.TitleAnnotationId]: 'Organization',
-  [LabelAnnotationId]: 'name',
-  [IconAnnotationId]: 'ph--building--regular',
-});
+}).pipe(
+  Schema.annotations({ title: 'Organization', description: 'An organization.' }),
+  LabelAnnotation.set(['name']),
+  IconAnnotation.set('ph--building--regular'),
+);
 
 export const Organization = OrganizationSchema.pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Organization',
     version: '0.1.0',
   }),
 );
 
-export type Organization = S.Schema.Type<typeof Organization>;
+export interface Organization extends Schema.Schema.Type<typeof Organization> {}

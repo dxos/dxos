@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 
 import { inRange } from '@dxos/compute';
-import { createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-form';
 import {
   type GridContentProps,
@@ -21,7 +21,6 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
-import { parseThreadAnchorAsCellRange } from '../../integrations';
 import { type SheetModel } from '../../model';
 import { cellClassNameForRange, rangeFromIndex } from '../../types';
 
@@ -53,13 +52,15 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
   const address = { col, row };
   const rawValue = model.getValue(address);
   const ranges = model.sheet.ranges?.filter(({ range }) => inRange(rangeFromIndex(model.sheet, range), address));
-  const threadRefs = model.sheet.threads
-    ?.filter((thread) => {
-      const range = thread.target?.anchor && parseThreadAnchorAsCellRange(thread.target!.anchor);
-      return thread && range ? inRange(range, address) : false;
-    })
-    .map((thread) => fullyQualifiedId(thread!))
-    .join(' ');
+  const threadRefs = undefined;
+  // TODO(wittjosiah): Update this to get threads via relations.
+  // model.sheet.threads
+  //   ?.filter((thread) => {
+  //     const range = thread.target?.anchor && parseThreadAnchorAsCellRange(thread.target!.anchor);
+  //     return thread && range ? inRange(range, address) : false;
+  //   })
+  //   .map((thread) => fullyQualifiedId(thread!))
+  //   .join(' ');
 
   const description = model.getValueDescription(address);
   const type = description?.type;
@@ -89,13 +90,13 @@ const gridCellGetter = (model: SheetModel) => {
 
 export const rowLabelCell = (row: number) => ({
   value: rowToA1Notation(row),
-  className: 'text-end pie-1 text-subdued',
+  className: '!bg-toolbarSurface text-subdued text-end pie-1',
   resizeHandle: 'row',
 });
 
 export const colLabelCell = (col: number) => ({
   value: colToA1Notation(col),
-  className: 'text-subdued',
+  className: '!bg-toolbarSurface text-subdued',
   resizeHandle: 'col',
 });
 
@@ -105,6 +106,11 @@ const cellGetter = (model: SheetModel) => {
     switch (plane) {
       case 'grid':
         return getGridCells(nextBounds);
+      case 'fixedStartStart': {
+        return {
+          '0,0': { className: '!bg-toolbarSurface' },
+        };
+      }
       case 'frozenColsStart':
         return [...Array(nextBounds.end.row - nextBounds.start.row)].reduce((acc, _, r0) => {
           const r = nextBounds.start.row + r0;

@@ -4,59 +4,42 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, Surface, useCapability } from '@dxos/app-framework';
-import { getSchemaTypename, isInstanceOf } from '@dxos/echo-schema';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
+import { SettingsStore } from '@dxos/local-storage';
+import { ChannelType } from '@dxos/plugin-thread/types';
 
-import { MeetingCapabilities } from './capabilities';
-import { CallSidebar, MeetingContainer, MeetingStatusDetail, MissingArtifact } from '../components';
-import { MEETING_PLUGIN } from '../meta';
-import { MeetingType } from '../types';
+import { MeetingContainer, MeetingSettings, MeetingsList } from '../components';
+import { meta } from '../meta';
+import { type MeetingSettingsProps, MeetingType } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${MEETING_PLUGIN}/article`,
+      id: `${meta.id}/plugin-settings`,
       role: 'article',
-      filter: (data): data is { subject: MeetingType; variant: undefined } =>
-        isInstanceOf(MeetingType, data.subject) && !data.variant,
+      filter: (data): data is { subject: SettingsStore<MeetingSettingsProps> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
+      component: ({ data: { subject } }) => <MeetingSettings settings={subject.value} />,
+    }),
+    createSurface({
+      id: `${meta.id}/meeting`,
+      role: 'article',
+      filter: (data): data is { subject: MeetingType } => isInstanceOf(MeetingType, data.subject),
       component: ({ data }) => <MeetingContainer meeting={data.subject} />,
     }),
     createSurface({
-      id: `${MEETING_PLUGIN}/missing-companion`,
+      id: `${meta.id}/meeting-companion`,
       role: 'article',
-      filter: (data): data is { companionTo: MeetingType; variant: string; subject: null } =>
-        !data.subject && isInstanceOf(MeetingType, data.companionTo) && typeof data.variant === 'string',
-      component: ({ data }) => <MissingArtifact meeting={data.companionTo} typename={data.variant} />,
-    }),
-    createSurface({
-      id: `${MEETING_PLUGIN}/meeting-summary`,
-      role: 'article',
-      filter: (data): data is { companionTo: MeetingType; subject: 'summary' } =>
-        isInstanceOf(MeetingType, data.companionTo) &&
-        data.variant === 'summary' &&
-        isInstanceOf(DocumentType, data.companionTo.artifacts[getSchemaTypename(DocumentType)!]?.target),
+      filter: (data): data is { subject: MeetingType | 'meeting'; companionTo: ChannelType } =>
+        (isInstanceOf(MeetingType, data.subject) || data.subject === 'meeting') &&
+        isInstanceOf(ChannelType, data.companionTo),
       component: ({ data }) => {
-        return (
-          <Surface
-            data={{ subject: data.companionTo.artifacts[getSchemaTypename(DocumentType)!].target }}
-            role='article'
-            limit={1}
-          />
+        return data.subject === 'meeting' ? (
+          <MeetingsList channel={data.companionTo} />
+        ) : (
+          <MeetingContainer meeting={data.subject} />
         );
-      },
-    }),
-    createSurface({
-      id: `${MEETING_PLUGIN}/assistant`,
-      role: 'deck-companion--active-meeting',
-      component: () => <CallSidebar />,
-    }),
-    createSurface({
-      id: `${MEETING_PLUGIN}/devtools-overview`,
-      role: 'devtools-overview',
-      component: () => {
-        const call = useCapability(MeetingCapabilities.CallManager);
-        return <MeetingStatusDetail state={call.state} />;
       },
     }),
   ]);

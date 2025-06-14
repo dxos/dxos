@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import type { inspect, InspectOptionsStylized } from 'node:util';
 
 import { inspectCustom } from '@dxos/debug';
@@ -12,6 +13,8 @@ import type { SpaceId } from './space-id';
 /**
  * Tags for ECHO DXNs that should resolve the object ID in the local space.
  */
+// TODO(dmaretskyi): Rebrand this as "unknown location" to specify objects in the same space or queue. Essentially making the DXN it a URI not URL
+// TODO(dmaretskyi): "@" is a separator character in the URI spec.
 export const LOCAL_SPACE_TAG = '@';
 
 // TODO(burdon): Namespace for.
@@ -37,6 +40,18 @@ export const QueueSubspaceTags = Object.freeze({
  * ```
  */
 export class DXN {
+  // TODO(dmaretskyi): Should this be a transformation into the DXN type?
+  static Schema = Schema.NonEmptyString.pipe(
+    Schema.pattern(/^dxn:([^:]+):(?:[^:]+:?)+[^:]$/),
+    // TODO(dmaretskyi): To set the format we need to move the annotation IDs out of the echo-schema package.
+    // FormatAnnotation.set(FormatEnum.DXN),
+    Schema.annotations({
+      title: 'DXN',
+      description: 'DXN URI',
+      examples: ['dxn:type:example.com/type/MyType', 'dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6'],
+    }),
+  );
+
   /**
    * Kind constants.
    */
@@ -153,6 +168,7 @@ export class DXN {
     return this.#parts;
   }
 
+  // TODO(burdon): Should getters fail?
   get typename() {
     invariant(this.#kind === DXN.kind.TYPE);
     return this.#parts[0];
@@ -225,6 +241,29 @@ export class DXN {
     );
   }
 }
+
+// TODO(dmaretskyi): Fluent API:
+/*
+class DXN {
+  ...
+isEchoDXN(): this is EchoDXN {
+  return this.#kind === DXN.kind.ECHO;
+}
+...
+}
+
+interface EchoDXN extends DXN {
+  objectId: ObjectId;
+}
+
+declare const dxn: DXN;
+
+dxn.objectId
+
+if(dxn.isEchoDXN()) {
+  dxn.objectId
+}
+  ```
 
 /**
  * API namespace.

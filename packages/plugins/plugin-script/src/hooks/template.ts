@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback } from 'react';
-
-import { FUNCTIONS_PRESET_META_KEY, type ScriptType } from '@dxos/functions/types';
+import { FUNCTIONS_PRESET_META_KEY, type ScriptType } from '@dxos/functions';
 import { getMeta } from '@dxos/live-object';
 import { createMenuItemGroup, createMenuAction } from '@dxos/react-ui-menu';
 
@@ -20,33 +18,11 @@ const createTemplateSelectGroup = () => {
   });
 };
 
-const createTemplateSelectActions = () => {
+const createTemplateSelectActions = (script: ScriptType) => {
   return templates.map((template) => {
-    return createMenuAction<TemplateActionProperties>(`template--${template.id}`, {
-      label: template.name,
-      value: template.id,
-      type: 'template',
-    });
-  });
-};
-
-export const createTemplateSelect = () => {
-  const templateSelectGroup = createTemplateSelectGroup();
-  const templateSelectActions = createTemplateSelectActions();
-  return {
-    nodes: [templateSelectGroup, ...templateSelectActions],
-    edges: [
-      { source: 'root', target: 'template-select' },
-      ...templateSelectActions.map((action) => ({ source: 'template-select', target: action.id })),
-    ],
-  };
-};
-
-export const useTemplateSelectHandler = ({ script }: { script: ScriptType }) => {
-  return useCallback(
-    (templateId: string) => {
-      const template = templates.find((template) => template.id === templateId);
-      if (template) {
+    return createMenuAction<TemplateActionProperties>(
+      `template--${template.id}`,
+      () => {
         script.name = template.name;
         script.source!.target!.content = template.source;
         const metaKeys = getMeta(script).keys;
@@ -57,8 +33,24 @@ export const useTemplateSelectHandler = ({ script }: { script: ScriptType }) => 
         if (template.presetId) {
           metaKeys.push({ source: FUNCTIONS_PRESET_META_KEY, id: template.presetId });
         }
-      }
-    },
-    [script],
-  );
+      },
+      {
+        label: template.name,
+        value: template.id,
+        type: 'template',
+      },
+    );
+  });
+};
+
+export const createTemplateSelect = (script: ScriptType) => {
+  const templateSelectGroup = createTemplateSelectGroup();
+  const templateSelectActions = createTemplateSelectActions(script);
+  return {
+    nodes: [templateSelectGroup, ...templateSelectActions],
+    edges: [
+      { source: 'root', target: 'template-select' },
+      ...templateSelectActions.map((action) => ({ source: 'template-select', target: action.id })),
+    ],
+  };
 };

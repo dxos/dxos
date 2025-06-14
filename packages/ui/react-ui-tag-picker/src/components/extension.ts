@@ -83,6 +83,7 @@ export type TagPickerOptions = {
   // TODO(ZaymonFC): Think of a better name for this?
   inGrid?: boolean;
   mode?: TagPickerMode;
+  onBlur?: (event: FocusEvent) => void;
   onSelect?: (id: string) => void;
   onSearch?: (text: string, ids: string[]) => TagPickerItemData[];
   onUpdate?: (ids: string[]) => void;
@@ -300,7 +301,6 @@ const styles = EditorView.theme({
     width: 'var(--dx-tag-picker-width)',
     marginTop: '6.5px',
   },
-  '.cm-completionLabel': {},
   '.cm-tooltip-autocomplete ul li[aria-selected]': {
     backgroundColor: 'var(--dx-hoverSurface)',
   },

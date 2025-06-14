@@ -7,7 +7,8 @@ import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
 import { analyzeMessages, analyzeSwarmEvents } from '../analysys';
-import { type ReplicantsSummary, type TestParams, type TestPlan, type SchedulerEnvImpl } from '../plan';
+import { type SchedulerEnvImpl } from '../env';
+import { type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
 import { type ReplicantRunParams, SignalReplicant } from '../replicants/signal-replicant';
 import { TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';

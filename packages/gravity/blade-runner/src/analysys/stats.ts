@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import mathjs from 'mathjs';
+import { mean, std } from 'mathjs';
 
 import { log } from '@dxos/log';
 import { entry, range } from '@dxos/util';
@@ -234,14 +234,14 @@ export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, res
   log.info(`analyzeSwarmEvents: ${Date.now() - start}ms`);
 
   return {
-    processMean: mathjs.mean(processLag),
-    processStd: mathjs.std(processLag),
-    notifyMean: mathjs.mean(notifyLag),
-    notifyStd: mathjs.std(notifyLag),
+    processMean: mean(processLag),
+    processStd: std(processLag),
+    notifyMean: mean(notifyLag),
+    notifyStd: std(notifyLag),
     ignored,
     failures,
     failureRate: failures / (discoverLag.length + failures),
-    fttMean: failureTtt.length > 0 ? mathjs.mean(failureTtt) : NaN,
+    fttMean: failureTtt.length > 0 ? mean(failureTtt) : NaN,
     ...(await analyzeRunFailures(reader)),
   };
 };

@@ -2,30 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
-import { S, AST, Format, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
-import { IconAnnotationId } from '../annotations';
+import { Type } from '@dxos/echo';
+import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo-schema';
+
+import { IconAnnotation } from '../annotations';
 
 /**
  * Project schema.
  */
-export const ProjectSchema = S.Struct({
+const ProjectSchema = Schema.Struct({
   id: Type.ObjectId,
-  name: S.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
-  image: S.optional(Format.URL),
-  description: S.optional(S.String),
-}).annotations({
-  [AST.TitleAnnotationId]: 'Project',
-  [LabelAnnotationId]: 'name',
-  [IconAnnotationId]: 'ph--kanban--regular',
-});
+  name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName')),
+  image: Schema.optional(Format.URL),
+  description: Schema.optional(Schema.String),
+}).pipe(
+  Schema.annotations({ title: 'Project' }),
+  LabelAnnotation.set(['name']),
+  IconAnnotation.set('ph--kanban--regular'),
+);
 
 export const Project = ProjectSchema.pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Project',
     version: '0.1.0',
   }),
 );
 
-export type Project = S.Schema.Type<typeof Project>;
+export interface Project extends Schema.Schema.Type<typeof Project> {}

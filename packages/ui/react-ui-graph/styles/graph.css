@@ -1,0 +1,124 @@
+/**
+ * Graph styles.
+ */
+
+/* TODO(burdon): Implement light/dark theme or use semantic tokens. */
+
+svg {
+  marker {
+    &.dx-arrow path {
+      @apply fill-none;
+    }
+
+    &.dx-dot circle {
+      @apply fill-none;
+    }
+  }
+
+  g.dx-grid {
+    path.dx-axis {
+      @apply stroke-neutral-200 dark:stroke-neutral-700;
+    }
+    path.dx-major {
+      @apply stroke-neutral-100 dark:stroke-neutral-800;
+    }
+    path.dx-minor {
+      @apply stroke-neutral-100 dark:stroke-neutral-850;
+    }
+  }  
+
+  g.dx-graph {
+    g.dx-guides {
+      circle {
+        @apply fill-neutral-300 stroke-neutral-500 opacity-10 dark:fill-neutral-700 dark:stroke-neutral-900; 
+      }
+    }
+
+    g.dx-subgraphs {
+      path.dx-subgraph {
+        @apply stroke-red-500 fill-neutral-100 dark:fill-neutral-900 [stroke-dasharray:4_4];
+      }
+    }
+
+    g.dx-nodes {
+      g.dx-node {
+        circle {
+          @apply fill-neutral-200 stroke-neutral-700 dark:fill-neutral-500 dark:stroke-none;
+        }
+        &.dx-selected {
+          circle {
+            @apply !fill-red-500 stroke-2 stroke-neutral-900 dark:stroke-neutral-200;
+          }
+        }
+
+        g.dx-label {
+          @apply hidden;
+        }
+      }
+
+      g[data-color="1"].dx-node { circle { @apply fill-blue-300   dark:fill-blue-500;   } }
+      g[data-color="2"].dx-node { circle { @apply fill-green-300  dark:fill-green-500   } }
+      g[data-color="3"].dx-node { circle { @apply fill-violet-300 dark:fill-violet-500; } }
+      g[data-color="4"].dx-node { circle { @apply fill-orange-300 dark:fill-orange-500; } }
+      g[data-color="5"].dx-node { circle { @apply fill-pink-300   dark:fill-pink-500;   } }
+      g[data-color="6"].dx-node { circle { @apply fill-indigo-300 dark:fill-indigo-500; } }
+
+      g.dx-dragging,
+      g.dx-highlight {
+        circle {
+          @apply stroke-2 stroke-neutral-900 dark:stroke-neutral-200 cursor-pointer;
+        }
+
+        g.dx-label {
+          @apply block;
+
+          line {
+            @apply stroke-2 stroke-neutral-500;
+          }
+          rect {
+            @apply stroke-1 stroke-neutral-500 fill-inverseSurface;
+          }
+          text {
+            @apply fill-inverseSurfaceText;
+          }
+        }
+      }
+    }
+
+    g.dx-edges {
+      g.dx-edge {
+        path {
+          /** NOTE: Set text- so that current color is picked up by marker. */
+          @apply stroke-1 stroke-neutral-700 dark:stroke-neutral-700;
+        }
+
+        &.dx-dashed {
+          path {
+            @apply [stroke-dasharray:4_4];
+          }
+        }
+      }
+
+      g[data-color="1"].dx-edge { path { @apply stroke-blue-300   dark:stroke-blue-500;   } }
+      g[data-color="2"].dx-edge { path { @apply stroke-green-300  dark:stroke-green-500   } }
+      g[data-color="3"].dx-edge { path { @apply stroke-violet-300 dark:stroke-violet-500; } }
+      g[data-color="4"].dx-edge { path { @apply stroke-orange-300 dark:stroke-orange-500; } }
+      g[data-color="5"].dx-edge { path { @apply stroke-pink-300   dark:stroke-pink-500;   } }
+      g[data-color="6"].dx-edge { path { @apply stroke-indigo-300 dark:stroke-indigo-500; } }
+    }
+
+    .dx-linker {
+      path {
+        @apply stroke-orange-500 [stroke-dasharray:4_4];
+      }
+
+      path::marker {
+        @apply stroke-red-500;
+      }
+    }
+
+    circle.dx-bullet {
+      @apply fill-red-500 stroke-none;
+    }
+  }
+}

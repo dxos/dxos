@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { type MouseEvent, type MutableRefObject, useCallback, useRef, useState } from 'react';
 
-import { defaultSizeRow } from '@dxos/lit-grid';
+import { defaultRowSize } from '@dxos/lit-grid';
 import { faker } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
 import { PopoverCombobox, type PopoverComboboxRootProps } from '@dxos/react-ui-searchlist';
@@ -27,7 +27,7 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
   const [editing, setEditing] = useState<GridEditing>(null);
   const handleEditingChange = useCallback<NonNullable<GridRootProps['onEditingChange']>>((event) => {
     // TODO(burdon): Not working?
-    setEditing(event ? { index: event.index, initialContent: '' } : null);
+    setEditing(event ? { index: event.index, initialContent: '', cellElement: event.cellElement } : null);
   }, []);
 
   // Multiselect
@@ -123,7 +123,7 @@ export const Basic: Story = {
     },
     rowDefault: {
       grid: {
-        size: defaultSizeRow,
+        size: defaultRowSize,
         resizeable: true,
       },
     },
@@ -170,7 +170,7 @@ export const SingleColumn: Story = {
     },
     rowDefault: {
       grid: {
-        size: defaultSizeRow,
+        size: defaultRowSize,
         resizeable: false,
       },
     },

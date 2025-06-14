@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { getHeads } from '@automerge/automerge';
+import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
+
 import {
   asyncTimeout,
   Event,
@@ -13,8 +16,6 @@ import {
   type ReadOnlyEvent,
   type CleanupFn,
 } from '@dxos/async';
-import { getHeads } from '@dxos/automerge/automerge';
-import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -23,10 +24,10 @@ import {
   isEncodedReference,
   Reference,
   type ObjectStructure,
-  type SpaceDoc,
+  type DatabaseDirectory,
   type SpaceState,
 } from '@dxos/echo-protocol';
-import { type ObjectId, Ref, type AnyObjectData } from '@dxos/echo-schema';
+import { type ObjectId, Ref, type AnyObjectData, type Filter } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -50,7 +51,7 @@ import { getInlineAndLinkChanges } from './util';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { Filter, optionsToProto, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
+import { normalizeQuery, QueryResult, type QueryFn } from '../query';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -93,7 +94,6 @@ export class CoreDatabase {
   private readonly _repoProxy: RepoProxy;
   private readonly _spaceId: SpaceId;
   private readonly _spaceKey: PublicKey;
-
   private readonly _objects = new Map<string, ObjectCore>();
 
   /**
@@ -130,6 +130,13 @@ export class CoreDatabase {
     this._repoProxy = new RepoProxy(this._dataService, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this._repoProxy, spaceId, spaceKey);
+  }
+
+  toJSON() {
+    return {
+      id: this._spaceId,
+      objects: this._objects.size,
+    };
   }
 
   get graph(): Hypergraph {
@@ -169,7 +176,7 @@ export class CoreDatabase {
     try {
       await this._automergeDocLoader.loadSpaceRootDocHandle(this._ctx, spaceState);
       const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
-      const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
+      const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
       invariant(spaceRootDoc);
       const objectIds = Object.keys(spaceRootDoc.objects ?? {});
       this._createInlineObjects(spaceRootDocHandle, objectIds);
@@ -248,7 +255,7 @@ export class CoreDatabase {
     if (!hasLoadedHandles) {
       return [];
     }
-    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().docSync();
+    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().doc();
     if (!rootDoc) {
       return [];
     }
@@ -257,11 +264,11 @@ export class CoreDatabase {
   }
 
   getNumberOfInlineObjects(): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().doc()?.objects ?? {}).length;
   }
 
   getNumberOfLinkedObjects(): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.links ?? {}).length;
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().doc()?.links ?? {}).length;
   }
 
   getTotalNumberOfObjects(): number {
@@ -397,10 +404,10 @@ export class CoreDatabase {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(filter?: FilterSource, options?: QueryOptions) {
-    return new Query(
+  private _query(filter?: unknown, options?: QueryOptions) {
+    return new QueryResult(
       this._createQueryContext(),
-      Filter.from(filter, optionsToProto({ ...options, spaceIds: [this.spaceId] })),
+      normalizeQuery(filter, options, { defaultSpaceId: this.spaceId }),
     );
   }
 
@@ -414,12 +421,12 @@ export class CoreDatabase {
   /**
    * Update objects.
    */
-  async update(filter: PropertyFilter, operation: UpdateOperation) {
-    const filterObj = Filter.fromFilterJson(filter);
-    if (!filterObj.isObjectIdFilter() && filterObj.objectIds?.length !== 1) {
-      throw new Error('Need to specify exactly one object id in the filter');
+  async update(filter: Filter.Any, operation: UpdateOperation) {
+    const ast = filter.ast;
+    if (ast.type !== 'object' || ast.id?.length !== 1) {
+      throw new Error('Only object id filters with one id are currently supported');
     }
-    const id = filterObj.objectIds![0];
+    const id = ast.id[0];
 
     const core = this.getObjectCoreById(id);
     if (!core) {
@@ -475,7 +482,7 @@ export class CoreDatabase {
     invariant(!this._objects.has(core.id));
     this._objects.set(core.id, core);
 
-    let spaceDocHandle: DocHandleProxy<SpaceDoc>;
+    let spaceDocHandle: DocHandleProxy<DatabaseDirectory>;
     const placement = opts?.placeIn ?? 'linked-doc';
     switch (placement) {
       case 'linked-doc': {
@@ -513,7 +520,7 @@ export class CoreDatabase {
   unlinkObjects(objectIds: string[]) {
     const root = this._automergeDocLoader.getSpaceRootDocHandle();
     for (const objectId of objectIds) {
-      if (!root.docSync().links?.[objectId]) {
+      if (!root.doc().links?.[objectId]) {
         throw new Error(`Link not found: ${objectId}`);
       }
     }
@@ -564,7 +571,7 @@ export class CoreDatabase {
     };
 
     if (type !== undefined) {
-      newStruct.system.type = encodeReference(Reference.fromDXN(type));
+      newStruct.system!.type = encodeReference(Reference.fromDXN(type));
     }
 
     core.setDecoded([], newStruct);
@@ -595,7 +602,7 @@ export class CoreDatabase {
    */
   async getDocumentHeads(): Promise<SpaceDocumentHeads> {
     const root = this._automergeDocLoader.getSpaceRootDocHandle();
-    const doc = root.docSync();
+    const doc = root.doc();
     if (!doc) {
       return { heads: {} };
     }
@@ -645,7 +652,7 @@ export class CoreDatabase {
    */
   async reIndexHeads(): Promise<void> {
     const root = this._automergeDocLoader.getSpaceRootDocHandle();
-    const doc = root.docSync();
+    const doc = root.doc();
     invariant(doc);
 
     await this._dataService.reIndexHeads(
@@ -693,12 +700,15 @@ export class CoreDatabase {
     return Object.values(this._repoProxy.handles);
   }
 
-  private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandleProxy<SpaceDoc>, objectsToLoad: string[]) {
-    const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
+  private async _handleSpaceRootDocumentChange(
+    spaceRootDocHandle: DocHandleProxy<DatabaseDirectory>,
+    objectsToLoad: string[],
+  ) {
+    const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
     const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}).map(([k, v]) => [k, v.toString()]));
 
-    const objectsToRebind = new Map<string, { handle: DocHandleProxy<SpaceDoc>; objectIds: string[] }>();
+    const objectsToRebind = new Map<string, { handle: DocHandleProxy<DatabaseDirectory>; objectIds: string[] }>();
     objectsToRebind.set(spaceRootDocHandle.url, { handle: spaceRootDocHandle, objectIds: [] });
 
     const objectsToRemove: string[] = [];
@@ -721,7 +731,8 @@ export class CoreDatabase {
           continue;
         }
         const newDocHandle = this._repoProxy.find(newObjectDocUrl as DocumentId);
-        await newDocHandle.doc();
+        await newDocHandle.whenReady();
+        newDocHandle.doc();
         objectsToRebind.set(newObjectDocUrl.toString(), { handle: newDocHandle, objectIds: [object.id] });
       } else {
         objectsToRemove.push(object.id);
@@ -760,7 +771,7 @@ export class CoreDatabase {
   /**
    * Keep as field to have a reference to pass for unsubscribing from handle changes.
    */
-  private readonly _onDocumentUpdate = (event: ChangeEvent<SpaceDoc>) => {
+  private readonly _onDocumentUpdate = (event: ChangeEvent<DatabaseDirectory>) => {
     const documentChanges = this._processDocumentUpdate(event);
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
     this._automergeDocLoader.onObjectLinksUpdated(documentChanges.linkedDocuments);
@@ -769,7 +780,7 @@ export class CoreDatabase {
     this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds);
   };
 
-  private _processDocumentUpdate(event: ChangeEvent<SpaceDoc>): DocumentChanges {
+  private _processDocumentUpdate(event: ChangeEvent<DatabaseDirectory>): DocumentChanges {
     const { inlineChangedObjects, linkedDocuments } = getInlineAndLinkChanges(event);
     const createdObjectIds: string[] = [];
     const objectsToRebind: string[] = [];
@@ -825,14 +836,14 @@ export class CoreDatabase {
   /**
    * Loads all objects on open and handles objects that are being created not by this client.
    */
-  private _createInlineObjects(docHandle: DocHandleProxy<SpaceDoc>, objectIds: string[]) {
+  private _createInlineObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]) {
     for (const id of objectIds) {
       invariant(!this._objects.has(id));
       this._createObjectInDocument(docHandle, id);
     }
   }
 
-  private _createObjectInDocument(docHandle: DocHandleProxy<SpaceDoc>, objectId: string) {
+  private _createObjectInDocument(docHandle: DocHandleProxy<DatabaseDirectory>, objectId: string) {
     invariant(!this._objects.get(objectId));
     const core = new ObjectCore();
     core.id = objectId;
@@ -882,7 +893,7 @@ export class CoreDatabase {
     });
   }
 
-  private _rebindObjects(docHandle: DocHandleProxy<SpaceDoc>, objectIds: string[]) {
+  private _rebindObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]) {
     for (const objectId of objectIds) {
       const objectCore = this._objects.get(objectId);
       invariant(objectCore);

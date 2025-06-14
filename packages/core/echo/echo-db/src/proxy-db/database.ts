@@ -2,8 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import { inspect } from 'node:util';
+
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
+import { inspectObject } from '@dxos/debug';
 import { type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -27,14 +30,14 @@ import type { InsertBatch, InsertData, UpdateOperation } from '../core-db/crud-a
 import {
   EchoReactiveHandler,
   type ProxyTarget,
-  type ReactiveEchoObject,
+  type AnyLiveObject,
   createObject,
   getObjectCore,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { Filter, type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions } from '../query';
+import { Filter, type QueryFn, type QueryOptions, Query } from '../query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -64,7 +67,9 @@ export interface EchoDatabase {
   get spaceKey(): PublicKey;
   get spaceId(): SpaceId;
 
-  getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): ReactiveEchoObject<T> | undefined;
+  toJSON(): object;
+
+  getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): AnyLiveObject<T> | undefined;
 
   /**
    * Query objects.
@@ -74,7 +79,7 @@ export interface EchoDatabase {
   /**
    * Update objects.
    */
-  update(filter: PropertyFilter, operation: UpdateOperation): Promise<void>;
+  update(filter: Filter.Any, operation: UpdateOperation): Promise<void>;
 
   /**
    * Insert new objects.
@@ -86,7 +91,7 @@ export interface EchoDatabase {
   /**
    * Adds object to the database.
    */
-  add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): ReactiveEchoObject<T>;
+  add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): AnyLiveObject<T>;
 
   /**
    * Removes object from the database.
@@ -149,7 +154,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Mapping `object core` -> `root proxy` (User facing proxies).
    * @internal
    */
-  readonly _rootProxies = new Map<ObjectCore, ReactiveEchoObject<any>>();
+  readonly _rootProxies = new Map<ObjectCore, AnyLiveObject<any>>();
 
   constructor(params: EchoDatabaseParams) {
     super();
@@ -166,6 +171,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       reactiveQuery: params.reactiveSchemaQuery,
       preloadSchemaOnOpen: params.preloadSchemaOnOpen,
     });
+  }
+
+  [inspect.custom]() {
+    return inspectObject(this);
+  }
+
+  toJSON() {
+    return this._coreDatabase.toJSON();
   }
 
   get spaceId(): SpaceId {
@@ -220,7 +233,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
   }
 
-  getObjectById(id: string, { deleted = false } = {}): ReactiveEchoObject<any> | undefined {
+  getObjectById(id: string, { deleted = false } = {}): AnyLiveObject<any> | undefined {
     const core = this._coreDatabase.getObjectCoreById(id);
     if (!core || (core.isDeleted() && !deleted)) {
       return undefined;
@@ -237,18 +250,18 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(filter?: FilterSource, options?: QueryOptions) {
-    return this._coreDatabase.graph.query(filter, {
+  private _query(query: Query.Any | Filter.Any, options?: QueryOptions) {
+    query = Filter.is(query) ? Query.select(query) : query;
+    return this._coreDatabase.graph.query(query, {
       ...options,
       spaceIds: [this.spaceId],
-      spaces: [this.spaceKey],
     });
   }
 
   /**
    * Update objects.
    */
-  async update(filter: PropertyFilter, operation: UpdateOperation) {
+  async update(filter: Filter.Any, operation: UpdateOperation) {
     await this._coreDatabase.update(filter, operation);
   }
 
@@ -262,7 +275,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add reactive object.
    */
-  add<T extends BaseObject>(obj: T, opts?: AddOptions): ReactiveEchoObject<T> {
+  add<T extends BaseObject>(obj: T, opts?: AddOptions): AnyLiveObject<T> {
     if (!isEchoObject(obj)) {
       const schema = getSchema(obj);
       if (schema != null) {
@@ -300,7 +313,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
     for (const migration of migrations) {
-      const { objects } = await this._coreDatabase.graph.query(Filter.typeDXN(migration.fromType.toString())).run();
+      const { objects } = await this._coreDatabase.graph.query(Query.select(Filter.typeDXN(migration.fromType))).run();
       log.verbose('migrate', { from: migration.fromType, to: migration.toType, objects: objects.length });
       for (const object of objects) {
         const output = await migration.transform(object, { db: this });
@@ -312,7 +325,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
           data: output,
           type: migration.toType,
         });
-        const postMigrationType = getType(object)?.toDXN();
+        const postMigrationType = getType(object);
         invariant(postMigrationType != null && DXN.equals(postMigrationType, migration.toType));
 
         await migration.onMigration({ before: object, object, db: this });
@@ -327,7 +340,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   async _loadObjectById<T extends BaseObject>(
     objectId: string,
     options: LoadObjectOptions = {},
-  ): Promise<ReactiveEchoObject<T> | undefined> {
+  ): Promise<AnyLiveObject<T> | undefined> {
     const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
     if (!core || core?.isDeleted()) {
       return undefined;

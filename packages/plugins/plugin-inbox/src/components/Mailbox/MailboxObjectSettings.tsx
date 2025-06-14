@@ -19,12 +19,14 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
   const { t } = useTranslation(INBOX_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = useMemo(() => getSpace(object), [object]);
-  const triggers = useQuery(space, Filter.schema(FunctionTrigger));
+  const triggers = useQuery(space, Filter.type(FunctionTrigger));
 
   const handleConfigureSync = useCallback(() => {
     invariant(space);
 
-    const syncTrigger = triggers.find((trigger) => trigger.meta?.mailboxId === object.id);
+    const syncTrigger = triggers.find(
+      (trigger) => trigger.spec?.kind === TriggerKind.Timer && trigger.input?.mailboxId === object.id,
+    );
     if (syncTrigger) {
       void dispatch(
         createIntent(LayoutAction.Open, {
@@ -41,7 +43,7 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
           space,
           template: { type: 'timer', cron: '*/30 * * * * *' },
           scriptName: 'Gmail',
-          payload: { mailboxId: object.id },
+          input: { mailboxId: object.id },
         }),
       );
     }
@@ -51,7 +53,7 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
     invariant(space);
 
     const subscriptionTrigger = triggers.find((trigger) => {
-      if (trigger.spec?.type === TriggerKind.Queue) {
+      if (trigger.spec?.kind === TriggerKind.Queue) {
         if (trigger.spec.queue === object.queue.dxn.toString()) {
           return true;
         }

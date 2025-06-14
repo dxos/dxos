@@ -23,7 +23,7 @@ import {
   type EchoDatabase,
   type EchoDatabaseImpl,
   type QueuesService,
-  type ReactiveEchoObject,
+  type AnyLiveObject,
   Filter,
   QueueFactory,
 } from '@dxos/echo-db';
@@ -113,7 +113,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
-  private _properties?: ReactiveEchoObject<any> = undefined;
+  private _properties?: AnyLiveObject<any> = undefined;
 
   constructor(
     private _clientServices: ClientServicesProvider,
@@ -158,6 +158,14 @@ export class SpaceProxy implements Space, CustomInspectable {
     this._queues.setService(queuesService);
   }
 
+  toJSON() {
+    return {
+      id: this.id,
+      db: this._db.toJSON(),
+      state: SpaceState[this.state.get()],
+    };
+  }
+
   get id(): SpaceId {
     return this._data.id as SpaceId;
   }
@@ -188,7 +196,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   @trace.info({ depth: 2 })
-  get properties(): ReactiveEchoObject<any> {
+  get properties(): AnyLiveObject<any> {
     this._throwIfNotInitialized();
     invariant(this._properties, 'Properties not available');
     return this._properties;
@@ -362,7 +370,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
       const unsubscribe = this._db
-        .query(Filter.schema(PropertiesType), { dataLocation: QueryOptions.DataLocation.LOCAL })
+        .query(Filter.type(PropertiesType), { dataLocation: QueryOptions.DataLocation.LOCAL })
         .subscribe(
           (query) => {
             if (query.objects.length === 1) {
@@ -493,13 +501,6 @@ export class SpaceProxy implements Space, CustomInspectable {
   createSnapshot(): Promise<SpaceSnapshot> {
     return todo();
     // return this._serviceProvider.services.SpaceService.createSnapshot({ space_key: this.key });
-  }
-
-  toJSON() {
-    return {
-      key: this.key.toHex(),
-      state: SpaceState[this.state.get()],
-    };
   }
 
   private async _removeMember(memberKey: PublicKey) {

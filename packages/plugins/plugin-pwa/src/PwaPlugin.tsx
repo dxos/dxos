@@ -30,7 +30,7 @@ export const PwaPlugin = () =>
       id: `${meta.id}/module/register-pwa`,
       activatesOn: Events.DispatcherReady,
       activate: (context) => {
-        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
 
         const updateSW = registerSW({
           onNeedRefresh: () =>

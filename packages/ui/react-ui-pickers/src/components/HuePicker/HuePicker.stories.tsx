@@ -30,7 +30,7 @@ const ToolbarStory = (props: HuePickerProps) => {
 
 const meta: Meta = {
   title: 'ui/react-ui-pickers/HuePicker',
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',
   },

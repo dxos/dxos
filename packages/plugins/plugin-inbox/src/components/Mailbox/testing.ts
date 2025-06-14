@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ObjectId } from '@dxos/echo-schema';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { createQueueDxn } from '@dxos/echo-schema';
 import { makeRef, refFromDXN } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { live, type Space } from '@dxos/react-client/echo';
-import { Contact, MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { MailboxType } from '../../types';
 
@@ -32,7 +31,7 @@ export const createMessage = (space?: Space) => {
 
     for (let i = 0; i < linkCount; i++) {
       const fullName = faker.person.fullName();
-      const obj = space.db.add(live(Contact, { fullName }));
+      const obj = space.db.add(live(DataType.Person, { fullName }));
       const dxn = makeRef(obj).dxn.toString();
 
       const position = Math.floor(Math.random() * words.length);
@@ -65,7 +64,7 @@ export const createMessage = (space?: Space) => {
 
   tags.sort((a, b) => a.label.localeCompare(b.label));
 
-  return live(MessageType, {
+  return live(DataType.Message, {
     created: faker.date.recent().toISOString(),
     sender: {
       email: faker.internet.email(),
@@ -84,8 +83,8 @@ export const createMessage = (space?: Space) => {
  * Initializes a mailbox with messages in the given space.
  */
 export const initializeMailbox = async (space: Space, messageCount = 30) => {
-  const queueDxn = new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()]);
-  const queue = space.queues.get<MessageType>(queueDxn);
+  const queueDxn = createQueueDxn(space.id);
+  const queue = space.queues.get<DataType.Message>(queueDxn);
   queue.append([...Array(messageCount)].map(() => createMessage(space)));
   const mailbox = live(MailboxType, { queue: refFromDXN(queueDxn) });
   space.db.add(mailbox);

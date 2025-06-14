@@ -5,7 +5,7 @@
 import React, { type ComponentType, type FC, type JSX, useMemo } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
-import { type TraceEvent, type InvocationSpan } from '@dxos/functions/types';
+import { type TraceEvent, type InvocationSpan } from '@dxos/functions';
 import { useQueue } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';

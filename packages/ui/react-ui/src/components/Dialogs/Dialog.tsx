@@ -81,11 +81,12 @@ const DialogClose: FunctionComponent<DialogCloseProps> = DialogClosePrimitive;
 type OverlayLayoutContextValue = { inOverlayLayout?: boolean };
 const DIALOG_OVERLAY_NAME = 'DialogOverlay';
 const DIALOG_CONTENT_NAME = 'DialogContent';
-const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLayoutContextValue>(DIALOG_OVERLAY_NAME, {
-  inOverlayLayout: false,
-});
+const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLayoutContextValue>(
+  DIALOG_OVERLAY_NAME,
+  {},
+);
 
-type DialogOverlayProps = ThemedClassName<DialogOverlayPrimitiveProps> & { blockAlign?: 'center' | 'start' | 'end' };
+type DialogOverlayProps = ThemedClassName<DialogOverlayPrimitiveProps & { blockAlign?: 'center' | 'start' | 'end' }>;
 
 const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<HTMLDivElement, DialogOverlayProps>(
   ({ classNames, children, blockAlign, ...props }, forwardedRef) => {
@@ -115,6 +116,8 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
 
     return (
       <DialogContentPrimitive
+        // NOTE: Radix warning unless set to undefined.
+        // https://www.radix-ui.com/primitives/docs/components/dialog#description
         aria-describedby={undefined}
         {...props}
         className={tx(

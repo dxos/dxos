@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Option } from 'effect';
 import React, { useEffect, useState } from 'react';
 
 import { useAppGraph } from '@dxos/app-framework';
@@ -40,7 +41,7 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
   const attended = useAttended();
   const startOfAttention = attended.at(-1);
   const path = usePath(graph, startOfAttention);
-  const containsAttended = !open && !isAttended && id && path ? path.includes(id) : false;
+  const containsAttended = !open && !isAttended && id && Option.isSome(path) ? path.value.includes(id) : false;
 
   const connectedToEdge = useEdgeStatus() === EdgeStatus.CONNECTED;
   // TODO(wittjosiah): This is not reactive.
@@ -49,21 +50,13 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
   const syncing = connectedToEdge && edgeSyncEnabled && syncState && syncState.missingOnLocal > 0;
 
   return (
-    <Tooltip.Root>
-      <Tooltip.Trigger asChild>
-        <AttentionGlyph
-          syncing={syncing}
-          attended={isAttended}
-          containsAttended={containsAttended}
-          classNames='self-center mie-1'
-        />
-      </Tooltip.Trigger>
-      <Tooltip.Portal>
-        <Tooltip.Content side='bottom' classNames='z-[70]'>
-          <span>{t('syncing label')}</span>
-          <Tooltip.Arrow />
-        </Tooltip.Content>
-      </Tooltip.Portal>
-    </Tooltip.Root>
+    <Tooltip.Trigger asChild content={t('syncing label')} side='bottom'>
+      <AttentionGlyph
+        syncing={syncing}
+        attended={isAttended}
+        containsAttended={containsAttended}
+        classNames='self-center mie-1'
+      />
+    </Tooltip.Trigger>
   );
 };

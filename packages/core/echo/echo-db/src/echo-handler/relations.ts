@@ -3,22 +3,28 @@
 //
 
 import {
+  type BaseEchoObject,
   EntityKind,
   EntityKindPropertyId,
   RelationSourceId,
   RelationTargetId,
   type BaseObject,
-  type HasId,
   type RelationSourceTargetRefs,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Live } from '@dxos/live-object';
 
-import type { ReactiveEchoObject } from './create';
+import type { AnyLiveObject } from './create';
 
-export type ReactiveEchoRelation<T extends BaseObject> = Live<T> & HasId & RelationSourceTargetRefs;
+/**
+ * @deprecated Use {@link @dxos/echo#Relation.Any} instead.
+ */
+export type AnyLiveRelation<T extends BaseObject> = Live<T> & BaseEchoObject & RelationSourceTargetRefs;
 
-export const isRelation = <T extends BaseObject>(object: ReactiveEchoObject<T>): object is ReactiveEchoRelation<T> => {
+/**
+ * @deprecated Use {@link @dxos/echo#Relation.isRelation} instead.
+ */
+export const isRelation = <T extends BaseObject>(object: AnyLiveObject<T>): object is AnyLiveRelation<T> => {
   const kind = (object as any)[EntityKindPropertyId];
   if (kind === undefined) {
     throw new TypeError('Provided value is not a valid ECHO object or relation');
@@ -27,10 +33,11 @@ export const isRelation = <T extends BaseObject>(object: ReactiveEchoObject<T>):
 };
 
 /**
+ * @deprecated Use {@link @dxos/echo#Relation.getSource} instead.
  * @returns Source ref from a relation.
  * @throws If the object is not a relation.
  */
-export const getSource = (relation: ReactiveEchoObject<any>): ReactiveEchoObject<any> => {
+export const getSource = (relation: AnyLiveObject<any>): AnyLiveObject<any> => {
   invariant(isRelation(relation));
   const obj = relation[RelationSourceId];
   invariant(obj !== undefined);
@@ -38,10 +45,11 @@ export const getSource = (relation: ReactiveEchoObject<any>): ReactiveEchoObject
 };
 
 /**
+ * @deprecated Use {@link @dxos/echo#Relation.getTarget} instead.
  * @returns Target ref from a relation.
  * @throws If the object is not a relation.
  */
-export const getTarget = (relation: ReactiveEchoObject<any>): ReactiveEchoObject<any> => {
+export const getTarget = (relation: AnyLiveObject<any>): AnyLiveObject<any> => {
   invariant(isRelation(relation));
   const obj = relation[RelationTargetId];
   invariant(obj !== undefined);

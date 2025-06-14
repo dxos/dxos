@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema } from 'effect/Schema';
 import React, {
   type MouseEvent,
   type PropsWithChildren,
@@ -40,7 +41,7 @@ import { RowActionsMenu } from './RowActionsMenu';
 import { ModalController, type TableModel, type TablePresentation } from '../../model';
 import { translationKey } from '../../translations';
 import { tableButtons, tableControls } from '../../util';
-import { createOption, TableCellEditor, type TableCellEditorProps } from '../TableCellEditor';
+import { createOption, TableValueEditor, type TableCellEditorProps } from '../TableCellEditor';
 
 //
 // Table.Root
@@ -75,13 +76,14 @@ export type TableController = {
 export type TableMainProps = {
   model?: TableModel;
   presentation?: TablePresentation;
+  schema?: Schema.AnyNoContext;
   // TODO(burdon): Rename since attention isn't a useful concept here? Standardize across other components. Pass property into useAttention.
   ignoreAttention?: boolean;
   onRowClick?: (row: any) => void;
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(
-  ({ model, presentation, ignoreAttention, onRowClick }, forwardedRef) => {
+  ({ model, presentation, ignoreAttention, schema, onRowClick }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const { t } = useTranslation(translationKey);
@@ -307,7 +309,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           invariant(space);
           const schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
           if (schema) {
-            const { objects } = await space.db.query(Filter.schema(schema)).run();
+            const { objects } = await space.db.query(Filter.type(schema)).run();
             const options = objects
               .map((obj) => {
                 const value = getValue(obj, field.referencePath!);
@@ -343,15 +345,16 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     return (
       <Grid.Root id={model.id ?? 'table-grid'}>
-        <TableCellEditor
+        <TableValueEditor
           model={model}
           modals={modals}
+          schema={schema}
           onEnter={handleEnter}
           onFocus={handleFocus}
           onQuery={handleQuery}
         />
         <Grid.Content
-          className={mx('[--dx-grid-base:var(--surface-bg)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
+          className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
           frozen={frozen}
           // getCells={getCells}
           columns={model.columnMeta.value}

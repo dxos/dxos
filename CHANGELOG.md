@@ -411,7 +411,7 @@
 * Deck polish ([#8216](https://github.com/dxos/dxos/issues/8216)) ([2ded716](https://github.com/dxos/dxos/commit/2ded716e9d81de377b594f28c26bcaf51eb5c9b2))
 * edge-client concurrency issues ([#8140](https://github.com/dxos/dxos/issues/8140)) ([8e45caf](https://github.com/dxos/dxos/commit/8e45caf4abe3d95a3c45929554f213a5aed33428))
 * Enable feed replicator on main.composer ([#8110](https://github.com/dxos/dxos/issues/8110)) ([2a40316](https://github.com/dxos/dxos/commit/2a403165441e4290985f6991302b49631fd1244f))
-* Fix @dxos/gem-spore exports ([#8089](https://github.com/dxos/dxos/issues/8089)) ([231cad4](https://github.com/dxos/dxos/commit/231cad469b06d2e0201b23e5f1c06d9c28aab81e))
+* Fix @dxos/react-ui-graph exports ([#8089](https://github.com/dxos/dxos/issues/8089)) ([231cad4](https://github.com/dxos/dxos/commit/231cad469b06d2e0201b23e5f1c06d9c28aab81e))
 * Fix client status enum. ([#7784](https://github.com/dxos/dxos/issues/7784)) ([a51e4be](https://github.com/dxos/dxos/commit/a51e4bed0995f93cb1c2685edc56f6695ffe471d))
 * Fix merge ([#8064](https://github.com/dxos/dxos/issues/8064)) ([6600e6a](https://github.com/dxos/dxos/commit/6600e6a3ddd7075224ac6d9b7c64cb332c355aab))
 * Fix settings dialog tabs ([#8043](https://github.com/dxos/dxos/issues/8043)) ([5f93e54](https://github.com/dxos/dxos/commit/5f93e54d24bef68df931f1807617e3d2dec79626))
@@ -1293,7 +1293,7 @@
 * **sentry:** crash reporting improvements ([#5872](https://github.com/dxos/dxos/issues/5872)) ([40a4553](https://github.com/dxos/dxos/commit/40a45538458d767a873e6077506f915a05964dbf))
 * Support getters in E.object and add a @dxos/echo-schema/schema entrypoint ([#5832](https://github.com/dxos/dxos/issues/5832)) ([33db07e](https://github.com/dxos/dxos/commit/33db07ed4bcd2994cb3ea0dd3eeef455da592ef2))
 * Support references in ECHO-effect schema ([#5867](https://github.com/dxos/dxos/issues/5867)) ([3df814a](https://github.com/dxos/dxos/commit/3df814aa407391de0d0cf9f9c55ef8d9cfbdc8f0))
-* Support storing and recalling ReactiveEchoObject from the database ([#5800](https://github.com/dxos/dxos/issues/5800)) ([7b31910](https://github.com/dxos/dxos/commit/7b31910a6586c2be2b8d5168140187abcaa495e2))
+* Support storing and recalling AnyLiveObject from the database ([#5800](https://github.com/dxos/dxos/issues/5800)) ([7b31910](https://github.com/dxos/dxos/commit/7b31910a6586c2be2b8d5168140187abcaa495e2))
 * Typescript service for script plugin ([#5865](https://github.com/dxos/dxos/issues/5865)) ([dcb39c5](https://github.com/dxos/dxos/commit/dcb39c533210bd5bb46ce08b904a911714a3502b))
 
 

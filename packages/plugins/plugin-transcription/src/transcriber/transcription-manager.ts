@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { signal } from '@preact/signals-core';
+
 import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { QueueImpl, type Queue } from '@dxos/echo-db';
@@ -9,7 +11,7 @@ import { create } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
-import { MessageType, type TranscriptionContentBlock } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { MediaStreamRecorder } from './media-stream-recorder';
 import { Transcriber } from './transcriber';
@@ -30,7 +32,7 @@ const PREFIXED_CHUNKS_AMOUNT = 10;
  */
 const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 
-export type TranscriptMessageEnricher = (message: MessageType) => Promise<MessageType>;
+export type TranscriptMessageEnricher = (message: DataType.Message) => Promise<DataType.Message>;
 
 export type TranscriptionManagerOptions = {
   edgeClient: EdgeHttpClient;
@@ -51,8 +53,8 @@ export class TranscriptionManager extends Resource {
   private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
-  private _queue?: Queue<MessageType> = undefined;
-  private _enabled = false;
+  private _queue?: Queue<DataType.Message> = undefined;
+  private _enabled = signal(false);
 
   constructor(options: TranscriptionManagerOptions) {
     super();
@@ -68,10 +70,15 @@ export class TranscriptionManager extends Resource {
     void this._transcriber?.close();
   }
 
+  /** @reactive */
+  get enabled() {
+    return this._enabled.value;
+  }
+
   setQueue(queueDxn: DXN): TranscriptionManager {
     if (this._queue?.dxn.toString() !== queueDxn.toString()) {
       log.info('setQueue', { queueDxn: queueDxn.toString() });
-      this._queue = new QueueImpl<MessageType>(this._edgeClient, queueDxn);
+      this._queue = new QueueImpl<DataType.Message>(this._edgeClient, queueDxn);
     }
     return this;
   }
@@ -84,7 +91,7 @@ export class TranscriptionManager extends Resource {
   }
 
   setRecording(recording?: boolean): TranscriptionManager {
-    if (!this.isOpen || !this._enabled) {
+    if (!this.isOpen || !this._enabled.value) {
       return this;
     }
 
@@ -102,11 +109,11 @@ export class TranscriptionManager extends Resource {
    */
   @synchronized
   async setEnabled(enabled?: boolean) {
-    if (this._enabled === enabled) {
+    if (this._enabled.value === enabled) {
       return;
     }
 
-    this._enabled = enabled ?? false;
+    this._enabled.value = enabled ?? false;
     // TODO(burdon): Why is toggle called here?
     this.isOpen && (await this._toggleTranscriber());
   }
@@ -126,10 +133,10 @@ export class TranscriptionManager extends Resource {
     await this._maybeReinitTranscriber();
 
     // Open or close transcriber if transcription is enabled or disabled.
-    if (this._enabled) {
+    if (this._enabled.value) {
       await this._transcriber?.open();
       // TODO(burdon): Started and stopped blocks appear twice.
-      const block = create(MessageType, {
+      const block = create(DataType.Message, {
         created: new Date().toISOString(),
         blocks: [{ type: 'transcription', text: 'Started', started: new Date().toISOString() }],
         sender: { role: 'assistant' },
@@ -137,7 +144,7 @@ export class TranscriptionManager extends Resource {
       this._queue?.append([block]);
     } else {
       await this._transcriber?.close();
-      const block = create(MessageType, {
+      const block = create(DataType.Message, {
         created: new Date().toISOString(),
         blocks: [{ type: 'transcription', text: 'Stopped', started: new Date().toISOString() }],
         sender: { role: 'assistant' },
@@ -147,7 +154,7 @@ export class TranscriptionManager extends Resource {
   }
 
   private async _maybeReinitTranscriber() {
-    if (!this._audioStreamTrack || !this._enabled) {
+    if (!this._audioStreamTrack || !this._enabled.value) {
       return;
     }
 
@@ -156,7 +163,7 @@ export class TranscriptionManager extends Resource {
     if (this._audioStreamTrack !== this._mediaRecorder?.mediaStreamTrack) {
       this._mediaRecorder = new MediaStreamRecorder({
         mediaStreamTrack: this._audioStreamTrack,
-        interval: RECORD_INTERVAL,
+        config: { interval: RECORD_INTERVAL },
       });
       needReinit = true;
     }
@@ -173,12 +180,12 @@ export class TranscriptionManager extends Resource {
     }
   }
 
-  private async _onSegments(segments: TranscriptionContentBlock[]) {
+  private async _onSegments(segments: DataType.MessageBlock.Transcription[]) {
     if (!this.isOpen || !this._queue) {
       return;
     }
 
-    let block = create(MessageType, {
+    let block = create(DataType.Message, {
       created: new Date().toISOString(),
       blocks: segments,
       sender: { identityDid: this._identityDid },

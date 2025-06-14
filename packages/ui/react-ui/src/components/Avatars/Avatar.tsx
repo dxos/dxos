@@ -4,13 +4,18 @@
 
 import '@dxos/lit-ui/dx-avatar.pcss';
 
-import { createComponent } from '@lit/react';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentProps, type ComponentPropsWithRef, forwardRef, type PropsWithChildren } from 'react';
 
-import { type AvatarVariant, type AvatarStatus, type AvatarAnimation, DxAvatar as NaturalDxAvatar } from '@dxos/lit-ui';
+import {
+  type AvatarVariant,
+  type AvatarStatus,
+  type AvatarAnimation,
+  type DxAvatar as NaturalDxAvatar,
+} from '@dxos/lit-ui';
+import { DxAvatar } from '@dxos/lit-ui/react';
 import { useId } from '@dxos/react-hooks';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -32,12 +37,6 @@ const AvatarRoot = ({ children, labelId: propsLabelId, descriptionId: propsDescr
   const descriptionId = useId('avatar__description', propsDescriptionId);
   return <AvatarProvider {...{ labelId, descriptionId }}>{children}</AvatarProvider>;
 };
-
-const DxAvatar = createComponent({
-  tagName: 'dx-avatar',
-  elementClass: NaturalDxAvatar,
-  react: React,
-});
 
 type AvatarContentProps = ThemedClassName<Omit<ComponentProps<typeof DxAvatar>, 'children'>>;
 

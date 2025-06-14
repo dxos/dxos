@@ -9,8 +9,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { createIntent, IntentPlugin, LayoutAction, SettingsPlugin, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { ObjectId } from '@dxos/echo-schema';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { createQueueDxn } from '@dxos/echo-schema';
 import { refFromDXN } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -20,13 +19,13 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { Filter, live, useQuery, useSpace } from '@dxos/react-client/echo';
 import { List, ListItem } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { Contact, MessageType, Organization } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { seedTestData } from '@dxos/schema/testing';
 
 import { InboxPlugin } from '../InboxPlugin';
 import { MailboxType } from '../types';
 
-const ContactItem = ({ contact }: { contact: Contact }) => {
+const ContactItem = ({ contact }: { contact: DataType.Person }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const ref = useRef<HTMLLIElement>(null);
 
@@ -59,7 +58,7 @@ const ContactItem = ({ contact }: { contact: Contact }) => {
   );
 };
 
-const OrganizationItem = ({ organization }: { organization: Organization }) => {
+const OrganizationItem = ({ organization }: { organization: DataType.Organization }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const ref = useRef<HTMLLIElement>(null);
 
@@ -95,7 +94,7 @@ const OrganizationItem = ({ organization }: { organization: Organization }) => {
 export const Contacts = {
   render: () => {
     const space = useSpace();
-    const contacts = useQuery(space, Filter.schema(Contact));
+    const contacts = useQuery(space, Filter.type(DataType.Person));
 
     return (
       <List>
@@ -110,7 +109,7 @@ export const Contacts = {
 export const Organizations = {
   render: () => {
     const space = useSpace();
-    const organizations = useQuery(space, Filter.schema(Organization));
+    const organizations = useQuery(space, Filter.type(DataType.Organization));
 
     return (
       <List>
@@ -129,15 +128,15 @@ const meta: Meta = {
       plugins: [
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
-          types: [MailboxType, MessageType, Contact, Organization],
+          types: [MailboxType, DataType.Message, DataType.Person, DataType.Organization],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
             const space = client.spaces.default;
             const { emails } = await seedTestData(space);
-            const queueDxn = new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()]);
-            const queue = space.queues.get<MessageType>(queueDxn);
+            const queueDxn = createQueueDxn(space.id);
+            const queue = space.queues.get<DataType.Message>(queueDxn);
             queue.append(emails);
             const mailbox = live(MailboxType, { queue: refFromDXN(queueDxn) });
             space.db.add(mailbox);

@@ -4,28 +4,32 @@
 
 export { SpaceId } from '@dxos/keys';
 export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
-export { getTypename, Expando, type TypedObject, type ObjectMeta, getSchema } from '@dxos/echo-schema';
 export {
-  type Live,
-  RefArray,
-  live,
-  getMeta,
-  getType,
-  isLiveObject,
   compareForeignKeys,
-  makeRef,
-} from '@dxos/live-object';
+  createQueueDxn,
+  getMeta,
+  getSchema,
+  getType,
+  getTypename,
+  Expando,
+  type ObjectMeta,
+  Ref,
+  RefArray,
+  type TypedObject,
+} from '@dxos/echo-schema';
+export { type Live, live, isLiveObject, makeRef, refFromDXN } from '@dxos/live-object';
 export {
   DocAccessor,
   type EchoDatabase,
+  Query,
   Filter,
-  type FilterSource,
   type Hypergraph,
   type IDocHandle,
+  ObjectVersion,
   type ObjectMigration,
   type Queue,
-  type Query,
-  type ReactiveEchoObject,
+  type QueryResult,
+  type AnyLiveObject,
   ResultFormat,
   type Selection,
   type SubscriptionHandle,
@@ -34,17 +38,18 @@ export {
   createSubscription,
   defineObjectMigration,
   fromCursor,
+  isEchoObject,
   getObjectCore,
   getRangeFromCursor,
+  getSource,
+  getTarget,
   getTextInRange,
-  hasType,
-  isEchoObject,
+  getVersion,
   loadObjectReferences,
   toCursor,
   toCursorRange,
   updateText,
-  getVersion,
-  ObjectVersion,
+  isRelation,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.
@@ -71,7 +76,6 @@ export {
   isSpace,
   parseFullyQualifiedId,
   parseId,
-  createQueueDxn,
   type Progress,
   type PeerSyncState,
   type SpaceSyncStateMap,

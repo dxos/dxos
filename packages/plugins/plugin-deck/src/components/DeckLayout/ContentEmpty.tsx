@@ -7,8 +7,9 @@ import React from 'react';
 import { Surface, useCapability } from '@dxos/app-framework';
 
 import { DeckCapabilities } from '../../capabilities';
+import { useBreakpoints } from '../../hooks';
 import { getMode } from '../../types';
-import { layoutAppliesTopbar, useBreakpoints } from '../../util';
+import { layoutAppliesTopbar } from '../../util';
 import { ToggleSidebarButton } from '../Sidebar';
 import { fixedSidebarToggleStyles } from '../fragments';
 
@@ -20,7 +21,7 @@ export const ContentEmpty = () => {
   return (
     <div
       role='none'
-      className='grid place-items-center p-8 relative bg-deck'
+      className='grid place-items-center p-8 relative bg-deckSurface'
       data-testid='layoutPlugin.firstRunMessage'
     >
       <Surface role='keyshortcuts' />

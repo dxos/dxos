@@ -14,11 +14,13 @@
         "entryPoints": [
           "{projectRoot}/src/index.ts",
           "{projectRoot}/src/types.ts"
-        ]
+        ],
+        "preactSignalTracking": true
       }
     },
     "lint": {},
-    "pack": {}
+    "pack": {},
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild"

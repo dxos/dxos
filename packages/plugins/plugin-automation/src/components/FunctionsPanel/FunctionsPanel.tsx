@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
-import { S } from '@dxos/echo-schema';
-import { FunctionType, ScriptType } from '@dxos/functions/types';
+import { FunctionType, ScriptType } from '@dxos/functions';
 import { Filter, fullyQualifiedId, useQuery, type Space } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { controlItemClasses } from '@dxos/react-ui-form';
@@ -23,8 +23,8 @@ export type FunctionsPanelProps = {
 
 export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
-  const functions = useQuery(space, Filter.schema(FunctionType));
-  const scripts = useQuery(space, Filter.schema(ScriptType));
+  const functions = useQuery(space, Filter.type(FunctionType));
+  const scripts = useQuery(space, Filter.type(ScriptType));
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const functionToScriptMap = useMemo(
@@ -65,7 +65,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
 
   return (
     <div role='none' className={mx(controlItemClasses)}>
-      <List.Root<FunctionType> items={functions} isItem={S.is(FunctionType)} getId={(func) => func.id}>
+      <List.Root<FunctionType> items={functions} isItem={Schema.is(FunctionType)} getId={(func) => func.id}>
         {({ items }) => (
           <div role='list' className='flex flex-col w-full'>
             {items?.map((func) => (

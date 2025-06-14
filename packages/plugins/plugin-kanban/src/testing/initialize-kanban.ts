@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import {
-  AST,
-  S,
   TypedObject,
   FormatEnum,
   TypeEnum,
@@ -41,13 +41,13 @@ const createDefaultTaskSchema = () => {
     typename: `example.com/type/${PublicKey.random().truncate()}`,
     version: '0.1.0',
   })({
-    title: S.optional(S.String).annotations({
-      [AST.TitleAnnotationId]: 'Title',
+    title: Schema.optional(Schema.String).annotations({
+      title: 'Title',
     }),
-    description: S.optional(S.String).annotations({
-      [AST.TitleAnnotationId]: 'Description',
+    description: Schema.optional(Schema.String).annotations({
+      title: 'Description',
     }),
-    state: S.optional(S.String),
+    state: Schema.optional(Schema.String),
   });
 
   return { schema, stateOptions };

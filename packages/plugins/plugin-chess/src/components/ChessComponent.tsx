@@ -5,6 +5,7 @@
 import { Chess } from 'chess.js';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
+import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { ChessModel, Board, Chessboard, type BoardRootProps } from '@dxos/react-ui-gameboard';
 
@@ -16,7 +17,11 @@ export const ChessComponent = ({ game }: { game: ChessType }) => {
     if (!model || game.pgn !== model?.game.pgn()) {
       const chess = new Chess();
       if (game.pgn) {
-        chess.loadPgn(game.pgn);
+        try {
+          chess.loadPgn(game.pgn);
+        } catch (err) {
+          log.catch(err, { game });
+        }
       }
 
       model.initialize(chess.fen());

@@ -9,9 +9,10 @@ import React, { useState } from 'react';
 
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { AlertDialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Welcome } from './Welcome';
+import { OVERLAY_STYLE, OVERLAY_CLASSES, Welcome } from './Welcome';
 import { type WelcomeScreenProps, WelcomeState } from './types';
 import translations from '../../translations';
 
@@ -20,13 +21,17 @@ const Container = ({ state: initialState = WelcomeState.INIT, ...props }: Partia
   const [state, setState] = useState(initialState);
 
   return (
-    <Welcome
-      identity={identity}
-      state={state}
-      onSignup={() => setState(WelcomeState.EMAIL_SENT)}
-      onGoToLogin={() => setState(WelcomeState.INIT)}
-      {...props}
-    />
+    <AlertDialog.Root defaultOpen>
+      <AlertDialog.Overlay classNames={OVERLAY_CLASSES} style={OVERLAY_STYLE}>
+        <Welcome
+          identity={identity}
+          state={state}
+          onSignup={() => setState(WelcomeState.EMAIL_SENT)}
+          onGoToLogin={() => setState(WelcomeState.INIT)}
+          {...props}
+        />
+      </AlertDialog.Overlay>
+    </AlertDialog.Root>
   );
 };
 

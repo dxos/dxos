@@ -25,6 +25,9 @@
       "path": "../../../common/debug"
     },
     {
+      "path": "../../../common/errors"
+    },
+    {
       "path": "../../../common/feed-store"
     },
     {
@@ -97,7 +100,7 @@
       "path": "../../protocols"
     },
     {
-      "path": "../automerge"
+      "path": "../echo"
     },
     {
       "path": "../echo-protocol"

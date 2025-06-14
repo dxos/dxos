@@ -2,130 +2,180 @@
 // Copyright 2024 DXOS.org
 //
 
-// TODO(thure): TS2742 at it again
+// TODO(thure): TS2742
 /* eslint-disable unused-imports/no-unused-imports */
 import * as _colors from '@ch-ui/colors';
 
 import { type ColorAliases, type ColorSememes } from './types';
 
+// TODO(burdon): Move to util.
+const getMapValue = <T>(map: Record<string, T>, key: string, defaultValue: () => T): T => {
+  let value = map[key];
+  if (!value) {
+    value = defaultValue();
+    map[key] = value;
+  }
+  return value;
+};
+
 type Sememe = ColorSememes[string];
 
 const applyAlpha = (sememe: Sememe, alpha: number): Sememe => {
-  return {
-    light: [sememe.light![0], `${sememe.light![1]}/${alpha}`],
-    dark: [sememe.dark![0], `${sememe.dark![1]}/${alpha}`],
-  };
+  if (alpha >= 1) {
+    return sememe;
+  } else {
+    return {
+      light: [sememe.light![0], `${sememe.light![1]}/${alpha}`],
+      dark: [sememe.dark![0], `${sememe.dark![1]}/${alpha}`],
+    };
+  }
 };
 
-// Surface cadence sememes (in contrast-order)
+// Luminosity extrema and key points.
 
-const STEPS = 8;
-const DARK_MIN = 850;
-const DARK_MAX = 700;
-const darkCadence = (step: number) => {
-  return Math.floor(DARK_MIN + (DARK_MAX - DARK_MIN) * (step / STEPS));
-};
-const LIGHT_MIN = 25;
-const LIGHT_MAX = 180;
-const lightCadence = (step: number) => {
-  return Math.floor(LIGHT_MIN + (LIGHT_MAX - LIGHT_MIN) * (step / STEPS));
-};
+// Both elevation cadences go from darker to lighter from “elevation” 0 to `ELEVATION_SCALE`,
+// whereas both contrast cadences go from highest contrast at 0 to lowest contrast at `CONTRAST_SCALE`.
 
-const surface0: Sememe = {
-  light: ['neutral', lightCadence(0)],
-  dark: ['neutral', darkCadence(0)],
-};
-const surface10: Sememe = {
-  light: ['neutral', lightCadence(1)],
-  dark: ['neutral', darkCadence(1)],
-};
-const surface20: Sememe = {
-  light: ['neutral', lightCadence(2)],
-  dark: ['neutral', darkCadence(2)],
-};
-const surface30: Sememe = {
-  light: ['neutral', lightCadence(3)],
-  dark: ['neutral', darkCadence(3)],
-};
-const surface40: Sememe = {
-  light: ['neutral', lightCadence(4)],
-  dark: ['neutral', darkCadence(4)],
-};
-const surface50: Sememe = {
-  light: ['neutral', lightCadence(5)],
-  dark: ['neutral', darkCadence(5)],
-};
-const surface60: Sememe = {
-  light: ['neutral', lightCadence(6)],
-  dark: ['neutral', darkCadence(6)],
-};
-const surface70: Sememe = {
-  light: ['neutral', lightCadence(7)],
-  dark: ['neutral', darkCadence(7)],
-};
-const surface80: Sememe = {
-  light: ['neutral', lightCadence(8)],
-  dark: ['neutral', darkCadence(8)],
-};
+const DARK_ELEVATION_MIN = 855;
+const DARK_ELEVATION_MAX = 731;
 
-const surface400: Sememe = {
-  light: ['neutral', 400],
-  dark: ['neutral', 400],
-};
-const surface450: Sememe = {
-  light: ['neutral', 450],
-  dark: ['neutral', 450],
-};
+const DARK_CONTRAST_MIN = 750;
+const DARK_CONTRAST_MAX = 665;
+
+const LIGHT_ELEVATION_MIN = 0;
+const LIGHT_ELEVATION_MAX = 0;
+
+const LIGHT_CONTRAST_MIN = 82;
+const LIGHT_CONTRAST_MAX = 24;
+
+const ELEVATION_SCALE = 2;
+const CONTRAST_SCALE = 3;
+
+const darkElevationCadence = (depth: number) =>
+  Math.round(
+    DARK_ELEVATION_MAX + (DARK_ELEVATION_MIN - DARK_ELEVATION_MAX) * ((ELEVATION_SCALE - depth) / ELEVATION_SCALE),
+  );
+const darkContrastCadence = (depth: number) =>
+  Math.round(
+    DARK_CONTRAST_MAX + (DARK_CONTRAST_MIN - DARK_CONTRAST_MAX) * ((ELEVATION_SCALE - depth) / ELEVATION_SCALE),
+  );
+
+const lightElevationCadence = (depth: number) =>
+  Math.round(
+    LIGHT_ELEVATION_MIN + (LIGHT_ELEVATION_MAX - LIGHT_ELEVATION_MIN) * ((CONTRAST_SCALE - depth) / CONTRAST_SCALE),
+  );
+const lightContrastCadence = (depth: number) =>
+  Math.round(LIGHT_CONTRAST_MAX + (LIGHT_CONTRAST_MIN - LIGHT_CONTRAST_MAX) * (depth / CONTRAST_SCALE));
+
+const elevationCadence = (lightDepth: number, darkDepth: number = lightDepth, alpha: number = 1): Sememe =>
+  applyAlpha(
+    {
+      light: ['neutral', lightElevationCadence(lightDepth)],
+      dark: ['neutral', darkElevationCadence(darkDepth)],
+    },
+    alpha,
+  );
+
+const contrastCadence = (lightDepth: number, darkDepth: number = lightDepth, alpha: number = 1): Sememe =>
+  applyAlpha(
+    {
+      light: ['neutral', lightContrastCadence(lightDepth)],
+      dark: ['neutral', darkContrastCadence(darkDepth)],
+    },
+    alpha,
+  );
 
 export const systemSememes = {
-  // TODO(burdon): Organize by category (e.g., surface, text, etc.)
+  //
+  // Elevation cadence tokens
+  //
+  baseSurface: elevationCadence(0),
+  groupSurface: elevationCadence(1),
+  modalSurface: elevationCadence(2),
 
   //
-  // Surfaces (bg-)
+  // Contrast cadence tokens
   //
 
-  'surface-10': surface10,
-  'surface-10t': applyAlpha(surface10, 0.65),
-  'surface-20': surface20,
-  'surface-30': surface30,
-  'surface-40': surface40,
-  'surface-50': surface50,
-  'surface-60': surface60,
-  'surface-70': surface70,
-  'surface-80': surface80,
+  textInputSurfaceBase: contrastCadence(0, 0),
+  textInputSurfaceGroup: contrastCadence(0, 0.5),
+  textInputSurfaceModal: contrastCadence(0, 1),
 
-  'surface-400': surface400,
-  'surface-450': surface450,
-  'surface-450t': applyAlpha(surface450, 0.1),
+  inputSurfaceBase: contrastCadence(1, 0.5),
+  inputSurfaceGroup: contrastCadence(1, 1),
+  inputSurfaceModal: contrastCadence(1, 1.5),
 
-  'accentSurface-300t': {
+  hoverSurfaceBase: contrastCadence(2, 1.5),
+  hoverSurfaceGroup: contrastCadence(2, 2),
+  hoverSurfaceModal: contrastCadence(2, 2.5),
+
+  separatorBase: contrastCadence(3, 2),
+  separatorGroup: contrastCadence(3, 2.5),
+  separatorModal: contrastCadence(3, 3),
+
+  subduedSeparator: contrastCadence(1, 1),
+
+  unAccent: {
+    light: ['neutral', 400],
+    dark: ['neutral', 400],
+  },
+  unAccentHover: {
+    light: ['neutral', 450],
+    dark: ['neutral', 450],
+  },
+  hoverOverlay: {
+    light: ['neutral', '450/.1'],
+    dark: ['neutral', '450/.1'],
+  },
+
+  //
+  // Special surfaces.
+  //
+
+  // Screen overlay for modal dialogs.
+  scrimSurface: applyAlpha({ light: ['neutral', LIGHT_CONTRAST_MAX], dark: ['neutral', DARK_ELEVATION_MIN] }, 0.65),
+
+  // High contrast for focused interactive elements. (Technically this is part of the surface cadence, but the contrast cadence is on the opposite side of the elevation cadence as this point.)
+  focusSurface: {
+    light: ['neutral', 0],
+    dark: ['neutral', 1000],
+  },
+
+  // For tooltips only; the highest elevation from the opposite theme
+  inverseSurface: {
+    light: ['neutral', DARK_ELEVATION_MIN],
+    dark: ['neutral', LIGHT_ELEVATION_MIN],
+  },
+
+  //
+  // Accent surfaces
+  //
+
+  accentSurfaceRelated: {
     light: ['primary', '300/.1'],
     dark: ['primary', '400/.1'],
   },
-  'accentSurface-400': {
+  accentSurfaceHover: {
     light: ['primary', 600],
     dark: ['primary', 475],
   },
-  'accentSurface-500': {
+  accentSurface: {
     light: ['primary', 500],
     dark: ['primary', 500],
   },
 
-  // Special surfaces (intentionally not part of contrast-order cadence)
-
-  deck: {
-    light: surface60.light,
-    dark: surface0.dark,
-  },
-
   //
-  // Text (text-)
-  // TODO(thure): Establish contrast-order cadence for text
+  // Text (text-) and other foregrounds
+  // TODO(thure): Establish contrast-order cadence for text.
   //
 
   baseText: {
     light: ['neutral', 1000],
     dark: ['neutral', 50],
+  },
+  inverseSurfaceText: {
+    light: ['neutral', 50],
+    dark: ['neutral', 1000],
   },
   description: {
     light: ['neutral', 500],
@@ -143,39 +193,63 @@ export const systemSememes = {
     light: ['primary', 500],
     dark: ['primary', 350],
   },
+  neutralFocusIndicator: {
+    light: ['neutral', 300],
+    dark: ['neutral', 450],
+  },
   accentFocusIndicator: {
-    light: ['primary', 350],
+    light: ['primary', 300],
     dark: ['primary', 450],
   },
-  unAccentHover: {
-    light: ['neutral', 400],
-    dark: ['neutral', 500],
-  },
-  inverse: {
+  accentSurfaceText: {
     light: ['neutral', 0],
     dark: ['neutral', 0],
   },
 } satisfies ColorSememes;
 
-export const systemAliases = {
-  // surface cadence
-  'surface-10': { root: ['attention'], attention: ['baseSurface'] },
-  'surface-20': { root: ['baseSurface'] },
-  'surface-30': { root: ['modalSurface', 'tooltipSurface'], attention: ['input'] },
-  'surface-40': { root: ['input'] },
-  'surface-50': { attention: ['groupSurface'] },
-  'surface-60': { root: ['groupSurface'], attention: ['hoverSurface'] },
-  'surface-70': { root: ['hoverSurface'], attention: ['separator'] },
-  'surface-80': { root: ['separator'] },
+type SememeName = keyof typeof systemSememes;
 
-  // special surfaces
-  'surface-10t': { root: ['scrim'] },
-  'surface-400': { root: ['unAccent'] },
-  'surface-450': { root: ['unAccentHover'] },
-  'surface-450t': { root: ['hoverOverlay'] },
+/**
+ * Alias map.
+ */
+const aliasDefs: Record<string, Record<string, SememeName>> = {
+  // The background color appearing in overscroll and between planks when Deck is enabled.
+  deckSurface: { root: 'groupSurface' },
 
-  // accent
-  'accentSurface-300t': { root: ['currentRelated'] },
-  'accentSurface-400': { root: ['accentSurfaceHover'] },
-  'accentSurface-500': { root: ['accentSurface'] },
-} satisfies ColorAliases;
+  // Secondary aliases
+  textInputSurface: { root: 'textInputSurfaceBase', group: 'textInputSurfaceGroup', modal: 'textInputSurfaceModal' },
+  inputSurface: { root: 'inputSurfaceBase', group: 'inputSurfaceGroup', modal: 'inputSurfaceModal' },
+  hoverSurface: { root: 'hoverSurfaceBase', group: 'hoverSurfaceGroup', modal: 'hoverSurfaceModal' },
+  separator: { root: 'separatorBase', group: 'separatorGroup', modal: 'separatorModal' },
+
+  // Selected items, current items, other surfaces needing special contrast against baseSurface.
+  activeSurface: { root: 'inputSurface' as any /* TODO(thure): strongly type secondary aliases. */ },
+
+  // Main sidebar panel.
+  sidebarSurface: { root: 'groupSurface' },
+
+  // Plank header.
+  headerSurface: { root: 'groupSurface' },
+
+  // Forms, cards, etc.
+  cardSurface: { root: 'groupSurface' },
+
+  // Toolbars, table/sheet headers, etc.
+  toolbarSurface: { root: 'groupSurface' },
+
+  // TODO: rename uses of this token to `focusSurface` and remove this alias.
+  attention: { root: 'focusSurface' },
+
+  // In “master-detail” patterns, the background of the item in the list which is enumerated in the adjacent view.
+  currentRelated: { root: 'accentSurfaceRelated' },
+};
+
+export const systemAliases: ColorAliases = Object.entries(aliasDefs).reduce((aliases, [alias, values]) => {
+  Object.entries(values).forEach(([key, sememe]) => {
+    const record = getMapValue(aliases, sememe, () => ({}));
+    const list = getMapValue<string[]>(record, key, () => []);
+    list.push(alias);
+  });
+
+  return aliases;
+}, {} as ColorAliases);

@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import type * as A from '@automerge/automerge';
+import { Schema } from 'effect';
 import { type InspectOptionsStylized } from 'node:util';
 
-import type * as A from '@dxos/automerge/automerge';
 import { devtoolsFormatter, type DevtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-protocol';
 import {
@@ -12,20 +13,27 @@ import {
   defineHiddenProperty,
   ECHO_ATTR_META,
   ECHO_ATTR_TYPE,
+  TYPENAME_SYMBOL,
+  DeletedSymbol,
   EchoSchema,
   EntityKind,
   EntityKindPropertyId,
   type ObjectMeta,
   ObjectMetaSchema,
   Ref,
+  RefImpl,
   RelationSourceId,
   RelationTargetId,
-  S,
   SchemaMetaSymbol,
   SchemaValidator,
   StoredSchema,
+  TypeSymbol,
+  getRefSavedTarget,
+  getTypeAnnotation,
+  isInstanceOf,
+  setRefResolver,
+  symbolMeta,
   symbolSchema,
-  TYPENAME_SYMBOL,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -33,18 +41,15 @@ import {
   createProxy,
   getProxyHandler,
   getProxyTarget,
-  getRefSavedTarget,
   isLiveObject,
   type ReactiveHandler,
   type Live,
-  RefImpl,
-  setRefResolver,
   symbolIsProxy,
 } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
-import { createObject, isEchoObject, type ReactiveEchoObject } from './create';
+import { createObject, isEchoObject, type AnyLiveObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
@@ -87,9 +92,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     defineHiddenProperty(target, symbolHandler, this);
 
-    if (inspectCustom) {
-      defineHiddenProperty(target, inspectCustom, this._inspect.bind(target));
-    }
+    // Maybe have been set by `create`.
+    Object.defineProperty(target, inspectCustom, {
+      enumerable: false,
+      configurable: true,
+      value: this._inspect.bind(target),
+    });
   }
 
   ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
@@ -155,6 +163,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
         case TYPENAME_SYMBOL:
           return this._getTypename(target);
+        case TypeSymbol:
+          return this.getTypeReference(target)?.toDXN();
+        case symbolMeta:
+          return this.getMeta(target);
+        case DeletedSymbol:
+          return this.isDeleted(target);
       }
     }
 
@@ -209,6 +223,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return true;
   }
 
+  /**
+   * @returns The typename without version for static schema or object id for dynamic schema.
+   */
   private _getTypename(target: ProxyTarget): string | undefined {
     const schema = this.getSchema(target);
     // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
@@ -269,7 +286,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
     // Object instanceof StoredEchoSchema requires database to lookup schema.
     const database = target[symbolInternals].database;
-    if (database && S.is(StoredSchema)(object)) {
+    // TODO(dmaretskyi): isInstanceOf(StoredSchema, object)
+    if (database && isInstanceOf(StoredSchema, object)) {
       return database.schemaRegistry._registerSchema(object);
     }
 
@@ -340,7 +358,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return unwrappedValue;
     }
 
-    const _ = S.asserts(propertySchema)(unwrappedValue);
+    const _ = Schema.asserts(propertySchema)(unwrappedValue);
     return unwrappedValue;
   }
 
@@ -351,7 +369,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         // to it or have shared mutability, we need to copy by value.
         return recurse({ ...value });
       } else if (isLiveObject(value)) {
-        throw new Error('Object references must be wrapped with `makeRef`');
+        throw new Error('Object references must be wrapped with `Ref.make`');
       } else if (Ref.isRef(value)) {
         const savedTarget = getRefSavedTarget(value);
         if (savedTarget) {
@@ -365,7 +383,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
   }
 
-  getSchema(target: ProxyTarget): S.Schema.AnyNoContext | undefined {
+  getSchema(target: ProxyTarget): Schema.Schema.AnyNoContext | undefined {
     if (target[symbolNamespace] === META_NAMESPACE) {
       // TODO(dmaretskyi): Breaks tests.
       // if (target[symbolPath].length !== 0) {
@@ -565,7 +583,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // Can be caused not using `object(Expando, { ... })` constructor.
       // TODO(dmaretskyi): Add better validation.
       invariant(otherObjId != null);
-      target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as ReactiveEchoObject<any>);
+      target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as AnyLiveObject<any>);
       return Reference.localObjectReference(otherObjId);
     }
 
@@ -708,9 +726,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _getDevtoolsFormatter(target: ProxyTarget): DevtoolsFormatter {
+    const schema = this.getSchema(target);
+    const typename = schema ? getTypeAnnotation(schema)?.typename : undefined;
+
     return {
-      header: (config?: any) =>
-        getHeader(this.getTypeReference(target)?.objectId ?? 'EchoObject', target[symbolInternals].core.id, config),
+      header: (config?: any) => getHeader(typename ?? 'EchoObject', target[symbolInternals].core.id, config),
       hasBody: () => true,
       body: () => {
         let data = deepMapValues(this._getReified(target), (value, recurse) => {
@@ -756,11 +776,12 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
   }
 };
 
-// TODO(burdon): Move ProxyTarget def to echo-schema and make ReactiveEchoObject inherit?
+// TODO(burdon): Move ProxyTarget def to echo-schema and make AnyLiveObject inherit?
 export const getObjectCore = <T extends BaseObject>(obj: Live<T>): ObjectCore => {
   if (!(obj as any as ProxyTarget)[symbolInternals]) {
     throw new Error('object is not an EchoObject');
   }
+
   const { core } = (obj as any as ProxyTarget)[symbolInternals];
   return core;
 };
@@ -769,7 +790,7 @@ export const getObjectCore = <T extends BaseObject>(obj: Live<T>): ObjectCore =>
  * @returns Automerge document (or a part of it) that backs the object.
  * Mostly used for debugging.
  */
-export const getObjectDocument = (obj: ReactiveEchoObject<any>): A.Doc<ObjectStructure> => {
+export const getObjectDocument = (obj: AnyLiveObject<any>): A.Doc<ObjectStructure> => {
   const core = getObjectCore(obj);
   return getDeep(core.getDoc(), core.mountPath)!;
 };

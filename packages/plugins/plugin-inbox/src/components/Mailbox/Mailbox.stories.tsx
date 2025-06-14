@@ -20,7 +20,7 @@ import { Filter, fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { Contact, MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { Mailbox } from './Mailbox';
@@ -35,11 +35,9 @@ const DefaultStory = () => {
   return <Mailbox id='story' messages={messages} ignoreAttention />;
 };
 
-export const Default = {};
-
 const WithCompanionStory = () => {
   const space = useSpace();
-  const [mailbox] = useQuery(space, Filter.schema(MailboxType));
+  const [mailbox] = useQuery(space, Filter.type(MailboxType));
   const state = useCapability(InboxCapabilities.MailboxState);
 
   const mailboxData = useMemo(() => ({ subject: mailbox }), [mailbox]);
@@ -62,6 +60,17 @@ const WithCompanionStory = () => {
   );
 };
 
+const meta: Meta = {
+  title: 'plugins/plugin-inbox/Mailbox',
+  component: Mailbox,
+  render: DefaultStory,
+  decorators: [withLayout({ fullscreen: true }), withAttention],
+};
+
+export default meta;
+
+export const Default = {};
+
 export const WithCompanion = {
   render: WithCompanionStory,
   decorators: [
@@ -69,7 +78,7 @@ export const WithCompanion = {
       plugins: [
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
-          types: [MailboxType, MessageType, Contact],
+          types: [MailboxType, DataType.Message, DataType.Person],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
@@ -88,12 +97,3 @@ export const WithCompanion = {
     }),
   ],
 };
-
-const meta: Meta = {
-  title: 'plugins/plugin-inbox/Mailbox',
-  component: Mailbox,
-  render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true }), withAttention],
-};
-
-export default meta;

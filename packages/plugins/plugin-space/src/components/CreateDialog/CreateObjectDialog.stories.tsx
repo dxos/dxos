@@ -35,7 +35,7 @@ const meta: Meta<typeof CreateObjectDialog> = {
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [CollectionType] }),
     withTheme,
-    withLayout({ tooltips: true }),
+    withLayout(),
   ],
   parameters: {
     translations: [...translations, osTranslations],
@@ -66,7 +66,7 @@ export const TargetSpace: StoryObj<typeof CreateObjectDialog> = {
 export const TargetCollection: StoryObj<typeof CreateObjectDialog> = {
   render: (args) => {
     const space = useSpace();
-    const [collection] = useQuery(space, Filter.schema(CollectionType));
+    const [collection] = useQuery(space, Filter.type(CollectionType));
 
     useEffect(() => {
       if (space) {

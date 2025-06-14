@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
 import jsonpointer from 'jsonpointer';
 import { type OpenAPIV2, type OpenAPIV3_1 } from 'openapi-types';
 
-import { ToolResult, type Tool } from '@dxos/artifact';
-import { JsonSchemaType, normalizeSchema, S, toEffectSchema } from '@dxos/echo-schema';
+import { ToolResult, type Tool } from '@dxos/ai';
+import { JsonSchemaType, normalizeSchema, toEffectSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
@@ -82,7 +83,7 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
       }
 
       log('inputSchema', { inputSchema });
-      S.validateSync(JsonSchemaType)(inputSchema);
+      Schema.validateSync(JsonSchemaType)(inputSchema);
 
       const description = methodItem.description ?? methodItem.summary;
       if (!description) {
@@ -200,7 +201,7 @@ const callApiEndpoint = async (endpoint: EndpointDescriptor, input: any) => {
 
         // Client-side validation
         const effectSchema = toEffectSchema(parameter.schema);
-        S.validateSync(effectSchema)(value);
+        Schema.validateSync(effectSchema)(value);
 
         if (body) {
           throw new Error(`Duplicate body parameter: ${parameter.name}`);

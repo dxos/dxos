@@ -2,16 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineTool, ToolResult } from '@dxos/artifact';
-import type { Tool } from '@dxos/artifact';
+import { defineTool, ToolResult, type Tool } from '@dxos/ai';
 import { toEffectSchema } from '@dxos/echo-schema';
-import { getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions/types';
-import type { FunctionType } from '@dxos/functions/types';
+import { getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
+import { type FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
-import type { SpaceId } from '@dxos/react-client/echo';
+import { type SpaceId } from '@dxos/react-client/echo';
 import { getMeta } from '@dxos/react-client/echo';
 
-export const covertFunctionToTool = (
+export const convertFunctionToTool = (
   fn: FunctionType,
   edgeUrl: string,
   spaceId?: SpaceId | undefined,
@@ -24,9 +23,7 @@ export const covertFunctionToTool = (
   if (!existingFunctionUrl) {
     return undefined;
   }
-  const url = getInvocationUrl(existingFunctionUrl, edgeUrl, {
-    spaceId,
-  });
+  const url = getInvocationUrl(existingFunctionUrl, edgeUrl, { spaceId });
 
   return defineTool('user-function', {
     name: fn.name,

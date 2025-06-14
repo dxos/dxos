@@ -24,7 +24,7 @@ import {
   type Label,
 } from './intent';
 import { Events, Capabilities } from '../common';
-import { contributes, type PluginsContext } from '../core';
+import { contributes, type PluginContext } from '../core';
 
 const EXECUTION_LIMIT = 100;
 const HISTORY_LIMIT = 100;
@@ -184,14 +184,14 @@ export type IntentContext = {
  * @param params.executionLimit The maximum recursion depth of intent chains.
  */
 export const createDispatcher = (
-  getResolvers: (module?: string) => AnyIntentResolver[],
+  getResolvers: () => AnyIntentResolver[],
   { executionLimit = EXECUTION_LIMIT, historyLimit = HISTORY_LIMIT } = {},
 ): IntentContext => {
   const historyRef = Effect.runSync(Ref.make<AnyIntentResult[][]>([]));
 
   const handleIntent = (intent: AnyIntent) =>
     Effect.gen(function* () {
-      const candidates = getResolvers(intent.module)
+      const candidates = getResolvers()
         .filter((resolver) => resolver.intent._tag === intent.id)
         .filter((resolver) => !resolver.filter || resolver.filter(intent.data))
         .toSorted(byPosition);
@@ -302,7 +302,7 @@ export const createDispatcher = (
 const defaultEffect = () => Effect.fail(new Error('Intent runtime not ready'));
 const defaultPromise = () => Effect.runPromise(defaultEffect());
 
-export default (context: PluginsContext) => {
+export default (context: PluginContext) => {
   const state = live<IntentContext>({
     dispatch: defaultEffect,
     dispatchPromise: defaultPromise,
@@ -311,15 +311,11 @@ export default (context: PluginsContext) => {
   });
 
   // TODO(wittjosiah): Make getResolver callback async and allow resolvers to be requested on demand.
-  const { dispatch, dispatchPromise, undo, undoPromise } = createDispatcher((module) =>
-    context
-      .requestCapabilities(Capabilities.IntentResolver, (c, moduleId): c is AnyIntentResolver => {
-        return module ? moduleId === module : true;
-      })
-      .flat(),
+  const { dispatch, dispatchPromise, undo, undoPromise } = createDispatcher(() =>
+    context.getCapabilities(Capabilities.IntentResolver).flat(),
   );
 
-  const manager = context.requestCapability(Capabilities.PluginManager);
+  const manager = context.getCapability(Capabilities.PluginManager);
   state.dispatch = (intentChain, depth) => {
     return Effect.gen(function* () {
       yield* manager._activate(Events.SetupIntentResolver);

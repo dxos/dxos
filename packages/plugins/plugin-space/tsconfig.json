@@ -51,7 +51,13 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/automerge"
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/artifact"
+    },
+    {
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-schema"
@@ -64,9 +70,6 @@
     },
     {
       "path": "../../core/protocols"
-    },
-    {
-      "path": "../../experimental/artifact"
     },
     {
       "path": "../../sdk/app-framework"

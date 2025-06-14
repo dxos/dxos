@@ -2,25 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useEffect, useState } from 'react';
 
-import type { GenerationStreamEvent } from '@dxos/assistant';
+import { type GenerationStreamEvent } from '@dxos/ai';
 import { GptInput, GptOutput } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
 import { createFunctionAnchors, FunctionBody, getHeight } from './common';
 import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
 
-export const GptShape = S.extend(
+export const GptShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('gpt'),
+  Schema.Struct({
+    type: Schema.Literal('gpt'),
   }),
 );
 
-export type GptShape = S.Schema.Type<typeof GptShape>;
+export type GptShape = Schema.Schema.Type<typeof GptShape>;
 
 export type CreateGptProps = CreateShapeProps<GptShape>;
 

@@ -51,7 +51,7 @@
       "path": "../../core/conductor"
     },
     {
-      "path": "../../core/echo/automerge"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-generator"

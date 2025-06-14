@@ -37,7 +37,7 @@ describe('Orama', () => {
     });
 
     {
-      const objects = range(10, () => generator.createObject());
+      const objects = await Promise.all(range(10, () => generator.createObject()));
       await Promise.all(objects.map((object) => insert<any>(db, object)));
     }
 

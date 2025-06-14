@@ -35,7 +35,6 @@ export default [
         'plank heading fallback label': 'Untitled',
         'actions menu label': 'Options',
         'settings deck label': 'Disable deck',
-        'reload required message': 'Reload required.',
         'pending heading': 'Loading…',
         'insert plank label': 'Open',
         'resize label': 'Drag to resize',

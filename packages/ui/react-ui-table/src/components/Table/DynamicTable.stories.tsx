@@ -59,7 +59,7 @@ const meta: Meta = {
   title: 'ui/react-ui-table/DynamicTable',
   component: DynamicTable,
   parameters: { translations },
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  decorators: [withLayout({ fullscreen: true }), withTheme],
 };
 
 export default meta;
@@ -128,7 +128,7 @@ export const WithEchoSchema: StoryObj = {
     const client = useClient();
     const { space } = useClientProvider();
     const schema = useSchema(client, space, Testing.Contact.typename);
-    const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
+    const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
     if (!schema) {
       return <div>Loading schema...</div>;
     }

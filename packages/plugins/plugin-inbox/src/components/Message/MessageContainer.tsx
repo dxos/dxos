@@ -11,19 +11,18 @@ import { fullyQualifiedId, type Space, Filter, useQuery } from '@dxos/react-clie
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
-import { type MenuActionHandler } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type MessageType, Contact } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { Message } from './Message';
 import { type ViewMode } from './MessageHeader';
-import { useMessageToolbarActions, type MessageToolbarAction } from './toolbar';
+import { useMessageToolbarActions } from './toolbar';
 import { INBOX_PLUGIN } from '../../meta';
 import { type MailboxType, InboxAction } from '../../types';
 
 export type MessageContainerProps = {
   space?: Space;
-  message?: MessageType;
+  message?: DataType.Message;
   inMailbox: MailboxType;
 };
 
@@ -42,8 +41,8 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
   const viewMode = useSignal<ViewMode>(initialViewMode);
 
   const hasEmail = useComputed(() => !!message?.sender.email);
-  const contacts = useQuery(space, Filter.schema(Contact));
-  const existingContact = useSignal<Contact | undefined>(undefined);
+  const contacts = useQuery(space, Filter.type(DataType.Person));
+  const existingContact = useSignal<DataType.Person | undefined>(undefined);
   const contactDxn = useComputed(() => (existingContact.value ? getDXN(existingContact.value)?.toString() : undefined));
 
   useEffect(() => {
@@ -54,26 +53,14 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
-  const menu = useMessageToolbarActions(viewMode, existingContact);
+  const handleExtractContact = useCallback(() => {
+    if (!space || !message) {
+      return;
+    }
+    void dispatch(createIntent(InboxAction.ExtractContact, { space, message }));
+  }, [space, message, dispatch]);
 
-  const handleToolbarAction = useCallback<MenuActionHandler<MessageToolbarAction>>(
-    (action: MessageToolbarAction) => {
-      switch (action.properties.type) {
-        case 'viewMode': {
-          viewMode.value = viewMode.value === 'plain' ? 'enriched' : 'plain';
-          break;
-        }
-        case 'extractContact': {
-          if (!space || !message) {
-            return;
-          }
-          void dispatch(createIntent(InboxAction.ExtractContact, { space, message }));
-          break;
-        }
-      }
-    },
-    [viewMode, message, space, dispatch],
-  );
+  const menu = useMessageToolbarActions(viewMode, existingContact, handleExtractContact);
 
   if (!message) {
     return <p className='p-8 text-center text-description'>{t('no message message')}</p>;
@@ -84,7 +71,7 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
       <div role='none' className='grid grid-rows-[min-content_1fr]'>
         <div role='none' className={stackItemContentToolbarClassNames('section')}>
           <ElevationProvider elevation='positioned'>
-            <MenuProvider {...menu} attendableId={fullyQualifiedId(inMailbox)} onAction={handleToolbarAction}>
+            <MenuProvider {...menu} attendableId={fullyQualifiedId(inMailbox)}>
               <ToolbarMenu />
             </MenuProvider>
           </ElevationProvider>

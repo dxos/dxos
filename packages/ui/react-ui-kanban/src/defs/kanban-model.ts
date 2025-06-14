@@ -3,9 +3,10 @@
 //
 
 import { batch, effect, signal, untracked } from '@preact/signals-core';
+import { type Schema } from 'effect';
 
 import { Resource } from '@dxos/context';
-import { type JsonProp, type TypedObject } from '@dxos/echo-schema';
+import { type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { type ViewProjection } from '@dxos/schema';
@@ -27,13 +28,13 @@ export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = { columnV
 
 export type KanbanModelProps = {
   kanban: KanbanType;
-  schema: TypedObject<any, any>;
+  schema: Schema.Schema.AnyNoContext;
   projection: ViewProjection;
 };
 
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
   private readonly _kanban: KanbanType;
-  private readonly _schema: TypedObject<any, any>;
+  private readonly _schema: Schema.Schema.AnyNoContext;
   private readonly _projection: ViewProjection;
   private _items = signal<T[]>([]);
   private _cards = signal<ArrangedCards<T>>([]);

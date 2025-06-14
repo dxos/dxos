@@ -3,8 +3,9 @@
 //
 
 import { signal } from '@preact/signals-core';
+import { isNotNullable } from 'effect/Predicate';
 
-import { FormatEnum, getDXN, getValue } from '@dxos/echo-schema';
+import { FormatEnum, getDXN, getValue, TypeEnum } from '@dxos/echo-schema';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
   type DxGridPlane,
@@ -84,6 +85,10 @@ export class TablePresentation<T extends TableRow = TableRow> {
             return '';
           }
 
+          if (props.type === 'array') {
+            return '';
+          }
+
           switch (props.format) {
             case FormatEnum.Boolean:
             case FormatEnum.SingleSelect:
@@ -121,11 +126,52 @@ export class TablePresentation<T extends TableRow = TableRow> {
         cell.className = mx(classes.flat());
       }
 
+      if (props.type === TypeEnum.Array) {
+        const targetArray = getValue(obj, field.path);
+        if (targetArray && Array.isArray(targetArray)) {
+          // TODO(ZaymonFC): For arrays of objects, objects should have a 'label' annotation on the field
+          // that can be used to render tags.
+          // TODO(ZaymonFC): Move to util.
+          const getLabel = (value: any) => {
+            // If the value is falsy, return undefined
+            // If the object is an array, check for 'name' property
+            // If the object is a primitive type (string, number, boolean) stringify
+            // If the object is an array return 'Array'
+            if (!value) {
+              return undefined;
+            }
+            if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+              return String(value);
+            }
+            if (Array.isArray(value)) {
+              return 'Array';
+            }
+            if (typeof value === 'object' && value.name) {
+              return value.name;
+            }
+            if (typeof value === 'object' && value.value) {
+              return `${value.value}`;
+            }
+            return 'Object';
+          };
+
+          const tags = targetArray
+            .map(getLabel)
+            .filter(isNotNullable)
+            .map((title) => {
+              return `<span class="dx-tag rounded-xl" data-hue="neutral">${title}</span>`;
+            })
+            .join('');
+
+          cell.accessoryHtml = `<div role='none' class="flex flex-row gap-1 overflow-x-auto">${tags}</div>`;
+        }
+      }
+
       if (props.format === FormatEnum.Ref && props.referenceSchema) {
         const targetObj = getValue(obj, field.path)?.target;
         if (targetObj) {
           const dxn = getDXN(targetObj)?.toString();
-          cell.accessoryHtml = `<dx-ref-tag ref=${dxn} class="dx-button block is-6 pli-[3px] plb-[3px] pbe-[2px] min-bs-0 absolute inline-end-1"><dx-icon icon="ph--link-simple--regular"/></dx-ref-tag>`;
+          cell.accessoryHtml = `<dx-ref-tag refId=${dxn} class="dx-button block is-6 pli-[3px] plb-[3px] pbe-[2px] min-bs-0 absolute inline-end-1"><dx-icon icon="ph--link-simple--regular"/></dx-ref-tag>`;
         }
       }
 
@@ -166,7 +212,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
             .join(' ');
 
           if (tags) {
-            cell.accessoryHtml = tags;
+            cell.accessoryHtml = `<div role='none' class="flex flex-row gap-1">${tags}</div>`;
           }
         }
       }
@@ -206,7 +252,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}
           ${tableButtons.columnSettings.render({ fieldId: field.id })}
         `,
-        className: '!bg-gridHeader',
+        className: '!bg-toolbarSurface',
       };
     }
 
@@ -249,7 +295,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     if (!this.model.features.selection.enabled || this.model.selection.selectionMode === 'single') {
       return {
         [toPlaneCellIndex({ col: 0, row: 0 })]: {
-          className: '!bg-gridHeader',
+          className: '!bg-toolbarSurface',
           readonly: true,
           value: '',
         },
@@ -263,7 +309,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           header: true,
           checked: this.model.selection.allRowsSeleted.value,
         }),
-        className: '!bg-gridHeader',
+        className: '!bg-toolbarSurface',
         readonly: true,
         value: '',
       },
@@ -278,7 +324,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
               disabled: (this.model.view?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
             })
           : undefined,
-        className: '!bg-gridHeader',
+        className: '!bg-toolbarSurface',
         readonly: true,
         value: '',
       },

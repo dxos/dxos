@@ -12,5 +12,5 @@ export const meta: PluginMeta = {
   description: 'Open files from the local file system.',
   icon: 'ph--file--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-files',
-  tags: ['experimental'],
+  tags: ['labs'],
 };

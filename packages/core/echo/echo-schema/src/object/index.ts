@@ -4,6 +4,7 @@
 
 export * from './common';
 export * from './create';
+export * from './entity';
 export * from './expando';
 export * from './ids';
 export * from './json-serializer';
@@ -12,3 +13,4 @@ export * from './relation';
 export * from './typed-object';
 export * from './typed-relation';
 export * from './typename';
+export * from './deleted';

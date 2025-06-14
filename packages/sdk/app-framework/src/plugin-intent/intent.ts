@@ -2,20 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
 export type IntentParams = {
-  readonly input: S.Schema.All;
-  readonly output: S.Schema.All;
+  readonly input: Schema.Schema.All;
+  readonly output: Schema.Schema.All;
 };
 
 export type IntentData<Fields extends IntentParams> =
-  S.Schema.Type<S.Struct<Fields>> extends { readonly input: any } ? S.Schema.Type<S.Struct<Fields>>['input'] : any;
+  Schema.Schema.Type<Schema.Struct<Fields>> extends { readonly input: any }
+    ? Schema.Schema.Type<Schema.Struct<Fields>>['input']
+    : any;
 
 export type IntentResultData<Fields extends IntentParams> =
-  S.Schema.Type<S.Struct<Fields>> extends { readonly output: any } ? S.Schema.Type<S.Struct<Fields>>['output'] : any;
+  Schema.Schema.Type<Schema.Struct<Fields>> extends { readonly output: any }
+    ? Schema.Schema.Type<Schema.Struct<Fields>>['output']
+    : any;
 
-export type IntentSchema<Tag extends string, Fields extends IntentParams> = S.TaggedClass<any, Tag, Fields>;
+export type IntentSchema<Tag extends string, Fields extends IntentParams> = Schema.TaggedClass<any, Tag, Fields>;
 
 /**
  * An intent is an abstract description of an operation to be performed.
@@ -33,13 +37,6 @@ export type Intent<Tag extends string, Fields extends IntentParams> = {
    * Any data needed to perform the desired action.
    */
   data: IntentData<Fields>;
-
-  /**
-   * Module ID.
-   * If specified, the intent will be sent explicitly to the plugin module.
-   * Otherwise, the intent will be sent to all plugins, in order and the first to resolve a non-null value will be used.
-   */
-  module?: string;
 
   /**
    * Whether or not the intent is being undone.
@@ -76,11 +73,11 @@ export type AnyIntentChain = IntentChain<any, any, any, any>;
 export const createIntent = <Tag extends string, Fields extends IntentParams>(
   schema: IntentSchema<Tag, Fields>,
   data: IntentData<Fields> = {},
-  params: Pick<AnyIntent, 'module' | 'undo'> = {},
+  params: Pick<AnyIntent, 'undo'> = {},
 ): IntentChain<Tag, Tag, Fields, Fields> => {
   // The output of validateSync breaks proxy objects so this is just used for validation.
   // TODO(wittjosiah): Is there a better way to make theses types align?
-  const _ = S.validateSync(schema.fields.input as S.Schema<any, any, unknown>)(data);
+  const _ = Schema.validateSync(schema.fields.input as Schema.Schema<any, any, unknown>)(data);
   const intent = {
     ...params,
     _schema: schema,
@@ -112,7 +109,7 @@ export const chain =
   >(
     schema: IntentSchema<NextTag, NextFields>,
     data: Omit<IntentData<NextFields>, keyof IntentResultData<LastFields>> = {},
-    params: Pick<AnyIntent, 'module' | 'undo'> = {},
+    params: Pick<AnyIntent, 'undo'> = {},
   ) =>
   (
     intent: IntentChain<FirstTag, any, FirstFields, LastFields>,
@@ -139,8 +136,13 @@ export const chain =
 
 // NOTE: Should maintain compatibility with `i18next` (and @dxos/react-ui).
 // TODO(wittjosiah): Making this immutable breaks type compatibility.
-export const Label = S.Union(
-  S.String,
-  S.mutable(S.Tuple(S.String, S.mutable(S.Struct({ ns: S.String, count: S.optional(S.Number) })))),
+export const Label = Schema.Union(
+  Schema.String,
+  Schema.mutable(
+    Schema.Tuple(
+      Schema.String,
+      Schema.mutable(Schema.Struct({ ns: Schema.String, count: Schema.optional(Schema.Number) })),
+    ),
+  ),
 );
-export type Label = S.Schema.Type<typeof Label>;
+export type Label = Schema.Schema.Type<typeof Label>;

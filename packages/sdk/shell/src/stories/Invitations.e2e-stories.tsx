@@ -16,7 +16,7 @@ import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useMultiClient, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Button, ButtonGroup, Clipboard, List } from '@dxos/react-ui';
-import { getSize, groupSurface } from '@dxos/react-ui-theme';
+import { getSize, activeSurface } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { IdentityListItem, SpaceListItem } from '../components';
@@ -197,7 +197,7 @@ const Invitations = () => {
 
   return (
     <div className={'flex flex-col m-4 flex-1 min-w-0'} data-testid={`peer-${id}`}>
-      <div className={`${groupSurface} rounded p-2 mbe-2`}>
+      <div className={`${activeSurface} rounded p-2 mbe-2`}>
         <h1>{header}</h1>
         {identity ? (
           <List>
@@ -208,7 +208,7 @@ const Invitations = () => {
         )}
       </div>
       {identity || panel ? (
-        <div className={`${groupSurface} rounded p-2`}>
+        <div className={`${activeSurface} rounded p-2`}>
           <Panel id={id} panel={panel} setPanel={setPanel} />
         </div>
       ) : null}
@@ -228,11 +228,7 @@ export const Default = {
       </Clipboard.Provider>
     );
   },
-  decorators: [
-    withMultiClientProvider({ numClients: 3 }),
-    withLayout({ tooltips: true, classNames: 'grid grid-cols-3' }),
-    withTheme,
-  ],
+  decorators: [withMultiClientProvider({ numClients: 3 }), withLayout({ classNames: 'grid grid-cols-3' }), withTheme],
   parameters: {
     chromatic: { disableSnapshot: true },
     translations: [osTranslations],

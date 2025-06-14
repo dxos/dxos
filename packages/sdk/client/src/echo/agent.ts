@@ -5,18 +5,12 @@
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { todo } from '@dxos/debug';
-import {
-  type Filter,
-  type QueryResult,
-  type QuerySource,
-  type QuerySourceProvider,
-  type ReactiveEchoObject,
-} from '@dxos/echo-db';
+import { type AnyLiveObject, type QueryResultEntry, type QuerySource, type QuerySourceProvider } from '@dxos/echo-db';
+import type { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
-import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { QueryReactivity, type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -49,8 +43,12 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
 
   // TODO(burdon): Make async?
   // TODO(burdon): Define return type.
-  private _sendRequest(filter: FilterProto) {
-    const request: QueryRequest = { queryId: PublicKey.random().toHex(), filter, reactivity: QueryReactivity.ONE_SHOT };
+  private _sendRequest(query: QueryAST.Query) {
+    const request: QueryRequest = {
+      queryId: PublicKey.random().toHex(),
+      query: JSON.stringify(query),
+      reactivity: QueryReactivity.ONE_SHOT,
+    };
     this._space
       .postMessage(QUERY_CHANNEL, {
         '@type': 'dxos.agent.query.QueryRequest',
@@ -97,14 +95,14 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
 }
 
 export class AgentQuerySource implements QuerySource {
-  private _results?: QueryResult[];
+  private _results?: QueryResultEntry[];
   private _cancelPreviousRequest?: () => void = undefined;
 
   public readonly changed = new Event<void>();
 
   constructor(
     private readonly _params: {
-      sendRequest: (filter: FilterProto) => { response: Promise<QueryResponse>; cancelRequest: () => void };
+      sendRequest: (query: QueryAST.Query) => { response: Promise<QueryResponse>; cancelRequest: () => void };
     },
   ) {}
 
@@ -116,19 +114,19 @@ export class AgentQuerySource implements QuerySource {
     // No-op.
   }
 
-  getResults(): QueryResult[] {
+  getResults(): QueryResultEntry[] {
     return this._results ?? [];
   }
 
-  async run(): Promise<QueryResult[]> {
+  async run(): Promise<QueryResultEntry[]> {
     return this._results ?? [];
   }
 
-  update(filter: Filter): void {
-    if (filter.options.dataLocation === undefined || filter.options.dataLocation === QueryOptions.DataLocation.LOCAL) {
-      // Disabled by dataLocation filter.
-      return;
-    }
+  update(query: QueryAST.Query): void {
+    // if (query.options.dataLocation === undefined || query.options.dataLocation === QueryOptions.DataLocation.LOCAL) {
+    //   // Disabled by dataLocation filter.
+    //   return;
+    // }
 
     this._results = undefined;
     this.changed.emit();
@@ -139,7 +137,7 @@ export class AgentQuerySource implements QuerySource {
 
     // TODO(burdon): Make async.
     const startTime = Date.now();
-    const { response, cancelRequest } = this._params.sendRequest(filter.toProto());
+    const { response, cancelRequest } = this._params.sendRequest(query);
     this._cancelPreviousRequest = cancelRequest;
     response
       .then((response) => {
@@ -148,7 +146,7 @@ export class AgentQuerySource implements QuerySource {
             const objSnapshot = response.objects?.find((obj) => obj.objectId === result.id);
             return {
               id: result.id,
-              spaceKey: result.spaceKey,
+              spaceKey: result.spaceKey!,
               spaceId: result.spaceId as SpaceId,
               object: objSnapshot && getEchoObjectFromSnapshot(objSnapshot),
               match: {
@@ -167,7 +165,7 @@ export class AgentQuerySource implements QuerySource {
   }
 }
 
-const getEchoObjectFromSnapshot = (objSnapshot: EchoObjectProto): ReactiveEchoObject<any> | undefined => {
+const getEchoObjectFromSnapshot = (objSnapshot: EchoObjectProto): AnyLiveObject<any> | undefined => {
   invariant(objSnapshot.genesis, 'Genesis is undefined.');
   invariant(objSnapshot.snapshot, 'Genesis model type is undefined.');
 

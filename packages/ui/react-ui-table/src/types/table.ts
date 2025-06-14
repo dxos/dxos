@@ -2,20 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EchoObject, Expando, LabelAnnotationId, ObjectId, Ref, S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
 // import { ThreadType } from '@dxos/plugin-space/types';
+import { ObjectId, Ref, Expando, EchoObject, LabelAnnotation } from '@dxos/echo-schema';
 import { ViewType } from '@dxos/schema';
 
-export const TableSchema = S.Struct({
+export const TableSchema = Schema.Struct({
   id: ObjectId,
-  name: S.optional(S.String),
-  view: S.optional(Ref(ViewType)),
+  name: Schema.optional(Schema.String),
+  view: Schema.optional(Ref(ViewType)),
   // TODO(burdon): Document why threads is included here?
-  threads: S.optional(S.Array(Ref(Expando /* ThreadType */))),
-}).annotations({
-  // TODO(burdon): Move annotation to property.
-  [LabelAnnotationId]: 'name',
-});
+  threads: Schema.optional(Schema.Array(Ref(Expando /* ThreadType */))),
+}).pipe(LabelAnnotation.set(['name']));
 
-export const TableType = TableSchema.pipe(EchoObject({ typename: 'dxos.org/type/Table', version: '0.1.0' }));
-export interface TableType extends S.Schema.Type<typeof TableType> {}
+// TODO(burdon): Move out of react-ui-xxx.
+export const TableType = TableSchema.pipe(
+  EchoObject({
+    typename: 'dxos.org/type/Table',
+    version: '0.1.0',
+  }),
+);
+export interface TableType extends Schema.Schema.Type<typeof TableType> {}

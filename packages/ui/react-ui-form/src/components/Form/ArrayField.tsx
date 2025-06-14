@@ -2,15 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import { SchemaAST, pipe } from 'effect';
 import { capitalize } from 'effect/String';
-import React, { useCallback, useMemo } from 'react';
+import React, { Fragment, useCallback } from 'react';
 
-import { AST } from '@dxos/echo-schema';
 import { findNode, getDiscriminatedType, isDiscriminatedUnion, SimpleType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 
 import { type ComponentLookup } from './Form';
@@ -18,8 +16,7 @@ import { FormField } from './FormContent';
 import { useFormValues, type FormInputStateProps } from './FormContext';
 import { InputHeader, type InputComponent } from './Input';
 import { translationKey } from '../../translations';
-
-const padding = 'px-2';
+import { findArrayElementType } from '../../util';
 
 type ArrayFieldProps = {
   property: SchemaProperty<any>;
@@ -39,12 +36,11 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
   invariant(Array.isArray(values), `Values at path ${path?.join('.')} must be an array.`);
   const label = title ?? pipe(name, capitalize);
 
-  const tupleType = findNode(ast, AST.isTupleType);
-  const elementType = (tupleType as AST.TupleType | undefined)?.rest[0]?.type;
+  const elementType = findArrayElementType(ast);
 
-  const getDefaultObjectValue = (typeNode: AST.AST): any => {
+  const getDefaultObjectValue = (typeNode: SchemaAST.AST): any => {
     const baseNode = findNode(typeNode, isDiscriminatedUnion);
-    const typeLiteral = baseNode ? getDiscriminatedType(baseNode, {}) : findNode(typeNode, AST.isTypeLiteral);
+    const typeLiteral = baseNode ? getDiscriminatedType(baseNode, {}) : findNode(typeNode, SchemaAST.isTypeLiteral);
     if (!typeLiteral) {
       return {};
     }
@@ -52,17 +48,12 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
     return Object.fromEntries(getSchemaProperties(typeLiteral, {}).map((prop) => [prop.name, prop.defaultValue]));
   };
 
-  const newValue = useMemo(() => {
-    if (type === 'object' && elementType) {
-      return getDefaultObjectValue(elementType);
-    } else {
-      return SimpleType.getDefaultValue(type);
-    }
-  }, [type, elementType]);
+  const getDefaultValue = () =>
+    type === 'object' && elementType ? getDefaultObjectValue(elementType) : SimpleType.getDefaultValue(type);
 
   const handleAdd = useCallback(() => {
-    inputProps.onValueChange(type, [...values, newValue]);
-  }, [type, elementType, inputProps, newValue, values]);
+    inputProps.onValueChange(type, [...values, getDefaultValue()]);
+  }, [type, elementType, inputProps, values]);
 
   const handleRemove = useCallback(
     (index: number) => {
@@ -76,38 +67,58 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
     return null;
   }
 
-  return (
-    <div role='none' className={mx(padding)}>
+  return readonly && values.length < 1 ? null : (
+    <>
       <InputHeader>{label}</InputHeader>
-      <div role='none' className='flex flex-col gap-1'>
-        {values.map((_value, index) => (
-          <div key={index} role='none' className='flex items-center gap-1'>
-            <div role='none' className='flex-1'>
-              <FormField
-                property={{
-                  ...property,
-                  array: false, // NOTE(ZaymonFC): This breaks arrays of arrays but ¯\_(ツ)_/¯. Ping me if you need that.
-                  ast: elementType,
-                }}
-                path={[...(path ?? []), index]}
-                readonly={readonly}
-                inline
-                Custom={Custom}
-                lookupComponent={lookupComponent}
-              />
-            </div>
-            <IconButton
-              icon='ph--trash--regular'
-              iconOnly
-              label={t('button remove')}
-              onClick={() => handleRemove(index)}
+      <div
+        role='none'
+        className={
+          readonly
+            ? 'flex flex-wrap gap-1 mlb-1'
+            : values.length > 0
+              ? 'grid gap-1 grid-cols-[1fr_min-content] mlb-1'
+              : 'hidden'
+        }
+      >
+        {values.map((_value, index) => {
+          const field = (
+            <FormField
+              property={{
+                ...property,
+                array: false, // NOTE(ZaymonFC): This breaks arrays of arrays but ¯\_(ツ)_/¯. Ping me if you need that.
+                ast: elementType,
+              }}
+              path={[...(path ?? []), index]}
+              readonly={readonly}
+              inline
+              Custom={Custom}
+              lookupComponent={lookupComponent}
             />
-          </div>
-        ))}
+          );
+          return readonly ? (
+            field
+          ) : (
+            <Fragment key={index}>
+              <div role='none'>{field}</div>
+              <IconButton
+                icon='ph--trash--regular'
+                iconOnly
+                label={t('button remove')}
+                onClick={() => handleRemove(index)}
+                classNames='self-center'
+              />
+            </Fragment>
+          );
+        })}
       </div>
-      <div role='none' className='flex justify-between items-center plb-1'>
-        <IconButton icon='ph--plus--regular' iconOnly label={t('button add')} onClick={handleAdd} />
-      </div>
-    </div>
+      {!readonly && (
+        <IconButton
+          classNames='is-full mlb-1 flex'
+          icon='ph--plus--regular'
+          label={t('add field')}
+          onClick={handleAdd}
+        />
+      )}
+    </>
   );
 };

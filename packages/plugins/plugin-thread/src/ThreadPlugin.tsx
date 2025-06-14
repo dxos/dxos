@@ -5,22 +5,37 @@
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
-import { ChannelType, defineObjectForm, ThreadType } from '@dxos/plugin-space/types';
-import { type ReactiveEchoObject, RefArray } from '@dxos/react-client/echo';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
+import { type AnyLiveObject, RefArray } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
-import { MessageType, MessageTypeV1, MessageTypeV1ToV2 } from '@dxos/schema';
+import { AnchoredTo, DataType } from '@dxos/schema';
 
-import { AppGraphBuilder, IntentResolver, Markdown, ReactSurface, ThreadState } from './capabilities';
-import { ThreadEvents as LocalThreadEvents } from './events';
+import {
+  AppGraphBuilder,
+  CallManager,
+  IntentResolver,
+  Markdown,
+  ReactRoot,
+  ReactSurface,
+  ThreadState,
+} from './capabilities';
 import { meta, THREAD_ITEM } from './meta';
 import translations from './translations';
-import { ThreadAction } from './types';
+import { ChannelType, ThreadAction, ThreadType } from './types';
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
+
+// TODO(wittjosiah): Rename to ChatPlugin.
+// TODO(wittjosiah): Enabling comments should likely be factored out of this plugin but depend on it's capabilities.
 export const ThreadPlugin = () =>
   definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/call-manager`,
+      activatesOn: ClientEvents.ClientReady,
+      activate: CallManager,
+    }),
     // TODO(wittjosiah): Currently not used but leaving because there will likely be settings for threads again.
     // defineModule({
     //   id: `${meta.id}/module/settings`,
@@ -58,16 +73,16 @@ export const ThreadPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: MessageType.typename,
+          id: DataType.Message.typename,
           metadata: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (message: MessageType) => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
+            loadReferences: (message: DataType.Message) => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
           },
         }),
         contributes(Capabilities.Metadata, {
           id: THREAD_ITEM,
           metadata: {
-            parse: (item: ReactiveEchoObject<any>, type: string) => {
+            parse: (item: AnyLiveObject<any>, type: string) => {
               switch (type) {
                 case 'node':
                   return { id: item.id, label: item.title, data: item };
@@ -96,12 +111,13 @@ export const ThreadPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ThreadType, MessageType, MessageTypeV1]),
+      activate: () =>
+        contributes(ClientCapabilities.Schema, [AnchoredTo, ThreadType, DataType.Message, DataType.MessageV1]),
     }),
     defineModule({
       id: `${meta.id}/module/migration`,
       activatesOn: ClientEvents.SetupMigration,
-      activate: () => contributes(ClientCapabilities.Migration, [MessageTypeV1ToV2]),
+      activate: () => contributes(ClientCapabilities.Migration, [DataType.MessageV1ToV2]),
     }),
     defineModule({
       id: `${meta.id}/module/markdown`,
@@ -109,10 +125,13 @@ export const ThreadPlugin = () =>
       activate: Markdown,
     }),
     defineModule({
+      id: `${meta.id}/module/react-root`,
+      activatesOn: Events.Startup,
+      activate: ReactRoot,
+    }),
+    defineModule({
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupReactSurface,
-      // TODO(wittjosiah): Should occur before the comments thread is loaded when surfaces activation is more granular.
-      activatesBefore: [ThreadEvents.SetupThread, LocalThreadEvents.SetupActivity],
       activate: ReactSurface,
     }),
     defineModule({

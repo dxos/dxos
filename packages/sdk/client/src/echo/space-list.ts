@@ -16,7 +16,7 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined, inspectObject } from '@dxos/debug';
-import { type EchoClient, type FilterSource, type Query, type QueryOptions, type QueuesService } from '@dxos/echo-db';
+import { Filter, Query, type EchoClient, type QueryOptions, type QueuesService, type QueryFn } from '@dxos/echo-db';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { live } from '@dxos/live-object';
@@ -37,6 +37,8 @@ import { SpaceProxy } from './space-proxy';
 import { RPC_TIMEOUT } from '../common';
 import { type HaloProxy } from '../halo/halo-proxy';
 import { InvitationsProxy } from '../invitations';
+
+const ENABLE_AGENT_QUERY_SOURCE = false;
 
 @trace.resource()
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
@@ -166,18 +168,20 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     });
     this._ctx.onDispose(() => spacesStream.close());
 
-    const subscription = this._isReady.subscribe(async (ready) => {
-      if (!ready) {
-        return;
-      }
+    if (ENABLE_AGENT_QUERY_SOURCE) {
+      const subscription = this._isReady.subscribe(async (ready) => {
+        if (!ready) {
+          return;
+        }
 
-      const agentQuerySourceProvider = new AgentQuerySourceProvider(this.default);
-      await agentQuerySourceProvider.open();
-      this._echoClient.graph.registerQuerySourceProvider(agentQuerySourceProvider);
-      this._ctx.onDispose(() => agentQuerySourceProvider.close());
-      subscription.unsubscribe();
-    });
-    this._ctx.onDispose(() => subscription.unsubscribe());
+        const agentQuerySourceProvider = new AgentQuerySourceProvider(this.default);
+        await agentQuerySourceProvider.open();
+        this._echoClient.graph.registerQuerySourceProvider(agentQuerySourceProvider);
+        this._ctx.onDispose(() => agentQuerySourceProvider.close());
+        subscription.unsubscribe();
+      });
+      this._ctx.onDispose(() => subscription.unsubscribe());
+    }
 
     // TODO(nf): implement/verify works
     // TODO(nf): trigger automatically? feedback on how many were resumed?
@@ -347,13 +351,18 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._findProxy(response.space);
   }
 
+  // Odd way to define methods types from a typedef.
   /**
    * Query all spaces.
-   * @param filter
-   * @param options
    */
-  query<T extends {} = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
-    return this._echoClient.graph.query(filter, options);
+  declare query: QueryFn;
+  static {
+    this.prototype.query = this.prototype._query;
+  }
+
+  private _query(query: Query.Any | Filter.Any, options?: QueryOptions) {
+    query = Filter.is(query) ? Query.select(query) : query;
+    return this._echoClient.graph.query(query, options);
   }
 
   private _findProxy(space: SerializedSpace): SpaceProxy {

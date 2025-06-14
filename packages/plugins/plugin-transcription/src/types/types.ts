@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SpaceIdSchema, S, isInstanceOf } from '@dxos/echo-schema';
-import { isLiveObject } from '@dxos/react-client/echo';
+import { Schema } from 'effect';
+
+import { SpaceId } from '@dxos/react-client/echo';
 
 import { TranscriptType } from './schema';
 import { TRANSCRIPTION_PLUGIN } from '../meta';
@@ -19,26 +20,13 @@ export const TRANSCRIPTION_URL = 'https://calls-service.dxos.workers.dev';
 export namespace TranscriptionAction {
   const TRANSCRIPTION_ACTION = `${TRANSCRIPTION_PLUGIN}/action`;
 
-  export class Create extends S.TaggedClass<Create>()(`${TRANSCRIPTION_ACTION}/create`, {
-    input: S.Struct({
-      name: S.optional(S.String),
-      spaceId: SpaceIdSchema,
+  export class Create extends Schema.TaggedClass<Create>()(`${TRANSCRIPTION_ACTION}/create`, {
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
+      spaceId: SpaceId,
     }),
-    output: S.Struct({
+    output: Schema.Struct({
       object: TranscriptType,
     }),
   }) {}
 }
-
-export const isTranscript = (object: unknown): object is typeof TranscriptType => {
-  return isLiveObject(object) && isInstanceOf(TranscriptType, object);
-};
-
-// TODO(burdon): Create with decode consistently: S.decodeSync(TranscriptionSettingsSchema)({}))
-export const TranscriptionSettingsSchema = S.mutable(
-  S.Struct({
-    entityExtraction: S.optional(S.Boolean).pipe(S.withConstructorDefault(() => true)),
-  }),
-);
-
-export type TranscriptionSettingsProps = S.Schema.Type<typeof TranscriptionSettingsSchema>;

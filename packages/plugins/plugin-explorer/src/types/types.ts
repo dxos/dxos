@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
 import { ViewType } from './schema';
 import { EXPLORER_PLUGIN } from '../meta';
@@ -10,11 +10,11 @@ import { EXPLORER_PLUGIN } from '../meta';
 export namespace ExplorerAction {
   const EXPLORER_ACTION = `${EXPLORER_PLUGIN}/action`;
 
-  export class Create extends S.TaggedClass<Create>()(`${EXPLORER_ACTION}/create`, {
-    input: S.Struct({
-      name: S.optional(S.String),
+  export class Create extends Schema.TaggedClass<Create>()(`${EXPLORER_ACTION}/create`, {
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
     }),
-    output: S.Struct({
+    output: Schema.Struct({
       object: ViewType,
     }),
   }) {}

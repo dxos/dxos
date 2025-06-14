@@ -2,24 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useEffect, useState } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
 import { Input } from '@dxos/react-ui';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
 
-export const SwitchShape = S.extend(
+export const SwitchShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('switch'),
+  Schema.Struct({
+    type: Schema.Literal('switch'),
   }),
 );
 
-export type SwitchShape = S.Schema.Type<typeof SwitchShape>;
+export type SwitchShape = Schema.Schema.Type<typeof SwitchShape>;
 
 export type CreateSwitchProps = CreateShapeProps<SwitchShape>;
 

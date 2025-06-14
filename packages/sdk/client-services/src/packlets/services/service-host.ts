@@ -125,6 +125,10 @@ export class ClientServicesHost {
       this._runtimeParams.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
     }
 
+    if (this._runtimeParams.enableVectorIndexing === undefined) {
+      this._runtimeParams.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
+    }
+
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
     }

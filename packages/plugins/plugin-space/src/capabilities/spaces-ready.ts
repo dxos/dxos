@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, createIntent, type PluginsContext, Capabilities, LayoutAction } from '@dxos/app-framework';
+import { Option } from 'effect';
+
+import { contributes, createIntent, type PluginContext, Capabilities, LayoutAction } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
 import { Expando } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
@@ -21,19 +23,19 @@ import { SpaceAction } from '../types';
 import { COMPOSER_SPACE_LOCK, SHARED } from '../util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
-const WAIT_FOR_OBJECT_TIMEOUT = 1000;
+const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
 
-export default async (context: PluginsContext) => {
+export default async (context: PluginContext) => {
   const subscriptions = new SubscriptionList();
   const spaceSubscriptions = new SubscriptionList();
 
-  const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-  const { graph } = context.requestCapability(Capabilities.AppGraph);
-  const layout = context.requestCapability(Capabilities.Layout);
-  const deck = context.requestCapability(DeckCapabilities.DeckState);
-  const attention = context.requestCapability(AttentionCapabilities.Attention);
-  const state = context.requestCapability(SpaceCapabilities.MutableState);
-  const client = context.requestCapability(ClientCapabilities.Client);
+  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+  const { graph } = context.getCapability(Capabilities.AppGraph);
+  const layout = context.getCapability(Capabilities.Layout);
+  const deck = context.getCapability(DeckCapabilities.DeckState);
+  const attention = context.getCapability(AttentionCapabilities.Attention);
+  const state = context.getCapability(SpaceCapabilities.MutableState);
+  const client = context.getCapability(ClientCapabilities.Client);
 
   const defaultSpace = client.spaces.default;
   await defaultSpace.waitUntilReady();
@@ -49,7 +51,7 @@ export default async (context: PluginsContext) => {
 
   const {
     objects: [spacesOrder],
-  } = await defaultSpace.db.query(Filter.schema(Expando, { key: SHARED })).run();
+  } = await defaultSpace.db.query(Filter.type(Expando, { key: SHARED })).run();
   if (!spacesOrder) {
     // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
     //  Instead, we store order as an array of space ids.
@@ -65,10 +67,10 @@ export default async (context: PluginsContext) => {
           return;
         }
 
-        const node = graph.findNode(active[0]);
+        const node = graph.getNode(active[0]).pipe(Option.getOrNull);
         if (!node && active[0].length === FQ_ID_LENGTH) {
           const timeout = setTimeout(async () => {
-            const node = graph.findNode(active[0]);
+            const node = graph.getNode(active[0]).pipe(Option.getOrNull);
             if (!node) {
               await dispatch(createIntent(SpaceAction.WaitForObject, { id: active[0] }));
             }

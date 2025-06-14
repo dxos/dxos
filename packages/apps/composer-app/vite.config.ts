@@ -87,6 +87,7 @@ export default defineConfig((env) => ({
   resolve: {
     alias: {
       'node-fetch': 'isomorphic-fetch',
+      'node:util': '@dxos/node-std/util',
     },
   },
   worker: {
@@ -106,10 +107,9 @@ export default defineConfig((env) => ({
       content: [
         join(__dirname, './index.html'),
         join(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/devtools/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/plugins/*/src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/plugins/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/sdk/*/src/**/*.{js,ts,jsx,tsx}'),
         join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
@@ -163,6 +163,8 @@ export default defineConfig((env) => ({
             ],
           },
         ],
+        // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
+        ['@preact-signals/safe-react/swc', { mode: 'all' }],
       ],
     }),
     importMapPlugin({
@@ -178,7 +180,7 @@ export default defineConfig((env) => ({
         '@dxos/client-protocol',
         '@dxos/client-services',
         '@dxos/config',
-        '@dxos/echo-schema',
+        '@dxos/echo',
         '@dxos/echo-signals',
         '@dxos/live-object',
         '@dxos/react-client',
@@ -214,26 +216,26 @@ export default defineConfig((env) => ({
         theme_color: '#003E70',
         icons: [
           {
-            "src": "pwa-64x64.png",
-            "sizes": "64x64",
-            "type": "image/png"
+            src: 'pwa-64x64.png',
+            sizes: '64x64',
+            type: 'image/png',
           },
           {
-            "src": "pwa-192x192.png",
-            "sizes": "192x192",
-            "type": "image/png"
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
           },
           {
-            "src": "pwa-512x512.png",
-            "sizes": "512x512",
-            "type": "image/png"
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
           },
           {
-            "src": "maskable-icon-512x512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
-          }
+            src: 'maskable-icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
         ],
       },
     }),
@@ -329,26 +331,28 @@ function importMapPlugin(options: { modules: string[] }) {
       },
 
       generateBundle() {
-        imports = Object.fromEntries(options.modules.map(m => [m, `/${this.getFileName(chunkRefIds[m])}`]));
-      }
+        imports = Object.fromEntries(options.modules.map((m) => [m, `/${this.getFileName(chunkRefIds[m])}`]));
+      },
     },
     {
       name: 'import-map:transform-index-html',
       enforce: 'post',
       transformIndexHtml(html: string) {
-        const tags = [{
-          tag: 'script',
-          attrs: {
-            type: 'importmap',
+        const tags = [
+          {
+            tag: 'script',
+            attrs: {
+              type: 'importmap',
+            },
+            children: JSON.stringify({ imports }, null, 2),
           },
-          children: JSON.stringify({ imports }, null, 2),
-        }];
+        ];
 
         return {
           html,
           tags,
-        }
-      }
-    }
+        };
+      },
+    },
   ] satisfies Plugin[];
 }

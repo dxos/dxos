@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import { Schema, pipe } from 'effect';
 
+import { defineTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
+import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { isInstanceOf, S } from '@dxos/echo-schema';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { live, fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
@@ -26,7 +27,7 @@ declare global {
 
 // TODO(ZaymonFC): Move to common, maybe this already exists?
 // TODO(ZaymonFC): ID explaination should be moved to the root prompt.
-const QualifiedId = S.String.annotations({
+const QualifiedId = Schema.String.annotations({
   description: 'The fully qualified ID of the table `spaceID:objectID`',
 });
 
@@ -50,11 +51,11 @@ export default () => {
           Use schema_create first to create a schema, or schema_list to choose an existing one.
         `,
         caption: 'Creating table...',
-        schema: S.Struct({
-          typename: S.String.annotations({
+        schema: Schema.Struct({
+          typename: Schema.String.annotations({
             description: 'The fully qualified typename of the schema to use for the table.',
           }),
-          name: S.optional(S.String).annotations({
+          name: Schema.optional(Schema.String).annotations({
             description: 'Optional name for the table.',
           }),
         }),
@@ -94,11 +95,11 @@ export default () => {
         name: 'list',
         description: 'List all tables in the current space with their row types.',
         caption: 'Querying tables...',
-        schema: S.Struct({}),
+        schema: Schema.Struct({}),
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
+          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
           const tableInfo = await Promise.all(
             tables.map(async (table) => {
               const view = await table.view?.load();
@@ -118,11 +119,11 @@ export default () => {
         // TODO(ZaymonFC): Tell the LLM how to present the tables to the user.
         description: 'Get the current schema of the table.',
         caption: 'Loading table...',
-        schema: S.Struct({ id: QualifiedId }),
+        schema: Schema.Struct({ id: QualifiedId }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
+          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
           const table = tables.find((table) => fullyQualifiedId(table) === id);
           invariant(isInstanceOf(TableType, table));
 
@@ -144,11 +145,11 @@ export default () => {
           NOTE: If the user wants to *see* the table, use the show tool.
         `,
         caption: 'Loading table rows...',
-        schema: S.Struct({ id: QualifiedId }),
+        schema: Schema.Struct({ id: QualifiedId }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
+          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
           const table = tables.find((table) => fullyQualifiedId(table) === id);
           invariant(isInstanceOf(TableType, table));
 
@@ -159,7 +160,7 @@ export default () => {
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
 
-          const { objects: rows } = await space.db.query(Filter.schema(schema)).run();
+          const { objects: rows } = await space.db.query(Filter.type(schema)).run();
           return ToolResult.Success(rows);
         },
       }),
@@ -170,16 +171,16 @@ export default () => {
           Use table_inspect first to understand the schema.
         `,
         caption: 'Inserting table rows...',
-        schema: S.Struct({
+        schema: Schema.Struct({
           id: QualifiedId,
-          data: S.Array(S.Any).annotations({ description: 'Array of data payloads to add as rows' }),
+          data: Schema.Array(Schema.Any).annotations({ description: 'Array of data payloads to add as rows' }),
         }),
         execute: async ({ id, data }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           invariant(extensions?.dispatch, 'No intent dispatcher');
 
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
+          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
           const table = tables.find((table) => fullyQualifiedId(table) === id);
           invariant(isInstanceOf(TableType, table));
 
@@ -193,7 +194,7 @@ export default () => {
 
           // Validate all rows.
           // TODO(ZaymonFC): There should be a nicer way to do this!
-          const validationResults = data.map((row) => S.validateEither(schema)(live(schema, row)));
+          const validationResults = data.map((row) => Schema.validateEither(schema)(live(schema, row)));
           const validationError = validationResults.find((res) => res._tag === 'Left');
           if (validationError) {
             return ToolResult.Error(`Validation failed: ${validationError.left.message}`);

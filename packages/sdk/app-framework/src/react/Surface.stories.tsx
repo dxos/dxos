@@ -87,7 +87,7 @@ export default {
     );
   },
   // NOTE: Intentionally not using withPluginManager to try to reduce surface area of the story.
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
   args: {
     manager: setupPluginManager(),
   },

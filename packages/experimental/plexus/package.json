@@ -21,9 +21,9 @@
     "*": {}
   },
   "dependencies": {
-    "@dxos/gem-core": "workspace:*",
-    "@dxos/gem-spore": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/react-ui-graph": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
@@ -50,7 +50,6 @@
     "tailwindcss": "~3.4.1",
     "vite": "5.4.7",
     "vite-plugin-fonts": "^0.7.0",
-    "vite-plugin-inspect": "^0.8.1",
     "vite-plugin-pwa": "^0.18.2",
     "workbox-window": "^7.0.0"
   }

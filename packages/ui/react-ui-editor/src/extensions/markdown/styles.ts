@@ -59,11 +59,11 @@ export const formattingStyles = EditorView.theme({
     background: 'var(--dx-cmCodeblock)',
     paddingInline: '1rem !important',
   },
-  '& .cm-codeblock-first': {
+  '& .cm-codeblock-start': {
     borderTopLeftRadius: '.25rem',
     borderTopRightRadius: '.25rem',
   },
-  '& .cm-codeblock-last': {
+  '& .cm-codeblock-end': {
     borderBottomLeftRadius: '.25rem',
     borderBottomRightRadius: '.25rem',
   },
@@ -72,8 +72,9 @@ export const formattingStyles = EditorView.theme({
    * Task list.
    */
   '& .cm-task': {
-    display: 'inline-block',
+    display: 'inline-flex',
     width: `${bulletListIndentationWidth}px`,
+    height: '20px',
   },
   '& .cm-task-checkbox': {
     display: 'grid',

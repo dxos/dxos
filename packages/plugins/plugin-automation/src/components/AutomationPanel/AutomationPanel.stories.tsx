@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React from 'react';
 
-import { FunctionType, FunctionTrigger } from '@dxos/functions/types';
+import { FunctionType, FunctionTrigger } from '@dxos/functions';
 import { live, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -42,7 +42,7 @@ const meta: Meta = {
         }
       },
     }),
-    withLayout({ fullscreen: true, tooltips: true, classNames: 'flex juastify-center m-2' }),
+    withLayout({ fullscreen: true, classNames: 'flex juastify-center m-2' }),
     withTheme,
   ],
   parameters: {

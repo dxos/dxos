@@ -2,36 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
+import { Option, pipe, type Schema } from 'effect';
+
 import {
   Capabilities,
   CollaborationActions,
   contributes,
   createResolver,
-  type PluginsContext,
+  type PluginContext,
 } from '@dxos/app-framework';
-import { next as A } from '@dxos/automerge/automerge';
-import { isInstanceOf, ObjectId } from '@dxos/echo-schema';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { makeRef, live, refFromDXN } from '@dxos/live-object';
-import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { resolveRef } from '@dxos/react-client';
-import { createDocAccessor } from '@dxos/react-client/echo';
-import { TextType } from '@dxos/schema';
+import { isInstanceOf } from '@dxos/echo-schema';
+import { live } from '@dxos/live-object';
+import { createDocAccessor, getRangeFromCursor, Ref } from '@dxos/react-client/echo';
+import { DataType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
 import { DocumentType, MarkdownAction } from '../types';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MarkdownAction.Create,
-      resolve: ({ name, spaceId, content }) => {
+      resolve: ({ name, content }) => {
         const doc = live(DocumentType, {
           name,
-          content: makeRef(live(TextType, { content: content ?? '' })),
-          assistantChatQueue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
-          threads: [],
+          content: Ref.make(live(DataType.Text, { content: content ?? '' })),
         });
 
         return { data: { object: doc } };
@@ -40,30 +36,29 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: MarkdownAction.SetViewMode,
       resolve: ({ id, viewMode }) => {
-        const { state } = context.requestCapability(MarkdownCapabilities.State);
+        const { state } = context.getCapability(MarkdownCapabilities.State);
         state.viewMode[id] = viewMode;
       },
     }),
-    // TODO(burdon): What is the error boundary for intents? Are errors reported back to caller?
     createResolver({
       intent: CollaborationActions.InsertContent,
-      resolve: async ({ spaceId, target: targetRef, object: objectRef, label }) => {
-        const client = context.requestCapability(ClientCapabilities.Client);
-        const space = client.spaces.get(spaceId);
-        const target = await resolveRef(client, targetRef.dxn, space);
-        if (target && isInstanceOf(DocumentType, target)) {
-          const accessor = createDocAccessor(target, ['content']);
-          // TODO(burdon): Should be a cursor that references a selected position.
-          const index = 0;
-          accessor.handle.change((doc) => {
-            // TODO(burdon): Throws error:
-            // intent-dispatcher.ts:270 Cannot read properties of undefined (reading 'annotations') (FiberFailure) TypeError: Cannot read properties of undefined (reading 'annotations')
-            const ref = `[${label ?? 'Generated content'}]](${objectRef.dxn.toString()})\n`;
-            A.splice(doc, accessor.path.slice(), index, 0, ref);
-          });
-        } else {
-          log.warn('target is not a document', { targetRef, objectRef });
-        }
+      filter: (
+        data,
+      ): data is Omit<Schema.Schema.Type<typeof CollaborationActions.InsertContent.fields.input>, 'target'> & {
+        target: DocumentType;
+      } => isInstanceOf(DocumentType, data.target),
+      resolve: async ({ target, object: objectRef, at, label }) => {
+        const text = await target.content.load();
+        const accessor = createDocAccessor(text, ['content']);
+        const { start, end } = pipe(
+          Option.fromNullable(at),
+          Option.flatMap((at) => Option.fromNullable(getRangeFromCursor(accessor, at))),
+          Option.getOrElse(() => ({ start: text.content.length - 1, end: text.content.length - 1 })),
+        );
+        accessor.handle.change((doc) => {
+          const ref = `[${label ?? 'Generated content'}]](${objectRef.dxn.toString()})\n`;
+          A.splice(doc, accessor.path.slice(), start, end - start, ref);
+        });
       },
     }),
   ]);

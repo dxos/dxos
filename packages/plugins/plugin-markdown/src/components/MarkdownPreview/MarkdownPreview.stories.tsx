@@ -14,7 +14,7 @@ import { DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { makeRef } from '@dxos/react-client/echo';
 import { Icon, Popover } from '@dxos/react-ui';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { MarkdownPreview } from './MarkdownPreview';
@@ -38,7 +38,13 @@ const meta: Meta<typeof MarkdownPreview> = {
       </Popover.Root>
     );
   },
-  decorators: [withPluginManager({ plugins: [IntentPlugin()] }), withTheme, withLayout({ tooltips: true })],
+  decorators: [
+    withPluginManager({
+      plugins: [IntentPlugin()],
+    }),
+    withTheme,
+    withLayout(),
+  ],
   parameters: {
     layout: 'centered',
     translations,
@@ -51,11 +57,10 @@ const data = (() => {
   const document = create(DocumentType, {
     name: faker.lorem.words(3),
     content: makeRef(
-      create(TextType, {
+      create(DataType.Text, {
         content: faker.lorem.paragraphs(3),
       }),
     ),
-    threads: [],
   });
 
   return { document };

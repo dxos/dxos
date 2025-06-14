@@ -24,10 +24,10 @@ faker.seed(1234);
 const tree = live<TestItem>(createTree());
 const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
 
-const meta: Meta<typeof Tree> = {
+const meta: Meta<typeof Tree<TestItem>> = {
   title: 'ui/react-ui-list/Tree',
   component: Tree,
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
   render: (args) => {
     useEffect(() => {
       return monitorForElements({
@@ -57,7 +57,7 @@ const meta: Meta<typeof Tree> = {
   },
   args: {
     id: tree.id,
-    getItems: (testItem?: TestItem) => {
+    useItems: (testItem?: TestItem) => {
       return testItem?.items ?? tree.items;
     },
     getProps: (testItem: TestItem) => ({

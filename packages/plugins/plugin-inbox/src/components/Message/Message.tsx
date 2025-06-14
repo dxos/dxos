@@ -12,19 +12,19 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  editorContent,
+  editorSlots,
   preview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { type MessageType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { MessageHeader } from './MessageHeader';
 import { type ViewMode } from './MessageHeader';
 
 export type MessageProps = ThemedClassName<{
   space?: Space;
-  message: MessageType;
+  message: DataType.Message;
   viewMode: ViewMode;
   hasEnrichedContent: boolean;
   contactDxn?: string;
@@ -50,7 +50,7 @@ export const Message = ({ space, message, viewMode, contactDxn, classNames }: Me
       return [
         createBasicExtensions({ readOnly: true, lineWrapping: true }),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, slots: { content: { className: editorContent } } }),
+        createThemeExtensions({ themeMode, slots: editorSlots }),
         decorateMarkdown(),
         preview(),
       ];

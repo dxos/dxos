@@ -39,6 +39,18 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/artifact"
+    },
+    {
+      "path": "../../core/assistant"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/echo/echo-protocol"
     },
     {
@@ -46,12 +58,6 @@
     },
     {
       "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../../experimental/artifact"
-    },
-    {
-      "path": "../../experimental/assistant"
     },
     {
       "path": "../../sdk/app-framework"

@@ -7,7 +7,7 @@ import { WaveFile } from 'wavefile';
 import { DeferredTask, Trigger } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
-import { type TranscriptionContentBlock } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 import { trace } from '@dxos/tracing';
 
 import { type AudioRecorder, type AudioChunk } from './audio-recorder';
@@ -65,7 +65,11 @@ export type TranscribeConfig = {
 export type TranscriberParams = {
   config: TranscribeConfig;
   recorder: AudioRecorder;
-  onSegments: (segments: TranscriptionContentBlock[]) => Promise<void>;
+  /**
+   * Callback to handle the transcribed segments, after all segment transformers are applied.
+   * @param segments - The transcribed segments.
+   */
+  onSegments: (segments: DataType.MessageBlock.Transcription[]) => Promise<void>;
 };
 
 /**
@@ -216,7 +220,10 @@ export class Transcriber extends Resource {
     return segments;
   }
 
-  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): TranscriptionContentBlock[] {
+  private _alignSegments(
+    segments: WhisperSegment[],
+    originalChunks: AudioChunk[],
+  ): DataType.MessageBlock.Transcription[] {
     // Absolute zero for all relative timestamps in the segments.
     const zeroTimestamp = originalChunks.at(0)!.timestamp;
 

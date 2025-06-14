@@ -26,9 +26,10 @@ import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { Topbar } from './Topbar';
 import { DeckCapabilities } from '../../capabilities';
+import { useBreakpoints, useHoistStatusbar } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 import { type DeckSettingsProps, getMode } from '../../types';
-import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
+import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
 import { Plank } from '../Plank';
 import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
@@ -38,7 +39,7 @@ export type DeckLayoutProps = {
 };
 
 const PlankSeparator = ({ order }: { order: number }) =>
-  order > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: order }} /> : null;
+  order > 0 ? <span role='separator' className='row-span-2 bg-deckSurface is-4' style={{ gridColumn: order }} /> : null;
 
 export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -59,7 +60,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   useEffect(() => {
     // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
     const attended = untracked(() => {
-      const attention = pluginManager.context.requestCapability(AttentionCapabilities.Attention);
+      const attention = pluginManager.context.getCapability(AttentionCapabilities.Attention);
       return attention.current;
     });
     const firstId = solo ?? active[0];
@@ -78,7 +79,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
     if (!isNotMobile && getMode(deck) === 'deck') {
       // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
       const attended = untracked(() => {
-        const attention = pluginManager.context.requestCapability(AttentionCapabilities.Attention);
+        const attention = pluginManager.context.getCapability(AttentionCapabilities.Attention);
         return attention.current;
       });
 
@@ -91,14 +92,15 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
     }
   }, [isNotMobile, deck, dispatch]);
 
-  // If deck is disabled in settings, ensure that the layout is in solo mode.
+  // When deck is disabled in settings, set to solo mode if the current layout mode is deck.
+  // TODO(thure): Applying this as an effect should be avoided over emitting the intent only when the setting changes.
   useEffect(() => {
-    if (!settings.enableDeck) {
+    if (!settings.enableDeck && layoutMode === 'deck') {
       void dispatch(
         createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: active[0], options: { mode: 'solo' } }),
       );
     }
-  }, [settings.enableDeck, dispatch, active]);
+  }, [settings.enableDeck, dispatch, active, layoutMode]);
 
   /**
    * Clear scroll restoration state if the window is resized
@@ -190,8 +192,8 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
         {!isEmpty && (
           <Main.Content
             bounce
-            classNames={mainPosition}
             handlesFocus
+            classNames={mainPosition}
             style={
               {
                 '--dx-main-sidebarWidth':
@@ -213,7 +215,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
           >
             <div
               role='none'
-              className={!solo ? 'relative bg-deck overflow-hidden' : 'sr-only'}
+              className={!solo ? 'relative bg-deckSurface overflow-hidden' : 'sr-only'}
               {...(solo && { inert: '' })}
             >
               {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
@@ -247,7 +249,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
             </div>
             <div
               role='none'
-              className={solo ? 'relative bg-deck overflow-hidden' : 'sr-only'}
+              className={solo ? 'relative bg-deckSurface overflow-hidden' : 'sr-only'}
               {...(!solo && { inert: '' })}
             >
               {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}

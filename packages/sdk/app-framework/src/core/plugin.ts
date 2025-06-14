@@ -4,7 +4,7 @@
 
 import { type MaybePromise } from '@dxos/util';
 
-import { type AnyCapability, type PluginsContext } from './capabilities';
+import { type AnyCapability, type PluginContext } from './capabilities';
 import { type ActivationEvent, type ActivationEvents } from './events';
 
 interface PluginModuleInterface {
@@ -36,7 +36,7 @@ interface PluginModuleInterface {
    * @returns The capabilities of the module.
    */
   activate: (
-    context: PluginsContext,
+    context: PluginContext,
   ) => MaybePromise<AnyCapability | AnyCapability[]> | Promise<() => Promise<AnyCapability | AnyCapability[]>>;
 }
 

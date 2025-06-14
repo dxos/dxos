@@ -7,17 +7,17 @@ import React, { useCallback } from 'react';
 
 import {
   Capabilities,
+  LayoutAction,
   chain,
   contributes,
   createIntent,
   createSurface,
-  LayoutAction,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { Filter, fullyQualifiedId, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
-import { Contact, MessageType, Organization } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { EventsContainer, MailboxContainer, MessageContainer, MailboxObjectSettings } from '../components';
 import { RelatedContacts, RelatedMessages } from '../components/Related';
@@ -36,9 +36,9 @@ export default () =>
     createSurface({
       id: `${INBOX_PLUGIN}/message`,
       role: 'article',
-      filter: (data): data is { companionTo: MailboxType; subject: MessageType | 'message' } =>
+      filter: (data): data is { companionTo: MailboxType; subject: DataType.Message | 'message' } =>
         isInstanceOf(MailboxType, data.companionTo) &&
-        (data.subject === 'message' || isInstanceOf(MessageType, data.subject)),
+        (data.subject === 'message' || isInstanceOf(DataType.Message, data.subject)),
       component: ({ data: { companionTo, subject: message } }) => {
         const space = getSpace(companionTo);
         return (
@@ -67,12 +67,12 @@ export default () =>
     createSurface({
       id: `${INBOX_PLUGIN}/contact-related`,
       role: 'related',
-      filter: (data): data is { subject: Contact } => isInstanceOf(Contact, data.subject),
+      filter: (data): data is { subject: DataType.Person } => isInstanceOf(DataType.Person, data.subject),
       component: ({ data: { subject: contact } }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = useSpace();
-        const [mailbox] = useQuery(space, Filter.schema(MailboxType));
-        const queue = useQueue<MessageType>(mailbox?.queue.dxn);
+        const [mailbox] = useQuery(space, Filter.type(MailboxType));
+        const queue = useQueue<DataType.Message>(mailbox?.queue.dxn);
         const messages = queue?.items ?? [];
         const related = messages
           .filter(
@@ -85,7 +85,7 @@ export default () =>
           .slice(0, 5);
 
         const handleMessageClick = useCallback(
-          (message: MessageType) => {
+          (message: DataType.Message) => {
             void dispatch(
               pipe(
                 createIntent(LayoutAction.UpdatePopover, {
@@ -113,32 +113,32 @@ export default () =>
     createSurface({
       id: `${INBOX_PLUGIN}/organization-related`,
       role: 'related',
-      filter: (data): data is { subject: Organization } => isInstanceOf(Organization, data.subject),
+      filter: (data): data is { subject: DataType.Organization } => isInstanceOf(DataType.Organization, data.subject),
       component: ({ data: { subject: organization } }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = getSpace(organization);
         const defaultSpace = useSpace();
-        const currentSpaceContacts = useQuery(space, Filter.schema(Contact));
+        const currentSpaceContacts = useQuery(space, Filter.type(DataType.Person));
         const defaultSpaceContacts = useQuery(
           defaultSpace === space ? undefined : defaultSpace,
-          Filter.schema(Contact),
+          Filter.type(DataType.Person),
         );
         const contacts = [...(currentSpaceContacts ?? []), ...(defaultSpaceContacts ?? [])];
         const related = contacts.filter((contact) =>
           typeof contact.organization === 'string' ? false : contact.organization?.target === organization,
         );
 
-        const currentSpaceTables = useQuery(space, Filter.schema(TableType));
-        const defaultSpaceTables = useQuery(defaultSpace, Filter.schema(TableType));
+        const currentSpaceTables = useQuery(space, Filter.type(TableType));
+        const defaultSpaceTables = useQuery(defaultSpace, Filter.type(TableType));
         const currentSpaceContactTable = currentSpaceTables?.find((table) => {
-          return table.view?.target?.query?.typename === Contact.typename;
+          return table.view?.target?.query?.typename === DataType.Person.typename;
         });
         const defaultSpaceContactTable = defaultSpaceTables?.find((table) => {
-          return table.view?.target?.query?.typename === Contact.typename;
+          return table.view?.target?.query?.typename === DataType.Person.typename;
         });
 
         const handleContactClick = useCallback(
-          async (contact: Contact) => {
+          async (contact: DataType.Person) => {
             const table = currentSpaceContacts.includes(contact) ? currentSpaceContactTable : defaultSpaceContactTable;
             await dispatch(
               createIntent(LayoutAction.UpdatePopover, {

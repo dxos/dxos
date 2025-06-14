@@ -18,7 +18,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { type MessageType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { transcript } from './transcript-extension';
@@ -27,7 +27,7 @@ import { type TranscriptType } from '../../types';
 
 export const renderMarkdown =
   (identities: Identity[]) =>
-  (message: MessageType, index: number, debug = false): string[] => {
+  (message: DataType.Message, index: number, debug = false): string[] => {
     if (message.sender.role === 'assistant') {
       // Start/stop block.
       return [message.blocks.find((block) => block.type === 'transcription')?.text ?? '', ''];
@@ -53,7 +53,7 @@ export const renderMarkdown =
 export type TranscriptProps = ThemedClassName<{
   transcript?: TranscriptType;
   space?: Space;
-  model: SerializationModel<MessageType>;
+  model: SerializationModel<DataType.Message>;
   // TODO(wittjosiah): Move to container.
   attendableId?: string;
   ignoreAttention?: boolean;

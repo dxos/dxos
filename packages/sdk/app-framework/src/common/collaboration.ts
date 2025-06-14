@@ -2,20 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SchemaAST as AST, Schema as S } from 'effect';
+import { Schema } from 'effect';
 
-import { Expando, Ref, SpaceIdSchema } from '@dxos/echo-schema';
+import { Expando, Ref } from '@dxos/echo-schema';
 
 export namespace CollaborationActions {
-  export class InsertContent extends S.TaggedClass<InsertContent>()('assistant/intent-content', {
-    input: S.Struct({
-      spaceId: SpaceIdSchema,
-      target: Ref(Expando),
+  export class InsertContent extends Schema.TaggedClass<InsertContent>()('assistant/intent-content', {
+    input: Schema.Struct({
+      target: Expando,
       object: Ref(Expando),
-      label: S.String.pipe(S.optional),
+      at: Schema.optional(Schema.String),
+      label: Schema.String.pipe(Schema.optional),
     }).annotations({
-      [AST.DescriptionAnnotationId]: 'Enables plugins to inject content blocks or references into a related entity.',
+      description: 'Enables plugins to inject content blocks or references into a related entity.',
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 }

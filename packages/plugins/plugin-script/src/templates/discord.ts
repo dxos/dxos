@@ -3,23 +3,26 @@
 //
 
 // @ts-ignore
-import { create, EchoObject, defineFunction, DXN, Filter, ObjectId, S } from 'dxos:functions';
-import {
-  FetchHttpClient,
-  // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.13.3';
+import { create, defineFunction, DXN, EchoObject, Filter, ObjectId, S } from 'dxos:functions';
 // @ts-ignore
-import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'https://esm.sh/dfx@0.113.0?deps=effect@3.13.3';
+import { FetchHttpClient } from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21';
 // @ts-ignore
-import { Effect, Config, Redacted, Ref } from 'https://esm.sh/effect@3.13.3';
+import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'https://esm.sh/dfx@0.113.0?deps=effect@3.14.21';
+// @ts-ignore
+import { Effect, Config, Redacted, Ref } from 'https://esm.sh/effect@3.14.21';
 
 const MessageSchema = S.Struct({
-  id: S.String,
+  id: ObjectId,
   foreignId: S.Any, // bigint?
   from: S.String,
   created: S.String,
   content: S.String,
-}).pipe(EchoObject({ typename: 'example.com/type/Message', version: '0.1.0' }));
+}).pipe(
+  EchoObject({
+    typename: 'example.com/type/Message',
+    version: '0.1.0',
+  }),
+);
 
 const DEFAULT_AFTER = 1704067200; // 2024-01-01
 
@@ -42,12 +45,7 @@ export default defineFunction({
     newMessages: S.Number,
   }),
 
-  handler: ({
-    event: {
-      data: { channelId, queueId, after = DEFAULT_AFTER, pageSize = 5 },
-    },
-    context: { space },
-  }: any) =>
+  handler: ({ data: { channelId, queueId, after = DEFAULT_AFTER, pageSize = 5 }, context: { space } }: any) =>
     Effect.gen(function* () {
       const { token } = yield* Effect.tryPromise({
         try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'discord.com' })).first(),

@@ -5,7 +5,7 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
-import { Icon, IconButton, Input, Link, ListItem, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Input, Link, ListItem, Tag, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { REGISTRY_PLUGIN } from '../meta';
@@ -29,7 +29,7 @@ export const PluginItem = ({
   onSettings,
 }: PluginItemProps) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
-  const { id, name, description, icon = 'ph--circle--regular' } = plugin.meta;
+  const { id, name, description, tags, icon = 'ph--circle--regular' } = plugin.meta;
   const isEnabled = enabled.includes(id);
   const inputId = `${id}-input`;
   const labelId = `${id}-label`;
@@ -54,10 +54,10 @@ export const PluginItem = ({
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
       // TODO(burdon): Use Rail vars.
-      classNames='w-full h-full grid grid-cols-[48px_1fr_48px] grid-rows-[40px_1fr_32px] p-1 border border-separator rounded-md'
+      classNames='is-full bs-full grid grid-cols-[48px_1fr_48px] grid-rows-[40px_1fr_32px] p-1 border border-separator rounded-md'
     >
       {/* Header. */}
-      <div className='flex justify-center items-center'>
+      <div className='flex flex-col grow justify-center items-center'>
         <Icon icon={icon} size={6} onClick={handleClick} classNames='text-subdued cursor-pointer' />
       </div>
       <div className='flex items-center overflow-hidden cursor-pointer' onClick={handleClick}>
@@ -71,9 +71,22 @@ export const PluginItem = ({
 
       {/* Body. */}
       <div />
-      <div id={descriptionId} className='col-span-2 pb-3'>
-        <p className={mx(descriptionText, 'line-clamp-3 min-w-0 pie-4')}>{description}</p>
-      </div>
+      {(description || tags) && (
+        <div id={descriptionId} className='col-span-2 flex flex-col w-full justify-between gap-2 pb-2'>
+          {tags && tags.length > 0 && (
+            <div>
+              {tags.map((tag) => (
+                <Tag key={tag} palette={'indigo'} classNames='text-xs capitalize'>
+                  {tag}
+                </Tag>
+              ))}
+            </div>
+          )}
+          <div className='grow'>
+            <p className={mx(descriptionText, 'line-clamp-3 min-w-0 pie-2')}>{description}</p>
+          </div>
+        </div>
+      )}
 
       {/* Footer. */}
       <div />

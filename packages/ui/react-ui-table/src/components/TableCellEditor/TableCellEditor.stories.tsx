@@ -7,12 +7,12 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { ImmutableSchema, type EchoSchema } from '@dxos/echo-schema';
+import { type EchoSchema, isMutable } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, live } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { defaultSizeRow, Grid, type GridEditing } from '@dxos/react-ui-grid';
+import { defaultRowSize, Grid, type GridEditing } from '@dxos/react-ui-grid';
 import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -31,7 +31,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
   const { space } = useClientProvider();
   invariant(space);
 
-  const tables = useQuery(space, Filter.schema(TableType));
+  const tables = useQuery(space, Filter.type(TableType));
   const [table, setTable] = useState<TableType>();
   const [schema, setSchema] = useState<EchoSchema>();
   useEffect(() => {
@@ -53,15 +53,16 @@ const DefaultStory = ({ editing }: StoryProps) => {
     () => ({
       selection: { enabled: true, mode: 'multiple' },
       dataEditable: true,
-      schemaEditable: !(schema instanceof ImmutableSchema),
+      schemaEditable: schema && isMutable(schema),
     }),
-    [],
+    [schema],
   );
 
   const model = useTableModel({ table, projection, features });
 
   const handleQuery: TableCellEditorProps['onQuery'] = async ({ field }) => {
-    const { objects } = await space.db.query(schema).run();
+    // TODO(dmaretskyi): If no schema query nothing
+    const { objects } = await space.db.query(schema ? Filter.type(schema) : Filter.everything()).run();
     return objects.map((obj) => {
       const label = obj[field.referencePath ?? 'id'];
       return {
@@ -76,7 +77,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
   }
 
   return (
-    <div className='flex w-[300px] border border-separator' style={{ height: defaultSizeRow }}>
+    <div className='flex w-[300px] border border-separator' style={{ height: defaultRowSize }}>
       <Grid.Root id='test' editing={editing}>
         <TableCellEditor model={model} onQuery={handleQuery} />
       </Grid.Root>
@@ -107,7 +108,7 @@ const meta: Meta<StoryProps> = {
       },
     }),
     withTheme,
-    withLayout({ tooltips: true }),
+    withLayout(),
   ],
 };
 
@@ -120,6 +121,7 @@ export const Default: Story = {
     editing: {
       index: 'grid,0,3',
       initialContent: 'Test',
+      cellElement: null,
     },
   },
 };

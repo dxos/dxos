@@ -3,6 +3,7 @@
 //
 
 import { type Callback, Redis, type RedisOptions } from 'ioredis';
+import fs from 'node:fs';
 import path from 'node:path';
 
 import { Trigger } from '@dxos/async';
@@ -216,6 +217,7 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
       testId: this.params.testId,
     };
 
+    fs.mkdirSync(outDir, { recursive: true });
     let processHandle: ProcessHandle;
     if (runtime.platform === 'nodejs') {
       processHandle = runNode({
@@ -235,7 +237,9 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
         rpcRequests.disconnect();
         rpcResponses.disconnect();
         processHandle.kill(signal);
-        void tracingStream.cancel();
+        void tracingStream.cancel().catch(() => {
+          log.warn('Failed to cancel tracing stream');
+        });
         void rpcHandle[close]().catch((err) => log.catch(err));
       },
       params: replicantParams,

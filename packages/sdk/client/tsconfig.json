@@ -56,7 +56,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/automerge"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-db"

@@ -5,18 +5,19 @@
 import '@dxos-theme';
 
 import '@preact/signals-react';
+
+import { Repo } from '@automerge/automerge-repo';
+import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import React, { useEffect, useState } from 'react';
 
-import { Repo } from '@dxos/automerge/automerge-repo';
-import { BroadcastChannelNetworkAdapter } from '@dxos/automerge/automerge-repo-network-broadcastchannel';
 import { Expando } from '@dxos/echo-schema';
-import { DocAccessor, Filter, live, createDocAccessor, useQuery, useSpace, type Space } from '@dxos/react-client/echo';
+import { DocAccessor, live, createDocAccessor, useQuery, useSpace, type Space, Query } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { ClientRepeater, type ClientRepeatedComponentProps } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { editorContent } from '../../defaults';
+import { editorSlots } from '../../defaults';
 import { useTextEditor } from '../../hooks';
 import translations from '../../translations';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '../factories';
@@ -41,12 +42,7 @@ const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
       initialValue: DocAccessor.getValue(source),
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...' }),
-        createThemeExtensions({
-          themeMode,
-          slots: {
-            editor: { className: editorContent },
-          },
-        }),
+        createThemeExtensions({ themeMode, slots: editorSlots }),
         createDataExtensions({ id: 'test', text: source, space, identity }),
       ],
       autoFocus,
@@ -71,11 +67,12 @@ const Story = () => {
         doc.text = initialContent;
       });
 
-      const object2 = repo2.find<TestObject>(object1.url);
+      const object2 = await repo2.find<TestObject>(object1.url);
       await object2.whenReady();
 
-      setObject1({ handle: object1, path: ['text'] });
-      setObject2({ handle: object2, path: ['text'] });
+      // TODO(mykola): Fix types.
+      setObject1({ handle: object1 as any, path: ['text'] });
+      setObject2({ handle: object2 as any, path: ['text'] });
     });
   }, []);
 
@@ -103,7 +100,7 @@ const EchoStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
   const identity = useIdentity();
   const space = useSpace(spaceKey);
   const [source, setSource] = useState<DocAccessor>();
-  const objects = useQuery<Expando>(space, Filter.from({ type: 'test' }));
+  const objects = useQuery(space, Query.type(Expando, { type: 'test' }));
 
   useEffect(() => {
     if (!source && objects.length) {

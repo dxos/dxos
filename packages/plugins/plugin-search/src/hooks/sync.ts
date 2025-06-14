@@ -2,8 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, getSchema, type S } from '@dxos/echo-schema';
-import { TextType } from '@dxos/schema';
+import { type Schema, SchemaAST } from 'effect';
+
+import { getSchema } from '@dxos/echo-schema';
+import { DataType } from '@dxos/schema';
 
 import { type SearchResult } from '../types';
 
@@ -13,8 +15,8 @@ export const queryStringToMatch = (queryString?: string): RegExp | undefined => 
 };
 
 // TODO(burdon): Type name registry linked to schema?
-const getIcon = (schema: S.Schema.AnyNoContext | undefined): string | undefined => {
-  if (!(schema && AST.isTypeLiteral(schema.ast))) {
+const getIcon = (schema: Schema.Schema.AnyNoContext | undefined): string | undefined => {
+  if (!(schema && SchemaAST.isTypeLiteral(schema.ast))) {
     return undefined;
   }
   const keys = schema.ast.propertySignatures.map((p) => p.name);
@@ -43,7 +45,7 @@ export const filterObjectsSync = <T extends Record<string, any>>(objects: T[], m
 
   return objects.reduce<SearchResult[]>((results, object) => {
     // TODO(burdon): Hack to ignore Text objects.
-    if (object instanceof TextType) {
+    if (object instanceof DataType.Text) {
       return results;
     }
 
@@ -109,7 +111,7 @@ const getKeys = (object: Record<string, unknown>): string[] => {
 export const mapObjectToTextFields = <T extends Record<string, unknown>>(object: T): TextFields => {
   return getKeys(object).reduce<TextFields>((fields, key) => {
     const value = object[key] as any;
-    if (typeof value === 'string' || value instanceof TextType) {
+    if (typeof value === 'string' || value instanceof DataType.Text) {
       try {
         fields[key] = String(value);
       } catch (err) {

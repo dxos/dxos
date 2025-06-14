@@ -57,6 +57,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../lit-ui"
+    },
+    {
       "path": "../react-ui"
     },
     {
@@ -67,6 +70,9 @@
     },
     {
       "path": "../react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../react-ui-tag-picker"
     },
     {
       "path": "../react-ui-theme"

@@ -7,9 +7,9 @@ import { afterAll, onTestFinished, beforeAll, describe, expect, test } from 'vit
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
-import { type ReactiveEchoObject, type Live } from '@dxos/client/echo';
+import { Expando, type AnyLiveObject, type Live } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { Filter, type Query } from '@dxos/echo-db';
+import { Filter, Query, type QueryResult } from '@dxos/echo-db';
 import { TestSchemaType, createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { QueryReactivity, type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
@@ -50,14 +50,14 @@ describe('QueryPlugin', () => {
     onTestFinished(() => client1.destroy());
     await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });
 
-    let org: Live<any>;
+    let _org: Live<any>;
     {
       const space = await client1.spaces.create({ name: 'first space' });
       await space.waitUntilReady();
       const generator = createSpaceObjectGenerator(space);
       await generator.addSchemas();
 
-      org = generator.createObject({ types: [TestSchemaType.organization] });
+      _org = generator.createObject({ types: [TestSchemaType.organization] });
       await space.db.flush();
     }
     const plugin = new QueryPlugin();
@@ -90,10 +90,9 @@ describe('QueryPlugin', () => {
     // Send search request.
     {
       const request: QueryRequest = {
-        filter: Filter.from(
-          { name: org.name },
-          { models: ['*'], spaces: client1.spaces.get().map((s) => s.key) },
-        ).toProto(),
+        query: JSON.stringify(
+          Query.select(Filter.everything()).options({ spaceIds: client1.spaces.get().map((s) => s.id) }).ast,
+        ),
         queryId: 'test-query-id',
         reactivity: QueryReactivity.ONE_SHOT,
       };
@@ -180,8 +179,8 @@ describe('QueryPlugin', () => {
       await builder.destroy();
     });
 
-    const waitForQueryResults = async (query: Query) => {
-      const results = new Trigger<ReactiveEchoObject<any>[]>();
+    const waitForQueryResults = async (query: QueryResult) => {
+      const results = new Trigger<AnyLiveObject<any>[]>();
       query.subscribe((query) => {
         if (query.results.some((result) => result.resolution?.source === 'remote')) {
           results.wake(query.objects);
@@ -192,7 +191,7 @@ describe('QueryPlugin', () => {
 
     test('Text query', async () => {
       const results = await waitForQueryResults(
-        client.spaces.query(testName, {
+        client.spaces.query(Filter.type(Expando, { name: testName }), {
           dataLocation: QueryOptions.DataLocation.REMOTE,
         }),
       );
@@ -212,12 +211,9 @@ describe('QueryPlugin', () => {
     });
 
     test('Property query', async () => {
-      const query = client.spaces.query(
-        { name: testName },
-        {
-          dataLocation: QueryOptions.DataLocation.REMOTE,
-        },
-      );
+      const query = client.spaces.query(Filter.type(Expando, { name: testName }), {
+        dataLocation: QueryOptions.DataLocation.REMOTE,
+      });
       const results = await waitForQueryResults(query);
 
       expect(results.length >= 0).to.be.true;

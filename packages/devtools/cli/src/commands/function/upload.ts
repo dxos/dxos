@@ -9,21 +9,14 @@ import path from 'path';
 
 import { asyncTimeout } from '@dxos/async';
 import { CollectionType } from '@dxos/cli-composer';
-import { type Client } from '@dxos/client';
-import { type ReactiveEchoObject, makeRef } from '@dxos/client/echo';
-import { live, getMeta } from '@dxos/client/echo';
+import { type PublicKey, type Client } from '@dxos/client';
+import { type AnyLiveObject, getMeta, live, makeRef } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
-import {
-  incrementSemverPatch,
-  setUserFunctionUrlInMetadata,
-  uploadWorkerFunction,
-  makeFunctionUrl,
-  FunctionType,
-  ScriptType,
-} from '@dxos/functions';
+import { FunctionType, ScriptType, makeFunctionUrl, setUserFunctionUrlInMetadata } from '@dxos/functions';
+import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
 import { invariant } from '@dxos/invariant';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
 import { bundleScript, findFunctionByDeploymentId } from '../../util';
@@ -41,6 +34,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
     composerScript: Flags.boolean({ description: 'Loads the script into composer.' }),
     functionId: Flags.string({ description: 'Existing UserFunction ID to update.' }),
     spaceKey: Flags.string({ description: 'Space key to create/update Script source in.' }),
+    noSpace: Flags.boolean({ description: 'Only uploads a function, without creating a FunctionObject in ECHO.' }),
   };
 
   static override args = {
@@ -49,6 +43,17 @@ export default class Upload extends BaseCommand<typeof Upload> {
 
   async run(): Promise<any> {
     const { scriptFileContent, bundledScript } = await this._loadScript();
+
+    if (this.flags.noSpace) {
+      return this.execWithClient(async ({ client }) => {
+        const identity = client.halo.identity.get();
+        invariant(identity, 'Identity not available');
+
+        const uploadResult = await this._upload(client, identity.identityKey, undefined, bundledScript);
+
+        this.log(`Upload complete: ${uploadResult.functionId}, version ${uploadResult.version}`);
+      });
+    }
 
     return this.execWithSpace(
       async ({ client, space }) => {
@@ -59,7 +64,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
 
         const existingFunctionObject = await this._loadFunctionObject(space);
 
-        const uploadResult = await this._upload(client, space, existingFunctionObject, bundledScript);
+        const uploadResult = await this._upload(client, space.key, existingFunctionObject, bundledScript);
 
         const functionObject = this._updateFunctionObject(space, existingFunctionObject, uploadResult);
 
@@ -101,13 +106,18 @@ export default class Upload extends BaseCommand<typeof Upload> {
     return matchingFunction;
   }
 
-  private async _upload(client: Client, space: Space, functionObject: FunctionType | undefined, bundledSource: string) {
+  private async _upload(
+    client: Client,
+    ownerPublicKey: PublicKey,
+    functionObject: FunctionType | undefined,
+    bundledSource: string,
+  ) {
     let result: UploadFunctionResponseBody;
     try {
       result = await asyncTimeout(
         uploadWorkerFunction({
           client,
-          spaceId: space.id,
+          ownerPublicKey,
           version: await this._getNextVersion(functionObject),
           functionId: this.flags.functionId,
           name: this.flags.name,
@@ -135,7 +145,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
     }
     functionObject.name = this.flags.name ?? functionObject.name;
     functionObject.version = uploadResult.version;
-    setUserFunctionUrlInMetadata(getMeta(functionObject), makeFunctionUrl(space.id, uploadResult));
+    setUserFunctionUrlInMetadata(getMeta(functionObject), makeFunctionUrl(uploadResult));
     return functionObject;
   }
 
@@ -146,7 +156,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
     scriptFileName: string,
     scriptFileContent: string,
   ): Promise<void> {
-    client.addTypes([ScriptType, TextType]);
+    client.addTypes([ScriptType, DataType.Text]);
 
     if (functionObject.source) {
       const script = await functionObject.source.load();
@@ -156,7 +166,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
         this.log(`Updated source of ${script.id}`);
       }
     } else {
-      const sourceObj = space.db.add(live(TextType, { content: scriptFileContent }));
+      const sourceObj = space.db.add(live(DataType.Text, { content: scriptFileContent }));
       const obj = space.db.add(
         live(ScriptType, { name: this.flags.name ?? scriptFileName, source: makeRef(sourceObj) }),
       );
@@ -181,7 +191,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
   }
 }
 
-const makeObjectNavigableInComposer = async (client: Client, space: Space, obj: ReactiveEchoObject<any>) => {
+const makeObjectNavigableInComposer = async (client: Client, space: Space, obj: AnyLiveObject<any>) => {
   const collection = space.properties['dxos.org/type/Collection'];
   if (collection) {
     client.addTypes([CollectionType]);

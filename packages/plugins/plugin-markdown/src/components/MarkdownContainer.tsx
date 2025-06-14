@@ -2,12 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Rx } from '@effect-rx/rx-react';
 import React, { useEffect, useMemo } from 'react';
 
-import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { Capabilities, useAppGraph, useCapabilities } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
-import { TextType } from '@dxos/schema';
+import { type SelectionManager } from '@dxos/react-ui-attention';
+import { DataType } from '@dxos/schema';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
@@ -19,25 +21,26 @@ export type MarkdownContainerProps = Pick<
   'role' | 'extensionProviders' | 'viewMode' | 'editorStateStore' | 'onViewModeChange'
 > & {
   id: string;
-  object: DocumentType | TextType | any;
+  object: DocumentType | DataType.Text | any;
   settings: MarkdownSettingsProps;
+  selectionManager?: SelectionManager;
 };
 
-// TODO(burdon): Move toolbar here.
 // TODO(burdon): Factor out difference for ECHO and non-ECHO objects; i.e., single component.
 const MarkdownContainer = ({
   id,
   role,
   object,
   settings,
+  selectionManager,
   viewMode,
   editorStateStore,
   onViewModeChange,
 }: MarkdownContainerProps) => {
   const scrollPastEnd = role === 'article';
   const doc = isInstanceOf(DocumentType, object) ? object : undefined;
-  const text = isInstanceOf(TextType, object) ? object : undefined;
-  const extensions = useExtensions({ document: doc, text, id, settings, viewMode, editorStateStore });
+  const text = isInstanceOf(DataType.Text, object) ? object : undefined;
+  const extensions = useExtensions({ document: doc, text, id, settings, selectionManager, viewMode, editorStateStore });
 
   if (doc) {
     return (
@@ -61,7 +64,6 @@ const MarkdownContainer = ({
         extensions={extensions}
         viewMode={viewMode}
         toolbar={settings.toolbar}
-        comment={false}
         inputMode={settings.editorInputMode}
         scrollPastEnd={scrollPastEnd}
         onViewModeChange={onViewModeChange}
@@ -116,12 +118,22 @@ export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props
     return async (file: File) => upload!(file, space);
   }, [space, upload]);
 
+  const { graph } = useAppGraph();
+  const customActions = useMemo(() => {
+    return Rx.make((get) => {
+      const actions = get(graph.actions(id));
+      const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
+      return { nodes, edges: nodes.map((node) => ({ source: 'root', target: node.id })) };
+    });
+  }, [graph]);
+
   return (
     <MarkdownEditor
       id={id}
       initialValue={doc.content?.target?.content}
       viewMode={viewMode}
       toolbar={settings.toolbar}
+      customActions={customActions}
       inputMode={settings.editorInputMode}
       onFileUpload={handleFileUpload}
       {...props}

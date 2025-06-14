@@ -8,7 +8,7 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { testFunctionPlugins } from '@dxos/compute/testing';
-import { FunctionType } from '@dxos/functions/types';
+import { FunctionType } from '@dxos/functions';
 import { live, useSpace, Filter } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar, Button, Input } from '@dxos/react-ui';
@@ -51,7 +51,7 @@ const Story = () => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const handleTest = async () => {
     if (space && graph) {
-      const { objects } = await space.db.query(Filter.schema(FunctionType)).run();
+      const { objects } = await space.db.query(Filter.type(FunctionType)).run();
       const mapped = graph.mapFunctionBindingToId(text);
       const unmapped = graph.mapFunctionBindingFromId(mapped);
       const internal = graph.mapFormulaToNative(text);

@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema as S } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 
 import { invariant } from '@dxos/invariant';
+import { type ObjectId } from '@dxos/keys';
 
 import {
   addFieldsToSchema,
@@ -15,16 +16,10 @@ import {
 } from './manipulation';
 import { getSnapshot } from './snapshot';
 import { StoredSchema } from './stored-schema';
-import {
-  getTypeAnnotation,
-  schemaVariance,
-  type JsonSchemaType,
-  type TypeAnnotation,
-  type SchemaMeta,
-  SchemaMetaSymbol,
-} from '../ast';
+import { getTypeAnnotation, schemaVariance, SchemaMetaSymbol, type SchemaMeta, type TypeAnnotation } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
-import { type ObjectId, type TypedObject, type TypedObjectPrototype } from '../object';
+import { type JsonSchemaType } from '../json-schema';
+import { type TypedObject, type TypedObjectPrototype } from '../object';
 
 /**
  * Base schema type.
@@ -34,17 +29,18 @@ export interface BaseSchema<A = any, I = any> extends TypedObject<A, I> {
   get readonly(): boolean;
   // TODO(burdon): Change to external function.
   get mutable(): EchoSchema<A, I>;
-  get snapshot(): S.Schema<A, I>;
+  get snapshot(): Schema.Schema<A, I>;
   get jsonSchema(): JsonSchemaType;
 }
 
 /**
  * Immutable schema type.
+ * @deprecated Use `Schema.Schema.AnyNoContext` instead.
  */
 // TODO(burdon): Common abstract base class?
 export class ImmutableSchema<A = any, I = any> implements BaseSchema<A, I> {
   private readonly _objectAnnotation: TypeAnnotation;
-  constructor(private readonly _schema: S.Schema<A, I>) {
+  constructor(private readonly _schema: Schema.Schema<A, I>) {
     this._objectAnnotation = getTypeAnnotation(this._schema)!;
     invariant(this._objectAnnotation);
   }
@@ -53,7 +49,7 @@ export class ImmutableSchema<A = any, I = any> implements BaseSchema<A, I> {
   // Effect Schema (push to abstract base class).
   //
 
-  public get [S.TypeId]() {
+  public get [Schema.TypeId]() {
     return schemaVariance;
   }
 
@@ -69,7 +65,7 @@ export class ImmutableSchema<A = any, I = any> implements BaseSchema<A, I> {
     return this._schema.Context;
   }
 
-  public get ast(): AST.AST {
+  public get ast(): SchemaAST.AST {
     return this._schema.ast;
   }
 
@@ -101,7 +97,7 @@ export class ImmutableSchema<A = any, I = any> implements BaseSchema<A, I> {
     return true;
   }
 
-  get snapshot(): S.Schema.AnyNoContext {
+  get snapshot(): Schema.Schema.AnyNoContext {
     return this._schema;
   }
 
@@ -122,15 +118,15 @@ export class ImmutableSchema<A = any, I = any> implements BaseSchema<A, I> {
  */
 const EchoSchemaConstructor = (): TypedObjectPrototype => {
   /**
-   * Return class definition satisfying S.Schema.
+   * Return class definition satisfying Schema.Schema.
    */
   return class {
     private static get _schema() {
       // The field is DynamicEchoSchema in runtime, but is serialized as StoredEchoSchema in automerge.
-      return S.Union(StoredSchema, S.instanceOf(EchoSchema)).annotations(StoredSchema.ast.annotations);
+      return Schema.Union(StoredSchema, Schema.instanceOf(EchoSchema)).annotations(StoredSchema.ast.annotations);
     }
 
-    static readonly [S.TypeId] = schemaVariance;
+    static readonly [Schema.TypeId] = schemaVariance;
 
     static get ast() {
       const schema = this._schema;
@@ -150,6 +146,20 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
 };
 
 /**
+ * @param schema @deprecated
+ */
+// TODO(burdon): Remove once we've stabilized the schema API.
+export const assertEchoSchema = (schema: Schema.Schema.AnyNoContext): EchoSchema => {
+  invariant(schema instanceof EchoSchema, 'Schema is not an EchoSchema');
+  return schema;
+};
+
+// TODO(burdon): Resolve (add annotation?)
+export const isMutable = (schema: Schema.Schema.AnyNoContext): boolean => {
+  return schema instanceof EchoSchema;
+};
+
+/**
  * Represents a schema that is stored in the ECHO database.
  * Schema can me mutable or readonly (specified by the {@link EchoSchema.readonly} field).
  *
@@ -162,17 +172,16 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
  * @example
  * ```ts
  * export class TableType extends TypedObject({ typename: 'example.org/type/Table', version: '0.1.0' })({
- *   title: S.String,
- *   schema: S.optional(ref(EchoSchema)),
- *   props: S.mutable(S.Array(TablePropSchema)),
+ *   title: Schema.String,
+ *   schema: Schema.optional(ref(EchoSchema)),
+ *   props: Schema.mutable(S.Array(TablePropSchema)),
  * }) {}
  * ```
  *
  * The ECHO API will translate any references to StoredSchema objects to be resolved as EchoSchema objects.
  */
-// TODO(burdon): Rename MutableSchema; extend ImmutableSchema.
 export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implements BaseSchema<A, I> {
-  private _schema: S.Schema.AnyNoContext | undefined;
+  private _schema: Schema.Schema.AnyNoContext | undefined;
   private _isDirty = true;
 
   constructor(private readonly _storedSchema: StoredSchema) {
@@ -183,7 +192,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   // Effect Schema (push to abstract base class).
   //
 
-  public get [S.TypeId]() {
+  public get [Schema.TypeId]() {
     return schemaVariance;
   }
 
@@ -210,7 +219,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
     return schema.annotations.bind(schema);
   }
 
-  public get pipe(): S.Schema.AnyNoContext['pipe'] {
+  public get pipe(): Schema.Schema.AnyNoContext['pipe'] {
     const schema = this._getSchema();
     return schema.pipe.bind(schema);
   }
@@ -234,7 +243,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   /**
    * Returns an immutable schema snapshot of the current state of the schema.
    */
-  public get snapshot(): S.Schema.AnyNoContext {
+  public get snapshot(): Schema.Schema.AnyNoContext {
     return this._getSchema();
   }
 
@@ -275,9 +284,9 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
     return this._storedSchema;
   }
 
-  public getProperties(): AST.PropertySignature[] {
+  public getProperties(): SchemaAST.PropertySignature[] {
     const ast = this._getSchema().ast;
-    invariant(AST.isTypeLiteral(ast));
+    invariant(SchemaAST.isTypeLiteral(ast));
     return [...ast.propertySignatures].filter((p) => p.name !== 'id').map(unwrapOptionality);
   }
 
@@ -299,7 +308,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   /**
    * @throws Error if the schema is readonly.
    */
-  public addFields(fields: S.Struct.Fields) {
+  public addFields(fields: Schema.Struct.Fields) {
     const extended = addFieldsToSchema(this._getSchema(), fields);
     this._storedSchema.jsonSchema = toJsonSchema(extended);
   }
@@ -307,7 +316,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   /**
    * @throws Error if the schema is readonly.
    */
-  public updateFields(fields: S.Struct.Fields) {
+  public updateFields(fields: Schema.Struct.Fields) {
     const updated = updateFieldsInSchema(this._getSchema(), fields);
     this._storedSchema.jsonSchema = toJsonSchema(updated);
   }
@@ -356,13 +365,13 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
 }
 
 // TODO(burdon): Move to effect.
-const unwrapOptionality = (property: AST.PropertySignature): AST.PropertySignature => {
-  if (!AST.isUnion(property.type)) {
+const unwrapOptionality = (property: SchemaAST.PropertySignature): SchemaAST.PropertySignature => {
+  if (!SchemaAST.isUnion(property.type)) {
     return property;
   }
 
   return {
     ...property,
-    type: property.type.types.find((type) => !AST.isUndefinedKeyword(type))!,
+    type: property.type.types.find((type) => !SchemaAST.isUndefinedKeyword(type))!,
   } as any;
 };

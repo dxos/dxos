@@ -3,13 +3,13 @@
 //
 
 import { Filter, getMeta, type Space } from '@dxos/client/echo';
-import { FunctionType, getUserFunctionUrlInMetadata, makeFunctionUrl } from '@dxos/functions/types';
+import { FunctionType, getUserFunctionUrlInMetadata, makeFunctionUrl } from '@dxos/functions';
 
 export const findFunctionByDeploymentId = async (space: Space, functionId?: string) => {
   if (!functionId) {
     return undefined;
   }
-  const invocationUrl = makeFunctionUrl(space.id, { functionId });
-  const functions = await space.db.query(Filter.schema(FunctionType)).run();
+  const invocationUrl = makeFunctionUrl({ functionId });
+  const functions = await space.db.query(Filter.type(FunctionType)).run();
   return functions.objects.find((fn) => getUserFunctionUrlInMetadata(getMeta(fn)) === invocationUrl);
 };

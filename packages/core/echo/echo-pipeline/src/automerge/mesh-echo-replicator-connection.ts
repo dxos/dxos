@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as A from '@dxos/automerge/automerge';
-import { cbor } from '@dxos/automerge/automerge-repo';
+import * as A from '@automerge/automerge';
+import { cbor } from '@automerge/automerge-repo';
+
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';

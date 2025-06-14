@@ -4,47 +4,45 @@
 
 // @ts-ignore
 import { create, defineFunction, EchoObject, Filter, ObjectId, S } from 'dxos:functions';
+// @ts-ignore
 import {
   HttpClient,
   HttpClientRequest,
   FetchHttpClient,
   // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.13.3';
+} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21';
 // @ts-ignore
-import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.13.3';
-
-// TODO(ZaymonFC): Calculate this dynamically and expose a parameter.
-const DEFAULT_AFTER = '2025-01-01';
+import { format, subDays } from 'https://esm.sh/date-fns@3.3.1';
+// @ts-ignore
+import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.14.21';
 
 export default defineFunction({
   inputSchema: S.Struct({
+    mailboxId: S.String,
+    userId: S.optional(S.String).pipe(S.withDecodingDefault(() => 'me')),
+    after: S.optional(S.Union(S.Number, S.String)).pipe(
+      S.withDecodingDefault(() => format(subDays(new Date(), 30), 'yyyy-MM-dd')),
+    ),
+    pageSize: S.optional(S.Number).pipe(S.withDecodingDefault(() => 100)),
     // TODO(wittjosiah): Remove. This is used to provide a terminal for a cron trigger.
     tick: S.optional(S.String),
-    userId: S.optional(S.String),
-    after: S.optional(S.Union(S.Number, S.String)),
-    pageSize: S.optional(S.Number),
-    mailboxId: S.String,
   }),
 
   outputSchema: S.Struct({
     newMessages: S.Number,
   }),
 
-  handler: ({
-    event: {
-      data: { mailboxId, userId = 'me', after = DEFAULT_AFTER, pageSize = 100 },
-    },
-    context: { space },
-  }: any) =>
+  handler: ({ context: { space }, data: { mailboxId, userId, after, pageSize } }: any) =>
     Effect.gen(function* () {
       const { token } = yield* Effect.tryPromise({
         try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'gmail.com' })).first(),
         catch: (e: any) => e,
       });
 
-      const makeRequest = (path: string) =>
+      // NOTE: Google API bundles size is v. large and caused runtime issues.
+      const makeRequest = (url: string) =>
         pipe(
-          path,
+          url,
           HttpClientRequest.get,
           HttpClientRequest.setHeaders({ Authorization: `Bearer ${token}`, Accept: 'application/json' }),
           HttpClient.execute,
@@ -54,13 +52,10 @@ export default defineFunction({
           Effect.scoped,
         );
 
-      const listMessages = (userId: string, q: string, pageSize: number, pageToken: string | null) => {
-        const url = `https://gmail.googleapis.com/gmail/v1/users/${userId}/messages?maxResults=${pageSize}&q=${q}`;
-        return makeRequest(pageToken ? `${url}&pageToken=${pageToken}` : url);
-      };
+      const listMessages = (userId: string, q: string, pageSize: number, pageToken: string | null) =>
+        makeRequest(getUrl(userId, undefined, { q, pageSize, pageToken }));
 
-      const getMessage = (userId: string, id: string) =>
-        makeRequest(`https://gmail.googleapis.com/gmail/v1/users/${userId}/messages/${id}`);
+      const getMessage = (userId: string, messageId: string) => makeRequest(getUrl(userId, messageId));
 
       const mailbox = yield* Effect.tryPromise({
         try: () => space.db.query({ id: mailboxId }).first(),
@@ -137,6 +132,14 @@ export default defineFunction({
     }).pipe(Effect.provide(FetchHttpClient.layer)),
 });
 
+const getUrl = (userId: string, messageId?: string, params?: Record<string, any>) => {
+  const api = new URL(
+    [`https://gmail.googleapis.com/gmail/v1/users/${userId}/messages`, messageId].filter(Boolean).join('/'),
+  );
+  Object.entries(params ?? {}).forEach(([key, value]) => api.searchParams.set(key, value));
+  return api.toString();
+};
+
 /**
  * Parses an email string in the format "Name <email@example.com>" into separate name and email components.
  */
@@ -153,10 +156,9 @@ const parseEmailString = (emailString: string): { name?: string; email: string }
   return undefined;
 };
 
-// TODO(wittjosiah): These schemas should be imported from @dxos/schema.
-
 //
 // Schemas
+// TODO(wittjosiah): These schemas should be imported from @dxos/S.
 //
 
 const ActorRoles = ['user', 'assistant'] as const;
@@ -240,5 +242,10 @@ const MessageType = S.Struct({
       }),
     ),
   ),
-}).pipe(EchoObject({ typename: 'dxos.org/type/Message', version: '0.1.0' }));
+}).pipe(
+  EchoObject({
+    typename: 'dxos.org/type/Message',
+    version: '0.1.0',
+  }),
+);
 type MessageType = S.Schema.Type<typeof MessageType>;

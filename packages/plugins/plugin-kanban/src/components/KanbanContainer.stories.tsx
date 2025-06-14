@@ -8,6 +8,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Type } from '@dxos/echo';
+import { assertEchoSchema } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -21,7 +24,7 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban, KanbanType, useKanbanModel } from '@dxos/react-ui-kanban';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { ViewProjection, Contact, Organization, organizationStatusOptions } from '@dxos/schema';
+import { DataType, ViewProjection } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { initializeKanban } from '../testing';
@@ -38,14 +41,14 @@ const rollOrg = () => ({
   description: faker.lorem.paragraph(),
   image: faker.image.url(),
   website: faker.internet.url(),
-  status: faker.helpers.arrayElement(organizationStatusOptions).id,
+  status: faker.helpers.arrayElement(DataType.OrganizationStatusOptions).id,
 });
 
 const StorybookKanban = () => {
   const client = useClient();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const kanbans = useQuery(space, Filter.schema(KanbanType));
+  const kanbans = useQuery(space, Filter.type(KanbanType));
   const [kanban, setKanban] = useState<KanbanType>();
   const [projection, setProjection] = useState<ViewProjection>();
   const schema = useSchema(client, space, kanban?.cardView?.target?.query.typename);
@@ -59,12 +62,14 @@ const StorybookKanban = () => {
 
   useEffect(() => {
     if (kanban?.cardView?.target && schema) {
-      setProjection(new ViewProjection(schema.jsonSchema, kanban.cardView.target));
+      const jsonSchema = Type.toJsonSchema(schema);
+      setProjection(new ViewProjection(jsonSchema, kanban.cardView.target));
     }
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
-  }, [kanban?.cardView?.target, schema, JSON.stringify(schema?.jsonSchema)]);
+    //  @dmaretskyi? Once resolved, update in multiple places (e.g., storybooks).
+  }, [kanban?.cardView?.target, schema, JSON.stringify(schema ? Type.toJsonSchema(schema) : {})]);
 
-  const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
+  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const model = useKanbanModel({
@@ -94,10 +99,10 @@ const StorybookKanban = () => {
 
   const handleTypenameChanged = useCallback(
     (typename: string) => {
-      if (kanban?.cardView?.target) {
-        schema?.mutable.updateTypename(typename);
-        kanban.cardView.target.query.typename = typename;
-      }
+      invariant(schema);
+      invariant(kanban?.cardView?.target);
+      assertEchoSchema(schema).updateTypename(typename);
+      kanban.cardView.target.query.typename = typename;
     },
     [kanban?.cardView?.target, schema],
   );
@@ -138,7 +143,7 @@ type StoryProps = {
 //
 
 const meta: Meta<StoryProps> = {
-  title: 'ui/plugin-kanban/Kanban',
+  title: 'plugins/plugin-kanban/Kanban',
   component: StorybookKanban,
   render: () => <StorybookKanban />,
   parameters: { translations },
@@ -148,7 +153,7 @@ const meta: Meta<StoryProps> = {
       plugins: [
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
-          types: [Organization, Contact, KanbanType],
+          types: [DataType.Organization, DataType.Person, KanbanType],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
@@ -156,7 +161,7 @@ const meta: Meta<StoryProps> = {
             const { schema, kanban } = await initializeKanban({
               space,
               client,
-              typename: Organization.typename,
+              typename: DataType.Organization.typename,
               initialPivotColumn: 'status',
             });
             space.db.add(kanban);

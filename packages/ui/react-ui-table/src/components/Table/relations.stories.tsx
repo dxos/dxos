@@ -5,14 +5,17 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
+import { type Schema } from 'effect';
+import { SchemaAST } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
-import { AST, type BaseObject, ImmutableSchema, type BaseSchema, type HasId } from '@dxos/echo-schema';
+import { type BaseObject, getSchemaTypename, type HasId, toJsonSchema } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { live, makeRef } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { Contact, createView, Organization, ViewProjection, ViewType } from '@dxos/schema';
+import { DataType, createView, ViewProjection, ViewType } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -29,14 +32,15 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Mutable and immutable views.
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
-const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count: number) => {
+const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema<T>, count: number) => {
   const { space } = useClientProvider();
 
+  const jsonSchema = useMemo(() => toJsonSchema(schema), [schema]);
   const table = useMemo(() => {
-    // const { typename } = pipe(schema.ast, AST.getAnnotation<TypeAnnotation>(TypeAnnotationId), Option.getOrThrow);
-    const typename = schema.typename;
-    const name = getAnnotation<string>(AST.TitleAnnotationId)(schema.ast) ?? typename;
-    const view = createView({ name, typename, jsonSchema: schema.jsonSchema });
+    const typename = getSchemaTypename(schema);
+    invariant(typename);
+    const name = getAnnotation<string>(SchemaAST.TitleAnnotationId)(schema.ast) ?? typename;
+    const view = createView({ name, typename, jsonSchema });
     return live(TableType, { view: makeRef(view) });
   }, [schema]);
 
@@ -46,7 +50,7 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
     }
 
     // TODO(burdon): Just pass in view? Reuse same jsonSchema instance? View determines if mutable, etc.
-    return new ViewProjection(schema.jsonSchema, table.view.target);
+    return new ViewProjection(jsonSchema, table.view.target);
   }, [schema, table]);
 
   const features = useMemo<TableFeatures>(
@@ -60,13 +64,11 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
       return;
     }
 
-    const objectGenerator = createAsyncGenerator(generator, schema, { optional: true, db: space?.db });
+    const objectGenerator = createAsyncGenerator(generator, schema, { db: space?.db, force: true });
     void objectGenerator.createObjects(count).then((objects) => {
       model.setRows(objects);
     });
   }, [model, space]);
-
-  console.log(projection?.getFieldProjections());
 
   const presentation = useMemo(() => {
     if (!model) {
@@ -80,13 +82,8 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
 };
 
 const DefaultStory = () => {
-  // TODO(burdon): Remove need for ImmutableSchema wrapper at API-level.
-  const orgSchema = useMemo(() => new ImmutableSchema(Organization), []);
-  const { model: orgModel, presentation: orgPresentation } = useTestModel<Organization>(orgSchema, 50);
-
-  // TODO(burdon): Generate links with references.
-  const contactSchema = useMemo(() => new ImmutableSchema(Contact), []);
-  const { model: contactModel, presentation: contactPresentation } = useTestModel<Contact>(contactSchema, 50);
+  const { model: orgModel, presentation: orgPresentation } = useTestModel(DataType.Organization, 50);
+  const { model: contactModel, presentation: contactPresentation } = useTestModel(DataType.Person, 50);
 
   return (
     <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
@@ -106,12 +103,12 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Organization, Contact],
+      types: [TableType, ViewType, DataType.Organization, DataType.Person],
       createIdentity: true,
       createSpace: true,
     }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ fullscreen: true }),
   ],
 };
 
