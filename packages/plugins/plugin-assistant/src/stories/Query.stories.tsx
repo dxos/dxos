@@ -235,6 +235,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
             <ItemList items={items} getTitle={(item) => getLabelForObject(item)} />
             <JsonFilter
               data={{
+                space: client.spaces.get().length,
                 db: space?.db.toJSON(),
                 items: items.length,
                 queue: researchQueue?.items.length,
