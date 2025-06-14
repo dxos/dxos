@@ -173,25 +173,21 @@ export class RepoProxy extends Resource {
     const onChange = () => {
       log.info('onChange', { documentId });
       this._pendingUpdateIds.add(documentId);
-      this._sendUpdatesJob!.trigger();
+      this._sendUpdatesJob?.trigger();
       this._emitSaveStateEvent();
     };
 
-    const handle = new DocHandleProxy<T>(
-      documentId,
-      { isNew, initialValue },
-      {
-        onDelete: () => {
-          this._pendingRemoveIds.add(documentId);
-          handle.off('change', onChange);
-          this._sendUpdatesJob?.trigger();
-          delete this._handles[documentId];
-        },
-      },
-    );
+    const onDelete = () => {
+      log.info('onDelete', { documentId });
+      handle.off('change', onChange);
+      this._pendingRemoveIds.add(documentId);
+      this._sendUpdatesJob?.trigger();
+      delete this._handles[documentId];
+    };
 
-    this._handles[documentId] = handle;
+    const handle = new DocHandleProxy<T>(documentId, { isNew, initialValue }, { onDelete });
     handle.on('change', onChange);
+    this._handles[documentId] = handle;
 
     if (isNew) {
       this._pendingCreateIds.add(documentId);
