@@ -6,40 +6,56 @@ import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 
-import type { Message } from './message';
-import { ToolResult, type Tool, type ToolExecutionContext } from './tools';
+import { type Message } from './message';
+import { type Tool, ToolResult, type ToolExecutionContext, type ExecutableTool } from './tool';
 
-export type DefineToolParams<Params extends Schema.Schema.AnyNoContext> = {
-  /**
-   * The name of the tool (may include hyphens but not underscores).
-   */
-  name: string;
-  caption?: string;
-  description: string;
+const createToolName = (name: string) => {
+  return name.replace(/[^\w-]/g, '_');
+};
+
+export const parseToolName = (name: string) => {
+  return name.split('_').pop();
+};
+
+/**
+ * Creates a well-formed tool definition.
+ */
+export const defineTool = (namespace: string, { name, ...props }: Omit<Tool, 'id' | 'namespace'>): ExecutableTool => {
+  const id = [namespace, name].join('/');
+  return {
+    id,
+    name: createToolName(id),
+    namespace,
+    function: name,
+    ...props,
+  };
+};
+
+export type CreateExecutableToolParams<Params extends Schema.Schema.AnyNoContext> = Omit<Tool, 'id' | 'namespace'> & {
   schema: Params;
   execute: (params: Schema.Schema.Type<Params>, context: ToolExecutionContext) => Promise<ToolResult>;
 };
 
-export const defineTool = <Params extends Schema.Schema.AnyNoContext>(
+/**
+ * Creates a runnable tool definition.
+ */
+export const createTool = <Params extends Schema.Schema.AnyNoContext>(
   namespace: string,
-  { name, caption, description, schema, execute }: DefineToolParams<Params>,
-): Tool => {
+  { name, schema, execute, ...props }: CreateExecutableToolParams<Params>,
+): ExecutableTool => {
+  const id = [namespace, name].join('/');
   return {
-    name: [namespace, name].join('/').replace(/[^\w-]/g, '_'),
+    ...props,
+    id,
+    name: createToolName(id),
     namespace,
     function: name,
-    caption,
-    description,
     parameters: toFunctionParameterSchema(Type.toJsonSchema(schema)),
     execute: (params: any, context?: any) => {
       const sanitized = Schema.decodeSync(schema)(params);
       return execute(sanitized, context ?? {});
     },
   };
-};
-
-export const parseToolName = (name: string) => {
-  return name.split('_').pop();
 };
 
 /**
@@ -89,7 +105,7 @@ export const toFunctionParameterSchema = (jsonSchema: Type.JsonSchema) => {
  * ```
  */
 export const structuredOutputParser = <TSchema extends Schema.Schema.AnyNoContext>(schema: TSchema) => {
-  const tool = defineTool('system', {
+  const tool = createTool('system', {
     name: 'submit_result',
     description: 'You must call this tool with the result of your work.',
     schema,

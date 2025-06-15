@@ -280,7 +280,7 @@ export const createGraphWriterTool = ({
   onDone?: (data: AnyEchoObject[]) => Promise<any>;
 }) => {
   return defineTool('graph', {
-    name: 'write',
+    name: 'writer',
     description: 'Write to the local graph database',
     schema: createExtractionSchema(schemaTypes),
     execute: async (input) => {

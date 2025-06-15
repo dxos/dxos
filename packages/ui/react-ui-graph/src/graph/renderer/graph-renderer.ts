@@ -300,8 +300,8 @@ const updateNode: D3Callable = <NodeData = any, EdgeData = any>(
           });
         }
       });
-    } catch (error) {
-      log.catch(error);
+    } catch (error: any) {
+      log.error('updateNode', { error: error?.message });
     }
   }
 
@@ -412,8 +412,8 @@ const updateEdge: D3Callable = <NodeData = any, EdgeData = any>(
         });
       }
     });
-  } catch (error) {
-    log.catch(error);
+  } catch (error: any) {
+    log.error('updateEdge', { error: error?.message });
   }
 
   // Optional transition.

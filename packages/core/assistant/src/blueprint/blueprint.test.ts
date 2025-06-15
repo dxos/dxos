@@ -32,12 +32,12 @@ describe.skip('Blueprint', () => {
   });
 
   test('follows a simple blueprint', { timeout: 60_000 }, async () => {
-    const blueprint = BlueprintBuilder.begin()
+    const blueprint = BlueprintBuilder.create()
       .step('Generate an idea for a new product. Do not use any external tools for this.')
       .step('Write a short description of the product.')
       .step('Run a market research to see if the product is viable. Do not use any external tools for this.')
       .step('Write a pitch deck for the product')
-      .end();
+      .build();
 
     const machine = new BlueprintMachine(blueprint);
     setConsolePrinter(machine, true);
@@ -77,19 +77,23 @@ describe.skip('Blueprint', () => {
       },
     });
 
-    const blueprint = BlueprintBuilder.begin()
+    const blueprint = BlueprintBuilder.create()
       .step(
         'Determine if the email is introduction, question, or spam. Bail if email does not fit into one of these categories.',
       )
-      .step('If the email is spam, label it as spam and do not respond.')
-      .withTool(labelTool)
+      .step('If the email is spam, label it as spam and do not respond.', {
+        tools: [labelTool],
+      })
       .step(
         'If the email is an introduction, respond with a short introduction of yourself and ask for more information.',
+        {
+          tools: [replyTool],
+        },
       )
-      .withTool(replyTool)
-      .step('If the email is a question, respond with a short answer and ask for more information.')
-      .withTool(replyTool)
-      .end();
+      .step('If the email is a question, respond with a short answer and ask for more information.', {
+        tools: [replyTool],
+      })
+      .build();
 
     const machine = new BlueprintMachine(blueprint);
     setConsolePrinter(machine);
@@ -119,15 +123,17 @@ describe.skip('Blueprint', () => {
 
     await db.flush({ indexes: true });
 
-    const blueprint = BlueprintBuilder.begin()
-      .step('Research founders of the organization. Do deep research.')
-      .withTool(createExaTool({ apiKey: EXA_API_KEY }))
-      .step('Based on your research select matching entires that are already in the graph')
-      .withTool(createLocalSearchTool(db))
-      .step('Add researched data to the graph')
-      .withTool(createLocalSearchTool(db))
-      .withTool(createGraphWriterTool({ db, schemaTypes: DataTypes }))
-      .end();
+    const blueprint = BlueprintBuilder.create()
+      .step('Research founders of the organization. Do deep research.', {
+        tools: [createExaTool({ apiKey: EXA_API_KEY })],
+      })
+      .step('Based on your research select matching entires that are already in the graph', {
+        tools: [createLocalSearchTool(db)],
+      })
+      .step('Add researched data to the graph', {
+        tools: [createLocalSearchTool(db), createGraphWriterTool({ db, schemaTypes: DataTypes })],
+      })
+      .build();
 
     const machine = new BlueprintMachine(blueprint);
     setConsolePrinter(machine, true);

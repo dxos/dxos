@@ -15,6 +15,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import {
   BlueprintBuilder,
+  BlueprintParser,
   BlueprintMachine,
   createExaTool,
   createGraphWriterTool,
@@ -22,14 +23,14 @@ import {
   setConsolePrinter,
 } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
-import { type AnyEchoObject, create, getLabelForObject, getTypename, Query, Ref } from '@dxos/echo-schema';
+import { type AnyEchoObject, create, getLabelForObject, getTypename, Ref } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { Filter, Queue, type Space, useQuery, useQueue } from '@dxos/react-client/echo';
+import { Filter, Queue, type Space, useQueue } from '@dxos/react-client/echo';
 import { Dialog, IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
 import {
   matchCompletion,
@@ -124,8 +125,6 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     }
   }, [space]);
 
-  // TODO(burdon): Filter by object/relation?
-  const objects = useQuery(space, Query.select(filter ?? Filter.everything()));
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
@@ -141,6 +140,20 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       void model.close();
     };
   }, [space, model, researchGraph?.queue.dxn.toString()]);
+
+  // const objects = useQuery(space, Query.select(filter ?? Filter.everything()));
+  // TODO(burdon): Hack to filter out invalid objects.
+  const objects =
+    model?.nodes
+      .filter((node) => {
+        try {
+          getTypename(node.data.object as AnyEchoObject);
+          return true;
+        } catch {
+          return false;
+        }
+      })
+      .map((node) => node.data.object as AnyEchoObject) ?? [];
 
   const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1_000 });
   const blueprint = useBlueprint(space, researchGraph?.queue.dxn);
@@ -243,7 +256,6 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
                 space: client.spaces.get().length,
                 db: space?.db.toJSON(),
                 queue: researchQueue?.toJSON(),
-                items: objects.length,
                 model: model?.toJSON(),
                 selection: selection.toJSON(),
                 ast,
@@ -304,32 +316,73 @@ const useBlueprint = (space: Space | undefined, queueDxn: DXN | undefined) => {
 
     const db = space.db;
 
-    // TODO(burdon): Text-DSL that references tools?
-    // TODO(dmaretskyi): make db available through services (same as function executor).
-    const blueprint = BlueprintBuilder.begin()
-      .step('Research information and entities related to the selected objects.')
-      .withTool(createExaTool({ apiKey: EXA_API_KEY }))
-      .step('Based on your research find matching entires that are already in the graph. Do exaustive research.')
-      .withTool(createLocalSearchTool(db))
-      .step('Add researched data to the graph. Make connections to existing objects.')
-      .withTool(createLocalSearchTool(db))
-      .withTool(
-        createGraphWriterTool({
-          db,
-          schemaTypes: DataTypes,
-          onDone: async (objects) => {
-            if (!space || !queueDxn) {
-              log.warn('failed to add objects to research queue');
-              return;
-            }
+    const parser = BlueprintParser.create([
+      createExaTool({ apiKey: EXA_API_KEY }),
+      createLocalSearchTool(db),
+      createGraphWriterTool({
+        db,
+        schemaTypes: DataTypes,
+        onDone: async (objects) => {
+          if (!space || !queueDxn) {
+            log.warn('failed to add objects to research queue');
+            return;
+          }
 
-            const queue = space.queues.get(queueDxn);
-            queue.append(objects);
-            log.info('research queue', { items: queue.objects });
-          },
-        }),
-      )
-      .end();
+          const queue = space.queues.get(queueDxn);
+          queue.append(objects);
+          log.info('research queue', { queue });
+        },
+      }),
+    ]);
+
+    console.log(parser.toJSON());
+
+    const blueprint = parser.parse({
+      steps: [
+        {
+          instructions: 'Research information and entities related to the selected objects.',
+          tools: ['search/web_search'],
+        },
+        {
+          instructions:
+            'Based on your research find matching entires that are already in the graph. Do exaustive research.',
+          tools: ['example/local_search'],
+        },
+        {
+          instructions: 'Add researched data to the graph. Make connections to existing objects.',
+          tools: ['example/local_search', 'graph/writer'],
+        },
+      ],
+    });
+
+    // TODO(dmaretskyi): make db available through services (same as function executor).
+    const blueprint2 = BlueprintBuilder.create()
+      .step('Research information and entities related to the selected objects.', {
+        tools: [createExaTool({ apiKey: EXA_API_KEY })],
+      })
+      .step('Based on your research find matching entires that are already in the graph. Do exaustive research.', {
+        tools: [createLocalSearchTool(db)],
+      })
+      .step('Add researched data to the graph. Make connections to existing objects.', {
+        tools: [
+          createLocalSearchTool(db),
+          createGraphWriterTool({
+            db,
+            schemaTypes: DataTypes,
+            onDone: async (objects) => {
+              if (!space || !queueDxn) {
+                log.warn('failed to add objects to research queue');
+                return;
+              }
+
+              const queue = space.queues.get(queueDxn);
+              queue.append(objects);
+              log.info('research queue', { queue });
+            },
+          }),
+        ],
+      })
+      .build();
 
     return blueprint;
   }, [space, queueDxn]);

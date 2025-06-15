@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { DEFAULT_EDGE_MODEL } from './defs';
 import { AIServiceEdgeClient, MixedStreamParser, OllamaClient } from './service';
 import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from './testing';
-import { defineTool, Message, ToolResult, type Tool } from './tools';
+import { createTool, defineTool, Message, ToolResult } from './tools';
 import { ToolTypes } from './types';
 
 // log.config({ filter: 'debug' });
@@ -52,7 +52,7 @@ describe.skip('AI Service Client', () => {
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
-    const custodian: Tool = {
+    const custodian = defineTool('test', {
       name: 'custodian',
       description: 'Custodian can tell you the password if you say the magic word',
       parameters: toJsonSchema(
@@ -60,7 +60,7 @@ describe.skip('AI Service Client', () => {
           magicWord: Schema.String.annotations({ description: 'The magic word. Should be exactly "pretty please"' }),
         }),
       ),
-    };
+    });
 
     // await client.appendMessages([
     //   {
@@ -141,13 +141,13 @@ describe.skip('AI Service Client', () => {
     const stream = await client.execStream({
       model: DEFAULT_EDGE_MODEL,
       tools: [
-        {
+        defineTool('test', {
           name: 'text-to-image',
           type: ToolTypes.TextToImage,
           // options: {
           //   model: '@cf/stabilityai/stable-diffusion-xl-base-1.0',
           // },
-        },
+        }),
       ],
     });
 
@@ -189,7 +189,7 @@ describe.skip('Ollama Client', () => {
 
     const client = createTestOllamaClient({
       tools: [
-        defineTool('test', {
+        createTool('test', {
           name: 'encrypt',
           description: 'Encrypt a message',
           schema: Schema.Struct({
@@ -232,10 +232,10 @@ describe.skip('Ollama Client', () => {
           content: [{ type: 'text', text: 'Generate an image of a cat' }],
         }),
         tools: [
-          {
+          defineTool('test', {
             name: 'text-to-image',
             type: ToolTypes.TextToImage,
-          },
+          }),
         ],
       }),
     );

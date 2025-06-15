@@ -8,7 +8,7 @@ import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { Relation, Obj, Type, Filter, Query, Ref } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, type EchoSchema, getLabel, getTypename } from '@dxos/echo-schema';
+import { type EchoSchema, getLabel, getTypename } from '@dxos/echo-schema';
 import { type GraphEdge, AbstractGraphBuilder, type Graph, ReactiveGraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -231,22 +231,9 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
           });
 
           this._options?.onCreateEdge?.(edge, object);
-        } catch (error) {
-          const source = (object as any)[ATTR_RELATION_SOURCE];
-          const target = (object as any)[ATTR_RELATION_TARGET];
-
-          const edge = {
-            id: object.id,
-            type: 'relation',
-            source,
-            target,
-            data: {
-              object,
-            },
-          };
-          console.log(JSON.stringify(edge, null, 2));
-
-          // this._options?.onCreateEdge?.(edge, object);
+        } catch (error: any) {
+          // TODO(burdon): FIX API and remove.
+          log.error('onCreateEdge', { error: error?.message });
         }
       } else {
         // TODO(burdon): Obj.getTypename returns undefined for the same object.

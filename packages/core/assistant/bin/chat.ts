@@ -2,10 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import inquirer from 'inquirer';
 import { writeFileSync } from 'node:fs';
 
-import { DEFAULT_EDGE_MODEL, AIServiceEdgeClient, ToolTypes, createLogger, createUserMessage, runLLM } from '@dxos/ai';
+import {
+  DEFAULT_EDGE_MODEL,
+  AIServiceEdgeClient,
+  ToolTypes,
+  createLogger,
+  createUserMessage,
+  runLLM,
+  ToolResult,
+  defineTool,
+} from '@dxos/ai';
 import {
   AI_SERVICE_ENDPOINT,
   createCypherTool,
@@ -49,10 +59,12 @@ while (true) {
     system: createSystemPrompt(schemaTypes),
     tools: [
       cypherTool,
-      {
+      defineTool('test', {
         name: 'text-to-image',
         type: ToolTypes.TextToImage,
-      },
+        schema: Schema.Void,
+        execute: () => Promise.resolve(ToolResult.Success('image="https://example.com/image.png"')),
+      }),
     ],
     client,
     history: [createUserMessage(spaceId, threadId, prompt.message)],

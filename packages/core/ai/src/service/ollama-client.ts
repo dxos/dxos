@@ -12,7 +12,7 @@ import { MessageCollector, emitMessageAsEvents } from './message-collector';
 import { type AIServiceClient, type GenerationStream } from './service';
 import { GenerationStreamImpl } from './stream';
 import { DEFAULT_OLLAMA_ENDPOINT } from '../defs';
-import { defineTool, isToolUse, type MessageContentBlock, runTools, type Tool, ToolResult } from '../tools';
+import { createTool, isToolUse, type MessageContentBlock, runTools, type Tool, ToolResult } from '../tools';
 import { ToolTypes, type GenerateRequest, type GenerateResponse, type GenerationStreamEvent } from '../types';
 
 export type OllamaClientParams = {
@@ -385,7 +385,7 @@ const sanitizeToolArguments = (args: any) => {
 const SAMPLE_IMAGE_URL = 'https://images.nightcafe.studio/jobs/BNmcRhHCM1JRKoUtqSei/BNmcRhHCM1JRKoUtqSei--1--5b9rv.jpg';
 
 const WELL_KNOWN_TOOLS: Record<string, Tool> = {
-  [ToolTypes.TextToImage]: defineTool('system', {
+  [ToolTypes.TextToImage]: createTool('system', {
     name: 'text-to-image',
     description: 'Generate an image from a text prompt',
     schema: Schema.Struct({
