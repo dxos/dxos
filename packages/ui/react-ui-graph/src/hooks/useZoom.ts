@@ -18,7 +18,7 @@ export type ZoomOptions = {
 
 const defaultZoomOptions: ZoomOptions = {
   enabled: true,
-  extent: [1 / 2, 2],
+  extent: [1 / 4, 4],
   onDblClick: (zoom: ZoomHandler) => zoom.reset(),
 };
 

@@ -40,7 +40,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
+import { getHashColor, mx } from '@dxos/react-ui-theme';
 import { DataType, DataTypes, SpaceGraphModel } from '@dxos/schema';
 import { createObjectFactory, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -124,7 +124,8 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     }
   }, [space]);
 
-  const items = useQuery(space, Query.select(filter ?? Filter.everything()));
+  // TODO(burdon): Filter by object/relation?
+  const objects = useQuery(space, Query.select(filter ?? Filter.everything()));
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
@@ -236,16 +237,13 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
               <IconButton icon='ph--plus--regular' iconOnly label='generate' onClick={handleGenerate} />
               <IconButton icon='ph--trash--regular' iconOnly label='reset' onClick={handleReset} />
             </Toolbar.Root>
-            <ItemList items={items} getTitle={(item) => getLabelForObject(item)} />
+            <ItemList items={objects} />
             <JsonFilter
               data={{
                 space: client.spaces.get().length,
                 db: space?.db.toJSON(),
-                queue: {
-                  dxn: researchGraph?.queue.dxn.toString(),
-                  items: researchQueue?.items.length,
-                },
-                items: items.length,
+                queue: researchQueue?.toJSON(),
+                items: objects.length,
                 model: model?.toJSON(),
                 selection: selection.toJSON(),
                 ast,
@@ -327,7 +325,7 @@ const useBlueprint = (space: Space | undefined, queueDxn: DXN | undefined) => {
 
             const queue = space.queues.get(queueDxn);
             queue.append(objects);
-            log.info('research queue', { items: queue.items });
+            log.info('research queue', { items: queue.objects });
           },
         }),
       )
@@ -349,46 +347,24 @@ const ResearchGraph = Schema.Struct({
   }),
 );
 
-const getColor = (type: string) => {
-  const colors = [
-    'text-red-500',
-    'text-green-500',
-    'text-blue-500',
-    'text-yellow-500',
-    'text-purple-500',
-    'text-pink-500',
-    'text-orange-500',
-    'text-violet-500',
-  ];
-
-  const hash = type.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return colors[hash % colors.length];
-};
-
-// TODO(burdon): Cards.
-const ItemList = ({
-  items = [],
-  getTitle,
-}: {
-  items?: AnyEchoObject[];
-  getTitle: (item: AnyEchoObject) => string | undefined;
-}) => {
+// TODO(burdon): Replace with card list.
+const ItemList = <T extends AnyEchoObject>({ items = [] }: { items?: T[] }) => {
   return (
-    <List.Root<AnyEchoObject> items={items}>
+    <List.Root<T> items={items}>
       {({ items }) => (
         <div role='list' className='grow flex flex-col overflow-y-auto'>
           {/* TODO(burdon): Virtualize. */}
           {items.map((item) => (
-            <List.Item<AnyEchoObject>
+            <List.Item<T>
               key={item.id}
               item={item}
               classNames='grid grid-cols-[4rem_16rem_1fr] min-h-[32px] items-center'
             >
               <div className='text-xs font-mono font-thin px-1 text-subdued'>{item.id.slice(-6)}</div>
-              <div className={mx('text-xs font-mono font-thin truncate px-1', getColor(getTypename(item)!))}>
+              <div className={mx('text-xs font-mono font-thin truncate px-1', getHashColor(getTypename(item))?.text)}>
                 {getTypename(item)}
               </div>
-              <List.ItemTitle>{getTitle(item)}</List.ItemTitle>
+              <List.ItemTitle>{getLabelForObject(item)}</List.ItemTitle>
             </List.Item>
           ))}
         </div>

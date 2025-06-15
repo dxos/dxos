@@ -134,7 +134,7 @@ describe.skip('SentenceNormalization', () => {
     await normalizer.open();
     effect(() => {
       log.info('normalizer');
-      log.info(JSON.stringify(queue.items, null, 2));
+      log.info(JSON.stringify(queue.objects, null, 2));
     });
 
     await new Promise(() => {});

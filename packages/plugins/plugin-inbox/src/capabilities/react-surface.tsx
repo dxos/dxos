@@ -73,7 +73,7 @@ export default () =>
         const space = useSpace();
         const [mailbox] = useQuery(space, Filter.type(MailboxType));
         const queue = useQueue<DataType.Message>(mailbox?.queue.dxn);
-        const messages = queue?.items ?? [];
+        const messages = queue?.objects ?? [];
         const related = messages
           .filter(
             (message) =>

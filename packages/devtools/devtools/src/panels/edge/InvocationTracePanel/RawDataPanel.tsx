@@ -25,9 +25,9 @@ export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ className
   const combinedData = useMemo(() => {
     return {
       span,
-      traceEvents: eventQueue?.items ?? [],
+      traceEvents: eventQueue?.objects ?? [],
     };
-  }, [span, eventQueue?.items]);
+  }, [span, eventQueue?.objects]);
 
   const rowRenderer = ({
     rows,

@@ -56,7 +56,7 @@ export class MessageNormalizer extends Resource {
         return;
       }
 
-      this._messagesToProcess = this._queue.items.filter((message) => {
+      this._messagesToProcess = this._queue.objects.filter((message) => {
         const actorId = getActorId(message.sender);
         return actorId === this._cursor.actorId && message.created >= this._cursor.timestamp;
       });

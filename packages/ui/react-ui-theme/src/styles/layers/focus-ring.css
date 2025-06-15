@@ -10,7 +10,7 @@
         @apply ring-focusLine ring-offset-focusOffset z-[1] ring-neutralFocusIndicator;
 
         &[data-variant="primary"] {
-          @apply ring-accentFocusIndicator
+          @apply ring-accentFocusIndicator;
         }
 
         &:hover {
@@ -39,7 +39,7 @@
     @apply ring-focusLine ring-offset-focusOffset ring-neutralFocusIndicator;
 
     &[data-variant="primary"] {
-      @apply ring-accentFocusIndicator
+      @apply ring-accentFocusIndicator;
     }
 
     &:hover {
@@ -78,7 +78,7 @@
         }
 
         &[data-variant="primary"]::after {
-          @apply ring-accentFocusIndicator
+          @apply ring-accentFocusIndicator;
         }
 
         &:hover {

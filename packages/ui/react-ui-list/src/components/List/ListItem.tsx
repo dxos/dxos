@@ -30,7 +30,8 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { useListContext } from './ListRoot';
 
-export type ListItemRecord = {};
+// TODO(burdon): Remove.
+export type ListItemRecord = object;
 
 export type ItemDragState =
   | {

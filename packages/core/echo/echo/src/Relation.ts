@@ -29,7 +29,7 @@ export const isRelation = (value: unknown): value is Any => {
 export const getSource = <T extends Any>(relation: T): EchoSchema.RelationSource<T> => {
   invariant(isRelation(relation));
   const obj = relation[EchoSchema.RelationSourceId];
-  invariant(obj !== undefined, 'Invalid relation.');
+  invariant(obj !== undefined, `Invalid source: ${relation.id}`);
   return obj;
 };
 
@@ -40,6 +40,6 @@ export const getSource = <T extends Any>(relation: T): EchoSchema.RelationSource
 export const getTarget = <T extends Any>(relation: T): EchoSchema.RelationTarget<T> => {
   invariant(isRelation(relation));
   const obj = relation[EchoSchema.RelationTargetId];
-  invariant(obj !== undefined, 'Invalid relation.');
+  invariant(obj !== undefined, `Invalid target: ${relation.id}`);
   return obj;
 };

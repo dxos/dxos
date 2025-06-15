@@ -90,6 +90,12 @@ export class RepoProxy extends Resource {
     });
   }
 
+  import<T>(dump: Uint8Array): DocHandleProxy<T> {
+    const handle = this.create<T>();
+    handle.update(() => A.load(dump));
+    return handle;
+  }
+
   create<T>(initialValue?: T): DocHandleProxy<T> {
     // Generate a new UUID and store it in the buffer.
     const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
@@ -98,12 +104,6 @@ export class RepoProxy extends Resource {
       isNew: true,
       initialValue,
     });
-  }
-
-  import<T>(dump: Uint8Array): DocHandleProxy<T> {
-    const handle = this.create<T>();
-    handle.update(() => A.load(dump));
-    return handle;
   }
 
   async flush(): Promise<void> {
@@ -169,16 +169,16 @@ export class RepoProxy extends Resource {
   }): DocHandleProxy<T> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
-    // TODO(burdon): Called even if not mutations.
+    // TODO(burdon): Seems to be called on read (e.g., story startup).
     const onChange = () => {
-      log.info('onChange', { documentId });
+      log('onChange', { documentId });
       this._pendingUpdateIds.add(documentId);
       this._sendUpdatesJob?.trigger();
       this._emitSaveStateEvent();
     };
 
     const onDelete = () => {
-      log.info('onDelete', { documentId });
+      log('onDelete', { documentId });
       handle.off('change', onChange);
       this._pendingRemoveIds.add(documentId);
       this._sendUpdatesJob?.trigger();

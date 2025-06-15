@@ -10,17 +10,22 @@ import { invariant } from '@dxos/invariant';
 import type * as Keys from '@dxos/keys';
 
 /**
- * New EchoObject schema.
+ * ECHO schema.
+ */
+export type Schema = EchoSchema.EchoSchema;
+
+/**
+ * EchoObject schema.
  */
 export const Obj = EchoSchema.EchoObject;
 
 /**
- * New EchoRelation schema.
+ * EchoRelation schema.
  */
 export const Relation = EchoSchema.EchoRelation;
 
 /**
- * New Ref schema.
+ * Ref schema.
  */
 export const Ref: <S extends Obj.Any>(schema: S) => EchoSchema.Ref$<Schema.Schema.Type<S>> = EchoSchema.Ref;
 
