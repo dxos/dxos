@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { defineTool, Message, type AIServiceClient, MixedStreamParser } from '@dxos/ai';
+import { Message, type AIServiceClient, MixedStreamParser, createTool } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import { create } from '@dxos/echo-schema';
 import { failedInvariant } from '@dxos/invariant';
@@ -73,7 +73,7 @@ export const processEmail = async (params: ProcessEmailParams): Promise<ProcessE
         }),
       ],
       tools: [
-        defineTool('test', {
+        createTool('test', {
           name: 'submit_result',
           description: 'Submit the result',
           schema: Schema.Struct({

@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { AIServiceEdgeClient, defineTool, ToolResult } from '@dxos/ai';
+import { AIServiceEdgeClient, ToolResult, createTool } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { ArtifactId } from '@dxos/artifact';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -45,7 +45,7 @@ describe.skip('Blueprint', () => {
   });
 
   test('email bot', { timeout: 60_000 }, async () => {
-    const replyTool = defineTool('email', {
+    const replyTool = createTool('email', {
       name: 'reply',
       description: 'Reply to the email',
       schema: Schema.Struct({
@@ -63,7 +63,7 @@ describe.skip('Blueprint', () => {
       },
     });
 
-    const labelTool = defineTool('email', {
+    const labelTool = createTool('email', {
       name: 'label',
       description: 'Apply a label to the email',
       schema: Schema.Struct({

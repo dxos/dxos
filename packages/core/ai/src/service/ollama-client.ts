@@ -12,7 +12,15 @@ import { MessageCollector, emitMessageAsEvents } from './message-collector';
 import { type AIServiceClient, type GenerationStream } from './service';
 import { GenerationStreamImpl } from './stream';
 import { DEFAULT_OLLAMA_ENDPOINT } from '../defs';
-import { createTool, isToolUse, type MessageContentBlock, runTools, type Tool, ToolResult } from '../tools';
+import {
+  createTool,
+  type ExecutableTool,
+  isToolUse,
+  type MessageContentBlock,
+  runTools,
+  type Tool,
+  ToolResult,
+} from '../tools';
 import { ToolTypes, type GenerateRequest, type GenerateResponse, type GenerationStreamEvent } from '../types';
 
 export type OllamaClientParams = {
@@ -21,7 +29,7 @@ export type OllamaClientParams = {
   /**
    * Tools that are executed within the client.
    */
-  tools?: Tool[];
+  tools?: ExecutableTool[];
 
   /**
    * Override generation parameters.
@@ -61,7 +69,7 @@ export class OllamaClient implements AIServiceClient {
   }
 
   private readonly _endpoint: string;
-  private readonly _tools: Tool[];
+  private readonly _tools: ExecutableTool[];
   private readonly _modelOverride?: string;
   private readonly _temperatureOverride?: number;
   private readonly _maxToolInvocations: number;
@@ -74,7 +82,7 @@ export class OllamaClient implements AIServiceClient {
     this._maxToolInvocations = maxToolInvocations ?? 3;
   }
 
-  private _getEmbededTools(clientTools: Tool[]): Tool[] {
+  private _getEmbededTools(clientTools: Tool[]): ExecutableTool[] {
     return [
       ...this._tools,
       ...clientTools
@@ -384,7 +392,7 @@ const sanitizeToolArguments = (args: any) => {
 
 const SAMPLE_IMAGE_URL = 'https://images.nightcafe.studio/jobs/BNmcRhHCM1JRKoUtqSei/BNmcRhHCM1JRKoUtqSei--1--5b9rv.jpg';
 
-const WELL_KNOWN_TOOLS: Record<string, Tool> = {
+const WELL_KNOWN_TOOLS: Record<string, ExecutableTool> = {
   [ToolTypes.TextToImage]: createTool('system', {
     name: 'text-to-image',
     description: 'Generate an image from a text prompt',
@@ -393,7 +401,6 @@ const WELL_KNOWN_TOOLS: Record<string, Tool> = {
     }),
     execute: async ({ prompt }) => {
       const image = await fetch(SAMPLE_IMAGE_URL).then(async (res) => Buffer.from(await res.arrayBuffer()));
-
       const imageBase64 = image.toString('base64');
       const id = ObjectId.random();
 

@@ -5,6 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
+import { type JsonSchemaType } from '@dxos/echo-schema';
 
 import { type Message } from './message';
 import { type Tool, ToolResult, type ToolExecutionContext, type ExecutableTool } from './tool';
@@ -20,7 +21,7 @@ export const parseToolName = (name: string) => {
 /**
  * Creates a well-formed tool definition.
  */
-export const defineTool = (namespace: string, { name, ...props }: Omit<Tool, 'id' | 'namespace'>): ExecutableTool => {
+export const defineTool = (namespace: string, { name, ...props }: Omit<Tool, 'id' | 'namespace'>): Tool => {
   const id = [namespace, name].join('/');
   return {
     id,
@@ -31,37 +32,52 @@ export const defineTool = (namespace: string, { name, ...props }: Omit<Tool, 'id
   };
 };
 
-export type CreateExecutableToolParams<Params extends Schema.Schema.AnyNoContext> = Omit<Tool, 'id' | 'namespace'> & {
+type BaseProps = Omit<Tool, 'id' | 'namespace' | 'parameters'>;
+
+interface CreateToolParams<Params extends Schema.Schema.AnyNoContext> extends BaseProps {
   schema: Params;
   execute: (params: Schema.Schema.Type<Params>, context: ToolExecutionContext) => Promise<ToolResult>;
-};
+}
+
+interface CreateRawToolParams extends BaseProps {
+  parameters: JsonSchemaType;
+  execute: (params: any, context: ToolExecutionContext) => Promise<ToolResult>;
+}
 
 /**
  * Creates a runnable tool definition.
  */
 export const createTool = <Params extends Schema.Schema.AnyNoContext>(
   namespace: string,
-  { name, schema, execute, ...props }: CreateExecutableToolParams<Params>,
+  { name, schema, execute, ...props }: CreateToolParams<Params>,
 ): ExecutableTool => {
-  const id = [namespace, name].join('/');
-  return {
-    ...props,
-    id,
-    name: createToolName(id),
-    namespace,
-    function: name,
+  return createRawTool(namespace, {
+    name,
     parameters: toFunctionParameterSchema(Type.toJsonSchema(schema)),
     execute: (params: any, context?: any) => {
       const sanitized = Schema.decodeSync(schema)(params);
       return execute(sanitized, context ?? {});
     },
+    ...props,
+  });
+};
+
+export const createRawTool = (
+  namespace: string,
+  { name, parameters, execute, ...props }: CreateRawToolParams,
+): ExecutableTool => {
+  const tool = defineTool(namespace, { name, ...props });
+  return {
+    ...tool,
+    parameters,
+    execute,
   };
 };
 
 /**
  * Adapts schemas to be able to pass to AI providers.
  */
-export const toFunctionParameterSchema = (jsonSchema: Type.JsonSchema) => {
+export const toFunctionParameterSchema = (jsonSchema: Type.JsonSchema): Type.JsonSchema => {
   const go = (jsonSchema: Type.JsonSchema) => {
     delete jsonSchema.propertyOrder;
     delete jsonSchema.annotations;

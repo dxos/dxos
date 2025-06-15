@@ -52,7 +52,7 @@ describe.skip('AI Service Client', () => {
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
-    const custodian = defineTool('test', {
+    const custodian = defineTool('testing', {
       name: 'custodian',
       description: 'Custodian can tell you the password if you say the magic word',
       parameters: toJsonSchema(
@@ -141,7 +141,7 @@ describe.skip('AI Service Client', () => {
     const stream = await client.execStream({
       model: DEFAULT_EDGE_MODEL,
       tools: [
-        defineTool('test', {
+        defineTool('testing', {
           name: 'text-to-image',
           type: ToolTypes.TextToImage,
           // options: {
@@ -232,7 +232,7 @@ describe.skip('Ollama Client', () => {
           content: [{ type: 'text', text: 'Generate an image of a cat' }],
         }),
         tools: [
-          defineTool('test', {
+          defineTool('testing', {
             name: 'text-to-image',
             type: ToolTypes.TextToImage,
           }),

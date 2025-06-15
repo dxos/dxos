@@ -81,7 +81,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
       }
 
       invariant(tool.execute);
-      const toolResult = await tool.execute(toolCall.input);
+      const toolResult = await tool.execute(toolCall.input, {});
       switch (toolResult.kind) {
         case 'error': {
           log.warn('tool error', { message: toolResult.message });

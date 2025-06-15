@@ -9,7 +9,6 @@ import {
   isToolUse,
   runTools,
   type AgentStatus,
-  defineTool,
   structuredOutputParser,
   type AIServiceClient,
   type GenerationStream,
@@ -18,7 +17,8 @@ import {
   type MessageContentBlock,
   MixedStreamParser,
   ToolResult,
-  type Tool,
+  createTool,
+  type ExecutableTool,
 } from '@dxos/ai';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import { Event, synchronized } from '@dxos/async';
@@ -64,7 +64,7 @@ export type SessionRunOptions = {
   /**
    * Non-artifact specific tools.
    */
-  tools: Tool[];
+  tools: ExecutableTool[];
 
   history: Message[];
 
@@ -156,7 +156,7 @@ export class AISession {
 
   @synchronized
   async run(options: SessionRunOptions): Promise<Message[]> {
-    const systemTools: Tool[] = [];
+    const systemTools: ExecutableTool[] = [];
     switch (this._options.operationModel) {
       case 'planning':
         systemTools.push(this._createQueryArtifactsTool(options.artifacts), this._createPlanningTool(options));
@@ -188,7 +188,7 @@ export class AISession {
     try {
       let more = false;
       do {
-        const tools = [
+        const tools: ExecutableTool[] = [
           ...systemTools,
           ...options.tools,
           ...options.artifacts
@@ -315,8 +315,8 @@ export class AISession {
     });
   }
 
-  private _createQueryArtifactsTool(artifacts: ArtifactDefinition[]): Tool {
-    return defineTool('system', {
+  private _createQueryArtifactsTool(artifacts: ArtifactDefinition[]): ExecutableTool {
+    return createTool('system', {
       name: 'query_artifact_definitions',
       description: 'Query the available artifact definitions',
       schema: Schema.Struct({}),
@@ -335,8 +335,8 @@ export class AISession {
   private _createRequireTool(
     artifacts: ArtifactDefinition[],
     onRequire: (artifactDefinitionIds: readonly string[]) => void,
-  ): Tool {
-    return defineTool('system', {
+  ): ExecutableTool {
+    return createTool('system', {
       name: 'require_artifact_definitions',
       description:
         'Require the use of specific artifact definitions. This will allow the model to interact with artifact definitions and use their tools.',
@@ -363,8 +363,8 @@ export class AISession {
     });
   }
 
-  private _createPlanningTool(options: SessionRunOptions): Tool {
-    return defineTool('system', {
+  private _createPlanningTool(options: SessionRunOptions): ExecutableTool {
+    return createTool('system', {
       name: 'create_plan',
       description:
         'Create a plan. Make sure that each step is independent and can be executed solely on the data returned by the previous step. The steps only share the data that is specified in the plan.',

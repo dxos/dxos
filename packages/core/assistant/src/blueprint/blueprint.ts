@@ -81,6 +81,7 @@ export namespace BlueprintParser {
 
       for (const step of steps) {
         builder.step(step.instructions, {
+          // TODO(burdon): Tool resolution is duplicated in the session and ollama-client.
           tools: step.tools?.map(
             (tool) => this._tools.find(({ id }) => id === tool) ?? raise(new Error(`Tool not found: ${tool}`)),
           ),

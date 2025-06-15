@@ -5,7 +5,8 @@
 import { Match, Schema } from 'effect';
 
 import {
-  defineTool,
+  createTool,
+  type ExecutableTool,
   Message,
   ToolResult,
   type AIServiceClient,
@@ -105,7 +106,7 @@ export class BlueprintMachine {
           'A comment about the task completion. If you bailed, you must explain why in detail (min couple of sentences).',
       }),
     });
-    const report = defineTool('system', {
+    const report = createTool('system', {
       name: 'report',
       description: 'This tool reports that the agent has completed the task or is unable to do so',
       schema: ReportSchema,
@@ -142,7 +143,7 @@ export class BlueprintMachine {
         The Rule-Following Agent precisely follows the instructions.
       `,
       history: [...state.history, ...inputMessages],
-      tools: [...nextStep.tools, report],
+      tools: [...nextStep.tools, report] as ExecutableTool[], // TODO(burdon): !!!
       artifacts: [],
       client: options.aiService,
       prompt: nextStep.instructions,
