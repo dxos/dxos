@@ -22,15 +22,15 @@ import {
   ATTR_RELATION_TARGET,
   create,
   createQueueDxn,
-  Filter,
   getSchema,
   getSchemaDXN,
   getTypename,
   isInstanceOf,
-  RelationSourceId,
-  RelationTargetId,
   toJsonSchema,
   type BaseObject,
+  Filter,
+  RelationSourceId,
+  RelationTargetId,
 } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';

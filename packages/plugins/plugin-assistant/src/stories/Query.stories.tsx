@@ -160,7 +160,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1_000 });
 
   const researchBlueprint = useMemo(() => {
-    if (!space) {
+    if (!space || !researchGraph) {
       return undefined;
     }
 
