@@ -251,8 +251,15 @@ const DefaultStory = ({
       </div>
 
       <Popover.VirtualTrigger virtualRef={popoverAnchorRef} />
-      <Popover.Content classNames='popover-card-width' onOpenAutoFocus={(event) => event.preventDefault()}>
-        <SyntaxHighlighter classNames='text-sm' language='json' code={JSON.stringify(popover, null, 2)} />
+      <Popover.Content
+        classNames='p-1 bg-groupSurface popover-card-width'
+        onOpenAutoFocus={(event) => event.preventDefault()}
+      >
+        <SyntaxHighlighter
+          classNames='p-0 bg-transparent text-xs'
+          language='json'
+          code={JSON.stringify(popover, null, 2)}
+        />
         <Popover.Arrow />
       </Popover.Content>
     </Popover.Root>
