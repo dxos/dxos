@@ -28,14 +28,14 @@ export type BlueprintMachineState = {
 };
 
 const INITIAL_STATE: BlueprintMachineState = {
+  state: 'working',
   history: [],
   trace: [],
-  state: 'working',
 };
 
 export type BlueprintTraceStep = {
-  stepId: ObjectId;
   status: 'done' | 'bailed' | 'skipped';
+  stepId: ObjectId;
   comment: string;
 };
 
@@ -49,7 +49,7 @@ type ExecutionOptions = {
 };
 
 /**
- *
+ * Blueprint state machine.
  */
 export class BlueprintMachine {
   public readonly begin = new Event<void>();
@@ -59,9 +59,9 @@ export class BlueprintMachine {
   public readonly message = new Event<Message>();
   public readonly block = new Event<MessageContentBlock>();
 
-  constructor(readonly blueprint: Blueprint) {}
-
   state: BlueprintMachineState = structuredClone(INITIAL_STATE);
+
+  constructor(readonly blueprint: Blueprint) {}
 
   async runToCompletion(options: ExecutionOptions): Promise<void> {
     log.info('runToCompletion', options);
@@ -106,6 +106,7 @@ export class BlueprintMachine {
           'A comment about the task completion. If you bailed, you must explain why in detail (min couple of sentences).',
       }),
     });
+
     const report = createTool('system', {
       name: 'report',
       description: 'This tool reports that the agent has completed the task or is unable to do so',
@@ -143,7 +144,7 @@ export class BlueprintMachine {
         The Rule-Following Agent precisely follows the instructions.
       `,
       history: [...state.history, ...inputMessages],
-      tools: [...nextStep.tools, report] as ExecutableTool[], // TODO(burdon): !!!
+      tools: [...nextStep.tools, report] as ExecutableTool[], // TODO(burdon): REMOVE CAST!
       artifacts: [],
       client: options.aiService,
       prompt: nextStep.instructions,

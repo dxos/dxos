@@ -4,13 +4,14 @@
 
 import { Schema } from 'effect';
 
-import { Tool } from '@dxos/ai';
+import { type ExecutableTool, Tool } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import { ObjectId } from '@dxos/keys';
 
 export const BlueprintStep = Schema.Struct({
   id: Schema.String,
   instructions: Schema.String,
+  // TODO(burdon): ExecutableTool can't be serialized.
   tools: Schema.Array(Tool).pipe(Schema.mutable),
 });
 export interface BlueprintStep extends Schema.Schema.Type<typeof BlueprintStep> {}
@@ -29,7 +30,7 @@ export namespace BlueprintBuilder {
   class Builder {
     private readonly _steps: BlueprintStep[] = [];
 
-    step(instructions: string, options?: { tools?: Tool[] }): Builder {
+    step(instructions: string, options?: { tools?: ExecutableTool[] }): Builder {
       this._steps.push({
         id: ObjectId.random(),
         instructions,
@@ -61,10 +62,10 @@ export namespace BlueprintParser {
     steps: Step[];
   };
 
-  export const create = (tools: Tool[] = []) => new Parser(tools);
+  export const create = (tools: ExecutableTool[] = []) => new Parser(tools);
 
   class Parser {
-    constructor(private readonly _tools: Tool[]) {}
+    constructor(private readonly _tools: ExecutableTool[]) {}
 
     toJSON() {
       return {

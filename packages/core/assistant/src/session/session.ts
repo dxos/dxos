@@ -182,6 +182,7 @@ export class AISession {
     this._pending = [await this._formatUserPrompt(options.artifactDiffResolver, options.prompt, options.history)];
     this.userMessage.emit(this._pending.at(-1)!);
     this._stream = undefined;
+
     let error: Error | undefined;
 
     const requiredArtifactIds = new Set<string>(options.requiredArtifactIds ?? []);
