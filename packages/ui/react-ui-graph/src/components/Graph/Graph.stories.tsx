@@ -6,6 +6,7 @@ import '@dxos-theme';
 
 import { effect } from '@preact/signals-core';
 import { type StoryObj } from '@storybook/react';
+import { select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
@@ -15,6 +16,7 @@ import { getHashColor, mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
+import { Pulsar } from '../../fx';
 import {
   GraphForceProjector,
   type GraphForceProjectorOptions,
@@ -176,6 +178,25 @@ const DefaultStory = ({
     });
   }, []);
 
+  const active = useMemo(() => new SelectionModel(true), []);
+  const handlePing = useCallback(() => {
+    for (const id of active.selected.value) {
+      const node = graphRef.current?.findNode(id);
+      if (node) {
+        Pulsar.remove(select(node));
+      }
+    }
+
+    for (const id of selection.selected.value) {
+      const node = graphRef.current?.findNode(id);
+      if (node) {
+        active.add(id);
+        const r = parseFloat(select(node).select('circle').attr('r') ?? '8');
+        Pulsar.create(select(node), r);
+      }
+    }
+  }, [selection, active]);
+
   return (
     <Popover.Root open={!!popover} onOpenChange={(state) => !state && setPopover(undefined)}>
       <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
@@ -224,6 +245,7 @@ const DefaultStory = ({
             onClear={handleClear}
             onAdd={handleAdd}
             onDelete={handleDelete}
+            onPing={handlePing}
           />
         )}
       </div>
@@ -248,6 +270,7 @@ const Debug = ({
   onClear,
   onAdd,
   onDelete,
+  onPing,
 }: {
   model?: GraphModel;
   selection: SelectionModel;
@@ -259,6 +282,7 @@ const Debug = ({
   onClear: () => void;
   onAdd: () => void;
   onDelete: () => void;
+  onPing: () => void;
 }) => {
   const [data, setData] = useState({});
   useEffect(() => {
@@ -281,6 +305,7 @@ const Debug = ({
         <IconButton onClick={onClear} size={5} label='Clear' icon='ph--trash--regular' iconOnly />
         <IconButton onClick={onAdd} size={5} label='Add' icon='ph--plus--regular' iconOnly />
         <IconButton onClick={onDelete} size={5} label='Delete' icon='ph--x--regular' iconOnly />
+        <IconButton onClick={onPing} size={5} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
       </Toolbar.Root>
       <JsonFilter data={data} classNames='text-sm' />
     </div>

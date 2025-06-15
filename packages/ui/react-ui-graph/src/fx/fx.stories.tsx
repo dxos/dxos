@@ -34,11 +34,15 @@ type Datum = {
 const StoryComponent: FC<{ count: number }> = ({ count = 1 }) => {
   const items = useMemo<Datum[]>(
     () =>
-      Array.from({ length: count }, () => ({
-        x: (Math.random() - 0.5) * 400,
-        y: (Math.random() - 0.5) * 400,
-        r: 8,
-      })),
+      Array.from({ length: count }, () => {
+        const a = Math.random() * Math.PI * 2;
+        const r = 100 + Math.random() * 200;
+        return {
+          x: r * Math.cos(a),
+          y: r * Math.sin(a),
+          r: 8,
+        };
+      }),
     [count],
   );
 
