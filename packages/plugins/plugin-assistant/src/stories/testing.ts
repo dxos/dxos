@@ -90,7 +90,7 @@ export const createTools = (space: Space, queueDxn?: DXN): ExecutableTool[] => {
   ].filter(isNonNullable);
 };
 
-export const blueprintDefinition: BlueprintParser.DSL = {
+export const RESEARCH_BLUEPRINT: BlueprintParser.DSL = {
   steps: [
     {
       instructions: 'Research information and entities related to the selected objects.',

@@ -39,7 +39,7 @@ import { createObjectFactory, type TypeSpec, type ValueGenerator } from '@dxos/s
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { addTestData } from './test-data';
-import { blueprintDefinition, createTools, testPlugins } from './testing';
+import { RESEARCH_BLUEPRINT, createTools, testPlugins } from './testing';
 import { AmbientDialog, PromptBar, type PromptController, type PromptBarProps } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { createFilter, type Expression, QueryParser } from '../parser';
@@ -159,14 +159,13 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1_000 });
 
-  // Construct blueprint.
-  const blueprint = useMemo(() => {
+  const researchBlueprint = useMemo(() => {
     if (!space) {
       return undefined;
     }
 
-    const parser = BlueprintParser.create(createTools(space, researchGraph?.queue.dxn));
-    return parser.parse(blueprintDefinition);
+    const tools = createTools(space, researchGraph?.queue.dxn);
+    return BlueprintParser.create(tools).parse(RESEARCH_BLUEPRINT);
   }, [space, researchGraph?.queue.dxn]);
 
   //
@@ -178,17 +177,17 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   }, [model]);
 
   const handleResearch = useCallback(async () => {
-    if (!space || !blueprint) {
+    if (!space || !researchBlueprint) {
       return;
     }
 
     const selected = selection.selected.value;
     log.info('starting research...', { selected });
     const { objects } = await space.db.query(Filter.ids(...selected)).run();
-    const machine = new BlueprintMachine(blueprint);
+    const machine = new BlueprintMachine(researchBlueprint);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiService: aiClient, input: objects });
-  }, [space, aiClient, blueprint, selection]);
+  }, [space, aiClient, researchBlueprint, selection]);
 
   const handleGenerate = useCallback(async () => {
     if (!space) {
