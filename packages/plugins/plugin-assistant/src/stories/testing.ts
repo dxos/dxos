@@ -73,6 +73,7 @@ export const testPlugins = ({
 ];
 
 // TODO(dmaretskyi): make db available through services (same as function executor).
+// TODO(burdon): Can tools implement "aspects" so that variants can be used rather than an explicit reference?
 export const createTools = (space: Space, queueDxn?: DXN): ExecutableTool[] => {
   return [
     createExaTool({ apiKey: EXA_API_KEY }),
@@ -89,7 +90,6 @@ export const createTools = (space: Space, queueDxn?: DXN): ExecutableTool[] => {
   ].filter(isNonNullable);
 };
 
-// TODO(burdon): Can tools implement "aspects" so that variants can be used rather than an explicit reference?
 export const blueprintDefinition: BlueprintParser.DSL = {
   steps: [
     {

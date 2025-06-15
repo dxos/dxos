@@ -18,7 +18,6 @@ import { Filter, Queue, type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
 import { type AnyEchoObject, create, getLabelForObject, getTypename, Ref } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
-import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
@@ -76,18 +75,23 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const selection = useMemo(() => new SelectionModel(), []);
 
-  // Reactive graph model.
+  //
+  // Graph
+  //
+
   const [model] = useState<SpaceGraphModel | undefined>(() => {
-    if (showGraph) {
-      return new SpaceGraphModel().setOptions({
-        onCreateEdge: (edge, relation) => {
-          // TODO(burdon): Check type.
-          if ((relation as any).active === false) {
-            edge.data.force = false;
-          }
-        },
-      });
+    if (!showGraph) {
+      return undefined;
     }
+
+    return new SpaceGraphModel().setOptions({
+      onCreateEdge: (edge, relation) => {
+        // TODO(burdon): Check type.
+        if ((relation as any).active === false) {
+          edge.data.force = false;
+        }
+      },
+    });
   });
 
   const client = useClient();
@@ -134,8 +138,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     };
   }, [space, model, researchGraph?.queue.dxn.toString()]);
 
-  // const objects = useQuery(space, Query.select(filter ?? Filter.everything()));
-  // TODO(burdon): Hack to filter out invalid objects.
+  // TODO(burdon): Hack to filter out invalid (queue) objects.
   const objects =
     model?.nodes
       .filter((node) => {
@@ -148,9 +151,23 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       })
       .map((node) => node.data.object as AnyEchoObject) ?? [];
 
-  const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1_000 });
-  const blueprint = useBlueprint(space, researchGraph?.queue.dxn);
+  //
+  // AI
+  //
+
   const aiClient = useMemo(() => new SpyAIService(new AIServiceEdgeClient(aiConfig)), []);
+
+  const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1_000 });
+
+  // Construct blueprint.
+  const blueprint = useMemo(() => {
+    if (!space) {
+      return undefined;
+    }
+
+    const parser = BlueprintParser.create(createTools(space, researchGraph?.queue.dxn));
+    return parser.parse(blueprintDefinition);
+  }, [space, researchGraph?.queue.dxn]);
 
   //
   // Handlers
@@ -166,7 +183,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     }
 
     const selected = selection.selected.value;
-    log.info('research', { selected });
+    log.info('starting research...', { selected });
     const { objects } = await space.db.query(Filter.ids(...selected)).run();
     const machine = new BlueprintMachine(blueprint);
     setConsolePrinter(machine, true);
@@ -218,6 +235,10 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     [space],
   );
 
+  //
+  // Prompt
+  //
+
   const promptRef = useRef<PromptController>(null);
   const handleCancel = useCallback<NonNullable<PromptBarProps['onCancel']>>(() => {
     setAst(undefined);
@@ -226,6 +247,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   }, []);
 
   const handleMatch = useCallback<NonNullable<TypeaheadOptions['onComplete']>>(createMatcher(space), [space]);
+
   const extensions = useMemo(() => [typeahead({ onComplete: handleMatch })], [handleMatch]);
 
   return (
@@ -273,7 +295,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   );
 };
 
-// TODO(burdon): Match against expression grammar.
+// TODO(burdon): Factor out; match against expression grammar.
 const createMatcher =
   (space?: Space) =>
   ({ line }: TypeaheadContext) => {
@@ -300,17 +322,6 @@ const createMatcher =
       return staticCompletion(['type:', 'AND', 'OR', 'NOT'])({ line });
     }
   };
-
-const useBlueprint = (space: Space | undefined, queueDxn: DXN | undefined) => {
-  return useMemo(() => {
-    if (!space) {
-      return undefined;
-    }
-
-    const parser = BlueprintParser.create(createTools(space, queueDxn));
-    return parser.parse(blueprintDefinition);
-  }, [space, queueDxn]);
-};
 
 /**
  * Container for a set of ephemeral research results.
