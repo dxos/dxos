@@ -89,6 +89,7 @@ export const createTools = (space: Space, queueDxn?: DXN): ExecutableTool[] => {
   ].filter(isNonNullable);
 };
 
+// TODO(burdon): Can tools implement "aspects" so that variants can be used rather than an explicit reference?
 export const blueprintDefinition: BlueprintParser.DSL = {
   steps: [
     {
