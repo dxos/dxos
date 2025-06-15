@@ -39,10 +39,11 @@ import { createObjectFactory, type TypeSpec, type ValueGenerator } from '@dxos/s
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { addTestData } from './test-data';
-import { RESEARCH_BLUEPRINT, createTools, testPlugins } from './testing';
+import { testPlugins } from './testing';
 import { AmbientDialog, PromptBar, type PromptController, type PromptBarProps } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { createFilter, type Expression, QueryParser } from '../parser';
+import { RESEARCH_BLUEPRINT, createTools } from '../testing';
 import translations from '../translations';
 
 faker.seed(1);
@@ -53,6 +54,7 @@ const generator = faker as any as ValueGenerator;
 const LOCAL = false;
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
 
+// TODO(burdon) Move to story args.
 const aiConfig: AIServiceEdgeClientOptions = {
   endpoint: endpoints.ai,
   defaultGenerationOptions: {
