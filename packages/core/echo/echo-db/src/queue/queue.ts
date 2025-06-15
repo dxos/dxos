@@ -35,6 +35,13 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
     this._queueId = queueId ?? failedInvariant();
   }
 
+  toJSON() {
+    return {
+      dxn: this._dxn.toString(),
+      objects: this._objects.length,
+    };
+  }
+
   get dxn() {
     return this._dxn;
   }

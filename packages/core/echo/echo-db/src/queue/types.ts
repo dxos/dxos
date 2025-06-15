@@ -15,7 +15,17 @@ export interface Queue<T extends BaseEchoObject = BaseEchoObject> {
   isLoading: boolean;
   error: Error | null;
   objects: T[];
+
+  toJSON(): any;
+
+  /**
+   * Appends objects to the queue.
+   */
   append(objects: T[]): void;
+
+  /**
+   * Deletes objects from the queue.
+   */
   delete(ids: string[]): void;
 
   /**

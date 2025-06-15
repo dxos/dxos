@@ -287,18 +287,22 @@ const updateNode: D3Callable = <NodeData = any, EdgeData = any>(
 
   // Custom attributes.
   if (options.attributes?.node) {
-    group.each((d, i, nodes) => {
-      const node = select(nodes[i]);
-      const { classes, data } = options.attributes?.node?.(d) ?? {};
-      if (classes) {
-        applyClasses(node, classes);
-      }
-      if (data) {
-        Object.entries(data).forEach(([key, value]) => {
-          node.attr(`data-${key}`, value);
-        });
-      }
-    });
+    try {
+      group.each((d, i, nodes) => {
+        const node = select(nodes[i]);
+        const { classes, data } = options.attributes?.node?.(d) ?? {};
+        if (classes) {
+          applyClasses(node, classes);
+        }
+        if (data) {
+          Object.entries(data).forEach(([key, value]) => {
+            node.attr(`data-${key}`, value);
+          });
+        }
+      });
+    } catch (error) {
+      log.catch(error);
+    }
   }
 
   // Optional transition.
@@ -394,19 +398,23 @@ const updateEdge: D3Callable = <NodeData = any, EdgeData = any>(
   nodeGroup: D3Selection,
 ) => {
   // Custom attributes.
-  group.each((d, i, edges) => {
-    const edge = select(edges[i]);
-    edge.classed('dx-dashed', d.linkForce === false);
-    const { classes, data } = options.attributes?.edge?.(d) ?? {};
-    if (classes) {
-      applyClasses(edge, classes);
-    }
-    if (data) {
-      Object.entries(data).forEach(([key, value]) => {
-        edge.attr(`data-${key}`, value);
-      });
-    }
-  });
+  try {
+    group.each((d, i, edges) => {
+      const edge = select(edges[i]);
+      edge.classed('dx-dashed', d.linkForce === false);
+      const { classes, data } = options.attributes?.edge?.(d) ?? {};
+      if (classes) {
+        applyClasses(edge, classes);
+      }
+      if (data) {
+        Object.entries(data).forEach(([key, value]) => {
+          edge.attr(`data-${key}`, value);
+        });
+      }
+    });
+  } catch (error) {
+    log.catch(error);
+  }
 
   // Optional transition.
   const groupOrTransition: D3Selection = options.transition

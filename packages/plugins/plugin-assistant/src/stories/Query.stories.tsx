@@ -125,7 +125,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   }, [space]);
 
   // TODO(burdon): Filter by object/relation?
-  const items = useQuery(space, Query.select(filter ?? Filter.everything()));
+  const objects = useQuery(space, Query.select(filter ?? Filter.everything()));
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
@@ -237,16 +237,13 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
               <IconButton icon='ph--plus--regular' iconOnly label='generate' onClick={handleGenerate} />
               <IconButton icon='ph--trash--regular' iconOnly label='reset' onClick={handleReset} />
             </Toolbar.Root>
-            <ItemList items={items} getTitle={(item) => getLabelForObject(item)} />
+            <ItemList items={objects} />
             <JsonFilter
               data={{
                 space: client.spaces.get().length,
                 db: space?.db.toJSON(),
-                queue: {
-                  dxn: researchGraph?.queue.dxn.toString(),
-                  items: researchQueue?.objects.length,
-                },
-                items: items.length,
+                queue: researchQueue?.toJSON(),
+                items: objects.length,
                 model: model?.toJSON(),
                 selection: selection.toJSON(),
                 ast,
@@ -350,21 +347,15 @@ const ResearchGraph = Schema.Struct({
   }),
 );
 
-// TODO(burdon): Cards.
-const ItemList = ({
-  items = [],
-  getTitle,
-}: {
-  items?: AnyEchoObject[];
-  getTitle: (item: AnyEchoObject) => string | undefined;
-}) => {
+// TODO(burdon): Replace with card list.
+const ItemList = <T extends AnyEchoObject>({ items = [] }: { items?: T[] }) => {
   return (
-    <List.Root<AnyEchoObject> items={items}>
+    <List.Root<T> items={items}>
       {({ items }) => (
         <div role='list' className='grow flex flex-col overflow-y-auto'>
           {/* TODO(burdon): Virtualize. */}
           {items.map((item) => (
-            <List.Item<AnyEchoObject>
+            <List.Item<T>
               key={item.id}
               item={item}
               classNames='grid grid-cols-[4rem_16rem_1fr] min-h-[32px] items-center'
@@ -373,7 +364,7 @@ const ItemList = ({
               <div className={mx('text-xs font-mono font-thin truncate px-1', getHashColor(getTypename(item))?.text)}>
                 {getTypename(item)}
               </div>
-              <List.ItemTitle>{getTitle(item)}</List.ItemTitle>
+              <List.ItemTitle>{getLabelForObject(item)}</List.ItemTitle>
             </List.Item>
           ))}
         </div>

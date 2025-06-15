@@ -46,6 +46,13 @@ export class MemoryQueue<T extends BaseEchoObject = BaseEchoObject> implements Q
 
   constructor(private readonly _dxn: DXN) {}
 
+  toJSON() {
+    return {
+      dxn: this._dxn.toString(),
+      objects: this._objects.length,
+    };
+  }
+
   get dxn() {
     return this._dxn;
   }
