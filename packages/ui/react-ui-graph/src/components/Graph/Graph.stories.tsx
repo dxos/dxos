@@ -178,7 +178,7 @@ const DefaultStory = ({
     });
   }, []);
 
-  const active = useMemo(() => new SelectionModel(true), []);
+  const active = useMemo(() => new SelectionModel(), []);
   const handlePing = useCallback(() => {
     for (const id of active.selected.value) {
       const node = graphRef.current?.findNode(id);
@@ -187,6 +187,7 @@ const DefaultStory = ({
       }
     }
 
+    active.clear();
     for (const id of selection.selected.value) {
       const node = graphRef.current?.findNode(id);
       if (node) {
