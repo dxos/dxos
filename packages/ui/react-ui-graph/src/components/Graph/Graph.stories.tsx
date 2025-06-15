@@ -299,18 +299,19 @@ type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
+    graph: () => convertTreeToGraph(createTree({ depth: 3 })),
     debug: true,
     grid: {
       axis: true,
     },
     drag: true,
     arrows: true,
-    graph: () => convertTreeToGraph(createTree({ depth: 3 })),
   },
 };
 
 export const Projector: Story = {
   args: {
+    graph: () => convertTreeToGraph(createTree({ depth: 4 })),
     debug: true,
     drag: true,
     arrows: true,
@@ -319,12 +320,12 @@ export const Projector: Story = {
     projectorOptions: {
       duration: 500,
     },
-    graph: () => convertTreeToGraph(createTree({ depth: 4 })),
   },
 };
 
 export const Force: Story = {
   args: {
+    graph: () => convertTreeToGraph(createTree({ depth: 5 })),
     debug: true,
     drag: true,
     projectorOptions: {
@@ -352,12 +353,12 @@ export const Force: Story = {
         },
       },
     },
-    graph: () => convertTreeToGraph(createTree({ depth: 5 })),
   },
 };
 
 export const Select: Story = {
   args: {
+    graph: () => createGraph(100, 30, ['type-1', 'type-2', 'type-3', 'type-4', 'type-5', 'type-6']),
     debug: false,
     drag: true,
     grid: true,
@@ -373,12 +374,12 @@ export const Select: Story = {
         },
       },
     },
-    graph: () => createGraph(100, 30, ['type-1', 'type-2', 'type-3', 'type-4', 'type-5', 'type-6']),
   },
 };
 
 export const WithSubgraphs: Story = {
   args: {
+    graph: () => createGraph(50, 30),
     debug: true,
     drag: true,
     subgraphs: true,
@@ -390,12 +391,12 @@ export const WithSubgraphs: Story = {
         },
       },
     },
-    graph: () => createGraph(50, 30),
   },
 };
 
 export const WithPopover: Story = {
   args: {
+    graph: () => createGraph(30, 10),
     debug: false,
     drag: true,
     inspect: true,
@@ -407,7 +408,6 @@ export const WithPopover: Story = {
         point: true,
       },
     },
-    graph: () => createGraph(30, 10),
   },
 };
 
