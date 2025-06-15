@@ -136,7 +136,9 @@ const getUrl = (userId: string, messageId?: string, params?: Record<string, any>
   const api = new URL(
     [`https://gmail.googleapis.com/gmail/v1/users/${userId}/messages`, messageId].filter(Boolean).join('/'),
   );
-  Object.entries(params ?? {}).forEach(([key, value]) => api.searchParams.set(key, value));
+  Object.entries(params ?? {})
+    .filter(([_, value]) => value != null)
+    .forEach(([key, value]) => api.searchParams.set(key, value));
   return api.toString();
 };
 
