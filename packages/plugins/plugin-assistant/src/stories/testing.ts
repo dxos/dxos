@@ -99,11 +99,11 @@ export const RESEARCH_BLUEPRINT: BlueprintParser.DSL = {
     {
       instructions:
         'Based on your research find matching entires that are already in the graph. Do exaustive research.',
-      tools: ['example/local_search'],
+      tools: ['search/local_search'],
     },
     {
       instructions: 'Add researched data to the graph. Make connections to existing objects.',
-      tools: ['example/local_search', 'graph/writer'],
+      tools: ['search/local_search', 'graph/writer'],
     },
   ],
 };

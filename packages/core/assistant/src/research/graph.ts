@@ -96,7 +96,7 @@ const isSchemaAddressableByDxn = (schema: Schema.Schema.AnyNoContext, dxn: DXN):
  * Perform vector search in the local database.
  */
 export const createLocalSearchTool = (db: EchoDatabase) => {
-  return createTool('example', {
+  return createTool('search', {
     name: 'local_search',
     description: 'Search the local database for information using a vector index',
     schema: Schema.Struct({
