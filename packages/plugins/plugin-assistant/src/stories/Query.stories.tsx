@@ -9,19 +9,12 @@ import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AIServiceEdgeClient, type AIServiceEdgeClientOptions } from '@dxos/ai';
-import { EXA_API_KEY, SpyAIService } from '@dxos/ai/testing';
+import { SpyAIService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import {
-  BlueprintBuilder,
-  BlueprintParser,
-  BlueprintMachine,
-  createExaTool,
-  createGraphWriterTool,
-  createLocalSearchTool,
-  setConsolePrinter,
-} from '@dxos/assistant';
+import { BlueprintParser, BlueprintMachine, setConsolePrinter } from '@dxos/assistant';
+import { Filter, Queue, type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
 import { type AnyEchoObject, create, getLabelForObject, getTypename, Ref } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
@@ -30,7 +23,7 @@ import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { Filter, Queue, type Space, useQueue } from '@dxos/react-client/echo';
+import { useQueue } from '@dxos/react-client/echo';
 import { Dialog, IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
 import {
   matchCompletion,
@@ -42,12 +35,12 @@ import {
 import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { getHashColor, mx } from '@dxos/react-ui-theme';
-import { DataType, DataTypes, SpaceGraphModel } from '@dxos/schema';
+import { DataType, SpaceGraphModel } from '@dxos/schema';
 import { createObjectFactory, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { addTestData } from './test-data';
-import { testPlugins } from './testing';
+import { blueprintDefinition, createTools, testPlugins } from './testing';
 import { AmbientDialog, PromptBar, type PromptController, type PromptBarProps } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { createFilter, type Expression, QueryParser } from '../parser';
@@ -314,77 +307,8 @@ const useBlueprint = (space: Space | undefined, queueDxn: DXN | undefined) => {
       return undefined;
     }
 
-    const db = space.db;
-
-    const parser = BlueprintParser.create([
-      createExaTool({ apiKey: EXA_API_KEY }),
-      createLocalSearchTool(db),
-      createGraphWriterTool({
-        db,
-        schemaTypes: DataTypes,
-        onDone: async (objects) => {
-          if (!space || !queueDxn) {
-            log.warn('failed to add objects to research queue');
-            return;
-          }
-
-          const queue = space.queues.get(queueDxn);
-          queue.append(objects);
-          log.info('research queue', { queue });
-        },
-      }),
-    ]);
-
-    console.log(parser.toJSON());
-
-    const blueprint = parser.parse({
-      steps: [
-        {
-          instructions: 'Research information and entities related to the selected objects.',
-          tools: ['search/web_search'],
-        },
-        {
-          instructions:
-            'Based on your research find matching entires that are already in the graph. Do exaustive research.',
-          tools: ['example/local_search'],
-        },
-        {
-          instructions: 'Add researched data to the graph. Make connections to existing objects.',
-          tools: ['example/local_search', 'graph/writer'],
-        },
-      ],
-    });
-
-    // TODO(dmaretskyi): make db available through services (same as function executor).
-    const blueprint2 = BlueprintBuilder.create()
-      .step('Research information and entities related to the selected objects.', {
-        tools: [createExaTool({ apiKey: EXA_API_KEY })],
-      })
-      .step('Based on your research find matching entires that are already in the graph. Do exaustive research.', {
-        tools: [createLocalSearchTool(db)],
-      })
-      .step('Add researched data to the graph. Make connections to existing objects.', {
-        tools: [
-          createLocalSearchTool(db),
-          createGraphWriterTool({
-            db,
-            schemaTypes: DataTypes,
-            onDone: async (objects) => {
-              if (!space || !queueDxn) {
-                log.warn('failed to add objects to research queue');
-                return;
-              }
-
-              const queue = space.queues.get(queueDxn);
-              queue.append(objects);
-              log.info('research queue', { queue });
-            },
-          }),
-        ],
-      })
-      .build();
-
-    return blueprint;
+    const parser = BlueprintParser.create(createTools(space, queueDxn));
+    return parser.parse(blueprintDefinition);
   }, [space, queueDxn]);
 };
 
