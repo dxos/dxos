@@ -12,9 +12,10 @@ import { create } from './create';
 import { serializeStatic } from './json-serializer';
 import { RelationSourceId, RelationTargetId } from './model';
 import { getTypename } from './typename';
-import { getSchema, getSchemaDXN } from '../ast';
+import { getSchemaDXN } from '../ast';
 import { Testing } from '../testing';
 import { isInstanceOf } from '../types';
+import { getSchema } from './accessors';
 
 describe('create (static version)', () => {
   test('defaults', ({ expect }) => {

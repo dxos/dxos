@@ -1,8 +1,10 @@
-import { DXN, ObjectId } from '@dxos/keys';
-import { InternalObjectProps } from './model';
-import { Schema } from 'effect';
+import { getField, type JsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
+import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
+import { Schema } from 'effect';
+import { LabelAnnotationId } from '../ast';
+import { InternalObjectProps, SchemaId } from './model';
 
 //
 // Accessors based on model.
@@ -23,4 +25,72 @@ export const getObjectDXN = (object: any): DXN | undefined => {
   }
 
   return DXN.fromLocalObjectId(object.id);
+};
+
+/**
+ * Returns the schema for the given object if one is defined.
+ */
+// TODO(burdon): Reconcile with `getTypename`.
+// TODO(dmaretskyi): For echo objects, this always returns the root schema.
+export const getSchema = (obj: unknown | undefined): Schema.Schema.AnyNoContext | undefined => {
+  if (!obj) {
+    return undefined;
+  }
+
+  return (obj as any)[SchemaId];
+};
+
+/**
+ * Internal use only.
+ */
+export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext) => {
+  Object.defineProperty(obj, SchemaId, {
+    value: schema,
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  });
+};
+
+/**
+ * Returns the label for a given object based on {@link LabelAnnotationId}.
+ */
+export const getLabelForObject = (obj: unknown | undefined): string | undefined => {
+  const schema = getSchema(obj);
+  if (schema) {
+    return getLabel(schema, obj);
+  }
+};
+
+/**
+ * Returns the label for a given object based on {@link LabelAnnotationId}.
+ */
+// TODO(burdon): Convert to JsonPath?
+export const getLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.Schema.Type<S>): string | undefined => {
+  let annotation = schema.ast.annotations[LabelAnnotationId];
+  if (!annotation) {
+    return undefined;
+  }
+  if (!Array.isArray(annotation)) {
+    annotation = [annotation];
+  }
+
+  for (const accessor of annotation as string[]) {
+    assertArgument(typeof accessor === 'string', 'Label annotation must be a string or an array of strings');
+    const value = getField(object, accessor as JsonPath);
+    switch (typeof value) {
+      case 'string':
+      case 'number':
+      case 'boolean':
+      case 'bigint':
+      case 'symbol':
+        return value.toString();
+      case 'undefined':
+      case 'object':
+      case 'function':
+        continue;
+    }
+  }
+
+  return undefined;
 };
