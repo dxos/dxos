@@ -28,15 +28,14 @@ export const BlueprintEditor = ({ classNames, blueprint }: BlueprintEditorProps)
     initialValue: JSON.stringify(blueprint, null, 2),
     extensions: [
       createBasicExtensions({ lineWrapping: false }),
-      createThemeExtensions({
-        themeMode,
-        syntaxHighlighting: true,
-      }),
+      createThemeExtensions({ themeMode, syntaxHighlighting: true }),
       // TODO(burdon): ERROR: reference "/schemas/any" resolves to more than one schema
       createJsonExtensions({ schema: false ? toJsonSchema(Blueprint) : undefined }),
       editorMonospace,
     ],
   });
 
-  return <div ref={parentRef} className={mx('w-full pli-2 overflow-x-scroll bg-inputSurface', classNames)} />;
+  return (
+    <div ref={parentRef} className={mx('flex w-full pli-2 overflow-x-scroll border-x border-separator', classNames)} />
+  );
 };
