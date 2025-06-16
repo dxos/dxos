@@ -26,7 +26,7 @@ type TestPluginsOptions = {
   indexConfig?: IndexConfig;
 };
 
-export const testPlugins = ({ config, types = [], indexConfig }: TestPluginsOptions = {}) => [
+export const testPlugins = ({ config, types = DataTypes, indexConfig }: TestPluginsOptions = {}) => [
   ClientPlugin({
     config: new Config(
       defaulstDeep({}, config, {
@@ -39,13 +39,11 @@ export const testPlugins = ({ config, types = [], indexConfig }: TestPluginsOpti
         },
       }),
     ),
-    types: DataTypes,
+    types,
     onClientInitialized: async (_, client) => {
       if (!client.halo.identity.get()) {
         await client.halo.createIdentity();
       }
-
-      client.addTypes(types);
 
       if (indexConfig) {
         // TODO(burdon): Rename services.services?
