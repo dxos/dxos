@@ -37,7 +37,7 @@ export default {
 
 export const Default = {
   args: {
-    valence: 'error',
+    valence: 'neutral',
     title: 'Alert title',
     body: 'Alert content',
   },
