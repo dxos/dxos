@@ -72,9 +72,15 @@ export const ViewEditor = ({
     };
   }, [view]);
 
-  const handleSelect = useCallback((field: FieldType) => {
-    setField((f) => (f === field ? undefined : field));
-  }, []);
+  const handleSelect = useCallback(
+    (field: FieldType) => {
+      if (immutable) {
+        return;
+      }
+      setField((f) => (f === field ? undefined : field));
+    },
+    [immutable],
+  );
 
   // TODO(burdon): Check if mutable; variant of useCallback that return undefined if readonly?
 
