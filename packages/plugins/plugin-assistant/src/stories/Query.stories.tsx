@@ -452,7 +452,6 @@ export const Test: Story = {
     const [events, setEvents] = useState<{ type: string; duration: number }[]>([]);
     const client = useClient();
     const space = client.spaces.get().at(0);
-    // const objects = useQuery(space, Filter.everything());
 
     const test = async (type: string, f: () => Promise<void> | void) => {
       const t = performance.now();
@@ -495,7 +494,6 @@ export const Test: Story = {
 
     const data = {
       space: space?.id,
-      // objects: objects.length,
       spaces: client.spaces.get().map((space) => {
         return space.db.toJSON();
       }),
