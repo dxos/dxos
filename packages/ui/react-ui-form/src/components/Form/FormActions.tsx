@@ -14,12 +14,12 @@ export type FormActionsProps = {
   onCancel?: () => void;
 };
 
-export const FormActions = ({ onCancel, readonly }: FormActionsProps) => {
+export const FormActions = ({ readonly, onCancel }: FormActionsProps) => {
   const { t } = useTranslation(translationKey);
   const { canSave, handleSave } = useFormContext();
 
   return (
-    <div role='none' className='mbs-4 flex [&_button]:grow gap-1'>
+    <div role='none' className='flex [&_button]:grow gap-1'>
       {onCancel && !readonly && (
         <IconButton data-testid='cancel-button' icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
       )}

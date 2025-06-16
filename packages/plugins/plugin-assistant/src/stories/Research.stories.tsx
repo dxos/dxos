@@ -9,7 +9,7 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import { Option, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AgentStatusReport, AIServiceEdgeClient, defineTool, Message, ToolResult, type Tool } from '@dxos/ai';
+import { AgentStatusReport, AIServiceEdgeClient, createTool, type ExecutableTool, Message, ToolResult } from '@dxos/ai';
 import { EXA_API_KEY, SpyAIService } from '@dxos/ai/testing';
 import { Capabilities, contributes, createSurface, Events, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -22,15 +22,15 @@ import {
   ATTR_RELATION_TARGET,
   create,
   createQueueDxn,
-  Filter,
   getSchema,
   getSchemaDXN,
   getTypename,
   isInstanceOf,
-  RelationSourceId,
-  RelationTargetId,
   toJsonSchema,
   type BaseObject,
+  Filter,
+  RelationSourceId,
+  RelationTargetId,
 } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -122,7 +122,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     [aiClient, space, queue],
   );
 
-  const tools = useMemo<Tool[]>(() => [createResearchTool(serviceContainer, 'research', researchFn)], []);
+  const tools = useMemo<ExecutableTool[]>(() => [createResearchTool(serviceContainer, 'research', researchFn)], []);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
@@ -146,7 +146,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [aiClient, tools, space, dispatch]);
 
   useEffect(() => {
-    if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
+    if (queue?.objects.length === 0 && !queue.isLoading && prompts.length > 0) {
       queue.append([
         create(Message, {
           role: 'assistant',
@@ -161,12 +161,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         }),
       ]);
     }
-  }, [queueDxn, prompts, queue?.items.length, queue?.isLoading]);
+  }, [queueDxn, prompts, queue?.objects.length, queue?.isLoading]);
 
   // State.
   const objects = useQuery(space, Filter.or(...DataTypes.map((type) => Filter.type(type))));
   const messages = [
-    ...(queue?.items.filter((item) => isInstanceOf(Message, item)) ?? []),
+    ...(queue?.objects.filter((item) => isInstanceOf(Message, item)) ?? []),
     ...(processor?.messages.value ?? []),
   ];
 
@@ -183,7 +183,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
           invariant(queue);
           await processor.request(message, {
-            history: queue.items,
+            history: queue.objects,
             onComplete: (messages) => {
               queue.append(messages);
             },
@@ -333,8 +333,7 @@ const ResearchPrompts = ({ object, onResearch }: ResearchPromptsProps) => {
 };
 
 const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn: typeof researchFn) => {
-  return defineTool('example', {
-    // TODO(dmaretskyi): Include name in definition
+  return createTool('example', {
     name,
     description: fn.description ?? raise(new Error('No description')),
     schema: fn.inputSchema,
@@ -345,14 +344,14 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
             write: (event) => {
               if (isInstanceOf(AgentStatusReport, event)) {
                 log.info('[too] report status', { status: event });
-                reportStatus(event);
+                reportStatus?.(event);
               }
             },
           },
         }),
       );
 
-      reportStatus(
+      reportStatus?.(
         create(AgentStatusReport, {
           message: 'Researching...',
         }),

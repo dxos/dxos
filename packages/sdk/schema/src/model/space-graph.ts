@@ -47,14 +47,14 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   private _filter?: Filter.Any;
 
   private _space?: Space;
+  private _queue?: Queue;
   private _schema?: EchoSchema[];
-  private _schemaSubscription?: CleanupFn;
   private _objects?: Obj.Any[];
   private _queueItems?: Obj.Any[];
-  private _objectsSubscription?: CleanupFn;
+  private _schemaSubscription?: CleanupFn;
+  private _objectSubscription?: CleanupFn;
   private _queueSubscription?: CleanupFn;
-
-  private _queue?: Queue;
+  private _timeout?: NodeJS.Timeout;
 
   override get builder() {
     return new SpaceGraphBuilder(this);
@@ -101,7 +101,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     const schemaaQuery = space.db.schemaRegistry.query({});
     const schemas = await schemaaQuery.run();
 
-    const onSchemaUpdate = ({ results }: { results: EchoSchema[] }) => (this._schema = results);
+    const onSchemaUpdate = ({ results }: { results: Type.Schema[] }) => (this._schema = results);
     this._schemaSubscription = schemaaQuery.subscribe(onSchemaUpdate);
     onSchemaUpdate({ results: schemas });
     this._subscribe();
@@ -113,13 +113,11 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     log('close');
     this._schemaSubscription?.();
     this._schemaSubscription = undefined;
-    this._objectsSubscription?.();
-    this._objectsSubscription = undefined;
+    this._objectSubscription?.();
+    this._objectSubscription = undefined;
     this._space = undefined;
     return this;
   }
-
-  private _timeout?: NodeJS.Timeout;
 
   /**
    * Batch updates into same execution frame.
@@ -129,18 +127,22 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     this._timeout = setTimeout(() => {
       if (this.isOpen()) {
         batch(() => {
-          this._update();
+          try {
+            this._update();
+          } catch (error) {
+            log.catch(error);
+          }
         });
       }
-    }, 0);
+    });
   }
 
   private _subscribe() {
-    this._objectsSubscription?.();
+    this._objectSubscription?.();
     this._queueSubscription?.();
 
     invariant(this._space);
-    this._objectsSubscription = this._space.db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
+    this._objectSubscription = this._space.db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
       ({ objects }) => {
         log.info('update', { objects: objects.length });
         this._objects = [...objects];
@@ -151,7 +153,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
     if (this._queue) {
       this._queueSubscription = effect(() => {
-        const items = this._queue?.items;
+        const items = this._queue?.objects;
         if (items) {
           this._queueItems = [...items];
         }
@@ -217,17 +219,22 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
       // Relation.
       if (Relation.isRelation(object)) {
-        const edge = this.addEdge({
-          id: object.id,
-          type: 'relation',
-          source: Relation.getSource(object).id,
-          target: Relation.getTarget(object).id,
-          data: {
-            object,
-          },
-        });
+        try {
+          const edge = this.addEdge({
+            id: object.id,
+            type: 'relation',
+            source: Relation.getSource(object).id,
+            target: Relation.getTarget(object).id,
+            data: {
+              object,
+            },
+          });
 
-        this._options?.onCreateEdge?.(edge, object);
+          this._options?.onCreateEdge?.(edge, object);
+        } catch (error: any) {
+          // TODO(burdon): FIX API and remove.
+          log.error('onCreateEdge', { error: error?.message });
+        }
       } else {
         // TODO(burdon): Obj.getTypename returns undefined for the same object.
         // const typename = Obj.getTypename(object);

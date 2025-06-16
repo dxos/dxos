@@ -7,8 +7,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { Message } from './message';
-import { type Tool, ToolResult } from './tools';
-import type { AgentStatus } from '../status-report';
+import { type ExecutableTool, ToolResult } from './tool';
+import { type AgentStatus } from '../status-report';
 
 export const isToolUse = (message: Message, { onlyToolNames }: { onlyToolNames?: string[] } = {}) => {
   const block = message.content.at(-1);
@@ -18,7 +18,7 @@ export const isToolUse = (message: Message, { onlyToolNames }: { onlyToolNames?:
 
 export type RunToolsOptions = {
   message: Message;
-  tools: Tool[];
+  tools: ExecutableTool[];
   extensions?: ToolContextExtensions;
   reportStatus: (status: AgentStatus) => void;
 };

@@ -4,7 +4,7 @@
 
 import { Schema, identity, Option, SchemaAST } from 'effect';
 
-import { defineTool, ToolResult } from '@dxos/ai';
+import { createTool, ToolResult } from '@dxos/ai';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
@@ -96,7 +96,7 @@ const isSchemaAddressableByDxn = (schema: Schema.Schema.AnyNoContext, dxn: DXN):
  * Perform vector search in the local database.
  */
 export const createLocalSearchTool = (db: EchoDatabase) => {
-  return defineTool('example', {
+  return createTool('search', {
     name: 'local_search',
     description: 'Search the local database for information using a vector index',
     schema: Schema.Struct({
@@ -279,8 +279,8 @@ export const createGraphWriterTool = ({
   schemaTypes: Schema.Schema.AnyNoContext[];
   onDone?: (data: AnyEchoObject[]) => Promise<any>;
 }) => {
-  return defineTool('graph', {
-    name: 'write',
+  return createTool('graph', {
+    name: 'writer',
     description: 'Write to the local graph database',
     schema: createExtractionSchema(schemaTypes),
     execute: async (input) => {

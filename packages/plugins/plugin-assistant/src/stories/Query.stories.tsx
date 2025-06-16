@@ -9,27 +9,20 @@ import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AIServiceEdgeClient, type AIServiceEdgeClientOptions } from '@dxos/ai';
-import { EXA_API_KEY, SpyAIService } from '@dxos/ai/testing';
+import { SpyAIService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import {
-  BlueprintBuilder,
-  BlueprintMachine,
-  createExaTool,
-  createGraphWriterTool,
-  createLocalSearchTool,
-  setConsolePrinter,
-} from '@dxos/assistant';
+import { BlueprintParser, BlueprintMachine, setConsolePrinter } from '@dxos/assistant';
+import { Filter, Queue, type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
-import { type AnyEchoObject, create, getLabelForObject, getTypename, Query, Ref } from '@dxos/echo-schema';
+import { type AnyEchoObject, create, getLabelForObject, getTypename, Ref } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
-import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { Filter, Queue, type Space, useQuery, useQueue } from '@dxos/react-client/echo';
+import { useQueue } from '@dxos/react-client/echo';
 import { Dialog, IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
 import {
   matchCompletion,
@@ -40,8 +33,8 @@ import {
 } from '@dxos/react-ui-editor';
 import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
-import { DataType, DataTypes, SpaceGraphModel } from '@dxos/schema';
+import { getHashColor, mx } from '@dxos/react-ui-theme';
+import { DataType, SpaceGraphModel } from '@dxos/schema';
 import { createObjectFactory, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -50,6 +43,7 @@ import { testPlugins } from './testing';
 import { AmbientDialog, PromptBar, type PromptController, type PromptBarProps } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { createFilter, type Expression, QueryParser } from '../parser';
+import { RESEARCH_BLUEPRINT, createTools } from '../testing';
 import translations from '../translations';
 
 faker.seed(1);
@@ -60,6 +54,7 @@ const generator = faker as any as ValueGenerator;
 const LOCAL = false;
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
 
+// TODO(burdon) Move to story args.
 const aiConfig: AIServiceEdgeClientOptions = {
   endpoint: endpoints.ai,
   defaultGenerationOptions: {
@@ -82,18 +77,23 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const selection = useMemo(() => new SelectionModel(), []);
 
-  // Reactive graph model.
+  //
+  // Graph
+  //
+
   const [model] = useState<SpaceGraphModel | undefined>(() => {
-    if (showGraph) {
-      return new SpaceGraphModel().setOptions({
-        onCreateEdge: (edge, relation) => {
-          // TODO(burdon): Check type.
-          if ((relation as any).active === false) {
-            edge.data.force = false;
-          }
-        },
-      });
+    if (!showGraph) {
+      return undefined;
     }
+
+    return new SpaceGraphModel().setOptions({
+      onCreateEdge: (edge, relation) => {
+        // TODO(burdon): Check type.
+        if ((relation as any).active === false) {
+          edge.data.force = false;
+        }
+      },
+    });
   });
 
   const client = useClient();
@@ -124,7 +124,6 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     }
   }, [space]);
 
-  const items = useQuery(space, Query.select(filter ?? Filter.everything()));
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
@@ -141,9 +140,35 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     };
   }, [space, model, researchGraph?.queue.dxn.toString()]);
 
-  const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1_000 });
-  const blueprint = useBlueprint(space, researchGraph?.queue.dxn);
+  // TODO(burdon): Hack to filter out invalid (queue) objects.
+  const objects =
+    model?.nodes
+      .filter((node) => {
+        try {
+          getTypename(node.data.object as AnyEchoObject);
+          return true;
+        } catch {
+          return false;
+        }
+      })
+      .map((node) => node.data.object as AnyEchoObject) ?? [];
+
+  //
+  // AI
+  //
+
   const aiClient = useMemo(() => new SpyAIService(new AIServiceEdgeClient(aiConfig)), []);
+
+  const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1_000 });
+
+  const researchBlueprint = useMemo(() => {
+    if (!space || !researchGraph) {
+      return undefined;
+    }
+
+    const tools = createTools(space, researchGraph?.queue.dxn);
+    return BlueprintParser.create(tools).parse(RESEARCH_BLUEPRINT);
+  }, [space, researchGraph?.queue.dxn]);
 
   //
   // Handlers
@@ -154,17 +179,17 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   }, [model]);
 
   const handleResearch = useCallback(async () => {
-    if (!space || !blueprint) {
+    if (!space || !researchBlueprint) {
       return;
     }
 
     const selected = selection.selected.value;
-    log.info('research', { selected });
+    log.info('starting research...', { selected });
     const { objects } = await space.db.query(Filter.ids(...selected)).run();
-    const machine = new BlueprintMachine(blueprint);
+    const machine = new BlueprintMachine(researchBlueprint);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiService: aiClient, input: objects });
-  }, [space, aiClient, blueprint, selection]);
+  }, [space, aiClient, researchBlueprint, selection]);
 
   const handleGenerate = useCallback(async () => {
     if (!space) {
@@ -211,6 +236,10 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     [space],
   );
 
+  //
+  // Prompt
+  //
+
   const promptRef = useRef<PromptController>(null);
   const handleCancel = useCallback<NonNullable<PromptBarProps['onCancel']>>(() => {
     setAst(undefined);
@@ -219,6 +248,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   }, []);
 
   const handleMatch = useCallback<NonNullable<TypeaheadOptions['onComplete']>>(createMatcher(space), [space]);
+
   const extensions = useMemo(() => [typeahead({ onComplete: handleMatch })], [handleMatch]);
 
   return (
@@ -236,16 +266,12 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
               <IconButton icon='ph--plus--regular' iconOnly label='generate' onClick={handleGenerate} />
               <IconButton icon='ph--trash--regular' iconOnly label='reset' onClick={handleReset} />
             </Toolbar.Root>
-            <ItemList items={items} getTitle={(item) => getLabelForObject(item)} />
+            <ItemList items={objects} />
             <JsonFilter
               data={{
                 space: client.spaces.get().length,
                 db: space?.db.toJSON(),
-                queue: {
-                  dxn: researchGraph?.queue.dxn.toString(),
-                  items: researchQueue?.items.length,
-                },
-                items: items.length,
+                queue: researchQueue?.toJSON(),
                 model: model?.toJSON(),
                 selection: selection.toJSON(),
                 ast,
@@ -270,7 +296,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   );
 };
 
-// TODO(burdon): Match against expression grammar.
+// TODO(burdon): Factor out; match against expression grammar.
 const createMatcher =
   (space?: Space) =>
   ({ line }: TypeaheadContext) => {
@@ -298,45 +324,6 @@ const createMatcher =
     }
   };
 
-const useBlueprint = (space: Space | undefined, queueDxn: DXN | undefined) => {
-  return useMemo(() => {
-    if (!space) {
-      return undefined;
-    }
-
-    const db = space.db;
-
-    // TODO(burdon): Text-DSL that references tools?
-    // TODO(dmaretskyi): make db available through services (same as function executor).
-    const blueprint = BlueprintBuilder.begin()
-      .step('Research information and entities related to the selected objects.')
-      .withTool(createExaTool({ apiKey: EXA_API_KEY }))
-      .step('Based on your research find matching entires that are already in the graph. Do exaustive research.')
-      .withTool(createLocalSearchTool(db))
-      .step('Add researched data to the graph. Make connections to existing objects.')
-      .withTool(createLocalSearchTool(db))
-      .withTool(
-        createGraphWriterTool({
-          db,
-          schemaTypes: DataTypes,
-          onDone: async (objects) => {
-            if (!space || !queueDxn) {
-              log.warn('failed to add objects to research queue');
-              return;
-            }
-
-            const queue = space.queues.get(queueDxn);
-            queue.append(objects);
-            log.info('research queue', { items: queue.items });
-          },
-        }),
-      )
-      .end();
-
-    return blueprint;
-  }, [space, queueDxn]);
-};
-
 /**
  * Container for a set of ephemeral research results.
  */
@@ -349,46 +336,24 @@ const ResearchGraph = Schema.Struct({
   }),
 );
 
-const getColor = (type: string) => {
-  const colors = [
-    'text-red-500',
-    'text-green-500',
-    'text-blue-500',
-    'text-yellow-500',
-    'text-purple-500',
-    'text-pink-500',
-    'text-orange-500',
-    'text-violet-500',
-  ];
-
-  const hash = type.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return colors[hash % colors.length];
-};
-
-// TODO(burdon): Cards.
-const ItemList = ({
-  items = [],
-  getTitle,
-}: {
-  items?: AnyEchoObject[];
-  getTitle: (item: AnyEchoObject) => string | undefined;
-}) => {
+// TODO(burdon): Replace with card list.
+const ItemList = <T extends AnyEchoObject>({ items = [] }: { items?: T[] }) => {
   return (
-    <List.Root<AnyEchoObject> items={items}>
+    <List.Root<T> items={items}>
       {({ items }) => (
         <div role='list' className='grow flex flex-col overflow-y-auto'>
           {/* TODO(burdon): Virtualize. */}
           {items.map((item) => (
-            <List.Item<AnyEchoObject>
+            <List.Item<T>
               key={item.id}
               item={item}
               classNames='grid grid-cols-[4rem_16rem_1fr] min-h-[32px] items-center'
             >
               <div className='text-xs font-mono font-thin px-1 text-subdued'>{item.id.slice(-6)}</div>
-              <div className={mx('text-xs font-mono font-thin truncate px-1', getColor(getTypename(item)!))}>
+              <div className={mx('text-xs font-mono font-thin truncate px-1', getHashColor(getTypename(item))?.text)}>
                 {getTypename(item)}
               </div>
-              <List.ItemTitle>{getTitle(item)}</List.ItemTitle>
+              <List.ItemTitle>{getLabelForObject(item)}</List.ItemTitle>
             </List.Item>
           ))}
         </div>
