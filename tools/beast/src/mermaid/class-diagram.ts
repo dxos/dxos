@@ -11,7 +11,7 @@ import { Cardinality, type ClassDefinition } from '../ts';
 export class ClassDiagram implements Diagram {
   private readonly _classes = new Map<string, ClassDefinition>();
 
-  addClass(def: ClassDefinition) {
+  addClass(def: ClassDefinition): this {
     this._classes.set(def.name, def);
     return this;
   }
@@ -69,7 +69,7 @@ export class ClassDiagram implements Diagram {
     ].flat() as string[];
   }
 
-  render() {
+  render(): string {
     return this.build().join('\n');
   }
 }

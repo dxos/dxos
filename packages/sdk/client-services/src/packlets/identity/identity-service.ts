@@ -41,7 +41,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     super();
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     const identity = this._identityManager.identity;
     if (identity && !identity.defaultSpaceId) {
       await this._fixIdentityWithoutDefaultSpace(identity);
@@ -55,7 +55,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     return this._getIdentity()!;
   }
 
-  private async _createDefaultSpace(dataSpaceManager: DataSpaceManager) {
+  private async _createDefaultSpace(dataSpaceManager: DataSpaceManager): Promise<void> {
     const space = await dataSpaceManager!.createDefaultSpace();
     const identity = this._identityManager.identity;
     invariant(identity);
@@ -141,7 +141,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     });
   }
 
-  private async _fixIdentityWithoutDefaultSpace(identity: Identity) {
+  private async _fixIdentityWithoutDefaultSpace(identity: Identity): Promise<void> {
     let recodedDefaultSpace = false;
     let foundDefaultSpace = false;
     const dataSpaceManager = this._dataSpaceManagerProvider();

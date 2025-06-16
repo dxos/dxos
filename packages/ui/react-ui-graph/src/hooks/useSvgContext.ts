@@ -61,13 +61,13 @@ export class SVGContext {
     return `${x},${y},${this._size!.width},${this._size!.height}`;
   }
 
-  setSize(size: Size) {
+  setSize(size: Size): void {
     this._size = { ...size };
     this._center = this._centered ? [-Math.floor(size.width / 2), -Math.floor(size.height / 2)] : [0, 0];
     this.resized.emit(this);
   }
 
-  setTransform(transform: ZoomTransform) {
+  setTransform(transform: ZoomTransform): void {
     if (this._scale.setTransform(transform)) {
       this.resized.emit(this);
     }

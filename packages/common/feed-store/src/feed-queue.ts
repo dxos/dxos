@@ -42,7 +42,7 @@ export class FeedQueue<T extends {}> {
     private readonly _options: FeedQueueOptions = {},
   ) {}
 
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return inspectObject(this);
   }
 
@@ -78,7 +78,7 @@ export class FeedQueue<T extends {}> {
    * Opens (or reopens) the queue.
    * @param options.start Starting index. First mutation to be read would have `seq == options.start`.
    */
-  async open(options: ReadStreamOptions = {}) {
+  async open(options: ReadStreamOptions = {}): Promise<void> {
     if (this.isOpen) {
       // TODO(burdon): Warn if re-opening (e.g., with different starting point).
       return;
@@ -156,7 +156,7 @@ export class FeedQueue<T extends {}> {
   /**
    * Closes the queue.
    */
-  async close() {
+  async close(): Promise<void> {
     if (this.isOpen) {
       invariant(this._feedConsumer);
       invariant(!this._feed.properties.closed);
@@ -198,7 +198,7 @@ export class FeedQueue<T extends {}> {
     return block;
   }
 
-  private _destroyConsumer() {
+  private _destroyConsumer(): void {
     if (this._feedConsumer) {
       log('queue closed', { feedKey: this._feed.key });
       this._feedConsumer = undefined;

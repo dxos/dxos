@@ -9,9 +9,9 @@ import {
   HttpClientRequest,
   FetchHttpClient,
   // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21';
+} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21&bundle=false';
 // @ts-ignore
-import { Effect, Schedule } from 'https://esm.sh/effect@3.14.21';
+import { Effect, Schedule } from 'https://esm.sh/effect@3.14.21?bundle=false';
 
 export default defineFunction({
   description: 'Returns the exchange rate between two currencies.',

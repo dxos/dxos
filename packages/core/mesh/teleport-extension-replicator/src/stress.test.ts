@@ -35,7 +35,7 @@ class TestAgent {
     peer.addExtension('dxos.mesh.teleport.replicator', this.replicator);
   }
 
-  async destroy() {
+  async destroy(): Promise<void> {
     await this.peer.close();
     await this.feedStore.close();
   }

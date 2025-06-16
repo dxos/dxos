@@ -71,11 +71,11 @@ class MermaidWidget extends WidgetType {
     super();
   }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return this._source === other._source;
   }
 
-  override toDOM(view: EditorView) {
+  override toDOM(view: EditorView): HTMLDivElement {
     const div = document.createElement('div');
     setTimeout(async () => {
       // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/config.type.ts
@@ -131,7 +131,7 @@ class MermaidWidget extends WidgetType {
     }
   }
 
-  override ignoreEvent(e: Event) {
+  override ignoreEvent(e: Event): boolean {
     return !/^mouse/.test(e.type);
   }
 }

@@ -119,7 +119,7 @@ export class SheetModel extends Resource {
   /**
    * Initialize sheet and engine.
    */
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     log('initialize', { id: this.id });
     initialize(this._sheet);
 
@@ -145,7 +145,7 @@ export class SheetModel extends Resource {
    * NOTE: This resets the undo history.
    * @deprecated
    */
-  reset() {
+  reset(): void {
     invariant(this._node);
     this._node.graph.hf.clearSheet(this._node.sheetId);
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
@@ -173,17 +173,17 @@ export class SheetModel extends Resource {
    * @deprecated
    */
   // TODO(burdon): Remove.
-  recalculate() {
+  recalculate(): void {
     this._node?.graph.hf.rebuildAndRecalculate();
   }
 
-  insertRows(i: number, n = 1) {
+  insertRows(i: number, n = 1): string[] {
     const idx = insertIndices(this._sheet.rows, i, n, MAX_ROWS);
     this.reset();
     return idx;
   }
 
-  insertColumns(i: number, n = 1) {
+  insertColumns(i: number, n = 1): string[] {
     const idx = insertIndices(this._sheet.columns, i, n, MAX_COLS);
     this.reset();
     return idx;
@@ -217,7 +217,7 @@ export class SheetModel extends Resource {
     return { axis: 'col', index, axisIndex: colIndex, axisMeta: this._sheet.rowMeta[colIndex], values };
   }
 
-  restoreRow({ index, axisIndex, axisMeta, values }: SheetAction.RestoreAxis) {
+  restoreRow({ index, axisIndex, axisMeta, values }: SheetAction.RestoreAxis): void {
     this._sheet.rows.splice(index, 0, axisIndex);
     values.forEach((value, col) => {
       if (value) {
@@ -230,7 +230,7 @@ export class SheetModel extends Resource {
     this.reset();
   }
 
-  restoreColumn({ index, axisIndex, axisMeta, values }: SheetAction.RestoreAxis) {
+  restoreColumn({ index, axisIndex, axisMeta, values }: SheetAction.RestoreAxis): void {
     this._sheet.columns.splice(index, 0, axisIndex);
     values.forEach((value, row) => {
       if (value) {
@@ -251,7 +251,7 @@ export class SheetModel extends Resource {
   /**
    * Clear range of values.
    */
-  clear(range: CellRange) {
+  clear(range: CellRange): void {
     invariant(this._node);
     const topLeft = getTopLeft(range);
     const values = this._iterRange(range, () => null);
@@ -262,7 +262,7 @@ export class SheetModel extends Resource {
     });
   }
 
-  cut(range: CellRange) {
+  cut(range: CellRange): void {
     invariant(this._node);
     this._node.graph.hf.cut(toModelRange(this._node.sheetId, range));
     this._iterRange(range, (cell) => {
@@ -271,12 +271,12 @@ export class SheetModel extends Resource {
     });
   }
 
-  copy(range: CellRange) {
+  copy(range: CellRange): void {
     invariant(this._node);
     this._node.graph.hf.copy(toModelRange(this._node.sheetId, range));
   }
 
-  paste(cell: CellAddress) {
+  paste(cell: CellAddress): void {
     invariant(this._node);
     if (!this._node.graph.hf.isClipboardEmpty()) {
       const changes = this._node.graph.hf.paste(toSimpleCellAddress(this._node.sheetId, cell));
@@ -291,7 +291,7 @@ export class SheetModel extends Resource {
   }
 
   // TODO(burdon): Display undo/redo state.
-  undo() {
+  undo(): void {
     invariant(this._node);
     if (this._node.graph.hf.isThereSomethingToUndo()) {
       this._node.graph.hf.undo();
@@ -299,7 +299,7 @@ export class SheetModel extends Resource {
     }
   }
 
-  redo() {
+  redo(): void {
     invariant(this._node);
     if (this._node.graph.hf.isThereSomethingToRedo()) {
       this._node.graph.hf.redo();
@@ -368,7 +368,7 @@ export class SheetModel extends Resource {
   /**
    * Sets the value, updating the sheet and engine.
    */
-  setValue(cell: CellAddress, value: CellScalarValue) {
+  setValue(cell: CellAddress, value: CellScalarValue): void {
     invariant(this._node);
     if (this._options.readonly) {
       throw new ReadonlyException();
@@ -411,7 +411,7 @@ export class SheetModel extends Resource {
   /**
    * Sets values from a simple map.
    */
-  setValues(values: Record<string, CellValue>) {
+  setValues(values: Record<string, CellValue>): void {
     Object.entries(values).forEach(([key, { value }]) => {
       this.setValue(addressFromA1Notation(key), value);
     });
@@ -441,12 +441,12 @@ export class SheetModel extends Resource {
   }
 
   // TODO(burdon): Delete index.
-  private _deleteIndices(indices: string[], i: number, n: number) {
+  private _deleteIndices(indices: string[], i: number, n: number): void {
     throw new Error('Not implemented');
   }
 
   // TODO(burdon): Move. Cannot use fractional without changing. Switch back to using unique IDs?
-  private _moveIndices(indices: string[], i: number, j: number, n: number) {
+  private _moveIndices(indices: string[], i: number, j: number, n: number): void {
     throw new Error('Not implemented');
   }
 

@@ -152,7 +152,7 @@ export class SignalRPCClient {
     log.trace('dxos.mesh.signal-rpc-client.constructor', trace.end({ id: traceId }));
   }
 
-  async close() {
+  async close(): Promise<void> {
     if (this._closed) {
       return;
     }
@@ -198,7 +198,15 @@ export class SignalRPCClient {
     return messageStream;
   }
 
-  async sendMessage({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) {
+  async sendMessage({
+    author,
+    recipient,
+    payload,
+  }: {
+    author: PublicKey;
+    recipient: PublicKey;
+    payload: Any;
+  }): Promise<void> {
     log('sendMessage', { author, recipient, payload, metadata: this._callbacks?.getMetadata?.() });
     invariant(!this._closed, 'SignalRPCClient is closed');
     await this._connectTrigger.wait();
@@ -210,7 +218,7 @@ export class SignalRPCClient {
     });
   }
 
-  private async _safeCloseRpc() {
+  private async _safeCloseRpc(): Promise<void> {
     try {
       this._connectTrigger.reset();
       await this._rpc.close();

@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { transformServerSentEvents } from 'https://esm.sh/@dxos/script-toolbox';
+import { transformServerSentEvents } from 'https://esm.sh/@dxos/script-toolbox?bundle=false';
 
 /**
  * Chatbot that answers questions based on the context data.

@@ -46,7 +46,7 @@ export class ComputeGraphModel extends AbstractGraphModel<
     return new ComputeGraphBuilder(this);
   }
 
-  override copy(graph?: Partial<Graph>) {
+  override copy(graph?: Partial<Graph>): ComputeGraphModel {
     return ComputeGraphModel.create(graph);
   }
 

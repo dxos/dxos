@@ -40,7 +40,7 @@ describe('Embeddings', () => {
     }
   });
 
-  test('vector search with orama', async () => {
+  test('vector search with orama', { timeout: 20_000 }, async () => {
     const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
 
     type Record = {
@@ -104,7 +104,7 @@ describe('Embeddings', () => {
   });
 });
 
-describe('EmbeddingExtractor', () => {
+describe('EmbeddingExtractor', { timeout: 20_000 }, () => {
   test('should create embeddings', async () => {
     const extractor = new EmbeddingExtractor();
     const embeddings = await extractor.extract([{ content: TEST_ARTICLES.marineLife }]);

@@ -24,7 +24,7 @@ const path = ['text'];
 
 class Generator {
   constructor(private readonly _handle: DocHandle<TestObject>) {}
-  update(text: string) {
+  update(text: string): void {
     this._handle.change((doc: TestObject) => {
       doc.text = text;
     });

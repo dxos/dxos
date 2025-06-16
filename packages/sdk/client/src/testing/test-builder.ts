@@ -74,14 +74,14 @@ export class TestBuilder {
     return this._ctx;
   }
 
-  async destroy() {
+  async destroy(): Promise<void> {
     await this._ctx.dispose(false); // TODO(burdon): Set to true to check clean shutdown.
   }
 
   /**
    * Create backend service handlers.
    */
-  createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
+  createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams): ClientServicesHost {
     const services = new ClientServicesHost({
       config: this.config,
       storage: this?.storage?.(),

@@ -101,14 +101,15 @@ export const editor = () => [
       const match = line.text.match(LIST_ITEM_REGEX);
       if (match) {
         // Check cursor was in a valid position.
-        const startTree = tr.startState.facet(treeFacet);
-        const startItem = startTree.find(tr.startState.selection.main.from);
+        // const startTree = tr.startState.facet(treeFacet);
+        // const startItem = startTree.find(tr.startState.selection.main.from);
+
         // Check if entire line was deleted (which is ok).
-        const deleteLine = fromA === startItem?.lineRange.from && toA === startItem?.lineRange.to;
-        if (!deleteLine && (!startItem || fromA < startItem.contentRange.from || toA > startItem.contentRange.to)) {
-          cancel = true;
-          return;
-        }
+        // const deleteLine = fromA === startItem?.lineRange.from && toA === startItem?.lineRange.to;
+        // if (!deleteLine && (!startItem || fromA < startItem.contentRange.from || toA > startItem.contentRange.to)) {
+        //   cancel = true;
+        //   return;
+        // }
 
         // Check valid item.
         const currentItem = tree.find(tr.state.selection.main.from);

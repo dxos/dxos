@@ -117,11 +117,11 @@ export class IndexGraph extends Resource implements Index {
     return true; // TODO(dmaretskyi): Actually check if anything changed. This will cause the index to be saved on every object change batch.
   }
 
-  async remove(id: ObjectPointerEncoded) {
+  async remove(id: ObjectPointerEncoded): Promise<void> {
     this._removeReferencesFrom(id);
   }
 
-  private _removeReferencesFrom(id: ObjectPointerEncoded) {
+  private _removeReferencesFrom(id: ObjectPointerEncoded): void {
     for (const target of this._objectToTargets.get(id) ?? []) {
       const perField = this._inboundReferences.get(target);
       if (!perField) {
@@ -140,7 +140,7 @@ export class IndexGraph extends Resource implements Index {
     this._objectToTargets.get(id)?.clear();
   }
 
-  private _trackOutgoingReferences(id: ObjectPointerEncoded, object: ObjectStructure) {
+  private _trackOutgoingReferences(id: ObjectPointerEncoded, object: ObjectStructure): void {
     const targetMapping = defaultMap(this._objectToTargets, id, () => new Set());
 
     const references = ObjectStructure.getAllOutgoingReferences(object);
@@ -250,7 +250,7 @@ export class IndexGraph extends Resource implements Index {
     return index;
   }
 
-  private _loadFrom(data: GraphIndexData) {
+  private _loadFrom(data: GraphIndexData): void {
     this._inboundReferences.clear();
     this._relationTargets.clear();
     this._relationSources.clear();

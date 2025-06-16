@@ -38,7 +38,10 @@ export class MulticastObservable<T> extends Observable<T> {
     this._observable.subscribe(this._handlers);
   }
 
-  static override from<T>(value: Observable<T> | ObservableLike<T> | ArrayLike<T> | Event<T>, initialValue?: T) {
+  static override from<T>(
+    value: Observable<T> | ObservableLike<T> | ArrayLike<T> | Event<T>,
+    initialValue?: T,
+  ): MulticastObservable<T> {
     if ('emit' in value) {
       return new MulticastObservable((observer) => {
         // TODO(wittjosiah): Do error/complete matter for events?
@@ -52,14 +55,14 @@ export class MulticastObservable<T> extends Observable<T> {
     return new MulticastObservable(observable, initialValue);
   }
 
-  static override of<T>(...items: T[]) {
+  static override of<T>(...items: T[]): MulticastObservable<T> {
     return new MulticastObservable(Observable.of(...items.slice(1)), items[0]);
   }
 
   /**
    * @returns Stable reference to an observable that always returns `undefined`.
    */
-  static empty() {
+  static empty(): MulticastObservable<null> {
     return EMPTY_OBSERVABLE;
   }
 
@@ -137,7 +140,7 @@ export class MulticastObservable<T> extends Observable<T> {
     return new MulticastObservable(this._observable.concat(...observables), value);
   }
 
-  private _subscribe(observer: Observer<T>) {
+  private _subscribe(observer: Observer<T>): () => void {
     if (!this._observers.has(observer)) {
       this._observers.add(observer);
     }

@@ -95,17 +95,17 @@ export class RemoteSelectionsDecorator implements PluginValue {
     });
   }
 
-  destroy() {
+  destroy(): void {
     void this._ctx.dispose();
     this._provider.close();
   }
 
-  update(update: ViewUpdate) {
+  update(update: ViewUpdate): void {
     this._updateLocalSelection(update.view);
     this._updateRemoteSelections(update.view);
   }
 
-  private _updateLocalSelection(view: EditorView) {
+  private _updateLocalSelection(view: EditorView): void {
     const hasFocus = view.hasFocus && view.dom.ownerDocument.hasFocus();
     const { anchor = undefined, head = undefined } = hasFocus ? view.state.selection.main : {};
     if (this._lastAnchor === anchor && this._lastHead === head) {
@@ -125,7 +125,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
     );
   }
 
-  private _updateRemoteSelections(view: EditorView) {
+  private _updateRemoteSelections(view: EditorView): void {
     const decorations: Range<Decoration>[] = [
       // TODO(burdon): Factor out for testing.
       // {
@@ -239,11 +239,11 @@ class RemoteCaretWidget extends WidgetType {
     return span;
   }
 
-  override updateDOM() {
+  override updateDOM(): boolean {
     return false;
   }
 
-  override eq(widget: this) {
+  override eq(widget: this): boolean {
     return widget._color === this._color;
   }
 
@@ -251,7 +251,7 @@ class RemoteCaretWidget extends WidgetType {
     return -1;
   }
 
-  override ignoreEvent() {
+  override ignoreEvent(): boolean {
     return true;
   }
 }

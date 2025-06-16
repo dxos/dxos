@@ -30,7 +30,7 @@ class TestAgent extends TestPeer {
     });
   }
 
-  enableWriting() {
+  enableWriting(): void {
     this.notarizationPlugin.setWriter(this.feed);
   }
 

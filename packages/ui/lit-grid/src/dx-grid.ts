@@ -258,7 +258,7 @@ export class DxGrid extends LitElement {
   // Primary pointer and keyboard handlers
   //
 
-  private dispatchEditRequest(initialContent?: string) {
+  private dispatchEditRequest(initialContent?: string): void {
     this.snapPosToFocusedCell();
     if (!this.cellReadonly(this.focusedCell.col, this.focusedCell.row, this.focusedCell.plane)) {
       // Without deferring, the event dispatches before `focusedCellBox` can get updated bounds of the cell, hence:
@@ -276,7 +276,7 @@ export class DxGrid extends LitElement {
     }
   }
 
-  private dispatchSelectionChange() {
+  private dispatchSelectionChange(): boolean {
     return this.dispatchEvent(
       new DxGridCellsSelect({
         start: this.selectionStart,
@@ -355,7 +355,7 @@ export class DxGrid extends LitElement {
    * Increments focus among all theoretically possible cells in a plane, cycling as tab would but accounting for the
    * theoretical bounds of the grid plane (handling infinite planes heuristically).
    */
-  private incrementFocusWithinPlane(event: KeyboardEvent) {
+  private incrementFocusWithinPlane(event: KeyboardEvent): void {
     const reverse = event.shiftKey;
     const colPlane = resolveColPlane(this.focusedCell.plane);
     const rowPlane = resolveRowPlane(this.focusedCell.plane);
@@ -383,7 +383,7 @@ export class DxGrid extends LitElement {
   /**
    * Increments focus in a specific direction without cycling.
    */
-  private moveFocusOrSelectionEndWithinPlane(event: KeyboardEvent) {
+  private moveFocusOrSelectionEndWithinPlane(event: KeyboardEvent): void {
     const current = event.shiftKey ? this.selectionEnd : this.focusedCell;
     const deltaCol = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0;
     const deltaRow = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
@@ -398,7 +398,7 @@ export class DxGrid extends LitElement {
     }
   }
 
-  private moveFocusBetweenPlanes(event: KeyboardEvent, plane: DxGridPlane) {
+  private moveFocusBetweenPlanes(event: KeyboardEvent, plane: DxGridPlane): void {
     const planeElement = this.gridRef.value?.querySelector(`[data-dx-grid-plane="${plane}"]`) as HTMLElement | null;
     if (planeElement) {
       const axis = event.key === 'ArrowUp' || event.key === 'ArrowDown' ? 'col' : 'row';
@@ -415,7 +415,7 @@ export class DxGrid extends LitElement {
     }
   }
 
-  private moveFocusIntoPlane(plane: DxGridPlane) {
+  private moveFocusIntoPlane(plane: DxGridPlane): void {
     if (this.focusedCell.plane !== plane) {
       const colPlane = resolveColPlane(plane);
       const rowPlane = resolveRowPlane(plane);
@@ -428,11 +428,11 @@ export class DxGrid extends LitElement {
     this.focusedCellElement()?.focus({ preventScroll: true });
   }
 
-  private moveFocusToPlane() {
+  private moveFocusToPlane(): void {
     this.focusedPlaneElement()?.focus({ preventScroll: true });
   }
 
-  private handleKeydown(event: KeyboardEvent) {
+  private handleKeydown(event: KeyboardEvent): void {
     if (this.focusActive && this.mode === 'browse') {
       const plane = targetIsPlane(event.target);
       if (plane) {
@@ -495,12 +495,12 @@ export class DxGrid extends LitElement {
   // Accessors
   //
 
-  private colSize(c: number | string, plane: DxGridPlane) {
+  private colSize(c: number | string, plane: DxGridPlane): number {
     const resolvedPlane = resolveColPlane(plane);
     return this.colSizes?.[resolvedPlane]?.[c] ?? this.columnDefault[resolvedPlane]?.size ?? defaultColSize;
   }
 
-  private rowSize(r: number | string, plane: DxGridPlane) {
+  private rowSize(r: number | string, plane: DxGridPlane): number {
     const resolvedPlane = resolveRowPlane(plane);
     return this.rowSizes?.[resolvedPlane]?.[r] ?? this.rowDefault[resolvedPlane]?.size ?? defaultRowSize;
   }
@@ -514,7 +514,7 @@ export class DxGrid extends LitElement {
     return this.focusedCell.plane === plane && this.focusedCell.col === c && this.focusedCell.row === r;
   }
 
-  private setFocusedCell(nextCoords: DxGridPosition) {
+  private setFocusedCell(nextCoords: DxGridPosition): void {
     if (
       this.focusedCell.plane !== nextCoords.plane ||
       this.focusedCell.col !== nextCoords.col ||
@@ -530,7 +530,7 @@ export class DxGrid extends LitElement {
 
   // Internal utility for setting selection end.
 
-  private setSelectionEnd(nextCoords: DxGridPosition) {
+  private setSelectionEnd(nextCoords: DxGridPosition): void {
     if (
       this.selectionEnd.plane !== nextCoords.plane ||
       this.selectionEnd.col !== nextCoords.col ||
@@ -543,7 +543,7 @@ export class DxGrid extends LitElement {
 
   // Selection setter for consumers
 
-  setSelection(range: DxGridRange) {
+  setSelection(range: DxGridRange): void {
     if (this.mode !== 'edit') {
       this.selectionStart = range.start;
       this.selectionEnd = range.end;
@@ -610,25 +610,25 @@ export class DxGrid extends LitElement {
     }
   };
 
-  private maxPosInline() {
+  private maxPosInline(): number {
     return this.intrinsicInlineSize - this.sizeInline;
   }
 
-  private maxPosBlock() {
+  private maxPosBlock(): number {
     return this.intrinsicBlockSize - this.sizeBlock;
   }
 
-  private updatePosInline(inline?: number, maxInline: number = this.maxPosInline()) {
+  private updatePosInline(inline?: number, maxInline: number = this.maxPosInline()): void {
     this.posInline = Math.max(0, Math.min(maxInline, inline ?? this.posInline));
     this.maybeUpdateVisInline();
   }
 
-  private updatePosBlock(block?: number, maxBlock: number = this.maxPosBlock()) {
+  private updatePosBlock(block?: number, maxBlock: number = this.maxPosBlock()): void {
     this.posBlock = Math.max(0, Math.min(maxBlock, block ?? this.posBlock));
     this.maybeUpdateVisBlock();
   }
 
-  private updatePos(inline?: number, block?: number, maxInline?: number, maxBlock?: number) {
+  private updatePos(inline?: number, block?: number, maxInline?: number, maxBlock?: number): void {
     this.updatePosInline(inline, maxInline);
     this.updatePosBlock(block, maxBlock);
   }
@@ -661,7 +661,7 @@ export class DxGrid extends LitElement {
     }
   };
 
-  private updateVisInline() {
+  private updateVisInline(): void {
     // todo: avoid starting from zero
     let axisCursor = 0;
     let pxCursor = this.colSize(axisCursor, 'grid');
@@ -710,7 +710,7 @@ export class DxGrid extends LitElement {
       .join(' ');
   }
 
-  private updateVisBlock() {
+  private updateVisBlock(): void {
     // todo: avoid starting from zero
     let axisCursor = 0;
     let pxCursor = this.rowSize(axisCursor, 'grid');
@@ -759,12 +759,12 @@ export class DxGrid extends LitElement {
       .join(' ');
   }
 
-  private updateVis() {
+  private updateVis(): void {
     this.updateVisInline();
     this.updateVisBlock();
   }
 
-  public updateCells(includeFixed?: boolean) {
+  public updateCells(includeFixed?: boolean): void {
     this.cells.grid = this.getCells!(
       {
         start: { col: this.visColMin, row: this.visRowMin },
@@ -830,7 +830,7 @@ export class DxGrid extends LitElement {
 
   // Focus handlers
 
-  setFocus(coords: DxGridPosition, snap = true) {
+  setFocus(coords: DxGridPosition, snap = true): void {
     this.setFocusedCell(coords);
     this.focusActive = true;
     if (snap) {
@@ -838,7 +838,7 @@ export class DxGrid extends LitElement {
     }
   }
 
-  private handleFocus(event: FocusEvent) {
+  private handleFocus(event: FocusEvent): void {
     const cellCoords = closestCell(event.target);
     if (cellCoords || targetIsPlane(event.target)) {
       this.focusActive = true;
@@ -848,26 +848,26 @@ export class DxGrid extends LitElement {
     }
   }
 
-  private handleBlur(event: FocusEvent) {
+  private handleBlur(event: FocusEvent): void {
     // Only unset `focusActive` if focus is moving to an element outside the grid.
     if (event.relatedTarget && !(event.relatedTarget as HTMLElement).closest(`[data-grid="${this.gridId}"]`)) {
       this.focusActive = false;
     }
   }
 
-  private focusedCellQuery() {
+  private focusedCellQuery(): string {
     return `[data-dx-grid-plane=${this.focusedCell.plane}] [aria-colindex="${this.focusedCell.col}"][aria-rowindex="${this.focusedCell.row}"]`;
   }
 
-  private focusedPlaneQuery() {
+  private focusedPlaneQuery(): string {
     return `[data-dx-grid-plane=${this.focusedCell.plane}]`;
   }
 
-  private focusedCellElement() {
+  private focusedCellElement(): HTMLElement | null {
     return this.gridRef.value?.querySelector(this.focusedCellQuery()) as HTMLElement | null;
   }
 
-  private focusedPlaneElement() {
+  private focusedPlaneElement(): HTMLElement | null {
     return this.gridRef.value?.querySelector(this.focusedPlaneQuery()) as HTMLElement | null;
   }
 
@@ -876,7 +876,7 @@ export class DxGrid extends LitElement {
   // `delta`, otherwise zero if it is within that range.
   //
 
-  private focusedCellRowOutOfVis() {
+  private focusedCellRowOutOfVis(): number {
     return this.focusedCell.row <= this.visRowMin
       ? this.focusedCell.row - this.visRowMin - 1
       : this.focusedCell.row >= this.visRowMax - 1
@@ -884,7 +884,7 @@ export class DxGrid extends LitElement {
         : 0;
   }
 
-  private focusedCellColOutOfVis() {
+  private focusedCellColOutOfVis(): number {
     return this.focusedCell.col <= this.visColMin
       ? this.focusedCell.col - this.visColMin - 1
       : this.focusedCell.col >= this.visColMax - 1
@@ -907,13 +907,13 @@ export class DxGrid extends LitElement {
     }
   }
 
-  private clampCol(coords: DxGridPosition, deltaCol = 0) {
+  private clampCol(coords: DxGridPosition, deltaCol = 0): number {
     const colPlane = resolveColPlane(coords.plane);
     const colMax = (colPlane === 'grid' ? this.limitColumns : this.frozen[colPlane]!) - 1;
     return Math.max(0, Math.min(colMax, coords.col + deltaCol));
   }
 
-  private clampRow(coords: DxGridPosition, deltaRow = 0) {
+  private clampRow(coords: DxGridPosition, deltaRow = 0): number {
     const rowPlane = resolveRowPlane(coords.plane);
     const rowMax = (rowPlane === 'grid' ? this.limitRows : this.frozen[rowPlane]!) - 1;
     return Math.max(0, Math.min(rowMax, coords.row + deltaRow));
@@ -922,7 +922,7 @@ export class DxGrid extends LitElement {
   /**
    * Moves focus to the cell with actual focus, otherwise moves focus to the viewport.
    */
-  refocus(increment: 'col' | 'row' | undefined = undefined, delta: 1 | -1 | 0 = 1) {
+  refocus(increment: 'col' | 'row' | undefined = undefined, delta: 1 | -1 | 0 = 1): void {
     if (increment) {
       switch (increment) {
         case 'col': {
@@ -949,11 +949,11 @@ export class DxGrid extends LitElement {
     });
   }
 
-  private clampPosInline(nextPos: number) {
+  private clampPosInline(nextPos: number): number {
     return Math.max(0, Math.min(this.intrinsicInlineSize - this.sizeInline, nextPos));
   }
 
-  private clampPosBlock(nextPos: number) {
+  private clampPosBlock(nextPos: number): number {
     return Math.max(0, Math.min(this.intrinsicBlockSize - this.sizeBlock, nextPos));
   }
 
@@ -980,7 +980,7 @@ export class DxGrid extends LitElement {
   /**
    * Updates `pos` so that a cell in focus is fully within the viewport
    */
-  snapPosToFocusedCell() {
+  snapPosToFocusedCell(): void {
     const outOfVis = this.focusedCellOutOfVis();
     if (outOfVis.col < 0) {
       // align viewport start edge with focused cell start edge
@@ -1003,7 +1003,7 @@ export class DxGrid extends LitElement {
     }
   }
 
-  scrollToCoord({ coords }: { coords: DxGridPosition }) {
+  scrollToCoord({ coords }: { coords: DxGridPosition }): void {
     const plane = coords.plane;
     const { row, col } = coords;
 
@@ -1011,15 +1011,15 @@ export class DxGrid extends LitElement {
     this.updatePosInline(this.inlineOffset(col, plane));
   }
 
-  scrollToColumn(col: number) {
+  scrollToColumn(col: number): void {
     this.updatePosInline(this.inlineOffset(col, 'grid'));
   }
 
-  scrollToRow(row: number) {
+  scrollToRow(row: number): void {
     this.updatePosBlock(this.blockOffset(row, 'grid'));
   }
 
-  scrollToEndRow() {
+  scrollToEndRow(): void {
     this.updatePosBlock(Infinity);
   }
 
@@ -1049,13 +1049,13 @@ export class DxGrid extends LitElement {
   // Resize handlers
   //
 
-  private axisResizeable(plane: 'grid' | DxGridFrozenPlane, axis: DxGridAxis, index: number | string) {
+  private axisResizeable(plane: 'grid' | DxGridFrozenPlane, axis: DxGridAxis, index: number | string): boolean {
     return axis === 'col'
       ? !!(this.columns[plane]?.[index]?.resizeable ?? this.columnDefault[plane as DxGridFrozenColsPlane]?.resizeable)
       : !!(this.rows[plane]?.[index]?.resizeable ?? this.rowDefault[plane as DxGridFrozenRowsPlane]?.resizeable);
   }
 
-  private handleAxisResizeInternal(event: DxAxisResizeInternal) {
+  private handleAxisResizeInternal(event: DxAxisResizeInternal): void {
     event.stopPropagation();
     const { plane, axis, delta, size, index, state } = event;
     if (axis === 'col') {
@@ -1225,7 +1225,7 @@ export class DxGrid extends LitElement {
       : null;
   }
 
-  private cellReadonly(col: number, row: number, plane: DxGridPlane) {
+  private cellReadonly(col: number, row: number, plane: DxGridPlane): boolean {
     const colPlane = resolveColPlane(plane);
     const rowPlane = resolveRowPlane(plane);
 
@@ -1384,7 +1384,7 @@ export class DxGrid extends LitElement {
       </div>`;
   }
 
-  private updateIntrinsicInlineSize() {
+  private updateIntrinsicInlineSize(): void {
     this.intrinsicInlineSize = Number.isFinite(this.limitColumns)
       ? [...Array(this.limitColumns)].reduce((acc, _, c0) => acc + this.colSize(c0, 'grid'), 0) +
         gap * (this.limitColumns - 1)
@@ -1402,7 +1402,7 @@ export class DxGrid extends LitElement {
         : 0);
   }
 
-  private updateIntrinsicBlockSize() {
+  private updateIntrinsicBlockSize(): void {
     this.intrinsicBlockSize = Number.isFinite(this.limitRows)
       ? [...Array(this.limitRows)].reduce((acc, _, r0) => acc + this.rowSize(r0, 'grid'), 0) +
         gap * (this.limitRows - 1)
@@ -1420,12 +1420,12 @@ export class DxGrid extends LitElement {
         : 0);
   }
 
-  private updateIntrinsicSizes() {
+  private updateIntrinsicSizes(): void {
     this.updateIntrinsicInlineSize();
     this.updateIntrinsicBlockSize();
   }
 
-  private computeColSizes() {
+  private computeColSizes(): void {
     this.colSizes = Object.entries(this.columns ?? {}).reduce(
       (acc: DxGridAxisSizes, [plane, planeColMeta]) => {
         acc[plane as 'grid' | DxGridFrozenPlane] = Object.entries(planeColMeta).reduce(
@@ -1443,7 +1443,7 @@ export class DxGrid extends LitElement {
     );
   }
 
-  private computeRowSizes() {
+  private computeRowSizes(): void {
     this.rowSizes = Object.entries(this.rows ?? {}).reduce(
       (acc: DxGridAxisSizes, [plane, planeRowMeta]) => {
         acc[plane as 'grid' | DxGridFrozenPlane] = Object.entries(planeRowMeta).reduce(
@@ -1461,7 +1461,7 @@ export class DxGrid extends LitElement {
     );
   }
 
-  override firstUpdated() {
+  override firstUpdated(): void {
     if (this.getCells) {
       this.updateCells(true);
     }
@@ -1471,7 +1471,7 @@ export class DxGrid extends LitElement {
     this.updateIntrinsicSizes();
   }
 
-  override willUpdate(changedProperties: Map<string, any>) {
+  override willUpdate(changedProperties: Map<string, any>): void {
     if (changedProperties.has('rowDefault') || changedProperties.has('rows') || changedProperties.has('limitRows')) {
       this.computeRowSizes();
       this.updateIntrinsicBlockSize();
@@ -1506,7 +1506,7 @@ export class DxGrid extends LitElement {
     }
   }
 
-  override updated(changedProperties: Map<string, any>) {
+  override updated(changedProperties: Map<string, any>): void {
     // Update the focused element if there is a change in bounds (otherwise Lit keeps focus on the relative element).
     if (
       this.focusActive &&
@@ -1528,7 +1528,7 @@ export class DxGrid extends LitElement {
     return false;
   }
 
-  override disconnectedCallback() {
+  override disconnectedCallback(): void {
     super.disconnectedCallback();
     if (this.viewportRef.value) {
       this.observer.unobserve(this.viewportRef.value);
@@ -1536,7 +1536,7 @@ export class DxGrid extends LitElement {
     document.defaultView?.removeEventListener('wheel', this.handleTopLevelWheel);
   }
 
-  override createRenderRoot() {
+  override createRenderRoot(): this {
     return this;
   }
 }
