@@ -18,6 +18,7 @@ import { Filter, Queue, type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
 import { type AnyEchoObject, create, getLabelForObject, getTypename, Ref } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
@@ -453,9 +454,9 @@ export const Test: Story = {
     const client = useClient();
     const space = client.spaces.get().at(0);
 
-    const test = async (type: string, f: () => Promise<void> | void) => {
+    const test = async (type: string, fn: () => Promise<void> | void) => {
       const t = performance.now();
-      await f();
+      await fn();
       setEvents([...events, { type, duration: performance.now() - t }]);
     };
 
@@ -469,34 +470,29 @@ export const Test: Story = {
     };
 
     const handleCreate = async () => {
-      if (space) {
-        await test('create', () => {
-          addTestData(space);
-        });
-      }
+      await test('create', () => {
+        invariant(space);
+        addTestData(space);
+      });
     };
 
     const handleFlush = async () => {
-      if (space) {
-        await test('flush', async () => {
-          await space.db.flush({ indexes: true });
-        });
-      }
+      await test('flush', async () => {
+        invariant(space);
+        await space.db.flush({ indexes: true });
+      });
     };
 
     const handleQuery = async () => {
-      if (space) {
-        await test('query', async () => {
-          await space.db.query(Filter.everything()).run();
-        });
-      }
+      await test('query', async () => {
+        invariant(space);
+        await space.db.query(Filter.everything()).run();
+      });
     };
 
     const data = {
       space: space?.id,
-      spaces: client.spaces.get().map((space) => {
-        return space.db.toJSON();
-      }),
+      spaces: client.spaces.get().map((space) => space.db.toJSON()),
       events,
     };
 
