@@ -2,16 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { flow, pipe, Option, Schema, SchemaAST } from 'effect';
+import { flow, Option, pipe, Schema, SchemaAST } from 'effect';
 
 import { getField, type JsonPath } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
+import { SchemaId } from '../object';
 import { createAnnotationHelper } from './annotation-helper';
 import { EntityKind } from './entity-kind';
-import { getSchema } from './schema';
 
 /**
  * ECHO identifier (for a stored schema).
@@ -204,3 +204,41 @@ export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generat
 export type GeneratorAnnotationValue = string | [string, number];
 
 export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationValue>(GeneratorAnnotationId);
+
+/**
+ * Returns the schema for the given object if one is defined.
+ */
+// TODO(burdon): Reconcile with `getTypename`.
+// TODO(dmaretskyi): For echo objects, this always returns the root schema.
+export const getSchema = (obj: unknown | undefined): Schema.Schema.AnyNoContext | undefined => {
+  if (!obj) {
+    return undefined;
+  }
+
+  return (obj as any)[SchemaId];
+};
+
+/**
+ * Internal use only.
+ */
+export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext) => {
+  Object.defineProperty(obj, SchemaId, {
+    value: schema,
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  });
+};
+
+// TODO(dmaretskyi): Unify with `getTypeReference`.
+export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
+  assertArgument(Schema.isSchema(schema), 'schema must be a schema');
+
+  // TODO(dmaretskyi): Add support for dynamic schema.
+  const objectAnnotation = getTypeAnnotation(schema);
+  if (!objectAnnotation) {
+    return undefined;
+  }
+
+  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
+};
