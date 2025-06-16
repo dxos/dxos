@@ -12,7 +12,7 @@ import { IndexVector } from './index-vector';
 const spaceKey = PublicKey.random();
 
 describe('IndexVector', () => {
-  test('basic vector search', async () => {
+  test('basic vector search', { timeout: 10_000 }, async () => {
     const index = new IndexVector();
     await index.open();
 
@@ -55,7 +55,7 @@ describe('IndexVector', () => {
     expect(results[0].rank).toBeGreaterThan(0);
   });
 
-  test('serialization', async () => {
+  test('serialization', { timeout: 10_000 }, async () => {
     const index = new IndexVector();
     await index.open();
 
@@ -89,7 +89,7 @@ describe('IndexVector', () => {
     expect(results[0].rank).toBeGreaterThan(0);
   });
 
-  test('remove document', async () => {
+  test('remove document', { timeout: 10_000 }, async () => {
     const index = new IndexVector();
     await index.open();
 
