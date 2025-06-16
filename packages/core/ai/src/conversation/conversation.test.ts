@@ -13,7 +13,7 @@ import { runLLM, type ConversationEvent } from './conversation';
 import { DEFAULT_EDGE_MODEL } from '../defs';
 import { AIServiceEdgeClient } from '../service';
 import { AI_SERVICE_ENDPOINT } from '../testing';
-import { createUserMessage, defineTool, ToolResult } from '../tools';
+import { createUserMessage, createTool, ToolResult } from '../tools';
 
 // TODO(burdon): Local live LLM test.
 describe.skip('Conversation tests', () => {
@@ -38,7 +38,7 @@ describe.skip('Conversation tests', () => {
   });
 
   test('tool call', async ({ expect }) => {
-    const custodian = defineTool('testing', {
+    const custodian = createTool('testing', {
       name: 'custodian',
       description: 'Custodian can tell you the password if you say the magic word',
       schema: Schema.Struct({

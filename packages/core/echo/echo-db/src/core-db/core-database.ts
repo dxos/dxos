@@ -161,7 +161,7 @@ export class CoreDatabase {
   }
 
   @synchronized
-  async open(spaceState: SpaceState) {
+  async open(spaceState: SpaceState): Promise<void> {
     const start = performance.now();
     if (this._state !== CoreDatabaseState.CLOSED) {
       log.info('Already open');
@@ -200,7 +200,7 @@ export class CoreDatabase {
 
   // TODO(dmaretskyi): Cant close while opening.
   @synchronized
-  async close() {
+  async close(): Promise<void> {
     if (this._state === CoreDatabaseState.CLOSED) {
       return;
     }
@@ -221,7 +221,7 @@ export class CoreDatabase {
    */
   // TODO(dmaretskyi): should it be synchronized and/or cancelable?
   @synchronized
-  async updateSpaceState(spaceState: SpaceState) {
+  async updateSpaceState(spaceState: SpaceState): Promise<void> {
     invariant(this._ctx, 'Must be open');
     if (spaceState.rootUrl === this._automergeDocLoader.getSpaceRootDocHandle().url) {
       return;
@@ -279,7 +279,7 @@ export class CoreDatabase {
    * @deprecated
    * Return only loaded objects.
    */
-  allObjectCores() {
+  allObjectCores(): ObjectCore[] {
     return Array.from(this._objects.values());
   }
 
@@ -414,14 +414,14 @@ export class CoreDatabase {
   /**
    * @internal
    */
-  _createQueryContext() {
+  _createQueryContext(): CoreDatabaseQueryContext {
     return new CoreDatabaseQueryContext(this, this._queryService);
   }
 
   /**
    * Update objects.
    */
-  async update(filter: Filter.Any, operation: UpdateOperation) {
+  async update(filter: Filter.Any, operation: UpdateOperation): Promise<void> {
     const ast = filter.ast;
     if (ast.type !== 'object' || ast.id?.length !== 1) {
       throw new Error('Only object id filters with one id are currently supported');
@@ -464,8 +464,7 @@ export class CoreDatabase {
     return isBatch ? cores.map((core) => core.toPlainObject()) : cores[0].toPlainObject();
   }
 
-  // TODO(dmaretskyi): Rename `addObjectCore`.
-  addCore(core: ObjectCore, opts?: AddCoreOptions) {
+  addCore(core: ObjectCore, opts?: AddCoreOptions): void {
     if (core.database) {
       // Already in the database.
       if (core.database !== this) {
@@ -508,8 +507,7 @@ export class CoreDatabase {
     });
   }
 
-  // TODO(dmaretskyi): Rename `removeObjectCore`.
-  removeCore(core: ObjectCore) {
+  removeCore(core: ObjectCore): void {
     invariant(this._objects.has(core.id));
     core.setDeleted(true);
   }
@@ -517,7 +515,7 @@ export class CoreDatabase {
   /**
    * Removes an object link from the space root document.
    */
-  unlinkObjects(objectIds: string[]) {
+  unlinkObjects(objectIds: string[]): void {
     const root = this._automergeDocLoader.getSpaceRootDocHandle();
     for (const objectId of objectIds) {
       if (!root.doc().links?.[objectId]) {
@@ -534,7 +532,7 @@ export class CoreDatabase {
   /**
    * Removes all objects that are marked as deleted.
    */
-  async unlinkDeletedObjects({ batchSize = 10 }: { batchSize?: number } = {}) {
+  async unlinkDeletedObjects({ batchSize = 10 }: { batchSize?: number } = {}): Promise<void> {
     const idChunks = chunkArray(this.getAllObjectIds(), batchSize);
     for (const ids of idChunks) {
       const objects = await this.batchLoadObjectCores(ids, { returnDeleted: true });
@@ -578,12 +576,11 @@ export class CoreDatabase {
   }
 
   async flush({ disk = true, indexes = false, updates = false }: FlushOptions = {}): Promise<void> {
+    log.info('flush', { disk, indexes, updates });
     if (disk) {
       await this._repoProxy.flush();
       await this._dataService.flush(
-        {
-          documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
-        },
+        { documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId) },
         { timeout: RPC_TIMEOUT },
       );
     }
@@ -636,7 +633,7 @@ export class CoreDatabase {
    *   This is also why flushing to disk is important.
    */
   // TODO(dmaretskyi): Find a way to ensure client propagation.
-  async waitUntilHeadsReplicated(heads: SpaceDocumentHeads) {
+  async waitUntilHeadsReplicated(heads: SpaceDocumentHeads): Promise<void> {
     await this._dataService.waitUntilHeadsReplicated(
       {
         heads: {
@@ -669,7 +666,7 @@ export class CoreDatabase {
   /**
    * @deprecated Use `flush({ indexes: true })`.
    */
-  async updateIndexes() {
+  async updateIndexes(): Promise<void> {
     await this._dataService.updateIndexes(undefined, { timeout: 0 });
   }
 
@@ -703,7 +700,7 @@ export class CoreDatabase {
   private async _handleSpaceRootDocumentChange(
     spaceRootDocHandle: DocHandleProxy<DatabaseDirectory>,
     objectsToLoad: string[],
-  ) {
+  ): Promise<void> {
     const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
     const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}).map(([k, v]) => [k, v.toString()]));
@@ -753,7 +750,7 @@ export class CoreDatabase {
     this.rootChanged.emit();
   }
 
-  private _emitObjectUpdateEvent(itemsUpdated: string[]) {
+  private _emitObjectUpdateEvent(itemsUpdated: string[]): void {
     if (itemsUpdated.length === 0) {
       return;
     }
@@ -806,13 +803,13 @@ export class CoreDatabase {
     };
   }
 
-  private _unsubscribeFromHandles() {
+  private _unsubscribeFromHandles(): void {
     for (const docHandle of Object.values(this._repoProxy.handles)) {
       docHandle.off('change', this._onDocumentUpdate);
     }
   }
 
-  private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded) {
+  private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded): void {
     handle.on('change', this._onDocumentUpdate);
     const core = this._createObjectInDocument(handle, objectId);
     if (this._areDepsSatisfied(core)) {
@@ -836,14 +833,14 @@ export class CoreDatabase {
   /**
    * Loads all objects on open and handles objects that are being created not by this client.
    */
-  private _createInlineObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]) {
+  private _createInlineObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]): void {
     for (const id of objectIds) {
       invariant(!this._objects.has(id));
       this._createObjectInDocument(docHandle, id);
     }
   }
 
-  private _createObjectInDocument(docHandle: DocHandleProxy<DatabaseDirectory>, objectId: string) {
+  private _createObjectInDocument(docHandle: DocHandleProxy<DatabaseDirectory>, objectId: string): ObjectCore {
     invariant(!this._objects.get(objectId));
     const core = new ObjectCore();
     core.id = objectId;
@@ -893,7 +890,7 @@ export class CoreDatabase {
     });
   }
 
-  private _rebindObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]) {
+  private _rebindObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]): void {
     for (const objectId of objectIds) {
       const objectCore = this._objects.get(objectId);
       invariant(objectCore);
@@ -922,7 +919,7 @@ export class CoreDatabase {
   });
 
   @trace.span({ showInBrowserTimeline: true })
-  private _emitDbUpdateEvents() {
+  private _emitDbUpdateEvents(): void {
     const fullUpdateIds = [...this._objectsForNextUpdate];
     const allDbUpdates = new Set([...this._objectsForNextUpdate, ...this._objectsForNextDbUpdate]);
     this._objectsForNextUpdate.clear();
@@ -941,7 +938,7 @@ export class CoreDatabase {
 
   // TODO(dmaretskyi): Pass all remote updates through this.
   // Scheduled db and signal update events.
-  private _scheduleThrottledUpdate(objectId: string[]) {
+  private _scheduleThrottledUpdate(objectId: string[]): void {
     for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
     }
@@ -953,7 +950,7 @@ export class CoreDatabase {
   }
 
   // Scheduled db update event only.
-  private _scheduleThrottledDbUpdate(objectId: string[]) {
+  private _scheduleThrottledDbUpdate(objectId: string[]): void {
     for (const id of objectId) {
       this._objectsForNextDbUpdate.add(id);
     }

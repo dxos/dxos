@@ -89,7 +89,7 @@ export class Hypergraph {
     spaceKey: PublicKey,
     database: EchoDatabaseImpl,
     owningObject?: unknown,
-  ) {
+  ): void {
     this._spaceKeyToId.set(spaceKey, spaceId);
     this._databases.set(spaceId, database);
     this._owningObjects.set(spaceId, owningObject);
@@ -112,7 +112,7 @@ export class Hypergraph {
     }
   }
 
-  _unregister(spaceId: SpaceId) {
+  _unregister(spaceId: SpaceId): void {
     // TODO(dmaretskyi): Remove db from query contexts.
     this._databases.delete(spaceId);
   }
@@ -169,8 +169,10 @@ export class Hypergraph {
     return {
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (dxn, load, onLoad) => {
+        // TODO(dmaretskyi): Add queues.
+
         if (dxn.kind !== DXN.kind.ECHO) {
-          throw new Error('Unsupported DXN kind');
+          return undefined; // Unsupported DXN kind.
         }
 
         const ref = Reference.fromDXN(dxn);
@@ -264,7 +266,7 @@ export class Hypergraph {
       .value.on(new Context(), onResolve);
   }
 
-  registerQuerySourceProvider(provider: QuerySourceProvider) {
+  registerQuerySourceProvider(provider: QuerySourceProvider): void {
     this._querySourceProviders.push(provider);
     for (const context of this._queryContexts.values()) {
       context.addQuerySource(provider.create());
@@ -274,14 +276,14 @@ export class Hypergraph {
   /**
    * Does not remove the provider from active query contexts.
    */
-  unregisterQuerySourceProvider(provider: QuerySourceProvider) {
+  unregisterQuerySourceProvider(provider: QuerySourceProvider): void {
     const index = this._querySourceProviders.indexOf(provider);
     if (index !== -1) {
       this._querySourceProviders.splice(index, 1);
     }
   }
 
-  private _onUpdate(updateEvent: ItemsUpdatedEvent) {
+  private _onUpdate(updateEvent: ItemsUpdatedEvent): void {
     const listenerMap = this._resolveEvents.get(updateEvent.spaceId);
     if (listenerMap) {
       compositeRuntime.batch(() => {

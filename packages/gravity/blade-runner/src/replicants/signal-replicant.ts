@@ -48,7 +48,7 @@ export class SignalReplicant {
     duration,
     repeatInterval,
     replicantWaitTime,
-  }: ReplicantRunParams) {
+  }: ReplicantRunParams): Promise<void> {
     const ctx = new Context();
     let testCounter = 0;
 

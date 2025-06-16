@@ -79,11 +79,11 @@ export class QueryServiceImpl extends Resource implements QueryService {
     });
   }
 
-  override async _open() {
+  override async _open(): Promise<void> {
     this._params.indexer.updated.on(this._ctx, () => this._updateQueries.schedule());
   }
 
-  override async _close() {
+  override async _close(): Promise<void> {
     await Promise.all(Array.from(this._queries).map((query) => query.close()));
   }
 
@@ -137,7 +137,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   /**
    * Re-index all loaded documents.
    */
-  async reindex() {
+  async reindex(): Promise<void> {
     log.info('Reindexing all documents...');
     const iterator = createDocumentsIterator(this._params.automergeHost);
     const ids: IdToHeads = new Map();

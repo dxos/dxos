@@ -13,12 +13,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../common/test-utils"
-    },
-    {
-      "path": "../primitives/react-hooks"
-    }
-  ]
+  "references": []
 }

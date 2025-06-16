@@ -5,21 +5,26 @@
 import { Resource } from '@dxos/context';
 import type { BaseEchoObject } from '@dxos/echo-schema';
 import { assertState } from '@dxos/invariant';
-import type { DXN } from '@dxos/keys';
+import { DXN, ObjectId, QueueSubspaceTags, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
 
 import { QueueImpl } from './queue';
 import type { QueuesService } from './queue-service';
 import type { Queue } from './types';
 
-export interface AbstractQueueFactory {
+export interface QueueAPI {
   get<T extends BaseEchoObject = BaseEchoObject>(dxn: DXN): Queue<T>;
+  create<T extends BaseEchoObject = BaseEchoObject>(options?: { subspaceTag?: QueueSubspaceTag }): Queue<T>;
 }
 
-export class QueueFactory extends Resource implements AbstractQueueFactory {
+export class QueueFactory extends Resource implements QueueAPI {
   private readonly _queues = new Map<DXN.String, Queue<BaseEchoObject>>();
   private _service?: QueuesService = undefined;
 
-  setService(service: QueuesService) {
+  constructor(private readonly _spaceId: SpaceId) {
+    super();
+  }
+
+  setService(service: QueuesService): void {
     this._service = service;
   }
 
@@ -35,5 +40,12 @@ export class QueueFactory extends Resource implements AbstractQueueFactory {
     const newQueue = new QueueImpl<T>(this._service, dxn);
     this._queues.set(stringDxn, newQueue);
     return newQueue as Queue<T>;
+  }
+
+  create<T extends BaseEchoObject = BaseEchoObject>({
+    subspaceTag = QueueSubspaceTags.DATA,
+  }: { subspaceTag?: QueueSubspaceTag } = {}): Queue<T> {
+    const dxn = DXN.fromQueue(subspaceTag, this._spaceId, ObjectId.random());
+    return this.get<T>(dxn);
   }
 }

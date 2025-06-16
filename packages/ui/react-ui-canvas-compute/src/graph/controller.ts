@@ -145,7 +145,7 @@ export class ComputeGraphController extends Resource {
     };
   }
 
-  setServices(services: Partial<Services>) {
+  setServices(services: Partial<Services>): void {
     log.info('setServices', { services });
     Object.assign(this._services, services);
   }
@@ -187,11 +187,11 @@ export class ComputeGraphController extends Resource {
     );
   }
 
-  addNode(node: ComputeNode) {
+  addNode(node: ComputeNode): void {
     this._graph.addNode(node);
   }
 
-  addEdge(edge: ComputeEdge) {
+  addEdge(edge: ComputeEdge): void {
     this._graph.addEdge(edge);
   }
 
@@ -199,15 +199,15 @@ export class ComputeGraphController extends Resource {
     return this._graph.getNode(nodeId);
   }
 
-  getInputs(nodeId: string) {
+  getInputs(nodeId: string): Record<string, RuntimeValue> {
     return this._runtimeStateInputs[nodeId] ?? {};
   }
 
-  getOutputs(nodeId: string) {
+  getOutputs(nodeId: string): Record<string, RuntimeValue> {
     return this._runtimeStateOutputs[nodeId] ?? {};
   }
 
-  setOutput(nodeId: string, property: string, value: any) {
+  setOutput(nodeId: string, property: string, value: any): void {
     this._forcedOutputs[nodeId] ??= {};
     this._forcedOutputs[nodeId][property] = value;
 
@@ -232,7 +232,7 @@ export class ComputeGraphController extends Resource {
     this._diagnostics = executor.getDiagnostics();
   }
 
-  async evalNode(nodeId: string) {
+  async evalNode(nodeId: string): Promise<void> {
     const executor = this._executor.clone();
     await executor.load(this._graph);
 
@@ -281,7 +281,7 @@ export class ComputeGraphController extends Resource {
    * @param startFromNode - Node to start from, otherwise all {@link AUTO_TRIGGER_NODES} are executed.
    */
   @synchronized
-  async exec(startFromNode?: string) {
+  async exec(startFromNode?: string): Promise<void> {
     this._runtimeStateInputs = {};
     this._runtimeStateOutputs = {};
     const executor = this._executor.clone();
@@ -372,7 +372,7 @@ export class ComputeGraphController extends Resource {
     };
   }
 
-  private _handleEvent(event: ComputeEvent) {
+  private _handleEvent(event: ComputeEvent): void {
     log('handleEvent', { event });
     switch (event.type) {
       case 'compute-input': {
@@ -388,12 +388,12 @@ export class ComputeGraphController extends Resource {
     this.events.emit(event);
   }
 
-  private _onInputComputed(nodeId: string, property: string, value: RuntimeValue) {
+  private _onInputComputed(nodeId: string, property: string, value: RuntimeValue): void {
     this._runtimeStateInputs[nodeId] ??= {};
     this._runtimeStateInputs[nodeId][property] = value;
   }
 
-  private _onOutputComputed(nodeId: string, property: string, value: RuntimeValue) {
+  private _onOutputComputed(nodeId: string, property: string, value: RuntimeValue): void {
     this._runtimeStateOutputs[nodeId] ??= {};
     this._runtimeStateOutputs[nodeId][property] = value;
 

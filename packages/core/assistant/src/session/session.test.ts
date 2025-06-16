@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { AIServiceEdgeClient, ConsolePrinter, defineTool, ToolResult } from '@dxos/ai';
+import { AIServiceEdgeClient, ConsolePrinter, createTool, ToolResult } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { Type } from '@dxos/echo';
@@ -22,7 +22,7 @@ const CalendarEventSchema = Schema.Struct({
   endTime: Schema.String,
   description: Schema.String,
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'example.com/type/CalendarEvent',
     version: '0.1.0',
   }),
@@ -48,7 +48,7 @@ describe.skip('AISession with Ollama', () => {
       instructions: 'Use this to create and query calendar events.',
       schema: CalendarEventSchema,
       tools: [
-        defineTool('calendar', {
+        createTool('calendar', {
           name: 'query',
           description: 'Query the calendar for events',
           schema: Schema.Struct({}),
@@ -65,7 +65,7 @@ describe.skip('AISession with Ollama', () => {
       instructions: 'Use this to create and manage tables. Each table has a unique id.',
       schema: Schema.Struct({}),
       tools: [
-        defineTool('table', {
+        createTool('table', {
           name: 'create',
           description: 'Create a table',
           schema: Schema.Struct({
@@ -89,7 +89,7 @@ describe.skip('AISession with Ollama', () => {
         'Use this to create and manage maps. Maps source data from tables. Table id is required to create a map.',
       schema: Schema.Struct({}),
       tools: [
-        defineTool('map', {
+        createTool('map', {
           name: 'create',
           description: 'Create a map',
           schema: Schema.Struct({

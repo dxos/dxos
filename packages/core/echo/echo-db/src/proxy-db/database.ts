@@ -58,8 +58,6 @@ export type AddOptions = {
 /**
  *
  */
-// TODO(burdon): Document.
-// TODO(burdon): Rename DatabaseProxy.
 export interface EchoDatabase {
   get graph(): Hypergraph;
   get schemaRegistry(): EchoSchemaRegistry;
@@ -77,18 +75,6 @@ export interface EchoDatabase {
   query: QueryFn;
 
   /**
-   * Update objects.
-   */
-  update(filter: Filter.Any, operation: UpdateOperation): Promise<void>;
-
-  /**
-   * Insert new objects.
-   */
-  // TODO(dmaretskyi): Support meta.
-  insert(data: InsertData): Promise<AnyObjectData>;
-  insert(data: InsertBatch): Promise<AnyObjectData[]>;
-
-  /**
    * Adds object to the database.
    */
   add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): AnyLiveObject<T>;
@@ -102,6 +88,22 @@ export interface EchoDatabase {
    * Wait for all pending changes to be saved to disk.
    */
   flush(opts?: FlushOptions): Promise<void>;
+
+  /**
+   * Update objects.
+   * @deprecated Use `add` instead.
+   */
+  // TODO(burdon): Remove.
+  update(filter: Filter.Any, operation: UpdateOperation): Promise<void>;
+
+  /**
+   * Insert new objects.
+   * @deprecated Use `add` instead.
+   */
+  // TODO(burdon): Remove.
+  // TODO(dmaretskyi): Support meta.
+  insert(data: InsertData): Promise<AnyObjectData>;
+  insert(data: InsertBatch): Promise<AnyObjectData[]>;
 
   /**
    * Run migrations.
@@ -220,7 +222,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   @synchronized
-  async setSpaceRoot(rootUrl: string) {
+  async setSpaceRoot(rootUrl: string): Promise<void> {
     log('setSpaceRoot', { rootUrl });
     const firstTime = this._rootUrl === undefined;
     this._rootUrl = rootUrl;
@@ -261,7 +263,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Update objects.
    */
-  async update(filter: Filter.Any, operation: UpdateOperation) {
+  async update(filter: Filter.Any, operation: UpdateOperation): Promise<void> {
     await this._coreDatabase.update(filter, operation);
   }
 

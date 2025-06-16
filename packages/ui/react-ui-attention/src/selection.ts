@@ -77,7 +77,7 @@ export class SelectionManager {
     )(selection) as any;
   }
 
-  updateSingle(contextId: string, id: string) {
+  updateSingle(contextId: string, id: string): void {
     untracked(() => {
       const selection = this.getSelection(contextId, 'single');
       invariant(selection?.mode === 'single', 'Selection mode is not single');
@@ -110,7 +110,7 @@ export class SelectionManager {
     });
   }
 
-  clearSelection(contextId: string) {
+  clearSelection(contextId: string): void {
     untracked(() => {
       const selection = this.getSelection(contextId);
       if (selection) {
@@ -119,7 +119,7 @@ export class SelectionManager {
     });
   }
 
-  toggleSelection(contextId: string, id: string) {
+  toggleSelection(contextId: string, id: string): void {
     untracked(() => {
       const selection = this.getSelection(contextId, 'multi');
       invariant(selection?.mode === 'multi', 'Selection mode is not multi');

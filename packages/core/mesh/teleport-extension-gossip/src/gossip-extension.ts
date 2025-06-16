@@ -78,7 +78,7 @@ export class GossipExtension implements TeleportExtension {
     this._closed = true;
   }
 
-  async sendAnnounce(message: GossipMessage) {
+  async sendAnnounce(message: GossipMessage): Promise<void> {
     if (this._closed) {
       return;
     }

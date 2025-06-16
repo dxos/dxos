@@ -30,7 +30,7 @@ export class ConnectionLog {
 
   readonly update = new Event();
 
-  getSwarmInfo(swarmId: PublicKey) {
+  getSwarmInfo(swarmId: PublicKey): SwarmInfo {
     return this._swarms.get(swarmId) ?? raise(new Error(`Swarm not found: ${swarmId}`));
   }
 
@@ -38,7 +38,7 @@ export class ConnectionLog {
     return Array.from(this._swarms.values());
   }
 
-  joinedSwarm(swarm: Swarm) {
+  joinedSwarm(swarm: Swarm): void {
     const info: SwarmInfo = {
       id: PublicKey.from(swarm._instanceId),
       topic: swarm.topic,
@@ -126,7 +126,7 @@ export class ConnectionLog {
     });
   }
 
-  leftSwarm(swarm: Swarm) {
+  leftSwarm(swarm: Swarm): void {
     this.getSwarmInfo(PublicKey.from(swarm._instanceId)).isActive = false;
     this.update.emit();
   }

@@ -13,7 +13,7 @@ export class ReplicantRegistry {
 
   private readonly _replicantClasses = new Map<string, ReplicantClass<any>>();
 
-  register(replicantClass: ReplicantClass<any>) {
+  register(replicantClass: ReplicantClass<any>): void {
     this._replicantClasses.set(replicantClass.name, replicantClass);
   }
 

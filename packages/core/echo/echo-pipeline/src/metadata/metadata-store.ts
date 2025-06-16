@@ -126,7 +126,7 @@ export class MetadataStore {
     log('saved', { size: encoded.length, checksum });
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this._invitationCleanupCtx.dispose();
     await this.flush();
     await this._metadataFile?.close();
@@ -220,7 +220,7 @@ export class MetadataStore {
     await this._writeFile(file, LargeSpaceMetadata, data);
   }
 
-  async flush() {
+  async flush(): Promise<void> {
     await this._directory.flush();
   }
 
@@ -268,7 +268,7 @@ export class MetadataStore {
     return this._metadata.identity;
   }
 
-  async setIdentityRecord(record: IdentityRecord) {
+  async setIdentityRecord(record: IdentityRecord): Promise<void> {
     invariant(!this._metadata.identity, 'Cannot overwrite existing identity in metadata');
 
     this._metadata.identity = record;
@@ -280,7 +280,7 @@ export class MetadataStore {
     return this._metadata.invitations ?? [];
   }
 
-  async addInvitation(invitation: Invitation) {
+  async addInvitation(invitation: Invitation): Promise<void> {
     if (this._metadata.invitations?.find((i) => i.invitationId === invitation.invitationId)) {
       return;
     }
@@ -290,13 +290,13 @@ export class MetadataStore {
     await this.flush();
   }
 
-  async removeInvitation(invitationId: string) {
+  async removeInvitation(invitationId: string): Promise<void> {
     this._metadata.invitations = (this._metadata.invitations ?? []).filter((i) => i.invitationId !== invitationId);
     await this._save();
     await this.flush();
   }
 
-  async addSpace(record: SpaceMetadata) {
+  async addSpace(record: SpaceMetadata): Promise<void> {
     invariant(
       !(this._metadata.spaces ?? []).find((space) => space.key.equals(record.key)),
       'Cannot overwrite existing space in metadata',
@@ -307,23 +307,23 @@ export class MetadataStore {
     await this.flush();
   }
 
-  async setSpaceDataLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
+  async setSpaceDataLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void> {
     this._getSpace(spaceKey).dataTimeframe = timeframe;
     await this._save();
   }
 
-  async setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
+  async setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void> {
     this._getSpace(spaceKey).controlTimeframe = timeframe;
     await this._save();
     await this.flush();
   }
 
-  async setCache(spaceKey: PublicKey, cache: SpaceCache) {
+  async setCache(spaceKey: PublicKey, cache: SpaceCache): Promise<void> {
     this._getSpace(spaceKey).cache = cache;
     await this._save();
   }
 
-  async setWritableFeedKeys(spaceKey: PublicKey, controlFeedKey: PublicKey, dataFeedKey: PublicKey) {
+  async setWritableFeedKeys(spaceKey: PublicKey, controlFeedKey: PublicKey, dataFeedKey: PublicKey): Promise<void> {
     const space = this._getSpace(spaceKey);
     space.controlFeedKey = controlFeedKey;
     space.dataFeedKey = dataFeedKey;
@@ -331,7 +331,7 @@ export class MetadataStore {
     await this.flush();
   }
 
-  async setSpaceState(spaceKey: PublicKey, state: SpaceState) {
+  async setSpaceState(spaceKey: PublicKey, state: SpaceState): Promise<void> {
     this._getSpace(spaceKey).state = state;
     await this._save();
     await this.flush();
@@ -341,7 +341,7 @@ export class MetadataStore {
     return this._getLargeSpaceMetadata(spaceKey).controlPipelineSnapshot;
   }
 
-  async setSpaceControlPipelineSnapshot(spaceKey: PublicKey, snapshot: ControlPipelineSnapshot) {
+  async setSpaceControlPipelineSnapshot(spaceKey: PublicKey, snapshot: ControlPipelineSnapshot): Promise<void> {
     this._getLargeSpaceMetadata(spaceKey).controlPipelineSnapshot = snapshot;
     await this._saveSpaceLargeMetadata(spaceKey);
     await this.flush();
@@ -351,7 +351,7 @@ export class MetadataStore {
     return this.hasSpace(spaceKey) ? this._getSpace(spaceKey).edgeReplication : undefined;
   }
 
-  async setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting) {
+  async setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting): Promise<void> {
     this._getSpace(spaceKey).edgeReplication = setting;
     await this._save();
     await this.flush();

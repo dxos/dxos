@@ -257,7 +257,7 @@ export class GraphModel<
     return new GraphBuilder<Node, Edge>(this);
   }
 
-  override copy(graph?: Partial<Graph>) {
+  override copy(graph?: Partial<Graph>): GraphModel<Node, Edge> {
     return new GraphModel<Node, Edge>({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] });
   }
 }
@@ -274,7 +274,7 @@ export const subscribe = (model: GraphModel, cb: GraphModelSubscription, fire = 
   }
 
   return effect(() => {
-    cb(model, model.graph);
+    cb(model, model.graph); // TODO(burdon): This won't work unless model.graph is reactive.
   });
 };
 
@@ -294,7 +294,7 @@ export class ReactiveGraphModel<
     );
   }
 
-  override copy(graph?: Partial<Graph>) {
+  override copy(graph?: Partial<Graph>): ReactiveGraphModel<Node, Edge> {
     return new ReactiveGraphModel<Node, Edge>(graph);
   }
 
@@ -310,7 +310,7 @@ export class GraphBuilder<
   Node extends BaseGraphNode = BaseGraphNode,
   Edge extends BaseGraphEdge = BaseGraphEdge,
 > extends AbstractGraphBuilder<Node, Edge, GraphModel<Node, Edge>> {
-  override call(cb: (builder: this) => void) {
+  override call(cb: (builder: this) => void): this {
     cb(this);
     return this;
   }

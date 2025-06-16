@@ -37,7 +37,7 @@ export const TranscriptionPlugin = () =>
               const members = space?.members.get().map((member) => member.identity) ?? [];
               const queue = new QueueImpl(client.edge, transcript.queue.dxn);
               await queue.refresh();
-              const content = queue.items
+              const content = queue.objects
                 .filter((message) => isInstanceOf(DataType.Message, message))
                 .flatMap((message, index) => renderMarkdown(members)(message, index))
                 .join('\n\n');

@@ -14,14 +14,14 @@ export class HistoryCache<T> {
     this._messages = [];
   }
 
-  push(...messages: T[]) {
+  push(...messages: T[]): void {
     if (this._messages.length >= this._limit) {
       this._messages.shift(); // Remove the oldest message
     }
     this._messages.push(...messages); // Add new message
   }
 
-  get() {
+  get(): T[] {
     return this._messages;
   }
 }

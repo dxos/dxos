@@ -15,11 +15,13 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { ViewProjection, ViewType, createView } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { ViewEditor } from './ViewEditor';
+import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 import translations from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
 
-const DefaultStory = () => {
+type StoryProps = Pick<ViewEditorProps, 'readonly'>;
+
+const DefaultStory = (props: StoryProps) => {
   const space = useSpace();
   const [schema, setSchema] = useState<EchoSchema>();
   const [view, setView] = useState<ViewType>();
@@ -57,6 +59,7 @@ const DefaultStory = () => {
     },
     [views, schema],
   );
+
   const handleDelete = useCallback((property: string) => projection?.deleteFieldProjection(property), [projection]);
 
   if (!schema || !view || !projection) {
@@ -70,6 +73,7 @@ const DefaultStory = () => {
           schema={schema}
           view={view}
           registry={space?.db.schemaRegistry}
+          readonly={props.readonly}
           onTypenameChanged={updateViewTypename}
           onDelete={handleDelete}
         />
@@ -78,9 +82,8 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<typeof ViewEditor> = {
+const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-form/ViewEditor',
-  component: ViewEditor,
   render: DefaultStory,
   decorators: [withClientProvider({ createSpace: true }), withLayout({ fullscreen: true }), withTheme],
   parameters: {
@@ -90,6 +93,12 @@ const meta: Meta<typeof ViewEditor> = {
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {};
+
+export const Readonly: Story = {
+  args: {
+    readonly: true,
+  },
+};

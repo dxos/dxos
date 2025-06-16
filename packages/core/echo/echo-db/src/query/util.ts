@@ -29,12 +29,12 @@ export const getTargetSpacesForQuery = (query: QueryAST.Query): SpaceId[] => {
  * Extracts the filter and options from a query.
  * Supports Select(...) and Options(Select(...)) queries.
  */
-export const isTrivialSelectionQuery = (
+export const isSimpleSelectionQuery = (
   query: QueryAST.Query,
 ): { filter: QueryAST.Filter; options?: QueryAST.QueryOptions } | null => {
   switch (query.type) {
     case 'options': {
-      const maybeFilter = isTrivialSelectionQuery(query.query);
+      const maybeFilter = isSimpleSelectionQuery(query.query);
       if (!maybeFilter) {
         return null;
       }

@@ -1,8 +1,4 @@
 //
-// Copyright 2024 DXOS.org
-//
-
-//
 // Copyright 2025 DXOS.org
 //
 
@@ -295,7 +291,7 @@ class FilterClass implements Filter<any> {
     return typeof value === 'object' && value !== null && '~Filter' in value;
   }
 
-  static everything() {
+  static everything(): FilterClass {
     return new FilterClass({
       type: 'object',
       typename: null,
@@ -303,7 +299,7 @@ class FilterClass implements Filter<any> {
     });
   }
 
-  static nothing() {
+  static nothing(): FilterClass {
     return new FilterClass({
       type: 'not',
       filter: {
@@ -314,11 +310,24 @@ class FilterClass implements Filter<any> {
     });
   }
 
+  static relation() {
+    return new FilterClass({
+      type: 'object',
+      typename: null,
+      props: {},
+    });
+  }
+
   static ids(...ids: ObjectId[]): Filter<any> {
     assertArgument(
       ids.every((id) => ObjectId.isValid(id)),
       'ids must be valid',
     );
+
+    if (ids.length === 0) {
+      return Filter.nothing();
+    }
+
     return new FilterClass({
       type: 'object',
       typename: null,

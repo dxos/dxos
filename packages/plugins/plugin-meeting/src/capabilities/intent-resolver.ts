@@ -6,13 +6,15 @@ import { Effect } from 'effect';
 
 import { AIServiceEdgeClient } from '@dxos/ai';
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
-import { Ref } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
+import { getSchemaTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { TranscriptionAction } from '@dxos/plugin-transcription/types';
-import { getSpace } from '@dxos/react-client/echo';
+import { Filter, fullyQualifiedId, getSpace, parseId, Query } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { MeetingCapabilities } from './capabilities';
@@ -48,9 +50,30 @@ export default (context: PluginContext) =>
     createResolver({
       intent: MeetingAction.SetActive,
       resolve: ({ object }) => {
+        const callManager = context.getCapability(ThreadCapabilities.CallManager);
         const state = context.getCapability(MeetingCapabilities.State);
         state.activeMeeting = object;
+        callManager.setActivity(getSchemaTypename(MeetingType)!, { meetingId: fullyQualifiedId(object) });
         return { data: { object } };
+      },
+    }),
+    createResolver({
+      intent: MeetingAction.HandlePayload,
+      resolve: async ({ meetingId, transcriptDxn, transcriptionEnabled }) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const state = context.getCapability(MeetingCapabilities.State);
+
+        const { spaceId, objectId } = meetingId ? parseId(meetingId) : {};
+        const space = spaceId && client.spaces.get(spaceId);
+        const meeting = objectId && (await space?.db.query(Query.select(Filter.ids(objectId))).first());
+        state.activeMeeting = meeting;
+
+        const enabled = !!transcriptionEnabled;
+        if (transcriptDxn) {
+          // NOTE: Must set queue before enabling transcription.
+          state.transcriptionManager?.setQueue(Type.DXN.parse(transcriptDxn));
+        }
+        await state.transcriptionManager?.setEnabled(enabled);
       },
     }),
     createResolver({

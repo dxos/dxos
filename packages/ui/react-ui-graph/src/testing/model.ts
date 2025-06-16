@@ -17,7 +17,7 @@ export class TestGraphModel extends ReactiveGraphModel<TestNode> {
     return faker.helpers.arrayElement(this._graph.nodes);
   }
 
-  createNodes(node: TestNode = undefined, n = 1) {
+  createNodes(node: TestNode = undefined, n = 1): void {
     Array.from({ length: n }).forEach(() => {
       const child = this.addNode(createNode());
       const parent = node || faker.helpers.arrayElement(this._graph.nodes);

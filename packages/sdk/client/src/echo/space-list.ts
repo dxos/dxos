@@ -73,7 +73,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     this._spacesStream = spacesStream;
   }
 
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return inspectObject(this);
   }
 
@@ -82,7 +82,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   @trace.info({ depth: null })
-  toJSON() {
+  toJSON(): { spaces: number | undefined } {
     return {
       spaces: this._value?.length,
     };
@@ -92,7 +92,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @internal
    */
   @trace.span()
-  async _open() {
+  async _open(): Promise<void> {
     log.trace('dxos.sdk.echo-proxy.open', Trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context({
       onError: (error) => {
@@ -220,7 +220,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return true;
   }
 
-  private _openSpaceAsync(spaceProxy: Space) {
+  private _openSpaceAsync(spaceProxy: Space): void {
     void spaceProxy.open().catch((err) => log.catch(err));
   }
 
@@ -235,7 +235,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return space.id === this._defaultSpaceId;
   }
 
-  async setConfig(config: IndexConfig) {
+  async setConfig(config: IndexConfig): Promise<void> {
     await this._serviceProvider.services.QueryService?.setConfig(config, { timeout: 20_000 }); // TODO(dmaretskyi): Set global timeout instead.
   }
 
@@ -243,7 +243,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @internal
    */
   @trace.span()
-  async _close() {
+  async _close(): Promise<void> {
     await this._ctx.dispose();
     await Promise.all(this.get().map((space) => (space as SpaceProxy)._destroy()));
     this._spacesStream.next([]);
@@ -270,7 +270,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   override get(): Space[];
   override get(spaceIdOrKey: SpaceId | PublicKey): Space | undefined;
-  override get(spaceIdOrKey?: SpaceId | PublicKey) {
+  override get(spaceIdOrKey?: SpaceId | PublicKey): Space | Space[] | undefined {
     if (!spaceIdOrKey) {
       return this._value;
     }

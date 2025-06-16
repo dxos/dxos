@@ -111,7 +111,7 @@ export class IdentityManager {
   }
 
   @Trace.span({ showInBrowserTimeline: true })
-  async open(ctx: Context) {
+  async open(ctx: Context): Promise<void> {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.halo.identity-manager.open', trace.begin({ id: traceId }));
 
@@ -131,11 +131,11 @@ export class IdentityManager {
     log.trace('dxos.halo.identity-manager.open', trace.end({ id: traceId }));
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this._identity?.close(new Context());
   }
 
-  async createIdentity({ profile, deviceProfile }: CreateIdentityOptions = {}) {
+  async createIdentity({ profile, deviceProfile }: CreateIdentityOptions = {}): Promise<Identity> {
     // TODO(nf): populate using context from ServiceContext?
     invariant(!this._identity, 'Identity already exists.');
     log('creating identity...');
@@ -263,7 +263,11 @@ export class IdentityManager {
   /**
    * Accept an existing identity. Expects its device key to be authorized (now or later).
    */
-  public async acceptIdentity(identity: Identity, identityRecord: IdentityRecord, profile?: DeviceProfileDocument) {
+  public async acceptIdentity(
+    identity: Identity,
+    identityRecord: IdentityRecord,
+    profile?: DeviceProfileDocument,
+  ): Promise<void> {
     this._identity = identity;
 
     // Identity becomes ready after device chain is replicated. Wait for it before storing the record.
@@ -287,7 +291,7 @@ export class IdentityManager {
   /**
    * Update the profile document of an existing identity.
    */
-  async updateProfile(profile: ProfileDocument) {
+  async updateProfile(profile: ProfileDocument): Promise<ProfileDocument> {
     invariant(this._identity, 'Identity not initialized.');
     // TODO(wittjosiah): Use CredentialGenerator.
     const credential = await this._identity.getIdentityCredentialSigner().createCredential({
@@ -330,7 +334,7 @@ export class IdentityManager {
     };
   }
 
-  private async _constructIdentity(identityRecord: IdentityRecord) {
+  private async _constructIdentity(identityRecord: IdentityRecord): Promise<Identity> {
     invariant(!this._identity);
     log('constructing identity', { identityRecord });
 

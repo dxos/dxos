@@ -11,7 +11,7 @@ export const Todo = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'example.com/type/Todo',
     version: '0.1.0',
   }),
@@ -21,7 +21,7 @@ export type Todo = Schema.Schema.Type<typeof Todo>;
 export const TodoList = Schema.Struct({
   todos: Schema.Array(Type.Ref(Todo)),
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'example.com/type/TodoList',
     version: '0.1.0',
   }),

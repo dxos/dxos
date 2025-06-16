@@ -389,7 +389,7 @@ export class Graph implements WritableGraph {
   //   }
   // }
 
-  expand(id: string, relation: Relation = 'outbound') {
+  expand(id: string, relation: Relation = 'outbound'): void {
     const key = `${id}$${relation}`;
     const expanded = Record.get(this._expanded, key).pipe(Option.getOrElse(() => false));
     log('expand', { key, expanded });
@@ -399,13 +399,13 @@ export class Graph implements WritableGraph {
     }
   }
 
-  addNodes(nodes: NodeArg<any, Record<string, any>>[]) {
+  addNodes(nodes: NodeArg<any, Record<string, any>>[]): void {
     Rx.batch(() => {
       nodes.map((node) => this.addNode(node));
     });
   }
 
-  addNode({ nodes, edges, ...nodeArg }: NodeArg<any, Record<string, any>>) {
+  addNode({ nodes, edges, ...nodeArg }: NodeArg<any, Record<string, any>>): void {
     const { id, type, data = null, properties = {} } = nodeArg;
     const nodeRx = this._node(id);
     const node = this._registry.get(nodeRx);
@@ -443,13 +443,13 @@ export class Graph implements WritableGraph {
     }
   }
 
-  removeNodes(ids: string[], edges = false) {
+  removeNodes(ids: string[], edges = false): void {
     Rx.batch(() => {
       ids.map((id) => this.removeNode(id, edges));
     });
   }
 
-  removeNode(id: string, edges = false) {
+  removeNode(id: string, edges = false): void {
     const nodeRx = this._node(id);
     // TODO(wittjosiah): Is there a way to mark these rx values for garbage collection?
     this._registry.set(nodeRx, Option.none());
@@ -468,13 +468,13 @@ export class Graph implements WritableGraph {
     this._onRemoveNode?.(id);
   }
 
-  addEdges(edges: Edge[]) {
+  addEdges(edges: Edge[]): void {
     Rx.batch(() => {
       edges.map((edge) => this.addEdge(edge));
     });
   }
 
-  addEdge(edgeArg: Edge) {
+  addEdge(edgeArg: Edge): void {
     const sourceRx = this._edges(edgeArg.source);
     const source = this._registry.get(sourceRx);
     if (!source.outbound.includes(edgeArg.target)) {
@@ -490,13 +490,13 @@ export class Graph implements WritableGraph {
     }
   }
 
-  removeEdges(edges: Edge[], removeOrphans = false) {
+  removeEdges(edges: Edge[], removeOrphans = false): void {
     Rx.batch(() => {
       edges.map((edge) => this.removeEdge(edge, removeOrphans));
     });
   }
 
-  removeEdge(edgeArg: Edge, removeOrphans = false) {
+  removeEdge(edgeArg: Edge, removeOrphans = false): void {
     const sourceRx = this._edges(edgeArg.source);
     const source = this._registry.get(sourceRx);
     if (source.outbound.includes(edgeArg.target)) {
@@ -527,7 +527,7 @@ export class Graph implements WritableGraph {
     }
   }
 
-  sortEdges(id: string, relation: Relation, order: string[]) {
+  sortEdges(id: string, relation: Relation, order: string[]): void {
     const edgesRx = this._edges(id);
     const edges = this._registry.get(edgesRx);
     const unsorted = edges[relation].filter((id) => !order.includes(id)) ?? [];
@@ -579,7 +579,7 @@ export class Graph implements WritableGraph {
   async waitForPath(
     params: { source?: string; target: string },
     { timeout = 5_000, interval = 500 }: { timeout?: number; interval?: number } = {},
-  ) {
+  ): Promise<string[]> {
     const path = this.getPath(params);
     if (Option.isSome(path)) {
       return path.value;

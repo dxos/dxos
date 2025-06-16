@@ -77,7 +77,7 @@ export class TunnelRpcPeer {
     return this._rpc.rpc.Tunnel;
   }
 
-  async close() {
+  async close(): Promise<void> {
     try {
       await this._rpc.close();
     } finally {

@@ -171,7 +171,13 @@ export class Bundler {
     });
   }
 
-  analyzeSourceFileImports(code: string) {
+  analyzeSourceFileImports(code: string): {
+    defaultImportName: string;
+    namedImports: string[];
+    wildcardImportName: string;
+    moduleIdentifier: string;
+    quotes: string;
+  }[] {
     // TODO(dmaretskyi): Support import aliases and wildcard imports.
     const parsedImports = allMatches(IMPORT_REGEX, code);
     return parsedImports.map((capture) => {

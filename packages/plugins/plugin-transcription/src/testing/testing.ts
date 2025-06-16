@@ -32,7 +32,7 @@ export const TestItem = Schema.Struct({
     description: 'Product description',
   }),
 }).pipe(
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/Test',
     version: '0.1.0',
   }),
@@ -88,7 +88,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
     };
   }
 
-  next() {
+  next(): Date {
     this.start = new Date(this.start.getTime() + Math.random() * 10_000);
     return this.start;
   }
@@ -106,7 +106,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
   currentMessage: number = 0;
   transcriptMessages: DataType.Message[] = [];
 
-  async connect(space: Space) {
+  async connect(space: Space): Promise<void> {
     this.space = space;
     const { transcriptMessages } = await seedTestData(space);
     this.transcriptMessages = transcriptMessages;

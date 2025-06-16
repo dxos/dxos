@@ -11,7 +11,7 @@ export class StackManager {
     this._page = locator.page();
   }
 
-  sections() {
+  sections(): Locator {
     return this.locator.locator('section');
   }
 
@@ -19,7 +19,7 @@ export class StackManager {
     return this.locator.locator('section').evaluateAll((els) => els.map((el) => el.getAttribute('id')));
   }
 
-  section(index: number) {
+  section(index: number): SectionManager {
     return new SectionManager(this.locator.locator('section').nth(index));
   }
 }
@@ -31,21 +31,21 @@ export class SectionManager {
     this._page = locator.page();
   }
 
-  async id() {
+  async id(): Promise<string | null> {
     return this.locator.getAttribute('id');
   }
 
-  async remove() {
+  async remove(): Promise<void> {
     await this.locator.getByTestId('section.drag-handle-menu-trigger').click();
     await this._page.getByTestId('section.remove').click();
   }
 
-  async navigateTo() {
+  async navigateTo(): Promise<void> {
     await this.locator.getByTestId('section.drag-handle-menu-trigger').click();
     await this._page.getByTestId('section.navigate-to').click();
   }
 
-  async dragTo(target: Locator, offset: { x: number; y: number } = { x: 0, y: 0 }) {
+  async dragTo(target: Locator, offset: { x: number; y: number } = { x: 0, y: 0 }): Promise<void> {
     const active = this.locator.getByTestId('section.drag-handle-menu-trigger');
     const box = await target.boundingBox();
     if (box) {

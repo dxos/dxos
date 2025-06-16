@@ -118,7 +118,7 @@ export class WorkerSession {
     this.bridgeService = this._iframeRpc.rpc.BridgeService;
   }
 
-  async open() {
+  async open(): Promise<void> {
     log.info('opening...');
     await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell()]);
 
@@ -133,7 +133,7 @@ export class WorkerSession {
     log.info('opened');
   }
 
-  async close() {
+  async close(): Promise<void> {
     log.info('closing...');
     try {
       await this.onClose.callIfSet();
@@ -145,7 +145,7 @@ export class WorkerSession {
     log.info('closed');
   }
 
-  private async _maybeOpenShell() {
+  private async _maybeOpenShell(): Promise<void> {
     try {
       this._shellClientRpc && (await asyncTimeout(this._shellClientRpc.open(), 1_000));
     } catch {

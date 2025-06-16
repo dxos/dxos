@@ -20,7 +20,7 @@ export class BitField {
     return !!bit;
   }
 
-  static set(data: Uint8Array, idx: number, value: boolean) {
+  static set(data: Uint8Array, idx: number, value: boolean): void {
     if (value) {
       data[idx >> 3] = data[idx >> 3] | (1 << (7 - (idx % 8)));
     } else {
@@ -48,7 +48,7 @@ export class BitField {
     return result;
   }
 
-  static and(first: Uint8Array, second: Uint8Array) {
+  static and(first: Uint8Array, second: Uint8Array): Uint8Array {
     invariant(first.length === second.length, 'Bitfields must be of the same length');
     const result = new Uint8Array(first.length);
     for (let i = 0; i < first.length; i++) {

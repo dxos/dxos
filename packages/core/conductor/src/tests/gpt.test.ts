@@ -6,7 +6,7 @@ import { it } from '@effect/vitest';
 import { Cause, Chunk, Console, Effect, Exit, Fiber, Option, Scope, Stream } from 'effect';
 import { describe, expect, test, type TaskContext } from 'vitest';
 
-import { AIServiceEdgeClient, OllamaClient, ToolTypes, type GenerationStreamEvent } from '@dxos/ai';
+import { AIServiceEdgeClient, defineTool, OllamaClient, ToolTypes, type GenerationStreamEvent } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 
@@ -225,13 +225,13 @@ describe.skip('GPT pipelines', () => {
         const input: GptInput = {
           prompt: 'A beautiful sunset over a calm ocean',
           tools: [
-            {
+            defineTool('testing', {
               name: 'text-to-image',
               type: ToolTypes.TextToImage,
               options: {
                 model: '@testing/kitten-in-bubble',
               },
-            },
+            }),
           ],
         };
         const output = yield* registry.gpt.exec!(makeValueBag(input)).pipe(
