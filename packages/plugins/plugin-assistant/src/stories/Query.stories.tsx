@@ -469,10 +469,18 @@ export const Test: Story = {
       window.location.reload();
     };
 
-    const handleCreate = async () => {
-      await test('create', () => {
+    const handleCreate1 = async () => {
+      await test('create-1', async () => {
         invariant(space);
-        addTestData(space);
+        await addTestData(space);
+      });
+    };
+
+    const handleCreate2 = async () => {
+      await test('create-2', async () => {
+        invariant(space);
+        const createObjects = createObjectFactory(space.db, generator);
+        await createObjects([{ type: DataType.Organization, count: 100 }]);
       });
     };
 
@@ -501,7 +509,8 @@ export const Test: Story = {
         <Toolbar.Root>
           <Button onClick={handleReset}>Reset</Button>
           <Button onClick={handleReload}>Reload</Button>
-          <Button onClick={handleCreate}>Create</Button>
+          <Button onClick={handleCreate1}>Create 1</Button>
+          <Button onClick={handleCreate2}>Create 2</Button>
           <Button onClick={handleFlush}>Flush</Button>
           <Button onClick={handleQuery}>Query</Button>
         </Toolbar.Root>
