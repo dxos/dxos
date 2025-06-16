@@ -40,7 +40,7 @@ const StoryComponent: FC<{ count: number }> = ({ count = 1 }) => {
         return {
           x: r * Math.cos(a),
           y: r * Math.sin(a),
-          r: 8,
+          r: Math.floor(Math.random() * 10) + 4,
         };
       }),
     [count],
