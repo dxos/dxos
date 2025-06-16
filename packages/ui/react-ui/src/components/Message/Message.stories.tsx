@@ -33,11 +33,17 @@ export default {
   render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
+  argTypes: {
+    valence: {
+      control: 'select',
+      options: ['success', 'info', 'warning', 'error', 'neutral'],
+    },
+  },
 };
 
 export const Default = {
   args: {
-    valence: 'error',
+    valence: 'neutral',
     title: 'Alert title',
     body: 'Alert content',
   },
