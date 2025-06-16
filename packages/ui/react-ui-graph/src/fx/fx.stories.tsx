@@ -17,7 +17,17 @@ import { type D3Callable } from '../util';
 
 import '../../styles/graph.css';
 
-const DefaultStory = (props: any) => {
+type Datum = {
+  x: number;
+  y: number;
+  r: number;
+};
+
+type StoryProps = {
+  count: number;
+} & Pulsar.Options;
+
+const DefaultStory = (props: StoryProps) => {
   return (
     <SVG.Root>
       <StoryComponent {...props} />
@@ -25,13 +35,7 @@ const DefaultStory = (props: any) => {
   );
 };
 
-type Datum = {
-  x: number;
-  y: number;
-  r: number;
-};
-
-const StoryComponent: FC<{ count: number }> = ({ count = 1 }) => {
+const StoryComponent: FC<StoryProps> = ({ count = 1, ...options }) => {
   const items = useMemo<Datum[]>(
     () =>
       Array.from({ length: count }, () => {
@@ -58,7 +62,7 @@ const StoryComponent: FC<{ count: number }> = ({ count = 1 }) => {
         enter
           .append('g')
           .attr('transform', (d) => `translate(${d.x}, ${d.y})`)
-          .call(createNode),
+          .call(createNode, 'stroke-blue-500 hover:fill-blue-500', options),
       );
   }, [items]);
 
@@ -72,7 +76,7 @@ const StoryComponent: FC<{ count: number }> = ({ count = 1 }) => {
   );
 };
 
-const createNode: D3Callable<SVGGElement, Datum> = (group, classNames = 'stroke-blue-500 hover:fill-blue-500') => {
+const createNode: D3Callable<SVGGElement, Datum> = (group, classNames, options) => {
   group
     .append('circle')
     .classed(classNames, true)
@@ -80,7 +84,11 @@ const createNode: D3Callable<SVGGElement, Datum> = (group, classNames = 'stroke-
     .on('click', function () {
       const d = select<SVGCircleElement, Datum>(this).datum();
       const group = select<SVGGElement, Datum>(this.parentElement as unknown as SVGGElement);
-      group.call(Pulsar.has(group) ? Pulsar.create : Pulsar.remove, d.r);
+      if (Pulsar.has(group)) {
+        Pulsar.create(group, d.r, options);
+      } else {
+        Pulsar.remove(group);
+      }
     });
 };
 
@@ -92,8 +100,17 @@ const meta: Meta = {
 
 export default meta;
 
-export const Pulse = {
+export const DefaultPulse = {
   args: {
     count: 20,
+  },
+};
+
+export const RapidPulse = {
+  args: {
+    count: 20,
+    duration: 1_000,
+    period: 1_000,
+    ratio: 5,
   },
 };
