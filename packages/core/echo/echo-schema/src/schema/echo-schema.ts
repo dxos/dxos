@@ -16,7 +16,7 @@ import {
 } from './manipulation';
 import { getSnapshot } from './snapshot';
 import { StoredSchema } from './stored-schema';
-import { getTypeAnnotation, schemaVariance, SchemaMetaSymbol, type SchemaMeta, type TypeAnnotation } from '../ast';
+import { getTypeAnnotation, SchemaMetaSymbol, type SchemaMeta, type TypeAnnotation } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
 import { type JsonSchemaType } from '../json-schema';
 import { type TypedObject, type TypedObjectPrototype } from '../object';
@@ -374,4 +374,10 @@ const unwrapOptionality = (property: SchemaAST.PropertySignature): SchemaAST.Pro
     ...property,
     type: property.type.types.find((type) => !SchemaAST.isUndefinedKeyword(type))!,
   } as any;
+};
+
+const schemaVariance = {
+  _A: (_: any) => _,
+  _I: (_: any) => _,
+  _R: (_: never) => _,
 };
