@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { type SchemaRegistry } from '@dxos/echo-db';
 import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, inputTextLabel, mx } from '@dxos/react-ui-theme';
 import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
@@ -152,6 +152,16 @@ export const ViewEditor = ({
 
   return (
     <div role='none' className={mx('overflow-y-auto', classNames)}>
+      <div role='none' className='mbe-2'>
+        {immutable && (
+          <Message.Root valence='info' className='rounded'>
+            <Message.Title>
+              <Icon icon='ph--info--regular' size={5} classNames='inline' /> {t('system schema title')}
+            </Message.Title>
+            <Message.Body>{t('system schema description')}</Message.Body>
+          </Message.Root>
+        )}
+      </div>
       <Form<ViewMetaType>
         autoSave
         schema={ViewMetaSchema}
@@ -183,7 +193,11 @@ export const ViewEditor = ({
 
               <div role='list' className='flex flex-col w-full'>
                 {fields?.map((field) => (
-                  <List.Item<FieldType> key={field.id} item={field} classNames={mx(grid, ghostHover, 'cursor-pointer')}>
+                  <List.Item<FieldType>
+                    key={field.id}
+                    item={field}
+                    classNames={mx(grid, ghostHover, !immutable && 'cursor-pointer')}
+                  >
                     <List.ItemDragHandle />
                     <List.ItemTitle onClick={() => handleSelect(field)}>{field.path}</List.ItemTitle>
                     <div className='flex items-center gap-2 -ml-4'>
@@ -224,7 +238,7 @@ export const ViewEditor = ({
                     <List.Item<string>
                       key={property}
                       item={property}
-                      classNames={mx(grid, ghostHover, 'cursor-pointer')}
+                      classNames={mx(grid, ghostHover, !immutable && 'cursor-pointer')}
                     >
                       <div />
                       <List.ItemTitle>{property}</List.ItemTitle>
