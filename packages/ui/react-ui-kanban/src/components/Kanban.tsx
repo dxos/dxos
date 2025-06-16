@@ -220,13 +220,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
 
                 return (
                   <div className='p-2'>
-<<<<<<< HEAD
-                    <div className='flex flex-col max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface ring-focusLine ring-neutralFocusIndicator rounded-md'>
-||||||| c91f446202
-                    <div className='rounded-lg max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface ring-focusLine ring-neutralFocusIndicator flex flex-col'>
-=======
                     <div className='rounded-md max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface border border-separator ring-focusLine ring-neutralFocusIndicator flex flex-col'>
->>>>>>> origin/main
                       {/* Column Header */}
                       <div className='flex items-center p-2'>
                         <IconButton
