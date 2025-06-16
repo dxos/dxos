@@ -121,7 +121,8 @@ Defines attributes and encoding placed on objects.
 | ---------------- | ---------------------- | ----------------------------------- | ---------------------- | --------------------------- | ---------- | ------------------------------------ |
 | Id               | No                     | `id`                                | `ObjectID` ULID string | `id`                        | string     | Unique object ID                     |
 | Self DXN         | Yes                    | `Symbol(@dxos/echo/Self)`           | `DXN`                  | `@self`                     | string     | DXN to the object itself             |
-| Typename         | No                     | `Symbol(@dxos/echo/Typename)`       | `DXN`                  | `@type`                     | string     | DXN to the object type               |
+| Type             | No                     | `Symbol(@dxos/echo/Type)`           | `DXN`                  | `@type`                     | string     | DXN to the object type               |
+| Schema           | Yes                    | `Symbol(@dxos/echo/Schema)`         | Effect-Schema          | -                           | string     | Reference to the object schema       |
 | Tombstone marker | Yes                    | `Symbol(@dxos/echo/Deleted)`        | `boolean`              | `@deleted`                  | boolean    | Deletion marker                      |
 | Metadata         | Yes                    | `Symbol(@dxos/echo/Meta)`           | Metadata object        | `@meta`                     | object     | Metadata section                     |
 | Entity kind      | No                     | `Symbol(@dxos/echo/EntityKind)`     | `EntityKind`           | (inferred from other props) | string     | Obj vs Relation                      |

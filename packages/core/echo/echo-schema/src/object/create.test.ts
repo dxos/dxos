@@ -10,7 +10,7 @@ import { DXN } from '@dxos/keys';
 
 import { create } from './create';
 import { serializeStatic } from './json-serializer';
-import { RelationSourceId, RelationTargetId } from './relation';
+import { RelationSourceId, RelationTargetId } from './model';
 import { getTypename } from './typename';
 import { getSchema, getSchemaDXN } from '../ast';
 import { Testing } from '../testing';

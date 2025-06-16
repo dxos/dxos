@@ -14,7 +14,7 @@ import {
   type ObjectMeta,
   ObjectMetaSchema,
 } from '@dxos/echo-schema';
-import { symbolMeta } from '@dxos/echo-schema';
+import { MetaId } from '@dxos/echo-schema';
 
 import type { Live } from './live';
 import { createProxy, isValidProxyTarget } from './proxy';
@@ -91,7 +91,8 @@ const setIdOnTarget = (target: any) => {
 /**
  * Set metadata on object.
  */
+// TODO(dmaretskyi): Move to echo-schema.
 const initMeta = <T>(obj: T, meta: ObjectMeta = { keys: [] }) => {
   prepareTypedTarget(meta, ObjectMetaSchema);
-  defineHiddenProperty(obj, symbolMeta, createProxy(meta, TypedReactiveHandler.instance as any));
+  defineHiddenProperty(obj, MetaId, createProxy(meta, TypedReactiveHandler.instance as any));
 };

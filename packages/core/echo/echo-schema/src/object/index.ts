@@ -14,3 +14,4 @@ export * from './typed-object';
 export * from './typed-relation';
 export * from './typename';
 export * from './deleted';
+export * from './model';

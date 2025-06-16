@@ -11,10 +11,10 @@ import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-pro
 import {
   type BaseObject,
   defineHiddenProperty,
-  ECHO_ATTR_META,
-  ECHO_ATTR_TYPE,
-  TYPENAME_SYMBOL,
-  DeletedSymbol,
+  ATTR_META,
+  ATTR_TYPE,
+  TypeId,
+  DeletedId,
   EchoSchema,
   EntityKind,
   EntityKindPropertyId,
@@ -27,13 +27,12 @@ import {
   SchemaMetaSymbol,
   SchemaValidator,
   StoredSchema,
-  TypeSymbol,
   getRefSavedTarget,
   getTypeAnnotation,
   isInstanceOf,
   setRefResolver,
-  symbolMeta,
-  symbolSchema,
+  MetaId,
+  SchemaId,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -139,7 +138,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     switch (prop) {
       case symbolInternals:
         return target[symbolInternals];
-      case symbolSchema:
+      case SchemaId:
         return this.getSchema(target);
     }
 
@@ -161,13 +160,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           // TODO(dmaretskyi): This shouldn't be implement via refs \_(^.^)_/.
           return this.lookupRef(target, targetRef)?.target;
         }
-        case TYPENAME_SYMBOL:
-          return this._getTypename(target);
-        case TypeSymbol:
+        case TypeId:
           return this.getTypeReference(target)?.toDXN();
-        case symbolMeta:
+        case MetaId:
           return this.getMeta(target);
-        case DeletedSymbol:
+        case DeletedId:
           return this.isDeleted(target);
       }
     }
@@ -698,14 +695,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     )}`;
   };
 
+  // TODO(dmaretskyi): Re-use existing json serializer
   private _toJSON(target: ProxyTarget): any {
     target[symbolInternals].signal.notifyRead();
     const typeRef = target[symbolInternals].core.getType();
     const reified = this._getReified(target);
     return {
-      [ECHO_ATTR_TYPE]: typeRef ? encodeReference(typeRef) : undefined,
+      [ATTR_TYPE]: typeRef ? encodeReference(typeRef) : undefined,
       ...(target[symbolInternals].core.isDeleted() ? { '@deleted': true } : {}),
-      [ECHO_ATTR_META]: { ...this.getMeta(target) },
+      [ATTR_META]: { ...this.getMeta(target) },
 
       // TODO(dmaretskyi): Change to just `id`.
       '@id': target[symbolInternals].core.id,

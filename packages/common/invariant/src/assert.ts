@@ -12,6 +12,7 @@
  * }
  * ```
  */
+// TODO(dmaretskyi): Rename assertParameter.
 export const assertArgument: (condition: unknown, message: string) => asserts condition = (
   condition: unknown,
   message: string,

@@ -6,6 +6,7 @@ import type { DXN, ObjectId } from '@dxos/keys';
 import type { EntityKind } from '../ast';
 import type { ObjectMeta } from './meta';
 import type { ForeignKey } from '@dxos/echo-protocol';
+import type { Schema } from 'effect';
 
 //
 // Defines the internal model of the echo object.
@@ -29,12 +30,17 @@ export const ATTR_SELF_DXN = '@self';
 /**
  * DXN to the object type.
  */
-export const TypenameId = Symbol('@dxos/echo/Typename');
+export const TypeId = Symbol('@dxos/echo/Type');
 
 /**
  * Property name for typename when object is serialized to JSON.
  */
-export const ATTR_TYPENAME = '@type';
+export const ATTR_TYPE = '@type';
+
+/**
+ * Reference to the object schema.
+ */
+export const SchemaId = Symbol('@dxos/echo/Schema');
 
 /**
  * Deletion marker.
@@ -95,7 +101,11 @@ export const HypergraphId = Symbol('@dxos/echo/Hypergraph');
 export interface InternalObjectProps {
   id: ObjectId;
   readonly [SelfDXNId]?: DXN;
-  readonly [TypenameId]: DXN;
+  readonly [TypeId]: DXN;
+  /**
+   * Returns the schema for the object.
+   */
+  readonly [SchemaId]?: Schema.Schema.AnyNoContext;
   readonly [EntityKindId]: EntityKind;
   readonly [RelationSourceId]?: DXN | InternalObjectProps;
   readonly [RelationTargetId]?: DXN | InternalObjectProps;
@@ -111,7 +121,7 @@ export interface InternalObjectProps {
 export interface ObjectJSON {
   id: string;
   [ATTR_SELF_DXN]?: DXN.String;
-  [ATTR_TYPENAME]: DXN.String;
+  [ATTR_TYPE]: DXN.String;
   [ATTR_RELATION_SOURCE]?: DXN.String;
   [ATTR_RELATION_TARGET]?: DXN.String;
   [ATTR_DELETED]?: boolean;

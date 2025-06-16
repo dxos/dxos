@@ -6,7 +6,7 @@ import { SchemaAST, Schema } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
-import { symbolSchema } from './schema';
+import { SchemaId } from '../object';
 
 // TODO(burdon): Reconcile with @dxos/effect visit().
 
@@ -77,7 +77,7 @@ export class SchemaValidator {
   }
 
   public static getTargetPropertySchema(target: any, prop: string | symbol): Schema.Schema.AnyNoContext {
-    const schema: Schema.Schema.AnyNoContext | undefined = (target as any)[symbolSchema];
+    const schema: Schema.Schema.AnyNoContext | undefined = (target as any)[SchemaId];
     invariant(schema, 'target has no schema');
     const arrayAst = unwrapArray(schema.ast);
     if (arrayAst != null) {

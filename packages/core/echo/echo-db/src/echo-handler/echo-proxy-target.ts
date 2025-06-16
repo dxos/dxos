@@ -6,7 +6,7 @@ import { type Brand, type Schema } from 'effect';
 
 import type { CleanupFn } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
-import type { symbolSchema } from '@dxos/echo-schema';
+import type { SchemaId } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { ComplexMap } from '@dxos/util';
 
@@ -122,5 +122,5 @@ export type ProxyTarget = {
   /**
    * Used for objects created by `createObject`.
    */
-  [symbolSchema]?: Schema.Schema.AnyNoContext;
+  [SchemaId]?: Schema.Schema.AnyNoContext;
 } & ({ [key: keyof any]: any } | EchoArray<any>);

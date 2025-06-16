@@ -11,9 +11,7 @@ import { getDeep, setDeep } from '@dxos/util';
 
 import { getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../ast';
 import { getTypename, type ObjectMeta } from '../object';
-
-// TODO(burdon): Use consistently (with serialization utils).
-export const ECHO_ATTR_META = '@meta';
+import { ATTR_META } from '../object/model';
 
 /**
  * Base type for all data objects (reactive, ECHO, and other raw objects).
@@ -37,7 +35,7 @@ export type ExcludeId<T extends BaseObject> = Omit<T, 'id'>;
 
 export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 
-export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
+export type WithMeta = { [ATTR_META]?: ObjectMeta };
 
 /**
  * The raw object should not include the ECHO id, but may include metadata.
@@ -91,8 +89,8 @@ export type ObjectData<S> = Schema.Schema.Encoded<S> & CommonObjectData;
  * @deprecated Bad API.
  */
 export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMeta } => {
-  const meta = object[ECHO_ATTR_META];
-  delete object[ECHO_ATTR_META];
+  const meta = object[ATTR_META];
+  delete object[ATTR_META];
   return { meta, object };
 };
 

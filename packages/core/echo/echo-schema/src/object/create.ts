@@ -58,7 +58,7 @@ export const create = <S extends Schema.Schema.AnyNoContext>(
   }
 
   const obj = { ...data, id: data.id ?? ObjectId.random() };
-  setTypename(obj, getSchemaDXN(schema)?.toString() ?? failedInvariant('Missing schema DXN'));
+  setTypename(obj, getSchemaDXN(schema) ?? failedInvariant('Missing schema DXN'));
   setSchema(obj, schema);
   attachTypedJsonSerializer(obj);
   attachedTypedObjectInspector(obj);

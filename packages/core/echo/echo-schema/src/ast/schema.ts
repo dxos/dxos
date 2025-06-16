@@ -8,11 +8,7 @@ import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { getTypeAnnotation } from './annotations';
-
-/**
- * For attaching schema to objects.
- */
-export const symbolSchema = Symbol.for('@dxos/schema/Schema');
+import { SchemaId } from '../object';
 
 /**
  * Returns the schema for the given object if one is defined.
@@ -24,14 +20,14 @@ export const getSchema = (obj: unknown | undefined): Schema.Schema.AnyNoContext 
     return undefined;
   }
 
-  return (obj as any)[symbolSchema];
+  return (obj as any)[SchemaId];
 };
 
 /**
  * Internal use only.
  */
 export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext) => {
-  Object.defineProperty(obj, symbolSchema, {
+  Object.defineProperty(obj, SchemaId, {
     value: schema,
     writable: false,
     enumerable: false,

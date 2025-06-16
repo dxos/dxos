@@ -435,6 +435,9 @@ export class ObjectCore {
     this._setRaw([SYSTEM_NAMESPACE, 'deleted'], value);
   }
 
+  /**
+   * @deprecated
+   */
   toPlainObject(): CommonObjectData & Record<string, any> {
     let data = this.getDecoded([DATA_NAMESPACE]);
     if (typeof data !== 'object') {
