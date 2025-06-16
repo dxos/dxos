@@ -63,8 +63,8 @@ export namespace Ref {
 /**
  * Gets the full DXN of the schema.
  * Will include the version if it's a `type` DXN.
- * @example dxn:example.com/type/Person:0.1.0
- * @example dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX
+ * @example "dxn:example.com/type/Person:0.1.0"
+ * @example "dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX"
  */
 export const getDXN = (schema: Obj.Any | Relation.Any): Keys.DXN | undefined => {
   return EchoSchema.getSchemaDXN(schema);
@@ -101,6 +101,7 @@ export type Meta = EchoSchema.TypeAnnotation;
 export const getMeta = (schema: Obj.Any | Relation.Any): Meta | undefined => {
   return EchoSchema.getTypeAnnotation(schema);
 };
+
 export { EntityKind as Kind } from '@dxos/echo-schema';
 
 /**

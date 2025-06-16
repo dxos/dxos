@@ -11,10 +11,14 @@ export type Any = EchoSchema.AnyEchoObject & EchoSchema.RelationSourceTargetRefs
 export const make = LiveObject.live;
 
 export const isRelation = (value: unknown): value is Any => {
-  const kind = (value as any)[EchoSchema.EntityKindPropertyId];
-  if (kind === undefined) {
-    throw new TypeError('Provided value is not a valid ECHO object or relation');
+  if (typeof value !== 'object' || value === null) {
+    return false;
   }
+  if (EchoSchema.ATTR_RELATION_SOURCE in value || EchoSchema.ATTR_RELATION_TARGET in value) {
+    return true;
+  }
+
+  const kind = (value as any)[EchoSchema.EntityKindPropertyId];
   return kind === EchoSchema.EntityKind.Relation;
 };
 
