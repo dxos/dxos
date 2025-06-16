@@ -13,7 +13,7 @@ import { type QueryRefOptions } from './useQueryRefOptions';
 type UseRefQueryLookupProps = { space?: Space };
 
 export const useRefQueryLookupHandler = ({ space }: UseRefQueryLookupProps): QueryRefOptions => {
-  const handleRefQueryLookup = useCallback(
+  return useCallback(
     async (typeInfo: TypeAnnotation) => {
       if (!space) {
         return [];
@@ -36,6 +36,4 @@ export const useRefQueryLookupHandler = ({ space }: UseRefQueryLookupProps): Que
     },
     [space],
   );
-
-  return handleRefQueryLookup;
 };

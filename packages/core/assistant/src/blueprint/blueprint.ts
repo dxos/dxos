@@ -2,68 +2,94 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Tool } from '@dxos/ai';
-import { assertState } from '@dxos/invariant';
+import { Schema } from 'effect';
+
+import { type ExecutableTool, Tool } from '@dxos/ai';
+import { raise } from '@dxos/debug';
 import { ObjectId } from '@dxos/keys';
 
-export type Blueprint = {
-  steps: BlueprintStep[];
-};
-
-export const Blueprint = Object.freeze({
-  make: (steps: string[]): Blueprint => {
-    return {
-      steps: steps.map(
-        (step, index): BlueprintStep => ({
-          id: ObjectId.random(),
-          instructions: step,
-          tools: [],
-        }),
-      ),
-    };
-  },
+export const BlueprintStep = Schema.Struct({
+  id: Schema.String,
+  instructions: Schema.String,
+  // TODO(burdon): ExecutableTool can't be serialized.
+  tools: Schema.Array(Tool).pipe(Schema.mutable),
 });
+export interface BlueprintStep extends Schema.Schema.Type<typeof BlueprintStep> {}
 
-export type BlueprintStep = {
-  id: ObjectId;
-  instructions: string;
-  tools: Tool[];
-};
+export const Blueprint = Schema.Struct({
+  steps: Schema.Array(BlueprintStep).pipe(Schema.mutable),
+});
+export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
 
+/**
+ * Blueprint builder API.
+ */
 export namespace BlueprintBuilder {
-  interface Begin {
-    step(instructions: string): Step;
-  }
-  interface Step {
-    step(instructions: string): Step;
-    withTool(tool: Tool): Step;
-    end(): Blueprint;
-  }
+  export const create = () => new Builder();
 
-  export const begin = (): Begin => new Builder();
-
-  class Builder implements Begin, Step {
+  class Builder {
     private readonly _steps: BlueprintStep[] = [];
 
-    step(instructions: string): Step {
+    step(instructions: string, options?: { tools?: ExecutableTool[] }): Builder {
       this._steps.push({
         id: ObjectId.random(),
         instructions,
-        tools: [],
+        tools: options?.tools ?? [],
       });
+
       return this;
     }
 
-    withTool(tool: Tool): Step {
-      assertState(this._steps.length > 0, 'Must have at least one step');
-      this._steps.at(-1)!.tools.push(tool);
-      return this;
-    }
-
-    end(): Blueprint {
+    build(): Blueprint {
       return {
         steps: this._steps,
       };
+    }
+  }
+}
+
+/**
+ * Blueprint parser API.
+ */
+export namespace BlueprintParser {
+  export type Step = {
+    instructions: string;
+    // TODO(burdon): Tool DXN? Additional metadata?
+    tools?: string[];
+  };
+
+  export type DSL = {
+    steps: Step[];
+  };
+
+  export const create = (tools: ExecutableTool[] = []) => new Parser(tools);
+
+  class Parser {
+    constructor(private readonly _tools: ExecutableTool[]) {}
+
+    toJSON() {
+      return {
+        tools: this._tools.map((tool) => ({
+          name: tool.name,
+          namespace: tool.namespace,
+          type: tool.type,
+        })),
+      };
+    }
+
+    parse({ steps }: DSL): Blueprint {
+      const builder = BlueprintBuilder.create();
+
+      for (const step of steps) {
+        builder.step(step.instructions, {
+          // TODO(burdon): Tool resolution is duplicated in the session and ollama-client.
+          tools: step.tools?.map(
+            (tool) => this._tools.find(({ id }) => id === tool) ?? raise(new Error(`Tool not found: ${tool}`)),
+          ),
+        });
+      }
+
+      return builder.build();
     }
   }
 }

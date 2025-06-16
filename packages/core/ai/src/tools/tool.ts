@@ -32,14 +32,14 @@ declare global {
 
 export type ToolExecutionContext = {
   /**
-   * Report what tool is doing currently.
-   */
-  reportStatus: (status: AgentStatus) => void;
-
-  /**
    * Extensions are injected by the caller.
    */
   extensions?: ToolContextExtensions;
+
+  /**
+   * Report what tool is doing currently.
+   */
+  reportStatus?: (status: AgentStatus) => void;
 };
 
 export type ToolResult =
@@ -74,8 +74,10 @@ export const ToolResult = Object.freeze({
  * https://platform.openai.com/docs/guides/function-calling
  * https://docs.anthropic.com/en/docs/build-with-claude/tool-use
  */
-// TODO(burdon): Move to @dxos/ai
 export const Tool = Schema.Struct({
+  // TODO(burdon): DXN?
+  id: Schema.String,
+
   /**
    * Unique name.
    * ^[a-zA-Z0-9_-]{1,64}$
@@ -115,11 +117,8 @@ export const Tool = Schema.Struct({
   options: Schema.optional(Schema.Any),
 });
 
-export type ToolType = Schema.Schema.Type<typeof Tool>;
+export type Tool = Schema.Schema.Type<typeof Tool>;
 
-export interface Tool extends ToolType {
-  /**
-   * Javascript function to execute the tool.
-   */
-  execute?: (params: unknown, context?: ToolExecutionContext) => Promise<ToolResult>;
+export interface ExecutableTool extends Tool {
+  execute: (params: unknown, context: ToolExecutionContext) => Promise<ToolResult>;
 }

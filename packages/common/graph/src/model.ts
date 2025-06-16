@@ -274,7 +274,7 @@ export const subscribe = (model: GraphModel, cb: GraphModelSubscription, fire = 
   }
 
   return effect(() => {
-    cb(model, model.graph);
+    cb(model, model.graph); // TODO(burdon): This won't work unless model.graph is reactive.
   });
 };
 
