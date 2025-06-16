@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { defineTool, ToolResult } from '@dxos/ai';
+import { createTool, ToolResult } from '@dxos/ai';
 import {
   contributes,
   createIntent,
@@ -28,7 +28,7 @@ declare global {
 
 export default () =>
   contributes(Capabilities.Tools, [
-    defineTool(meta.id, {
+    createTool(meta.id, {
       name: 'show',
       description: `
         Show an item as a companion to an existing plank. This will make the item appear alongside the primary content.
@@ -42,13 +42,15 @@ export default () =>
         }),
       }),
       execute: async ({ id }, { extensions }) => {
-        invariant(extensions?.pivotId, 'No pivot ID');
-        invariant(extensions?.dispatch, 'No intent dispatcher');
+        invariant(extensions);
+        const { pivotId, dispatch, part } = extensions;
+        invariant(pivotId, 'No pivot ID');
+        invariant(dispatch, 'No intent dispatcher');
 
-        if (extensions.part === 'deck') {
-          const { data, error } = await extensions.dispatch(
+        if (part === 'deck') {
+          const { data, error } = await dispatch(
             createIntent(DeckAction.ChangeCompanion, {
-              primary: extensions.pivotId,
+              primary: pivotId,
               companion: id,
             }),
           );
@@ -58,12 +60,12 @@ export default () =>
 
           return ToolResult.Success(data);
         } else {
-          const { data, error } = await extensions.dispatch(
+          const { data, error } = await dispatch(
             createIntent(LayoutAction.Open, {
               subject: [id],
               part: 'main',
               options: {
-                pivotId: extensions.pivotId,
+                pivotId,
                 positioning: 'end',
               },
             }),

@@ -24,11 +24,12 @@ import { useSvgContext } from '../../hooks';
 export type GraphController = {
   refresh: () => void;
   repaint: () => void;
+  findNode: (id: string) => SVGGElement | null;
 };
 
 export type GraphProps<Node extends BaseGraphNode = any, Edge extends BaseGraphEdge = any> = ThemedClassName<
   Pick<GraphRendererOptions<Node>, 'labels' | 'subgraphs' | 'attributes'> & {
-    model?: GraphModel<Node, Edge>;
+    model?: GraphModel<Node, Edge>; // TODO(burdon): ReactiveGraphModel
     projector?: GraphProjector<Node>;
     renderer?: GraphRenderer<Node>;
     drag?: boolean;
@@ -86,13 +87,19 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
       repaint: () => {
         renderer.render(projector.layout);
       },
+      findNode: (id: string) => {
+        return graphRef.current?.querySelector<SVGGElement>(`g[data-id="${id}"]`);
+      },
     }),
-    [projector, renderer, model],
+    [model, projector, renderer],
   );
 
   // Subscriptions.
   useEffect(() => {
     return combine(
+      effect(() => {
+        projector.updateData(model?.graph);
+      }),
       projector.updated.on(({ layout }) => {
         try {
           renderer.render(layout);
@@ -101,11 +108,8 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
           log.catch(error);
         }
       }),
-      effect(() => {
-        projector.updateData(model?.graph);
-      }),
     );
-  }, [projector, renderer, model]);
+  }, [model, projector, renderer]);
 
   // Start.
   useEffect(() => {

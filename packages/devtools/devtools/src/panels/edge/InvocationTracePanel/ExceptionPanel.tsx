@@ -21,11 +21,11 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
   const eventQueue = useQueue<TraceEvent>(traceQueueDxn, { pollInterval: 2000 });
 
   const errorLogs = useMemo(() => {
-    if (!eventQueue?.items?.length) {
+    if (!eventQueue?.objects?.length) {
       return [];
     }
 
-    return eventQueue.items
+    return eventQueue.objects
       .flatMap((event) =>
         event.logs
           .filter((log) => log.level === 'error')
@@ -35,7 +35,7 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
           })),
       )
       .sort((a, b) => a.timestampMs - b.timestampMs);
-  }, [eventQueue?.items]);
+  }, [eventQueue?.objects]);
 
   if (traceQueueDxn && eventQueue?.isLoading) {
     return <div className={mx('flex items-center justify-center h-full')}>Loading trace data...</div>;

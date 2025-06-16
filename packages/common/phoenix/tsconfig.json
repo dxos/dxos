@@ -10,18 +10,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../async"
-    },
-    {
-      "path": "../invariant"
-    },
-    {
-      "path": "../log"
-    },
-    {
-      "path": "../node-std"
-    }
-  ]
+  "references": []
 }

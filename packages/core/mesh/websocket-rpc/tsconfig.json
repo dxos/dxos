@@ -4,21 +4,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../../common/async"
-    },
-    {
-      "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/node-std"
-    },
-    {
-      "path": "../../protocols"
-    },
-    {
-      "path": "../rpc"
-    }
-  ]
+  "references": []
 }
