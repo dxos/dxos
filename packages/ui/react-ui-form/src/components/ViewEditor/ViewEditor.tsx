@@ -155,7 +155,7 @@ export const ViewEditor = ({
       <div role='none' className='p-2'>
         <div role='none' className='mbe-2'>
           {immutable && (
-            <Message.Root valence='info' className='rounded'>
+            <Message.Root valence='neutral' className='rounded'>
               <Message.Title>
                 <Icon icon='ph--info--regular' size={5} classNames='inline' /> {t('system schema title')}
               </Message.Title>
