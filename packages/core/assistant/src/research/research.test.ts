@@ -55,7 +55,7 @@ describe('Research', () => {
     );
   });
 
-  test.only('should generate a research report', { timeout: 1000_000 }, async () => {
+  test.only('should generate a research report', { timeout: 300_000 }, async () => {
     db.add(
       live(DataType.Organization, {
         name: 'Notion',
