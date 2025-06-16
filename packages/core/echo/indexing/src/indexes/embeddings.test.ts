@@ -14,7 +14,8 @@ import { TestData } from '../testing';
 
 // Alternative to Orama from vector index search: hnswlib-wasm
 
-describe('Embeddings', () => {
+// TODO(mykola): Exceeded ratelimit for huggingface.
+describe.skip('Embeddings', () => {
   test.skip('should create embeddings', async () => {
     // Create the feature-extraction pipeline for the chosen model
     const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
@@ -104,7 +105,8 @@ describe('Embeddings', () => {
   });
 });
 
-describe('EmbeddingExtractor', { timeout: 20_000 }, () => {
+// TODO(mykola): Exceeded ratelimit for huggingface.
+describe.skip('EmbeddingExtractor', { timeout: 20_000 }, () => {
   test('should create embeddings', async () => {
     const extractor = new EmbeddingExtractor();
     const embeddings = await extractor.extract([{ content: TEST_ARTICLES.marineLife }]);
