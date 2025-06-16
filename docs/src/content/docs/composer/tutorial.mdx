@@ -358,7 +358,7 @@ export default () => {
     `,
     schema: MapType,
     tools: [
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'list',
         description: 'Query maps.',
         caption: 'Listing maps...',

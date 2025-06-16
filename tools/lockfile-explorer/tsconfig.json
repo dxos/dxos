@@ -17,9 +17,5 @@
   "include": [
     "src/**/*"
   ],
-  "references": [
-    {
-      "path": "../../packages/common/util"
-    }
-  ]
+  "references": []
 }

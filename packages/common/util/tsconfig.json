@@ -10,21 +10,5 @@
     "src",
     "test"
   ],
-  "references": [
-    {
-      "path": "../crypto"
-    },
-    {
-      "path": "../debug"
-    },
-    {
-      "path": "../invariant"
-    },
-    {
-      "path": "../keys"
-    },
-    {
-      "path": "../node-std"
-    }
-  ]
+  "references": []
 }
