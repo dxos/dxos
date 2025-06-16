@@ -4,7 +4,7 @@
 
 import { pipe, Schema } from 'effect';
 
-import { defineTool, ToolResult } from '@dxos/ai';
+import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
@@ -35,7 +35,7 @@ export default () => {
     `,
     schema: DocumentType,
     tools: [
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'create',
         description: 'Create a new markdown document',
         caption: 'Creating document...',
@@ -68,7 +68,7 @@ export default () => {
           return ToolResult.Success(createArtifactElement(data.id));
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'list',
         description: 'List all markdown documents in the current space.',
         caption: 'Listing markdown documents...',
@@ -89,7 +89,7 @@ export default () => {
           return ToolResult.Success(documentInfo);
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'inspect',
         description: 'Read the content of a markdown document.',
         caption: 'Inspecting markdown document...',

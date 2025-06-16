@@ -11,10 +11,14 @@ export type Any = EchoSchema.AnyEchoObject & EchoSchema.RelationSourceTargetRefs
 export const make = LiveObject.live;
 
 export const isRelation = (value: unknown): value is Any => {
-  const kind = (value as any)[EchoSchema.EntityKindPropertyId];
-  if (kind === undefined) {
-    throw new TypeError('Provided value is not a valid ECHO object or relation');
+  if (typeof value !== 'object' || value === null) {
+    return false;
   }
+  if (EchoSchema.ATTR_RELATION_SOURCE in value || EchoSchema.ATTR_RELATION_TARGET in value) {
+    return true;
+  }
+
+  const kind = (value as any)[EchoSchema.EntityKindPropertyId];
   return kind === EchoSchema.EntityKind.Relation;
 };
 
@@ -25,7 +29,7 @@ export const isRelation = (value: unknown): value is Any => {
 export const getSource = <T extends Any>(relation: T): EchoSchema.RelationSource<T> => {
   invariant(isRelation(relation));
   const obj = relation[EchoSchema.RelationSourceId];
-  invariant(obj !== undefined, 'Invalid relation.');
+  invariant(obj !== undefined, `Invalid source: ${relation.id}`);
   return obj;
 };
 
@@ -36,6 +40,6 @@ export const getSource = <T extends Any>(relation: T): EchoSchema.RelationSource
 export const getTarget = <T extends Any>(relation: T): EchoSchema.RelationTarget<T> => {
   invariant(isRelation(relation));
   const obj = relation[EchoSchema.RelationTargetId];
-  invariant(obj !== undefined, 'Invalid relation.');
+  invariant(obj !== undefined, `Invalid target: ${relation.id}`);
   return obj;
 };

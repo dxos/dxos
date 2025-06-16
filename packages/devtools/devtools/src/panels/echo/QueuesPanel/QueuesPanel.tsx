@@ -34,12 +34,12 @@ export const QueuesPanel = () => {
   );
 
   const rows = useMemo(() => {
-    return (queue?.items ?? []).map((item: any) => ({
+    return (queue?.objects ?? []).map((item: any) => ({
       id: item.id,
       type: item['@type'],
       _original: item,
     }));
-  }, [queue?.items]);
+  }, [queue?.objects]);
 
   const handleRowClicked = (row: any) => {
     if (!row) {
@@ -48,7 +48,7 @@ export const QueuesPanel = () => {
     }
 
     // Always pick the last item in the queue.
-    const lastItem = queue?.items[queue?.items.length - 1];
+    const lastItem = queue?.objects[queue?.objects.length - 1];
     if (lastItem) {
       setSelectedVersionObject(null);
       setSelected(lastItem);

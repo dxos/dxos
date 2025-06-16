@@ -3,6 +3,7 @@
 //
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
+import type { Schema } from 'effect';
 import isEqual from 'lodash.isequal';
 
 import { waitForCondition } from '@dxos/async';
@@ -29,6 +30,7 @@ type OpenDatabaseOptions = {
 type PeerOptions = {
   kv?: LevelDB;
   indexing?: Partial<EchoHostIndexingConfig>;
+  types?: Schema.Schema.AnyNoContext[];
 };
 
 export class EchoTestBuilder extends Resource {
@@ -55,6 +57,9 @@ export class EchoTestBuilder extends Resource {
   async createDatabase(options: PeerOptions = {}) {
     const peer = await this.createPeer(options);
     const db = await peer.createDatabase(PublicKey.random());
+    if (options.types) {
+      db.graph.schemaRegistry.addSchema(options.types);
+    }
     return {
       peer,
       host: peer.host,

@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { defineTool, ToolResult } from '@dxos/ai';
+import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
 import { type Space } from '@dxos/react-client/echo';
@@ -32,7 +32,7 @@ export default () => {
     `,
     schema: MailboxType,
     tools: [
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'inspect',
         description: 'Retrieves events for the given calendar.',
         caption: 'Retrieving calendar events...',

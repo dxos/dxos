@@ -154,7 +154,7 @@ export const ViewEditor = ({
         classNames='min-bs-0 overflow-y-auto'
       />
 
-      <div role='none' className='border-bs border-separator min-bs-0 overflow-y-auto'>
+      <div role='none' className='min-bs-0 overflow-y-auto'>
         {/* TODO(burdon): Clean up common form ux. */}
         <div role='none' className='p-2'>
           <label className={mx(inputTextLabel)}>{t('fields label')}</label>
