@@ -4,7 +4,7 @@
 
 import { Schema, SchemaAST } from 'effect';
 
-import { defineTool, ToolResult } from '@dxos/ai';
+import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { FormatEnum, FormatEnums, SelectOptionSchema, GeoPoint, toJsonSchema } from '@dxos/echo-schema';
@@ -58,7 +58,7 @@ const SYSTEM_NAMESPACE = 'dxos.org/echo/schema';
 
 export default () =>
   contributes(Capabilities.Tools, [
-    defineTool(SYSTEM_NAMESPACE, {
+    createTool(SYSTEM_NAMESPACE, {
       name: 'list',
       description: 'List registered schemas in the space.',
       caption: 'Listing registered schemas...',
@@ -76,7 +76,7 @@ export default () =>
         );
       },
     }),
-    defineTool(SYSTEM_NAMESPACE, {
+    createTool(SYSTEM_NAMESPACE, {
       name: 'get',
       description: 'Get a specific schema by its typename.',
       caption: 'Getting schema...',
@@ -97,7 +97,7 @@ export default () =>
         return ToolResult.Success(schema);
       },
     }),
-    defineTool(SYSTEM_NAMESPACE, {
+    createTool(SYSTEM_NAMESPACE, {
       name: 'create',
       description: 'Create a new schema with the provided definition.',
       caption: 'Creating schema...',

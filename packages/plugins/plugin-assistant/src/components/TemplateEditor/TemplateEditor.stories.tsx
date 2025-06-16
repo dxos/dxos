@@ -42,7 +42,7 @@ const DefaultStory = ({ text }: TemplateEditorProps & { text: string }) => {
   });
 
   return (
-    <div role='none' className='flex w-[40rem] border border-separator overflow-hidden'>
+    <div role='none' className='flex w-[50rem] overflow-hidden border-x border-separator'>
       <TemplateEditor template={template} />
     </div>
   );

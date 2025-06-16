@@ -60,6 +60,7 @@ export type BasicExtensionsOptions = {
   indentWithTab?: boolean;
   keymap?: null | 'default' | 'standard';
   lineNumbers?: boolean;
+  /** If false then do not set a max-width or side margin on the editor. */
   lineWrapping?: boolean;
   placeholder?: string;
   /** If true user cannot edit the text, but they can still select and copy it. */

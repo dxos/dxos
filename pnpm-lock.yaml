@@ -2679,6 +2679,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../echo-pipeline
@@ -12620,6 +12623,9 @@ importers:
       '@codemirror/lang-javascript':
         specifier: ^6.2.2
         version: 6.2.2
+      '@codemirror/lang-json':
+        specifier: ^6.0.1
+        version: 6.0.1
       '@codemirror/lang-markdown':
         specifier: ^6.3.0
         version: 6.3.0
@@ -12716,6 +12722,9 @@ importers:
       '@replit/codemirror-vscode-keymap':
         specifier: ^6.0.2
         version: 6.0.2(@codemirror/autocomplete@6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1))(@codemirror/commands@6.6.2)(@codemirror/language@6.10.3)(@codemirror/lint@6.8.2)(@codemirror/search@6.5.6)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
+      ajv:
+        specifier: ^8.17.1
+        version: 8.17.1
       codemirror:
         specifier: ^6.0.1
         version: 6.0.1
@@ -23579,8 +23588,8 @@ packages:
   ajv@8.11.0:
     resolution: {integrity: sha512-wGgprdCvMalC0BztXvitD2hC04YffAvtsUn93JbGXYLAtCUO4xd17mCCZQxUOItiBwZvJScWo8NIvQMQ71rdpg==}
 
-  ajv@8.12.0:
-    resolution: {integrity: sha512-sRu1kpcO9yLtYxBKvqfTeh9KzZEwO3STyX1HT+4CaDzC6HpTGYhIhPIzj9XuKU7KYDwnaeh5hcOwjy1QuJzBPA==}
+  ajv@8.17.1:
+    resolution: {integrity: sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g==}
 
   alea@1.0.1:
     resolution: {integrity: sha512-QU+wv+ziDXaMxRdsQg/aH7sVfWdhKps5YP97IIwFkHCsbDZA3k87JXoZ5/iuemf4ntytzIWeScrRpae8+lDrXA==}
@@ -26803,6 +26812,9 @@ packages:
   fast-unique-numbers@9.0.20:
     resolution: {integrity: sha512-2ym6CEsBN3CDEYBn2QgIfj6zCtOghEHcNU7wjq69W/y3TGr0m5XDZbVJ72CluwqnGwQBI8RZxDuTAjg1Ttphvw==}
     engines: {node: '>=18.2.0'}
+
+  fast-uri@3.0.6:
+    resolution: {integrity: sha512-Atfo14OibSv5wAp4VWNsFYE1AchQRTv9cBGWET4pZWHzYshFSS9NQI6I57rdKn9croWVMbYFbLhJ+yJvmZIIHw==}
 
   fast-url-parser@1.1.3:
     resolution: {integrity: sha512-5jOCVXADYNuRkKFzNJ0dCCewsZiYo0dz8QNYljkOpFC6r2U4OBmKtvm/Tsuh4w1YYdDqDb31a8TVhBJ2OJKdqQ==}
@@ -35737,9 +35749,9 @@ snapshots:
       gl-matrix: 3.4.3
       tslib: 2.8.0
 
-  '@apideck/better-ajv-errors@0.3.6(ajv@8.12.0)':
+  '@apideck/better-ajv-errors@0.3.6(ajv@8.17.1)':
     dependencies:
-      ajv: 8.12.0
+      ajv: 8.17.1
       json-schema: 0.4.0
       jsonpointer: 5.0.1
       leven: 3.1.0
@@ -41364,7 +41376,7 @@ snapshots:
       '@nx/devkit': 19.7.2(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.11.31(@swc/helpers@0.5.17))(@swc/types@0.1.5)(typescript@5.8.3))(@swc/core@1.11.31(@swc/helpers@0.5.17)))
       '@nx/js': 19.7.2(patch_hash=mavp33mumclr54vvfyyf557nvq)(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.11.31(@swc/helpers@0.5.17))(@swc/types@0.1.5)(typescript@5.8.3))(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.11.31(@swc/helpers@0.5.17))(@swc/types@0.1.5)(typescript@5.8.3))(@swc/core@1.11.31(@swc/helpers@0.5.17)))(typescript@5.8.3)
       '@phenomnomnominal/tsquery': 5.0.1(typescript@5.8.3)
-      ajv: 8.12.0
+      ajv: 8.17.1
       autoprefixer: 10.4.17(postcss@8.5.3)
       babel-loader: 9.2.1(@babel/core@7.25.9)(webpack@5.88.2(@swc/core@1.11.31(@swc/helpers@0.5.17))(esbuild@0.23.1))
       browserslist: 4.24.0
@@ -47417,15 +47429,15 @@ snapshots:
 
   ajv-formats@2.1.1:
     dependencies:
-      ajv: 8.12.0
+      ajv: 8.17.1
 
   ajv-keywords@3.5.2(ajv@6.12.6):
     dependencies:
       ajv: 6.12.6
 
-  ajv-keywords@5.1.0(ajv@8.12.0):
+  ajv-keywords@5.1.0(ajv@8.17.1):
     dependencies:
-      ajv: 8.12.0
+      ajv: 8.17.1
       fast-deep-equal: 3.1.3
 
   ajv@6.12.6:
@@ -47442,12 +47454,12 @@ snapshots:
       require-from-string: 2.0.2
       uri-js: 4.4.1
 
-  ajv@8.12.0:
+  ajv@8.17.1:
     dependencies:
       fast-deep-equal: 3.1.3
+      fast-uri: 3.0.6
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
-      uri-js: 4.4.1
 
   alea@1.0.1: {}
 
@@ -49092,7 +49104,7 @@ snapshots:
 
   conf@12.0.0:
     dependencies:
-      ajv: 8.12.0
+      ajv: 8.17.1
       ajv-formats: 2.1.1
       atomically: 2.0.3
       debounce-fn: 5.1.2
@@ -51387,6 +51399,8 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.27.1
       tslib: 2.8.1
+
+  fast-uri@3.0.6: {}
 
   fast-url-parser@1.1.3:
     dependencies:
@@ -59096,9 +59110,9 @@ snapshots:
   schema-utils@4.2.0:
     dependencies:
       '@types/json-schema': 7.0.15
-      ajv: 8.12.0
+      ajv: 8.17.1
       ajv-formats: 2.1.1
-      ajv-keywords: 5.1.0(ajv@8.12.0)
+      ajv-keywords: 5.1.0(ajv@8.17.1)
 
   screenfull@5.2.0: {}
 
@@ -62054,7 +62068,7 @@ snapshots:
 
   workbox-build@7.0.0(@types/babel__core@7.20.5):
     dependencies:
-      '@apideck/better-ajv-errors': 0.3.6(ajv@8.12.0)
+      '@apideck/better-ajv-errors': 0.3.6(ajv@8.17.1)
       '@babel/core': 7.25.9
       '@babel/preset-env': 7.23.9(@babel/core@7.25.9)
       '@babel/runtime': 7.24.5
@@ -62062,7 +62076,7 @@ snapshots:
       '@rollup/plugin-node-resolve': 11.2.1(rollup@2.79.1)
       '@rollup/plugin-replace': 2.4.2(rollup@2.79.1)
       '@surma/rollup-plugin-off-main-thread': 2.2.3
-      ajv: 8.12.0
+      ajv: 8.17.1
       common-tags: 1.8.2
       fast-json-stable-stringify: 2.1.0
       fs-extra: 9.1.0
