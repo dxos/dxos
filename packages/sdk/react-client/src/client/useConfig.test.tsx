@@ -29,7 +29,7 @@ describe('Config hook', () => {
     expect(Object.entries(result.current).length).toBeGreaterThan(0);
   });
 
-  test('should return custom client config when used properly in a context', { retry: 5 }, async () => {
+  test('should return custom client config when used properly in a context', async () => {
     const config = new Config({
       version: 1,
       runtime: {
@@ -40,15 +40,14 @@ describe('Config hook', () => {
         },
       },
     });
+
     const { client } = await createClient({ config });
     const wrapper = await createClientContextProvider(client);
     const { result } = renderHook(render, { wrapper });
     await act(async () => {
       await waitForCondition({ condition: () => client.status.get() === SystemStatus.ACTIVE });
     });
-    await expect.poll(() => result.current).toBeDefined();
-    // TODO(burdon): Flaky.
-    //  TypeError: Cannot read properties of null (reading 'get')
+    await expect.poll(() => result.current).toBeTruthy();
     expect(result.current.get('runtime.client.storage')).toEqual(config.get('runtime.client.storage'));
   });
 });
