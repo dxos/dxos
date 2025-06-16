@@ -27,6 +27,9 @@ const getColumnDropElement = (stackElement: HTMLDivElement) => {
   return stackElement.closest('.kanban-drop') as HTMLDivElement;
 };
 
+const kanbanCardStyles =
+  'rounded overflow-hidden bg-cardSurface border border-separator dark:border-subduedSeparator dx-focus-ring-group-y-indicator relative min-bs-[--rail-item]';
+
 export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
   const { singleSelect, clear } = useSelectionActions([model.id, getTypename(model.schema)!]);
@@ -39,6 +42,13 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       if (onAddCard) {
         const newCardId = onAddCard(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue);
         setFocusedCardId(newCardId);
+        queueMicrotask(() => {
+          const columnStack = document.getElementById(columnValue as string);
+          if (columnStack) {
+            const scrollEvent = new Event('scroll');
+            columnStack.dispatchEvent(scrollEvent);
+          }
+        });
       }
     },
     [onAddCard],
@@ -73,9 +83,10 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             <div
               role='none'
               className={mx(
-                'shrink min-bs-0 border border-separator bg-baseSurface rounded-md grid dx-focus-ring-group-x-indicator kanban-drop',
+                'shrink min-bs-0 bg-baseSurface border border-separator rounded-md grid dx-focus-ring-group-x-indicator kanban-drop',
                 railGridHorizontalContainFitContent,
               )}
+              data-scroll-separator='false'
             >
               <Stack
                 id={columnValue}
@@ -84,11 +95,12 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 rail={false}
                 classNames={
                   /* NOTE(thure): Do not let this element have zero intrinsic size, otherwise the drop indicator will not display. See #9035. */
-                  ['plb-1', cards.length > 0 && 'plb-2 relative -block-start-1 z-[1] -mbe-1']
+                  ['plb-1', cards.length > 0 && 'plb-2']
                 }
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
                 getDropElement={getColumnDropElement}
+                separatorOnScroll={9}
               >
                 {cards.map((card, cardIndex, cardsArray) => (
                   <StackItem.Root
@@ -100,10 +112,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
                     nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
                   >
-                    <div
-                      role='none'
-                      className='rounded overflow-hidden bg-cardSurface dx-focus-ring-group-y-indicator relative min-bs-[--rail-item]'
-                    >
+                    <div role='none' className={kanbanCardStyles}>
                       <div role='none' className='flex items-center absolute block-start-0 inset-inline-0'>
                         <StackItem.DragHandle asChild>
                           <IconButton
@@ -133,7 +142,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     <StackItem.DragPreview>
                       {({ item }) => (
                         <div className='p-2'>
-                          <div className='rounded overflow-hidden bg-cardSurface ring-focusLine ring-neutralFocusIndicator relative min-bs-[--rail-item]'>
+                          <div className={mx(kanbanCardStyles, 'ring-focusLine ring-neutralFocusIndicator')}>
                             <div role='none' className='flex items-center absolute block-start-0 inset-inline-0'>
                               <IconButton
                                 iconOnly
@@ -155,7 +164,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
               {onAddCard && (
                 <div
                   role='none'
-                  className='plb-2 pli-2 relative before:absolute before:inset-inline-2 before:block-start-0 before:bs-px before:bg-separator'
+                  className='plb-2 mli-2 border-bs border-transparent [[data-scroll-separator-end="true"]_&]:border-subduedSeparator'
                 >
                   <IconButton
                     icon='ph--plus--regular'
@@ -166,7 +175,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 </div>
               )}
 
-              <StackItem.Heading classNames='pli-2 order-first rounded-t-md bg-transparent'>
+              <StackItem.Heading classNames='mli-2 order-first bg-transparent rounded-bs-md'>
                 {!uncategorized && (
                   <StackItem.DragHandle asChild>
                     <IconButton
@@ -211,7 +220,13 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
 
                 return (
                   <div className='p-2'>
+<<<<<<< HEAD
                     <div className='flex flex-col max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface ring-focusLine ring-neutralFocusIndicator rounded-md'>
+||||||| c91f446202
+                    <div className='rounded-lg max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface ring-focusLine ring-neutralFocusIndicator flex flex-col'>
+=======
+                    <div className='rounded-md max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface border border-separator ring-focusLine ring-neutralFocusIndicator flex flex-col'>
+>>>>>>> origin/main
                       {/* Column Header */}
                       <div className='flex items-center p-2'>
                         <IconButton
@@ -235,15 +250,11 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                         className={mx(
                           'overflow-y-auto flex-1 pli-2 flex flex-col gap-2',
                           'plb-1',
-                          cards.length > 0 && 'plb-2 relative -block-start-1 z-[1] -mbe-1',
+                          cards.length > 0 && 'plb-2',
                         )}
                       >
                         {cards.map((card) => (
-                          <div
-                            key={card.id}
-                            role='none'
-                            className='flex-none rounded overflow-hidden bg-cardSurface dx-focus-ring-group-y-indicator relative min-bs-[--rail-item]'
-                          >
+                          <div key={card.id} role='none' className={kanbanCardStyles}>
                             <Surface role='card--kanban' limit={1} data={{ subject: card }} />
                           </div>
                         ))}
