@@ -30,7 +30,7 @@ export const BlueprintEditor = ({ classNames, blueprint }: BlueprintEditorProps)
       createBasicExtensions({ lineWrapping: false }),
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),
       // TODO(burdon): ERROR: reference "/schemas/any" resolves to more than one schema
-      createJsonExtensions({ schema: false ? toJsonSchema(Blueprint) : undefined }),
+      createJsonExtensions({ schema: toJsonSchema(Blueprint) }),
       editorMonospace,
     ],
   });
