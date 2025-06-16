@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 
 import { Config } from '@dxos/client';
 import { Filter } from '@dxos/client/echo';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -18,7 +19,6 @@ import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { createObjectFactory, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { addTestData } from './test-data';
 import { DataType, DataTypes } from '../common';
 
 faker.seed(1);
@@ -49,12 +49,12 @@ const DefaultStory = () => {
   const handleCreate = async () => {
     await test('create', async () => {
       invariant(space);
-      await addTestData(space);
+      space.db.add(create(DataType.Organization, { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' }));
     });
   };
 
   const handleCreateFactory = async () => {
-    await test('create-2', async () => {
+    await test('create-objects', async () => {
       invariant(space);
       const createObjects = createObjectFactory(space.db, generator);
       await createObjects([{ type: DataType.Organization, count: 1_000 }]);
