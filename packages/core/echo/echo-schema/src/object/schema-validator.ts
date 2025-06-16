@@ -6,7 +6,7 @@ import { SchemaAST, Schema } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
-import { SchemaId } from '../object';
+import { SchemaId } from './model';
 
 // TODO(burdon): Reconcile with @dxos/effect visit().
 

@@ -4,6 +4,5 @@
 
 export * from './annotations';
 export * from './annotation-helper';
-export * from './schema-validator';
 export * from './types';
 export * from './entity-kind';
