@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo-db';
-import { Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
+import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
@@ -54,7 +54,11 @@ export const ViewEditor = ({
   onDelete,
 }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
-  const projection = useMemo(() => new ViewProjection(toJsonSchema(schema), view), [schema, view]);
+  const projection = useMemo(() => {
+    // Use reactive and mutable version of json schema when schema is mutable.
+    const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
+    return new ViewProjection(jsonSchema, view);
+  }, [schema, view]);
   const [field, setField] = useState<FieldType>();
   const immutable = readonly || !isMutable(schema);
 
