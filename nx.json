@@ -26,6 +26,7 @@
       "executor": "@nx/js:tsc",
       "inputs": ["production", "^production"],
       "options": {
+        "generatePackageJson": false,
         "main": "{projectRoot}/src/index.ts",
         "outputPath": "{projectRoot}/dist/types",
         "tsConfig": "{projectRoot}/tsconfig.json"
@@ -72,7 +73,7 @@
     },
     "lint": {
       "cache": true,
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "inputs": ["default"],
       "options": { "format": "unix", "lintFilePatterns": ["{projectRoot}/**/*.{ts,tsx,js,jsx}"], "quiet": true }
     },
