@@ -5,6 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  '@automerge/automerge': 3.0.0-beta.4
   ipfs-utils: 9.0.14
   micromatch: ^4.0.8
   nan: 2.19.0
@@ -2653,11 +2654,11 @@ importers:
   packages/core/echo/echo-db:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.0
-        version: 3.0.0-beta.0
+        specifier: 3.0.0-beta.4
+        version: 3.0.0-beta.4
       '@automerge/automerge-repo':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.0.1
+        version: 2.0.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2747,8 +2748,8 @@ importers:
   packages/core/echo/echo-generator:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.0
-        version: 3.0.0-beta.0
+        specifier: 3.0.0-beta.4
+        version: 3.0.0-beta.4
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -2787,11 +2788,11 @@ importers:
   packages/core/echo/echo-pipeline:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.0
-        version: 3.0.0-beta.0
+        specifier: 3.0.0-beta.4
+        version: 3.0.0-beta.4
       '@automerge/automerge-repo':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.0.1
+        version: 2.0.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -3015,8 +3016,8 @@ importers:
   packages/core/echo/indexing:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.0
-        version: 3.0.0-beta.0
+        specifier: 3.0.0-beta.4
+        version: 3.0.0-beta.4
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -4379,8 +4380,8 @@ importers:
   packages/devtools/devtools:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.0
-        version: 3.0.0-beta.0
+        specifier: 3.0.0-beta.4
+        version: 3.0.0-beta.4
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -5098,17 +5099,17 @@ importers:
   packages/gravity/blade-runner:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.0
-        version: 3.0.0-beta.0
+        specifier: 3.0.0-beta.4
+        version: 3.0.0-beta.4
       '@automerge/automerge-repo':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.0.1
+        version: 2.0.1
       '@automerge/automerge-repo-network-websocket':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.0.1
+        version: 2.0.1
       '@automerge/automerge-repo-storage-indexeddb':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.0.1
+        version: 2.0.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -6019,8 +6020,8 @@ importers:
         specifier: ^1.2.13
         version: 1.2.13(workerize-loader@2.0.2(webpack@5.88.2(@swc/core@1.11.31(@swc/helpers@0.5.17))(esbuild@0.23.1)))
       '@automerge/automerge':
-        specifier: 3.0.0-beta.0
-        version: 3.0.0-beta.0
+        specifier: 3.0.0-beta.4
+        version: 3.0.0-beta.4
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -6342,8 +6343,8 @@ importers:
   packages/plugins/plugin-excalidraw:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.0
-        version: 3.0.0-beta.0
+        specifier: 3.0.0-beta.4
+        version: 3.0.0-beta.4
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -7217,8 +7218,8 @@ importers:
   packages/plugins/plugin-markdown:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.0
-        version: 3.0.0-beta.0
+        specifier: 3.0.0-beta.4
+        version: 3.0.0-beta.4
       '@codemirror/search':
         specifier: ^6.5.6
         version: 6.5.6
@@ -9009,8 +9010,8 @@ importers:
   packages/plugins/plugin-sketch:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.0
-        version: 3.0.0-beta.0
+        specifier: 3.0.0-beta.4
+        version: 3.0.0-beta.4
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -9145,8 +9146,8 @@ importers:
   packages/plugins/plugin-space:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.0
-        version: 3.0.0-beta.0
+        specifier: 3.0.0-beta.4
+        version: 3.0.0-beta.4
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -10718,11 +10719,11 @@ importers:
   packages/sdk/client:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.0
-        version: 3.0.0-beta.0
+        specifier: 3.0.0-beta.4
+        version: 3.0.0-beta.4
       '@automerge/automerge-repo':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.0.1
+        version: 2.0.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -10908,11 +10909,11 @@ importers:
   packages/sdk/client-services:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.0
-        version: 3.0.0-beta.0
+        specifier: 3.0.0-beta.4
+        version: 3.0.0-beta.4
       '@automerge/automerge-repo':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.0.1
+        version: 2.0.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11165,11 +11166,11 @@ importers:
   packages/sdk/migrations:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.0
-        version: 3.0.0-beta.0
+        specifier: 3.0.0-beta.4
+        version: 3.0.0-beta.4
       '@automerge/automerge-repo':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.0.1
+        version: 2.0.1
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -12606,8 +12607,8 @@ importers:
   packages/ui/react-ui-editor:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.0
-        version: 3.0.0-beta.0
+        specifier: 3.0.0-beta.4
+        version: 3.0.0-beta.4
       '@codemirror/autocomplete':
         specifier: ^6.18.1
         version: 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
@@ -12739,11 +12740,11 @@ importers:
         version: 4.1.0
     devDependencies:
       '@automerge/automerge-repo':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.0.1
+        version: 2.0.1
       '@automerge/automerge-repo-network-broadcastchannel':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.0.1
+        version: 2.0.1
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -14920,23 +14921,20 @@ packages:
   '@atlaskit/pragmatic-drag-and-drop@1.4.0':
     resolution: {integrity: sha512-qRY3PTJIcxfl/QB8Gwswz+BRvlmgAC5pB+J2hL6dkIxgqAgVwOhAamMUKsrOcFU/axG2Q7RbNs1xfoLKDuhoPg==}
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.0.0':
-    resolution: {integrity: sha512-jVgDiywmrMAtD77JFxH7ZyCiS8DT5t6C0Ya9G3v+UyRID+3sK8WJHr+LHKX/Tkim9y3mazpHE1Arknrmb/YIiA==}
+  '@automerge/automerge-repo-network-broadcastchannel@2.0.1':
+    resolution: {integrity: sha512-YnnO6WStkOj7vPEB6B9IdcxBbUHCxAUttePzSbNALNdEchhPZF6PbEQhhddjqfYzX4LnEAoGpkQvVnPop3w4Gg==}
 
-  '@automerge/automerge-repo-network-websocket@2.0.0':
-    resolution: {integrity: sha512-Hd1FMMxezhlywzika5dgBsNN0ETZ4xjxVSCHuX2yI3vtdmDCOICBHKiY/t2ymnDPw+TKyBm0jXMQai2UVuSIMQ==}
+  '@automerge/automerge-repo-network-websocket@2.0.1':
+    resolution: {integrity: sha512-bO1itzPw6z6+rHKRV6ItEOnGReAoEuk9dRbxQPRKZKg+StyowNBLaOl4R4/yVO49roxMRh+OrFYKfEuZ+B/M3w==}
 
-  '@automerge/automerge-repo-storage-indexeddb@2.0.0':
-    resolution: {integrity: sha512-Dka8WnVWWgK7+kSxwizrXGoUtvOPvFVJlGMpXAkvWC9z/9NEHKazkdjFkaMO+uiTGwp+w51xEeZ2gIqB3wgWoA==}
+  '@automerge/automerge-repo-storage-indexeddb@2.0.1':
+    resolution: {integrity: sha512-4e7fnA0rwQ8KJSZV7HsntOixgvh+YkW1pLs1h3XGMGRARKvSo+xZ6bcf3D8jzR/BPawpJkeu9BExH585X+UC8w==}
 
-  '@automerge/automerge-repo@2.0.0':
-    resolution: {integrity: sha512-c1VDrR6s8BE36m6xDcSC8f4ECccPcaK1E6q3vIlBHOEyyLvLQbFmlmFIZulaV//S0B0HW2lLSrK/2cFwQblQ+A==}
+  '@automerge/automerge-repo@2.0.1':
+    resolution: {integrity: sha512-1V8pyX5s8PtyPDKmkdEaK/lSuwc9j1HWRYxiWwx2/7FYshfKjl3+mMTAEemzKrwQNE3f3+0zKlI4gChBebAevg==}
 
-  '@automerge/automerge@2.2.9':
-    resolution: {integrity: sha512-6HM52Ops79hAQBWMg/t0MNfGOdEiXyenQjO9F1hKZq0RWDsMLpPa1SzRy/C4/4UyX67sTHuA5CwBpH34SpfZlA==}
-
-  '@automerge/automerge@3.0.0-beta.0':
-    resolution: {integrity: sha512-0z4nTAZGbMzoqhIvrrOr/BfY/mE02L4dzGnYok3QiUlLdTO1bXktaGkNR670qz1JAfzTjMI9o51oI74UHYZN+g==}
+  '@automerge/automerge@3.0.0-beta.4':
+    resolution: {integrity: sha512-eI3aGxd2RxhXJevza5LWi9JFb4pmgdWcijrADasJnhwkzXptAMGlhEaJEalesF5Z789DIDA+BJrXOuKNqOp5yg==}
 
   '@aws-crypto/crc32@5.2.0':
     resolution: {integrity: sha512-nLbCWqQNgUiwwtFsen1AdzAtvuLRsQS8rYgMuxCrdKf9kOssamGLuPwyTY9wyYblNr9+1XM8v6zoDTPPSIeANg==}
@@ -35782,17 +35780,17 @@ snapshots:
       bind-event-listener: 3.0.0
       raf-schd: 4.0.3
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.0.0':
+  '@automerge/automerge-repo-network-broadcastchannel@2.0.1':
     dependencies:
-      '@automerge/automerge-repo': 2.0.0
+      '@automerge/automerge-repo': 2.0.1
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo-network-websocket@2.0.0':
+  '@automerge/automerge-repo-network-websocket@2.0.1':
     dependencies:
-      '@automerge/automerge-repo': 2.0.0
+      '@automerge/automerge-repo': 2.0.1
       cbor-x: 1.5.4
-      debug: 4.4.0
+      debug: 4.4.1(supports-color@5.5.0)
       eventemitter3: 5.0.1
       isomorphic-ws: 5.0.0(ws@8.18.2)
       ws: 8.18.2
@@ -35801,18 +35799,18 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo-storage-indexeddb@2.0.0':
+  '@automerge/automerge-repo-storage-indexeddb@2.0.1':
     dependencies:
-      '@automerge/automerge-repo': 2.0.0
+      '@automerge/automerge-repo': 2.0.1
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo@2.0.0':
+  '@automerge/automerge-repo@2.0.1':
     dependencies:
-      '@automerge/automerge': 2.2.9
+      '@automerge/automerge': 3.0.0-beta.4
       bs58check: 3.0.1
       cbor-x: 1.5.4
-      debug: 4.4.0
+      debug: 4.4.1(supports-color@5.5.0)
       eventemitter3: 5.0.1
       fast-sha256: 1.3.0
       uuid: 9.0.1
@@ -35820,11 +35818,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge@2.2.9':
-    dependencies:
-      uuid: 9.0.1
-
-  '@automerge/automerge@3.0.0-beta.0': {}
+  '@automerge/automerge@3.0.0-beta.4': {}
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -38442,7 +38436,7 @@ snapshots:
       '@babel/helper-split-export-declaration': 7.24.7
       '@babel/parser': 7.25.7
       '@babel/types': 7.25.7
-      debug: 4.3.7(supports-color@8.1.1)
+      debug: 4.4.1(supports-color@5.5.0)
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -39581,7 +39575,7 @@ snapshots:
   '@eslint/eslintrc@2.1.4':
     dependencies:
       ajv: 6.12.6
-      debug: 4.3.5
+      debug: 4.4.1(supports-color@5.5.0)
       espree: 9.6.1
       globals: 13.20.0
       ignore: 5.2.4
@@ -39810,7 +39804,7 @@ snapshots:
   '@humanwhocodes/config-array@0.11.14':
     dependencies:
       '@humanwhocodes/object-schema': 2.0.3
-      debug: 4.3.5
+      debug: 4.4.1(supports-color@5.5.0)
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -40399,7 +40393,7 @@ snapshots:
     dependencies:
       '@libp2p/interface': 1.3.1
       '@multiformats/multiaddr': 12.2.1
-      debug: 4.3.7(supports-color@8.1.1)
+      debug: 4.4.1(supports-color@5.5.0)
       interface-datastore: 8.2.11
       multiformats: 13.3.0
     transitivePeerDependencies:
@@ -44966,7 +44960,7 @@ snapshots:
       recast: 0.23.9
       semver: 7.6.3
       util: 0.12.5
-      ws: 8.18.0
+      ws: 8.18.2
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -46520,7 +46514,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/typescript-estree': 6.20.0(typescript@5.8.3)
       '@typescript-eslint/utils': 6.20.0(eslint@8.57.0)(typescript@5.8.3)
-      debug: 4.3.7(supports-color@8.1.1)
+      debug: 4.4.1(supports-color@5.5.0)
       eslint: 8.57.0
       ts-api-utils: 1.3.0(typescript@5.8.3)
     optionalDependencies:
@@ -46566,7 +46560,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 6.20.0
       '@typescript-eslint/visitor-keys': 6.20.0
-      debug: 4.3.7(supports-color@8.1.1)
+      debug: 4.4.1(supports-color@5.5.0)
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
@@ -57424,7 +57418,7 @@ snapshots:
   proxy-agent@6.4.0:
     dependencies:
       agent-base: 7.1.0
-      debug: 4.3.7(supports-color@8.1.1)
+      debug: 4.4.1(supports-color@5.5.0)
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.5
       lru-cache: 7.18.3
