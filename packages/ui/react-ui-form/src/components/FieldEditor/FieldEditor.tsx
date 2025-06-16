@@ -79,6 +79,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
         }
         return { fieldSchema };
       });
+
       setReferenceSchema((prev) => {
         if (_props.referenceSchema !== prev?.typename) {
           const newSchema = schemas.find((schema) => schema.typename === _props.referenceSchema);

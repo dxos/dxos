@@ -8,7 +8,8 @@ import type { inspect, InspectOptionsStylized } from 'node:util';
 import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
-import type { SpaceId } from './space-id';
+import { ObjectId } from './object-id';
+import { SpaceId } from './space-id';
 
 /**
  * Tags for ECHO DXNs that should resolve the object ID in the local space.
@@ -22,6 +23,8 @@ export const QueueSubspaceTags = Object.freeze({
   DATA: 'data',
   TRACE: 'trace',
 });
+
+export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubspaceTags];
 
 /**
  * DXN unambiguously names a resource like an ECHO object, schema definition, plugin, etc.
@@ -77,6 +80,10 @@ export class DXN {
      */
     QUEUE: 'queue',
   });
+
+  get kind() {
+    return this.#kind;
+  }
 
   static equals(a: DXN, b: DXN): boolean {
     return a.kind === b.kind && a.parts.length === b.parts.length && a.parts.every((part, i) => part === b.parts[i]);
@@ -135,6 +142,14 @@ export class DXN {
     return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, id]);
   }
 
+  static fromQueue(subspaceTag: QueueSubspaceTag, spaceId: SpaceId, queueId: ObjectId, objectId?: ObjectId) {
+    invariant(SpaceId.isValid(spaceId));
+    invariant(ObjectId.isValid(queueId));
+    invariant(!objectId || ObjectId.isValid(objectId));
+
+    return new DXN(DXN.kind.QUEUE, [subspaceTag, spaceId, queueId, ...(objectId ? [objectId] : [])]);
+  }
+
   #kind: string;
   #parts: string[];
 
@@ -158,10 +173,6 @@ export class DXN {
 
     this.#kind = kind;
     this.#parts = parts;
-  }
-
-  get kind() {
-    return this.#kind;
   }
 
   get parts() {

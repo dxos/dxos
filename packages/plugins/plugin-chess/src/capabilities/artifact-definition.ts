@@ -5,7 +5,7 @@
 import { Chess } from 'chess.js';
 import { pipe, Schema } from 'effect';
 
-import { defineTool, ToolResult } from '@dxos/ai';
+import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { createArtifactElement, VersionPin } from '@dxos/assistant';
@@ -36,7 +36,7 @@ export default () => {
    `,
     schema: ChessType,
     tools: [
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'create',
         description: 'Create a new chess game. Returns the artifact definition for the game.',
         caption: 'Creating chess game...',
@@ -60,7 +60,7 @@ export default () => {
           ]);
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'list',
         description: 'Query all active chess games.',
         caption: 'Getting games...',
@@ -72,7 +72,7 @@ export default () => {
           return ToolResult.Success(games);
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'inspect',
         description: 'Get the current state of the chess game.',
         caption: 'Inspecting game...',
@@ -87,7 +87,7 @@ export default () => {
           return ToolResult.Success(game.fen);
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'move',
         description: 'Make a move in the chess game.',
         caption: 'Making chess move...',

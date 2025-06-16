@@ -6,11 +6,11 @@ import { type Signal, batch, computed, signal } from '@preact/signals-core';
 
 import {
   DEFAULT_EDGE_MODEL,
+  type ExecutableTool,
   type AIServiceClient,
   type GenerateRequest,
   type Message,
   type MessageContentBlock,
-  type Tool,
   type ToolUseContentBlock,
 } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
@@ -87,7 +87,7 @@ export class ChatProcessor {
 
   constructor(
     private readonly _ai: AIServiceClient,
-    private _tools?: Tool[],
+    private _tools?: ExecutableTool[],
     private _artifacts?: ArtifactDefinition[],
     private readonly _extensions?: ToolContextExtensions,
     private readonly _options: ChatProcessorOptions = defaultOptions,
@@ -100,7 +100,7 @@ export class ChatProcessor {
   /**
    * Update tools.
    */
-  setTools(tools: Tool[]): void {
+  setTools(tools: ExecutableTool[]): void {
     this._tools = tools;
   }
 

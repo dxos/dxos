@@ -43,8 +43,7 @@ export const instanceOf: {
 export const getSchema = EchoSchema.getSchema;
 
 export const getDXN = (obj: Any): DXN => {
-  assertArgument(!Schema.isSchema(obj), 'Object must not be a schema.');
-
+  assertArgument(!Schema.isSchema(obj), 'Object should not be a schema.');
   const dxn = EchoSchema.getDXN(obj);
   invariant(dxn != null, 'Invalid object.');
   return dxn;
@@ -67,7 +66,8 @@ export const getSchemaDXN = (obj: Any): DXN => {
 export const getTypename = (obj: Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema == null) {
-    return undefined;
+    // Try to extract typename from DXN.
+    return getSchemaDXN(obj)?.asTypeDXN()?.type;
   }
 
   return EchoSchema.getTypename(schema);

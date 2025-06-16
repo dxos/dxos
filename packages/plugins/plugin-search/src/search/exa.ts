@@ -6,12 +6,12 @@ import { Option, Schema, SchemaAST } from 'effect';
 import Exa from 'exa-js';
 
 import {
-  defineTool,
   type AIServiceClient,
   type GenerateRequest,
   Message,
   MixedStreamParser,
   type TextContentBlock,
+  createTool,
 } from '@dxos/ai';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { create, getTypeAnnotation, ObjectId, ReferenceAnnotationId } from '@dxos/echo-schema';
@@ -166,7 +166,7 @@ const getStructuredOutput = async <S extends Schema.Schema.AnyNoContext>(
         request.systemPrompt +
         '\nDo not output anything other then the tool call. Call the submit_result tool with the result.',
       tools: [
-        defineTool('submit_result', {
+        createTool('submit_result', {
           name: 'submit_result',
           description: 'Submit the result',
           schema: request.schema,
