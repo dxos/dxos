@@ -23,7 +23,7 @@ import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { useQueue } from '@dxos/react-client/echo';
-import { Dialog, IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
 import {
   matchCompletion,
   staticCompletion,
@@ -203,8 +203,8 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       addTestData(space);
     }
 
-    // TODO(burdon): Why is this needed?
-    // await space.db.flush({ indexes: true });
+    // TODO(burdon): BUG: objects are not persisted unless this is called.
+    await space.db.flush({ indexes: true });
   }, [space, generator, spec]);
 
   const handleReset = useCallback(
@@ -444,5 +444,75 @@ export const GraphList: Story = {
 export const Research: Story = {
   args: {
     drag: true,
+  },
+};
+
+export const Test: Story = {
+  render: () => {
+    const [events, setEvents] = useState<{ type: string; duration: number }[]>([]);
+    const client = useClient();
+    const space = client.spaces.get().at(0);
+    // const objects = useQuery(space, Filter.everything());
+
+    const test = async (type: string, f: () => Promise<void> | void) => {
+      const t = performance.now();
+      await f();
+      setEvents([...events, { type, duration: performance.now() - t }]);
+    };
+
+    const handleReset = async () => {
+      await client.reset();
+      window.location.reload();
+    };
+
+    const handleReload = async () => {
+      window.location.reload();
+    };
+
+    const handleCreate = async () => {
+      if (space) {
+        await test('create', () => {
+          addTestData(space);
+        });
+      }
+    };
+
+    const handleFlush = async () => {
+      if (space) {
+        await test('flush', async () => {
+          await space.db.flush({ indexes: true });
+        });
+      }
+    };
+
+    const handleQuery = async () => {
+      if (space) {
+        await test('query', async () => {
+          await space.db.query(Filter.everything()).run();
+        });
+      }
+    };
+
+    const data = {
+      space: space?.id,
+      // objects: objects.length,
+      spaces: client.spaces.get().map((space) => {
+        return space.db.toJSON();
+      }),
+      events,
+    };
+
+    return (
+      <div className='flex flex-col w-full'>
+        <Toolbar.Root>
+          <Button onClick={handleReset}>Reset</Button>
+          <Button onClick={handleReload}>Reload</Button>
+          <Button onClick={handleCreate}>Create</Button>
+          <Button onClick={handleFlush}>Flush</Button>
+          <Button onClick={handleQuery}>Query</Button>
+        </Toolbar.Root>
+        <JsonFilter data={data} />
+      </div>
+    );
   },
 };

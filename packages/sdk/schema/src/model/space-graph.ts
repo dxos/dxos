@@ -144,7 +144,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     invariant(this._space);
     this._objectSubscription = this._space.db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
       ({ objects }) => {
-        log.info('update', { objects: objects.length });
+        log('update', { objects: objects.length });
         this._objects = [...objects];
         this.invalidate();
       },
@@ -163,7 +163,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   }
 
   private _update() {
-    log.info('update', {
+    log('update', {
       nodes: this._graph.nodes.length,
       edges: this._graph.edges.length,
       objects: this._objects?.length,

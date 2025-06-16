@@ -524,7 +524,6 @@ export class Client {
 
   /**
    * Resets and destroys client storage.
-   *
    * This will currently leave the client in a closed state.
    * Re-using the client after reset is not currently supported.
    */
@@ -539,10 +538,11 @@ export class Client {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
     await this._services?.services.SystemService.reset();
     await this._close();
+
     // TODO(wittjosiah): Re-open after reset.
     // await this._open();
     // this._resetting = false;
-    this.reloaded.emit();
+    // this.reloaded.emit();
     log('reset complete');
   }
 }
