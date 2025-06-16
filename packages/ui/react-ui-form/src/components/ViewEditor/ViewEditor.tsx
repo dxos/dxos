@@ -98,12 +98,12 @@ export const ViewEditor = ({
           view.name = name;
         }
 
-        if (view.query.typename !== typename) {
+        if (view.query.typename !== typename && !immutable) {
           onTypenameChanged?.(typename);
         }
       });
     },
-    [schema, view, onTypenameChanged],
+    [schema, view, onTypenameChanged, immutable],
   );
 
   const handleDelete = useCallback(
@@ -156,7 +156,7 @@ export const ViewEditor = ({
         autoSave
         schema={ViewMetaSchema}
         values={viewValues}
-        onSave={immutable ? undefined : handleUpdate}
+        onSave={handleUpdate}
         classNames='min-bs-0 overflow-y-auto'
       />
 
