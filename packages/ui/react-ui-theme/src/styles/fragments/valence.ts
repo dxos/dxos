@@ -24,7 +24,7 @@ export const valenceColorText = (valence?: MessageValence) => {
   }
 };
 
-export const neutralMessageColors = 'bg-neutral-25 dark:bg-neutral-850';
+export const neutralMessageColors = 'bg-activeSurface';
 export const successMessageColors = 'text-successSurfaceText bg-successSurface';
 export const infoMessageColors = 'text-infoSurfaceText bg-infoSurface';
 export const warningMessageColors = 'text-warningSurfaceText bg-warningSurface';
