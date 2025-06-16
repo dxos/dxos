@@ -9,7 +9,7 @@ import { DXN, ObjectId } from '@dxos/keys';
 
 import { Ref } from './ref';
 import { EchoObject, create } from '../object';
-import { getDXN } from '../types';
+import { getObjectDXN, type InternalObjectProps } from '../object';
 
 const Task = Schema.Struct({
   title: Schema.optional(Schema.String),
@@ -51,7 +51,7 @@ describe('Ref', () => {
       name: 'John Doe',
       tasks: [
         {
-          '/': getDXN(task)!.toString(),
+          '/': getObjectDXN(task as any)!.toString(),
           target: JSON.parse(JSON.stringify(task)),
         },
       ],
@@ -67,7 +67,7 @@ describe('Ref', () => {
       id: contact.id,
       '@type': `dxn:type:${Contact.typename}:${Contact.version}`,
       name: 'John Doe',
-      tasks: [{ '/': getDXN(task)!.toString() }],
+      tasks: [{ '/': getObjectDXN(task)!.toString() }],
     });
   });
 

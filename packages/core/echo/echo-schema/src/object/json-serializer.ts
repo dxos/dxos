@@ -13,9 +13,11 @@ import {
   RelationTargetId,
   ATTR_TYPE,
   TypeId,
+  type InternalObjectProps,
 } from './model';
 import { type Ref } from '../ref';
-import { getDXN, type BaseObject } from '../types';
+import { type BaseObject } from '../types';
+import { getObjectDXN } from './accessors';
 
 type DeepReplaceRef<T> =
   T extends Ref<any> ? EncodedReference : T extends object ? { [K in keyof T]: DeepReplaceRef<T[K]> } : T;
@@ -72,7 +74,7 @@ const formatRelationConnector = (value: BaseObject | DXN): DXN => {
   }
 
   if (typeof value === 'object') {
-    return getDXN(value) ?? failedInvariant('Missing relation connector');
+    return getObjectDXN(value as InternalObjectProps) ?? failedInvariant('Missing relation connector');
   }
 
   return failedInvariant('Invalid relation connector');

@@ -44,7 +44,7 @@ export const getSchema = EchoSchema.getSchema;
 
 export const getDXN = (obj: Any): DXN => {
   assertArgument(!Schema.isSchema(obj), 'Object should not be a schema.');
-  const dxn = EchoSchema.getDXN(obj);
+  const dxn = EchoSchema.getObjectDXN(obj);
   invariant(dxn != null, 'Invalid object.');
   return dxn;
 };

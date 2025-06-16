@@ -191,25 +191,6 @@ export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
 export type HasTypename = {};
 
 /**
- * Returns a DXN for an object or schema.
- */
-export const getDXN = (object: any): DXN | undefined => {
-  if (Schema.isSchema(object)) {
-    return getSchemaDXN(object as any);
-  }
-
-  if (typeof object !== 'object' || object == null) {
-    throw new TypeError('Object is not an object.');
-  }
-
-  if (!ObjectId.isValid(object.id)) {
-    throw new TypeError('Object id is not valid.');
-  }
-
-  return DXN.fromLocalObjectId(object.id);
-};
-
-/**
  * Canonical type for all ECHO objects.
  * @deprecated Use `AnyEchoObject` instead.
  */
