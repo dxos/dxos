@@ -152,23 +152,25 @@ export const ViewEditor = ({
 
   return (
     <div role='none' className={mx('overflow-y-auto', classNames)}>
-      <div role='none' className='mbe-2'>
-        {immutable && (
-          <Message.Root valence='info' className='rounded'>
-            <Message.Title>
-              <Icon icon='ph--info--regular' size={5} classNames='inline' /> {t('system schema title')}
-            </Message.Title>
-            <Message.Body>{t('system schema description')}</Message.Body>
-          </Message.Root>
-        )}
+      <div role='none' className='p-2'>
+        <div role='none' className='mbe-2'>
+          {immutable && (
+            <Message.Root valence='info' className='rounded'>
+              <Message.Title>
+                <Icon icon='ph--info--regular' size={5} classNames='inline' /> {t('system schema title')}
+              </Message.Title>
+              <Message.Body>{t('system schema description')}</Message.Body>
+            </Message.Root>
+          )}
+        </div>
+        <Form<ViewMetaType>
+          autoSave
+          schema={ViewMetaSchema}
+          values={viewValues}
+          onSave={handleUpdate}
+          classNames='min-bs-0 overflow-y-auto'
+        />
       </div>
-      <Form<ViewMetaType>
-        autoSave
-        schema={ViewMetaSchema}
-        values={viewValues}
-        onSave={handleUpdate}
-        classNames='min-bs-0 overflow-y-auto'
-      />
 
       <div role='none' className='min-bs-0 overflow-y-auto'>
         {/* TODO(burdon): Clean up common form ux. */}
