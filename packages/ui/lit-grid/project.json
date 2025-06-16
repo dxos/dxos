@@ -19,6 +19,7 @@
           "{projectRoot}/src/index.ts",
           "{projectRoot}/src/testing/index.ts"
         ],
+        "generatePackageJson": false,
         "main": "{projectRoot}/src/index.ts",
         "outputPath": "{projectRoot}/dist",
         "tsConfig": "{projectRoot}/tsconfig.json"

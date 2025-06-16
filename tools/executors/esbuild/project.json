@@ -9,6 +9,7 @@
       ],
       "executor": "@nx/js:tsc",
       "options": {
+        "generatePackageJson": false,
         "main": "{projectRoot}/src/index.ts",
         "outputPath": "{projectRoot}/dist",
         "tsConfig": "{projectRoot}/tsconfig.json"
