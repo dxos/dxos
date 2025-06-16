@@ -15,6 +15,6 @@ export const TestPanel = ({ classNames, children }: ThemedClassName<PropsWithChi
 export const TestLayout = ({ classNames, json, children }: ThemedClassName<PropsWithChildren<{ json?: any }>>) => (
   <div className='w-full h-full grid grid-cols-[1fr_1fr]'>
     <div className={mx('m-2 justify-center overflow-y-auto', classNames)}>{children}</div>
-    <JsonFilter data={json} classNames='w-full text-xs' />
+    <JsonFilter data={json} classNames='w-full text-xs' testId='debug' />
   </div>
 );
