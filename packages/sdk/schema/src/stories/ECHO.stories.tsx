@@ -86,7 +86,7 @@ const DefaultStory = () => {
       <Toolbar.Root>
         <Button onClick={handleReset}>Reset</Button>
         <Button onClick={handleReload}>Reload</Button>
-        <Button onClick={handleCreate}>Create Graph</Button>
+        <Button onClick={handleCreate}>Create</Button>
         <Button onClick={handleCreateFactory}>Create 1000</Button>
         <Button onClick={handleFlush}>Flush</Button>
         <Button onClick={handleQuery}>Query</Button>
