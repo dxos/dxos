@@ -78,6 +78,7 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
     };
 
     return (
+      // TODO(burdon): Use global modal?
       <RefDropdownMenu.Provider>
         <div ref={parentRef} {...focusAttributes} className={mx('flex w-full justify-center', classNames)} />
         <DropdownMenu.Portal>

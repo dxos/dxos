@@ -28,9 +28,7 @@ import { decorateMarkdown } from '../markdown';
 // TODO(burdon): Smart Cut-and-paste.
 // TODO(burdon): DND.
 
-export type OutlinerProps = {
-  showSelected?: boolean;
-};
+export type OutlinerProps = {};
 
 /**
  * Outliner extension.
@@ -56,7 +54,7 @@ export const outliner = (options: OutlinerProps = {}): Extension => [
   floatingMenu(),
 
   // Line decorations.
-  decorations(options),
+  decorations(),
 
   // Default markdown decorations.
   decorateMarkdown({ listPaddingLeft: 8 }),
@@ -68,7 +66,7 @@ export const outliner = (options: OutlinerProps = {}): Extension => [
 /**
  * Line decorations (for border and selection).
  */
-const decorations = (options: OutlinerProps) => [
+const decorations = () => [
   ViewPlugin.fromClass(
     class {
       decorations: DecorationSet = Decoration.none;
@@ -157,8 +155,8 @@ const decorations = (options: OutlinerProps) => [
         marginBottom: '2px',
       },
 
-      '.cm-list-item-selected': {
-        borderColor: options.showSelected === false ? undefined : 'var(--dx-separator)',
+      '[data-is-attention-source] & .cm-list-item-selected': {
+        borderColor: 'var(--dx-separator)',
       },
       '.cm-list-item-focused': {
         borderColor: 'var(--dx-accentFocusIndicator)',

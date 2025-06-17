@@ -6,7 +6,7 @@ import type { State as AmState } from '@automerge/automerge';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { checkoutVersion, Filter, getEditHistory, Query, type AnyLiveObject } from '@dxos/echo-db';
-import { FormatEnum, getDXN, getSchema, getSchemaVersion, getTypename } from '@dxos/echo-schema';
+import { FormatEnum, getObjectDXN, getSchema, getSchemaVersion, getTypename } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { getType, isDeleted } from '@dxos/live-object';
 import { useQuery, type Space } from '@dxos/react-client/echo';
@@ -210,7 +210,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
             {selected ? (
               <ObjectViewer
                 object={selectedVersionObject ?? selected}
-                id={getDXN(selected)?.toString()}
+                id={getObjectDXN(selected)?.toString()}
                 onNavigate={onNavigate}
               />
             ) : (

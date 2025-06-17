@@ -137,6 +137,7 @@ jobs:
       - *cache_save
       - nx/set-shas
       - run: pnpm check-dependencies
+      - run: node ./scripts/check-cycles.mjs
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
       - vitest-affected:

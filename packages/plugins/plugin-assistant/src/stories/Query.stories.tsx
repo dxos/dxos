@@ -287,7 +287,10 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
               data={{
                 space: client.spaces.get().length,
                 db: space?.db.toJSON(),
-                queue: researchQueue?.toJSON(),
+                queue: {
+                  dxn: researchQueue?.dxn.toString(),
+                  objects: researchQueue?.objects.length,
+                },
                 model: model?.toJSON(),
                 selection: selection.toJSON(),
                 ast,

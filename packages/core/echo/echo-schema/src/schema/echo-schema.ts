@@ -16,7 +16,7 @@ import {
 } from './manipulation';
 import { getSnapshot } from './snapshot';
 import { StoredSchema } from './stored-schema';
-import { getTypeAnnotation, schemaVariance, SchemaMetaSymbol, type SchemaMeta, type TypeAnnotation } from '../ast';
+import { getTypeAnnotation, SchemaMetaSymbol, type SchemaMeta, type TypeAnnotation } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
 import { type JsonSchemaType } from '../json-schema';
 import { type TypedObject, type TypedObjectPrototype } from '../object';
@@ -157,6 +157,13 @@ export const assertEchoSchema = (schema: Schema.Schema.AnyNoContext): EchoSchema
 // TODO(burdon): Resolve (add annotation?)
 export const isMutable = (schema: Schema.Schema.AnyNoContext): boolean => {
   return schema instanceof EchoSchema;
+};
+
+// NOTE: Keep in this file.
+const schemaVariance = {
+  _A: (_: any) => _,
+  _I: (_: any) => _,
+  _R: (_: never) => _,
 };
 
 /**

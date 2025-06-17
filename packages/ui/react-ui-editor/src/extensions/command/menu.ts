@@ -118,11 +118,10 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
       position: 'fixed',
       padding: '0',
       border: 'none',
-      transition: 'opacity 0.3s ease-in-out',
-      // opacity: 0.1,
+      visibility: 'hidden',
     },
-    '.cm-ref-tag[data-focused="true"]': {
-      opacity: 1,
+    '[data-is-attention-source] & .cm-ref-tag': {
+      visibility: 'visible',
     },
     '.cm-ref-tag button': {
       display: 'grid',

@@ -26,6 +26,7 @@ import {
   type ObjectStructure,
   type DatabaseDirectory,
   type SpaceState,
+  DATA_NAMESPACE,
 } from '@dxos/echo-protocol';
 import { type ObjectId, Ref, type AnyObjectData, type Filter } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -48,8 +49,7 @@ import { CoreDatabaseQueryContext } from './core-database-query-context';
 import { type InsertBatch, type InsertData, type UpdateOperation } from './crud-api';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
-import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
-import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
+import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../automerge';
 import { type Hypergraph } from '../hypergraph';
 import { normalizeQuery, QueryResult, type QueryFn } from '../query';
 

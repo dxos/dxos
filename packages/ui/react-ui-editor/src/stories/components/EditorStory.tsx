@@ -3,7 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { type ReactNode, useEffect, useState, forwardRef, useImperativeHandle } from 'react';
+import React, { type ReactNode, forwardRef, useEffect, useState, useImperativeHandle, useMemo } from 'react';
 
 import { Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { useForwardedRef, useThemeContext } from '@dxos/react-ui';
-import { useAttentionAttributes, useAttention } from '@dxos/react-ui-attention';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
@@ -48,18 +48,25 @@ export type StoryProps = Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'ex
 
 export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
   ({ debug, debugCustom, text, extensions: _extensions, ...props }, forwardedRef) => {
+    const attentionAttrs = useAttentionAttributes('testing');
     const [tree, setTree] = useState<DebugNode>();
     const [object] = useState(createObject(live(Expando, { content: text ?? '' })));
     const viewRef = useForwardedRef(forwardedRef);
     const view = viewRef.current;
-    const extensions = debug ? [_extensions, debugTree(setTree)].filter(isNonNullable) : _extensions;
+    const extensions = useMemo(
+      () => (debug ? [_extensions, debugTree(setTree)].filter(isNonNullable) : _extensions),
+      [debug, _extensions],
+    );
 
     return (
       <div className={mx('w-full h-full grid overflow-hidden', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
         <EditorComponent ref={viewRef} object={object} extensions={extensions} {...props} />
 
         {debug && (
-          <div className='grid h-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'>
+          <div
+            className='grid h-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'
+            {...attentionAttrs}
+          >
             {view && debugCustom?.(view)}
             {(debug === 'raw' || debug === 'raw+tree') && (
               <pre className='p-1 text-xs text-green-800 dark:text-green-200 overflow-auto'>
@@ -96,8 +103,6 @@ export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
   ) => {
     const { themeMode } = useThemeContext();
     const attentionAttrs = useAttentionAttributes(id);
-    const { hasAttention } = useAttention(id);
-    console.log(hasAttention);
 
     invariant(object);
     const { parentRef, focusAttributes, view } = useTextEditor(
@@ -108,11 +113,7 @@ export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
           createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
           createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true }),
           createMarkdownExtensions({ themeMode }),
-          createThemeExtensions({
-            themeMode,
-            syntaxHighlighting: true,
-            slots,
-          }),
+          createThemeExtensions({ themeMode, syntaxHighlighting: true, slots }),
           editorGutter,
           extensions || [],
         ],
@@ -131,7 +132,7 @@ export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
     }, [view]);
 
     return (
-      <div role='none' className='flex overflow-hidden' ref={parentRef} {...focusAttributes} {...attentionAttrs} />
+      <div ref={parentRef} role='none' className='flex overflow-hidden' {...focusAttributes} {...attentionAttrs} />
     );
   },
 );
