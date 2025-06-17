@@ -16,3 +16,5 @@ export * from './edit-history';
 export * from './relations';
 export * from './util';
 export * from './version';
+export * from './subscription';
+export * from './doc-accessor';

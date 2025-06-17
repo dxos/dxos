@@ -26,13 +26,7 @@ import { setDeep, defer, getDeep, throwUnhandledError, deepMapValues } from '@dx
 
 import { type CoreDatabase } from './core-database';
 import { docChangeSemaphore } from './doc-semaphore';
-import {
-  isValidKeyPath,
-  type DocAccessor,
-  type DecodedAutomergePrimaryValue,
-  type DecodedAutomergeValue,
-  type KeyPath,
-} from './types';
+import { isValidKeyPath, type DocAccessor, type DecodedAutomergePrimaryValue, type KeyPath } from './types';
 import { type DocHandleProxy } from '../automerge';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
@@ -318,7 +312,7 @@ export class ObjectCore {
     return value;
   }
 
-  arrayPush(path: KeyPath, items: DecodedAutomergeValue[]): number {
+  arrayPush(path: KeyPath, items: DecodedAutomergePrimaryValue[]): number {
     const itemsEncoded = items.map((item) => this.encode(item));
 
     let newLength: number = -1;

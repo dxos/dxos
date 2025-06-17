@@ -21,9 +21,10 @@ import { defer } from '@dxos/util';
 import { type AnyLiveObject, createObject, isEchoObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
-import { createDocAccessor, DocAccessor } from '../core-db';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
+import { createDocAccessor } from './doc-accessor';
+import { DocAccessor } from '../core-db';
 
 registerSignalsRuntime();
 
