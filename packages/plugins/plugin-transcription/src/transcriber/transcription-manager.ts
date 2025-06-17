@@ -78,6 +78,7 @@ export class TranscriptionManager extends Resource {
   setQueue(queueDxn: DXN): TranscriptionManager {
     if (this._queue?.dxn.toString() !== queueDxn.toString()) {
       log.info('setQueue', { queueDxn: queueDxn.toString() });
+      // TODO(dmaretskyi): Use `spaces.queues.get(dxn)`
       this._queue = new QueueImpl<DataType.Message>(this._edgeClient, queueDxn);
     }
     return this;
