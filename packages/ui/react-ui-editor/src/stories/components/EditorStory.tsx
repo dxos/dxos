@@ -6,13 +6,15 @@ import { type EditorView } from '@codemirror/view';
 import React, { type ReactNode, useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 
 import { Expando } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { useThemeContext } from '@dxos/react-ui';
-import { useAttention } from '@dxos/react-ui-attention';
+import { useForwardedRef, useThemeContext } from '@dxos/react-ui';
+import { useAttentionAttributes, useAttention } from '@dxos/react-ui-attention';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
+import { isNonNullable } from '@dxos/util';
 
 import { editorSlots, editorGutter } from '../../defaults';
 import {
@@ -26,33 +28,61 @@ import {
 } from '../../extensions';
 import { useTextEditor, type UseTextEditorProps } from '../../hooks';
 
-// Type definitions
+// Type definitions.
 export type DebugMode = 'raw' | 'tree' | 'raw+tree';
 
 const defaultId = 'editor-' + PublicKey.random().toHex().slice(0, 8);
 
-export type StoryProps = {
-  id?: string;
-  debug?: DebugMode;
-  debugCustom?: (view: EditorView) => ReactNode;
-  text?: string;
-  readOnly?: boolean;
-  placeholder?: string;
-  lineNumbers?: boolean;
-  onReady?: (view: EditorView) => void;
-} & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'> &
-  Pick<ThemeExtensionsOptions, 'slots'>;
+export type StoryProps = Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'> &
+  Pick<ThemeExtensionsOptions, 'slots'> & {
+    id?: string;
+    debug?: DebugMode;
+    debugCustom?: (view: EditorView) => ReactNode;
+    text?: string;
+    object?: Expando;
+    readOnly?: boolean;
+    placeholder?: string;
+    lineNumbers?: boolean;
+    onReady?: (view: EditorView) => void;
+  };
+
+export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
+  ({ debug, debugCustom, text, extensions: _extensions, ...props }, forwardedRef) => {
+    const [tree, setTree] = useState<DebugNode>();
+    const [object] = useState(createObject(live(Expando, { content: text ?? '' })));
+    const viewRef = useForwardedRef(forwardedRef);
+    const view = viewRef.current;
+    const extensions = debug ? [_extensions, debugTree(setTree)].filter(isNonNullable) : _extensions;
+
+    return (
+      <div className={mx('w-full h-full grid overflow-hidden', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
+        <EditorComponent ref={viewRef} object={object} extensions={extensions} {...props} />
+
+        {debug && (
+          <div className='grid h-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'>
+            {view && debugCustom?.(view)}
+            {(debug === 'raw' || debug === 'raw+tree') && (
+              <pre className='p-1 text-xs text-green-800 dark:text-green-200 overflow-auto'>
+                {view?.state.doc.toString()}
+              </pre>
+            )}
+            {(debug === 'tree' || debug === 'raw+tree') && <JsonFilter data={tree} classNames='p-1 text-xs' />}
+          </div>
+        )}
+      </div>
+    );
+  },
+);
 
 /**
- * Default story component
+ * Default story component.
  */
-export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
+export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
   (
     {
       id = defaultId,
-      debug,
-      debugCustom,
       text,
+      object,
       readOnly,
       placeholder = 'New document.',
       lineNumbers,
@@ -64,12 +94,12 @@ export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
     },
     forwardedRef,
   ) => {
+    const { themeMode } = useThemeContext();
+    const attentionAttrs = useAttentionAttributes(id);
     const { hasAttention } = useAttention(id);
     console.log(hasAttention);
 
-    const [object] = useState(createObject(live(Expando, { content: text ?? '' })));
-    const { themeMode } = useThemeContext();
-    const [tree, setTree] = useState<DebugNode>();
+    invariant(object);
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
         id,
@@ -85,7 +115,6 @@ export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
           }),
           editorGutter,
           extensions || [],
-          debug ? debugTree(setTree) : [],
         ],
         scrollTo,
         selection,
@@ -102,20 +131,7 @@ export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
     }, [view]);
 
     return (
-      <div className={mx('w-full h-full grid overflow-hidden', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
-        <div role='none' className='flex overflow-hidden' ref={parentRef} {...focusAttributes} />
-        {debug && (
-          <div className='grid h-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'>
-            {view && debugCustom?.(view)}
-            {(debug === 'raw' || debug === 'raw+tree') && (
-              <pre className='p-1 text-xs text-green-800 dark:text-green-200 overflow-auto'>
-                {view?.state.doc.toString()}
-              </pre>
-            )}
-            {(debug === 'tree' || debug === 'raw+tree') && <JsonFilter data={tree} classNames='p-1 text-xs' />}
-          </div>
-        )}
-      </div>
+      <div role='none' className='flex overflow-hidden' ref={parentRef} {...focusAttributes} {...attentionAttrs} />
     );
   },
 );
