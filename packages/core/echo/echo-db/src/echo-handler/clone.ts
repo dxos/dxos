@@ -6,7 +6,7 @@ import { type BaseObject, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { assertParameter } from '@dxos/protocols';
 
-import { type AnyLiveObject, initEchoReactiveObjectRootProxy, isEchoObject } from './create';
+import { type AnyLiveObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { symbolInternals } from './echo-proxy-target';
 import { ObjectCore } from '../core-db';

@@ -10,7 +10,7 @@ import type { SchemaId } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { ComplexMap } from '@dxos/util';
 
-import { type AnyLiveObject } from './create';
+import { type AnyLiveObject } from './echo-handler';
 import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
 import type { ObjectCore, KeyPath } from '../core-db';

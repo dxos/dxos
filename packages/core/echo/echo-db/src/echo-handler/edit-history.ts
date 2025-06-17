@@ -7,7 +7,7 @@ import { next as am, type Doc, type Heads, type State } from '@automerge/automer
 import { ATTR_META, ATTR_TYPE, type BaseObject } from '@dxos/echo-schema';
 import { assertArgument } from '@dxos/invariant';
 
-import { isEchoObject, type AnyLiveObject } from './create';
+import { isEchoObject, type AnyLiveObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { ObjectCore } from '../core-db';
 

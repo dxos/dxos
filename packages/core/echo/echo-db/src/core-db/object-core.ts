@@ -15,6 +15,7 @@ import {
   type ObjectStructure,
   Reference,
   type DatabaseDirectory,
+  DATA_NAMESPACE,
 } from '@dxos/echo-protocol';
 import { ObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
