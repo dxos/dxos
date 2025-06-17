@@ -406,6 +406,7 @@ const meta: Meta<typeof DefaultStory> = {
   ],
   parameters: {
     translations,
+    controls: { disable: true },
   },
 };
 
