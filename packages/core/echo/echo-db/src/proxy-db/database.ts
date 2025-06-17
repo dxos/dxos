@@ -15,6 +15,7 @@ import { type Live, getProxyTarget, getType, isLiveObject } from '@dxos/live-obj
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
 import { EchoSchemaRegistry } from './echo-schema-registry';
@@ -38,7 +39,6 @@ import {
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { Filter, type QueryFn, type QueryOptions, Query } from '../query';
-import { trace } from '@dxos/tracing';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
