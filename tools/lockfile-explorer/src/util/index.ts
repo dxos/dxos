@@ -3,4 +3,4 @@
 //
 
 export * from './ellipsis';
-export * from './object';
+export * from '@dxos/util';

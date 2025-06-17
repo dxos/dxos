@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 // s
 
+import { type StorageAdapterInterface, type Chunk, type StorageKey } from '@automerge/automerge-repo';
 import { type MixedEncoding } from 'level-transcoder';
 
-import { type StorageAdapterInterface, type Chunk, type StorageKey } from '@dxos/automerge/automerge-repo';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type BatchLevel, type SublevelDB } from '@dxos/kv-store';
 import { type MaybePromise } from '@dxos/util';

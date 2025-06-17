@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver, type PluginsContext } from '@dxos/app-framework';
+import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { initializeTable, TableType } from '@dxos/react-ui-table';
@@ -13,13 +13,13 @@ import { ViewProjection } from '@dxos/schema';
 import { TABLE_PLUGIN } from '../meta';
 import { TableAction } from '../types';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: TableAction.Create,
       resolve: async ({ space, name, typename }) => {
-        const client = context.requestCapability(ClientCapabilities.Client);
-        const table = create(TableType, { name, threads: [] });
+        const client = context.getCapability(ClientCapabilities.Client);
+        const table = live(TableType, { name, threads: [] });
         await initializeTable({ client, space, table, typename });
         return { data: { object: table } };
       },
@@ -32,7 +32,7 @@ export default (context: PluginsContext) =>
         invariant(table.view?.target);
         const schema = space.db.schemaRegistry.getSchema(table.view.target.query.typename!);
         invariant(schema);
-        space.db.add(create(schema, data));
+        space.db.add(live(schema, data));
       },
     }),
     createResolver({

@@ -11,14 +11,15 @@ import {
   definePlugin,
   Events,
 } from '@dxos/app-framework';
+import { getSchemaTypename } from '@dxos/echo-schema';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, AssistantSettings } from './capabilities';
+import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
-import { AssistantAction, AIChatType, ServiceType, TemplateType } from './types';
+import { AssistantAction, AIChatType, ServiceType, TemplateType, CompanionTo } from './types';
 
 export const AssistantPlugin = () =>
   definePlugin(meta, [
@@ -30,7 +31,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/settings`,
       activatesOn: Events.SetupSettings,
-      activate: AssistantSettings,
+      activate: Settings,
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
@@ -43,7 +44,7 @@ export const AssistantPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: AIChatType.typename,
+          id: getSchemaTypename(AIChatType)!,
           metadata: {
             icon: 'ph--atom--regular',
           },
@@ -58,7 +59,7 @@ export const AssistantPlugin = () =>
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: AIChatType,
-            getIntent: (_, options) => createIntent(AssistantAction.CreateChat, { spaceId: options.space.id }),
+            getIntent: (_, options) => createIntent(AssistantAction.CreateChat, { space: options.space }),
           }),
         ),
         contributes(
@@ -74,7 +75,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, TemplateType]),
+      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, TemplateType, CompanionTo]),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,

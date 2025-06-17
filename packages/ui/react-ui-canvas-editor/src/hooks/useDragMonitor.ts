@@ -102,28 +102,28 @@ export class DragMonitor {
   /**
    * Offset relative to the center of the shape.
    */
-  setOffset(offset: Point) {
+  setOffset(offset: Point): void {
     this._offset = offset;
   }
 
   /**
    * Called from setCustomNativeDragPreview.render()
    */
-  start(state: DraggingState) {
+  start(state: DraggingState): void {
     this._state.value = state;
   }
 
   /**
    * Called while dragging.
    */
-  update(state: Partial<DraggingState>) {
+  update(state: Partial<DraggingState>): void {
     this._state.value = { ...this._state.value, ...state } as any;
   }
 
   /**
    * Called on drop.
    */
-  stop() {
+  stop(): void {
     this._state.value = { type: 'inactive' };
     this._offset = undefined;
   }

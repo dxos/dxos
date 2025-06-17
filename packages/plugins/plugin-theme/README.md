@@ -1,6 +1,4 @@
-# @dxos/plugin-client
-
-Surface plugin for DXOS Client.
+# @dxos/plugin-theme
 
 ## DXOS Resources
 

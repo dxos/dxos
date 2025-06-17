@@ -10,6 +10,7 @@ export default [
       [translationKey]: {
         'fields label': 'Fields',
         'hidden fields label': 'Hidden Fields',
+        'empty readonly ref field label': '(none)',
 
         // TODO(burdon): Standardize field/property.
         'button add property': 'Add property',
@@ -20,6 +21,8 @@ export default [
         'add field': 'Add field',
         'delete field': 'Delete field',
         'field limit reached': 'Maximum number of fields reached',
+        'boolean input true value': 'Yes',
+        'boolean input false value': 'No',
 
         // TODO(burdon): Factor out?
         'button cancel': 'Cancel',
@@ -52,16 +55,20 @@ export default [
         'format uri': 'URI',
         'format uuid': 'UUID',
 
-        // Placeholders
+        // Placeholders.
         'placeholder latitude': 'Latitude',
         'placeholder longitude': 'Longitude',
 
-        // SelectOptionsInput
+        // SelectOptionsInput.
         'select option label': 'Label',
         'select option label placeholder': 'Option label',
         'select option color': 'Color',
         'select option delete': 'Delete',
         'select option add': 'Add option',
+
+        // System schema message.
+        'system schema title': 'System Schema',
+        'system schema description': 'This schema is managed by the system and cannot be modified.',
       },
     },
   },

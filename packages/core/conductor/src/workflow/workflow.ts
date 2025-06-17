@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
+import { Effect, Schema } from 'effect';
 
-import { S } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 
 import { compileOrThrow, type GraphExecutor } from '../compiler';
@@ -86,19 +85,19 @@ export class Workflow {
    */
   resolveMeta(): WorkflowMeta {
     const inputs = this._graph.nodes.filter((node) => node.type === NODE_INPUT);
-    const resolveOutputsSchema = (sourceNode: ComputeNode): S.Struct<any> => {
+    const resolveOutputsSchema = (sourceNode: ComputeNode): Schema.Struct<any> => {
       const properties = this._graph.edges
         .filter((e) => e.source === sourceNode.id)
         .map((edge) => [edge.output, pickProperty(this._requireResolved(edge.target).meta.input, edge.input)]);
-      return S.Struct(Object.fromEntries(properties));
+      return Schema.Struct(Object.fromEntries(properties));
     };
 
     const outputs = this._graph.nodes.filter((node) => node.type === NODE_OUTPUT);
-    const resolveInputsSchema = (targetNode: ComputeNode): S.Struct<any> => {
+    const resolveInputsSchema = (targetNode: ComputeNode): Schema.Struct<any> => {
       const properties = this._graph.edges
         .filter((e) => e.target === targetNode.id)
         .map((edge) => [edge.input, pickProperty(this._requireResolved(edge.source).meta.output, edge.output)]);
-      return S.Struct(Object.fromEntries(properties));
+      return Schema.Struct(Object.fromEntries(properties));
     };
 
     return {
@@ -128,11 +127,11 @@ export class Workflow {
     });
   }
 
-  asGraph() {
+  asGraph(): ComputeGraphModel {
     return this._graph;
   }
 
-  private _requireResolved(nodeId: string) {
+  private _requireResolved(nodeId: string): Executable<Schema.Schema.AnyNoContext, Schema.Schema.AnyNoContext> {
     const resolved = this._resolvedNodeById.get(nodeId);
     if (!resolved) {
       throw new Error(`Node ${nodeId} was not resolved in ${this._dxn.toString()}.`);
@@ -143,7 +142,7 @@ export class Workflow {
 
 type NodeSchema = {
   nodeId: string;
-  schema: S.Struct<any>;
+  schema: Schema.Struct<any>;
 };
 
 export type WorkflowMeta = {

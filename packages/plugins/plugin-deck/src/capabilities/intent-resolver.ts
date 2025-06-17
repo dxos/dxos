@@ -3,7 +3,7 @@
 //
 
 import { batch } from '@preact/signals-core';
-import { pipe } from 'effect';
+import { Schema, Effect, pipe, Option } from 'effect';
 
 import {
   Capabilities,
@@ -11,16 +11,16 @@ import {
   contributes,
   IntentAction,
   LayoutAction,
-  type PluginsContext,
+  type PluginContext,
   createIntent,
   chain,
 } from '@dxos/app-framework';
-import { getTypename, S } from '@dxos/echo-schema';
+import { getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { isReactiveObject } from '@dxos/live-object';
+import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { type Node } from '@dxos/plugin-graph';
+import { isActionLike } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { byPosition, isNonNullable } from '@dxos/util';
 
@@ -38,13 +38,13 @@ import {
 } from '../types';
 import { setActive } from '../util';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: IntentAction.ShowUndo,
       resolve: (data) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
-        const { undoPromise: undo } = context.requestCapability(Capabilities.IntentDispatcher);
+        const layout = context.getCapability(DeckCapabilities.MutableDeckState);
+        const { undoPromise: undo } = context.getCapability(Capabilities.IntentDispatcher);
 
         // TODO(wittjosiah): Support undoing further back than the last action.
         if (layout.currentUndoId) {
@@ -67,12 +67,12 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      // TODO(wittjosiah): This should be able to just be `S.is(LayoutAction.UpdateSidebar.fields.input)`
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateSidebar.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.UpdateSidebar.fields.input> =>
-        S.is(LayoutAction.UpdateSidebar.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateSidebar.fields.input> =>
+        Schema.is(LayoutAction.UpdateSidebar.fields.input)(data),
       resolve: ({ options }) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         const next = options?.state ?? layout.sidebarState;
         if (next !== layout.sidebarState) {
           layout.sidebarState = next;
@@ -81,12 +81,12 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      // TODO(wittjosiah): This should be able to just be `S.is(LayoutAction.UpdateComplementary.fields.input)`
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateComplementary.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.UpdateComplementary.fields.input> =>
-        S.is(LayoutAction.UpdateComplementary.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateComplementary.fields.input> =>
+        Schema.is(LayoutAction.UpdateComplementary.fields.input)(data),
       resolve: ({ subject, options }) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const layout = context.getCapability(DeckCapabilities.MutableDeckState);
 
         if (layout.complementarySidebarPanel !== subject) {
           layout.complementarySidebarPanel = subject;
@@ -100,49 +100,56 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      // TODO(wittjosiah): This should be able to just be `S.is(LayoutAction.UpdateDialog.fields.input)`
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateDialog.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.UpdateDialog.fields.input> =>
-        S.is(LayoutAction.UpdateDialog.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateDialog.fields.input> =>
+        Schema.is(LayoutAction.UpdateDialog.fields.input)(data),
       resolve: ({ subject, options }) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         layout.dialogOpen = options.state ?? Boolean(subject);
-        layout.dialogContent = subject ? { component: subject, props: options.props } : null;
-        layout.dialogBlockAlign = options.blockAlign ?? 'center';
         layout.dialogType = options.type ?? 'default';
+        layout.dialogBlockAlign = options.blockAlign ?? 'center';
+        layout.dialogOverlayClasses = options.overlayClasses;
+        layout.dialogOverlayStyle = options.overlayStyle;
+        layout.dialogContent = subject ? { component: subject, props: options.props } : null;
       },
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      // TODO(wittjosiah): This should be able to just be `S.is(LayoutAction.UpdatePopover.fields.input)`
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdatePopover.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.UpdatePopover.fields.input> =>
-        S.is(LayoutAction.UpdatePopover.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdatePopover.fields.input> =>
+        Schema.is(LayoutAction.UpdatePopover.fields.input)(data),
       resolve: ({ subject, options }) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         layout.popoverOpen = options.state ?? Boolean(subject);
-        layout.popoverContent = subject ? { component: subject, props: options.props } : null;
-        layout.popoverAnchorId = options.anchorId;
+        layout.popoverContent =
+          typeof subject === 'string' ? { component: subject, props: options.props } : subject ? { subject } : null;
         layout.popoverSide = options.side;
+        if (options.variant === 'virtual') {
+          layout.popoverAnchor = options.anchor;
+        } else {
+          layout.popoverAnchorId = options.anchorId;
+        }
       },
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      // TODO(wittjosiah): This should be able to just be `S.is(LayoutAction.AddToast.fields.input)`
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.AddToast.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.AddToast.fields.input> =>
-        S.is(LayoutAction.AddToast.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.AddToast.fields.input> =>
+        Schema.is(LayoutAction.AddToast.fields.input)(data),
       resolve: ({ subject }) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         layout.toasts.push(subject);
       },
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      // TODO(wittjosiah): This should be able to just be `S.is(LayoutAction.SetLayoutMode.fields.input)`
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.SetLayoutMode.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.SetLayoutMode.fields.input> => {
-        if (!S.is(LayoutAction.SetLayoutMode.fields.input)(data)) {
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SetLayoutMode.fields.input> => {
+        if (!Schema.is(LayoutAction.SetLayoutMode.fields.input)(data)) {
           return false;
         }
 
@@ -153,7 +160,7 @@ export default (context: PluginsContext) =>
         return true;
       },
       resolve: ({ subject, options }) => {
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
 
         const setMode = (mode: LayoutMode) => {
           const deck = state.deck;
@@ -174,10 +181,8 @@ export default (context: PluginsContext) =>
             deck.initialized = true;
           }
 
-          if (mode === 'fullscreen' && !deck.fullscreen) {
-            deck.fullscreen = true;
-          } else if (mode !== 'fullscreen' && deck.fullscreen) {
-            deck.fullscreen = false;
+          if (mode === 'solo--fullscreen') {
+            deck.fullscreen = !deck.fullscreen;
           }
         };
 
@@ -199,10 +204,11 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
-        S.is(LayoutAction.SwitchWorkspace.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
+        Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
       resolve: ({ subject }) => {
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const { graph } = context.getCapability(Capabilities.AppGraph);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
         batch(() => {
           // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
           //  Ideally this should be worked into the data model in a generic way.
@@ -220,15 +226,24 @@ export default (context: PluginsContext) =>
           return {
             intents: [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: first })],
           };
+        } else {
+          const [item] = graph
+            .getConnections(subject)
+            .filter((node) => !isActionLike(node) && node.properties.disposition !== 'hidden');
+          if (item) {
+            return {
+              intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] })],
+            };
+          }
         }
       },
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.RevertWorkspace.fields.input> =>
-        S.is(LayoutAction.RevertWorkspace.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.RevertWorkspace.fields.input> =>
+        Schema.is(LayoutAction.RevertWorkspace.fields.input)(data),
       resolve: () => {
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
         return {
           intents: [createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: state.previousDeck })],
         };
@@ -236,65 +251,78 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.Open.fields.input> =>
-        S.is(LayoutAction.Open.fields.input)(data),
-      resolve: ({ subject, options }) => {
-        const { graph } = context.requestCapability(Capabilities.AppGraph);
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
-        const attention = context.requestCapability(AttentionCapabilities.Attention);
-        const settings = context
-          .requestCapabilities(Capabilities.SettingsStore)[0]
-          ?.getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.Open.fields.input> =>
+        Schema.is(LayoutAction.Open.fields.input)(data),
+      resolve: ({ subject, options }) =>
+        Effect.gen(function* () {
+          const { graph } = context.getCapability(Capabilities.AppGraph);
+          const state = context.getCapability(DeckCapabilities.MutableDeckState);
+          const attention = context.getCapability(AttentionCapabilities.Attention);
+          const settings = context
+            .getCapabilities(Capabilities.SettingsStore)[0]
+            ?.getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
 
-        const previouslyOpenIds = new Set<string>(state.deck.solo ? [state.deck.solo] : state.deck.active);
-        batch(() => {
-          const next = state.deck.solo
-            ? (subject as string[]).map((id) => createEntryId(id, options?.variant))
-            : subject.reduce(
-                (acc, entryId) =>
-                  openEntry(acc, entryId, {
-                    key: options?.key,
-                    positioning: options?.positioning ?? settings?.newPlankPositioning,
-                    pivotId: options?.pivotId,
-                    variant: options?.variant,
-                  }),
-                state.deck.active,
-              );
+          if (options?.workspace && state.activeDeck !== options?.workspace) {
+            const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            yield* dispatch(
+              createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: options.workspace }),
+            );
+          }
 
-          return setActive({ next, state, attention });
-        });
+          const previouslyOpenIds = new Set<string>(state.deck.solo ? [state.deck.solo] : state.deck.active);
+          batch(() => {
+            const next = state.deck.solo
+              ? (subject as string[]).map((id) => createEntryId(id, options?.variant))
+              : subject.reduce(
+                  (acc, entryId) =>
+                    openEntry(acc, entryId, {
+                      key: options?.key,
+                      positioning: options?.positioning ?? settings?.newPlankPositioning,
+                      pivotId: options?.pivotId,
+                      variant: options?.variant,
+                    }),
+                  state.deck.active,
+                );
 
-        const ids = state.deck.solo ? [state.deck.solo] : state.deck.active;
-        const newlyOpen = ids.filter((i) => !previouslyOpenIds.has(i));
+            return setActive({ next, state, attention });
+          });
 
-        return {
-          intents: [
-            ...(options?.scrollIntoView !== false
-              ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: newlyOpen[0] ?? subject[0] })]
-              : []),
-            createIntent(LayoutAction.Expose, { part: 'navigation', subject: newlyOpen[0] ?? subject[0] }),
-            ...newlyOpen.map((subjectId) => {
-              const active = graph?.findNode(subjectId)?.data;
-              const typename = isReactiveObject(active) ? getTypename(active) : undefined;
-              return createIntent(ObservabilityAction.SendEvent, {
-                name: 'navigation.activate',
-                properties: {
-                  subjectId,
-                  typename,
-                },
-              });
-            }),
-          ],
-        };
-      },
+          const ids = state.deck.solo ? [state.deck.solo] : state.deck.active;
+          const newlyOpen = ids.filter((i) => !previouslyOpenIds.has(i));
+
+          return {
+            intents: [
+              ...(options?.scrollIntoView !== false
+                ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: newlyOpen[0] ?? subject[0] })]
+                : []),
+              createIntent(LayoutAction.Expose, { part: 'navigation', subject: newlyOpen[0] ?? subject[0] }),
+              ...newlyOpen.map((subjectId) => {
+                const typename = Option.match(graph.getNode(subjectId), {
+                  onNone: () => undefined,
+                  onSome: (node) => {
+                    const active = node.data;
+                    return isLiveObject(active) ? getTypename(active) : undefined;
+                  },
+                });
+                return createIntent(ObservabilityAction.SendEvent, {
+                  name: 'navigation.activate',
+                  properties: {
+                    subjectId,
+                    typename,
+                  },
+                });
+              }),
+            ],
+          };
+        }),
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.Close.fields.input> =>
-        S.is(LayoutAction.Close.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.Close.fields.input> =>
+        Schema.is(LayoutAction.Close.fields.input)(data),
       resolve: ({ subject }) => {
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
-        const attention = context.requestCapability(AttentionCapabilities.Attention);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
+        const attention = context.getCapability(AttentionCapabilities.Attention);
         const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
         const next = subject.reduce((acc, id) => closeEntry(acc, id), active);
         const toAttend = setActive({ next, state, attention });
@@ -313,11 +341,11 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.Set.fields.input> =>
-        S.is(LayoutAction.Set.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.Set.fields.input> =>
+        Schema.is(LayoutAction.Set.fields.input)(data),
       resolve: ({ subject }) => {
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
-        const attention = context.requestCapability(AttentionCapabilities.Attention);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
+        const attention = context.getCapability(AttentionCapabilities.Attention);
         const toAttend = setActive({ next: subject as string[], state, attention });
         return {
           intents: toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : [],
@@ -326,24 +354,24 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.ScrollIntoView.fields.input> =>
-        S.is(LayoutAction.ScrollIntoView.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.ScrollIntoView.fields.input> =>
+        Schema.is(LayoutAction.ScrollIntoView.fields.input)(data),
       resolve: ({ subject }) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         layout.scrollIntoView = subject;
       },
     }),
     createResolver({
       intent: DeckAction.UpdatePlankSize,
       resolve: (data) => {
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
         state.deck.plankSizing[data.id] = data.size;
       },
     }),
     createResolver({
       intent: DeckAction.ChangeCompanion,
       resolve: (data) => {
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
         // TODO(thure): Reactivity only works when creating a lexically new `activeCompanions`… Are these not proxy objects?
         if (data.companion === null) {
           const { [data.primary]: _, ...nextActiveCompanions } = state.deck.activeCompanions ?? {};
@@ -360,9 +388,9 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: DeckAction.Adjust,
       resolve: (adjustment) => {
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
-        const attention = context.requestCapability(AttentionCapabilities.Attention);
-        const { graph } = context.requestCapability(Capabilities.AppGraph);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
+        const attention = context.getCapability(AttentionCapabilities.Attention);
+        const { graph } = context.getCapability(Capabilities.AppGraph);
 
         return batch(() => {
           if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
@@ -374,23 +402,28 @@ export default (context: PluginsContext) =>
           }
 
           if (adjustment.type === 'companion') {
-            const node = graph.findNode(adjustment.id);
-            const [companion] = node
-              ? graph
-                  .nodes(node, { filter: (n): n is Node<any> => n.type === PLANK_COMPANION_TYPE })
-                  .toSorted((a, b) => byPosition(a.properties, b.properties))
-              : [];
-            if (companion) {
-              return {
-                intents: [
-                  // TODO(wittjosiah): This should remember the previously selected companion.
-                  createIntent(DeckAction.ChangeCompanion, { primary: adjustment.id, companion: companion.id }),
-                ],
-              };
-            }
+            return pipe(
+              graph.getNode(adjustment.id),
+              Option.map((node) =>
+                graph
+                  .getConnections(node.id)
+                  .filter((n) => n.type === PLANK_COMPANION_TYPE)
+                  .toSorted((a, b) => byPosition(a.properties, b.properties)),
+              ),
+              Option.flatMap((companions) => (companions.length > 0 ? Option.some(companions[0]) : Option.none())),
+              Option.match({
+                onNone: () => ({}),
+                onSome: (companion) => ({
+                  intents: [
+                    // TODO(wittjosiah): This should remember the previously selected companion.
+                    createIntent(DeckAction.ChangeCompanion, { primary: adjustment.id, companion: companion.id }),
+                  ],
+                }),
+              }),
+            );
           }
 
-          if (adjustment.type === 'solo') {
+          if (adjustment.type.startsWith('solo')) {
             const entryId = adjustment.id;
             if (!state.deck.solo) {
               // Solo the entry.
@@ -399,21 +432,34 @@ export default (context: PluginsContext) =>
                   createIntent(LayoutAction.SetLayoutMode, {
                     part: 'mode',
                     subject: entryId,
-                    options: { mode: 'solo' },
+                    options: { mode: adjustment.type },
                   }),
                 ],
               };
             } else {
-              // Un-solo the current entry.
-              return {
-                intents: [
-                  // NOTE: The order of these is important.
-                  pipe(
-                    createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }),
-                    chain(LayoutAction.Open, { part: 'main', subject: [entryId] }),
-                  ),
-                ],
-              };
+              if (adjustment.type === 'solo--fullscreen') {
+                // Toggle fullscreen on the current entry.
+                return {
+                  intents: [
+                    createIntent(LayoutAction.SetLayoutMode, {
+                      part: 'mode',
+                      subject: entryId,
+                      options: { mode: 'solo--fullscreen' },
+                    }),
+                  ],
+                };
+              } else if (adjustment.type === 'solo') {
+                // Un-solo the current entry.
+                return {
+                  intents: [
+                    // NOTE: The order of these is important.
+                    pipe(
+                      createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }),
+                      chain(LayoutAction.Open, { part: 'main', subject: [entryId] }),
+                    ),
+                  ],
+                };
+              }
             }
           }
         });

@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { type ReactiveEchoObject, fullyQualifiedId } from '@dxos/react-client/echo';
+import { type AnyLiveObject, fullyQualifiedId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-export const TemplateContainer = ({ object }: { object: ReactiveEchoObject<any>; role: string }) => {
+export const TemplateContainer = ({ object }: { object: AnyLiveObject<any>; role: string }) => {
   return (
     <StackItem.Content>
       <pre className='m-4 p-2 ring'>

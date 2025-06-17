@@ -4,8 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { AIServiceEdgeClient } from '@dxos/assistant';
-import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
+import { AIServiceEdgeClient } from '@dxos/ai';
+import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 
 import { createToolsFromApi, resolveAuthorization } from './openapi';
@@ -43,12 +43,14 @@ describe.skip('openapi', () => {
   describe.skip('invoke tools', () => {
     test('amadeus hotel name autocomplete', async () => {
       const tools = await createToolsFromApi(HOTEL_NAME_AUTOCOMPLETE_API, { authorization: AMADEUS_AUTH });
-
-      const result = await tools[0].execute!({
-        keyword: 'William Vale Brooklyn',
-        subType: ['HOTEL_LEISURE', 'HOTEL_GDS'],
-        countryCode: 'US',
-      });
+      const result = await tools[0].execute(
+        {
+          keyword: 'William Vale Brooklyn',
+          subType: ['HOTEL_LEISURE', 'HOTEL_GDS'],
+          countryCode: 'US',
+        },
+        {},
+      );
 
       log.info('result', { result });
     });
@@ -56,11 +58,13 @@ describe.skip('openapi', () => {
     test('weather API', async () => {
       const tools = await createToolsFromApi(WEATHER_API, { authorization: VISUAL_CROSSING_CREDENTIALS });
       const forecastTool = tools.find((t) => t.name.includes('forecast'));
-
-      const result = await forecastTool?.execute!({
-        locations: 'Brooklyn, NY',
-        aggregateHours: '24',
-      });
+      const result = await forecastTool?.execute(
+        {
+          locations: 'Brooklyn, NY',
+          aggregateHours: '24',
+        },
+        {},
+      );
 
       log.info('result', { result });
     });
@@ -68,10 +72,7 @@ describe.skip('openapi', () => {
 
   describe.skip('AI uses tools', () => {
     test('amadeus flight availabilities', { timeout: 60_000 }, async () => {
-      const tools = await createToolsFromApi(FLIGHT_SEARCH_API, {
-        authorization: AMADEUS_AUTH,
-      });
-
+      const tools = await createToolsFromApi(FLIGHT_SEARCH_API, { authorization: AMADEUS_AUTH });
       const client = new AIServiceEdgeClient({
         endpoint: AI_SERVICE_ENDPOINT.LOCAL,
       });
@@ -86,7 +87,6 @@ describe.skip('openapi', () => {
     // TODO(dmaretskyi): Doesn't work.
     test('amadeus hotel name autocomplete', { timeout: 60_000 }, async () => {
       const tools = await createToolsFromApi(HOTEL_NAME_AUTOCOMPLETE_API, { authorization: AMADEUS_AUTH });
-
       const client = new AIServiceEdgeClient({
         endpoint: AI_SERVICE_ENDPOINT.LOCAL,
       });
@@ -101,7 +101,6 @@ describe.skip('openapi', () => {
         authorization: VISUAL_CROSSING_CREDENTIALS,
         instructions: WEATHER_INSTRUCTIONS,
       });
-
       const client = new AIServiceEdgeClient({
         endpoint: AI_SERVICE_ENDPOINT.LOCAL,
       });

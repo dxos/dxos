@@ -1,13 +1,13 @@
-//
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { getTypeReference, type S } from '@dxos/echo-schema';
+import { getTypeReference, getSchema } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { getProxyHandler, getSchema, getType } from '@dxos/live-object';
+import { getProxyHandler, getType } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
 registerSignalsRuntime();
@@ -34,7 +34,7 @@ export interface TestConfiguration {
   createObjectFn: (props?: Partial<Testing.TestSchema>) => Promise<Testing.TestSchema>;
 }
 
-export type TestConfigurationFactory = (schema: S.Schema.AnyNoContext | undefined) => TestConfiguration | null;
+export type TestConfigurationFactory = (schema: Schema.Schema.AnyNoContext | undefined) => TestConfiguration | null;
 
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
   for (const schema of [undefined, Testing.TestSchema, Testing.TestSchemaType]) {
@@ -157,7 +157,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
       test('getTypeReference', async () => {
         const obj = await createObject({ number: 42 });
-        expect(getType(obj)?.toDXN().toString()).to.deep.eq(getTypeReference(getSchema(obj))?.toDXN().toString());
+        expect(getType(obj)?.toString()).to.deep.eq(getTypeReference(getSchema(obj))?.toDXN().toString());
       });
 
       test('can assign arrays with objects', async () => {

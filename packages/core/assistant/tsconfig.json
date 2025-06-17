@@ -1,0 +1,10 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "include": [
+    "bin",
+    "src",
+    "src/**/*.json"
+  ],
+  "references": []
+}

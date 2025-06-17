@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type ScriptType } from '@dxos/functions/types';
+import { type ScriptType } from '@dxos/functions';
 import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -57,7 +57,7 @@ export const ScriptContainer = ({
   );
 
   return (
-    <StackItem.Content toolbar classNames='divide-y divide-separator'>
+    <StackItem.Content toolbar>
       <ScriptToolbar state={state} role={role} script={script} />
       <TypescriptEditor
         id={script.id}

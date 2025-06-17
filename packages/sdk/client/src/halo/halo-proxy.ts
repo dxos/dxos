@@ -56,12 +56,12 @@ export class HaloProxy implements Halo {
     public _traceParent?: string,
   ) {}
 
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return inspectObject(this);
   }
 
   @trace.info({ depth: null })
-  toJSON() {
+  toJSON(): { identityKey: string | undefined; deviceKey: string | undefined } {
     return {
       identityKey: this._identity.get()?.identityKey.truncate(),
       deviceKey: this.device?.deviceKey.truncate(),
@@ -107,7 +107,7 @@ export class HaloProxy implements Halo {
    *
    * @internal
    */
-  async _open() {
+  async _open(): Promise<void> {
     log.trace('dxos.sdk.halo-proxy.open', Trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     const gotIdentity = this._identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
@@ -186,7 +186,7 @@ export class HaloProxy implements Halo {
    *
    * @internal
    */
-  async _close() {
+  async _close(): Promise<void> {
     await this._invitationProxy?.close();
     this._invitationProxy = undefined;
     this._subscriptions.clear();
@@ -199,7 +199,7 @@ export class HaloProxy implements Halo {
    * @internal
    */
   // TODO(wittjosiah): Should `Observable` class support this?
-  _waitForIdentity() {
+  _waitForIdentity(): Promise<void> {
     return this._identityChanged.waitForCondition(() => !!this._identity.get());
   }
 
@@ -249,7 +249,7 @@ export class HaloProxy implements Halo {
    * Get Halo credentials for the current user.
    * Note: Will return an empty result if called before all credentials have been loaded.
    */
-  queryCredentials({ ids, type }: { ids?: PublicKey[]; type?: string } = {}) {
+  queryCredentials({ ids, type }: { ids?: PublicKey[]; type?: string } = {}): Credential[] {
     return this._credentials.get().filter((credential) => {
       if (ids && !ids.some((id) => id.equals(credential.id!))) {
         return false;
@@ -294,7 +294,7 @@ export class HaloProxy implements Halo {
   /**
    * Write credentials to halo profile.
    */
-  async writeCredentials(credentials: Credential[]) {
+  async writeCredentials(credentials: Credential[]): Promise<void> {
     const identity = this._identity.get();
     if (!identity) {
       throw new ApiError('Identity is not available.');

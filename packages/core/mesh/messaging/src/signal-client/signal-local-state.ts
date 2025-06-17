@@ -61,28 +61,28 @@ export class SignalLocalState {
     return { failureCount };
   }
 
-  join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
+  join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): void {
     this._joinedTopics.add({ topic, peerId });
   }
 
-  leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
+  leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): void {
     void this._swarmStreams.get({ topic, peerId })?.close();
     this._swarmStreams.delete({ topic, peerId });
     this._joinedTopics.delete({ topic, peerId });
   }
 
-  subscribeMessages(peerId: PublicKey) {
+  subscribeMessages(peerId: PublicKey): void {
     this._subscribedMessages.add({ peerId });
   }
 
-  unsubscribeMessages(peerId: PublicKey) {
+  unsubscribeMessages(peerId: PublicKey): void {
     log('unsubscribing from messages', { peerId });
     this._subscribedMessages.delete({ peerId });
     void this.messageStreams.get(peerId)?.close();
     this.messageStreams.delete(peerId);
   }
 
-  public async reconcile(ctx: Context, client: SignalRPCClient) {
+  public async reconcile(ctx: Context, client: SignalRPCClient): Promise<void> {
     await this._reconcileSwarmSubscriptions(ctx, client);
     await this._reconcileMessageSubscriptions(ctx, client);
     this.reconciled.emit();

@@ -2,9 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, TypedObject } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
-// TODO(burdon): Change to S.Literal (and discriminated union).
+import { TypedObject } from '@dxos/echo-schema';
+
+// TODO(burdon): Change to Schema.Literal (and discriminated union).
 export enum TemplateInputType {
   VALUE = 0,
   PASS_THROUGH = 1,
@@ -16,41 +18,41 @@ export enum TemplateInputType {
   SCHEMA = 7,
 }
 
-export const TemplateInputSchema = S.mutable(
-  S.Struct({
-    name: S.String,
-    type: S.optional(S.Enums(TemplateInputType)),
-    value: S.optional(S.String),
+export const TemplateInputSchema = Schema.mutable(
+  Schema.Struct({
+    name: Schema.String,
+    type: Schema.optional(Schema.Enums(TemplateInputType)),
+    value: Schema.optional(Schema.String),
   }),
 );
 
-export type TemplateInput = S.Schema.Type<typeof TemplateInputSchema>;
+export type TemplateInput = Schema.Schema.Type<typeof TemplateInputSchema>;
 
 export const TemplateKinds = ['always', 'schema-matching', 'automatically', 'manual'] as const;
 export type TemplateKind = (typeof TemplateKinds)[number];
 
-export const TemplateKindSchema = S.Union(
-  S.Struct({
-    include: S.Literal('always'),
+export const TemplateKindSchema = Schema.Union(
+  Schema.Struct({
+    include: Schema.Literal('always'),
   }),
-  S.Struct({
-    include: S.Literal('schema-matching'),
-    typename: S.String,
+  Schema.Struct({
+    include: Schema.Literal('schema-matching'),
+    typename: Schema.String,
   }),
-  S.Struct({
-    include: S.Literal('automatically'),
-    description: S.String,
+  Schema.Struct({
+    include: Schema.Literal('automatically'),
+    description: Schema.String,
   }),
-  S.Struct({
-    include: S.Literal('manual'),
+  Schema.Struct({
+    include: Schema.Literal('manual'),
   }),
 );
 
-export type TemplateKindType = S.Schema.Type<typeof TemplateKindSchema>;
+export type TemplateKindType = Schema.Schema.Type<typeof TemplateKindSchema>;
 export class TemplateType extends TypedObject({ typename: 'dxos.org/type/Template', version: '0.1.0' })({
-  name: S.optional(S.String),
-  kind: S.mutable(TemplateKindSchema),
-  source: S.String,
-  inputs: S.optional(S.mutable(S.Array(TemplateInputSchema))),
-  command: S.optional(S.String),
+  name: Schema.optional(Schema.String),
+  kind: Schema.mutable(TemplateKindSchema),
+  source: Schema.String,
+  inputs: Schema.optional(Schema.mutable(Schema.Array(TemplateInputSchema))),
+  command: Schema.optional(Schema.String),
 }) {}

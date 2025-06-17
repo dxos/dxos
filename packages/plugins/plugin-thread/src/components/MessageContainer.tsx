@@ -9,7 +9,7 @@ import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'rea
 import { Surface } from '@dxos/app-framework';
 import { RefArray } from '@dxos/live-object';
 import { PublicKey } from '@dxos/react-client';
-import { type ReactiveEchoObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
+import { type AnyLiveObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { Button, ButtonGroup, Tooltip, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
@@ -21,7 +21,7 @@ import {
   mx,
 } from '@dxos/react-ui-theme';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
-import { type TextContentBlock, type MessageType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { command } from './command-extension';
 import { useOnEditAnalytics } from '../hooks';
@@ -31,17 +31,14 @@ import { getMessageMetadata } from '../util';
 // TODO(thure): #8149
 const messageControlClassNames = ['!p-1 !min-bs-0 transition-opacity', hoverableControlItem];
 
-export const MessageContainer = ({
-  message,
-  members,
-  editable = false,
-  onDelete,
-}: {
-  message: MessageType;
+export type MessageContainerProps = {
+  message: DataType.Message;
   members: SpaceMember[];
   editable?: boolean;
   onDelete?: (id: string) => void;
-}) => {
+};
+
+export const MessageContainer = ({ message, members, editable = false, onDelete }: MessageContainerProps) => {
   const senderIdentity = members.find(
     (member) =>
       (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
@@ -64,46 +61,30 @@ export const MessageContainer = ({
       <MessageHeading authorName={messageMetadata.authorName} timestamp={messageMetadata.timestamp}>
         <ButtonGroup classNames='mie-1'>
           {userIsAuthor && editable && (
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <Button
-                  variant='ghost'
-                  data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
-                  classNames={messageControlClassNames}
-                  onClick={() => setEditing((editing) => !editing)}
-                >
-                  <span className='sr-only'>{editLabel}</span>
-                  {editing ? <Check className={getSize(4)} /> : <PencilSimple className={getSize(4)} />}
-                </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content>
-                  {editLabel}
-                  <Tooltip.Arrow />
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
+            <Tooltip.Trigger asChild content={editLabel}>
+              <Button
+                variant='ghost'
+                data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
+                classNames={messageControlClassNames}
+                onClick={() => setEditing((editing) => !editing)}
+              >
+                <span className='sr-only'>{editLabel}</span>
+                {editing ? <Check className={getSize(4)} /> : <PencilSimple className={getSize(4)} />}
+              </Button>
+            </Tooltip.Trigger>
           )}
           {onDelete && (
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <Button
-                  variant='ghost'
-                  data-testid='thread.message.delete'
-                  classNames={messageControlClassNames}
-                  onClick={() => handleDelete()}
-                >
-                  <span className='sr-only'>{deleteLabel}</span>
-                  <X className={getSize(4)} />
-                </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content>
-                  {deleteLabel}
-                  <Tooltip.Arrow />
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
+            <Tooltip.Trigger asChild content={deleteLabel}>
+              <Button
+                variant='ghost'
+                data-testid='thread.message.delete'
+                classNames={messageControlClassNames}
+                onClick={() => handleDelete()}
+              >
+                <span className='sr-only'>{deleteLabel}</span>
+                <X className={getSize(4)} />
+              </Button>
+            </Tooltip.Trigger>
           )}
         </ButtonGroup>
       </MessageHeading>
@@ -124,7 +105,7 @@ const TextboxBlock = ({
   isAuthor,
   editing,
 }: {
-  block: TextContentBlock;
+  block: DataType.MessageBlock.Text;
   editing?: boolean;
   isAuthor?: boolean;
   identity?: Identity;
@@ -166,7 +147,7 @@ const TextboxBlock = ({
   return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
 };
 
-const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: ReactiveEchoObject<any> }>(
+const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: AnyLiveObject<any> }>(
   ({ subject }, forwardedRef) => {
     let title = subject.name ?? subject.title ?? subject.type ?? 'Object';
     if (typeof title !== 'string') {

@@ -8,33 +8,36 @@ import { type Client } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import type { PublicKey, SpaceId } from '@dxos/keys';
+import type { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 
 export type UploadWorkerArgs = {
   client: Client;
-  spaceId: SpaceId;
   source: string;
   version: string;
   name?: string;
   functionId?: string;
+  ownerPublicKey: PublicKey;
 };
 
 export const uploadWorkerFunction = async ({
   client,
-  spaceId,
   version,
   source,
   name,
   functionId,
+  ownerPublicKey,
 }: UploadWorkerArgs): Promise<UploadFunctionResponseBody> => {
   const edgeUrl = client.config.values.runtime?.services?.edge?.url;
   invariant(edgeUrl, 'Edge is not configured.');
   const edgeClient = new EdgeHttpClient(edgeUrl);
   const edgeIdentity = createEdgeIdentity(client);
   edgeClient.setIdentity(edgeIdentity);
-  const response = await edgeClient.uploadFunction({ spaceId, functionId }, { name, version, script: source });
+  const response = await edgeClient.uploadFunction(
+    { functionId },
+    { name, version, script: source, ownerPublicKey: ownerPublicKey.toHex() },
+  );
 
   // TODO(burdon): Edge service log.
   log.info('Uploaded', {

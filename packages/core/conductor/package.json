@@ -1,6 +1,6 @@
 {
   "name": "@dxos/conductor",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Compute graph implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,6 +33,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/artifact": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
@@ -50,8 +51,8 @@
     "@dxos/react-ui-kanban": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "0.75.1",
-    "effect": "3.13.3",
+    "@effect/platform": "0.80.12",
+    "effect": "3.14.21",
     "jsonpath-plus": "10.2.0",
     "ollama": "^0.5.11"
   },

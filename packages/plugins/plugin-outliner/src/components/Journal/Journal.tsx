@@ -3,7 +3,7 @@
 //
 
 import { format } from 'date-fns/format';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { makeRef, RefArray } from '@dxos/live-object';
 import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
@@ -11,23 +11,23 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { OUTLINER_PLUGIN } from '../../meta';
 import {
-  type JournalType,
   createJournalEntry,
-  type JournalEntryType,
   getJournalEntries,
   getDateString,
   parseDateString,
+  type JournalType,
+  type JournalEntryType,
 } from '../../types';
-import { Outliner, type OutlinerRootProps } from '../Outliner';
+import { Outliner, type OutlinerController, type OutlinerProps } from '../Outliner';
 
-type JournalRootProps = ThemedClassName<
-  {
-    journal?: JournalType;
-  } & Pick<OutlinerRootProps, 'onCreate' | 'onDelete' | 'onAction'>
->;
+// TODO(burdon): Only show one selected line entry.
 
-// TODO(burdon): Convert into single grid.
-const JournalRoot = ({ journal, classNames, ...props }: JournalRootProps) => {
+type JournalProps = ThemedClassName<{
+  journal: JournalType;
+}>;
+
+// TODO(burdon): Virtualize.
+export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
   const date = new Date();
 
@@ -53,7 +53,7 @@ const JournalRoot = ({ journal, classNames, ...props }: JournalRootProps) => {
   }, [journal, date]);
 
   return (
-    <div className={mx('flex flex-col overflow-y-auto divide-y divide-separator', classNames)}>
+    <div className={mx('flex flex-col w-full overflow-y-auto', classNames)}>
       {showAddEntry && (
         <div className='p-2'>
           <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
@@ -61,8 +61,8 @@ const JournalRoot = ({ journal, classNames, ...props }: JournalRootProps) => {
       )}
       {RefArray.targets(journal?.entries ?? [])
         .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0))
-        .map((entry) => (
-          <JournalEntry key={entry.id} entry={entry} classNames='pbs-4 pbe-4' {...props} />
+        .map((entry, i) => (
+          <JournalEntry key={entry.id} entry={entry} classNames='p-2' {...props} autoFocus={i === 0} />
         ))}
     </div>
   );
@@ -71,30 +71,43 @@ const JournalRoot = ({ journal, classNames, ...props }: JournalRootProps) => {
 type JournalEntryProps = ThemedClassName<
   {
     entry: JournalEntryType;
-  } & Pick<OutlinerRootProps, 'onCreate' | 'onDelete' | 'onAction'>
+  } & Pick<OutlinerProps, 'autoFocus'>
 >;
 
 const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
-  if (!entry.tree.target) {
+  const { t } = useTranslation(OUTLINER_PLUGIN);
+  const date = parseDateString(entry.date);
+  const isToday = getDateString() === entry.date;
+  const outlinerRef = useRef<OutlinerController>(null);
+
+  const handleFocus = useCallback(() => {
+    outlinerRef.current?.focus();
+  }, []);
+
+  if (!entry.content.target) {
     return null;
   }
 
-  const date = parseDateString(entry.date);
-  const isToday = getDateString() === entry.date;
   return (
     <div className={mx('flex flex-col', classNames)}>
-      <div className='pis-2'>
-        <span className={mx('text-lg', isToday && 'text-primary-500')}>{format(date, 'MMM d, yyyy')}</span>
-        <span className='text-sm text-subdued pis-2'>{format(date, 'EEEE')}</span>
+      <div className='flex items-center gap-2 bg-transparent'>
+        <IconButton
+          label={format(date, 'MMM d, yyyy')}
+          icon={isToday ? 'ph--calendar-dot--regular' : 'ph--calendar-blank--regular'}
+          onClick={handleFocus}
+        />
+        <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>
+        {isToday && <div className='text-xs'>{t('today label')}</div>}
       </div>
-      <Outliner.Root tree={entry.tree.target} classNames='pbs-2 pbe-2' {...props} />
+      <Outliner
+        ref={outlinerRef}
+        id={entry.id}
+        text={entry.content.target}
+        classNames='pbs-2 pbe-2'
+        scrollable={false}
+        showSelected={false}
+        {...props}
+      />
     </div>
   );
 };
-
-export const Journal = {
-  Root: JournalRoot,
-  Entry: JournalEntry,
-};
-
-export type { JournalRootProps, JournalEntryProps };

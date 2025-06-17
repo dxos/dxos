@@ -342,6 +342,7 @@ export const Input = {
 export type {
   InputVariant,
   InputRootProps,
+  InputSharedProps,
   PinInputProps,
   TextInputProps,
   TextAreaProps,

@@ -1,6 +1,6 @@
 @layer dx-components {
   .dx-dialog__overlay {
-    @apply fixed z-50 inset-inline-0 block-start-0 bs-dvh bg-scrim overflow-auto grid place-items-center pbs-[env(safe-area-inset-top)];
+    @apply fixed z-50 inset-inline-0 block-start-0 bs-dvh bg-scrimSurface overflow-auto grid place-items-center pbs-[env(safe-area-inset-top)];
     @media (min-width: theme('screens.sm')) {
       @apply p-[calc(env(safe-area-inset-top)+.6rem)];
     }
@@ -24,11 +24,11 @@
   }
   .dx-dialog__content {
     /* TODO(thure): `flex` should not be default. */
-    @apply flex flex-col is-dvw max-is-full p-4 animate-slideUpAndFade shadow-lg bg-modalSurface backdrop-blur;
+    @apply flex flex-col is-dvw max-is-full p-4 animate-slideUpAndFade shadow-md bg-modalSurface backdrop-blur;
     --surface-bg: var(--dx-modalSurface);
     will-change: opacity, transform;
     @media (min-width: theme('screens.sm')) {
-      @apply is-[95vw] border rounded-lg border-separator;
+      @apply is-[95vw] border rounded-md border-separator;
     }
     @media (min-width: theme('screens.md')) {
       @apply max-is-[24rem];

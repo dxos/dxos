@@ -6,21 +6,22 @@ import React, {
   useCallback,
   useMemo,
   useRef,
+  useState,
   type FocusEvent,
   type KeyboardEvent,
   type WheelEvent,
   type MouseEvent,
-  useState,
 } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { rangeToA1Notation, type CellRange } from '@dxos/compute';
+import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   closestCell,
-  defaultSizeRow,
   editorKeys,
+  parseCellIndex,
   Grid,
   GridCellEditor,
   type DxGridElement,
@@ -29,7 +30,6 @@ import {
   type EditorKeyHandler,
   type EditorBlurHandler,
   type GridContentProps,
-  parseCellIndex,
 } from '@dxos/react-ui-grid';
 
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
@@ -58,18 +58,21 @@ const frozen = {
   frozenRowsStart: 1,
 };
 
-const sheetRowDefault = {
-  frozenRowsStart: { size: defaultSizeRow, readonly: true },
-  grid: { size: defaultSizeRow, resizeable: true },
+const sheetColDefault = {
+  frozenColsStart: { size: 48, readonly: true },
+  grid: { size: defaultColSize, resizeable: true },
 };
-const sheetColDefault = { frozenColsStart: { size: 48, readonly: true }, grid: { size: 180, resizeable: true } };
+const sheetRowDefault = {
+  frozenRowsStart: { size: defaultRowSize, readonly: true },
+  grid: { size: defaultRowSize, resizeable: true },
+};
 
 export const GridSheet = () => {
   const { t } = useTranslation(SHEET_PLUGIN);
   const { id, model, editing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs, ignoreAttention } =
     useSheetContext();
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
-  // a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
+  //  a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [extraplanarFocus, setExtraplanarFocus] = useState<DxGridPosition | null>(null);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -152,6 +155,7 @@ export const GridSheet = () => {
     },
     [editing],
   );
+
   const handleWheel = useCallback(
     (event: WheelEvent) => {
       if (!ignoreAttention && !hasAttention) {
@@ -302,7 +306,8 @@ export const GridSheet = () => {
   useSelectThreadOnCellFocus();
 
   return (
-    <div role='none' className='relative min-bs-0'>
+    // TODO(thure): Why are Table’s and Sheet’s editor boxes off by 1px?
+    <div role='none' className='relative min-bs-0 [&_.cm-editor]:!border-lb [&_.cm-editor]:!border-transparent '>
       <GridCellEditor getCellContent={getCellContent} extension={extension} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}
@@ -310,18 +315,19 @@ export const GridSheet = () => {
         limitRows={DEFAULT_ROWS}
         columns={columns}
         rows={rows}
+        // TODO(burdon): `col` vs. `column`?
+        columnDefault={sheetColDefault}
+        rowDefault={sheetRowDefault}
+        frozen={frozen}
         onAxisResize={handleAxisResize}
         onSelect={handleSelect}
-        rowDefault={sheetRowDefault}
-        columnDefault={sheetColDefault}
-        frozen={frozen}
         onFocus={handleFocus}
         onWheelCapture={handleWheel}
         onKeyDown={handleKeyDown}
         onContextMenu={handleContextMenu}
         onClick={handleClick}
         overscroll='trap'
-        className='[--dx-grid-base:var(--surface-bg)] [&_.dx-grid]:border-bs [&_.dx-grid]:absolute [&_.dx-grid]:inset-0 [&_.dx-grid]:border-separator'
+        className='[--dx-grid-base:var(--baseSurface)] [&_.dx-grid]:border-bs [&_.dx-grid]:border-be [&_.dx-grid]:absolute [&_.dx-grid]:inset-0 [&_.dx-grid]:border-separator'
         activeRefs={activeRefs}
         ref={setDxGrid}
       />

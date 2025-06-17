@@ -18,7 +18,8 @@
         ],
         "platforms": [
           "browser"
-        ]
+        ],
+        "preactSignalTracking": true
       }
     },
     "lint": {},

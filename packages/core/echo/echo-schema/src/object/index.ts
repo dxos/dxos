@@ -4,11 +4,13 @@
 
 export * from './common';
 export * from './create';
+export * from './entity';
 export * from './expando';
+export * from './ids';
+export * from './json-serializer';
 export * from './meta';
-export * from './object-id';
 export * from './relation';
 export * from './typed-object';
 export * from './typed-relation';
 export * from './typename';
-export { serializeStatic } from './json-serializer';
+export * from './deleted';

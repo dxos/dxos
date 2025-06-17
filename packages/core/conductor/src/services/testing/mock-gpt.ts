@@ -5,7 +5,7 @@
 import type { Context } from 'effect';
 import { Effect, Stream } from 'effect';
 
-import { type GenerationStreamEvent } from '@dxos/assistant';
+import { type GenerationStreamEvent } from '@dxos/ai';
 import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { getDebugName } from '@dxos/util';

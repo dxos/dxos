@@ -59,6 +59,7 @@ export type ServiceContextRuntimeParams = Pick<
   DataSpaceManagerRuntimeParams & {
     invitationConnectionDefaultParams?: InvitationConnectionParams;
     disableP2pReplication?: boolean;
+    enableVectorIndexing?: boolean;
   };
 /**
  * Shared backend for all client services.
@@ -155,6 +156,9 @@ export class ServiceContext extends Resource {
       kv: this.level,
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
+      indexing: {
+        vector: this._runtimeParams?.enableVectorIndexing,
+      },
     });
 
     this._meshReplicator = new MeshEchoReplicator();
@@ -193,7 +197,7 @@ export class ServiceContext extends Resource {
   }
 
   @Trace.span()
-  protected override async _open(ctx: Context) {
+  protected override async _open(ctx: Context): Promise<void> {
     await this._checkStorageVersion();
 
     log('opening...');
@@ -231,7 +235,7 @@ export class ServiceContext extends Resource {
     log('opened');
   }
 
-  protected override async _close(ctx: Context) {
+  protected override async _close(ctx: Context): Promise<void> {
     log('closing...');
     if (this._deviceSpaceSync && this.identityManager.identity) {
       await this.identityManager.identity.space.spaceState.removeCredentialProcessor(this._deviceSpaceSync);
@@ -268,7 +272,7 @@ export class ServiceContext extends Resource {
     return factory(invitation);
   }
 
-  async broadcastProfileUpdate(profile: ProfileDocument | undefined) {
+  async broadcastProfileUpdate(profile: ProfileDocument | undefined): Promise<void> {
     if (!profile || !this.dataSpaceManager) {
       return;
     }
@@ -287,7 +291,7 @@ export class ServiceContext extends Resource {
     return identity;
   }
 
-  private async _checkStorageVersion() {
+  private async _checkStorageVersion(): Promise<void> {
     await this.metadataStore.load();
     if (this.metadataStore.version !== STORAGE_VERSION) {
       throw new InvalidStorageVersionError(STORAGE_VERSION, this.metadataStore.version);
@@ -297,7 +301,7 @@ export class ServiceContext extends Resource {
 
   // Called when identity is created.
   @Trace.span()
-  private async _initialize(ctx: Context) {
+  private async _initialize(ctx: Context): Promise<void> {
     log('initializing spaces...');
     const identity = this.identityManager.identity ?? failUndefined();
     const signingContext: SigningContext = {
@@ -375,7 +379,7 @@ export class ServiceContext extends Resource {
     await identity.space.spaceState.addCredentialProcessor(this._deviceSpaceSync);
   }
 
-  private async _setNetworkIdentity(params?: { deviceCredential: Credential }) {
+  private async _setNetworkIdentity(params?: { deviceCredential: Credential }): Promise<void> {
     using _ = await this._edgeIdentityUpdateMutex.acquire();
 
     let edgeIdentity: EdgeIdentity;

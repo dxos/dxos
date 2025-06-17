@@ -5,7 +5,8 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { FormatEnum } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { assertEchoSchema, FormatEnum, isMutable } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -26,7 +27,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     [kanban?.cardView?.target?.query?.typename],
   );
   const schema = useSchema(client, space, currentTypename);
-  const views = useQuery(space, Filter.schema(ViewType));
+  const views = useQuery(space, Filter.type(ViewType));
 
   const handleUpdateTypename = useCallback(
     (newTypename: string) => {
@@ -36,7 +37,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
         view.query.typename = newTypename;
       }
 
-      schema.mutable.updateTypename(newTypename);
+      assertEchoSchema(schema).updateTypename(newTypename);
     },
     [views, schema],
   );
@@ -50,9 +51,10 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   const projection = useMemo(() => {
     if (kanban?.cardView?.target && schema) {
-      return new ViewProjection(schema.jsonSchema, kanban.cardView.target);
+      const jsonSchema = Type.toJsonSchema(schema);
+      return new ViewProjection(jsonSchema, kanban.cardView.target);
     }
-  }, [kanban?.cardView?.target, schema, JSON.stringify(schema)]);
+  }, [kanban?.cardView?.target, schema, JSON.stringify(schema ? Type.toJsonSchema(schema) : {})]);
 
   const fieldProjections = projection?.getFieldProjections() || [];
   const selectFields = fieldProjections
@@ -78,13 +80,15 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   return (
     <>
-      <Form schema={KanbanSettingsSchema} values={initialValues} onSave={onSave} autoSave Custom={custom} />
+      <div role='none' className='p-2'>
+        <Form schema={KanbanSettingsSchema} values={initialValues} onSave={onSave} autoSave Custom={custom} />
+      </div>
       <ViewEditor
         registry={space.db.schemaRegistry}
         schema={schema}
         view={kanban.cardView.target}
-        onTypenameChanged={schema.readonly ? undefined : handleUpdateTypename}
-        onDelete={schema.readonly ? undefined : handleDelete}
+        onTypenameChanged={isMutable(schema) ? handleUpdateTypename : undefined}
+        onDelete={isMutable(schema) ? handleDelete : undefined}
       />
     </>
   );

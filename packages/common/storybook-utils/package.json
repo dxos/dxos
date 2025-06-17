@@ -1,6 +1,6 @@
 {
   "name": "@dxos/storybook-utils",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Utilities for DXOS UI Storybooks.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -11,7 +11,8 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -24,7 +25,11 @@
   ],
   "dependencies": {
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/lit-theme-editor": "workspace:*",
+    "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/theme-editor-addon": "workspace:*",
+    "@storybook/manager-api": "^8.3.6",
     "@storybook/preview-api": "^8.3.6",
     "lodash.defaultsdeep": "^4.6.1",
     "storybook-dark-mode": "^4.0.2"

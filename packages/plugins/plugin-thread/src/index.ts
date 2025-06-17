@@ -3,7 +3,7 @@
 //
 
 export { ThreadCapabilities } from './capabilities';
-export * from './events';
+export * from './calls';
 export * from './hooks';
 export * from './meta';
 

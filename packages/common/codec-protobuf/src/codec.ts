@@ -95,7 +95,7 @@ export class ProtoCodec<T = any> implements Codec<T> {
   /**
    * Dynamically add new definitions to this codec. Mutates the underlying schema.
    */
-  addJson(schema: any) {
+  addJson(schema: any): void {
     this._schema.addJson(schema);
   }
 

@@ -9,14 +9,13 @@ import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
-import { ComplexMap } from '@dxos/util';
 
-import { IndexConstructors } from './index-constructors';
-import { type IndexMetadataStore } from './index-metadata-store';
-import { type IndexStore } from './index-store';
-import { type FindResult, type IdToHeads, type Index, type IndexQuery, type ObjectSnapshot } from './types';
+import { IndexConstructors } from './indexes';
+import { IndexingEngine } from './indexing-engine';
+import { type IndexMetadataStore, type IndexStore } from './store';
+import { type FindResult, type IdToHeads, type IndexQuery, type ObjectSnapshot } from './types';
 
 const DEFAULT_INDEX_UPDATE_BATCH_SIZE = 100;
 
@@ -55,11 +54,6 @@ export type IndexerParams = {
 @trace.resource()
 export class Indexer extends Resource {
   private _indexConfig?: IndexConfig;
-  private readonly _indexes = new ComplexMap<IndexKind, Index>((kind) =>
-    kind.kind === IndexKind.Kind.FIELD_MATCH ? `${kind.kind}:${kind.field}` : kind.kind,
-  );
-
-  private readonly _newIndexes: Index[] = [];
 
   public readonly updated = new Event<void>();
 
@@ -67,8 +61,8 @@ export class Indexer extends Resource {
 
   private readonly _db: LevelDB;
   private readonly _metadataStore: IndexMetadataStore;
-  private readonly _indexStore: IndexStore;
-  private readonly _loadDocuments: (ids: IdToHeads) => AsyncGenerator<ObjectSnapshot[]>;
+
+  private readonly _engine: IndexingEngine;
 
   private readonly _indexUpdateBatchSize: number;
   private readonly _indexCooldownTime: number;
@@ -88,11 +82,17 @@ export class Indexer extends Resource {
     super();
     this._db = db;
     this._metadataStore = metadataStore;
-    this._indexStore = indexStore;
-    this._loadDocuments = loadDocuments;
     this._indexUpdateBatchSize = indexUpdateBatchSize;
     this._indexCooldownTime = indexCooldownTime;
     this._indexTimeBudget = indexTimeBudget;
+    this._engine = new IndexingEngine({
+      db,
+      metadataStore,
+      indexStore,
+      documentLoader: {
+        loadDocuments,
+      },
+    });
   }
 
   get initialized() {
@@ -100,18 +100,17 @@ export class Indexer extends Resource {
   }
 
   @synchronized
-  setConfig(config: IndexConfig) {
-    if (this._indexConfig) {
-      log.warn('Index config is already set');
-      return;
-    }
+  // TODO(mykola): Make it iterative (e.g. `initConfig(<index1>); initConfig(<index2>); ...`).
+  async setConfig(config: IndexConfig): Promise<void> {
     this._indexConfig = config;
     if (this._lifecycleState === LifecycleState.OPEN) {
-      for (const kind of this._indexes.keys()) {
+      log.warn('Setting index config after initialization, this is unstable', { config });
+      for (const kind of this._engine.indexKinds) {
         if (!config.indexes?.some((kind) => isEqual(kind, kind))) {
-          this._indexes.delete(kind);
+          this._engine.deleteIndex(kind);
         }
       }
+      await this._loadIndexes();
       this._run.schedule();
     }
   }
@@ -121,6 +120,8 @@ export class Indexer extends Resource {
     if (!this._indexConfig) {
       log.warn('Index config is not set');
     }
+
+    await this._engine.open(ctx);
 
     // Needs to be re-created because context changes.
     // TODO(dmaretskyi): Find a way to express this better for resources.
@@ -135,7 +136,7 @@ export class Indexer extends Resource {
           await sleepWithContext(this._ctx, cooldownMs);
         }
 
-        if (this._newIndexes.length > 0) {
+        if (this._engine.newIndexCount > 0) {
           await this._promoteNewIndexes();
         }
         await this._indexUpdatedObjects();
@@ -155,11 +156,8 @@ export class Indexer extends Resource {
 
   protected override async _close(ctx: Context): Promise<void> {
     await this._run.join();
-    for (const index of this._indexes.values()) {
-      await index.close();
-    }
-    this._newIndexes.length = 0;
-    this._indexes.clear();
+
+    await this._engine.close(ctx);
   }
 
   protected override async _catch(err: Error): Promise<void> {
@@ -167,17 +165,46 @@ export class Indexer extends Resource {
     log.catch(err);
   }
 
+  // TODO(dmaretskyi): Allow consumers to get specific index instances and query them directly.
   @synchronized
   async execQuery(filter: IndexQuery): Promise<FindResult[]> {
     if (this._lifecycleState !== LifecycleState.OPEN || this._indexConfig?.enabled !== true) {
       throw new Error('Indexer is not initialized or not enabled');
     }
-    const arraysOfIds = await Promise.all(Array.from(this._indexes.values()).map((index) => index.find(filter)));
-    return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
+
+    if (filter.graph) {
+      const graphIndex = this._engine.getIndex({ kind: IndexKind.Kind.GRAPH });
+      if (!graphIndex) {
+        // TODO(dmaretskyi): This shouldn't be the default?
+        return [];
+      }
+      return graphIndex.find(filter);
+    } else if (filter.text?.kind === 'vector') {
+      const vectorIndex = this._engine.getIndex({ kind: IndexKind.Kind.VECTOR });
+      if (!vectorIndex) {
+        // TODO(dmaretskyi): This shouldn't be the default?
+        return [];
+      }
+      return vectorIndex.find(filter);
+    } else if (filter.text?.kind === 'text') {
+      const textIndex = this._engine.getIndex({ kind: IndexKind.Kind.FULL_TEXT });
+      if (!textIndex) {
+        // TODO(dmaretskyi): This shouldn't be the default?
+        return [];
+      }
+      return textIndex.find(filter);
+    } else {
+      const typenameIndex = this._engine.getIndex({ kind: IndexKind.Kind.SCHEMA_MATCH });
+      if (!typenameIndex) {
+        // TODO(dmaretskyi): This shouldn't be the default?
+        return [];
+      }
+      return typenameIndex.find(filter);
+    }
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async reindex(idToHeads: IdToHeads) {
+  async reindex(idToHeads: IdToHeads): Promise<void> {
     const batch = this._db.batch();
     this._metadataStore.markDirty(idToHeads, batch);
     this._metadataStore.dropFromClean(Array.from(idToHeads.keys()), batch);
@@ -188,141 +215,61 @@ export class Indexer extends Resource {
   /**
    * Perform any pending index updates.
    */
-  async updateIndexes() {
+  async updateIndexes(): Promise<void> {
     await this._run.runBlocking();
   }
 
-  private async _loadIndexes() {
-    const kinds = await this._indexStore.loadIndexKindsFromDisk();
+  private async _loadIndexes(): Promise<void> {
+    const kinds = await this._engine.loadIndexKindsFromDisk();
     for (const [identifier, kind] of kinds.entries()) {
       if (!this._indexConfig || this._indexConfig.indexes?.some((configKind) => isEqual(configKind, kind))) {
-        await this._indexStore
-          .load(identifier)
-          .then((index) => this._indexes.set(index.kind, index))
-          .catch((err) => {
-            log.warn('Failed to load index', { err, identifier });
-          });
+        try {
+          await this._engine.loadIndexFromDisk(identifier);
+        } catch (err) {
+          log.warn('Failed to load index', { err, identifier });
+        }
       } else {
         // Note: We remove indexes that are not used
         //       to not store indexes that are getting out of sync with database.
-        await this._indexStore.remove(identifier);
+        await this._engine.removeIndexFromDisk(identifier);
       }
     }
 
     // Create indexes that are not loaded from disk.
     for (const kind of this._indexConfig?.indexes || []) {
-      if (!this._indexes.has(kind)) {
+      if (!this._engine.getIndex(kind)) {
         const IndexConstructor = IndexConstructors[kind.kind];
         invariant(IndexConstructor, `Index kind ${kind.kind} is not supported`);
         // Note: New indexes are not saved to disk until they are promoted.
         //       New Indexes will be promoted to `_indexes` map on indexing job run.
-        this._newIndexes.push(new IndexConstructor(kind));
+        await this._engine.addNewIndex(new IndexConstructor(kind));
       }
     }
-    await Promise.all(this._newIndexes.map((index) => index.open()));
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _promoteNewIndexes() {
-    const documentsToIndex = await this._metadataStore.getAllIndexedDocuments();
-    for await (const documents of this._loadDocuments(documentsToIndex)) {
-      if (this._ctx.disposed) {
-        return;
-      }
-      await this._updateIndexes(this._newIndexes, documents);
-    }
-    this._newIndexes.forEach((index) => this._indexes.set(index.kind, index));
-    this._newIndexes.length = 0; // Clear new indexes.
-    await this._saveIndexes();
+  private async _promoteNewIndexes(): Promise<void> {
+    await this._engine.promoteNewIndexes();
     this.updated.emit();
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _indexUpdatedObjects() {
+  private async _indexUpdatedObjects(): Promise<void> {
     if (this._ctx.disposed) {
       return;
     }
-    const idToHeads = await this._metadataStore.getDirtyDocuments();
 
-    log('dirty objects to index', { count: idToHeads.size });
-    if (idToHeads.size === 0 || this._ctx.disposed) {
-      return;
+    const { completed, updated } = await this._engine.indexUpdatedObjects({
+      indexTimeBudget: this._indexTimeBudget,
+      indexUpdateBatchSize: this._indexUpdateBatchSize,
+    });
+
+    if (!completed) {
+      this._run.schedule();
     }
 
-    const startTime = Date.now();
-    const documentsUpdated: ObjectSnapshot[] = [];
-    const saveIndexChanges = async () => {
-      log('Saving index changes', { count: documentsUpdated.length, timeSinceStart: Date.now() - startTime });
-      await this._saveIndexes();
-      const batch = this._db.batch();
-      this._metadataStore.markClean(new Map(documentsUpdated.map((document) => [document.id, document.heads])), batch);
-      await batch.write();
-    };
-
-    const updates: boolean[] = [];
-    for await (const documents of this._loadDocuments(idToHeads)) {
-      if (this._ctx.disposed) {
-        return;
-      }
-      updates.push(...(await this._updateIndexes(Array.from(this._indexes.values()), documents)));
-      documentsUpdated.push(...documents);
-      if (documentsUpdated.length >= this._indexUpdateBatchSize) {
-        await saveIndexChanges();
-        documentsUpdated.length = 0;
-      }
-      if (Date.now() - startTime > this._indexTimeBudget) {
-        if (documentsUpdated.length > 0) {
-          await saveIndexChanges();
-        }
-        log('Indexing time budget exceeded', { time: Date.now() - startTime });
-        this._run.schedule();
-        break;
-      }
-    }
-    await saveIndexChanges();
-    if (updates.some(Boolean)) {
+    if (updated) {
       this.updated.emit();
-    }
-
-    log('Indexing finished', { time: Date.now() - startTime });
-  }
-
-  @trace.span({ showInBrowserTimeline: true })
-  private async _updateIndexes(indexes: Index[], documents: ObjectSnapshot[]): Promise<boolean[]> {
-    const updates: boolean[] = [];
-    for (const index of indexes) {
-      if (this._ctx.disposed) {
-        return updates;
-      }
-      switch (index.kind.kind) {
-        case IndexKind.Kind.FIELD_MATCH:
-          invariant(index.kind.field, 'Field match index kind should have a field');
-          updates.push(
-            ...(await updateIndexWithObjects(
-              index,
-              documents.filter((document) => index.kind.field! in document.object),
-            )),
-          );
-          break;
-        case IndexKind.Kind.SCHEMA_MATCH:
-          updates.push(...(await updateIndexWithObjects(index, documents)));
-          break;
-      }
-    }
-    return updates;
-  }
-
-  @trace.span({ showInBrowserTimeline: true })
-  @synchronized
-  private async _saveIndexes() {
-    for (const index of this._indexes.values()) {
-      if (this._ctx.disposed) {
-        return;
-      }
-      await this._indexStore.save(index);
     }
   }
 }
-
-const updateIndexWithObjects = async (index: Index, snapshots: ObjectSnapshot[]) =>
-  Promise.all(snapshots.map((snapshot) => index.update(snapshot.id, snapshot.object)));

@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { useCallback, useEffect, useState } from 'react';
 
 import type { ComputeNode, ComputeMeta, ComputeEvent } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import { useComputeContext } from './compute-context';
@@ -67,8 +67,8 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
   return {
     node: controller.getComputeNode(shape.node!),
     meta: meta ?? {
-      input: S.Struct({}),
-      output: S.Struct({}),
+      input: Schema.Struct({}),
+      output: Schema.Struct({}),
     },
     runtime: {
       inputs: controller.getInputs(shape.node!),

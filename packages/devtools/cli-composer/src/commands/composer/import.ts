@@ -5,9 +5,8 @@
 import { Args } from '@oclif/core';
 
 import { FLAG_SPACE_KEYS } from '@dxos/cli-base';
-import { Filter, type Space } from '@dxos/client/echo';
+import { Filter, type Space, compareForeignKeys } from '@dxos/client/echo';
 import { getTypename } from '@dxos/echo-schema';
-import { compareForeignKeys } from '@dxos/live-object';
 import { diff } from '@dxos/util';
 
 import { BaseCommand } from '../../base.js';

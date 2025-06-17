@@ -3,13 +3,14 @@
 //
 
 import { type Command } from '@oclif/core';
+import { Schema } from 'effect';
 
 import { AbstractBaseCommand } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
-import { ECHO_ATTR_META, ECHO_ATTR_TYPE, getTypeAnnotation, type ObjectMeta, S } from '@dxos/echo-schema';
-import { FUNCTION_TYPES } from '@dxos/functions/types';
+import { ECHO_ATTR_META, ECHO_ATTR_TYPE, getTypeAnnotation, type ObjectMeta } from '@dxos/echo-schema';
+import { FUNCTION_TYPES } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { isNonNullable } from '@dxos/util';
 
 /**
@@ -17,22 +18,22 @@ import { isNonNullable } from '@dxos/util';
  */
 export abstract class BaseCommand<T extends typeof Command = any> extends AbstractBaseCommand<T> {
   // TODO(burdon): Move to BaseCommand.
-  protected _schemaMap?: Map<string, S.Schema.AnyNoContext>;
+  protected _schemaMap?: Map<string, Schema.Schema.AnyNoContext>;
 
   get schemaMap() {
     invariant(this._schemaMap, 'Schema map not initialized.');
     return this._schemaMap;
   }
 
-  protected override async onClientInit(client: Client) {
+  protected override async onClientInit(client: Client): Promise<void> {
     this._schemaMap = await this.addTypes(client);
   }
 
   /**
    * build typename
    */
-  protected async addTypes(client: Client) {
-    const schemaMap = new Map<string, S.Schema.AnyNoContext>();
+  protected async addTypes(client: Client): Promise<Map<string, Schema.Schema.AnyNoContext>> {
+    const schemaMap = new Map<string, Schema.Schema.AnyNoContext>();
     // TODO(burdon): Enable dynamic import? (e.g., from npm.)
     // const types = await import('@braneframe/types');
     if (this.flags.verbose) {
@@ -41,7 +42,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
 
     const schemata = [...FUNCTION_TYPES]
       .map((schema) => {
-        if (S.isSchema(schema)) {
+        if (Schema.isSchema(schema)) {
           const { typename } = getTypeAnnotation(schema as any) ?? {};
           if (typename) {
             return [typename, schema];
@@ -68,7 +69,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
   /**
    * Parse object.
    */
-  protected parseObject(schemaMap: Map<string, S.Schema.AnyNoContext>, data: any): any {
+  protected parseObject(schemaMap: Map<string, Schema.Schema.AnyNoContext>, data: any): any {
     if (Array.isArray(data)) {
       return data.map((item) => this.parseObject(schemaMap, item));
     } else if (typeof data === 'object') {
@@ -91,7 +92,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
         //   this.log(JSON.stringify({ object, meta }, undefined, 2));
         // }
 
-        return create(type, object, meta);
+        return live(type, object, meta);
       }
     }
 

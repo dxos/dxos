@@ -42,6 +42,7 @@ const initialBox = {
 
 type GridEditing = {
   index: DxEditRequest['cellIndex'];
+  cellElement: DxEditRequest['cellElement'];
   initialContent: DxEditRequest['initialContent'];
 } | null;
 
@@ -112,7 +113,6 @@ const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>
   const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
   const [dxGrid, setDxGridInternal] = useState<NaturalDxGrid | null>(null);
 
-  // TODO(burdon): Can we use useImperativeHandle here?
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
   // a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const setDxGrid = useCallback(
@@ -138,7 +138,7 @@ const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>
 
   const handleEdit = useCallback((event: DxEditRequest) => {
     setEditBox(event.cellBox);
-    setEditing({ index: event.cellIndex, initialContent: event.initialContent });
+    setEditing({ index: event.cellIndex, cellElement: event.cellElement, initialContent: event.initialContent });
   }, []);
 
   return <DxGrid {...props} gridId={id} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={setDxGrid} />;
@@ -146,12 +146,27 @@ const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>
 
 GridContent.displayName = GRID_CONTENT_NAME;
 
+//
+// Fragments
+//
+
+// NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
+// These are offset by 1px to avoid double borders in planks.
+const gridSeparatorInlineEnd =
+  '[&>.dx-grid]:relative [&>.dx-grid]:after:absolute [&>.dx-grid]:after:inset-block-0 [&>.dx-grid]:after:-inline-end-px [&>.dx-grid]:after:is-px [&>.dx-grid]:after:bg-separator';
+const gridSeparatorBlockEnd =
+  '[&>.dx-grid]:relative [&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-inline-0 [&>.dx-grid]:before:-block-end-px [&>.dx-grid]:before:bs-px [&>.dx-grid]:before:bg-separator';
+
+//
+// Exports
+//
+
 export const Grid = {
   Root: GridRoot,
   Content: GridContent,
 };
 
-export { GridRoot, GridContent, useGridContext, createGridScope };
+export { GridRoot, GridContent, useGridContext, createGridScope, gridSeparatorInlineEnd, gridSeparatorBlockEnd };
 
 export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
 

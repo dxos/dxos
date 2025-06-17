@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo-db';
-import { AST, Format, type BaseSchema, S, type JsonProp } from '@dxos/echo-schema';
+import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, inputTextLabel, mx } from '@dxos/react-ui-theme';
 import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
@@ -18,19 +19,19 @@ import { Form } from '../Form';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
 
-const ViewMetaSchema = S.Struct({
-  name: S.String.annotations({
-    [AST.TitleAnnotationId]: 'View',
+const ViewMetaSchema = Schema.Struct({
+  name: Schema.String.annotations({
+    title: 'View',
   }),
   typename: Format.URL.annotations({
-    [AST.TitleAnnotationId]: 'Typename',
+    title: 'Typename',
   }),
-}).pipe(S.mutable);
+}).pipe(Schema.mutable);
 
-type ViewMetaType = S.Schema.Type<typeof ViewMetaSchema>;
+type ViewMetaType = Schema.Schema.Type<typeof ViewMetaSchema>;
 
 export type ViewEditorProps = ThemedClassName<{
-  schema: BaseSchema;
+  schema: Schema.Schema.AnyNoContext;
   view: ViewType;
   registry?: SchemaRegistry;
   readonly?: boolean;
@@ -53,8 +54,13 @@ export const ViewEditor = ({
   onDelete,
 }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
-  const projection = useMemo(() => new ViewProjection(schema.jsonSchema, view), [schema, view]);
+  const projection = useMemo(() => {
+    // Use reactive and mutable version of json schema when schema is mutable.
+    const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
+    return new ViewProjection(jsonSchema, view);
+  }, [schema, view]);
   const [field, setField] = useState<FieldType>();
+  const immutable = readonly || !isMutable(schema);
 
   // TODO(burdon): Should be reactive.
   const viewValues = useMemo(() => {
@@ -66,37 +72,43 @@ export const ViewEditor = ({
     };
   }, [view]);
 
-  const handleSelect = useCallback((field: FieldType) => {
-    setField((f) => (f === field ? undefined : field));
-  }, []);
+  const handleSelect = useCallback(
+    (field: FieldType) => {
+      if (immutable) {
+        return;
+      }
+      setField((f) => (f === field ? undefined : field));
+    },
+    [immutable],
+  );
 
   // TODO(burdon): Check if mutable; variant of useCallback that return undefined if readonly?
 
   const handleAdd = useCallback(() => {
-    invariant(!schema.readonly);
+    invariant(!immutable);
     const field = projection.createFieldProjection();
     setField(field);
   }, [schema, view]);
 
   const handleUpdate = useCallback(
     ({ name, typename }: ViewMetaType) => {
-      invariant(!schema.readonly);
+      invariant(!immutable);
       requestAnimationFrame(() => {
         if (view.name !== name) {
           view.name = name;
         }
 
-        if (view.query.typename !== typename) {
+        if (view.query.typename !== typename && !immutable) {
           onTypenameChanged?.(typename);
         }
       });
     },
-    [schema, view, onTypenameChanged],
+    [schema, view, onTypenameChanged, immutable],
   );
 
   const handleDelete = useCallback(
     (fieldId: string) => {
-      invariant(!schema.readonly);
+      invariant(!immutable);
       if (fieldId === field?.id) {
         setField(undefined);
       }
@@ -108,7 +120,7 @@ export const ViewEditor = ({
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
-      invariant(!schema.readonly);
+      invariant(!immutable);
       // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
       const fields = [...view.fields];
       const [moved] = fields.splice(fromIndex, 1);
@@ -139,15 +151,28 @@ export const ViewEditor = ({
   );
 
   return (
-    <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
-      <Form<ViewMetaType>
-        autoSave
-        schema={ViewMetaSchema}
-        values={viewValues}
-        onSave={schema.readonly ? undefined : handleUpdate}
-      />
+    <div role='none' className={mx('overflow-y-auto', classNames)}>
+      <div role='none' className='p-2'>
+        <div role='none' className='mbe-2'>
+          {immutable && (
+            <Message.Root valence='neutral' className='rounded'>
+              <Message.Title>
+                <Icon icon='ph--info--regular' size={5} classNames='inline' /> {t('system schema title')}
+              </Message.Title>
+              <Message.Body>{t('system schema description')}</Message.Body>
+            </Message.Root>
+          )}
+        </div>
+        <Form<ViewMetaType>
+          autoSave
+          schema={ViewMetaSchema}
+          values={viewValues}
+          onSave={handleUpdate}
+          classNames='min-bs-0 overflow-y-auto'
+        />
+      </div>
 
-      <div>
+      <div role='none' className='min-bs-0 overflow-y-auto'>
         {/* TODO(burdon): Clean up common form ux. */}
         <div role='none' className='p-2'>
           <label className={mx(inputTextLabel)}>{t('fields label')}</label>
@@ -155,9 +180,9 @@ export const ViewEditor = ({
 
         <List.Root<FieldType>
           items={view.fields}
-          isItem={S.is(FieldSchema)}
+          isItem={Schema.is(FieldSchema)}
           getId={(field) => field.id}
-          onMove={schema.readonly ? undefined : handleMove}
+          onMove={immutable ? undefined : handleMove}
         >
           {({ items: fields }) => (
             <>
@@ -170,7 +195,11 @@ export const ViewEditor = ({
 
               <div role='list' className='flex flex-col w-full'>
                 {fields?.map((field) => (
-                  <List.Item<FieldType> key={field.id} item={field} classNames={mx(grid, ghostHover, 'cursor-pointer')}>
+                  <List.Item<FieldType>
+                    key={field.id}
+                    item={field}
+                    classNames={mx(grid, ghostHover, !immutable && 'cursor-pointer')}
+                  >
                     <List.ItemDragHandle />
                     <List.ItemTitle onClick={() => handleSelect(field)}>{field.path}</List.ItemTitle>
                     <div className='flex items-center gap-2 -ml-4'>
@@ -179,7 +208,7 @@ export const ViewEditor = ({
                         disabled={view.fields.length <= 1}
                         onClick={() => handleHide(field.id)}
                       />
-                      {!schema.readonly && (
+                      {!immutable && (
                         <List.ItemDeleteButton
                           icon='ph--trash--regular'
                           disabled={view.fields.length <= 1}
@@ -211,7 +240,7 @@ export const ViewEditor = ({
                     <List.Item<string>
                       key={property}
                       item={property}
-                      classNames={mx(grid, ghostHover, 'cursor-pointer')}
+                      classNames={mx(grid, ghostHover, !immutable && 'cursor-pointer')}
                     >
                       <div />
                       <List.ItemTitle>{property}</List.ItemTitle>
@@ -237,13 +266,14 @@ export const ViewEditor = ({
       )}
 
       {!readonly && !field && (
-        <div className='flex p-2 justify-center'>
+        <div role='none' className='p-2'>
           <IconButton
             icon='ph--plus--regular'
             label={t('button add property')}
-            onClick={schema.readonly ? undefined : handleAdd}
+            onClick={immutable ? undefined : handleAdd}
             // TODO(burdon): Show field limit in ux (not tooltip).
             disabled={view.fields.length >= VIEW_FIELD_LIMIT}
+            classNames='flex is-full'
           />
         </div>
       )}

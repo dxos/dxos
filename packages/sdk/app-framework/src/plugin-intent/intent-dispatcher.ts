@@ -5,7 +5,7 @@
 import { Effect, Option, pipe, Ref } from 'effect';
 import { type Simplify } from 'effect/Types';
 
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { byPosition, type MaybePromise, type Position, type GuardedType } from '@dxos/util';
 
@@ -24,7 +24,7 @@ import {
   type Label,
 } from './intent';
 import { Events, Capabilities } from '../common';
-import { contributes, type PluginsContext } from '../core';
+import { contributes, type PluginContext } from '../core';
 
 const EXECUTION_LIMIT = 100;
 const HISTORY_LIMIT = 100;
@@ -91,9 +91,25 @@ export type IntentEffectDefinition<Input, Output> = (
  * Intent resolver to match intents to their effects.
  */
 export type IntentResolver<Tag extends string, Fields extends IntentParams, Data = IntentData<Fields>> = Readonly<{
+  /**
+   * The schema of the intent to be resolved.
+   */
   intent: IntentSchema<Tag, Fields>;
+
+  /**
+   * Hint to determine the order the resolvers are processed if multiple resolvers are defined for the same intent.
+   * Only one resolver will be used.
+   */
   position?: Position;
+
+  /**
+   * Optional filter to determine if the resolver should be used.
+   */
   filter?: (data: IntentData<Fields>) => data is Data;
+
+  /**
+   * The effect to be performed when the intent is resolved.
+   */
   resolve: IntentEffectDefinition<GuardedType<IntentResolver<Tag, Fields, Data>['filter']>, IntentResultData<Fields>>;
 }>;
 
@@ -168,14 +184,14 @@ export type IntentContext = {
  * @param params.executionLimit The maximum recursion depth of intent chains.
  */
 export const createDispatcher = (
-  getResolvers: (module?: string) => AnyIntentResolver[],
+  getResolvers: () => AnyIntentResolver[],
   { executionLimit = EXECUTION_LIMIT, historyLimit = HISTORY_LIMIT } = {},
 ): IntentContext => {
   const historyRef = Effect.runSync(Ref.make<AnyIntentResult[][]>([]));
 
   const handleIntent = (intent: AnyIntent) =>
     Effect.gen(function* () {
-      const candidates = getResolvers(intent.module)
+      const candidates = getResolvers()
         .filter((resolver) => resolver.intent._tag === intent.id)
         .filter((resolver) => !resolver.filter || resolver.filter(intent.data))
         .toSorted(byPosition);
@@ -286,8 +302,8 @@ export const createDispatcher = (
 const defaultEffect = () => Effect.fail(new Error('Intent runtime not ready'));
 const defaultPromise = () => Effect.runPromise(defaultEffect());
 
-export default (context: PluginsContext) => {
-  const state = create<IntentContext>({
+export default (context: PluginContext) => {
+  const state = live<IntentContext>({
     dispatch: defaultEffect,
     dispatchPromise: defaultPromise,
     undo: defaultEffect,
@@ -295,15 +311,11 @@ export default (context: PluginsContext) => {
   });
 
   // TODO(wittjosiah): Make getResolver callback async and allow resolvers to be requested on demand.
-  const { dispatch, dispatchPromise, undo, undoPromise } = createDispatcher((module) =>
-    context
-      .requestCapabilities(Capabilities.IntentResolver, (c, moduleId): c is AnyIntentResolver => {
-        return module ? moduleId === module : true;
-      })
-      .flat(),
+  const { dispatch, dispatchPromise, undo, undoPromise } = createDispatcher(() =>
+    context.getCapabilities(Capabilities.IntentResolver).flat(),
   );
 
-  const manager = context.requestCapability(Capabilities.PluginManager);
+  const manager = context.getCapability(Capabilities.PluginManager);
   state.dispatch = (intentChain, depth) => {
     return Effect.gen(function* () {
       yield* manager._activate(Events.SetupIntentResolver);

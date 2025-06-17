@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useCallback, useMemo } from 'react';
 
-import { S } from '@dxos/echo-schema';
-import { create } from '@dxos/react-client/echo';
+import { live } from '@dxos/react-client/echo';
 import { Popover } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { type GridScopedProps, useGridContext } from '@dxos/react-ui-grid';
@@ -20,14 +20,14 @@ export const CreateRefPanel = ({ model, modals, __gridScope }: GridScopedProps<C
   const space = model?.space;
   const state = modals.state.value;
 
-  const schema = useMemo<S.Schema<any> | undefined>(() => {
+  const schema = useMemo<Schema.Schema<any> | undefined>(() => {
     if (!space || state?.type !== 'createRefPanel') {
       return;
     }
 
     const [schema] = space.db.schemaRegistry.query({ typename: state.typename }).runSync();
     if (schema) {
-      const omit = S.omit<any, any, ['id']>('id');
+      const omit = Schema.omit<any, any, ['id']>('id');
       return omit(schema);
     }
   }, [space, state]);
@@ -40,7 +40,7 @@ export const CreateRefPanel = ({ model, modals, __gridScope }: GridScopedProps<C
 
       const [schema] = space.db.schemaRegistry.query({ typename: state.typename }).runSync();
       if (schema) {
-        const obj = space.db.add(create(schema, values));
+        const obj = space.db.add(live(schema, values));
         state.onCreate?.(obj);
       }
       void modals.close();

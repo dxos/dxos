@@ -2,12 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
+import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
-import { S } from '@dxos/echo-schema';
+import { defineArtifact } from '@dxos/artifact';
 import { type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
+import { MailboxType } from '../types';
 
 declare global {
   interface ToolContextExtensions {
@@ -27,43 +30,43 @@ export default () => {
       - When creating the schema for a travel itinerary you must include a geopoint property (i.e., as an array of [lng,lat]).
       - Suggest to view the itinerary on a map.
     `,
-    schema: S.Struct({}),
+    schema: MailboxType,
     tools: [
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'inspect',
         description: 'Retrieves events for the given calendar.',
         caption: 'Retrieving calendar events...',
-        schema: S.Struct({}),
+        schema: Schema.Struct({}),
         execute: async () => {
           // TODO(burdon): Mock data for demo.
           return ToolResult.Success({
             events: [
               {
-                date: '2025-03-16',
+                date: '2025-05-16',
                 location: 'New York',
               },
               {
-                date: '2025-03-17',
+                date: '2025-05-17',
                 title: 'Effect Conference',
                 location: 'Rome',
               },
               {
-                date: '2025-03-18',
+                date: '2025-05-18',
                 title: 'Effect conference',
                 location: 'Livorno, Tuscany',
               },
               {
-                date: '2025-03-21',
+                date: '2025-05-21',
                 title: 'Digital Identity Meetup',
                 location: 'Barcelona, Spain',
               },
               {
-                date: '2025-03-25',
+                date: '2025-05-25',
                 title: 'Home Visit',
                 location: 'Birmingham, UK',
               },
               {
-                date: '2025-03-28',
+                date: '2025-05-28',
                 title: 'Return home',
                 location: 'New York',
               },

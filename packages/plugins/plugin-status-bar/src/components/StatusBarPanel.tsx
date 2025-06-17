@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
+import { useConfig } from '@dxos/react-client';
 import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 
 import { StatusBar } from './StatusBar';
@@ -17,7 +18,8 @@ export const StatusBarActions = () => {
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
-      {/* TODO(zan): Configure this label? */}
+      <EnvironmentLabel />
+      <VersionNumber />
       <StatusBar.Button asChild>
         <a href='https://dxos.org/discord' target='_blank' rel='noopener noreferrer'>
           <Icon icon='ph--discord-logo--regular' size={4} />
@@ -30,7 +32,6 @@ export const StatusBarActions = () => {
           <StatusBar.Text classNames='hidden sm:block'>{t('github label')}</StatusBar.Text>
         </a>
       </StatusBar.Button>
-      <VersionNumber />
     </Popover.Root>
   );
 };
@@ -42,5 +43,33 @@ export const StatusBarPanel = () => {
       <span role='separator' className='grow' />
       <Surface role='status' />
     </>
+  );
+};
+
+const ENV_LABELS: Record<string, string> = {
+  'edge-dev': 'Dev',
+  'edge-main': 'Main',
+  'edge-labs': 'Labs',
+  'edge-production': 'Production',
+};
+
+const EnvironmentLabel = () => {
+  const config = useConfig();
+  const edgeUrl = config.values.runtime?.services?.edge?.url;
+  if (!edgeUrl) {
+    return null;
+  }
+  const part = new URL(edgeUrl).host.split('.')[0];
+  const edgeEnv = ENV_LABELS[part];
+  if (!edgeEnv) {
+    return null;
+  }
+
+  return (
+    <StatusBar.Item>
+      <StatusBar.Text classNames='text-xs text-subdued border border-separator rounded-full px-1'>
+        <span title={edgeEnv}>{edgeEnv[0]}</span>
+      </StatusBar.Text>
+    </StatusBar.Item>
   );
 };

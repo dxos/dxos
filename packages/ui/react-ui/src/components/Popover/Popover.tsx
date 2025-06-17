@@ -246,13 +246,13 @@ PopoverPortal.displayName = PORTAL_NAME;
 
 const CONTENT_NAME = 'PopoverContent';
 
-interface PopoverContentProps extends PopoverContentTypeProps {
+type PopoverContentProps = ThemedClassName<PopoverContentTypeProps> & {
   /**
    * Used to force mounting when more control is needed. Useful when
    * controlling animation with React animation libraries.
    */
-  forceMount?: true;
-}
+  forceMount?: boolean;
+};
 
 const PopoverContent = forwardRef<PopoverContentTypeElement, PopoverContentProps>(
   (props: ScopedProps<PopoverContentProps>, forwardedRef) => {
@@ -277,7 +277,8 @@ PopoverContent.displayName = CONTENT_NAME;
 /* ----------------------------------------------------------------------------------------------- */
 
 type PopoverContentTypeElement = PopoverContentImplElement;
-interface PopoverContentTypeProps extends Omit<PopoverContentImplProps, 'trapFocus' | 'disableOutsidePointerEvents'> {}
+export interface PopoverContentTypeProps
+  extends Omit<PopoverContentImplProps, 'trapFocus' | 'disableOutsidePointerEvents'> {}
 
 const PopoverContentModal = forwardRef<PopoverContentTypeElement, PopoverContentTypeProps>(
   (props: ScopedProps<PopoverContentTypeProps>, forwardedRef) => {
@@ -571,6 +572,8 @@ const PopoverViewport = forwardRef<HTMLDivElement, PopoverViewportProps>(
 
 const getState = (open: boolean) => (open ? 'open' : 'closed');
 
+type PopoverContentInteractOutsideEvent = Parameters<NonNullable<PopoverContentProps['onInteractOutside']>>[0];
+
 export const Popover = {
   Root: PopoverRoot,
   Anchor: PopoverAnchor,
@@ -595,4 +598,5 @@ export type {
   PopoverCloseProps,
   PopoverArrowProps,
   PopoverViewportProps,
+  PopoverContentInteractOutsideEvent,
 };

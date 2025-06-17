@@ -6,12 +6,12 @@ import { Octokit } from '@octokit/core';
 import React, { type ChangeEvent, useCallback, useEffect, useState } from 'react';
 
 import { createIntent, SettingsAction, useIntentDispatcher } from '@dxos/app-framework';
-import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions/types';
+import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Filter, getMeta, getSpace, Ref, useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Input, useControlledState, useTranslation } from '@dxos/react-ui';
-import { AccessTokenType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { SCRIPT_PLUGIN } from '../../meta';
 
@@ -48,7 +48,7 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const client = useClient();
   const space = getSpace(object);
-  const [fn] = useQuery(space, Filter.schema(FunctionType, { source: object }));
+  const [fn] = useQuery(space, Filter.type(FunctionType, { source: Ref.make(object) }));
 
   const functionPath = fn && getUserFunctionUrlInMetadata(getMeta(fn));
   const functionUrl =
@@ -112,7 +112,7 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(object);
-  const [githubToken] = useQuery(space, Filter.schema(AccessTokenType, { source: 'github.com' }));
+  const [githubToken] = useQuery(space, Filter.type(DataType.AccessToken, { source: 'github.com' }));
   const gistKey = getMeta(object).keys.find(({ source }) => source === 'github.com');
   const [gistUrl, setGistUrl] = useState<string | undefined>();
 

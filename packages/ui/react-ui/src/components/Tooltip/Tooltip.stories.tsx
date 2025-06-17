@@ -3,55 +3,80 @@
 //
 
 import '@dxos-theme';
-
 import React from 'react';
+
+import { faker } from '@dxos/random';
 
 import { Tooltip } from './Tooltip';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
-type StoryTooltipProps = {
-  content: string;
+type StoryProps = {
+  tooltips: { label: string; content: string }[];
   defaultOpen?: boolean;
 };
 
-const StoryTooltip = ({ content, defaultOpen }: StoryTooltipProps) => (
-  <Tooltip.Provider>
-    <Tooltip.Root defaultOpen={defaultOpen}>
-      <Tooltip.Trigger asChild>
-        <Button>Trigger tooltip</Button>
-      </Tooltip.Trigger>
-      <Tooltip.Content side='right'>
-        <Tooltip.Arrow />
-        {content}
-      </Tooltip.Content>
-    </Tooltip.Root>
+const DefaultStory = ({ tooltips, defaultOpen }: StoryProps) => (
+  <Tooltip.Provider defaultOpen={defaultOpen}>
+    <div role='none' className='is-32'>
+      {tooltips.map(({ label, content }, i) => (
+        <Tooltip.Trigger asChild key={i} content={content} side='right'>
+          <Button classNames='block is-full'>{label}</Button>
+        </Tooltip.Trigger>
+      ))}
+    </div>
   </Tooltip.Provider>
 );
 
 export default {
   title: 'ui/react-ui-core/Tooltip',
   component: Tooltip,
-  render: StoryTooltip,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {
   args: {
-    content: 'This is the tooltip content',
+    tooltips: [
+      {
+        label: 'Tooltip trigger',
+        content: 'This is the tooltip content',
+      },
+    ],
   },
   parameters: {
     chromatic: { delay: 500 },
   },
 };
 
-export const Testing = {
+export const DefaultOpen = {
   args: {
     defaultOption: true,
-    content: 'This is the tooltip content',
+    tooltips: [
+      {
+        label: 'Tooltip trigger',
+        content: 'This is the tooltip content',
+      },
+    ],
   },
   parameters: {
     chromatic: { delay: 500 },
+  },
+};
+
+export const StressTest = {
+  args: {
+    defaultOption: true,
+    tooltips: faker.helpers.multiple(
+      () => ({
+        label: faker.lorem.words(2),
+        content: faker.lorem.words(5),
+      }),
+      { count: 32 },
+    ),
+  },
+  parameters: {
+    chromatic: { disableSnapshot: true },
   },
 };

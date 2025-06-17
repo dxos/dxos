@@ -2,27 +2,29 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
+import { type AutomergeUrl } from '@automerge/automerge-repo';
+import { Schema } from 'effect';
 import Redis from 'ioredis';
 
 import { Trigger } from '@dxos/async';
-import { next as A } from '@dxos/automerge/automerge';
-import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { Context } from '@dxos/context';
 import { Filter, type QueryResult, type EchoDatabaseImpl, createDocAccessor } from '@dxos/echo-db';
-import { EchoTestPeer, TestReplicator, TestReplicatorConnection } from '@dxos/echo-db/testing';
-import { create, type ReactiveObject, TypedObject } from '@dxos/echo-schema';
-import { S } from '@dxos/echo-schema';
+import { EchoTestPeer } from '@dxos/echo-db/testing';
+import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-pipeline/testing';
+import { TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
 import { DEFAULT_REDIS_OPTIONS, createRedisReadableStream, createRedisWritableStream } from '../redis';
 
-export class Text extends TypedObject({ typename: 'dxos.blade-runner.Text', version: '0.1.0' })({
-  content: S.String,
+export class Text extends TypedObject({ typename: 'dxos.org/blade-runner/Text', version: '0.1.0' })({
+  content: Schema.String,
 }) {}
 
 @trace.resource()
@@ -38,7 +40,7 @@ export class EchoReplicant {
   constructor(private readonly env: ReplicantEnv) {}
 
   @trace.span()
-  async open() {
+  async open(): Promise<void> {
     log.trace('dxos.echo-replicant.open');
     this._testPeer = new EchoTestPeer(createTestLevel(this.env.params.planRunDir));
     await this._testPeer.open();
@@ -86,12 +88,12 @@ export class EchoReplicant {
     size: number;
     insertions: number;
     mutationsSize: number;
-  }) {
+  }): Promise<void> {
     performance.mark('create:begin');
 
     invariant(this._db, 'Database not initialized.');
     for (let objIdx = 0; objIdx < amount; objIdx++) {
-      const doc = create(Text, { content: '' }) satisfies ReactiveObject<Text>;
+      const doc = live(Text, { content: '' }) satisfies Live<Text>;
       this._db!.add(doc);
       const accessor = createDocAccessor(doc, ['content']);
       for (let mutationIdx = 0; mutationIdx < insertions; mutationIdx++) {
@@ -135,7 +137,7 @@ export class EchoReplicant {
   }: {
     expectedAmount: number;
     queryResolution?: Exclude<QueryResult<Text>['resolution'], undefined>['source'];
-  }) {
+  }): Promise<void> {
     log.trace('dxos.echo-replicant.query.init', { expectedAmount, queryResolution });
     performance.mark('query:begin');
     invariant(this._db, 'Database not initialized.');
@@ -191,7 +193,7 @@ export class EchoReplicant {
     return { peerId: this._replicator.context.peerId };
   }
 
-  async peerId() {
+  async peerId(): Promise<string> {
     invariant(this._replicator?.context, 'Replicator not connected.');
     return this._replicator.context.peerId;
   }
@@ -208,7 +210,7 @@ export class EchoReplicant {
     otherPeerId: string;
     readQueue: string;
     writeQueue: string;
-  }) {
+  }): Promise<void> {
     log.trace('dxos.echo-replicant.connect', { otherPeerId, readQueue, writeQueue });
     invariant(this._replicator?.context, 'Replicator not connected.');
 
@@ -228,7 +230,7 @@ export class EchoReplicant {
   }
 
   @trace.span()
-  async disconnect({ otherPeerId }: { otherPeerId: string }) {
+  async disconnect({ otherPeerId }: { otherPeerId: string }): Promise<void> {
     log.trace('dxos.echo-replicant.disconnect', { otherPeerId });
     invariant(this._replicator?.context, 'Replicator not connected.');
     const connection = this._connections.get(otherPeerId);

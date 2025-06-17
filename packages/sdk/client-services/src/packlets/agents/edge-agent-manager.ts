@@ -50,7 +50,7 @@ export class EdgeAgentManager extends Resource {
   }
 
   @synchronized
-  public async createAgent() {
+  public async createAgent(): Promise<void> {
     invariant(this.isOpen);
     invariant(this._edgeHttpClient);
     invariant(this._edgeFeatures?.agents);
@@ -81,7 +81,7 @@ export class EdgeAgentManager extends Resource {
     this._updateStatus(EdgeAgentStatus.ACTIVE, deviceKey);
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     const isEnabled = this._edgeHttpClient && this._edgeFeatures?.agents;
 
     log('edge agent manager open', { isEnabled });
@@ -112,12 +112,12 @@ export class EdgeAgentManager extends Resource {
     });
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     this._fetchAgentStatusTask = undefined;
     this._lastKnownDeviceCount = 0;
   }
 
-  protected async _fetchAgentStatus() {
+  protected async _fetchAgentStatus(): Promise<void> {
     invariant(this._edgeHttpClient);
     try {
       log('fetching agent status');
@@ -145,7 +145,7 @@ export class EdgeAgentManager extends Resource {
    * because most of the time we'll be getting an empty response.
    * Instead, we stay in active polling mode while there are spaces where we don't see our agent's feed.
    */
-  protected _ensureAgentIsInSpaces(agentDeviceKey: PublicKey) {
+  protected _ensureAgentIsInSpaces(agentDeviceKey: PublicKey): void {
     let activePollingEnabled = false;
     for (const space of this._dataSpaceManager.spaces.values()) {
       if (space.getEdgeReplicationSetting() === EdgeReplicationSetting.DISABLED) {
@@ -171,7 +171,7 @@ export class EdgeAgentManager extends Resource {
     }
   }
 
-  private _updateStatus(status: EdgeAgentStatus, deviceKey: PublicKey | undefined) {
+  private _updateStatus(status: EdgeAgentStatus, deviceKey: PublicKey | undefined): void {
     this._agentStatus = status;
     this._agentDeviceKey = deviceKey;
     this.agentStatusChanged.emit(status);

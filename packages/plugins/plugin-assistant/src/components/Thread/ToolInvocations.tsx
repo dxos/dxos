@@ -4,7 +4,7 @@
 
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type Message, type ToolType } from '@dxos/artifact';
+import { type AgentStatus, type Message, type Tool } from '@dxos/ai';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { NumericTabs, StatusRoll, ToggleContainer } from '@dxos/react-ui-components';
@@ -17,22 +17,22 @@ export const isToolMessage = (message: Message) => {
   return message.content.some((block) => block.type === 'tool_use' || block.type === 'tool_result');
 };
 
-const getToolName = (tool: ToolType) => {
+const getToolName = (tool: Tool) => {
   return tool.namespace && tool.function ? `${tool.namespace}:${tool.function}` : tool.name.split('_').pop();
 };
 
-const getToolCaption = (tool: ToolType | undefined) => {
+const getToolCaption = (tool: Tool | undefined, status: AgentStatus | undefined) => {
   if (!tool) {
     return 'Calling tool...';
   }
 
-  return tool.caption ?? `Calling ${getToolName(tool)}...`;
+  return status?.message ?? tool.caption ?? `Calling ${getToolName(tool)}...`;
 };
 
 export const ToolBlock: FC<ThemedClassName<ThreadMessageProps>> = ({ classNames, message, tools }) => {
   const { content = [] } = message;
 
-  let request: { tool: ToolType | undefined; block: any } | undefined;
+  let request: { tool: Tool | undefined; block: any } | undefined;
   const blocks = content.filter((block) => block.type === 'tool_use' || block.type === 'tool_result');
   const items = blocks
     .map((block) => {
@@ -43,8 +43,10 @@ export const ToolBlock: FC<ThemedClassName<ThreadMessageProps>> = ({ classNames,
             return null;
           }
 
+          log.info('tool_use', { tool: request?.tool, status: block.currentStatus });
+
           request = { tool: tools?.find((tool) => tool.name === block.name), block };
-          return { title: getToolCaption(request.tool), block };
+          return { title: getToolCaption(request.tool, block.currentStatus), block };
         }
 
         case 'tool_result': {
@@ -53,7 +55,7 @@ export const ToolBlock: FC<ThemedClassName<ThreadMessageProps>> = ({ classNames,
             return { title: 'Error', block };
           }
 
-          return { title: `${getToolCaption(request.tool)} (Success)`, block };
+          return { title: `${getToolCaption(request.tool, undefined)} (Success)`, block };
         }
 
         default: {

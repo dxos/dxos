@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Registry } from '@effect-rx/rx-react';
 import { untracked } from '@preact/signals-core';
 import { Array as A, Effect, Either, Match, pipe } from 'effect';
 
 import { Event } from '@dxos/async';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
-import { type AnyCapability, PluginsContext } from './capabilities';
+import { type AnyCapability, PluginContext } from './capabilities';
 import { type ActivationEvent, eventKey, getEvents, isAllOf } from './events';
 import { type PluginModule, type Plugin } from './plugin';
 
@@ -24,6 +25,7 @@ export type PluginManagerOptions = {
   plugins?: Plugin[];
   core?: string[];
   enabled?: string[];
+  registry?: Registry.Registry;
 };
 
 type PluginManagerState = {
@@ -43,13 +45,11 @@ type PluginManagerState = {
 
 export class PluginManager {
   readonly activation = new Event<{ event: string; state: 'activating' | 'activated' | 'error'; error?: any }>();
+  readonly context: PluginContext;
+  readonly registry: Registry.Registry;
 
-  readonly context = new PluginsContext({
-    activate: (event) => this._activate(event),
-    reset: (id) => this._reset(id),
-  });
-
-  private readonly _state: ReactiveObject<PluginManagerState>;
+  // TODO(wittjosiah): Replace with Rx.
+  private readonly _state: Live<PluginManagerState>;
   private readonly _pluginLoader: PluginManagerOptions['pluginLoader'];
   private readonly _capabilities = new Map<string, AnyCapability[]>();
 
@@ -58,9 +58,17 @@ export class PluginManager {
     plugins = [],
     core = plugins.map(({ meta }) => meta.id),
     enabled = [],
+    registry,
   }: PluginManagerOptions) {
+    this.registry = registry ?? Registry.make();
+    this.context = new PluginContext({
+      registry: this.registry,
+      activate: (event) => this._activate(event),
+      reset: (id) => this._reset(id),
+    });
+
     this._pluginLoader = pluginLoader;
-    this._state = create({
+    this._state = live({
       plugins,
       core,
       enabled,
@@ -79,7 +87,7 @@ export class PluginManager {
    *
    * @reactive
    */
-  get plugins(): ReactiveObject<readonly Plugin[]> {
+  get plugins(): Live<readonly Plugin[]> {
     return this._state.plugins;
   }
 
@@ -88,7 +96,7 @@ export class PluginManager {
    *
    * @reactive
    */
-  get core(): ReactiveObject<readonly string[]> {
+  get core(): Live<readonly string[]> {
     return this._state.core;
   }
 
@@ -97,7 +105,7 @@ export class PluginManager {
    *
    * @reactive
    */
-  get enabled(): ReactiveObject<readonly string[]> {
+  get enabled(): Live<readonly string[]> {
     return this._state.enabled;
   }
 
@@ -106,7 +114,7 @@ export class PluginManager {
    *
    * @reactive
    */
-  get modules(): ReactiveObject<readonly PluginModule[]> {
+  get modules(): Live<readonly PluginModule[]> {
     return this._state.modules;
   }
 
@@ -115,7 +123,7 @@ export class PluginManager {
    *
    * @reactive
    */
-  get active(): ReactiveObject<readonly string[]> {
+  get active(): Live<readonly string[]> {
     return this._state.active;
   }
 
@@ -124,7 +132,7 @@ export class PluginManager {
    *
    * @reactive
    */
-  get eventsFired(): ReactiveObject<readonly string[]> {
+  get eventsFired(): Live<readonly string[]> {
     return this._state.eventsFired;
   }
 
@@ -133,7 +141,7 @@ export class PluginManager {
    *
    * @reactive
    */
-  get pendingReset(): ReactiveObject<readonly string[]> {
+  get pendingReset(): Live<readonly string[]> {
     return this._state.pendingReset;
   }
 
@@ -257,7 +265,7 @@ export class PluginManager {
     return untracked(() => Effect.runPromise(this._reset(event)));
   }
 
-  private _addPlugin(plugin: Plugin) {
+  private _addPlugin(plugin: Plugin): void {
     untracked(() => {
       log('add plugin', { id: plugin.meta.id });
       if (!this._state.plugins.includes(plugin)) {
@@ -266,7 +274,7 @@ export class PluginManager {
     });
   }
 
-  private _removePlugin(id: string) {
+  private _removePlugin(id: string): void {
     untracked(() => {
       log('remove plugin', { id });
       const pluginIndex = this._state.plugins.findIndex((plugin) => plugin.meta.id === id);
@@ -276,7 +284,7 @@ export class PluginManager {
     });
   }
 
-  private _addModule(module: PluginModule) {
+  private _addModule(module: PluginModule): void {
     untracked(() => {
       log('add module', { id: module.id });
       if (!this._state.modules.includes(module)) {
@@ -285,7 +293,7 @@ export class PluginManager {
     });
   }
 
-  private _removeModule(id: string) {
+  private _removeModule(id: string): void {
     untracked(() => {
       log('remove module', { id });
       const moduleIndex = this._state.modules.findIndex((module) => module.id === id);
@@ -295,27 +303,27 @@ export class PluginManager {
     });
   }
 
-  private _getPlugin(id: string) {
+  private _getPlugin(id: string): Plugin | undefined {
     return this._state.plugins.find((plugin) => plugin.meta.id === id);
   }
 
-  private _getActiveModules() {
+  private _getActiveModules(): PluginModule[] {
     return this._state.modules.filter((module) => this._state.active.includes(module.id));
   }
 
-  private _getInactiveModules() {
+  private _getInactiveModules(): PluginModule[] {
     return this._state.modules.filter((module) => !this._state.active.includes(module.id));
   }
 
-  private _getActiveModulesByEvent(key: string) {
+  private _getActiveModulesByEvent(key: string): PluginModule[] {
     return this._getActiveModules().filter((module) => getEvents(module.activatesOn).map(eventKey).includes(key));
   }
 
-  private _getInactiveModulesByEvent(key: string) {
+  private _getInactiveModulesByEvent(key: string): PluginModule[] {
     return this._getInactiveModules().filter((module) => getEvents(module.activatesOn).map(eventKey).includes(key));
   }
 
-  private _setPendingResetByModule(module: PluginModule) {
+  private _setPendingResetByModule(module: PluginModule): void {
     return untracked(() => {
       const activationEvents = getEvents(module.activatesOn)
         .map(eventKey)

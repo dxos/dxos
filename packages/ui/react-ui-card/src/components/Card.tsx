@@ -8,8 +8,8 @@ import React, {
   type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
   type FC,
-  forwardRef,
   type PropsWithChildren,
+  forwardRef,
 } from 'react';
 
 import { useDensityContext, DropdownMenu, type ThemedClassName } from '@dxos/react-ui';

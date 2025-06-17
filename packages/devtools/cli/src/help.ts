@@ -15,14 +15,18 @@ export const BANNER =
   '_/\\/\\/\\/\\/\\____/\\/\\____/\\/\\____/\\/\\/\\/\\____/\\/\\/\\/\\/\\___\n';
 
 export default class CustomHelp extends Help {
-  override async showHelp(args: string[]) {
+  override async showHelp(args: string[]): Promise<void> {
     if (!args.length) {
       console.log(BANNER);
     }
 
     const warnings = [];
     if (process.env.NODE_ENV === 'development') {
-      warnings.push(chalk`{blue NODE_ENV}: {red ${process.env.NODE_ENV}} (${rev.branch()} #${rev.short()})`);
+      let branch = '';
+      try {
+        branch = `(${rev.branch()} #${rev.short()})`;
+      } catch {}
+      warnings.push(chalk`{blue NODE_ENV}: {red ${process.env.NODE_ENV}}${branch}`);
     }
 
     if (process.env.DX_PROFILE) {

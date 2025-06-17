@@ -2,16 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, S, toJsonSchema } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { ContactType } from '@dxos/client/testing';
+import { Ref, toJsonSchema } from '@dxos/echo-schema';
 
 export const functions = [
   {
     name: 'example.com/function/chess',
     version: '0.1.0',
     inputSchema: toJsonSchema(
-      S.Struct({
-        level: S.Number.annotations({
-          [AST.TitleAnnotationId]: 'Level',
+      Schema.Struct({
+        level: Schema.Number.annotations({
+          title: 'Level',
         }),
       }),
     ),
@@ -21,12 +24,23 @@ export const functions = [
     version: '0.1.0',
     binding: 'FOREX',
     inputSchema: toJsonSchema(
-      S.Struct({
-        from: S.String.annotations({
-          [AST.TitleAnnotationId]: 'Currency from',
+      Schema.Struct({
+        from: Schema.String.annotations({
+          title: 'Currency from',
         }),
-        to: S.String.annotations({
-          [AST.TitleAnnotationId]: 'Currency to',
+        to: Schema.String.annotations({
+          title: 'Currency to',
+        }),
+      }),
+    ),
+  },
+  {
+    name: 'example.com/function/ping-contact',
+    version: '0.0.1',
+    inputSchema: toJsonSchema(
+      Schema.Struct({
+        contact: Ref(ContactType).annotations({
+          title: 'Contact',
         }),
       }),
     ),

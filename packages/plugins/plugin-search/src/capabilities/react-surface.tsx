@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useLayout, useAppGraph } from '@dxos/app-framework';
-import { getActiveSpace } from '@dxos/plugin-space';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { useActiveSpace } from '@dxos/plugin-space';
 import { isSpace, type Space } from '@dxos/react-client/echo';
 
 import { SEARCH_DIALOG, SearchDialog, type SearchDialogProps, SearchMain } from '../components';
@@ -24,13 +24,10 @@ export default () =>
       ),
     }),
     createSurface({
-      // id: `${SEARCH_DIALOG}/search-input`,
-      id: 'search-input',
+      id: `${SEARCH_DIALOG}/search-input`,
       role: 'search-input',
       component: () => {
-        const layout = useLayout();
-        const { graph } = useAppGraph();
-        const space = graph ? getActiveSpace(graph, layout.active[0]) : undefined;
+        const space = useActiveSpace();
         if (!space) {
           return null;
         }

@@ -8,7 +8,7 @@ import { EventEmitter } from 'node:events';
  * Listens for global errors.
  */
 export class ErrorHandler extends EventEmitter {
-  _listener: any;
+  _listener: EventListener;
 
   constructor() {
     super();
@@ -29,7 +29,7 @@ export class ErrorHandler extends EventEmitter {
     window.addEventListener('unhandledrejection', this._listener);
   }
 
-  reset() {
+  reset(): void {
     window.removeEventListener('error', this._listener);
     window.removeEventListener('unhandledrejection', this._listener);
   }

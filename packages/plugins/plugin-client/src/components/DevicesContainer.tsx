@@ -13,7 +13,14 @@ import { type Device, useDevices } from '@dxos/react-client/halo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Button, Clipboard, IconButton, List, useId, useTranslation } from '@dxos/react-ui';
-import { ControlFrame, ControlFrameItem, ControlGroup, ControlItem, ControlSection } from '@dxos/react-ui-form';
+import {
+  ControlFrame,
+  ControlFrameItem,
+  ControlGroup,
+  ControlItem,
+  ControlPage,
+  ControlSection,
+} from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
@@ -22,11 +29,11 @@ import { hexToEmoji } from '@dxos/util';
 import { CLIENT_PLUGIN } from '../meta';
 import { ClientAction } from '../types';
 
-export const DevicesContainer = ({
-  createInvitationUrl,
-}: {
-  createInvitationUrl: (invitationCode: string) => string;
-}) => {
+export type DevicesContainerProps = {
+  createInvitationUrl?: (invitationCode: string) => string;
+};
+
+export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps) => {
   const { t } = useTranslation('os');
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const devices = useDevices();
@@ -46,57 +53,69 @@ export const DevicesContainer = ({
 
   return (
     <Clipboard.Provider>
-      <StackItem.Content classNames='p-2 block overflow-y-auto'>
-        <ControlSection
-          title={t('devices verbose label', { ns: CLIENT_PLUGIN })}
-          description={t('devices description', { ns: CLIENT_PLUGIN })}
-        >
-          <ControlFrame>
-            <ControlFrameItem title={t('devices label', { ns: CLIENT_PLUGIN })}>
-              <List>
-                {devices.map((device: Device) => {
-                  return (
-                    <DeviceListItem key={device.deviceKey.toHex()} device={device} connectionState={connectionState} />
-                  );
-                })}
-              </List>
-            </ControlFrameItem>
-            <ControlFrameItem title='Add device'>
-              <DeviceInvitation createInvitationUrl={createInvitationUrl} />
-            </ControlFrameItem>
-          </ControlFrame>
-        </ControlSection>
-        <ControlSection
-          title={t('danger zone title', { ns: CLIENT_PLUGIN })}
-          description={t('danger zone description', { ns: CLIENT_PLUGIN })}
-        >
-          <ControlGroup>
-            <ControlItem
-              title={t('reset device label')}
-              description={t('reset device description', { ns: CLIENT_PLUGIN })}
-            >
-              <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
-                {t('reset device label')}
-              </Button>
-            </ControlItem>
-            <ControlItem
-              title={t('recover identity label')}
-              description={t('recover identity description', { ns: CLIENT_PLUGIN })}
-            >
-              <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
-                {t('recover identity label')}
-              </Button>
-            </ControlItem>
-            <ControlItem
-              title={t('join new identity label')}
-              description={t('join new identity description', { ns: CLIENT_PLUGIN })}
-            >
-              <Button variant='destructive' onClick={handleJoinNewIdentity} data-testid='devicesContainer.joinExisting'>
-                {t('join new identity label')}
-              </Button>
-            </ControlItem>
-          </ControlGroup>
-        </ControlSection>
+      <StackItem.Content classNames='block overflow-y-auto'>
+        <ControlPage>
+          <ControlSection
+            title={t('devices verbose label', { ns: CLIENT_PLUGIN })}
+            description={t('devices description', { ns: CLIENT_PLUGIN })}
+          >
+            <ControlFrame>
+              <ControlFrameItem title={t('devices label', { ns: CLIENT_PLUGIN })}>
+                <List>
+                  {devices.map((device: Device) => {
+                    return (
+                      <DeviceListItem
+                        key={device.deviceKey.toHex()}
+                        device={device}
+                        connectionState={connectionState}
+                      />
+                    );
+                  })}
+                </List>
+              </ControlFrameItem>
+              {createInvitationUrl && (
+                <ControlFrameItem title='Add device'>
+                  <DeviceInvitation createInvitationUrl={createInvitationUrl} />
+                </ControlFrameItem>
+              )}
+            </ControlFrame>
+          </ControlSection>
+          <ControlSection
+            title={t('danger zone title', { ns: CLIENT_PLUGIN })}
+            description={t('danger zone description', { ns: CLIENT_PLUGIN })}
+          >
+            <ControlGroup>
+              <ControlItem
+                title={t('reset device label')}
+                description={t('reset device description', { ns: CLIENT_PLUGIN })}
+              >
+                <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
+                  {t('reset device label')}
+                </Button>
+              </ControlItem>
+              <ControlItem
+                title={t('recover identity label')}
+                description={t('recover identity description', { ns: CLIENT_PLUGIN })}
+              >
+                <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
+                  {t('recover identity label')}
+                </Button>
+              </ControlItem>
+              <ControlItem
+                title={t('join new identity label')}
+                description={t('join new identity description', { ns: CLIENT_PLUGIN })}
+              >
+                <Button
+                  variant='destructive'
+                  onClick={handleJoinNewIdentity}
+                  data-testid='devicesContainer.joinExisting'
+                >
+                  {t('join new identity label')}
+                </Button>
+              </ControlItem>
+            </ControlGroup>
+          </ControlSection>
+        </ControlPage>
       </StackItem.Content>
     </Clipboard.Provider>
   );
@@ -239,11 +258,16 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
         <span id={qrLabel} className='sr-only'>
           {t('qr label')}
         </span>
-        <Clipboard.Button value={url ?? 'never'} />
       </div>
-      <Button variant='ghost' onClick={onCancel}>
-        {t('cancel label')}
-      </Button>
+      {/* TODO(burdon): Factor out button bar */}
+      <div className='flex justify-center'>
+        <div className='flex gap-2'>
+          <Clipboard.Button value={url ?? 'never'} />
+          <Button variant='ghost' onClick={onCancel}>
+            {t('cancel label')}
+          </Button>
+        </div>
+      </div>
     </>
   );
 };

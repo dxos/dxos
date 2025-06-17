@@ -13,33 +13,35 @@ import {
   createSurface,
   LayoutAction,
   useCapability,
-  type PluginsContext,
+  useIntentDispatcher,
+  type PluginContext,
 } from '@dxos/app-framework';
 import {
+  AutomergePanel,
   ConfigPanel,
   CredentialsPanel,
   DeviceListPanel,
   DiagnosticsPanel,
+  EdgeDashboardPanel,
   FeedsPanel,
   IdentityPanel,
+  InvocationTraceContainer,
   KeyringPanel,
   LoggingPanel,
   MembersPanel,
   MetadataPanel,
   NetworkPanel,
   ObjectsPanel,
+  QueuesPanel,
+  SchemaPanel,
   SignalPanel,
   SpaceInfoPanel,
   SpaceListPanel,
   StoragePanel,
   SwarmPanel,
-  TracingPanel,
-  EdgeDashboardPanel,
-  AutomergePanel,
-  WorkflowPanel,
-  QueuesPanel,
-  InvocationTracePanel,
   TestingPanel,
+  TracingPanel,
+  WorkflowPanel,
 } from '@dxos/devtools';
 import { SettingsStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
@@ -51,13 +53,21 @@ import {
   SpaceState,
   isSpace,
   isEchoObject,
-  type ReactiveEchoObject,
-  type ReactiveObject,
+  type AnyLiveObject,
+  type Live,
   type Space,
   parseId,
 } from '@dxos/react-client/echo';
 
-import { DebugApp, DebugObjectPanel, DebugSettings, DebugStatus, SpaceGenerator, Wireframe } from '../components';
+import {
+  DebugApp,
+  DebugObjectPanel,
+  DebugSettings,
+  DebugStatus,
+  DevtoolsOverviewContainer,
+  SpaceGenerator,
+  Wireframe,
+} from '../components';
 import { DEBUG_PLUGIN } from '../meta';
 import { type DebugSettingsProps, Devtools } from '../types';
 
@@ -82,7 +92,7 @@ const useCurrentSpace = () => {
   return space;
 };
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${DEBUG_PLUGIN}/plugin-settings`,
@@ -97,7 +107,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
       component: ({ data }) => {
         const handleCreateObject = useCallback(
-          (objects: ReactiveObject<any>[]) => {
+          (objects: Live<any>[]) => {
             if (!isSpace(data.subject.space)) {
               return;
             }
@@ -109,7 +119,7 @@ export default (context: PluginsContext) =>
               return;
             }
 
-            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = useIntentDispatcher();
             objects.forEach((object) => {
               void dispatch(createIntent(SpaceAction.AddObject, { target: collection, object }));
             });
@@ -130,9 +140,9 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/wireframe`,
       role: ['article', 'section'],
       position: 'hoist',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } => {
+      filter: (data): data is { subject: AnyLiveObject<any> } => {
         const settings = context
-          .requestCapability(Capabilities.SettingsStore)
+          .getCapability(Capabilities.SettingsStore)
           .getStore<DebugSettingsProps>(DEBUG_PLUGIN)!.value;
         return isEchoObject(data.subject) && !!settings.wireframe;
       },
@@ -143,9 +153,14 @@ export default (context: PluginsContext) =>
     createSurface({
       id: `${DEBUG_PLUGIN}/object-debug`,
       role: 'article',
-      filter: (data): data is { companionTo: ReactiveEchoObject<any> } =>
+      filter: (data): data is { companionTo: AnyLiveObject<any> } =>
         data.subject === 'debug' && isEchoObject(data.companionTo),
       component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/devtools-overview`,
+      role: 'deck-companion--devtools',
+      component: () => <DevtoolsOverviewContainer />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/status`,
@@ -219,7 +234,7 @@ export default (context: PluginsContext) =>
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Spaces,
       component: () => {
-        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = useIntentDispatcher();
         const handleSelect = useCallback(
           () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Devtools.Echo.Space] })),
           [dispatch],
@@ -233,7 +248,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is any => data.subject === Devtools.Echo.Space,
       component: () => {
         const space = useCurrentSpace();
-        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = useIntentDispatcher();
         const handleSelect = useCallback(
           () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Devtools.Echo.Feeds] })),
           [dispatch],
@@ -257,6 +272,15 @@ export default (context: PluginsContext) =>
       component: () => {
         const space = useCurrentSpace();
         return <ObjectsPanel space={space} />;
+      },
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/echo/schema`,
+      role: 'article',
+      filter: (data): data is any => data.subject === Devtools.Echo.Schema,
+      component: () => {
+        const space = useCurrentSpace();
+        return <SchemaPanel space={space} />;
       },
     }),
     createSurface({
@@ -338,7 +362,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is any => data.subject === Devtools.Edge.Traces,
       component: () => {
         const space = useCurrentSpace();
-        return <InvocationTracePanel space={space} />;
+        return <InvocationTraceContainer space={space} />;
       },
     }),
     createSurface({
@@ -346,7 +370,7 @@ export default (context: PluginsContext) =>
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Testing,
       component: () => {
-        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = useIntentDispatcher();
         const onSpaceCreate = useCallback(
           async (space: Space) => {
             await space.waitUntilReady();

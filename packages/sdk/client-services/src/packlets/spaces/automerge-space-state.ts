@@ -25,7 +25,7 @@ export class AutomergeSpaceState extends Resource implements CredentialProcessor
     this._isProcessingRootDocs = false;
   }
 
-  async processCredential(credential: Credential) {
+  async processCredential(credential: Credential): Promise<void> {
     if (!checkCredentialType(credential, 'dxos.halo.credentials.Epoch')) {
       return;
     }
@@ -42,7 +42,7 @@ export class AutomergeSpaceState extends Resource implements CredentialProcessor
     this.onNewEpoch.emit(credential);
   }
 
-  startProcessingRootDocs() {
+  startProcessingRootDocs(): void {
     if (this._isProcessingRootDocs) {
       return;
     }
@@ -53,7 +53,7 @@ export class AutomergeSpaceState extends Resource implements CredentialProcessor
     this._isProcessingRootDocs = true;
   }
 
-  async ensureEpochInitialized() {
+  async ensureEpochInitialized(): Promise<void> {
     await this.onNewEpoch.waitForCondition(() => !!this.lastEpoch);
   }
 }

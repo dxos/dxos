@@ -38,7 +38,8 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts"
-        ]
+        ],
+        "preactSignalTracking": true
       }
     },
     "lint": {},

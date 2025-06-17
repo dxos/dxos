@@ -10,7 +10,7 @@ import { type SwarmController, type Topology } from './topology';
 export class FullyConnectedTopology implements Topology {
   private _controller?: SwarmController;
 
-  toString() {
+  toString(): string {
     return 'FullyConnectedTopology';
   }
 

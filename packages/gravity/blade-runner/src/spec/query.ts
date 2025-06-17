@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { type AutomergeUrl } from '@automerge/automerge-repo';
+
 import { type QueryResult } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -63,7 +64,7 @@ export class QueryTestPlan implements TestPlan<QueryTestSpec, QueryTestResult> {
     };
   }
 
-  async run(env: SchedulerEnv, params: TestParams<QueryTestSpec>) {
+  async run(env: SchedulerEnv, params: TestParams<QueryTestSpec>): Promise<QueryTestResult> {
     const results = {} as QueryTestResult;
     // TODO(mykola): Maybe factor out?
     const userDataDir = `/tmp/echo-replicant-${PublicKey.random().toHex()}`;

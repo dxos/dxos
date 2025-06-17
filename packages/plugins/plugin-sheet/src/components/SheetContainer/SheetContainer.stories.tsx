@@ -9,6 +9,7 @@ import React from 'react';
 
 import { Capabilities, contributes, createResolver, IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { GraphPlugin } from '@dxos/plugin-graph';
 import { fullyQualifiedId, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
@@ -64,15 +65,11 @@ const meta: Meta = {
     withClientProvider({ types: [SheetType], createSpace: true }),
     withComputeGraphDecorator(),
     withTheme,
-    withLayout({
-      fullscreen: true,
-      tooltips: true,
-      classNames: 'grid',
-    }),
+    withLayout({ fullscreen: true, classNames: 'grid' }),
     withAttention,
     // TODO(wittjosiah): Consider whether we should refactor component so story doesn't need to depend on intents.
     withPluginManager({
-      plugins: [IntentPlugin()],
+      plugins: [IntentPlugin(), GraphPlugin()],
       capabilities: [
         contributes(
           Capabilities.IntentResolver,

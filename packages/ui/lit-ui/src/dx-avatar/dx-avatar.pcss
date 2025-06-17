@@ -1,5 +1,5 @@
 .dx-avatar-group {
-  @apply inline-flex items-center;
+  @apply inline-flex items-center pie-2;
 }
 
 .dx-avatar-group .dx-avatar {
@@ -20,7 +20,7 @@ dx-avatar {
   @apply relative inline-flex shrink-0;
 
   .dx-avatar__frame {
-    @apply is-full bs-full bg-[--surface-bg]
+    @apply is-full bs-full bg-[--surface-bg];
   }
 
   .dx-avatar__frame, .dx-avatar__ring {
@@ -46,7 +46,7 @@ dx-avatar {
   }
 
   &[data-status="active"] .dx-avatar__ring {
-    @apply border-[color:var(--dx-activeCursor)];
+    @apply border-[color:var(--dx-successCursor)];
   }
 
   &[data-status="error"] .dx-avatar__ring {

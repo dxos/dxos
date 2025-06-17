@@ -13,9 +13,10 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { createDocAccessor, fullyQualifiedId, getSpace, type Query } from '@dxos/react-client/echo';
+import { createDocAccessor, fullyQualifiedId, getSpace, type QueryResult } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
+import { type SelectionManager } from '@dxos/react-ui-attention';
 import {
   type AutocompleteResult,
   type EditorStateStore,
@@ -29,11 +30,16 @@ import {
   formattingKeymap,
   linkTooltip,
   listener,
+  preview,
   selectionState,
   typewriter,
+  type RenderCallback,
+  EditorView,
+  documentId,
+  Cursor,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { type TextType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { MarkdownCapabilities } from './capabilities';
@@ -43,10 +49,11 @@ import { setFallbackName } from './util';
 type ExtensionsOptions = {
   document?: DocumentType;
   id?: string;
-  text?: TextType;
+  text?: DataType.Text;
   dispatch?: PromiseIntentDispatcher;
-  query?: Query<DocumentType>;
+  query?: QueryResult<DocumentType>;
   settings: MarkdownSettingsProps;
+  selectionManager?: SelectionManager;
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
 };
@@ -57,6 +64,7 @@ export const useExtensions = ({
   id,
   text,
   settings,
+  selectionManager,
   viewMode,
   editorStateStore,
 }: ExtensionsOptions): Extension[] => {
@@ -66,7 +74,7 @@ export const useExtensions = ({
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.
-  // const query = space?.db.query(Filter.schema(DocumentType));
+  // const query = space?.db.query(Filter.type(DocumentType));
   // query?.subscribe();
   const baseExtensions = useMemo(
     () =>
@@ -75,6 +83,7 @@ export const useExtensions = ({
         id,
         text,
         settings,
+        selectionManager,
         viewMode,
         dispatch,
         // query,
@@ -91,6 +100,7 @@ export const useExtensions = ({
       settings.numberedHeadings,
       settings.debug,
       settings.typewriter,
+      selectionManager,
     ],
   );
 
@@ -99,18 +109,20 @@ export const useExtensions = ({
   //
   // External extensions from other plugins.
   //
-  const pluginExtensions = useMemo<Extension[] | undefined>(
-    () =>
-      extensionProviders.flat().reduce((acc: Extension[], provider) => {
-        const extension = typeof provider === 'function' ? provider({ document }) : provider;
-        if (extension) {
-          acc.push(extension);
-        }
+  const pluginExtensions = useMemo<Extension[]>(() => {
+    if (!document) {
+      return [];
+    }
 
-        return acc;
-      }, []),
-    [extensionProviders, document],
-  );
+    return extensionProviders.flat().reduce((acc: Extension[], provider) => {
+      const extension = typeof provider === 'function' ? provider({ document }) : provider;
+      if (extension) {
+        acc.push(extension);
+      }
+
+      return acc;
+    }, []);
+  }, [extensionProviders, document]);
 
   //
   // Basic plugins.
@@ -154,10 +166,12 @@ const createBaseExtensions = ({
   id,
   dispatch,
   settings,
+  selectionManager,
   query,
   viewMode,
 }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
+    selectionManager && selectionChange(selectionManager),
     settings.editorInputMode && InputModeExtensions[settings.editorInputMode],
     settings.folding && folding(),
   ].filter(isNotFalsy);
@@ -175,7 +189,7 @@ const createBaseExtensions = ({
           // TODO(wittjosiah): For internal links, consider ignoring the link text and rendering the label of the object being linked to.
           renderLinkButton:
             dispatch && (document || id)
-              ? onRenderLink((id: string) => {
+              ? createLinkRenderer((id: string) => {
                   void dispatch(
                     createIntent(LayoutAction.Open, {
                       part: 'main',
@@ -189,6 +203,7 @@ const createBaseExtensions = ({
               : undefined,
         }),
         linkTooltip(renderLinkTooltip),
+        preview(),
       ],
     );
   }
@@ -227,46 +242,65 @@ const createBaseExtensions = ({
   return extensions;
 };
 
+export const selectionChange = (selectionManager: SelectionManager) => {
+  return EditorView.updateListener.of((update) => {
+    if (update.selectionSet) {
+      const id = update.state.facet(documentId);
+      const cursorConverter = update.state.facet(Cursor.converter);
+      const selection = update.state.selection;
+      const ranges = selection.ranges
+        .map((range) => ({
+          from: cursorConverter.toCursor(range.from),
+          to: cursorConverter.toCursor(range.to),
+        }))
+        .filter(({ from, to }) => to > from);
+      selectionManager.updateMultiRange(id, ranges);
+    }
+  });
+};
+
 // TODO(burdon): Factor out styles.
 const style = {
   hover: 'rounded-sm text-primary-500 hover:text-primary-600 dark:text-primary-500 hover:dark:text-primary-400',
   icon: 'inline-block leading-none mis-1 cursor-pointer',
 };
 
-const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url: string) => {
-  // TODO(burdon): Formalize/document internal link format.
-  const isInternal =
-    url.startsWith('/') ||
-    // TODO(wittjosiah): This should probably be parsed out on paste?
-    url.startsWith(window.location.origin);
+const createLinkRenderer =
+  (onSelectObject: (id: string) => void): RenderCallback<{ url: string }> =>
+  (el, { url }) => {
+    // TODO(burdon): Formalize/document internal link format.
+    const isInternal =
+      url.startsWith('/') ||
+      // TODO(wittjosiah): This should probably be parsed out on paste?
+      url.startsWith(window.location.origin);
 
-  const options: AnchorHTMLAttributes<any> = isInternal
-    ? {
-        onClick: () => {
-          const qualifiedId = url.split('/').at(-1);
-          invariant(qualifiedId, 'Invalid link format.');
-          onSelectObject(qualifiedId);
-        },
-      }
-    : {
-        href: url,
-        rel: 'noreferrer',
-        target: '_blank',
-      };
+    const options: AnchorHTMLAttributes<any> = isInternal
+      ? {
+          onClick: () => {
+            const qualifiedId = url.split('/').at(-1);
+            invariant(qualifiedId, 'Invalid link format.');
+            onSelectObject(qualifiedId);
+          },
+        }
+      : {
+          href: url,
+          rel: 'noreferrer',
+          target: '_blank',
+        };
 
-  renderRoot(
-    el,
-    <a {...options} className={style.hover}>
-      <Icon
-        icon={isInternal ? 'ph--arrow-square-down--bold' : 'ph--arrow-square-out--bold'}
-        size={4}
-        classNames={style.icon}
-      />
-    </a>,
-  );
-};
+    renderRoot(
+      el,
+      <a {...options} className={style.hover}>
+        <Icon
+          icon={isInternal ? 'ph--arrow-square-down--bold' : 'ph--arrow-square-out--bold'}
+          size={4}
+          classNames={style.icon}
+        />
+      </a>,
+    );
+  };
 
-const renderLinkTooltip = (el: Element, url: string) => {
+const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   const web = new URL(url);
   renderRoot(
     el,

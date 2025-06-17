@@ -4,9 +4,10 @@
 
 import React, { useState, useEffect, Fragment, type FC } from 'react';
 
+import { parseToolName, type Tool } from '@dxos/ai';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
-import { parseToolName, type ArtifactDefinition, type Tool } from '@dxos/artifact';
-import { FunctionType } from '@dxos/functions/types';
+import { type ArtifactDefinition } from '@dxos/artifact';
+import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -93,7 +94,7 @@ export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 
   // Registered services.
-  const services = useQuery(space, Filter.schema(ServiceType));
+  const services = useQuery(space, Filter.type(ServiceType));
   const [serviceTools, setServiceTools] = useState<{ service: ServiceType; tools: Tool[] }[]>([]);
   useEffect(() => {
     log('creating service tools...', { services: services.length });
@@ -107,7 +108,7 @@ export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?
   }, [services]);
 
   // Deployed functions.
-  const functions = useQuery(space, Filter.schema(FunctionType));
+  const functions = useQuery(space, Filter.type(FunctionType));
 
   return (
     <Toolbox classNames={classNames} artifacts={artifactDefinitions} services={serviceTools} functions={functions} />

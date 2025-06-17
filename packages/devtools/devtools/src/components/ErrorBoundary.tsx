@@ -59,12 +59,12 @@ export class ErrorBoundary extends Component<
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error) {
+  static getDerivedStateFromError(error: Error): { hasError: boolean; error: Error } {
     captureException(error);
     return { hasError: true, error };
   }
 
-  override render() {
+  override render(): string | number | boolean | React.JSX.Element | Iterable<React.ReactNode> | null | undefined {
     if (this.state.hasError) {
       return (
         <ErrorPopup

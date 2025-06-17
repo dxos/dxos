@@ -4,96 +4,124 @@
 
 import { type Schema } from 'effect';
 
-import {
-  type BaseSchema,
-  type EchoSchema,
-  type Expando as Expando$,
-  type ImmutableSchema,
-  type JsonSchemaType,
-  type TypeMeta,
-  EchoObject,
-  EntityKind,
-  ObjectId,
-  Ref as Ref$,
-  getTypeAnnotation,
-  getSchema,
-  getSchemaDXN,
-  getSchemaTypename,
-  getSchemaVersion,
-  isInstanceOf,
-} from '@dxos/echo-schema';
-import { create as create$, makeRef } from '@dxos/live-object';
+import type { EncodedReference } from '@dxos/echo-protocol';
+import * as EchoSchema from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
+import type * as Keys from '@dxos/keys';
 
-// NOTES:
-// - New Echo package and namespaces allow for incremental migration; vastly simplifies imports.
-// - Split into separate ECHO namespaces: Database, Space, Type, Query, Queue.
-//  - Example; import { Database, Type, Query, Queue } from '@dxos/echo';
-// - Use `declare namespace` for types (no code is generated). See Effect pattern, where Schema is a namespace, interface, and function.
-// - Test with @dxos/schema/testing types.
-// - Define user (Composer) types in namespace (e.g., of plugin) and drop Type suffix; remove all deprecated Braneframe types.
+/**
+ * ECHO schema.
+ */
+export type Schema = EchoSchema.EchoSchema;
 
-export type { TypeMeta as Meta, JsonSchemaType as JsonSchema };
-export {
-  EntityKind as Kind,
-  ObjectId,
-  getTypeAnnotation as getMeta,
-  getSchema,
-  getSchemaDXN as getDXN,
-  getSchemaTypename as getTypename,
-  getSchemaVersion as getVersion,
-  isInstanceOf as instanceOf,
+/**
+ * EchoObject schema.
+ */
+export const Obj = EchoSchema.EchoObject;
+
+/**
+ * EchoRelation schema.
+ */
+export const Relation = EchoSchema.EchoRelation;
+
+/**
+ * Ref schema.
+ */
+export const Ref: <S extends Obj.Any>(schema: S) => EchoSchema.Ref$<Schema.Schema.Type<S>> = EchoSchema.Ref;
+
+export namespace Obj {
+  /**
+   * Type that represents an arbitrary schema type of an object.
+   * NOTE: This is not an instance type.
+   */
+  // TODO(dmaretskyi): If schema was covariant, we could specify props in here, like `id: ObjectId`.
+  export type Any = Schema.Schema.AnyNoContext;
+}
+
+export namespace Relation {
+  /**
+   * Type that represents an arbitrary schema type of a relation.
+   * NOTE: This is not an instance type.
+   */
+  // TODO(dmaretskyi): If schema was covariant, we could specify props in here, like `id: ObjectId`.
+  export type Any = Schema.Schema.AnyNoContext;
+
+  /**
+   * Get relation target type.
+   */
+  export type Target<A> = A extends EchoSchema.RelationSourceTargetRefs<infer T, infer _S> ? T : never;
+
+  /**
+   * Get relation source type.
+   */
+  export type Source<A> = A extends EchoSchema.RelationSourceTargetRefs<infer _T, infer S> ? S : never;
+}
+
+export namespace Ref {
+  /**
+   * Type that represents an arbitrary schema type of a reference.
+   * NOTE: This is not an instance type.
+   */
+  export type Any = Schema.Schema<EchoSchema.Ref<any>, EncodedReference>;
+}
+
+/**
+ * Gets the full DXN of the schema.
+ * Will include the version if it's a `type` DXN.
+ * @example "dxn:example.com/type/Person:0.1.0"
+ * @example "dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX"
+ */
+export const getDXN = (schema: Obj.Any | Relation.Any): Keys.DXN | undefined => {
+  return EchoSchema.getSchemaDXN(schema);
 };
 
 /**
- * Type API.
- *
- * @category api namespace
- * @since 0.9.0
+ * @param schema - Schema to get the typename from.
+ * @returns The typename of the schema. Example: `example.com/type/Person`.
  */
-export declare namespace Type {
-  /**
-   * A schema that can be extended with arbitrary properties.
-   */
-  export type Expando = Expando$;
-
-  export type Abstract<T = any> = BaseSchema<T>;
-  export type ImmutableType<T> = ImmutableSchema<T>;
-  export type MutableType<T> = EchoSchema<T>;
-}
-
-//
-// Constructors
-//
-
-export const ref = makeRef;
-export const create = create$;
-
-//
-// Combinators
-//
+export const getTypename = (schema: Obj.Any | Relation.Any): string => {
+  const typename = EchoSchema.getSchemaTypename(schema);
+  invariant(typeof typename === 'string' && !typename.startsWith('dxn:'), 'Invalid typename');
+  return typename;
+};
 
 /**
- * Defines an ECHO type.
- *
- * @example
- * ```ts
- * const Org = S.Struct({
- *   name: S.String,
- * }).pipe(Type.def({ typename: 'example.com/type/Org', version: '1.0.0' }));
- * ```
+ * Gets the version of the schema.
+ * @example 0.1.0
  */
-export const def = (meta: TypeMeta) => EchoObject(meta);
+export const getVersion = (schema: Obj.Any | Relation.Any): string => {
+  const version = EchoSchema.getSchemaVersion(schema);
+  invariant(typeof version === 'string' && version.match(/^\d+\.\d+\.\d+$/), 'Invalid version');
+  return version;
+};
 
 /**
- * Defines a reference to an ECHO object.
- *
- * @example
- * ```ts
- * import { Type } from '@dxos/echo';
- * const Contact = S.Struct({
- *   name: S.String,
- *   employer: Type.Ref(Org),
- * }).pipe(Type.def({ typename: 'example.com/type/Contact', version: '1.0.0' }));
- * ```
+ * ECHO type metadata.
  */
-export const Ref = <S extends Schema.Schema.AnyNoContext>(self: S) => Ref$<Schema.Schema.Type<S>>(self);
+export type Meta = EchoSchema.TypeAnnotation;
+
+/**
+ * Gets the meta data of the schema.
+ */
+export const getMeta = (schema: Obj.Any | Relation.Any): Meta | undefined => {
+  return EchoSchema.getTypeAnnotation(schema);
+};
+
+export { EntityKind as Kind } from '@dxos/echo-schema';
+
+/**
+ * @returns True if the schema is mutable.
+ */
+export const isMutable = (schema: Obj.Any | Relation.Any): boolean => {
+  return EchoSchema.isMutable(schema);
+};
+
+export { SpaceId, ObjectId, DXN } from '@dxos/keys';
+
+export {
+  //
+  Expando,
+  JsonSchemaType as JsonSchema,
+  toJsonSchema,
+  Format,
+} from '@dxos/echo-schema';

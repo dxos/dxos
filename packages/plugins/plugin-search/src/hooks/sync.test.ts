@@ -5,8 +5,8 @@
 import { describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
-import { Expando } from '@dxos/echo-schema';
-import { create } from '@dxos/live-object';
+import { Expando, Filter } from '@dxos/echo-schema';
+import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
 import { filterObjectsSync } from './sync';
@@ -26,10 +26,10 @@ describe('Search', () => {
     Array.from({ length: 20 }).map((_, i) => {
       const content =
         i === 10 ? faker.lorem.sentence() + ` ${match}}. ` + faker.lorem.sentence() : faker.lorem.sentences();
-      return space.db.add(create(Expando, { title: faker.lorem.sentence(), content }));
+      return space.db.add(live(Expando, { title: faker.lorem.sentence(), content }));
     });
 
-    const { objects } = await space.db.query().run();
+    const { objects } = await space.db.query(Filter.everything()).run();
     const results = filterObjectsSync(objects, new RegExp(match, 'i'));
     expect(results).to.have.length(1);
   });

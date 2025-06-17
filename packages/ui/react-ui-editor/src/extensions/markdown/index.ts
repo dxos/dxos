@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './editorAction';
+export * from './action';
 export * from './bundle';
 export * from './debug';
 export * from './decorate';

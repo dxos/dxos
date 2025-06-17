@@ -4,13 +4,13 @@
 
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type SidebarState } from '@dxos/react-ui';
 
 import { DeckCapabilities } from './capabilities';
 import { DECK_PLUGIN } from '../meta';
-import { getMode, type DeckState, type DeckPluginState, defaultDeck } from '../types';
+import { getMode, type DeckPluginState, defaultDeck, type DeckState } from '../types';
 
 const boolean = /true|false/;
 
@@ -29,7 +29,7 @@ const migrateSidebarState = () => {
   });
 };
 
-export default () => {
+const DeckStateFactory = () => {
   migrateSidebarState();
 
   const state = new LocalStorageStore<DeckPluginState>(DECK_PLUGIN, {
@@ -41,6 +41,7 @@ export default () => {
     dialogBlockAlign: undefined,
     dialogType: undefined,
     popoverContent: null,
+    popoverAnchor: undefined,
     popoverAnchorId: undefined,
     popoverOpen: false,
     toasts: [],
@@ -67,7 +68,7 @@ export default () => {
     .prop({ key: 'activeDeck', type: LocalStorageStore.string() })
     .prop({ key: 'previousDeck', type: LocalStorageStore.string() });
 
-  const layout = create<Capabilities.Layout>({
+  const layout = live<Capabilities.Layout>({
     get mode() {
       return getMode(state.values.deck);
     },
@@ -99,3 +100,5 @@ export default () => {
     contributes(Capabilities.Layout, layout),
   ];
 };
+
+export default DeckStateFactory;

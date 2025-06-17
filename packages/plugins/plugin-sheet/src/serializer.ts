@@ -3,19 +3,18 @@
 //
 
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
-import { create, getObjectCore } from '@dxos/react-client/echo';
+import { live, getObjectCore } from '@dxos/react-client/echo';
 
 import { SheetType } from './types';
 
 export const serializer: TypedObjectSerializer<SheetType> = {
   serialize: async ({ object }): Promise<string> => {
-    const { threads: _threads, ...sheet } = object;
-    return JSON.stringify(sheet, null, 2);
+    return JSON.stringify(object, null, 2);
   },
 
   deserialize: async ({ content, newId }) => {
     const { id, ...parsed } = JSON.parse(content);
-    const sheet = create(SheetType, parsed);
+    const sheet = live(SheetType, parsed);
 
     if (!newId) {
       const core = getObjectCore(sheet);

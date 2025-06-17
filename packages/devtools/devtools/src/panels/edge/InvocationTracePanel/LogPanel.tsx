@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { type FC, useMemo } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
 import { FormatEnum } from '@dxos/echo-schema';
-import { type TraceEvent, type InvocationSpan } from '@dxos/functions/types';
+import { type TraceEvent, type InvocationSpan } from '@dxos/functions';
 import { useQueue } from '@dxos/react-client/echo';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
@@ -15,7 +15,7 @@ type LogPanelProps = {
   span?: InvocationSpan;
 };
 
-export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
+export const LogPanel: FC<LogPanelProps> = ({ span }) => {
   // Get the trace queue for this invocation
   const traceQueueDxn = useMemo(() => {
     return span?.invocationTraceQueue ? decodeReference(span.invocationTraceQueue).dxn : undefined;
@@ -50,11 +50,11 @@ export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
   );
 
   const rows = useMemo(() => {
-    if (!eventQueue?.items?.length) {
+    if (!eventQueue?.objects?.length) {
       return [];
     }
 
-    return eventQueue.items.flatMap((event) => {
+    return eventQueue.objects.flatMap((event) => {
       return event.logs.map((log) => ({
         id: `${event.id}-${log.timestampMs}`,
         time: new Date(log.timestampMs).toLocaleString(),
@@ -64,7 +64,7 @@ export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
         _original: { ...log, eventId: event.id },
       }));
     });
-  }, [eventQueue?.items]);
+  }, [eventQueue?.objects]);
 
   if (traceQueueDxn && eventQueue?.isLoading) {
     return <div className={mx('flex items-center justify-center')}>Loading trace data...</div>;

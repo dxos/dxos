@@ -16,11 +16,7 @@ import translations from '../translations';
 const meta: Meta = {
   title: 'plugins/plugin-space/MembersContainer',
   component: MembersContainer,
-  decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true }),
-    withTheme,
-    withLayout({ tooltips: true }),
-  ],
+  decorators: [withClientProvider({ createIdentity: true, createSpace: true }), withTheme, withLayout()],
   parameters: {
     layout: 'fullscreen',
     translations: [...translations, osTranslations],

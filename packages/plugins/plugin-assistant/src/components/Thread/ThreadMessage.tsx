@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, type FC } from 'react';
+import React, { type FC, type PropsWithChildren } from 'react';
 
-import { type MessageContentBlock, type Message, type ToolType } from '@dxos/artifact';
+import { type MessageContentBlock, type Message, type Tool } from '@dxos/ai';
+import { Surface } from '@dxos/app-framework';
+import type { BaseEchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
 import { Button, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
@@ -20,8 +22,8 @@ import { safeParseJson } from '@dxos/util';
 import { ToolBlock, isToolMessage } from './ToolInvocations';
 import { ToolboxContainer } from '../Toolbox';
 
-const panelClassNames = 'flex flex-col w-full px-2 bg-groupSurface rounded-md';
-const userClassNames = 'bg-[--user-fill] text-inverse';
+const panelClassNames = 'flex flex-col w-full px-2 bg-activeSurface rounded-md';
+const userClassNames = 'bg-[--user-fill] text-accentSurfaceText';
 
 const ToggleContainer = (props: ToggleContainerProps) => {
   return <NativeToggleContainer {...props} classNames={mx(panelClassNames, props.classNames)} />;
@@ -43,12 +45,20 @@ export type ThreadMessageProps = ThemedClassName<{
   space?: Space;
   message: Message;
   debug?: boolean;
-  tools?: ToolType[];
+  tools?: Tool[];
   onPrompt?: (text: string) => void;
   onDelete?: (id: string) => void;
+  onAddToGraph?: (object: BaseEchoObject) => void;
 }>;
 
-export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, space, message, tools, onPrompt }) => {
+export const ThreadMessage: FC<ThreadMessageProps> = ({
+  classNames,
+  space,
+  message,
+  tools,
+  onPrompt,
+  onAddToGraph,
+}) => {
   const { role, content = [] } = message;
 
   // TODO(burdon): Restructure types to make check unnecessary.
@@ -74,13 +84,18 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, space, messa
         classNames={mx(classNames, 'animate-[fadeIn_0.5s]')}
         user={block.type === 'text' && role === 'user'}
       >
-        <Component space={space} block={block} onPrompt={onPrompt} />
+        <Component space={space} block={block} onPrompt={onPrompt} onAddToGraph={onAddToGraph} />
       </MessageContainer>
     );
   });
 };
 
-type BlockComponent = FC<{ space?: Space; block: MessageContentBlock; onPrompt?: (text: string) => void }>;
+type BlockComponent = FC<{
+  space?: Space;
+  block: MessageContentBlock;
+  onPrompt?: (text: string) => void;
+  onAddToGraph?: (object: BaseEchoObject) => void;
+}>;
 
 const components: Record<string, BlockComponent> = {
   //
@@ -105,7 +120,7 @@ const components: Record<string, BlockComponent> = {
     return (
       <ToggleContainer
         // open={open}
-        defaultOpen={block.disposition === 'cot' && block.pending}
+        defaultOpen={systemDispositions.includes(block.disposition ?? '') && block.pending}
         title={title}
         icon={
           block.pending ? (
@@ -115,7 +130,7 @@ const components: Record<string, BlockComponent> = {
       >
         <MarkdownViewer
           content={block.text}
-          classNames={['pbe-2', block.disposition === 'cot' && 'text-sm text-subdued']}
+          classNames={['pbe-2', systemDispositions.includes(block.disposition ?? '') && 'text-sm text-subdued']}
         />
       </ToggleContainer>
     );
@@ -124,7 +139,7 @@ const components: Record<string, BlockComponent> = {
   //
   // JSON
   //
-  ['json' as const]: ({ space, block, onPrompt }) => {
+  ['json' as const]: ({ space, block, onPrompt, onAddToGraph }) => {
     invariant(block.type === 'json');
 
     switch (block.disposition) {
@@ -154,6 +169,26 @@ const components: Record<string, BlockComponent> = {
                 {option}
               </Button>
             ))}
+          </div>
+        );
+      }
+
+      case 'graph': {
+        return (
+          <div className='flex flex-wrap gap-1'>
+            <Surface
+              role='card'
+              data={{ subject: JSON.parse(block.json ?? '{}') }}
+              limit={1}
+              fallback={<div className='font-mono text-xs text-pre'>{block.json}</div>}
+            />
+            {onAddToGraph && (
+              <IconButton
+                icon='ph--plus--regular'
+                label='Add to graph'
+                onClick={() => onAddToGraph?.(JSON.parse(block.json ?? '{}'))}
+              />
+            )}
           </div>
         );
       }
@@ -193,4 +228,7 @@ const titles: Record<string, string> = {
   ['tool_use' as const]: 'Tool request',
   ['tool_result' as const]: 'Tool result',
   ['tool_list' as const]: 'Tools',
+  ['artifact-update' as const]: 'Artifact(s) changed',
 };
+
+const systemDispositions: string[] = ['cot', 'artifact-update'];

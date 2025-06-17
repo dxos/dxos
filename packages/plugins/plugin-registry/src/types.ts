@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
-export const RegistrySettingsSchema = S.mutable(
-  S.Struct({
-    experimental: S.optional(S.Boolean),
+export const RegistrySettingsSchema = Schema.mutable(
+  Schema.Struct({
+    experimental: Schema.optional(Schema.Boolean),
   }),
 );
 
-export type RegistrySettings = S.Schema.Type<typeof RegistrySettingsSchema>;
+export type RegistrySettings = Schema.Schema.Type<typeof RegistrySettingsSchema>;

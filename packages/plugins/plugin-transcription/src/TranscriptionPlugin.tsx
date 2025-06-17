@@ -6,11 +6,14 @@ import { Capabilities, Events, contributes, defineModule, definePlugin } from '@
 import { QueueImpl } from '@dxos/echo-db';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { getSpace } from '@dxos/react-client/echo';
+import { DataType } from '@dxos/schema';
 
-import { AppGraphBuilder, IntentResolver, MeetingTranscriptionState, ReactSurface, Transcriber } from './capabilities';
+import { IntentResolver, ReactSurface, Transcriber } from './capabilities';
+import { renderMarkdown } from './components';
 import { meta } from './meta';
 import translations from './translations';
-import { TranscriptBlock, TranscriptType } from './types';
+import { TranscriptType } from './types';
 
 export const TranscriptionPlugin = () =>
   definePlugin(meta, [
@@ -18,16 +21,6 @@ export const TranscriptionPlugin = () =>
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/transcription`,
-      activatesOn: Events.SetupAppGraph,
-      activate: Transcriber,
-    }),
-    defineModule({
-      id: `${meta.id}/module/meeting-transcription-state`,
-      activatesOn: Events.SetupAppGraph,
-      activate: MeetingTranscriptionState,
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
@@ -39,12 +32,14 @@ export const TranscriptionPlugin = () =>
             icon: 'ph--subtitles--regular',
             // TODO(wittjosiah): Factor out. Artifact? Separate capability?
             getTextContent: async (transcript: TranscriptType) => {
-              const client = context.requestCapability(ClientCapabilities.Client);
+              const client = context.getCapability(ClientCapabilities.Client);
+              const space = getSpace(transcript);
+              const members = space?.members.get().map((member) => member.identity) ?? [];
               const queue = new QueueImpl(client.edge, transcript.queue.dxn);
               await queue.refresh();
-              const content = queue.items
-                .filter((block) => isInstanceOf(TranscriptBlock, block))
-                .map((block) => `${block.authorName}: ${block.segments.map((segment) => segment.text).join('\n')}`)
+              const content = queue.objects
+                .filter((message) => isInstanceOf(DataType.Message, message))
+                .flatMap((message, index) => renderMarkdown(members)(message, index))
                 .join('\n\n');
               return content;
             },
@@ -67,8 +62,8 @@ export const TranscriptionPlugin = () =>
       activate: IntentResolver,
     }),
     defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
+      id: `${meta.id}/module/transcription`,
       activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
+      activate: Transcriber,
     }),
   ]);

@@ -15,8 +15,10 @@ import { type InvitationResult } from '@dxos/react-client/invitations';
 import { Welcome, WelcomeState } from './Welcome';
 import { removeQueryParamByValue } from '../../../util';
 import { activateAccount, signup } from '../credentials';
+import { WELCOME_PLUGIN } from '../meta';
 
-export const WELCOME_SCREEN = 'WelcomeScreen';
+export const WELCOME_SCREEN = `${WELCOME_PLUGIN}/component/WelcomeScreen`;
+const TEST_EMAIL = 'test@dxos.org';
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const searchParams = new URLSearchParams(window.location.search);
@@ -39,6 +41,24 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
 
       if (error) {
         setError(false);
+      }
+
+      if (email === TEST_EMAIL) {
+        if (!identity) {
+          await dispatch(
+            createIntent(ClientAction.CreateIdentity, {
+              displayName: 'Test User',
+              data: { emoji: '🧪', hue: 'amber' },
+            }),
+          );
+        }
+        await dispatch(
+          createIntent(LayoutAction.UpdateDialog, {
+            part: 'dialog',
+            options: { state: false },
+          }),
+        );
+        return;
       }
 
       try {
@@ -81,9 +101,8 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
 
     const handleDone = async (result: InvitationResult | null) => {
       await dispatch(
-        createIntent(LayoutAction.Close, {
-          part: 'main',
-          subject: [`surface:${WELCOME_SCREEN}`],
+        createIntent(LayoutAction.UpdateDialog, {
+          part: 'dialog',
           options: { state: false },
         }),
       );

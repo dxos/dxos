@@ -9,7 +9,7 @@ import { type Space, Filter, fullyQualifiedId } from '@dxos/client/echo';
 import { FQ_ID_LENGTH } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { getTypename } from '@dxos/echo-schema';
-import { FunctionType } from '@dxos/functions/types';
+import { FunctionType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -196,7 +196,7 @@ export class ComputeGraph extends Resource {
    * Map from binding to fully qualified ECHO ID (to store).
    * E.g., HELLO() => spaceId:objectId()
    */
-  mapFunctionBindingToId(formula: string) {
+  mapFunctionBindingToId(formula: string): string {
     return formula.replace(/(\w+)\((.*)\)/g, (match, binding, args) => {
       if (binding === EDGE_FUNCTION_NAME || defaultFunctions.find((fn) => fn.name === binding)) {
         return match;
@@ -216,7 +216,7 @@ export class ComputeGraph extends Resource {
    * Map from fully qualified ECHO ID to binding (from store).
    * E.g., spaceId:objectId() => HELLO()
    */
-  mapFunctionBindingFromId(formula: string) {
+  mapFunctionBindingFromId(formula: string): string | undefined {
     const binding = formula.replace(/(\w+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {
       const id = `${spaceId}:${objectId}`;
       if (id.length !== FQ_ID_LENGTH) {
@@ -238,10 +238,10 @@ export class ComputeGraph extends Resource {
     }
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     if (this._space) {
       // Subscribe to remote function definitions.
-      const query = this._space.db.query(Filter.schema(FunctionType));
+      const query = this._space.db.query(Filter.type(FunctionType));
       const unsubscribe = query.subscribe(({ objects }) => {
         this._remoteFunctions = objects.filter(({ binding }) => binding);
         this.update.emit({ type: 'functionsUpdated' });
@@ -251,7 +251,7 @@ export class ComputeGraph extends Resource {
     }
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     for (const node of this._nodes.values()) {
       await node.close();
     }

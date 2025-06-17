@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
 import { Capabilities, Events } from '../../common';
 import { contributes, defineEvent, defineCapability, defineModule, definePlugin } from '../../core';
@@ -15,9 +15,9 @@ export const CountEvent = defineEvent('dxos.org/test/generator/count');
 export const createPluginId = (id: string) => `dxos.org/test/generator/${id}`;
 
 export const createGeneratorIntent = (id: string) => {
-  class Alert extends S.TaggedClass<Alert>()(`${createPluginId(id)}/action/alert`, {
-    input: S.Void,
-    output: S.Void,
+  class Alert extends Schema.TaggedClass<Alert>()(`${createPluginId(id)}/action/alert`, {
+    input: Schema.Void,
+    output: Schema.Void,
   }) {}
 
   return Alert as unknown as IntentSchema<any, any>;

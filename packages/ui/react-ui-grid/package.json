@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-grid",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "React component which manages a `dx-grid` Lit web component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,6 +30,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@lit/react": "^1.0.5",
+    "@preact-signals/safe-react": "^0.9.0",
     "@radix-ui/react-context": "1.1.1",
     "@radix-ui/react-popper": "1.2.2",
     "@radix-ui/react-use-controllable-state": "1.1.0"

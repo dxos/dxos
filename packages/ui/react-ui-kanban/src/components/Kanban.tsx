@@ -4,11 +4,12 @@
 
 import React, { type ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { Surface } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
-import { getSnapshot, type JsonPath, setValue } from '@dxos/echo-schema';
+import { getSnapshot, getTypename, type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
-import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
+import { useSelectionActions, useSelected, AttentionGlyph } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Stack, StackItem, autoScrollRootAttributes, railGridHorizontalContainFitContent } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
@@ -22,11 +23,18 @@ export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   onRemoveCard?: (card: T) => void;
 };
 
+const getColumnDropElement = (stackElement: HTMLDivElement) => {
+  return stackElement.closest('.kanban-drop') as HTMLDivElement;
+};
+
+const kanbanCardStyles =
+  'rounded overflow-hidden bg-cardSurface border border-separator dark:border-subduedSeparator dx-focus-ring-group-y-indicator relative min-bs-[--rail-item]';
+
 export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
-  const { select, clear } = useSelectionActions([model.id, model.schema.typename]);
-  const selectedItems = useSelectedItems(model.id);
-  const [focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
+  const { singleSelect, clear } = useSelectionActions([model.id, getTypename(model.schema)!]);
+  const selected = useSelected(model.id, 'single');
+  const [_focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
   useEffect(() => () => clear(), []);
 
   const handleAddCard = useCallback(
@@ -34,6 +42,13 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       if (onAddCard) {
         const newCardId = onAddCard(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue);
         setFocusedCardId(newCardId);
+        queueMicrotask(() => {
+          const columnStack = document.getElementById(columnValue as string);
+          if (columnStack) {
+            const scrollEvent = new Event('scroll');
+            columnStack.dispatchEvent(scrollEvent);
+          }
+        });
       }
     },
     [onAddCard],
@@ -49,24 +64,29 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       itemsCount={model.arrangedCards.length}
       {...autoScrollRootAttributes}
     >
-      {model.arrangedCards.map(({ columnValue, cards }) => {
+      {model.arrangedCards.map(({ columnValue, cards }, index, array) => {
         const { color, title } = model.getPivotAttributes(columnValue);
         const uncategorized = columnValue === UNCATEGORIZED_VALUE;
+        const prevSiblingId = index > 0 ? array[index - 1].columnValue : undefined;
+        const nextSiblingId = index < array.length - 1 ? array[index + 1].columnValue : undefined;
         return (
           <StackItem.Root
             key={columnValue}
             item={{ id: columnValue }}
             size={20}
-            classNames='flex flex-col pli-2 plb-2 drag-preview-p-0'
+            classNames='flex flex-col pli-2 plb-2'
             disableRearrange={uncategorized}
             focusIndicatorVariant='group'
+            prevSiblingId={prevSiblingId}
+            nextSiblingId={nextSiblingId}
           >
             <div
               role='none'
               className={mx(
-                'shrink min-bs-0 bg-groupSurface rounded-lg grid dx-focus-ring-group-x-indicator',
+                'shrink min-bs-0 bg-baseSurface border border-separator rounded-md grid dx-focus-ring-group-x-indicator kanban-drop',
                 railGridHorizontalContainFitContent,
               )}
+              data-scroll-separator='false'
             >
               <Stack
                 id={columnValue}
@@ -74,30 +94,36 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 size='contain'
                 rail={false}
                 classNames={
-                  /* NOTE(thure): Do not eliminate spacing here without ensuring this element will have a significant size, otherwise dropping items into an empty stack will be made difficult or impossible. See #9035. */ 'pbe-1 drag-preview-p-0'
+                  /* NOTE(thure): Do not let this element have zero intrinsic size, otherwise the drop indicator will not display. See #9035. */
+                  ['plb-1', cards.length > 0 && 'plb-2']
                 }
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
+                getDropElement={getColumnDropElement}
+                separatorOnScroll={9}
               >
-                {cards.map((card) => (
+                {cards.map((card, cardIndex, cardsArray) => (
                   <StackItem.Root
                     key={card.id}
                     item={card}
-                    classNames={'contain-layout pli-2 plb-2 drag-preview-p-0'}
+                    classNames='contain-layout pli-2 plb-1 first-of-type:pbs-0 last-of-type:pbe-0'
                     focusIndicatorVariant='group'
-                    onClick={() => select([card.id])}
+                    onClick={() => singleSelect(card.id)}
+                    prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
+                    nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
                   >
-                    <div role='none' className={mx('rounded bg-baseSurface dx-focus-ring-group-y-indicator')}>
-                      <div role='none' className='flex items-center'>
+                    <div role='none' className={kanbanCardStyles}>
+                      <div role='none' className='flex items-center absolute block-start-0 inset-inline-0'>
                         <StackItem.DragHandle asChild>
                           <IconButton
                             iconOnly
                             icon='ph--dots-six-vertical--regular'
                             variant='ghost'
                             label={t('card drag handle label')}
+                            classNames='pli-2'
                           />
                         </StackItem.DragHandle>
-                        <AttentionGlyph attended={selectedItems.has(card.id)} />
+                        <AttentionGlyph attended={selected === card.id} />
                         {onRemoveCard && (
                           <>
                             <span role='separator' className='grow' />
@@ -111,22 +137,45 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           </>
                         )}
                       </div>
-                      <CardForm key={card.id} card={card} model={model} autoFocus={card.id === focusedCardId} />
+                      <Surface role='card--kanban' limit={1} data={{ subject: card }} />
                     </div>
+                    <StackItem.DragPreview>
+                      {({ item }) => (
+                        <div className='p-2'>
+                          <div className={mx(kanbanCardStyles, 'ring-focusLine ring-neutralFocusIndicator')}>
+                            <div role='none' className='flex items-center absolute block-start-0 inset-inline-0'>
+                              <IconButton
+                                iconOnly
+                                icon='ph--dots-six-vertical--regular'
+                                variant='ghost'
+                                label={t('card drag handle label')}
+                                classNames='pli-2'
+                              />
+                            </div>
+                            <Surface role='card--kanban' limit={1} data={{ subject: item }} />
+                          </div>
+                        </div>
+                      )}
+                    </StackItem.DragPreview>
                   </StackItem.Root>
                 ))}
               </Stack>
+
               {onAddCard && (
-                <div role='none' className='plb-2 pli-2'>
+                <div
+                  role='none'
+                  className='plb-2 mli-2 border-bs border-transparent [[data-scroll-separator-end="true"]_&]:border-subduedSeparator'
+                >
                   <IconButton
                     icon='ph--plus--regular'
                     label={t('add card label')}
                     onClick={() => handleAddCard(columnValue)}
-                    classNames='is-full bg-baseSurface'
+                    classNames='is-full'
                   />
                 </div>
               )}
-              <StackItem.Heading classNames='pli-2 order-first'>
+
+              <StackItem.Heading classNames='mli-2 order-first bg-transparent rounded-bs-md'>
                 {!uncategorized && (
                   <StackItem.DragHandle asChild>
                     <IconButton
@@ -157,6 +206,65 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 )} */}
               </StackItem.Heading>
             </div>
+            <StackItem.DragPreview>
+              {({ item }) => {
+                // Find the column data for this item
+                const columnData = model.arrangedCards.find((col) => col.columnValue === item.id);
+                if (!columnData) {
+                  return null;
+                }
+
+                const { cards, columnValue } = columnData;
+                const { color, title } = model.getPivotAttributes(columnValue);
+                const uncategorized = columnValue === UNCATEGORIZED_VALUE;
+
+                return (
+                  <div className='p-2'>
+                    <div className='rounded-md max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface border border-separator ring-focusLine ring-neutralFocusIndicator flex flex-col'>
+                      {/* Column Header */}
+                      <div className='flex items-center p-2'>
+                        <IconButton
+                          iconOnly
+                          icon='ph--dots-six-vertical--regular'
+                          variant='ghost'
+                          label={t('column drag handle label')}
+                          classNames='pli-2'
+                        />
+                        <Tag
+                          palette={color as any}
+                          data-uncategorized={uncategorized}
+                          classNames='mis-1 data-[uncategorized="true"]:mis-2'
+                        >
+                          {title}
+                        </Tag>
+                      </div>
+
+                      {/* Cards Container */}
+                      <div
+                        className={mx(
+                          'overflow-y-auto flex-1 pli-2 flex flex-col gap-2',
+                          'plb-1',
+                          cards.length > 0 && 'plb-2',
+                        )}
+                      >
+                        {cards.map((card) => (
+                          <div key={card.id} role='none' className={kanbanCardStyles}>
+                            <Surface role='card--kanban' limit={1} data={{ subject: card }} />
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Add Card Button */}
+                      {onAddCard && (
+                        <div className='p-2 border-t border-separator'>
+                          <IconButton icon='ph--plus--regular' label={t('add card label')} classNames='is-full' />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              }}
+            </StackItem.DragPreview>
           </StackItem.Root>
         );
       })}
@@ -203,7 +311,7 @@ type CardFormProps<T extends BaseKanbanItem> = {
   autoFocus: boolean;
 };
 
-const CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardFormProps<T>) => {
+const _CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardFormProps<T>) => {
   const handleSave = useCallback(
     debounce((values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
       const id = values.id;
@@ -220,7 +328,7 @@ const CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardForm
     [model.items],
   );
 
-  const initialValue = useMemo(() => getSnapshot(card), [JSON.stringify(card)]);
+  const initialValue = useMemo(() => getSnapshot(card), [JSON.stringify(card)]); // TODO(burdon): Avoid stringify.
 
   // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
   //   omit fields from the form?

@@ -2,16 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
-import { useResizeDetector } from 'react-resize-detector';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { type Space } from '@dxos/client/echo';
-import { createSvgContext, SVG, SVGRoot } from '@dxos/gem-core';
 import { useAsyncState } from '@dxos/react-ui';
+import { SVG, type SVGContext } from '@dxos/react-ui-graph';
+import { SpaceGraphModel } from '@dxos/schema';
 
 import { HierarchicalEdgeBundling, RadialTree, TidyTree } from './layout';
 import { mapGraphToTreeData, type TreeNode } from './types';
-import { SpaceGraphModel } from '../Graph';
 
 // TODO(burdon): Create dge bundling graph using d3.hierarchy.
 // https://observablehq.com/@d3/hierarchical-edge-bundling?intent=fork
@@ -63,10 +62,7 @@ export type TreeComponentProps<N = unknown> = {
 
 // TODO(burdon): Label accessor.
 export const Tree = <N,>({ space, selected, variant = 'tidy', onNodeClick }: TreeComponentProps<N>) => {
-  const [model] = useAsyncState(
-    async () => (space ? new SpaceGraphModel().open(space, selected) : undefined),
-    [space, selected],
-  );
+  const [model] = useAsyncState(async () => (space ? new SpaceGraphModel().open(space) : undefined), [space, selected]);
 
   const [tree, setTree] = useState<TreeNode>();
   useEffect(() => {
@@ -76,11 +72,11 @@ export const Tree = <N,>({ space, selected, variant = 'tidy', onNodeClick }: Tre
     }, true);
   }, [model]);
 
-  const context = createSvgContext();
-  const { ref, width = 0, height = 0 } = useResizeDetector();
+  const context = useRef<SVGContext>(null);
 
   useEffect(() => {
-    if (width && height) {
+    if (context.current) {
+      const { width, height } = context.current.size!;
       const size = Math.min(width, height);
       const radius = size * 0.4;
       const options = {
@@ -98,17 +94,14 @@ export const Tree = <N,>({ space, selected, variant = 'tidy', onNodeClick }: Tre
 
       if (tree) {
         const renderer = renderers.get(variant);
-        renderer?.(context.ref.current!, tree, options);
+        renderer?.(context.current!.svg, tree, options);
       }
     }
-  }, [tree, width, height]);
+  }, [context.current, tree]);
 
-  // TODO(burdon): Provider should expand.
   return (
-    <div ref={ref} className='flex grow overflow-hidden' onClick={() => onNodeClick?.()}>
-      <SVGRoot context={context}>
-        <SVG />
-      </SVGRoot>
+    <div onClick={() => onNodeClick?.()}>
+      <SVG.Root ref={context} />
     </div>
   );
 };

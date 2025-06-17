@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-theme",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "DXOS Surface plugin for providing the application theme.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,9 +32,12 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@preact-signals/safe-react": "^0.9.0",
+    "effect": "^3.13.3",
     "i18next": "^21.10.0"
   },
   "devDependencies": {
@@ -50,6 +53,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

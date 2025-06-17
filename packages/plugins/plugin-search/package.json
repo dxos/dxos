@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-search",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,10 +23,12 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/artifact": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -36,14 +38,13 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
-    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "3.13.3",
+    "@preact-signals/safe-react": "^0.9.0",
     "exa-js": "^1.5.12",
     "main-thread-scheduling": "^14.1.1"
   },
@@ -52,9 +53,12 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@effect-rx/rx-react": "^0.34.1",
+    "@effect/platform": "0.80.12",
     "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
+    "effect": "3.14.21",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "vite": "5.4.7"
@@ -62,7 +66,10 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@effect-rx/rx-react": "^0.34.1",
+    "@effect/platform": "0.80.12",
     "@phosphor-icons/react": "^2.1.5",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },
