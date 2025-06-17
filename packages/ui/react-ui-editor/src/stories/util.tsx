@@ -262,7 +262,9 @@ export type StoryProps = {
 } & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'> &
   Pick<ThemeExtensionsOptions, 'slots'>;
 
-// Default story component
+/**
+ * Default story component
+ */
 export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
   (
     {

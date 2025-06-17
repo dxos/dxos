@@ -20,8 +20,8 @@ import { createRenderer } from '../util';
 
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/Comments',
+  component: EditorStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: EditorStory,
   parameters: { layout: 'fullscreen' },
 };
 
