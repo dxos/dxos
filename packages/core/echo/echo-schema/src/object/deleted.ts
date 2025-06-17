@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { BaseObject } from '../types';
 import { DeletedId } from './model';
+import type { BaseObject } from '../types';
 
 /**
  * @returns `true` if the object has been marked as deleted.

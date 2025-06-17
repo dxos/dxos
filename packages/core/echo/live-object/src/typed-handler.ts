@@ -100,18 +100,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
         return toJSON(target);
       }
       case TypeId: {
-        if ((target as any)[TypeId] !== undefined) {
-          return (target as any)[TypeId];
-        }
-
-        const schema = this.getSchema(target);
-        // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
-        if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
-          return (schema as any)[SchemaMetaSymbol].typename;
-        }
-        return this.getTypeReference(target)?.objectId;
-      }
-      case TypeId: {
         return this.getTypeReference(target)?.toDXN();
       }
     }

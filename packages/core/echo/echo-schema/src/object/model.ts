@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { DXN, ObjectId } from '@dxos/keys';
-import type { EntityKind } from '../ast';
-import type { ObjectMeta } from './meta';
-import type { ForeignKey } from '@dxos/echo-protocol';
 import type { Schema } from 'effect';
+
+import type { ForeignKey } from '@dxos/echo-protocol';
+import type { DXN, ObjectId } from '@dxos/keys';
+
+import type { ObjectMeta } from './meta';
+import type { EntityKind } from '../ast';
 
 //
 // Defines the internal model of the echo object.

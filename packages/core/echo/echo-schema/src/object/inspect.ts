@@ -6,9 +6,9 @@ import type { inspect as inspectFn, InspectOptionsStylized } from 'node:util';
 
 import { inspectCustom, type CustomInspectFunction } from '@dxos/debug';
 
-import { type BaseEchoObject } from '../types';
 import { ATTR_META, ATTR_TYPE, MetaId } from './model';
 import { getType } from './typename';
+import { type BaseEchoObject } from '../types';
 
 /*
  * @internal

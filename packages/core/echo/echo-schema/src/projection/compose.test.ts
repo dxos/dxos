@@ -6,9 +6,9 @@ import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
 import { composeSchema } from './compose';
-import { toJsonSchema } from '../json';
 import { FieldPath } from '../ast';
 import { FormatAnnotation, FormatEnum } from '../formats';
+import { toJsonSchema } from '../json';
 import { ECHO_ANNOTATIONS_NS_KEY } from '../json-schema';
 import { TypedObject } from '../object';
 

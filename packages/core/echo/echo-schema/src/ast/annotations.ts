@@ -4,7 +4,6 @@
 
 import { flow, Option, pipe, Schema, SchemaAST } from 'effect';
 
-import { getField, type JsonPath } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';

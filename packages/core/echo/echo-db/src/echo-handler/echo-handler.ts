@@ -33,8 +33,12 @@ import {
   setRefResolver,
   StoredSchema,
   TypeId,
+  type BaseEchoObject,
+  getEntityKind,
+  getSchema,
+  requireTypeReference,
 } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
+import { invariant, assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import {
   createProxy,
@@ -45,20 +49,13 @@ import {
   type ReactiveHandler,
   symbolIsProxy,
 } from '@dxos/live-object';
+import { getMeta, getProxySlot } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
-import { type KeyPath, META_NAMESPACE, ObjectCore } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
-
-import { type BaseEchoObject, getEntityKind, getSchema, requireTypeReference } from '@dxos/echo-schema';
-import { assertArgument } from '@dxos/invariant';
-import { getMeta, getProxySlot } from '@dxos/live-object';
-
-import { type DecodedAutomergePrimaryValue } from '../core-db';
-import { ObjectInternals } from './echo-proxy-target';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
+import { ObjectInternals } from './echo-proxy-target';
 import {
   type ProxyTarget,
   symbolHandler,
@@ -67,6 +64,8 @@ import {
   symbolPath,
   TargetKey,
 } from './echo-proxy-target';
+import { type DecodedAutomergePrimaryValue, type KeyPath, META_NAMESPACE, ObjectCore } from '../core-db';
+import { type EchoDatabase } from '../proxy-db';
 
 /**
  * Shared for all targets within one ECHO object.

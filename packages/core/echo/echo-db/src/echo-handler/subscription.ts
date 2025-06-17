@@ -3,8 +3,8 @@
 //
 
 import { type CleanupFn } from '@dxos/async';
-import { getObjectCore, isEchoObject } from './echo-handler';
 
+import { getObjectCore, isEchoObject } from './echo-handler';
 
 export type Selection = any[];
 
