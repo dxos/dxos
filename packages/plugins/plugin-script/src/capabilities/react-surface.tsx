@@ -18,12 +18,11 @@ import {
   ScriptContainer,
   ScriptPluginSettings,
   ScriptObjectSettings,
-  TestPanel,
   ScriptProperties,
   DeploymentDialog,
   DEPLOYMENT_DIALOG,
+  TestContainer,
 } from '../components';
-import { useDeployState, useToolbarState } from '../hooks';
 import { meta } from '../meta';
 import { type ScriptSettingsProps } from '../types';
 
@@ -64,16 +63,7 @@ export default () =>
       role: 'article',
       filter: (data): data is { companionTo: ScriptType } =>
         isInstanceOf(ScriptType, data.companionTo) && data.subject === 'execute',
-      component: ({ data, role }) => {
-        // TODO(wittjosiah): Decouple hooks from toolbar state.
-        const state = useToolbarState();
-        useDeployState({ state, script: data.companionTo });
-        return (
-          <StackItem.Content role={role}>
-            <TestPanel functionUrl={state.functionUrl} />
-          </StackItem.Content>
-        );
-      },
+      component: ({ data, role }) => <TestContainer script={data.companionTo} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/companion/logs`,
