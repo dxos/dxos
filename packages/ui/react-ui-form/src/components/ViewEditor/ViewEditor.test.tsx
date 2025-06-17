@@ -106,4 +106,38 @@ describe('ViewEditor', () => {
     expect(addedPropertyProjection).toBeDefined();
     expect(addedPropertyProjection.props.property).toBe('added_property');
   });
+
+  test('delete property', async () => {
+    await Default.run();
+    await waitForViewEditor();
+
+    // Find the delete button for the 'name' property
+    const nameProperty = screen.getByText('name');
+    const propertyRow = nameProperty.closest('[role="listitem"]');
+    const deleteButton = propertyRow?.querySelector('button:last-child');
+
+    if (!deleteButton) {
+      throw new Error('Delete button not found');
+    }
+
+    // Click the delete button
+    fireEvent.click(deleteButton);
+
+    // Assert the property is no longer visible
+    expect(screen.queryByText('name')).not.toBeInTheDocument();
+
+    const debugInfo = JSON.parse(screen.getByTestId('debug').textContent!);
+
+    // Check schema no longer contains the name property
+    const schemaProperties = debugInfo.schema._storedSchema.jsonSchema.properties;
+    expect(schemaProperties.name).toBeUndefined();
+
+    // Check view no longer contains the name field
+    const nameField = debugInfo.view.fields.find((field: any) => field.path === 'name');
+    expect(nameField).toBeUndefined();
+
+    // Check projection no longer contains the name property
+    const nameProjection = debugInfo.projection._fieldProjections.find((proj: any) => proj.field.path === 'name');
+    expect(nameProjection).toBeUndefined();
+  });
 });
