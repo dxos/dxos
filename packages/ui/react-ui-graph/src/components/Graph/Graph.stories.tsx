@@ -324,6 +324,9 @@ const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-graph/Graph',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    controls: { disable: true },
+  },
 };
 
 export default meta;
