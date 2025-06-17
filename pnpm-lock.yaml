@@ -7875,9 +7875,6 @@ importers:
 
   packages/plugins/plugin-outliner:
     dependencies:
-      '@codemirror/commands':
-        specifier: ^6.6.2
-        version: 6.6.2
       '@codemirror/state':
         specifier: ^6.4.1
         version: 6.4.1
