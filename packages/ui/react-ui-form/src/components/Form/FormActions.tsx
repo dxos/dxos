@@ -19,7 +19,7 @@ export const FormActions = ({ readonly, onCancel }: FormActionsProps) => {
   const { canSave, handleSave } = useFormContext();
 
   return (
-    <div role='none' className='flex [&_button]:grow gap-1 pli-2'>
+    <div role='none' className='flex [&_button]:grow gap-1 pli-2 pbe-2'>
       {onCancel && !readonly && (
         <IconButton data-testid='cancel-button' icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
       )}
