@@ -26,6 +26,7 @@ import {
   type ObjectStructure,
   type DatabaseDirectory,
   type SpaceState,
+  DATA_NAMESPACE,
 } from '@dxos/echo-protocol';
 import { type ObjectId, Ref, type AnyObjectData, type Filter } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -48,8 +49,7 @@ import { CoreDatabaseQueryContext } from './core-database-query-context';
 import { type InsertBatch, type InsertData, type UpdateOperation } from './crud-api';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
-import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
-import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
+import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../automerge';
 import { type Hypergraph } from '../hypergraph';
 import { normalizeQuery, QueryResult, type QueryFn } from '../query';
 
@@ -464,7 +464,6 @@ export class CoreDatabase {
     return isBatch ? cores.map((core) => core.toPlainObject()) : cores[0].toPlainObject();
   }
 
-  // TODO(dmaretskyi): Rename `addObjectCore`.
   addCore(core: ObjectCore, opts?: AddCoreOptions): void {
     if (core.database) {
       // Already in the database.
@@ -508,7 +507,6 @@ export class CoreDatabase {
     });
   }
 
-  // TODO(dmaretskyi): Rename `removeObjectCore`.
   removeCore(core: ObjectCore): void {
     invariant(this._objects.has(core.id));
     core.setDeleted(true);
@@ -578,12 +576,11 @@ export class CoreDatabase {
   }
 
   async flush({ disk = true, indexes = false, updates = false }: FlushOptions = {}): Promise<void> {
+    log('flush', { disk, indexes, updates });
     if (disk) {
       await this._repoProxy.flush();
       await this._dataService.flush(
-        {
-          documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
-        },
+        { documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId) },
         { timeout: RPC_TIMEOUT },
       );
     }

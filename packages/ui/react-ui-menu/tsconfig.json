@@ -10,5 +10,33 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/keyboard"
+    },
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-attention"
+    },
+    {
+      "path": "../react-ui-theme"
+    }
+  ]
 }

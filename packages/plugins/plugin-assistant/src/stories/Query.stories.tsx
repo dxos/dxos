@@ -200,24 +200,35 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       const createObjects = createObjectFactory(space.db, generator);
       await createObjects(spec);
     } else {
-      addTestData(space);
+      await addTestData(space);
     }
 
-    // TODO(burdon): Why is this needed?
-    // await space.db.flush({ indexes: true });
+    // TODO(burdon): BUG: objects are not persisted unless this is called.
+    await space.db.flush({ indexes: true });
   }, [space, generator, spec]);
 
-  const handleReset = useCallback(async () => {
-    if (space) {
-      await space.close();
-    }
+  const handleReset = useCallback(
+    async (reset = false) => {
+      if (reset) {
+        // TODO(burdon): Doesn't cleanly restart.
+        log.info('resetting client...');
+        await client.reset();
+        log.info('client reset');
+        return;
+      }
 
-    const newSpace = await client.spaces.create();
-    setSpace(newSpace);
-    setAst(undefined);
-    setFilter(undefined);
-    promptRef.current?.setText('');
-  }, [space, client]);
+      if (space) {
+        await space.close();
+      }
+
+      const newSpace = await client.spaces.create();
+      setSpace(newSpace);
+      setAst(undefined);
+      setFilter(undefined);
+      promptRef.current?.setText('');
+    },
+    [space, client],
+  );
 
   const handleSubmit = useCallback<NonNullable<PromptBarProps['onSubmit']>>(
     (text) => {
@@ -264,14 +275,22 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
               <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='refresh' onClick={handleRefresh} />
               <IconButton icon='ph--sparkle--regular' iconOnly label='research' onClick={handleResearch} />
               <IconButton icon='ph--plus--regular' iconOnly label='generate' onClick={handleGenerate} />
-              <IconButton icon='ph--trash--regular' iconOnly label='reset' onClick={handleReset} />
+              <IconButton
+                icon='ph--trash--regular'
+                iconOnly
+                label='reset'
+                onClick={(event) => handleReset(event.shiftKey)}
+              />
             </Toolbar.Root>
             <ItemList items={objects} />
             <JsonFilter
               data={{
                 space: client.spaces.get().length,
                 db: space?.db.toJSON(),
-                queue: researchQueue?.toJSON(),
+                queue: {
+                  dxn: researchQueue?.dxn.toString(),
+                  objects: researchQueue?.objects.length,
+                },
                 model: model?.toJSON(),
                 selection: selection.toJSON(),
                 ast,

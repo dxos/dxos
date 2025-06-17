@@ -9,6 +9,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';
 import * as LiveObject from '@dxos/live-object';
 
+import type * as Ref from './Ref';
 import type * as Type from './Type';
 
 export type Any = EchoSchema.AnyEchoObject;
@@ -42,9 +43,10 @@ export const instanceOf: {
 
 export const getSchema = EchoSchema.getSchema;
 
+// TODO(dmaretskyi): Allow returning undefined.
 export const getDXN = (obj: Any): DXN => {
   assertArgument(!Schema.isSchema(obj), 'Object should not be a schema.');
-  const dxn = EchoSchema.getDXN(obj);
+  const dxn = EchoSchema.getObjectDXN(obj);
   invariant(dxn != null, 'Invalid object.');
   return dxn;
 };
@@ -53,6 +55,7 @@ export const getDXN = (obj: Any): DXN => {
  * @returns The DXN of the object's type.
  * @example dxn:example.com/type/Contact:1.0.0
  */
+// TODO(dmaretskyi): Allow returning undefined.
 export const getSchemaDXN = (obj: Any): DXN => {
   const type = EchoSchema.getType(obj);
   invariant(type != null, 'Invalid object.');
@@ -73,14 +76,38 @@ export const getTypename = (obj: Any): string | undefined => {
   return EchoSchema.getTypename(schema);
 };
 
+// TODO(dmaretskyi): Allow returning undefined.
 export const getMeta = (obj: Any): EchoSchema.ObjectMeta => {
   const meta = EchoSchema.getMeta(obj);
   invariant(meta != null, 'Invalid object.');
   return meta;
 };
 
+// TODO(dmaretskyi): Default to `false`.
 export const isDeleted = (obj: Any): boolean => {
   const deleted = EchoSchema.isDeleted(obj);
   invariant(typeof deleted === 'boolean', 'Invalid object.');
   return deleted;
 };
+
+/**
+ * JSON representation of an object.
+ */
+export type JSON = EchoSchema.ObjectJSON;
+
+/**
+ * Converts object to it's JSON representation.
+ *
+ * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
+ */
+export const toJSON = (obj: Any): JSON => EchoSchema.objectToJSON(obj);
+
+/**
+ * Creates an object from it's json representation.
+ * Performs schema validation.
+ * References and schema will be resolvable if the `refResolver` is provided.
+ *
+ * The function need to be async to support resolving the schema as well as the relation endpoints.
+ */
+export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver }) => Promise<Any> =
+  EchoSchema.objectFromJSON;
