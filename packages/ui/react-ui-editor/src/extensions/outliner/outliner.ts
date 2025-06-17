@@ -158,7 +158,7 @@ const decorations = (options: OutlinerProps) => [
       },
 
       '.cm-list-item-selected': {
-        borderColor: options.showSelected ? 'var(--dx-separator)' : undefined,
+        borderColor: options.showSelected === false ? undefined : 'var(--dx-separator)',
       },
       '.cm-list-item-focused': {
         borderColor: 'var(--dx-accentFocusIndicator)',

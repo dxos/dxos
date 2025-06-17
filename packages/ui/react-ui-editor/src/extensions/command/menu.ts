@@ -119,7 +119,10 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
       padding: '0',
       border: 'none',
       transition: 'opacity 0.3s ease-in-out',
-      opacity: 0.1,
+      // opacity: 0.1,
+    },
+    '.cm-ref-tag[data-focused="true"]': {
+      opacity: 1,
     },
     '.cm-ref-tag button': {
       display: 'grid',
@@ -127,9 +130,6 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
       justifyContent: 'center',
       width: '2rem',
       height: '2rem',
-    },
-    '.cm-ref-tag[data-focused="true"]': {
-      opacity: 1,
     },
   }),
 ];
