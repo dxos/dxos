@@ -7,10 +7,13 @@ import { type Schema } from 'effect';
 import { failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 
+import { setSchema } from './accessors';
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
+import { MetaId } from './model';
 import { setTypename } from './typename';
-import { getSchemaDXN, getTypeAnnotation, setSchema } from '../ast';
+import { getSchemaDXN, getTypeAnnotation } from '../ast';
+import { defineHiddenProperty } from '../utils';
 
 // Make `id` optional.
 type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;
@@ -58,9 +61,10 @@ export const create = <S extends Schema.Schema.AnyNoContext>(
   }
 
   const obj = { ...data, id: data.id ?? ObjectId.random() };
-  setTypename(obj, getSchemaDXN(schema)?.toString() ?? failedInvariant('Missing schema DXN'));
+  setTypename(obj, getSchemaDXN(schema) ?? failedInvariant('Missing schema DXN'));
   setSchema(obj, schema);
   attachTypedJsonSerializer(obj);
   attachedTypedObjectInspector(obj);
+  defineHiddenProperty(obj, MetaId, { keys: [] });
   return obj;
 };

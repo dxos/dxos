@@ -5,48 +5,34 @@
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
+import { getSchema } from './accessors';
+import { TypeId } from './model';
+import { getSchemaTypename } from '../ast';
 import { type BaseObject } from '../types';
-
-// TODO(burdon): Change to `@typename`.
-export const ECHO_ATTR_TYPE = '@type';
-
-/**
- * Querying the typename of the object.
- * The typename is either a DXN or a raw string without version.
- * @example `dxn:example.com/type/Contact:1.0.0`
- * @example `example.com/type/Contact`
- */
-// TODO(dmaretskyi): Unify with {@link TypeSymbol}.
-export const TYPENAME_SYMBOL = Symbol.for('@dxos/schema/Typename');
-
-/**
- * Querying the type of the object.
- * The type returned is a DXN.
- * @example dxn:example.com/type/Contact:1.0.0
- */
-export const TypeSymbol = Symbol.for('@dxos/schema/Type');
 
 /**
  * Gets the typename of the object without the version.
+ * Returns only the name portion, not the DXN.
+ * @example "example.org/type/Contact"
  */
 export const getTypename = (obj: BaseObject): string | undefined => {
-  let typename = (obj as any)[TYPENAME_SYMBOL];
-  if (typename === undefined) {
-    typename = obj[ECHO_ATTR_TYPE];
+  const schema = getSchema(obj);
+  if (schema != null) {
+    // Try to extract typename from DXN.
+    return getSchemaTypename(schema);
+  } else {
+    const type = getType(obj);
+    return type?.asTypeDXN()?.type;
   }
-  if (typename === undefined) {
-    return undefined;
-  }
-
-  invariant(typeof typename === 'string');
-  return typename;
 };
 
 /**
  * @internal
  */
-export const setTypename = (obj: any, typename: string) => {
-  Object.defineProperty(obj, TYPENAME_SYMBOL, {
+// TODO(dmaretskyi): Rename setTypeDXN.
+export const setTypename = (obj: any, typename: DXN) => {
+  invariant(typename instanceof DXN, 'Invalid type.');
+  Object.defineProperty(obj, TypeId, {
     value: typename,
     writable: false,
     enumerable: false,
@@ -60,17 +46,15 @@ export const setTypename = (obj: any, typename: string) => {
  * @example `dxn:example.com/type/Contact:1.0.0`
  */
 export const getType = (obj: BaseObject): DXN | undefined => {
-  if (obj) {
-    const type = (obj as any)[TypeSymbol];
-    if (type) {
-      return type;
-    }
-
-    const typename = (obj as any)[TYPENAME_SYMBOL];
-    if (typeof typename === 'string' && typename.startsWith('dxn:')) {
-      return DXN.parse(typename);
-    }
+  if (!obj) {
+    return undefined;
   }
 
-  return undefined;
+  const type = (obj as any)[TypeId];
+  if (!type) {
+    return undefined;
+  }
+
+  invariant(type instanceof DXN, 'Invalid object.');
+  return type;
 };

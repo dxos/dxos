@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
-import { type RepoProxy, type DocHandleProxy } from '../client';
+import { type RepoProxy, type DocHandleProxy } from '../automerge';
 
 type SpaceDocumentLinks = DatabaseDirectory['links'];
 
