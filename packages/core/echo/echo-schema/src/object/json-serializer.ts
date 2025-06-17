@@ -2,11 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
+import { raise } from '@dxos/debug';
 import { isEncodedReference, type EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, failedInvariant, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
+import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
 import { getObjectDXN, setSchema } from './accessors';
+import { ObjectMetaSchema } from './meta';
 import {
   ATTR_DELETED,
   ATTR_META,
@@ -23,14 +28,10 @@ import {
   type ObjectJSON,
 } from './model';
 import { getType, setTypename } from './typename';
-import { Ref, refFromEncodedReference, RefImpl, setRefResolver, type RefResolver } from '../ref';
-import { type AnyEchoObject, type BaseObject } from '../types';
-import { Schema } from 'effect';
-import { assumeType, deepMapValues, visitValues } from '@dxos/util';
-import { ObjectMetaSchema } from './meta';
-import { defineHiddenProperty } from '../utils';
-import { raise } from '@dxos/debug';
 import { EntityKind } from '../ast';
+import { Ref, refFromEncodedReference, setRefResolver, type RefResolver } from '../ref';
+import { type AnyEchoObject, type BaseObject } from '../types';
+import { defineHiddenProperty } from '../utils';
 
 type DeepReplaceRef<T> =
   T extends Ref<any> ? EncodedReference : T extends object ? { [K in keyof T]: DeepReplaceRef<T[K]> } : T;

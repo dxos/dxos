@@ -6,6 +6,7 @@ import { FetchHttpClient } from '@effect/platform';
 import { type Context, Effect, Layer, type Scope } from 'effect';
 import { describe, test, expect } from 'vitest';
 
+import { todo } from '@dxos/debug';
 import { ObjectId, type Ref, type RefResolver, setRefResolver } from '@dxos/echo-schema';
 import { FunctionType, setUserFunctionUrlInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -37,7 +38,6 @@ import {
   synchronizedComputeFunction,
   unwrapValueBag,
 } from '../types';
-import { todo } from '@dxos/debug';
 
 describe('workflow', () => {
   test('run', async () => {

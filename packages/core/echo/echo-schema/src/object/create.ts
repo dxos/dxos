@@ -10,9 +10,9 @@ import { ObjectId } from '@dxos/keys';
 import { setSchema } from './accessors';
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
+import { MetaId } from './model';
 import { setTypename } from './typename';
 import { getSchemaDXN, getTypeAnnotation } from '../ast';
-import { MetaId } from './model';
 import { defineHiddenProperty } from '../utils';
 
 // Make `id` optional.

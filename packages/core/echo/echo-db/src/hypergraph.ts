@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { raise, StackTrace } from '@dxos/debug';
+import type { Ref } from '@dxos/echo';
 import { Reference } from '@dxos/echo-protocol';
 import {
   Filter,
@@ -14,7 +15,6 @@ import {
   type BaseObject,
   type BaseSchema,
   type ObjectId,
-  type RefResolver,
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
@@ -37,7 +37,6 @@ import {
   type QueryOptions,
   type QuerySource,
 } from './query';
-import type { Ref } from '@dxos/echo';
 
 /**
  * Manages cross-space database interactions.

@@ -1,15 +1,20 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { describe, expect, test } from 'vitest';
 
-import { objectFromJSON, objectToJSON } from './json-serializer';
-import { create } from './create';
-import { Testing } from '../testing';
-import { Ref, StaticRefResolver } from '../ref';
-import { ATTR_TYPE, EntityKindId, MetaId, RelationSourceId, RelationTargetId, TypeId } from './model';
-import { EntityKind, getEntityKind, getSchemaDXN, getSchemaTypename, ReferenceAnnotationId } from '../ast';
 import { DXN } from '@dxos/keys';
-import { getType, getTypename } from './typename';
+
 import { getObjectDXN, getSchema } from './accessors';
+import { create } from './create';
+import { objectFromJSON, objectToJSON } from './json-serializer';
 import { getMeta } from './meta';
+import { ATTR_TYPE, EntityKindId, MetaId, RelationSourceId, RelationTargetId, TypeId } from './model';
+import { getType, getTypename } from './typename';
+import { EntityKind, getSchemaDXN, getSchemaTypename } from '../ast';
+import { Ref, StaticRefResolver } from '../ref';
+import { Testing } from '../testing';
 
 describe('Object JSON serializer', () => {
   test('should serialize and deserialize object', async () => {

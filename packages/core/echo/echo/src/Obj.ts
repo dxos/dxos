@@ -9,8 +9,8 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';
 import * as LiveObject from '@dxos/live-object';
 
-import type * as Type from './Type';
 import type * as Ref from './Ref';
+import type * as Type from './Type';
 
 export type Any = EchoSchema.AnyEchoObject;
 
