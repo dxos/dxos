@@ -49,7 +49,7 @@ import { CoreDatabaseQueryContext } from './core-database-query-context';
 import { type InsertBatch, type InsertData, type UpdateOperation } from './crud-api';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
-import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
+import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../automerge';
 import { type Hypergraph } from '../hypergraph';
 import { normalizeQuery, QueryResult, type QueryFn } from '../query';
 
