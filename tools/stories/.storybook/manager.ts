@@ -40,6 +40,6 @@ addons.register('dxos', (api) => {
   });
 
   // Hide add-on panel.
-  const { showPanel } = addons.getConfig();
-  api.togglePanel(showPanel);
+  // const { showPanel } = addons.getConfig();
+  // api.togglePanel(showPanel);
 });

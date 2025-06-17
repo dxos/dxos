@@ -5,7 +5,7 @@
 import { type Completion } from '@codemirror/autocomplete';
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import React, { type ReactNode, useEffect, useState, type FC } from 'react';
+import React, { type ReactNode, useEffect, useState, type FC, forwardRef, useImperativeHandle } from 'react';
 
 import { Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -248,6 +248,8 @@ export const global = new Map<string, EditorSelectionState>();
 // Type definitions
 export type DebugMode = 'raw' | 'tree' | 'raw+tree';
 
+const defaultId = 'editor-' + PublicKey.random().toHex().slice(0, 8);
+
 export type StoryProps = {
   id?: string;
   debug?: DebugMode;
@@ -261,66 +263,73 @@ export type StoryProps = {
   Pick<ThemeExtensionsOptions, 'slots'>;
 
 // Default story component
-export const EditorStory = ({
-  id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
-  debug,
-  debugCustom,
-  text,
-  readOnly,
-  placeholder = 'New document.',
-  lineNumbers,
-  scrollTo,
-  selection,
-  extensions,
-  slots = editorSlots,
-  onReady,
-}: StoryProps) => {
-  const [object] = useState(createObject(live(Expando, { content: text ?? '' })));
-  const { themeMode } = useThemeContext();
-  const [tree, setTree] = useState<DebugNode>();
-  const { parentRef, focusAttributes, view } = useTextEditor(
-    () => ({
-      id,
-      initialValue: text,
-      extensions: [
-        createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-        createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true }),
-        createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({
-          themeMode,
-          syntaxHighlighting: true,
-          slots,
-        }),
-        editorGutter,
-        extensions || [],
-        debug ? debugTree(setTree) : [],
-      ],
+export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
+  (
+    {
+      id = defaultId,
+      debug,
+      debugCustom,
+      text,
+      readOnly,
+      placeholder = 'New document.',
+      lineNumbers,
       scrollTo,
       selection,
-    }),
-    [object, extensions, themeMode],
-  );
+      extensions,
+      slots = editorSlots,
+      onReady,
+    },
+    forwardedRef,
+  ) => {
+    const [object] = useState(createObject(live(Expando, { content: text ?? '' })));
+    const { themeMode } = useThemeContext();
+    const [tree, setTree] = useState<DebugNode>();
+    const { parentRef, focusAttributes, view } = useTextEditor(
+      () => ({
+        id,
+        initialValue: text,
+        extensions: [
+          createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
+          createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true }),
+          createMarkdownExtensions({ themeMode }),
+          createThemeExtensions({
+            themeMode,
+            syntaxHighlighting: true,
+            slots,
+          }),
+          editorGutter,
+          extensions || [],
+          debug ? debugTree(setTree) : [],
+        ],
+        scrollTo,
+        selection,
+      }),
+      [object, extensions, themeMode],
+    );
 
-  useEffect(() => {
-    if (view) {
-      onReady?.(view);
-    }
-  }, [view]);
+    useImperativeHandle(forwardedRef, () => view, [view]);
 
-  return (
-    <div className={mx('w-full h-full grid overflow-hidden', debug && 'grid-cols-[1fr_600px]')}>
-      <div role='none' className='flex overflow-hidden' ref={parentRef} {...focusAttributes} />
-      {debug && (
-        <div className='grid h-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'>
-          {view && debugCustom?.(view)}
-          {(debug === 'raw' || debug === 'raw+tree') && (
-            <pre className='p-1 text-xs text-green-800 dark:text-green-200 overflow-auto'>
-              {view?.state.doc.toString()}
-            </pre>
-          )}
-          {(debug === 'tree' || debug === 'raw+tree') && <JsonFilter data={tree} classNames='p-1 text-xs' />}
-        </div>
-      )}
-    </div>
-  );
-};
+    useEffect(() => {
+      if (view) {
+        onReady?.(view);
+      }
+    }, [view]);
+
+    return (
+      <div className={mx('w-full h-full grid overflow-hidden', debug && 'grid-cols-[1fr_600px]')}>
+        <div role='none' className='flex overflow-hidden' ref={parentRef} {...focusAttributes} />
+        {debug && (
+          <div className='grid h-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'>
+            {view && debugCustom?.(view)}
+            {(debug === 'raw' || debug === 'raw+tree') && (
+              <pre className='p-1 text-xs text-green-800 dark:text-green-200 overflow-auto'>
+                {view?.state.doc.toString()}
+              </pre>
+            )}
+            {(debug === 'tree' || debug === 'raw+tree') && <JsonFilter data={tree} classNames='p-1 text-xs' />}
+          </div>
+        )}
+      </div>
+    );
+  },
+);
