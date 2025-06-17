@@ -125,7 +125,17 @@ export const objectFromJSON = async (
 };
 
 const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }) => {
-  return deepMapValues(jsonData, (value, recurse) => {
+  const {
+    [ATTR_TYPE]: _type,
+    [ATTR_META]: _meta,
+    [ATTR_DELETED]: _deleted,
+    [ATTR_RELATION_SOURCE]: _relationSource,
+    [ATTR_RELATION_TARGET]: _relationTarget,
+    [ATTR_SELF_DXN]: _selfDxn,
+    ...props
+  } = jsonData as any;
+
+  return deepMapValues(props, (value, recurse) => {
     if (isEncodedReference(value)) {
       return refFromEncodedReference(value, options.refResolver);
     }

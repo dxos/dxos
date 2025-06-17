@@ -75,4 +75,19 @@ describe('Object JSON serializer', () => {
     expect((taskFromJson as any)[MetaId]).toEqual({ keys: [] });
     expect(getSchema(taskFromJson)).toEqual(Testing.Task);
   });
+
+  test('serialize with unresolved schema', async () => {
+    const contact = create(Testing.Contact, {
+      name: 'John Doe',
+    });
+    const contactJson = objectToJSON(contact);
+    const contactFromJson: any = await objectFromJSON(contactJson);
+
+    expect(contactFromJson.id).toBe(contact.id);
+    expect(contactFromJson.name).toBe('John Doe');
+    expect(getSchema(contactFromJson)).toBeUndefined();
+    expect(getTypename(contactFromJson)).toEqual(getSchemaTypename(Testing.Contact));
+    expect(getObjectDXN(contactFromJson)).toEqual(getObjectDXN(contact));
+    expect(getType(contactFromJson)).toEqual(getSchemaDXN(Testing.Contact));
+  });
 });
