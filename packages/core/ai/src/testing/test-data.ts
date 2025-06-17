@@ -24,7 +24,7 @@ import {
   type Node,
   type Relationship,
 } from '../cypher';
-import { Contact, Organization, Project, Task } from '../testing';
+import { Contact, Organization, Project, Task } from './test-schema';
 
 export const seedTestData = (db: EchoDatabase) => {
   const contactRich = db.add(
