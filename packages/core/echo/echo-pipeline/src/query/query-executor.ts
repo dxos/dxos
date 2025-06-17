@@ -13,6 +13,7 @@ import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
+import { trace } from '@dxos/tracing';
 import { getDeep, isNonNullable } from '@dxos/util';
 
 import type { QueryPlan } from './plan';
@@ -21,7 +22,6 @@ import type { AutomergeHost } from '../automerge';
 import { createIdFromSpaceKey } from '../common';
 import type { SpaceStateManager } from '../db-host';
 import { filterMatchObject } from '../filter';
-import { trace } from '@dxos/tracing';
 
 type QueryExecutorOptions = {
   indexer: Indexer;

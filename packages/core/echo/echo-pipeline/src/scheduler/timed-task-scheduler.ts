@@ -4,7 +4,6 @@
 
 import { DeferredTask, sleepWithContext, asyncTimeout } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
 
 const DEFAULT_TIMEOUT = 30_000;
 

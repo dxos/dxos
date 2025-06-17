@@ -23,10 +23,10 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
 
-import { TimedTaskScheduler } from '../scheduler';
 import type { SpaceStateManager } from './space-state-manager';
 import { type AutomergeHost } from '../automerge';
-import { QueryExecutor, type QueryExecutionResult } from '../query';
+import { QueryExecutor } from '../query';
+import { TimedTaskScheduler } from '../scheduler';
 
 export type QueryServiceParams = {
   indexer: Indexer;
