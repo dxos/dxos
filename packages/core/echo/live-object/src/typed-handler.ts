@@ -10,6 +10,8 @@ import { type Reference } from '@dxos/echo-protocol';
 import {
   defineHiddenProperty,
   DeletedId,
+  getSchemaDXN,
+  getSchemaTypename,
   getTypeReference,
   SchemaId,
   SchemaMetaSymbol,
@@ -187,6 +189,11 @@ const toJSON = (target: ProxyTarget): any => {
  * Recursively set AST on all potential proxy targets.
  */
 const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext) => {
+  const schemaType = getSchemaDXN(schema);
+  if (schemaType != null) {
+    defineHiddenProperty(obj, TypeId, schemaType);
+  }
+
   defineHiddenProperty(obj, SchemaId, schema);
   for (const key in obj) {
     if (isValidProxyTarget(obj[key])) {

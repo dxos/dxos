@@ -118,29 +118,25 @@ export const getTypenameOrThrow = (schema: Schema.Schema.AnyNoContext): string =
 
 /**
  * Returns a reference that will be used to point to a schema.
+ * @deprecated Use {@link getSchemaDXN} instead.
  */
-// TODO(dmaretskyi): Unify with `getSchemaDXN`.
 export const getTypeReference = (schema: Schema.Schema.All | undefined): Reference | undefined => {
   if (!schema) {
     return undefined;
   }
 
-  const echoId = getTypeIdentifierAnnotation(schema);
-  if (echoId) {
-    return Reference.fromDXN(DXN.parse(echoId));
-  }
-
-  const annotation = getTypeAnnotation(schema);
-  if (annotation == null) {
+  const schemaDXN = getSchemaDXN(schema);
+  if (!schemaDXN) {
     return undefined;
   }
-
-  return Reference.fromDXN(DXN.fromTypenameAndVersion(annotation.typename, annotation.version));
+  return Reference.fromDXN(schemaDXN);
 };
 
 /**
  * Returns a reference that will be used to point to a schema.
  * @throws If it is not possible to reference this schema.
+ *
+ * @deprecated Use {@link getSchemaDXN} instead.
  */
 export const requireTypeReference = (schema: Schema.Schema.AnyNoContext): Reference => {
   const typeReference = getTypeReference(schema);

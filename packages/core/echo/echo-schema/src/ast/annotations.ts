@@ -160,9 +160,19 @@ export type GeneratorAnnotationValue = string | [string, number];
 
 export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationValue>(GeneratorAnnotationId);
 
-// TODO(dmaretskyi): Unify with `getTypeReference`.
+/**
+ * @returns DXN of the schema.
+ *
+ * For non-stored schema returns `dxn:type:`.
+ * For stored schema returns `dxn:echo:`.
+ */
 export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
   assertArgument(Schema.isSchema(schema), 'schema must be a schema');
+
+  const echoId = getTypeIdentifierAnnotation(schema);
+  if (echoId) {
+    return DXN.parse(echoId);
+  }
 
   // TODO(dmaretskyi): Add support for dynamic schema.
   const objectAnnotation = getTypeAnnotation(schema);
