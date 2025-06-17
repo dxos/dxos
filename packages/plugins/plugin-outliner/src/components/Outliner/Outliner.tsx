@@ -68,9 +68,13 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
     );
 
     const handleDeleteRow = () => {
-      if (view) {
-        deleteItem(view);
-      }
+      // TODO(burdon): Hack since menu steals focus.
+      setTimeout(() => {
+        if (view) {
+          deleteItem(view);
+          view.focus();
+        }
+      }, 100);
     };
 
     return (

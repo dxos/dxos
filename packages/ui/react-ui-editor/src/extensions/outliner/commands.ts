@@ -137,11 +137,6 @@ export const deleteItem: Command = (view: EditorView) => {
         },
       ],
     });
-
-    // TODO(burdon): Better way?
-    setTimeout(() => {
-      view.focus();
-    }, 100);
   }
 
   return true;
@@ -257,10 +252,19 @@ export const commands = (): Extension =>
       run: moveItemUp,
     },
     //
+    // Delete.
+    //
+    {
+      key: 'Mod-Backspace',
+      preventDefault: true,
+      run: deleteItem,
+    },
+    //
     // Misc.
     //
     {
       key: 'Alt-t',
+      preventDefault: true,
       run: toggleTask,
     },
   ]);
