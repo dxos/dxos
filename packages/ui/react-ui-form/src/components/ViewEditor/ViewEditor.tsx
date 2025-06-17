@@ -255,14 +255,16 @@ export const ViewEditor = ({
       </div>
 
       {field && (
-        <FieldEditor
-          key={field.id}
-          view={view}
-          projection={projection}
-          field={field}
-          registry={registry}
-          onSave={handleClose}
-        />
+        <div role='none' className='p-2'>
+          <FieldEditor
+            key={field.id}
+            view={view}
+            projection={projection}
+            field={field}
+            registry={registry}
+            onSave={handleClose}
+          />
+        </div>
       )}
 
       {!readonly && !field && (
