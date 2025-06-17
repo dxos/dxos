@@ -38,6 +38,7 @@ import {
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { Filter, type QueryFn, type QueryOptions, Query } from '../query';
+import { trace } from '@dxos/tracing';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -143,6 +144,7 @@ export type EchoDatabaseParams = {
  * API for the database.
  * Implements EchoDatabase interface.
  */
+@trace.resource()
 export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   private readonly _schemaRegistry: EchoSchemaRegistry;
   /**
@@ -309,6 +311,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.removeCore(getObjectCore(obj));
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   async flush(opts?: FlushOptions): Promise<void> {
     await this._coreDatabase.flush(opts);
   }

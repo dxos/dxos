@@ -21,6 +21,7 @@ import type { AutomergeHost } from '../automerge';
 import { createIdFromSpaceKey } from '../common';
 import type { SpaceStateManager } from '../db-host';
 import { filterMatchObject } from '../filter';
+import { trace } from '@dxos/tracing';
 
 type QueryExecutorOptions = {
   indexer: Indexer;
@@ -107,6 +108,7 @@ type StepExecutionResult = {
  * - Tracking execution performance metrics
  * - Handling different types of query operations (select, filter, traverse, etc.)
  */
+@trace.resource()
 export class QueryExecutor extends Resource {
   private readonly _indexer: Indexer;
   private readonly _automergeHost: AutomergeHost;
@@ -167,6 +169,7 @@ export class QueryExecutor extends Resource {
     );
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   async execQuery(): Promise<QueryExecutionResult> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const prevResultSet = this._lastResultSet;

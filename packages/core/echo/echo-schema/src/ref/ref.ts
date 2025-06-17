@@ -8,6 +8,7 @@ import { Reference, type EncodedReference } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
+import { trace } from '@dxos/tracing';
 
 import { getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId } from '../ast';
 import { type JsonSchemaType } from '../json-schema';
@@ -288,7 +289,7 @@ export interface RefResolver {
    */
   resolve(dxn: DXN): Promise<BaseObject | undefined>;
 }
-
+@trace.resource()
 export class RefImpl<T> implements Ref<T> {
   #dxn: DXN;
   #resolver?: RefResolver = undefined;
@@ -335,6 +336,7 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * @inheritdoc
    */
+  @trace.span({ showInBrowserTimeline: true })
   async load(): Promise<T> {
     invariant(this.#resolver, 'Resolver is not set');
     const obj = await this.#resolver.resolve(this.#dxn);
