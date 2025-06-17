@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 export type TestConnectionStateProvider = () => 'on' | 'off';
 
 export class TestAdapter extends NetworkAdapter {
-  static createPair(connectionStateProvider: TestConnectionStateProvider = () => 'on') {
+  static createPair(connectionStateProvider: TestConnectionStateProvider = () => 'on'): TestAdapter[] {
     const adapter1: TestAdapter = new TestAdapter({
       send: (message: Message) => connectionStateProvider() === 'on' && sleep(10).then(() => adapter2.receive(message)),
     });
@@ -36,31 +36,31 @@ export class TestAdapter extends NetworkAdapter {
     return Promise.resolve();
   }
 
-  override connect(peerId: PeerId) {
+  override connect(peerId: PeerId): void {
     this.peerId = peerId;
     this.onConnect.wake();
   }
 
-  peerCandidate(peerId: PeerId) {
+  peerCandidate(peerId: PeerId): void {
     invariant(peerId, 'PeerId is required');
     this.emit('peer-candidate', { peerId, peerMetadata: {} });
   }
 
-  peerDisconnected(peerId: PeerId) {
+  peerDisconnected(peerId: PeerId): void {
     invariant(peerId, 'PeerId is required');
     this.emit('peer-disconnected', { peerId });
   }
 
-  override send(message: Message) {
+  override send(message: Message): void {
     log('send', { from: message.senderId, to: message.targetId, type: message.type });
     this._params.send(message);
   }
 
-  override disconnect() {
+  override disconnect(): void {
     this.peerId = undefined;
   }
 
-  receive(message: Message) {
+  receive(message: Message): void {
     invariant(this.peerId, 'Peer id is not set');
     this.emit('message', message);
   }

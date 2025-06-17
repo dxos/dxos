@@ -501,8 +501,9 @@ describe('Queries', () => {
       }
     });
 
-    test('full-text', async () => {
-      const { db, graph } = await builder.createDatabase();
+    // TODO(wittjosiah): Currently disabled by default because it's expensive.
+    test.skip('full-text', async () => {
+      const { db, graph } = await builder.createDatabase({ indexing: { fullText: true } });
       graph.schemaRegistry.addSchema([Testing.Task]);
 
       db.add(live(Testing.Task, { title: 'apples' }));
@@ -535,7 +536,6 @@ describe('Queries', () => {
   });
 });
 
-// TODO(wittjosiah): 2/3 of these tests fail. They reproduce issues that we want to fix.
 describe('Query reactivity', () => {
   const setup = async (ctx: TestContext) => {
     const builder = await new EchoTestBuilder().open();
@@ -555,7 +555,6 @@ describe('Query reactivity', () => {
     return { builder, db, objects };
   };
 
-  // TODO(dmaretskyi): Fires twice.
   test('fires only once when new objects are added', async (ctx) => {
     const { db } = await setup(ctx);
     const query = db.query(Query.select(Filter.type(Expando, { label: 'red' })));

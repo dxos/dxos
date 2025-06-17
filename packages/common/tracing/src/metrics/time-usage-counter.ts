@@ -15,7 +15,7 @@ export class TimeUsageCounter extends BaseCounter {
 
   private _lastTickTime = performance.now();
 
-  record(time: number) {
+  record(time: number): void {
     this._currentValue += time;
     this._totalValue += time;
   }

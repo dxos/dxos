@@ -54,9 +54,9 @@ export const warningInputValence = 'shadow-amber-500/50 dark:shadow-amber-600/50
 export const errorInputValence = 'shadow-rose-500/50 dark:shadow-rose-600/50';
 
 const textInputSurfaceFocus =
-  'transition-colors bg-input focus:bg-attention border-transparent focus:border-transparent';
+  'transition-colors bg-textInputSurface focus:bg-focusSurface border border-separator focus:border-separator';
 
-const textInputSurfaceHover = 'hover:bg-hoverSurface focus:hover:bg-attention';
+const textInputSurfaceHover = 'hover:bg-textInputSurface focus:hover:bg-focusSurface';
 
 const booleanInputSurface =
   'shadow-inner transition-colors bg-unAccent aria-checked:bg-accentSurface aria-[checked=mixed]:bg-accentSurface';
@@ -143,7 +143,7 @@ export const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disa
 export const inputSwitchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx(
     getSize(size === 'px' ? 'px' : ((size - 2) as Size)),
-    'block bg-white rounded-full border-separator transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%]',
+    'block bg-white rounded-full transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%]',
     ...etc,
   );
 

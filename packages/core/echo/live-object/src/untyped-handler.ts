@@ -121,11 +121,11 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return result;
   }
 
-  getSchema() {
+  getSchema(): undefined {
     return undefined;
   }
 
-  getTypeReference() {
+  getTypeReference(): undefined {
     return undefined;
   }
 }

@@ -9,30 +9,28 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import { Option, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AgentStatusReport, AIServiceEdgeClient, defineTool, Message, ToolResult, type Tool } from '@dxos/ai';
+import { AgentStatusReport, AIServiceEdgeClient, createTool, type ExecutableTool, Message, ToolResult } from '@dxos/ai';
 import { EXA_API_KEY, SpyAIService } from '@dxos/ai/testing';
 import { Capabilities, contributes, createSurface, Events, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { findRelatedSchema, researchFn, type RelatedSchema } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
-import { DXN, Type } from '@dxos/echo';
+import { Type, type Obj } from '@dxos/echo';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   create,
   createQueueDxn,
-  Filter,
   getSchema,
   getSchemaDXN,
-  getSchemaTypename,
   getTypename,
   isInstanceOf,
+  toJsonSchema,
+  type BaseObject,
+  Filter,
   RelationSourceId,
   RelationTargetId,
-  toJsonSchema,
-  type BaseEchoObject,
-  type BaseObject,
 } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -66,7 +64,7 @@ const LOCAL = false;
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
 
 type RenderProps = {
-  items?: Type.AnyObject[];
+  items?: Obj.Any[];
   prompts?: string[];
 } & Pick<ThreadProps, 'debug'>;
 
@@ -97,7 +95,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
   // Queue.
   const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
-  const queue = useQueue<Message>(DXN.tryParse(queueDxn));
+  const queue = useQueue<Message>(Type.DXN.tryParse(queueDxn));
 
   // Function executor.
   const serviceContainer = useMemo(
@@ -124,7 +122,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     [aiClient, space, queue],
   );
 
-  const tools = useMemo<Tool[]>(() => [createResearchTool(serviceContainer, 'research', researchFn)], []);
+  const tools = useMemo<ExecutableTool[]>(() => [createResearchTool(serviceContainer, 'research', researchFn)], []);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
@@ -148,7 +146,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [aiClient, tools, space, dispatch]);
 
   useEffect(() => {
-    if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
+    if (queue?.objects.length === 0 && !queue.isLoading && prompts.length > 0) {
       queue.append([
         create(Message, {
           role: 'assistant',
@@ -163,12 +161,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         }),
       ]);
     }
-  }, [queueDxn, prompts, queue?.items.length, queue?.isLoading]);
+  }, [queueDxn, prompts, queue?.objects.length, queue?.isLoading]);
 
   // State.
   const objects = useQuery(space, Filter.or(...DataTypes.map((type) => Filter.type(type))));
   const messages = [
-    ...(queue?.items.filter((item) => isInstanceOf(Message, item)) ?? []),
+    ...(queue?.objects.filter((item) => isInstanceOf(Message, item)) ?? []),
     ...(processor?.messages.value ?? []),
   ];
 
@@ -185,7 +183,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
           invariant(queue);
           await processor.request(message, {
-            history: queue.items,
+            history: queue.objects,
             onComplete: (messages) => {
               queue.append(messages);
             },
@@ -212,7 +210,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   );
 
   // TODO(dmaretskyi): Pull in relations automatically.
-  const handleAddToGraph = useCallback(async (object: BaseEchoObject) => {
+  const handleAddToGraph = useCallback(async (object: BaseObject) => {
     space.db.add(instantiate(space.db, object));
     await space.db.flush({ indexes: true });
     forceUpdate({});
@@ -310,7 +308,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 };
 
 type ResearchPromptsProps = {
-  object: BaseEchoObject;
+  object: BaseObject;
   onResearch: (object: BaseObject, relatedSchema: RelatedSchema) => void;
 };
 
@@ -327,7 +325,7 @@ const ResearchPrompts = ({ object, onResearch }: ResearchPromptsProps) => {
           onClick={() => onResearch(object, schema)}
           className='border border-separator rounded px-2 py-1 m-1'
         >
-          Research more of {getSchemaTypename(schema.schema)}
+          Research more of {Type.getTypename(schema.schema)}
         </button>
       ))}
     </div>
@@ -335,8 +333,7 @@ const ResearchPrompts = ({ object, onResearch }: ResearchPromptsProps) => {
 };
 
 const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn: typeof researchFn) => {
-  return defineTool('example', {
-    // TODO(dmaretskyi): Include name in definition
+  return createTool('example', {
     name,
     description: fn.description ?? raise(new Error('No description')),
     schema: fn.inputSchema,
@@ -347,14 +344,14 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
             write: (event) => {
               if (isInstanceOf(AgentStatusReport, event)) {
                 log.info('[too] report status', { status: event });
-                reportStatus(event);
+                reportStatus?.(event);
               }
             },
           },
         }),
       );
 
-      reportStatus(
+      reportStatus?.(
         create(AgentStatusReport, {
           message: 'Researching...',
         }),
@@ -365,7 +362,7 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
       const { result } = await executor.invoke(fn, input);
       return ToolResult.Success(
         'Research completed. The results are placed in the conversation and already presented to the user. No need to present them again.',
-        result.objects.map((obj) => ({
+        result.objects.map((obj: any) => ({
           type: 'json',
           json: JSON.stringify(obj),
           disposition: 'graph',
@@ -385,15 +382,15 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
 // TODO(dmaretskyi): Move into core.
 const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
   const schema =
-    db.graph.schemaRegistry.getSchemaByDXN(DXN.parse(getTypename(object as any)!)) ??
+    db.graph.schemaRegistry.getSchemaByDXN(Type.DXN.parse(getTypename(object as any)!)) ??
     raise(new Error('Schema not found'));
 
   let { id, [ATTR_RELATION_SOURCE]: source, [ATTR_RELATION_TARGET]: target, ...props } = object as any;
   if (source) {
-    source = db.getObjectById(DXN.parse(source).asEchoDXN()!.echoId) ?? raise(new Error('Source not found'));
+    source = db.getObjectById(Type.DXN.parse(source).asEchoDXN()!.echoId) ?? raise(new Error('Source not found'));
   }
   if (target) {
-    target = db.getObjectById(DXN.parse(target).asEchoDXN()!.echoId) ?? raise(new Error('Target not found'));
+    target = db.getObjectById(Type.DXN.parse(target).asEchoDXN()!.echoId) ?? raise(new Error('Target not found'));
   }
 
   return live(schema, {
@@ -448,12 +445,14 @@ const meta: Meta<typeof DefaultStory> = {
   decorators: [
     withPluginManager({
       plugins: testPlugins({
-        runtime: {
-          client: {
-            storage: {
-              persistent: true,
+        config: {
+          runtime: {
+            client: {
+              storage: {
+                persistent: true,
+              },
+              enableVectorIndexing: true,
             },
-            enableVectorIndexing: true,
           },
         },
       }),

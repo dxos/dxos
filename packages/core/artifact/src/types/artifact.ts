@@ -4,7 +4,7 @@
 
 import { type Schema } from 'effect';
 
-import { type Tool } from '@dxos/ai';
+import { type ExecutableTool } from '@dxos/ai';
 
 /**
  * Static artifact definition.
@@ -39,7 +39,7 @@ export type ArtifactDefinition = {
   /**
    * Tools that can be used to act on data which matches the artifact.
    */
-  tools: Tool[];
+  tools: ExecutableTool[];
 
   // TODO(wittjosiah): Add `component` field for rendering data which matches the artifact?
   //  NOTE(burdon): I think that could just be provided separately by the plugin (since there might be multiple surface types).

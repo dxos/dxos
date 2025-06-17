@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
-import { DXN } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import {
   FunctionType,
   FunctionTriggerSchema,
@@ -14,12 +14,10 @@ import {
   ScriptType,
 } from '@dxos/functions';
 import { Filter, Ref, useQuery, type Space } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
 import { type CustomInputMap, Form, SelectInput, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 
-import { FunctionInputEditor } from './FunctionInputEditor';
+import { FunctionInputEditor, type FunctionInputEditorProps } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
-import { AUTOMATION_PLUGIN } from '../../meta';
 
 export type TriggerEditorProps = {
   space: Space;
@@ -29,20 +27,33 @@ export type TriggerEditorProps = {
 };
 
 export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEditorProps) => {
-  const { t } = useTranslation(AUTOMATION_PLUGIN);
-
-  const functions = useQuery(space, Filter.type(FunctionType));
-  const workflows = useQuery(space, Filter.type(ComputeGraph));
-  const scripts = useQuery(space, Filter.type(ScriptType));
-
   const handleSave = (values: FunctionTriggerType) => {
     onSave?.(values);
   };
 
   const handleRefQueryLookup = useRefQueryLookupHandler({ space });
+  const Custom = useCustomInputs(space, handleRefQueryLookup);
 
-  const Custom = useMemo(
+  return (
+    <Form
+      Custom={Custom}
+      schema={FunctionTriggerSchema}
+      values={trigger}
+      onSave={handleSave}
+      onCancel={onCancel}
+      onQueryRefOptions={handleRefQueryLookup}
+    />
+  );
+};
+
+const useCustomInputs = (space: Space, onQueryRefOptions: FunctionInputEditorProps['onQueryRefOptions']) => {
+  const functions = useQuery(space, Filter.type(FunctionType));
+  const workflows = useQuery(space, Filter.type(ComputeGraph));
+  const scripts = useQuery(space, Filter.type(ScriptType));
+
+  return useMemo(
     (): CustomInputMap => ({
+      // Function selector.
       ['function' satisfies keyof FunctionTriggerType]: (props) => {
         const getValue = useCallback(() => {
           const formValue = props.getValue();
@@ -54,7 +65,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
 
         const handleOnValueChange = useCallback(
           (_type: any, dxnString: string) => {
-            const dxn = DXN.parse(dxnString);
+            const dxn = Type.DXN.parse(dxnString);
             if (dxn) {
               const ref = Ref.fromDXN(dxn);
               props.onValueChange('object', ref);
@@ -72,25 +83,16 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
           />
         );
       },
+
+      // Spec selector.
       ['spec.kind' as const]: SpecSelector,
+
+      // Function input editor.
       ['input' as const]: (props) => (
-        <FunctionInputEditor {...props} functions={functions} onQueryRefOptions={handleRefQueryLookup} />
+        <FunctionInputEditor {...props} functions={functions} onQueryRefOptions={onQueryRefOptions} />
       ),
     }),
-    [workflows, scripts, functions, t],
-  );
-
-  return (
-    <div role='none' className='bs-full is-full'>
-      <Form
-        schema={FunctionTriggerSchema}
-        values={trigger}
-        onSave={handleSave}
-        onCancel={onCancel}
-        Custom={Custom}
-        onQueryRefOptions={handleRefQueryLookup}
-      />
-    </div>
+    [workflows, scripts, functions],
   );
 };
 

@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Format, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 
 export const AccessToken = Schema.Struct({
   id: Type.ObjectId,
@@ -14,7 +14,7 @@ export const AccessToken = Schema.Struct({
       description: 'User-provided note about the token.',
     }),
   ),
-  source: Format.Hostname.annotations({
+  source: Type.Format.Hostname.annotations({
     title: 'Source',
     description: 'The domain name of the service that issued the token.',
     examples: ['github.com'],
@@ -27,7 +27,7 @@ export const AccessToken = Schema.Struct({
   Schema.annotations({
     description: 'A credential or token for accessing a service.',
   }),
-  Type.def({
+  Type.Obj({
     typename: 'dxos.org/type/AccessToken',
     version: '0.1.0',
   }),

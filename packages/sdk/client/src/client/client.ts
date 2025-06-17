@@ -20,7 +20,7 @@ import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { EchoClient, type QueuesService, QueueServiceImpl, QueueServiceStub } from '@dxos/echo-db';
+import { EchoClient, type QueuesService, QueueServiceImpl, QueueServiceStub, type Hypergraph } from '@dxos/echo-db';
 import { getTypename } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -61,41 +61,17 @@ export type ClientOptions = {
 @trace.resource()
 export class Client {
   /**
-   * The version of this client API.
-   */
-  @trace.info()
-  readonly version = DXOS_VERSION;
-
-  /**
    * Emitted after the client is reset and the services have finished restarting.
    */
   readonly reloaded = new Event<void>();
 
-  private readonly _options: ClientOptions;
-  private _ctx = new Context();
-  private _config?: Config;
-
-  @trace.info()
-  private _services?: ClientServicesProvider;
-
-  private _runtime?: ClientRuntime;
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
-
-  @trace.info()
-  private _initialized = false;
-
-  @trace.info()
-  private _resetting = false;
-
-  private _statusStream?: Stream<QueryStatusResponse>;
-  private _statusTimeout?: NodeJS.Timeout;
-  private _status = MulticastObservable.from(this._statusUpdate, null);
-  private _iframeManager?: IFrameManager;
-  private _shellManager?: ShellManager;
-  private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
+  private readonly _status = MulticastObservable.from(this._statusUpdate, null);
 
   private readonly _echoClient = new EchoClient();
+
+  private readonly _options: ClientOptions;
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -103,6 +79,30 @@ export class Client {
   @trace.info()
   private readonly _instanceId = PublicKey.random().toHex();
 
+  /**
+   * The version of this client API.
+   */
+  @trace.info()
+  readonly version = DXOS_VERSION;
+
+  @trace.info()
+  private _services?: ClientServicesProvider;
+
+  @trace.info()
+  private _initialized = false;
+
+  @trace.info()
+  private _resetting = false;
+
+  private _runtime?: ClientRuntime;
+
+  private _ctx = new Context();
+  private _config?: Config;
+  private _statusStream?: Stream<QueryStatusResponse>;
+  private _statusTimeout?: NodeJS.Timeout;
+  private _iframeManager?: IFrameManager;
+  private _shellManager?: ShellManager;
+  private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
   private _edgeClient?: EdgeHttpClient = undefined;
   private _queuesService?: QueuesService = undefined;
 
@@ -135,11 +135,11 @@ export class Client {
     }
   }
 
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return this.toString();
   }
 
-  toString() {
+  toString(): string {
     return `Client(${this._instanceId})`;
   }
 
@@ -162,21 +162,14 @@ export class Client {
   }
 
   /**
-   * Internal Echo client.
-   */
-  get echoClient() {
-    return this._echoClient;
-  }
-
-  /**
    * Current client services provider.
    */
+  // TODO(burdon): Return services.services. Move to debug endpoint.
   get services(): ClientServicesProvider {
     invariant(this._services, 'Client not initialized.');
     return this._services;
   }
 
-  // TODO(burdon): Rename isOpen.
   /**
    * Returns true if the client has been initialized. Initialize by calling `.initialize()`.
    */
@@ -191,7 +184,9 @@ export class Client {
     return this._status;
   }
 
-  // TODO(burdon): Comment
+  /**
+   * ECHO Spaces.
+   */
   get spaces(): Echo {
     invariant(this._runtime, 'Client not initialized.');
     return this._runtime.spaces;
@@ -215,7 +210,6 @@ export class Client {
 
   /**
    * EDGE client.
-   *
    * This API is experimental and subject to change.
    */
   get edge(): EdgeHttpClient {
@@ -224,7 +218,14 @@ export class Client {
   }
 
   /**
-   *
+   * @deprecated Temporary.
+   */
+  get graph(): Hypergraph {
+    return this._echoClient.graph;
+  }
+
+  /**
+   * Shell API.
    */
   get shell(): Shell {
     invariant(this._runtime, 'Client not initialized.');
@@ -233,17 +234,10 @@ export class Client {
   }
 
   /**
-   * @deprecated Temporary.
-   */
-  get graph() {
-    return this._echoClient.graph;
-  }
-
-  /**
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  addTypes(types: Schema.Schema.AnyNoContext[]) {
+  addTypes(types: Schema.Schema.AnyNoContext[]): this {
     log('addTypes', { schema: types.map((type) => getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
@@ -345,7 +339,7 @@ export class Client {
    * Required before using the Client instance.
    */
   @synchronized
-  async initialize() {
+  async initialize(): Promise<void> {
     if (this._initialized) {
       return;
     }
@@ -374,7 +368,7 @@ export class Client {
     log.trace('dxos.sdk.client.open', Trace.end({ id: this._instanceId }));
   }
 
-  private async _open() {
+  private async _open(): Promise<void> {
     log('opening...');
     invariant(this._services);
     const { SpaceList } = await import('../echo/space-list');
@@ -494,7 +488,7 @@ export class Client {
    * Open/close is re-entrant.
    */
   @synchronized
-  async destroy() {
+  async destroy(): Promise<void> {
     if (!this._initialized) {
       return;
     }
@@ -507,7 +501,7 @@ export class Client {
     this._initialized = false;
   }
 
-  private async _close() {
+  private async _close(): Promise<void> {
     log('closing...');
     this._statusTimeout && clearTimeout(this._statusTimeout);
     await this._statusStream?.close();
@@ -530,12 +524,11 @@ export class Client {
 
   /**
    * Resets and destroys client storage.
-   *
    * This will currently leave the client in a closed state.
    * Re-using the client after reset is not currently supported.
    */
   @synchronized
-  async reset() {
+  async reset(): Promise<void> {
     if (!this._initialized) {
       throw new ApiError('Client not open.');
     }
@@ -545,10 +538,11 @@ export class Client {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
     await this._services?.services.SystemService.reset();
     await this._close();
+
     // TODO(wittjosiah): Re-open after reset.
     // await this._open();
     // this._resetting = false;
-    this.reloaded.emit();
+    // this.reloaded.emit();
     log('reset complete');
   }
 }

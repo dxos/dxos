@@ -12,12 +12,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../async"
-    },
-    {
-      "path": "../node-std"
-    }
-  ]
+  "references": []
 }

@@ -55,16 +55,20 @@ export default [
         'format uri': 'URI',
         'format uuid': 'UUID',
 
-        // Placeholders
+        // Placeholders.
         'placeholder latitude': 'Latitude',
         'placeholder longitude': 'Longitude',
 
-        // SelectOptionsInput
+        // SelectOptionsInput.
         'select option label': 'Label',
         'select option label placeholder': 'Option label',
         'select option color': 'Color',
         'select option delete': 'Delete',
         'select option add': 'Add option',
+
+        // System schema message.
+        'system schema title': 'System Schema',
+        'system schema description': 'This schema is managed by the system and cannot be modified.',
       },
     },
   },

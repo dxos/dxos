@@ -97,6 +97,16 @@ type StepExecutionResult = {
   trace: ExecutionTrace;
 };
 
+/**
+ * Executes query plans against the Indexer and AutomergeHost.
+ *
+ * The QueryExecutor is responsible for:
+ * - Executing query plans step by step
+ * - Managing the working set of query results
+ * - Loading documents from the database
+ * - Tracking execution performance metrics
+ * - Handling different types of query operations (select, filter, traverse, etc.)
+ */
 export class QueryExecutor extends Resource {
   private readonly _indexer: Indexer;
   private readonly _automergeHost: AutomergeHost;
@@ -140,9 +150,9 @@ export class QueryExecutor extends Resource {
     return this._trace;
   }
 
-  protected override async _open(ctx: Context) {}
+  protected override async _open(ctx: Context): Promise<void> {}
 
-  protected override async _close(ctx: Context) {}
+  protected override async _close(ctx: Context): Promise<void> {}
 
   getResults(): QueryResult[] {
     return this._lastResultSet.map(

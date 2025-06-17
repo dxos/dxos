@@ -27,7 +27,7 @@ export class FakeAgentHostingProvider implements AgentHostingProviderClient {
     return this._agents.delete(agentID);
   }
 
-  public init(authToken: any) {
+  public init(authToken: any): boolean {
     return true;
   }
 }

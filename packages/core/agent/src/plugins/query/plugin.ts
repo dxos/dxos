@@ -15,7 +15,7 @@ import { Plugin } from '../plugin';
 export class QueryPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/query';
 
-  override async onOpen() {
+  override async onOpen(): Promise<void> {
     const subscription = this.context.client.spaces.isReady.subscribe(async (ready) => {
       if (!ready) {
         return;
@@ -38,7 +38,7 @@ export class QueryPlugin extends Plugin {
     this._ctx.onDispose(() => subscription.unsubscribe());
   }
 
-  private async _processRequest(request: QueryRequest) {
+  private async _processRequest(request: QueryRequest): Promise<void> {
     throw new Error('Not implemented');
     // const filter = DeprecatedFilter.fromProto(
     //   defaultsDeep({}, { options: { dataLocation: QueryOptions.DataLocation.LOCAL } }, request.filter),

@@ -35,7 +35,7 @@ type PropOptions = {
 export class LocalStorageStore<T extends object> {
   static string(): PropType<string>;
   static string(params: PropOptions): PropType<string | undefined>;
-  static string(params?: PropOptions) {
+  static string(params?: PropOptions): PropType<string | undefined> | PropType<string> {
     const prop: PropType<string | undefined> = {
       get: (key) => {
         const value = localStorage.getItem(key);
@@ -55,7 +55,7 @@ export class LocalStorageStore<T extends object> {
 
   static enum<U>(): PropType<U>;
   static enum<U>(params: PropOptions): PropType<U | undefined>;
-  static enum<U>(params?: PropOptions) {
+  static enum<U>(params?: PropOptions): PropType<U | undefined> | PropType<U> {
     return params?.allowUndefined
       ? (LocalStorageStore.string(params) as PropType<U | undefined>)
       : (LocalStorageStore.string() as unknown as PropType<U>);
@@ -63,7 +63,7 @@ export class LocalStorageStore<T extends object> {
 
   static number(): PropType<number>;
   static number(params: PropOptions): PropType<number | undefined>;
-  static number(params?: PropOptions) {
+  static number(params?: PropOptions): PropType<number | undefined> | PropType<number> {
     const prop: PropType<number | undefined> = {
       get: (key) => {
         const value = parseInt(localStorage.getItem(key) ?? '');
@@ -83,7 +83,7 @@ export class LocalStorageStore<T extends object> {
 
   static bool(): PropType<boolean>;
   static bool(params: PropOptions): PropType<boolean | undefined>;
-  static bool(params?: PropOptions) {
+  static bool(params?: PropOptions): PropType<boolean | undefined> | PropType<boolean> {
     const prop: PropType<boolean | undefined> = {
       get: (key) => {
         const value = localStorage.getItem(key);
@@ -137,7 +137,7 @@ export class LocalStorageStore<T extends object> {
   /**
    * Binds signal property to local storage key.
    */
-  prop<K extends keyof T>({ key, type }: PropDef<K, T>) {
+  prop<K extends keyof T>({ key, type }: PropDef<K, T>): this {
     invariant(typeof key === 'string');
     const storageKey = this._prefix + '/' + hyphenize(key);
     if (this._subscriptions.has(storageKey)) {
@@ -167,7 +167,7 @@ export class LocalStorageStore<T extends object> {
   /**
    * Delete all settings.
    */
-  reset() {
+  reset(): void {
     localStorage.removeItem(this._prefix);
     for (const key of Object.keys(localStorage)) {
       if (key.startsWith(this._prefix)) {
@@ -179,11 +179,11 @@ export class LocalStorageStore<T extends object> {
   /**
    * Expunges all store-related items from local storage.
    */
-  expunge() {
+  expunge(): void {
     this._subscriptions.forEach((_, key) => localStorage.removeItem(key));
   }
 
-  close() {
+  close(): void {
     this._subscriptions.forEach((unsubscribe) => unsubscribe());
     this._subscriptions.clear();
   }

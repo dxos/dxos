@@ -25,7 +25,7 @@ export class InvitationsManager extends ScopedShellManager {
     super();
   }
 
-  async init() {
+  async init(): Promise<void> {
     if (this._initialized) {
       return;
     }
@@ -40,7 +40,7 @@ export class InvitationsManager extends ScopedShellManager {
     this._initialized = true;
   }
 
-  async closePage() {
+  async closePage(): Promise<void> {
     await this.page.close();
   }
 
@@ -50,7 +50,7 @@ export class InvitationsManager extends ScopedShellManager {
     return this.page.getByTestId(`peer-${id}`);
   }
 
-  async getNetworkStatus(id: number) {
+  async getNetworkStatus(id: number): Promise<0 | 1> {
     const selector = this.peer(id).getByTestId('identity-list-item.description').first();
 
     try {
@@ -61,17 +61,17 @@ export class InvitationsManager extends ScopedShellManager {
     }
   }
 
-  async getDisplayName(id: number) {
+  async getDisplayName(id: number): Promise<string | null> {
     // TODO(wittjosiah): Update id.
     return this.peer(id).getByTestId('identity-list-item').first().textContent();
   }
 
-  async getSpaceName(id: number, nth: number) {
+  async getSpaceName(id: number, nth: number): Promise<string | null> {
     // TODO(wittjosiah): Update id.
     return this.peer(id).getByTestId('space-list-item').nth(nth).textContent();
   }
 
-  async getSpaceMembersCount(id: number) {
+  async getSpaceMembersCount(id: number): Promise<number> {
     return this.peer(id).getByTestId('space-members-list').locator('li').count();
   }
 
@@ -81,11 +81,11 @@ export class InvitationsManager extends ScopedShellManager {
 
   // Actions
 
-  async toggleNetworkStatus(id: number) {
+  async toggleNetworkStatus(id: number): Promise<void> {
     await this.peer(id).getByTestId('invitations.toggle-network').click();
   }
 
-  async openPanel(id: number, panel: PanelType) {
+  async openPanel(id: number, panel: PanelType): Promise<void> {
     const peer = this.peer(id);
 
     if (typeof panel === 'number') {
@@ -112,14 +112,14 @@ export class InvitationsManager extends ScopedShellManager {
     }
   }
 
-  async createIdentity(id: number) {
+  async createIdentity(id: number): Promise<void> {
     const createIdentity = this.peer(id).getByTestId('invitations.create-identity');
     // TODO(wittjosiah): Clicking on buttons wrapped in tooltips is flaky in webkit playwright.
     await createIdentity.click();
     await expect(createIdentity).toBeDisabled();
   }
 
-  async createSpace(id: number) {
+  async createSpace(id: number): Promise<void> {
     await this.peer(id).getByTestId('invitations.create-space').click();
   }
 
@@ -154,7 +154,7 @@ export class InvitationsManager extends ScopedShellManager {
     return this._invitationCode.wait({ timeout: 1_000 });
   }
 
-  async acceptInvitation(id: number, type: 'device' | 'space', invitation: string) {
+  async acceptInvitation(id: number, type: 'device' | 'space', invitation: string): Promise<void> {
     const peer = this.peer(id);
     // TODO(wittjosiah): Update ids.
     if (type === 'device') {
@@ -165,7 +165,7 @@ export class InvitationsManager extends ScopedShellManager {
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input-continue`).click();
   }
 
-  private async _onConsoleMessage(message: ConsoleMessage) {
+  private async _onConsoleMessage(message: ConsoleMessage): Promise<void> {
     try {
       const json = JSON.parse(message.text());
       if (json.invitationCode) {

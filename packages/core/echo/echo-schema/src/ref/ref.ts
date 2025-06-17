@@ -45,7 +45,7 @@ export const RefTypeId: unique symbol = Symbol('@dxos/echo-schema/Ref');
 export interface Ref$<T extends WithId> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
 
 // Type of the `Ref` function and extra methods attached to it.
-interface RefFn {
+export interface RefFn {
   <S extends Schema.Schema.Any>(schema: S): Ref$<Schema.Schema.Type<S>>;
 
   /**
@@ -356,7 +356,7 @@ export class RefImpl<T> implements Ref<T> {
    * Do not inline the target object in the reference.
    * Makes .target unavailable unless the reference is connected to a database context.
    */
-  noInline() {
+  noInline(): this {
     this.#target = undefined;
     return this;
   }
@@ -374,11 +374,11 @@ export class RefImpl<T> implements Ref<T> {
    * When a reference has a saved target (i.e. the target or object holding the reference is not in the database),
    * the target is included in the serialized object.
    */
-  toJSON() {
+  toJSON(): EncodedReference {
     return this.encode();
   }
 
-  toString() {
+  toString(): string {
     if (this.#target) {
       return `Ref(${this.#target.toString()})`;
     }
@@ -392,7 +392,7 @@ export class RefImpl<T> implements Ref<T> {
    * Internal method to set the resolver.
    * @internal
    */
-  _setResolver(resolver: RefResolver) {
+  _setResolver(resolver: RefResolver): void {
     this.#resolver = resolver;
   }
 
@@ -401,7 +401,7 @@ export class RefImpl<T> implements Ref<T> {
    * Not the same as `target` which is resolved from the resolver.
    * @internal
    */
-  _getSavedTarget() {
+  _getSavedTarget(): T | undefined {
     return this.#target;
   }
 }

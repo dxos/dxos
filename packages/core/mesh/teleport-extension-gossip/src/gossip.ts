@@ -53,7 +53,7 @@ export class Gossip {
     return this._params.localPeerId;
   }
 
-  async open() {
+  async open(): Promise<void> {
     // Clear the map periodically.
     scheduleTaskInterval(
       this._ctx,
@@ -64,7 +64,7 @@ export class Gossip {
     );
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this._ctx.dispose();
   }
 
@@ -100,7 +100,7 @@ export class Gossip {
     return extension;
   }
 
-  postMessage(channel: string, payload: any) {
+  postMessage(channel: string, payload: any): void {
     for (const extension of this._connections.values()) {
       this._sendAnnounceWithTimeoutTracking(extension, {
         peerId: this._params.localPeerId,
@@ -124,7 +124,7 @@ export class Gossip {
     }
   }
 
-  listen(channel: string, callback: (message: GossipMessage) => void) {
+  listen(channel: string, callback: (message: GossipMessage) => void): { unsubscribe: () => void } {
     if (!this._listeners.has(channel)) {
       this._listeners.set(channel, new Set());
     }
@@ -137,7 +137,7 @@ export class Gossip {
     };
   }
 
-  private _callListeners(message: GossipMessage) {
+  private _callListeners(message: GossipMessage): void {
     if (this._listeners.has(message.channelId)) {
       this._listeners.get(message.channelId)!.forEach((callback) => {
         callback(message);
@@ -145,7 +145,7 @@ export class Gossip {
     }
   }
 
-  private _propagateAnnounce(message: GossipMessage) {
+  private _propagateAnnounce(message: GossipMessage): Promise<void[]> {
     return Promise.all(
       [...this._connections.entries()].map(async ([remotePeerId, extension]) => {
         if (this._params.localPeerId.equals(message.peerId) || remotePeerId.equals(message.peerId)) {
@@ -156,7 +156,7 @@ export class Gossip {
     );
   }
 
-  private _performGc() {
+  private _performGc(): void {
     const start = performance.now();
 
     for (const key of this._toClear.keys()) {
@@ -173,7 +173,7 @@ export class Gossip {
     }
   }
 
-  private _sendAnnounceWithTimeoutTracking(extension: GossipExtension, message: GossipMessage) {
+  private _sendAnnounceWithTimeoutTracking(extension: GossipExtension, message: GossipMessage): Promise<void> {
     return extension.sendAnnounce(message).catch((err) => {
       // Noop?
     });

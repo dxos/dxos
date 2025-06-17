@@ -109,18 +109,20 @@ export const useExtensions = ({
   //
   // External extensions from other plugins.
   //
-  const pluginExtensions = useMemo<Extension[] | undefined>(
-    () =>
-      extensionProviders.flat().reduce((acc: Extension[], provider) => {
-        const extension = typeof provider === 'function' ? provider({ document }) : provider;
-        if (extension) {
-          acc.push(extension);
-        }
+  const pluginExtensions = useMemo<Extension[]>(() => {
+    if (!document) {
+      return [];
+    }
 
-        return acc;
-      }, []),
-    [extensionProviders, document],
-  );
+    return extensionProviders.flat().reduce((acc: Extension[], provider) => {
+      const extension = typeof provider === 'function' ? provider({ document }) : provider;
+      if (extension) {
+        acc.push(extension);
+      }
+
+      return acc;
+    }, []);
+  }, [extensionProviders, document]);
 
   //
   // Basic plugins.

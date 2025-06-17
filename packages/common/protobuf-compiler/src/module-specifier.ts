@@ -13,7 +13,7 @@ const require = createRequire(import.meta.url);
  * Represents a reference to a module, either as an relative path with the cwd or as a global module specifier.
  */
 export class ModuleSpecifier {
-  static resolveFromFilePath(path: string, context: string) {
+  static resolveFromFilePath(path: string, context: string): ModuleSpecifier {
     // Normalize path.
     const relativePath = relative(context, resolve(context, path));
     const pathWithDot = relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
@@ -29,11 +29,11 @@ export class ModuleSpecifier {
     invariant(isAbsolute(contextPath));
   }
 
-  isAbsolute() {
+  isAbsolute(): boolean {
     return !this.name.startsWith('.');
   }
 
-  importSpecifier(importContext: string) {
+  importSpecifier(importContext: string): string {
     if (this.isAbsolute()) {
       return this.name;
     } else {
@@ -47,7 +47,7 @@ export class ModuleSpecifier {
     }
   }
 
-  resolve() {
+  resolve(): string {
     return require.resolve(this.name, { paths: [this.contextPath] });
   }
 }

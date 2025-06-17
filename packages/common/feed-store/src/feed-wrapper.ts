@@ -39,11 +39,11 @@ export class FeedWrapper<T extends {}> {
     this._writeLock.wake();
   }
 
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return inspectObject(this);
   }
 
-  toJSON() {
+  toJSON(): { feedKey: PublicKey; length: number; opened: boolean; closed: boolean } {
     return {
       feedKey: this._key,
       length: this.properties.length,
@@ -139,7 +139,7 @@ export class FeedWrapper<T extends {}> {
    * Flush pending changes to disk.
    * Calling this is not required unless you want to explicitly wait for data to be written.
    */
-  async flushToDisk() {
+  async flushToDisk(): Promise<void> {
     await this._storageDirectory.flush();
   }
 
@@ -206,7 +206,7 @@ export class FeedWrapper<T extends {}> {
   /**
    * Clear and check for integrity.
    */
-  async safeClear(from: number, to: number) {
+  async safeClear(from: number, to: number): Promise<void> {
     invariant(from >= 0 && from < to && to <= this.length, 'Invalid range');
 
     const CHECK_MESSAGES = 20;
@@ -272,7 +272,7 @@ class BatchedReadStream extends Readable {
     }
   }
 
-  private _nonBatchedRead(cb: (err: Error | null) => void) {
+  private _nonBatchedRead(cb: (err: Error | null) => void): void {
     this._feed.get(this._cursor, { wait: true }, (err, data) => {
       if (err) {
         cb(err);
@@ -285,7 +285,7 @@ class BatchedReadStream extends Readable {
     });
   }
 
-  private _batchedRead(cb: (err: Error | null) => void) {
+  private _batchedRead(cb: (err: Error | null) => void): void {
     this._feed.getBatch(this._cursor, this._cursor + this._batch, { wait: true }, (err, data) => {
       if (err) {
         cb(err);

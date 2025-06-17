@@ -50,11 +50,11 @@ export const LogPanel: FC<LogPanelProps> = ({ span }) => {
   );
 
   const rows = useMemo(() => {
-    if (!eventQueue?.items?.length) {
+    if (!eventQueue?.objects?.length) {
       return [];
     }
 
-    return eventQueue.items.flatMap((event) => {
+    return eventQueue.objects.flatMap((event) => {
       return event.logs.map((log) => ({
         id: `${event.id}-${log.timestampMs}`,
         time: new Date(log.timestampMs).toLocaleString(),
@@ -64,7 +64,7 @@ export const LogPanel: FC<LogPanelProps> = ({ span }) => {
         _original: { ...log, eventId: event.id },
       }));
     });
-  }, [eventQueue?.items]);
+  }, [eventQueue?.objects]);
 
   if (traceQueueDxn && eventQueue?.isLoading) {
     return <div className={mx('flex items-center justify-center')}>Loading trace data...</div>;

@@ -2,21 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { closeEffect, openCommand, openEffect } from './action';
-import { type RenderCallback } from '../../types';
+import { closeEffect, openEffect } from './action';
 
 export type FloatingMenuOptions = {
+  icon?: string;
   height?: number;
-  renderMenu: RenderCallback<{ onAction: () => void }>;
+  padding?: number;
 };
 
-export const floatingMenu = (options: FloatingMenuOptions) =>
+export const floatingMenu = (options: FloatingMenuOptions = {}) => [
   ViewPlugin.fromClass(
     class {
       view: EditorView;
-      button: HTMLElement;
+      tag: HTMLElement;
       rafId: number | null = null;
 
       constructor(view: EditorView) {
@@ -28,14 +28,17 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
           container.style.position = 'relative';
         }
 
-        // Render menu externally.
-        this.button = document.createElement('div');
-        this.button.style.position = 'absolute';
-        this.button.style.zIndex = '10';
-        this.button.style.display = 'none';
+        const icon = document.createElement('dx-icon');
+        icon.setAttribute('icon', options.icon ?? 'ph--dots-three-outline--regular');
 
-        options.renderMenu(this.button, { onAction: () => openCommand(view) }, view);
-        container.appendChild(this.button);
+        const button = document.createElement('button');
+        button.appendChild(icon);
+
+        // TODO(burdon): Custom tag/styles?
+        this.tag = document.createElement('dx-ref-tag');
+        this.tag.classList.add('cm-ref-tag');
+        this.tag.appendChild(button);
+        container.appendChild(this.tag);
 
         // Listen for scroll events.
         container.addEventListener('scroll', this.scheduleUpdate.bind(this));
@@ -43,35 +46,47 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
       }
 
       update(update: ViewUpdate) {
+        this.tag.dataset.focused = update.view.hasFocus ? 'true' : 'false';
+        if (!update.view.hasFocus) {
+          return;
+        }
+
         // TODO(burdon): Timer to fade in/out.
         if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(openEffect)))) {
-          this.button.style.display = 'none';
+          this.tag.style.display = 'none';
+          this.tag.classList.add('opacity-10');
         } else if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(closeEffect)))) {
-          this.button.style.display = 'block';
-        } else if (update.selectionSet || update.viewportChanged || update.docChanged || update.geometryChanged) {
+          this.tag.style.display = 'block';
+        } else if (
+          update.docChanged ||
+          update.focusChanged ||
+          update.geometryChanged ||
+          update.selectionSet ||
+          update.viewportChanged
+        ) {
           this.scheduleUpdate();
         }
       }
 
       updateButtonPosition() {
+        const { x, width } = this.view.contentDOM.getBoundingClientRect();
+
         const pos = this.view.state.selection.main.head;
         const line = this.view.lineBlockAt(pos);
+        const coords = this.view.coordsAtPos(line.from);
+        if (!coords) {
+          return;
+        }
 
-        const scrollRect = this.view.scrollDOM.getBoundingClientRect();
-        const contentRect = this.view.contentDOM.getBoundingClientRect();
+        const lineHeight = coords.bottom - coords.top;
+        const dy = (lineHeight - (options.height ?? 32)) / 2;
 
-        // Center the menu.
-        const dy = options.height ? (line.height - options.height) / 2 : 0;
+        const offsetTop = coords.top + dy;
+        const offsetLeft = x + width + (options.padding ?? 8);
 
-        const offsetTop = scrollRect.top + line.top + dy;
-        const offsetLeft = scrollRect.width - contentRect.x;
-
-        this.button.style.top = `${offsetTop}px`;
-        this.button.style.left = `${offsetLeft}px`;
-        this.button.style.display = 'block';
-
-        // TODO(burdon): Position is incorrect if cursor is in fenced code block.
-        // console.log('offsetTop', lineRect, containerRect);
+        this.tag.style.top = `${offsetTop}px`;
+        this.tag.style.left = `${offsetLeft}px`;
+        this.tag.style.display = 'block';
       }
 
       scheduleUpdate() {
@@ -83,10 +98,31 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
       }
 
       destroy() {
-        this.button.remove();
+        this.tag.remove();
         if (this.rafId != null) {
           cancelAnimationFrame(this.rafId);
         }
       }
     },
-  );
+  ),
+
+  EditorView.theme({
+    '.cm-ref-tag': {
+      position: 'fixed',
+      padding: '0',
+      border: 'none',
+      transition: 'opacity 0.3s ease-in-out',
+      opacity: 0.1,
+    },
+    '.cm-ref-tag button': {
+      display: 'grid',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '2rem',
+      height: '2rem',
+    },
+    '.cm-ref-tag[data-focused="true"]': {
+      opacity: 1,
+    },
+  }),
+];

@@ -82,7 +82,7 @@ export class CredentialGraph<A, State> {
     return this._onVertexInserted(newVertex);
   }
 
-  private _removeSentinelConnection(vertex: ChainVertex<A>) {
+  private _removeSentinelConnection(vertex: ChainVertex<A>): void {
     const sentinelIdx = vertex.children.indexOf(this._sentinel);
     if (sentinelIdx >= 0) {
       vertex.children.splice(sentinelIdx, 1);
@@ -92,7 +92,7 @@ export class CredentialGraph<A, State> {
     }
   }
 
-  private async _onVertexInserted(newVertex: ChainVertex<A>) {
+  private async _onVertexInserted(newVertex: ChainVertex<A>): Promise<void> {
     const { credential, assertion } = newVertex;
     invariant(credential);
     let changedSubjects: State[] = [];
@@ -164,7 +164,7 @@ export class CredentialGraph<A, State> {
     pendingPaths: Map<number, PathState<A>[]>,
     mergeResult: ReplayRequiredMergeResult<A>,
     convergedPaths: PathState<A>[],
-  ) {
+  ): void {
     paths.push(
       ...mergeResult.replay.map((path) => {
         const stateOverrides = path.stateOverrides ?? new ComplexMap<PublicKey, ChainVertex<A>>(PublicKey.hash);
@@ -203,7 +203,7 @@ export class CredentialGraph<A, State> {
     return pendingList;
   }
 
-  private _updatePathState(path: PathState<A>) {
+  private _updatePathState(path: PathState<A>): void {
     const headCredential = path.head.credential;
     if (headCredential == null) {
       return;
@@ -227,7 +227,7 @@ export class CredentialGraph<A, State> {
     }
   }
 
-  private _forkTraversal(paths: PathState<A>[], path: PathState<A>) {
+  private _forkTraversal(paths: PathState<A>[], path: PathState<A>): void {
     const replayChoice = path.chosenPath?.[path.head.id];
     const choices = replayChoice ?? path.head.children;
     for (const choice of choices) {

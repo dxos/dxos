@@ -231,8 +231,8 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
           'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded',
           // TODO(burdon): Create reusable button/component and/or create var for size.
           pinned
-            ? 'bg-transparent w-[50px] p-2 group-hover/l0item:bg-groupSurface'
-            : 'bg-groupSurface w-[50px] h-[50px]',
+            ? 'bg-transparent w-[50px] p-2 group-hover/l0item:bg-activeSurface'
+            : 'bg-activeSurface w-[50px] h-[50px]',
         )}
         {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
       >
@@ -319,7 +319,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       classNames={[
         'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg',
         'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] gap-1 contain-layout',
-        '!is-[--l0-size] bg-baseSurface border-ie border-separator app-drag pbe-[env(safe-area-inset-bottom)]',
+        '!is-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
       ]}
     >
       <div role='none' className='flex justify-center p-1'>

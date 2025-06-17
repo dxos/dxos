@@ -3,7 +3,7 @@
 //
 
 import { type Decorator } from '@storybook/react';
-import React from 'react';
+import React, { type ComponentType, type PropsWithChildren } from 'react';
 
 import { mx, surfaceShadow } from '@dxos/react-ui-theme';
 import { type Density, type Elevation } from '@dxos/react-ui-types';
@@ -12,6 +12,29 @@ type Config = {
   elevations?: { elevation: Elevation; surface?: string }[];
   densities?: Density[];
 };
+
+const Container = ({ children, elevation, surface }: PropsWithChildren<{ elevation: Elevation; surface?: string }>) => (
+  <div className={mx('p-4 mlb-4 rounded-md border border-separator', surface, surfaceShadow({ elevation }))}>
+    {children}
+  </div>
+);
+
+const Panel = ({
+  Story,
+  elevations,
+  densities,
+  className,
+}: { Story: ComponentType } & Config & { className?: string }) => (
+  <div className={mx('flex flex-col h-full p-4', className)}>
+    {elevations?.map(({ elevation, surface }) =>
+      densities?.map((density) => (
+        <Container key={`${elevation}--${density}`} surface={surface} elevation={elevation}>
+          <Story />
+        </Container>
+      )),
+    )}
+  </div>
+);
 
 export const withSurfaceVariantsLayout = ({
   elevations = [
@@ -22,31 +45,9 @@ export const withSurfaceVariantsLayout = ({
   densities = ['coarse'],
 }: Config = {}): Decorator => {
   return (Story) => (
-    <div className='fixed inset-0 grid grid-cols-2 grid-rows-[min-content] overflow-y-auto'>
-      <div className='light p-4'>
-        {elevations.map(({ elevation, surface }) =>
-          densities.map((density) => (
-            <div
-              key={`${elevation}--${density}`}
-              className={mx('p-4 mlb-4 rounded', surface, surfaceShadow({ elevation }))}
-            >
-              <Story />
-            </div>
-          )),
-        )}
-      </div>
-      <div className='dark p-4'>
-        {elevations.map(({ elevation, surface }) =>
-          densities.map((density) => (
-            <div
-              key={`${elevation}--${density}`}
-              className={mx('p-4 mlb-4 rounded', surface, surfaceShadow({ elevation }))}
-            >
-              <Story />
-            </div>
-          )),
-        )}
-      </div>
+    <div className='fixed inset-0 grid grid-cols-2 overflow-y-auto'>
+      <Panel Story={Story} className='light' elevations={elevations} densities={densities} />
+      <Panel Story={Story} className='dark' elevations={elevations} densities={densities} />
     </div>
   );
 };

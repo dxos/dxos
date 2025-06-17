@@ -92,7 +92,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     );
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     log.trace('dxos.mesh.signal-client.open', trace.begin({ id: this._instanceId }));
 
     if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this._state)) {
@@ -139,7 +139,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     log.trace('dxos.mesh.signal-client.open', trace.end({ id: this._instanceId }));
   }
 
-  protected override async _catch(err: Error) {
+  protected override async _catch(err: Error): Promise<void> {
     if (this._state === SignalState.CLOSED || this._ctx.disposed) {
       return;
     }
@@ -150,7 +150,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     this._scheduleReconcileAfterError();
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     log('closing...');
     if ([SignalState.CLOSED].includes(this._state)) {
       return;
@@ -203,24 +203,24 @@ export class SignalClient extends Resource implements SignalClientMethods {
     });
   }
 
-  async subscribeMessages(peer: PeerInfo) {
+  async subscribeMessages(peer: PeerInfo): Promise<void> {
     invariant(peer.peerKey, 'Peer key required');
     log('subscribing to messages', { peer });
     this.localState.subscribeMessages(PublicKey.from(peer.peerKey));
     this._reconcileTask?.schedule();
   }
 
-  async unsubscribeMessages(peer: PeerInfo) {
+  async unsubscribeMessages(peer: PeerInfo): Promise<void> {
     invariant(peer.peerKey, 'Peer key required');
     log('unsubscribing from messages', { peer });
     this.localState.unsubscribeMessages(PublicKey.from(peer.peerKey));
   }
 
-  private _scheduleReconcileAfterError() {
+  private _scheduleReconcileAfterError(): void {
     scheduleTask(this._ctx, () => this._reconcileTask!.schedule(), ERROR_RECONCILE_DELAY);
   }
 
-  private _createClient() {
+  private _createClient(): void {
     log('creating client', { host: this._host, state: this._state });
     invariant(!this._client, 'Client already created');
 
@@ -275,7 +275,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     }
   }
 
-  private async _reconnect() {
+  private async _reconnect(): Promise<void> {
     log(`reconnecting in ${this._reconnectAfter}ms`, { state: this._state });
 
     if (this._state === SignalState.RECONNECTING) {
@@ -294,7 +294,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     this._createClient();
   }
 
-  private _onConnected() {
+  private _onConnected(): void {
     this._lastError = undefined;
     this._lastReconciliationFailed = false;
     this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
@@ -303,7 +303,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     this._reconcileTask!.schedule();
   }
 
-  private _onDisconnected(options?: { error: Error }) {
+  private _onDisconnected(options?: { error: Error }): void {
     this._updateReconnectTimeout();
     if (this._state === SignalState.CLOSED) {
       return;
@@ -317,21 +317,21 @@ export class SignalClient extends Resource implements SignalClientMethods {
     this._reconnectTask!.schedule();
   }
 
-  private _setState(newState: SignalState) {
+  private _setState(newState: SignalState): void {
     this._state = newState;
     this._monitor.recordStateChangeTime();
     log('signal state changed', { status: this.getStatus() });
     this.statusChanged.emit(this.getStatus());
   }
 
-  private _updateReconnectTimeout() {
+  private _updateReconnectTimeout(): void {
     if (this._state !== SignalState.CONNECTED && this._state !== SignalState.CONNECTING) {
       this._reconnectAfter *= 2;
       this._reconnectAfter = Math.min(this._reconnectAfter, MAX_RECONNECT_TIMEOUT);
     }
   }
 
-  private async _safeResetClient() {
+  private async _safeResetClient(): Promise<void> {
     await this._connectionCtx?.dispose();
     this._connectionCtx = undefined;
 

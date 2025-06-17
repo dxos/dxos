@@ -3,6 +3,7 @@
 //
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
+import type { Schema } from 'effect';
 import isEqual from 'lodash.isequal';
 
 import { waitForCondition } from '@dxos/async';
@@ -29,6 +30,7 @@ type OpenDatabaseOptions = {
 type PeerOptions = {
   kv?: LevelDB;
   indexing?: Partial<EchoHostIndexingConfig>;
+  types?: Schema.Schema.AnyNoContext[];
 };
 
 export class EchoTestBuilder extends Resource {
@@ -55,6 +57,9 @@ export class EchoTestBuilder extends Resource {
   async createDatabase(options: PeerOptions = {}) {
     const peer = await this.createPeer(options);
     const db = await peer.createDatabase(PublicKey.random());
+    if (options.types) {
+      db.graph.schemaRegistry.addSchema(options.types);
+    }
     return {
       peer,
       host: peer.host,
@@ -81,7 +86,7 @@ export class EchoTestPeer extends Resource {
     this._initEcho();
   }
 
-  private _initEcho() {
+  private _initEcho(): void {
     this._echoHost = new EchoHost({ kv: this._kv, indexing: this._indexing });
     this._clients.delete(this._echoClient);
     this._echoClient = new EchoClient();
@@ -120,13 +125,13 @@ export class EchoTestPeer extends Resource {
   /**
    * Simulates a reload of the process by re-creation ECHO.
    */
-  async reload() {
+  async reload(): Promise<void> {
     await this.close();
     this._initEcho();
     await this.open();
   }
 
-  async createClient() {
+  async createClient(): Promise<EchoClient> {
     const client = new EchoClient();
     this._clients.add(client);
     client.connectToService({

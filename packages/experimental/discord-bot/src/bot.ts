@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 export class DiscordBot {
   constructor(private readonly _config: Config) {}
 
-  async start() {
+  async start(): Promise<void> {
     const { value: token } = this._config.find('runtime.keys', { name: 'discord.com/token' }) ?? {};
     const { value: channelId } = this._config.find('runtime.keys', { name: 'discord.com/channel' }) ?? {};
     if (!token) {
@@ -97,5 +97,5 @@ export class DiscordBot {
     }
   }
 
-  async stop() {}
+  async stop(): Promise<void> {}
 }

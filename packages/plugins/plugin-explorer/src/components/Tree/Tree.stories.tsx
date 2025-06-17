@@ -7,13 +7,13 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { TreeType, Tree as TreeModel } from '@dxos/plugin-outliner/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Tree, type TreeComponentProps } from './Tree';
+import { TreeType, Tree as TreeModel } from './types';
 
 // TODO(burdon): Storybook for Graph/Tree/Plot (generics); incl. GraphModel.
 // TODO(burdon): Type for all Explorer components (Space, Object, Query, etc.) incl.

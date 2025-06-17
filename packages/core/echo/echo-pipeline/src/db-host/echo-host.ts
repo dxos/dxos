@@ -52,7 +52,7 @@ export interface EchoHostIndexingConfig {
 
 const DEFAULT_INDEXING_CONFIG: EchoHostIndexingConfig = {
   // TODO(dmaretskyi): Disabled by default since embedding generation is expensive.
-  fullText: true,
+  fullText: false,
   vector: false,
 };
 
@@ -216,14 +216,14 @@ export class EchoHost extends Resource {
   /**
    * Flush all pending writes to the underlying storage.
    */
-  async flush() {
+  async flush(): Promise<void> {
     await this._automergeHost.repo.flush();
   }
 
   /**
    * Perform any pending index updates.
    */
-  async updateIndexes() {
+  async updateIndexes(): Promise<void> {
     await this._indexer.updateIndexes();
   }
 

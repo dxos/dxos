@@ -34,7 +34,7 @@ export class SpeakingMonitor extends Resource {
     return this._isSpeaking;
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     this._deferredUpdate = new DeferredTask(this._ctx, async () => this._emitSpeakingChanged());
 
     let timeout: NodeJS.Timeout | undefined;

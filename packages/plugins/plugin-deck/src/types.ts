@@ -82,8 +82,10 @@ export const DeckPluginState = Schema.Struct({
   complementarySidebarPanel: Schema.optional(Schema.String),
 
   dialogOpen: Schema.Boolean,
-  dialogBlockAlign: Schema.optional(Schema.Literal('start', 'center', 'end')),
   dialogType: Schema.optional(Schema.Literal('default', 'alert')),
+  dialogBlockAlign: Schema.optional(Schema.Literal('start', 'center', 'end')),
+  dialogOverlayClasses: Schema.optional(Schema.String),
+  dialogOverlayStyle: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
   /** Data to be passed to the dialog Surface. */
   dialogContent: Schema.optional(Schema.Any),
 

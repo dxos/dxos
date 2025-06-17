@@ -31,16 +31,16 @@ export class Migrations {
     return this.migrations[this.migrations.length - 1]?.version;
   }
 
-  static running(space: Space) {
+  static running(space: Space): boolean {
     return this._state.running.includes(space.key.toHex());
   }
 
-  static define(namespace: string, migrations: Migration[]) {
+  static define(namespace: string, migrations: Migration[]): void {
     this.namespace = namespace;
     this.migrations = migrations;
   }
 
-  static async migrate(space: Space, targetVersion?: string | number) {
+  static async migrate(space: Space, targetVersion?: string | number): Promise<boolean> {
     invariant(!this.running(space), 'Migration already running');
     invariant(this.versionProperty, 'Migrations namespace not set');
     invariant(space.state.get() === SpaceState.SPACE_READY, 'Space not ready');

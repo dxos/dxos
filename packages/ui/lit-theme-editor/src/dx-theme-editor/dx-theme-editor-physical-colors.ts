@@ -36,7 +36,7 @@ export class DxThemeEditorPhysicalColors extends LitElement {
     this.tokenSet = restore();
   };
 
-  private updateSeriesProperty(series: string, property: string, value: any) {
+  private updateSeriesProperty(series: string, property: string, value: any): void {
     if (!this.tokenSet.colors?.physical?.definitions?.series?.[series]) {
       return;
     }
@@ -54,7 +54,7 @@ export class DxThemeEditorPhysicalColors extends LitElement {
     this.debouncedSaveAndRender();
   }
 
-  private handleKeyPointChange(series: string, index: number, value: number) {
+  private handleKeyPointChange(series: string, index: number, value: number): void {
     if (!isHelicalArcSeries(this.tokenSet.colors?.physical?.definitions?.series?.[series])) {
       return;
     }
@@ -65,11 +65,11 @@ export class DxThemeEditorPhysicalColors extends LitElement {
     this.updateSeriesProperty(series, 'keyPoint', keyPoint);
   }
 
-  private handleControlPointChange(series: string, property: 'lowerCp' | 'upperCp', value: number) {
+  private handleControlPointChange(series: string, property: 'lowerCp' | 'upperCp', value: number): void {
     this.updateSeriesProperty(series, property, value);
   }
 
-  private handleTorsionChange(series: string, value: number) {
+  private handleTorsionChange(series: string, value: number): void {
     this.updateSeriesProperty(series, 'torsion', value);
   }
 
@@ -154,13 +154,13 @@ export class DxThemeEditorPhysicalColors extends LitElement {
     `;
   }
 
-  override connectedCallback() {
+  override connectedCallback(): void {
     super.connectedCallback();
     saveAndRender(this.tokenSet);
     window.addEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
   }
 
-  override disconnectedCallback() {
+  override disconnectedCallback(): void {
     super.disconnectedCallback();
     window.removeEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
   }
@@ -173,7 +173,7 @@ export class DxThemeEditorPhysicalColors extends LitElement {
     );
   }
 
-  override createRenderRoot() {
+  override createRenderRoot(): this {
     return this;
   }
 }

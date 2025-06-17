@@ -55,13 +55,13 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
     readonly style?: string,
   ) {}
 
-  addSubgraph({ id, label, style }: Subgraph) {
+  addSubgraph({ id, label, style }: Subgraph): SubgraphImpl {
     const subgraph = new SubgraphImpl(id, label, style);
     this._subGraphs.add(subgraph);
     return subgraph;
   }
 
-  addNode(node: Node) {
+  addNode(node: Node): this {
     this._nodes.add(node);
     return this;
   }
@@ -134,12 +134,12 @@ export class Flowchart implements Diagram, SubgraphBuilder {
   addNode = this._root.addNode.bind(this._root);
   addSubgraph = this._root.addSubgraph.bind(this._root);
 
-  addClassDef(id: string, properties: any) {
+  addClassDef(id: string, properties: any): this {
     this._classDefs.add({ id, properties });
     return this;
   }
 
-  addLink(link: Link) {
+  addLink(link: Link): this {
     this._links.add(link);
     return this;
   }
@@ -147,7 +147,7 @@ export class Flowchart implements Diagram, SubgraphBuilder {
   /**
    * Generate mermaid document.
    */
-  build() {
+  build(): string[] {
     const section = (label: string, lines: string[]) => (lines.length ? ['', `%% ${label}`, ...lines] : undefined);
 
     const sections = [
@@ -185,7 +185,7 @@ export class Flowchart implements Diagram, SubgraphBuilder {
     ].flat() as string[];
   }
 
-  render() {
+  render(): string {
     return this.build().join('\n');
   }
 

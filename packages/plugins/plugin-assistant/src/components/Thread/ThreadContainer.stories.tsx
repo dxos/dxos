@@ -19,7 +19,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { DXN, Type } from '@dxos/echo';
+import { Type, type Obj } from '@dxos/echo';
 import { createQueueDxn, create, Query, Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
@@ -46,7 +46,7 @@ import translations from '../../translations';
 const endpoints = remoteServiceEndpoints;
 
 type RenderProps = {
-  items?: Type.AnyObject[];
+  items?: Obj.Any[];
   prompts?: string[];
 } & Pick<ThreadProps, 'debug'>;
 
@@ -82,7 +82,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
   // Queue.
   const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
-  const queue = useQueue<Message>(DXN.tryParse(queueDxn));
+  const queue = useQueue<Message>(Type.DXN.tryParse(queueDxn));
 
   useEffect(() => {
     if (space) {
@@ -91,7 +91,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [space]);
 
   useEffect(() => {
-    if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
+    if (queue?.objects.length === 0 && !queue.isLoading && prompts.length > 0) {
       queue.append([
         create(Message, {
           role: 'assistant',
@@ -106,7 +106,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         }),
       ]);
     }
-  }, [queueDxn, prompts, queue?.items.length, queue?.isLoading]);
+  }, [queueDxn, prompts, queue?.objects.length, queue?.isLoading]);
 
   // State.
   const query = useMemo(
@@ -114,7 +114,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     [artifactDefinitions],
   );
   const artifactItems = useQuery(space, query);
-  const messages = [...(queue?.items ?? []), ...(processor?.messages.value ?? [])];
+  const messages = [...(queue?.objects ?? []), ...(processor?.messages.value ?? [])];
 
   const handleSubmit = useCallback(
     (message: string) => {
@@ -128,7 +128,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         }
 
         await processor.request(message, {
-          history: queue.items,
+          history: queue.objects,
           onComplete: (messages) => {
             queue.append(messages);
           },

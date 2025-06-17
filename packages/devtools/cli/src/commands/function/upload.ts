@@ -111,7 +111,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
     ownerPublicKey: PublicKey,
     functionObject: FunctionType | undefined,
     bundledSource: string,
-  ) {
+  ): Promise<UploadFunctionResponseBody> {
     let result: UploadFunctionResponseBody;
     try {
       result = await asyncTimeout(

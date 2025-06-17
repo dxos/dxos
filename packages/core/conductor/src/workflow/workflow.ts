@@ -127,11 +127,11 @@ export class Workflow {
     });
   }
 
-  asGraph() {
+  asGraph(): ComputeGraphModel {
     return this._graph;
   }
 
-  private _requireResolved(nodeId: string) {
+  private _requireResolved(nodeId: string): Executable<Schema.Schema.AnyNoContext, Schema.Schema.AnyNoContext> {
     const resolved = this._resolvedNodeById.get(nodeId);
     if (!resolved) {
       throw new Error(`Node ${nodeId} was not resolved in ${this._dxn.toString()}.`);

@@ -12,7 +12,7 @@ import { PlankContentError } from '../Plank';
 
 export const Dialog = () => {
   const context = useCapability(DeckCapabilities.MutableDeckState);
-  const { dialogType, dialogBlockAlign, dialogContent, dialogOpen } = context;
+  const { dialogOpen, dialogType, dialogBlockAlign, dialogOverlayClasses, dialogOverlayStyle, dialogContent } = context;
   const Root = dialogType === 'alert' ? AlertDialog.Root : NaturalDialog.Root;
   const Overlay = dialogType === 'alert' ? AlertDialog.Overlay : NaturalDialog.Overlay;
 
@@ -27,7 +27,7 @@ export const Dialog = () => {
         // TODO(burdon): Placeholder creates a suspense boundary; replace with defaults.
         <Surface role='dialog' data={dialogContent} limit={1} fallback={PlankContentError} placeholder={<div />} />
       ) : (
-        <Overlay blockAlign={dialogBlockAlign}>
+        <Overlay blockAlign={dialogBlockAlign} classNames={dialogOverlayClasses} style={dialogOverlayStyle}>
           <Surface role='dialog' data={dialogContent} limit={1} fallback={PlankContentError} />
         </Overlay>
       )}

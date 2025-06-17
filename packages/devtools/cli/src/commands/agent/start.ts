@@ -73,7 +73,7 @@ export default class Start extends BaseCommand<typeof Start> {
     }
   }
 
-  private async _runInForeground() {
+  private async _runInForeground(): Promise<void> {
     const socket = 'unix://' + getProfilePath(DX_RUNTIME, this.flags.profile, 'agent.sock');
     {
       // Clear out old socket file.
@@ -194,7 +194,7 @@ export default class Start extends BaseCommand<typeof Start> {
     await gracefulStopComplete.wait();
   }
 
-  private async _runAsDaemon(system: boolean) {
+  private async _runAsDaemon(system: boolean): Promise<void | undefined> {
     return await this.execWithDaemon(async (daemon) => {
       if (await daemon.isRunning(this.flags.profile)) {
         this.log(chalk`{red Warning}: '${this.flags.profile}' is already running.`);
@@ -217,7 +217,7 @@ export default class Start extends BaseCommand<typeof Start> {
     }, system);
   }
 
-  private async _sendTelemetry() {
+  private async _sendTelemetry(): Promise<void> {
     const sendTelemetry = async () => {
       // TODO(nf): move to observability
       const installationId = this._observability?.getTag('installationId');

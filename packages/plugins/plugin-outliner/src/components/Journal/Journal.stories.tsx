@@ -4,46 +4,39 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useEffect, useState } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react';
+import React, { useMemo } from 'react';
 
-import { live, makeRef, useSpace } from '@dxos/react-client/echo';
+import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { DataType } from '@dxos/schema';
+import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Journal } from './Journal';
 import translations from '../../translations';
-import { createJournalEntry, JournalEntryType, JournalType, TreeType } from '../../types';
+import { createJournal, JournalEntryType, JournalType, OutlineType } from '../../types';
 
-const meta: Meta<typeof Journal.Root> = {
+const meta: Meta<typeof Journal> = {
   title: 'plugins/plugin-outliner/Journal',
-  component: Journal.Root,
-  render: () => {
+  component: Journal,
+  render: render(({ journal: _journal }) => {
     const space = useSpace();
-    const [journal, setJournal] = useState<JournalType>();
-    useEffect(() => {
-      if (space) {
-        setJournal(
-          space.db.add(
-            live(JournalType, {
-              name: 'Journal',
-              entries: [makeRef(createJournalEntry(new Date(2025, 0, 1)))],
-            }),
-          ),
-        );
-      }
-    }, [space]);
-
-    return (
-      <div className='flex h-full'>
-        <Journal.Root journal={journal} classNames='flex flex-col w-[40rem] h-full overflow-hidden bg-modalSurface' />
-      </div>
-    );
-  },
+    // TODO(burdon): Throws:
+    //  Uncaught InvariantViolation: invariant violation: assignFromLocalState [doc] at packages/core/echo/echo-db/src/core-db/object-core.ts:126
+    //  Uncaught Error: Object references must be wrapped with `Ref.make`
+    const journal = useMemo(() => space?.db.add(_journal), [space, _journal]);
+    if (journal) {
+      return <Journal journal={journal} />;
+    }
+  }),
   decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true, types: [JournalType, JournalEntryType, TreeType] }),
+    withClientProvider({
+      createIdentity: true,
+      createSpace: true,
+      types: [DataType.Text, JournalType, JournalEntryType, OutlineType],
+    }),
     withTheme,
-    withLayout({ fullscreen: true, classNames: 'flex justify-center bg-baseSurface' }),
+    withLayout({ fullscreen: true }),
   ],
   parameters: {
     translations,
@@ -52,8 +45,10 @@ const meta: Meta<typeof Journal.Root> = {
 
 export default meta;
 
-type Story = StoryObj<typeof Journal.Root>;
+type Story = StoryObj<typeof Journal>;
 
 export const Default: Story = {
-  args: {},
+  args: {
+    journal: createJournal(),
+  },
 };

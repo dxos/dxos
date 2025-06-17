@@ -31,7 +31,7 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
  * const Contact = Schema.Struct({
  *   name: Schema.String,
  *   email: Schema.String,
- * }).pipe(Type.def({
+ * }).pipe(Type.Obj({
  *   typename: 'example.com/type/Contact',
  *   version: '0.1.0',
  * }))

@@ -4,7 +4,7 @@
 
 import React, { type FC, type PropsWithChildren } from 'react';
 
-import { type MessageContentBlock, type Message, type ToolType } from '@dxos/ai';
+import { type MessageContentBlock, type Message, type Tool } from '@dxos/ai';
 import { Surface } from '@dxos/app-framework';
 import type { BaseEchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -22,7 +22,7 @@ import { safeParseJson } from '@dxos/util';
 import { ToolBlock, isToolMessage } from './ToolInvocations';
 import { ToolboxContainer } from '../Toolbox';
 
-const panelClassNames = 'flex flex-col w-full px-2 bg-groupSurface rounded-md';
+const panelClassNames = 'flex flex-col w-full px-2 bg-activeSurface rounded-md';
 const userClassNames = 'bg-[--user-fill] text-accentSurfaceText';
 
 const ToggleContainer = (props: ToggleContainerProps) => {
@@ -45,7 +45,7 @@ export type ThreadMessageProps = ThemedClassName<{
   space?: Space;
   message: Message;
   debug?: boolean;
-  tools?: ToolType[];
+  tools?: Tool[];
   onPrompt?: (text: string) => void;
   onDelete?: (id: string) => void;
   onAddToGraph?: (object: BaseEchoObject) => void;

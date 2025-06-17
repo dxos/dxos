@@ -45,7 +45,9 @@ export const editor = () => [
   EditorState.transactionFilter.of((tr) => {
     const tree = tr.state.facet(treeFacet);
 
+    //
     // Check cursor is in a valid position.
+    //
     if (!tr.docChanged) {
       const current = getSelection(tr.state).from;
       if (current != null) {
@@ -62,19 +64,24 @@ export const editor = () => [
             return [{ selection: EditorSelection.cursor(currentItem.contentRange.from) }];
           } else {
             if (currentItem.index < prevItem.index) {
-              // Moving up.
+              // Moving line up.
               return [{ selection: EditorSelection.cursor(currentItem.contentRange.to) }];
             } else if (currentItem.index > prevItem.index) {
-              // Moving down.
+              // Moving line down.
               return [{ selection: EditorSelection.cursor(currentItem.contentRange.from) }];
             } else {
+              // Moving left.
               if (current < prev) {
-                // Moving left.
                 if (currentItem.index === 0) {
+                  // At start of the list.
                   return [];
                 } else {
+                  // Go to previous line.
                   return [{ selection: EditorSelection.cursor(currentItem.lineRange.from - 1) }];
                 }
+              } else {
+                // Go to end of line.
+                return [{ selection: EditorSelection.cursor(currentItem.contentRange.to) }];
               }
             }
           }
@@ -84,13 +91,36 @@ export const editor = () => [
       return tr;
     }
 
+    //
+    // Validate changes that don't break the tree.
+    //
     let cancel = false;
     const changes: ChangeSpec[] = [];
     tr.changes.iterChanges((fromA, toA, fromB, toB, insert) => {
       const line = tr.startState.doc.lineAt(fromA);
       const match = line.text.match(LIST_ITEM_REGEX);
       if (match) {
-        const start = line.from + (match?.[0]?.length ?? 0);
+        // Check cursor was in a valid position.
+        const startTree = tr.startState.facet(treeFacet);
+        const startItem = startTree.find(tr.startState.selection.main.from);
+
+        // Check if entire line was deleted (which is ok).
+        const deleteLine = fromA === startItem?.lineRange.from && toA === startItem?.lineRange.to + 1;
+        if (deleteLine) {
+          return;
+        }
+
+        // if (!deleteLine && (!startItem || fromA < startItem.contentRange.from || toA > startItem.contentRange.to)) {
+        //   cancel = true;
+        //   return;
+        // }
+
+        // Check valid item.
+        const currentItem = tree.find(tr.state.selection.main.from);
+        if (!currentItem?.contentRange) {
+          cancel = true;
+          return;
+        }
 
         // Detect and cancel replacement of task marker with continuation indent.
         // Task markers are atomic so will be deleted when backspace is pressed.
@@ -98,6 +128,7 @@ export const editor = () => [
         // - [ ] <- backspace here deletes the task marker.
         // - [ ] <- backspace here inserts 6 spaces (creates continuation).
         //   - [ ] <- backspace here deletes the task marker.
+        const start = line.from + (match?.[0]?.length ?? 0);
         const replace = start === toA && toA - fromA === insert.length;
         if (replace) {
           changes.push({ from: line.from - 1, to: toA });

@@ -43,7 +43,7 @@ export class SelectionModel<T extends TableRow> extends Resource {
     super();
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     const selectionWatcher = effect(() => {
       touch(this._selection.value);
       this._onSelectionChanged?.();
