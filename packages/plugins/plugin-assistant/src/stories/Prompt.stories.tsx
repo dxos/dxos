@@ -47,6 +47,7 @@ const meta: Meta<typeof PromptBar> = {
   parameters: {
     translations,
     layout: 'centered',
+    controls: { disable: true },
   },
 };
 

@@ -69,6 +69,7 @@ const meta: Meta<typeof Prompt> = {
   parameters: {
     layout: 'centered',
     translations,
+    controls: { disable: true },
   },
 };
 

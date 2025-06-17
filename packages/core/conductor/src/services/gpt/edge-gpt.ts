@@ -16,7 +16,7 @@ import {
   type ImageContentBlock,
 } from '@dxos/ai';
 import { makePushIterable } from '@dxos/async';
-import { ObjectId, ECHO_ATTR_TYPE } from '@dxos/echo-schema';
+import { ObjectId, ATTR_TYPE } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { IMAGE_TYPENAME, MESSAGE_TYPENAME, type GptService } from './gpt';
@@ -78,7 +78,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
         Effect.map((messages) =>
           // TODO(dmaretskyi): Why do we need to prepend the last message
           [messages.at(-1)!, ...messages].map((msg) => ({
-            [ECHO_ATTR_TYPE]: `dxn:type:${MESSAGE_TYPENAME}:0.1.0`,
+            [ATTR_TYPE]: `dxn:type:${MESSAGE_TYPENAME}:0.1.0`,
             ...msg,
           })),
         ),
@@ -109,7 +109,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
             if (content.type === 'image') {
               // TODO(dmaretskyi): Hardwired to return images as artifacts if they are present in the response,
               return {
-                [ECHO_ATTR_TYPE]: IMAGE_TYPENAME,
+                [ATTR_TYPE]: IMAGE_TYPENAME,
                 id: content.id,
                 source: content.source,
               };
@@ -129,7 +129,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
         if (imageMatch) {
           const [, id, prompt] = imageMatch;
           return {
-            [ECHO_ATTR_TYPE]: IMAGE_TYPENAME,
+            [ATTR_TYPE]: IMAGE_TYPENAME,
             id,
             prompt,
             source: this.imageCache.get(id)?.source,

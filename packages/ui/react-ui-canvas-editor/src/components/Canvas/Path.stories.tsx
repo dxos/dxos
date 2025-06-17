@@ -66,6 +66,9 @@ const meta: Meta = {
   title: 'ui/react-ui-canvas-editor/Rope',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    controls: { disable: true },
+  },
 };
 
 export default meta;

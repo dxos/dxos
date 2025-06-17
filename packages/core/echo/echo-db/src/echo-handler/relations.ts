@@ -14,7 +14,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { type Live } from '@dxos/live-object';
 
-import type { AnyLiveObject } from './create';
+import type { AnyLiveObject } from './echo-handler';
 
 /**
  * @deprecated Use {@link @dxos/echo#Relation.Any} instead.

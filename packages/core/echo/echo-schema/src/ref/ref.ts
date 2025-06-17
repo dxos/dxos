@@ -9,7 +9,7 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
-import { getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId } from '../ast';
+import { getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId } from '../ast';
 import { type JsonSchemaType } from '../json-schema';
 import type { BaseObject, WithId } from '../types';
 
@@ -287,6 +287,9 @@ export interface RefResolver {
    * Resolver ref asynchronously.
    */
   resolve(dxn: DXN): Promise<BaseObject | undefined>;
+
+  // TODO(dmaretskyi): Combine with `resolve`.
+  resolveSchema(dxn: DXN): Promise<Schema.Schema.AnyNoContext | undefined>;
 }
 
 export class RefImpl<T> implements Ref<T> {
@@ -426,3 +429,54 @@ export const getRefSavedTarget = (ref: Ref<any>): BaseObject | undefined => {
 const refVariance: Ref<any>[typeof RefTypeId] = {
   _T: null as any,
 };
+
+export const refFromEncodedReference = (encodedReference: EncodedReference, resolver?: RefResolver): Ref<any> => {
+  const dxn = DXN.parse(encodedReference['/']);
+  const ref = new RefImpl(dxn);
+
+  // TODO(dmaretskyi): Handle inline target in the encoded reference.
+
+  if (resolver) {
+    setRefResolver(ref, resolver);
+  }
+  return ref;
+};
+
+export class StaticRefResolver implements RefResolver {
+  public objects = new Map<ObjectId, BaseObject>();
+  public schemas = new Map<DXN.String, Schema.Schema.AnyNoContext>();
+
+  addObject(obj: BaseObject): this {
+    this.objects.set(obj.id, obj);
+    return this;
+  }
+
+  addSchema(schema: Schema.Schema.AnyNoContext): this {
+    const dxn = getSchemaDXN(schema);
+    invariant(dxn, 'Schema has no DXN');
+    this.schemas.set(dxn.toString(), schema);
+    return this;
+  }
+
+  resolveSync(dxn: DXN, _load: boolean, _onLoad?: () => void): BaseObject | undefined {
+    const id = dxn?.asEchoDXN()?.echoId;
+    if (id == null) {
+      return undefined;
+    }
+
+    return this.objects.get(id);
+  }
+
+  async resolve(dxn: DXN): Promise<BaseObject | undefined> {
+    const id = dxn?.asEchoDXN()?.echoId;
+    if (id == null) {
+      return undefined;
+    }
+
+    return this.objects.get(id);
+  }
+
+  async resolveSchema(dxn: DXN): Promise<Schema.Schema.AnyNoContext | undefined> {
+    return this.schemas.get(dxn.toString());
+  }
+}
