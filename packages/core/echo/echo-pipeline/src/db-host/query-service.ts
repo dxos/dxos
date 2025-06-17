@@ -23,9 +23,10 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
 
+import { TimedTaskScheduler } from '../scheduler';
 import type { SpaceStateManager } from './space-state-manager';
 import { type AutomergeHost } from '../automerge';
-import { QueryExecutor } from '../query';
+import { QueryExecutor, type QueryExecutionResult } from '../query';
 
 export type QueryServiceParams = {
   indexer: Indexer;
@@ -44,20 +45,35 @@ type ActiveQuery = {
 
 export class QueryServiceImpl extends Resource implements QueryService {
   private readonly _queries = new Set<ActiveQuery>();
+  private readonly _backpressureExecutor = new TimedTaskScheduler({
+    budget: 500,
+    budgetPeriod: 1000,
+    restTime: 500,
+    maxParallelTasks: 10,
+    cleanUpAfter: 30_000,
+  });
 
   private readonly _updateQueries = new DeferredTask(this._ctx, async () => {
-    await Promise.all(
-      Array.from(this._queries).map(async (query) => {
-        try {
-          const { changed } = await query.executor.execQuery();
-          if (changed) {
-            query.sendResults(query.executor.getResults());
+    if (this._queries.size === 0) {
+      return;
+    }
+
+    const tasks = Array.from(this._queries).map((query) => {
+      return {
+        run: async () => {
+          try {
+            const { changed } = await query.executor.execQuery();
+            if (changed) {
+              query.sendResults(query.executor.getResults());
+            }
+          } catch (err) {
+            log.catch(err);
           }
-        } catch (err) {
-          log.catch(err);
-        }
-      }),
-    );
+        },
+      };
+    });
+
+    await Promise.all(this._backpressureExecutor.schedule(tasks));
   });
 
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
@@ -81,10 +97,11 @@ export class QueryServiceImpl extends Resource implements QueryService {
 
   override async _open(): Promise<void> {
     this._params.indexer.updated.on(this._ctx, () => this._updateQueries.schedule());
+    await this._backpressureExecutor.open(this._ctx);
   }
 
   override async _close(): Promise<void> {
-    await Promise.all(Array.from(this._queries).map((query) => query.close()));
+    await this._backpressureExecutor.close(this._ctx);
   }
 
   async setConfig(config: IndexConfig): Promise<void> {
@@ -118,17 +135,21 @@ export class QueryServiceImpl extends Resource implements QueryService {
       };
       this._queries.add(queryEntry);
 
-      queueMicrotask(async () => {
-        await queryEntry.executor.open();
-
-        try {
-          await queryEntry.executor.execQuery();
-          // Always send first result set.
-          queryEntry.sendResults(queryEntry.executor.getResults());
-        } catch (error: any) {
-          close(error);
-        }
-      });
+      this._backpressureExecutor
+        .schedule([
+          {
+            run: async () => {
+              // Run query executor.
+              await queryEntry.executor.open();
+              await queryEntry.executor.execQuery();
+              // Always send first result set.
+              queryEntry.sendResults(queryEntry.executor.getResults());
+            },
+          },
+        ])[0]
+        .catch((err) => {
+          close(err);
+        });
 
       return queryEntry.close;
     });
