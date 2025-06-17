@@ -159,6 +159,13 @@ export const isMutable = (schema: Schema.Schema.AnyNoContext): boolean => {
   return schema instanceof EchoSchema;
 };
 
+// NOTE: Keep in this file.
+const schemaVariance = {
+  _A: (_: any) => _,
+  _I: (_: any) => _,
+  _R: (_: never) => _,
+};
+
 /**
  * Represents a schema that is stored in the ECHO database.
  * Schema can me mutable or readonly (specified by the {@link EchoSchema.readonly} field).
@@ -374,10 +381,4 @@ const unwrapOptionality = (property: SchemaAST.PropertySignature): SchemaAST.Pro
     ...property,
     type: property.type.types.find((type) => !SchemaAST.isUndefinedKeyword(type))!,
   } as any;
-};
-
-const schemaVariance = {
-  _A: (_: any) => _,
-  _I: (_: any) => _,
-  _R: (_: never) => _,
 };

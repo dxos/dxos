@@ -12,7 +12,7 @@ import { getSchema } from './accessors';
 import { create } from './create';
 import { serializeStatic } from './json-serializer';
 import { RelationSourceId, RelationTargetId } from './model';
-import { getTypename } from './typename';
+import { getType, getTypename } from './typename';
 import { getSchemaDXN } from '../ast';
 import { Testing } from '../testing';
 import { isInstanceOf } from '../types';
@@ -41,7 +41,7 @@ describe('create (static version)', () => {
     expect(contact.name).toBe('Bot');
     expect(contact.email).toBe('bot@example.com');
     expect((contact as any)['@type']).toBeUndefined();
-    expect(getTypename(contact)).toBe(getSchemaDXN(Testing.Contact)!.toString());
+    expect(getType(contact)?.toString()).toBe(getSchemaDXN(Testing.Contact)!.toString());
     expect(isInstanceOf(Testing.Contact, contact)).toBe(true);
   });
 

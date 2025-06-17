@@ -10,7 +10,7 @@ import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../ast';
-import { getTypename, type ObjectMeta } from '../object';
+import { getType, getTypename, type ObjectMeta } from '../object';
 import { ATTR_META } from '../object/model';
 
 /**
@@ -153,6 +153,15 @@ export const requireTypeReference = (schema: Schema.Schema.AnyNoContext): Refere
 };
 
 // TODO(burdon): Can we use `Schema.is`?
+/**
+ * Checks if the object is an instance of the schema.
+ * Only typename is compared, the schema version is ignored.
+ *
+ * The following cases are considered to mean that the object is an instance of the schema:
+ *  - Object was created with this exact schema.
+ *  - Object was created with a different version of this schema.
+ *  - Object was created with a different schema (maybe dynamic) that has the same typename.
+ */
 export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
   schema: Schema,
   object: any,
@@ -166,21 +175,22 @@ export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
     throw new Error('Schema must have an object annotation.');
   }
 
+  const type = getType(object);
+  if (type && DXN.equals(type, schemaDXN)) {
+    return true;
+  }
+
   const typename = getTypename(object);
   if (!typename) {
     return false;
   }
 
-  if (typename.startsWith('dxn:')) {
-    return schemaDXN.toString() === typename;
-  } else {
-    const typeDXN = schemaDXN.asTypeDXN();
-    if (!typeDXN) {
-      return false;
-    }
-
-    return typeDXN.type === typename;
+  const typeDXN = schemaDXN.asTypeDXN();
+  if (!typeDXN) {
+    return false;
   }
+
+  return typeDXN.type === typename;
 };
 
 /**

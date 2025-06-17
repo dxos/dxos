@@ -25,20 +25,4 @@ export class LoggingReactiveHandler implements ReactiveHandler<any> {
     target[LoggingReactiveHandler.symbolChangeLog].push(prop);
     return Reflect.set(target, prop, value, receiver);
   }
-
-  isDeleted(): boolean {
-    return false;
-  }
-
-  getSchema(): undefined {
-    return undefined;
-  }
-
-  getTypeReference(): Reference | undefined {
-    return undefined;
-  }
-
-  getMeta(target: any): ObjectMeta {
-    return getObjectMeta(target);
-  }
 }

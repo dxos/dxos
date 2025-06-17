@@ -7,22 +7,23 @@ import { DXN } from '@dxos/keys';
 
 import { getSchema } from './accessors';
 import { TypeId } from './model';
-import { getSchemaDXN } from '../ast';
+import { getSchemaDXN, getSchemaTypename } from '../ast';
 import { type BaseObject } from '../types';
 
 /**
  * Gets the typename of the object without the version.
+ * Returns only the name portion, not the DXN.
+ * @example "example.org/type/Contact"
  */
 export const getTypename = (obj: BaseObject): string | undefined => {
   const schema = getSchema(obj);
-  if (schema == null) {
+  if (schema != null) {
     // Try to extract typename from DXN.
-    return getSchemaDXN(obj as any)?.asTypeDXN()?.type;
+    return getSchemaTypename(schema);
+  } else {
+    const type = getType(obj);
+    return type?.asTypeDXN()?.type;
   }
-
-  const type = getType(obj);
-
-  return type?.asTypeDXN()?.type;
 };
 
 /**
@@ -45,15 +46,15 @@ export const setTypename = (obj: any, typename: DXN) => {
  * @example `dxn:example.com/type/Contact:1.0.0`
  */
 export const getType = (obj: BaseObject): DXN | undefined => {
-  if (obj) {
-    const type = (obj as any)[TypeId];
-    if (type) {
-      return type;
-    }
-
-    invariant(type instanceof DXN, 'Invalid object.');
-    return type;
+  if (!obj) {
+    return undefined;
   }
 
-  return undefined;
+  const type = (obj as any)[TypeId];
+  if (!type) {
+    return undefined;
+  }
+
+  invariant(type instanceof DXN, 'Invalid object.');
+  return type;
 };

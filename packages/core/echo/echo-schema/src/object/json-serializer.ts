@@ -6,18 +6,19 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
+import { type Ref } from '../ref';
+import { type BaseObject } from '../types';
 import { getObjectDXN } from './accessors';
 import {
-  ATTR_RELATION_TARGET,
   ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  ATTR_TYPE,
   RelationSourceId,
   RelationTargetId,
-  ATTR_TYPE,
   TypeId,
   type InternalObjectProps,
 } from './model';
-import { type Ref } from '../ref';
-import { type BaseObject } from '../types';
+import { getType } from './typename';
 
 type DeepReplaceRef<T> =
   T extends Ref<any> ? EncodedReference : T extends object ? { [K in keyof T]: DeepReplaceRef<T[K]> } : T;
@@ -27,7 +28,7 @@ type SerializedStatic<T extends { id: string }> = { [K in keyof T]: DeepReplaceR
 };
 
 export const serializeStatic = <T extends { id: string }>(obj: T): SerializedStatic<T> => {
-  const typename = (obj as any)[TypeId];
+  const typename = getType(obj)?.toString();
   invariant(typename && typeof typename === 'string');
   return JSON.parse(JSON.stringify(obj));
 };
@@ -54,7 +55,7 @@ const typedJsonSerializer = function (this: any, key: string, value: any) {
   const { id, [TypeId]: typename, ...rest } = this;
   const result: any = {
     id,
-    [ATTR_TYPE]: typename,
+    [ATTR_TYPE]: typename.toString(),
   };
 
   if (this[RelationSourceId]) {

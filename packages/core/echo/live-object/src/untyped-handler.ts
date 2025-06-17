@@ -120,14 +120,6 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     target[symbolPropertySignal].notifyWrite();
     return result;
   }
-
-  getSchema(): undefined {
-    return undefined;
-  }
-
-  getTypeReference(): undefined {
-    return undefined;
-  }
 }
 
 const toJSON = (target: any): any => {

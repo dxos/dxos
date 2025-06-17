@@ -131,6 +131,8 @@ Defines attributes and encoding placed on objects.
 | Hypergraph       | Yes                    | `Symbol(@dxos/echo/Hypergraph)`     | `Hypergraph`           | -                           | -          | Pointer to runtime hypergraph object |
 | Database         | Yes                    | `Symbol(@dxos/echo/Database)`       | `Database`             | -                           | -          | Pointer to runtime database object   |
 
+> NOTE: All of the API functions can return `undefined` since they are also designed to work with objects outside of the database.
+
 ### Value representation
 
 |           | Runtime | JSON                 |

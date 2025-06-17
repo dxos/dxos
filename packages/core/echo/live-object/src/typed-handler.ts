@@ -99,9 +99,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
         target[symbolSignal].notifyRead();
         return toJSON(target);
       }
-      case TypeId: {
-        return this.getTypeReference(target)?.toDXN();
-      }
     }
 
     // Handle getter properties. Will not subscribe the value signal.
@@ -153,14 +150,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
     target[symbolPropertySignal].notifyWrite();
     return result;
-  }
-
-  getSchema(target: any) {
-    return target[SchemaId];
-  }
-
-  getTypeReference(target: any): Reference | undefined {
-    return getTypeReference(target[SchemaId]);
   }
 
   private _validateValue(target: any, prop: string | symbol, value: any) {
