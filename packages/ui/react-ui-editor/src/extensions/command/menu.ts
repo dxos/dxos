@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { closeEffect, openEffect } from './action';
 
@@ -33,11 +33,10 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
 
         const button = document.createElement('button');
         button.appendChild(icon);
-        button.classList.add('grid', 'items-center', 'justify-center', 'w-8', 'h-8');
 
         // TODO(burdon): Custom tag/styles?
         this.tag = document.createElement('dx-ref-tag');
-        this.tag.classList.add('border-none', 'fixed', 'p-0');
+        this.tag.classList.add('cm-ref-tag');
         this.tag.appendChild(button);
         container.appendChild(this.tag);
 
@@ -47,17 +46,24 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
       }
 
       update(update: ViewUpdate) {
+        this.tag.dataset.focused = update.view.hasFocus ? 'true' : 'false';
         if (!update.view.hasFocus) {
-          this.tag.style.display = 'none';
           return;
         }
 
         // TODO(burdon): Timer to fade in/out.
         if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(openEffect)))) {
           this.tag.style.display = 'none';
+          this.tag.classList.add('opacity-10');
         } else if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(closeEffect)))) {
           this.tag.style.display = 'block';
-        } else if (update.selectionSet || update.viewportChanged || update.docChanged || update.geometryChanged) {
+        } else if (
+          update.docChanged ||
+          update.focusChanged ||
+          update.geometryChanged ||
+          update.selectionSet ||
+          update.viewportChanged
+        ) {
           this.scheduleUpdate();
         }
       }
@@ -99,4 +105,24 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
       }
     },
   ),
+
+  EditorView.theme({
+    '.cm-ref-tag': {
+      position: 'fixed',
+      padding: '0',
+      border: 'none',
+      transition: 'opacity 0.3s ease-in-out',
+      opacity: 0.1,
+    },
+    '.cm-ref-tag button': {
+      display: 'grid',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '2rem',
+      height: '2rem',
+    },
+    '.cm-ref-tag[data-focused="true"]': {
+      opacity: 1,
+    },
+  }),
 ];

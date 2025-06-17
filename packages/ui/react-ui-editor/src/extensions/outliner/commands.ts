@@ -123,9 +123,33 @@ export const moveItemUp: Command = (view: EditorView) => {
 // Misc commands.
 //
 
-export const toggleTask: Command = (view: EditorView) => {
-  const pos = getSelection(view.state)?.from;
+export const deleteItem: Command = (view: EditorView) => {
   const tree = view.state.facet(treeFacet);
+  const pos = getSelection(view.state).from;
+  const current = tree.find(pos);
+  if (current) {
+    view.dispatch({
+      selection: EditorSelection.cursor(current.lineRange.from),
+      changes: [
+        {
+          from: current.lineRange.from,
+          to: Math.min(current.lineRange.to + 1, view.state.doc.length),
+        },
+      ],
+    });
+
+    // TODO(burdon): Better way?
+    setTimeout(() => {
+      view.focus();
+    }, 100);
+  }
+
+  return true;
+};
+
+export const toggleTask: Command = (view: EditorView) => {
+  const tree = view.state.facet(treeFacet);
+  const pos = getSelection(view.state)?.from;
   const current = tree.find(pos);
   if (current) {
     const type = current.type === 'task' ? 'bullet' : 'task';

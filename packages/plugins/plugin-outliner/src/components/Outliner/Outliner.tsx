@@ -5,7 +5,6 @@
 import { EditorSelection } from '@codemirror/state';
 import React, { forwardRef, useImperativeHandle } from 'react';
 
-import { log } from '@dxos/log';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { DropdownMenu, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
@@ -13,6 +12,7 @@ import {
   createBasicExtensions,
   createDataExtensions,
   createThemeExtensions,
+  deleteItem,
   outliner,
   useTextEditor,
   RefDropdownMenu,
@@ -68,7 +68,9 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
     );
 
     const handleDeleteRow = () => {
-      log.info('delete row');
+      if (view) {
+        deleteItem(view);
+      }
     };
 
     return (
