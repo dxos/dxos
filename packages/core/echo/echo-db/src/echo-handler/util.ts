@@ -7,7 +7,7 @@ import { type BaseObject, type ForeignKey } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getMeta, getProxyTarget, type Live } from '@dxos/live-object';
 
-import { isEchoObject, type AnyLiveObject } from './create';
+import { isEchoObject, type AnyLiveObject } from './echo-handler';
 import { symbolInternals, type ProxyTarget } from './echo-proxy-target';
 import { type EchoDatabase } from '../proxy-db';
 

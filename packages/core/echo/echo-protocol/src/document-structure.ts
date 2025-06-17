@@ -246,3 +246,14 @@ export type ObjectSystem = {
    */
   target?: EncodedReference;
 };
+
+/**
+ * Id property name.
+ */
+export const PROPERTY_ID = 'id';
+
+/**
+ * Data namespace.
+ * The key on {@link ObjectStructure} that contains the user-defined data.
+ */
+export const DATA_NAMESPACE = 'data';
