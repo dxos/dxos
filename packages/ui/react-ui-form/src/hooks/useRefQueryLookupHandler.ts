@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { getDXN, type TypeAnnotation } from '@dxos/echo-schema';
+import { getObjectDXN, type TypeAnnotation } from '@dxos/echo-schema';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
@@ -23,7 +23,7 @@ export const useRefQueryLookupHandler = ({ space }: UseRefQueryLookupProps): Que
 
       return objects
         .map((object) => {
-          const dxn = getDXN(object);
+          const dxn = getObjectDXN(object);
           if (!dxn) {
             return undefined;
           }
