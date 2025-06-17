@@ -12,7 +12,7 @@ import { getSchema } from './accessors';
 import { create } from './create';
 import { serializeStatic } from './json-serializer';
 import { RelationSourceId, RelationTargetId } from './model';
-import { getType, getTypename } from './typename';
+import { getType } from './typename';
 import { getSchemaDXN } from '../ast';
 import { Testing } from '../testing';
 import { isInstanceOf } from '../types';

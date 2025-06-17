@@ -6,18 +6,7 @@ import { SchemaAST, Schema } from 'effect';
 import { type InspectOptionsStylized } from 'node:util';
 
 import { inspectCustom } from '@dxos/debug';
-import { type Reference } from '@dxos/echo-protocol';
-import {
-  defineHiddenProperty,
-  DeletedId,
-  getSchemaDXN,
-  getSchemaTypename,
-  getTypeReference,
-  SchemaId,
-  SchemaMetaSymbol,
-  SchemaValidator,
-  TypeId,
-} from '@dxos/echo-schema';
+import { defineHiddenProperty, DeletedId, getSchemaDXN, SchemaId, SchemaValidator, TypeId } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { debug, inspect } from 'node:util';
+import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';

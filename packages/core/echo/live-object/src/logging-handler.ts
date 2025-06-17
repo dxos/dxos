@@ -2,10 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Reference } from '@dxos/echo-protocol';
-import { type ObjectMeta } from '@dxos/echo-schema';
-import { getObjectMeta } from '@dxos/echo-schema';
-
 import { type ReactiveHandler } from './proxy';
 
 export class LoggingReactiveHandler implements ReactiveHandler<any> {

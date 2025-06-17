@@ -6,8 +6,6 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { type Ref } from '../ref';
-import { type BaseObject } from '../types';
 import { getObjectDXN } from './accessors';
 import {
   ATTR_RELATION_SOURCE,
@@ -19,6 +17,8 @@ import {
   type InternalObjectProps,
 } from './model';
 import { getType } from './typename';
+import { type Ref } from '../ref';
+import { type BaseObject } from '../types';
 
 type DeepReplaceRef<T> =
   T extends Ref<any> ? EncodedReference : T extends object ? { [K in keyof T]: DeepReplaceRef<T[K]> } : T;

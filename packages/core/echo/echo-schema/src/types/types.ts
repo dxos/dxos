@@ -9,7 +9,7 @@ import { splitJsonPath, type JsonPath } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
-import { getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../ast';
+import { getSchemaDXN } from '../ast';
 import { getType, getTypename, type ObjectMeta } from '../object';
 import { ATTR_META } from '../object/model';
 

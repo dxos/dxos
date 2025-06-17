@@ -7,7 +7,7 @@ import { DXN } from '@dxos/keys';
 
 import { getSchema } from './accessors';
 import { TypeId } from './model';
-import { getSchemaDXN, getSchemaTypename } from '../ast';
+import { getSchemaTypename } from '../ast';
 import { type BaseObject } from '../types';
 
 /**
