@@ -5,7 +5,7 @@
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Trigger } from '@dxos/async';
+import { sleep, Trigger } from '@dxos/async';
 import { type BaseObject, Expando, getSchema, getTypename, Query, Ref } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -17,6 +17,8 @@ import { range } from '@dxos/util';
 import { clone, getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
+import { createTestLevel } from '@dxos/kv-store/testing';
+import { log } from '@dxos/log';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
@@ -50,6 +52,30 @@ describe('Database', () => {
 
     db.add(live(Expando, { name: 'Test' }));
     await db.flush();
+  });
+
+  test('objects are saved without a flush', async () => {
+    const level = createTestLevel();
+    const testBuilder = new EchoTestBuilder();
+    await openAndClose(testBuilder);
+
+    {
+      const { db } = await testBuilder.createDatabase({ kv: level });
+      db.add(live(Expando, { name: 'Test' }));
+      const { objects } = await db.query(Query.select(Filter.everything())).run();
+      expect(objects).to.have.length(1);
+      expect(objects[0].name).to.eq('Test');
+      await sleep(1000); // Wait for the object to be saved.
+      db.close();
+    }
+
+    {
+      const { db } = await testBuilder.createDatabase({ kv: level });
+      const { objects } = await db.query(Query.select(Filter.everything())).run();
+      expect(objects).to.have.length(1);
+      expect(objects[0].name).to.eq('Test');
+      db.close();
+    }
   });
 
   test('add object multiple times', async () => {
