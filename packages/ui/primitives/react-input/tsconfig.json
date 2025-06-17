@@ -10,5 +10,9 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../react-hooks"
+    }
+  ]
 }
