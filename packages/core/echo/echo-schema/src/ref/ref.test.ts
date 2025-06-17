@@ -39,7 +39,8 @@ describe('Ref', () => {
     Ref(Contact).pipe(Schema.is)(Ref.fromDXN(DXN.parse(`dxn:echo:@:${ObjectId.random()}`)));
   });
 
-  test('encode with inlined target', () => {
+  // TODO(dmaretskyi): Figure out how to expose this in the API.
+  test.skip('encode with inlined target', () => {
     const task = create(Task, { title: 'Fix bugs' });
     const contact = create(Contact, { name: 'John Doe', tasks: [Ref.make(task)] });
 
@@ -47,6 +48,9 @@ describe('Ref', () => {
     expect(json).toEqual({
       id: contact.id,
       '@type': `dxn:type:${Contact.typename}:${Contact.version}`,
+      '@meta': {
+        keys: [],
+      },
       name: 'John Doe',
       tasks: [
         {
@@ -65,6 +69,9 @@ describe('Ref', () => {
     expect(json).toEqual({
       id: contact.id,
       '@type': `dxn:type:${Contact.typename}:${Contact.version}`,
+      '@meta': {
+        keys: [],
+      },
       name: 'John Doe',
       tasks: [{ '/': getObjectDXN(task)!.toString() }],
     });

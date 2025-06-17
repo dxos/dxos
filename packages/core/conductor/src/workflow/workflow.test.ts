@@ -37,6 +37,7 @@ import {
   synchronizedComputeFunction,
   unwrapValueBag,
 } from '../types';
+import { todo } from '@dxos/debug';
 
 describe('workflow', () => {
   test('run', async () => {
@@ -154,6 +155,7 @@ describe('workflow', () => {
           resolveCounter++;
           return fnObject;
         },
+        resolveSchema: () => todo(),
       };
       setRefResolver(functionRef, refResolver);
       return { fnObject, functionRef, resolveCount: () => resolveCounter };

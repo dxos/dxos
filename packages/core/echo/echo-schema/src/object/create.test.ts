@@ -55,6 +55,9 @@ describe('create (static version)', () => {
     expect(json).toEqual({
       id: contact.id,
       '@type': DXN.fromTypenameAndVersion(Testing.Contact.typename, Testing.Contact.version).toString(),
+      '@meta': {
+        keys: [],
+      },
       name: 'Bot',
       email: 'bot@example.com',
     });
@@ -81,6 +84,9 @@ describe('create (static version)', () => {
       '@type': DXN.fromTypenameAndVersion(Testing.HasManager.typename, Testing.HasManager.version).toString(),
       '@relationSource': DXN.fromLocalObjectId(contactA.id).toString(),
       '@relationTarget': DXN.fromLocalObjectId(contactB.id).toString(),
+      '@meta': {
+        keys: [],
+      },
     });
   });
 

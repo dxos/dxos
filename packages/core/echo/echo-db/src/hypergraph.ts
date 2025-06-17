@@ -37,6 +37,7 @@ import {
   type QueryOptions,
   type QuerySource,
 } from './query';
+import type { Ref } from '@dxos/echo';
 
 /**
  * Manages cross-space database interactions.
@@ -164,7 +165,8 @@ export class Hypergraph {
    * @param middleware Called with the loaded object. The caller may change the object.
    * @returns Result of `onLoad`.
    */
-  getRefResolver(hostDb: EchoDatabase, middleware: (obj: BaseObject) => BaseObject = (obj) => obj): RefResolver {
+  // TODO(dmaretskyi): Restructure API: Remove middleware, move `hostDb` into context option. Make accessible on Database objects.
+  getRefResolver(hostDb: EchoDatabase, middleware: (obj: BaseObject) => BaseObject = (obj) => obj): Ref.Resolver {
     // TODO(dmaretskyi): Cache per hostDb.
     return {
       // TODO(dmaretskyi): Respect `load` flag.
@@ -201,7 +203,21 @@ export class Hypergraph {
           return undefined;
         }
       },
-    };
+
+      resolveSchema: async (dxn) => {
+        switch (dxn.kind) {
+          case DXN.kind.TYPE: {
+            return this.schemaRegistry.getSchemaByDXN(dxn);
+          }
+          case DXN.kind.ECHO: {
+            throw new Error('Not implemented: Resolving schema stored in the database');
+          }
+          default: {
+            return undefined;
+          }
+        }
+      },
+    } satisfies Ref.Resolver;
   }
 
   /**

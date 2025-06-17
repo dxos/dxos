@@ -10,6 +10,7 @@ import type { DXN } from '@dxos/keys';
 import * as LiveObject from '@dxos/live-object';
 
 import type * as Type from './Type';
+import type * as Ref from './Ref';
 
 export type Any = EchoSchema.AnyEchoObject;
 
@@ -88,3 +89,23 @@ export const isDeleted = (obj: Any): boolean => {
   invariant(typeof deleted === 'boolean', 'Invalid object.');
   return deleted;
 };
+
+/**
+ * JSON representation of an object.
+ */
+export type JSON = EchoSchema.ObjectJSON;
+
+/**
+ * Converts object to it's JSON representation.
+ */
+export const toJSON = (obj: Any): JSON => EchoSchema.objectToJSON(obj);
+
+/**
+ * Creates an object from it's json representation.
+ * Performs schema validation.
+ * References and schema will be resolvable if the `refResolver` is provided.
+ *
+ * The function need to be async to support resolving the schema as well as the relation endpoints.
+ */
+export const fromJSON: (json: JSON, options?: { refResolver?: Ref.Resolver }) => Promise<Any> =
+  EchoSchema.objectFromJSON;
