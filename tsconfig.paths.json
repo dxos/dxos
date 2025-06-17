@@ -313,9 +313,6 @@
       "@dxos/react-ui-canvas-editor/testing": [
         "packages/ui/react-ui-canvas-editor/src/testing/index.ts"
       ],
-      "@dxos/react-ui-card": [
-        "packages/ui/react-ui-card/src/index.ts"
-      ],
       "@dxos/react-ui-components": [
         "packages/ui/react-ui-components/src/index.ts"
       ],
