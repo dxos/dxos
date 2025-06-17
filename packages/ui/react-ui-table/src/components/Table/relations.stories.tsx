@@ -100,7 +100,7 @@ const DefaultStory = () => {
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-table/relations',
   render: DefaultStory,
-  parameters: { translations },
+  parameters: { translations, controls: { disable: true } },
   decorators: [
     withClientProvider({
       types: [TableType, ViewType, DataType.Organization, DataType.Person],

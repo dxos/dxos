@@ -71,6 +71,7 @@ const meta: Meta<StoryProps<any>> = {
   decorators: [withTheme],
   parameters: {
     translations,
+    controls: { disable: true },
   },
   argTypes: {
     readonly: {

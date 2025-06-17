@@ -206,7 +206,7 @@ type StoryProps = { rows?: number };
 const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
-  parameters: { translations },
+  parameters: { translations, controls: { disable: true } },
   decorators: [
     withClientProvider({
       types: [TableType, ViewType],
