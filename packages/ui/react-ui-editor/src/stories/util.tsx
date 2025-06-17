@@ -318,7 +318,7 @@ export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
     }, [view]);
 
     return (
-      <div className={mx('w-full h-full grid overflow-hidden', debug && 'grid-cols-[1fr_600px]')}>
+      <div className={mx('w-full h-full grid overflow-hidden', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
         <div role='none' className='flex overflow-hidden' ref={parentRef} {...focusAttributes} />
         {debug && (
           <div className='grid h-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'>

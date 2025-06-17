@@ -18,6 +18,8 @@ addons.setConfig({
 });
 
 addons.register('dxos', (api) => {
+  // const config = addons.getConfig();
+
   const update = (darkMode: boolean) => {
     addons.setConfig({
       showPanel: false,
@@ -31,6 +33,7 @@ addons.register('dxos', (api) => {
     });
   };
 
+  // Manage dark mode from toolbar (not system settings).
   const currentDarkMode = undefined;
   const channel = addons.getChannel();
   channel.on(DARK_MODE_EVENT_NAME, (darkMode) => {
@@ -38,8 +41,4 @@ addons.register('dxos', (api) => {
       update(darkMode);
     }
   });
-
-  // Hide add-on panel.
-  // const { showPanel } = addons.getConfig();
-  // api.togglePanel(showPanel);
 });
