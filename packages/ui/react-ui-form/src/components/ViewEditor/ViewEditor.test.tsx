@@ -140,4 +140,27 @@ describe('ViewEditor', () => {
     const nameProjection = debugInfo.projection._fieldProjections.find((proj: any) => proj.field.path === 'name');
     expect(nameProjection).toBeUndefined();
   });
+
+  test('hide and show property', async () => {
+    await Default.run();
+    await waitForViewEditor();
+
+    // Click the first hide button
+    const hideButtons = screen.getAllByTestId('hide-field-button');
+    fireEvent.click(hideButtons[0]);
+
+    // Check that hiddenFields is non-empty
+    let debugInfo = JSON.parse(screen.getByTestId('debug').textContent!);
+    expect(debugInfo.view.hiddenFields.length).toBeGreaterThan(0);
+
+    // Wait for the show button to appear and click it
+    await waitFor(() => {
+      expect(screen.getByTestId('show-field-button')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByTestId('show-field-button'));
+
+    // Check that hiddenFields is empty again
+    debugInfo = JSON.parse(screen.getByTestId('debug').textContent!);
+    expect(debugInfo.view.hiddenFields.length).toBe(0);
+  });
 });
