@@ -16,7 +16,9 @@ pnpm i @dxos/echo
 
 ## Contributions
 
-Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs).
+Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), 
+the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), 
+and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs).
 
 License: [MIT](./LICENSE) Copyright 2022 © DXOS
 
@@ -28,14 +30,14 @@ import { Type, Obj, Relation, Ref, Query, Filter } from '@dxos/echo';
 
 |                               | Object                          | Relation                                    | Ref             |
 | ----------------------------- | ------------------------------- | ------------------------------------------- | --------------- |
-| **SCHEMA API**                |
+| **SCHEMA API**                |                                 |                                             |                 |
 | Define schema                 | `Type.Obj()`                    | `Type.Relation()`                           | `Type.Ref()`    |
 | Any schema type               | `Type.Obj.Any`                  | `Type.Relation.Any`                         | `Type.Ref.Any`  |
 | Get DXN (of schema)           | `Type.getDXN(schema)`           | `Type.getDXN(schema)`                       |                 |
 | Get typename (of schema)      | `Type.getTypename(schema)`      | `Type.getTypename(schema)`                  |                 |
 | Get type metadata (of schema) | `Type.getMeta(schema)`          | `Type.getMeta(schema)`                      |                 |
-| Is mutable schema             | `Type.isMutable(schema)`        | `Type.isMutable(schema)`                    |
-| **DATA API**                  |
+| Is mutable schema             | `Type.isMutable(schema)`        | `Type.isMutable(schema)`                    |                 |
+| **DATA API**                  |                                 |                                             |                 |
 | Any instance type             | `Obj.Any`                       | `Relation.Any`                              | `Ref.Any`       |
 | Create object                 | `Obj.make(Schema, { ... })`     | `Relation.make(Schema, { ... })`            | `Ref.make(obj)` |
 | Check kind                    | `Obj.isObject(x): x is Obj.Any` | `Relation.isRelation(x): x is Relation.Any` | `Ref.isRef(x)`  |
@@ -45,9 +47,9 @@ import { Type, Obj, Relation, Ref, Query, Filter } from '@dxos/echo';
 | Get typename (of instance)    | `Obj.getTypename(obj)`          | `Obj.getTypename(obj)`                      |                 |
 | Get Meta                      | `Obj.getMeta(obj)`              | `Obj.getMeta(relation)`                     |                 |
 | Is deleted                    | `Obj.isDeleted(obj)`            | `Obj.isDeleted(obj)`                        |                 |
-| Get relation source           |                                 | `Relation.getSource(relation)`              |
+| Get relation source           |                                 | `Relation.getSource(relation)`              |                 |
 | Get relation target           |                                 | `Relation.getTarget(relation)`              |                 |
-| Expando                       | `Expando`                       |
+| Expando                       | `Expando`                       |                                             |                 |
 
 ```ts
 Type.getDXN(schema) == DXN.parse('dxn:type:example.com/type/Person:0.1.0');
