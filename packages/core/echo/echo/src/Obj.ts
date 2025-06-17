@@ -97,6 +97,8 @@ export type JSON = EchoSchema.ObjectJSON;
 
 /**
  * Converts object to it's JSON representation.
+ *
+ * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
  */
 export const toJSON = (obj: Any): JSON => EchoSchema.objectToJSON(obj);
 
@@ -107,5 +109,5 @@ export const toJSON = (obj: Any): JSON => EchoSchema.objectToJSON(obj);
  *
  * The function need to be async to support resolving the schema as well as the relation endpoints.
  */
-export const fromJSON: (json: JSON, options?: { refResolver?: Ref.Resolver }) => Promise<Any> =
+export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver }) => Promise<Any> =
   EchoSchema.objectFromJSON;

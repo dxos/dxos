@@ -26,7 +26,7 @@ import { getType, setTypename } from './typename';
 import { Ref, refFromEncodedReference, RefImpl, setRefResolver, type RefResolver } from '../ref';
 import { type AnyEchoObject, type BaseObject } from '../types';
 import { Schema } from 'effect';
-import { deepMapValues, visitValues } from '@dxos/util';
+import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 import { ObjectMetaSchema } from './meta';
 import { defineHiddenProperty } from '../utils';
 import { raise } from '@dxos/debug';
@@ -54,9 +54,10 @@ export const objectToJSON = <T extends AnyEchoObject>(obj: T): SerializedObject<
  * The function need to be async to support resolving the schema as well as the relation endpoints.
  */
 export const objectFromJSON = async (
-  jsonData: ObjectJSON,
+  jsonData: unknown,
   { refResolver }: { refResolver?: RefResolver } = {},
 ): Promise<AnyEchoObject> => {
+  assumeType<ObjectJSON>(jsonData);
   assertArgument(typeof jsonData === 'object' && jsonData !== null, 'expect object');
   assertArgument(typeof jsonData[ATTR_TYPE] === 'string', 'expected object to have a type');
   assertArgument(typeof jsonData.id === 'string', 'expected object to have an id');

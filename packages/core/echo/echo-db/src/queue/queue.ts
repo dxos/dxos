@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Obj, Ref } from '@dxos/echo';
 import { type AnyEchoObject, type HasId, getTypename } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
@@ -27,6 +28,7 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
 
   constructor(
     private readonly _service: QueuesService,
+    private readonly _refResolver: Ref.Resolver,
     private readonly _dxn: DXN,
   ) {
     const { subspaceTag, spaceId, queueId } = this._dxn.asQueueDXN() ?? {};
@@ -76,7 +78,12 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
     this._signal.notifyWrite();
 
     try {
-      await this._service.insertIntoQueue(this._subspaceTag, this._spaceId, this._queueId, items);
+      await this._service.insertIntoQueue(
+        this._subspaceTag,
+        this._spaceId,
+        this._queueId,
+        items.map((item) => Obj.toJSON(item)),
+      );
     } catch (err) {
       this._error = err as Error;
       this._signal.notifyWrite();
@@ -111,7 +118,14 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
         return;
       }
 
-      changed = objectSetChanged(this._objects, objects as AnyEchoObject[]);
+      const decodedObjects = await Promise.all(
+        objects.map((obj) => Obj.fromJSON(obj, { refResolver: this._refResolver })),
+      );
+      if (thisRefreshId !== this._refreshId) {
+        return;
+      }
+
+      changed = objectSetChanged(this._objects, decodedObjects);
 
       this._objects = objects as T[];
     } catch (err) {

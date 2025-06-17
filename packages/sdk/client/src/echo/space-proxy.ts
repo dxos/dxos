@@ -109,7 +109,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
-  private readonly _queues = new QueueFactory(this.id);
+  private readonly _queues!: QueueFactory;
 
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
@@ -133,6 +133,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     );
 
     this._db = echoClient.constructDatabase({ spaceId: this.id, spaceKey: this.key, owningObject: this });
+    this._queues = new QueueFactory(this._data.id as SpaceId, echoClient.graph.getRefResolver(this._db));
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
