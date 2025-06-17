@@ -23,7 +23,7 @@ import {
   names,
   renderLinkButton,
   text,
-} from './util';
+} from './components';
 import { editorMonospace } from '../defaults';
 import {
   InputModeExtensions,

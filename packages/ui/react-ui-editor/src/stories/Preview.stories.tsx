@@ -11,7 +11,7 @@ import { IconButton, Popover } from '@dxos/react-ui';
 import { hoverableHidden } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { EditorStory } from './util';
+import { EditorStory } from './components';
 import { RefPopover, useRefPopover } from '../components';
 import {
   preview,

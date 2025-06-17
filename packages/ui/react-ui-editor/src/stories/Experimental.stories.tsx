@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { EditorStory, content } from './util';
+import { EditorStory, content } from './components';
 import { typewriter, blast, defaultOptions, dropFile } from '../extensions';
 import { str } from '../testing';
 
