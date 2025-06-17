@@ -576,7 +576,7 @@ export class CoreDatabase {
   }
 
   async flush({ disk = true, indexes = false, updates = false }: FlushOptions = {}): Promise<void> {
-    log.info('flush', { disk, indexes, updates });
+    log('flush', { disk, indexes, updates });
     if (disk) {
       await this._repoProxy.flush();
       await this._dataService.flush(

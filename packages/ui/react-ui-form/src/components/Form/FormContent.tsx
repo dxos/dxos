@@ -7,6 +7,8 @@ import { capitalize } from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
@@ -184,27 +186,28 @@ export const FormField = ({
   return null;
 };
 
-export type FormContentProps = {
+export type FormFieldsProps = ThemedClassName<{
+  Custom?: Partial<Record<string, InputComponent>>;
   schema: Schema.Schema.All;
   path?: (string | number)[];
   filter?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
   sort?: string[];
   readonly?: boolean;
-  onQueryRefOptions?: QueryRefOptions;
   lookupComponent?: ComponentLookup;
-  Custom?: Partial<Record<string, InputComponent>>;
-};
+  onQueryRefOptions?: QueryRefOptions;
+}>;
 
 export const FormFields = ({
+  classNames,
+  Custom,
   schema,
   path,
   filter,
   sort,
   readonly,
-  onQueryRefOptions,
   lookupComponent,
-  Custom,
-}: FormContentProps) => {
+  onQueryRefOptions,
+}: FormFieldsProps) => {
   const values = useFormValues(path);
 
   const properties = useMemo(() => {
@@ -215,7 +218,8 @@ export const FormFields = ({
   }, [schema, values, filter, sort]);
 
   return (
-    <div role='form' className='is-full'>
+    // TODO(burdon): Consistent padding (with composite forms).
+    <div role='form' className={mx('p-2 is-full', classNames)}>
       {properties
         .map((property) => {
           return (

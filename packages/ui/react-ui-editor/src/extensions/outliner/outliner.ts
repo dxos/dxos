@@ -28,6 +28,10 @@ import { decorateMarkdown } from '../markdown';
 // TODO(burdon): Smart Cut-and-paste.
 // TODO(burdon): DND.
 
+export type OutlinerProps = {
+  showSelected?: boolean;
+};
+
 /**
  * Outliner extension.
  * - Stores outline as a standard markdown document with task and list markers.
@@ -35,7 +39,7 @@ import { decorateMarkdown } from '../markdown';
  * - Constrains editor to outline structure.
  * - Supports smart cut-and-paste.
  */
-export const outliner = (): Extension => [
+export const outliner = (options: OutlinerProps = {}): Extension => [
   // Commands.
   Prec.highest(commands()),
 
@@ -52,7 +56,7 @@ export const outliner = (): Extension => [
   floatingMenu(),
 
   // Line decorations.
-  decorations(),
+  decorations(options),
 
   // Default markdown decorations.
   decorateMarkdown({ listPaddingLeft: 8 }),
@@ -64,7 +68,7 @@ export const outliner = (): Extension => [
 /**
  * Line decorations (for border and selection).
  */
-const decorations = () => [
+const decorations = (options: OutlinerProps) => [
   ViewPlugin.fromClass(
     class {
       decorations: DecorationSet = Decoration.none;
@@ -125,38 +129,40 @@ const decorations = () => [
   ),
 
   // Theme.
-  EditorView.theme({
-    '.cm-list-item': {
-      borderLeftWidth: '1px',
-      borderRightWidth: '1px',
-      paddingLeft: '32px',
-      borderColor: 'transparent',
-    },
-    '.cm-list-item.cm-codeblock-start': {
-      borderRadius: '0',
-    },
+  EditorView.theme(
+    Object.assign({
+      '.cm-list-item': {
+        borderLeftWidth: '1px',
+        borderRightWidth: '1px',
+        paddingLeft: '32px',
+        borderColor: 'transparent',
+      },
+      '.cm-list-item.cm-codeblock-start': {
+        borderRadius: '0',
+      },
 
-    '.cm-list-item-start': {
-      borderTopWidth: '1px',
-      borderTopLeftRadius: '4px',
-      borderTopRightRadius: '4px',
-      paddingTop: '4px',
-      marginTop: '8px',
-    },
+      '.cm-list-item-start': {
+        borderTopWidth: '1px',
+        borderTopLeftRadius: '4px',
+        borderTopRightRadius: '4px',
+        paddingTop: '4px',
+        marginTop: '2px',
+      },
 
-    '.cm-list-item-end': {
-      borderBottomWidth: '1px',
-      borderBottomLeftRadius: '4px',
-      borderBottomRightRadius: '4px',
-      paddingBottom: '4px',
-      marginBottom: '8px',
-    },
+      '.cm-list-item-end': {
+        borderBottomWidth: '1px',
+        borderBottomLeftRadius: '4px',
+        borderBottomRightRadius: '4px',
+        paddingBottom: '4px',
+        marginBottom: '2px',
+      },
 
-    '.cm-list-item-selected': {
-      borderColor: 'var(--dx-separator)',
-    },
-    '.cm-list-item-focused': {
-      borderColor: 'var(--dx-accentFocusIndicator)',
-    },
-  }),
+      '.cm-list-item-selected': {
+        borderColor: options.showSelected ? 'var(--dx-separator)' : undefined,
+      },
+      '.cm-list-item-focused': {
+        borderColor: 'var(--dx-accentFocusIndicator)',
+      },
+    }),
+  ),
 ];
