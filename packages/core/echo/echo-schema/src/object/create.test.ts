@@ -10,7 +10,7 @@ import { DXN } from '@dxos/keys';
 
 import { getSchema } from './accessors';
 import { create } from './create';
-import { serializeStatic } from './json-serializer';
+import { objectToJSON } from './json-serializer';
 import { RelationSourceId, RelationTargetId } from './model';
 import { getType } from './typename';
 import { getSchemaDXN } from '../ast';
@@ -58,7 +58,7 @@ describe('create (static version)', () => {
       name: 'Bot',
       email: 'bot@example.com',
     });
-    expect(serializeStatic(contact)).toStrictEqual(json);
+    expect(objectToJSON(contact)).toStrictEqual(json);
   });
 
   test('JSON encoding with relation', () => {

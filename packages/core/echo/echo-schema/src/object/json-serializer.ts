@@ -15,22 +15,21 @@ import {
   RelationTargetId,
   TypeId,
   type InternalObjectProps,
+  type ObjectJSON,
 } from './model';
 import { getType } from './typename';
 import { type Ref } from '../ref';
-import { type BaseObject } from '../types';
+import { type AnyEchoObject, type BaseObject } from '../types';
 
 type DeepReplaceRef<T> =
   T extends Ref<any> ? EncodedReference : T extends object ? { [K in keyof T]: DeepReplaceRef<T[K]> } : T;
 
-type SerializedStatic<T extends { id: string }> = { [K in keyof T]: DeepReplaceRef<T[K]> } & {
-  [ATTR_TYPE]: string;
-};
+type SerializedObject<T extends { id: string }> = { [K in keyof T]: DeepReplaceRef<T[K]> } & ObjectJSON;
 
-export const serializeStatic = <T extends { id: string }>(obj: T): SerializedStatic<T> => {
+export const objectToJSON = <T extends AnyEchoObject>(obj: T): SerializedObject<T> => {
   const typename = getType(obj)?.toString();
   invariant(typename && typeof typename === 'string');
-  return JSON.parse(JSON.stringify(obj));
+  return typedJsonSerializer.call(obj);
 };
 
 /**
@@ -51,7 +50,7 @@ export const attachTypedJsonSerializer = (obj: any) => {
 };
 
 // NOTE: KEEP as function.
-const typedJsonSerializer = function (this: any, key: string, value: any) {
+const typedJsonSerializer = function (this: any) {
   const { id, [TypeId]: typename, ...rest } = this;
   const result: any = {
     id,
