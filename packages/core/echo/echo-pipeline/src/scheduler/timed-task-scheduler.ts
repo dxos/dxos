@@ -80,6 +80,13 @@ export class TimedTaskScheduler<T = void> extends Resource {
     super();
   }
 
+  /**
+   * Info method for debugging purposes.
+   */
+  get processedTasks(): Array<Task<T>> {
+    return this._processedTasks;
+  }
+
   protected override async _open(ctx: Context): Promise<void> {
     this._executor = new DeferredTask(ctx, async () => {
       let now = Date.now();
@@ -132,13 +139,6 @@ export class TimedTaskScheduler<T = void> extends Resource {
 
   protected override async _close(ctx: Context): Promise<void> {
     this._executor = undefined;
-  }
-
-  /**
-   * Info method for debugging purposes.
-   */
-  get processedTasks(): Array<Task<T>> {
-    return this._processedTasks;
   }
 
   /**
