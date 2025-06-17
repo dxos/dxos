@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, type Ref } from '@dxos/echo';
 import { type AnyEchoObject, type HasId, getTypename } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import type { QueuesService } from './queue-service';
 import type { Queue } from './types';
-import { log } from '@dxos/log';
 
 /**
  * Client-side view onto an EDGE queue.
