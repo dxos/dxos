@@ -101,13 +101,14 @@ export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
     },
     forwardedRef,
   ) => {
+    invariant(object);
     const { themeMode } = useThemeContext();
     const attentionAttrs = useAttentionAttributes(id);
-
-    invariant(object);
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
         id,
+        scrollTo,
+        selection,
         initialValue: text,
         extensions: [
           createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
@@ -117,13 +118,13 @@ export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
           editorGutter,
           extensions || [],
         ],
-        scrollTo,
-        selection,
       }),
-      [object, extensions, themeMode],
+      [id, object, extensions, themeMode],
     );
 
     useImperativeHandle(forwardedRef, () => view, [view]);
+
+    console.log(attentionAttrs, focusAttributes);
 
     useEffect(() => {
       if (view) {
@@ -132,7 +133,7 @@ export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
     }, [view]);
 
     return (
-      <div ref={parentRef} role='none' className='flex overflow-hidden' {...focusAttributes} {...attentionAttrs} />
+      <div ref={parentRef} role='editor' className='flex overflow-hidden' {...attentionAttrs} {...focusAttributes} />
     );
   },
 );

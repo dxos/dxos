@@ -7,6 +7,7 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { DropdownMenu, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import {
   createMarkdownExtensions,
   createBasicExtensions,
@@ -40,14 +41,13 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
   ({ classNames, text, id, autoFocus, scrollable = true, showSelected = true }, forwardedRef) => {
     const { t } = useTranslation(OUTLINER_PLUGIN);
     const { themeMode } = useThemeContext();
+    const attentionAttrs = useAttentionAttributes(id);
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
         id,
         autoFocus,
-        // TODO(burdon): Make this optional.
-        initialValue: text.content,
-        // Auto select end of document.
         selection: EditorSelection.cursor(text.content.length),
+        initialValue: text.content,
         extensions: [
           createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
           createBasicExtensions({ readOnly: false }),
@@ -59,6 +59,8 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
       [id, text, autoFocus, themeMode],
     );
 
+    console.log(attentionAttrs);
+
     useImperativeHandle(
       forwardedRef,
       () => ({
@@ -68,7 +70,7 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
     );
 
     const handleDeleteRow = () => {
-      // TODO(burdon): Hack since menu steals focus.
+      // TODO(burdon): Timeout hack since menu steals focus.
       setTimeout(() => {
         if (view) {
           deleteItem(view);
@@ -80,7 +82,13 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
     return (
       // TODO(burdon): Use global modal?
       <RefDropdownMenu.Provider>
-        <div ref={parentRef} {...focusAttributes} className={mx('flex w-full justify-center', classNames)} />
+        <div
+          ref={parentRef}
+          role='editor'
+          className={mx('_flex _justify-center', classNames)}
+          {...attentionAttrs}
+          {...focusAttributes}
+        />
         <DropdownMenu.Portal>
           <DropdownMenu.Content>
             <DropdownMenu.Viewport>

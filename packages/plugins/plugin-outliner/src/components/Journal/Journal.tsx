@@ -88,15 +88,19 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
     return null;
   }
 
+  // TODO(burdon):!!!
+  const recent = false;
+
   return (
     <div className={mx('flex flex-col', classNames)}>
       <div className='flex items-center gap-2 bg-transparent'>
         <IconButton
           label={format(date, 'MMM d, yyyy')}
-          icon={isToday ? 'ph--calendar-dot--regular' : 'ph--calendar-blank--regular'}
+          size={5}
+          icon={isToday ? 'ph--calendar-check--regular' : 'ph--calendar-blank--regular'}
           onClick={handleFocus}
         />
-        <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>
+        {recent && <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>}
         {isToday && <div className='text-xs'>{t('today label')}</div>}
       </div>
       <Outliner
