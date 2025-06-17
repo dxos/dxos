@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useEffect, useState } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
 import { Icon, type IconProps } from '@dxos/react-ui';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -13,16 +13,16 @@ import { mx } from '@dxos/react-ui-theme';
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
 
-export const RandomShape = S.extend(
+export const RandomShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('rng'),
-    min: S.optional(S.Number),
-    max: S.optional(S.Number),
+  Schema.Struct({
+    type: Schema.Literal('rng'),
+    min: Schema.optional(Schema.Number),
+    max: Schema.optional(Schema.Number),
   }),
 );
 
-export type RandomShape = S.Schema.Type<typeof RandomShape>;
+export type RandomShape = Schema.Schema.Type<typeof RandomShape>;
 
 export type CreateRandomProps = CreateShapeProps<RandomShape>;
 

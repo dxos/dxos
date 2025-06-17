@@ -4,10 +4,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL, type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
-import { type AssociatedArtifact, createSystemPrompt, type Tool } from '@dxos/artifact';
-import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL } from '@dxos/assistant';
-import { FunctionType } from '@dxos/functions/types';
+import { type AssociatedArtifact, createSystemPrompt } from '@dxos/artifact';
+import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, type Space, useQuery } from '@dxos/react-client/echo';
@@ -15,7 +15,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { AssistantCapabilities } from '../capabilities';
 import { ChatProcessor, type ChatProcessorOptions } from '../hooks';
-import { covertFunctionToTool, createToolsFromService } from '../tools';
+import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type AIChatType, type AssistantSettingsProps, ServiceType } from '../types';
 
 type UseChatProcessorProps = {
@@ -33,7 +33,8 @@ export const useChatProcessor = ({
   chat,
   space,
   settings,
-  part = 'deck',
+  // part = 'deck',
+  part,
   associatedArtifact,
 }: UseChatProcessorProps): ChatProcessor => {
   const aiClient = useCapability(AssistantCapabilities.AiClient);
@@ -42,8 +43,8 @@ export const useChatProcessor = ({
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // Services.
-  const services = useQuery(space, Filter.schema(ServiceType));
-  const [serviceTools, setServiceTools] = useState<Tool[]>([]);
+  const services = useQuery(space, Filter.type(ServiceType));
+  const [serviceTools, setServiceTools] = useState<ExecutableTool[]>([]);
   useEffect(() => {
     log('creating service tools...');
     queueMicrotask(async () => {
@@ -54,15 +55,15 @@ export const useChatProcessor = ({
 
   // Tools and context.
   const config = useConfig();
-  const functions = useQuery(space, Filter.schema(FunctionType));
+  const functions = useQuery(space, Filter.type(FunctionType));
   const chatId = useMemo(() => (chat ? fullyQualifiedId(chat) : undefined), [chat]);
   const [tools, extensions] = useMemo(() => {
     log('creating tools...');
-    const tools = [
+    const tools: ExecutableTool[] = [
       ...globalTools.flat(),
       ...serviceTools,
       ...functions
-        .map((fn) => covertFunctionToTool(fn, config.values.runtime?.services?.edge?.url ?? '', space?.id))
+        .map((fn) => convertFunctionToTool(fn, config.values.runtime?.services?.edge?.url ?? '', space?.id))
         .filter(isNonNullable),
     ];
     const extensions = { space, dispatch, pivotId: chatId, part };
@@ -90,7 +91,7 @@ export const useChatProcessor = ({
   const processor = useMemo(() => {
     log('creating processor...', { settings });
     return new ChatProcessor(aiClient.value, tools, artifactDefinitions, extensions, { model, systemPrompt });
-  }, [aiClient.value, tools, extensions, model, systemPrompt]);
+  }, [aiClient.value, tools, artifactDefinitions, extensions, model, systemPrompt]);
 
   return processor;
 };

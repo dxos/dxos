@@ -66,7 +66,7 @@ export class TestAgentBuilder {
     return Array.from(this._agents.values());
   }
 
-  getAgent(deviceKey: PublicKey) {
+  getAgent(deviceKey: PublicKey): TestAgent | undefined {
     return this._agents.get(deviceKey);
   }
 
@@ -123,7 +123,7 @@ export class TestAgent {
     return Array.from(this._spaces.values());
   }
 
-  getSpace(spaceKey: PublicKey) {
+  getSpace(spaceKey: PublicKey): Space | undefined {
     return this._spaces.get(spaceKey);
   }
 
@@ -208,7 +208,7 @@ export class TestAgent {
     return space;
   }
 
-  createSpaceProtocol(topic: PublicKey, gossip?: Gossip) {
+  createSpaceProtocol(topic: PublicKey, gossip?: Gossip): SpaceProtocol {
     return new SpaceProtocol({
       topic,
       swarmIdentity: {
@@ -228,13 +228,13 @@ export class TestAgent {
     });
   }
 
-  createGossip() {
+  createGossip(): Gossip {
     return new Gossip({
       localPeerId: this.deviceKey,
     });
   }
 
-  createPresence(gossip?: Gossip) {
+  createPresence(gossip?: Gossip): Presence {
     return new Presence({
       announceInterval: 30,
       offlineTimeout: 200,
@@ -243,7 +243,7 @@ export class TestAgent {
     });
   }
 
-  async spaceGenesis(space: Space) {
+  async spaceGenesis(space: Space): Promise<void> {
     const generator = new CredentialGenerator(this.keyring, this.identityKey, this.deviceKey);
     const credentials = [
       ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),

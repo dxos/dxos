@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useState, useEffect, useMemo, type ChangeEvent } from 'react';
 
 import { type GeoPoint, GeoLocation } from '@dxos/echo-schema';
 import { Input, useTranslation } from '@dxos/react-ui';
@@ -28,7 +28,7 @@ export const GeoPointInput = ({ type, label, disabled, getStatus, getValue, onVa
 
   const handleCoordinateChange = useCallback(
     (coordinateType: keyof Pick<GeoLocation, 'longitude' | 'latitude'>, setText: (text: string) => void) =>
-      (event: React.ChangeEvent<HTMLInputElement>) => {
+      (event: ChangeEvent<HTMLInputElement>) => {
         const inputText = event.target.value;
         setText(inputText);
         if (inputText !== '' && inputText !== '-') {

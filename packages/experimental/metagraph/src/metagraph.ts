@@ -36,7 +36,7 @@ export class QueryObservableProvider<T> extends ObservableProvider<QueryEvents<T
     this.callback.onUpdate(this._results);
   }
 
-  async fetch() {
+  async fetch(): Promise<void> {
     await this._callback();
   }
 }

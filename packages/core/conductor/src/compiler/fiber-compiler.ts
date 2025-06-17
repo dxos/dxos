@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Layer, Scope } from 'effect';
+import { Effect, Layer, Scope, Schema } from 'effect';
 
 import { raise } from '@dxos/debug';
-import { S } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -192,7 +191,7 @@ export class GraphExecutor {
   /**
    * Clone the graph and the topology but discard the runtime state.
    */
-  clone() {
+  clone(): GraphExecutor {
     const executor = new GraphExecutor({
       computeMetaResolver: this._computeMetaResolver,
       computeNodeResolver: this._computeNodeResolver,
@@ -201,7 +200,7 @@ export class GraphExecutor {
     return executor;
   }
 
-  async load(graph: ComputeGraphModel) {
+  async load(graph: ComputeGraphModel): Promise<void> {
     this._computeCache.clear();
     this._topology = await createTopology({
       graph,
@@ -223,31 +222,31 @@ export class GraphExecutor {
    * Get resolved schema for inputs of the node.
    * The schema will depend on other nodes this node is connected to.
    */
-  getInputSchema(nodeId: string): S.Schema.AnyNoContext {
+  getInputSchema(nodeId: string): Schema.Schema.AnyNoContext {
     invariant(this._topology, 'Graph not loaded');
     const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
-    return S.Struct(Object.fromEntries(node.outputs.map((output) => [output.name, output.schema] as const)));
+    return Schema.Struct(Object.fromEntries(node.outputs.map((output) => [output.name, output.schema] as const)));
   }
 
   /**
    * Get resolved schema for outputs of the node.
    * The schema will depend on other nodes this node is connected to.
    */
-  getOutputSchema(nodeId: string): S.Schema.AnyNoContext {
+  getOutputSchema(nodeId: string): Schema.Schema.AnyNoContext {
     invariant(this._topology, 'Graph not loaded');
     const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
-    return S.Struct(Object.fromEntries(node.inputs.map((input) => [input.name, input.schema] as const)));
+    return Schema.Struct(Object.fromEntries(node.inputs.map((input) => [input.name, input.schema] as const)));
   }
 
   /**
    * Set outputs for a node.
    * When values are polled, this node will not be computed.
    */
-  setOutputs(nodeId: string, outputs: ComputeEffect<ValueBag<any>>) {
+  setOutputs(nodeId: string, outputs: ComputeEffect<ValueBag<any>>): void {
     this._computeCache.set(nodeId, outputs);
   }
 
-  setInputs(nodeId: string, inputs: ComputeEffect<ValueBag<any>>) {
+  setInputs(nodeId: string, inputs: ComputeEffect<ValueBag<any>>): void {
     this._computeCache.set(nodeId, inputs);
   }
 
@@ -349,7 +348,7 @@ export class GraphExecutor {
           inputs: Object.keys(inputValues.values),
         });
 
-        // const sanitizedInputs = yield* S.decode(node.meta.input)(inputValues);
+        // const sanitizedInputs = yield* Schema.decode(node.meta.input)(inputValues);
         // TODO(dmaretskyi): Figure out schema validation on value bags.
         invariant(isValueBag(inputValues), 'Input must be a value bag');
         const output = yield* nodeSpec.exec(inputValues, node.graphNode).pipe(
@@ -365,7 +364,7 @@ export class GraphExecutor {
         //   log.info('text in fiber', { text: getDebugName(output.text) });
         // }
 
-        // const decodedOutput = yield* S.decode(node.meta.output)(output);
+        // const decodedOutput = yield* Schema.decode(node.meta.output)(output);
 
         const res: ValueBag<any>['values'] = {};
         for (const key of Object.keys(output.values)) {

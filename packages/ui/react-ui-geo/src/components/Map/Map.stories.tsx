@@ -13,7 +13,7 @@ import { Map, type MapController } from './Map';
 import { useMapZoomHandler } from '../../hooks';
 import { type MapMarker } from '../../types';
 
-const Render = ({ markers }) => {
+const DefaultStory = ({ markers = [] }: { markers?: MapMarker[] }) => {
   const [controller, setController] = useState<MapController>();
   const handleZoomAction = useMapZoomHandler(controller);
 
@@ -26,15 +26,15 @@ const Render = ({ markers }) => {
   );
 };
 
-const meta: Meta<typeof Render> = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-geo/Map',
-  component: Render,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  render: DefaultStory,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export default meta;
 
-type Story = StoryObj<typeof Render>;
+type Story = StoryObj<typeof DefaultStory>;
 
 export const Default: Story = {};
 

@@ -14,7 +14,7 @@ import { Select } from '../Select';
 
 type StorybookToolbarProps = {};
 
-const StorybookToolbar = (props: StorybookToolbarProps) => {
+const DefaultStory = (props: StorybookToolbarProps) => {
   return (
     <Toolbar.Root>
       {/* TODO(burdon): Should be fixed width (regardless of selection). */}
@@ -72,7 +72,7 @@ const StorybookToolbar = (props: StorybookToolbarProps) => {
 export default {
   title: 'ui/react-ui-core/Toolbar',
   component: Toolbar,
-  render: StorybookToolbar,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

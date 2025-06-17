@@ -16,11 +16,13 @@
         "platforms": [
           "browser",
           "node"
-        ]
+        ],
+        "preactSignalTracking": true
       }
     },
     "lint": {},
-    "pack": {}
+    "pack": {},
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",

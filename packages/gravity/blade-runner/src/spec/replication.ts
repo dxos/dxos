@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { type AutomergeUrl } from '@automerge/automerge-repo';
+
 import { log } from '@dxos/log';
 
 import { type SchedulerEnvImpl } from '../env';

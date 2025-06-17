@@ -14,23 +14,20 @@ import { GridSheet } from '../GridSheet';
 import { SheetProvider } from '../SheetContext';
 import { SheetToolbar } from '../SheetToolbar';
 
-export const SheetContainer = ({
-  space,
-  sheet,
-  role,
-  ignoreAttention,
-}: {
+export type SheetContainerProps = {
   space: Space;
   sheet: SheetType;
   role?: string;
   ignoreAttention?: boolean;
-}) => {
+};
+
+export const SheetContainer = ({ space, sheet, role, ignoreAttention }: SheetContainerProps) => {
   const graph = useComputeGraph(space);
 
   return graph ? (
     <SheetProvider sheet={sheet} graph={graph} ignoreAttention={ignoreAttention}>
       <StackItem.Content toolbar statusbar {...(role === 'section' && { classNames: 'aspect-video' })}>
-        <SheetToolbar attendableId={fullyQualifiedId(sheet)} />
+        <SheetToolbar id={fullyQualifiedId(sheet)} />
         <GridSheet />
         <FunctionEditor />
       </StackItem.Content>

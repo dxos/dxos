@@ -3,21 +3,15 @@
 //
 
 // @ts-ignore
-import { transformServerSentEvents } from 'https://esm.sh/@dxos/script-toolbox';
+import { transformServerSentEvents } from 'https://esm.sh/@dxos/script-toolbox?bundle=false';
 
 /**
  * Chatbot that answers questions based on the context data.
  */
-export default async ({
-  event: {
-    data: { request },
-  },
-  context: { space, ai },
-}: any) => {
-  const textBody = await request.text();
+export default async ({ data: { bodyText }, context: { space, ai } }: any) => {
   let parsedRequest: any;
   try {
-    parsedRequest = JSON.parse(textBody);
+    parsedRequest = JSON.parse(bodyText);
   } catch (err) {
     const answer = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
       stream: true,
@@ -29,7 +23,7 @@ export default async ({
      ${await getContext({ space })}
 
      QUESTION:
-     ${textBody}
+     ${bodyText}
     `,
     });
     return new Response(transformServerSentEvents(answer));

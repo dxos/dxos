@@ -2,46 +2,82 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback } from 'react';
+import { Rx } from '@effect-rx/rx-react';
+import React, { type PropsWithChildren, useMemo } from 'react';
 
+import { useAppGraph } from '@dxos/app-framework';
+import { type CompleteCellRange } from '@dxos/compute';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { createGapSeparator, MenuProvider, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  type ActionGraphEdges,
+  type ActionGraphNodes,
+  type ActionGraphProps,
+  createGapSeparator,
+  MenuProvider,
+  rxFromSignal,
+  ToolbarMenu,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 
 import { createAlign, useAlignState } from './align';
-import { createComment, useCommentState } from './comment';
 import { createStyle, useStyleState } from './style';
-import { useToolbarAction } from './useToolbarAction';
 import { type ToolbarState, useToolbarState } from './useToolbarState';
+import { type SheetModel } from '../../model';
+import { useSheetContext } from '../SheetContext';
 
 //
 // Root
 //
 
-export type SheetToolbarProps = ThemedClassName<PropsWithChildren<{ attendableId?: string }>>;
+export type SheetToolbarProps = ThemedClassName<PropsWithChildren<{ id: string }>>;
 
-const createToolbarActions = (state: ToolbarState) => {
-  const align = createAlign(state);
-  const style = createStyle(state);
-  const gap = createGapSeparator();
-  const comment = createComment(state);
-  return {
-    nodes: [...align.nodes, ...style.nodes, ...gap.nodes, ...comment.nodes],
-    edges: [...align.edges, ...style.edges, ...gap.edges, ...comment.edges],
-  };
+const createToolbarActions = (
+  model: SheetModel,
+  state: ToolbarState,
+  cursorFallbackRange?: CompleteCellRange,
+  customActions?: Rx.Rx<ActionGraphProps>,
+) => {
+  return Rx.make((get) => {
+    const align = get(rxFromSignal(() => createAlign(model, state, cursorFallbackRange)));
+    const style = get(rxFromSignal(() => createStyle(model, state, cursorFallbackRange)));
+    const gap = createGapSeparator();
+    const nodes: ActionGraphNodes = [...align.nodes, ...style.nodes, ...gap.nodes];
+    const edges: ActionGraphEdges = [...align.edges, ...style.edges, ...gap.edges];
+    if (customActions) {
+      const custom = get(customActions);
+      nodes.push(...custom.nodes);
+      edges.push(...custom.edges);
+    }
+    return {
+      nodes,
+      edges,
+    };
+  });
 };
 
-export const SheetToolbar = ({ attendableId, classNames }: SheetToolbarProps) => {
+export const SheetToolbar = ({ id, classNames }: SheetToolbarProps) => {
+  const { model, cursorFallbackRange } = useSheetContext();
   const state = useToolbarState({});
   useAlignState(state);
   useStyleState(state);
-  useCommentState(state);
 
-  const actionsCreator = useCallback(() => createToolbarActions(state), [state]);
+  const { graph } = useAppGraph();
+  const customActions = useMemo(() => {
+    return Rx.make((get) => {
+      const actions = get(graph.actions(id));
+      const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
+      return { nodes, edges: nodes.map((node) => ({ source: 'root', target: node.id })) };
+    });
+  }, [graph]);
+
+  const actionsCreator = useMemo(
+    () => createToolbarActions(model, state, cursorFallbackRange, customActions),
+    [model, state, cursorFallbackRange, customActions],
+  );
   const menu = useMenuActions(actionsCreator);
-  const handleAction = useToolbarAction(state);
 
   return (
-    <MenuProvider {...menu} attendableId={attendableId} onAction={handleAction}>
+    <MenuProvider {...menu} attendableId={id}>
       <ToolbarMenu classNames={classNames} />
     </MenuProvider>
   );

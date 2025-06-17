@@ -2,41 +2,41 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
-import { TaskType } from './task';
-import { TreeNodeType } from './tree';
+import { DataType } from '@dxos/schema';
+
 import { JournalType, OutlineType } from './types';
 import { OUTLINER_PLUGIN } from '../meta';
 
 export namespace OutlinerAction {
   const OUTLINER_ACTION = `${OUTLINER_PLUGIN}/action`;
 
-  export class CreateJournal extends S.TaggedClass<CreateJournal>()(`${OUTLINER_ACTION}/create-journal`, {
-    input: S.Struct({
-      name: S.optional(S.String),
+  export class CreateJournal extends Schema.TaggedClass<CreateJournal>()(`${OUTLINER_ACTION}/create-journal`, {
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
     }),
-    output: S.Struct({
+    output: Schema.Struct({
       object: JournalType,
     }),
   }) {}
 
-  export class CreateOutline extends S.TaggedClass<CreateOutline>()(`${OUTLINER_ACTION}/create-outline`, {
-    input: S.Struct({
-      name: S.optional(S.String),
+  export class CreateOutline extends Schema.TaggedClass<CreateOutline>()(`${OUTLINER_ACTION}/create-outline`, {
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
     }),
-    output: S.Struct({
+    output: Schema.Struct({
       object: OutlineType,
     }),
   }) {}
 
   // TODO(burdon): Move to plugin-task.
-  export class CreateTask extends S.TaggedClass<CreateOutline>()(`${OUTLINER_ACTION}/create-task`, {
-    input: S.Struct({
-      node: TreeNodeType,
+  export class CreateTask extends Schema.TaggedClass<CreateTask>()(`${OUTLINER_ACTION}/create-task`, {
+    input: Schema.Struct({
+      text: Schema.String,
     }),
-    output: S.Struct({
-      object: TaskType,
+    output: Schema.Struct({
+      object: DataType.Task,
     }),
   }) {}
 }

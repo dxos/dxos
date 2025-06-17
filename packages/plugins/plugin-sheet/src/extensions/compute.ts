@@ -141,7 +141,7 @@ class ComputeWidget extends WidgetType {
     super();
   }
 
-  override toDOM(_view: EditorView) {
+  override toDOM(_view: EditorView): HTMLDivElement {
     const div = document.createElement('div');
     div.setAttribute('title', this.formula);
     div.innerText = String(this.value);

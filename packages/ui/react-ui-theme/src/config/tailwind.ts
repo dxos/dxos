@@ -39,6 +39,14 @@ export const tailwindConfig = ({
         spacing: {
           prose: 'var(--dx-prose)',
           containerMaxWidth: 'var(--dx-containerMaxWidth)',
+          popoverMaxWidth: 'var(--dx-popoverMaxWidth)',
+        },
+        borderRadius: {
+          none: '0',
+          sm: '0.25rem',
+          DEFAULT: '0.5rem',
+          md: '.75rem',
+          lg: '1rem',
         },
         screens: {
           'pointer-fine': { raw: '(pointer: fine)' },

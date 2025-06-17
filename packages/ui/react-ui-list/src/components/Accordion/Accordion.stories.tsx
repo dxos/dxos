@@ -26,9 +26,9 @@ const DefaultStory = () => {
   return (
     <Accordion.Root<TestItem> items={items} classNames='w-[40rem]'>
       {({ items }) => (
-        <div className='flex flex-col w-full border-y border-divider divide-y divide-divider'>
+        <div className='flex flex-col w-full border-y border-separator divide-y divide-separator'>
           {items.map((item) => (
-            <Accordion.Item key={item.id} item={item} classNames='border-x border-divider'>
+            <Accordion.Item key={item.id} item={item} classNames='border-x border-separator'>
               <Accordion.ItemHeader>{item.name}</Accordion.ItemHeader>
               <Accordion.ItemBody>
                 <p>{item.text}</p>

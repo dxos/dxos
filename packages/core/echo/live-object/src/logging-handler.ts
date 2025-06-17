@@ -4,8 +4,8 @@
 
 import { type Reference } from '@dxos/echo-protocol';
 import { type ObjectMeta } from '@dxos/echo-schema';
+import { getObjectMeta } from '@dxos/echo-schema';
 
-import { getObjectMeta } from './object';
 import { type ReactiveHandler } from './proxy';
 
 export class LoggingReactiveHandler implements ReactiveHandler<any> {
@@ -30,7 +30,7 @@ export class LoggingReactiveHandler implements ReactiveHandler<any> {
     return false;
   }
 
-  getSchema() {
+  getSchema(): undefined {
     return undefined;
   }
 

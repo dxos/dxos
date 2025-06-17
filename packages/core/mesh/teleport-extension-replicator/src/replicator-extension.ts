@@ -83,7 +83,7 @@ export class ReplicatorExtension implements TeleportExtension {
     return this;
   }
 
-  addFeed(feed: FeedWrapper<any>) {
+  addFeed(feed: FeedWrapper<any>): void {
     this._feeds.set(feed.key, feed);
     log('addFeed', { feedKey: feed.key });
     if (this._extensionContext) {
@@ -91,7 +91,7 @@ export class ReplicatorExtension implements TeleportExtension {
     }
   }
 
-  async onOpen(context: ExtensionContext) {
+  async onOpen(context: ExtensionContext): Promise<void> {
     this._extensionContext = context;
     log('open');
 
@@ -137,7 +137,7 @@ export class ReplicatorExtension implements TeleportExtension {
     this._updateTask.schedule();
   }
 
-  async onClose(err?: Error | undefined) {
+  async onClose(err?: Error | undefined): Promise<void> {
     log('close', { err });
     await this._ctx.dispose();
     await this._rpc?.close();
@@ -146,7 +146,7 @@ export class ReplicatorExtension implements TeleportExtension {
     }
   }
 
-  async onAbort(err?: Error | undefined) {
+  async onAbort(err?: Error | undefined): Promise<void> {
     log('abort', { err });
 
     await this._ctx.dispose();
@@ -157,7 +157,7 @@ export class ReplicatorExtension implements TeleportExtension {
   }
 
   @synchronized
-  private async _reevaluateFeeds() {
+  private async _reevaluateFeeds(): Promise<void> {
     log('_reevaluateFeeds');
     for (const feedKey of this._feeds.keys()) {
       if (this._ctx.disposed) {
@@ -187,7 +187,7 @@ export class ReplicatorExtension implements TeleportExtension {
   /**
    * Try to initiate feed replication.
    */
-  private async _initiateReplication(feedInfo: FeedInfo) {
+  private async _initiateReplication(feedInfo: FeedInfo): Promise<void> {
     log('initiating replication', { feedInfo });
     invariant(this._extensionContext!.initiator === true, 'Invalid call');
     invariant(!this._streams.has(feedInfo.feedKey), `Replication already in progress for feed: ${feedInfo.feedKey}`);
@@ -216,7 +216,7 @@ export class ReplicatorExtension implements TeleportExtension {
     return tag;
   }
 
-  private async _replicateFeed(info: FeedInfo, streamTag: string) {
+  private async _replicateFeed(info: FeedInfo, streamTag: string): Promise<void> {
     log('replicate', { info, streamTag });
     invariant(!this._streams.has(info.feedKey), `Replication already in progress for feed: ${info.feedKey}`);
 
@@ -285,7 +285,7 @@ export class ReplicatorExtension implements TeleportExtension {
     networkStream.pipe(replicationStream as any).pipe(networkStream);
   }
 
-  private async _stopReplication(feedKey: PublicKey) {
+  private async _stopReplication(feedKey: PublicKey): Promise<void> {
     const stream = this._streams.get(feedKey);
     if (!stream) {
       return;

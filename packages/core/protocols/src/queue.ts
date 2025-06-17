@@ -19,13 +19,15 @@ export type QueueQuery = {
 // TODO(dmaretskyi): Rename QueueQueryResult.
 export type QueryResult = {
   // TODO(dmaretskyi): HasId & HasTypename.
+
   objects: unknown[];
-  // /**
-  //  * Cursor at the end of the range.
-  //  */
+
+  /**
+   * Cursor at the end of the range.
+   */
   nextCursor: QueueCursor | null;
-  // /**
-  //  * Cursor at the start of the range.
-  //  */
+  /**
+   * Cursor at the start of the range.
+   */
   prevCursor: QueueCursor | null;
 };

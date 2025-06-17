@@ -3,12 +3,12 @@
 //
 
 import { Aperture } from '@phosphor-icons/react';
-import * as d3 from 'd3';
+import { transition, easeLinear } from 'd3';
 import defaulstDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { useSvgContext } from '@dxos/gem-core';
-import { type GraphLayoutNode, type GraphModel, GraphRenderer, type GraphRendererOptions } from '@dxos/gem-spore';
+import { type ReactiveGraphModel } from '@dxos/graph';
+import { type GraphLayoutNode, GraphRenderer, type GraphRendererOptions, useSvgContext } from '@dxos/react-ui-graph';
 import { mx } from '@dxos/react-ui-theme';
 
 import { TreeProjector, type TreeProjectorOptions } from './tree-projector';
@@ -28,7 +28,7 @@ export type PlexusSlots<N> = {
 };
 
 export type PlexusProps<N> = {
-  model: GraphModel<N>;
+  model: ReactiveGraphModel;
   className?: string;
   slots?: PlexusSlots<N>;
   onSelect?: (node: N) => void;
@@ -59,7 +59,7 @@ export const Plexus = <N,>({ model, slots, onSelect, onTransition }: PlexusProps
       new TreeProjector<N>(
         context,
         defaulstDeep({}, slots?.projector, {
-          idAccessor: model.idAccessor,
+          // idAccessor: model.idAccessor, // TODO(burdon): !!!
         }),
       ),
     [],
@@ -72,8 +72,8 @@ export const Plexus = <N,>({ model, slots, onSelect, onTransition }: PlexusProps
         context,
         graphRef,
         defaulstDeep({}, slots?.renderer, {
-          idAccessor: model.idAccessor,
-          transition: () => d3.transition().duration(transitionDuration).ease(d3.easeLinear),
+          // idAccessor: model.idAccessor, // TODO(burdon): !!!
+          transition: () => transition().duration(transitionDuration).ease(easeLinear),
           labels: {
             text: (node: GraphLayoutNode<N>) => node.id.slice(0, 8), // + `[${node.data.label}]`
           },
@@ -90,16 +90,18 @@ export const Plexus = <N,>({ model, slots, onSelect, onTransition }: PlexusProps
   const [data, setData] = useState(model.graph);
   useEffect(() => {
     model.subscribe((graph) => {
-      setData({ ...graph });
-      setSelected(model.selected);
+      // TODO(burdon): !!!
+      // setData({ ...graph });
+      // setSelected(model.selected);
     });
   }, [model]);
 
   // Trigger layout.
   useEffect(() => {
     if (graphRef.current) {
-      projector.update(model.graph, model.selected);
-      renderer.update(projector.layout);
+      // TODO(burdon): !!!
+      // projector.update(model.graph, model.selected);
+      renderer.render(projector.layout);
     }
   }, [graphRef, data]);
 

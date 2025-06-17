@@ -5,21 +5,18 @@
 import { ChatText } from '@phosphor-icons/react';
 import React, { useEffect } from 'react';
 
-import { type ThreadType } from '@dxos/plugin-space/types';
+import { RelationSourceId } from '@dxos/echo-schema';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useTranslation, Trans } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionMessage, mx } from '@dxos/react-ui-theme';
+import { type AnchoredTo } from '@dxos/schema';
 
-import { CommentContainer } from './CommentContainer';
-import { type ThreadContainerProps } from './types';
+import { CommentContainer, type CommentContainerProps } from './CommentContainer';
 import { THREAD_PLUGIN } from '../meta';
+import { type ThreadType } from '../types';
 
-export type ThreadsContainerProps = Omit<ThreadContainerProps, 'thread' | 'detached' | 'current' | 'autoFocus'> & {
-  threads: ThreadType[];
-  /**
-   * Threads that are no longer anchored to a position in the object.
-   */
-  detached?: string[];
+export type ThreadsContainerProps = Omit<CommentContainerProps, 'anchor' | 'current'> & {
+  anchors: AnchoredTo[];
   currentId?: string;
   showResolvedThreads?: boolean;
 };
@@ -27,15 +24,15 @@ export type ThreadsContainerProps = Omit<ThreadContainerProps, 'thread' | 'detac
 /**
  * Comment threads.
  */
-export const CommentsContainer = ({
-  threads,
-  detached = [],
-  currentId,
-  showResolvedThreads,
-  ...props
-}: ThreadsContainerProps) => {
+export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...props }: ThreadsContainerProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
-  const filteredThreads = showResolvedThreads ? threads : threads.filter((thread) => !(thread?.status === 'resolved'));
+  // TODO(wittjosiah): There seems to be a race between thread and anchor being deleted.
+  const filteredAnchors = showResolvedThreads
+    ? anchors.filter((anchor) => !!anchor[RelationSourceId])
+    : anchors.filter((anchor) => {
+        const thread = anchor[RelationSourceId];
+        return thread && thread.status !== 'resolved';
+      });
 
   useEffect(() => {
     if (currentId) {
@@ -45,27 +42,14 @@ export const CommentsContainer = ({
 
   return (
     <>
-      {filteredThreads.length > 0 ? (
-        filteredThreads.map((thread) => {
+      {filteredAnchors.length > 0 ? (
+        filteredAnchors.map((anchor) => {
+          const thread = anchor[RelationSourceId] as ThreadType;
           const threadId = fullyQualifiedId(thread);
-          return (
-            <CommentContainer
-              key={threadId}
-              thread={thread}
-              current={currentId === threadId}
-              detached={detached.includes(threadId)}
-              {...props}
-            />
-          );
+          return <CommentContainer key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
         })
       ) : (
-        <div
-          role='alert'
-          className={mx(
-            descriptionText,
-            'place-self-center border border-dashed border-unAccent rounded-lg text-center p-4 m-4',
-          )}
-        >
+        <div role='alert' className={mx(descriptionMessage, 'place-self-center rounded-lg text-center m-4')}>
           <h2 className='mbe-2 font-medium text-baseText'>{t('no comments title')}</h2>
           <p>
             <Trans

@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import type { AutomergeUrl } from '@automerge/automerge-repo';
+
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
-import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import {
   type CredentialProcessor,
@@ -72,7 +73,7 @@ export class SpacesServiceImpl implements SpacesService {
     return this._serializeSpace(space);
   }
 
-  async updateSpace({ spaceKey, state, edgeReplication }: UpdateSpaceRequest) {
+  async updateSpace({ spaceKey, state, edgeReplication }: UpdateSpaceRequest): Promise<void> {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
 
@@ -184,13 +185,13 @@ export class SpacesServiceImpl implements SpacesService {
     });
   }
 
-  async postMessage({ spaceKey, channel, message }: PostMessageRequest) {
+  async postMessage({ spaceKey, channel, message }: PostMessageRequest): Promise<void> {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
     await space.postMessage(getChannelId(channel), message);
   }
 
-  subscribeMessages({ spaceKey, channel }: SubscribeMessagesRequest) {
+  subscribeMessages({ spaceKey, channel }: SubscribeMessagesRequest): Stream<GossipMessage> {
     return new Stream<GossipMessage>(({ ctx, next }) => {
       scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
@@ -222,7 +223,7 @@ export class SpacesServiceImpl implements SpacesService {
     });
   }
 
-  async writeCredentials({ spaceKey, credentials }: WriteCredentialsRequest) {
+  async writeCredentials({ spaceKey, credentials }: WriteCredentialsRequest): Promise<void> {
     const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
     for (const credential of credentials ?? []) {
       if (credential.proof) {
@@ -373,7 +374,7 @@ export class SpacesServiceImpl implements SpacesService {
     return this._identityManager.identity;
   }
 
-  private async _updateMetrics() {
+  private async _updateMetrics(): Promise<void> {
     const dataSpaceManager = await this._getDataSpaceManager();
     const identity = this._identityManager.identity?.identityKey.truncate();
     if (identity) {

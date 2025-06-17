@@ -5,7 +5,7 @@
 // @ts-ignore
 import { defineFunction, S } from 'dxos:functions';
 // @ts-ignore
-import { Chess } from 'https://esm.sh/chess.js@0.13.1';
+import { Chess } from 'https://esm.sh/chess.js@0.13.1?bundle=false';
 
 export default defineFunction({
   description: 'Plays a random move in a chess game.',
@@ -25,12 +25,7 @@ export default defineFunction({
     }),
   }),
 
-  handler: async ({
-    event: {
-      data: { changedObjectId, player = 'b' },
-    },
-    context: { space },
-  }: any) => {
+  handler: async ({ data: { changedObjectId, player = 'b' }, context: { space } }: any) => {
     const { pgn } = await space.db.query({ id: changedObjectId }).first();
     const game = new Chess();
     game.load_pgn(pgn);

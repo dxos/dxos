@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema } from 'effect/Schema';
 import React, {
   type MouseEvent,
   type PropsWithChildren,
@@ -19,26 +20,28 @@ import { invariant } from '@dxos/invariant';
 import { Filter } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { closestCell, type DxGridElement, type DxGridPosition, type GridContentProps, Grid } from '@dxos/react-ui-grid';
+import {
+  closestCell,
+  type DxGridElement,
+  type DxGridPosition,
+  type GridContentProps,
+  Grid,
+  type DxGridPlane,
+  type DxGridPlaneRange,
+  gridSeparatorInlineEnd,
+  gridSeparatorBlockEnd,
+} from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy, safeParseInt } from '@dxos/util';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
 import { CreateRefPanel } from './CreateRefPanel';
-import { RefPanel } from './RefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
 import { ModalController, type TableModel, type TablePresentation } from '../../model';
 import { translationKey } from '../../translations';
 import { tableButtons, tableControls } from '../../util';
-import { createOption, TableCellEditor, type TableCellEditorProps } from '../TableCellEditor';
-
-// NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
-// These are offset by 1px to avoid double borders in planks.
-const inlineEndLine =
-  '[&>.dx-grid]:relative [&>.dx-grid]:after:absolute [&>.dx-grid]:after:inset-block-0 [&>.dx-grid]:after:-inline-end-px [&>.dx-grid]:after:is-px [&>.dx-grid]:after:bg-separator';
-const blockEndLine =
-  '[&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-inline-0 [&>.dx-grid]:before:-block-end-px [&>.dx-grid]:before:bs-px [&>.dx-grid]:before:bg-separator';
+import { createOption, TableValueEditor, type TableCellEditorProps } from '../TableCellEditor';
 
 //
 // Table.Root
@@ -73,13 +76,14 @@ export type TableController = {
 export type TableMainProps = {
   model?: TableModel;
   presentation?: TablePresentation;
+  schema?: Schema.AnyNoContext;
   // TODO(burdon): Rename since attention isn't a useful concept here? Standardize across other components. Pass property into useAttention.
   ignoreAttention?: boolean;
   onRowClick?: (row: any) => void;
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(
-  ({ model, presentation, ignoreAttention, onRowClick }, forwardedRef) => {
+  ({ model, presentation, ignoreAttention, schema, onRowClick }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const { t } = useTranslation(translationKey);
@@ -98,20 +102,17 @@ const TableMain = forwardRef<TableController, TableMainProps>(
       };
     }, [model]);
 
-    // TODO(burdon): Replace useEffect below.
-    // const getCells = useCallback<GridContentProps['getCells']>(
-    //   (range: DxGridRange, plane: DxGridPlane) => presentation?.getCells(range, plane) ?? {},
-    //   [presentation],
-    // );
+    const getCells = useCallback<NonNullable<GridContentProps['getCells']>>(
+      (range: DxGridPlaneRange, plane: DxGridPlane) => presentation?.getCells(range, plane) ?? {},
+      [presentation],
+    );
 
     useEffect(() => {
       if (!presentation || !dxGrid) {
         return;
       }
-
-      // TODO(burdon): Pass to Grid.Content?
-      dxGrid.getCells = (range, plane) => presentation.getCells(range, plane);
-    }, [presentation, dxGrid]);
+      dxGrid.getCells = getCells;
+    }, [presentation, dxGrid, getCells]);
 
     /**
      * Provides an external controller that can be called to repaint the table.
@@ -179,10 +180,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(
             }
             case 'newColumn': {
               modals.showColumnCreator();
-              break;
-            }
-            case 'referencedCell': {
-              modals.showReferencePanel(data.targetId, data.schemaId);
               break;
             }
             case 'sort': {
@@ -312,7 +309,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           invariant(space);
           const schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
           if (schema) {
-            const { objects } = await space.db.query(Filter.schema(schema)).run();
+            const { objects } = await space.db.query(Filter.type(schema)).run();
             const options = objects
               .map((obj) => {
                 const value = getValue(obj, field.referencePath!);
@@ -348,15 +345,16 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     return (
       <Grid.Root id={model.id ?? 'table-grid'}>
-        <TableCellEditor
+        <TableValueEditor
           model={model}
           modals={modals}
+          schema={schema}
           onEnter={handleEnter}
           onFocus={handleFocus}
           onQuery={handleQuery}
         />
         <Grid.Content
-          className={mx('[--dx-grid-base:var(--surface-bg)]', inlineEndLine, blockEndLine)}
+          className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
           frozen={frozen}
           // getCells={getCells}
           columns={model.columnMeta.value}
@@ -373,7 +371,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(
         <ColumnActionsMenu model={model} modals={modals} />
         <ColumnSettings model={model} modals={modals} onNewColumn={handleNewColumn} />
         <CreateRefPanel model={model} modals={modals} />
-        <RefPanel model={model} modals={modals} />
       </Grid.Root>
     );
   },

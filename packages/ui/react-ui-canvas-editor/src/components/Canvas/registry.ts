@@ -54,7 +54,7 @@ export class ShapeRegistry {
     return this._registry.get(type);
   }
 
-  registerShapeDef(shape: ShapeDef) {
+  registerShapeDef(shape: ShapeDef): void {
     this._registry.set(shape.type, shape);
   }
 }

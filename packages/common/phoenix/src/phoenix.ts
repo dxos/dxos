@@ -22,7 +22,7 @@ export class Phoenix {
   /**
    * Starts detached watchdog process which starts and monitors selected command.
    */
-  static async start(params: WatchDogParams) {
+  static async start(params: WatchDogParams): Promise<ProcessInfo> {
     {
       // Clear stale pid file.
       if (existsSync(params.pidFile)) {
@@ -42,7 +42,7 @@ export class Phoenix {
       });
     }
 
-    const watchdogPath = join(dirname(pkgUp.sync({ cwd: scriptDir })!), 'bin', 'watchdog');
+    const watchdogPath = join(dirname(pkgUp.sync({ cwd: scriptDir })!), 'bin', 'watchdog.mjs');
 
     const watchDog = fork(watchdogPath, [JSON.stringify(params)], {
       detached: true,
@@ -69,7 +69,7 @@ export class Phoenix {
   /**
    * Stops detached watchdog process by PID info written down in PID file.
    */
-  static async stop(pidFile: string, force = false) {
+  static async stop(pidFile: string, force = false): Promise<void> {
     if (!existsSync(pidFile)) {
       throw new Error('PID file does not exist');
     }

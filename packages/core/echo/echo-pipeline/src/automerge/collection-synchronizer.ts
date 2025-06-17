@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as am } from '@automerge/automerge';
+import type { DocumentId, PeerId } from '@automerge/automerge-repo';
+
 import { asyncReturn, Event, scheduleTask, scheduleTaskInterval } from '@dxos/async';
-import { next as am } from '@dxos/automerge/automerge';
-import type { DocumentId, PeerId } from '@dxos/automerge/automerge-repo';
 import { Resource, type Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
@@ -69,7 +70,7 @@ export class CollectionSynchronizer extends Resource {
     return this._perCollectionStates.get(collectionId)?.localState;
   }
 
-  setLocalCollectionState(collectionId: string, state: CollectionState) {
+  setLocalCollectionState(collectionId: string, state: CollectionState): void {
     this._activeCollections.add(collectionId);
 
     log('setLocalCollectionState', { collectionId, state });
@@ -83,7 +84,7 @@ export class CollectionSynchronizer extends Resource {
     });
   }
 
-  clearLocalCollectionState(collectionId: string) {
+  clearLocalCollectionState(collectionId: string): void {
     this._activeCollections.delete(collectionId);
     this._perCollectionStates.delete(collectionId);
     log('clearLocalCollectionState', { collectionId });
@@ -93,7 +94,7 @@ export class CollectionSynchronizer extends Resource {
     return this._getOrCreatePerCollectionState(collectionId).remoteStates;
   }
 
-  refreshCollection(collectionId: string) {
+  refreshCollection(collectionId: string): void {
     let scheduleAnotherRefresh = false;
     const state = this._getOrCreatePerCollectionState(collectionId);
     for (const peerId of this._connectedPeers) {
@@ -115,7 +116,7 @@ export class CollectionSynchronizer extends Resource {
   /**
    * Callback when a connection to a peer is established.
    */
-  onConnectionOpen(peerId: PeerId) {
+  onConnectionOpen(peerId: PeerId): void {
     const spanId = getSpanName(peerId);
     trace.spanStart({
       id: spanId,
@@ -144,7 +145,7 @@ export class CollectionSynchronizer extends Resource {
   /**
    * Callback when a connection to a peer is closed.
    */
-  onConnectionClosed(peerId: PeerId) {
+  onConnectionClosed(peerId: PeerId): void {
     this._connectedPeers.delete(peerId);
 
     for (const perCollectionState of this._perCollectionStates.values()) {
@@ -155,7 +156,7 @@ export class CollectionSynchronizer extends Resource {
   /**
    * Callback when a peer queries the state of a collection.
    */
-  onCollectionStateQueried(collectionId: string, peerId: PeerId) {
+  onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
 
     if (perCollectionState.localState) {
@@ -166,7 +167,7 @@ export class CollectionSynchronizer extends Resource {
   /**
    * Callback when a peer sends the state of a collection.
    */
-  onRemoteStateReceived(collectionId: string, peerId: PeerId, state: CollectionState) {
+  onRemoteStateReceived(collectionId: string, peerId: PeerId, state: CollectionState): void {
     log('onRemoteStateReceived', { collectionId, peerId, state });
     validateCollectionState(state);
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
@@ -200,7 +201,7 @@ export class CollectionSynchronizer extends Resource {
     }));
   }
 
-  private _refreshInterestedPeers(collectionId: string) {
+  private _refreshInterestedPeers(collectionId: string): void {
     for (const peerId of this._connectedPeers) {
       if (this._shouldSyncCollection(collectionId, peerId)) {
         this._getOrCreatePerCollectionState(collectionId).interestedPeers.add(peerId);

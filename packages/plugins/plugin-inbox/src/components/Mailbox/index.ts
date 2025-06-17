@@ -4,4 +4,6 @@
 
 import { MailboxContainer } from './MailboxContainer';
 
+export { MailboxObjectSettings } from './MailboxObjectSettings';
+
 export default MailboxContainer;

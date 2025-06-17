@@ -2,21 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
+import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { ViewProjection } from '@dxos/schema';
 
 import { KANBAN_PLUGIN } from '../meta';
-import { createKanban, KanbanAction } from '../types';
+import { initializeKanban } from '../testing';
+import { KanbanAction } from '../types';
 
-export default () =>
+export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: KanbanAction.Create,
-      resolve: async ({ space, name, typename, initialPivotColumn }) => ({
-        data: { object: await createKanban({ space, name, typename, initialPivotColumn }) },
-      }),
+      resolve: async ({ space, name, typename, initialPivotColumn }) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const { kanban } = await initializeKanban({ client, space, name, typename, initialPivotColumn });
+        return { data: { object: kanban } };
+      },
     }),
     createResolver({
       intent: KanbanAction.DeleteCardField,

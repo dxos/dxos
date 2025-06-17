@@ -4,9 +4,6 @@
   "compilerOptions": {},
   "references": [
     {
-      "path": "docs/tsconfig.json"
-    },
-    {
       "path": "packages/apps/composer-app/tsconfig.json"
     },
     {
@@ -88,9 +85,6 @@
       "path": "packages/common/phoenix/tsconfig.json"
     },
     {
-      "path": "packages/common/plate/tsconfig.json"
-    },
-    {
       "path": "packages/common/process/tsconfig.json"
     },
     {
@@ -109,6 +103,9 @@
       "path": "packages/common/test-utils/tsconfig.json"
     },
     {
+      "path": "packages/common/theme-editor-addon/tsconfig.json"
+    },
+    {
       "path": "packages/common/timeframe/tsconfig.json"
     },
     {
@@ -124,13 +121,22 @@
       "path": "packages/core/agent/tsconfig.json"
     },
     {
+      "path": "packages/core/ai/tsconfig.json"
+    },
+    {
+      "path": "packages/core/artifact/tsconfig.json"
+    },
+    {
+      "path": "packages/core/artifact-testing/tsconfig.json"
+    },
+    {
+      "path": "packages/core/assistant/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/tsconfig.json"
     },
     {
       "path": "packages/core/conductor/tsconfig.json"
-    },
-    {
-      "path": "packages/core/echo/automerge/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo/tsconfig.json"
@@ -229,15 +235,6 @@
       "path": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
     },
     {
-      "path": "packages/experimental/artifact/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/artifact-testing/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/assistant/tsconfig.json"
-    },
-    {
       "path": "packages/experimental/cf-labs/tsconfig.json"
     },
     {
@@ -245,12 +242,6 @@
     },
     {
       "path": "packages/experimental/env-tests/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/gem-core/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/gem-spore/tsconfig.json"
     },
     {
       "path": "packages/experimental/metagraph/tsconfig.json"
@@ -266,9 +257,6 @@
     },
     {
       "path": "packages/experimental/spyglass/tsconfig.json"
-    },
-    {
-      "path": "packages/gravity/kube-publishing/tsconfig.json"
     },
     {
       "path": "packages/gravity/proto-guard/tsconfig.json"
@@ -343,7 +331,13 @@
       "path": "packages/plugins/plugin-outliner/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-outliner-deprecated/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-presenter/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-preview/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
@@ -371,6 +365,9 @@
     },
     {
       "path": "packages/plugins/plugin-status-bar/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-storybook-layout/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-table/tsconfig.json"
@@ -445,6 +442,9 @@
       "path": "packages/ui/lit-grid/tsconfig.json"
     },
     {
+      "path": "packages/ui/lit-theme-editor/tsconfig.json"
+    },
+    {
       "path": "packages/ui/lit-ui/tsconfig.json"
     },
     {
@@ -493,6 +493,9 @@
       "path": "packages/ui/react-ui-geo/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-graph/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-grid/tsconfig.json"
     },
     {
@@ -539,9 +542,6 @@
     },
     {
       "path": "packages/ui/react-ui-types/tsconfig.json"
-    },
-    {
-      "path": "tools/apidoc/tsconfig.json"
     },
     {
       "path": "tools/beast/tsconfig.json"

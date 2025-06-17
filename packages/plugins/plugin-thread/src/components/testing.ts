@@ -3,18 +3,19 @@
 //
 
 import { IdentityDid } from '@dxos/keys';
-import { create, makeRef } from '@dxos/live-object';
-import { ThreadType } from '@dxos/plugin-space/types';
+import { live, makeRef } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type Identity } from '@dxos/react-client/halo';
-import { MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
+
+import { ThreadType } from '../types';
 
 export const createCommentThread = (identity: Identity) => {
-  return create(ThreadType, {
+  return live(ThreadType, {
     messages: faker.helpers.multiple(
       () =>
         makeRef(
-          create(MessageType, {
+          live(DataType.Message, {
             sender: {
               identityDid: faker.datatype.boolean() ? identity.did : IdentityDid.random(),
             },

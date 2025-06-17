@@ -8,17 +8,17 @@ import { mx } from '../../util';
 import { ghostHover } from '../fragments';
 
 export const primaryButtonColors =
-  'text-inverse bg-accentSurface hover:bg-accentSurfaceHover aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 data-[state=open]:bg-primary-500 dark:data-[state=open]:bg-primary-500 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100';
+  'text-accentSurfaceText bg-accentSurface hover:bg-accentSurfaceHover aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 data-[state=open]:bg-primary-500 dark:data-[state=open]:bg-primary-500 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100';
 
-export const staticDefaultButtonColors = 'bg-input';
+export const staticDefaultButtonColors = 'bg-inputSurface';
 
 export const defaultButtonColors =
   staticDefaultButtonColors +
-  ' data-[state=open]:bg-input aria-pressed:text-accentText aria-pressed:bg-baseSurface aria-checked:text-accentText aria-checked:bg-baseSurface';
+  ' data-[state=open]:bg-inputSurface aria-pressed:text-accentText aria-pressed:bg-baseSurface aria-checked:text-accentText aria-checked:bg-baseSurface';
 
 export const ghostButtonColors =
   ghostHover +
-  ' hover:text-inherit data-[state=open]:bg-input aria-pressed:text-accentText aria-pressed:bg-baseSurface aria-checked:text-accentText aria-checked:bg-baseSurface';
+  ' hover:text-inherit data-[state=open]:bg-inputSurface aria-pressed:text-accentText aria-pressed:bg-baseSurface aria-checked:text-accentText aria-checked:bg-baseSurface';
 
 export type ButtonStyleProps = Partial<{
   inGroup?: boolean;

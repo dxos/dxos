@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type ChangeFn, type ChangeOptions, type Doc, type Heads, next as A } from '@automerge/automerge';
+import { type DocHandleChangePayload } from '@automerge/automerge-repo';
 import type { InspectOptionsStylized, inspect } from 'util';
 
 import { Event } from '@dxos/async';
-import { type ChangeFn, type ChangeOptions, type Doc, type Heads, next as A } from '@dxos/automerge/automerge';
-import { type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import { inspectCustom } from '@dxos/debug';
 import {
   decodeReference,
@@ -14,12 +14,12 @@ import {
   isEncodedReference,
   type ObjectStructure,
   Reference,
-  type SpaceDoc,
+  type DatabaseDirectory,
 } from '@dxos/echo-protocol';
-import { createObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { ObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { isReactiveObject } from '@dxos/live-object';
+import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { setDeep, defer, getDeep, throwUnhandledError, deepMapValues } from '@dxos/util';
 
@@ -59,7 +59,7 @@ export class ObjectCore {
   /**
    * Id of the ECHO object.
    */
-  public id = createObjectId();
+  public id = ObjectId.random();
 
   /**
    * Set if when the object is bound to a database.
@@ -74,7 +74,7 @@ export class ObjectCore {
   /**
    * Set if when the object is bound to a database.
    */
-  public docHandle?: DocHandleProxy<SpaceDoc> = undefined;
+  public docHandle?: DocHandleProxy<DatabaseDirectory> = undefined;
 
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
@@ -87,18 +87,18 @@ export class ObjectCore {
    */
   public readonly updates = new Event();
 
-  toString() {
+  toString(): string {
     return `ObjectCore { id: ${this.id} }`;
   }
 
-  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect) {
+  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect): string {
     return `ObjectCore ${inspectFn({ id: this.id }, options)}`;
   }
 
   /**
    * Create local doc with initial state from this object.
    */
-  initNewObject(initialProps?: unknown, opts?: ObjectCoreOptions) {
+  initNewObject(initialProps?: unknown, opts?: ObjectCoreOptions): void {
     invariant(!this.docHandle && !this.doc);
 
     initialProps ??= {};
@@ -113,7 +113,7 @@ export class ObjectCore {
     });
   }
 
-  bind(options: BindOptions) {
+  bind(options: BindOptions): void {
     invariant(options.docHandle.isReady());
     this.database = options.db;
     this.docHandle = options.docHandle;
@@ -128,7 +128,7 @@ export class ObjectCore {
       // Prevent recursive change calls.
       using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
-      this.docHandle.change((newDoc: SpaceDoc) => {
+      this.docHandle.change((newDoc: DatabaseDirectory) => {
         setDeep(newDoc, this.mountPath, doc);
       });
     }
@@ -136,14 +136,26 @@ export class ObjectCore {
     this.notifyUpdate();
   }
 
-  getDoc() {
-    return this.doc ?? this.docHandle?.docSync() ?? failedInvariant('Invalid state');
+  getDoc(): Doc<unknown> {
+    if (this.doc) {
+      return this.doc;
+    }
+
+    if (this.docHandle) {
+      return this.docHandle.doc();
+    }
+
+    throw new Error('Invalid ObjectCore state');
+  }
+
+  getObjectStructure(): ObjectStructure {
+    return getDeep(this.getDoc(), this.mountPath) as ObjectStructure;
   }
 
   /**
    * Do not take into account mountPath.
    */
-  change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>) {
+  change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>): void {
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -166,7 +178,7 @@ export class ObjectCore {
   /**
    * Do not take into account mountPath.
    */
-  changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): string[] | undefined {
+  changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): Heads | undefined {
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -198,7 +210,7 @@ export class ObjectCore {
     const self = this;
     return {
       handle: {
-        docSync: () => this.getDoc(),
+        doc: () => this.getDoc(),
         change: (callback, options) => {
           this.change(callback, options);
         },
@@ -251,7 +263,7 @@ export class ObjectCore {
    * Encode a value to be stored in the Automerge document.
    */
   encode(value: DecodedAutomergePrimaryValue) {
-    if (isReactiveObject(value) as boolean) {
+    if (isLiveObject(value) as boolean) {
       throw new TypeError('Linking is not allowed');
     }
 
@@ -306,7 +318,7 @@ export class ObjectCore {
     return value;
   }
 
-  arrayPush(path: KeyPath, items: DecodedAutomergeValue[]) {
+  arrayPush(path: KeyPath, items: DecodedAutomergeValue[]): number {
     const itemsEncoded = items.map((item) => this.encode(item));
 
     let newLength: number = -1;
@@ -320,7 +332,7 @@ export class ObjectCore {
     return newLength;
   }
 
-  private _getRaw(path: KeyPath) {
+  private _getRaw(path: KeyPath): Doc<ObjectStructure> | Doc<DatabaseDirectory> {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();
@@ -331,7 +343,7 @@ export class ObjectCore {
     return value;
   }
 
-  private _setRaw(path: KeyPath, value: any) {
+  private _setRaw(path: KeyPath, value: any): void {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
@@ -345,14 +357,14 @@ export class ObjectCore {
   }
 
   // TODO(dmaretskyi): Rename to `set`.
-  setDecoded(path: KeyPath, value: DecodedAutomergePrimaryValue) {
+  setDecoded(path: KeyPath, value: DecodedAutomergePrimaryValue): void {
     this._setRaw(path, this.encode(value));
   }
 
   /**
    * Deletes key at path.
    */
-  delete(path: KeyPath) {
+  delete(path: KeyPath): void {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
@@ -366,7 +378,7 @@ export class ObjectCore {
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setKind(kind: EntityKind) {
+  setKind(kind: EntityKind): void {
     this._setRaw([SYSTEM_NAMESPACE, 'kind'], kind);
   }
 
@@ -377,7 +389,7 @@ export class ObjectCore {
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setSource(ref: Reference) {
+  setSource(ref: Reference): void {
     this.setDecoded([SYSTEM_NAMESPACE, 'source'], ref);
   }
 
@@ -388,7 +400,7 @@ export class ObjectCore {
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setTarget(ref: Reference) {
+  setTarget(ref: Reference): void {
     this.setDecoded([SYSTEM_NAMESPACE, 'target'], ref);
   }
 
@@ -402,7 +414,7 @@ export class ObjectCore {
     return value;
   }
 
-  setType(reference: Reference) {
+  setType(reference: Reference): void {
     this._setRaw([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
   }
 
@@ -410,16 +422,16 @@ export class ObjectCore {
     return this.getDecoded([META_NAMESPACE]) as ObjectMeta;
   }
 
-  setMeta(meta: ObjectMeta) {
+  setMeta(meta: ObjectMeta): void {
     this._setRaw([META_NAMESPACE], this.encode(meta));
   }
 
-  isDeleted() {
+  isDeleted(): boolean {
     const value = this._getRaw([SYSTEM_NAMESPACE, 'deleted']);
     return typeof value === 'boolean' ? value : false;
   }
 
-  setDeleted(value: boolean) {
+  setDeleted(value: boolean): void {
     this._setRaw([SYSTEM_NAMESPACE, 'deleted'], value);
   }
 
@@ -475,7 +487,7 @@ export class ObjectCore {
 
 export type BindOptions = {
   db: CoreDatabase;
-  docHandle: DocHandleProxy<SpaceDoc>;
+  docHandle: DocHandleProxy<DatabaseDirectory>;
   path: KeyPath;
 
   /**
@@ -484,7 +496,7 @@ export type BindOptions = {
   assignFromLocalState?: boolean;
 };
 
-export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<SpaceDoc>) => {
+export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<DatabaseDirectory>) => {
   if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objId)) {
     return true;
   }

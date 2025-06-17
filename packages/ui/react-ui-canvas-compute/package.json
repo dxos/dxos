@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-canvas-compute",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "A compute graph extension for the canvas editor component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -22,6 +22,7 @@
   "dependencies": {
     "@antv/graphlib": "^2.0.4",
     "@antv/layout": "^1.2.13",
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/artifact": "workspace:*",
     "@dxos/assistant": "workspace:*",
@@ -49,7 +50,8 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "0.75.1",
+    "@effect/platform": "0.80.12",
+    "@preact-signals/safe-react": "^0.9.0",
     "chess.js": "^1.0.0"
   },
   "devDependencies": {
@@ -66,7 +68,7 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "effect": "3.13.3",
+    "effect": "3.14.21",
     "lodash.defaultsdeep": "^4.6.1",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",

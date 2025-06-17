@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
+import { createTool, ToolResult } from '@dxos/ai';
 import {
   contributes,
   createIntent,
@@ -9,8 +12,6 @@ import {
   LayoutAction,
   type PromiseIntentDispatcher,
 } from '@dxos/app-framework';
-import { defineTool, ToolResult } from '@dxos/artifact';
-import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '../meta';
@@ -27,7 +28,7 @@ declare global {
 
 export default () =>
   contributes(Capabilities.Tools, [
-    defineTool(meta.id, {
+    createTool(meta.id, {
       name: 'show',
       description: `
         Show an item as a companion to an existing plank. This will make the item appear alongside the primary content.
@@ -35,19 +36,21 @@ export default () =>
       `,
       caption: 'Showing item...',
       // TODO(wittjosiah): Refactor Layout/Navigation/Deck actions so that they can be used directly.
-      schema: S.Struct({
-        id: S.String.annotations({
+      schema: Schema.Struct({
+        id: Schema.String.annotations({
           description: 'The ID of the item to show.',
         }),
       }),
       execute: async ({ id }, { extensions }) => {
-        invariant(extensions?.pivotId, 'No pivot ID');
-        invariant(extensions?.dispatch, 'No intent dispatcher');
+        invariant(extensions);
+        const { pivotId, dispatch, part } = extensions;
+        invariant(pivotId, 'No pivot ID');
+        invariant(dispatch, 'No intent dispatcher');
 
-        if (extensions.part === 'deck') {
-          const { data, error } = await extensions.dispatch(
+        if (part === 'deck') {
+          const { data, error } = await dispatch(
             createIntent(DeckAction.ChangeCompanion, {
-              primary: extensions.pivotId,
+              primary: pivotId,
               companion: id,
             }),
           );
@@ -57,12 +60,12 @@ export default () =>
 
           return ToolResult.Success(data);
         } else {
-          const { data, error } = await extensions.dispatch(
+          const { data, error } = await dispatch(
             createIntent(LayoutAction.Open, {
               subject: [id],
               part: 'main',
               options: {
-                pivotId: extensions.pivotId,
+                pivotId,
                 positioning: 'end',
               },
             }),

@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import type * as A from '@automerge/automerge';
+import { Schema } from 'effect';
 import { type InspectOptionsStylized } from 'node:util';
 
-import type * as A from '@dxos/automerge/automerge';
 import { devtoolsFormatter, type DevtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-protocol';
 import {
@@ -12,20 +13,27 @@ import {
   defineHiddenProperty,
   ECHO_ATTR_META,
   ECHO_ATTR_TYPE,
+  TYPENAME_SYMBOL,
+  DeletedSymbol,
   EchoSchema,
   EntityKind,
   EntityKindPropertyId,
   type ObjectMeta,
   ObjectMetaSchema,
   Ref,
+  RefImpl,
   RelationSourceId,
   RelationTargetId,
-  S,
   SchemaMetaSymbol,
   SchemaValidator,
   StoredSchema,
+  TypeSymbol,
+  getRefSavedTarget,
+  getTypeAnnotation,
+  isInstanceOf,
+  setRefResolver,
+  symbolMeta,
   symbolSchema,
-  TYPENAME_SYMBOL,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -33,18 +41,15 @@ import {
   createProxy,
   getProxyHandler,
   getProxyTarget,
-  getRefSavedTarget,
-  isReactiveObject,
+  isLiveObject,
   type ReactiveHandler,
-  type ReactiveObject,
-  RefImpl,
-  setRefResolver,
+  type Live,
   symbolIsProxy,
 } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
-import { createObject, isEchoObject, type ReactiveEchoObject } from './create';
+import { createObject, isEchoObject, type AnyLiveObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
@@ -87,9 +92,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     defineHiddenProperty(target, symbolHandler, this);
 
-    if (inspectCustom) {
-      defineHiddenProperty(target, inspectCustom, this._inspect.bind(target));
-    }
+    // Maybe have been set by `create`.
+    Object.defineProperty(target, inspectCustom, {
+      enumerable: false,
+      configurable: true,
+      value: this._inspect.bind(target),
+    });
   }
 
   ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
@@ -155,6 +163,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
         case TYPENAME_SYMBOL:
           return this._getTypename(target);
+        case TypeSymbol:
+          return this.getTypeReference(target)?.toDXN();
+        case symbolMeta:
+          return this.getMeta(target);
+        case DeletedSymbol:
+          return this.isDeleted(target);
       }
     }
 
@@ -209,6 +223,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return true;
   }
 
+  /**
+   * @returns The typename without version for static schema or object id for dynamic schema.
+   */
   private _getTypename(target: ProxyTarget): string | undefined {
     const schema = this.getSchema(target);
     // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
@@ -269,7 +286,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
     // Object instanceof StoredEchoSchema requires database to lookup schema.
     const database = target[symbolInternals].database;
-    if (database && S.is(StoredSchema)(object)) {
+    // TODO(dmaretskyi): isInstanceOf(StoredSchema, object)
+    if (database && isInstanceOf(StoredSchema, object)) {
       return database.schemaRegistry._registerSchema(object);
     }
 
@@ -303,7 +321,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return this._wrapInProxyIfRequired(target, decodedValueAtPath);
   }
 
-  private _arrayHas(target: ProxyTarget, prop: string | symbol) {
+  private _arrayHas(target: ProxyTarget, prop: string | symbol): boolean {
     invariant(target instanceof EchoArray);
     if (typeof prop === 'string') {
       const parsedIndex = parseInt(prop);
@@ -340,7 +358,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return unwrappedValue;
     }
 
-    const _ = S.asserts(propertySchema)(unwrappedValue);
+    const _ = Schema.asserts(propertySchema)(unwrappedValue);
     return unwrappedValue;
   }
 
@@ -350,8 +368,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         // The value is a value-object field of another echo-object. We don't want to create a reference
         // to it or have shared mutability, we need to copy by value.
         return recurse({ ...value });
-      } else if (isReactiveObject(value)) {
-        throw new Error('Object references must be wrapped with `makeRef`');
+      } else if (isLiveObject(value)) {
+        throw new Error('Object references must be wrapped with `Ref.make`');
       } else if (Ref.isRef(value)) {
         const savedTarget = getRefSavedTarget(value);
         if (savedTarget) {
@@ -365,7 +383,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
   }
 
-  getSchema(target: ProxyTarget): S.Schema.AnyNoContext | undefined {
+  getSchema(target: ProxyTarget): Schema.Schema.AnyNoContext | undefined {
     if (target[symbolNamespace] === META_NAMESPACE) {
       // TODO(dmaretskyi): Breaks tests.
       // if (target[symbolPath].length !== 0) {
@@ -433,14 +451,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return false;
   }
 
-  arrayPush(target: ReactiveObject<ProxyTarget>, path: KeyPath, ...items: any[]): number {
+  arrayPush(target: Live<ProxyTarget>, path: KeyPath, ...items: any[]): number {
     const validatedItems = this._validateForArray(target, path, items, target.length);
 
     const encodedItems = this._encodeForArray(target, validatedItems);
     return target[symbolInternals].core.arrayPush([getNamespace(target), ...path], encodedItems);
   }
 
-  arrayPop(target: ReactiveObject<ProxyTarget>, path: KeyPath): any {
+  arrayPop(target: Live<ProxyTarget>, path: KeyPath): any {
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -453,7 +471,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return returnValue;
   }
 
-  arrayShift(target: ReactiveObject<ProxyTarget>, path: KeyPath): any {
+  arrayShift(target: Live<ProxyTarget>, path: KeyPath): any {
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -466,7 +484,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return returnValue;
   }
 
-  arrayUnshift(target: ReactiveObject<ProxyTarget>, path: KeyPath, ...items: any[]): number {
+  arrayUnshift(target: Live<ProxyTarget>, path: KeyPath, ...items: any[]): number {
     const validatedItems = this._validateForArray(target, path, items, 0);
 
     const fullPath = this._getPropertyMountPath(target, path);
@@ -483,13 +501,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return newLength;
   }
 
-  arraySplice(
-    target: ReactiveObject<ProxyTarget>,
-    path: KeyPath,
-    start: number,
-    deleteCount?: number,
-    ...items: any[]
-  ): any[] {
+  arraySplice(target: Live<ProxyTarget>, path: KeyPath, start: number, deleteCount?: number, ...items: any[]): any[] {
     const validatedItems = this._validateForArray(target, path, items, start);
 
     const fullPath = this._getPropertyMountPath(target, path);
@@ -510,7 +522,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return deletedElements;
   }
 
-  arraySort(target: ReactiveObject<ProxyTarget>, path: KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
+  arraySort(target: Live<ProxyTarget>, path: KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
     const fullPath = this._getPropertyMountPath(target, path);
 
     target[symbolInternals].core.change((doc) => {
@@ -523,7 +535,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return target as EchoArray<any>;
   }
 
-  arrayReverse(target: ReactiveObject<ProxyTarget>, path: KeyPath): any[] {
+  arrayReverse(target: Live<ProxyTarget>, path: KeyPath): any[] {
     const fullPath = this._getPropertyMountPath(target, path);
 
     target[symbolInternals].core.change((doc) => {
@@ -571,7 +583,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // Can be caused not using `object(Expando, { ... })` constructor.
       // TODO(dmaretskyi): Add better validation.
       invariant(otherObjId != null);
-      target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as ReactiveEchoObject<any>);
+      target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as AnyLiveObject<any>);
       return Reference.localObjectReference(otherObjId);
     }
 
@@ -630,7 +642,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
   }
 
-  private _arraySetLength(target: ProxyTarget, path: KeyPath, newLength: number) {
+  private _arraySetLength(target: ProxyTarget, path: KeyPath, newLength: number): void {
     if (newLength < 0) {
       throw new RangeError('Invalid array length');
     }
@@ -714,9 +726,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _getDevtoolsFormatter(target: ProxyTarget): DevtoolsFormatter {
+    const schema = this.getSchema(target);
+    const typename = schema ? getTypeAnnotation(schema)?.typename : undefined;
+
     return {
-      header: (config?: any) =>
-        getHeader(this.getTypeReference(target)?.objectId ?? 'EchoObject', target[symbolInternals].core.id, config),
+      header: (config?: any) => getHeader(typename ?? 'EchoObject', target[symbolInternals].core.id, config),
       hasBody: () => true,
       body: () => {
         let data = deepMapValues(this._getReified(target), (value, recurse) => {
@@ -762,11 +776,12 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
   }
 };
 
-// TODO(burdon): Move ProxyTarget def to echo-schema and make ReactiveEchoObject inherit?
-export const getObjectCore = <T extends BaseObject>(obj: ReactiveObject<T>): ObjectCore => {
+// TODO(burdon): Move ProxyTarget def to echo-schema and make AnyLiveObject inherit?
+export const getObjectCore = <T extends BaseObject>(obj: Live<T>): ObjectCore => {
   if (!(obj as any as ProxyTarget)[symbolInternals]) {
     throw new Error('object is not an EchoObject');
   }
+
   const { core } = (obj as any as ProxyTarget)[symbolInternals];
   return core;
 };
@@ -775,7 +790,7 @@ export const getObjectCore = <T extends BaseObject>(obj: ReactiveObject<T>): Obj
  * @returns Automerge document (or a part of it) that backs the object.
  * Mostly used for debugging.
  */
-export const getObjectDocument = (obj: ReactiveEchoObject<any>): A.Doc<ObjectStructure> => {
+export const getObjectDocument = (obj: AnyLiveObject<any>): A.Doc<ObjectStructure> => {
   const core = getObjectCore(obj);
   return getDeep(core.getDoc(), core.mountPath)!;
 };
@@ -794,7 +809,7 @@ export const isRootDataObject = (target: ProxyTarget) => {
  */
 const isEchoObjectField = (value: any) => {
   return (
-    isReactiveObject(value) &&
+    isLiveObject(value) &&
     getProxyHandler(value) instanceof EchoReactiveHandler &&
     !isRootDataObject(getProxyTarget(value))
   );

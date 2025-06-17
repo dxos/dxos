@@ -7,10 +7,10 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { type Message } from '@dxos/ai';
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { type Message } from '@dxos/artifact';
-import { ObjectId } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
@@ -29,9 +29,9 @@ const DefaultStory = ({ messages: _messages, ...props }: ThreadProps) => {
 
   const handleSubmit = useCallback(
     (text: string) => {
-      const request: Message = { id: ObjectId.random(), role: 'user', content: [{ type: 'text', text }] };
+      const request: Message = { id: Type.ObjectId.random(), role: 'user', content: [{ type: 'text', text }] };
       const response: Message = {
-        id: ObjectId.random(),
+        id: Type.ObjectId.random(),
         role: 'assistant',
         content: [{ type: 'text', disposition: 'cot', pending: true, text: faker.lorem.paragraphs(1) }],
       };
@@ -44,7 +44,7 @@ const DefaultStory = ({ messages: _messages, ...props }: ThreadProps) => {
           request,
           response,
           {
-            id: ObjectId.random(),
+            id: Type.ObjectId.random(),
             role: 'assistant',
             content: [{ type: 'text', text: faker.lorem.paragraphs(1) }],
           },
@@ -69,18 +69,15 @@ const DefaultStory = ({ messages: _messages, ...props }: ThreadProps) => {
 };
 
 const meta: Meta<ThreadProps> = {
-  title: 'plugins/plugin-automation/Thread',
+  title: 'plugins/plugin-assistant/Thread',
   render: DefaultStory,
   component: Thread,
   decorators: [
     withSignals,
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-    }),
+    withClientProvider({ createIdentity: true, createSpace: true }),
     withPluginManager({ plugins: [IntentPlugin()] }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center' }),
+    withLayout({ fullscreen: true, classNames: 'flex justify-center' }),
   ],
   parameters: {
     translations,
@@ -93,7 +90,7 @@ type Story = StoryObj<ThreadProps>;
 
 const TEST_MESSAGES: Message[] = [
   {
-    id: ObjectId.random(),
+    id: Type.ObjectId.random(),
     role: 'user',
     content: [
       {
@@ -103,7 +100,7 @@ const TEST_MESSAGES: Message[] = [
     ],
   },
   {
-    id: ObjectId.random(),
+    id: Type.ObjectId.random(),
     role: 'assistant',
     content: [
       {
@@ -128,7 +125,7 @@ const TEST_MESSAGES: Message[] = [
     ],
   },
   {
-    id: ObjectId.random(),
+    id: Type.ObjectId.random(),
     role: 'user',
     content: [
       {
@@ -139,7 +136,7 @@ const TEST_MESSAGES: Message[] = [
     ],
   },
   {
-    id: ObjectId.random(),
+    id: Type.ObjectId.random(),
     role: 'assistant',
     content: [
       {
@@ -151,7 +148,7 @@ const TEST_MESSAGES: Message[] = [
     ],
   },
   {
-    id: ObjectId.random(),
+    id: Type.ObjectId.random(),
     role: 'user',
     content: [
       {
@@ -162,7 +159,7 @@ const TEST_MESSAGES: Message[] = [
     ],
   },
   {
-    id: ObjectId.random(),
+    id: Type.ObjectId.random(),
     role: 'assistant',
     content: [
       {

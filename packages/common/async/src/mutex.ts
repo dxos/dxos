@@ -115,7 +115,7 @@ const enableWarning = !FORCE_DISABLE_WARNING && (globalThis as any).mochaExecuto
 export const synchronized = (
   target: any,
   propertyName: string,
-  descriptor: TypedPropertyDescriptor<(...args: any) => any>,
+  descriptor: TypedPropertyDescriptor<(...args: any) => Promise<any>>,
 ) => {
   const method = descriptor.value!;
   descriptor.value = async function synchronizedMethod(this: any & LockableClass, ...args: any) {

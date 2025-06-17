@@ -2,8 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import { type DocumentId } from '@automerge/automerge-repo';
+
 import { UpdateScheduler } from '@dxos/async';
-import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { invariant } from '@dxos/invariant';
@@ -72,7 +73,7 @@ export class DataServiceImpl implements DataService {
     });
   }
 
-  async updateSubscription(request: UpdateSubscriptionRequest) {
+  async updateSubscription(request: UpdateSubscriptionRequest): Promise<void> {
     const synchronizer = this._subscriptions.get(request.subscriptionId);
     invariant(synchronizer, 'Subscription not found');
 
@@ -122,7 +123,7 @@ export class DataServiceImpl implements DataService {
     await this._automergeHost.reIndexHeads((request.documentIds ?? []) as DocumentId[]);
   }
 
-  async updateIndexes() {
+  async updateIndexes(): Promise<void> {
     await this._updateIndexes();
   }
 

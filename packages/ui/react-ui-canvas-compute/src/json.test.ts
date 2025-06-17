@@ -2,27 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { S } from '@dxos/echo-schema';
 import { BaseGraphEdge, BaseGraphNode } from '@dxos/graph';
 
 import { createGptCircuit } from './testing';
 
-export const Shape = S.extend(
+export const Shape = Schema.extend(
   BaseGraphNode,
-  S.Struct({
-    text: S.optional(S.String),
-    guide: S.optional(S.Boolean),
-    classNames: S.optional(S.String),
+  Schema.Struct({
+    text: Schema.optional(Schema.String),
+    guide: Schema.optional(Schema.Boolean),
+    classNames: Schema.optional(Schema.String),
   }),
 );
 
-export const Connection = S.extend(
+export const Connection = Schema.extend(
   BaseGraphEdge,
-  S.Struct({
-    input: S.optional(S.String),
-    output: S.optional(S.String),
+  Schema.Struct({
+    input: Schema.optional(Schema.String),
+    output: Schema.optional(Schema.String),
   }),
 );
 

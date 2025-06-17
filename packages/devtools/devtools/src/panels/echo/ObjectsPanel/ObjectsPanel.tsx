@@ -2,20 +2,19 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useMemo, useState, useCallback } from 'react';
+import type { State as AmState } from '@automerge/automerge';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import type { State as AmState } from '@dxos/automerge/automerge';
-import { checkoutVersion, Filter, getEditHistory, type ReactiveEchoObject } from '@dxos/echo-db';
-import { FormatEnum, getSchemaVersion } from '@dxos/echo-schema';
-import { DXN } from '@dxos/keys';
-import { getSchema, getType, getTypename, isDeleted } from '@dxos/live-object';
-import { QueryOptions, type Space, useQuery } from '@dxos/react-client/echo';
+import { checkoutVersion, Filter, getEditHistory, Query, type AnyLiveObject } from '@dxos/echo-db';
+import { FormatEnum, getDXN, getSchema, getSchemaVersion, getTypename } from '@dxos/echo-schema';
+import { type DXN } from '@dxos/keys';
+import { getType, isDeleted } from '@dxos/live-object';
+import { useQuery, type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
-import { PanelContainer, Placeholder, Searchbar } from '../../../components';
+import { ObjectViewer, PanelContainer, Placeholder, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 import { styles } from '../../../styles';
@@ -27,9 +26,9 @@ const textFilter = (text?: string) => {
 
   // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
-  return (item: ReactiveEchoObject<any>) => {
+  return (item: AnyLiveObject<any>) => {
     let match = false;
-    match ||= !!getType(item)?.objectId.match(matcher);
+    match ||= !!getType(item)?.toString().match(matcher);
     match ||= !!String((item as any).title ?? '').match(matcher);
     return match;
   };
@@ -55,9 +54,9 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
   // TODO(burdon): Sort by type?
-  const items = useQuery(space, Filter.all(), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
+  const items = useQuery(space, Query.select(Filter.everything()).options({ deleted: 'include' }));
   const [filter, setFilter] = useState('');
-  const [selected, setSelected] = useState<ReactiveEchoObject<any>>();
+  const [selected, setSelected] = useState<AnyLiveObject<any>>();
   const [selectedVersion, setSelectedVersion] = useState<HistoryRow | null>(null);
   const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);
 
@@ -72,7 +71,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     }
   };
 
-  const objectSelect = (object: ReactiveEchoObject<any>) => {
+  const objectSelect = (object: AnyLiveObject<any>) => {
     setSelectedVersionObject(null);
     setSelected(object);
   };
@@ -209,7 +208,11 @@ export const ObjectsPanel = (props: { space?: Space }) => {
         <div className='min-bs-0 bs-full grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
           <div className={mx('p-1 min-bs-0 overflow-auto')}>
             {selected ? (
-              <ObjectDataViewer object={selectedVersionObject ?? selected} onNavigate={onNavigate} />
+              <ObjectViewer
+                object={selectedVersionObject ?? selected}
+                id={getDXN(selected)?.toString()}
+                onNavigate={onNavigate}
+              />
             ) : (
               <Placeholder label='Data' />
             )}
@@ -224,77 +227,5 @@ export const ObjectsPanel = (props: { space?: Space }) => {
         </div>
       </div>
     </PanelContainer>
-  );
-};
-
-export type ObjectDataViewerProps = {
-  object: ReactiveEchoObject<any>;
-  onNavigate: (dxn: DXN) => void;
-};
-
-const ObjectDataViewer = ({ object, onNavigate }: ObjectDataViewerProps) => {
-  const text = JSON.stringify(object, null, 2);
-
-  const rowRenderer = ({
-    rows,
-    stylesheet,
-    useInlineStyles,
-  }: {
-    rows: rendererNode[];
-    stylesheet: any;
-    useInlineStyles: any;
-  }) => {
-    /**
-     * Changes the "dxn:..." span to an anchor tag that navigates to the object.
-     */
-    const addDxnLinks = (node: rendererNode) => {
-      if (isDxnSpanNode(node)) {
-        node.tagName = 'a';
-        node.properties ??= { className: [] };
-        node.properties.className.push('underline', 'cursor-pointer');
-        node.properties.onClick = () => {
-          onNavigate(DXN.parse((node.children![0].value as string).slice(1, -1)));
-        };
-      } else {
-        node.children?.forEach(addDxnLinks);
-      }
-    };
-
-    rows.forEach(addDxnLinks);
-
-    return rows.map((row, index) => {
-      return createElement({
-        node: row,
-        stylesheet,
-        style: {},
-        useInlineStyles,
-        key: index,
-      });
-    });
-  };
-
-  return (
-    <SyntaxHighlighter classNames='text-sm' language='json' renderer={rowRenderer}>
-      {text}
-    </SyntaxHighlighter>
-  );
-};
-
-interface rendererNode {
-  type: 'element' | 'text';
-  value?: string | number | undefined;
-  tagName?: keyof React.JSX.IntrinsicElements | React.ComponentType<any> | undefined;
-  properties?: { className: any[]; [key: string]: any };
-  children?: rendererNode[];
-}
-
-const isDxnSpanNode = (node: rendererNode) => {
-  return (
-    node.type === 'element' &&
-    node.tagName === 'span' &&
-    node.children?.length === 1 &&
-    node.children[0].type === 'text' &&
-    typeof node.children[0].value === 'string' &&
-    node.children[0].value.match(/^"(dxn:[^"]+)"$/)
   );
 };

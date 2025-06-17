@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { type ComponentType, type JSX, useMemo, useState } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
@@ -34,12 +34,12 @@ export const QueuesPanel = () => {
   );
 
   const rows = useMemo(() => {
-    return (queue?.items ?? []).map((item: any) => ({
+    return (queue?.objects ?? []).map((item: any) => ({
       id: item.id,
       type: item['@type'],
       _original: item,
     }));
-  }, [queue?.items]);
+  }, [queue?.objects]);
 
   const handleRowClicked = (row: any) => {
     if (!row) {
@@ -48,7 +48,7 @@ export const QueuesPanel = () => {
     }
 
     // Always pick the last item in the queue.
-    const lastItem = queue?.items[queue?.items.length - 1];
+    const lastItem = queue?.objects[queue?.objects.length - 1];
     if (lastItem) {
       setSelectedVersionObject(null);
       setSelected(lastItem);
@@ -114,7 +114,7 @@ const ObjectDataViewer = ({ object }: ObjectDataViewerProps) => {
 interface rendererNode {
   type: 'element' | 'text';
   value?: string | number | undefined;
-  tagName?: keyof React.JSX.IntrinsicElements | React.ComponentType<any> | undefined;
+  tagName?: keyof JSX.IntrinsicElements | ComponentType<any> | undefined;
   properties?: { className: any[]; [key: string]: any };
   children?: rendererNode[];
 }

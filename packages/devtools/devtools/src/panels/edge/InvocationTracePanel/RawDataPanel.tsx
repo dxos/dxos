@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, useMemo } from 'react';
+import React, { type ComponentType, type FC, type JSX, useMemo } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
-import { type TraceEvent, type InvocationSpan } from '@dxos/functions/types';
+import { type TraceEvent, type InvocationSpan } from '@dxos/functions';
 import { useQueue } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
@@ -25,9 +25,9 @@ export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ className
   const combinedData = useMemo(() => {
     return {
       span,
-      traceEvents: eventQueue?.items ?? [],
+      traceEvents: eventQueue?.objects ?? [],
     };
-  }, [span, eventQueue?.items]);
+  }, [span, eventQueue?.objects]);
 
   const rowRenderer = ({
     rows,
@@ -37,7 +37,7 @@ export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ className
     rows: {
       type: 'element' | 'text';
       value?: string | number | undefined;
-      tagName?: keyof React.JSX.IntrinsicElements | React.ComponentType<any> | undefined;
+      tagName?: keyof JSX.IntrinsicElements | ComponentType<any> | undefined;
       properties?: { className: any[]; [key: string]: any };
       children?: any[];
     }[];

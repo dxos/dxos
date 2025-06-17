@@ -3,17 +3,17 @@
 //
 
 import { Capabilities, contributes } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { DECK_PLUGIN } from '../meta';
 import { DeckSettingsSchema, type DeckSettingsProps } from '../types';
 
 export default () => {
-  const settings = create<DeckSettingsProps>({
+  const settings = live<DeckSettingsProps>({
     showHints: false,
-    enableDeck: true,
-    enableNativeRedirect: false,
+    enableDeck: false,
     enableStatusbar: false,
+    enableNativeRedirect: false,
     newPlankPositioning: 'start',
     overscroll: 'none',
   });

@@ -15,10 +15,19 @@ const minSize = 5;
 export type AmbientDialogProps = PropsWithChildren<{
   open?: boolean;
   title?: string;
+  resizeable?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onEscape?: () => void;
 }>;
 
-export const AmbientDialog = ({ children, open: controlledOpen, title, onOpenChange }: AmbientDialogProps) => {
+export const AmbientDialog = ({
+  children,
+  open: controlledOpen,
+  title,
+  resizeable = true,
+  onOpenChange,
+  onEscape,
+}: AmbientDialogProps) => {
   const [resizeKey, setReizeKey] = useState(0);
   const [size, setSize] = useState<Size>('min-content');
   const [open, setOpen] = useState(controlledOpen);
@@ -47,26 +56,31 @@ export const AmbientDialog = ({ children, open: controlledOpen, title, onOpenCha
   return (
     <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
       <Dialog.Content
-        classNames='relative box-content py-0 px-2 md:is-[35rem] md:max-is-none overflow-hidden pointer-events-auto transition-[block-size] ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200'
+        classNames='relative box-content p-0 md:is-[35rem] md:max-is-none overflow-hidden pointer-events-auto transition-[block-size] ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200'
         inOverlayLayout
         {...resizeAttributes}
         style={{
-          ...sizeStyle(size, 'vertical', true),
+          ...(resizeable ? sizeStyle(size, 'vertical', true) : {}),
           maxBlockSize: 'calc(100dvh - env(safe-area-inset-bottom) - env(safe-area-inset-top) - 9rem)',
         }}
+        onEscapeKeyDown={onEscape}
         onInteractOutside={preventDefault}
       >
-        <ResizeHandle
-          key={resizeKey}
-          side='block-start'
-          defaultSize='min-content'
-          minSize={minSize}
-          fallbackSize={minSize}
-          iconPosition='center'
-          onSizeChange={setSize}
-        />
+        {(resizeable && (
+          <>
+            <ResizeHandle
+              key={resizeKey}
+              side='block-start'
+              defaultSize='min-content'
+              minSize={minSize}
+              fallbackSize={minSize}
+              iconPosition='center'
+              onSizeChange={setSize}
+            />
 
-        <DialogHeader open={open} title={title} onToggle={handleToggle} />
+            <DialogHeader open={open} title={title} onToggle={handleToggle} />
+          </>
+        )) || <Dialog.Title srOnly />}
 
         {children}
       </Dialog.Content>

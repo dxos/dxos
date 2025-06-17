@@ -8,7 +8,7 @@ import React from 'react';
 
 import { withTheme } from '../testing';
 
-const TypographyStory = () => {
+const DefaultStory = () => {
   return (
     <div className='mli-auto p-8 max-is-[60rem] space-b-4'>
       <h1 className='text-4xl font-medium'>
@@ -45,7 +45,7 @@ const TypographyStory = () => {
 
 export default {
   title: 'ui/react-ui-core/Playground/Typography',
-  render: TypographyStory,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

@@ -26,11 +26,11 @@ export class RemoteTracing {
   private _tracing: TracingMethods | undefined;
   private _spanMap = new Map<TracingSpan, RemoteSpan>();
 
-  registerProcessor(processor: TracingMethods) {
+  registerProcessor(processor: TracingMethods): void {
     this._tracing = processor;
   }
 
-  flushSpan(span: TracingSpan) {
+  flushSpan(span: TracingSpan): void {
     if (!this._tracing) {
       return;
     }

@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-import "google/protobuf/any.proto";
+import "google/protobuf/struct.proto";
 
 import "dxos/keys.proto";
 
@@ -37,17 +37,18 @@ message UserState {
 message Activity {
   LamportTimestamp lamport_timestamp = 1;
 
-  google.protobuf.Any payload = 10;
+  google.protobuf.Struct payload = 10;
 }
 
 /**
- * Transcription state.
+ * Meeting state.
  *
- * Used to encode/decode the Any payload of a call activity for the transcription plugin.
+ * Used to encode/decode the Any payload of a call activity for the meeting plugin.
  */
- message TranscriptionPayload {
-  bool enabled = 1;
-  string queue_dxn = 2;
+message MeetingPayload {
+  string meeting_id = 1;
+  string transcript_dxn = 2;
+  bool transcription_enabled = 3;
 }
 
 /**

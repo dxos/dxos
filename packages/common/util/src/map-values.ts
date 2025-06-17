@@ -124,3 +124,17 @@ class DeepMapperAsync {
     }
   };
 }
+
+/**
+ * Visits all values on an object or every item in an array.
+ * No-op if the value is not an object or array.
+ */
+export const visitValues = (object: unknown, visitor: (value: unknown, key: string | number) => void) => {
+  if (Array.isArray(object)) {
+    object.forEach((item, index) => visitor(item, index));
+  } else if (typeof object === 'object' && object !== null) {
+    for (const [key, value] of Object.entries(object)) {
+      visitor(value, key);
+    }
+  }
+};

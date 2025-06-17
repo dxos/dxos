@@ -12,7 +12,7 @@ import { GeoPointInput } from './custom';
 /**
  * Get property input component.
  */
-export const getInputComponent = (type: SimpleType, format?: FormatEnum): InputComponent | undefined => {
+export const getInputComponent = (type: SimpleType, format?: FormatEnum | string): InputComponent | undefined => {
   switch (format) {
     case FormatEnum.GeoPoint:
       return GeoPointInput;

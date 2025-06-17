@@ -53,12 +53,12 @@ export class TestBuilder<T extends {}> {
     return (this._properties.root ??= this.storage.createDirectory(TestBuilder.ROOT_DIR));
   }
 
-  setKeyring(keyring: Keyring | PropertyProvider<T, Keyring>) {
+  setKeyring(keyring: Keyring | PropertyProvider<T, Keyring>): this {
     this._properties.keyring = evaluate(this, keyring);
     return this;
   }
 
-  setStorage(storage: Storage, root?: string) {
+  setStorage(storage: Storage, root?: string): this {
     this._properties.storage = evaluate(this, storage);
     if (root) {
       this._properties.root = this.storage.createDirectory(root);
@@ -67,12 +67,12 @@ export class TestBuilder<T extends {}> {
     return this;
   }
 
-  setRoot(root: Directory) {
+  setRoot(root: Directory): this {
     this._properties.root = evaluate(this, root);
     return this;
   }
 
-  createFeedFactory() {
+  createFeedFactory(): FeedFactory<T> {
     return new FeedFactory<T>({
       root: this.root,
       signer: this.keyring,
@@ -82,7 +82,7 @@ export class TestBuilder<T extends {}> {
     });
   }
 
-  createFeedStore() {
+  createFeedStore(): FeedStore<T> {
     return new FeedStore<T>({
       factory: this.createFeedFactory(),
     });

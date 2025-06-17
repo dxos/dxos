@@ -72,7 +72,7 @@ export class SentryLogProcessor {
     });
   };
 
-  public addLogBreadcrumbsTo(event: Event) {
+  public addLogBreadcrumbsTo(event: Event): void {
     event.breadcrumbs ??= [];
     for (const breadcrumb of this._breadcrumbs) {
       event.breadcrumbs.push(breadcrumb);
@@ -132,14 +132,25 @@ const formatMessageForSentry = (entry: LogEntry) => {
 };
 
 const convertLevel = (level: LogLevel): SeverityLevel => {
-  if (level === LogLevel.TRACE) {
-    return 'debug';
+  switch (level) {
+    case LogLevel.ERROR:
+      return 'error';
+    case LogLevel.VERBOSE:
+      return 'info';
+    case LogLevel.INFO:
+      return 'info';
+    case LogLevel.WARN:
+      return 'warning';
+    case LogLevel.DEBUG:
+    case LogLevel.TRACE:
+      return 'debug';
+    default:
+      throw never(level);
   }
-  if (level === LogLevel.WARN) {
-    return 'warning';
-  }
+};
 
-  return LogLevel[level].toLowerCase() as SeverityLevel;
+const never = (_: never) => {
+  return new Error('unhandled value');
 };
 
 const getRelativeFilename = (filename: string) => {

@@ -9,16 +9,16 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { create, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
-import { type Space, type TypedObject } from '@dxos/react-client/echo';
+import { Ref, type Space, type TypedObject } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import { Input, ThemeProvider, Tooltip, Status } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import type { MaybePromise } from '@dxos/util';
 
 import TaskList from './examples/TaskList';
@@ -51,12 +51,11 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
 const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
-    types: [DocumentType, TextType],
+    types: [DocumentType, DataType.Text],
     onSpaceCreated: ({ space }) => {
       space.db.add(
-        create(DocumentType, {
-          content: makeRef(create(TextType, { content: '## Type here...\n\ntry the airplane mode switch.' })),
-          threads: [],
+        live(DocumentType, {
+          content: Ref.make(live(DataType.Text, { content: '## Type here...\n\ntry the airplane mode switch.' })),
         }),
       );
     },
@@ -87,46 +86,36 @@ const main = async () => {
         <div className='demo'>
           <Tooltip.Provider>
             <div className='buttons'>
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <div className='flex'>
-                    <Input.Root>
-                      <Input.Switch
-                        data-testid='airplane-mode'
-                        classNames='me-2'
-                        onCheckedChange={(e) => {
-                          setOffline(!offline);
-                          return handleToggleNetwork(e);
-                        }}
-                      />
-                      <Input.Label>
-                        <Airplane size={28} className={offline ? 'active' : ''} />
-                      </Input.Label>
-                    </Input.Root>
-                  </div>
-                </Tooltip.Trigger>
-                <Tooltip.Content>Offline mode</Tooltip.Content>
-              </Tooltip.Root>
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <div className='flex'>
-                    <Input.Root>
-                      <Input.Switch
-                        data-testid='batching'
-                        classNames='me-2'
-                        onCheckedChange={(e) => {
-                          setBatching(!batching);
-                          return handleToggleBatching(e);
-                        }}
-                      />
-                      <Input.Label>
-                        <Stack size={28} className={batching ? 'active' : ''} />
-                      </Input.Label>
-                    </Input.Root>
-                  </div>
-                </Tooltip.Trigger>
-                <Tooltip.Content>Write batching</Tooltip.Content>
-              </Tooltip.Root>
+              <Tooltip.Trigger asChild content='Offline mode' className='flex'>
+                <Input.Root>
+                  <Input.Switch
+                    data-testid='airplane-mode'
+                    classNames='me-2'
+                    onCheckedChange={(e) => {
+                      setOffline(!offline);
+                      return handleToggleNetwork(e);
+                    }}
+                  />
+                  <Input.Label>
+                    <Airplane size={28} className={offline ? 'active' : ''} />
+                  </Input.Label>
+                </Input.Root>
+              </Tooltip.Trigger>
+              <Tooltip.Trigger content='Write batching' className='flex'>
+                <Input.Root>
+                  <Input.Switch
+                    data-testid='batching'
+                    classNames='me-2'
+                    onCheckedChange={(e) => {
+                      setBatching(!batching);
+                      return handleToggleBatching(e);
+                    }}
+                  />
+                  <Input.Label>
+                    <Stack size={28} className={batching ? 'active' : ''} />
+                  </Input.Label>
+                </Input.Root>
+              </Tooltip.Trigger>
             </div>
           </Tooltip.Provider>
           {clients.map((client, index) => (

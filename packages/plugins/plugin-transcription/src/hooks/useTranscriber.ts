@@ -15,6 +15,8 @@ import { type Transcriber } from '../transcriber';
 export const useTranscriber = ({
   audioStreamTrack,
   onSegments,
+  transcriberConfig,
+  recorderConfig,
 }: Partial<TranscriptionCapabilities.GetTranscriberProps>) => {
   const [getTranscriber] = useCapabilities(TranscriptionCapabilities.Transcriber);
 
@@ -24,8 +26,8 @@ export const useTranscriber = ({
       return undefined;
     }
 
-    return getTranscriber({ audioStreamTrack, onSegments });
-  }, [audioStreamTrack, onSegments, getTranscriber]);
+    return getTranscriber({ audioStreamTrack, onSegments, transcriberConfig, recorderConfig });
+  }, [audioStreamTrack, onSegments, getTranscriber, transcriberConfig, recorderConfig]);
 
   useEffect(() => {
     return () => {

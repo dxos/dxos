@@ -2,6 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './graph-model';
-
-export * from './Graph';
+export * from './D3ForceGraph';
+export * from './ForceGraph';

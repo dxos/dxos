@@ -31,7 +31,7 @@ export class TestClient {
     }
   }
 
-  persist(value: number) {
+  persist(value: number): void {
     this._persistent && localStorage.setItem('testclient', String(value));
   }
 
@@ -75,7 +75,7 @@ export class TestClient {
     };
   }
 
-  subscribe(callback: (value: number) => void) {
+  subscribe(callback: (value: number) => void): void {
     this._update.on(() => {
       callback(this._value);
     });

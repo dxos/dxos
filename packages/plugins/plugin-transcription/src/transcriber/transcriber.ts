@@ -7,10 +7,11 @@ import { WaveFile } from 'wavefile';
 import { DeferredTask, Trigger } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
+import { type DataType } from '@dxos/schema';
 import { trace } from '@dxos/tracing';
 
 import { type AudioRecorder, type AudioChunk } from './audio-recorder';
-import { TRANSCRIPTION_URL, type TranscriptSegment } from '../types';
+import { TRANSCRIPTION_URL } from '../types';
 import { mergeFloat64Arrays } from '../util';
 
 type WhisperWord = {
@@ -64,7 +65,11 @@ export type TranscribeConfig = {
 export type TranscriberParams = {
   config: TranscribeConfig;
   recorder: AudioRecorder;
-  onSegments: (segments: TranscriptSegment[]) => Promise<void>;
+  /**
+   * Callback to handle the transcribed segments, after all segment transformers are applied.
+   * @param segments - The transcribed segments.
+   */
+  onSegments: (segments: DataType.MessageBlock.Transcription[]) => Promise<void>;
 };
 
 /**
@@ -92,35 +97,41 @@ export class Transcriber extends Resource {
     this._onSegments = onSegments;
   }
 
-  protected override async _open(ctx: Context) {
+  protected override async _open(ctx: Context): Promise<void> {
+    log.info('opening');
     this._recorder.setOnChunk((chunk) => this._saveAudioChunk(chunk));
     await this._recorder.start();
     this._transcribeTask = new DeferredTask(ctx, async () => this._transcribe());
     this._openTrigger.wake();
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
+    log.info('closing');
     this._recording = false;
     this._transcribeTask = undefined;
     await this._recorder.stop();
   }
 
-  startChunksRecording() {
+  startChunksRecording(): void {
+    log.info('starting');
     if (this._lifecycleState !== LifecycleState.OPEN) {
       return;
     }
+
     this._recording = true;
   }
 
-  stopChunksRecording() {
+  stopChunksRecording(): void {
     if (this._lifecycleState !== LifecycleState.OPEN || !this._recording) {
       return;
     }
+
     this._recording = false;
     this._transcribeTask?.schedule();
+    log.info('stopped');
   }
 
-  private _saveAudioChunk(chunk: AudioChunk) {
+  private _saveAudioChunk(chunk: AudioChunk): void {
     log('saving audio chunk', { chunk });
     this._audioChunks.push(chunk);
 
@@ -136,7 +147,7 @@ export class Transcriber extends Resource {
     }
   }
 
-  private async _transcribe() {
+  private async _transcribe(): Promise<void> {
     log('transcribing', { chunks: this._audioChunks.length });
     const chunks = this._audioChunks;
     this._audioChunks = this._dropOldChunks();
@@ -156,14 +167,14 @@ export class Transcriber extends Resource {
     }
   }
 
-  private _dropOldChunks() {
+  private _dropOldChunks(): AudioChunk[] {
     return this._config.prefixBufferChunksAmount > 0
       ? this._audioChunks.slice(-this._config.prefixBufferChunksAmount)
       : [];
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _mergeAudioChunks(chunks: AudioChunk[]) {
+  private async _mergeAudioChunks(chunks: AudioChunk[]): Promise<string> {
     const file = new WaveFile();
     const wavConfig = this._recorder.wavConfig;
 
@@ -178,7 +189,7 @@ export class Transcriber extends Resource {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _fetchTranscription(audio: string) {
+  private async _fetchTranscription(audio: string): Promise<WhisperSegment[]> {
     if (audio.length === 0) {
       this._audioChunks = [];
       throw new Error('No audio to send for transcribing');
@@ -194,24 +205,25 @@ export class Transcriber extends Resource {
 
     if (!response.ok) {
       this._audioChunks = [];
-      throw new Error('Failed to transcribe');
+      throw new Error(`Transcription failed: ${response.statusText}`);
     }
 
-    const {
-      segments,
-    }: {
+    const { segments } = (await response.json()) as {
       segments: WhisperSegment[];
-    } = await response.json();
+    };
 
     log.info('transcription response', {
-      segments,
+      segments: segments.length,
       string: segments.map((segments) => segments.text).join(' '),
     });
 
     return segments;
   }
 
-  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): TranscriptSegment[] {
+  private _alignSegments(
+    segments: WhisperSegment[],
+    originalChunks: AudioChunk[],
+  ): DataType.MessageBlock.Transcription[] {
     // Absolute zero for all relative timestamps in the segments.
     const zeroTimestamp = originalChunks.at(0)!.timestamp;
 
@@ -240,8 +252,9 @@ export class Transcriber extends Resource {
 
     // Add absolute timestamp to each segment.
     return filteredSegments.map((segment) => ({
-      started: new Date(zeroTimestamp + segment.start * 1_000),
-      text: segment.text,
+      type: 'transcription',
+      started: new Date(zeroTimestamp + segment.start * 1_000).toISOString(),
+      text: segment.text.trim(),
     }));
   }
 }

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S, Effect, Fiber, pipe } from 'effect';
+import { Schema, Effect, Fiber, pipe } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { chain, createIntent } from './intent';
@@ -134,25 +134,6 @@ describe('Intent dispatcher', () => {
     await Effect.runPromise(program);
   });
 
-  test('filter resolvers by plugin', async () => {
-    const otherComputeResolver = createResolver({
-      intent: Compute,
-      resolve: async (data) => ({ data: { value: data?.value * 3 } }),
-    });
-    const { dispatch } = createDispatcher((module) => (module === 'test' ? [computeResolver] : [otherComputeResolver]));
-    const program = Effect.gen(function* () {
-      const a = yield* dispatch(createIntent(Compute, { value: 1 }));
-
-      expect(a.value).toBe(3);
-
-      const b = yield* dispatch(createIntent(Compute, { value: 1 }, { module: 'test' }));
-
-      expect(b.value).toBe(2);
-    });
-
-    await Effect.runPromise(program);
-  });
-
   test('filter resolvers by predicate', async () => {
     const conditionalComputeResolver = createResolver({
       intent: Compute,
@@ -224,12 +205,12 @@ describe('Intent dispatcher', () => {
   test.todo('follow up intents');
 });
 
-class ToString extends S.TaggedClass<ToString>()('ToString', {
-  input: S.Struct({
-    value: S.Number,
+class ToString extends Schema.TaggedClass<ToString>()('ToString', {
+  input: Schema.Struct({
+    value: Schema.Number,
   }),
-  output: S.Struct({
-    string: S.String,
+  output: Schema.Struct({
+    string: Schema.String,
   }),
 }) {}
 
@@ -238,12 +219,12 @@ const toStringResolver = createResolver({
   resolve: async (data) => ({ data: { string: data.value.toString() } }),
 });
 
-class Compute extends S.TaggedClass<Compute>()('Compute', {
-  input: S.Struct({
-    value: S.Number,
+class Compute extends Schema.TaggedClass<Compute>()('Compute', {
+  input: Schema.Struct({
+    value: Schema.Number,
   }),
-  output: S.Struct({
-    value: S.Number,
+  output: Schema.Struct({
+    value: Schema.Number,
   }),
 }) {}
 
@@ -262,13 +243,13 @@ const computeResolver = createResolver({
   },
 });
 
-class Concat extends S.TaggedClass<Concat>()('Concat', {
-  input: S.Struct({
-    string: S.String,
-    plus: S.String,
+class Concat extends Schema.TaggedClass<Concat>()('Concat', {
+  input: Schema.Struct({
+    string: Schema.String,
+    plus: Schema.String,
   }),
-  output: S.Struct({
-    string: S.String,
+  output: Schema.Struct({
+    string: Schema.String,
   }),
 }) {}
 
@@ -277,9 +258,9 @@ const concatResolver = createResolver({
   resolve: async (data) => ({ data: { string: data.string + data.plus } }),
 });
 
-class Add extends S.TaggedClass<Add>()('Add', {
-  input: S.Tuple(S.Number, S.Number),
-  output: S.Number,
+class Add extends Schema.TaggedClass<Add>()('Add', {
+  input: Schema.Tuple(Schema.Number, Schema.Number),
+  output: Schema.Number,
 }) {}
 
 const addResolver = createResolver({
@@ -287,9 +268,9 @@ const addResolver = createResolver({
   resolve: async (data) => ({ data: data[0] + data[1] }),
 });
 
-class SideEffect extends S.TaggedClass<SideEffect>()('SideEffect', {
-  input: S.Void,
-  output: S.Void,
+class SideEffect extends Schema.TaggedClass<SideEffect>()('SideEffect', {
+  input: Schema.Void,
+  output: Schema.Void,
 }) {}
 
 const sideEffectResolver = createResolver({

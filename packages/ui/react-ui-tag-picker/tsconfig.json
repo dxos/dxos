@@ -10,24 +10,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../lit-ui"
-    },
-    {
-      "path": "../react-ui"
-    },
-    {
-      "path": "../react-ui-editor"
-    },
-    {
-      "path": "../react-ui-theme"
-    }
-  ]
+  "references": []
 }

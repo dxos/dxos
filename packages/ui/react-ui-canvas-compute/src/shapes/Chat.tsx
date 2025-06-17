@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useRef } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
 import {
   type ShapeComponentProps,
   type ShapeDef,
@@ -23,14 +23,14 @@ import { useComputeNodeState } from '../hooks';
 // Data
 //
 
-export const ChatShape = S.extend(
+export const ChatShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('chat'),
+  Schema.Struct({
+    type: Schema.Literal('chat'),
   }),
 );
 
-export type ChatShape = S.Schema.Type<typeof ChatShape>;
+export type ChatShape = Schema.Schema.Type<typeof ChatShape>;
 
 //
 // Component

@@ -27,6 +27,10 @@ export const hueSememes: ColorSememes = [...Object.keys(huePalettes), 'neutral',
       light: [palette, 700],
       dark: [palette, 200],
     };
+    acc[`${palette}Screen`] = {
+      light: [palette, 100],
+      dark: [palette, 800],
+    };
     return acc;
   },
   {},
@@ -34,7 +38,7 @@ export const hueSememes: ColorSememes = [...Object.keys(huePalettes), 'neutral',
 
 const valenceAliasSememeStems = ['Text', 'Surface', 'SurfaceText', 'Fill', 'Cursor'];
 const valenceMapping = {
-  emerald: ['success', 'active'],
+  emerald: ['success'],
   cyan: ['info'],
   amber: ['warning'],
   rose: ['error'],

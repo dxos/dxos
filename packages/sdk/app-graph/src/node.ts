@@ -41,10 +41,10 @@ export type Node<TData = any, TProperties extends Record<string, any> = Record<s
   data: TData;
 }>;
 
-export type NodeFilter<T = any, U extends Record<string, any> = Record<string, any>> = (
+export type NodeFilter<TData = any, TProperties extends Record<string, any> = Record<string, any>> = (
   node: Node<unknown, Record<string, any>>,
   connectedNode: Node,
-) => node is Node<T, U>;
+) => node is Node<TData, TProperties>;
 
 export type Relation = 'outbound' | 'inbound';
 
@@ -70,12 +70,12 @@ export type NodeArg<TData, TProperties extends Record<string, any> = Record<stri
 
 export type InvokeParams = {
   /** Node the invoked action is connected to. */
-  node: Node;
+  parent?: Node;
 
   caller?: string;
 };
 
-export type ActionData = (params: InvokeParams) => MaybePromise<void>;
+export type ActionData = (params?: InvokeParams) => MaybePromise<void>;
 
 export type Action<TProperties extends Record<string, any> = Record<string, any>> = Readonly<
   Omit<Node<ActionData, TProperties>, 'properties'> & {

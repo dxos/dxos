@@ -16,12 +16,11 @@ export default [
         'plugin name': 'Transcription',
         'transcript companion label': 'Transcript',
 
-        'start transcription label': 'Start transcription',
-        'stop transcription label': 'Stop transcription',
-
         'delete button': 'Delete',
         'bookmark button': 'Bookmark',
         'scroll to end label': 'Scroll to latest',
+
+        'settings entity extraction label': 'Entity extraction',
       },
     },
   },

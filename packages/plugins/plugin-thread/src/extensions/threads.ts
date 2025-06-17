@@ -7,14 +7,13 @@ import { EditorView } from '@codemirror/view';
 import { computed, effect } from '@preact/signals-core';
 
 import { createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { Ref } from '@dxos/echo-schema';
-import { RefArray } from '@dxos/live-object';
+import { Filter, isInstanceOf, Query, RelationSourceId } from '@dxos/echo-schema';
 import { type DocumentType } from '@dxos/plugin-markdown/types';
-import { ThreadType } from '@dxos/plugin-space/types';
-import { getSpace, getTextInRange, createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
+import { getSpace, getTextInRange, createDocAccessor, fullyQualifiedId, getSource } from '@dxos/react-client/echo';
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
+import { AnchoredTo } from '@dxos/schema';
 
-import { ThreadAction, type ThreadState } from '../types';
+import { ThreadAction, ThreadType, type ThreadState } from '../types';
 
 // TODO(burdon): Factor out.
 const getName = (doc: DocumentType, anchor: string): string | undefined => {
@@ -35,21 +34,33 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Promi
     return [comments()];
   }
 
-  // TODO(Zan): When we have the deepsignal specific equivalent of this we should use that instead.
-  const threads = computed(() =>
-    [...RefArray.targets(doc.threads), ...(state.drafts[fullyQualifiedId(doc)] ?? [])].filter(
-      (thread) => !(thread?.status === 'resolved'),
-    ),
+  const query = space.db.query(Query.select(Filter.ids(doc.id)).targetOf(AnchoredTo));
+  const unsubscribe = query.subscribe();
+
+  const anchors = computed(() =>
+    query.objects
+      .filter((anchor) => {
+        const thread = anchor[RelationSourceId];
+        return isInstanceOf(ThreadType, thread) && thread.status !== 'resolved';
+      })
+      .concat(state.drafts[fullyQualifiedId(doc)] ?? []),
   );
 
   return [
+    EditorView.domEventHandlers({
+      destroy: () => {
+        unsubscribe();
+      },
+    }),
+
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
-        RefArray.targets(doc.threads).forEach((thread) => {
-          if (thread.anchor) {
+        anchors.value.forEach((anchor) => {
+          if (anchor.anchor) {
             // Only update if the name has changed, otherwise this will cause an infinite loop.
             // Skip if the name is empty; this means comment text was deleted, but thread name should remain.
-            const name = getName(doc, thread.anchor);
+            const name = getName(doc, anchor.anchor);
+            const thread = anchor[RelationSourceId] as ThreadType;
             if (name && name !== thread.name) {
               thread.name = name;
             }
@@ -62,16 +73,16 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Promi
       fullyQualifiedId(doc),
       (sink) => effect(() => sink()),
       () =>
-        threads.value
-          .filter((thread) => thread?.anchor)
-          .map((thread) => ({ id: fullyQualifiedId(thread), cursor: thread.anchor! })),
+        anchors.value
+          .filter((anchor) => anchor.anchor)
+          .map((anchor) => ({ id: fullyQualifiedId(anchor[RelationSourceId]), cursor: anchor.anchor })),
     ),
 
     comments({
       id: fullyQualifiedId(doc),
       onCreate: ({ cursor }) => {
         const name = getName(doc, cursor);
-        void dispatch(createIntent(ThreadAction.Create, { cursor, name, subject: doc }));
+        void dispatch(createIntent(ThreadAction.Create, { anchor: cursor, name, subject: doc }));
       },
       onDelete: ({ id }) => {
         const draft = state.drafts[fullyQualifiedId(doc)];
@@ -82,19 +93,26 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Promi
           }
         }
 
-        const thread = doc.threads.find(Ref.hasObjectId(id))?.target;
+        const thread = query.objects.find((object) => getSource(object).id === id);
         if (thread) {
           thread.anchor = undefined;
         }
       },
       onUpdate: ({ id, cursor }) => {
-        const thread =
-          state.drafts[fullyQualifiedId(doc)]?.find((thread) => fullyQualifiedId(thread) === id) ??
-          doc.threads.find(Ref.hasObjectId(id))?.target;
+        const draft = state.drafts[fullyQualifiedId(doc)]?.find((thread) => fullyQualifiedId(thread) === id);
+        if (draft) {
+          const thread = draft[RelationSourceId] as ThreadType;
+          thread.name = getName(doc, cursor);
+          draft.anchor = cursor;
+        }
 
-        if (thread instanceof ThreadType && thread.anchor) {
-          thread.name = getName(doc, thread.anchor);
-          thread.anchor = cursor;
+        const relation = query.objects.find((object) => getSource(object).id === id);
+        if (relation) {
+          const thread = getSource(relation);
+          if (isInstanceOf(ThreadType, thread)) {
+            thread.name = getName(doc, cursor);
+            relation.anchor = cursor;
+          }
         }
       },
       onSelect: ({ selection }) => {

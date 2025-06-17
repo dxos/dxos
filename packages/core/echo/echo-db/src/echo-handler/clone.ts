@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type BaseObject, createObjectId } from '@dxos/echo-schema';
+import { type BaseObject, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { assertParameter } from '@dxos/protocols';
 
-import { type ReactiveEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './create';
+import { type AnyLiveObject, initEchoReactiveObjectRootProxy, isEchoObject } from './create';
 import { getObjectCore } from './echo-handler';
 import { symbolInternals } from './echo-proxy-target';
 import { ObjectCore } from '../core-db';
@@ -20,10 +20,10 @@ export type CloneOptions = {
   /**
    * Additional list of objects to clone preserving references.
    */
-  additional?: (ReactiveEchoObject<any> | undefined)[];
+  additional?: (AnyLiveObject<any> | undefined)[];
 };
 
-const requireAutomergeCore = (obj: ReactiveEchoObject<any>) => {
+const requireAutomergeCore = (obj: AnyLiveObject<any>) => {
   const core = getObjectCore(obj);
   invariant(core, 'object is not an EchoObject');
   return core;
@@ -34,19 +34,19 @@ const requireAutomergeCore = (obj: ReactiveEchoObject<any>) => {
  * @deprecated
  */
 export const clone = <T extends BaseObject>(
-  obj: ReactiveEchoObject<T>,
+  obj: AnyLiveObject<T>,
   { retainId = true, additional = [] }: CloneOptions = {},
 ): T => {
-  assertParameter('obj', isEchoObject(obj), 'ReactiveEchoObject');
+  assertParameter('obj', isEchoObject(obj), 'AnyLiveObject');
   if (retainId === false && additional.length > 0) {
     throw new Error('Updating ids is not supported when cloning with nested objects.');
   }
 
-  const clone = cloneInner(obj, retainId ? obj.id : createObjectId());
-  const clones: ReactiveEchoObject<any>[] = [clone];
+  const clone = cloneInner(obj, retainId ? obj.id : ObjectId.random());
+  const clones: AnyLiveObject<any>[] = [clone];
   for (const innerObj of additional) {
     if (innerObj) {
-      clones.push(cloneInner(innerObj, retainId ? innerObj.id : createObjectId()));
+      clones.push(cloneInner(innerObj, retainId ? innerObj.id : ObjectId.random()));
     }
   }
 
@@ -69,7 +69,7 @@ export const clone = <T extends BaseObject>(
   return clone;
 };
 
-const cloneInner = <T extends BaseObject>(obj: ReactiveEchoObject<T>, id: string): ReactiveEchoObject<T> => {
+const cloneInner = <T extends BaseObject>(obj: AnyLiveObject<T>, id: string): AnyLiveObject<T> => {
   const core = requireAutomergeCore(obj);
   const coreClone = new ObjectCore();
   coreClone.initNewObject();
@@ -85,7 +85,7 @@ const cloneInner = <T extends BaseObject>(obj: ReactiveEchoObject<T>, id: string
 };
 
 const getObjectDoc = (core: ObjectCore): any => {
-  let value = core.doc ?? core.docHandle!.docSync();
+  let value = core.doc ?? core.docHandle!.doc();
   for (const key of core.mountPath) {
     value = (value as any)?.[key];
   }

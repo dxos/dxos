@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { groupSurface, mx } from '@dxos/react-ui-theme';
+import { activeSurface, mx } from '@dxos/react-ui-theme';
 
 import { SearchResults } from './SearchResults';
 import { Searchbar } from './Searchbar';
@@ -25,7 +25,7 @@ export const SearchMain: FC<ThemedClassName<{ space: Space }>> = ({ classNames, 
   const allSpaces = false;
 
   // TODO(burdon): Returns ALL objects (e.g., incl. Text objects that are fields of parent objects).
-  const objects = useQuery(allSpaces ? client.spaces : space, Filter.all());
+  const objects = useQuery(allSpaces ? client.spaces : space, Filter.everything());
   const results = useGlobalSearchResults(objects);
 
   const {
@@ -56,9 +56,9 @@ export const SearchMain: FC<ThemedClassName<{ space: Space }>> = ({ classNames, 
         }}
         onSubmit={runSearch}
       />
-      {isLoading && <div className={mx('flex flex-col grow overflow-hidden', groupSurface)}>Loading...</div>}
+      {isLoading && <div className={mx('flex flex-col grow overflow-hidden', activeSurface)}>Loading...</div>}
       {allResults.length > 0 && (
-        <div className={mx('flex flex-col grow overflow-hidden', groupSurface)}>
+        <div className={mx('flex flex-col grow overflow-hidden', activeSurface)}>
           <SearchResults items={allResults} selected={selected} onSelect={handleSelect} />
         </div>
       )}

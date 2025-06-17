@@ -25,7 +25,7 @@ export class TestRunner {
     this._appPath = `${os.tmpdir()}/dxos/kube/publishing/${this._spec.appName}`;
   }
 
-  async run() {
+  async run(): Promise<void> {
     // Prepare test env.
     log.info('starting test', {
       outDir: this._appPath,
@@ -79,14 +79,14 @@ export class TestRunner {
     }
   }
 
-  private async _checkoutApp() {
+  private async _checkoutApp(): Promise<void> {
     await run(`echo "${this._spec.appName}" | npm init "@dxos@latest"`, [], { cwd: this._appPath, shell: true });
     await run('npm', ['install'], { cwd: this._appPath });
     await sleep(1_000);
   }
 
   // Modify each js or ts or html file with dummy code.
-  private async _modifyApp(appPath: string, testStep: string) {
+  private async _modifyApp(appPath: string, testStep: string): Promise<void> {
     const files = fs.readdirSync(appPath);
     for await (const file of files) {
       const filePath = path.join(appPath, file);
@@ -106,7 +106,7 @@ export class TestRunner {
   }
 
   // Modifyes app build script to generate more test files.
-  private async _modifyBuildStep() {
+  private async _modifyBuildStep(): Promise<void> {
     const packageJson = fs.readFileSync(path.join(this._appPath, 'package.json'), 'utf8');
     // TODO(egorgripasov): Read/preserve original build script to make test more extensible.
     const newPackageJson = packageJson.replace(
@@ -116,14 +116,14 @@ export class TestRunner {
     fs.writeFileSync(path.join(this._appPath, 'package.json'), newPackageJson, 'utf8');
   }
 
-  private async _pubishApp() {
+  private async _pubishApp(): Promise<void> {
     // TODO(egorgripasov): Consider using the DX lib directly.
     await run('npx', ['dx', 'app', 'publish', '--verbose', '--config', path.join(process.cwd(), './config.yml')], {
       cwd: this._appPath,
     });
   }
 
-  private async _buildFilesMap(outPath: string, currentPath: string) {
+  private async _buildFilesMap(outPath: string, currentPath: string): Promise<void> {
     const files = fs.readdirSync(currentPath);
     for await (const file of files) {
       const filePath = path.join(currentPath, file);

@@ -2,29 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ulid } from 'ulidx';
 import { describe, test } from 'vitest';
 
-import { log } from '@dxos/log';
+import { live } from './object';
+import { getSnapshot } from './snapshot';
 
-import { getSnapshot } from './accessors';
-import { create } from './object';
+// TODO(burdon): Add reactive tests.
 
 describe('Object', () => {
-  test.skip('ulid stress test', () => {
-    const amountToGenerate = 10_000;
-
-    const generators = [ulid];
-    for (const generator of generators) {
-      const start = Date.now();
-      for (let i = 0; i < amountToGenerate; i++) {
-        generator();
-      }
-      const end = Date.now();
-      log.info(`Generated ${amountToGenerate} ULIDs in ${end - start}ms`);
-    }
-  });
-
   test('getSnapshot', ({ expect }) => {
     const data = {
       str: 'foo',
@@ -41,8 +26,9 @@ describe('Object', () => {
         },
       ],
     };
-    // NOTE: create doesn't clone `data`!!!!
-    const obj = create(structuredClone(data));
+
+    // NOTE: create doesn't clone `data`.
+    const obj = live(structuredClone(data));
     const snapshot = getSnapshot(obj);
     expect(snapshot).toEqual(data);
     obj.arr = [];

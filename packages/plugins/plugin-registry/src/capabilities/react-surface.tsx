@@ -50,7 +50,7 @@ export default () =>
           () =>
             manager.plugins
               .filter(({ meta }) => !manager.core.includes(meta.id))
-              .filter(({ meta }) => !meta.tags?.includes('experimental')),
+              .filter(({ meta }) => !meta.tags?.includes('labs')),
           [],
         );
 
@@ -58,14 +58,14 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${REGISTRY_PLUGIN}/experimental`,
+      id: `${REGISTRY_PLUGIN}/labs`,
       role: 'article',
-      filter: (data): data is any => data.subject === `${REGISTRY_KEY}+experimental`,
+      filter: (data): data is any => data.subject === `${REGISTRY_KEY}+labs`,
       component: () => {
         const manager = usePluginManager();
-        const filtered = useMemo(() => manager.plugins.filter(({ meta }) => meta.tags?.includes('experimental')), []);
+        const filtered = useMemo(() => manager.plugins.filter(({ meta }) => meta.tags?.includes('labs')), []);
 
-        return <RegistryContainer id={`${REGISTRY_KEY}+experimental`} plugins={filtered} />;
+        return <RegistryContainer id={`${REGISTRY_KEY}+labs`} plugins={filtered} />;
       },
     }),
     createSurface({

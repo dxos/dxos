@@ -20,24 +20,23 @@
       "bugs"
     ],
     "withCustomExports": [
-      "@dxos/shell",
-      "@dxos/node-std",
-      "@dxos/invariant",
-      "@dxos/log",
+      "@dxos/async",
       "@dxos/codec-protobuf",
       "@dxos/context",
       "@dxos/debug",
-      "@dxos/util",
-      "@dxos/async",
+      "@dxos/invariant",
       "@dxos/keys",
+      "@dxos/lit-grid",
+      "@dxos/log",
+      "@dxos/node-std",
+      "@dxos/random",
+      "@dxos/react-ui-graph",
+      "@dxos/react-ui-stack",
+      "@dxos/shell",
+      "@dxos/test-utils",
       "@dxos/timeframe",
       "@dxos/tracing",
-      "@dxos/lit-grid",
-      "@dxos/plate",
-      "@dxos/gem-spore",
-      "@dxos/test-utils",
-      "@dxos/react-ui-stack",
-      "@dxos/random"
+      "@dxos/util"
     ]
   },
   "tsconfig": {
@@ -50,19 +49,21 @@
         "@dxos/composer-app"
       ],
       "include": [
-        "packages/plugins/*",
-        "packages/plugins/experimental/*",
-        "packages/ui/react-ui*",
+        "packages/common/storybook-utils",
+        "packages/core/artifact-testing",
+        "packages/core/assistant",
+        "packages/core/compute",
+        "packages/core/conductor",
+        "packages/core/functions",
         "packages/devtools/devtools",
-        "packages/sdk/app-graph",
+        "packages/plugins/*",
         "packages/sdk/app-framework",
+        "packages/sdk/app-graph",
         "packages/sdk/migrations",
         "packages/sdk/shell",
-        "packages/experimental/artifact-testing",
-        "packages/experimental/assistant",
-        "packages/core/conductor"
+        "packages/ui/react-ui*"
       ]
     },
-    "noProjectReferences": false
+    "noProjectReferences": true
   }
 }

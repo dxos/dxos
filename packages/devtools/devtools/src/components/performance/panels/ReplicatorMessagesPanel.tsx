@@ -9,9 +9,9 @@ import { type EchoDataStats } from '@dxos/echo-pipeline';
 import { type DatabaseInfo } from '../../../hooks';
 import { type CustomPanelProps, Panel } from '../Panel';
 
-type CountsByMessageType = EchoDataStats['replicator']['countByMessageType'];
+type CountsByMessage = EchoDataStats['replicator']['countByMessage'];
 
-type MessageTypeSummary = {
+type MessageSummary = {
   direction: 'in' | 'out';
   type: string;
   quantity: string;
@@ -21,32 +21,42 @@ export const ReplicatorMessagesPanel = ({ database, ...props }: CustomPanelProps
   const replicatorStats = database?.dataStats?.replicator;
   let receivedTotal = 0;
   let sentTotal = 0;
-  const entries: MessageTypeSummary[] = Object.entries(
-    replicatorStats?.countByMessageType ?? ({} as CountsByMessageType),
-  )
+  const entries: MessageSummary[] = Object.entries(replicatorStats?.countByMessage ?? ({} as CountsByMessage))
     .flatMap(([type, counts]) => {
       sentTotal += counts.sent;
       receivedTotal += counts.received;
-      const avgMessageSize = replicatorStats?.avgSizeByMessageType[type];
+      const avgMessageSize = replicatorStats?.avgSizeByMessage[type];
       const sizeString = avgMessageSize !== undefined ? ` (${formatNumber(avgMessageSize)} bytes)` : '';
       return [
         { direction: 'in', type, quantity: `${formatNumber(counts.received)}${sizeString}` },
         { direction: 'out', type, quantity: `${formatNumber(counts.sent)}${sizeString}` },
-      ] as MessageTypeSummary[];
+      ] as MessageSummary[];
     })
     .sort((m1, m2) => {
       const cmp = m1.type.localeCompare(m2.type);
       return cmp === 0 ? m1.direction.localeCompare(m2.direction) : cmp;
     });
+
   return (
     <Panel
       {...props}
       icon='ph--database--regular'
-      title='Database replicator messages'
+      title='DB messages'
       info={
-        <span>
-          last {formatNumber(receivedTotal)}-in & {formatNumber(sentTotal)}-out
-        </span>
+        <div className='flex gap-1 items-center'>
+          <span>
+            <span>{formatNumber(receivedTotal)}</span>
+            <span className='text-green-500' title='Received'>
+              ↓
+            </span>
+          </span>
+          <span>
+            <span>{formatNumber(sentTotal)}</span>
+            <span className='text-orange-500' title='Sent'>
+              ↑
+            </span>
+          </span>
+        </div>
       }
     >
       <table className='table-auto w-full text-xs font-mono'>
@@ -54,8 +64,8 @@ export const ReplicatorMessagesPanel = ({ database, ...props }: CustomPanelProps
           {entries.map(({ direction, type, quantity }, i) => (
             <tr key={i}>
               <td className='p-1 text-left'>{direction}</td>
-              <td className='p-1 text-center overflow-hidden'>{type}</td>
-              <td className='p-1 text-right'>{quantity}</td>
+              <td className='p-1 truncate text-center'>{type}</td>
+              <td className='p-1 truncate text-right'>{quantity}</td>
             </tr>
           ))}
         </tbody>

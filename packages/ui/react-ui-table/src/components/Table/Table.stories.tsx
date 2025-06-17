@@ -5,14 +5,22 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
+import { Schema } from 'effect';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { FormatEnum, ImmutableSchema } from '@dxos/echo-schema';
+import {
+  assertEchoSchema,
+  FormatEnum,
+  isMutable,
+  toJsonSchema,
+  EchoObject,
+  GeneratorAnnotation,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { Filter, useQuery, useSchema, create } from '@dxos/react-client/echo';
+import { Filter, useQuery, useSchema, live } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -28,8 +36,7 @@ import { TableType } from '../../types';
 import { initializeTable } from '../../util';
 import { TableToolbar } from '../TableToolbar';
 
-// NOTE(ZaymonFC): We rely on this seed being 0 in the smoke tests.
-faker.seed(0);
+faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
 
 /**
  * Custom hook to create and manage a test table model for storybook demonstrations.
@@ -39,14 +46,14 @@ const useTestTableModel = () => {
   const client = useClient();
   const { space } = useClientProvider();
 
-  const filter = useMemo(() => Filter.schema(TableType), []);
+  const filter = useMemo(() => Filter.type(TableType), []);
   const tables = useQuery(space, filter);
   const table = useMemo(() => tables.at(0), [tables]);
   const schema = useSchema(client, space, table?.view?.target?.query.typename);
 
   const projection = useMemo(() => {
     if (schema && table?.view?.target) {
-      return new ViewProjection(schema.jsonSchema, table.view.target);
+      return new ViewProjection(toJsonSchema(schema), table.view.target);
     }
   }, [schema, table?.view?.target]);
 
@@ -54,12 +61,12 @@ const useTestTableModel = () => {
     () => ({
       selection: { enabled: true, mode: 'multiple' as const },
       dataEditable: true,
-      schemaEditable: !(schema instanceof ImmutableSchema),
+      schemaEditable: schema && isMutable(schema),
     }),
     [schema],
   );
 
-  const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
+  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const tableRef = useRef<TableController>(null);
@@ -73,7 +80,7 @@ const useTestTableModel = () => {
 
   const handleInsertRow = useCallback(() => {
     if (space && schema) {
-      space.db.add(create(schema, {}));
+      space.db.add(live(schema, {}));
     }
   }, [space, schema]);
 
@@ -107,31 +114,15 @@ const useTestTableModel = () => {
     onRowOrderChange: handleRowOrderChange,
   });
 
+  const handleSaveView = useCallback(() => {
+    model?.saveView();
+  }, [model]);
+
   const presentation = useMemo(() => {
     if (model) {
       return new TablePresentation(model);
     }
   }, [model]);
-
-  const handleToolbarAction = useCallback(
-    (action: { type: string }) => {
-      switch (action.type) {
-        case 'on-thread-create': {
-          console.log('Thread creation triggered');
-          break;
-        }
-        case 'add-row': {
-          handleInsertRow();
-          break;
-        }
-        case 'save-view': {
-          model?.saveView();
-          break;
-        }
-      }
-    },
-    [table, model],
-  );
 
   return {
     schema,
@@ -140,7 +131,8 @@ const useTestTableModel = () => {
     model,
     presentation,
     space,
-    handleToolbarAction,
+    handleInsertRow,
+    handleSaveView,
     handleDeleteRows,
     handleDeleteColumn,
   };
@@ -151,11 +143,10 @@ const StoryViewEditor = () => {
 
   const handleTypenameChanged = useCallback(
     (typename: string) => {
-      if (table?.view?.target) {
-        invariant(schema);
-        schema.mutable.updateTypename(typename);
-        table.view.target.query.typename = typename;
-      }
+      invariant(schema);
+      invariant(table?.view?.target);
+      assertEchoSchema(schema).updateTypename(typename);
+      table.view.target.query.typename = typename;
     },
     [schema, table?.view?.target],
   );
@@ -180,7 +171,7 @@ const StoryViewEditor = () => {
 //
 
 const DefaultStory = () => {
-  const { schema, table, tableRef, model, presentation, handleToolbarAction } = useTestTableModel();
+  const { schema, table, tableRef, model, presentation, handleInsertRow, handleSaveView } = useTestTableModel();
 
   if (!schema || !table) {
     return <div />;
@@ -189,9 +180,9 @@ const DefaultStory = () => {
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
       <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
-        <TableToolbar classNames='border-be border-separator' onAction={handleToolbarAction} />
+        <TableToolbar classNames='border-be border-separator' onAdd={handleInsertRow} onSave={handleSaveView} />
         <Table.Root>
-          <Table.Main ref={tableRef} model={model} presentation={presentation} ignoreAttention />
+          <Table.Main ref={tableRef} model={model} presentation={presentation} schema={schema} ignoreAttention />
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
@@ -222,19 +213,19 @@ const meta: Meta<StoryProps> = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(create(TableType, {}));
+        const table = space.db.add(live(TableType, {}));
         const schema = await initializeTable({ client, space, table, initialRow: false });
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            create(schema, {
+            live(schema, {
               name: faker.person.fullName(),
             }),
           );
         });
       },
     }),
+    withLayout({ fullscreen: true }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
   ],
 };
 
@@ -247,22 +238,65 @@ export const StaticSchema: StoryObj = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Testing.Contact, Testing.Org],
+      types: [TableType, ViewType, Testing.Contact, Testing.Organization],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(create(TableType, {}));
-        await initializeTable({ client, space, table, typename: Testing.Contact.typename });
+        const table = space.db.add(live(TableType, {}));
+        await initializeTable({ client, space, table, typename: Testing.Organization.typename });
 
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
-          { type: Testing.Contact, count: 10 },
-          { type: Testing.Org, count: 1 },
+          // { type: Testing.Contact, count: 10 },
+          // { type: Testing.Organization, count: 1 },
+          { type: ContactWithArrayOfEmails, count: 10 },
         ]);
       },
     }),
+    withLayout({ fullscreen: true }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
+  ],
+};
+
+const ContactWithArrayOfEmails = Schema.Struct({
+  name: Schema.String.pipe(GeneratorAnnotation.set('person.fullName')),
+  emails: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        value: Schema.String,
+        label: Schema.String.pipe(Schema.optional),
+      }),
+    ),
+  ),
+}).pipe(
+  EchoObject({
+    typename: 'dxos.org/type/ContactWithArrayOfEmails',
+    version: '0.1.0',
+  }),
+);
+
+export const ArrayOfObjects: StoryObj = {
+  render: DefaultStory,
+  parameters: { translations },
+  decorators: [
+    withClientProvider({
+      types: [TableType, ViewType, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
+      createIdentity: true,
+      createSpace: true,
+      onSpaceCreated: async ({ client, space }) => {
+        const table = space.db.add(live(TableType, {}));
+        await initializeTable({ client, space, table, typename: ContactWithArrayOfEmails.typename });
+
+        const factory = createObjectFactory(space.db, faker as any);
+        await factory([
+          // { type: Testing.Contact, count: 10 },
+          // { type: Testing.Organization, count: 1 },
+          { type: ContactWithArrayOfEmails, count: 10 },
+        ]);
+      },
+    }),
+    withLayout({ fullscreen: true }),
+    withTheme,
   ],
 };
 
@@ -303,13 +337,13 @@ export const Tags: Meta<StoryProps> = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const table = space.db.add(create(TableType, {}));
+        const table = space.db.add(live(TableType, {}));
         await initializeTable({ client, space, table, initialRow: false, typename });
 
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            create(storedSchema, {
+            live(storedSchema, {
               single: faker.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: faker.helpers.randomSubset(selectOptionIds),
             }),
@@ -317,7 +351,7 @@ export const Tags: Meta<StoryProps> = {
         });
       },
     }),
+    withLayout({ fullscreen: true }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
   ],
 };

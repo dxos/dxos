@@ -4,12 +4,23 @@
 
 import { defineConfig, mergeConfig } from 'vitest/config';
 
-import { baseConfig } from '../../../vitest.shared';
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
-export default mergeConfig(baseConfig({ cwd: __dirname }), defineConfig({
-  test: {
-    include: [
-      './src/**/*.stories.ts'
+import { baseConfig } from '../../../vitest.shared';
+import { resolve } from 'node:path';
+
+export default mergeConfig(
+  baseConfig({ cwd: __dirname }),
+  defineConfig({
+    test: {
+      environment: 'jsdom',
+      setupFiles: ['./src/vitest-setup.ts'],
+    },
+    plugins: [
+      ThemePlugin({
+        root: __dirname,
+        content: [resolve(__dirname, './src')],
+      }),
     ]
-  }
-}));
+  }),
+);

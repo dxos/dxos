@@ -2,19 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import {
-  AST,
   type EchoSchema,
   Format,
   FormatEnum,
   type JsonPath,
   type JsonProp,
-  S,
+  Ref,
   TypedObject,
   TypeEnum,
 } from '@dxos/echo-schema';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { create, makeRef, type Space } from '@dxos/react-client/echo';
+import { live, type Space } from '@dxos/react-client/echo';
 import { createFieldId, createView, getSchemaProperties, ViewProjection, type ViewType } from '@dxos/schema';
 
 import { type TableType } from '../types';
@@ -34,20 +35,16 @@ export const initializeTable = async ({
   table,
   typename,
   initialRow = true,
-}: InitialiseTableProps): Promise<S.Schema.AnyNoContext> => {
+}: InitialiseTableProps): Promise<Schema.Schema.AnyNoContext> => {
   if (typename) {
     const schema = await space.db.graph.getSchemaByTypename(typename, space.db);
     if (!schema) {
       throw new Error(`Schema not found: ${typename}`);
     }
 
-    // We need to get the schema properties here.
-    // For now, only simple types and refs, not compound types are going to be supported.
-    const fields = getSchemaProperties(schema.ast)
-      .filter((prop) => prop.format !== FormatEnum.Ref)
-      .map((prop) => prop.name);
+    const fields = getSchemaProperties(schema.ast).map((prop) => prop.name);
 
-    table.view = makeRef(
+    table.view = Ref.make(
       createView({
         // TODO(ZaymonFC): Don't hardcode name?
         name: 'View',
@@ -62,7 +59,7 @@ export const initializeTable = async ({
     const [schema] = await space.db.schemaRegistry.register([ContactSchema]);
     const fields = ContactFields;
 
-    table.view = makeRef(
+    table.view = Ref.make(
       createView({
         name: 'View',
         typename: schema.typename,
@@ -75,7 +72,7 @@ export const initializeTable = async ({
 
     if (initialRow) {
       // TODO(burdon): Last (first) row should not be in db and should be managed by the model.
-      space.db.add(create(schema, {}));
+      space.db.add(live(schema, {}));
     }
 
     return schema;
@@ -86,10 +83,10 @@ const ContactSchema = TypedObject({
   typename: `example.com/type/${PublicKey.random().truncate()}`,
   version: '0.1.0',
 })({
-  name: S.optional(S.String).annotations({ [AST.TitleAnnotationId]: 'Name' }),
-  active: S.optional(S.Boolean),
-  email: S.optional(Format.Email),
-  salary: S.optional(Format.Currency()).annotations({ [AST.TitleAnnotationId]: 'Salary' }),
+  name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
+  active: Schema.optional(Schema.Boolean),
+  email: Schema.optional(Format.Email),
+  salary: Schema.optional(Format.Currency()).annotations({ title: 'Salary' }),
 });
 
 const ContactFields = ['name', 'email', 'salary', 'active'];

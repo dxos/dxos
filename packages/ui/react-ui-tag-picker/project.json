@@ -1,6 +1,6 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "react-ui-multiselect",
+  "name": "react-ui-tag-picker",
   "tags": [
     "scope:ui"
   ],
@@ -16,7 +16,8 @@
         "platforms": [
           "browser",
           "node"
-        ]
+        ],
+        "preactSignalTracking": true
       }
     },
     "lint": {},

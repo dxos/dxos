@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { S, isInstanceOf } from '@dxos/echo-schema';
-import { isReactiveObject } from '@dxos/react-client/echo';
+import { Schema } from 'effect';
+
+import { SpaceId } from '@dxos/react-client/echo';
 
 import { TranscriptType } from './schema';
 import { TRANSCRIPTION_PLUGIN } from '../meta';
@@ -19,18 +20,13 @@ export const TRANSCRIPTION_URL = 'https://calls-service.dxos.workers.dev';
 export namespace TranscriptionAction {
   const TRANSCRIPTION_ACTION = `${TRANSCRIPTION_PLUGIN}/action`;
 
-  export class Create extends S.TaggedClass<Create>()(`${TRANSCRIPTION_ACTION}/create`, {
-    input: S.Struct({
-      name: S.optional(S.String),
-      // TODO(wittjosiah): SpaceId.
-      spaceId: S.String,
+  export class Create extends Schema.TaggedClass<Create>()(`${TRANSCRIPTION_ACTION}/create`, {
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
+      spaceId: SpaceId,
     }),
-    output: S.Struct({
+    output: Schema.Struct({
       object: TranscriptType,
     }),
   }) {}
 }
-
-export const isTranscript = (object: unknown): object is typeof TranscriptType => {
-  return isReactiveObject(object) && isInstanceOf(TranscriptType, object);
-};

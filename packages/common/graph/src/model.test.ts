@@ -2,21 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
+import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { S } from '@dxos/echo-schema';
+import { Trigger } from '@dxos/async';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { live } from '@dxos/live-object';
 
-import { GraphModel } from './model';
-import { BaseGraphNode, type GraphNode } from './types';
+import { GraphModel, ReactiveGraphModel } from './model';
+import { BaseGraphNode, type Graph, type GraphNode } from './types';
 
-const TestNode = S.extend(
+registerSignalsRuntime();
+
+const TestNode = Schema.extend(
   BaseGraphNode,
-  S.Struct({
-    value: S.String,
+  Schema.Struct({
+    value: Schema.String,
   }),
 );
 
-type TestNode = S.Schema.Type<typeof TestNode>;
+type TestNode = Schema.Schema.Type<typeof TestNode>;
 
 type TestData = { value: string };
 
@@ -25,7 +31,7 @@ describe('Graph', () => {
     const graph = new GraphModel();
     expect(graph.nodes).to.have.length(0);
     expect(graph.edges).to.have.length(0);
-    expect(graph.toJSON()).to.deep.eq({ nodes: [], edges: [] });
+    expect(graph.toJSON()).to.deep.eq({ nodes: 0, edges: 0 });
   });
 
   test('extended', ({ expect }) => {
@@ -34,9 +40,71 @@ describe('Graph', () => {
     expect(node.value.length).to.eq(4);
   });
 
+  test('reactive', async ({ expect }) => {
+    const graph = new GraphModel(live({ nodes: [], edges: [] }));
+
+    const done = new Trigger<Graph>();
+
+    // NOTE: Requires `registerSignalsRuntime` to be called.
+    const unsubscribe = effect(() => {
+      if (graph.edges.length === 2) {
+        done.wake(graph.graph);
+      }
+    });
+
+    setTimeout(() => {
+      graph.builder.addNode({ id: 'node-1' });
+      graph.builder.addNode({ id: 'node-2' });
+      graph.builder.addNode({ id: 'node-3' });
+    });
+
+    setTimeout(() => {
+      graph.builder.addEdge({ source: 'node-1', target: 'node-2' });
+      graph.builder.addEdge({ source: 'node-2', target: 'node-3' });
+    });
+
+    {
+      const graph = await done.wait();
+      expect(graph.nodes).to.have.length(3);
+      expect(graph.edges).to.have.length(2);
+    }
+
+    unsubscribe();
+  });
+
+  test('reactive model', async ({ expect }) => {
+    const graph = new ReactiveGraphModel();
+
+    const done = new Trigger<Graph>();
+    const unsubscribe = graph.subscribe((graph) => {
+      if (graph.edges.length === 2) {
+        done.wake(graph.graph);
+      }
+    });
+
+    setTimeout(() => {
+      graph.builder.addNode({ id: 'node-1' });
+      graph.builder.addNode({ id: 'node-2' });
+      graph.builder.addNode({ id: 'node-3' });
+    });
+
+    setTimeout(() => {
+      graph.builder.addEdge({ source: 'node-1', target: 'node-2' });
+      graph.builder.addEdge({ source: 'node-2', target: 'node-3' });
+    });
+
+    {
+      const graph = await done.wait();
+      expect(graph.nodes).to.have.length(3);
+      expect(graph.edges).to.have.length(2);
+    }
+
+    unsubscribe();
+  });
+
   test('optional', ({ expect }) => {
     {
-      const graph = new GraphModel<GraphNode<string>>();
+      const graph = new GraphModel<GraphNode.Required<string>>();
       const node = graph.addNode({ id: 'test', data: 'test' });
       expect(node.data.length).to.eq(4);
     }
@@ -49,7 +117,7 @@ describe('Graph', () => {
   });
 
   test('add and remove subgraphs', ({ expect }) => {
-    const graph = new GraphModel<GraphNode<TestData>>();
+    const graph = new GraphModel<GraphNode.Required<TestData>>();
     graph.builder
       .addNode({ id: 'node1', data: { value: 'test' } })
       .addNode({ id: 'node2', data: { value: 'test' } })

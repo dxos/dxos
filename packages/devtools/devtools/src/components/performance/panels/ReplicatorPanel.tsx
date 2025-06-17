@@ -34,7 +34,7 @@ export const ReplicatorPanel = ({ database, ...props }: CustomPanelProps<{ datab
     <Panel
       {...props}
       icon='ph--database--regular'
-      title='Database replicator'
+      title='DB replicator'
       info={
         <div className='flex gap-1'>
           {formatNumber(replicatorStats?.connections)}
@@ -46,8 +46,8 @@ export const ReplicatorPanel = ({ database, ...props }: CustomPanelProps<{ datab
         <tbody>
           {info.map(([entity, quantity], i) => (
             <tr key={i}>
-              <td className='p-1 overflow-hidden'>{entity}</td>
-              <td className='p-1 text-right'>{quantity}</td>
+              <td className='p-1 truncate'>{entity}</td>
+              <td className='p-1 truncate text-right'>{quantity}</td>
             </tr>
           ))}
         </tbody>

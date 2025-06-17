@@ -4,11 +4,13 @@
 
 import { useEffect } from 'react';
 
-import { inRange } from '@dxos/compute';
+import { type CompleteCellRange, inRange } from '@dxos/compute';
 import { createMenuAction, createMenuItemGroup, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
+import { type ToolbarState } from './useToolbarState';
 import { SHEET_PLUGIN } from '../../meta';
-import { type AlignKey, alignKey, type AlignValue, rangeFromIndex } from '../../types';
+import { type SheetModel } from '../../model';
+import { type AlignKey, alignKey, type AlignValue, rangeFromIndex, rangeToIndex } from '../../types';
 import { useSheetContext } from '../SheetContext';
 
 export type AlignAction = { key: AlignKey; value: AlignValue };
@@ -43,21 +45,49 @@ const createAlignGroupAction = (value?: AlignValue) =>
     value: `${alignKey}--${value}`,
   } as ToolbarMenuActionGroupProperties);
 
-const createAlignActions = (value?: AlignValue) =>
+const createAlignActions = (model: SheetModel, state: ToolbarState, cursorFallbackRange?: CompleteCellRange) =>
   Object.entries(aligns).map(([alignValue, icon]) => {
-    return createMenuAction<AlignAction>(`${alignKey}--${alignValue}`, {
-      key: alignKey,
-      value: alignValue as AlignValue,
-      checked: value === alignValue,
-      label: [`range value ${alignValue} label`, { ns: SHEET_PLUGIN }],
-      icon,
-      testId: `grid.toolbar.${alignKey}.${alignValue}`,
-    });
+    return createMenuAction<AlignAction>(
+      `${alignKey}--${alignValue}`,
+      () => {
+        if (!cursorFallbackRange) {
+          return;
+        }
+        const index =
+          model.sheet.ranges?.findIndex(
+            (range) =>
+              range.key === alignKey && inRange(rangeFromIndex(model.sheet, range.range), cursorFallbackRange.from),
+          ) ?? -1;
+        const nextRangeEntity = {
+          range: rangeToIndex(model.sheet, cursorFallbackRange),
+          key: alignKey,
+          value: alignValue as AlignValue,
+        };
+        if (index < 0) {
+          model.sheet.ranges?.push(nextRangeEntity);
+          state[alignKey] = nextRangeEntity.value;
+        } else if (model.sheet.ranges![index].value === nextRangeEntity.value) {
+          model.sheet.ranges?.splice(index, 1);
+          state[alignKey] = undefined;
+        } else {
+          model.sheet.ranges?.splice(index, 1, nextRangeEntity);
+          state[alignKey] = nextRangeEntity.value;
+        }
+      },
+      {
+        key: alignKey,
+        value: alignValue as AlignValue,
+        checked: state[alignKey] === alignValue,
+        label: [`range value ${alignValue} label`, { ns: SHEET_PLUGIN }],
+        icon,
+        testId: `grid.toolbar.${alignKey}.${alignValue}`,
+      },
+    );
   });
 
-export const createAlign = ({ [alignKey]: alignValue }: Partial<AlignState>) => {
-  const alignGroup = createAlignGroupAction(alignValue);
-  const alignActions = createAlignActions(alignValue);
+export const createAlign = (model: SheetModel, state: ToolbarState, cursorFallbackRange?: CompleteCellRange) => {
+  const alignGroup = createAlignGroupAction(state[alignKey]);
+  const alignActions = createAlignActions(model, state, cursorFallbackRange);
   return {
     nodes: [alignGroup, ...alignActions],
     edges: [

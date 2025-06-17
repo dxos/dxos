@@ -3,14 +3,7 @@
 //
 
 import { invertedEffects } from '@codemirror/commands';
-import {
-  type ChangeDesc,
-  type EditorState,
-  type Extension,
-  StateEffect,
-  StateField,
-  type Text,
-} from '@codemirror/state';
+import { type ChangeDesc, type Extension, StateEffect, StateField, type Text } from '@codemirror/state';
 import {
   hoverTooltip,
   keymap,
@@ -22,17 +15,15 @@ import {
   ViewPlugin,
 } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 
 import { debounce, type CleanupFn } from '@dxos/async';
-import { type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
 import { documentId } from './selection';
-import { type EditorToolbarState } from '../components';
-import { type Comment, type Range } from '../types';
-import { Cursor, overlap, singleValueFacet, callbackWrapper } from '../util';
+import { type RenderCallback, type Comment, type Range } from '../types';
+import { Cursor, singleValueFacet, callbackWrapper } from '../util';
 
 //
 // State management.
@@ -156,7 +147,7 @@ const commentsDecorations = EditorView.decorations.compute([commentsState], (sta
   return Decoration.set(decorations);
 });
 
-const commentClickedEffect = StateEffect.define<string>();
+export const commentClickedEffect = StateEffect.define<string>();
 
 const handleCommentClick = EditorView.domEventHandlers({
   click: (event, view) => {
@@ -346,6 +337,10 @@ export type CommentsOptions = {
    */
   key?: string;
   /**
+   * Called to render tooltip.
+   */
+  renderTooltip?: RenderCallback<{ shortcut: string }>;
+  /**
    * Called to create a new thread and return the thread id.
    */
   onCreate?: (params: { cursor: string; from: number; location?: Rect | null }) => void;
@@ -361,10 +356,6 @@ export type CommentsOptions = {
    * Called to notify which thread is currently closest to the cursor.
    */
   onSelect?: (state: CommentsState) => void;
-  /**
-   * Called to render tooltip.
-   */
-  onHover?: (el: Element, shortcut: string) => void;
 };
 
 const optionsFacet = singleValueFacet<CommentsOptions>();
@@ -408,7 +399,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     // Hover tooltip (for key shortcut hints, etc.)
     // TODO(burdon): Factor out to generic hints extension for current selection/line.
     //
-    options.onHover &&
+    options.renderTooltip &&
       hoverTooltip(
         (view, pos) => {
           const selection = view.state.selection.main;
@@ -419,7 +410,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
               above: true,
               create: () => {
                 const el = document.createElement('div');
-                options.onHover!(el, shortcut);
+                options.renderTooltip!(el, { shortcut }, view);
                 return { dom: el, offset: { x: 0, y: 8 } };
               },
             };
@@ -546,30 +537,6 @@ export const scrollThreadIntoView = (view: EditorView, id: string, center = true
 };
 
 /**
- * Query the editor state for the active formatting at the selection.
- */
-export const selectionOverlapsComment = (state: EditorState): boolean => {
-  // May not be defined if thread plugin not installed.
-  const commentState = state.field(commentsState, false);
-  if (commentState === undefined) {
-    return false;
-  }
-
-  const { selection } = state;
-  for (const range of selection.ranges) {
-    if (commentState.comments.some(({ range: commentRange }) => overlap(commentRange, range))) {
-      return true;
-    }
-  }
-
-  return false;
-};
-
-const hasActiveSelection = (state: EditorState): boolean => {
-  return state.selection.ranges.some((range) => !range.empty);
-};
-
-/**
  * Manages external comment synchronization for the editor.
  * This class subscribes to external comment updates and applies them to the editor view.
  */
@@ -606,19 +573,6 @@ export const createExternalCommentSync = (
     },
   );
 
-export const useCommentState = (state: ReactiveObject<EditorToolbarState>): Extension => {
-  return useMemo(
-    () =>
-      EditorView.updateListener.of((update) => {
-        if (update.docChanged || update.selectionSet) {
-          state.comment = selectionOverlapsComment(update.state);
-          state.selection = hasActiveSelection(update.state);
-        }
-      }),
-    [state],
-  );
-};
-
 /**
  * @deprecated This hook will be removed in future versions. Use the new comment sync extension instead.
  * Update comments state field.
@@ -635,23 +589,4 @@ export const useComments = (view: EditorView | null | undefined, id: string, com
       }
     }
   });
-};
-
-/**
- * Hook provides an extension to listen for comment clicks and invoke a handler.
- */
-export const useCommentClickListener = (onCommentClick: (commentId: string) => void): Extension => {
-  return useMemo(
-    () =>
-      EditorView.updateListener.of((update) => {
-        update.transactions.forEach((transaction) => {
-          transaction.effects.forEach((effect) => {
-            if (effect.is(commentClickedEffect)) {
-              onCommentClick(effect.value);
-            }
-          });
-        });
-      }),
-    [onCommentClick],
-  );
 };

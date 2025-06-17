@@ -9,7 +9,7 @@ import { ClientProvider } from '@dxos/react-client';
 
 import { Main } from './Main';
 import { getConfig } from '../config';
-import { createTodoList, TodoListType, TodoType } from '../types';
+import { createTodoList, TodoList, Todo } from '../types';
 
 const createWorker = () =>
   new SharedWorker(new URL('../shared-worker', import.meta.url), {
@@ -24,7 +24,7 @@ export const Root = () => {
       config={getConfig}
       createWorker={createWorker}
       shell='./shell.html'
-      types={[TodoListType, TodoType]}
+      types={[TodoList, Todo]}
       onInitialized={async (client) => {
         const searchParams = new URLSearchParams(location.search);
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
