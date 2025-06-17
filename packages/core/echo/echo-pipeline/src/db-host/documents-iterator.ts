@@ -2,16 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as A from '@dxos/automerge/automerge';
-import { type DocumentId } from '@dxos/automerge/automerge-repo';
+import * as A from '@automerge/automerge';
+import { type DocumentId } from '@automerge/automerge-repo';
+
 import { Context } from '@dxos/context';
-import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
-import { type ObjectSnapshot, type IdToHeads } from '@dxos/indexing';
+import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
+import { type IdToHeads, type ObjectSnapshot } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ObjectPointerVersion, objectPointerCodec } from '@dxos/protocols';
 
-import { type AutomergeHost, getSpaceKeyFromDoc } from '../automerge';
+import { type AutomergeHost } from '../automerge';
 
 const LOG_VIEW_OPERATION_THRESHOLD = 300;
 
@@ -27,9 +28,9 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
     for (const [id, heads] of objects.entries()) {
       try {
         const { documentId, objectId } = objectPointerCodec.decode(id);
-        const handle = await automergeHost.loadDoc<SpaceDoc>(Context.default(), documentId as DocumentId);
+        const handle = await automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId as DocumentId);
 
-        let doc = handle.docSync();
+        let doc = handle.doc();
         invariant(doc);
 
         const currentHeads = A.getHeads(doc);
@@ -61,7 +62,7 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
         // Upgrade V0 object pointers to V1.
         let newId = id;
         if (objectPointerCodec.getVersion(id) === ObjectPointerVersion.V0) {
-          const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
+          const spaceKey = DatabaseDirectory.getSpaceKey(doc) ?? undefined;
           newId = objectPointerCodec.encode({ documentId, objectId, spaceKey });
         }
 

@@ -4,18 +4,17 @@
 
 import { pipe } from 'effect';
 
-import { contributes, Capabilities, type PluginsContext, chain, createIntent } from '@dxos/app-framework';
-import { getSchemaTypename } from '@dxos/echo-schema';
+import { contributes, Capabilities, type PluginContext, chain, createIntent } from '@dxos/app-framework';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
 
 import translations from '../translations';
 import { MarkdownAction, DocumentType } from '../types';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphSerializer, [
     {
-      inputType: getSchemaTypename(DocumentType)!,
+      inputType: DocumentType.typename,
       outputType: 'text/markdown',
       // Reconcile with metadata serializers.
       serialize: async (node) => {
@@ -37,7 +36,7 @@ export default (context: PluginsContext) =>
           return;
         }
 
-        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
         const result = await dispatch(
           pipe(
             createIntent(MarkdownAction.Create, { spaceId: space.id, name: data.name, content: data.data }),

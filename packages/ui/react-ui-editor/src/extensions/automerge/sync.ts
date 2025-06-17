@@ -4,10 +4,10 @@
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
+import { next as A } from '@automerge/automerge';
 import { type StateField } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
-import { next as A } from '@dxos/automerge/automerge';
 import { type IDocHandle } from '@dxos/react-client/echo';
 
 import { getLastHeads, getPath, isReconcile, reconcileAnnotation, type State, updateHeads } from './defs';
@@ -26,7 +26,7 @@ export class Syncer {
     private readonly _state: StateField<State>
   ) {}
 
-  reconcile(view: EditorView, editor: boolean) {
+  reconcile(view: EditorView, editor: boolean): void {
     // TODO(burdon): Better way to do mutex?
     if (this._pending) {
       return;
@@ -41,7 +41,7 @@ export class Syncer {
     this._pending = false;
   }
 
-  onEditorChange(view: EditorView) {
+  onEditorChange(view: EditorView): void {
     // Apply the unreconciled transactions to the document.
     const transactions = view.state.field(this._state).unreconciledTransactions.filter((tx) => !isReconcile(tx));
     const newHeads = updateAutomerge(this._state, this._handle, transactions, view.state);
@@ -54,18 +54,18 @@ export class Syncer {
     }
   }
 
-  onAutomergeChange(view: EditorView) {
+  onAutomergeChange(view: EditorView): void {
     // Get the diff between the updated state of the document and the heads and apply that to the codemirror doc.
     const oldHeads = getLastHeads(view.state, this._state);
-    const newHeads = A.getHeads(this._handle.docSync()!);
-    const diff = A.equals(oldHeads, newHeads) ? [] : A.diff(this._handle.docSync()!, oldHeads, newHeads);
+    const newHeads = A.getHeads(this._handle.doc()!);
+    const diff = A.equals(oldHeads, newHeads) ? [] : A.diff(this._handle.doc()!, oldHeads, newHeads);
 
     const selection = view.state.selection;
     const path = getPath(view.state, this._state);
     updateCodeMirror(view, selection, path, diff);
 
     // TODO(burdon): Test conflicts?
-    // A.getConflicts(this._handle.docSync()!, path[0]);
+    // A.getConflicts(this._handle.doc()!, path[0]);
 
     view.dispatch({
       effects: updateHeads(newHeads),

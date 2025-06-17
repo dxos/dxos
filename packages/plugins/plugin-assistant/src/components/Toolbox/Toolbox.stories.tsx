@@ -32,7 +32,7 @@ const DefaultStory = (props: ToolboxProps) => {
 };
 
 const meta: Meta<typeof Toolbox> = {
-  title: 'plugins/plugin-automation/Toolbox',
+  title: 'plugins/plugin-assistant/Toolbox',
   component: Toolbox,
   render: DefaultStory,
   decorators: [
@@ -44,7 +44,7 @@ const meta: Meta<typeof Toolbox> = {
             await client.halo.createIdentity();
           },
         }),
-        SpacePlugin({ observability: false }),
+        SpacePlugin(),
         SettingsPlugin(),
         IntentPlugin(),
         ChessPlugin(),
@@ -54,11 +54,11 @@ const meta: Meta<typeof Toolbox> = {
       capabilities,
     }),
     withTheme,
-    withLayout({ tooltips: true }),
+    withLayout(),
   ],
   parameters: {
-    translations,
     layout: 'centered',
+    translations,
   },
 };
 

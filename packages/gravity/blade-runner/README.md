@@ -5,8 +5,12 @@ Blade Runner.
 
 ## Prerequisites
 
-- Run redis
+- Install Playwright
+```bash
+pnpm exec playwright install
+```
 
+- Run redis
 ```bash
 brew install redis
 redis-server --port 6379

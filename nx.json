@@ -7,8 +7,7 @@
     "sharedGlobals": [
       "{workspaceRoot}/tsconfig.json",
       "{workspaceRoot}/.eslintrc*.js",
-      { "runtime": "node --version" },
-      "{workspaceRoot}/go.work"
+      { "runtime": "node --version" }
     ],
     "production": [
       "default",
@@ -48,6 +47,7 @@
         { "env": "DX_HOST" },
         { "env": "DX_PWA" },
         { "env": "NODE_ENV" },
+        { "env": "NODE_OPTIONS" },
         { "env": "REMOTE_SOURCE" },
         { "env": "DX_HUB_URL" },
         { "env": "LOG_FILTER" },
@@ -108,6 +108,20 @@
         "command": "bash -c 'pnpm pack --pack-destination \"$(git rev-parse --show-toplevel)/dist/tarballs/{projectName}\"'",
         "cwd": "{projectRoot}"
       }
+    },
+    "typedoc": {
+      "cache": true,
+      "dependsOn": [
+        "build"
+      ],
+      "executor": "nx:run-script",
+      "inputs": ["production"],
+      "options": {
+        "script": "typedoc"
+      },
+      "outputs": [
+        "{projectRoot}/typedoc"
+      ]
     }
   },
   "nxCloudId": "62ed1bb8236992263d3c673b"

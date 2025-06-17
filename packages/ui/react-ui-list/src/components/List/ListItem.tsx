@@ -30,7 +30,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { useListContext } from './ListRoot';
 
-export type ListItemRecord = {};
+export type ListItemRecord = any;
 
 export type ItemDragState =
   | {
@@ -96,7 +96,7 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
       draggable({
         element,
         dragHandle: dragHandleRef.current!,
-        getInitialData: () => item,
+        getInitialData: () => item as any,
         onGenerateDragPreview: dragPreview
           ? ({ nativeSetDragImage, source }) => {
               const rect = source.element.getBoundingClientRect();
@@ -104,10 +104,7 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
                 nativeSetDragImage,
                 getOffset: ({ container }) => {
                   const { height } = container.getBoundingClientRect();
-                  return {
-                    x: 20,
-                    y: height / 2,
-                  };
+                  return { x: 20, y: height / 2 };
                 },
                 render: ({ container }) => {
                   container.style.width = rect.width + 'px';
@@ -134,10 +131,10 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
       dropTargetForElements({
         element,
         canDrop: ({ source }) => {
-          return source.element !== element && isItem(source.data);
+          return (source.element !== element && isItem?.(source.data)) ?? false;
         },
         getData: ({ input }) => {
-          return attachClosestEdge(item, { element, input, allowedEdges: ['top', 'bottom'] });
+          return attachClosestEdge(item as any, { element, input, allowedEdges: ['top', 'bottom'] });
         },
         getIsSticky: () => true,
         onDragEnter: ({ self }) => {

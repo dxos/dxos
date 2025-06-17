@@ -8,23 +8,22 @@ import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-sc
 import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { useLayoutEffect, useState } from 'react';
 
-import { type Orientation } from '../components/Stack';
-import { type StackItemRearrangeHandler, type StackItemData } from '../components/StackContext';
+import { type StackItemRearrangeHandler, type StackItemData, type Orientation } from '../components';
 
 /**
  * Hook to handle drag and drop functionality for Stack components.
  */
 export const useStackDropForElements = ({
+  id,
   element,
   selfDroppable,
   orientation,
-  id,
   onRearrange,
 }: {
+  id?: string;
   element: HTMLDivElement | null;
   selfDroppable: boolean;
   orientation: Orientation;
-  id?: string;
   onRearrange?: StackItemRearrangeHandler;
 }) => {
   const [dropping, setDropping] = useState(false);

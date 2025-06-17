@@ -14,7 +14,7 @@ import { SheetToolbar } from './SheetToolbar';
 import translations from '../../translations';
 
 const DefaultStory = () => {
-  return <SheetToolbar classNames={textBlockWidth} />;
+  return <SheetToolbar id='test' classNames={textBlockWidth} />;
 };
 
 export const Default = {};
@@ -23,7 +23,7 @@ const meta: Meta = {
   title: 'plugins/plugin-sheet/Toolbar',
   component: SheetToolbar,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
   parameters: { translations, layout: 'fullscreen' },
 };
 

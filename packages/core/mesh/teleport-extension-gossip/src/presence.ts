@@ -127,7 +127,7 @@ export class Presence extends Resource {
     };
   }
 
-  private _receiveAnnounces(message: GossipMessage) {
+  private _receiveAnnounces(message: GossipMessage): void {
     invariant(message.channelId === PRESENCE_CHANNEL_ID, `Invalid channel ID: ${message.channelId}`);
     const oldPeerState = this._peerStates.get(message.peerId);
     if (!oldPeerState || oldPeerState.timestamp.getTime() < message.timestamp.getTime()) {
@@ -140,7 +140,7 @@ export class Presence extends Resource {
     }
   }
 
-  private _removePeerFromIdentityKeyIndex(peerState: GossipMessage) {
+  private _removePeerFromIdentityKeyIndex(peerState: GossipMessage): void {
     const identityPeerList = this._peersByIdentityKey.get((peerState.payload as PeerState).identityKey) ?? [];
     const peerIdIndex = identityPeerList.findIndex((id) => id.peerId?.equals(peerState.peerId));
     if (peerIdIndex >= 0) {
@@ -148,7 +148,7 @@ export class Presence extends Resource {
     }
   }
 
-  private _updatePeerInIdentityKeyIndex(newState: GossipMessage) {
+  private _updatePeerInIdentityKeyIndex(newState: GossipMessage): void {
     const identityKey = (newState.payload as PeerState).identityKey;
     const identityKeyPeers = this._peersByIdentityKey.get(identityKey) ?? [];
     const existingIndex = identityKeyPeers.findIndex((p) => p.peerId && newState.peerId?.equals(p.peerId));

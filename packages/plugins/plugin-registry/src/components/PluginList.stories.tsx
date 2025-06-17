@@ -37,7 +37,7 @@ const DefaultStory = ({ classNames }: ThemedClassName<{}>) => {
             name: `${faker.commerce.productName()}`,
             description: faker.lorem.sentences(Math.ceil(Math.random() * 3)),
             tags: faker.datatype.boolean({ probability: 0.6 })
-              ? [faker.helpers.arrayElement(['experimental', 'beta', 'alpha', 'stable', 'new', '新発売'])]
+              ? [faker.helpers.arrayElement(['labs', 'beta', 'alpha', 'stable', 'new', '新発売'])]
               : undefined,
             icon: faker.helpers.arrayElement(icons),
             homePage: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.url() : undefined,
@@ -65,7 +65,7 @@ const meta: Meta = {
   title: 'plugins/plugin-registry/PluginList',
   component: PluginList,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ tooltips: true, fullscreen: true, classNames: 'justify-center' })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
   parameters: {
     translations,
   },

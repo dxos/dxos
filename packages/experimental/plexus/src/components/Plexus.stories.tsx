@@ -20,10 +20,9 @@ import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import hash from 'string-hash';
 
-import { Grid, SVG, SVGRoot, Zoom } from '@dxos/gem-core';
-import { Markers, type GraphLayoutNode } from '@dxos/gem-spore';
-import { convertTreeToGraph, createTree, type TestNode, TestGraphModel } from '@dxos/gem-spore/testing';
 import { faker } from '@dxos/random';
+import { SVG, type GraphLayoutNode } from '@dxos/react-ui-graph';
+import { convertTreeToGraph, createTree, type TestNode, TestGraphModel } from '@dxos/react-ui-graph/testing';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -39,13 +38,6 @@ export default {
   render: () => <Test />,
   decorators: [withTheme],
 };
-
-// TODO(burdon): Factor testing out of gem-spore/testing
-// TODO(burdon): Generate typed tree data.
-// TODO(burdon): Layout around focused element (up/down); hide distant items.
-//  - large collections (scroll/zoom/lens?)
-//  - square off leaf nodes (HTML list blocks) with radial lines into circles
-//  - search
 
 const Panel: FC<{ node: TestNode; className?: string }> = ({ node, className }) => {
   const Icon = icons[hash(node.label ?? '') % icons.length];
@@ -75,11 +67,12 @@ const Test = () => {
   // TODO(burdon): Pass down state to context (set nav, etc.)
   const [spinning, setSpinning] = useState(true);
 
+  // const selection = useMemo(() => new SelectionModel(), []);
   const model = useMemo(() => {
     const root = createTree({ depth: 5, children: 3 });
     const model = new TestGraphModel(convertTreeToGraph(root));
-    model.setSelected(root.id);
-    setHistory([model.selected!]);
+    // selection.setSelected(root.id);
+    setHistory([root.id]);
     return model;
   }, []);
 
@@ -93,11 +86,11 @@ const Test = () => {
 
   // Do transition on history change.
   useEffect(() => {
-    model.setSelected(history[index]);
+    // selection.setSelected(history[index]);
   }, [index]);
 
   const handleGenerate = () => {
-    model.createNodes(model.getNode(model.selected!));
+    // model.createNodes(model.getNode(selection.selected!));
   };
 
   const handleSelect = (node: TestNode) => {
@@ -169,18 +162,18 @@ const Test = () => {
   return (
     <div ref={containerRef} className='flex flex-col absolute left-0 right-0 top-0 bottom-0'>
       <div className='flex flex-1 relative'>
-        <SVGRoot>
-          <SVG className={slots?.root}>
-            <Markers arrowSize={6} />
-            <Grid className={slots?.grid?.className} />
-            <Zoom extent={[1, 4]}>
-              <g className={mx('visible', spinning && 'invisible')}>
-                <line className='stroke-slate-700 stroke-[3px]' x1={0} y1={0} x2={lineLength} y2={0} />
-              </g>
-              <Plexus model={model} slots={slots?.plexus} onSelect={handleSelect} onTransition={setSpinning} />
-            </Zoom>
-          </SVG>
-        </SVGRoot>
+        <SVG.Root>
+          {/* <SVG classNames={slots?.root}> */}
+          <SVG.Markers arrowSize={6} />
+          <SVG.Grid /*className={slots?.grid?.className} */ />
+          <SVG.Zoom extent={[1, 4]}>
+            <g className={mx('visible', spinning && 'invisible')}>
+              <line className='stroke-slate-700 stroke-[3px]' x1={0} y1={0} x2={lineLength} y2={0} />
+            </g>
+            <Plexus model={model} slots={slots?.plexus} onSelect={handleSelect} onTransition={setSpinning} />
+          </SVG.Zoom>
+          {/* </SVG> */}
+        </SVG.Root>
 
         {node && (
           <div

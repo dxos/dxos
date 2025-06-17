@@ -2,21 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type PublicKey } from '@dxos/keys';
-import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
+//
+// Copyright 2025 DXOS.org
+//
 
-import type { Filter$, FilterSource } from './filter';
-import { type Query } from './query';
-import { type ReactiveEchoObject } from '../echo-handler';
+import { Filter, Query } from '@dxos/echo-schema';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
+import type { Live } from '@dxos/live-object';
+import { log } from '@dxos/log';
+import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
+
+import { type QueryResult } from './query-result';
+
+export { Filter, Query };
 
 /**
  * `query` API function declaration.
  */
-// TODO(dmaretskyi): Type based on the result format.
 export interface QueryFn {
-  (): Query;
-  <F extends Filter$.Any>(filter: F, options?: QueryOptions | undefined): Query<ReactiveEchoObject<Filter$.Object<F>>>;
-  (filter?: FilterSource | undefined, options?: QueryOptions | undefined): Query<ReactiveEchoObject<any>>;
+  // TODO(dmaretskyi): Remove query options.
+  <Q extends Query.Any>(query: Q, options?: QueryOptions | undefined): QueryResult<Live<Query.Type<Q>>>;
+  <F extends Filter.Any>(filter: F, options?: QueryOptions | undefined): QueryResult<Live<Filter.Type<F>>>;
 }
 
 /**
@@ -41,9 +47,10 @@ export enum ResultFormat {
   AutomergeDocAccessor = 'automergeDocAccessor',
 }
 
+/**
+ * @deprecated Use `Query.options` instead.
+ */
 export type QueryOptions = {
-  format?: ResultFormat;
-
   /**
    * Query only in specific spaces.
    */
@@ -72,14 +79,19 @@ export type QueryOptions = {
   include?: QueryJoinSpec;
 
   /**
-   * @deprecated Use `spaceIds` instead.
-   */
-  spaces?: PublicKey[];
-
-  /**
    * Return only the first `limit` results.
    */
   limit?: number;
+
+  /**
+   * @deprecated Stick to live format.
+   */
+  format?: ResultFormat;
+
+  /**
+   * @deprecated Use `spaceIds` instead.
+   */
+  spaces?: PublicKey[];
 };
 
 export interface QueryJoinSpec extends Record<string, true | QueryJoinSpec> {}
@@ -93,4 +105,47 @@ export const optionsToProto = (options: QueryOptions): QueryOptionsProto => {
     limit: options.limit,
     spaces: options.spaces,
   };
+};
+
+type NormalizeQueryOptions = {
+  defaultSpaceId?: SpaceId;
+};
+
+export const normalizeQuery = (
+  query_: unknown | undefined,
+  userOptions: QueryOptions | undefined,
+  opts?: NormalizeQueryOptions,
+) => {
+  let query: Query.Any;
+
+  if (Query.is(query_)) {
+    query = query_;
+  } else if (Filter.is(query_)) {
+    query = Query.select(query_);
+  } else if (query_ === undefined) {
+    query = Query.select(Filter.everything());
+  } else if (typeof query_ === 'object' && query_ !== null) {
+    query = Query.select(Filter._props(query_));
+  } else if (typeof query_ === 'function') {
+    throw new TypeError('Functions are not supported as queries');
+  } else {
+    log.error('Invalid query', { query: query_ });
+    throw new TypeError('Invalid query');
+  }
+
+  if (userOptions) {
+    query = query.options({
+      spaceIds: userOptions.spaceIds ?? (opts?.defaultSpaceId ? [opts.defaultSpaceId] : undefined),
+      deleted:
+        userOptions?.deleted === undefined
+          ? undefined
+          : userOptions?.deleted === QueryOptionsProto.ShowDeletedOption.SHOW_DELETED
+            ? 'include'
+            : userOptions?.deleted === QueryOptionsProto.ShowDeletedOption.HIDE_DELETED
+              ? 'exclude'
+              : 'only',
+    });
+  }
+
+  return query;
 };

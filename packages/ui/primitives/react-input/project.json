@@ -32,7 +32,8 @@
         "platforms": [
           "browser",
           "node"
-        ]
+        ],
+        "preactSignalTracking": true
       },
       "outputs": [
         "{options.outputPath}"

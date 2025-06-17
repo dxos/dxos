@@ -1,0 +1,128 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import '@dxos-theme';
+
+import { type StoryObj, type Meta } from '@storybook/react';
+import React, { useEffect, useMemo, useState } from 'react';
+
+import { log } from '@dxos/log';
+import { Toolbar } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+type Word = {
+  text: string;
+  matched: boolean;
+};
+
+const SpeechRecognition = ({ keywords }: { keywords: string[] }) => {
+  const [running, setRunning] = useState(false);
+  const [matchingWords, setMatchingWords] = useState<Word[]>(keywords.map((word) => ({ text: word, matched: false })));
+
+  const [transcript, setTranscript] = useState('');
+  const recognition = useMemo(() => {
+    // TODO(mykola): Fix types
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechGrammarList = (window as any).SpeechGrammarList || (window as any).webkitSpeechGrammarList;
+    if (!SpeechRecognition || !SpeechGrammarList) {
+      log.error('Speech recognition not supported in this browser');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
+    // Add this line to enable punctuation
+    recognition.grammars = new SpeechGrammarList();
+
+    // TODO(mykola): Fix types
+    recognition.onresult = (event: any) => {
+      log.info('recognition result', { event });
+      const current = event.resultIndex;
+      const transcript = event.results[current][0].transcript;
+
+      // Remove punctuation and normalize whitespace for comparison
+      const normalizeText = (text: string) =>
+        text
+          .toLowerCase()
+          .replace(/[.,!?]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+      const normalizedTranscript = normalizeText(transcript);
+
+      // Check each keyword and update matching words
+      const updatedWords = matchingWords.map((word) => {
+        const normalizedKeyword = normalizeText(word.text);
+        const matched = normalizedTranscript.includes(normalizedKeyword);
+        return { ...word, matched };
+      });
+
+      setMatchingWords(updatedWords);
+      setTranscript(transcript);
+    };
+
+    // TODO(mykola): Fix types
+    recognition.onerror = (event: any) => {
+      log.error('Speech recognition error:', { error: event.error });
+      setRunning(false);
+    };
+
+    return recognition;
+  }, []);
+
+  useEffect(() => {
+    if (running) {
+      recognition?.start();
+    } else {
+      recognition?.stop();
+    }
+  }, [running, recognition]);
+
+  return (
+    <div className={mx('flex flex-col gap-2 w-[30rem]')}>
+      <Toolbar.Root>
+        <Toolbar.IconButton
+          iconOnly
+          icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
+          label={running ? 'Pause' : 'Play'}
+          onClick={() => setRunning((running) => !running)}
+        />
+      </Toolbar.Root>
+
+      <div className='flex flex-wrap'>
+        {matchingWords.map((word, index) => (
+          <span
+            key={index}
+            className={mx(
+              'px-3 py-1 m-2 rounded border',
+              word.matched ? 'bg-red-200 text-red-800 border-red-300' : 'bg-gray-200 text-gray-600 border-gray-300',
+            )}
+          >
+            {word.text}
+          </span>
+        ))}
+      </div>
+
+      <span>{transcript || (running ? 'Listening...' : 'Click play to start speech recognition')}</span>
+    </div>
+  );
+};
+
+const meta: Meta<typeof SpeechRecognition> = {
+  title: 'plugins/plugin-transcription/KeyWordDetection',
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
+};
+
+export default meta;
+
+export const SpeechRecognitionAPI: StoryObj<typeof SpeechRecognition> = {
+  render: SpeechRecognition,
+  args: {
+    keywords: ['kai', 'computer', 'hello'],
+  },
+};

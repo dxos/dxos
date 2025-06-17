@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { generateAutomergeUrl, parseAutomergeUrl, Repo } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { generateAutomergeUrl, parseAutomergeUrl, Repo } from '@dxos/automerge/automerge-repo';
 import { DocumentsSynchronizer } from '@dxos/echo-pipeline';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -26,8 +26,8 @@ describe('DocHandleProxy', () => {
 
     const mutation = clientHandle._getPendingChanges()!;
     docsSynchronizer.update([{ documentId, mutation, isNew: true }]);
-    const workerHandle = workerRepo.find<{ text: string }>(documentId);
-    expect(workerHandle.docSync()?.text).to.equal(text);
+    const workerHandle = await workerRepo.find<{ text: string }>(documentId);
+    expect(workerHandle.doc()?.text).to.equal(text);
   });
 
   test('update handle with foreign mutation', async () => {
@@ -50,7 +50,7 @@ describe('DocHandleProxy', () => {
       doc.text = text;
     });
 
-    expect(clientHandle.docSync().text).to.equal;
+    expect(clientHandle.doc().text).to.equal;
   });
 
   test('foreign and intrinsic mutation', async () => {
@@ -85,8 +85,8 @@ describe('DocHandleProxy', () => {
     synchronizer.update([{ documentId: workerHandle.documentId, mutation: clientUpdate }]);
 
     for (const handle of [clientHandle, workerHandle]) {
-      expect(handle.docSync()?.clientText).to.equal(clientText);
-      expect(handle.docSync()?.foreignPeerText).to.equal(foreignPeerText);
+      expect(handle.doc()?.clientText).to.equal(clientText);
+      expect(handle.doc()?.foreignPeerText).to.equal(foreignPeerText);
     }
   });
 });

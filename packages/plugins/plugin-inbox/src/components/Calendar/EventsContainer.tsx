@@ -6,13 +6,14 @@ import React, { useState } from 'react';
 
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
+import { DataType } from '@dxos/schema';
 
 import { EventList } from './EventtList';
-import { type CalendarType, EventType } from '../../types';
+import { type CalendarType } from '../../types';
 
 const byDate =
   (direction = -1) =>
-  ({ startDate: a }: EventType, { startDate: b }: EventType) =>
+  ({ startDate: a }: DataType.Event, { startDate: b }: DataType.Event) =>
     a < b ? -direction : a > b ? direction : 0;
 
 export type EventsContainerProps = {
@@ -20,9 +21,9 @@ export type EventsContainerProps = {
 };
 
 export const EventsContainer = ({ calendar }: EventsContainerProps) => {
-  const [selected, setSelected] = useState<EventType>();
+  const [selected, setSelected] = useState<DataType.Event>();
   const space = getSpace(calendar);
-  const objects = useQuery(space, Filter.schema(EventType));
+  const objects = useQuery(space, Filter.type(DataType.Event));
   objects.sort(byDate());
 
   return (

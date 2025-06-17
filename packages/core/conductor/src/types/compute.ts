@@ -3,12 +3,10 @@
 //
 
 import { type HttpClient } from '@effect/platform';
-import { Effect, type Scope } from 'effect';
+import { Effect, type Schema, type Scope } from 'effect';
 
-import { type S } from '@dxos/echo-schema';
 import { mapValues } from '@dxos/util';
 
-// TODO(burdon): Move to types to untangle circular deps.
 import type { ComputeNode } from './graph';
 import type { EventLogger, FunctionCallService, GptService, QueueService, SpaceService } from '../services';
 
@@ -119,32 +117,32 @@ export const synchronizedComputeFunction =
 
 // TODO(dmaretskyi): To effect schema.
 export type ComputeMeta = {
-  input: S.Schema.AnyNoContext;
-  output: S.Schema.AnyNoContext;
+  input: Schema.Schema.AnyNoContext;
+  output: Schema.Schema.AnyNoContext;
 };
 
 /**
  *
  */
 export type Executable<
-  SI extends S.Schema.AnyNoContext = S.Schema.AnyNoContext,
-  SO extends S.Schema.AnyNoContext = S.Schema.AnyNoContext,
+  SI extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
+  SO extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
 > = {
   meta: ComputeMeta;
 
   /** Undefined for meta nodes like input/output. */
-  exec?: ComputeFunction<S.Schema.Type<SI>, S.Schema.Type<SO>>;
+  exec?: ComputeFunction<Schema.Schema.Type<SI>, Schema.Schema.Type<SO>>;
 };
 
 /**
  * Type-safe constructor for function definition.
  */
-export const defineComputeNode = <SI extends S.Schema.AnyNoContext, SO extends S.Schema.AnyNoContext>({
+export const defineComputeNode = <SI extends Schema.Schema.AnyNoContext, SO extends Schema.Schema.AnyNoContext>({
   input,
   output,
   exec,
 }: {
   input: SI;
   output: SO;
-  exec?: ComputeFunction<S.Schema.Type<SI>, S.Schema.Type<SO>>;
+  exec?: ComputeFunction<Schema.Schema.Type<SI>, Schema.Schema.Type<SO>>;
 }): Executable => ({ meta: { input, output }, exec });

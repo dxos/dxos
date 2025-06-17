@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Option } from 'effect';
 import React, { type FC, useMemo } from 'react';
 
 import { useAppGraph, Surface } from '@dxos/app-framework';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 
 import { FILES_PLUGIN } from '../meta';
 import { type LocalFile, type LocalEntity, LocalFilesAction } from '../types';
@@ -33,17 +34,14 @@ const LocalFileContainer: FC<{ file: LocalFile }> = ({ file }) => {
 const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   const { t } = useTranslation(FILES_PLUGIN);
   const { graph } = useAppGraph();
-  const node = graph.findNode(entity.id);
+  const node = graph.getNode(entity.id).pipe(Option.getOrNull);
   const action =
-    node && graph.actions(node).find((action) => action.id === `${LocalFilesAction.Reconnect._tag}:${node.id}`);
+    node && graph.getActions(node.id).find((action) => action.id === `${LocalFilesAction.Reconnect._tag}:${node.id}`);
 
   return (
     <StackItem.Content>
       <div role='none' className='overflow-auto p-8 grid place-items-center'>
-        <p
-          role='alert'
-          className={mx(descriptionText, 'break-words border border-dashed border-separator rounded-lg p-8')}
-        >
+        <p role='alert' className={mx(descriptionMessage, 'break-words rounded-lg p-8')}>
           {t('missing file permissions')}
           {action && node && (
             <Button onClick={() => action.data({ node })}>{toLocalizedString(action.properties.label, t)}</Button>

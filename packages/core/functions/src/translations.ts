@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ScriptType } from './types';
+import { ScriptType } from './schema';
 
 export default [
   {

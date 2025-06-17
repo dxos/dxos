@@ -2,22 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, type PluginsContext, Capabilities, createResolver, LayoutAction } from '@dxos/app-framework';
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { contributes, type PluginContext, Capabilities, createResolver, LayoutAction } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 import { NavTreeCapabilities } from './capabilities';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(
     Capabilities.IntentResolver,
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.Expose.fields.input> =>
-        S.is(LayoutAction.Expose.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.Expose.fields.input> =>
+        Schema.is(LayoutAction.Expose.fields.input)(data),
       resolve: async ({ subject }) => {
-        const { graph } = context.requestCapability(Capabilities.AppGraph);
-        const { getItem, setItem } = context.requestCapability(NavTreeCapabilities.State);
+        const { graph } = context.getCapability(Capabilities.AppGraph);
+        const { getItem, setItem } = context.getCapability(NavTreeCapabilities.State);
 
         try {
           const path = await graph.waitForPath({ target: subject }, { timeout: 1_000 });

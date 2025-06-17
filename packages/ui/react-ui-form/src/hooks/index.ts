@@ -1,5 +1,7 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 export * from './useForm';
+export * from './useRefQueryLookupHandler';
+export * from './useQueryRefOptions';

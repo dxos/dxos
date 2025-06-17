@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import { Schema, pipe } from 'effect';
 
+import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
+import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { isInstanceOf, S } from '@dxos/echo-schema';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
@@ -16,7 +17,7 @@ import { KanbanType } from '@dxos/react-ui-kanban';
 import { meta } from '../meta';
 import { KanbanAction } from '../types';
 
-const QualifiedId = S.String.annotations({
+const QualifiedId = Schema.String.annotations({
   description: 'The fully qualified ID of the kanban `spaceID:objectID`',
 });
 
@@ -38,17 +39,17 @@ export default () => {
     `,
     schema: KanbanType,
     tools: [
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'create',
         description: `
             Create a new kanban board using an existing schema.
             Use schema_create first to create a schema, or schema_list to choose an existing one.`,
         caption: 'Creating kanban board...',
-        schema: S.Struct({
-          typename: S.String.annotations({
+        schema: Schema.Struct({
+          typename: Schema.String.annotations({
             description: 'The fully qualified typename of the schema to use for the kanban cards.',
           }),
-          pivotColumn: S.optional(S.String).annotations({
+          pivotColumn: Schema.optional(Schema.String).annotations({
             description: 'Optional field name to use as the column pivot.',
           }),
         }),
@@ -79,15 +80,15 @@ export default () => {
           return ToolResult.Success(createArtifactElement(data.id));
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'list',
         description: 'List all kanban boards in the current space.',
         caption: 'Listing kanban boards...',
-        schema: S.Struct({}),
+        schema: Schema.Struct({}),
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: boards } = await space.db.query(Filter.schema(KanbanType)).run();
+          const { objects: boards } = await space.db.query(Filter.type(KanbanType)).run();
 
           const boardInfo = await Promise.all(
             boards.map(async (board: KanbanType) => {
@@ -102,15 +103,15 @@ export default () => {
           return ToolResult.Success(boardInfo);
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'inspect',
         description: 'Get details about a specific kanban board.',
         caption: 'Inspecting kanban board...',
-        schema: S.Struct({ id: QualifiedId }),
+        schema: Schema.Struct({ id: QualifiedId }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: boards } = await space.db.query(Filter.schema(KanbanType)).run();
+          const { objects: boards } = await space.db.query(Filter.type(KanbanType)).run();
           const board = boards.find((board: KanbanType) => fullyQualifiedId(board) === id);
           invariant(isInstanceOf(KanbanType, board));
 

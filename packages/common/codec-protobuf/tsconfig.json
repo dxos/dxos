@@ -9,24 +9,5 @@
     "src",
     "test"
   ],
-  "references": [
-    {
-      "path": "../async"
-    },
-    {
-      "path": "../context"
-    },
-    {
-      "path": "../invariant"
-    },
-    {
-      "path": "../log"
-    },
-    {
-      "path": "../node-std"
-    },
-    {
-      "path": "../util"
-    }
-  ]
+  "references": []
 }

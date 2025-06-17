@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { type FC, useMemo } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
-import { type TraceEvent, type InvocationSpan } from '@dxos/functions/types';
+import { type TraceEvent, type InvocationSpan } from '@dxos/functions';
 import { useQueue } from '@dxos/react-client/echo';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -13,7 +13,7 @@ type ExceptionPanelProps = {
   span: InvocationSpan;
 };
 
-export const ExceptionPanel: React.FC<ExceptionPanelProps> = ({ span }) => {
+export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
   const traceQueueDxn = useMemo(() => {
     return span.invocationTraceQueue ? decodeReference(span.invocationTraceQueue).dxn : undefined;
   }, [span.invocationTraceQueue]);
@@ -21,11 +21,11 @@ export const ExceptionPanel: React.FC<ExceptionPanelProps> = ({ span }) => {
   const eventQueue = useQueue<TraceEvent>(traceQueueDxn, { pollInterval: 2000 });
 
   const errorLogs = useMemo(() => {
-    if (!eventQueue?.items?.length) {
+    if (!eventQueue?.objects?.length) {
       return [];
     }
 
-    return eventQueue.items
+    return eventQueue.objects
       .flatMap((event) =>
         event.logs
           .filter((log) => log.level === 'error')
@@ -35,7 +35,7 @@ export const ExceptionPanel: React.FC<ExceptionPanelProps> = ({ span }) => {
           })),
       )
       .sort((a, b) => a.timestampMs - b.timestampMs);
-  }, [eventQueue?.items]);
+  }, [eventQueue?.objects]);
 
   if (traceQueueDxn && eventQueue?.isLoading) {
     return <div className={mx('flex items-center justify-center h-full')}>Loading trace data...</div>;

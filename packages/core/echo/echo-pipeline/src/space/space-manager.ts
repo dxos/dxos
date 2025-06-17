@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type AutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
+
 import { synchronized, trackLeaks, Trigger } from '@dxos/async';
-import { type AutomergeUrl, parseAutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { getCredentialAssertion, type DelegateInvitationCredential, type MemberInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
@@ -82,10 +83,10 @@ export class SpaceManager {
   }
 
   @synchronized
-  async open() {}
+  async open(): Promise<void> {}
 
   @synchronized
-  async close() {
+  async close(): Promise<void> {
     await Promise.all([...this._spaces.values()].map((space) => space.close()));
   }
 
@@ -97,7 +98,7 @@ export class SpaceManager {
     onDelegatedInvitationStatusChange,
     onMemberRolesChanged,
     memberKey,
-  }: ConstructSpaceParams) {
+  }: ConstructSpaceParams): Promise<Space> {
     log.trace('dxos.echo.space-manager.construct-space', trace.begin({ id: this._instanceId }));
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 

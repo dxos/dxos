@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-hooks",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "React hooks supporting DXOS React primitives.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -26,6 +26,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@preact-signals/safe-react": "^0.9.0",
     "alea": "^1.0.1"
   },
   "devDependencies": {

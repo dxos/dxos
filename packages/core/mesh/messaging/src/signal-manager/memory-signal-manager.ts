@@ -55,7 +55,7 @@ export class MemorySignalManager implements SignalManager {
     this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
   }
 
-  async open() {
+  async open(): Promise<void> {
     if (!this._ctx.disposed) {
       return;
     }
@@ -65,7 +65,7 @@ export class MemorySignalManager implements SignalManager {
     await Promise.all([...this._joinedSwarms.values()].map((value) => this.join(value)));
   }
 
-  async close() {
+  async close(): Promise<void> {
     if (this._ctx.disposed) {
       return;
     }
@@ -87,7 +87,7 @@ export class MemorySignalManager implements SignalManager {
     return [];
   }
 
-  async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
+  async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
     invariant(!this._ctx.disposed, 'Closed');
 
     this._joinedSwarms.add({ topic, peer });
@@ -119,7 +119,7 @@ export class MemorySignalManager implements SignalManager {
     }
   }
 
-  async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
+  async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
     invariant(!this._ctx.disposed, 'Closed');
 
     this._joinedSwarms.delete({ topic, peer });
@@ -144,7 +144,15 @@ export class MemorySignalManager implements SignalManager {
     throw new Error('Not implemented');
   }
 
-  async sendMessage({ author, recipient, payload }: { author: PeerInfo; recipient: PeerInfo; payload: Any }) {
+  async sendMessage({
+    author,
+    recipient,
+    payload,
+  }: {
+    author: PeerInfo;
+    recipient: PeerInfo;
+    payload: Any;
+  }): Promise<void> {
     log('send message', { author, recipient, ...dec(payload) });
 
     invariant(recipient);
@@ -180,21 +188,21 @@ export class MemorySignalManager implements SignalManager {
       });
   }
 
-  async subscribeMessages(peerInfo: PeerInfo) {
+  async subscribeMessages(peerInfo: PeerInfo): Promise<void> {
     log('subscribing', { peerInfo });
     this._context.connections.set(peerInfo, this);
   }
 
-  async unsubscribeMessages(peerInfo: PeerInfo) {
+  async unsubscribeMessages(peerInfo: PeerInfo): Promise<void> {
     log('unsubscribing', { peerInfo });
     this._context.connections.delete(peerInfo);
   }
 
-  freeze() {
+  freeze(): void {
     this._freezeTrigger.reset();
   }
 
-  unfreeze() {
+  unfreeze(): void {
     this._freezeTrigger.wake();
   }
 }

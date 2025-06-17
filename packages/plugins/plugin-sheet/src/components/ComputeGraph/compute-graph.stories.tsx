@@ -8,8 +8,8 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { testFunctionPlugins } from '@dxos/compute/testing';
-import { FunctionType } from '@dxos/functions/types';
-import { create, useSpace, Filter } from '@dxos/react-client/echo';
+import { FunctionType } from '@dxos/functions';
+import { live, useSpace, Filter } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar, Button, Input } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -44,14 +44,14 @@ const Story = () => {
         setResult({ functions: { standard: f1.length, echo: f2.length } });
       });
 
-      space.db.add(create(FunctionType, { name: 'test', version: '0.0.1', binding: FUNCTION_NAME }));
+      space.db.add(live(FunctionType, { name: 'test', version: '0.0.1', binding: FUNCTION_NAME }));
     }
   }, [space, graph]);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const handleTest = async () => {
     if (space && graph) {
-      const { objects } = await space.db.query(Filter.schema(FunctionType)).run();
+      const { objects } = await space.db.query(Filter.type(FunctionType)).run();
       const mapped = graph.mapFunctionBindingToId(text);
       const unmapped = graph.mapFunctionBindingFromId(mapped);
       const internal = graph.mapFormulaToNative(text);

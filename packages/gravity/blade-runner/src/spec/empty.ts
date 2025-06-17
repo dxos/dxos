@@ -25,7 +25,7 @@ export class EmptyTestPlan implements TestPlan<EmptyTestSpec> {
     };
   }
 
-  async run(env: SchedulerEnvImpl<EmptyTestSpec>, params: TestParams<EmptyTestSpec>) {
+  async run(env: SchedulerEnvImpl<EmptyTestSpec>, params: TestParams<EmptyTestSpec>): Promise<void> {
     log.info('run', {
       message: 'Empty spec hello message, running dumb replicant.',
       params: env.params,

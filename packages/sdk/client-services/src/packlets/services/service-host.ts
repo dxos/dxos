@@ -125,6 +125,10 @@ export class ClientServicesHost {
       this._runtimeParams.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
     }
 
+    if (this._runtimeParams.enableVectorIndexing === undefined) {
+      this._runtimeParams.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
+    }
+
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
     }
@@ -199,7 +203,7 @@ export class ClientServicesHost {
    * Config can also be provided in the constructor.
    * Can only be called once.
    */
-  initialize({ config, ...options }: InitializeOptions) {
+  initialize({ config, ...options }: InitializeOptions): void {
     invariant(!this._open, 'service host is open');
     log('initializing...');
 
@@ -252,7 +256,7 @@ export class ClientServicesHost {
 
   @synchronized
   @Trace.span()
-  async open(ctx: Context) {
+  async open(ctx: Context): Promise<void> {
     if (this._open) {
       return;
     }
@@ -329,7 +333,11 @@ export class ClientServicesHost {
       DataService: this._serviceContext.echoHost.dataService,
       QueryService: this._serviceContext.echoHost.queryService,
 
-      NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
+      NetworkService: new NetworkServiceImpl(
+        this._serviceContext.networkManager,
+        this._serviceContext.signalManager,
+        this._edgeConnection,
+      ),
 
       LoggingService: this._loggingService,
       TracingService: this._tracingService,
@@ -369,7 +377,7 @@ export class ClientServicesHost {
 
   @synchronized
   @Trace.span()
-  async close() {
+  async close(): Promise<void> {
     if (!this._open) {
       return;
     }
@@ -387,7 +395,7 @@ export class ClientServicesHost {
     log('closed', { deviceKey });
   }
 
-  async reset() {
+  async reset(): Promise<void> {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.client-services-host.reset', trace.begin({ id: traceId }));
 

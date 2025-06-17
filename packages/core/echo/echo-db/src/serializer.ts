@@ -3,11 +3,12 @@
 //
 
 import { decodeReference, type EncodedReference, encodeReference, Reference } from '@dxos/echo-protocol';
+import { Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues, isNonNullable, stripUndefined } from '@dxos/util';
 
 import { ObjectCore } from './core-db';
-import { getObjectCore, type ReactiveEchoObject } from './echo-handler';
+import { getObjectCore, type AnyLiveObject } from './echo-handler';
 import { type EchoDatabase } from './proxy-db';
 import type { SerializedObject, SerializedSpace } from './serialized-space';
 
@@ -32,9 +33,9 @@ export class Serializer {
   async export(database: EchoDatabase): Promise<SerializedSpace> {
     const ids = database.coreDatabase.getAllObjectIds();
 
-    const loadedObjects: Array<ReactiveEchoObject<any> | undefined> = [];
+    const loadedObjects: Array<AnyLiveObject<any> | undefined> = [];
     for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
-      const { objects } = await database.query({ id: chunk }).run({ timeout: 60_000 });
+      const { objects } = await database.query(Filter.ids(...chunk)).run({ timeout: 60_000 });
       loadedObjects.push(...objects);
     }
 
@@ -51,7 +52,7 @@ export class Serializer {
     return data;
   }
 
-  async import(database: EchoDatabase, data: SerializedSpace, opts?: ImportOptions) {
+  async import(database: EchoDatabase, data: SerializedSpace, opts?: ImportOptions): Promise<void> {
     invariant(data.version === Serializer.version, `Invalid version: ${data.version}`);
 
     const { objects } = data;
@@ -65,7 +66,7 @@ export class Serializer {
     await database.flush();
   }
 
-  exportObject(object: ReactiveEchoObject<any>): SerializedObject {
+  exportObject(object: AnyLiveObject<any>): SerializedObject {
     const core = getObjectCore(object);
 
     // TODO(dmaretskyi): Unify JSONinfication with echo-handler.
@@ -84,7 +85,7 @@ export class Serializer {
     });
   }
 
-  private _importObject(database: EchoDatabase, object: SerializedObject) {
+  private _importObject(database: EchoDatabase, object: SerializedObject): void {
     const { '@id': id, '@type': type, '@deleted': deleted, '@meta': meta, ...data } = object;
     const dataProperties = Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')));
     const decodedData = deepMapValues(dataProperties, (value, recurse) => {

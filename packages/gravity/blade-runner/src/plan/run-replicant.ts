@@ -16,6 +16,7 @@ import { DEFAULT_REDIS_OPTIONS } from '../redis';
 export const runReplicant = async ({ replicantParams }: RunParams) => {
   try {
     initLogProcessor(replicantParams);
+    log.info('running replicant', { params: replicantParams });
 
     const env: ReplicantEnvImpl = new ReplicantEnvImpl(replicantParams, DEFAULT_REDIS_OPTIONS);
     const replicant = new (ReplicantRegistry.instance.get(replicantParams.replicantClass))(env);

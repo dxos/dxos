@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type BaseEchoObject, type HasId } from '@dxos/echo-schema';
+import { type AnyEchoObject, type HasId, getTypename } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { failedInvariant } from '@dxos/invariant';
+import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type SpaceId } from '@dxos/keys';
 
 import type { QueuesService } from './queue-service';
@@ -13,16 +13,14 @@ import type { Queue } from './types';
 /**
  * Client-side view onto an EDGE queue.
  */
-// TODO(burdon): Move to echo-queue.
-// TODO(burdon): T should be constrained to EchoObject.
-export class QueueImpl<T extends BaseEchoObject = BaseEchoObject> implements Queue<T> {
+export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue<T> {
   private readonly _signal = compositeRuntime.createSignal();
 
   private readonly _subspaceTag: string;
   private readonly _spaceId: SpaceId;
   private readonly _queueId: string;
 
-  private _items: T[] = [];
+  private _objects: T[] = [];
   private _isLoading = true;
   private _error: Error | null = null;
   private _refreshId = 0;
@@ -37,13 +35,15 @@ export class QueueImpl<T extends BaseEchoObject = BaseEchoObject> implements Que
     this._queueId = queueId ?? failedInvariant();
   }
 
-  get dxn() {
-    return this._dxn;
+  toJSON() {
+    return {
+      dxn: this._dxn.toString(),
+      objects: this._objects.length,
+    };
   }
 
-  get items(): T[] {
-    this._signal.notifyRead();
-    return this._items;
+  get dxn() {
+    return this._dxn;
   }
 
   get isLoading(): boolean {
@@ -56,12 +56,22 @@ export class QueueImpl<T extends BaseEchoObject = BaseEchoObject> implements Que
     return this._error;
   }
 
+  get objects(): T[] {
+    this._signal.notifyRead();
+    return this._objects;
+  }
+
   /**
    * Insert into queue with optimistic update.
    */
   async append(items: T[]): Promise<void> {
+    assertArgument(
+      items.every((item) => item.id !== undefined && !!getTypename(item)),
+      'items must be valid echo objects',
+    );
+
     // Optimistic update.
-    this._items = [...this._items, ...items];
+    this._objects = [...this._objects, ...items];
     this._signal.notifyWrite();
 
     try {
@@ -75,7 +85,7 @@ export class QueueImpl<T extends BaseEchoObject = BaseEchoObject> implements Que
   async delete(ids: string[]): Promise<void> {
     // Optimistic update.
     // TODO(dmaretskyi): Restrict types.
-    this._items = this._items.filter((item) => !ids.includes((item as HasId).id));
+    this._objects = this._objects.filter((item) => !ids.includes((item as HasId).id));
     this._signal.notifyWrite();
 
     try {
@@ -91,20 +101,33 @@ export class QueueImpl<T extends BaseEchoObject = BaseEchoObject> implements Que
    * Overrides optimistic updates.
    */
   // TODO(dmaretskyi): Split optimistic into separate state so it doesn't get overridden.
-  async refresh() {
+  async refresh(): Promise<void> {
     const thisRefreshId = ++this._refreshId;
+    let changed = false;
     try {
       const { objects } = await this._service.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
       if (thisRefreshId !== this._refreshId) {
         return;
       }
 
-      this._items = objects as T[];
+      changed = objectSetChanged(this._objects, objects as AnyEchoObject[]);
+      this._objects = objects as T[];
     } catch (err) {
       this._error = err as Error;
     } finally {
       this._isLoading = false;
-      this._signal.notifyWrite();
+      if (changed) {
+        this._signal.notifyWrite();
+      }
     }
   }
 }
+
+const objectSetChanged = (before: AnyEchoObject[], after: AnyEchoObject[]) => {
+  if (before.length !== after.length) {
+    return true;
+  }
+
+  // TODO(dmaretskyi):  We might want to compare the objects data.
+  return before.some((item, index) => item.id !== after[index].id);
+};

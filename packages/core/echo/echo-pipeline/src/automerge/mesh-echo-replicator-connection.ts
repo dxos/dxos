@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as A from '@dxos/automerge/automerge';
-import { cbor } from '@dxos/automerge/automerge-repo';
+import * as A from '@automerge/automerge';
+import { cbor } from '@automerge/automerge-repo';
+
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -95,7 +96,7 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
     ]);
   }
 
-  private _disconnectIfEnabled() {
+  private _disconnectIfEnabled(): void {
     if (this._isEnabled) {
       this._params.onRemoteDisconnected();
     }
@@ -122,7 +123,7 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
    * Start exchanging messages with the remote peer.
    * Call after the remote peer has connected.
    */
-  enable() {
+  enable(): void {
     invariant(this._remotePeerId != null, 'Remote peer has not connected yet.');
     this._isEnabled = true;
   }
@@ -130,7 +131,7 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
   /**
    * Stop exchanging messages with the remote peer.
    */
-  disable() {
+  disable(): void {
     this._isEnabled = false;
   }
 }

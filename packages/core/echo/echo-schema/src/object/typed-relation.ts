@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
 import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions } from './common';
-import type { RelationSourceTargetRefs } from './relation';
-import { EntityKind, type HasId, TypeAnnotationId, Typename, Version } from '../ast';
-import type { TypeAnnotation, TypeMeta } from '../ast/annotations';
+import { type RelationSourceTargetRefs } from './relation';
+import { EntityKind, TypeAnnotationId, Typename, Version, type TypeAnnotation, type TypeMeta } from '../ast';
+import { type HasId } from '../types';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.
@@ -18,7 +18,7 @@ import type { TypeAnnotation, TypeMeta } from '../ast/annotations';
  *
  * In contrast to {@link EchoSchema} this definition is not recorded in the database.
  */
-export interface TypedRelation<A = any, I = any> extends TypeMeta, S.Schema<A, I> {}
+export interface TypedRelation<A = any, I = any> extends TypeMeta, Schema.Schema<A, I> {}
 
 /**
  * Typed object that could be used as a prototype in class definitions.
@@ -37,6 +37,7 @@ export type TypedRelationProps = TypeMeta & {
 
 /**
  * Base class factory for typed objects.
+ * @deprecated Use {@link EchoRelation} instead.
  */
 export const TypedRelation = ({ typename: _typename, version: _version, disableValidation }: TypedRelationProps) => {
   const typename = Typename.make(_typename, { disableValidation });
@@ -45,18 +46,23 @@ export const TypedRelation = ({ typename: _typename, version: _version, disableV
   /**
    * Return class definition factory.
    */
-  return <SchemaFields extends S.Struct.Fields, Options extends TypedObjectOptions>(
+  return <SchemaFields extends Schema.Struct.Fields, Options extends TypedObjectOptions>(
     fields: SchemaFields,
     options?: Options,
   ): TypedRelationPrototype<
     TypedObjectFields<SchemaFields, Options> & RelationSourceTargetRefs,
-    S.Struct.Encoded<SchemaFields>
+    Schema.Struct.Encoded<SchemaFields>
   > => {
     // Create schema from fields.
-    const schema: S.Schema.All = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
+    const schema: Schema.Schema.All = options?.record
+      ? Schema.Struct(fields, { key: Schema.String, value: Schema.Any })
+      : Schema.Struct(fields);
 
     // Set ECHO object id property.
-    const typeSchema = S.extend(S.mutable(options?.partial ? S.partial(schema) : schema), S.Struct({ id: S.String }));
+    const typeSchema = Schema.extend(
+      Schema.mutable(options?.partial ? Schema.partial(schema) : schema),
+      Schema.Struct({ id: Schema.String }),
+    );
 
     // Set ECHO annotations.
     invariant(typeof EntityKind.Relation === 'string');
@@ -66,7 +72,7 @@ export const TypedRelation = ({ typename: _typename, version: _version, disableV
 
     /**
      * Return class definition.
-     * NOTE: Actual reactive ECHO objects must be created via the `create(Type)` function.
+     * NOTE: Actual reactive ECHO objects must be created via the `live(Type)` function.
      */
     // TODO(burdon): This is missing fields required by TypedRelation (e.g., Type, Encoded, Context)?
     return class TypedRelation extends makeTypedEntityClass(typename, version, annotatedSchema as any) {} as any;

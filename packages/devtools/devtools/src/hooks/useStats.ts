@@ -2,19 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import get from 'lodash.get';
 import { useEffect, useState } from 'react';
 
 import { SpaceState } from '@dxos/client/echo';
 import { type NetworkStatus } from '@dxos/client/mesh';
-import { type FilterParams } from '@dxos/echo-db';
-import { type EchoStatsDiagnostic, type EchoDataStats, type QueryMetrics } from '@dxos/echo-pipeline';
+import { type EchoStatsDiagnostic, type EchoDataStats } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
+import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type Diagnostics, TRACE_PROCESSOR, type DiagnosticsRequest } from '@dxos/tracing';
 import { DiagnosticsChannel } from '@dxos/tracing';
+import { get } from '@dxos/util';
 
 // TODO(burdon): Factor out.
 
@@ -36,8 +36,9 @@ export type MemoryInfo = {
  * Represents the @info props in QueryState.
  */
 export type QueryInfo = {
-  filter: FilterParams;
-  metrics: QueryMetrics;
+  // TODO(dmaretskyi): Remove.
+  filter: any;
+  metrics: any;
   active: boolean;
 };
 
@@ -62,6 +63,7 @@ export type Stats = {
   queries?: QueryInfo[];
   memory?: MemoryInfo;
   network?: NetworkStatus;
+  edge?: QueryEdgeStatusResponse;
 };
 
 /**
@@ -102,7 +104,7 @@ export const useStats = (): [Stats, () => void] => {
       // TODO(burdon): Reconcile with diagnostics.
       const objects = TRACE_PROCESSOR.findResourcesByClassName('RepoProxy')
         .flatMap((r) => Object.values(r.instance.deref()?.handles ?? {}))
-        .map((handle: any) => handle.docSync())
+        .map((handle: any) => handle.doc())
         .filter(Boolean);
 
       const database: DatabaseInfo = {
@@ -183,6 +185,21 @@ export const useStats = (): [Stats, () => void] => {
       setStats((stats) =>
         Object.assign({}, stats, {
           network,
+        }),
+      );
+    });
+
+    return () => {
+      void stream.close();
+    };
+  }, []);
+
+  useEffect(() => {
+    const stream = client.services.services.EdgeAgentService!.queryEdgeStatus();
+    stream.subscribe((edge) => {
+      setStats((stats) =>
+        Object.assign({}, stats, {
+          edge,
         }),
       );
     });

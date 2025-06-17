@@ -22,7 +22,6 @@ export type DxAvatarProps = Partial<
   Pick<
     DxAvatar,
     | 'fallback'
-    | 'labelId'
     | 'imgSrc'
     | 'imgCrossOrigin'
     | 'imgReferrerPolicy'
@@ -48,9 +47,6 @@ export class DxAvatar extends LitElement {
 
   @property({ type: String })
   fallback: string = 'never';
-
-  @property({ type: String })
-  labelId: string = 'never';
 
   @property({ type: String })
   imgSrc: string | undefined = undefined;
@@ -88,22 +84,23 @@ export class DxAvatar extends LitElement {
   @state()
   loadingStaus: ImageLoadingStatus = 'idle';
 
-  override connectedCallback() {
+  override connectedCallback(): void {
     super.connectedCallback();
+    this.role = 'img';
     this.loadingStaus = this.imgSrc ? 'loading' : 'idle';
   }
 
-  override willUpdate(changedProperties: Map<string, any>) {
+  override willUpdate(changedProperties: Map<string, any>): void {
     if (changedProperties.has('imgSrc')) {
       this.loadingStaus = changedProperties.get('imgSrc') ? 'loading' : 'idle';
     }
   }
 
-  private handleLoad() {
+  private handleLoad(): void {
     this.loadingStaus = 'loaded';
   }
 
-  private handleError() {
+  private handleError(): void {
     this.loadingStaus = 'error';
   }
 
@@ -120,11 +117,11 @@ export class DxAvatar extends LitElement {
         ? `var(--dx-${this.hue}Surface)`
         : `var(--dx-${this.hue}Fill)`
       : 'var(--surface-bg)';
-    const fg = this.hue && this.hueVariant === 'surface' ? `var(--dx-${this.hue}SurfaceText)` : 'var(--dx-inverse)';
+    const fg =
+      this.hue && this.hueVariant === 'surface' ? `var(--dx-${this.hue}SurfaceText)` : 'var(--dx-accentSurfaceText)';
     return html`<span
-      role="img"
+      role="none"
       class=${`dx-avatar${this.rootClassName ? ` ${this.rootClassName}` : ''}`}
-      aria-labelledby=${this.labelId}
       data-size=${this.size}
       data-variant=${this.variant}
       data-status=${this.status}
@@ -170,19 +167,6 @@ export class DxAvatar extends LitElement {
             />`
         }
         ${
-          this.imgSrc &&
-          svg`<image
-          width="100%"
-          height="100%"
-          preserveAspectRatio="xMidYMid slice"
-          href=${this.imgSrc}
-          mask=${`url(#${this.maskId})`}
-          crossorigin=${this.imgCrossOrigin}
-          @load=${this.handleLoad}
-          @error=${this.handleError}
-        />`
-        }
-        ${
           this.icon
             ? svg`<use
                 class="dx-avatar__icon"
@@ -204,11 +188,24 @@ export class DxAvatar extends LitElement {
                 ${this.fallback}
               </text>`
         }
+        ${
+          this.imgSrc &&
+          svg`<image
+              width="100%"
+              height="100%"
+              preserveAspectRatio="xMidYMid slice"
+              href=${this.imgSrc}
+              mask=${`url(#${this.maskId})`}
+              crossorigin=${this.imgCrossOrigin}
+              @load=${this.handleLoad}
+              @error=${this.handleError}
+            />`
+        }
       </svg>`}<span role="none" class="dx-avatar__ring" style=${styleMap({ borderWidth: ringWidth + 'px' })}
     /></span>`;
   }
 
-  override createRenderRoot() {
+  override createRenderRoot(): this {
     return this;
   }
 }

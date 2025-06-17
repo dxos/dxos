@@ -6,7 +6,7 @@ import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { ObjectId, type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
+import { live, makeRef, type Live } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { createSheet } from '@dxos/plugin-sheet/types';
 import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
@@ -14,7 +14,7 @@ import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
-import { createView, TextType } from '@dxos/schema';
+import { createView, DataType } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
@@ -31,8 +31,8 @@ const generator: ValueGenerator = faker as any;
 export type ObjectGenerator<T extends BaseObject> = (
   space: Space,
   n: number,
-  cb?: (objects: ReactiveObject<any>[]) => void,
-) => Promise<ReactiveObject<T>[]>;
+  cb?: (objects: Live<any>[]) => void,
+) => Promise<Live<T>[]>;
 
 export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   [
@@ -40,10 +40,9 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         return space.db.add(
-          create(DocumentType, {
+          live(DocumentType, {
             name: faker.commerce.productName(),
-            content: makeRef(create(TextType, { content: faker.lorem.sentences(5) })),
-            threads: [],
+            content: makeRef(live(DataType.Text, { content: faker.lorem.sentences(5) })),
           }),
         );
       });
@@ -58,9 +57,9 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
       const objects = range(n).map(() => {
         // TODO(burdon): Generate diagram.
         const obj = space.db.add(
-          create(DiagramType, {
+          live(DiagramType, {
             name: faker.commerce.productName(),
-            canvas: makeRef(create(CanvasType, { content: {} })),
+            canvas: makeRef(live(CanvasType, { content: {} })),
           }),
         );
 
@@ -139,11 +138,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
 ]);
 
 export const createGenerator = <T extends BaseObject>(type: TypedObject<T>): ObjectGenerator<T> => {
-  return async (
-    space: Space,
-    n: number,
-    cb?: (objects: ReactiveObject<any>[]) => void,
-  ): Promise<ReactiveObject<T>[]> => {
+  return async (space: Space, n: number, cb?: (objects: Live<any>[]) => void): Promise<Live<T>[]> => {
     // Find or create mutable schema.
     const schema =
       (await space.db.schemaRegistry.query({ typename: type.typename }).firstOrUndefined()) ??
@@ -154,12 +149,12 @@ export const createGenerator = <T extends BaseObject>(type: TypedObject<T>): Obj
     const objects = await generate.createObjects(n);
 
     // Find or create table and view.
-    const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
+    const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
     const table = tables.find((table) => table.view?.target?.query?.typename === type.typename);
     if (!table) {
       const name = type.typename.split('/').pop() ?? type.typename;
       const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
-      const table = space.db.add(create(TableType, { name, view: makeRef(view) }));
+      const table = space.db.add(live(TableType, { name, view: makeRef(view) }));
       cb?.([table]);
     }
 

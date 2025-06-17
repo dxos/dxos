@@ -18,12 +18,14 @@ import { type StackSectionItem } from '../types';
 
 const sectionActionDimensions = 'p-1 mlb-1 shrink-0 min-bs-0 is-[--rail-action] bs-min';
 
+export type StackSectionProps = StackSectionItem;
+
 export const StackSection = ({
   id,
   view,
   object,
   metadata: { icon = 'ph--placeholder--regular' },
-}: StackSectionItem) => {
+}: StackSectionProps) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { onNavigate, onAdd, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
@@ -51,7 +53,7 @@ export const StackSection = ({
                   <DropdownMenu.Viewport>
                     {view.collapsed ? (
                       <DropdownMenu.Item onClick={() => onNavigate(id)} data-testid='section.navigate-to'>
-                        <Icon icon='ph--arrow-square-out--regular' size={5} />
+                        <Icon icon='ph--arrow-right--regular' size={5} />
                         <span className='mis-2 grow'>{t('navigate to section label')}</span>
                       </DropdownMenu.Item>
                     ) : (
@@ -95,7 +97,7 @@ export const StackSection = ({
                 variant='ghost'
                 onClick={() => onNavigate(id)}
                 label={t('navigate to section label')}
-                icon='ph--arrow-square-out--regular'
+                icon='ph--arrow-right--regular'
                 data-testid='section.navigate-to'
                 classNames={sectionActionDimensions}
               />

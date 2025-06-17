@@ -2,18 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type BaseEchoObject } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { type BaseEchoObject, EntityKind, TypeAnnotationId, type TypeAnnotation } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 
 /**
  * Client-side view onto an EDGE queue.
  */
-export type Queue<T extends BaseEchoObject = BaseEchoObject> = {
+export interface Queue<T extends BaseEchoObject = BaseEchoObject> {
   dxn: DXN;
-  items: T[]; // TODO(burdon): Make readonly.
   isLoading: boolean;
   error: Error | null;
-  append(items: T[]): void;
+  objects: T[];
+
+  toJSON(): any;
+
+  /**
+   * Appends objects to the queue.
+   */
+  append(objects: T[]): void;
+
+  /**
+   * Deletes objects from the queue.
+   */
   delete(ids: string[]): void;
 
   /**
@@ -21,4 +33,18 @@ export type Queue<T extends BaseEchoObject = BaseEchoObject> = {
    */
   // TODO(dmaretskyi): Remove.
   refresh(): Promise<void>;
+}
+
+// TODO(dmaretskyi): Implement.
+const isQueue = (value: unknown): value is Queue => {
+  return false;
 };
+
+export const Queue: Schema.Schema<Queue> = Schema.declare(isQueue, {
+  [TypeAnnotationId]: {
+    // TODO(dmaretskyi): Perhaps queue should be its own entity kind.
+    kind: EntityKind.Object,
+    typename: 'dxos.org/type/Queue',
+    version: '0.1.0',
+  } satisfies TypeAnnotation,
+});

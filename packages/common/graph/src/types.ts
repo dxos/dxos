@@ -2,38 +2,50 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
 import { type Specialize } from '@dxos/util';
 
-export const BaseGraphNode = S.Struct({
-  id: S.String,
-  type: S.optional(S.String),
-  data: S.optional(S.Any),
+//
+// Node
+//
+
+// TODO(burdon): Make type extensible (i.e., not dependent on `data` property)?
+export const BaseGraphNode = Schema.Struct({
+  id: Schema.String,
+  type: Schema.optional(Schema.String),
+  data: Schema.optional(Schema.Any),
 });
 
 /** Raw base type. */
-export type BaseGraphNode = S.Schema.Type<typeof BaseGraphNode>;
+export type BaseGraphNode = Schema.Schema.Type<typeof BaseGraphNode>;
 
 /** Typed node data. */
-export type GraphNode<Data = any, Optional extends boolean = false> = Specialize<
+type GraphNode<Data = any, Optional extends boolean = false> = Specialize<
   BaseGraphNode,
   Optional extends true ? { data?: Data } : { data: Data }
 >;
 
 export declare namespace GraphNode {
-  export type Optional<T = any> = GraphNode<T, true>;
+  export type Any = GraphNode<any, true>;
+  export type Optional<Data = any> = GraphNode<Data, true>;
+  export type Required<Data = any> = GraphNode<Data, false>;
 }
 
-export const BaseGraphEdge = S.Struct({
-  id: S.String,
-  type: S.optional(S.String),
-  data: S.optional(S.Any),
-  source: S.String,
-  target: S.String,
+//
+// Edge
+//
+
+export const BaseGraphEdge = Schema.Struct({
+  id: Schema.String,
+  type: Schema.optional(Schema.String),
+  source: Schema.String,
+  target: Schema.String,
+  data: Schema.optional(Schema.Any),
 });
 
 /** Raw base type. */
-export type BaseGraphEdge = S.Schema.Type<typeof BaseGraphEdge>;
+export type BaseGraphEdge = Schema.Schema.Type<typeof BaseGraphEdge>;
 
 /** Typed edge data. */
 export type GraphEdge<Data = any, Optional extends boolean = false> = Specialize<
@@ -42,21 +54,19 @@ export type GraphEdge<Data = any, Optional extends boolean = false> = Specialize
 >;
 
 export declare namespace GraphEdge {
-  export type Optional<T = any> = GraphEdge<T, true>;
+  export type Any = GraphEdge<any, true>;
+  export type Optional<Data = any> = GraphEdge<Data, true>;
+  export type Required<Data = any> = GraphEdge<Data, false>;
 }
 
-/**
- * Allows any additional properties on graph nodes.
- */
-const ExtendableBaseGraphNode = S.extend(BaseGraphNode, S.Struct({}, { key: S.String, value: S.Any }));
+//
+// Graph
+//
 
-/**
- * Generic graph.
- */
-export const Graph = S.Struct({
-  id: S.optional(S.String),
-  nodes: S.mutable(S.Array(ExtendableBaseGraphNode)),
-  edges: S.mutable(S.Array(BaseGraphEdge)),
+export const Graph = Schema.Struct({
+  id: Schema.optional(Schema.String),
+  nodes: Schema.mutable(Schema.Array(BaseGraphNode)),
+  edges: Schema.mutable(Schema.Array(BaseGraphEdge)),
 });
 
-export type Graph = S.Schema.Type<typeof Graph>;
+export type Graph = Schema.Schema.Type<typeof Graph>;

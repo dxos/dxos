@@ -14,9 +14,10 @@
     --topbar-size: var(--rail-size);
     --statusbar-size: theme(spacing.8);
     --nav-sidebar-size: 22.5rem;
+    /* NOTE(thure): 74px (rather than rem) is intentional in order to match the size of macOS windowing controls. */
     --l0-size: 74px;
     --l1-size: calc(var(--nav-sidebar-size) - var(--l0-size));
-    --complementary-sidebar-size: 22.5rem;
+    --complementary-sidebar-size: 25rem;
     --r0-size: var(--rail-size);
     --r1-size: calc(var(--complementary-sidebar-size) - var(--r0-size));
     --text-content: calc(50rem - env(safe-area-inset-left) - env(safe-area-inset-right));

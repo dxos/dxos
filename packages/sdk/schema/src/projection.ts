@@ -3,13 +3,13 @@
 //
 
 import { computed, untracked } from '@preact/signals-core';
+import { Schema } from 'effect';
 
 import {
   formatToType,
   typeToFormat,
   FormatEnum,
   type JsonProp,
-  S,
   TypeEnum,
   type JsonSchemaType,
 } from '@dxos/echo-schema';
@@ -38,12 +38,13 @@ export type FieldProjection = {
  * Wrapper for View that manages Field and Format updates.
  */
 export class ViewProjection {
-  private readonly _encode = S.encodeSync(PropertySchema);
-  private readonly _decode = S.decodeSync(PropertySchema, {});
+  private readonly _encode = Schema.encodeSync(PropertySchema);
+  private readonly _decode = Schema.decodeSync(PropertySchema, {});
 
   private _fieldProjections = computed(() => this._view.fields.map((field) => this.getFieldProjection(field.id)));
   private _hiddenProperties = computed(() => this._view.hiddenFields?.map((field) => field.path as string) ?? []);
 
+  // TOOD(burdon): Should this take an instane of S.S.AnyNoContext and derive the JsonSchemaType itselft (and watch for reactivity)?
   constructor(
     /** Possibly reactive object. */
     // TODO(burdon): Pass in boolean readonly?
@@ -56,6 +57,10 @@ export class ViewProjection {
 
   get view() {
     return this._view;
+  }
+
+  get schema() {
+    return this._schema;
   }
 
   /**
@@ -88,28 +93,34 @@ export class ViewProjection {
     invariant(field.path.indexOf('.') === -1);
 
     const jsonProperty: JsonSchemaType = this._schema.properties[field.path] ?? { format: FormatEnum.None };
-    const { type: schemaType, format: schemaFormat = FormatEnum.None, echo, ...rest } = jsonProperty;
+    const { type: schemaType, format: schemaFormat = FormatEnum.None, annotations, ...rest } = jsonProperty;
 
     const { typename: referenceSchema } = getSchemaReference(jsonProperty) ?? {};
     const type = referenceSchema ? TypeEnum.Ref : (schemaType as TypeEnum);
-    const format = referenceSchema
-      ? FormatEnum.Ref
-      : schemaFormat === FormatEnum.None
-        ? typeToFormat[type]!
-        : (schemaFormat as FormatEnum);
+
+    const format =
+      (() => {
+        if (referenceSchema) {
+          return FormatEnum.Ref;
+        } else if (schemaFormat === FormatEnum.None) {
+          return typeToFormat[type];
+        } else {
+          return schemaFormat as FormatEnum;
+        }
+      })() ?? FormatEnum.None;
 
     const getOptions = () => {
       if (format === FormatEnum.SingleSelect) {
-        return echo?.annotations?.singleSelect?.options;
+        return annotations?.meta?.singleSelect?.options;
       }
       if (format === FormatEnum.MultiSelect) {
-        return echo?.annotations?.multiSelect?.options;
+        return annotations?.meta?.multiSelect?.options;
       }
     };
 
     const options = getOptions();
 
-    const values = {
+    const values: typeof PropertySchema.Type = {
       type,
       format,
       property: field.path as JsonProp,
@@ -209,7 +220,7 @@ export class ViewProjection {
    * @param projection The field and props to update
    * @param index Optional index for inserting new fields. Ignored when updating existing fields.
    */
-  setFieldProjection({ field, props }: Partial<FieldProjection>, index?: number) {
+  setFieldProjection({ field, props }: Partial<FieldProjection>, index?: number): void {
     log('setFieldProjection', { field, props, index });
 
     untracked(() => {
@@ -383,7 +394,7 @@ export class ViewProjection {
         oneOf !== undefined && oneOf?.length !== 0 && oneOf?.every((p) => typeof p.const === 'string');
       if (hasLegacyOptions) {
         const options = (oneOf as any[]).map(({ const: id, title, color }) => ({ id, title, color }));
-        log.info('Migrating legacy single-select format', options);
+        log('migrating legacy single-select format', options);
         makeSingleSelectAnnotations(jsonProperty, options);
         jsonProperty.oneOf = [];
       }

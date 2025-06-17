@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as am } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
-
-import { next as am } from '@dxos/automerge/automerge';
 
 import { migrateDocument } from './migrate-document';
 

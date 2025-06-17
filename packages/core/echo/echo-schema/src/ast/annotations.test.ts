@@ -2,27 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { getLabel, EchoObject, LabelAnnotationId, Typename, Version } from './annotations';
+import { getLabel, Typename, Version, LabelAnnotation } from './annotations';
+import { EchoObject } from '../object';
 
 // TODO(dmaretskyi): Use one of the testing schemas.
-const TestObject = S.Struct({
-  name: S.optional(S.String),
-  fallbackName: S.optional(S.String),
-  other: S.String,
-}).annotations({
-  [LabelAnnotationId]: ['name', 'fallbackName'],
-});
+const TestObject = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  fallbackName: Schema.optional(Schema.String),
+  other: Schema.String,
+}).pipe(LabelAnnotation.set(['name', 'fallbackName']));
 
-const a: S.Struct<typeof TestObject.fields> = TestObject;
+const a: Schema.Struct<typeof TestObject.fields> = TestObject;
 console.log(a);
 
-type TestObject = S.Schema.Type<typeof TestObject>;
+type TestObject = Schema.Schema.Type<typeof TestObject>;
 
-const TestEchoSchema = TestObject.pipe(EchoObject({ typename: 'dxos.org/type/Test', version: '0.1.0' }));
-type TestEchoSchema = S.Schema.Type<typeof TestEchoSchema>;
+const TestEchoSchema = TestObject.pipe(
+  EchoObject({
+    typename: 'dxos.org/type/Test',
+    version: '0.1.0',
+  }),
+);
+type TestEchoSchema = Schema.Schema.Type<typeof TestEchoSchema>;
 
 describe('annotations', () => {
   describe('Typename', () => {

@@ -2,21 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as A from '@dxos/automerge/automerge';
-import {
-  interpretAsDocumentId,
-  type AutomergeUrl,
-  type DocHandle,
-  type DocumentId,
-} from '@dxos/automerge/automerge-repo';
-import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
+import type * as A from '@automerge/automerge';
+import { interpretAsDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+
+import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
 import { measureDocMetrics, type DocMetrics } from './automerge-metrics';
-import { getSpaceKeyFromDoc } from '../automerge';
 
 export class DatabaseRoot {
-  static mapLinks(doc: DocHandle<SpaceDoc>, mapping: Record<DocumentId, DocumentId>): void {
+  static mapLinks(doc: DocHandle<DatabaseDirectory>, mapping: Record<DocumentId, DocumentId>): void {
     doc.change((d) => {
       if (!d.links) {
         return;
@@ -30,7 +25,7 @@ export class DatabaseRoot {
     });
   }
 
-  constructor(private readonly _rootHandle: DocHandle<SpaceDoc>) {}
+  constructor(private readonly _rootHandle: DocHandle<DatabaseDirectory>) {}
 
   get documentId(): DocumentId {
     return this._rootHandle.documentId;
@@ -41,19 +36,19 @@ export class DatabaseRoot {
   }
 
   get isLoaded(): boolean {
-    return !!this._rootHandle.docSync();
+    return this._rootHandle.isReady();
   }
 
-  get handle(): DocHandle<SpaceDoc> {
+  get handle(): DocHandle<DatabaseDirectory> {
     return this._rootHandle;
   }
 
-  docSync(): A.Doc<SpaceDoc> | null {
-    return this._rootHandle.docSync() ?? null;
+  doc(): A.Doc<DatabaseDirectory> | null {
+    return this._rootHandle.isReady() ? this._rootHandle.doc() : null;
   }
 
   getVersion(): SpaceDocVersion | null {
-    const doc = this.docSync();
+    const doc = this.doc();
     if (!doc) {
       return null;
     }
@@ -62,16 +57,16 @@ export class DatabaseRoot {
   }
 
   getSpaceKey(): string | null {
-    const doc = this.docSync();
+    const doc = this.doc();
     if (!doc) {
       return null;
     }
 
-    return getSpaceKeyFromDoc(doc);
+    return DatabaseDirectory.getSpaceKey(doc);
   }
 
   getInlineObjectCount(): number | null {
-    const doc = this.docSync();
+    const doc = this.doc();
     if (!doc) {
       return null;
     }
@@ -80,7 +75,7 @@ export class DatabaseRoot {
   }
 
   getLinkedObjectCount(): number | null {
-    const doc = this.docSync();
+    const doc = this.doc();
     if (!doc) {
       return null;
     }
@@ -89,7 +84,7 @@ export class DatabaseRoot {
   }
 
   getAllLinkedDocuments(): AutomergeUrl[] {
-    const doc = this.docSync();
+    const doc = this.doc();
     invariant(doc);
 
     // .toString() to handle RawString.
@@ -97,7 +92,7 @@ export class DatabaseRoot {
   }
 
   measureMetrics(): DocMetrics | null {
-    const doc = this.docSync();
+    const doc = this.doc();
     if (!doc) {
       return null;
     }

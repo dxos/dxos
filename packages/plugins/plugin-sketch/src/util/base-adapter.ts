@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as A } from '@dxos/automerge/automerge';
+import { next as A } from '@automerge/automerge';
+
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -40,7 +41,7 @@ export class Modified<Element extends BaseElement> {
     };
   }
 
-  clear() {
+  clear(): void {
     this.added.clear();
     this.updated.clear();
     this.deleted.clear();
@@ -69,7 +70,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
   /**
    * @param accessor Accessor for element map.
    */
-  async open(accessor: DocAccessor<any>) {
+  async open(accessor: DocAccessor<any>): Promise<void> {
     invariant(accessor.path.length);
     if (this.isOpen) {
       await this.close();
@@ -86,7 +87,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     // Initialize the component store with the automerge doc records.
     //
     {
-      const map: Record<string, Element> = getDeep(accessor.handle.docSync(), accessor.path) ?? {};
+      const map: Record<string, Element> = getDeep(accessor.handle.doc(), accessor.path) ?? {};
       const records = Object.values(map);
       if (records.length === 0) {
         // If the automerge doc is empty, initialize the automerge doc with the default store records.
@@ -109,7 +110,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     //
     {
       const updateModel = () => {
-        const doc = accessor.handle.docSync()!;
+        const doc = accessor.handle.doc()!;
         const map: Record<string, Element> = getDeep(doc, accessor.path);
 
         const updated = new Set<Element['id']>();
@@ -179,7 +180,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     log('open');
   }
 
-  async close() {
+  async close(): Promise<void> {
     if (!this.isOpen) {
       return;
     }
@@ -195,7 +196,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
   /**
    * Update the database.
    */
-  protected updateDatabase(batch: Batch<Element>) {
+  protected updateDatabase(batch: Batch<Element>): void {
     invariant(this.isOpen);
     if (this.readonly) {
       log.warn('Attempting to update read-only store.');
@@ -231,6 +232,6 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
    */
   protected abstract onUpdate(batch: Batch<Element>): void;
 
-  protected onOpen(ctx: Context) {}
-  protected onClose() {}
+  protected onOpen(ctx: Context): void {}
+  protected onClose(): void {}
 }

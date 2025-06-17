@@ -2,9 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-//
-// `defaultSize`, the final fallbacks
-//
-
-export const defaultSizeRow = 30;
-export const defaultSizeCol = 180;
+export const defaultColSize = 180;
+export const defaultRowSize = 30;

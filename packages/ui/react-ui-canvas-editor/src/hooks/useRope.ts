@@ -2,8 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type D3DragEvent, type SimulationNodeDatum } from 'd3';
-import * as d3 from 'd3';
+import {
+  type D3DragEvent,
+  type Simulation,
+  type SimulationNodeDatum,
+  drag,
+  forceLink,
+  forceSimulation,
+  select,
+} from 'd3';
 import { useEffect, useMemo, useState } from 'react';
 
 import { GraphModel, type GraphNode } from '@dxos/graph';
@@ -42,7 +49,7 @@ const endSize = 4;
 const midSize = 3;
 
 export type RopeResult = {
-  simulation: d3.Simulation<any, any>;
+  simulation: Simulation<any, any>;
 };
 
 export const useRope = (
@@ -63,7 +70,7 @@ export const useRope = (
 
   // TODO(burdon): Add/delete elements.
   const graph = useMemo(() => {
-    const graph = new GraphModel<GraphNode<SimulationNodeDatum>>();
+    const graph = new GraphModel<GraphNode.Required<SimulationNodeDatum>>();
     for (const { id, start, end } of elements) {
       createGraph(graph, id, start, end, options);
     }
@@ -77,7 +84,7 @@ export const useRope = (
       return;
     }
 
-    const group = d3.select(g);
+    const group = select(g);
 
     const paths = group
       .selectAll('path')
@@ -133,7 +140,7 @@ export const useRope = (
     return () => {
       setResult(undefined);
       simulation.stop();
-      d3.select(g).selectAll('*').remove();
+      select(g).selectAll('*').remove();
     };
   }, [g, graph, elements]);
 
@@ -144,16 +151,16 @@ export const useRope = (
  * Create subgraph for spring.
  */
 const createGraph = (
-  graph: GraphModel<GraphNode<SimulationNodeDatum>>,
+  graph: GraphModel<GraphNode.Required<SimulationNodeDatum>>,
   id: string,
   p1: Point,
   p2: Point | undefined,
   options: RopeOptions,
-): GraphNode<SimulationNodeDatum> => {
+): GraphNode.Required<SimulationNodeDatum> => {
   const d = p2 && options.nodes > 1 ? pointDivide(pointSubtract(p2, p1), options.nodes - 1) : { x: 0, y: -1 };
 
   // Create start of chain.
-  let source: GraphNode<SimulationNodeDatum> = {
+  let source: GraphNode.Required<SimulationNodeDatum> = {
     id: `${id}-0`,
     type: 'start',
     data: { ...p1, fx: p1.x, fy: p1.y },
@@ -164,7 +171,7 @@ const createGraph = (
   range(options.nodes - 1).forEach((_, i) => {
     const last = i === options.nodes - 2;
     const p = pointAdd({ x: source.data.x ?? 0, y: source.data.y ?? 0 }, d);
-    const target: GraphNode<SimulationNodeDatum> = {
+    const target: GraphNode.Required<SimulationNodeDatum> = {
       id: `${id}-${i + 1}`,
       type: last ? 'end' : undefined,
       data: last && p2 ? { ...p2, fx: p2.x, fy: p2.y } : { ...p },
@@ -183,13 +190,11 @@ const createGraph = (
  * Each graph node data property contains the starting datum for the simulation.
  * The graph nodes are copied into the simulation since the simulation mutates them.
  */
-export const createSimulation = (graph: GraphModel<GraphNode<SimulationNodeDatum>>, options: RopeOptions) => {
-  const simulation = d3
-    .forceSimulation<any>(graph.nodes.map((node) => ({ id: node.id, ...node.data, data: node })))
+export const createSimulation = (graph: GraphModel<GraphNode.Required<SimulationNodeDatum>>, options: RopeOptions) => {
+  const simulation = forceSimulation<any>(graph.nodes.map((node) => ({ id: node.id, ...node.data, data: node })))
     .force(
       'link',
-      d3
-        .forceLink(graph.edges.map((edge) => ({ ...edge })))
+      forceLink(graph.edges.map((edge) => ({ ...edge })))
         .id((d: any) => d.id)
         .distance(options.linkLength)
         .strength(options.linkStrength),
@@ -214,8 +219,7 @@ export const createSimulation = (graph: GraphModel<GraphNode<SimulationNodeDatum
  * Drag behavior.
  */
 export const createDrag = (cb: (event: 'start' | 'drag' | 'end') => void) =>
-  d3
-    .drag<SVGCircleElement, any>()
+  drag<SVGCircleElement, any>()
     .on('start', ((event: D3DragEvent<SVGCircleElement, any, any>) => {
       cb('start');
       event.subject.fx = event.subject.x;

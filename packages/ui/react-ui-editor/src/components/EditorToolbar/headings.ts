@@ -2,10 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type EditorView } from '@codemirror/view';
+
 import { type NodeArg } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
+import { setHeading } from '../../extensions';
 import { translationKey } from '../../translations';
 
 const createHeadingGroupAction = (value: string) =>
@@ -20,7 +23,7 @@ const createHeadingGroupAction = (value: string) =>
     'ph--text-h--regular',
   );
 
-const createHeadingActions = (value: string) =>
+const createHeadingActions = (getView: () => EditorView) =>
   Object.entries({
     '0': 'ph--paragraph--regular',
     '1': 'ph--text-h-one--regular',
@@ -31,12 +34,10 @@ const createHeadingActions = (value: string) =>
     '6': 'ph--text-h-six--regular',
   }).map(([levelStr, icon]) => {
     const level = parseInt(levelStr);
-    return createEditorAction(
-      { type: 'heading', data: level, checked: value === levelStr },
+    return createEditorAction(`heading--${levelStr}`, () => setHeading(level)(getView()), {
+      label: ['heading level label', { count: level, ns: translationKey }],
       icon,
-      ['heading level label', { count: level, ns: translationKey }],
-      `heading--${levelStr}`,
-    );
+    });
   });
 
 const computeHeadingValue = (state: EditorToolbarState) => {
@@ -45,10 +46,10 @@ const computeHeadingValue = (state: EditorToolbarState) => {
   return header ? header[1] : blockType === 'paragraph' || !blockType ? '0' : '';
 };
 
-export const createHeadings = (state: EditorToolbarState) => {
+export const createHeadings = (state: EditorToolbarState, getView: () => EditorView) => {
   const headingValue = computeHeadingValue(state);
   const headingGroupAction = createHeadingGroupAction(headingValue);
-  const headingActions = createHeadingActions(headingValue);
+  const headingActions = createHeadingActions(getView);
   return {
     nodes: [headingGroupAction as NodeArg<any>, ...headingActions],
     edges: [

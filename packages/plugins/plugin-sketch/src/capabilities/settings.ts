@@ -3,12 +3,12 @@
 //
 
 import { Capabilities, contributes } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { SKETCH_PLUGIN } from '../meta';
 import { type SketchSettingsProps, SketchSettingsSchema } from '../types';
 
 export default () => {
-  const settings = create<SketchSettingsProps>({});
+  const settings = live<SketchSettingsProps>({});
   return contributes(Capabilities.Settings, { schema: SketchSettingsSchema, prefix: SKETCH_PLUGIN, value: settings });
 };

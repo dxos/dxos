@@ -10,12 +10,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../react-ui"
-    },
-    {
-      "path": "../react-ui-theme"
-    }
-  ]
+  "references": []
 }

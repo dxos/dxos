@@ -98,3 +98,37 @@ export const partition = <T>(array: T[], guard: (item: T, index: number, array: 
     [[], []],
   );
 };
+
+/**
+ * Returns elements that exist in all provided arrays based on a selector function.
+ *
+ * @param arrays - Arrays to intersect.
+ * @param selector - Function to extract the comparison value from each element.
+ * @returns Array containing elements from the first array that exist in all other arrays.
+ */
+export const intersectBy = <T, K>(arrays: T[][], selector: (item: T) => K): T[] => {
+  if (arrays.length === 0) {
+    return [];
+  }
+
+  if (arrays.length === 1) {
+    return [...arrays[0]];
+  }
+
+  const [first, ...rest] = arrays;
+
+  // Create lookup maps for all other arrays.
+  const lookups = rest.map((array) => {
+    const map = new Map<K, T>();
+    for (const item of array) {
+      map.set(selector(item), item);
+    }
+    return map;
+  });
+
+  // Keep items from first array that exist in all other arrays.
+  return first.filter((item) => {
+    const key = selector(item);
+    return lookups.every((lookup) => lookup.has(key));
+  });
+};

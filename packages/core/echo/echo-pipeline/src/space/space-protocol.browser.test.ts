@@ -17,6 +17,7 @@ const port = process.env.SIGNAL_PORT ?? 4000;
 const SIGNAL_URL = `ws://localhost:${port}/.well-known/dx/signal`;
 
 describe('space/space-protocol', () => {
+  // TODO(dmaretskyi): Fails with the vscode test-runner for some reason.
   test('two peers discover each other', async () => {
     const builder = new TestAgentBuilder();
     onTestFinished(async () => {

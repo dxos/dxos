@@ -8,7 +8,7 @@ import { FileTs, FileJs, ArrowClockwise, Bug, TextUnderline, TextB, TextItalic }
 import React, { useState } from 'react';
 
 import { Input, Select, Toggle, Toolbar } from '../components';
-import { withTheme, withVariants } from '../testing';
+import { withTheme, withSurfaceVariantsLayout } from '../testing';
 
 const DefaultStory = () => {
   const [checked, setChecked] = useState<boolean>(false);
@@ -81,11 +81,11 @@ const DefaultStory = () => {
   );
 };
 
-export const Default = {};
-
 export default {
   title: 'ui/react-ui-core/Playground/Controls',
   render: DefaultStory,
-  decorators: [withVariants(), withTheme],
+  decorators: [withSurfaceVariantsLayout(), withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };
+
+export const Default = {};

@@ -13,7 +13,7 @@ export type MemoryQueueOptions<T extends BaseEchoObject = BaseEchoObject> = {
   spaceId?: SpaceId;
   queueId?: string;
   dxn?: DXN;
-  items?: T[];
+  objects?: T[];
 };
 
 /**
@@ -24,7 +24,7 @@ export class MemoryQueue<T extends BaseEchoObject = BaseEchoObject> implements Q
     spaceId,
     queueId,
     dxn,
-    items,
+    objects,
   }: MemoryQueueOptions<T>): MemoryQueue<T> {
     if (!dxn) {
       dxn = new DXN(DXN.kind.QUEUE, [spaceId ?? SpaceId.random(), queueId ?? ObjectId.random()]);
@@ -33,25 +33,28 @@ export class MemoryQueue<T extends BaseEchoObject = BaseEchoObject> implements Q
     }
 
     const queue = new MemoryQueue<T>(dxn);
-    if (items) {
-      void queue.append(items);
+    if (objects?.length) {
+      void queue.append(objects);
     }
+
     return queue;
   }
 
   private readonly _signal = compositeRuntime.createSignal();
 
-  private _items: T[] = [];
+  private _objects: T[] = [];
 
   constructor(private readonly _dxn: DXN) {}
 
-  get dxn() {
-    return this._dxn;
+  toJSON() {
+    return {
+      dxn: this._dxn.toString(),
+      objects: this._objects.length,
+    };
   }
 
-  get items(): T[] {
-    this._signal.notifyRead();
-    return [...this._items];
+  get dxn() {
+    return this._dxn;
   }
 
   get isLoading(): boolean {
@@ -62,17 +65,22 @@ export class MemoryQueue<T extends BaseEchoObject = BaseEchoObject> implements Q
     return null;
   }
 
+  get objects(): T[] {
+    this._signal.notifyRead();
+    return [...this._objects];
+  }
+
   /**
    * Insert into queue with optimistic update.
    */
-  async append(items: T[]): Promise<void> {
-    this._items = [...this._items, ...items];
+  async append(objects: T[]): Promise<void> {
+    this._objects = [...this._objects, ...objects];
     this._signal.notifyWrite();
   }
 
   delete(ids: ObjectId[]): void {
     // TODO(dmaretskyi): Restrict types.
-    this._items = this._items.filter((item) => !ids.includes((item as HasId).id));
+    this._objects = this._objects.filter((object) => !ids.includes((object as HasId).id));
     this._signal.notifyWrite();
   }
 

@@ -27,14 +27,20 @@ export type AutocompleteOptions = {
    * @returns Array of suggestion strings
    */
   onSuggest?: (text: string) => string[];
+
+  /**
+   * ESC pressed.
+   */
+  onCancel?: () => void;
 };
 
 /**
  * Creates an autocomplete extension that shows inline suggestions.
  * Pressing Tab will complete the suggestion.
  */
-export const createAutocompleteExtension = ({ onSubmit, onSuggest }: AutocompleteOptions): Extension => {
-  const suggestionPlugin = ViewPlugin.fromClass(
+// TODO(burdon): Move to react-ui-editor.
+export const autocompleteExtension = ({ onSubmit, onSuggest, onCancel }: AutocompleteOptions): Extension => {
+  const suggest = ViewPlugin.fromClass(
     class {
       _decorations: DecorationSet;
       _currentSuggestion: string | null = null;
@@ -103,21 +109,20 @@ export const createAutocompleteExtension = ({ onSubmit, onSuggest }: Autocomplet
   );
 
   return [
-    suggestionPlugin,
+    suggest,
     EditorView.theme({
       '.cm-inline-suggestion': {
         opacity: 0.4,
       },
     }),
 
-    // Accept the current suggestion.
     Prec.highest(
       keymap.of([
         {
           key: 'Tab',
           preventDefault: true,
           run: (view) => {
-            const plugin = view.plugin(suggestionPlugin);
+            const plugin = view.plugin(suggest);
             return plugin?.completeSuggestion(view) ?? false;
           },
         },
@@ -130,7 +135,7 @@ export const createAutocompleteExtension = ({ onSubmit, onSuggest }: Autocomplet
               return false;
             }
 
-            const plugin = view.plugin(suggestionPlugin);
+            const plugin = view.plugin(suggest);
             return plugin?.completeSuggestion(view) ?? false;
           },
         },
@@ -186,6 +191,7 @@ export const createAutocompleteExtension = ({ onSubmit, onSuggest }: Autocomplet
                 insert: '',
               },
             });
+            onCancel?.();
             return true;
           },
         },
@@ -199,14 +205,14 @@ class InlineSuggestionWidget extends WidgetType {
     super();
   }
 
-  override toDOM() {
+  override toDOM(): HTMLSpanElement {
     const span = document.createElement('span');
     span.textContent = this.suffix;
     span.className = 'cm-inline-suggestion';
     return span;
   }
 
-  override eq(other: InlineSuggestionWidget) {
+  override eq(other: InlineSuggestionWidget): boolean {
     return other.suffix === this.suffix;
   }
 }

@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { cbor } from '@automerge/automerge-repo';
 import { getRandomPort } from 'get-port-please';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { cbor } from '@dxos/automerge/automerge-repo';
 import { createEphemeralEdgeIdentity, EdgeClient, MessageSchema } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { PublicKey, SpaceId } from '@dxos/keys';
@@ -33,12 +33,12 @@ describe('EchoEdgeReplicator', () => {
     await connectionOpen.waitForCount(1);
 
     const forbidden = createForbiddenMessage({ identityKey: client.identityKey, peerKey: client.peerKey }, spaceId);
-    server.sendMessage(forbidden);
+    await server.sendMessage(forbidden);
     await connectionOpen.waitForCount(1);
 
     // Double restart to check for race conditions.
     client.setIdentity(await createEphemeralEdgeIdentity());
-    server.sendMessage(forbidden);
+    await server.sendMessage(forbidden);
     await connectionOpen.waitForCount(1);
 
     await replicator.disconnect();

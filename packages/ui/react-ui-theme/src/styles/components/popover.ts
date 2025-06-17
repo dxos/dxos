@@ -8,22 +8,22 @@ import { mx } from '../../util';
 import { focusRing, modalSurface, surfaceShadow, surfaceZIndex } from '../fragments';
 
 export type PopoverStyleProps = Partial<{
-  constrainInline?: boolean;
   constrainBlock: boolean;
+  constrainInline: boolean;
   elevation: Elevation;
 }>;
 
-export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrainInline, constrainBlock }, ...etc) =>
+export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constrainInline }, ...etc) =>
   mx(
-    'p-1 rounded-lg',
-    constrainInline && 'max-is-[--radix-popover-content-available-width] overflow-x-auto',
+    'rounded-md',
     constrainBlock && 'max-bs-[--radix-popover-content-available-height] overflow-y-auto',
+    constrainInline && 'max-is-[--radix-popover-content-available-width] overflow-x-auto',
     ...etc,
   );
 
 export const popoverContent: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'border border-separator rounded-lg',
+    'border border-separator rounded-md',
     modalSurface,
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),

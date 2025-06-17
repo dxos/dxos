@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { useSelectedItems } from '@dxos/react-ui-attention';
-import { Form } from '@dxos/react-ui-form';
+import { useSelected } from '@dxos/react-ui-attention';
+import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 import { type ViewType } from '@dxos/schema';
 
 import { TABLE_PLUGIN } from '../meta';
@@ -23,14 +23,11 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   const space = getSpace(view);
   const schema = useSchema(client, space, view.query?.typename);
 
-  // TODO(burdon): Why is this needed?
-  const effectSchema = useMemo(() => schema?.snapshot, [JSON.stringify(schema?.jsonSchema)]);
-
   // NOTE(ZaymonFC): Since selection is currently a set, the order these objects show
   //   up in will not necessarily match the order in the selected context.
-  const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
-  const selectedRows = useSelectedItems(objectId);
-  const selectedObjects = queriedObjects.filter((obj) => selectedRows.has(obj.id));
+  const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const selectedRows = useSelected(objectId, 'multi');
+  const selectedObjects = queriedObjects.filter((obj) => selectedRows.includes(obj.id));
 
   const handleSave = useCallback(
     (values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
@@ -48,13 +45,21 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
     [queriedObjects],
   );
 
+  const handleRefQueryLookup = useRefQueryLookupHandler({ space });
+
   return (
-    <div role='none' className='p-1 flex flex-col gap-1'>
+    <div role='none' className='bs-full is-full flex flex-col gap-1 overflow-y-auto p-1'>
       {selectedObjects.length === 0 && <div className='text-sm'>{t('row details no selection label')}</div>}
-      {effectSchema &&
+      {schema &&
         selectedObjects.map((object) => (
           <div key={object.id} className='border border-separator rounded'>
-            <Form schema={effectSchema} values={object} onSave={handleSave} autoSave />
+            <Form
+              schema={schema}
+              values={object}
+              onSave={handleSave}
+              autoSave
+              onQueryRefOptions={handleRefQueryLookup}
+            />
           </div>
         ))}
     </div>

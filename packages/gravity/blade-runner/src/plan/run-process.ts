@@ -164,9 +164,8 @@ export const runBrowser = async ({ replicantParams, options }: RunParams): Promi
   };
 };
 
-const getBrowser = (browserType: Platform): BrowserType => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { chromium, firefox, webkit } = require('playwright');
+const getBrowser = async (browserType: Platform): Promise<BrowserType> => {
+  const { chromium, firefox, webkit } = await import('playwright');
   switch (browserType) {
     case 'chromium':
       return chromium;
@@ -182,7 +181,7 @@ const getBrowser = (browserType: Platform): BrowserType => {
 const getNewBrowserContext = async ({ platform, userDataDir }: ReplicantRuntimeParams, options: BrowserOptions) => {
   invariant(platform, 'Invalid runtime');
 
-  const browserRunner = getBrowser(platform);
+  const browserRunner = await getBrowser(platform);
 
   const playwrightOptions = {
     headless: options.headless,

@@ -4,14 +4,12 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { useAppGraph, useLayout } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
-import { StatsPanel, useStats } from '@dxos/devtools';
-import { getActiveSpace } from '@dxos/plugin-space';
+import { useActiveSpace } from '@dxos/plugin-space';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Icon, Popover } from '@dxos/react-ui';
+import { Icon } from '@dxos/react-ui';
 
 const styles = {
   success: 'text-sky-300 dark:text-green-700',
@@ -135,9 +133,7 @@ const SwarmIndicator = () => {
 // TODO(burdon): Merge with SaveStatus.
 const SavingIndicator = () => {
   const [state, _setState] = useState(0);
-  const layout = useLayout();
-  const { graph } = useAppGraph();
-  const _space = graph ? getActiveSpace(graph, layout.active[0]) : undefined;
+  const _space = useActiveSpace();
   // TODO(dmaretskyi): Fix this when we have save status for automerge.
   // useEffect(() => {
   //   if (!space) {
@@ -180,28 +176,7 @@ const SavingIndicator = () => {
   }
 };
 
-const PerformanceIndicator = () => {
-  const [visible, setVisible] = useState(false);
-  const [stats, refreshStats] = useStats();
-
-  return (
-    <Popover.Root open={visible} onOpenChange={setVisible}>
-      <Popover.Trigger asChild>
-        <StatusBar.Button onClick={() => setVisible((visible) => !visible)} title='Performance panels'>
-          <Icon icon='ph--chart-bar--regular' size={4} />
-        </StatusBar.Button>
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content classNames='max-is-[min(var(--radix-popover-content-available-width),300px)] max-bs-[--radix-popover-content-available-height]'>
-          <StatsPanel stats={stats} onRefresh={refreshStats} />
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
-  );
-};
-
-const indicators = [SavingIndicator, SwarmIndicator, PerformanceIndicator, ErrorIndicator];
+const indicators = [SavingIndicator, SwarmIndicator, ErrorIndicator];
 
 export const DebugStatus = () => {
   return (

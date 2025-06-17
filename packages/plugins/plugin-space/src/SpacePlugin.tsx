@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import {
   allOf,
   Capabilities,
@@ -12,10 +14,9 @@ import {
   Events,
   oneOf,
 } from '@dxos/app-framework';
-import { S } from '@dxos/echo-schema';
-import { RefArray } from '@dxos/live-object';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
+import { RefArray } from '@dxos/react-client/echo';
 import { osTranslations } from '@dxos/shell/react';
 
 import {
@@ -25,15 +26,15 @@ import {
   IntentResolver,
   ReactRoot,
   ReactSurface,
-  Schema,
-  Tools,
+  SchemaDefs,
+  SchemaTools,
   SpaceCapabilities,
   SpaceSettings,
   SpacesReady,
   SpaceState,
 } from './capabilities';
 import { SpaceEvents } from './events';
-import { meta, SPACE_PLUGIN } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { CollectionAction, CollectionType, defineObjectForm } from './types';
 
@@ -57,7 +58,7 @@ export type SpacePluginOptions = {
 export const SpacePlugin = ({
   invitationUrl = window.location.origin,
   invitationParam = 'spaceInvitationCode',
-  observability = true,
+  observability = false,
 }: SpacePluginOptions = {}) => {
   const createInvitationUrl = (invitationCode: string) => {
     const baseUrl = new URL(invitationUrl);
@@ -107,26 +108,16 @@ export const SpacePlugin = ({
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: CollectionType,
-            formSchema: S.Struct({ name: S.optional(S.String) }),
+            formSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
             getIntent: (props) => createIntent(CollectionAction.Create, props),
           }),
         ),
     }),
     defineModule({
-      id: `${meta.id}/module/space-settings`,
-      activatesOn: SpaceEvents.SetupSettingsPanel,
-      activate: () =>
-        contributes(SpaceCapabilities.SettingsSection, {
-          id: 'properties',
-          label: ['space settings properties label', { ns: SPACE_PLUGIN }],
-          position: 'hoist',
-        }),
-    }),
-    defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.ClientReady,
       activatesBefore: [ClientEvents.SetupSchema],
-      activate: Schema,
+      activate: SchemaDefs,
     }),
     defineModule({
       id: `${meta.id}/module/react-root`,
@@ -143,7 +134,7 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
-      activate: (context) => IntentResolver({ context, observability }),
+      activate: (context) => IntentResolver({ context, createInvitationUrl, observability }),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
@@ -177,7 +168,7 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/tools`,
       activatesOn: Events.SetupArtifactDefinition,
-      activate: Tools,
+      activate: SchemaTools,
     }),
   ]);
 };

@@ -6,11 +6,12 @@ import { createIntent, definePlugin, contributes, Capabilities, Events, defineMo
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
+import { DataType } from '@dxos/schema';
 
-import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
+import { IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
-import { JournalEntryType, JournalType, OutlinerAction, OutlineType, TaskType, Tree, TreeType } from './types';
+import { JournalEntryType, JournalType, OutlinerAction, OutlineType } from './types';
 
 export const OutlinerPlugin = () =>
   definePlugin(meta, [
@@ -33,20 +34,6 @@ export const OutlinerPlugin = () =>
           id: OutlineType.typename,
           metadata: {
             icon: 'ph--tree-structure--regular',
-            // TODO(wittjosiah): Factor out. Artifact? Separate capability?
-            getTextContent: async (outline: OutlineType) => {
-              const tree = new Tree(await outline.tree.load());
-              const textContent: string[] = [];
-              let node = tree.getNext(tree.root);
-              while (node) {
-                if (node.data.text) {
-                  // TODO(wittjosiah): Handle indentation.
-                  textContent.push(`- ${node.data.text}`);
-                }
-                node = tree.getNext(node);
-              }
-              return textContent.join('\n');
-            },
           },
         }),
       ],
@@ -74,12 +61,13 @@ export const OutlinerPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [TaskType, TreeType, JournalEntryType, JournalType]),
+      activate: () =>
+        contributes(ClientCapabilities.Schema, [DataType.Task, JournalEntryType, JournalType, OutlineType]),
     }),
     defineModule({
       id: `${meta.id}/module/whitelist-schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.SchemaWhiteList, [TaskType]),
+      activate: () => contributes(ClientCapabilities.SchemaWhiteList, [DataType.Task]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
@@ -90,10 +78,5 @@ export const OutlinerPlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
     }),
   ]);

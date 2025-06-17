@@ -10,7 +10,7 @@ export default [
       [CLIENT_PLUGIN]: {
         'account label': 'User Account',
         'profile label': 'Profile',
-        'profile description': 'You can adjust how you’re represented in Composer here.',
+        'profile description': 'You can adjust how your user settings here.',
         'devices label': 'Devices',
         'devices verbose label': 'Manage devices',
         'add device description':
@@ -42,7 +42,7 @@ export default [
         'open user account label': 'Open user account',
         'manage credentials dialog title': 'Manage Account Recovery',
         'credentials list label': 'Recovery credentials',
-        'no credentials title': 'There’s no way to recover your account yet.',
+        'no credentials title': 'WARNING: There is currently no way to recover your account.',
         'no credentials message': 'Create a recovery credential above to secure your account.',
         'recovery setup dialog title': 'Account Security',
         'recovery setup dialog description':

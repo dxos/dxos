@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import type { AutomergeUrl } from '@automerge/automerge-repo';
+
 import { type Context } from '@dxos/context';
 import { type EchoHost } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
@@ -47,7 +48,7 @@ export const runEpochMigration = async (ctx: Context, context: MigrationContext)
         timeout: LOAD_DOC_TIMEOUT,
       });
 
-      const newRoot = context.echoHost.createDoc(rootHandle.docSync());
+      const newRoot = context.echoHost.createDoc(rootHandle.doc());
       await context.echoHost.flush();
       return { newRoot: newRoot.url };
     }

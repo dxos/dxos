@@ -11,23 +11,16 @@ import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 import { Toolbar } from '../Toolbar';
 
-type StorybookAlertDialogProps = Partial<{
+type StoryProps = Partial<{
   title: string;
   description: string;
   body: string;
-  cancelTrigger: string; // TODO(burdon): Why trigger?
+  cancelTrigger: string;
   actionTrigger: string;
   openTrigger: string;
 }>;
 
-const StorybookAlertDialog = ({
-  title,
-  openTrigger,
-  description,
-  body,
-  cancelTrigger,
-  actionTrigger,
-}: StorybookAlertDialogProps) => {
+const DefaultStory = ({ title, openTrigger, description, body, cancelTrigger, actionTrigger }: StoryProps) => {
   return (
     <AlertDialog.Root defaultOpen>
       <AlertDialog.Trigger asChild>
@@ -56,7 +49,7 @@ const StorybookAlertDialog = ({
 export default {
   title: 'ui/react-ui-core/AlertDialog',
   component: AlertDialog,
-  render: StorybookAlertDialog,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

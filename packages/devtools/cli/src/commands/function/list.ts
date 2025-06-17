@@ -9,7 +9,7 @@ import { join } from 'node:path';
 
 import { table } from '@dxos/cli-base';
 import { Config } from '@dxos/config';
-import { type FunctionManifest } from '@dxos/functions/types';
+import { type FunctionManifest } from '@dxos/functions';
 
 import { BaseCommand } from '../../base';
 
@@ -39,9 +39,8 @@ export default class List extends BaseCommand<typeof List> {
 export const printFunctions = (functions: FunctionManifest['functions'] = []) => {
   ux.stdout(
     table(functions, {
-      uri: { primary: true },
-      route: {},
-      handler: {},
+      name: { primary: true },
+      version: {},
       description: {},
     }),
   );

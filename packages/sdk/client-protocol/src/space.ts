@@ -4,7 +4,7 @@
 
 import { type MulticastObservable, type CleanupFn } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
-import { type QueueFactory, type CoreDatabase, type EchoDatabase, type ReactiveEchoObject } from '@dxos/echo-db';
+import { type QueueFactory, type CoreDatabase, type EchoDatabase, type AnyLiveObject } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
   type Contact,
@@ -18,7 +18,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { type CancellableInvitation } from './invitations';
@@ -33,6 +33,8 @@ export interface SpaceInternal {
 
   // TODO(dmaretskyi): Return epoch info.
   createEpoch(options?: CreateEpochOptions): Promise<void>;
+
+  getCredentials(): Promise<Credential[]>;
 
   getEpochs(): Promise<SpecificCredential<Epoch>[]>;
 
@@ -82,7 +84,7 @@ export interface Space {
   /**
    * Properties object.
    */
-  get properties(): ReactiveEchoObject<any>;
+  get properties(): AnyLiveObject<any>;
 
   /**
    * Current state of the space.

@@ -75,8 +75,8 @@
   .dx-main-sidebar {
     @apply fixed overscroll-contain overflow-x-hidden overflow-y-auto;
     @apply duration-200 ease-in-out-symmetric;
-    @apply border-landmarkLine border-separator rounded-lg;
-    @apply base-surface md:fixed-surface backdrop-blur-md dark:backdrop-blur-lg;
+    @apply border-landmarkLine border-subduedSeparator rounded-lg;
+    @apply sidebar-surface backdrop-blur-md dark:backdrop-blur-lg;
 
     transition-property: inset-inline-start, inset-inline-end, inline-size;
     inset-block-start: max(.5rem, env(safe-area-inset-top));
@@ -93,7 +93,7 @@
     }
 
     &[data-side="is"] {
-      @apply -inline-start-[100vw] border-ie-landmarkLine border-separator;
+      @apply -inline-start-[100vw] border-ie-landmarkLine border-subduedSeparator;
       z-index: 8;
 
       &[data-state="expanded"] {
@@ -146,7 +146,7 @@
   }
 
   .dx-main-overlay {
-    @apply fixed inset-0 bg-scrim;
+    @apply fixed inset-0 bg-scrimSurface;
     @apply transition-opacity duration-200 ease-in-out-symmetric;
     @apply opacity-0 hidden;
     z-index: 6;

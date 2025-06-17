@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-text-tooltip",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "An opinionated card component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,6 +24,7 @@
     "src"
   ],
   "dependencies": {
+    "@preact-signals/safe-react": "^0.9.0",
     "@radix-ui/react-compose-refs": "1.1.1"
   },
   "devDependencies": {

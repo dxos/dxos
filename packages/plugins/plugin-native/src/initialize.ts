@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { PluginsContext } from '@dxos/app-framework';
+import type { PluginContext } from '@dxos/app-framework';
 import { SettingsAction, LayoutAction, createIntent, Capabilities } from '@dxos/app-framework';
 import { HELP_PLUGIN } from '@dxos/plugin-help';
 import { COMMANDS_DIALOG } from '@dxos/plugin-navtree';
@@ -157,9 +157,9 @@ const setupGlobalHotkey = async (socketWindow: any, appWindow: any, dispatch: an
   });
 };
 
-export const initializeNativeApp = async (context: PluginsContext) => {
+export const initializeNativeApp = async (context: PluginContext) => {
   const { app, socketWindow, socketOs, appName } = await loadSocketSupplyModules();
-  const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
 
   const platform = socketOs.platform();
 

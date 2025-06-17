@@ -1,5 +1,5 @@
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import ReactPlugin from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react-swc';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
@@ -14,6 +14,8 @@ export default defineConfig({
     },
   },
   build: {
+    // TODO(wittjosiah): Minification is causing issues with the app.
+    minify: false,
     outDir: 'out/tasks',
     rollupOptions: {
       input: {
@@ -33,6 +35,12 @@ export default defineConfig({
     ConfigPlugin(),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
-    ReactPlugin({ jsxRuntime: 'classic' })
+    ReactPlugin({
+      tsDecorators: true,
+      plugins: [
+        // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
+        ['@preact-signals/safe-react/swc', { mode: 'all' }],
+      ],
+    }),
   ],
 });

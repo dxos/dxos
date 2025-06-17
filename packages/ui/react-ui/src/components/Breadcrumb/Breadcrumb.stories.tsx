@@ -10,7 +10,7 @@ import { Breadcrumb } from './Breadcrumb';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
-const StorybookBreadcrumb = () => {
+const DefaultStory = () => {
   return (
     <Breadcrumb.Root aria-label='Breadcrumb'>
       <Breadcrumb.List>
@@ -41,7 +41,7 @@ const StorybookBreadcrumb = () => {
 export default {
   title: 'ui/react-ui-core/Breadcrumb',
   component: Breadcrumb,
-  render: StorybookBreadcrumb,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

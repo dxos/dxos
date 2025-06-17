@@ -2,15 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Rx } from '@effect-rx/rx-react';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { ImmutableSchema } from '@dxos/echo-schema';
+import { createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
+import { isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { ThreadAction } from '@dxos/plugin-thread/types';
 import { useClient } from '@dxos/react-client';
-import { create, fullyQualifiedId, getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
+import { live, fullyQualifiedId, getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
@@ -18,7 +18,6 @@ import {
   type TableFeatures,
   TablePresentation,
   TableToolbar,
-  type TableToolbarAction,
   type TableType,
   useTableModel,
 } from '@dxos/react-ui-table';
@@ -26,7 +25,6 @@ import { ViewProjection } from '@dxos/schema';
 
 import { TableAction } from '../types';
 
-// TODO(ZaymonFC): Move toolbar action handling to a more appropriate location.
 const TableContainer = ({ role, table }: { role?: string; table: TableType }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const tableRef = useRef<TableController>(null);
@@ -34,17 +32,21 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
   const client = useClient();
   const space = getSpace(table);
   const schema = useSchema(client, space, table.view?.target?.query.typename);
-  const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
+  const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
-  const handleThreadCreate = useCallback(() => {
-    // TODO(Zan): Consider a more appropriate anchor format.
-    void dispatch(createIntent(ThreadAction.Create, { subject: table, cursor: Date.now().toString() }));
-  }, [dispatch, table]);
+  const { graph } = useAppGraph();
+  const customActions = useMemo(() => {
+    return Rx.make((get) => {
+      const actions = get(graph.actions(fullyQualifiedId(table)));
+      const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
+      return { nodes, edges: nodes.map((node) => ({ source: 'root', target: node.id })) };
+    });
+  }, [graph]);
 
   const handleInsertRow = useCallback(() => {
     if (schema && space) {
-      space.db.add(create(schema, {}));
+      space.db.add(live(schema, {}));
     }
   }, [space, schema]);
 
@@ -67,14 +69,14 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
       return;
     }
 
-    return new ViewProjection(schema.jsonSchema, table.view.target!);
+    return new ViewProjection(toJsonSchema(schema), table.view.target!);
   }, [schema, table.view?.target]);
 
   const features: Partial<TableFeatures> = useMemo(
     () => ({
       selection: { enabled: true, mode: 'multiple' },
       dataEditable: true,
-      schemaEditable: !(schema instanceof ImmutableSchema),
+      schemaEditable: schema && isMutable(schema),
     }),
     [],
   );
@@ -91,37 +93,23 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
     onRowOrderChange: () => tableRef.current?.update?.(),
   });
 
-  const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);
+  const handleSave = useCallback(() => {
+    model?.saveView();
+  }, [model]);
 
-  const handleAction = useCallback(
-    (action: TableToolbarAction) => {
-      switch (action.properties.type) {
-        case 'comment': {
-          handleThreadCreate();
-          break;
-        }
-        case 'add-row': {
-          handleInsertRow();
-          break;
-        }
-        case 'save-view': {
-          model?.saveView();
-          break;
-        }
-      }
-    },
-    [handleThreadCreate, handleInsertRow, model],
-  );
+  const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);
 
   return (
     <StackItem.Content role={role} toolbar>
       <TableToolbar
-        onAction={handleAction}
         attendableId={fullyQualifiedId(table)}
         classNames='border-be border-separator'
+        customActions={customActions}
+        onAdd={handleInsertRow}
+        onSave={handleSave}
       />
       <Table.Root role={role}>
-        <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} />
+        <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} schema={schema} />
       </Table.Root>
     </StackItem.Content>
   );

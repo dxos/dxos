@@ -2,8 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { save } from '@automerge/automerge';
+import { type DocHandle } from '@automerge/automerge-repo';
+
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
-import { save } from '@dxos/automerge/automerge';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import type { SpecificCredential } from '@dxos/credentials';
@@ -14,8 +16,9 @@ import {
   createMappedFeedWriter,
   type MetadataStore,
   type Space,
+  FIND_PARAMS,
 } from '@dxos/echo-pipeline';
-import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
+import { SpaceDocVersion, type DatabaseDirectory } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -226,13 +229,13 @@ export class DataSpace {
   }
 
   @synchronized
-  async open() {
+  async open(): Promise<void> {
     if (this._state === SpaceState.SPACE_CLOSED) {
       await this._open();
     }
   }
 
-  private async _open() {
+  private async _open(): Promise<void> {
     await this._presence.open();
     await this._gossip.open();
     await this._notarizationPlugin.open();
@@ -259,11 +262,11 @@ export class DataSpace {
   }
 
   @synchronized
-  async close() {
+  async close(): Promise<void> {
     await this._close();
   }
 
-  private async _close() {
+  private async _close(): Promise<void> {
     await this._callbacks.beforeClose?.();
 
     await this.preClose.callSerial();
@@ -291,18 +294,18 @@ export class DataSpace {
     await this._gossip.close();
   }
 
-  async postMessage(channel: string, message: any) {
+  async postMessage(channel: string, message: any): Promise<void> {
     return this._gossip.postMessage(channel, message);
   }
 
-  listen(channel: string, callback: (message: GossipMessage) => void) {
+  listen(channel: string, callback: (message: GossipMessage) => void): { unsubscribe: () => void } {
     return this._gossip.listen(channel, callback);
   }
 
   /**
    * Initialize the data pipeline in a separate task.
    */
-  initializeDataPipelineAsync() {
+  initializeDataPipelineAsync(): void {
     scheduleTask(this._ctx, async () => {
       try {
         this.metrics.pipelineInitBegin = new Date();
@@ -325,7 +328,7 @@ export class DataSpace {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async initializeDataPipeline() {
+  async initializeDataPipeline(): Promise<void> {
     if (this._state !== SpaceState.SPACE_CONTROL_ONLY) {
       throw new SystemError('Invalid operation');
     }
@@ -352,7 +355,7 @@ export class DataSpace {
 
   async *getAllDocuments(): AsyncIterable<[string, Uint8Array]> {
     invariant(this._databaseRoot, 'Space is not ready');
-    const doc = this._databaseRoot.docSync() ?? failedInvariant();
+    const doc = this._databaseRoot.doc() ?? failedInvariant();
     const root = save(doc);
     yield [this._databaseRoot.documentId, root];
 
@@ -362,7 +365,7 @@ export class DataSpace {
     }
   }
 
-  private async _enterReadyState() {
+  private async _enterReadyState(): Promise<void> {
     await this._callbacks.beforeReady?.();
 
     this._state = SpaceState.SPACE_READY;
@@ -373,7 +376,7 @@ export class DataSpace {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _initializeAndReadControlPipeline() {
+  private async _initializeAndReadControlPipeline(): Promise<void> {
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
       ctx: this._ctx,
       timeout: 10_000,
@@ -399,7 +402,7 @@ export class DataSpace {
   }
 
   @timed(10_000)
-  private async _createWritableFeeds() {
+  private async _createWritableFeeds(): Promise<void> {
     const credentials: Credential[] = [];
     if (!this.inner.controlFeedKey) {
       const controlFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
@@ -456,15 +459,19 @@ export class DataSpace {
     }
   }
 
-  private _onNewAutomergeRoot(rootUrl: string) {
+  private _onNewAutomergeRoot(rootUrl: string): void {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
 
-    const handle = this._echoHost.automergeRepo.find<SpaceDoc>(rootUrl as any);
+    let handle: DocHandle<DatabaseDirectory>;
 
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
     queueMicrotask(async () => {
       try {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
+          handle = await cancelWithContext(
+            this._ctx,
+            this._echoHost.automergeRepo.find<DatabaseDirectory>(rootUrl as any, FIND_PARAMS),
+          );
           await cancelWithContext(this._ctx, handle.whenReady());
         });
         if (this._ctx.disposed) {
@@ -475,7 +482,7 @@ export class DataSpace {
         using _guard = await this._epochProcessingMutex.acquire();
 
         // Attaching space keys to legacy documents.
-        const doc = handle.docSync() ?? failedInvariant();
+        const doc = handle.doc() ?? failedInvariant();
         if (!doc.access?.spaceKey) {
           handle.change((doc: any) => {
             doc.access = { spaceKey: this.key.toHex() };
@@ -506,7 +513,7 @@ export class DataSpace {
   }
 
   // TODO(dmaretskyi): Use profile from signing context.
-  async updateOwnProfile(profile: ProfileDocument) {
+  async updateOwnProfile(profile: ProfileDocument): Promise<void> {
     const credential = await this._signingContext.credentialSigner.createCredential({
       subject: this._signingContext.identityKey,
       assertion: {
@@ -561,7 +568,7 @@ export class DataSpace {
   }
 
   @synchronized
-  async activate() {
+  async activate(): Promise<void> {
     if (![SpaceState.SPACE_CLOSED, SpaceState.SPACE_INACTIVE].includes(this._state)) {
       return;
     }
@@ -572,7 +579,7 @@ export class DataSpace {
   }
 
   @synchronized
-  async deactivate() {
+  async deactivate(): Promise<void> {
     if (this._state === SpaceState.SPACE_INACTIVE) {
       return;
     }

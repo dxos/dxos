@@ -2,17 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type DocHandle, Repo } from '@automerge/automerge-repo';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { render, screen } from '@testing-library/react';
 // TODO(wittjosiah): Move to vitest expect (and remove from package.json).
 import chai, { expect } from 'chai';
 import chaiDom from 'chai-dom';
-import get from 'lodash.get';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { describe, test } from 'vitest';
 
-import { type DocHandle, Repo } from '@dxos/automerge/automerge-repo';
+import { get } from '@dxos/util';
 
 import { automerge } from './automerge';
 
@@ -24,7 +24,7 @@ const path = ['text'];
 
 class Generator {
   constructor(private readonly _handle: DocHandle<TestObject>) {}
-  update(text: string) {
+  update(text: string): void {
     this._handle.change((doc: TestObject) => {
       doc.text = text;
     });
@@ -36,7 +36,8 @@ const Test: FC<{ handle: DocHandle<TestObject>; generator: Generator }> = ({ han
   const [view, setView] = useState<EditorView>();
   useEffect(() => {
     const extensions = [
-      automerge({ handle, path }),
+      // TODO(mykola): Fix types.
+      automerge({ handle: handle as any, path }),
       EditorView.updateListener.of((update) => {
         if (view.state.doc.toString() === 'hello!') {
           // Update editor.
@@ -46,7 +47,7 @@ const Test: FC<{ handle: DocHandle<TestObject>; generator: Generator }> = ({ han
     ];
 
     const view = new EditorView({
-      state: EditorState.create({ doc: get(handle.docSync()!, path), extensions }),
+      state: EditorState.create({ doc: get(handle.doc()!, path), extensions }),
       parent: ref.current!,
     });
 

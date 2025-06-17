@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { create, makeRef } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 
 import { EXCALIDRAW_SCHEMA, SketchAction } from '../types';
@@ -15,10 +15,9 @@ export default () =>
       intent: SketchAction.Create,
       resolve: ({ name, schema = EXCALIDRAW_SCHEMA, content = {} }) => ({
         data: {
-          object: create(DiagramType, {
+          object: live(DiagramType, {
             name,
-            canvas: makeRef(create(CanvasType, { schema, content })),
-            threads: [],
+            canvas: makeRef(live(CanvasType, { schema, content })),
           }),
         },
       }),

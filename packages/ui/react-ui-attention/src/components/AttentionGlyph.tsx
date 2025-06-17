@@ -9,7 +9,7 @@ import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 const attentionGlyphStyles =
-  'inline-block rounded-sm is-3 bs-3 bg-transparent text-accentText transition-colors [[data-contains-attended=true]_&]:bg-attentionRelated [[data-attention=true]_&]:bg-accentSurface [[data-attention=true]_&]:text-inverse [[aria-current][data-attention=true]_&]:bg-accentSurface [[aria-current][data-attention=true]_&]:text-inverse';
+  'inline-block rounded-sm is-3 bs-3 bg-transparent text-accentText transition-colors [[data-contains-attended=true]_&]:bg-attentionRelated [[data-attention=true]_&]:bg-accentSurface [[data-attention=true]_&]:text-accentSurfaceText [[aria-current][data-attention=true]_&]:bg-accentSurface [[aria-current][data-attention=true]_&]:text-accentSurfaceText';
 
 const presenceIconStyles =
   'is-3 bs-3 group-[[aria-current]_&:hover]/attentionGlyphButton:hidden group-[[aria-current]_&:focus]/attentionGlyphButton:hidden group-[[data-attention=true]_&:hover]/attentionGlyphButton:hidden group-[[data-attention=true]_&:focus]/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]_&:hover]/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]_&:focus]/attentionGlyphButton:hidden';
@@ -60,7 +60,7 @@ export const Syncing = () => {
   return (
     <div role='status' className='flex items-center'>
       <Icon
-        icon='ph--circle-notch--regular'
+        icon='ph--circle-notch--bold'
         size={3}
         style={animationProps}
         classNames='text-subdued animate-[spin_2s_linear_infinite]'

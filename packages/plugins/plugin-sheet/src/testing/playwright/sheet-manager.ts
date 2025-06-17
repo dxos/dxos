@@ -25,21 +25,21 @@ export class SheetManager {
     return this.cellByText('Ready').waitFor({ state: 'visible' });
   }
 
-  async fill(text: string) {
+  async fill(text: string): Promise<void> {
     // TODO(thure): Do these timeouts help with test flakiness?
     await this.page.waitForTimeout(200);
     await this.cellEditor().fill(text);
     await this.page.waitForTimeout(200);
   }
 
-  async press(key: string) {
+  async press(key: string): Promise<void> {
     // TODO(thure): Does these timeouts help with test flakiness?
     await this.page.waitForTimeout(200);
     await this.page.keyboard.press(key);
     await this.page.waitForTimeout(200);
   }
 
-  async commit(key: string) {
+  async commit(key: string): Promise<void> {
     // TODO(thure): Why do we need to wait? Enter is ignored otherwise…
     await this.page.waitForTimeout(500);
     await this.press(key);
@@ -49,7 +49,7 @@ export class SheetManager {
     return this.grid.grid.getByText(text);
   }
 
-  async setFocusedCellValue(text: string, commitKey: string) {
+  async setFocusedCellValue(text: string, commitKey: string): Promise<void> {
     const mode = await this.grid.mode();
     if (mode === 'browse') {
       await this.commit('Enter');
@@ -58,7 +58,7 @@ export class SheetManager {
     await this.commit(commitKey);
   }
 
-  async selectRange(start: DxGridPosition, end: DxGridPosition) {
+  async selectRange(start: DxGridPosition, end: DxGridPosition): Promise<void> {
     const startCell = this.grid.cell(start.col, start.row, start.plane);
     const endCell = this.grid.cell(end.col, end.row, end.plane);
     const startBox = await startCell.boundingBox();
@@ -69,7 +69,7 @@ export class SheetManager {
     });
   }
 
-  async deleteAxis(axis: DxGridAxis, position: number) {
+  async deleteAxis(axis: DxGridAxis, position: number): Promise<void> {
     const col = axis === 'row' ? 0 : position;
     const row = axis === 'row' ? position : 0;
     const plane = axis === 'row' ? 'frozenColsStart' : 'frozenRowsStart';
@@ -77,15 +77,15 @@ export class SheetManager {
     await this.page.getByTestId(`grid.${axis}.drop`).click();
   }
 
-  toolbarAction(key: string, value: string) {
+  toolbarAction(key: string, value: string): Locator {
     return this.page.getByTestId(`grid.toolbar.${key}.${value}`);
   }
 
-  cellEditor() {
+  cellEditor(): Locator {
     return this.page.getByTestId('grid.cell-editor').getByRole('textbox');
   }
 
-  rangeInList(a1Coords: string) {
+  rangeInList(a1Coords: string): Locator {
     return this.page.getByTestId('grid.range-list').getByText(a1Coords);
   }
 }

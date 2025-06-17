@@ -2,28 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type EditorView } from '@codemirror/view';
+import { type Rx } from '@effect-rx/rx-react';
 import { useMemo } from 'react';
 
-import { create, type ReactiveObject } from '@dxos/live-object';
-import { type Label, type ThemedClassName } from '@dxos/react-ui';
+import { type Action } from '@dxos/app-graph';
+import { live, type Live } from '@dxos/live-object';
+import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type MenuSeparator,
   type MenuItemGroup,
   type ToolbarMenuActionGroupProperties,
-  type MenuActionProperties,
   createMenuAction,
   createMenuItemGroup,
   type ActionGraphProps,
+  type MenuActionProperties,
 } from '@dxos/react-ui-menu';
 
-import type { EditorAction, EditorActionPayload, EditorViewMode, Formatting } from '../../extensions';
+import type { EditorAction, EditorViewMode, Formatting } from '../../extensions';
 import { translationKey } from '../../translations';
 
-export type EditorToolbarState = Formatting &
-  Partial<{ comment: boolean; viewMode: EditorViewMode; selection: boolean }>;
+export type EditorToolbarState = Formatting & Partial<{ viewMode: EditorViewMode }>;
 
 export const useEditorToolbarState = (initialState: Partial<EditorToolbarState> = {}) => {
-  return useMemo(() => create<EditorToolbarState>(initialState), []);
+  return useMemo(() => live<EditorToolbarState>(initialState), []);
 };
 
 export type EditorToolbarFeatureFlags = Partial<{
@@ -31,16 +33,17 @@ export type EditorToolbarFeatureFlags = Partial<{
   formatting: boolean;
   lists: boolean;
   blocks: boolean;
-  comment: boolean;
   search: boolean;
-  viewMode: boolean;
+  // TODO(wittjosiah): Factor out. Depend on plugin-level capabilities.
+  image: () => void;
+  viewMode: (mode: EditorViewMode) => void;
 }>;
 
 export type EditorToolbarActionGraphProps = {
-  state: ReactiveObject<EditorToolbarState>;
+  state: Live<EditorToolbarState>;
+  getView: () => EditorView;
   // TODO(wittjosiah): Control positioning.
-  customActions?: () => ActionGraphProps;
-  onAction: (action: EditorAction) => void;
+  customActions?: Rx.Rx<ActionGraphProps>;
 };
 
 export type EditorToolbarProps = ThemedClassName<
@@ -49,17 +52,13 @@ export type EditorToolbarProps = ThemedClassName<
 
 export type EditorToolbarItem = EditorAction | MenuItemGroup | MenuSeparator;
 
-export const createEditorAction = (
-  payload: EditorActionPayload & Partial<MenuActionProperties>,
-  icon: string,
-  label: Label = [`${payload.type} label`, { ns: translationKey }],
-  id: string = payload.type,
-) => createMenuAction(id, { icon, label, ...payload }) as EditorAction;
+export const createEditorAction = (id: string, invoke: () => void, properties: Partial<MenuActionProperties>) => {
+  const { label = [`${id} label`, { ns: translationKey }], ...rest } = properties;
+  return createMenuAction(id, invoke, { label, ...rest }) as Action<MenuActionProperties>;
+};
 
 export const createEditorActionGroup = (
   id: string,
   props: Omit<ToolbarMenuActionGroupProperties, 'icon'>,
   icon?: string,
 ) => createMenuItemGroup(id, { icon, iconOnly: true, ...props });
-
-export const editorToolbarSearch = createEditorAction({ type: 'search' }, 'ph--magnifying-glass--regular');

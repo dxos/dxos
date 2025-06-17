@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-thread",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "A set of components to use with threads, including comments and messages.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,6 +25,7 @@
   "dependencies": {
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@preact-signals/safe-react": "^0.9.0",
     "@radix-ui/react-primitive": "2.0.2",
     "date-fns": "^3.3.1"
   },

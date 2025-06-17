@@ -18,7 +18,6 @@ import {
   autocomplete,
   createBasicExtensions,
   createThemeExtensions,
-  editorFullWidth,
   type EditorInputMode,
   editorMonospace,
   EditorView,
@@ -64,15 +63,10 @@ export const TypescriptEditor = ({
         createThemeExtensions({
           themeMode,
           syntaxHighlighting: true,
-          slots: {
-            content: { className: editorFullWidth },
-          },
         }),
         // NOTE: Not using default editor gutter because folding for code works best right beside text.
         EditorView.theme({
           '.cm-gutters': {
-            // Match margin from content.
-            marginTop: '16px',
             background: 'var(--dx-baseSurface)',
           },
         }),

@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useEffect, useRef } from 'react';
 
 import { createInputSchema, createOutputSchema, GptMessage } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -14,16 +14,16 @@ import { createFunctionAnchors, Box } from './common';
 import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 
 const InputSchema = createInputSchema(GptMessage);
-const OutputSchema = createOutputSchema(S.mutable(S.Array(GptMessage)));
+const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(GptMessage)));
 
-export const ThreadShape = S.extend(
+export const ThreadShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('thread'),
+  Schema.Struct({
+    type: Schema.Literal('thread'),
   }),
 );
 
-export type ThreadShape = S.Schema.Type<typeof ThreadShape>;
+export type ThreadShape = Schema.Schema.Type<typeof ThreadShape>;
 
 export type CreateThreadProps = CreateShapeProps<ThreadShape>;
 

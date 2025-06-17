@@ -5,19 +5,19 @@
 import { snippet } from '@codemirror/autocomplete';
 import { syntaxTree } from '@codemirror/language';
 import {
-  type Extension,
-  type StateCommand,
-  type EditorState,
   type ChangeSpec,
-  type Text,
   EditorSelection,
+  type Extension,
+  type EditorState,
   type Line,
+  type StateCommand,
+  type Text,
 } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
 import { useMemo } from 'react';
 
-import { type ReactiveObject } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 
 import { type EditorToolbarState } from '../../components';
 
@@ -1250,7 +1250,7 @@ export const getFormatting = (state: EditorState): Formatting => {
 /**
  * Hook provides an extension to compute the current formatting state.
  */
-export const useFormattingState = (state: ReactiveObject<EditorToolbarState>): Extension => {
+export const useFormattingState = (state: Live<EditorToolbarState>): Extension => {
   return useMemo(
     () =>
       EditorView.updateListener.of((update) => {

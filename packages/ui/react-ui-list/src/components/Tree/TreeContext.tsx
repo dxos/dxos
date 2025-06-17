@@ -19,7 +19,7 @@ export type PropsFromTreeItem = {
 };
 
 export type TreeContextType<T = any> = {
-  getItems: (parent?: T) => T[];
+  useItems: (parent?: T) => T[];
   getProps: (item: T, parent: string[]) => PropsFromTreeItem;
   isOpen: (path: string[], item: T) => boolean;
   isCurrent: (path: string[], item: T) => boolean;

@@ -35,7 +35,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
     return this.extensionContext?.remotePeerId;
   }
 
-  private async _openStream(streamTag: string, interval = 5, chunkSize = 2048) {
+  private async _openStream(streamTag: string, interval = 5, chunkSize = 2048): Promise<void> {
     invariant(!this._streams.has(streamTag), `Stream already exists: ${streamTag}`);
 
     const networkStream = await this.extensionContext!.createStream(streamTag, {
@@ -124,7 +124,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
     };
   }
 
-  async onOpen(context: ExtensionContext) {
+  async onOpen(context: ExtensionContext): Promise<void> {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
     this.extensionContext = context;
     this._rpc = createProtoRpcPeer<
@@ -175,7 +175,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
     this.open.wake();
   }
 
-  async onClose(err?: Error) {
+  async onClose(err?: Error): Promise<void> {
     log('onClose', { err });
     await this.callbacks.onClose?.();
     this.closed.wake();
@@ -187,7 +187,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
     await this._rpc?.close();
   }
 
-  async onAbort(err?: Error) {
+  async onAbort(err?: Error): Promise<void> {
     log('onAbort', { err });
     await this.callbacks.onAbort?.();
     this.aborted.wake();
@@ -239,7 +239,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
   /**
    * Force-close the connection.
    */
-  async closeConnection(err?: Error) {
+  async closeConnection(err?: Error): Promise<void> {
     this.extensionContext?.close(err);
   }
 }

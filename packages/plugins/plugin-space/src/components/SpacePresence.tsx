@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import { Option } from 'effect';
+import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
@@ -16,10 +17,12 @@ import {
   type Size,
   type ThemedClassName,
   Tooltip,
+  Popover,
   useTranslation,
   List,
   ListItem,
   useDefaultValue,
+  type DxAvatar,
 } from '@dxos/react-ui';
 import { AttentionGlyph, useAttended, useAttention, type AttentionGlyphProps } from '@dxos/react-ui-attention';
 import { ComplexMap, keyToFallback } from '@dxos/util';
@@ -114,40 +117,38 @@ export const FullPresence = (props: MemberPresenceProps) => {
   return (
     <div className='dx-avatar-group' data-testid='spacePlugin.presence'>
       {members.slice(0, 3).map((member, i) => (
-        <Tooltip.Root key={member.identity.identityKey.toHex()}>
-          <Tooltip.Trigger>
-            <PrensenceAvatar
-              identity={member.identity}
-              match={member.currentlyAttended} // TODO(Zan): Match always true now we're showing 'members viewing current object'.
-              index={members.length - i}
-              onClick={() => onMemberClick?.(member)}
-              size={size}
-            />
-          </Tooltip.Trigger>
-          <Tooltip.Portal>
-            <Tooltip.Content side='bottom'>
-              <span>{getName(member.identity)}</span>
-              <Tooltip.Arrow />
-            </Tooltip.Content>
-          </Tooltip.Portal>
-        </Tooltip.Root>
+        <Tooltip.Trigger
+          key={member.identity.identityKey.toHex()}
+          side='bottom'
+          content={getName(member.identity)}
+          className='grid focus:outline-none'
+        >
+          <PresenceAvatar
+            identity={member.identity}
+            match={member.currentlyAttended} // TODO(Zan): Match always true now we're showing 'members viewing current object'.
+            index={members.length - i}
+            onClick={() => onMemberClick?.(member)}
+            size={size}
+          />
+        </Tooltip.Trigger>
       ))}
 
       {members.length > 3 && (
-        <Tooltip.Root>
-          <Tooltip.Trigger>
+        <Popover.Root>
+          <Popover.Trigger className='grid focus:outline-none'>
             <Avatar.Root>
               {/* TODO(wittjosiah): Make text fit. */}
               <Avatar.Content
                 status='inactive'
                 style={{ zIndex: members.length - 4 }}
                 fallback={`+${members.length - 3}`}
+                size={size}
               />
             </Avatar.Root>
-          </Tooltip.Trigger>
-          <Tooltip.Portal>
-            <Tooltip.Content side='bottom'>
-              <Tooltip.Arrow />
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Content side='bottom'>
+              <Popover.Arrow />
               <List classNames='max-h-56 overflow-y-auto'>
                 {members.map((member) => (
                   <ListItem.Root
@@ -157,13 +158,13 @@ export const FullPresence = (props: MemberPresenceProps) => {
                     data-testid='identity-list-item'
                   >
                     {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
-                    <PrensenceAvatar identity={member.identity} size={size} showName match={member.currentlyAttended} />
+                    <PresenceAvatar identity={member.identity} size={size} showName match={member.currentlyAttended} />
                   </ListItem.Root>
                 ))}
               </List>
-            </Tooltip.Content>
-          </Tooltip.Portal>
-        </Tooltip.Root>
+            </Popover.Content>
+          </Popover.Portal>
+        </Popover.Root>
       )}
     </div>
   );
@@ -177,26 +178,28 @@ type PresenceAvatarProps = Pick<AvatarContentProps, 'size'> & {
   onClick?: () => void;
 };
 
-const PrensenceAvatar = ({ identity, showName, match, index, onClick, size }: PresenceAvatarProps) => {
-  const status = match ? 'current' : 'active';
-  const fallbackValue = keyToFallback(identity.identityKey);
-  return (
-    <Avatar.Root>
-      <Avatar.Content
-        status={status}
-        hue={identity.profile?.data?.hue || fallbackValue.hue}
-        data-testid='spacePlugin.presence.member'
-        data-status={status}
-        size={size}
-        classNames='mbs-2 mie-4'
-        {...(index ? { style: { zIndex: index } } : {})}
-        onClick={() => onClick?.()}
-        fallback={identity.profile?.data?.emoji || fallbackValue.emoji}
-      />
-      <Avatar.Label classNames={showName ? 'text-sm truncate pli-2' : 'sr-only'}>{getName(identity)}</Avatar.Label>
-    </Avatar.Root>
-  );
-};
+const PresenceAvatar = forwardRef<DxAvatar, PresenceAvatarProps>(
+  ({ identity, showName, match, index, onClick, size }, forwardedRef) => {
+    const status = match ? 'current' : 'active';
+    const fallbackValue = keyToFallback(identity.identityKey);
+    return (
+      <Avatar.Root>
+        <Avatar.Content
+          status={status}
+          hue={identity.profile?.data?.hue || fallbackValue.hue}
+          data-testid='spacePlugin.presence.member'
+          data-status={status}
+          size={size}
+          {...(index ? { style: { zIndex: index } } : {})}
+          onClick={onClick}
+          fallback={identity.profile?.data?.emoji || fallbackValue.emoji}
+          ref={forwardedRef}
+        />
+        <Avatar.Label classNames={showName ? 'text-sm truncate pli-2' : 'sr-only'}>{getName(identity)}</Avatar.Label>
+      </Avatar.Root>
+    );
+  },
+);
 
 export type SmallPresenceLiveProps = {
   id?: string;
@@ -215,7 +218,7 @@ export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps)
   const attended = useAttended();
   const startOfAttention = attended.at(-1);
   const path = usePath(graph, startOfAttention);
-  const containsAttended = !open && !isAttended && id && path ? path.includes(id) : false;
+  const containsAttended = !open && !isAttended && id && Option.isSome(path) ? path.value.includes(id) : false;
 
   const getActiveViewers = (viewers: ComplexMap<PublicKey, ObjectViewerProps>): ObjectViewerProps[] => {
     const moment = Date.now();
@@ -247,21 +250,13 @@ export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPr
   const { t } = useTranslation(SPACE_PLUGIN);
 
   return (
-    <Tooltip.Root>
-      <Tooltip.Trigger asChild>
-        <AttentionGlyph
-          attended={attended}
-          containsAttended={containsAttended}
-          presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}
-          classNames='self-center mie-1'
-        />
-      </Tooltip.Trigger>
-      <Tooltip.Portal>
-        <Tooltip.Content side='bottom'>
-          <span>{t('presence label', { count })}</span>
-          <Tooltip.Arrow />
-        </Tooltip.Content>
-      </Tooltip.Portal>
-    </Tooltip.Root>
+    <Tooltip.Trigger asChild content={t('presence label', { count })} side='bottom'>
+      <AttentionGlyph
+        attended={attended}
+        containsAttended={containsAttended}
+        presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}
+        classNames='self-center mie-1'
+      />
+    </Tooltip.Trigger>
   );
 };

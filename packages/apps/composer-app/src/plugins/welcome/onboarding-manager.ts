@@ -16,6 +16,7 @@ import { type Client } from '@dxos/react-client';
 import { DeviceType, type Credential, type Identity } from '@dxos/react-client/halo';
 
 import { WELCOME_SCREEN } from './components';
+import { OVERLAY_CLASSES, OVERLAY_STYLE } from './components/Welcome/Welcome';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
 import { WELCOME_PLUGIN } from './meta';
 import { queryAllCredentials, removeQueryParamByValue } from '../../util';
@@ -88,7 +89,7 @@ export class OnboardingManager {
     );
   }
 
-  async initialize() {
+  async initialize(): Promise<void> {
     await this._fetchBetaCredential();
     if (this._credential && this._hubUrl) {
       // Don't block app loading on network request.
@@ -132,18 +133,18 @@ export class OnboardingManager {
     }
   }
 
-  async destroy() {
+  async destroy(): Promise<void> {
     await this._ctx.dispose();
   }
 
-  private async _queryRecoveryCredentials() {
+  private async _queryRecoveryCredentials(): Promise<Credential[]> {
     const credentials = await queryAllCredentials(this._client);
     return credentials.filter(
       (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
     );
   }
 
-  private async _setupRecovery() {
+  private async _setupRecovery(): Promise<void> {
     const credentials = await this._queryRecoveryCredentials();
     if (this._skipAuth || credentials.length > 0) {
       return;
@@ -173,12 +174,12 @@ export class OnboardingManager {
     );
   }
 
-  private async _fetchBetaCredential() {
+  private async _fetchBetaCredential(): Promise<void> {
     const credentials = await queryAllCredentials(this._client);
     this._setCredential(credentials);
   }
 
-  private _setCredential(credentials: Credential[]) {
+  private _setCredential(credentials: Credential[]): void {
     const credential = credentials
       .toSorted((a, b) => b.issuanceDate.getTime() - a.issuanceDate.getTime())
       .find(matchServiceCredential(['composer:beta']));
@@ -189,7 +190,7 @@ export class OnboardingManager {
     }
   }
 
-  private async _upgradeCredential() {
+  private async _upgradeCredential(): Promise<void> {
     try {
       invariant(this._hubUrl);
       // TODO(wittjosiah): If id is required to present credentials, then it should always be present for queried credentials.
@@ -210,7 +211,7 @@ export class OnboardingManager {
     }
   }
 
-  private async _activateAccount() {
+  private async _activateAccount(): Promise<void> {
     try {
       invariant(this._hubUrl);
       invariant(this._identity);
@@ -224,39 +225,38 @@ export class OnboardingManager {
     }
   }
 
-  private async _login() {
+  private async _login(): Promise<void> {
     invariant(this._token);
     await this._dispatch(createIntent(ClientAction.RedeemToken, { token: this._token }));
     this._token && removeQueryParamByValue(this._token);
     this._tokenType && removeQueryParamByValue(this._tokenType);
   }
 
-  private async _showWelcome() {
+  private async _showWelcome(): Promise<void> {
     // NOTE: Active parts cannot contain '/' characters currently.
     await this._dispatch(
-      createIntent(LayoutAction.SetLayoutMode, {
-        part: 'mode',
-        subject: `surface:${WELCOME_SCREEN}`,
-        options: { mode: 'fullscreen' },
+      createIntent(LayoutAction.UpdateDialog, {
+        part: 'dialog',
+        subject: WELCOME_SCREEN,
+        options: { type: 'alert', overlayClasses: OVERLAY_CLASSES, overlayStyle: OVERLAY_STYLE },
       }),
     );
   }
 
-  private async _closeWelcome() {
+  private async _closeWelcome(): Promise<void> {
     await this._dispatch(
-      createIntent(LayoutAction.Close, {
-        part: 'main',
-        subject: [`surface:${WELCOME_SCREEN}`],
+      createIntent(LayoutAction.UpdateDialog, {
+        part: 'dialog',
         options: { state: false },
       }),
     );
   }
 
-  private async _createIdentity() {
+  private async _createIdentity(): Promise<void> {
     await this._dispatch(createIntent(ClientAction.CreateIdentity));
   }
 
-  private async _createAgent() {
+  private async _createAgent(): Promise<void> {
     const devices = this._client.halo.devices.get();
     const edgeAgent = devices.find(
       (device) => device.profile?.type === DeviceType.AGENT_MANAGED && device.profile?.os?.toUpperCase() === 'EDGE',
@@ -268,7 +268,7 @@ export class OnboardingManager {
     await this._dispatch(createIntent(ClientAction.CreateAgent));
   }
 
-  private async _openJoinIdentity() {
+  private async _openJoinIdentity(): Promise<void> {
     invariant(this._deviceInvitationCode !== undefined);
 
     await this._dispatch(createIntent(ClientAction.JoinIdentity, { invitationCode: this._deviceInvitationCode }));
@@ -276,13 +276,13 @@ export class OnboardingManager {
     removeQueryParamByValue(this._deviceInvitationCode);
   }
 
-  private async _openRecoverIdentity() {
+  private async _openRecoverIdentity(): Promise<void> {
     await this._dispatch(createIntent(ClientAction.RecoverIdentity));
 
     removeQueryParamByValue('true');
   }
 
-  private async _openJoinSpace() {
+  private async _openJoinSpace(): Promise<void> {
     invariant(this._spaceInvitationCode);
 
     await this._dispatch(createIntent(SpaceAction.Join, { invitationCode: this._spaceInvitationCode }));
@@ -290,7 +290,7 @@ export class OnboardingManager {
     removeQueryParamByValue(this._spaceInvitationCode);
   }
 
-  private async _startHelp() {
+  private async _startHelp(): Promise<void> {
     if (this._skipAuth) {
       return;
     }

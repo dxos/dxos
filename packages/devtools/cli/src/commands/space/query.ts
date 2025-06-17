@@ -27,14 +27,14 @@ export default class Query extends BaseCommand<typeof Query> {
     return await this.execWithClient(async ({ client }) => {
       const space = await this.getSpace(client, this.args.key);
       const filter = this.flags.typename?.length ? Filter.typename(this.flags.typename) : undefined;
-      const { objects } = await space.db.query(filter).run();
+      const { objects } = await space.db.query(filter ?? Filter.everything()).run();
       this.log('Objects:', objects.length);
       this._printObjects(objects, { extended: this.flags.extended as boolean });
       return { objects };
     });
   }
 
-  private _printObjects(objects: any[], flags: TableFlags = {}) {
+  private _printObjects(objects: any[], flags: TableFlags = {}): void {
     ux.stdout(
       table(
         objects,

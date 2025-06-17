@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AST, type S } from '@dxos/echo-schema';
+import { type Schema, SchemaAST } from 'effect';
+
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -24,7 +25,7 @@ export type Topology = {
 
 type TopologyNodeInput = {
   name: string;
-  schema: S.Schema.AnyNoContext;
+  schema: Schema.Schema.AnyNoContext;
   sourceNodeId?: string;
   sourceNodeOutput?: string;
 };
@@ -36,7 +37,7 @@ type TopologyNodeOutputBinding = {
 
 type TopologyNodeOutput = {
   name: string;
-  schema: S.Schema.AnyNoContext;
+  schema: Schema.Schema.AnyNoContext;
   /**
    * Nodes that this output is bound to.
    */
@@ -108,7 +109,7 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
         schema,
         boundTo: [],
       });
-      if (AST.isNeverKeyword(schema.ast)) {
+      if (SchemaAST.isNeverKeyword(schema.ast)) {
         log.info('setting never output on node:', {
           sourceNode: sourceNode.graphNode.type,
           output: edge.output,
@@ -139,7 +140,7 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
       property: input.name,
     });
 
-    if (AST.isNeverKeyword(output.schema.ast)) {
+    if (SchemaAST.isNeverKeyword(output.schema.ast)) {
       log.warn('output does not exist on node:', { source: targetNode.graphNode.type, target: output.name });
       topology.diagnostics.push({
         severity: 'error',
@@ -148,7 +149,7 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
       });
     }
 
-    if (AST.isNeverKeyword(input.schema.ast)) {
+    if (SchemaAST.isNeverKeyword(input.schema.ast)) {
       log.warn('input does not exist on node:', { source: input.name, target: targetNode.graphNode.type });
       topology.diagnostics.push({
         severity: 'error',

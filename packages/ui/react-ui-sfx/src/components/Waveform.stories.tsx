@@ -66,7 +66,7 @@ const meta: Meta<WaveformProps> = {
   title: 'ui/react-ui-sfx/Waveform',
   component: Waveform,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export default meta;

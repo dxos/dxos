@@ -11,7 +11,7 @@ export const meta: PluginMeta = {
   name: 'Transcription',
   description: 'Voice transcription.',
   icon: 'ph--microphone--regular',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-transcription',
-  tags: ['experimental'],
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-transcription',
+  tags: ['labs'],
   screenshots: [],
 };

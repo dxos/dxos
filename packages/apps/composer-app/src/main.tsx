@@ -7,8 +7,9 @@ import '@dxos-theme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { createApp } from '@dxos/app-framework';
+import { useApp } from '@dxos/app-framework';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { log, LogLevel } from '@dxos/log';
 import { getObservabilityGroup, isObservabilityDisabled, initializeAppObservability } from '@dxos/observability';
 import { Tooltip, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
@@ -17,11 +18,25 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { Placeholder, ResetDialog } from './components';
 import { setupConfig } from './config';
 import { APP_KEY } from './constants';
-import { core, defaults, plugins, type PluginConfig } from './plugins';
+import { getCore, getDefaults, getPlugins, type PluginConfig } from './plugin-defs';
 import translations from './translations';
 import { defaultStorageIsEmpty, isTrue, isFalse } from './util';
 
+const PARAM_SAFE_MODE = 'safe';
+const PARAM_LOG_LEVEL = 'log';
+
 const main = async () => {
+  const url = new URL(window.location.href);
+  const safeMode = isTrue(url.searchParams.get(PARAM_SAFE_MODE), false);
+  if (safeMode) {
+    log.info('SAFE MODE');
+  }
+  const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
+  if (logLevel) {
+    const level = LogLevel[logLevel.toUpperCase() as keyof typeof LogLevel];
+    log.config({ filter: level });
+  }
+
   TRACE_PROCESSOR.setInstanceTag('app');
 
   registerSignalsRuntime();
@@ -86,30 +101,41 @@ const main = async () => {
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
-  const App = createApp({
-    fallback: ({ error }) => (
-      <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
-        <Tooltip.Provider>
-          <ResetDialog error={error} observability={observability} />
-        </Tooltip.Provider>
-      </ThemeProvider>
-    ),
-    placeholder: Placeholder,
-    plugins: plugins(conf),
-    core: core(conf),
-    defaults: defaults(conf),
-    cacheEnabled: true,
-  });
+  const plugins = getPlugins(conf);
+  const core = getCore(conf);
+  const defaults = getDefaults(conf);
+
+  const Fallback = ({ error }: { error: Error }) => (
+    <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
+      <Tooltip.Provider>
+        <ResetDialog error={error} observability={observability} />
+      </Tooltip.Provider>
+    </ThemeProvider>
+  );
+
+  const Main = () => {
+    const App = useApp({
+      fallback: Fallback,
+      placeholder: Placeholder,
+      plugins,
+      core,
+      defaults,
+      cacheEnabled: true,
+      safeMode,
+    });
+
+    return <App />;
+  };
 
   const root = document.getElementById('root')!;
   if (conf.isStrict) {
     createRoot(root).render(
       <StrictMode>
-        <App />
+        <Main />
       </StrictMode>,
     );
   } else {
-    createRoot(root).render(<App />);
+    createRoot(root).render(<Main />);
   }
 };
 

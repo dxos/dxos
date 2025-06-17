@@ -167,7 +167,7 @@ export class Peer {
   /**
    * Initiate a connection to the remote peer.
    */
-  async initiateConnection() {
+  async initiateConnection(): Promise<void> {
     invariant(!this.initiating, 'Initiation in progress.');
     invariant(!this.connection, 'Already connected.');
     const sessionId = PublicKey.random();
@@ -244,7 +244,7 @@ export class Peer {
    * Create new connection.
    * Either we're initiating a connection or creating one in response to an offer from the other peer.
    */
-  private _createConnection(initiator: boolean, sessionId: PublicKey) {
+  private _createConnection(initiator: boolean, sessionId: PublicKey): Connection {
     log('creating connection', {
       topic: this.topic,
       peerId: this.localInfo,
@@ -360,7 +360,7 @@ export class Peer {
     return connection;
   }
 
-  async closeConnection(err?: Error) {
+  async closeConnection(err?: Error): Promise<void> {
     if (!this.connection) {
       return;
     }
@@ -376,7 +376,7 @@ export class Peer {
     log('closed', { peerId: this.remoteInfo, sessionId: connection.sessionId });
   }
 
-  async onSignal(message: SignalMessage) {
+  async onSignal(message: SignalMessage): Promise<void> {
     if (!this.connection) {
       log('dropping signal message for non-existent connection', { message });
       return;
@@ -386,7 +386,7 @@ export class Peer {
   }
 
   @synchronized
-  async safeDestroy(reason?: string) {
+  async safeDestroy(reason?: string): Promise<void> {
     await this._ctx.dispose();
     log('Destroying peer', { peerId: this.remoteInfo, topic: this.topic });
 

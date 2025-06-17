@@ -9,21 +9,19 @@ import React, { useEffect, useState } from 'react';
 
 import { Capabilities, contributes, createSurface, IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { ObjectId } from '@dxos/echo-schema';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { refFromDXN } from '@dxos/live-object';
-import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
+import { makeRef } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { create, type Space } from '@dxos/react-client/echo';
+import { live, type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Thread } from '@dxos/react-ui-thread';
-import { MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ChatContainer } from './ChatContainer';
 import translations from '../translations';
+import { ChannelType, ThreadType } from '../types';
 
 faker.seed(1);
 
@@ -38,8 +36,9 @@ const Story = () => {
       setTimeout(async () => {
         const space = await client.spaces.create();
         const channel = space.db.add(
-          create(ChannelType, {
-            queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()])),
+          live(ChannelType, {
+            defaultThread: makeRef(live(ThreadType, { messages: [], status: 'active' })),
+            threads: [],
           }),
         );
         setSpace(space);
@@ -48,13 +47,13 @@ const Story = () => {
     }
   }, [identity]);
 
-  if (!identity || !channel || !space) {
+  if (!identity || !channel || !space || !channel.defaultThread.target) {
     return null;
   }
 
   return (
     <main className='max-is-prose mli-auto bs-dvh overflow-hidden'>
-      <ChatContainer space={space} dxn={channel.queue.dxn} />
+      <ChatContainer space={space} thread={channel.defaultThread.target} />
     </main>
   );
 };
@@ -80,8 +79,8 @@ const meta: Meta = {
       ],
     }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
-    withClientProvider({ createSpace: true, types: [ThreadType, MessageType] }),
+    withLayout({ fullscreen: true }),
+    withClientProvider({ createSpace: true, types: [ThreadType, DataType.Message] }),
   ],
   parameters: { translations },
 };

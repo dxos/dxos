@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import { Schema, pipe } from 'effect';
 
+import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, createIntent, type PromiseIntentDispatcher, contributes } from '@dxos/app-framework';
-import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
+import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
@@ -34,34 +34,34 @@ export default () => {
     `,
     schema: MapType,
     tools: [
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'list',
         description: 'Query maps.',
         caption: 'Listing maps...',
-        schema: S.Struct({}),
+        schema: Schema.Struct({}),
         execute: async (_, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const { objects } = await extensions.space.db.query(Filter.schema(MapType)).run();
+          const { objects } = await extensions.space.db.query(Filter.type(MapType)).run();
           invariant(objects.length > 0, 'No maps found');
           return ToolResult.Success(objects);
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'create',
         description:
           'Create a new map, optionally with a schema for data points. When creating a map, make sure to use the show tool to display the map to the user.',
         caption: 'Creating map...',
-        schema: S.Struct({
-          center: S.optional(
-            S.Struct({
-              longitude: S.Number.annotations({ description: 'The longitude of the map center.' }),
-              latitude: S.Number.annotations({ description: 'The latitude of the map center.' }),
+        schema: Schema.Struct({
+          center: Schema.optional(
+            Schema.Struct({
+              longitude: Schema.Number.annotations({ description: 'The longitude of the map center.' }),
+              latitude: Schema.Number.annotations({ description: 'The latitude of the map center.' }),
             }),
           ).annotations({ description: 'Optional center coordinates for the map.' }),
-          typename: S.optional(S.String).annotations({
+          typename: Schema.optional(Schema.String).annotations({
             description: 'Optional fully qualified typename of the schema to use for map points.',
           }),
-          locationProperty: S.optional(S.String).annotations({
+          locationProperty: Schema.optional(Schema.String).annotations({
             description: 'Optional field name to use as the location property.',
           }),
         }),

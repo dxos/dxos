@@ -12,7 +12,7 @@ import { mx, textBlockWidth } from '@dxos/react-ui-theme';
  */
 export const DeprecatedFormContainer = ({ children, classNames }: ThemedClassName<PropsWithChildren>) => {
   return (
-    <div role='none' className='w-full p-4 justify-center overflow-x-hidden overflow-y-auto'>
+    <div role='none' className='container-max-width p-4 justify-center overflow-x-hidden overflow-y-auto'>
       <div role='form' className={mx('flex flex-col', textBlockWidth, classNames)}>
         {children}
       </div>

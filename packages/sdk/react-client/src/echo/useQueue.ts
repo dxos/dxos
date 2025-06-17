@@ -4,9 +4,9 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 
-import type { Queue } from '@dxos/client/echo';
+import { type Queue } from '@dxos/client/echo';
 import { raise } from '@dxos/debug';
-import type { BaseEchoObject } from '@dxos/echo-schema';
+import { type BaseEchoObject } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 
 import { useClient } from '../client';
@@ -35,6 +35,7 @@ export const useQueue = <T extends BaseEchoObject>(
     if (!queueDxn) {
       return undefined;
     }
+
     const { spaceId } = queueDxn.asQueueDXN() ?? raise(new TypeError('Invalid queue DXN'));
     return client.spaces.get(spaceId)?.queues.get<T>(queueDxn);
   }, [client, queueDxn?.toString()]);

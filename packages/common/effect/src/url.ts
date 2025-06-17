@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, type Schema as S, Option, pipe } from 'effect';
+import { SchemaAST, type Schema, Option, pipe } from 'effect';
 
 import { decamelize } from '@dxos/util';
 
@@ -10,12 +10,12 @@ const ParamKeyAnnotationId = Symbol.for('@dxos/schema/annotation/ParamKey');
 
 type ParamKeyAnnotationValue = { key: string };
 
-export const getParamKeyAnnotation: (annotated: AST.Annotated) => Option.Option<ParamKeyAnnotationValue> =
-  AST.getAnnotation<ParamKeyAnnotationValue>(ParamKeyAnnotationId);
+export const getParamKeyAnnotation: (annotated: SchemaAST.Annotated) => Option.Option<ParamKeyAnnotationValue> =
+  SchemaAST.getAnnotation<ParamKeyAnnotationValue>(ParamKeyAnnotationId);
 
 export const ParamKeyAnnotation =
   (value: ParamKeyAnnotationValue) =>
-  <S extends S.Annotable.All>(self: S): S.Annotable.Self<S> =>
+  <S extends Schema.Annotable.All>(self: S): Schema.Annotable.Self<S> =>
     self.annotations({ [ParamKeyAnnotationId]: value });
 
 /**
@@ -23,7 +23,7 @@ export const ParamKeyAnnotation =
  * Supports custom key serialization.
  */
 export class UrlParser<T extends Record<string, any>> {
-  constructor(private readonly _schema: S.Struct<T>) {}
+  constructor(private readonly _schema: Schema.Struct<T>) {}
 
   /**
    * Parse URL params.
@@ -37,9 +37,9 @@ export class UrlParser<T extends Record<string, any>> {
       }
 
       if (value != null) {
-        if (AST.isNumberKeyword(type.ast)) {
+        if (SchemaAST.isNumberKeyword(type.ast)) {
           params[key] = parseInt(value);
-        } else if (AST.isBooleanKeyword(type.ast)) {
+        } else if (SchemaAST.isBooleanKeyword(type.ast)) {
           params[key] = value === 'true' || value === '1';
         } else {
           params[key] = value;

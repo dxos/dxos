@@ -16,8 +16,8 @@ const repo = 'https://github.com/dxos/dxos';
 const VERSION_REGEX = /([\d.]+)/;
 
 export const VersionNumber = () => {
-  const config = useConfig();
   const { t } = useTranslation(STATUS_BAR_PLUGIN);
+  const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
   const [_, v] = version?.match(VERSION_REGEX) ?? [];
   const isLabs = config.values.runtime?.app?.env?.DX_LABS;

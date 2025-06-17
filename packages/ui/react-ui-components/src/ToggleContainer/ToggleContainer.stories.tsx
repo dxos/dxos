@@ -24,7 +24,7 @@ class Generator {
   readonly count = computed(() => this._lines.value.length);
   readonly text: ReadonlySignal<string[]> = computed(() => [...this._lines.value, this._current.value]);
 
-  start() {
+  start(): void {
     this.stop();
     this._running = setInterval(() => {
       if (this._current.value.length > 0) {
@@ -38,7 +38,7 @@ class Generator {
     }, 100);
   }
 
-  stop() {
+  stop(): void {
     if (this._running) {
       clearInterval(this._running);
       this._running = undefined;
