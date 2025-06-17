@@ -2,24 +2,42 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Doc, next as am } from '@automerge/automerge';
+import { next as am, type Doc } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import { type Schema } from 'effect';
 
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
-import { ObjectCore, migrateDocument, type RepoProxy, type DocHandleProxy } from '@dxos/echo-db';
+import { ObjectCore, migrateDocument, type DocHandleProxy, type RepoProxy } from '@dxos/echo-db';
 import {
+  Reference,
   SpaceDocVersion,
   encodeReference,
-  type ObjectStructure,
   type DatabaseDirectory,
-  Reference,
+  type ObjectStructure,
 } from '@dxos/echo-protocol';
 import { requireTypeReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
+/*
+
+Considering a better API for this:
+
+```ts
+const migration = space.db.beginMigration(); // all actions are not visible to queries and are only applied once you call `apply`
+
+migration.applyObjectMigration(defineMigration(From, To, { ... }));
+
+migration.delete(id);
+migration.add(obj);
+
+await migration.apply(); // Will create new epoch.
+```
+
+*/
+
+// TODO(dmaretskyi): We no longer need to hook into ECHO internals, with the changes to echo APIs.
 export class MigrationBuilder {
   private readonly _repo: RepoProxy;
   private readonly _rootDoc: Doc<DatabaseDirectory>;

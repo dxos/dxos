@@ -5,7 +5,7 @@
 import { Context, Schema } from 'effect';
 
 import { ImageSource } from '@dxos/ai';
-import { ECHO_ATTR_TYPE } from '@dxos/echo-schema';
+import { ATTR_TYPE } from '@dxos/echo-schema';
 
 import { type GptInput, type GptOutput } from '../../nodes';
 import type { ComputeEffect, ValueBag } from '../../types';
@@ -22,7 +22,7 @@ export const Image = Schema.Struct({
 
 export type Image = Schema.Schema.Type<typeof Image>;
 
-export const isImage = (value: any): value is Image => value?.[ECHO_ATTR_TYPE] === IMAGE_TYPENAME;
+export const isImage = (value: any): value is Image => value?.[ATTR_TYPE] === IMAGE_TYPENAME;
 
 export class GptService extends Context.Tag('GptService')<
   GptService,

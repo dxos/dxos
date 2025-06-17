@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { Filter, type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
-import { type BaseEchoObject, getDXN, getLabel } from '@dxos/echo-schema';
+import { type BaseEchoObject, getObjectDXN, getLabel } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 export type ContextProvider = {
@@ -40,9 +40,9 @@ export const useContextProvider = (space?: Space): ContextProvider | undefined =
             })
             .filter((object) => stringMatch(query, getLabel(Obj.getSchema(object)!, object) ?? ''))
             // TODO(dmaretskyi): `Type.getDXN` (at the point of writing) didn't work here as it was schema-only.
-            .filter((object) => !!getDXN(object))
+            .filter((object) => !!getObjectDXN(object))
             .map((object) => ({
-              uri: getDXN(object as any)!.toString(),
+              uri: getObjectDXN(object as any)!.toString(),
               label: getLabel(Obj.getSchema(object)!, object) ?? '',
             }))
         );

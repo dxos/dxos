@@ -15,6 +15,7 @@ import {
   type ObjectStructure,
   Reference,
   type DatabaseDirectory,
+  DATA_NAMESPACE,
 } from '@dxos/echo-protocol';
 import { ObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -25,15 +26,8 @@ import { setDeep, defer, getDeep, throwUnhandledError, deepMapValues } from '@dx
 
 import { type CoreDatabase } from './core-database';
 import { docChangeSemaphore } from './doc-semaphore';
-import {
-  isValidKeyPath,
-  type DocAccessor,
-  type DecodedAutomergePrimaryValue,
-  type DecodedAutomergeValue,
-  type KeyPath,
-} from './types';
-import { type DocHandleProxy } from '../client';
-import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
+import { isValidKeyPath, type DocAccessor, type DecodedAutomergePrimaryValue, type KeyPath } from './types';
+import { type DocHandleProxy } from '../automerge';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.
@@ -318,7 +312,7 @@ export class ObjectCore {
     return value;
   }
 
-  arrayPush(path: KeyPath, items: DecodedAutomergeValue[]): number {
+  arrayPush(path: KeyPath, items: DecodedAutomergePrimaryValue[]): number {
     const itemsEncoded = items.map((item) => this.encode(item));
 
     let newLength: number = -1;
@@ -435,6 +429,9 @@ export class ObjectCore {
     this._setRaw([SYSTEM_NAMESPACE, 'deleted'], value);
   }
 
+  /**
+   * @deprecated
+   */
   toPlainObject(): CommonObjectData & Record<string, any> {
     let data = this.getDecoded([DATA_NAMESPACE]);
     if (typeof data !== 'object') {
