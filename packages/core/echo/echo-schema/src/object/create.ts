@@ -12,6 +12,8 @@ import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { setTypename } from './typename';
 import { getSchemaDXN, getTypeAnnotation } from '../ast';
+import { MetaId } from './model';
+import { defineHiddenProperty } from '../utils';
 
 // Make `id` optional.
 type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;
@@ -63,5 +65,6 @@ export const create = <S extends Schema.Schema.AnyNoContext>(
   setSchema(obj, schema);
   attachTypedJsonSerializer(obj);
   attachedTypedObjectInspector(obj);
+  defineHiddenProperty(obj, MetaId, { keys: [] });
   return obj;
 };

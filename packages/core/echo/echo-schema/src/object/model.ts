@@ -87,16 +87,6 @@ export const RelationTargetId: unique symbol = Symbol('@dxos/echo/RelationTarget
 export const ATTR_RELATION_TARGET = '@relationTarget';
 
 /**
- * Reference to the database the object belongs to.
- */
-export const DatabaseId = Symbol('@dxos/echo/Database');
-
-/**
- * Reference to the hypergraph the object belongs to.
- */
-export const HypergraphId = Symbol('@dxos/echo/Hypergraph');
-
-/**
  * Internal runtime representation of an object.
  * The fields are accessed through getter functions.
  */
@@ -113,8 +103,6 @@ export interface InternalObjectProps {
   readonly [RelationTargetId]?: DXN | InternalObjectProps;
   readonly [DeletedId]?: boolean;
   readonly [MetaId]?: ObjectMeta;
-  readonly [DatabaseId]?: DXN;
-  readonly [HypergraphId]?: DXN;
 }
 
 /**

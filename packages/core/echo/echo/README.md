@@ -128,10 +128,9 @@ Defines attributes and encoding placed on objects.
 | Entity kind      | No                     | `Symbol(@dxos/echo/EntityKind)`     | `EntityKind`           | (inferred from other props) | string     | Obj vs Relation                      |
 | Relation Source  | No (only on relations) | `Symbol(@dxos/echo/RelationSource)` | `Object` or `DXN`      | `@relationSource`           | DXN string | Relation source DXN                  |
 | Relation Target  | No (only on relations) | `Symbol(@dxos/echo/RelationTarget)` | `Object` or `DXN`      | `@relationTarget`           | DXN string | Relation target DXN                  |
-| Hypergraph       | Yes                    | `Symbol(@dxos/echo/Hypergraph)`     | `Hypergraph`           | -                           | -          | Pointer to runtime hypergraph object |
-| Database         | Yes                    | `Symbol(@dxos/echo/Database)`       | `Database`             | -                           | -          | Pointer to runtime database object   |
 
 > NOTE: All of the API functions can return `undefined` since they are also designed to work with objects outside of the database.
+> TODO: Consider how Database, Hypergraph, and RefResolver are attached to the object.
 
 ### Value representation
 
