@@ -9,12 +9,5 @@
     "scripts",
     "src"
   ],
-  "references": [
-    {
-      "path": "../node-std"
-    },
-    {
-      "path": "../random"
-    }
-  ]
+  "references": []
 }

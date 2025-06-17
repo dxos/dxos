@@ -7,12 +7,12 @@ import { describe, expect, test } from 'vitest';
 
 import { ObjectId } from '@dxos/echo-schema';
 
-import { defineTool } from './define';
-import { ToolResult } from './tools';
+import { createTool } from './define';
+import { ToolResult } from './tool';
 
 describe('tools', () => {
   test('should define a tool', () => {
-    const tool = defineTool('test', {
+    const tool = createTool('test', {
       name: 'test',
       description: 'Test tool',
       schema: Schema.Struct({
@@ -33,7 +33,7 @@ describe('tools', () => {
   });
 
   test('use object id in tool parameters', () => {
-    const tool = defineTool('test', {
+    const tool = createTool('test', {
       name: 'test',
       description: 'Test tool',
       schema: Schema.Struct({

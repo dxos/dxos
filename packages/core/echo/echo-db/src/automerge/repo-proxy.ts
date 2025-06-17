@@ -106,6 +106,16 @@ export class RepoProxy extends Resource {
     return handle;
   }
 
+  create<T>(initialValue?: T): DocHandleProxy<T> {
+    // Generate a new UUID and store it in the buffer.
+    const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
+    return this._getHandle<T>({
+      documentId,
+      isNew: true,
+      initialValue,
+    });
+  }
+
   async flush(): Promise<void> {
     await this._sendUpdatesJob?.runBlocking();
   }

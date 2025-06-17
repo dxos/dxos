@@ -21,7 +21,7 @@ const DefaultStory = () => {
   const space = spaces[1];
 
   return (
-    <div role='none' className='w-96'>
+    <div className='w-96'>
       <AutomationPanel space={space} />
     </div>
   );
@@ -42,10 +42,11 @@ const meta: Meta = {
         }
       },
     }),
-    withLayout({ fullscreen: true, classNames: 'flex juastify-center m-2' }),
+    withLayout(),
     withTheme,
   ],
   parameters: {
+    layout: 'centered',
     translations,
   },
 };

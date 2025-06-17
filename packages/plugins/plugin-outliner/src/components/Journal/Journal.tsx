@@ -6,7 +6,7 @@ import { format } from 'date-fns/format';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { makeRef, RefArray } from '@dxos/live-object';
-import { Button, IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { OUTLINER_PLUGIN } from '../../meta';
@@ -19,6 +19,8 @@ import {
   type JournalEntryType,
 } from '../../types';
 import { Outliner, type OutlinerController, type OutlinerProps } from '../Outliner';
+
+// TODO(burdon): Only show one selected line entry.
 
 type JournalProps = ThemedClassName<{
   journal: JournalType;
@@ -51,7 +53,7 @@ export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
   }, [journal, date]);
 
   return (
-    <div className={mx('flex flex-col w-full overflow-y-auto divide-y divide-separator', classNames)}>
+    <div className={mx('flex flex-col w-full overflow-y-auto', classNames)}>
       {showAddEntry && (
         <div className='p-2'>
           <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
@@ -60,7 +62,7 @@ export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
       {RefArray.targets(journal?.entries ?? [])
         .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0))
         .map((entry, i) => (
-          <JournalEntry key={entry.id} entry={entry} classNames='pbs-4 pbe-4' {...props} autoFocus={i === 0} />
+          <JournalEntry key={entry.id} entry={entry} classNames='p-2' {...props} autoFocus={i === 0} />
         ))}
     </div>
   );
@@ -77,6 +79,11 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
   const date = parseDateString(entry.date);
   const isToday = getDateString() === entry.date;
   const outlinerRef = useRef<OutlinerController>(null);
+
+  const handleFocus = useCallback(() => {
+    outlinerRef.current?.focus();
+  }, []);
+
   if (!entry.content.target) {
     return null;
   }
@@ -84,7 +91,11 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
   return (
     <div className={mx('flex flex-col', classNames)}>
       <div className='flex items-center gap-2 bg-transparent'>
-        <Button onClick={() => outlinerRef.current?.focus()}>{format(date, 'MMM d, yyyy')}</Button>
+        <IconButton
+          label={format(date, 'MMM d, yyyy')}
+          icon={isToday ? 'ph--calendar-dot--regular' : 'ph--calendar-blank--regular'}
+          onClick={handleFocus}
+        />
         <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>
         {isToday && <div className='text-xs'>{t('today label')}</div>}
       </div>
@@ -94,6 +105,7 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
         text={entry.content.target}
         classNames='pbs-2 pbe-2'
         scrollable={false}
+        showSelected={false}
         {...props}
       />
     </div>

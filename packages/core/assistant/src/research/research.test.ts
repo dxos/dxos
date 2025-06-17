@@ -14,7 +14,8 @@ import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, Traci
 import { live } from '@dxos/live-object';
 import { DataType, DataTypes } from '@dxos/schema';
 
-import { createExtractionSchema, getSanitizedSchemaName, researchFn } from './research';
+import { createExtractionSchema, getSanitizedSchemaName } from './graph';
+import { researchFn } from './research';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
@@ -54,7 +55,7 @@ describe('Research', () => {
     );
   });
 
-  test.skip('should generate a research report', { timeout: 1000_000 }, async () => {
+  test('should generate a research report', { timeout: 300_000 }, async () => {
     db.add(
       live(DataType.Organization, {
         name: 'Notion',
