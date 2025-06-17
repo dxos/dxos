@@ -171,14 +171,14 @@ export class RepoProxy extends Resource {
 
     // TODO(burdon): Called even if not mutations.
     const onChange = () => {
-      log.info('onChange', { documentId });
+      log('onChange', { documentId });
       this._pendingUpdateIds.add(documentId);
       this._sendUpdatesJob?.trigger();
       this._emitSaveStateEvent();
     };
 
     const onDelete = () => {
-      log.info('onDelete', { documentId });
+      log('onDelete', { documentId });
       handle.off('change', onChange);
       this._pendingRemoveIds.add(documentId);
       this._sendUpdatesJob?.trigger();
