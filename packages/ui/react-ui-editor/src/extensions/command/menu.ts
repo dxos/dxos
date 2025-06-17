@@ -58,7 +58,6 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
         } else if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(closeEffect)))) {
           this.tag.style.display = 'block';
         } else if (update.selectionSet || update.viewportChanged || update.docChanged || update.geometryChanged) {
-          console.log('scheduleUpdate');
           this.scheduleUpdate();
         }
       }
