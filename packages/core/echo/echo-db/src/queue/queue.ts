@@ -10,6 +10,7 @@ import { type DXN, type SpaceId } from '@dxos/keys';
 
 import type { QueuesService } from './queue-service';
 import type { Queue } from './types';
+import { log } from '@dxos/log';
 
 /**
  * Client-side view onto an EDGE queue.
@@ -85,6 +86,7 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
         items.map((item) => Obj.toJSON(item)),
       );
     } catch (err) {
+      log.catch(err);
       this._error = err as Error;
       this._signal.notifyWrite();
     }
@@ -129,6 +131,7 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
 
       this._objects = objects as T[];
     } catch (err) {
+      log.catch(err);
       this._error = err as Error;
     } finally {
       this._isLoading = false;
