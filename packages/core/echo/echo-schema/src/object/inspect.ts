@@ -6,9 +6,9 @@ import type { inspect as inspectFn, InspectOptionsStylized } from 'node:util';
 
 import { inspectCustom, type CustomInspectFunction } from '@dxos/debug';
 
-import { symbolMeta } from './meta';
-import { ECHO_ATTR_TYPE, getType } from './typename';
-import { ECHO_ATTR_META, type BaseEchoObject } from '../types';
+import { ATTR_META, ATTR_TYPE, MetaId } from './model';
+import { getType } from './typename';
+import { type BaseEchoObject } from '../types';
 
 /*
  * @internal
@@ -38,9 +38,9 @@ const typedObjectInspectFunction: CustomInspectFunction<BaseEchoObject> = functi
   return inspect(
     {
       id,
-      [ECHO_ATTR_TYPE]: getType(this),
+      [ATTR_TYPE]: getType(this),
       ...props,
-      [ECHO_ATTR_META]: (this as any)[symbolMeta], // TODO(dmaretskyi): Couldn't use getMeta since that throw's if the object has no meta.
+      [ATTR_META]: (this as any)[MetaId], // TODO(dmaretskyi): Couldn't use getMeta since that throw's if the object has no meta.
     },
     options,
   );

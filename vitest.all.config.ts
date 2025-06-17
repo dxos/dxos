@@ -23,6 +23,16 @@ export default defineConfig({
       '!**/src/**/*.browser.test.{ts,tsx}',
       '!**/test/**/*.browser.test.{ts,tsx}',
     ],
+    exclude: [
+      '.nx/*',
+      '**/node_modules/*',
+      '**/dist/*',
+      '**/build/*',
+      '**/coverage/*',
+      '**/dist/*',
+      '**/build/*',
+      '**/coverage/*',
+    ],
   },
   plugins: [
     tsconfigPaths({

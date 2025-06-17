@@ -6,10 +6,8 @@ import { signal } from '@preact/signals-core';
 
 import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { QueueImpl, type Queue } from '@dxos/echo-db';
+import { type Queue } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
-import { type DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { DataType } from '@dxos/schema';
 
@@ -62,35 +60,24 @@ export class TranscriptionManager extends Resource {
     this._messageEnricher = options.messageEnricher;
   }
 
-  protected override async _open(): Promise<void> {
-    await this._toggleTranscriber();
-  }
-
-  protected override async _close(): Promise<void> {
-    void this._transcriber?.close();
-  }
-
   /** @reactive */
   get enabled() {
     return this._enabled.value;
   }
 
-  setQueue(queueDxn: DXN): TranscriptionManager {
-    if (this._queue?.dxn.toString() !== queueDxn.toString()) {
-      log.info('setQueue', { queueDxn: queueDxn.toString() });
-      this._queue = new QueueImpl<DataType.Message>(this._edgeClient, queueDxn);
-    }
+  setQueue(queue: Queue<DataType.Message>): this {
+    this._queue = queue;
     return this;
   }
 
-  setIdentityDid(did: string): TranscriptionManager {
+  setIdentityDid(did: string): this {
     if (this._identityDid !== did) {
       this._identityDid = did;
     }
     return this;
   }
 
-  setRecording(recording?: boolean): TranscriptionManager {
+  setRecording(recording?: boolean): this {
     if (!this.isOpen || !this._enabled.value) {
       return this;
     }
@@ -126,6 +113,14 @@ export class TranscriptionManager extends Resource {
 
     this._audioStreamTrack = track;
     this.isOpen && (await this._toggleTranscriber());
+  }
+
+  protected override async _open(): Promise<void> {
+    await this._toggleTranscriber();
+  }
+
+  protected override async _close(): Promise<void> {
+    void this._transcriber?.close();
   }
 
   // TODO(burdon): Change this to setEnables (explicit), not toggle.
