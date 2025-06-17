@@ -2,12 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-export { type AnyLiveObject, createObject, isEchoObject, initEchoReactiveObjectRootProxy } from './create';
-export { EchoReactiveHandler, getObjectCore } from './echo-handler';
-export { type ProxyTarget } from './echo-proxy-target';
-export * from './util';
 export * from './clone';
+export {
+  createObject,
+  EchoReactiveHandler,
+  getObjectCore,
+  initEchoReactiveObjectRootProxy,
+  isEchoObject,
+  type AnyLiveObject,
+} from './echo-handler';
+export { type ProxyTarget } from './echo-proxy-target';
 export * from './edit-history';
 export * from './relations';
+export * from './util';
 export * from './version';
-export * from './relations';
+export * from './subscription';
+export * from './doc-accessor';

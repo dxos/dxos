@@ -19,5 +19,48 @@
     "src",
     "src/cli-observability-secrets.json"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/tracing"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/mesh/network-manager"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../client-protocol"
+    },
+    {
+      "path": "../client-services"
+    },
+    {
+      "path": "../config"
+    }
+  ]
 }

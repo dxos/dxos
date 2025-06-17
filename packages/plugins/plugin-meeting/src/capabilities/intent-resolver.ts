@@ -69,9 +69,10 @@ export default (context: PluginContext) =>
         state.activeMeeting = meeting;
 
         const enabled = !!transcriptionEnabled;
-        if (transcriptDxn) {
+        if (space && transcriptDxn) {
           // NOTE: Must set queue before enabling transcription.
-          state.transcriptionManager?.setQueue(Type.DXN.parse(transcriptDxn));
+          const queue = space.queues.get<DataType.Message>(Type.DXN.parse(transcriptDxn));
+          state.transcriptionManager?.setQueue(queue);
         }
         await state.transcriptionManager?.setEnabled(enabled);
       },

@@ -169,7 +169,7 @@ export class RepoProxy extends Resource {
   }): DocHandleProxy<T> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
-    // TODO(burdon): Seems to be called on read (e.g., story startup).
+    // TODO(burdon): Called even if not mutations.
     const onChange = () => {
       log('onChange', { documentId });
       this._pendingUpdateIds.add(documentId);
