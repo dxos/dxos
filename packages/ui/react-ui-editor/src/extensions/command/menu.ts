@@ -47,12 +47,18 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
       }
 
       update(update: ViewUpdate) {
+        if (!update.view.hasFocus) {
+          this.tag.style.display = 'none';
+          return;
+        }
+
         // TODO(burdon): Timer to fade in/out.
         if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(openEffect)))) {
           this.tag.style.display = 'none';
         } else if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(closeEffect)))) {
           this.tag.style.display = 'block';
         } else if (update.selectionSet || update.viewportChanged || update.docChanged || update.geometryChanged) {
+          console.log('scheduleUpdate');
           this.scheduleUpdate();
         }
       }

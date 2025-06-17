@@ -32,11 +32,12 @@ export type OutlinerProps = ThemedClassName<
     id: string;
     text: DataType.Text;
     scrollable?: boolean;
+    showSelected?: boolean;
   } & Pick<UseTextEditorProps, 'id' | 'autoFocus'>
 >;
 
 export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
-  ({ classNames, text, id, autoFocus, scrollable = true }, forwardedRef) => {
+  ({ classNames, text, id, autoFocus, scrollable = true, showSelected = true }, forwardedRef) => {
     const { t } = useTranslation(OUTLINER_PLUGIN);
     const { themeMode } = useThemeContext();
     const { parentRef, focusAttributes, view } = useTextEditor(
@@ -52,7 +53,7 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
           createBasicExtensions({ readOnly: false }),
           createMarkdownExtensions({ themeMode }),
           createThemeExtensions({ themeMode, slots: { scroll: { className: scrollable ? '' : '!overflow-hidden' } } }),
-          outliner(),
+          outliner({ showSelected }),
         ],
       }),
       [id, text, autoFocus, themeMode],
