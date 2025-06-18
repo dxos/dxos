@@ -5,38 +5,56 @@
 import chalk from 'chalk';
 
 import { ConsolePrinter } from '@dxos/ai';
+import { type CleanupFn, combine } from '@dxos/async';
 
 import { type Blueprint } from './blueprint';
 import { type BlueprintMachine, type BlueprintMachineState } from './machine';
 
 /* eslint-disable no-console */
 
-// Force chalk colors on for tests
+// Force chalk colors on for tests.
 chalk.level = 2;
 
-export const setConsolePrinter = (machine: BlueprintMachine, extraLogging = false) => {
-  const printer = new ConsolePrinter();
-  if (extraLogging) {
-    machine.stepStart.on((step) =>
-      console.log(
-        `\n${chalk.magenta(`${chalk.bold(`STEP ${machine.blueprint.steps.indexOf(step) + 1} of ${machine.blueprint.steps.length}:`)} ${step.instructions}`)}\n`,
-      ),
-    );
-    machine.message.on((msg) => printer.printMessage(msg));
-    machine.block.on((block) => printer.printContentBlock(block));
+export class Logger {
+  private readonly messages: string[] = [];
+
+  clear() {
+    this.messages.length = 0;
   }
-  machine.begin.on(() => printTrace(machine.blueprint, machine.state));
-  machine.stepComplete.on(() => printTrace(machine.blueprint, machine.state));
+
+  log(message: string) {
+    this.messages.push(message);
+  }
+}
+
+export const setConsolePrinter = (machine: BlueprintMachine, extraLogging = false): CleanupFn => {
+  const printer = new ConsolePrinter();
+  return combine(
+    extraLogging
+      ? [
+          machine.stepStart.on((step) =>
+            console.log(
+              `\n${chalk.magenta(`${chalk.bold(`STEP ${machine.blueprint.steps.indexOf(step) + 1} of ${machine.blueprint.steps.length}:`)} ${step.instructions}`)}\n`,
+            ),
+          ),
+          machine.message.on((msg) => printer.printMessage(msg)),
+          machine.block.on((block) => printer.printContentBlock(block)),
+        ]
+      : [],
+    machine.begin.on(() => printTrace(machine.state, machine.blueprint)),
+    machine.stepComplete.on(() => printTrace(machine.state, machine.blueprint)),
+  );
 };
 
-const printTrace = (blueprint: Blueprint, state: BlueprintMachineState) => {
-  console.log('\n==============================================\n');
-  console.log(chalk.bold('\nThe Blueprint:'));
+const BREAK_LINE = `\n\n${'='.repeat(40)}`;
+
+const printTrace = (state: BlueprintMachineState, blueprint: Blueprint) => {
+  console.group(chalk.bold('\nBlueprint'));
 
   blueprint.steps.forEach((step, index) => {
     const traceStep = state.trace.find((t) => t.stepId === step.id);
 
-    let color = chalk.gray; // Not executed
+    let color = chalk.gray; // Not executed.
     let bullet = '○';
     if (traceStep) {
       switch (traceStep.status) {
@@ -56,11 +74,11 @@ const printTrace = (blueprint: Blueprint, state: BlueprintMachineState) => {
     }
 
     console.log(color(`\n${bullet} ${step.instructions}`));
-
     if (traceStep?.comment) {
       console.log(chalk.white(`    ↳ ${traceStep.comment}`));
     }
   });
-  console.log('\n');
-  console.log('\n==============================================\n');
+
+  console.groupEnd();
+  console.log(BREAK_LINE);
 };

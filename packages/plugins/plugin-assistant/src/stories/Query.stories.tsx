@@ -270,7 +270,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
         )}
 
         {showList && (
-          <div className='grow grid grid-rows-[min-content_1fr_1fr] overflow-hidden divide-y divide-separator'>
+          <div className='grow grid grid-rows-[min-content_1fr_1fr_1fr] overflow-hidden divide-y divide-separator'>
             <Toolbar.Root>
               <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='refresh' onClick={handleRefresh} />
               <IconButton icon='ph--sparkle--regular' iconOnly label='research' onClick={handleResearch} />
@@ -296,6 +296,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
                 ast,
               }}
             />
+            <Log />
           </div>
         )}
       </div>
@@ -379,6 +380,10 @@ const ItemList = <T extends AnyEchoObject>({ items = [] }: { items?: T[] }) => {
       )}
     </List.Root>
   );
+};
+
+const Log = () => {
+  return <div>Log</div>;
 };
 
 const meta: Meta<typeof DefaultStory> = {
