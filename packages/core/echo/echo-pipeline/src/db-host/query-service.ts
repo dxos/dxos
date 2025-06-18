@@ -95,12 +95,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   }
 
   override async _open(): Promise<void> {
-    this._params.indexer.updated.on(this._ctx, () => {
-      this._queries.forEach((query) => {
-        query.updateMode = 'normal';
-      });
-      this._updateQueries.schedule();
-    });
+    this._params.indexer.updated.on(this._ctx, () => this._updateQueries.schedule());
     await this._scheduler.open(this._ctx);
   }
 
