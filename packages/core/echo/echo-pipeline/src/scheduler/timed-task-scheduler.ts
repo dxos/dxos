@@ -22,10 +22,10 @@ export type TimedTaskSchedulerParams = {
   budgetPeriod: number;
 
   /**
-   * The rest time if the time budget is exceeded.
+   * The cooldown time if the time budget is exceeded.
    * in [ms].
    */
-  restTime: number;
+  cooldown: number;
 
   /**
    * The maximum number of tasks to run in parallel.
@@ -33,10 +33,11 @@ export type TimedTaskSchedulerParams = {
   maxParallelTasks: number;
 
   /**
-   * Clean executed tasks after time period.
+   * Save executed tasks for time period.
+   * For debugging purposes.
    * in [ms].
    */
-  cleanUpAfter: number;
+  saveHistoryFor: number;
 };
 
 export type Task<T> = {
@@ -46,90 +47,78 @@ export type Task<T> = {
   reject: (reason?: any) => void;
 
   /**
-   * The start timestamp of the task.
-   */
-  start: number;
-
-  /**
-   * The end timestamp of the task.
-   */
-  end: number;
-
-  /**
-   * The elapsed time of the task.
-   * in [ms].
-   */
-  elapsed: number;
-
-  /**
    * The timeout for the task.
    * in [ms].
    */
   timeout: number;
 };
+
+type ParallelBatch<T> = {
+  start: number;
+  end: number;
+  elapsed: number;
+  tasks: Array<Task<T>>;
+};
+
 /**
- * Schedules and executes asynchronous tasks with time budgeting, parallelism, and rest periods.
+ * Schedules and executes asynchronous tasks with time budgeting, parallelism, and cooldown periods.
  * It is designed to enable backpressure for time-consuming tasks in a controlled manner.
  */
 export class TimedTaskScheduler<T = void> extends Resource {
   private readonly _executionQueue: Array<Task<T>> = [];
-  private _processedTasks: Array<Task<T>> = [];
   private _executor?: DeferredTask = undefined;
+
+  private _processedBatches: Array<ParallelBatch<T>> = [];
 
   constructor(private readonly _params: TimedTaskSchedulerParams) {
     super();
   }
 
   /**
-   * Info method for debugging purposes.
+   * Returns the processed batches.
    */
-  get processedTasks(): Array<Task<T>> {
-    return this._processedTasks;
+  get processedBatches(): Array<ParallelBatch<T>> {
+    return this._processedBatches;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
     this._executor = new DeferredTask(ctx, async () => {
       let now = Date.now();
       // Clean up old tasks.
-      this._processedTasks = this._processedTasks.filter((task) => task.end > now - this._params.cleanUpAfter);
+      const cutoutTimestamp = now - Math.max(this._params.saveHistoryFor, this._params.budgetPeriod);
+      this._processedBatches = this._processedBatches.filter((batch) => batch.end > cutoutTimestamp);
 
-      // Early return if there are no tasks to run.
       if (this._executionQueue.length === 0) {
         return;
       }
 
-      // Check if the budget is exceeded.
-      if (this._processedTasks.length > 0) {
-        const lastPeriodTasks = this._processedTasks.filter(
-          (task) => task.start > now - this._params.budgetPeriod || task.end > now - this._params.budgetPeriod,
-        );
-        const lastPeriodTasksTime = lastPeriodTasks.reduce((acc, task) => acc + task.elapsed, 0);
-        if (lastPeriodTasksTime >= this._params.budget) {
-          await sleepWithContext(ctx, this._params.restTime);
-          this._executor?.schedule();
-          return;
-        }
+      if (this._shouldCooldown()) {
+        await sleepWithContext(ctx, this._params.cooldown);
+        this._executor?.schedule();
+        return;
       }
 
       // Execute tasks.
       const tasks = this._executionQueue.splice(0, this._params.maxParallelTasks);
-      now = Date.now();
+      const startBatch = Date.now();
       await Promise.all(
         tasks.map(async (task) => {
-          task.start = now;
           try {
             const result = await asyncTimeout(task.run(), task.timeout);
             task.resolve(result);
             return result;
           } catch (error) {
             task.reject(error);
-          } finally {
-            task.end = Date.now();
-            task.elapsed = task.end - task.start;
-            this._processedTasks.push(task);
           }
         }),
       );
+      const endBatch = Date.now();
+      this._processedBatches.push({
+        start: startBatch,
+        end: endBatch,
+        elapsed: endBatch - startBatch,
+        tasks,
+      });
 
       if (this._executionQueue.length > 0) {
         this._executor?.schedule();
@@ -139,6 +128,20 @@ export class TimedTaskScheduler<T = void> extends Resource {
 
   protected override async _close(ctx: Context): Promise<void> {
     this._executor = undefined;
+  }
+
+  private _shouldCooldown(): boolean {
+    const now = Date.now();
+    const batchesInPeriod = this._processedBatches.filter((batch) => batch.end > now - this._params.budgetPeriod);
+    if (batchesInPeriod.length === 0) {
+      return false;
+    }
+    const consumedBudget = batchesInPeriod.reduce((acc, batch) => acc + batch.elapsed, 0);
+    if (consumedBudget >= this._params.budget) {
+      return true;
+    }
+
+    return false;
   }
 
   /**

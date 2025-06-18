@@ -50,7 +50,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
     budgetPeriod: 1000,
     restTime: 500,
     maxParallelTasks: 10,
-    cleanUpAfter: 30_000,
+    saveHistoryFor: 30_000,
   });
 
   private readonly _updateQueries = new DeferredTask(this._ctx, async () => {
@@ -59,21 +59,24 @@ export class QueryServiceImpl extends Resource implements QueryService {
     }
 
     const tasks = Array.from(this._queries).map((query) => {
-      return {
-        run: async () => {
-          try {
-            const { changed } = await query.executor.execQuery();
-            if (changed) {
-              query.sendResults(query.executor.getResults());
-            }
-          } catch (err) {
-            log.catch(err);
+      return async () => {
+        try {
+          const { changed } = await query.executor.execQuery();
+          if (changed) {
+            query.sendResults(query.executor.getResults());
           }
-        },
+        } catch (err) {
+          log.catch(err);
+        }
       };
     });
 
-    await Promise.all(this._scheduler.schedule(tasks));
+    try {
+      // Wait for all tasks to complete.
+      await Promise.all(tasks.map((task) => this._scheduler.schedule(task)));
+    } catch (err) {
+      log.catch(err);
+    }
   });
 
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
@@ -135,21 +138,19 @@ export class QueryServiceImpl extends Resource implements QueryService {
       };
       this._queries.add(queryEntry);
 
-      this._scheduler
-        .schedule([
-          {
-            run: async () => {
-              // Run query executor.
-              await queryEntry.executor.open();
-              await queryEntry.executor.execQuery();
-              // Always send first result set.
-              queryEntry.sendResults(queryEntry.executor.getResults());
-            },
-          },
-        ])[0]
-        .catch((err) => {
-          close(err);
-        });
+      queueMicrotask(async () => {
+        try {
+          await queryEntry.executor.open();
+          await this._scheduler.schedule(async () => {
+            // Run query executor.
+            await queryEntry.executor.execQuery();
+            // Always send first result set.
+            queryEntry.sendResults(queryEntry.executor.getResults());
+          });
+        } catch (err) {
+          close(err as Error);
+        }
+      });
 
       return queryEntry.close;
     });
