@@ -43,7 +43,7 @@ const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/TextEditor',
   component: EditorStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { layout: 'fullscreen' },
+  parameters: { layout: 'fullscreen', controls: { disable: true } },
 };
 
 export default meta;
