@@ -205,6 +205,7 @@ export const ViewEditor = ({
                         icon='ph--eye-slash--regular'
                         disabled={view.fields.length <= 1}
                         onClick={() => handleHide(field.id)}
+                        data-testid='hide-field-button'
                       />
                       {!immutable && (
                         <List.ItemDeleteButton
@@ -242,7 +243,11 @@ export const ViewEditor = ({
                     >
                       <div />
                       <List.ItemTitle>{property}</List.ItemTitle>
-                      <List.ItemButton icon='ph--eye--regular' onClick={() => handleShow(property)} />
+                      <List.ItemButton
+                        icon='ph--eye--regular'
+                        onClick={() => handleShow(property)}
+                        data-testid='show-field-button'
+                      />
                     </List.Item>
                   ))}
                 </div>
