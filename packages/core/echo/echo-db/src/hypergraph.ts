@@ -6,7 +6,6 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { raise, StackTrace } from '@dxos/debug';
 import type { Ref } from '@dxos/echo';
-import { Reference } from '@dxos/echo-protocol';
 import {
   Filter,
   ImmutableSchema,
@@ -19,10 +18,10 @@ import {
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { DXN, PublicKey, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
+import { DXN, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, entry } from '@dxos/util';
+import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
 import { type AnyLiveObject } from './echo-handler';
@@ -38,7 +37,7 @@ import {
   type QueryOptions,
   type QuerySource,
 } from './query';
-import type { Queue, QueueFactory } from './queue';
+import type { QueueFactory } from './queue';
 
 const TRACE_REF_RESOLUTION = true;
 
@@ -241,8 +240,8 @@ export class Hypergraph {
       },
 
       resolveSchema: async (dxn) => {
-        let beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0,
-          status: string = '';
+        const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
+        let status: string = '';
         try {
           switch (dxn.kind) {
             case DXN.kind.TYPE: {
@@ -278,14 +277,12 @@ export class Hypergraph {
     context: RefResolutionContext,
     onResolve?: (obj: AnyLiveObject<any>) => void,
   ): AnyLiveObject<any> | undefined {
-    let spaceId: SpaceId | undefined, objectId: ObjectId | undefined;
-
     if (!dxn.asEchoDXN()) {
       throw new Error('Unsupported DXN kind');
     }
     const dxnData = dxn.asEchoDXN()!;
-    spaceId = dxnData.spaceId ?? context.space;
-    objectId = dxnData.echoId;
+    const spaceId = dxnData.spaceId ?? context.space;
+    const objectId = dxnData.echoId;
 
     if (spaceId === undefined) {
       throw new Error('Unable to determine space to resolve the reference from');
@@ -322,8 +319,8 @@ export class Hypergraph {
   }
 
   private async _resolveAsync(dxn: DXN, context: RefResolutionContext): Promise<AnyEchoObject | undefined> {
-    let beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0,
-      status: string = '';
+    const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
+    let status: string = '';
     try {
       switch (dxn.kind) {
         case DXN.kind.ECHO: {

@@ -52,7 +52,6 @@ import { getInlineAndLinkChanges } from './util';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../automerge';
 import { type Hypergraph } from '../hypergraph';
 import { normalizeQuery, QueryResult, type QueryFn } from '../query';
-import { elapsed } from 'effect/Schedule';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -367,8 +366,8 @@ export class CoreDatabase {
     const idsToLoad = objectsToLoad.map((v) => v.id);
     this._automergeDocLoader.loadObjectDocument(idsToLoad);
 
-    let startTime = TRACE_LOADING ? performance.now() : 0,
-      diagnostics: string[] = [];
+    const startTime = TRACE_LOADING ? performance.now() : 0;
+    const diagnostics: string[] = [];
     try {
       return await new Promise((resolve, reject) => {
         let unsubscribe: CleanupFn | null = null;

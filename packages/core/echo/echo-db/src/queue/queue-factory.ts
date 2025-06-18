@@ -3,7 +3,6 @@
 //
 
 import { Resource } from '@dxos/context';
-import type { Ref } from '@dxos/echo';
 import type { BaseEchoObject } from '@dxos/echo-schema';
 import { assertState } from '@dxos/invariant';
 import { DXN, ObjectId, QueueSubspaceTags, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
@@ -11,7 +10,7 @@ import { DXN, ObjectId, QueueSubspaceTags, type QueueSubspaceTag, type SpaceId }
 import { QueueImpl } from './queue';
 import type { QueuesService } from './queue-service';
 import type { Queue } from './types';
-import { Hypergraph } from '../hypergraph';
+import { type Hypergraph } from '../hypergraph';
 
 export interface QueueAPI {
   get<T extends BaseEchoObject = BaseEchoObject>(dxn: DXN): Queue<T>;

@@ -22,7 +22,6 @@ import { getObjectCore, type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { Query } from '../query';
 import { EchoTestBuilder } from '../testing';
-import { log } from '@dxos/log';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {

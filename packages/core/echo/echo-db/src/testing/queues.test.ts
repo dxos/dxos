@@ -1,7 +1,13 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+
 import { create, getSchema } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { DXN, SpaceId } from '@dxos/keys';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+
 import { EchoTestBuilder } from './echo-test-builder';
 
 describe('queues', (ctx) => {
@@ -27,7 +33,7 @@ describe('queues', (ctx) => {
     {
       const resolved = await peer.client.graph
         .createRefResolver({ context: { space: spaceId } })
-        .resolve(DXN.fromQueue('data', spaceId, queue.dxn.asQueueDXN()?.queueId!, obj.id));
+        .resolve(DXN.fromQueue('data', spaceId, queue.dxn.asQueueDXN()!.queueId, obj.id));
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');
       expect(getSchema(resolved)).toEqual(Testing.Contact);

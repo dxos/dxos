@@ -19,7 +19,7 @@ import {
 } from '@dxos/debug';
 import {
   Filter,
-  QueueFactory,
+  type QueueFactory,
   type AnyLiveObject,
   type CoreDatabase,
   type EchoClient,

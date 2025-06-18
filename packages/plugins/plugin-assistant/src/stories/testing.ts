@@ -21,7 +21,7 @@ import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { Config } from '@dxos/react-client';
 import { DataTypes } from '@dxos/schema';
 
-type TestPluginsOptions = { config?: ConfigProto; types?: Schema.Schema.AnyNoContext[]; indexConfig?: IndexConfig; };
+type TestPluginsOptions = { config?: ConfigProto; types?: Schema.Schema.AnyNoContext[]; indexConfig?: IndexConfig };
 
 export const testPlugins = ({ config, types = DataTypes, indexConfig }: TestPluginsOptions = {}) => [
   ClientPlugin({

@@ -4,13 +4,7 @@
 
 import { Schema } from 'effect';
 
-import {
-  type BaseEchoObject,
-  EntityKind,
-  TypeAnnotationId,
-  type TypeAnnotation,
-  type AnyEchoObject,
-} from '@dxos/echo-schema';
+import { EntityKind, TypeAnnotationId, type TypeAnnotation, type AnyEchoObject } from '@dxos/echo-schema';
 import { type DXN, type ObjectId } from '@dxos/keys';
 
 /**
