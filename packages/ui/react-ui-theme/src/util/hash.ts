@@ -28,6 +28,7 @@ const colors: Color[] = [
   { color: 'pink', bg: 'bg-pinkFill', text: 'text-pinkFill', tag: 'bg-pinkSurface' },
 ];
 
+// TODO(thure): Reconcile with `to-fallback.ts` which exports `toHue` which overlaps a lot.
 export const getHashColor = (type: string | undefined): Color => {
   if (!type) {
     return { color: 'neutral', bg: 'bg-neutralFill', text: 'text-neutralFill', tag: 'bg-neutralSurface' };
