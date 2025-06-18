@@ -13,12 +13,7 @@ import {
   WidgetType,
 } from '@codemirror/view';
 
-// TODO(burdon): Factor out stable color hash (using theme).
-const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink'];
-const getColor = (text: string) => {
-  const hash = text.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return colors[hash % colors.length];
-};
+import { getHashColor, mx } from '@dxos/react-ui-theme';
 
 class TagWidget extends WidgetType {
   constructor(private _text: string) {
@@ -27,9 +22,8 @@ class TagWidget extends WidgetType {
 
   toDOM(): HTMLSpanElement {
     const span = document.createElement('span');
-    span.className = 'cm-tag';
+    span.className = mx('cm-tag', getHashColor(this._text).tag);
     span.textContent = this._text;
-    span.style.setProperty('--dx-tagColor', getColor(this._text));
     return span;
   }
 }
@@ -42,8 +36,8 @@ const tagMatcher = new MatchDecorator({
     }),
 });
 
-// TODO(burdon): Autocomplete.
-export const tagsExtension = (): Extension => [
+// TODO(burdon): Autocomplete from existing tags?
+export const hashtag = (): Extension => [
   ViewPlugin.fromClass(
     class {
       tags: DecorationSet;
@@ -66,14 +60,9 @@ export const tagsExtension = (): Extension => [
 
   EditorView.theme({
     '.cm-tag': {
-      border: 'red',
       borderRadius: '4px',
       marginRight: '6px',
-      padding: '2px 4px',
-      color: 'var(--dx-baseSurface)',
-      backgroundColor: 'var(--dx-tagColor)',
-      fontSize: '12px',
-      verticalAlign: 'text-bottom',
+      padding: '2px 6px',
     },
   }),
 ];

@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { EditorStory, content, longText } from './util';
+import { EditorStory, content, longText } from './components';
 import { annotations, comments, createExternalCommentSync } from '../extensions';
 import { str } from '../testing';
 import { type Comment } from '../types';
@@ -20,8 +20,8 @@ import { createRenderer } from '../util';
 
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/Comments',
+  component: EditorStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: EditorStory,
   parameters: { layout: 'fullscreen' },
 };
 

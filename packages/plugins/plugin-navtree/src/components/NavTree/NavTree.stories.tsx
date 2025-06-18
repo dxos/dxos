@@ -26,7 +26,7 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
-import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
+import { useAttentionAttributes, useAttention } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
@@ -65,7 +65,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
 };
 
 const StoryPlank = ({ attendableId }: { attendableId: string }) => {
-  const attentionAttrs = useAttendableAttributes(attendableId);
+  const attentionAttrs = useAttentionAttributes(attendableId);
 
   return (
     <StackItem.Root
