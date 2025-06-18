@@ -45,7 +45,7 @@ type ActiveQuery = {
 
 export class QueryServiceImpl extends Resource implements QueryService {
   private readonly _queries = new Set<ActiveQuery>();
-  private readonly _backpressureExecutor = new TimedTaskScheduler({
+  private readonly _scheduler = new TimedTaskScheduler({
     budget: 500,
     budgetPeriod: 1000,
     restTime: 500,
@@ -73,7 +73,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
       };
     });
 
-    await Promise.all(this._backpressureExecutor.schedule(tasks));
+    await Promise.all(this._scheduler.schedule(tasks));
   });
 
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
@@ -97,11 +97,11 @@ export class QueryServiceImpl extends Resource implements QueryService {
 
   override async _open(): Promise<void> {
     this._params.indexer.updated.on(this._ctx, () => this._updateQueries.schedule());
-    await this._backpressureExecutor.open(this._ctx);
+    await this._scheduler.open(this._ctx);
   }
 
   override async _close(): Promise<void> {
-    await this._backpressureExecutor.close(this._ctx);
+    await this._scheduler.close(this._ctx);
   }
 
   async setConfig(config: IndexConfig): Promise<void> {
@@ -135,7 +135,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
       };
       this._queries.add(queryEntry);
 
-      this._backpressureExecutor
+      this._scheduler
         .schedule([
           {
             run: async () => {
