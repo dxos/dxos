@@ -613,7 +613,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         refImpl,
         database.graph.createRefResolver({
           context: {
-            spaceId: database.spaceId,
+            space: database.spaceId,
           },
           middleware: (obj) => this._handleStoredSchema(target, obj),
         }),

@@ -6,7 +6,7 @@ import { Obj, type Ref } from '@dxos/echo';
 import { type AnyEchoObject, type HasId, getTypename } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
-import { type DXN, type SpaceId } from '@dxos/keys';
+import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import type { QueuesService } from './queue-service';
@@ -24,6 +24,7 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
   private readonly _spaceId: SpaceId;
   private readonly _queueId: string;
 
+  private _objectCache = new Map<ObjectId, T>();
   private _objects: T[] = [];
   private _isLoading = true;
   private _error: Error | null = null;
@@ -78,6 +79,9 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
 
     // Optimistic update.
     this._objects = [...this._objects, ...items];
+    for (const item of items) {
+      this._objectCache.set(item.id, item as T);
+    }
     this._signal.notifyWrite();
 
     try {
@@ -98,6 +102,9 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
     // Optimistic update.
     // TODO(dmaretskyi): Restrict types.
     this._objects = this._objects.filter((item) => !ids.includes((item as HasId).id));
+    for (const id of ids) {
+      this._objectCache.delete(id);
+    }
     this._signal.notifyWrite();
 
     try {
@@ -106,6 +113,25 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
       this._error = err as Error;
       this._signal.notifyWrite();
     }
+  }
+
+  async queryObjects(): Promise<T[]> {
+    const { objects } = await this._service.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
+    const decodedObjects = await Promise.all(
+      objects.map((obj) => Obj.fromJSON(obj, { refResolver: this._refResolver })),
+    );
+    for (const obj of decodedObjects) {
+      this._objectCache.set(obj.id, obj as T);
+    }
+    return decodedObjects as T[];
+  }
+
+  async getObjectsById(ids: ObjectId[]): Promise<(T | null)[]> {
+    const missingIds = ids.filter((id) => !this._objectCache.has(id));
+    if (missingIds.length > 0) {
+      await this.queryObjects();
+    }
+    return ids.map((id) => this._objectCache.get(id) ?? null);
   }
 
   /**
@@ -130,6 +156,10 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
       );
       if (thisRefreshId !== this._refreshId) {
         return;
+      }
+
+      for (const obj of decodedObjects) {
+        this._objectCache.set(obj.id, obj as T);
       }
 
       changed = objectSetChanged(this._objects, decodedObjects);

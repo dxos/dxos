@@ -402,6 +402,7 @@ export class Client {
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
       queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
+      queuesService: this._queuesService,
     });
     await this._echoClient.open(this._ctx);
 
@@ -412,7 +413,6 @@ export class Client {
       this._services,
       this._echoClient,
       halo,
-      this._queuesService!,
       this._instanceId,
     );
 

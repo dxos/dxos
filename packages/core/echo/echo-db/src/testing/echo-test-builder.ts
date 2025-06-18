@@ -20,6 +20,7 @@ import { EchoClient } from '../client';
 import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Filter, Query } from '../query';
+import { MockQueueService } from '../queue';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
@@ -74,6 +75,7 @@ export class EchoTestPeer extends Resource {
   private readonly _kv: LevelDB;
   private readonly _indexing: Partial<EchoHostIndexingConfig>;
   private readonly _clients = new Set<EchoClient>();
+  private _queuesService = new MockQueueService();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
@@ -107,6 +109,7 @@ export class EchoTestPeer extends Resource {
     this._echoClient.connectToService({
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
+      queuesService: this._queuesService,
     });
     await this._echoHost.open(ctx);
     await this._echoClient.open(ctx);
