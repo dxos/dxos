@@ -4,6 +4,8 @@
 
 import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
+import { type CleanupFn, addEventListener } from '@dxos/async';
+
 import { closeEffect, openEffect } from './action';
 
 export type FloatingMenuOptions = {
@@ -17,7 +19,8 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
     class {
       view: EditorView;
       tag: HTMLElement;
-      rafId: number | null = null;
+      rafId?: number | null;
+      cleanup?: CleanupFn;
 
       constructor(view: EditorView) {
         this.view = view;
@@ -28,21 +31,32 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
           container.style.position = 'relative';
         }
 
-        const icon = document.createElement('dx-icon');
-        icon.setAttribute('icon', options.icon ?? 'ph--dots-three-outline--regular');
+        {
+          const icon = document.createElement('dx-icon');
+          icon.setAttribute('icon', options.icon ?? 'ph--dots-three-vertical--regular');
 
-        const button = document.createElement('button');
-        button.appendChild(icon);
+          const button = document.createElement('button');
+          button.appendChild(icon);
 
-        // TODO(burdon): Custom tag/styles?
-        this.tag = document.createElement('dx-ref-tag');
-        this.tag.classList.add('cm-ref-tag');
-        this.tag.appendChild(button);
+          this.tag = document.createElement('dx-ref-tag');
+          this.tag.classList.add('cm-ref-tag');
+          this.tag.appendChild(button);
+        }
+
         container.appendChild(this.tag);
 
         // Listen for scroll events.
-        container.addEventListener('scroll', this.scheduleUpdate.bind(this));
+        const handler = () => this.scheduleUpdate();
+        this.cleanup = addEventListener(container, 'scroll', handler);
         this.scheduleUpdate();
+      }
+
+      destroy() {
+        this.cleanup?.();
+        this.tag.remove();
+        if (this.rafId != null) {
+          cancelAnimationFrame(this.rafId);
+        }
       }
 
       update(update: ViewUpdate) {
@@ -96,13 +110,6 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
 
         this.rafId = requestAnimationFrame(this.updateButtonPosition.bind(this));
       }
-
-      destroy() {
-        this.tag.remove();
-        if (this.rafId != null) {
-          cancelAnimationFrame(this.rafId);
-        }
-      }
     },
   ),
 
@@ -111,8 +118,13 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
       position: 'fixed',
       padding: '0',
       border: 'none',
-      transition: 'opacity 0.3s ease-in-out',
-      opacity: 0.1,
+      opacity: '0',
+    },
+    '[data-has-focus] & .cm-ref-tag': {
+      opacity: '1',
+    },
+    '[data-is-attention-source] & .cm-ref-tag': {
+      opacity: '1',
     },
     '.cm-ref-tag button': {
       display: 'grid',
@@ -120,9 +132,6 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
       justifyContent: 'center',
       width: '2rem',
       height: '2rem',
-    },
-    '.cm-ref-tag[data-focused="true"]': {
-      opacity: 1,
     },
   }),
 ];

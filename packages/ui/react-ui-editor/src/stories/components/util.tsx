@@ -4,38 +4,23 @@
 
 import { type Completion } from '@codemirror/autocomplete';
 import { type Extension } from '@codemirror/state';
-import { type EditorView } from '@codemirror/view';
-import React, { type ReactNode, useEffect, useState, type FC } from 'react';
+import React, { type FC } from 'react';
 
-import { Expando } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
-import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
-import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { useThemeContext, Icon } from '@dxos/react-ui';
-import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
+import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { editorSlots, editorGutter } from '../defaults';
 import {
-  type DebugNode,
   type EditorSelectionState,
-  createDataExtensions,
-  createBasicExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
   decorateMarkdown,
-  debugTree,
   folding,
   formattingKeymap,
   image,
   linkTooltip,
   table,
-  type ThemeExtensionsOptions,
-} from '../extensions';
-import { useTextEditor, type UseTextEditorProps } from '../hooks';
-import { str } from '../testing';
-import { createRenderer } from '../util';
+} from '../../extensions';
+import { str } from '../../testing';
+import { createRenderer } from '../../util';
 
 export const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
 
@@ -244,83 +229,3 @@ export const headings = str(
 );
 
 export const global = new Map<string, EditorSelectionState>();
-
-// Type definitions
-export type DebugMode = 'raw' | 'tree' | 'raw+tree';
-
-export type StoryProps = {
-  id?: string;
-  debug?: DebugMode;
-  debugCustom?: (view: EditorView) => ReactNode;
-  text?: string;
-  readOnly?: boolean;
-  placeholder?: string;
-  lineNumbers?: boolean;
-  onReady?: (view: EditorView) => void;
-} & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'> &
-  Pick<ThemeExtensionsOptions, 'slots'>;
-
-// Default story component
-export const EditorStory = ({
-  id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
-  debug,
-  debugCustom,
-  text,
-  readOnly,
-  placeholder = 'New document.',
-  lineNumbers,
-  scrollTo,
-  selection,
-  extensions,
-  slots = editorSlots,
-  onReady,
-}: StoryProps) => {
-  const [object] = useState(createObject(live(Expando, { content: text ?? '' })));
-  const { themeMode } = useThemeContext();
-  const [tree, setTree] = useState<DebugNode>();
-  const { parentRef, focusAttributes, view } = useTextEditor(
-    () => ({
-      id,
-      initialValue: text,
-      extensions: [
-        createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-        createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true }),
-        createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({
-          themeMode,
-          syntaxHighlighting: true,
-          slots,
-        }),
-        editorGutter,
-        extensions || [],
-        debug ? debugTree(setTree) : [],
-      ],
-      scrollTo,
-      selection,
-    }),
-    [object, extensions, themeMode],
-  );
-
-  useEffect(() => {
-    if (view) {
-      onReady?.(view);
-    }
-  }, [view]);
-
-  return (
-    <div className={mx('w-full h-full grid overflow-hidden', debug && 'grid-cols-[1fr_600px]')}>
-      <div role='none' className='flex overflow-hidden' ref={parentRef} {...focusAttributes} />
-      {debug && (
-        <div className='grid h-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'>
-          {view && debugCustom?.(view)}
-          {(debug === 'raw' || debug === 'raw+tree') && (
-            <pre className='p-1 text-xs text-green-800 dark:text-green-200 overflow-auto'>
-              {view?.state.doc.toString()}
-            </pre>
-          )}
-          {(debug === 'tree' || debug === 'raw+tree') && <JsonFilter data={tree} classNames='p-1 text-xs' />}
-        </div>
-      )}
-    </div>
-  );
-};
