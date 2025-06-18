@@ -35,7 +35,8 @@ export class Logger {
 export const setLogger = (machine: BlueprintMachine, logger: Logger): CleanupFn => {
   const log = () => {
     logger.log(machine.state.state);
-    for (const step of machine.blueprint.steps) {
+    const step = machine.blueprint.steps.at(-1);
+    if (step) {
       const traceStep = machine.state.trace.find((t) => t.stepId === step.id);
       if (traceStep?.comment) {
         logger.log(traceStep.comment);
