@@ -129,7 +129,7 @@ export class EchoClient extends Resource {
       preloadSchemaOnOpen,
       spaceKey,
     });
-    this._graph._register(spaceId, spaceKey, db, owningObject);
+    this._graph._register(spaceId, db, owningObject);
     this._databases.set(spaceId, db);
     return db;
   }

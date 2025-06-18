@@ -76,12 +76,6 @@ export interface RefResolverOptions {
  * Manages cross-space database interactions.
  */
 export class Hypergraph {
-  /**
-   * Used for References resolution.
-   * @deprecated use SpaceId.
-   * TODO(mykola): Delete on References migration.
-   */
-  private readonly _spaceKeyToId = new ComplexMap<PublicKey, SpaceId>(PublicKey.hash);
   private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
   // TODO(burdon): Comment/rename?
   private readonly _owningObjects = new Map<SpaceId, unknown>();
@@ -120,11 +114,9 @@ export class Hypergraph {
   _register(
     spaceId: SpaceId,
     /** @deprecated Use spaceId */
-    spaceKey: PublicKey,
     database: EchoDatabaseImpl,
     owningObject?: unknown,
   ): void {
-    this._spaceKeyToId.set(spaceKey, spaceId);
     this._databases.set(spaceId, database);
     this._owningObjects.set(spaceId, owningObject);
     database.coreDatabase._updateEvent.on(this._onUpdate.bind(this));
