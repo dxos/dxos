@@ -37,8 +37,40 @@ import {
   type QueryOptions,
   type QuerySource,
 } from './query';
+import type { Queue } from './queue';
 
 const TRACE_REF_RESOLUTION = true;
+
+/**
+ * Resolution context.
+ * Affects how non-absolute DXNs are resolved.
+ */
+export interface RefResolutionContext {
+  /**
+   * Space that the resolution is happening from.
+   */
+  spaceId?: SpaceId;
+
+  /**
+   * Queue that the resolution is happening from.
+   * This queue will be searched first, and then the space it belongs to.
+   */
+  queueId?: ObjectId;
+}
+
+export interface RefResolverOptions {
+  /**
+   * Resolution context.
+   * Affects how non-absolute DXNs are resolved.
+   */
+  context?: RefResolutionContext;
+
+  /**
+   * Middleware to change the resolved object before returning it.
+   * @deprecated On track to be removed.
+   */
+  middleware?: (obj: BaseObject) => BaseObject;
+}
 
 /**
  * Manages cross-space database interactions.
@@ -167,8 +199,9 @@ export class Hypergraph {
    * @returns Result of `onLoad`.
    */
   // TODO(dmaretskyi): Restructure API: Remove middleware, move `hostDb` into context option. Make accessible on Database objects.
-  getRefResolver(hostDb: EchoDatabase, middleware: (obj: BaseObject) => BaseObject = (obj) => obj): Ref.Resolver {
-    // TODO(dmaretskyi): Cache per hostDb.
+  createRefResolver({ context = {}, middleware = (obj) => obj }: RefResolverOptions): Ref.Resolver {
+    // TODO(dmaretskyi): Rewrite resolution algorithm with tracks for absolute and relative DXNs.
+
     return {
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (dxn, load, onLoad) => {
@@ -178,8 +211,7 @@ export class Hypergraph {
           return undefined; // Unsupported DXN kind.
         }
 
-        const ref = Reference.fromDXN(dxn);
-        const res = this._lookupRef(hostDb, ref, onLoad ?? (() => {}));
+        const res = this._lookupRef(dxn, context, onLoad);
 
         if (res) {
           return middleware(res);
@@ -200,9 +232,14 @@ export class Hypergraph {
             status = 'error';
             throw new Error('Cross-space references are not supported');
           }
+
+          const db =
+            (context.spaceId && this._databases.get(context.spaceId)) ??
+            raise(new Error('Resolving context-free references is not supported'));
+
           const {
             objects: [obj],
-          } = await hostDb.query(Filter.ids(dxn.parts[1])).run();
+          } = await db.query(Filter.ids(dxn.parts[1])).run();
           if (obj) {
             status = 'resolved';
             return middleware(obj);
@@ -246,49 +283,38 @@ export class Hypergraph {
   }
 
   /**
-   * @internal
    * @param db
    * @param ref
    * @param onResolve will be weakly referenced.
    */
-  _lookupRef(
-    db: EchoDatabase,
-    ref: Reference,
-    onResolve: (obj: AnyLiveObject<any>) => void,
+  private _lookupRef(
+    dxn: DXN,
+    context: RefResolutionContext,
+    onResolve?: (obj: AnyLiveObject<any>) => void,
   ): AnyLiveObject<any> | undefined {
     let spaceId: SpaceId | undefined, objectId: ObjectId | undefined;
 
-    if (ref.dxn && ref.dxn.asEchoDXN()) {
-      const dxnData = ref.dxn.asEchoDXN()!;
-      spaceId = dxnData.spaceId;
-      objectId = dxnData.echoId;
-    } else {
-      // TODO(dmaretskyi): Legacy resoltion -- remove.
-      objectId = ref.objectId;
-      const spaceKey = ref.host ? PublicKey.from(ref.host) : db?.spaceKey;
-      const mappedSpaceId = this._spaceKeyToId.get(spaceKey);
-      invariant(mappedSpaceId, 'No spaceId for spaceKey.');
-      spaceId = mappedSpaceId;
+    if (!dxn.asEchoDXN()) {
+      throw new Error('Unsupported DXN kind');
     }
+    const dxnData = dxn.asEchoDXN()!;
+    spaceId = dxnData.spaceId ?? context.spaceId;
+    objectId = dxnData.echoId;
 
     if (spaceId === undefined) {
-      const local = db.getObjectById(objectId);
-      if (local) {
-        return local;
-      }
-    } else {
-      const remoteDb = this._databases.get(spaceId);
-      if (remoteDb) {
-        // Resolve remote reference.
-        const remote = remoteDb.getObjectById(objectId);
-        if (remote) {
-          return remote;
-        }
+      throw new Error('Unable to determine space to resolve the reference from');
+    }
+
+    const db = this._databases.get(spaceId);
+    if (db) {
+      // Resolve remote reference.
+      const obj = db.getObjectById(objectId);
+      if (obj) {
+        return obj;
       }
     }
 
-    // Assume local database.
-    spaceId ??= db.spaceId;
+    // TODO(dmaretskyi): Consider throwing if space not found.
 
     if (!OBJECT_DIAGNOSTICS.has(objectId)) {
       OBJECT_DIAGNOSTICS.set(objectId, {
@@ -300,11 +326,13 @@ export class Hypergraph {
     }
 
     log('trap', { spaceId, objectId });
-    entry(this._resolveEvents, spaceId)
-      .orInsert(new Map())
-      .deep(objectId)
-      .orInsert(new Event())
-      .value.on(new Context(), onResolve);
+    if (onResolve) {
+      entry(this._resolveEvents, spaceId)
+        .orInsert(new Map())
+        .deep(objectId)
+        .orInsert(new Event())
+        .value.on(new Context(), onResolve);
+    }
   }
 
   registerQuerySourceProvider(provider: QuerySourceProvider): void {

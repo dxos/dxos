@@ -611,7 +611,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const refImpl = new RefImpl(ref.toDXN());
       setRefResolver(
         refImpl,
-        database.graph.getRefResolver(database, (obj) => this._handleStoredSchema(target, obj)),
+        database.graph.createRefResolver({
+          context: {
+            spaceId: database.spaceId,
+          },
+          middleware: (obj) => this._handleStoredSchema(target, obj),
+        }),
       );
       return refImpl;
     } else {

@@ -137,7 +137,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     );
 
     this._db = echoClient.constructDatabase({ spaceId: this.id, spaceKey: this.key, owningObject: this });
-    this._queues = new QueueFactory(this._data.id as SpaceId, echoClient.graph.getRefResolver(this._db));
+    this._queues = new QueueFactory(this._data.id as SpaceId, echoClient.graph.createRefResolver({ context: { spaceId: this._data.id as SpaceId}}));
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
