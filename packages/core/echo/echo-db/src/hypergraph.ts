@@ -38,6 +38,8 @@ import {
   type QuerySource,
 } from './query';
 
+const TRACE_REF_RESOLUTION = true;
+
 /**
  * Manages cross-space database interactions.
  */
@@ -186,33 +188,57 @@ export class Hypergraph {
         }
       },
       resolve: async (dxn) => {
-        if (dxn.kind !== DXN.kind.ECHO) {
-          throw new Error('Unsupported DXN kind');
-        }
+        let beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0,
+          status: string = '';
+        try {
+          if (dxn.kind !== DXN.kind.ECHO) {
+            status = 'error';
+            throw new Error('Unsupported DXN kind');
+          }
 
-        if (!dxn.isLocalObjectId()) {
-          throw new Error('Cross-space references are not supported');
-        }
-        const {
-          objects: [obj],
-        } = await hostDb.query(Filter.ids(dxn.parts[1])).run();
-        if (obj) {
-          return middleware(obj);
-        } else {
-          return undefined;
+          if (!dxn.isLocalObjectId()) {
+            status = 'error';
+            throw new Error('Cross-space references are not supported');
+          }
+          const {
+            objects: [obj],
+          } = await hostDb.query(Filter.ids(dxn.parts[1])).run();
+          if (obj) {
+            status = 'resolved';
+            return middleware(obj);
+          } else {
+            status = 'missing';
+            return undefined;
+          }
+        } finally {
+          if (TRACE_REF_RESOLUTION) {
+            log.info('resolve', { dxn: dxn.toString(), status, time: performance.now() - beginTime });
+          }
         }
       },
 
       resolveSchema: async (dxn) => {
-        switch (dxn.kind) {
-          case DXN.kind.TYPE: {
-            return this.schemaRegistry.getSchemaByDXN(dxn);
+        let beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0,
+          status: string = '';
+        try {
+          switch (dxn.kind) {
+            case DXN.kind.TYPE: {
+              const schema = this.schemaRegistry.getSchemaByDXN(dxn);
+              status = schema != null ? 'resolved' : 'missing';
+              return schema;
+            }
+            case DXN.kind.ECHO: {
+              status = 'error';
+              throw new Error('Not implemented: Resolving schema stored in the database');
+            }
+            default: {
+              status = 'unknown dxn';
+              return undefined;
+            }
           }
-          case DXN.kind.ECHO: {
-            throw new Error('Not implemented: Resolving schema stored in the database');
-          }
-          default: {
-            return undefined;
+        } finally {
+          if (TRACE_REF_RESOLUTION) {
+            log.info('resolveSchema', { dxn: dxn.toString(), status, time: performance.now() - beginTime });
           }
         }
       },

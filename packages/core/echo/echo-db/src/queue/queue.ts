@@ -12,6 +12,8 @@ import { log } from '@dxos/log';
 import type { QueuesService } from './queue-service';
 import type { Queue } from './types';
 
+const TRACE_QUEUE_LOAD = true;
+
 /**
  * Client-side view onto an EDGE queue.
  */
@@ -115,7 +117,10 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
     const thisRefreshId = ++this._refreshId;
     let changed = false;
     try {
+      TRACE_QUEUE_LOAD &&
+        log.info('queue refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
       const { objects } = await this._service.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
+      TRACE_QUEUE_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects.length });
       if (thisRefreshId !== this._refreshId) {
         return;
       }
@@ -129,6 +134,7 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
 
       changed = objectSetChanged(this._objects, decodedObjects);
 
+      TRACE_QUEUE_LOAD && log.info('queue refresh', { changed, objects: objects.length, refreshId: thisRefreshId });
       this._objects = objects as T[];
     } catch (err) {
       log.catch(err);
