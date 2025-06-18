@@ -41,6 +41,7 @@ type ActiveQuery = {
   executor: QueryExecutor;
   sendResults: (results: QueryResult[]) => void;
   close: () => Promise<void>;
+  shouldUpdate: boolean;
 };
 
 export class QueryServiceImpl extends Resource implements QueryService {
@@ -48,17 +49,22 @@ export class QueryServiceImpl extends Resource implements QueryService {
   private readonly _scheduler = new TimedTaskScheduler({
     budget: 500,
     budgetPeriod: 1000,
-    restTime: 500,
+    cooldown: 500,
     maxParallelTasks: 10,
     saveHistoryFor: 30_000,
   });
 
   private readonly _updateQueries = new DeferredTask(this._ctx, async () => {
-    if (this._queries.size === 0) {
+    const queriesToUpdate = Array.from(this._queries).filter((query) => query.shouldUpdate);
+    queriesToUpdate.forEach((query) => {
+      query.shouldUpdate = false;
+    });
+
+    if (queriesToUpdate.length === 0) {
       return;
     }
 
-    const tasks = Array.from(this._queries).map((query) => {
+    const tasks = Array.from(queriesToUpdate).map((query) => {
       return async () => {
         try {
           const { changed } = await query.executor.execQuery();
@@ -99,7 +105,12 @@ export class QueryServiceImpl extends Resource implements QueryService {
   }
 
   override async _open(): Promise<void> {
-    this._params.indexer.updated.on(this._ctx, () => this._updateQueries.schedule());
+    this._params.indexer.updated.on(this._ctx, () => {
+      this._queries.forEach((query) => {
+        query.shouldUpdate = true;
+      });
+      this._updateQueries.schedule();
+    });
     await this._scheduler.open(this._ctx);
   }
 
@@ -135,23 +146,17 @@ export class QueryServiceImpl extends Resource implements QueryService {
           await queryEntry.executor.close();
           this._queries.delete(queryEntry);
         },
+        shouldUpdate: true,
       };
       this._queries.add(queryEntry);
-
       queueMicrotask(async () => {
         try {
           await queryEntry.executor.open();
-          await this._scheduler.schedule(async () => {
-            // Run query executor.
-            await queryEntry.executor.execQuery();
-            // Always send first result set.
-            queryEntry.sendResults(queryEntry.executor.getResults());
-          });
+          this._updateQueries.schedule();
         } catch (err) {
           close(err as Error);
         }
       });
-
       return queryEntry.close;
     });
   }
