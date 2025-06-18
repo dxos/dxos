@@ -7,7 +7,6 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { DropdownMenu, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import {
   createMarkdownExtensions,
   createBasicExtensions,
@@ -41,7 +40,6 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
   ({ classNames, text, id, autoFocus, scrollable = true, showSelected = true }, forwardedRef) => {
     const { t } = useTranslation(OUTLINER_PLUGIN);
     const { themeMode } = useThemeContext();
-    const attentionAttrs = useAttentionAttributes(id);
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
         id,
@@ -58,8 +56,6 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
       }),
       [id, text, autoFocus, themeMode],
     );
-
-    console.log(attentionAttrs);
 
     useImperativeHandle(
       forwardedRef,
@@ -80,15 +76,9 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
     };
 
     return (
-      // TODO(burdon): Use global modal?
+      // TODO(burdon): Use global modal provider?
       <RefDropdownMenu.Provider>
-        <div
-          ref={parentRef}
-          role='editor'
-          className={mx('_flex _justify-center', classNames)}
-          {...attentionAttrs}
-          {...focusAttributes}
-        />
+        <div ref={parentRef} role='editor' className={mx(classNames)} {...focusAttributes} />
         <DropdownMenu.Portal>
           <DropdownMenu.Content>
             <DropdownMenu.Viewport>

@@ -79,6 +79,7 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
   const date = parseDateString(entry.date);
   const isToday = getDateString() === entry.date;
   const outlinerRef = useRef<OutlinerController>(null);
+  const [focused, setFocused] = useState(false);
 
   const handleFocus = useCallback(() => {
     outlinerRef.current?.focus();
@@ -92,7 +93,12 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
   const recent = false;
 
   return (
-    <div className={mx('flex flex-col', classNames)}>
+    <div
+      className={mx('group flex flex-col', classNames)}
+      onFocusCapture={() => setFocused(true)}
+      onBlurCapture={() => setFocused(false)}
+      {...{ 'data-has-focus': focused }}
+    >
       <div className='flex items-center gap-2 bg-transparent'>
         <IconButton
           label={format(date, 'MMM d, yyyy')}

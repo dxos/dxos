@@ -120,6 +120,9 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
       border: 'none',
       visibility: 'hidden',
     },
+    '[group-data-has-focus] & .cm-ref-tag': {
+      visibility: 'visible',
+    },
     '[data-is-attention-source] & .cm-ref-tag': {
       visibility: 'visible',
     },
