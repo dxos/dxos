@@ -23,7 +23,7 @@ import {
   names,
   renderLinkButton,
   text,
-} from './util';
+} from './components';
 import { editorMonospace } from '../defaults';
 import {
   InputModeExtensions,
@@ -41,7 +41,7 @@ import { str } from '../testing';
 
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/TextEditor',
-  render: EditorStory,
+  component: EditorStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { layout: 'fullscreen', controls: { disable: true } },
 };

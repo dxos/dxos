@@ -19,13 +19,17 @@ const handlePreviewLookup = async (
   defaultSpace: Space,
   { ref, label }: PreviewLinkRef,
 ): Promise<PreviewLinkTarget | null> => {
-  const dxn = DXN.parse(ref);
-  if (!dxn) {
+  try {
+    const dxn = DXN.parse(ref);
+    if (!dxn) {
+      return null;
+    }
+
+    const object = await resolveRef(client, dxn, defaultSpace);
+    return { label, object };
+  } catch (err) {
     return null;
   }
-
-  const object = await resolveRef(client, dxn, defaultSpace);
-  return { label, object };
 };
 
 export default (context: PluginContext) => {
