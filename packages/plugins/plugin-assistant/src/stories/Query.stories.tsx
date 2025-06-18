@@ -34,7 +34,7 @@ import {
 import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { getHashColor, mx } from '@dxos/react-ui-theme';
-import { DataType, SpaceGraphModel } from '@dxos/schema';
+import { DataType, DataTypes, SpaceGraphModel } from '@dxos/schema';
 import { createObjectFactory, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -388,7 +388,7 @@ const meta: Meta<typeof DefaultStory> = {
     withPluginManager({
       fireEvents: [Events.SetupArtifactDefinition],
       plugins: testPlugins({
-        types: [ResearchGraph],
+        types: [...DataTypes, ResearchGraph],
         config: {
           runtime: {
             client: {
