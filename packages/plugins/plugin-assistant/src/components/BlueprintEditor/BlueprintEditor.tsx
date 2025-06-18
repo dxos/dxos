@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React from 'react';
 
 import { Blueprint, type BlueprintParser } from '@dxos/assistant';
@@ -15,10 +16,16 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
+import { removeProperties } from '@dxos/util';
 
 export type BlueprintEditorProps = ThemedClassName<{
   blueprint: BlueprintParser.DSL;
 }>;
+
+export const Test = Schema.Struct({
+  steps: Schema.optional(Schema.Array(Schema.Any).pipe(Schema.mutable)),
+  foo: Schema.optional(Schema.Array(Schema.Any).pipe(Schema.mutable)),
+});
 
 // TODO(burdon): Factor out JsonEditor.
 // TODO(burdon): Make editable.
@@ -29,8 +36,21 @@ export const BlueprintEditor = ({ classNames, blueprint }: BlueprintEditorProps)
     extensions: [
       createBasicExtensions({ lineWrapping: false }),
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-      // TODO(burdon): ERROR: reference "/schemas/any" resolves to more than one schema
-      createJsonExtensions({ schema: toJsonSchema(Blueprint) }),
+      createJsonExtensions({
+        schema: removeProperties(toJsonSchema(Blueprint), (key, value) => {
+          if (key === '$ref' && value === '#/$defs/jsonSchema') {
+            return true;
+          }
+          if (key === '$ref' && value === '#/$defs/dependency') {
+            return true;
+          }
+          if (key === '$id' && value === '/schemas/any') {
+            return true;
+          }
+
+          return false;
+        }),
+      }),
       editorMonospace,
     ],
   });

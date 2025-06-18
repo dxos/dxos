@@ -9,7 +9,7 @@ import { raise } from '@dxos/debug';
 import { ObjectId } from '@dxos/keys';
 
 export const BlueprintStep = Schema.Struct({
-  id: Schema.String,
+  id: Schema.optional(Schema.String),
   instructions: Schema.String,
   // TODO(burdon): ExecutableTool can't be serialized.
   tools: Schema.Array(Tool).pipe(Schema.mutable),

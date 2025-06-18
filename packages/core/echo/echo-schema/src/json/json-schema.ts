@@ -90,8 +90,7 @@ export const toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
   jsonSchema.$schema = JSON_SCHEMA_URL;
 
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
-    // Put id first.
-    jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']);
+    jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']); // Put id first.
   }
 
   const echoIdentifier = getTypeIdentifierAnnotation(schema);
@@ -120,7 +119,7 @@ export const toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
   }
 
   // Fix field order.
-  // TODO(dmaretskyi): Makes sure undefined is not left on optional fields for the resulting object .
+  // TODO(dmaretskyi): Makes sure undefined is not left on optional fields for the resulting object.
   // TODO(dmaretskyi): `orderFields` util.
   jsonSchema = orderKeys(jsonSchema, [
     '$schema',
@@ -137,7 +136,7 @@ export const toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
 
     'properties',
     'required',
-    'propertyOrder',
+    'propertyOrder', // Custom.
     'items',
     'additionalProperties',
 
