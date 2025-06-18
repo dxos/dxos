@@ -17,6 +17,7 @@ import {
   useTextEditor,
   RefDropdownMenu,
   type UseTextEditorProps,
+  hashtag,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
@@ -44,16 +45,15 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
       () => ({
         id,
         autoFocus,
-        // TODO(burdon): Make this optional.
-        initialValue: text.content,
-        // Auto select end of document.
         selection: EditorSelection.cursor(text.content.length),
+        initialValue: text.content,
         extensions: [
           createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
           createBasicExtensions({ readOnly: false }),
           createMarkdownExtensions({ themeMode }),
           createThemeExtensions({ themeMode, slots: { scroll: { className: scrollable ? '' : '!overflow-hidden' } } }),
           outliner({ showSelected }),
+          hashtag(),
         ],
       }),
       [id, text, autoFocus, themeMode],
@@ -68,7 +68,7 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
     );
 
     const handleDeleteRow = () => {
-      // TODO(burdon): Hack since menu steals focus.
+      // TODO(burdon): Timeout hack since menu steals focus.
       setTimeout(() => {
         if (view) {
           deleteItem(view);
@@ -78,8 +78,9 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
     };
 
     return (
+      // TODO(burdon): Use global modal provider?
       <RefDropdownMenu.Provider>
-        <div ref={parentRef} {...focusAttributes} className={mx('flex w-full justify-center', classNames)} />
+        <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />
         <DropdownMenu.Portal>
           <DropdownMenu.Content>
             <DropdownMenu.Viewport>

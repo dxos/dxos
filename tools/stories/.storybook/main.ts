@@ -40,11 +40,10 @@ export const config = (
     reactDocgen: false,
   },
   addons: [
-    // ADDING '@storybook/addon-essentials' CAUSES THE TAB TO OMM WHEN PRINTING A DEEPLY NESTED DATA STRUCTURE.
-    // https://github.com/storybookjs/storybook/issues/17098
-    // https://github.com/storybookjs/storybook/issues/19844
-    // '@storybook/addon-essentials',
-
+    // Please do not disable `addon-essentials` for all stories if one story is crashing due to an infinite loop.
+    // Set `controls: { disable: true }` in the story’s parameters, or set `argTypes` that works for your story instead
+    // of relying on Storybook’s automatic analysis in these cases. See also: https://github.com/storybookjs/storybook/issues/17098
+    '@storybook/addon-essentials',
     '@storybook/addon-interactions',
     '@storybook/addon-links',
     '@storybook/addon-themes',

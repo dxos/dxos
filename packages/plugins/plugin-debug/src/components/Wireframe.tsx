@@ -7,7 +7,7 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { fullyQualifiedId, type AnyLiveObject } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { useAttendableAttributes } from '@dxos/react-ui-attention';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -19,10 +19,10 @@ export type WireframeProps = ThemedClassName<{
 
 // TODO(burdon): Make focusable and attendable with input.
 export const Wireframe = ({ classNames, label, object }: WireframeProps) => {
-  const attendableAttrs = useAttendableAttributes(fullyQualifiedId(object));
+  const attentionAttrs = useAttentionAttributes(fullyQualifiedId(object));
   const { width, height, ref } = useResizeDetector();
   return (
-    <div ref={ref} className={mx('relative grow min-bs-96', classNames)} {...attendableAttrs}>
+    <div ref={ref} className={mx('relative grow min-bs-96', classNames)} {...attentionAttrs}>
       <div className='absolute inset-2 flex flex-col gap-2 overflow-hidden font-mono'>
         <div className='flex justify-between'>
           <div>{label}</div>
