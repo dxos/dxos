@@ -5,7 +5,7 @@
 import React, { type FC, forwardRef } from 'react';
 
 import { Card } from '@dxos/react-ui-stack';
-import { ghostHover, mx } from '@dxos/react-ui-theme';
+import { ghostHover } from '@dxos/react-ui-theme';
 
 import { SEARCH_RESULT } from '../../meta';
 import { type SearchResult } from '../../types';
@@ -43,25 +43,20 @@ export const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>((item, for
   const { id, objectType, label, snippet, match, selected, onSelect } = item;
 
   return (
-    <Card.Root
-      ref={forwardRef}
-      item={item}
-      classNames={mx('mx-2 mt-2 cursor-pointer', selected && '!bg-activeSurface', ghostHover)}
-      onClick={() => onSelect?.(id)}
-    >
-      {objectType && (
-        <>
-          <div className='text-xs text-neutral-400 ml-4'>{objectType}</div>
-        </>
-      )}
-      <Card.Heading>
-        <Card.HeadingLabel>{label ?? 'Untitled'}</Card.HeadingLabel>
-      </Card.Heading>
-      {snippet && (
-        <Card.Content data-gutter={true}>
-          <Snippet text={snippet} match={match} />
-        </Card.Content>
-      )}
+    <Card.Root>
+      <Card.Content
+        ref={forwardRef}
+        classNames={['mx-2 mt-2 cursor-pointer', selected && '!bg-activeSurface', ghostHover]}
+        onClick={() => onSelect?.(id)}
+      >
+        {objectType && (
+          <>
+            <div className='text-xs text-neutral-400 ml-4'>{objectType}</div>
+          </>
+        )}
+        <Card.Heading>{label ?? 'Untitled'}</Card.Heading>
+        {snippet && <Snippet text={snippet} match={match} />}
+      </Card.Content>
     </Card.Root>
   );
 });

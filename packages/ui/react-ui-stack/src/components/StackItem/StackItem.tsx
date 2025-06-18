@@ -13,6 +13,7 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
+import { Slot } from '@radix-ui/react-slot';
 import React, {
   forwardRef,
   useLayoutEffect,
@@ -61,6 +62,7 @@ type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   role?: 'article' | 'section';
   disableRearrange?: boolean;
   focusIndicatorVariant?: 'over-all' | 'group';
+  asChild?: boolean;
 };
 
 const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
@@ -78,6 +80,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
       style,
       disableRearrange,
       focusIndicatorVariant = 'over-all',
+      asChild,
       ...props
     },
     forwardedRef,
@@ -91,7 +94,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
       useState(propsSize);
 
-    const Root = role ?? 'div';
+    const Root = asChild ? Slot : role ?? 'div';
 
     const composedItemRef = composeRefs<HTMLDivElement>(itemRef, forwardedRef);
 

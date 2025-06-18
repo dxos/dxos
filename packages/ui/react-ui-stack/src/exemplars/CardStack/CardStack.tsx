@@ -4,11 +4,10 @@
 
 import React, { forwardRef, type PropsWithChildren } from 'react';
 
-import { IconButton, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { railGridHorizontalContainFitContent, Stack, type StackProps } from '../../components';
-import { translationKey } from '../../translations';
+import { Card } from '../Card';
 
 const CardStackStack = forwardRef<
   HTMLDivElement,
@@ -33,19 +32,7 @@ const CardStackStack = forwardRef<
   );
 });
 
-const CardStackDragHandle = forwardRef<HTMLButtonElement, {}>((_, forwardedRef) => {
-  const { t } = useTranslation(translationKey);
-  return (
-    <IconButton
-      iconOnly
-      icon='ph--dots-six-vertical--regular'
-      variant='ghost'
-      label={t('drag handle label')}
-      classNames='pli-2'
-      ref={forwardedRef}
-    />
-  );
-});
+const CardStackDragHandle = Card.DragHandle;
 
 const CardStackHeading = forwardRef<HTMLDivElement, PropsWithChildren<{}>>(({ children }, forwardedRef) => {
   return (
