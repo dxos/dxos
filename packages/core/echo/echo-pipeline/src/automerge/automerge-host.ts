@@ -539,6 +539,7 @@ export class AutomergeHost extends Resource {
     this._collectionSynchronizer.onConnectionClosed(peerId);
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   private _onRemoteCollectionStateUpdated(collectionId: string, peerId: PeerId): void {
     const localState = this._collectionSynchronizer.getLocalCollectionState(collectionId);
     const remoteState = this._collectionSynchronizer.getRemoteCollectionStates(collectionId).get(peerId);
