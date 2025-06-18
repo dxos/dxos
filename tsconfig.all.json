@@ -331,9 +331,6 @@
       "path": "packages/plugins/plugin-outliner/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-outliner-deprecated/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-presenter/tsconfig.json"
     },
     {
