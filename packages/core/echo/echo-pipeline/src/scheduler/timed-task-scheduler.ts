@@ -4,7 +4,6 @@
 
 import { DeferredTask, sleepWithContext, asyncTimeout } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { option } from 'fast-check';
 
 const DEFAULT_TIMEOUT = 30_000;
 
@@ -83,7 +82,7 @@ export class TimedTaskScheduler<T = void> extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     this._executor = new DeferredTask(ctx, async () => {
-      let now = Date.now();
+      const now = Date.now();
       // Clean up old tasks.
       const cutoutTimestamp = now - Math.max(this._params.saveHistoryFor, this._params.budgetPeriod);
       this._processedBatches = this._processedBatches.filter((batch) => batch.end > cutoutTimestamp);

@@ -7,7 +7,6 @@ import { describe, test, onTestFinished } from 'vitest';
 import { sleep } from '@dxos/async';
 
 import { TimedTaskScheduler, type TimedTaskSchedulerParams } from './timed-task-scheduler';
-import { log } from '@dxos/log';
 
 describe('TimedTaskScheduler', () => {
   const getPlanner = async (params: Partial<TimedTaskSchedulerParams> = {}) => {
