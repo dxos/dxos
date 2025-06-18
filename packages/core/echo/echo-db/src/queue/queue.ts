@@ -20,7 +20,7 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
   private readonly _spaceId: SpaceId;
   private readonly _queueId: string;
 
-  private _items: T[] = [];
+  private _objects: T[] = [];
   private _isLoading = true;
   private _error: Error | null = null;
   private _refreshId = 0;
@@ -35,14 +35,15 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
     this._queueId = queueId ?? failedInvariant();
   }
 
-  get dxn() {
-    return this._dxn;
+  toJSON() {
+    return {
+      dxn: this._dxn.toString(),
+      objects: this._objects.length,
+    };
   }
 
-  // TODO(burdon): Rename to objects.
-  get items(): T[] {
-    this._signal.notifyRead();
-    return this._items;
+  get dxn() {
+    return this._dxn;
   }
 
   get isLoading(): boolean {
@@ -55,6 +56,11 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
     return this._error;
   }
 
+  get objects(): T[] {
+    this._signal.notifyRead();
+    return this._objects;
+  }
+
   /**
    * Insert into queue with optimistic update.
    */
@@ -65,7 +71,7 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
     );
 
     // Optimistic update.
-    this._items = [...this._items, ...items];
+    this._objects = [...this._objects, ...items];
     this._signal.notifyWrite();
 
     try {
@@ -79,7 +85,7 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
   async delete(ids: string[]): Promise<void> {
     // Optimistic update.
     // TODO(dmaretskyi): Restrict types.
-    this._items = this._items.filter((item) => !ids.includes((item as HasId).id));
+    this._objects = this._objects.filter((item) => !ids.includes((item as HasId).id));
     this._signal.notifyWrite();
 
     try {
@@ -104,8 +110,8 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
         return;
       }
 
-      changed = objectSetChanged(this._items, objects as AnyEchoObject[]);
-      this._items = objects as T[];
+      changed = objectSetChanged(this._objects, objects as AnyEchoObject[]);
+      this._objects = objects as T[];
     } catch (err) {
       this._error = err as Error;
     } finally {

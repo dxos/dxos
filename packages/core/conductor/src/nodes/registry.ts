@@ -5,7 +5,7 @@
 import { Effect, Schema } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
-import { Message, type Tool, ToolTypes } from '@dxos/ai';
+import { defineTool, Message, type Tool, ToolTypes } from '@dxos/ai';
 import { Filter, getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -407,11 +407,11 @@ export const registry: Record<NodeType, Executable> = {
   }),
 };
 
-const textToImageTool: Tool = {
-  name: 'textToImage',
+const textToImageTool: Tool = defineTool('testing', {
+  name: 'text-to-image',
   type: ToolTypes.TextToImage,
   options: {
     // TODO(burdon): Testing.
     // model: '@testing/kitten-in-bubble',
   },
-};
+});

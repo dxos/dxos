@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { defineTool, ToolResult } from '@dxos/ai';
+import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
@@ -141,7 +141,7 @@ export default () => {
   `,
     schema: ScriptType,
     tools: [
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'create',
         description: 'Create a new script. Returns the artifact definition for the script',
         caption: 'Creating script...',
@@ -174,7 +174,7 @@ export default () => {
           return ToolResult.Success(createArtifactElement(script.id));
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'inspect',
         description: 'Inspect a script. Returns the artifact definition for the script',
         caption: 'Inspecting script...',
@@ -193,7 +193,7 @@ export default () => {
           });
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'update',
         description: 'Update a script. Returns the artifact definition for the script',
         caption: 'Updating script...',

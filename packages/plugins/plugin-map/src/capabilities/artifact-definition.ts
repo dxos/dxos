@@ -4,7 +4,7 @@
 
 import { Schema, pipe } from 'effect';
 
-import { defineTool, ToolResult } from '@dxos/ai';
+import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, createIntent, type PromiseIntentDispatcher, contributes } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
@@ -34,7 +34,7 @@ export default () => {
     `,
     schema: MapType,
     tools: [
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'list',
         description: 'Query maps.',
         caption: 'Listing maps...',
@@ -46,7 +46,7 @@ export default () => {
           return ToolResult.Success(objects);
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'create',
         description:
           'Create a new map, optionally with a schema for data points. When creating a map, make sure to use the show tool to display the map to the user.',

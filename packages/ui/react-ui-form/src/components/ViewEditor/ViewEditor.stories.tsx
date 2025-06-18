@@ -57,6 +57,7 @@ const DefaultStory = () => {
     },
     [views, schema],
   );
+
   const handleDelete = useCallback((property: string) => projection?.deleteFieldProjection(property), [projection]);
 
   if (!schema || !view || !projection) {

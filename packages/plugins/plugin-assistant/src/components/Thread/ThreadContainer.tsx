@@ -40,12 +40,12 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
   const messageQueue = useMessageQueue(chat);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   // TODO(thure): This will be referentially new on every render, is it causing overreactivity?
-  const messages = [...(messageQueue?.items ?? []), ...processor.messages.value];
+  const messages = [...(messageQueue?.objects ?? []), ...processor.messages.value];
 
   // Post last message to document.
   useEffect(() => {
-    if (!processor.streaming.value && messageQueue?.items) {
-      const message = messageQueue.items[messageQueue.items.length - 1];
+    if (!processor.streaming.value && messageQueue?.objects) {
+      const message = messageQueue.objects[messageQueue.objects.length - 1];
       if (space && chat && message && dispatch && associatedArtifact) {
         void dispatch(
           createIntent(CollaborationActions.InsertContent, {
@@ -70,7 +70,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
 
       invariant(messageQueue);
       void processor.request(text, {
-        history: messageQueue.items,
+        history: messageQueue.objects,
         onComplete: (messages) => {
           messageQueue.append(messages);
         },

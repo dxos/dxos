@@ -4,9 +4,18 @@
 
 import React, { type FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
+import { getTypename } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { type GraphController, GraphForceProjector, type GraphProps, SVG, type SVGContext } from '@dxos/react-ui-graph';
+import {
+  type GraphController,
+  GraphForceProjector,
+  type GraphLayoutNode,
+  type GraphProps,
+  SVG,
+  type SVGContext,
+} from '@dxos/react-ui-graph';
+import { getHashColor } from '@dxos/react-ui-theme';
 import { type SpaceGraphNode, type SpaceGraphModel, type SpaceGraphEdge } from '@dxos/schema';
 
 import '@dxos/react-ui-graph/styles/graph.css';
@@ -72,11 +81,17 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
             },
           }}
           attributes={{
-            node: (node) => ({
-              classes: {
-                'dx-selected': selection.contains(node.id),
-              },
-            }),
+            node: (node: GraphLayoutNode<SpaceGraphNode>) => {
+              const obj = node.data?.data.object;
+              return {
+                data: {
+                  color: getHashColor(obj && getTypename(obj))?.color,
+                },
+                classes: {
+                  'dx-selected': selection.contains(node.id),
+                },
+              };
+            },
           }}
           onSelect={handleSelect}
         />

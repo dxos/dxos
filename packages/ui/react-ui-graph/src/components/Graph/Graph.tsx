@@ -24,6 +24,7 @@ import { useSvgContext } from '../../hooks';
 export type GraphController = {
   refresh: () => void;
   repaint: () => void;
+  findNode: (id: string) => SVGGElement | null;
 };
 
 export type GraphProps<Node extends BaseGraphNode = any, Edge extends BaseGraphEdge = any> = ThemedClassName<
@@ -85,6 +86,9 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
       },
       repaint: () => {
         renderer.render(projector.layout);
+      },
+      findNode: (id: string) => {
+        return graphRef.current?.querySelector<SVGGElement>(`g[data-id="${id}"]`);
       },
     }),
     [model, projector, renderer],

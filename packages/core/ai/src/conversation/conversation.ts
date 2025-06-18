@@ -8,7 +8,7 @@ import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AIServiceClient } from '../service';
-import { type Message, type Tool } from '../tools';
+import { type ExecutableTool, type Message } from '../tools';
 import { type LLMModel, type GenerationStreamEvent } from '../types';
 
 export type CreateLLMConversationParams = {
@@ -22,7 +22,7 @@ export type CreateLLMConversationParams = {
    */
   system?: string;
 
-  tools: Tool[];
+  tools: ExecutableTool[];
   history?: Message[];
   client: AIServiceClient;
 
@@ -81,7 +81,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
       }
 
       invariant(tool.execute);
-      const toolResult = await tool.execute(toolCall.input);
+      const toolResult = await tool.execute(toolCall.input, {});
       switch (toolResult.kind) {
         case 'error': {
           log.warn('tool error', { message: toolResult.message });

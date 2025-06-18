@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Schema } from 'effect';
+import { type Schema } from 'effect';
 import defaulstDeep from 'lodash.defaultsdeep';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';

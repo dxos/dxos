@@ -77,14 +77,18 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
     onDone?.();
   };
 
+  if (trigger) {
+    return (
+      <ControlItem title={t('trigger editor title')}>
+        <TriggerEditor space={space} trigger={trigger} onSave={handleSave} onCancel={handleCancel} />
+      </ControlItem>
+    );
+  }
+
   return (
     <div className='flex flex-col w-full'>
-      {trigger ? (
-        <ControlItem title={t('trigger editor title')}>
-          <TriggerEditor space={space} trigger={trigger} onSave={handleSave} onCancel={handleCancel} />
-        </ControlItem>
-      ) : (
-        <div role='none' className={controlItemClasses}>
+      <div role='none' className={controlItemClasses}>
+        {triggers.length > 0 && (
           <List.Root<FunctionTrigger> items={triggers} isItem={Schema.is(FunctionTrigger)} getId={(field) => field.id}>
             {({ items: triggers }) => (
               <div role='list' className='flex flex-col w-full'>
@@ -127,10 +131,10 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
               </div>
             )}
           </List.Root>
-          {triggers.length > 0 && <Separator classNames='mlb-4' />}
-          <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
-        </div>
-      )}
+        )}
+        {triggers.length > 0 && <Separator classNames='mlb-4' />}
+        <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
+      </div>
     </div>
   );
 };
