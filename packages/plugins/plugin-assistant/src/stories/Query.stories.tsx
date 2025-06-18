@@ -388,7 +388,7 @@ const ItemList = <T extends AnyEchoObject>({ items = [] }: { items?: T[] }) => {
 
 const Log: FC<{ logger: Logger }> = ({ logger }) => {
   return (
-    <div className='grow p-1 overflow-y-auto text-xs'>
+    <div className='grow flex flex-col p-1 overflow-y-auto text-sm'>
       {logger.messages.value.map((message, index) => (
         <div key={index}>{message}</div>
       ))}

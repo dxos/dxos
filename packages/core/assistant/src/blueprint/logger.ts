@@ -33,36 +33,41 @@ export class Logger {
 }
 
 export const setLogger = (machine: BlueprintMachine, logger: Logger): CleanupFn => {
-  const log = () => {
-    logger.log(machine.state.state);
-    const step = machine.blueprint.steps.at(-1);
-    if (step) {
-      const traceStep = machine.state.trace.find((t) => t.stepId === step.id);
-      if (traceStep?.comment) {
-        logger.log(traceStep.comment);
-      }
-    }
-  };
-
-  return combine(machine.begin.on(log), machine.stepComplete.on(log));
+  return combine(
+    machine.begin.on(() => {
+      logger.log('Starting...');
+    }),
+    machine.stepStart.on((step) => {
+      const index = machine.blueprint.steps.indexOf(step);
+      logger.log(`Step ${index + 1} of ${machine.blueprint.steps.length}`);
+    }),
+    machine.stepComplete.on((step) => {
+      const trace = machine.state.trace.find((t) => t.stepId === step.id);
+      logger.log(`Complete: ${trace?.comment}`);
+    }),
+    machine.end.on(() => {
+      logger.log('OK');
+    }),
+  );
 };
 
-export const setConsolePrinter = (machine: BlueprintMachine, extraLogging = false): CleanupFn => {
+export const setConsolePrinter = (machine: BlueprintMachine, verbose = false): CleanupFn => {
   const printer = new ConsolePrinter();
   return combine(
-    extraLogging
+    machine.begin.on(() => printTrace(machine.blueprint, machine.state)),
+    machine.stepStart.on((step) =>
+      console.log(
+        `\n${chalk.magenta(`${chalk.bold(`STEP ${machine.blueprint.steps.indexOf(step) + 1} of ${machine.blueprint.steps.length}:`)} ${step.instructions}`)}\n`,
+      ),
+    ),
+    machine.stepComplete.on(() => printTrace(machine.blueprint, machine.state)),
+    machine.end.on(() => console.log('DONE')),
+    verbose
       ? [
-          machine.stepStart.on((step) =>
-            console.log(
-              `\n${chalk.magenta(`${chalk.bold(`STEP ${machine.blueprint.steps.indexOf(step) + 1} of ${machine.blueprint.steps.length}:`)} ${step.instructions}`)}\n`,
-            ),
-          ),
           machine.message.on((msg) => printer.printMessage(msg)),
           machine.block.on((block) => printer.printContentBlock(block)),
         ]
       : [],
-    machine.begin.on(() => printTrace(machine.blueprint, machine.state)),
-    machine.stepComplete.on(() => printTrace(machine.blueprint, machine.state)),
   );
 };
 
