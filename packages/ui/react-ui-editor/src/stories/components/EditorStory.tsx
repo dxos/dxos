@@ -60,7 +60,7 @@ export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
 
     return (
       <div className={mx('w-full h-full grid overflow-hidden', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
-        <EditorComponent ref={viewRef} object={object} extensions={extensions} {...props} />
+        <EditorComponent ref={viewRef} object={object} text={text} extensions={extensions} {...props} />
 
         {debug && (
           <div
@@ -130,8 +130,6 @@ export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
       }
     }, [view]);
 
-    return (
-      <div ref={parentRef} role='editor' className='flex overflow-hidden' {...attentionAttrs} {...focusAttributes} />
-    );
+    return <div ref={parentRef} className='flex overflow-hidden' {...attentionAttrs} {...focusAttributes} />;
   },
 );

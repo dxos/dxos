@@ -17,6 +17,7 @@ import {
   useTextEditor,
   RefDropdownMenu,
   type UseTextEditorProps,
+  hashtag,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
@@ -52,6 +53,7 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
           createMarkdownExtensions({ themeMode }),
           createThemeExtensions({ themeMode, slots: { scroll: { className: scrollable ? '' : '!overflow-hidden' } } }),
           outliner({ showSelected }),
+          hashtag(),
         ],
       }),
       [id, text, autoFocus, themeMode],
@@ -78,7 +80,7 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
     return (
       // TODO(burdon): Use global modal provider?
       <RefDropdownMenu.Provider>
-        <div ref={parentRef} role='editor' className={mx(classNames)} {...focusAttributes} />
+        <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />
         <DropdownMenu.Portal>
           <DropdownMenu.Content>
             <DropdownMenu.Viewport>
