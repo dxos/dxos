@@ -17,7 +17,7 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { Filter, fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
-import { useAttendableAttributes } from '@dxos/react-ui-attention';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
@@ -45,7 +45,7 @@ const WithCompanionStory = () => {
   const companionData = useMemo(() => ({ subject: message ?? 'message', companionTo: mailbox }), [message, mailbox]);
 
   // NOTE: Attention required for scrolling.
-  const attentionAttrs = useAttendableAttributes(mailbox ? fullyQualifiedId(mailbox) : undefined);
+  const attentionAttrs = useAttentionAttributes(mailbox ? fullyQualifiedId(mailbox) : undefined);
 
   if (!space || !mailbox) {
     return <div>Loading...</div>;
