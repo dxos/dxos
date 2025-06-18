@@ -19,7 +19,7 @@ import { type FindResult, type IdToHeads, type IndexQuery, type ObjectSnapshot }
 
 const DEFAULT_INDEX_UPDATE_BATCH_SIZE = 100;
 
-const DEFAULT_INDEX_COOLDOWN_TIME = 100;
+const DEFAULT_INDEX_COOLDOWN_TIME = 300;
 
 const DEFAULT_INDEX_TIME_BUDGET = 300;
 
