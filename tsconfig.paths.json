@@ -157,12 +157,6 @@
       "@dxos/plugin-outliner/types": [
         "packages/plugins/plugin-outliner/src/types/index.ts"
       ],
-      "@dxos/plugin-outliner-deprecated": [
-        "packages/plugins/plugin-outliner-deprecated/src/index.ts"
-      ],
-      "@dxos/plugin-outliner-deprecated/types": [
-        "packages/plugins/plugin-outliner-deprecated/src/types/index.ts"
-      ],
       "@dxos/plugin-presenter": [
         "packages/plugins/plugin-presenter/src/index.ts"
       ],
