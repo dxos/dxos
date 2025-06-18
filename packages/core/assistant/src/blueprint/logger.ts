@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type ReadonlySignal, signal } from '@preact/signals-core';
 import chalk from 'chalk';
 
 import { ConsolePrinter } from '@dxos/ai';
@@ -16,16 +17,34 @@ import { type BlueprintMachine, type BlueprintMachineState } from './machine';
 chalk.level = 2;
 
 export class Logger {
-  private readonly messages: string[] = [];
+  private _messages = signal<string[]>([]);
+
+  get messages(): ReadonlySignal<string[]> {
+    return this._messages;
+  }
 
   clear() {
-    this.messages.length = 0;
+    this._messages = signal([]);
   }
 
   log(message: string) {
-    this.messages.push(message);
+    this._messages = signal([...this._messages.value, message]);
   }
 }
+
+export const setLogger = (machine: BlueprintMachine, logger: Logger): CleanupFn => {
+  const log = () => {
+    logger.log(machine.state.state);
+    for (const step of machine.blueprint.steps) {
+      const traceStep = machine.state.trace.find((t) => t.stepId === step.id);
+      if (traceStep?.comment) {
+        logger.log(traceStep.comment);
+      }
+    }
+  };
+
+  return combine(machine.begin.on(log), machine.stepComplete.on(log));
+};
 
 export const setConsolePrinter = (machine: BlueprintMachine, extraLogging = false): CleanupFn => {
   const printer = new ConsolePrinter();
@@ -41,17 +60,16 @@ export const setConsolePrinter = (machine: BlueprintMachine, extraLogging = fals
           machine.block.on((block) => printer.printContentBlock(block)),
         ]
       : [],
-    machine.begin.on(() => printTrace(machine.state, machine.blueprint)),
-    machine.stepComplete.on(() => printTrace(machine.state, machine.blueprint)),
+    machine.begin.on(() => printTrace(machine.blueprint, machine.state)),
+    machine.stepComplete.on(() => printTrace(machine.blueprint, machine.state)),
   );
 };
 
-const BREAK_LINE = `\n\n${'='.repeat(40)}`;
+const BREAK_LINE = `\n${'_'.repeat(80)}\n`;
 
-const printTrace = (state: BlueprintMachineState, blueprint: Blueprint) => {
+const printTrace = (blueprint: Blueprint, state: BlueprintMachineState) => {
   console.group(chalk.bold('\nBlueprint'));
-
-  blueprint.steps.forEach((step, index) => {
+  blueprint.steps.forEach((step) => {
     const traceStep = state.trace.find((t) => t.stepId === step.id);
 
     let color = chalk.gray; // Not executed.
@@ -75,7 +93,7 @@ const printTrace = (state: BlueprintMachineState, blueprint: Blueprint) => {
 
     console.log(color(`\n${bullet} ${step.instructions}`));
     if (traceStep?.comment) {
-      console.log(chalk.white(`    ↳ ${traceStep.comment}`));
+      console.log(chalk.white(`  ↳ ${traceStep.comment}`));
     }
   });
 

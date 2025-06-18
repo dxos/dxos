@@ -6,14 +6,15 @@ import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
 import { Schema } from 'effect';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AIServiceEdgeClient, type AIServiceEdgeClientOptions } from '@dxos/ai';
 import { SpyAIService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { BlueprintParser, BlueprintMachine, setConsolePrinter } from '@dxos/assistant';
+import { BlueprintParser, BlueprintMachine, setConsolePrinter, Logger, setLogger } from '@dxos/assistant';
+import { combine } from '@dxos/async';
 import { Filter, Queue, type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
 import { type AnyEchoObject, create, getLabelForObject, getTypename, Ref } from '@dxos/echo-schema';
@@ -170,6 +171,8 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     return BlueprintParser.create(tools).parse(RESEARCH_BLUEPRINT);
   }, [space, researchGraph?.queue.dxn]);
 
+  const logger = useMemo(() => new Logger(), []);
+
   //
   // Handlers
   //
@@ -187,8 +190,9 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     log.info('starting research...', { selected });
     const { objects } = await space.db.query(Filter.ids(...selected)).run();
     const machine = new BlueprintMachine(researchBlueprint);
-    setConsolePrinter(machine, true);
+    const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));
     await machine.runToCompletion({ aiService: aiClient, input: objects });
+    cleanup();
   }, [space, aiClient, researchBlueprint, selection]);
 
   const handleGenerate = useCallback(async () => {
@@ -283,6 +287,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
               />
             </Toolbar.Root>
             <ItemList items={objects} />
+            <Log logger={logger} />
             <JsonFilter
               data={{
                 space: client.spaces.get().length,
@@ -296,7 +301,6 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
                 ast,
               }}
             />
-            <Log />
           </div>
         )}
       </div>
@@ -382,8 +386,14 @@ const ItemList = <T extends AnyEchoObject>({ items = [] }: { items?: T[] }) => {
   );
 };
 
-const Log = () => {
-  return <div>Log</div>;
+const Log: FC<{ logger: Logger }> = ({ logger }) => {
+  return (
+    <div className='grow p-1 overflow-y-auto text-xs divide-y divide-separator'>
+      {logger.messages.value.map((message, index) => (
+        <div key={index}>{message}</div>
+      ))}
+    </div>
+  );
 };
 
 const meta: Meta<typeof DefaultStory> = {
