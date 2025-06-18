@@ -11,7 +11,7 @@ import { IconButton, Popover } from '@dxos/react-ui';
 import { hoverableHidden } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { EditorStory } from './util';
+import { EditorStory } from './components';
 import { RefPopover, useRefPopover } from '../components';
 import {
   preview,
@@ -108,8 +108,8 @@ const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLook
 
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/Preview',
+  component: EditorStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: EditorStory,
   parameters: { layout: 'fullscreen' },
 };
 

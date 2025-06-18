@@ -8,14 +8,14 @@ import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { useAttendableAttributes } from './AttentionProvider';
+import { useAttentionAttributes } from './AttentionProvider';
 import { withAttention } from '../testing';
 
 const Attendable = ({ id }: { id: string }) => {
-  const attendableAttrs = useAttendableAttributes(id);
+  const attentionAttrs = useAttentionAttributes(id);
 
   return (
-    <div {...attendableAttrs}>
+    <div {...attentionAttrs}>
       <textarea className='attention-surface resize-none' placeholder={id} />
     </div>
   );
