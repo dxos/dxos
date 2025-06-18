@@ -17,6 +17,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 
+import { Contact, Organization, Project, Task } from './test-schema';
 import {
   formatInferredRelationshipLabel,
   formatNodeLabel,
@@ -24,7 +25,6 @@ import {
   type Node,
   type Relationship,
 } from '../cypher';
-import { Contact, Organization, Project, Task } from '../testing';
 
 export const seedTestData = (db: EchoDatabase) => {
   const contactRich = db.add(

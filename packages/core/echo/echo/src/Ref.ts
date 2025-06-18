@@ -19,3 +19,8 @@ export const fromDXN = EchoSchema.Ref.fromDXN;
  * Extract reference target.
  */
 export type Target<R extends Any> = R extends EchoSchema.Ref<infer T> ? T : never;
+
+/**
+ * Reference resolver.
+ */
+export type Resolver = EchoSchema.RefResolver;

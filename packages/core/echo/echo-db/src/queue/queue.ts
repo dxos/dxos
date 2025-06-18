@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Obj, type Ref } from '@dxos/echo';
 import { type AnyEchoObject, type HasId, getTypename } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import type { QueuesService } from './queue-service';
 import type { Queue } from './types';
@@ -27,6 +29,7 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
 
   constructor(
     private readonly _service: QueuesService,
+    private readonly _refResolver: Ref.Resolver,
     private readonly _dxn: DXN,
   ) {
     const { subspaceTag, spaceId, queueId } = this._dxn.asQueueDXN() ?? {};
@@ -42,6 +45,7 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
     };
   }
 
+  // TODO(burdon): Rename to objects.
   get dxn() {
     return this._dxn;
   }
@@ -75,8 +79,14 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
     this._signal.notifyWrite();
 
     try {
-      await this._service.insertIntoQueue(this._subspaceTag, this._spaceId, this._queueId, items);
+      await this._service.insertIntoQueue(
+        this._subspaceTag,
+        this._spaceId,
+        this._queueId,
+        items.map((item) => Obj.toJSON(item)),
+      );
     } catch (err) {
+      log.catch(err);
       this._error = err as Error;
       this._signal.notifyWrite();
     }
@@ -110,9 +120,18 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
         return;
       }
 
-      changed = objectSetChanged(this._objects, objects as AnyEchoObject[]);
+      const decodedObjects = await Promise.all(
+        objects.map((obj) => Obj.fromJSON(obj, { refResolver: this._refResolver })),
+      );
+      if (thisRefreshId !== this._refreshId) {
+        return;
+      }
+
+      changed = objectSetChanged(this._objects, decodedObjects);
+
       this._objects = objects as T[];
     } catch (err) {
+      log.catch(err);
       this._error = err as Error;
     } finally {
       this._isLoading = false;

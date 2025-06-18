@@ -11,14 +11,14 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { EditorStory, content } from './util';
+import { EditorStory, content } from './components';
 import { typewriter, blast, defaultOptions, dropFile } from '../extensions';
 import { str } from '../testing';
 
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/Experimental',
+  component: EditorStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: EditorStory,
   parameters: { layout: 'fullscreen' },
 };
 

@@ -21,11 +21,9 @@ import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { Config } from '@dxos/react-client';
 import { DataTypes } from '@dxos/schema';
 
-export const testPlugins = ({
-  config,
-  types = [],
-  indexConfig,
-}: { config?: ConfigProto; types?: Schema.Schema.AnyNoContext[]; indexConfig?: IndexConfig } = {}) => [
+type TestPluginsOptions = { config?: ConfigProto; types?: Schema.Schema.AnyNoContext[]; indexConfig?: IndexConfig; };
+
+export const testPlugins = ({ config, types = DataTypes, indexConfig }: TestPluginsOptions = {}) => [
   ClientPlugin({
     config: new Config(
       defaulstDeep({}, config, {
@@ -38,19 +36,16 @@ export const testPlugins = ({
         },
       }),
     ),
-    types: DataTypes,
+    types,
     onClientInitialized: async (_, client) => {
       log.info('testPlugins.onClientInitialized', { types });
       if (!client.halo.identity.get()) {
         await client.halo.createIdentity();
       }
 
-      client.addTypes(types);
-
-      // TODO(burdon): Not working.
       if (indexConfig) {
         // TODO(burdon): Rename services.services?
-        // await client.services.services.QueryService!.setConfig(indexConfig);
+        await client.services.services.QueryService!.setConfig(indexConfig);
       }
     },
   }),

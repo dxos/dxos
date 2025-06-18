@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+
+import { type CleanupFn, addEventListener } from '@dxos/async';
 
 import { closeEffect, openEffect } from './action';
 
@@ -17,7 +19,8 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
     class {
       view: EditorView;
       tag: HTMLElement;
-      rafId: number | null = null;
+      rafId?: number | null;
+      cleanup?: CleanupFn;
 
       constructor(view: EditorView) {
         this.view = view;
@@ -28,31 +31,53 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
           container.style.position = 'relative';
         }
 
-        const icon = document.createElement('dx-icon');
-        icon.setAttribute('icon', options.icon ?? 'ph--dots-three-outline--regular');
+        {
+          const icon = document.createElement('dx-icon');
+          icon.setAttribute('icon', options.icon ?? 'ph--dots-three-vertical--regular');
 
-        const button = document.createElement('button');
-        button.appendChild(icon);
-        button.classList.add('grid', 'items-center', 'justify-center', 'w-8', 'h-8');
+          const button = document.createElement('button');
+          button.appendChild(icon);
 
-        // TODO(burdon): Custom tag/styles?
-        this.tag = document.createElement('dx-ref-tag');
-        this.tag.classList.add('border-none', 'fixed', 'p-0');
-        this.tag.appendChild(button);
+          this.tag = document.createElement('dx-ref-tag');
+          this.tag.classList.add('cm-ref-tag');
+          this.tag.appendChild(button);
+        }
+
         container.appendChild(this.tag);
 
         // Listen for scroll events.
-        container.addEventListener('scroll', this.scheduleUpdate.bind(this));
+        const handler = () => this.scheduleUpdate();
+        this.cleanup = addEventListener(container, 'scroll', handler);
         this.scheduleUpdate();
       }
 
+      destroy() {
+        this.cleanup?.();
+        this.tag.remove();
+        if (this.rafId != null) {
+          cancelAnimationFrame(this.rafId);
+        }
+      }
+
       update(update: ViewUpdate) {
+        this.tag.dataset.focused = update.view.hasFocus ? 'true' : 'false';
+        if (!update.view.hasFocus) {
+          return;
+        }
+
         // TODO(burdon): Timer to fade in/out.
         if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(openEffect)))) {
           this.tag.style.display = 'none';
+          this.tag.classList.add('opacity-10');
         } else if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(closeEffect)))) {
           this.tag.style.display = 'block';
-        } else if (update.selectionSet || update.viewportChanged || update.docChanged || update.geometryChanged) {
+        } else if (
+          update.docChanged ||
+          update.focusChanged ||
+          update.geometryChanged ||
+          update.selectionSet ||
+          update.viewportChanged
+        ) {
           this.scheduleUpdate();
         }
       }
@@ -85,13 +110,28 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
 
         this.rafId = requestAnimationFrame(this.updateButtonPosition.bind(this));
       }
-
-      destroy() {
-        this.tag.remove();
-        if (this.rafId != null) {
-          cancelAnimationFrame(this.rafId);
-        }
-      }
     },
   ),
+
+  EditorView.theme({
+    '.cm-ref-tag': {
+      position: 'fixed',
+      padding: '0',
+      border: 'none',
+      opacity: '0',
+    },
+    '[data-has-focus] & .cm-ref-tag': {
+      opacity: '1',
+    },
+    '[data-is-attention-source] & .cm-ref-tag': {
+      opacity: '1',
+    },
+    '.cm-ref-tag button': {
+      display: 'grid',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '2rem',
+      height: '2rem',
+    },
+  }),
 ];

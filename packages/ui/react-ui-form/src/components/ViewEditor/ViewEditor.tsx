@@ -6,9 +6,9 @@ import { Schema } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo-db';
-import { Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
+import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, inputTextLabel, mx } from '@dxos/react-ui-theme';
 import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
@@ -54,7 +54,11 @@ export const ViewEditor = ({
   onDelete,
 }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
-  const projection = useMemo(() => new ViewProjection(toJsonSchema(schema), view), [schema, view]);
+  const projection = useMemo(() => {
+    // Use reactive and mutable version of json schema when schema is mutable.
+    const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
+    return new ViewProjection(jsonSchema, view);
+  }, [schema, view]);
   const [field, setField] = useState<FieldType>();
   const immutable = readonly || !isMutable(schema);
 
@@ -68,9 +72,15 @@ export const ViewEditor = ({
     };
   }, [view]);
 
-  const handleSelect = useCallback((field: FieldType) => {
-    setField((f) => (f === field ? undefined : field));
-  }, []);
+  const handleSelect = useCallback(
+    (field: FieldType) => {
+      if (immutable) {
+        return;
+      }
+      setField((f) => (f === field ? undefined : field));
+    },
+    [immutable],
+  );
 
   // TODO(burdon): Check if mutable; variant of useCallback that return undefined if readonly?
 
@@ -88,12 +98,12 @@ export const ViewEditor = ({
           view.name = name;
         }
 
-        if (view.query.typename !== typename) {
+        if (view.query.typename !== typename && !immutable) {
           onTypenameChanged?.(typename);
         }
       });
     },
-    [schema, view, onTypenameChanged],
+    [schema, view, onTypenameChanged, immutable],
   );
 
   const handleDelete = useCallback(
@@ -142,11 +152,21 @@ export const ViewEditor = ({
 
   return (
     <div role='none' className={mx('overflow-y-auto', classNames)}>
+      {immutable && (
+        <div role='none' className='mbe-2'>
+          <Message.Root valence='neutral' className='rounded'>
+            <Message.Title>
+              <Icon icon='ph--info--regular' size={5} classNames='inline' /> {t('system schema title')}
+            </Message.Title>
+            <Message.Body>{t('system schema description')}</Message.Body>
+          </Message.Root>
+        </div>
+      )}
       <Form<ViewMetaType>
         autoSave
         schema={ViewMetaSchema}
         values={viewValues}
-        onSave={immutable ? undefined : handleUpdate}
+        onSave={handleUpdate}
         classNames='min-bs-0 overflow-y-auto'
       />
 
@@ -173,7 +193,11 @@ export const ViewEditor = ({
 
               <div role='list' className='flex flex-col w-full'>
                 {fields?.map((field) => (
-                  <List.Item<FieldType> key={field.id} item={field} classNames={mx(grid, ghostHover, 'cursor-pointer')}>
+                  <List.Item<FieldType>
+                    key={field.id}
+                    item={field}
+                    classNames={mx(grid, ghostHover, !immutable && 'cursor-pointer')}
+                  >
                     <List.ItemDragHandle />
                     <List.ItemTitle onClick={() => handleSelect(field)}>{field.path}</List.ItemTitle>
                     <div className='flex items-center gap-2 -ml-4'>
@@ -214,7 +238,7 @@ export const ViewEditor = ({
                     <List.Item<string>
                       key={property}
                       item={property}
-                      classNames={mx(grid, ghostHover, 'cursor-pointer')}
+                      classNames={mx(grid, ghostHover, !immutable && 'cursor-pointer')}
                     >
                       <div />
                       <List.ItemTitle>{property}</List.ItemTitle>

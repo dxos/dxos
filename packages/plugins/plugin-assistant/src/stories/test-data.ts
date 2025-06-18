@@ -93,7 +93,7 @@ const testRelationships: Record<
   ],
 };
 
-export const addTestData = (space: Space): void => {
+export const addTestData = async (space: Space): Promise<void> => {
   const objectMap = new Map<string, Live<any>>();
 
   for (const [typename, objects] of Object.entries(testObjects)) {
