@@ -29,6 +29,7 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
   private _isLoading = true;
   private _error: Error | null = null;
   private _refreshId = 0;
+  private _querying = false;
 
   constructor(
     private readonly _service: QueuesService,
@@ -118,18 +119,26 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
   async queryObjects(): Promise<T[]> {
     const { objects } = await this._service.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
     const decodedObjects = await Promise.all(
-      objects.map((obj) => Obj.fromJSON(obj, { refResolver: this._refResolver })),
+      objects.map(async (obj) => {
+        const decoded = await Obj.fromJSON(obj, { refResolver: this._refResolver });
+        this._objectCache.set(decoded.id, decoded as T);
+        return decoded;
+      }),
     );
-    for (const obj of decodedObjects) {
-      this._objectCache.set(obj.id, obj as T);
-    }
     return decodedObjects as T[];
   }
 
   async getObjectsById(ids: ObjectId[]): Promise<(T | null)[]> {
     const missingIds = ids.filter((id) => !this._objectCache.has(id));
     if (missingIds.length > 0) {
-      await this.queryObjects();
+      if (!this._querying) {
+        try {
+          this._querying = true;
+          await this.queryObjects();
+        } finally {
+          this._querying = false;
+        }
+      }
     }
     return ids.map((id) => this._objectCache.get(id) ?? null);
   }
