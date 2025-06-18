@@ -41,7 +41,6 @@ type ActiveQuery = {
   executor: QueryExecutor;
   sendResults: (results: QueryResult[]) => void;
   close: () => Promise<void>;
-  shouldUpdate: boolean;
 };
 
 export class QueryServiceImpl extends Resource implements QueryService {
@@ -55,16 +54,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   });
 
   private readonly _updateQueries = new DeferredTask(this._ctx, async () => {
-    const queriesToUpdate = Array.from(this._queries).filter((query) => query.shouldUpdate);
-    queriesToUpdate.forEach((query) => {
-      query.shouldUpdate = false;
-    });
-
-    if (queriesToUpdate.length === 0) {
-      return;
-    }
-
-    const tasks = Array.from(queriesToUpdate).map((query) => {
+    const tasks = Array.from(this._queries).map((query) => {
       return async () => {
         try {
           const { changed } = await query.executor.execQuery();
@@ -107,7 +97,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   override async _open(): Promise<void> {
     this._params.indexer.updated.on(this._ctx, () => {
       this._queries.forEach((query) => {
-        query.shouldUpdate = true;
+        query.updateMode = 'normal';
       });
       this._updateQueries.schedule();
     });
@@ -143,15 +133,18 @@ export class QueryServiceImpl extends Resource implements QueryService {
         },
         close: async () => {
           close();
-          await queryEntry.executor.close();
           this._queries.delete(queryEntry);
+          await queryEntry.executor.close();
         },
-        shouldUpdate: true,
       };
-      this._queries.add(queryEntry);
       queueMicrotask(async () => {
         try {
           await queryEntry.executor.open();
+          await this._scheduler.schedule(async () => {
+            await queryEntry.executor.execQuery();
+            queryEntry.sendResults(queryEntry.executor.getResults());
+          });
+          this._queries.add(queryEntry);
           this._updateQueries.schedule();
         } catch (err) {
           close(err as Error);
