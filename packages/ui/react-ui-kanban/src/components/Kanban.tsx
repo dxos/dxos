@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { useSelectionActions, useSelected, AttentionGlyph } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
-import { Stack, StackItem, autoScrollRootAttributes, railGridHorizontalContainFitContent } from '@dxos/react-ui-stack';
+import { Stack, StackItem, autoScrollRootAttributes, CardStack, CardStackDragPreview } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
 import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanModel } from '../defs';
@@ -80,27 +80,12 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             prevSiblingId={prevSiblingId}
             nextSiblingId={nextSiblingId}
           >
-            <div
-              role='none'
-              className={mx(
-                'shrink min-bs-0 bg-baseSurface border border-separator rounded-md grid dx-focus-ring-group-x-indicator kanban-drop',
-                railGridHorizontalContainFitContent,
-              )}
-              data-scroll-separator='false'
-            >
-              <Stack
+            <CardStack.Root>
+              <CardStack.Content
                 id={columnValue}
-                orientation='vertical'
-                size='contain'
-                rail={false}
-                classNames={
-                  /* NOTE(thure): Do not let this element have zero intrinsic size, otherwise the drop indicator will not display. See #9035. */
-                  ['plb-1', cards.length > 0 && 'plb-2']
-                }
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
                 getDropElement={getColumnDropElement}
-                separatorOnScroll={9}
               >
                 {cards.map((card, cardIndex, cardsArray) => (
                   <StackItem.Root
@@ -159,34 +144,20 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     </StackItem.DragPreview>
                   </StackItem.Root>
                 ))}
-              </Stack>
+              </CardStack.Content>
 
               {onAddCard && (
-                <div
-                  role='none'
-                  className='plb-2 mli-2 border-bs border-transparent [[data-scroll-separator-end="true"]_&]:border-subduedSeparator'
-                >
+                <CardStack.Footer>
                   <IconButton
                     icon='ph--plus--regular'
                     label={t('add card label')}
                     onClick={() => handleAddCard(columnValue)}
                     classNames='is-full'
                   />
-                </div>
+                </CardStack.Footer>
               )}
 
-              <StackItem.Heading classNames='mli-2 order-first bg-transparent rounded-bs-md'>
-                {!uncategorized && (
-                  <StackItem.DragHandle asChild>
-                    <IconButton
-                      iconOnly
-                      icon='ph--dots-six-vertical--regular'
-                      variant='ghost'
-                      label={t('column drag handle label')}
-                      classNames='pli-2'
-                    />
-                  </StackItem.DragHandle>
-                )}
+              <CardStack.Heading draggable={!uncategorized}>
                 <Tag
                   palette={color as any}
                   data-uncategorized={uncategorized}
@@ -194,18 +165,8 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 >
                   {title}
                 </Tag>
-                {/* NOTE(ZaymonFC): We're just going to manipulate status with the ViewEditor for now. */}
-                {/* {onRemoveEmptyColumn && cards.length < 1 && (
-                  <IconButton
-                    iconOnly
-                    variant='ghost'
-                    icon='ph--x--regular'
-                    label={t('remove empty column label')}
-                    onClick={() => onRemoveEmptyColumn(columnValue)}
-                  />
-                )} */}
-              </StackItem.Heading>
-            </div>
+              </CardStack.Heading>
+            </CardStack.Root>
             <StackItem.DragPreview>
               {({ item }) => {
                 // Find the column data for this item
@@ -219,49 +180,34 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 const uncategorized = columnValue === UNCATEGORIZED_VALUE;
 
                 return (
-                  <div className='p-2'>
-                    <div className='rounded-md max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface border border-separator ring-focusLine ring-neutralFocusIndicator flex flex-col'>
-                      {/* Column Header */}
-                      <div className='flex items-center p-2'>
-                        <IconButton
-                          iconOnly
-                          icon='ph--dots-six-vertical--regular'
-                          variant='ghost'
-                          label={t('column drag handle label')}
-                          classNames='pli-2'
-                        />
-                        <Tag
-                          palette={color as any}
-                          data-uncategorized={uncategorized}
-                          classNames='mis-1 data-[uncategorized="true"]:mis-2'
-                        >
-                          {title}
-                        </Tag>
-                      </div>
-
-                      {/* Cards Container */}
-                      <div
-                        className={mx(
-                          'overflow-y-auto flex-1 pli-2 flex flex-col gap-2',
-                          'plb-1',
-                          cards.length > 0 && 'plb-2',
-                        )}
+                  <CardStackDragPreview.Root>
+                    {/* Column Header */}
+                    <CardStackDragPreview.Heading>
+                      <Tag
+                        palette={color as any}
+                        data-uncategorized={uncategorized}
+                        classNames='mis-1 data-[uncategorized="true"]:mis-2'
                       >
-                        {cards.map((card) => (
-                          <div key={card.id} role='none' className={kanbanCardStyles}>
-                            <Surface role='card--kanban' limit={1} data={{ subject: card }} />
-                          </div>
-                        ))}
-                      </div>
+                        {title}
+                      </Tag>
+                    </CardStackDragPreview.Heading>
 
-                      {/* Add Card Button */}
-                      {onAddCard && (
-                        <div className='p-2 border-t border-separator'>
-                          <IconButton icon='ph--plus--regular' label={t('add card label')} classNames='is-full' />
+                    {/* Cards Container */}
+                    <CardStackDragPreview.Content itemsCount={cards.length}>
+                      {cards.map((card) => (
+                        <div key={card.id} role='none' className={kanbanCardStyles}>
+                          <Surface role='card--kanban' limit={1} data={{ subject: card }} />
                         </div>
-                      )}
-                    </div>
-                  </div>
+                      ))}
+                    </CardStackDragPreview.Content>
+
+                    {/* Add Card Button */}
+                    {onAddCard && (
+                      <CardStackDragPreview.Footer>
+                        <IconButton icon='ph--plus--regular' label={t('add card label')} classNames='is-full' />
+                      </CardStackDragPreview.Footer>
+                    )}
+                  </CardStackDragPreview.Root>
                 );
               }}
             </StackItem.DragPreview>
