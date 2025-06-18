@@ -124,8 +124,6 @@ export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
 
     useImperativeHandle(forwardedRef, () => view, [view]);
 
-    console.log(attentionAttrs, focusAttributes);
-
     useEffect(() => {
       if (view) {
         onReady?.(view);
