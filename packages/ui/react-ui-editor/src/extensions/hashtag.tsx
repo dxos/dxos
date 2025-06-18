@@ -13,7 +13,7 @@ import {
   WidgetType,
 } from '@codemirror/view';
 
-import { getHashColor } from '@dxos/react-ui-theme';
+import { getHashColor, mx } from '@dxos/react-ui-theme';
 
 class TagWidget extends WidgetType {
   constructor(private _text: string) {
@@ -22,9 +22,8 @@ class TagWidget extends WidgetType {
 
   toDOM(): HTMLSpanElement {
     const span = document.createElement('span');
-    span.className = 'cm-tag';
+    span.className = mx('cm-tag', getHashColor(this._text).tag);
     span.textContent = this._text;
-    span.style.setProperty('--dx-tagColor', getHashColor(this._text).color);
     return span;
   }
 }
@@ -61,14 +60,9 @@ export const hashtag = (): Extension => [
 
   EditorView.theme({
     '.cm-tag': {
-      border: 'red',
       borderRadius: '4px',
       marginRight: '6px',
-      padding: '2px 4px',
-      color: 'var(--dx-baseSurface)',
-      backgroundColor: 'var(--dx-tagColor)',
-      fontSize: '12px',
-      verticalAlign: 'text-bottom',
+      padding: '2px 6px',
     },
   }),
 ];
