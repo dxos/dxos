@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import type { QueuesService } from './queue-service';
 import type { Queue } from './types';
 
-const TRACE_QUEUE_LOAD = true;
+const TRACE_QUEUE_LOAD = false;
 
 /**
  * Client-side view onto an EDGE queue.

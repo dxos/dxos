@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import { Schema } from 'effect';
+import { Match, Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AIServiceEdgeClient, type AIServiceEdgeClientOptions } from '@dxos/ai';
@@ -14,7 +14,7 @@ import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { BlueprintParser, BlueprintMachine, setConsolePrinter } from '@dxos/assistant';
-import { Filter, Queue, type Space } from '@dxos/client/echo';
+import { Filter, Queue, type EchoDatabase, type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
 import { type AnyEchoObject, create, getLabelForObject, getTypename, Ref } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
@@ -34,7 +34,7 @@ import {
 import { List } from '@dxos/react-ui-list';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { getHashColor, mx } from '@dxos/react-ui-theme';
-import { DataType, SpaceGraphModel } from '@dxos/schema';
+import { DataType, DataTypes, Employer, SpaceGraphModel } from '@dxos/schema';
 import { createObjectFactory, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -281,6 +281,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
                 label='reset'
                 onClick={(event) => handleReset(event.shiftKey)}
               />
+              <FlushButton db={space?.db} />
             </Toolbar.Root>
             <ItemList items={objects} />
             <JsonFilter
@@ -381,6 +382,47 @@ const ItemList = <T extends AnyEchoObject>({ items = [] }: { items?: T[] }) => {
   );
 };
 
+const FlushButton = ({ db }: { db?: EchoDatabase }) => {
+  const [state, setState] = useState<'idle' | 'flushing' | 'flushed'>('idle');
+
+  const resetTimer = useRef<NodeJS.Timeout | null>(null);
+  const handleFlush = useCallback(() => {
+    if (!db) {
+      return;
+    }
+
+    queueMicrotask(async () => {
+      if (resetTimer.current) {
+        clearTimeout(resetTimer.current);
+      }
+
+      setState('flushing');
+      await db.flush();
+      setState('flushed');
+
+      resetTimer.current = setTimeout(() => {
+        setState('idle');
+        resetTimer.current = null;
+      }, 1000);
+    });
+  }, [db]);
+
+  return (
+    <IconButton
+      icon={Match.value(state).pipe(
+        Match.when('idle', () => 'ph--floppy-disk--regular'),
+        Match.when('flushing', () => 'ph--spinner--regular'),
+        Match.when('flushed', () => 'ph--check--regular'),
+        Match.exhaustive,
+      )}
+      iconOnly
+      label={state === 'flushing' ? 'flushing...' : state === 'flushed' ? 'flushed!' : 'flush'}
+      onClick={handleFlush}
+      disabled={state === 'flushing'}
+    />
+  );
+};
+
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-assistant/Query',
   render: DefaultStory,
@@ -388,7 +430,7 @@ const meta: Meta<typeof DefaultStory> = {
     withPluginManager({
       fireEvents: [Events.SetupArtifactDefinition],
       plugins: testPlugins({
-        types: [ResearchGraph],
+        types: [ResearchGraph, ...DataTypes],
         config: {
           runtime: {
             client: {
