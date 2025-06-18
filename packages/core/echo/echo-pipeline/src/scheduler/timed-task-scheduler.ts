@@ -4,6 +4,7 @@
 
 import { DeferredTask, sleepWithContext, asyncTimeout } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
+import { option } from 'fast-check';
 
 const DEFAULT_TIMEOUT = 30_000;
 
@@ -142,33 +143,25 @@ export class TimedTaskScheduler<T = void> extends Resource {
 
   /**
    * Adds tasks to execution queue.
+   * @param task - The task function to be executed.
+   * @param options - Optional parameters for the task, such as timeout.
+   * @param options.timeout - The maximum time to wait for the task to complete.
+   *                          Defaults to 30 seconds if not specified.
    * @returns An array of promises that resolve to the results of the tasks.
    */
-  schedule(
-    tasks: {
-      run: Task<T>['run'];
-      /**
-       * Timeout for the task.
-       * @default 30 seconds timeout.
-       */
-      timeout?: Task<T>['timeout'];
-    }[],
-  ): Promise<T>[] {
-    const tasksToSchedule = tasks.map(({ run, timeout }) => {
-      const task = {
-        run,
-        timeout: timeout ?? DEFAULT_TIMEOUT,
-      } as Task<T>;
+  schedule(task: Task<T>['run'], options?: Pick<Task<T>, 'timeout'>): Promise<T> {
+    const taskToSchedule = {
+      run: task,
+      timeout: options?.timeout ?? DEFAULT_TIMEOUT,
+    } as Task<T>;
 
-      task.result = new Promise<T>((resolve, reject) => {
-        task.resolve = resolve;
-        task.reject = reject;
-      });
-      return task;
+    taskToSchedule.result = new Promise<T>((resolve, reject) => {
+      taskToSchedule.resolve = resolve;
+      taskToSchedule.reject = reject;
     });
-    this._executionQueue.push(...tasksToSchedule);
+    this._executionQueue.push(taskToSchedule);
     this._executor!.schedule();
 
-    return tasksToSchedule.map((task) => task.result);
+    return taskToSchedule.result;
   }
 }
