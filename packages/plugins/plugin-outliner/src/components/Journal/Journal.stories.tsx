@@ -7,14 +7,14 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
-import { useSpace } from '@dxos/react-client/echo';
+import { makeRef, live, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Journal } from './Journal';
 import translations from '../../translations';
-import { createJournal, JournalEntryType, JournalType, OutlineType } from '../../types';
+import { createJournal, createJournalEntry, JournalEntryType, JournalType, OutlineType } from '../../types';
 
 const meta: Meta<typeof Journal> = {
   title: 'plugins/plugin-outliner/Journal',
@@ -53,6 +53,19 @@ export const Default: Story = {
   },
 };
 
+export const Jounals: Story = {
+  args: {
+    journal: live(JournalType, {
+      name: 'Journal 1',
+      entries: [
+        makeRef(createJournalEntry()),
+        makeRef(createJournalEntry(new Date(Date.now() - 5 * 24 * 60 * 60 * 1_000))),
+        makeRef(createJournalEntry(new Date(2025, 0, 1))),
+      ],
+    }),
+  },
+};
+
 const FocusContainer = ({ id }: { id: string }) => {
   const [focused, setFocused] = useState(false);
   return (
@@ -63,9 +76,11 @@ const FocusContainer = ({ id }: { id: string }) => {
       className='group'
       {...{ 'data-has-focus': focused ? true : undefined }}
     >
-      <div className='flex gap-2 p-2 group-data-[has-focus]:outline'>
-        <input type='text' />
-        <button onClick={() => setFocused(true)}>Focus</button>
+      <div>
+        <div className='flex gap-2 p-2 group-data-[has-focus]:outline'>
+          <input type='text' />
+          <button onClick={() => setFocused(true)}>Focus</button>
+        </div>
       </div>
     </div>
   );
