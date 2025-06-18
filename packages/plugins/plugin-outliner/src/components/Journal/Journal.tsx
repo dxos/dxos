@@ -97,6 +97,7 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
       className={mx('group flex flex-col', classNames)}
       onFocusCapture={() => setFocused(true)}
       onBlurCapture={() => setFocused(false)}
+      // TODO(burdon): Experiment with `peer-focus-within` Tailwind selector.
       {...{ 'data-has-focus': focused ? true : undefined }}
     >
       <div className='flex items-center gap-2 bg-transparent'>

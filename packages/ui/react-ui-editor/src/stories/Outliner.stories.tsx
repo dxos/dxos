@@ -13,7 +13,7 @@ import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory } from './components';
 import { RefDropdownMenu } from '../components';
-import { outliner, listItemToString, treeFacet, deleteItem } from '../extensions';
+import { outliner, listItemToString, treeFacet, deleteItem, hashtag } from '../extensions';
 import { str } from '../testing';
 
 type StoryProps = {
@@ -34,7 +34,7 @@ const DefaultStory = ({ text }: StoryProps) => {
       <EditorStory
         ref={viewRef}
         text={text}
-        extensions={[outliner()]}
+        extensions={[outliner(), hashtag()]}
         placeholder=''
         slots={{}}
         debug='raw+tree'
