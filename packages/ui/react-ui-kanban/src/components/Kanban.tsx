@@ -81,7 +81,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             nextSiblingId={nextSiblingId}
           >
             <CardStack.Root>
-              <CardStack.Content
+              <CardStack.Stack
                 id={columnValue}
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
@@ -144,7 +144,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     </StackItem.DragPreview>
                   </StackItem.Root>
                 ))}
-              </CardStack.Content>
+              </CardStack.Stack>
 
               {onAddCard && (
                 <CardStack.Footer>
@@ -157,15 +157,20 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 </CardStack.Footer>
               )}
 
-              <CardStack.Heading draggable={!uncategorized}>
-                <Tag
-                  palette={color as any}
-                  data-uncategorized={uncategorized}
-                  classNames='mis-1 data-[uncategorized="true"]:mis-2'
-                >
-                  {title}
-                </Tag>
-              </CardStack.Heading>
+              <StackItem.Heading asChild>
+                <CardStack.Heading>
+                  <StackItem.DragHandle asChild>
+                    <CardStack.DragHandle />
+                  </StackItem.DragHandle>
+                  <Tag
+                    palette={color as any}
+                    data-uncategorized={uncategorized}
+                    classNames='mis-1 data-[uncategorized="true"]:mis-2'
+                  >
+                    {title}
+                  </Tag>
+                </CardStack.Heading>
+              </StackItem.Heading>
             </CardStack.Root>
             <StackItem.DragPreview>
               {({ item }) => {
