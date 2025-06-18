@@ -40,6 +40,7 @@ export const setLogger = (machine: BlueprintMachine, logger: Logger): CleanupFn 
     machine.stepStart.on((step) => {
       const index = machine.blueprint.steps.indexOf(step);
       logger.log(`Step ${index + 1} of ${machine.blueprint.steps.length}`);
+      logger.log(`Instructions: ${step.instructions}`);
     }),
     machine.stepComplete.on((step) => {
       const trace = machine.state.trace.find((t) => t.stepId === step.id);

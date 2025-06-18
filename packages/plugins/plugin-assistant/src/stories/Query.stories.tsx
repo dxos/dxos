@@ -390,7 +390,9 @@ const Log: FC<{ logger: Logger }> = ({ logger }) => {
   return (
     <div className='grow flex flex-col p-1 overflow-y-auto text-sm'>
       {logger.messages.value.map((message, index) => (
-        <div key={index}>{message}</div>
+        <div key={index} className='text-subdued'>
+          {message}
+        </div>
       ))}
     </div>
   );
