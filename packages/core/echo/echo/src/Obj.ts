@@ -10,7 +10,6 @@ import type { DXN } from '@dxos/keys';
 import * as LiveObject from '@dxos/live-object';
 
 import type * as Ref from './Ref';
-import type * as Type from './Type';
 
 export type Any = EchoSchema.AnyEchoObject;
 
@@ -22,24 +21,26 @@ export const isObject = (obj: unknown): obj is Any => {
 };
 
 /**
- * Check that object or relation is an instance of a schema.
+ * Test if object or relation is an instance of a schema.
  * @example
  * ```ts
  * const person = Obj.make(Person, { name: 'John' });
- * const isPerson = Obj.instanceOf(Person);
- * isPerson(person); // true
+ * const isPerson = Obj.instanceOf(Person)(pseron);
  * ```
  */
-export const instanceOf: {
-  <S extends Type.Relation.Any | Type.Obj.Any>(schema: S): (value: unknown) => value is S;
-  <S extends Type.Relation.Any | Type.Obj.Any>(schema: S, value: unknown): value is S;
-} = ((...args: any[]) => {
-  if (args.length === 1) {
-    return (obj: unknown) => EchoSchema.isInstanceOf(args[0], obj);
-  }
+export const instanceOf = EchoSchema.isInstanceOf;
 
-  return EchoSchema.isInstanceOf(args[0], args[1]);
-}) as any;
+// TODO(burdon): Remove overloaded version since it erases the type information.
+// export const instanceOf: {
+//   <S extends Type.Relation.Any | Type.Obj.Any>(schema: S): (value: unknown) => value is S;
+//   <S extends Type.Relation.Any | Type.Obj.Any>(schema: S, value: unknown): value is S;
+// } = ((...args: any[]) => {
+//   if (args.length === 1) {
+//     return (obj: unknown) => EchoSchema.isInstanceOf(args[0], obj);
+//   }
+
+//   return EchoSchema.isInstanceOf(args[0], args[1]);
+// }) as any;
 
 export const getSchema = EchoSchema.getSchema;
 

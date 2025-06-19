@@ -9,7 +9,7 @@ import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { createArtifactElement, VersionPin } from '@dxos/assistant';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
@@ -82,7 +82,7 @@ export default () => {
           const game = await extensions.space.db
             .query(Filter.ids(ArtifactId.toDXN(id, extensions.space.id).toString()))
             .first();
-          invariant(isInstanceOf(ChessType, game));
+          invariant(Obj.instanceOf(ChessType, game));
 
           return ToolResult.Success(game.fen);
         },
@@ -103,7 +103,7 @@ export default () => {
           const game = await extensions.space.db
             .query(Filter.ids(ArtifactId.toDXN(id, extensions.space.id).toString()))
             .first();
-          invariant(isInstanceOf(ChessType, game));
+          invariant(Obj.instanceOf(ChessType, game));
 
           const board = new Chess(game.fen);
           try {

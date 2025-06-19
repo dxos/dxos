@@ -13,7 +13,7 @@ import {
   type PromiseIntentDispatcher,
   type PluginContext,
 } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
@@ -23,11 +23,11 @@ import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
 import {
   type Space,
   Filter,
+  Query,
+  type QueryResult,
   fullyQualifiedId,
   getSpace,
   isSpace,
-  Query,
-  type QueryResult,
   isEchoObject,
 } from '@dxos/react-client/echo';
 
@@ -227,7 +227,7 @@ const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space):
   }
 
   const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { space }));
-  invariant(isInstanceOf(AIChatType, data?.object));
+  invariant(Obj.instanceOf(AIChatType, data?.object));
   await dispatch(createIntent(SpaceAction.AddObject, { target: space, object: data.object }));
   return data.object;
 };

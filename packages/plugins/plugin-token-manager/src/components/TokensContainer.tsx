@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import React, { useCallback, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { live, Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
@@ -43,7 +43,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
       const result = await dispatch(
         createIntent(SpaceAction.AddObject, { object: token, target: space, hidden: true }),
       );
-      if (isInstanceOf(DataType.AccessToken, result.data?.object)) {
+      if (Obj.instanceOf(DataType.AccessToken, result.data?.object)) {
         void dispatch(createIntent(TokenManagerAction.AccessTokenCreated, { accessToken: result.data?.object }));
       }
     },

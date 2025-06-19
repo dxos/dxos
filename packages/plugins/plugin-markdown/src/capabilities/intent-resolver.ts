@@ -12,7 +12,7 @@ import {
   createResolver,
   type PluginContext,
 } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { live } from '@dxos/live-object';
 import { createDocAccessor, getRangeFromCursor, Ref } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
@@ -46,7 +46,7 @@ export default (context: PluginContext) =>
         data,
       ): data is Omit<Schema.Schema.Type<typeof CollaborationActions.InsertContent.fields.input>, 'target'> & {
         target: DocumentType;
-      } => isInstanceOf(DocumentType, data.target),
+      } => Obj.instanceOf(DocumentType, data.target),
       resolve: async ({ target, object: objectRef, at, label }) => {
         const text = await target.content.load();
         const accessor = createDocAccessor(text, ['content']);

@@ -6,7 +6,7 @@ import { type Schema } from 'effect';
 import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, createSurface, Surface, useCapability, useLayout } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
 import {
@@ -78,7 +78,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: `${SPACE_PLUGIN}/collection-fallback`,
       role: 'article',
       position: 'fallback',
-      filter: (data): data is { subject: CollectionType } => isInstanceOf(CollectionType, data.subject),
+      filter: (data): data is { subject: CollectionType } => Obj.instanceOf(CollectionType, data.subject),
       component: ({ data }) => <CollectionMain collection={data.subject} />,
     }),
     createSurface({
@@ -262,7 +262,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/collection-section`,
       role: 'section',
-      filter: (data): data is { subject: CollectionType } => isInstanceOf(CollectionType, data.subject),
+      filter: (data): data is { subject: CollectionType } => Obj.instanceOf(CollectionType, data.subject),
       component: ({ data }) => <CollectionSection collection={data.subject} />,
     }),
     createSurface({

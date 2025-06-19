@@ -6,7 +6,8 @@ import { type Schema } from 'effect';
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos/app-framework';
-import { getTypenameOrThrow, isInstanceOf, type Ref } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
+import { getTypenameOrThrow, type Ref } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CollectionType } from '@dxos/plugin-space/types';
@@ -26,14 +27,14 @@ export default () =>
     createSurface({
       id: `${meta.id}/table`,
       role: ['article', 'section', 'slide'],
-      filter: (data): data is { subject: TableType } => isInstanceOf(TableType, data.subject) && !data.variant,
+      filter: (data): data is { subject: TableType } => Obj.instanceOf(TableType, data.subject) && !data.variant,
       component: ({ data, role }) => <TableContainer table={data.subject} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/companion/schema`,
       role: 'article',
       filter: (data): data is { companionTo: TableType; subject: 'schema' } =>
-        isInstanceOf(TableType, data.companionTo) && data.subject === 'schema',
+        Obj.instanceOf(TableType, data.companionTo) && data.subject === 'schema',
       component: ({ data, role }) => {
         return (
           <StackItem.Content role={role}>
@@ -45,7 +46,7 @@ export default () =>
     // createSurface({
     //   id: `${meta.id}/object-settings`,
     //   role: 'object-settings',
-    //   filter: (data): data is { subject: TableType } => isInstanceOf(TableType, data.subject),
+    //   filter: (data): data is { subject: TableType } => Obj.instanceOf(TableType, data.subject),
     //   component: ({ data }) => <TableViewEditor table={data.subject} />,
     // }),
     createSurface({

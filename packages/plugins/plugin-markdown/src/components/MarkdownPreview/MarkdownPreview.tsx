@@ -6,7 +6,7 @@ import { pipe } from 'effect';
 import React, { useCallback } from 'react';
 
 import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import {
   type PreviewProps,
   defaultCard,
@@ -27,18 +27,18 @@ import { getAbstract, getFallbackName } from '../../util';
 
 // TODO(burdon): Factor out.
 const getTitle = (subject: DocumentType | DataType.Text, fallback: string) => {
-  if (isInstanceOf(DocumentType, subject)) {
+  if (Obj.instanceOf(DocumentType, subject)) {
     return subject.name ?? subject.fallbackName ?? getFallbackName(subject.content?.target?.content ?? fallback);
-  } else if (isInstanceOf(DataType.Text, subject)) {
+  } else if (Obj.instanceOf(DataType.Text, subject)) {
     return getFallbackName(subject.content);
   }
 };
 
 // TODO(burdon): Factor out.
 const getSnippet = (subject: DocumentType | DataType.Text, fallback: string) => {
-  if (isInstanceOf(DocumentType, subject)) {
+  if (Obj.instanceOf(DocumentType, subject)) {
     return getAbstract(subject.content?.target?.content ?? fallback);
-  } else if (isInstanceOf(DataType.Text, subject)) {
+  } else if (Obj.instanceOf(DataType.Text, subject)) {
     return getAbstract(subject.content);
   }
 };

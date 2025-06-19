@@ -16,7 +16,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { findRelatedSchema, researchFn, type RelatedSchema } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
-import { Type, type Obj } from '@dxos/echo';
+import { Type, Obj } from '@dxos/echo';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -25,7 +25,6 @@ import {
   getSchema,
   getSchemaDXN,
   getTypename,
-  isInstanceOf,
   toJsonSchema,
   type BaseObject,
   Filter,
@@ -166,7 +165,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   // State.
   const objects = useQuery(space, Filter.or(...DataTypes.map((type) => Filter.type(type))));
   const messages = [
-    ...(queue?.objects.filter((item) => isInstanceOf(Message, item)) ?? []),
+    ...(queue?.objects.filter((item) => Obj.instanceOf(Message, item)) ?? []),
     ...(processor?.messages.value ?? []),
   ];
 
@@ -342,7 +341,7 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
         serviceContainer.clone().setServices({
           tracing: {
             write: (event) => {
-              if (isInstanceOf(AgentStatusReport, event)) {
+              if (Obj.instanceOf(AgentStatusReport, event)) {
                 log.info('[too] report status', { status: event });
                 reportStatus?.(event);
               }

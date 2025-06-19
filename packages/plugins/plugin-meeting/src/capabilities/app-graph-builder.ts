@@ -6,7 +6,8 @@ import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
 import { Capabilities, chain, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
-import { getSchemaTypename, isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
+import { getSchemaTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
@@ -112,7 +113,7 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (isInstanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
             Option.flatMap((channel) => {
               const space = getSpace(channel);
               const state = space && get(rxFromObservable(space.state));
@@ -152,7 +153,7 @@ export default (context: PluginContext) =>
         return Rx.make((get) => {
           return pipe(
             get(node),
-            Option.flatMap((node) => (isInstanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
             Option.flatMap((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
               const meeting = get(rxFromSignal(() => state.activeMeeting));
@@ -193,7 +194,7 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (isInstanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
             Option.flatMap((channel) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
               const isCallActive = get(
@@ -233,7 +234,7 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (isInstanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
             Option.map((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
               const enabled = get(rxFromSignal(() => state.transcriptionManager?.enabled ?? false));
@@ -285,7 +286,7 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (isInstanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
             Option.flatMap((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
               const meeting = get(rxFromSignal(() => state.activeMeeting));
@@ -317,7 +318,7 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (isInstanceOf(MeetingType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) => (Obj.instanceOf(MeetingType, node.data) ? Option.some(node.data) : Option.none())),
             Option.map((meeting) => {
               return [
                 {

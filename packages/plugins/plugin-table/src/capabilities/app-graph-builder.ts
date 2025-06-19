@@ -6,7 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { isEchoObject } from '@dxos/react-client/echo';
@@ -24,7 +24,7 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (isInstanceOf(TableType, node.data) ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (Obj.instanceOf(TableType, node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => [
               {
                 id: [node.id, 'schema'].join(ATTENDABLE_PATH_SEPARATOR),

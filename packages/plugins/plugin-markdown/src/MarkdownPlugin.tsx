@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { isInstanceOf, type BaseObject } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
@@ -54,14 +54,15 @@ export const MarkdownPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: DocumentType.typename,
           metadata: {
-            label: (object: any) =>
-              isInstanceOf(DocumentType, object) ? object.name || object.fallbackName : undefined,
+            // TODO(burdon): !!!
+            label: (object: Obj.Any) =>
+              Obj.instanceOf(DocumentType, object) ? object.name || object.fallbackName : undefined,
             icon: 'ph--text-aa--regular',
             graphProps: {
               managesAutofocus: true,
             },
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (doc: DocumentType) => await RefArray.loadAll<BaseObject>([doc.content]),
+            loadReferences: async (doc: DocumentType) => await RefArray.loadAll<Obj.Any>([doc.content]),
             serializer,
             // TODO(wittjosiah): Consider how to do generic comments without these.
             comments: 'anchored',

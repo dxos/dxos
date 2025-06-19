@@ -6,7 +6,8 @@ import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
-import { getTypename, isInstanceOf } from '@dxos/echo-schema';
+import { getTypename } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
@@ -63,7 +64,7 @@ export default (context: PluginContext) => {
         return Rx.make((get) => {
           return pipe(
             get(node),
-            Option.flatMap((node) => (isInstanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
             Option.map((channel) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
               const joined = get(
@@ -99,7 +100,7 @@ export default (context: PluginContext) => {
           pipe(
             get(node),
             Option.flatMap((node) => {
-              if (!isEchoObject(node.data) || isInstanceOf(ChannelType, node.data)) {
+              if (!isEchoObject(node.data) || Obj.instanceOf(ChannelType, node.data)) {
                 return Option.none();
               }
               const metadata = resolve(getTypename(node.data)!);
@@ -129,7 +130,7 @@ export default (context: PluginContext) => {
           pipe(
             get(node),
             Option.flatMap((node) => {
-              if (!isEchoObject(node.data) || isInstanceOf(ChannelType, node.data)) {
+              if (!isEchoObject(node.data) || Obj.instanceOf(ChannelType, node.data)) {
                 return Option.none();
               }
               const metadata = resolve(getTypename(node.data)!);

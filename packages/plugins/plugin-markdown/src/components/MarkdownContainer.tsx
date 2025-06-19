@@ -6,7 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, useAppGraph, useCapabilities } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { DataType } from '@dxos/schema';
@@ -38,8 +38,8 @@ const MarkdownContainer = ({
   onViewModeChange,
 }: MarkdownContainerProps) => {
   const scrollPastEnd = role === 'article';
-  const doc = isInstanceOf(DocumentType, object) ? object : undefined;
-  const text = isInstanceOf(DataType.Text, object) ? object : undefined;
+  const doc = Obj.instanceOf(DocumentType, object) ? object : undefined;
+  const text = Obj.instanceOf(DataType.Text, object) ? object : undefined;
   const extensions = useExtensions({ document: doc, text, id, settings, selectionManager, viewMode, editorStateStore });
 
   if (doc) {

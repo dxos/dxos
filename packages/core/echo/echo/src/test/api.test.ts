@@ -117,8 +117,8 @@ describe('Experimental API review', () => {
 
     expect(Schema.is(Testing.Person)(contact)).to.be.true;
     expect(Testing.Person.instanceOf(contact)).to.be.true;
-    expect(Obj.instanceOf(Testing.Person)(contact)).to.be.true;
-    expect(Obj.instanceOf(Testing.Organization)(organization)).to.be.true;
+    expect(Obj.instanceOf(Testing.Person, contact)).to.be.true;
+    expect(Obj.instanceOf(Testing.Organization, organization)).to.be.true;
   });
 
   test('default props', ({ expect }) => {
