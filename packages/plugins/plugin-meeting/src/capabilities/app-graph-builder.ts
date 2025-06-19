@@ -6,8 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
 import { Capabilities, chain, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
-import { getSchemaTypename } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
@@ -262,7 +261,7 @@ export default (context: PluginContext) =>
 
                     const callManager = context.getCapability(ThreadCapabilities.CallManager);
                     const transcript = await meeting.transcript.load();
-                    callManager.setActivity(getSchemaTypename(MeetingType)!, {
+                    callManager.setActivity(Type.getTypename(MeetingType)!, {
                       meetingId: fullyQualifiedId(meeting),
                       transcriptDxn: transcript.queue.dxn.toString(),
                       transcriptionEnabled: !enabled,

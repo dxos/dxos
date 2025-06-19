@@ -22,7 +22,8 @@ import {
   type SimpleDateTime,
 } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { getTypename, FormatEnum, TypeEnum } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
+import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -130,7 +131,9 @@ export class SheetModel extends Resource {
     });
 
     // TODO(burdon): SheetModel should extend ComputeNode and be constructed via the graph.
-    this._node = this._graph.getOrCreateNode(createSheetName({ type: getTypename(this._sheet)!, id: this._sheet.id }));
+    this._node = this._graph.getOrCreateNode(
+      createSheetName({ type: Obj.getTypename(this._sheet)!, id: this._sheet.id }),
+    );
     await this._node.open();
 
     // Listen for model updates (e.g., async calculations).

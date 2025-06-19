@@ -3,7 +3,8 @@
 //
 
 import { type AnyLiveObject, live, type Space } from '@dxos/client/echo';
-import { Query, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
+import { Query } from '@dxos/echo';
+import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 import { createObjectFactory, type ValueGenerator, type TypeSpec } from '@dxos/schema/testing';
 import { range } from '@dxos/util';

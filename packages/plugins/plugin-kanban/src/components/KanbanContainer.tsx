@@ -5,7 +5,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { EchoSchema, getTypenameOrThrow, toJsonSchema, type TypedObject } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { EchoSchema, toJsonSchema, type TypedObject } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, getSpace, live } from '@dxos/react-client/echo';
@@ -30,7 +31,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
 
   useEffect(() => {
     const typename = kanban.cardView?.target?.query?.typename;
-    const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => getTypenameOrThrow(schema) === typename);
+    const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
       setCardSchema(() => staticSchema as TypedObject<any, any>);
     }

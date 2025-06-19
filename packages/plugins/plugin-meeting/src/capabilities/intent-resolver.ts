@@ -7,7 +7,6 @@ import { Effect } from 'effect';
 import { AIServiceEdgeClient } from '@dxos/ai';
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
 import { Ref, Type } from '@dxos/echo';
-import { getSchemaTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -53,7 +52,7 @@ export default (context: PluginContext) =>
         const callManager = context.getCapability(ThreadCapabilities.CallManager);
         const state = context.getCapability(MeetingCapabilities.State);
         state.activeMeeting = object;
-        callManager.setActivity(getSchemaTypename(MeetingType)!, { meetingId: fullyQualifiedId(object) });
+        callManager.setActivity(Type.getTypename(MeetingType)!, { meetingId: fullyQualifiedId(object) });
         return { data: { object } };
       },
     }),

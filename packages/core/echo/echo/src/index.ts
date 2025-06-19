@@ -2,10 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as Type from './Type';
 export * as Obj from './Obj';
-export * as Relation from './Relation';
 export * as Ref from './Ref';
+export * as Relation from './Relation';
+export * as Type from './Type';
 
-export { type Live } from '@dxos/live-object';
 export { Filter, Query } from '@dxos/echo-schema';
+export { type Live } from '@dxos/live-object';
+
+// TODO(burdon): Re-export Key namespace.
+// TODO(burdon): Re-export Queue namespace.
+// TODO(burdon): Re-export JsonSchema namespace.

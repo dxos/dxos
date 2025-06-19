@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getSchemaTypename } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 
 import { ASSISTANT_PLUGIN } from './meta';
 import { AIChatType, TemplateType } from './types';
@@ -10,7 +10,7 @@ import { AIChatType, TemplateType } from './types';
 export default [
   {
     'en-US': {
-      [getSchemaTypename(AIChatType)!]: {
+      [Type.getTypename(AIChatType)!]: {
         'typename label': 'Assistant',
         'object name placeholder': 'AI Chat',
       },

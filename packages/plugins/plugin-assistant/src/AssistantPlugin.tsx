@@ -3,15 +3,15 @@
 //
 
 import {
-  allOf,
   Capabilities,
+  Events,
+  allOf,
   contributes,
   createIntent,
   defineModule,
   definePlugin,
-  Events,
 } from '@dxos/app-framework';
-import { getSchemaTypename } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -44,7 +44,7 @@ export const AssistantPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: getSchemaTypename(AIChatType)!,
+          id: Type.getTypename(AIChatType)!,
           metadata: {
             icon: 'ph--atom--regular',
           },

@@ -59,6 +59,7 @@ export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext) => {
 };
 
 /**
+ * @deprecated Use {@link Obj.getLabel} instead.
  * Returns the label for a given object based on {@link LabelAnnotationId}.
  */
 export const getLabelForObject = (obj: unknown | undefined): string | undefined => {

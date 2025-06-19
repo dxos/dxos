@@ -5,8 +5,8 @@
 import { Rx } from '@effect-rx/rx-react';
 
 import { createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { type BaseObject, EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
-import { getSchema } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
+import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
@@ -41,7 +41,7 @@ export const SHARED = 'shared-spaces';
 /**
  * Convert a query result to an Rx value of the objects.
  */
-export const rxFromQuery = <T extends BaseObject>(query: QueryResult<T>): Rx.Rx<T[]> => {
+export const rxFromQuery = <T extends Obj.Any>(query: QueryResult<T>): Rx.Rx<T[]> => {
   return Rx.make((get) => {
     const unsubscribe = query.subscribe((result) => {
       get.setSelf(result.objects);
@@ -315,7 +315,7 @@ export const createObjectNode = ({
   navigable?: boolean;
   resolve: (typename: string) => Record<string, any>;
 }) => {
-  const type = getTypename(object);
+  const type = Obj.getTypename(object);
   if (!type) {
     return undefined;
   }
@@ -459,7 +459,7 @@ export const getNestedObjects = async (
   object: AnyLiveObject<any>,
   resolve: (typename: string) => Record<string, any>,
 ): Promise<AnyLiveObject<any>[]> => {
-  const type = getTypename(object);
+  const type = Obj.getTypename(object);
   if (!type) {
     return [];
   }
@@ -480,12 +480,12 @@ export const getNestedObjects = async (
  */
 // TODO(burdon): Remove.
 export const cloneObject = async (
-  object: Expando,
+  object: Type.Expando,
   resolve: (typename: string) => Record<string, any>,
   newSpace: Space,
-): Promise<Expando> => {
-  const schema = getSchema(object);
-  const typename = schema ? getTypeAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
+): Promise<Type.Expando> => {
+  const schema = Obj.getSchema(object);
+  const typename = schema ? Type.getTypename(schema) ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
   const metadata = resolve(typename);
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);

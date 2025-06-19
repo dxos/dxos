@@ -3,8 +3,8 @@
 //
 
 import { type Live, type Space } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
-import { getSchemaTypename, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
+import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
@@ -42,8 +42,8 @@ const people: DataType.Person[] = [
 ];
 
 const testObjects: Record<string, any[]> = {
-  [getSchemaTypename(DataType.Organization)!]: organizations,
-  [getSchemaTypename(DataType.Person)!]: people,
+  [Type.getTypename(DataType.Organization)!]: organizations,
+  [Type.getTypename(DataType.Person)!]: people,
 };
 
 const testRelationships: Record<
@@ -53,7 +53,7 @@ const testRelationships: Record<
     target: string;
   } & Record<string, any>)[]
 > = {
-  [getSchemaTypename(DataType.Employer)!]: [
+  [Type.getTypename(DataType.Employer)!]: [
     // @eslint-disable-next-line
     { source: 'rich_burdon', target: 'dxos' },
     { source: 'rich_burdon', target: 'google', active: false }, // TODO(burdon): Should not contribute to force.
@@ -76,7 +76,7 @@ const testRelationships: Record<
   ],
 
   // TODO(burdon): Limit graph view to selected relationship types.
-  [getSchemaTypename(DataType.HasConnection)!]: [
+  [Type.getTypename(DataType.HasConnection)!]: [
     //
     { kind: 'partner', source: 'dxos', target: 'ink_and_switch' },
     { kind: 'partner', source: 'dxos', target: 'effectful' },

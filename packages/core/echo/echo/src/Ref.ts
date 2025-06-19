@@ -8,12 +8,8 @@ import type * as Obj from './Obj';
 
 export type Any = EchoSchema.Ref<Obj.Any>;
 
-export const make = EchoSchema.Ref.make;
-
-export const isRef: (value: unknown) => value is Any = EchoSchema.Ref.isRef;
-
-// TODO(dmaretskyi): Consider just allowing `make` to accept DXN.
-export const fromDXN = EchoSchema.Ref.fromDXN;
+// TODO(wittjosiah): Should be a ref to a Queue.
+export const Queue = EchoSchema.Ref(EchoSchema.Expando);
 
 /**
  * Extract reference target.
@@ -24,3 +20,10 @@ export type Target<R extends Any> = R extends EchoSchema.Ref<infer T> ? T : neve
  * Reference resolver.
  */
 export type Resolver = EchoSchema.RefResolver;
+
+export const make = EchoSchema.Ref.make;
+
+export const isRef: (value: unknown) => value is Any = EchoSchema.Ref.isRef;
+
+// TODO(dmaretskyi): Consider just allowing `make` to accept DXN.
+export const fromDXN = EchoSchema.Ref.fromDXN;

@@ -17,7 +17,7 @@ import { BlueprintMachine, BlueprintParser, Logger, setConsolePrinter, setLogger
 import { combine } from '@dxos/async';
 import { Filter, Queue, type Space } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
-import { Ref, getLabelForObject, getTypename, type AnyEchoObject } from '@dxos/echo-schema';
+import { Ref } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -158,13 +158,13 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     model?.nodes
       .filter((node) => {
         try {
-          getTypename(node.data.object as AnyEchoObject);
+          Obj.getTypename(node.data.object as Obj.Any);
           return true;
         } catch {
           return false;
         }
       })
-      .map((node) => node.data.object as AnyEchoObject) ?? [];
+      .map((node) => node.data.object as Obj.Any) ?? [];
 
   //
   // AI
@@ -394,10 +394,12 @@ const ItemList = <T extends Obj.Any>({ items = [] }: { items?: T[] }) => {
               classNames='grid grid-cols-[4rem_16rem_1fr] min-h-[32px] items-center'
             >
               <div className='text-xs font-mono font-thin px-1 text-subdued'>{item.id.slice(-6)}</div>
-              <div className={mx('text-xs font-mono font-thin truncate px-1', getHashColor(getTypename(item))?.text)}>
-                {getTypename(item)}
+              <div
+                className={mx('text-xs font-mono font-thin truncate px-1', getHashColor(Obj.getTypename(item))?.text)}
+              >
+                {Obj.getTypename(item)}
               </div>
-              <List.ItemTitle>{getLabelForObject(item)}</List.ItemTitle>
+              <List.ItemTitle>{Obj.getLabel(item)}</List.ItemTitle>
             </List.Item>
           ))}
         </div>

@@ -4,15 +4,8 @@
 
 import { Schema } from 'effect';
 
-import {
-  TypedObject,
-  FormatEnum,
-  TypeEnum,
-  type JsonProp,
-  type EchoSchema,
-  getTypenameOrThrow,
-  toJsonSchema,
-} from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { TypedObject, FormatEnum, TypeEnum, type JsonProp, type EchoSchema, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, live, makeRef } from '@dxos/react-client/echo';
@@ -41,12 +34,8 @@ const createDefaultTaskSchema = () => {
     typename: `example.com/type/${PublicKey.random().truncate()}`,
     version: '0.1.0',
   })({
-    title: Schema.optional(Schema.String).annotations({
-      title: 'Title',
-    }),
-    description: Schema.optional(Schema.String).annotations({
-      title: 'Description',
-    }),
+    title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+    description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
     state: Schema.optional(Schema.String),
   });
 
@@ -61,7 +50,7 @@ export const initializeKanban = async ({
   initialPivotColumn,
 }: InitializeKanbanProps): Promise<{ kanban: KanbanType; schema?: EchoSchema }> => {
   if (typename) {
-    const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => getTypenameOrThrow(schema) === typename);
+    const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
     const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
 
     const ast = staticSchema?.ast ?? schema?.ast;

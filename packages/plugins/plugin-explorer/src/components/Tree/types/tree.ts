@@ -4,8 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { Type } from '@dxos/echo';
-import { ObjectId, Ref, Expando } from '@dxos/echo-schema';
+import { Ref, Type } from '@dxos/echo';
+import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 
@@ -15,7 +15,7 @@ export const TreeNodeType = Schema.Struct({
   id: ObjectId,
   children: Schema.mutable(Schema.Array(ObjectId)),
   data: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any })),
-  ref: Schema.optional(Ref(Expando)), // TODO(burdon): Generic type?
+  ref: Schema.optional(Ref.Queue),
 }).pipe(Schema.mutable);
 
 export interface TreeNodeType extends Schema.Schema.Type<typeof TreeNodeType> {}

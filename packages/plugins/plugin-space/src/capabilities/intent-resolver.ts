@@ -12,8 +12,8 @@ import {
   LayoutAction,
   type PluginContext,
 } from '@dxos/app-framework';
-import { Relation } from '@dxos/echo';
-import { type Expando, getTypename, type HasId } from '@dxos/echo-schema';
+import { Obj, Relation, type Type } from '@dxos/echo';
+import { type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { live, makeRef, type Live } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
@@ -394,7 +394,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                     properties: {
                       spaceId: space.id,
                       objectId: object.id,
-                      typename: getTypename(object),
+                      typename: Obj.getTypename(object),
                     },
                   }),
                 ]
@@ -489,16 +489,16 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
             deletionData.parentCollection instanceof CollectionType
           ) {
             // Restore the object to the space.
-            const restoredObjects = deletionData.objects.map((obj: Expando) => space.db.add(obj));
+            const restoredObjects = deletionData.objects.map((obj: Type.Expando) => space.db.add(obj));
 
             // Restore nested objects to the space.
-            deletionData.nestedObjectsList.flat().forEach((obj: Expando) => {
+            deletionData.nestedObjectsList.flat().forEach((obj: Type.Expando) => {
               space.db.add(obj);
             });
 
             deletionData.indices.forEach((index: number, i: number) => {
               if (index !== -1) {
-                deletionData.parentCollection.objects.splice(index, 0, makeRef(restoredObjects[i] as Expando));
+                deletionData.parentCollection.objects.splice(index, 0, makeRef(restoredObjects[i] as Type.Expando));
               }
             });
 

@@ -6,8 +6,8 @@ import { type Schema } from 'effect';
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
-import { getTypenameOrThrow, type Ref } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
+import { type Ref } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CollectionType } from '@dxos/plugin-space/types';
@@ -106,12 +106,12 @@ export default () =>
         );
 
         const fixed = client.graph.schemaRegistry.schemas.filter((schema) =>
-          whitelistedTypenames.has(getTypenameOrThrow(schema)),
+          whitelistedTypenames.has(Type.getTypename(schema)),
         );
         const dynamic = space?.db.schemaRegistry.query().runSync();
         const typenames = Array.from(
           new Set<string>([
-            ...fixed.map((schema) => getTypenameOrThrow(schema)),
+            ...fixed.map((schema) => Type.getTypename(schema)),
             ...dynamic.map((schema) => schema.typename),
           ]),
         ).sort();
