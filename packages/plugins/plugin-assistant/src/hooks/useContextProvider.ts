@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Schema } from 'effect';
 import { useMemo } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { Filter, type Space } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
-import { type BaseEchoObject, getObjectDXN, getLabel } from '@dxos/echo-schema';
+import { Obj, type Type } from '@dxos/echo';
+import { getObjectDXN, getLabel } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 export type ContextProvider = {
@@ -30,7 +29,7 @@ export const useContextProvider = (space?: Space): ContextProvider | undefined =
       query: async ({ query }) => {
         const artifactSchemas = artifactDefinitions.map((artifact) => artifact.schema);
         const { objects } = await space.db
-          .query(Filter.or(...artifactSchemas.map((schema) => Filter.type(schema as Schema.Schema<BaseEchoObject>))))
+          .query(Filter.or(...artifactSchemas.map((schema) => Filter.type(schema as Type.Schema))))
           .run();
         return (
           objects

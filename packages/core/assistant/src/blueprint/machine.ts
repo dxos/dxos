@@ -6,11 +6,11 @@ import { Match, Schema } from 'effect';
 
 import {
   createTool,
+  type AIServiceClient,
   type ExecutableTool,
   Message,
-  ToolResult,
-  type AIServiceClient,
   type MessageContentBlock,
+  ToolResult,
   type ToolUseContentBlock,
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
@@ -20,6 +20,12 @@ import { log } from '@dxos/log';
 
 import type { Blueprint, BlueprintStep } from './blueprint';
 import { AISession } from '../session';
+
+export type BlueprintTraceStep = {
+  status: 'done' | 'bailed' | 'skipped';
+  stepId: ObjectId;
+  comment: string;
+};
 
 export type BlueprintMachineState = {
   history: Message[];
@@ -31,12 +37,6 @@ const INITIAL_STATE: BlueprintMachineState = {
   state: 'working',
   history: [],
   trace: [],
-};
-
-export type BlueprintTraceStep = {
-  status: 'done' | 'bailed' | 'skipped';
-  stepId: ObjectId;
-  comment: string;
 };
 
 type ExecutionOptions = {

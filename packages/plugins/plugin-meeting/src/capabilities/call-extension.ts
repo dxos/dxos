@@ -8,7 +8,8 @@ import { AIServiceEdgeClient, type AIServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
-import { Filter, getSchemaTypename, Query, type BaseEchoObject } from '@dxos/echo-schema';
+import { type Obj } from '@dxos/echo';
+import { Filter, getSchemaTypename, Query } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -101,7 +102,7 @@ const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: Entit
 
   return async (message: DataType.Message) => {
     const { objects } = await space.db
-      .query(Query.select(Filter.or(...contextTypes.map((s) => Filter.type(s as Schema.Schema<BaseEchoObject>)))))
+      .query(Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as Schema.Schema<Obj.Any>)))))
       .run();
 
     log.info('context', { objects });
@@ -122,7 +123,7 @@ const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: Entit
 };
 
 // TODO(dmaretskyi): Use Type.Any
-const processContextObject = async (object: BaseEchoObject): Promise<any> => {
+const processContextObject = async (object: Obj.Any): Promise<any> => {
   // TODO(dmaretskyi): Documents need special processing is the content is behind a ref.
   // TODO(dmaretskyi): Think about a way to handle this serialization with a decorator.
   // if (isInstanceOf(DocumentType, object)) {
