@@ -3,6 +3,7 @@
 //
 
 import { useFocusableGroup } from '@fluentui/react-tabster';
+import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -11,14 +12,16 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { useStack } from '../StackContext';
 
-export type StackItemHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+export type StackItemHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 
-export const StackItemHeading = ({ children, classNames, ...props }: StackItemHeadingProps) => {
+export const StackItemHeading = ({ children, classNames, asChild, ...props }: StackItemHeadingProps) => {
   const { orientation } = useStack();
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
 
+  const Root = asChild ? Slot : 'div';
+
   return (
-    <div
+    <Root
       role='heading'
       {...props}
       tabIndex={0}
@@ -31,7 +34,7 @@ export const StackItemHeading = ({ children, classNames, ...props }: StackItemHe
       )}
     >
       {children}
-    </div>
+    </Root>
   );
 };
 
