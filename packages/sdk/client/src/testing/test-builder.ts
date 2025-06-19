@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { type ExpectStatic } from 'vitest';
+
 import { Trigger } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
 import { ClientServicesHost, type ServiceContextRuntimeParams } from '@dxos/client-services';
@@ -175,17 +177,21 @@ export class TestBuilder {
   }
 }
 
-export const testSpaceAutomerge = async (createDb: EchoDatabase, checkDb: EchoDatabase = createDb) => {
+export const testSpaceAutomerge = async (
+  expect: ExpectStatic,
+  createDb: EchoDatabase,
+  checkDb: EchoDatabase = createDb,
+) => {
   const object = live(Expando, {});
   createDb.add(object);
-  await checkDb.query(Filter.ids(object.id)).first({ timeout: 1000 });
+  await expect.poll(() => checkDb.query(Filter.ids(object.id)).first({ timeout: 1000 }));
 
   return { objectId: object.id };
 };
 
-export const syncItemsAutomerge = async (db1: EchoDatabase, db2: EchoDatabase) => {
-  await testSpaceAutomerge(db1, db2);
-  await testSpaceAutomerge(db2, db1);
+export const syncItemsAutomerge = async (expect: ExpectStatic, db1: EchoDatabase, db2: EchoDatabase) => {
+  await testSpaceAutomerge(expect, db1, db2);
+  await testSpaceAutomerge(expect, db2, db1);
 };
 
 /**

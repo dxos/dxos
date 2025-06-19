@@ -24,11 +24,11 @@ export class Logger {
   }
 
   clear() {
-    this._messages = signal([]);
+    this._messages.value = [];
   }
 
   log(message: string) {
-    this._messages = signal([...this._messages.value, message]);
+    this._messages.value = [...this._messages.value, message];
   }
 }
 

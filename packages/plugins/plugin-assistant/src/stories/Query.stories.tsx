@@ -5,20 +5,21 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import { Schema } from 'effect';
-import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Match, Schema } from 'effect';
+import React, { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react';
 
 import { AIServiceEdgeClient, type AIServiceEdgeClientOptions } from '@dxos/ai';
 import { SpyAIService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { BlueprintParser, BlueprintMachine, Logger, setConsolePrinter, setLogger } from '@dxos/assistant';
+import { BlueprintMachine, BlueprintParser, Logger, setConsolePrinter, setLogger } from '@dxos/assistant';
 import { combine } from '@dxos/async';
 import { Filter, Queue, type Space } from '@dxos/client/echo';
-import { Type } from '@dxos/echo';
-import { type AnyEchoObject, Ref, create, getLabelForObject, getTypename } from '@dxos/echo-schema';
+import { type Obj, Type } from '@dxos/echo';
+import { Ref, create, getLabelForObject, getTypename, type AnyEchoObject } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
@@ -41,10 +42,10 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { addTestData } from './test-data';
 import { testPlugins } from './testing';
-import { AmbientDialog, PromptBar, type PromptController, type PromptBarProps } from '../components';
+import { AmbientDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
-import { createFilter, type Expression, QueryParser } from '../parser';
-import { RESEARCH_BLUEPRINT, createTools } from '../testing';
+import { QueryParser, createFilter, type Expression } from '../parser';
+import { RESEARCH_BLUEPRINT, createRegistry } from '../testing';
 import translations from '../translations';
 
 faker.seed(1);
@@ -63,6 +64,18 @@ const aiConfig: AIServiceEdgeClientOptions = {
     // model: '@anthropic/claude-sonnet-4-20250514',
   },
 };
+
+/**
+ * Container for a set of ephemeral research results.
+ */
+const ResearchGraph = Schema.Struct({
+  queue: Ref(Queue),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/ResearchGraph',
+    version: '0.1.0',
+  }),
+);
 
 type Mode = 'graph' | 'list';
 
@@ -167,8 +180,8 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       return undefined;
     }
 
-    const tools = createTools(space, researchGraph?.queue.dxn);
-    return BlueprintParser.create(tools).parse(RESEARCH_BLUEPRINT);
+    const registry = createRegistry(space, researchGraph?.queue.dxn);
+    return BlueprintParser.create(registry).parse(RESEARCH_BLUEPRINT);
   }, [space, researchGraph?.queue.dxn]);
 
   const logger = useMemo(() => new Logger(), []);
@@ -188,10 +201,19 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
     const selected = selection.selected.value;
     log.info('starting research...', { selected });
-    const { objects } = await space.db.query(Filter.ids(...selected)).run();
+    const resolver = space.db.graph.createRefResolver({
+      context: {
+        space: space.db.spaceId,
+        queue: researchGraph?.queue.dxn,
+      },
+    });
+    const objects = await Promise.all(selected.map((id) => resolver.resolve(DXN.fromLocalObjectId(id))));
     const machine = new BlueprintMachine(researchBlueprint);
     const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));
+
+    log.info('starting research...', { selected });
     await machine.runToCompletion({ aiService: aiClient, input: objects });
+
     cleanup();
   }, [space, aiClient, researchBlueprint, selection]);
 
@@ -206,9 +228,6 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     } else {
       await addTestData(space);
     }
-
-    // TODO(burdon): BUG: objects are not persisted unless this is called.
-    await space.db.flush({ indexes: true });
   }, [space, generator, spec]);
 
   const handleReset = useCallback(
@@ -266,6 +285,8 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const extensions = useMemo(() => [typeahead({ onComplete: handleMatch })], [handleMatch]);
 
+  const { state: flushState, handleFlush } = useFlush(space);
+
   return (
     <div className='grow grid overflow-hidden'>
       <div className={mx('grow grid overflow-hidden', !mode && 'grid-cols-[1fr_30rem]')}>
@@ -284,6 +305,18 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
                 iconOnly
                 label='reset'
                 onClick={(event) => handleReset(event.shiftKey)}
+              />
+              <IconButton
+                disabled={flushState === 'flushing'}
+                icon={Match.value(flushState).pipe(
+                  Match.when('idle', () => 'ph--floppy-disk--regular'),
+                  Match.when('flushing', () => 'ph--spinner--regular'),
+                  Match.when('flushed', () => 'ph--check--regular'),
+                  Match.exhaustive,
+                )}
+                iconOnly
+                label='flush'
+                onClick={handleFlush}
               />
             </Toolbar.Root>
             <ItemList items={objects} />
@@ -348,20 +381,8 @@ const createMatcher =
     }
   };
 
-/**
- * Container for a set of ephemeral research results.
- */
-const ResearchGraph = Schema.Struct({
-  queue: Ref(Queue),
-}).pipe(
-  Type.Obj({
-    typename: 'dxos.org/type/ResearchGraph',
-    version: '0.1.0',
-  }),
-);
-
 // TODO(burdon): Replace with card list.
-const ItemList = <T extends AnyEchoObject>({ items = [] }: { items?: T[] }) => {
+const ItemList = <T extends Obj.Any>({ items = [] }: { items?: T[] }) => {
   return (
     <List.Root<T> items={items}>
       {({ items }) => (
@@ -384,6 +405,34 @@ const ItemList = <T extends AnyEchoObject>({ items = [] }: { items?: T[] }) => {
       )}
     </List.Root>
   );
+};
+
+const useFlush = (space?: Space) => {
+  const [state, setState] = useState<'idle' | 'flushing' | 'flushed'>('idle');
+  const resetTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const handleFlush = useCallback(() => {
+    if (!space) {
+      return;
+    }
+
+    queueMicrotask(async () => {
+      if (resetTimer.current) {
+        clearTimeout(resetTimer.current);
+      }
+
+      setState('flushing');
+      await space.db.flush();
+      setState('flushed');
+
+      resetTimer.current = setTimeout(() => {
+        setState('idle');
+        resetTimer.current = null;
+      }, 1_000);
+    });
+  }, [space]);
+
+  return { state, handleFlush };
 };
 
 const Log: FC<{ logger: Logger }> = ({ logger }) => {
