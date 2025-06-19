@@ -10,6 +10,7 @@ import { type BaseObject, Expando, getSchema, getTypename, Query, Ref } from '@d
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { dangerouslySetProxyId, getMeta, getType, live, type Live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -17,8 +18,6 @@ import { range } from '@dxos/util';
 import { clone, getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
-import { createTestLevel } from '@dxos/kv-store/testing';
-import { log } from '@dxos/log';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
@@ -58,7 +57,6 @@ describe('Database', () => {
     const level = createTestLevel();
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
-    debugger;
 
     // Create database.
     let spaceKey: PublicKey;
@@ -73,7 +71,7 @@ describe('Database', () => {
       expect(objects).to.have.length(1);
       expect(objects[0].name).to.eq('Test');
       await sleep(300); // Wait for the object to be saved.
-      db.close();
+      await db.close();
     }
 
     // Load database.
@@ -83,7 +81,7 @@ describe('Database', () => {
       const { objects } = await db.query(Query.select(Filter.everything())).run();
       expect(objects).to.have.length(1);
       expect(objects[0].name).to.eq('Test');
-      db.close();
+      await db.close();
     }
   });
 
