@@ -7,11 +7,12 @@ import { type EditorView } from '@codemirror/view';
 import React, { useCallback, useEffect, useRef } from 'react';
 
 import { Icon, Popover, useThemeContext } from '@dxos/react-ui';
+import { type MaybePromise } from '@dxos/util';
 
 export type SlashCommandItem = {
   label: string;
   icon: string;
-  onSelect?: (view: EditorView, line: Line) => void;
+  onSelect?: (view: EditorView, line: Line) => MaybePromise<void>;
 };
 
 export type SlashCommandMenuProps = {

@@ -51,7 +51,7 @@ const meta: Meta<typeof EditorStory> = {
 
       const selection = view.state.selection.main;
       const line = view.state.doc.lineAt(selection.head);
-      item.onSelect?.(view, line);
+      void item.onSelect?.(view, line);
     }, []);
 
     const extensions = useMemo(
