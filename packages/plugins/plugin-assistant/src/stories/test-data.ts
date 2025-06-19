@@ -3,7 +3,8 @@
 //
 
 import { type Live, type Space } from '@dxos/client/echo';
-import { create, getSchemaTypename, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
+import { getSchemaTypename, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
@@ -100,7 +101,7 @@ export const addTestData = async (space: Space): Promise<void> => {
     const schema = space.db.graph.schemaRegistry.getSchema(typename);
     invariant(schema, `Schema not found: ${typename}`);
     for (const { id, ...data } of objects) {
-      const object = space.db.add(create(schema, data));
+      const object = space.db.add(Obj.make(schema, data));
       objectMap.set(id, object);
     }
   }
@@ -116,7 +117,7 @@ export const addTestData = async (space: Space): Promise<void> => {
       invariant(targetObject, `Target object not found: ${target}`);
 
       space.db.add(
-        create(schema, {
+        Obj.make(schema, {
           ...data,
           // TODO(burdon): Test source/target types match.
           [RelationSourceId]: sourceObject,

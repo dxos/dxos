@@ -20,8 +20,8 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Type } from '@dxos/echo';
-import { create, createQueueDxn, type Expando } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
+import { createQueueDxn, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live, makeRef, refFromDXN } from '@dxos/live-object';
@@ -75,7 +75,7 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
   const handleInsert = async () => {
     invariant(space);
     invariant(queue);
-    queue.append([create(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
+    queue.append([Obj.make(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
     const message = queue.objects.at(-1);
     invariant(message);
 

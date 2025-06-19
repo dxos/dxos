@@ -18,8 +18,9 @@ import {
   processTranscriptMessage,
   getNer,
 } from '@dxos/assistant';
+import { Obj } from '@dxos/echo';
 import { Filter, MemoryQueue } from '@dxos/echo-db';
-import { create, createQueueDxn, type Expando } from '@dxos/echo-schema';
+import { createQueueDxn, type Expando } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -129,7 +130,11 @@ const DefaultStory = ({
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
-      const message = create(DataType.Message, { sender: { name: 'You' }, created: new Date().toISOString(), blocks });
+      const message = Obj.make(DataType.Message, {
+        sender: { name: 'You' },
+        created: new Date().toISOString(),
+        blocks,
+      });
       if (!space) {
         void queue.append([message]);
         return;

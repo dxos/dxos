@@ -11,8 +11,8 @@ import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant
 import { scheduleTaskInterval } from '@dxos/async';
 import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Type } from '@dxos/echo';
-import { create, createQueueDxn, ObjectId } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
+import { createQueueDxn, ObjectId } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -165,7 +165,7 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
 
     const i = setInterval(() => {
       void builder.createMessage(Math.ceil(Math.random() * 3)).then((message) => {
-        queue.append([create(DataType.Message, message)]);
+        queue.append([Obj.make(DataType.Message, message)]);
       });
     }, interval);
     return () => clearInterval(i);
@@ -202,7 +202,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
       ctx,
       async () => {
         const message = await builder.createMessage();
-        queue.append([create(DataType.Message, message)]);
+        queue.append([Obj.make(DataType.Message, message)]);
       },
       interval,
     );

@@ -3,7 +3,8 @@
 //
 
 import { DEFAULT_EDGE_MODEL, type AIServiceClient, Message, MixedStreamParser } from '@dxos/ai';
-import { create, getSchemaTypename } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
+import { getSchemaTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
@@ -27,7 +28,7 @@ export const summarizeTranscript = async (ai: AIServiceClient, content: string):
     await ai.execStream({
       model: DEFAULT_EDGE_MODEL,
       systemPrompt: SUMMARIZE_PROMPT,
-      history: [create(Message, { role: 'user', content: [{ type: 'text', text: content }] })],
+      history: [Obj.make(Message, { role: 'user', content: [{ type: 'text', text: content }] })],
     }),
   );
 

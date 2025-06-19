@@ -16,8 +16,8 @@ import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-te
 import { BlueprintMachine, BlueprintParser, Logger, setConsolePrinter, setLogger } from '@dxos/assistant';
 import { combine } from '@dxos/async';
 import { Filter, Queue, type Space } from '@dxos/client/echo';
-import { type Obj, Type } from '@dxos/echo';
-import { Ref, create, getLabelForObject, getTypename, type AnyEchoObject } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
+import { Ref, getLabelForObject, getTypename, type AnyEchoObject } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -130,8 +130,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     } else {
       const queue = space.queues.create();
       return space.db.add(
-        create(ResearchGraph, {
-          // TODO(dmaretskyi): Ref.make(queue)
+        Obj.make(ResearchGraph, {
           queue: Ref.fromDXN(queue.dxn),
         }),
       );
