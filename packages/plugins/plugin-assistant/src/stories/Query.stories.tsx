@@ -213,9 +213,6 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     } else {
       await addTestData(space);
     }
-
-    // TODO(burdon): BUG: objects are not persisted unless this is called.
-    await space.db.flush({ indexes: true });
   }, [space, generator, spec]);
 
   const handleReset = useCallback(
