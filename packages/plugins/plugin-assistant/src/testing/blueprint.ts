@@ -4,7 +4,7 @@
 
 import { ToolRegistry } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { type BlueprintParser, createExaTool, createGraphWriterTool, createLocalSearchTool } from '@dxos/assistant';
+import { type BlueprintDefinition, createExaTool, createGraphWriterTool, createLocalSearchTool } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
 import { type DXN } from '@dxos/keys';
 import { DataTypes } from '@dxos/schema';
@@ -30,7 +30,7 @@ export const createTools = (space: Space, queueDxn?: DXN): ToolRegistry => {
   );
 };
 
-export const RESEARCH_BLUEPRINT: BlueprintParser.DSL = {
+export const RESEARCH_BLUEPRINT: BlueprintDefinition = {
   steps: [
     {
       instructions: 'Research information and entities related to the selected objects.',

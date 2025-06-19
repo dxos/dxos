@@ -44,7 +44,7 @@ import { testPlugins } from './testing';
 import { AmbientDialog, PromptBar, type PromptController, type PromptBarProps } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { createFilter, type Expression, QueryParser } from '../parser';
-import { RESEARCH_BLUEPRINT, createTools } from '../testing';
+import { RESEARCH_BLUEPRINT, createTools as createRegistry } from '../testing';
 import translations from '../translations';
 
 faker.seed(1);
@@ -167,8 +167,8 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       return undefined;
     }
 
-    const tools = createTools(space, researchGraph?.queue.dxn);
-    return BlueprintParser.create(tools).parse(RESEARCH_BLUEPRINT);
+    const registry = createRegistry(space, researchGraph?.queue.dxn);
+    return BlueprintParser.create(registry).parse(RESEARCH_BLUEPRINT);
   }, [space, researchGraph?.queue.dxn]);
 
   const logger = useMemo(() => new Logger(), []);
@@ -187,11 +187,14 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     }
 
     const selected = selection.selected.value;
-    log.info('starting research...', { selected });
-    const { objects } = await space.db.query(Filter.ids(...selected)).run();
+
     const machine = new BlueprintMachine(researchBlueprint);
     const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));
+
+    log.info('starting research...', { selected });
+    const { objects } = await space.db.query(Filter.ids(...selected)).run();
     await machine.runToCompletion({ aiService: aiClient, input: objects });
+
     cleanup();
   }, [space, aiClient, researchBlueprint, selection]);
 
