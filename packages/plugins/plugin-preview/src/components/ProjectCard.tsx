@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
+import { Card } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 
-import { type PreviewProps, popoverCard, previewTitle, defaultCard } from '../types';
+import { type PreviewProps } from '../types';
 
 export const ProjectCard = ({
   classNames,
@@ -15,10 +15,10 @@ export const ProjectCard = ({
   subject: { name, image, description },
 }: PreviewProps<DataType.Project>) => {
   return (
-    <div role='none' className={mx(role === 'popover' ? popoverCard : defaultCard, classNames)}>
-      {image && <img className='is-full bs-auto' src={image} alt={name} />}
-      <h2 className={mx(previewTitle, 'pli-3 mlb-3')}>{name}</h2>
-      {description && <p className='pli-3 line-clamp-2 mlb-3'>{description}</p>}
-    </div>
+    <Card.Content classNames={[role === 'popover' && 'popover-card-width', classNames]}>
+      {image && <Card.Poster image={image} alt={name} />}
+      <Card.Heading>{name}</Card.Heading>
+      {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
+    </Card.Content>
   );
 };

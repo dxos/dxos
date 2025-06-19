@@ -23,7 +23,6 @@ import { DataType } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
 import { PREVIEW_PLUGIN } from '../meta';
-import { kanbanCardWithoutPoster } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -112,14 +111,7 @@ export default () =>
         }, []);
 
         return (
-          <Form
-            schema={schema}
-            values={data.subject}
-            readonly={role === 'popover'}
-            onSave={handleSave}
-            autoSave
-            {...(role === 'card--kanban' && { classNames: kanbanCardWithoutPoster })}
-          />
+          <Form schema={schema} values={data.subject} readonly={role === 'popover'} onSave={handleSave} autoSave />
         );
       },
     }),
