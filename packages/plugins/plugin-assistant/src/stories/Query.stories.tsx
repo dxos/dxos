@@ -19,6 +19,7 @@ import { Filter, Queue, type EchoDatabase, type Space } from '@dxos/client/echo'
 import { Type } from '@dxos/echo';
 import { Ref, create, getLabelForObject, getTypename, type AnyEchoObject } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
@@ -46,7 +47,6 @@ import { ASSISTANT_PLUGIN } from '../meta';
 import { QueryParser, createFilter, type Expression } from '../parser';
 import { RESEARCH_BLUEPRINT, createTools } from '../testing';
 import translations from '../translations';
-import { DXN } from '@dxos/keys';
 
 faker.seed(1);
 
@@ -193,9 +193,9 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       context: {
         space: space.db.spaceId,
         queue: researchGraph?.queue.dxn,
-      }
-    })
-    const objects = await Promise.all(selected.map(id => resolver.resolve(DXN.fromLocalObjectId(id))));
+      },
+    });
+    const objects = await Promise.all(selected.map((id) => resolver.resolve(DXN.fromLocalObjectId(id))));
     const machine = new BlueprintMachine(researchBlueprint);
     const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));
     await machine.runToCompletion({ aiService: aiClient, input: objects });

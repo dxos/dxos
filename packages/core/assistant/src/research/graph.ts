@@ -234,7 +234,7 @@ export const sanitizeObjects = async (
 
   // TODO(dmaretskyi): Use ref resolver.
   const { objects: dbObjects } = await db.query(Query.select(Filter.ids(...existingIds))).run();
-  const queueObjects = await queue?.getObjectsById([...existingIds]) ?? [];
+  const queueObjects = (await queue?.getObjectsById([...existingIds])) ?? [];
   const objects = [...dbObjects, ...queueObjects].filter(isNonNullable);
 
   // TODO(dmaretskyi): Returns everything if IDs are empty!

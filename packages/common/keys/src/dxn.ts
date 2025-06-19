@@ -255,11 +255,7 @@ export class DXN {
   get [devtoolsFormatter](): DevtoolsFormatter {
     return {
       header: () => {
-        return [
-          'span',
-          { style: `font-weight: bold;` },
-          this.toString(),
-        ];
+        return ['span', { style: 'font-weight: bold;' }, this.toString()];
       },
     };
   }
