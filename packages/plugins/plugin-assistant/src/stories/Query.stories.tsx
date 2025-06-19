@@ -6,17 +6,18 @@ import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
 import { Match, Schema } from 'effect';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { default as React, useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react';
 
 import { AIServiceEdgeClient, type AIServiceEdgeClientOptions } from '@dxos/ai';
 import { SpyAIService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { BlueprintParser, BlueprintMachine, setConsolePrinter } from '@dxos/assistant';
+import { BlueprintMachine, BlueprintParser, Logger, setConsolePrinter, setLogger } from '@dxos/assistant';
+import { combine } from '@dxos/async';
 import { Filter, Queue, type EchoDatabase, type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
-import { type AnyEchoObject, create, getLabelForObject, getTypename, Ref } from '@dxos/echo-schema';
+import { Ref, create, getLabelForObject, getTypename, type AnyEchoObject } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
@@ -38,13 +39,13 @@ import { DataType, DataTypes, SpaceGraphModel } from '@dxos/schema';
 import { createObjectFactory, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { addTestData } from './test-data';
-import { testPlugins } from './testing';
-import { AmbientDialog, PromptBar, type PromptController, type PromptBarProps } from '../components';
+import { AmbientDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
-import { createFilter, type Expression, QueryParser } from '../parser';
+import { QueryParser, createFilter, type Expression } from '../parser';
 import { RESEARCH_BLUEPRINT, createTools } from '../testing';
 import translations from '../translations';
+import { addTestData } from './test-data';
+import { testPlugins } from './testing';
 
 faker.seed(1);
 
@@ -170,6 +171,8 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     return BlueprintParser.create(tools).parse(RESEARCH_BLUEPRINT);
   }, [space, researchGraph?.queue.dxn]);
 
+  const logger = useMemo(() => new Logger(), []);
+
   //
   // Handlers
   //
@@ -187,8 +190,9 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     log.info('starting research...', { selected });
     const { objects } = await space.db.query(Filter.ids(...selected)).run();
     const machine = new BlueprintMachine(researchBlueprint);
-    setConsolePrinter(machine, true);
+    const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));
     await machine.runToCompletion({ aiService: aiClient, input: objects });
+    cleanup();
   }, [space, aiClient, researchBlueprint, selection]);
 
   const handleGenerate = useCallback(async () => {
@@ -270,7 +274,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
         )}
 
         {showList && (
-          <div className='grow grid grid-rows-[min-content_1fr_1fr] overflow-hidden divide-y divide-separator'>
+          <div className='grow grid grid-rows-[min-content_1fr_1fr_1fr] overflow-hidden divide-y divide-separator'>
             <Toolbar.Root>
               <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='refresh' onClick={handleRefresh} />
               <IconButton icon='ph--sparkle--regular' iconOnly label='research' onClick={handleResearch} />
@@ -284,6 +288,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
               <FlushButton db={space?.db} />
             </Toolbar.Root>
             <ItemList items={objects} />
+            <Log logger={logger} />
             <JsonFilter
               data={{
                 space: client.spaces.get().length,
@@ -423,6 +428,18 @@ const FlushButton = ({ db }: { db?: EchoDatabase }) => {
   );
 };
 
+const Log: FC<{ logger: Logger }> = ({ logger }) => {
+  return (
+    <div className='grow flex flex-col p-1 overflow-y-auto text-sm'>
+      {logger.messages.value.map((message, index) => (
+        <div key={index} className='text-subdued'>
+          {message}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-assistant/Query',
   render: DefaultStory,
@@ -430,7 +447,7 @@ const meta: Meta<typeof DefaultStory> = {
     withPluginManager({
       fireEvents: [Events.SetupArtifactDefinition],
       plugins: testPlugins({
-        types: [ResearchGraph, ...DataTypes],
+        types: [...DataTypes, ResearchGraph],
         config: {
           runtime: {
             client: {
