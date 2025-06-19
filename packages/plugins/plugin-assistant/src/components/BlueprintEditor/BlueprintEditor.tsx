@@ -16,7 +16,6 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { removeProperties } from '@dxos/util';
 
 export type BlueprintEditorProps = ThemedClassName<{
   blueprint: BlueprintParser.DSL;
@@ -36,21 +35,7 @@ export const BlueprintEditor = ({ classNames, blueprint }: BlueprintEditorProps)
     extensions: [
       createBasicExtensions({ lineWrapping: false }),
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-      createJsonExtensions({
-        schema: removeProperties(toJsonSchema(Blueprint), (key, value) => {
-          if (key === '$ref' && value === '#/$defs/jsonSchema') {
-            return true;
-          }
-          if (key === '$ref' && value === '#/$defs/dependency') {
-            return true;
-          }
-          if (key === '$id' && value === '/schemas/any') {
-            return true;
-          }
-
-          return false;
-        }),
-      }),
+      createJsonExtensions({ schema: toJsonSchema(Blueprint, { strict: true }) }),
       editorMonospace,
     ],
   });
