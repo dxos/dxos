@@ -285,6 +285,6 @@ describe('Client services', () => {
         );
     }
 
-    await syncItemsAutomerge(hostSpace.db, guestSpace.db);
+    await syncItemsAutomerge(expect, hostSpace.db, guestSpace.db);
   });
 });

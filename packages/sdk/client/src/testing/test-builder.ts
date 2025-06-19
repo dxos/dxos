@@ -30,7 +30,7 @@ import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/
 import { Client } from '../client';
 import { type EchoDatabase } from '../echo';
 import { ClientServicesProxy, LocalClientServices } from '../services';
-import { expect } from 'vitest';
+import {  type ExpectStatic } from 'vitest';
 
 export const testConfigWithLocalSignal = new Config({
   version: 1,
@@ -176,7 +176,7 @@ export class TestBuilder {
   }
 }
 
-export const testSpaceAutomerge = async (createDb: EchoDatabase, checkDb: EchoDatabase = createDb) => {
+export const testSpaceAutomerge = async (expect: ExpectStatic, createDb: EchoDatabase, checkDb: EchoDatabase = createDb) => {
   const object = live(Expando, {});
   createDb.add(object);
   await expect.poll(() => checkDb.query(Filter.ids(object.id)).first({ timeout: 1000 }));
@@ -184,9 +184,9 @@ export const testSpaceAutomerge = async (createDb: EchoDatabase, checkDb: EchoDa
   return { objectId: object.id };
 };
 
-export const syncItemsAutomerge = async (db1: EchoDatabase, db2: EchoDatabase) => {
-  await testSpaceAutomerge(db1, db2);
-  await testSpaceAutomerge(db2, db1);
+export const syncItemsAutomerge = async (expect: ExpectStatic, db1: EchoDatabase, db2: EchoDatabase) => {
+  await testSpaceAutomerge(expect, db1, db2);
+  await testSpaceAutomerge(expect, db2, db1);
 };
 
 /**
