@@ -21,6 +21,12 @@ import { log } from '@dxos/log';
 import type { Blueprint, BlueprintStep } from './blueprint';
 import { AISession } from '../session';
 
+export type BlueprintTraceStep = {
+  status: 'done' | 'bailed' | 'skipped';
+  stepId: ObjectId;
+  comment: string;
+};
+
 export type BlueprintMachineState = {
   history: Message[];
   trace: BlueprintTraceStep[];
@@ -31,12 +37,6 @@ const INITIAL_STATE: BlueprintMachineState = {
   state: 'working',
   history: [],
   trace: [],
-};
-
-export type BlueprintTraceStep = {
-  status: 'done' | 'bailed' | 'skipped';
-  stepId: ObjectId;
-  comment: string;
 };
 
 type ExecutionOptions = {

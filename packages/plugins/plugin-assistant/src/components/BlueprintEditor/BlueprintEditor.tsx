@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
 import React from 'react';
 
-import { Blueprint, type BlueprintParser } from '@dxos/assistant';
+import { BlueprintParser } from '@dxos/assistant';
 import { toJsonSchema } from '@dxos/echo-schema';
 import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
@@ -21,11 +20,6 @@ export type BlueprintEditorProps = ThemedClassName<{
   blueprint: BlueprintParser.DSL;
 }>;
 
-export const Test = Schema.Struct({
-  steps: Schema.optional(Schema.Array(Schema.Any).pipe(Schema.mutable)),
-  foo: Schema.optional(Schema.Array(Schema.Any).pipe(Schema.mutable)),
-});
-
 // TODO(burdon): Factor out JsonEditor.
 // TODO(burdon): Make editable.
 export const BlueprintEditor = ({ classNames, blueprint }: BlueprintEditorProps) => {
@@ -35,7 +29,7 @@ export const BlueprintEditor = ({ classNames, blueprint }: BlueprintEditorProps)
     extensions: [
       createBasicExtensions({ lineWrapping: false }),
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-      createJsonExtensions({ schema: toJsonSchema(Blueprint, { strict: true }) }),
+      createJsonExtensions({ schema: toJsonSchema(BlueprintParser.InputSchema, { strict: true }) }),
       editorMonospace,
     ],
   });

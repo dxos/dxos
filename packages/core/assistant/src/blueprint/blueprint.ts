@@ -9,7 +9,8 @@ import { raise } from '@dxos/debug';
 import { ObjectId } from '@dxos/keys';
 
 export const BlueprintStep = Schema.Struct({
-  id: Schema.optional(Schema.String),
+  // TODO(burdon): Remove?
+  id: Schema.String,
   instructions: Schema.String,
   // TODO(burdon): ExecutableTool can't be serialized.
   tools: Schema.Array(Tool).pipe(Schema.mutable),
@@ -52,6 +53,15 @@ export namespace BlueprintBuilder {
  * Blueprint parser API.
  */
 export namespace BlueprintParser {
+  export const InputSchema = Schema.Struct({
+    steps: Schema.Array(
+      Schema.Struct({
+        instructions: Schema.String,
+        tools: Schema.optional(Schema.Array(Schema.String)),
+      }),
+    ),
+  });
+
   export type Step = {
     instructions: string;
     // TODO(burdon): Tool DXN? Additional metadata?
