@@ -8,7 +8,7 @@ import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { Relation, Obj, Type, Filter, Query, Ref } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { getLabel, getTypename } from '@dxos/echo-schema';
+import { getLabel } from '@dxos/echo-schema';
 import { type GraphEdge, AbstractGraphBuilder, type Graph, ReactiveGraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -235,13 +235,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
         }
       } else {
         // TODO(burdon): Filter?
-        // TODO(burdon): Obj.getTypename returns undefined for the same object.
-        // const typename = Obj.getTypename(object);
-        const t = Obj.getTypename(object);
-        if (!t) {
-          console.warn('no typename', object);
-        }
-        const typename = getTypename(object);
+        const typename = Obj.getTypename(object);
         if (typename) {
           let node: SpaceGraphNode | undefined = currentNodes.find((node) => node.id === object.id);
           if (!node) {
