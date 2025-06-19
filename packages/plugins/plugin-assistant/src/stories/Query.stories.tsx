@@ -17,20 +17,7 @@ import { BlueprintMachine, BlueprintParser, Logger, setConsolePrinter, setLogger
 import { combine } from '@dxos/async';
 import { Filter, Queue, type EchoDatabase, type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
-<<<<<<< HEAD
-import {
-  type AnyEchoObject,
-  type BaseEchoObject,
-  Ref,
-  create,
-  getLabelForObject,
-  getTypename,
-} from '@dxos/echo-schema';
-||||||| 5887169666
-import { type AnyEchoObject, Ref, create, getLabelForObject, getTypename } from '@dxos/echo-schema';
-=======
 import { Ref, create, getLabelForObject, getTypename, type AnyEchoObject } from '@dxos/echo-schema';
->>>>>>> dm/blueprint-step
 import { SelectionModel } from '@dxos/graph';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -57,16 +44,8 @@ import { addTestData } from './test-data';
 import { testPlugins } from './testing';
 import { AmbientDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
-<<<<<<< HEAD
-import { createFilter, type Expression, QueryParser } from '../parser';
-import { RESEARCH_BLUEPRINT, createTools as createRegistry } from '../testing';
-||||||| 5887169666
-import { createFilter, type Expression, QueryParser } from '../parser';
-import { RESEARCH_BLUEPRINT, createTools } from '../testing';
-=======
 import { QueryParser, createFilter, type Expression } from '../parser';
-import { RESEARCH_BLUEPRINT, createTools } from '../testing';
->>>>>>> dm/blueprint-step
+import { RESEARCH_BLUEPRINT, createRegistry } from '../testing';
 import translations from '../translations';
 
 faker.seed(1);

@@ -6,7 +6,7 @@ import React, { type FC, type PropsWithChildren } from 'react';
 
 import { type MessageContentBlock, type Message, type Tool } from '@dxos/ai';
 import { Surface } from '@dxos/app-framework';
-import type { BaseEchoObject } from '@dxos/echo-schema';
+import { type BaseEchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
 import { Button, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';

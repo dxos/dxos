@@ -6,11 +6,11 @@ import { Match, Schema } from 'effect';
 
 import {
   createTool,
+  type AIServiceClient,
   type ExecutableTool,
   Message,
-  ToolResult,
-  type AIServiceClient,
   type MessageContentBlock,
+  ToolResult,
   type ToolUseContentBlock,
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
