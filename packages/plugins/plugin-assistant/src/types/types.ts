@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { BlueprintType } from '@dxos/assistant';
+import { Blueprint } from '@dxos/assistant';
 import { SpaceSchema } from '@dxos/react-client/echo';
 
 import { AIChatType } from './chat';
@@ -28,7 +28,7 @@ export namespace AssistantAction {
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: BlueprintType,
+      object: Blueprint,
     }),
   }) {}
 }

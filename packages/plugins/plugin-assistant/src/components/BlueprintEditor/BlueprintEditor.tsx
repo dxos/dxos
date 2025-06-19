@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Blueprint, type BlueprintType } from '@dxos/assistant';
+import { Blueprint } from '@dxos/assistant';
 import { toJsonSchema } from '@dxos/echo-schema';
 import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
@@ -17,7 +17,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 export type BlueprintEditorProps = ThemedClassName<{
-  blueprint: BlueprintType;
+  blueprint: Blueprint;
 }>;
 
 // TODO(burdon): Factor out JsonEditor.

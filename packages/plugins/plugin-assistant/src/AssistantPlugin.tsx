@@ -11,7 +11,7 @@ import {
   definePlugin,
   Events,
 } from '@dxos/app-framework';
-import { BlueprintType } from '@dxos/assistant';
+import { Blueprint } from '@dxos/assistant';
 import { getSchemaTypename } from '@dxos/echo-schema';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
@@ -39,7 +39,7 @@ export const AssistantPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: BlueprintType.typename,
+          id: getSchemaTypename(Blueprint)!,
           metadata: {
             icon: 'ph--blueprint--regular',
           },
@@ -66,7 +66,7 @@ export const AssistantPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: BlueprintType,
+            objectSchema: Blueprint,
             getIntent: () => createIntent(AssistantAction.CreateBlueprint),
           }),
         ),

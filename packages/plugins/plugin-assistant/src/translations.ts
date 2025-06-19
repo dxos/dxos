@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { BlueprintType } from '@dxos/assistant';
+import { Blueprint } from '@dxos/assistant';
 import { getSchemaTypename } from '@dxos/echo-schema';
 
 import { ASSISTANT_PLUGIN } from './meta';
@@ -15,7 +15,7 @@ export default [
         'typename label': 'Assistant',
         'object name placeholder': 'AI Chat',
       },
-      [getSchemaTypename(BlueprintType)!]: {
+      [getSchemaTypename(Blueprint)!]: {
         'typename label': 'Blueprint',
         'object name placeholder': 'New blueprint',
       },

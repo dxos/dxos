@@ -6,7 +6,7 @@ import { Effect } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
-import { BlueprintType } from '@dxos/assistant';
+import { Blueprint } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { Filter, isInstanceOf, Query } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
@@ -105,7 +105,7 @@ export default () =>
     createSurface({
       id: `${ASSISTANT_PLUGIN}/blueprint`,
       role: 'article',
-      filter: (data): data is { subject: BlueprintType } => Obj.instanceOf(BlueprintType, data.subject),
+      filter: (data): data is { subject: Blueprint } => Obj.instanceOf(Blueprint, data.subject),
       component: ({ data, role }) => (
         <StackItem.Content role={role}>
           <BlueprintEditor blueprint={data.subject} />

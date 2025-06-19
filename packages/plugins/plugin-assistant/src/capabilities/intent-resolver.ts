@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { BlueprintType } from '@dxos/assistant';
+import { Blueprint } from '@dxos/assistant';
 import { createQueueDxn } from '@dxos/echo-schema';
 import { live, refFromDXN } from '@dxos/live-object';
 
@@ -30,7 +30,7 @@ export default () => [
       intent: AssistantAction.CreateBlueprint,
       resolve: ({ name }) => ({
         data: {
-          object: live(BlueprintType, { name, steps: [] }),
+          object: live(Blueprint, { name, steps: [] }),
         },
       }),
     }),
