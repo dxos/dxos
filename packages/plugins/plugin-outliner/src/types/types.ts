@@ -15,7 +15,7 @@ import { getDateString } from './util';
 
 export const OutlineType = Schema.Struct({
   name: Schema.optional(Schema.String),
-  content: Obj.make(DataType.Text),
+  content: Type.Ref(DataType.Text),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Outline',
@@ -30,8 +30,9 @@ export interface OutlineType extends Schema.Schema.Type<typeof OutlineType> {}
 //
 
 export const JournalEntryType = Schema.Struct({
-  date: Schema.String, // TODO(burdon): Date.
-  content: Obj.make(DataType.Text), // TODO(burdon): Breaks unless this is a reference.
+  id: Schema.String,
+  date: Schema.String,
+  content: Type.Ref(DataType.Text),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/JournalEntry',
@@ -42,8 +43,9 @@ export const JournalEntryType = Schema.Struct({
 export interface JournalEntryType extends Schema.Schema.Type<typeof JournalEntryType> {}
 
 export const JournalType = Schema.Struct({
+  id: Schema.String,
   name: Schema.optional(Schema.String),
-  entries: Schema.mutable(Schema.Array(Ref.make(JournalEntryType))),
+  entries: Schema.mutable(Schema.Array(Type.Ref(JournalEntryType))),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Journal',
@@ -80,5 +82,5 @@ export const createJournalEntry = (date = new Date()): JournalEntryType => {
 
 export const getJournalEntries = (journal: JournalType, date: Date): JournalEntryType[] => {
   const str = getDateString(date);
-  return RefArray.targets(journal.entries).filter((entry) => entry.date === str);
+  return Ref.Array.targets(journal.entries).filter((entry) => entry.date === str);
 };
