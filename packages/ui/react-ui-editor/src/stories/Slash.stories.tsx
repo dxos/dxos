@@ -8,35 +8,31 @@ import { type EditorView } from '@codemirror/view';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { type DxRefTag, type DxRefTagActivate } from '@dxos/lit-ui';
-import { Popover, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory } from './components';
-import { RefPopover } from '../components';
+import { RefPopover, type SlashCommandItem, SlashCommandMenu, coreSlashCommandItems } from '../components';
 import { slashLineEffect, slashMenu } from '../extensions';
 import { str } from '../testing';
-
-const items = ['test', 'text', 'heading', 'list', 'quote'];
 
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/Slash',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: () => {
-    const { tx } = useThemeContext();
     const viewRef = useRef<EditorView>(null);
     const triggerRef = useRef<DxRefTag | null>(null);
     const [open, setOpen] = useState(false);
     const [_, update] = useState({});
     const [currentItem, setCurrentItem] = useState(0);
-    const currentRef = useRef<string | null>(null);
-    const itemsRef = useRef<string[]>(items);
+    const currentRef = useRef<SlashCommandItem | null>(null);
+    const itemsRef = useRef<SlashCommandItem[]>(coreSlashCommandItems);
 
     const handleOpenChange = useCallback((open: boolean) => {
       setOpen(open);
       if (!open) {
         setCurrentItem(0);
         triggerRef.current = null;
-        itemsRef.current = items;
+        itemsRef.current = coreSlashCommandItems;
         viewRef.current?.dispatch({ effects: [slashLineEffect.of(null)] });
       }
     }, []);
@@ -45,6 +41,17 @@ const meta: Meta<typeof EditorStory> = {
       currentRef.current = itemsRef.current[0];
       triggerRef.current = event.trigger;
       handleOpenChange(true);
+    }, []);
+
+    const handleSelect = useCallback((item: SlashCommandItem) => {
+      const view = viewRef.current;
+      if (!view) {
+        return;
+      }
+
+      const selection = view.state.selection.main;
+      const line = view.state.doc.lineAt(selection.head);
+      item.onSelect?.(view, line);
     }, []);
 
     const extensions = useMemo(
@@ -67,20 +74,15 @@ const meta: Meta<typeof EditorStory> = {
           onDeactivate: () => {
             handleOpenChange(false);
           },
-          onEnter: (_line) => {
-            const view = viewRef.current;
-            const line = view?.state.doc.line(_line);
-            const insert = currentRef.current;
-            if (!view || !line || !insert) {
-              return;
+          onEnter: () => {
+            if (currentRef.current) {
+              handleSelect(currentRef.current);
             }
-
-            const from = line.from;
-            const to = line.to;
-            view.dispatch({ changes: { from, to, insert } });
           },
           onTextChange: (text) => {
-            itemsRef.current = items.filter((item) => item.toLowerCase().includes(text.toLowerCase()));
+            itemsRef.current = coreSlashCommandItems.filter((item) =>
+              item.label.toLowerCase().includes(text.toLowerCase()),
+            );
             update({});
           },
         }),
@@ -97,31 +99,7 @@ const meta: Meta<typeof EditorStory> = {
         onActivate={handleActivate}
       >
         <EditorStory ref={viewRef} text={str('# Slash', '', '', '')} placeholder={''} extensions={extensions} />
-        <Popover.Portal>
-          {/* NOTE: Not using DropdownMenu because the slash menu needs to manage focus explicitly. */}
-          <Popover.Content
-            align='start'
-            onOpenAutoFocus={(event) => event.preventDefault()}
-            classNames={tx('menu.content', 'menu--exotic-unfocusable', { elevation: 'positioned' })}
-          >
-            <Popover.Viewport classNames={tx('menu.viewport', 'menu__viewport--exotic-unfocusable', {})}>
-              <ul>
-                {itemsRef.current.map((item, index) => (
-                  <li
-                    key={item}
-                    className={tx('menu.item', 'menu__item--exotic-unfocusable', {}, [
-                      currentItem === index && 'bg-hoverSurface',
-                    ])}
-                    tabIndex={-1}
-                    onClick={() => console.log('!')}
-                  >
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </Popover.Viewport>
-          </Popover.Content>
-        </Popover.Portal>
+        <SlashCommandMenu items={itemsRef.current} currentItem={currentItem} onSelect={handleSelect} />
       </RefPopover>
     );
   },

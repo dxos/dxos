@@ -163,7 +163,7 @@ export type SlashMenuOptions = {
   onArrowDown?: () => void;
   onArrowUp?: () => void;
   onDeactivate?: () => void;
-  onEnter?: (line: number, text: string) => void;
+  onEnter?: () => void;
   onTextChange?: (text: string) => void;
 };
 
@@ -249,7 +249,7 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
 
           // Check if cursor is on the active slash line.
           if (currentLine.number === activeSlashLine && currentLine.text.startsWith('/')) {
-            options.onEnter?.(activeSlashLine, currentLine.text);
+            options.onEnter?.();
             return true;
           }
         }
