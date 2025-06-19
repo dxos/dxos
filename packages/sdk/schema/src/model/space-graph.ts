@@ -8,7 +8,6 @@ import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { Relation, Obj, Type, Filter, Query, Ref } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { getLabel } from '@dxos/echo-schema';
 import { type GraphEdge, AbstractGraphBuilder, type Graph, ReactiveGraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -244,7 +243,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
               type: 'object',
               data: {
                 object,
-                label: (schema && getLabel(schema, object)) ?? object.id,
+                label: (schema && Obj.getLabel(object)) ?? object.id,
               },
             };
 

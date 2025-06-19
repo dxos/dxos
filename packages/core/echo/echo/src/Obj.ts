@@ -90,6 +90,15 @@ export const isDeleted = (obj: Any): boolean => {
   return deleted;
 };
 
+export const getLabel = (obj: Any, defaultLabel?: string): string => {
+  const schema = getSchema(obj);
+  if (schema == null) {
+    return defaultLabel ?? obj.id;
+  }
+
+  return EchoSchema.getLabel(schema, obj);
+};
+
 /**
  * JSON representation of an object.
  */
