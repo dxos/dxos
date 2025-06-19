@@ -44,13 +44,6 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       if (onAddCard) {
         const newCardId = onAddCard(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue);
         setFocusedCardId(newCardId);
-        queueMicrotask(() => {
-          const columnStack = document.getElementById(columnValue as string);
-          if (columnStack) {
-            const scrollEvent = new Event('scroll');
-            columnStack.dispatchEvent(scrollEvent);
-          }
-        });
       }
     },
     [onAddCard],

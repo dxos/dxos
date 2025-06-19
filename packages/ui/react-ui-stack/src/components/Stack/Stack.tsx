@@ -12,6 +12,7 @@ import React, {
   useState,
   useMemo,
   useCallback,
+  useEffect,
 } from 'react';
 
 import { type ThemedClassName, ListItem } from '@dxos/react-ui';
@@ -106,6 +107,22 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
         return size === 'contain-fit-content' ? railGridVerticalContainFitContent : railGridVertical;
       }
     }, [rail, orientation, size]);
+
+    useEffect(() => {
+      if (!(stackElement && Number.isFinite(separatorOnScroll))) {
+        return;
+      }
+
+      const observer = new MutationObserver(() => {
+        handleScroll();
+      });
+
+      observer.observe(stackElement, { childList: true, subtree: true });
+
+      return () => {
+        observer.disconnect();
+      };
+    }, [stackElement, handleScroll]);
 
     return (
       <StackContext.Provider value={{ orientation, rail, size, onRearrange }}>
