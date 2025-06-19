@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import type { inspect, InspectOptionsStylized } from 'node:util';
 
-import { inspectCustom } from '@dxos/debug';
+import { devtoolsFormatter, type DevtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
 import { ObjectId } from './object-id';
@@ -250,6 +250,18 @@ export class DXN {
     return (
       printControlCode(inspectFn.colors.blueBright![0]) + this.toString() + printControlCode(inspectFn.colors.reset![0])
     );
+  }
+
+  get [devtoolsFormatter](): DevtoolsFormatter {
+    return {
+      header: () => {
+        return [
+          'span',
+          { style: `font-weight: bold;` },
+          this.toString(),
+        ];
+      },
+    };
   }
 }
 
