@@ -94,7 +94,7 @@ type BlockComponent = FC<{
   space?: Space;
   block: MessageContentBlock;
   onPrompt?: (text: string) => void;
-  onAddToGraph?: (object: BaseEchoObject) => void;
+  onAddToGraph?: (object: Obj.Any) => void;
 }>;
 
 const components: Record<string, BlockComponent> = {
