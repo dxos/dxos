@@ -23,11 +23,14 @@ import {
   type BaseObject,
   RelationSourceDXNId,
   RelationTargetDXNId,
+  RelationSourceId,
+  RelationTargetId,
 } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
+import type { Obj, Relation } from '@dxos/echo';
 
 // TODO(burdon): Unify with the graph schema.
 export const Subgraph = Schema.Struct({
@@ -153,8 +156,8 @@ export const sanitizeObjects = async (
     .flat();
 
   const idMap = new Map<string, string>();
-
   const existingIds = new Set<ObjectId>();
+  const enitties = new Map<ObjectId, Obj.Any | Relation.Any>();
 
   const resolveId = (id: string): DXN | undefined => {
     if (ObjectId.isValid(id)) {
@@ -214,9 +217,12 @@ export const sanitizeObjects = async (
         data[RelationTargetDXNId] = targetDxn;
       }
 
-      return create(entry.schema, data);
+      return {
+        data,
+        schema: entry.schema,
+      };
     })
-    .filter((object) => !existingIds.has(object.id)); // TODO(dmaretskyi): This dissallows updating existing objects.
+    .filter((object) => !existingIds.has(object.data.id)); // TODO(dmaretskyi): This dissallows updating existing objects.
 
   const { objects } = await db.query(Query.select(Filter.ids(...existingIds))).run();
   // TODO(dmaretskyi): Returns everything if IDs are empty!
@@ -226,7 +232,35 @@ export const sanitizeObjects = async (
     throw new Error(`Object IDs do not point to existing objects: ${missing.join(', ')}`);
   }
 
-  return res;
+  return res.flatMap(({data, schema}) => {
+    let skip = false;
+    if(RelationSourceDXNId in data) {
+      const id = (data[RelationSourceDXNId] as DXN).asEchoDXN()?.echoId;
+      const obj = objects.find(object => object.id === id) ?? enitties.get(id!);
+      if(obj) {
+        delete data[RelationSourceDXNId];
+        data[RelationSourceId] = obj;
+      } else {
+        skip = true;
+      }
+    }
+    if(RelationTargetDXNId in data) {
+      const id = (data[RelationTargetDXNId] as DXN).asEchoDXN()?.echoId;
+      const obj = objects.find(object => object.id === id) ?? enitties.get(id!);
+      if(obj) {
+        delete data[RelationTargetDXNId];
+        data[RelationTargetId] = obj;
+      } else {
+        skip = true;
+      }
+    }
+    if(!skip) {
+      const obj = create(schema, data);
+      enitties.set(obj.id, obj);
+      return [obj];
+    }
+    return [];
+  });
 };
 
 const SoftRef = Schema.Struct({
