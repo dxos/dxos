@@ -3,10 +3,11 @@
 //
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
+import { Blueprint } from '@dxos/assistant';
 import { createQueueDxn } from '@dxos/echo-schema';
 import { live, refFromDXN } from '@dxos/live-object';
 
-import { AssistantAction, AIChatType, TemplateType } from '../types';
+import { AssistantAction, AIChatType } from '../types';
 
 export default () => [
   contributes(
@@ -26,10 +27,10 @@ export default () => [
   contributes(
     Capabilities.IntentResolver,
     createResolver({
-      intent: AssistantAction.CreateTemplate,
+      intent: AssistantAction.CreateBlueprint,
       resolve: ({ name }) => ({
         data: {
-          object: live(TemplateType, { name, kind: { include: 'manual' }, source: '{{! Template }}' }),
+          object: live(Blueprint, { name, steps: [] }),
         },
       }),
     }),
