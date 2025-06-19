@@ -92,10 +92,10 @@ export const toJsonSchema = (schema: Schema.Schema.All, options: JsonSchemaOptio
       if (key === '$id' && value === '/schemas/any') {
         return true;
       }
-      if (key === '$ref' && value === '#/$defs/jsonSchema') {
+      if (key === '$ref' && value === '#/$defs/dependency') {
         return true;
       }
-      if (key === '$ref' && value === '#/$defs/dependency') {
+      if (key === '$ref' && value === '#/$defs/jsonSchema') {
         return true;
       }
 
