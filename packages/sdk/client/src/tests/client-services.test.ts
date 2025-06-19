@@ -180,7 +180,7 @@ describe('Client services', () => {
       .toEqual(Device.PresenceState.OFFLINE);
   });
 
-  test.only('synchronizes data between two spaces after completing invitation', { timeout: 20_000 }, async () => {
+  test('synchronizes data between two spaces after completing invitation', { timeout: 20_000 }, async () => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 
