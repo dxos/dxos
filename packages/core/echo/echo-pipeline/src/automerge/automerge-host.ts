@@ -45,6 +45,7 @@ import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator, type RemoteDocumentExistenceCheckParams } from './echo-replicator';
 import { HeadsStore } from './heads-store';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
+import { TimedTaskScheduler } from '../scheduler';
 
 export type PeerIdProvider = () => string | undefined;
 
@@ -86,6 +87,13 @@ export class AutomergeHost extends Resource {
   private readonly _db: LevelDB;
   private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _echoNetworkAdapter: EchoNetworkAdapter;
+  private readonly _syncScheduler = new TimedTaskScheduler({
+    budget: 500,
+    budgetPeriod: 1000,
+    cooldown: 500,
+    maxParallelTasks: 10,
+    saveHistoryFor: 30_000,
+  });
 
   private readonly _collectionSynchronizer = new CollectionSynchronizer({
     queryCollectionState: this._queryCollectionState.bind(this),
@@ -175,6 +183,7 @@ export class AutomergeHost extends Resource {
       }
     });
 
+    await this._syncScheduler.open();
     await this._echoNetworkAdapter.open();
     await this._collectionSynchronizer.open();
     await this._echoNetworkAdapter.open();
@@ -185,6 +194,7 @@ export class AutomergeHost extends Resource {
     await this._collectionSynchronizer.close();
     await this._storage.close?.();
     await this._echoNetworkAdapter.close();
+    await this._syncScheduler.close();
     await this._ctx.dispose();
   }
 
@@ -564,7 +574,12 @@ export class AutomergeHost extends Resource {
 
     // Load the documents so they will start syncing.
     for (const documentId of toReplicate) {
-      this._repo.findWithProgress(documentId);
+      this._syncScheduler
+        .schedule(async () => {
+          const handle = await this._repo.find(documentId, FIND_PARAMS);
+          await handle.whenReady();
+        })
+        .catch((err) => log.catch(err));
     }
   }
 
