@@ -162,16 +162,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return target[symbolInternals].core.getTarget()?.toDXN();
         }
         case RelationSourceId: {
-          const sourceRef = target[symbolInternals].core.getSource();
-          invariant(sourceRef);
-          // TODO(dmaretskyi): This shouldn't be implement via refs \_(^.^)_/.
-          return this.lookupRef(target, sourceRef)?.target;
+          return this._getRelationSource(target);
         }
         case RelationTargetId: {
-          const targetRef = target[symbolInternals].core.getTarget();
-          invariant(targetRef);
-          // TODO(dmaretskyi): This shouldn't be implement via refs \_(^.^)_/.
-          return this.lookupRef(target, targetRef)?.target;
+          return this._getRelationTarget(target);
         }
         case TypeId:
           return this.getTypeReference(target)?.toDXN();
@@ -179,6 +173,18 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return this.getMeta(target);
         case DeletedId:
           return this.isDeleted(target);
+      }
+    } else {
+      switch (prop) {
+        case EntityKindId: 
+        case RelationSourceDXNId: 
+        case RelationTargetDXNId: 
+        case RelationSourceId: 
+        case RelationTargetId: 
+        case TypeId:
+        case MetaId:
+        case DeletedId:
+          return undefined;
       }
     }
 
@@ -243,6 +249,39 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return (schema as any)[SchemaMetaSymbol].typename;
     }
     return this.getTypeReference(target)?.objectId;
+  }
+
+  private _getRelationSource(target: ProxyTarget): any {
+    const sourceRef = target[symbolInternals].core.getSource();
+    invariant(sourceRef);
+    const database = target[symbolInternals].database;
+    if (database) {
+      // TODO(dmaretskyi): Put refs into proxy cache.
+        return database.graph.createRefResolver({
+          context: {
+            space: database.spaceId,
+          },
+        }).resolveSync(sourceRef.toDXN(), false);
+    } else {
+      invariant(target[symbolInternals].linkCache);
+      return target[symbolInternals].linkCache.get(sourceRef.objectId);
+    }
+  }
+
+  private _getRelationTarget(target: ProxyTarget): any {
+    const targetRef = target[symbolInternals].core.getTarget();
+    invariant(targetRef);
+    const database = target[symbolInternals].database;
+    if (database) {
+      return database.graph.createRefResolver({
+        context: {
+          space: database.spaceId,
+        },
+      }).resolveSync(targetRef.toDXN(), false);
+    } else { 
+      invariant(target[symbolInternals].linkCache);
+      return target[symbolInternals].linkCache.get(targetRef.objectId);
+    }
   }
 
   /**
