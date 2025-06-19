@@ -15,6 +15,7 @@ import { setTypename } from './typename';
 import { EntityKind, getSchemaDXN, getTypeAnnotation } from '../ast';
 import { defineHiddenProperty } from '../utils';
 import { raise } from '@dxos/debug';
+import type { Simplify } from 'effect/Schema';
 
 // Make `id` optional.
 type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;

@@ -4,9 +4,10 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { create, Expando, getSchema, Ref } from '@dxos/echo-schema';
+import { create, Expando, getSchema, Ref, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { DXN, SpaceId } from '@dxos/keys';
+import { Relation, Obj } from '@dxos/echo';
 
 import { EchoTestBuilder } from './echo-test-builder';
 import { live } from '@dxos/live-object';
@@ -65,6 +66,63 @@ describe('queues', (ctx) => {
     }
   });
 
-  test('relations in queues');
-  test('relation between queue object and a database object');
+  test('relations in queues', async () => {
+    await using peer = await builder.createPeer({ types: [Testing.Contact, Testing.HasManager] });
+    const spaceId = SpaceId.random();
+    const queues = peer.client.constructQueueFactory(spaceId);
+    const queue = queues.create();
+
+    {
+      const obj = create(Testing.Contact, {
+        name: 'john',
+      });
+      const obj2 = create(Testing.Contact, {
+        name: 'jane',
+      });
+      const relation = create(Testing.HasManager, {
+        [RelationSourceId]: obj,
+        [RelationTargetId]: obj2,
+      });
+      await queue.append([obj, obj2, relation]);
+    }
+      
+
+    {
+      const [obj, obj2, relation] = await queue.queryObjects();
+      expect((obj as Testing.Contact).name).toEqual('john');
+      expect((obj2 as Testing.Contact).name).toEqual('jane');
+      expect(Relation.getSource(relation as Testing.HasManager).name).toEqual('john');
+      expect(Relation.getTarget(relation as Testing.HasManager).name).toEqual('jane');
+    }
+  });
+
+  test('relation between queue object and a database object', async () => {
+    await using peer = await builder.createPeer({ types: [Testing.Contact, Testing.HasManager] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const queue = queues.create();
+
+    {
+      const obj = db.add(live(Testing.Contact, {
+        name: 'john',
+      }));
+
+      const jane = create(Testing.Contact, {
+        name: 'jane',
+      });
+      const relation = create(Testing.HasManager, {
+        [RelationSourceId]: obj,
+        [RelationTargetId]: jane,
+      });
+      
+      await queue.append([jane, relation]);
+    }
+
+    {
+      const [jane, relation] = await queue.queryObjects();
+      expect((jane as Testing.Contact).name).toEqual('jane');
+      expect(Relation.getSource(relation as Testing.HasManager).name).toEqual('john');
+      expect(Relation.getTarget(relation as Testing.HasManager).name).toEqual('jane');
+    }
+  });
 });
