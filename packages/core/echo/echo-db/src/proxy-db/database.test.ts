@@ -5,11 +5,12 @@
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Trigger } from '@dxos/async';
+import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type BaseObject, Expando, getSchema, getTypename, Query, Ref } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { dangerouslySetProxyId, getMeta, getType, live, type Live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -50,6 +51,38 @@ describe('Database', () => {
 
     db.add(live(Expando, { name: 'Test' }));
     await db.flush();
+  });
+
+  test('db is persisted to storage without a flush', { timeout: 100000 }, async () => {
+    const level = createTestLevel();
+    const testBuilder = new EchoTestBuilder();
+    await openAndClose(testBuilder);
+
+    // Create database.
+    let spaceKey: PublicKey;
+    let rootUrl: string;
+    {
+      const testPeer = await testBuilder.createPeer({ kv: level });
+      const db = await testPeer.createDatabase();
+      spaceKey = db.spaceKey;
+      rootUrl = db.rootUrl!;
+      db.add(live(Expando, { name: 'Test' }));
+      const { objects } = await db.query(Query.select(Filter.everything())).run();
+      expect(objects).to.have.length(1);
+      expect(objects[0].name).to.eq('Test');
+      await sleep(500); // Wait for the object to be saved.
+      await db.close();
+    }
+
+    // Load database.
+    {
+      const testPeer = await testBuilder.createPeer({ kv: level });
+      const db = await asyncTimeout(testPeer.openDatabase(spaceKey, rootUrl), 1000);
+      const { objects } = await db.query(Query.select(Filter.everything())).run();
+      expect(objects).to.have.length(1);
+      expect(objects[0].name).to.eq('Test');
+      await db.close();
+    }
   });
 
   test('add object multiple times', async () => {
