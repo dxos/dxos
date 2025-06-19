@@ -143,7 +143,7 @@ describe('RepoProxy', () => {
 
       const clientHandle = clientRepo.create<{ text: string }>({ text });
       url = clientHandle.url;
-      await sleep(500);
+      await sleep(300); // Wait for the object to be saved.
       await host.close();
       await clientRepo.close();
     }
