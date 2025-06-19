@@ -12,12 +12,10 @@ import { type PreviewProps } from '../types';
 
 export const OrganizationCard = ({
   children,
-  classNames,
   subject: { name, image, description, website },
-  role,
 }: PreviewProps<DataType.Organization>) => {
   return (
-    <Card.Content classNames={[role === 'popover' && 'popover-card-width', classNames]}>
+    <>
       <Card.Poster alt={name!} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
       <Card.Heading>{name}</Card.Heading>
       {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
@@ -37,6 +35,6 @@ export const OrganizationCard = ({
         </Card.Chrome>
       )}
       {children}
-    </Card.Content>
+    </>
   );
 };

@@ -22,6 +22,7 @@ import { descriptionMessage } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
+import { CardContainer } from '../components/CardContainer';
 import { PREVIEW_PLUGIN } from '../meta';
 
 export default () =>
@@ -64,9 +65,11 @@ export default () =>
           [dispatch],
         );
         return (
-          <ContactCard subject={data.subject} onOrgClick={handleOrgClick} role={role}>
-            {role === 'popover' && <Surface role='related' data={data} />}
-          </ContactCard>
+          <CardContainer role={role}>
+            <ContactCard subject={data.subject} onOrgClick={handleOrgClick}>
+              {role === 'popover' && <Surface role='related' data={data} />}
+            </ContactCard>
+          </CardContainer>
         );
       },
     }),
@@ -75,16 +78,22 @@ export default () =>
       role: ['popover', 'card--kanban', 'card'],
       filter: (data): data is { subject: DataType.Organization } => isInstanceOf(DataType.Organization, data.subject),
       component: ({ data, role }) => (
-        <OrganizationCard subject={data.subject} role={role}>
-          {role === 'popover' && <Surface role='related' data={data} />}
-        </OrganizationCard>
+        <CardContainer role={role}>
+          <OrganizationCard subject={data.subject}>
+            {role === 'popover' && <Surface role='related' data={data} />}
+          </OrganizationCard>
+        </CardContainer>
       ),
     }),
     createSurface({
       id: `${PREVIEW_PLUGIN}/schema-popover--project`,
       role: ['popover', 'card--kanban', 'card'],
       filter: (data): data is { subject: DataType.Project } => isInstanceOf(DataType.Project, data.subject),
-      component: ({ data, role }) => <ProjectCard subject={data.subject} role={role} />,
+      component: ({ data, role }) => (
+        <CardContainer role={role}>
+          <ProjectCard subject={data.subject} />
+        </CardContainer>
+      ),
     }),
 
     //
@@ -111,7 +120,9 @@ export default () =>
         }, []);
 
         return (
-          <Form schema={schema} values={data.subject} readonly={role === 'popover'} onSave={handleSave} autoSave />
+          <CardContainer role={role}>
+            <Form schema={schema} values={data.subject} readonly={role === 'popover'} onSave={handleSave} autoSave />
+          </CardContainer>
         );
       },
     }),

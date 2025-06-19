@@ -27,8 +27,8 @@ const CardRoot = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
-const CardContent = forwardRef<HTMLDivElement, SharedCardProps>(
-  ({ children, classNames, asChild, role = 'group', ...props }, forwardedRef) => {
+const CardContent = forwardRef<HTMLDivElement, SharedCardProps & { surfaceRole?: string }>(
+  ({ children, classNames, asChild, role = 'group', surfaceRole, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     const rootProps = asChild
       ? { classNames: [cardContent, classNames] }
@@ -55,22 +55,13 @@ const CardHeading = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
-const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(
-  ({ children, classNames, asChild, ...props }, forwardedRef) => {
-    return (
-      <Toolbar.Root
-        {...props}
-        classNames={[
-          'dx-card__toolbar group-has-[.dx-card__poster]/card:absolute block-start-0 inset-inline-0 bg-transparent bs-[--rail-action]',
-          classNames,
-        ]}
-        ref={forwardedRef}
-      >
-        {children}
-      </Toolbar.Root>
-    );
-  },
-);
+const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, ...props }, forwardedRef) => {
+  return (
+    <Toolbar.Root {...props} ref={forwardedRef}>
+      {children}
+    </Toolbar.Root>
+  );
+});
 
 const CardToolbarIconButton = Toolbar.IconButton;
 const CardToolbarSeparator = Toolbar.Separator;
@@ -96,19 +87,21 @@ const CardMenu = Primitive.div as FC<ComponentPropsWithRef<'div'>>;
 
 type CardPosterProps = {
   alt: string;
+  aspect?: 'video' | 'auto';
 } & Partial<{ image: string; icon: string }>;
 
 const CardPoster = (props: CardPosterProps) => {
+  const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
   if (props.image) {
     return (
-      <img className='dx-card__poster aspect-video object-cover is-full bs-auto' src={props.image} alt={props.alt} />
+      <img className={`dx-card__poster ${aspect} object-cover is-full bs-auto`} src={props.image} alt={props.alt} />
     );
   }
   if (props.icon) {
     return (
       <div
         role='image'
-        className='dx-card__poster grid aspect-video place-items-center bg-inputSurface text-subdued'
+        className={`dx-card__poster grid ${aspect} place-items-center bg-inputSurface text-subdued`}
         aria-label={props.alt}
       >
         <Icon icon={props.icon} size={10} />

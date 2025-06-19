@@ -13,14 +13,12 @@ import { type PreviewProps } from '../types';
 
 export const ContactCard = ({
   children,
-  classNames,
-  role,
   subject: { fullName, image, organization, emails },
   onOrgClick,
 }: PreviewProps<DataType.Person> & { onOrgClick?: (org: DataType.Organization) => void }) => {
   const organizationName = organization && typeof organization === 'object' ? organization.target?.name : organization;
   return (
-    <Card.Content classNames={[role === 'popover' && 'popover-card-width', classNames]}>
+    <>
       <Avatar.Root>
         <Card.Text role='group' classNames='grid gap-3 grid-cols-[min-content_1fr]'>
           <Avatar.Content imgSrc={image} icon='ph--user--regular' size={16} hue='neutral' />
@@ -66,6 +64,6 @@ export const ContactCard = ({
           ))}
       </dl>
       {children}
-    </Card.Content>
+    </>
   );
 };
