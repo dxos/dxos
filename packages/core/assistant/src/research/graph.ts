@@ -6,7 +6,7 @@ import { Schema, identity, Option, SchemaAST } from 'effect';
 
 import { createTool, ToolResult } from '@dxos/ai';
 import type { Obj, Relation } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-db';
+import { type EchoDatabase, type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
   EntityKind,
@@ -30,7 +30,7 @@ import {
 import { mapAst } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { deepMapValues } from '@dxos/util';
+import { deepMapValues, isNonNullable } from '@dxos/util';
 
 // TODO(burdon): Unify with the graph schema.
 export const Subgraph = Schema.Struct({
@@ -98,7 +98,7 @@ const isSchemaAddressableByDxn = (schema: Schema.Schema.AnyNoContext, dxn: DXN):
 /**
  * Perform vector search in the local database.
  */
-export const createLocalSearchTool = (db: EchoDatabase) => {
+export const createLocalSearchTool = (db: EchoDatabase, queue?: Queue) => {
   return createTool('search', {
     name: 'local_search',
     description: 'Search the local database for information using a vector index',
@@ -109,9 +109,16 @@ export const createLocalSearchTool = (db: EchoDatabase) => {
     }),
     execute: async ({ query }) => {
       const { objects } = await db.query(Query.select(Filter.text(query, { type: 'vector' }))).run();
+      const results = [...objects];
+      if (queue) {
+        const queueObjects = await queue.queryObjects();
+        // TODO(dmaretskyi): Text search on the queue.
+        results.push(...queueObjects);
+      }
+
       return ToolResult.Success(`
         <local_context>
-          ${JSON.stringify(objects, null, 2)}
+          ${JSON.stringify(results, null, 2)}
         </local_context>
         `);
     },
@@ -144,6 +151,7 @@ export const sanitizeObjects = async (
   types: Schema.Schema.AnyNoContext[],
   data: Record<string, readonly unknown[]>,
   db: EchoDatabase,
+  queue?: Queue,
 ): Promise<BaseObject[]> => {
   const entries = types
     .map(
@@ -224,9 +232,13 @@ export const sanitizeObjects = async (
     })
     .filter((object) => !existingIds.has(object.data.id)); // TODO(dmaretskyi): This dissallows updating existing objects.
 
-  const { objects } = await db.query(Query.select(Filter.ids(...existingIds))).run();
+  // TODO(dmaretskyi): Use ref resolver.
+  const { objects: dbObjects } = await db.query(Query.select(Filter.ids(...existingIds))).run();
+  const queueObjects = await queue?.getObjectsById([...existingIds]) ?? [];
+  const objects = [...dbObjects, ...queueObjects].filter(isNonNullable);
+
   // TODO(dmaretskyi): Returns everything if IDs are empty!
-  log.info('objects', { objects, existingIds });
+  log.info('objects', { dbObjects, queueObjects, existingIds });
   const missing = Array.from(existingIds).filter((id) => !objects.some((object) => object.id === id));
   if (missing.length > 0) {
     throw new Error(`Object IDs do not point to existing objects: ${missing.join(', ')}`);
@@ -306,10 +318,12 @@ const preprocessSchema = (schema: Schema.Schema.AnyNoContext) => {
 
 export const createGraphWriterTool = ({
   db,
+  queue,
   schemaTypes,
   onDone = async (x) => x,
 }: {
   db: EchoDatabase;
+  queue?: Queue;
   schemaTypes: Schema.Schema.AnyNoContext[];
   onDone?: (data: AnyEchoObject[]) => Promise<any>;
 }) => {
@@ -318,7 +332,7 @@ export const createGraphWriterTool = ({
     description: 'Write to the local graph database',
     schema: createExtractionSchema(schemaTypes),
     execute: async (input) => {
-      const data = await sanitizeObjects(schemaTypes, input as any, db);
+      const data = await sanitizeObjects(schemaTypes, input as any, db, queue);
       return ToolResult.Success(await onDone(data as AnyEchoObject[]));
     },
   });

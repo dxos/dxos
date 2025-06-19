@@ -46,6 +46,7 @@ import { ASSISTANT_PLUGIN } from '../meta';
 import { QueryParser, createFilter, type Expression } from '../parser';
 import { RESEARCH_BLUEPRINT, createTools } from '../testing';
 import translations from '../translations';
+import { DXN } from '@dxos/keys';
 
 faker.seed(1);
 
@@ -188,7 +189,13 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
     const selected = selection.selected.value;
     log.info('starting research...', { selected });
-    const { objects } = await space.db.query(Filter.ids(...selected)).run();
+    const resolver = space.db.graph.createRefResolver({
+      context: {
+        space: space.db.spaceId,
+        queue: researchGraph?.queue.dxn,
+      }
+    })
+    const objects = await Promise.all(selected.map(id => resolver.resolve(DXN.fromLocalObjectId(id))));
     const machine = new BlueprintMachine(researchBlueprint);
     const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));
     await machine.runToCompletion({ aiService: aiClient, input: objects });
