@@ -40,7 +40,11 @@ const CardHeading = forwardRef<HTMLDivElement, SharedCardProps>(({ children, cla
 
 const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, classNames, ...props }, forwardedRef) => {
   return (
-    <Toolbar.Root {...props} classNames={['absolute block-start-0 inset-inline-0', classNames]} ref={forwardedRef}>
+    <Toolbar.Root
+      {...props}
+      classNames={['absolute block-start-0 inset-inline-0 bg-transparent', classNames]}
+      ref={forwardedRef}
+    >
       {children}
     </Toolbar.Root>
   );
@@ -82,3 +86,5 @@ export const Card = {
   Menu: CardMenu,
   Media: CardMedia,
 };
+
+export { cardRoot, cardContent };

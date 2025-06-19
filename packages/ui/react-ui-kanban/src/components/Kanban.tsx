@@ -16,6 +16,8 @@ import {
   CardStackDragPreview,
   Card,
   CardDragPreview,
+  cardRoot,
+  cardStackContainer,
 } from '@dxos/react-ui-stack';
 
 import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanModel } from '../defs';
@@ -77,6 +79,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             item={columnItem}
             size={20}
             disableRearrange={uncategorized}
+            classNames={cardStackContainer}
             focusIndicatorVariant='group'
             prevSiblingId={prevSiblingId}
             nextSiblingId={nextSiblingId}
@@ -93,34 +96,32 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     key={card.id}
                     item={card}
                     focusIndicatorVariant='group'
+                    classNames={cardRoot}
                     onClick={() => singleSelect(card.id)}
                     prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
                     nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
-                    asChild
                   >
-                    <Card.Root>
-                      <Card.Content>
-                        <Card.Toolbar>
-                          <StackItem.DragHandle asChild>
-                            <Card.DragHandle toolbarItem />
-                          </StackItem.DragHandle>
-                          <AttentionGlyph attended={selected === card.id} />
-                          {onRemoveCard && (
-                            <>
-                              <Card.ToolbarSeparator />
-                              <Card.ToolbarIconButton
-                                iconOnly
-                                variant='ghost'
-                                icon='ph--x--regular'
-                                label={t('remove card label')}
-                                onClick={() => onRemoveCard(card)}
-                              />
-                            </>
-                          )}
-                        </Card.Toolbar>
-                        <Surface role='card--kanban' limit={1} data={{ subject: card }} />
-                      </Card.Content>
-                    </Card.Root>
+                    <Card.Content>
+                      <Card.Toolbar>
+                        <StackItem.DragHandle asChild>
+                          <Card.DragHandle toolbarItem />
+                        </StackItem.DragHandle>
+                        <AttentionGlyph attended={selected === card.id} />
+                        {onRemoveCard && (
+                          <>
+                            <Card.ToolbarSeparator variant='gap' />
+                            <Card.ToolbarIconButton
+                              iconOnly
+                              variant='ghost'
+                              icon='ph--x--regular'
+                              label={t('remove card label')}
+                              onClick={() => onRemoveCard(card)}
+                            />
+                          </>
+                        )}
+                      </Card.Toolbar>
+                      <Surface role='card--kanban' limit={1} data={{ subject: card }} />
+                    </Card.Content>
                     <StackItem.DragPreview>
                       {({ item }) => (
                         <CardDragPreview.Root>

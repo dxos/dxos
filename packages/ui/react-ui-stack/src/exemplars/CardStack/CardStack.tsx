@@ -9,6 +9,8 @@ import { mx } from '@dxos/react-ui-theme';
 import { railGridHorizontalContainFitContent, Stack, type StackProps } from '../../components';
 import { Card } from '../Card';
 
+const cardStackContainer = 'flex flex-col pli-2 plb-2';
+
 const CardStackStack = forwardRef<
   HTMLDivElement,
   Omit<StackProps, 'orientation' | 'size' | 'rail' | 'separatorOnScroll'>
@@ -34,37 +36,35 @@ const CardStackStack = forwardRef<
 
 const CardStackDragHandle = Card.DragHandle;
 
+const cardStackHeading = 'mli-2 order-first bg-transparent rounded-bs-md flex items-center';
+
 const CardStackHeading = forwardRef<HTMLDivElement, PropsWithChildren<{}>>(({ children }, forwardedRef) => {
   return (
-    <div role='heading' className='mli-2 order-first bg-transparent rounded-bs-md' ref={forwardedRef}>
+    <div role='heading' className={cardStackHeading} ref={forwardedRef}>
       {children}
     </div>
   );
 });
+
+const cardStackFooter =
+  'plb-2 mli-2 border-bs border-transparent [[data-scroll-separator-end="true"]_&]:border-subduedSeparator';
 
 const CardStackFooter = forwardRef<HTMLDivElement, PropsWithChildren<{}>>(({ children }, forwardedRef) => {
   return (
-    <div
-      role='none'
-      className='plb-2 mli-2 border-bs border-transparent [[data-scroll-separator-end="true"]_&]:border-subduedSeparator'
-      ref={forwardedRef}
-    >
+    <div role='none' className={cardStackFooter} ref={forwardedRef}>
       {children}
     </div>
   );
 });
 
+const cardStackRoot = mx(
+  'shrink min-bs-0 bg-baseSurface border border-separator rounded-md grid dx-focus-ring-group-x-indicator kanban-drop',
+  railGridHorizontalContainFitContent,
+);
+
 const CardStackRoot = forwardRef<HTMLDivElement, PropsWithChildren<{}>>(({ children }, forwardedRef) => {
   return (
-    <div
-      role='none'
-      className={mx(
-        'shrink min-bs-0 bg-baseSurface border border-separator rounded-md grid dx-focus-ring-group-x-indicator kanban-drop',
-        railGridHorizontalContainFitContent,
-      )}
-      data-scroll-separator='false'
-      ref={forwardedRef}
-    >
+    <div role='none' className={cardStackRoot} data-scroll-separator='false' ref={forwardedRef}>
       {children}
     </div>
   );
@@ -77,3 +77,5 @@ export const CardStack = {
   Footer: CardStackFooter,
   DragHandle: CardStackDragHandle,
 };
+
+export { cardStackRoot, cardStackFooter, cardStackHeading, cardStackContainer };
