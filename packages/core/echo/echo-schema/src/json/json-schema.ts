@@ -106,7 +106,7 @@ export const toJsonSchema = (schema: Schema.Schema.All, options: JsonSchemaOptio
   return jsonSchema;
 };
 
-export const _toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
+const _toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
   invariant(schema);
   const withRefinements = withEchoRefinements(schema.ast, '#');
   let jsonSchema = JSONSchema.fromAST(withRefinements, {
