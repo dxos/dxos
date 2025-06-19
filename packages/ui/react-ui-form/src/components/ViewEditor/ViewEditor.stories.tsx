@@ -86,9 +86,7 @@ const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-form/ViewEditor',
   render: DefaultStory,
   decorators: [withClientProvider({ createSpace: true }), withLayout({ fullscreen: true }), withTheme],
-  parameters: {
-    translations,
-  },
+  parameters: { translations },
 };
 
 export default meta;
@@ -98,7 +96,5 @@ type Story = StoryObj<StoryProps>;
 export const Default: Story = {};
 
 export const Readonly: Story = {
-  args: {
-    readonly: true,
-  },
+  args: { readonly: true },
 };

@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { log } from '@dxos/log';
@@ -20,6 +20,7 @@ import { TestLayout, TestPanel } from '../testing';
 type StoryProps = FieldEditorProps;
 
 const DefaultStory = (props: FieldEditorProps) => {
+  const projection = useMemo(() => new ViewProjection(createEchoSchema(TestSchema).jsonSchema, testView), []);
   const handleComplete: FieldEditorProps['onSave'] = () => {
     log.info('onClose', { props });
   };
@@ -27,7 +28,7 @@ const DefaultStory = (props: FieldEditorProps) => {
   return (
     <TestLayout json={{ props }}>
       <TestPanel>
-        <FieldEditor {...props} onSave={handleComplete} />
+        <FieldEditor {...props} projection={projection} onSave={handleComplete} />
       </TestPanel>
     </TestLayout>
   );
@@ -49,8 +50,8 @@ type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
-    projection: new ViewProjection(createEchoSchema(TestSchema).jsonSchema, testView),
     view: testView,
     field: testView.fields[0],
   },
+  parameters: { controls: { disabled: true } },
 };
