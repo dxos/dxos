@@ -4,11 +4,13 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { create, getSchema } from '@dxos/echo-schema';
+import { create, Expando, getSchema, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 
 import { EchoTestBuilder } from './echo-test-builder';
+import { live } from '@dxos/live-object';
+import type { Queue } from '../queue';
 
 describe('queues', (ctx) => {
   let builder: EchoTestBuilder;
@@ -17,6 +19,20 @@ describe('queues', (ctx) => {
   });
   afterEach(async () => {
     await builder.close();
+  });
+
+  test('resolve reference to a queue', async () => {
+    await using peer = await builder.createPeer({ types: [Testing.Contact] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const obj = db.add(live({
+      // TODO(dmaretskyi): Support Ref.make
+      queue: Ref.fromDXN(queues.create().dxn) as Ref<Queue>,
+    }));
+
+    expect(obj.queue.target).toBeDefined();
+    expect(obj.queue.target!.dxn).toBeInstanceOf(DXN)
+    expect(await obj.queue.load()).toBeDefined();
   });
 
   test('create and resolve an object from a queue', async () => {

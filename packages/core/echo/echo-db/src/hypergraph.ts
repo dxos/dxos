@@ -37,7 +37,7 @@ import {
   type QueryOptions,
   type QuerySource,
 } from './query';
-import type { QueueFactory } from './queue';
+import type { Queue, QueueFactory } from './queue';
 
 const TRACE_REF_RESOLUTION = true;
 
@@ -216,7 +216,11 @@ export class Hypergraph {
     return {
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (dxn, load, onLoad) => {
-        // TODO(dmaretskyi): Add queues.
+        // TODO(dmaretskyi): Add queue objects.
+        if (dxn.kind === DXN.kind.QUEUE && dxn.asQueueDXN()?.objectId === undefined) {
+          const { spaceId, subspaceTag, queueId } = dxn.asQueueDXN()!;
+          return this._resolveQueueSync(spaceId, subspaceTag as QueueSubspaceTag, queueId);
+        }
 
         if (dxn.kind !== DXN.kind.ECHO) {
           return undefined; // Unsupported DXN kind.
@@ -318,7 +322,7 @@ export class Hypergraph {
     }
   }
 
-  private async _resolveAsync(dxn: DXN, context: RefResolutionContext): Promise<AnyEchoObject | undefined> {
+  private async _resolveAsync(dxn: DXN, context: RefResolutionContext): Promise<AnyEchoObject | Queue | undefined> {
     const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
     let status: string = '';
     try {
@@ -357,7 +361,7 @@ export class Hypergraph {
           const { subspaceTag, spaceId, queueId, objectId } = dxn.asQueueDXN() ?? failedInvariant();
           if (!objectId) {
             status = 'error';
-            throw new Error('Queue object ID is required');
+            return this._resolveQueueSync(spaceId, subspaceTag as QueueSubspaceTag, queueId);
           }
 
           const obj = await this._resolveQueueObjectAsync(spaceId, subspaceTag as QueueSubspaceTag, queueId, objectId);
@@ -390,6 +394,18 @@ export class Hypergraph {
       objects: [obj],
     } = await db.query(Filter.ids(objectId)).run();
     return obj;
+  }
+
+  private _resolveQueueSync(
+    spaceId: SpaceId,
+    subspaceTag: QueueSubspaceTag,
+    queueId: ObjectId,
+  ): Queue | undefined {
+    const queueFactory = this._queueFactories.get(spaceId);
+    if (!queueFactory) {
+      return undefined;
+    }
+    return queueFactory.get(DXN.fromQueue(subspaceTag, spaceId, queueId));
   }
 
   private async _resolveQueueObjectAsync(
