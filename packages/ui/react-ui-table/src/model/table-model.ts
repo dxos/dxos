@@ -6,7 +6,15 @@ import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-c
 
 import { type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { type FieldSortType, FormatEnum, getValue, setValue, type JsonProp, getSnapshot } from '@dxos/echo-schema';
+import {
+  type FieldSortType,
+  FormatEnum,
+  getValue,
+  setValue,
+  type JsonProp,
+  getSnapshot,
+  getSchema,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject, makeRef } from '@dxos/live-object';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
@@ -16,7 +24,7 @@ import {
   type DxGridPlanePosition,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import { type ViewType, type ViewProjection, PropertyType } from '@dxos/schema';
+import { type ViewType, type ViewProjection, type PropertyType, validateSchema } from '@dxos/schema';
 
 import { type SelectionMode, SelectionModel } from './selection-model';
 import { TableSorting } from './table-sorting';
@@ -345,12 +353,24 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
     const currentRow = this._rows.value[rowIdx];
     invariant(currentRow, 'Invalid row index');
-    const rowClone = getSnapshot(currentRow);
+
+    // Get a snapshot of the current object.
+    const snapshot = getSnapshot(currentRow);
     const transformedValue = editorTextToCellValue(props, value);
 
-    setValue(rowClone, field.path, transformedValue);
+    // Sent the proposed value.
+    setValue(snapshot, field.path, transformedValue);
 
-    // Stub validation - always returns valid for now
+    const schema = getSchema(currentRow);
+    invariant(schema);
+
+    const validationResult = validateSchema(schema, snapshot);
+    if (validationResult && validationResult.length > 0) {
+      const error = validationResult[0];
+      invariant(error.path === field.path);
+      return { valid: false, error: error.message };
+    }
+
     return { valid: true };
   };
 
