@@ -16,7 +16,7 @@ import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-te
 import { BlueprintMachine, BlueprintParser, Logger, setConsolePrinter, setLogger } from '@dxos/assistant';
 import { combine } from '@dxos/async';
 import { Filter, Queue, type EchoDatabase, type Space } from '@dxos/client/echo';
-import { Type } from '@dxos/echo';
+import { type Obj, Type } from '@dxos/echo';
 import { Ref, create, getLabelForObject, getTypename, type AnyEchoObject } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
 import { DXN } from '@dxos/keys';
@@ -369,7 +369,7 @@ const createMatcher =
   };
 
 // TODO(burdon): Replace with card list.
-const ItemList = <T extends BaseEchoObject>({ items = [] }: { items?: T[] }) => {
+const ItemList = <T extends Obj.Any>({ items = [] }: { items?: T[] }) => {
   return (
     <List.Root<T> items={items}>
       {({ items }) => (
