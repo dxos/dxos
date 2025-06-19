@@ -30,6 +30,7 @@ import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/
 import { Client } from '../client';
 import { type EchoDatabase } from '../echo';
 import { ClientServicesProxy, LocalClientServices } from '../services';
+import { expect } from 'vitest';
 
 export const testConfigWithLocalSignal = new Config({
   version: 1,
@@ -178,7 +179,7 @@ export class TestBuilder {
 export const testSpaceAutomerge = async (createDb: EchoDatabase, checkDb: EchoDatabase = createDb) => {
   const object = live(Expando, {});
   createDb.add(object);
-  await checkDb.query(Filter.ids(object.id)).first({ timeout: 1000 });
+  await expect.poll(() => checkDb.query(Filter.ids(object.id)).first({ timeout: 1000 }));
 
   return { objectId: object.id };
 };

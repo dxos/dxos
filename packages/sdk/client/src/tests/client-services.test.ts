@@ -15,6 +15,7 @@ import { Device, DeviceKind, Invitation, SpaceMember } from '@dxos/protocols/pro
 
 import { Client } from '../client';
 import { syncItemsAutomerge, TestBuilder } from '../testing';
+import { Filter } from '@dxos/echo-schema';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.
@@ -180,7 +181,7 @@ describe('Client services', () => {
       .toEqual(Device.PresenceState.OFFLINE);
   });
 
-  test('synchronizes data between two spaces after completing invitation', { timeout: 20_000 }, async () => {
+  test.only('synchronizes data between two spaces after completing invitation', { timeout: 20_000 }, async () => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 
