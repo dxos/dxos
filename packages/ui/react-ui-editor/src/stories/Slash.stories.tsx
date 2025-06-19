@@ -98,6 +98,7 @@ const meta: Meta<typeof EditorStory> = {
       >
         <EditorStory ref={viewRef} text={str('# Slash', '', '', '')} placeholder={''} extensions={extensions} />
         <Popover.Portal>
+          {/* NOTE: Not using DropdownMenu because the slash menu needs to manage focus explicitly. */}
           <Popover.Content
             align='start'
             onOpenAutoFocus={(event) => event.preventDefault()}
@@ -105,7 +106,6 @@ const meta: Meta<typeof EditorStory> = {
           >
             <Popover.Viewport classNames={tx('menu.viewport', 'menu__viewport--exotic-unfocusable', {})}>
               <ul>
-                {/* NOTE: Not using DropdownMenu because the slash menu needs to manage focus explicitly. */}
                 {itemsRef.current.map((item, index) => (
                   <li
                     key={item}
