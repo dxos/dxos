@@ -89,13 +89,13 @@ export const toJsonSchema = (schema: Schema.Schema.All, options: JsonSchemaOptio
   if (options.strict) {
     // TOOD(burdon): Workaround to ensure JSON schema is valid (for agv parsing).
     jsonSchema = removeProperties(jsonSchema, (key, value) => {
+      if (key === '$id' && value === '/schemas/any') {
+        return true;
+      }
       if (key === '$ref' && value === '#/$defs/jsonSchema') {
         return true;
       }
       if (key === '$ref' && value === '#/$defs/dependency') {
-        return true;
-      }
-      if (key === '$id' && value === '/schemas/any') {
         return true;
       }
 
