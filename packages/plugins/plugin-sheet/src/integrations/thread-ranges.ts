@@ -15,13 +15,13 @@ import {
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
-import { isInstanceOf, RelationSourceId } from '@dxos/echo-schema';
+import { Relation } from '@dxos/echo';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ThreadAction, ThreadType } from '@dxos/plugin-thread/types';
 import { Filter, fullyQualifiedId, getSpace, Query, useQuery } from '@dxos/react-client/echo';
 import { type DxGridElement, type DxGridPosition, type GridContentProps } from '@dxos/react-ui-grid';
 import { AnchoredTo } from '@dxos/schema';
-import { Relation } from '@dxos/echo';
 
 import { useSheetContext } from '../components';
 import { SHEET_PLUGIN } from '../meta';

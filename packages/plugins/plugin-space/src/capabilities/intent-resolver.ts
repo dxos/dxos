@@ -12,7 +12,8 @@ import {
   LayoutAction,
   type PluginContext,
 } from '@dxos/app-framework';
-import { type Expando, getTypename, type HasId, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
+import { Relation } from '@dxos/echo';
+import { type Expando, getTypename, type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { live, makeRef, type Live } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
@@ -36,7 +37,6 @@ import {
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionAction, CollectionType, SpaceAction } from '../types';
 import { cloneObject, COMPOSER_SPACE_LOCK, getNestedObjects } from '../util';
-import { Relation } from '@dxos/echo';
 
 // TODO(wittjosiah): Remove.
 const SPACE_MAX_OBJECTS = 500;

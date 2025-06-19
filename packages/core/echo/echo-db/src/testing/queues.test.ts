@@ -4,13 +4,13 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { create, Expando, getSchema, Ref, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
+import { Relation } from '@dxos/echo';
+import { create, getSchema, Ref, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { DXN, SpaceId } from '@dxos/keys';
-import { Relation, Obj } from '@dxos/echo';
+import { live } from '@dxos/live-object';
 
 import { EchoTestBuilder } from './echo-test-builder';
-import { live } from '@dxos/live-object';
 import type { Queue } from '../queue';
 
 describe('queues', (ctx) => {
@@ -26,13 +26,15 @@ describe('queues', (ctx) => {
     await using peer = await builder.createPeer({ types: [Testing.Contact] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
-    const obj = db.add(live({
-      // TODO(dmaretskyi): Support Ref.make
-      queue: Ref.fromDXN(queues.create().dxn) as Ref<Queue>,
-    }));
+    const obj = db.add(
+      live({
+        // TODO(dmaretskyi): Support Ref.make
+        queue: Ref.fromDXN(queues.create().dxn) as Ref<Queue>,
+      }),
+    );
 
     expect(obj.queue.target).toBeDefined();
-    expect(obj.queue.target!.dxn).toBeInstanceOf(DXN)
+    expect(obj.queue.target!.dxn).toBeInstanceOf(DXN);
     expect(await obj.queue.load()).toBeDefined();
   });
 
@@ -85,7 +87,6 @@ describe('queues', (ctx) => {
       });
       await queue.append([obj, obj2, relation]);
     }
-      
 
     {
       const [obj, obj2, relation] = await queue.queryObjects();
@@ -103,9 +104,11 @@ describe('queues', (ctx) => {
     const queue = queues.create();
 
     {
-      const obj = db.add(live(Testing.Contact, {
-        name: 'john',
-      }));
+      const obj = db.add(
+        live(Testing.Contact, {
+          name: 'john',
+        }),
+      );
 
       const jane = create(Testing.Contact, {
         name: 'jane',
@@ -114,7 +117,7 @@ describe('queues', (ctx) => {
         [RelationSourceId]: obj,
         [RelationTargetId]: jane,
       });
-      
+
       await queue.append([jane, relation]);
     }
 

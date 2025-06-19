@@ -288,7 +288,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
       obj = createObject(obj);
     }
-    assertObjectModelShape(obj)
+    assertObjectModelShape(obj);
 
     // TODO(burdon): Check if already added to db?
     invariant(isEchoObject(obj));

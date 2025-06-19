@@ -396,11 +396,7 @@ export class Hypergraph {
     return obj;
   }
 
-  private _resolveQueueSync(
-    spaceId: SpaceId,
-    subspaceTag: QueueSubspaceTag,
-    queueId: ObjectId,
-  ): Queue | undefined {
+  private _resolveQueueSync(spaceId: SpaceId, subspaceTag: QueueSubspaceTag, queueId: ObjectId): Queue | undefined {
     const queueFactory = this._queueFactories.get(spaceId);
     if (!queueFactory) {
       return undefined;

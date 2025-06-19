@@ -3,9 +3,9 @@
 //
 
 import { Obj, type Ref } from '@dxos/echo';
-import { type AnyEchoObject, type HasId, assertObjectModelShape, getTypename } from '@dxos/echo-schema';
+import { type AnyEchoObject, type HasId, assertObjectModelShape } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { assertArgument, failedInvariant } from '@dxos/invariant';
+import { failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 

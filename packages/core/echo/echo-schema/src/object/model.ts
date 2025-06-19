@@ -5,12 +5,12 @@
 import type { Schema } from 'effect';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
+import { assumeType } from '@dxos/util';
 
 import type { ObjectMeta } from './meta';
 import { EntityKind } from '../ast';
-import { assumeType } from '@dxos/util';
-import { invariant } from '@dxos/invariant';
 
 //
 // Defines the internal model of the echo object.
@@ -142,16 +142,19 @@ export interface ObjectMetaJSON {
 }
 
 // eslint-disable-next-line func-style
-export function assertObjectModelShape(obj: unknown): asserts obj is InternalObjectProps {
+export const assertObjectModelShape = (obj: unknown): asserts obj is InternalObjectProps => {
   invariant(typeof obj === 'object' && obj !== null, 'Invalid object model: not an object');
   assumeType<InternalObjectProps>(obj);
   invariant(ObjectId.isValid(obj.id), 'Invalid object model: invalid id');
   invariant(obj[TypeId] === undefined || obj[TypeId] instanceof DXN, 'Invalid object model: invalid type');
-  invariant(obj[EntityKindId] === EntityKind.Object || obj[EntityKindId] === EntityKind.Relation, 'Invalid object model: invalid entity kind');
+  invariant(
+    obj[EntityKindId] === EntityKind.Object || obj[EntityKindId] === EntityKind.Relation,
+    'Invalid object model: invalid entity kind',
+  );
   if (obj[EntityKindId] === EntityKind.Relation) {
     invariant(obj[RelationSourceDXNId] instanceof DXN, 'Invalid object model: invalid relation source');
     invariant(obj[RelationTargetDXNId] instanceof DXN, 'Invalid object model: invalid relation target');
     invariant(!(obj[RelationSourceId] instanceof DXN), 'Invalid object model: source pointer is a DXN');
     invariant(!(obj[RelationTargetId] instanceof DXN), 'Invalid object model: target pointer is a DXN');
   }
-}
+};

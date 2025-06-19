@@ -13,4 +13,3 @@ export enum EntityKind {
 }
 
 export const EntityKindSchema = Schema.Enums(EntityKind);
-

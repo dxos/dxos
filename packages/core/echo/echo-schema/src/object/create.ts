@@ -4,18 +4,25 @@
 
 import { type Schema } from 'effect';
 
-import { assertArgument, failedInvariant, invariant } from '@dxos/invariant';
+import { raise } from '@dxos/debug';
+import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 
 import { getObjectDXN, setSchema } from './accessors';
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
-import { assertObjectModelShape, EntityKindId, MetaId, RelationSourceDXNId, RelationSourceId, RelationTargetDXNId, RelationTargetId } from './model';
+import {
+  assertObjectModelShape,
+  EntityKindId,
+  MetaId,
+  RelationSourceDXNId,
+  RelationSourceId,
+  RelationTargetDXNId,
+  RelationTargetId,
+} from './model';
 import { setTypename } from './typename';
 import { EntityKind, getSchemaDXN, getTypeAnnotation } from '../ast';
 import { defineHiddenProperty } from '../utils';
-import { raise } from '@dxos/debug';
-import type { Simplify } from 'effect/Schema';
 
 // Make `id` optional.
 type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;
@@ -61,7 +68,10 @@ export const create = <S extends Schema.Schema.AnyNoContext>(
   assertArgument(!('@type' in data), '@type is not allowed');
   assertArgument(!(RelationSourceDXNId in data), 'Relation source DXN is not allowed in the constructor');
   assertArgument(!(RelationTargetDXNId in data), 'Relation target DXN is not allowed in the constructor');
-  assertArgument((RelationSourceId in data) === (RelationTargetId in data), 'Relation source and target must be provided together');
+  assertArgument(
+    RelationSourceId in data === RelationTargetId in data,
+    'Relation source and target must be provided together',
+  );
 
   const obj = { ...data, id: data.id ?? ObjectId.random() };
   const kind = RelationSourceId in data ? EntityKind.Relation : EntityKind.Object;

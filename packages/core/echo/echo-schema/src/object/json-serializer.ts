@@ -6,11 +6,11 @@ import { Schema } from 'effect';
 
 import { raise } from '@dxos/debug';
 import { isEncodedReference, type EncodedReference } from '@dxos/echo-protocol';
-import { assertArgument, failedInvariant, invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
-import { getObjectDXN, setSchema } from './accessors';
+import { setSchema } from './accessors';
 import { ObjectMetaSchema } from './meta';
 import {
   ATTR_DELETED,
@@ -26,14 +26,13 @@ import {
   RelationSourceId,
   RelationTargetId,
   TypeId,
-  type InternalObjectProps,
   type ObjectJSON,
   assertObjectModelShape,
 } from './model';
 import { getType, setTypename } from './typename';
 import { EntityKind } from '../ast';
 import { Ref, refFromEncodedReference, setRefResolver, type RefResolver } from '../ref';
-import { type AnyEchoObject, type BaseObject } from '../types';
+import { type AnyEchoObject } from '../types';
 import { defineHiddenProperty } from '../utils';
 
 type DeepReplaceRef<T> =
@@ -90,8 +89,8 @@ export const objectFromJSON = async (
   const isRelation =
     typeof jsonData[ATTR_RELATION_SOURCE] === 'string' || typeof jsonData[ATTR_RELATION_TARGET] === 'string';
   if (isRelation) {
-    let sourceDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')));
-    let targetDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')));
+    const sourceDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')));
+    const targetDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')));
 
     // TODO(dmaretskyi): Async!
     const source = (await refResolver?.resolve(sourceDxn)) as AnyEchoObject | undefined;

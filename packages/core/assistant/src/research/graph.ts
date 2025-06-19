@@ -20,8 +20,6 @@ import {
   ObjectId,
   Query,
   ReferenceAnnotationId,
-  RelationSourceId,
-  RelationTargetId,
   type BaseObject,
   RelationSourceDXNId,
   RelationTargetDXNId,
