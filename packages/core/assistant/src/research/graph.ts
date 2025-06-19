@@ -5,6 +5,7 @@
 import { Schema, identity, Option, SchemaAST } from 'effect';
 
 import { createTool, ToolResult } from '@dxos/ai';
+import type { Obj, Relation } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
@@ -30,7 +31,6 @@ import { mapAst } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
-import type { Obj, Relation } from '@dxos/echo';
 
 // TODO(burdon): Unify with the graph schema.
 export const Subgraph = Schema.Struct({
@@ -232,29 +232,29 @@ export const sanitizeObjects = async (
     throw new Error(`Object IDs do not point to existing objects: ${missing.join(', ')}`);
   }
 
-  return res.flatMap(({data, schema}) => {
+  return res.flatMap(({ data, schema }) => {
     let skip = false;
-    if(RelationSourceDXNId in data) {
+    if (RelationSourceDXNId in data) {
       const id = (data[RelationSourceDXNId] as DXN).asEchoDXN()?.echoId;
-      const obj = objects.find(object => object.id === id) ?? enitties.get(id!);
-      if(obj) {
+      const obj = objects.find((object) => object.id === id) ?? enitties.get(id!);
+      if (obj) {
         delete data[RelationSourceDXNId];
         data[RelationSourceId] = obj;
       } else {
         skip = true;
       }
     }
-    if(RelationTargetDXNId in data) {
+    if (RelationTargetDXNId in data) {
       const id = (data[RelationTargetDXNId] as DXN).asEchoDXN()?.echoId;
-      const obj = objects.find(object => object.id === id) ?? enitties.get(id!);
-      if(obj) {
+      const obj = objects.find((object) => object.id === id) ?? enitties.get(id!);
+      if (obj) {
         delete data[RelationTargetDXNId];
         data[RelationTargetId] = obj;
       } else {
         skip = true;
       }
     }
-    if(!skip) {
+    if (!skip) {
       const obj = create(schema, data);
       enitties.set(obj.id, obj);
       return [obj];

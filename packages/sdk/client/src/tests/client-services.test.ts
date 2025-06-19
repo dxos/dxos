@@ -15,7 +15,6 @@ import { Device, DeviceKind, Invitation, SpaceMember } from '@dxos/protocols/pro
 
 import { Client } from '../client';
 import { syncItemsAutomerge, TestBuilder } from '../testing';
-import { Filter } from '@dxos/echo-schema';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.

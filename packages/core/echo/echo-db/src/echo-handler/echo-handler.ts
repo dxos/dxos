@@ -176,11 +176,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     } else {
       switch (prop) {
-        case EntityKindId: 
-        case RelationSourceDXNId: 
-        case RelationTargetDXNId: 
-        case RelationSourceId: 
-        case RelationTargetId: 
+        case EntityKindId:
+        case RelationSourceDXNId:
+        case RelationTargetDXNId:
+        case RelationSourceId:
+        case RelationTargetId:
         case TypeId:
         case MetaId:
         case DeletedId:
@@ -257,11 +257,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const database = target[symbolInternals].database;
     if (database) {
       // TODO(dmaretskyi): Put refs into proxy cache.
-        return database.graph.createRefResolver({
+      return database.graph
+        .createRefResolver({
           context: {
             space: database.spaceId,
           },
-        }).resolveSync(sourceRef.toDXN(), false);
+        })
+        .resolveSync(sourceRef.toDXN(), false);
     } else {
       invariant(target[symbolInternals].linkCache);
       return target[symbolInternals].linkCache.get(sourceRef.objectId);
@@ -273,12 +275,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(targetRef);
     const database = target[symbolInternals].database;
     if (database) {
-      return database.graph.createRefResolver({
-        context: {
-          space: database.spaceId,
-        },
-      }).resolveSync(targetRef.toDXN(), false);
-    } else { 
+      return database.graph
+        .createRefResolver({
+          context: {
+            space: database.spaceId,
+          },
+        })
+        .resolveSync(targetRef.toDXN(), false);
+    } else {
       invariant(target[symbolInternals].linkCache);
       return target[symbolInternals].linkCache.get(targetRef.objectId);
     }

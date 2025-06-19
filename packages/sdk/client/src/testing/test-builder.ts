@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { type ExpectStatic } from 'vitest';
+
 import { Trigger } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
 import { ClientServicesHost, type ServiceContextRuntimeParams } from '@dxos/client-services';
@@ -30,7 +32,6 @@ import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/
 import { Client } from '../client';
 import { type EchoDatabase } from '../echo';
 import { ClientServicesProxy, LocalClientServices } from '../services';
-import {  type ExpectStatic } from 'vitest';
 
 export const testConfigWithLocalSignal = new Config({
   version: 1,
@@ -176,7 +177,11 @@ export class TestBuilder {
   }
 }
 
-export const testSpaceAutomerge = async (expect: ExpectStatic, createDb: EchoDatabase, checkDb: EchoDatabase = createDb) => {
+export const testSpaceAutomerge = async (
+  expect: ExpectStatic,
+  createDb: EchoDatabase,
+  checkDb: EchoDatabase = createDb,
+) => {
   const object = live(Expando, {});
   createDb.add(object);
   await expect.poll(() => checkDb.query(Filter.ids(object.id)).first({ timeout: 1000 }));

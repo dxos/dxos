@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
 import { Match, Schema } from 'effect';
-import { default as React, useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react';
 
 import { AIServiceEdgeClient, type AIServiceEdgeClientOptions } from '@dxos/ai';
 import { SpyAIService } from '@dxos/ai/testing';
@@ -39,13 +39,13 @@ import { DataType, DataTypes, SpaceGraphModel } from '@dxos/schema';
 import { createObjectFactory, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { addTestData } from './test-data';
+import { testPlugins } from './testing';
 import { AmbientDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { QueryParser, createFilter, type Expression } from '../parser';
 import { RESEARCH_BLUEPRINT, createTools } from '../testing';
 import translations from '../translations';
-import { addTestData } from './test-data';
-import { testPlugins } from './testing';
 
 faker.seed(1);
 
