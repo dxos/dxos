@@ -2,11 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { RangeSetBuilder, StateField, StateEffect, Prec } from '@codemirror/state';
+import { EditorView, ViewPlugin, type ViewUpdate, Decoration, keymap, type DecorationSet } from '@codemirror/view';
 
 import { type CleanupFn, addEventListener } from '@dxos/async';
 
 import { closeEffect, openEffect } from './action';
+import { multilinePlaceholder } from '../placeholder';
 
 export type FloatingMenuOptions = {
   icon?: string;
@@ -135,3 +137,180 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
     },
   }),
 ];
+
+// State effects for managing slash menu state.
+export const slashLineEffect = StateEffect.define<number | null>();
+
+// State field to track which line the slash menu is active on.
+const slashMenuState = StateField.define<number | null>({
+  create: () => null,
+  update: (value, tr) => {
+    let newValue = value;
+
+    // Apply effects.
+    for (const effect of tr.effects) {
+      if (effect.is(slashLineEffect)) {
+        newValue = effect.value;
+      }
+    }
+
+    return newValue;
+  },
+});
+
+export type SlashMenuOptions = {
+  placeholder?: Parameters<typeof multilinePlaceholder>[0];
+  onArrowDown?: () => void;
+  onArrowUp?: () => void;
+  onDeactivate?: () => void;
+  onEnter?: (line: number, text: string) => void;
+  onTextChange?: (text: string) => void;
+};
+
+export const slashMenu = (options: SlashMenuOptions = {}) => {
+  const slashMenuPlugin = ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet = Decoration.none;
+
+      constructor(readonly view: EditorView) {}
+
+      update(update: ViewUpdate) {
+        const builder = new RangeSetBuilder<Decoration>();
+        const selection = update.view.state.selection.main;
+        const line = update.view.state.doc.lineAt(selection.head);
+        const activeSlashLine = update.view.state.field(slashMenuState);
+
+        // Check if we should show the widget - only if this line is in the active slash lines set.
+        const shouldShowWidget = activeSlashLine === line.number && line.text.startsWith('/');
+
+        if (shouldShowWidget) {
+          const slashPos = line.from;
+          const contentStart = slashPos + 1;
+          const content = update.view.state.sliceDoc(contentStart, line.to);
+
+          // Create mark decoration that wraps the entire line content in a dx-ref-tag.
+          builder.add(
+            slashPos,
+            line.to,
+            Decoration.mark({
+              tagName: 'dx-ref-tag',
+              class: 'cm-ref-tag',
+              attributes: {
+                'data-auto-trigger': 'true',
+              },
+            }),
+          );
+
+          if (update.docChanged) {
+            options.onTextChange?.(content);
+          }
+        }
+
+        this.decorations = builder.finish();
+      }
+    },
+    {
+      decorations: (v) => v.decorations,
+    },
+  );
+
+  const slashKeymap = keymap.of([
+    {
+      key: '/',
+      run: (view) => {
+        const selection = view.state.selection.main;
+        const line = view.state.doc.lineAt(selection.head);
+
+        // Only trigger on empty lines or at the beginning of a line.
+        if (line.text.trim() === '' || selection.head === line.from) {
+          // Insert the slash character.
+          view.dispatch({
+            changes: { from: selection.head, insert: '/' },
+            selection: { anchor: selection.head + 1, head: selection.head + 1 },
+            effects: slashLineEffect.of(line.number),
+          });
+          return true;
+        }
+
+        return false;
+      },
+    },
+    {
+      key: 'Enter',
+      run: (view) => {
+        const activeSlashLine = view.state.field(slashMenuState);
+        if (activeSlashLine !== null) {
+          const selection = view.state.selection.main;
+          const currentLine = view.state.doc.lineAt(selection.head);
+          // Clear the current line.
+          view.dispatch({
+            changes: { from: currentLine.from, to: currentLine.to, insert: '' },
+          });
+
+          // Check if cursor is on the active slash line.
+          if (currentLine.number === activeSlashLine && currentLine.text.startsWith('/')) {
+            options.onEnter?.(activeSlashLine, currentLine.text);
+            return true;
+          }
+        }
+
+        return false;
+      },
+    },
+    {
+      key: 'ArrowDown',
+      run: (view) => {
+        const activeSlashLine = view.state.field(slashMenuState);
+        if (activeSlashLine !== null) {
+          options.onArrowDown?.();
+          return true;
+        }
+
+        return false;
+      },
+    },
+    {
+      key: 'ArrowUp',
+      run: (view) => {
+        const activeSlashLine = view.state.field(slashMenuState);
+        if (activeSlashLine !== null) {
+          options.onArrowUp?.();
+          return true;
+        }
+
+        return false;
+      },
+    },
+  ]);
+
+  // Listen for selection and document changes to clean up the slash menu.
+  const updateListener = EditorView.updateListener.of((update) => {
+    const activeSlashLine = update.view.state.field(slashMenuState);
+
+    if (activeSlashLine !== null) {
+      const line = update.view.state.doc.line(activeSlashLine);
+      const selection = update.view.state.selection.main;
+      const currentLine = update.view.state.doc.lineAt(selection.head);
+
+      // Check if we should remove the slash menu.
+      const shouldRemove =
+        !line.text.startsWith('/') || // Line no longer starts with '/'.
+        currentLine.number !== activeSlashLine; // Cursor moved to different line.
+
+      if (shouldRemove) {
+        update.view.dispatch({
+          effects: slashLineEffect.of(null),
+        });
+        options.onDeactivate?.();
+      }
+    }
+  });
+
+  return [
+    multilinePlaceholder(options.placeholder ?? "Press '/' for commands"),
+    Prec.highest(slashKeymap),
+    updateListener,
+    slashMenuState,
+    slashMenuPlugin,
+  ];
+};
