@@ -141,8 +141,9 @@ export interface ObjectMetaJSON {
   keys: ForeignKey[];
 }
 
-// eslint-disable-next-line func-style
-export const assertObjectModelShape = (obj: unknown): asserts obj is InternalObjectProps => {
+// NOTE: Keep as `function` to avoid type inference issues.
+// eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
+export function assertObjectModelShape(obj: unknown): asserts obj is InternalObjectProps {
   invariant(typeof obj === 'object' && obj !== null, 'Invalid object model: not an object');
   assumeType<InternalObjectProps>(obj);
   invariant(ObjectId.isValid(obj.id), 'Invalid object model: invalid id');
@@ -157,4 +158,4 @@ export const assertObjectModelShape = (obj: unknown): asserts obj is InternalObj
     invariant(!(obj[RelationSourceId] instanceof DXN), 'Invalid object model: source pointer is a DXN');
     invariant(!(obj[RelationTargetId] instanceof DXN), 'Invalid object model: target pointer is a DXN');
   }
-};
+}
