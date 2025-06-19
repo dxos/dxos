@@ -39,7 +39,7 @@ import {
 } from './query';
 import type { Queue, QueueFactory } from './queue';
 
-const TRACE_REF_RESOLUTION = true;
+const TRACE_REF_RESOLUTION = false;
 
 /**
  * Resolution context.
