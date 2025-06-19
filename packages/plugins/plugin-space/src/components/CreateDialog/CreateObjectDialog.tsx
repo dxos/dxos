@@ -7,9 +7,9 @@ import React, { useCallback, useRef } from 'react';
 
 import {
   Capabilities,
+  LayoutAction,
   chain,
   createIntent,
-  LayoutAction,
   useCapabilities,
   useIntentDispatcher,
   usePluginManager,

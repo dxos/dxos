@@ -21,7 +21,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Type } from '@dxos/echo';
-import { createQueueDxn, type Expando } from '@dxos/echo-schema';
+import { createQueueDxn } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live, makeRef, refFromDXN } from '@dxos/live-object';
@@ -96,7 +96,7 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
 
     void dispatch(
       createIntent(CollaborationActions.InsertContent, {
-        target: doc as any as Expando, // TODO(burdon): Common base type.
+        target: doc as any as Type.Expando,
         object: refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
         at: cursor,
         label: 'Proposal',

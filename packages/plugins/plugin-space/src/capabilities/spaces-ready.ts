@@ -6,7 +6,7 @@ import { Option } from 'effect';
 
 import { contributes, createIntent, type PluginContext, Capabilities, LayoutAction } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
-import { Expando } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -51,7 +51,7 @@ export default async (context: PluginContext) => {
 
   const {
     objects: [spacesOrder],
-  } = await defaultSpace.db.query(Filter.type(Expando, { key: SHARED })).run();
+  } = await defaultSpace.db.query(Filter.type(Type.Expando, { key: SHARED })).run();
   if (!spacesOrder) {
     // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
     //  Instead, we store order as an array of space ids.

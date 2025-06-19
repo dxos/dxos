@@ -7,9 +7,10 @@ import { Check, PencilSimple, X } from '@phosphor-icons/react';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
+import { type Type } from '@dxos/echo';
 import { RefArray } from '@dxos/live-object';
 import { PublicKey } from '@dxos/react-client';
-import { type AnyLiveObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
+import { type AnyLiveObject, type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { Button, ButtonGroup, Tooltip, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
@@ -96,7 +97,7 @@ export const MessageContainer = ({ message, members, editable = false, onDelete 
   );
 };
 
-const MessagePart = ({ part }: { part: Expando }) => {
+const MessagePart = ({ part }: { part: Type.Expando }) => {
   return <MessageBlockObjectTile subject={part} />;
 };
 

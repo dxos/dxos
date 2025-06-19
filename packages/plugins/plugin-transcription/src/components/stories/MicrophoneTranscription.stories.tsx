@@ -18,9 +18,9 @@ import {
   processTranscriptMessage,
   getNer,
 } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
-import { Filter, MemoryQueue } from '@dxos/echo-db';
-import { createQueueDxn, type Expando } from '@dxos/echo-schema';
+import { Filter, Obj, type Type } from '@dxos/echo';
+import { MemoryQueue } from '@dxos/echo-db';
+import { createQueueDxn } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -96,7 +96,7 @@ const DefaultStory = ({
 
     let executor: FunctionExecutor | undefined;
     let extractionFunction: ExtractionFunction | undefined;
-    let objects: Promise<Expando[]> | undefined;
+    let objects: Promise<Type.Expando[]> | undefined;
 
     if (entityExtraction === 'ner') {
       // Init model loading. Takes time.
