@@ -4,9 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Type } from '@dxos/echo';
-import { Ref, RefArray } from '@dxos/echo-schema';
-import { live, makeRef } from '@dxos/live-object';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 import { getDateString } from './util';
@@ -17,7 +15,7 @@ import { getDateString } from './util';
 
 export const OutlineType = Schema.Struct({
   name: Schema.optional(Schema.String),
-  content: Ref(DataType.Text),
+  content: Obj.make(DataType.Text),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Outline',
@@ -33,7 +31,7 @@ export interface OutlineType extends Schema.Schema.Type<typeof OutlineType> {}
 
 export const JournalEntryType = Schema.Struct({
   date: Schema.String, // TODO(burdon): Date.
-  content: Ref(DataType.Text), // TODO(burdon): Breaks unless this is a reference.
+  content: Obj.make(DataType.Text), // TODO(burdon): Breaks unless this is a reference.
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/JournalEntry',
@@ -45,7 +43,7 @@ export interface JournalEntryType extends Schema.Schema.Type<typeof JournalEntry
 
 export const JournalType = Schema.Struct({
   name: Schema.optional(Schema.String),
-  entries: Schema.mutable(Schema.Array(Ref(JournalEntryType))),
+  entries: Schema.mutable(Schema.Array(Ref.make(JournalEntryType))),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Journal',
@@ -60,23 +58,23 @@ export interface JournalType extends Schema.Schema.Type<typeof JournalType> {}
 //
 
 export const createOutline = (name?: string, content?: string): OutlineType => {
-  return live(OutlineType, {
+  return Obj.make(OutlineType, {
     name,
-    content: makeRef(live(DataType.Text, { content: content ?? '' })),
+    content: Ref.make(Obj.make(DataType.Text, { content: content ?? '' })),
   });
 };
 
 export const createJournal = (name?: string): JournalType => {
-  return live(JournalType, {
+  return Obj.make(JournalType, {
     name,
-    entries: [makeRef(createJournalEntry())],
+    entries: [Ref.make(createJournalEntry())],
   });
 };
 
 export const createJournalEntry = (date = new Date()): JournalEntryType => {
-  return live(JournalEntryType, {
+  return Obj.make(JournalEntryType, {
     date: getDateString(date),
-    content: makeRef(live(DataType.Text, { content: '' })),
+    content: Ref.make(Obj.make(DataType.Text, { content: '' })),
   });
 };
 

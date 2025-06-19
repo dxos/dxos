@@ -6,8 +6,7 @@ import { type Schema } from 'effect';
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos/app-framework';
-import { Obj, Type } from '@dxos/echo';
-import { type Ref } from '@dxos/echo-schema';
+import { Obj, type Ref, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CollectionType } from '@dxos/plugin-space/types';
@@ -55,7 +54,7 @@ export default () =>
       filter: (
         data,
       ): data is {
-        companionTo: AnyLiveObject<{ view: Ref<ViewType> } | { cardView: Ref<ViewType> }>;
+        companionTo: AnyLiveObject<{ view: Ref.Ref<ViewType> } | { cardView: Ref.Ref<ViewType> }>;
       } => {
         if (data.subject !== 'selected-objects' || !data.companionTo || !isEchoObject(data.companionTo)) {
           return false;
