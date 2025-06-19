@@ -90,13 +90,11 @@ export const isDeleted = (obj: Any): boolean => {
   return deleted;
 };
 
-export const getLabel = (obj: Any, defaultLabel?: string): string => {
+export const getLabel = (obj: Any): string | undefined => {
   const schema = getSchema(obj);
-  if (schema == null) {
-    return defaultLabel ?? obj.id;
+  if (schema != null) {
+    return EchoSchema.getLabel(schema, obj);
   }
-
-  return EchoSchema.getLabel(schema, obj);
 };
 
 /**

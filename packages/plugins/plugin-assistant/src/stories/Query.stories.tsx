@@ -307,6 +307,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
                 onClick={(event) => handleReset(event.shiftKey)}
               />
               <IconButton
+                disabled={flushState === 'flushing'}
                 icon={Match.value(flushState).pipe(
                   Match.when('idle', () => 'ph--floppy-disk--regular'),
                   Match.when('flushing', () => 'ph--spinner--regular'),
@@ -316,7 +317,6 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
                 iconOnly
                 label='flush'
                 onClick={handleFlush}
-                disabled={flushState === 'flushing'}
               />
             </Toolbar.Root>
             <ItemList items={objects} />
