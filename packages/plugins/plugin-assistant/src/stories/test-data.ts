@@ -3,8 +3,7 @@
 //
 
 import { type Live, type Space } from '@dxos/client/echo';
-import { Obj, Type } from '@dxos/echo';
-import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
+import { Obj, Type, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
@@ -120,8 +119,8 @@ export const addTestData = async (space: Space): Promise<void> => {
         Obj.make(schema, {
           ...data,
           // TODO(burdon): Test source/target types match.
-          [RelationSourceId]: sourceObject,
-          [RelationTargetId]: targetObject,
+          [Relation.Source]: sourceObject,
+          [Relation.Target]: targetObject,
         }),
       );
     }

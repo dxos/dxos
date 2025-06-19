@@ -22,7 +22,7 @@ import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
 import { SpaceCapabilities } from '../../capabilities';
 import { SPACE_PLUGIN } from '../../meta';
-import { type ObjectForm, SpaceAction } from '../../types';
+import { SpaceAction } from '../../types';
 
 export const CREATE_OBJECT_DIALOG = `${SPACE_PLUGIN}/CreateObjectDialog`;
 
@@ -44,22 +44,14 @@ export const CreateObjectDialog = ({
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const forms = useCapabilities(SpaceCapabilities.ObjectForm);
 
-  const resolve = useCallback(
-    (typename: string) =>
+  const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(
+    (typename) =>
       manager.context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
     [manager],
   );
 
-  const handleCreateObject = useCallback(
-    async ({
-      form,
-      target,
-      data = {},
-    }: {
-      form: ObjectForm;
-      target: CreateObjectPanelProps['target'];
-      data?: Record<string, any>;
-    }) => {
+  const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(
+    async ({ form, target, data = {} }) => {
       if (!target) {
         // TODO(wittjosiah): UI feedback.
         return;

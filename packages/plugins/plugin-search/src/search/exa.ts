@@ -13,9 +13,9 @@ import {
   type TextContentBlock,
   createTool,
 } from '@dxos/ai';
-import { Obj, Type } from '@dxos/echo';
+import { Key, Obj, Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import { ObjectId, ReferenceAnnotationId } from '@dxos/echo-schema';
+import { ReferenceAnnotationId } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -214,7 +214,7 @@ const sanitizeObjects = (entries: { data: any; schema: Schema.Schema.AnyNoContex
 
   return entries
     .map((entry) => {
-      idMap.set(entry.data.id, ObjectId.random());
+      idMap.set(entry.data.id, Key.ObjectId.random());
       entry.data.id = idMap.get(entry.data.id);
       return entry;
     })

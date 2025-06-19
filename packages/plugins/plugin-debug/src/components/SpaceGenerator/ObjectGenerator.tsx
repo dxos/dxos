@@ -4,7 +4,8 @@
 
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { ObjectId, type BaseObject, type TypedObject } from '@dxos/echo-schema';
+import { Key, type Obj } from '@dxos/echo';
+import { type TypedObject } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { live, makeRef, type Live } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
@@ -28,7 +29,7 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Reuse in testbench-app.
 // TODO(burdon): Mutator running in background (factor out): from echo-generator.
 
-export type ObjectGenerator<T extends BaseObject> = (
+export type ObjectGenerator<T extends Obj.Any> = (
   space: Space,
   n: number,
   cb?: (objects: Live<any>[]) => void,
@@ -119,7 +120,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
           .createNode({
             id: 'gpt-QUEUE_ID',
             type: 'constant',
-            value: new DXN(DXN.kind.QUEUE, ['data', space.id, ObjectId.random()]).toString(),
+            value: new DXN(DXN.kind.QUEUE, ['data', space.id, Key.ObjectId.random()]).toString(),
           })
           .createNode({ id: 'gpt-APPEND', type: 'append' })
           .createNode({ id: 'gpt-OUTPUT', type: NODE_OUTPUT })
@@ -137,7 +138,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   ],
 ]);
 
-export const createGenerator = <T extends BaseObject>(type: TypedObject<T>): ObjectGenerator<T> => {
+export const createGenerator = <T extends Obj.Any>(type: TypedObject<T>): ObjectGenerator<T> => {
   return async (space: Space, n: number, cb?: (objects: Live<any>[]) => void): Promise<Live<T>[]> => {
     // Find or create mutable schema.
     const schema =

@@ -29,6 +29,7 @@ export const Relation = EchoSchema.EchoRelation;
  */
 export const Ref: <S extends Obj.Any>(schema: S) => EchoSchema.Ref$<Schema.Schema.Type<S>> = EchoSchema.Ref;
 
+// TODO(buurdon): Move to Obj?
 export namespace Obj {
   /**
    * Type that represents an arbitrary schema type of an object.
@@ -38,6 +39,7 @@ export namespace Obj {
   export type Any = Schema.Schema.AnyNoContext;
 }
 
+// TODO(buurdon): Move to Relation?
 export namespace Relation {
   /**
    * Type that represents an arbitrary schema type of a relation.
@@ -57,6 +59,7 @@ export namespace Relation {
   export type Source<A> = A extends EchoSchema.RelationSourceTargetRefs<infer _T, infer S> ? S : never;
 }
 
+// TODO(buurdon): Move to Ref?
 export namespace Ref {
   /**
    * Type that represents an arbitrary schema type of a reference.

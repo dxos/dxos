@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Ref } from '@dxos/echo';
-import { type JsonPath, toEffectSchema } from '@dxos/echo-schema';
+import { JsonSchema, Ref } from '@dxos/echo';
+import { type JsonPath } from '@dxos/echo-schema';
 import { type FunctionType } from '@dxos/functions';
 import { useOnTransition } from '@dxos/react-ui';
 import { Form, type FormInputStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
@@ -45,7 +45,7 @@ export const FunctionInputEditor = ({
   );
 
   const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
-  const effectSchema = useMemo(() => (inputSchema ? toEffectSchema(inputSchema) : undefined), [inputSchema]);
+  const effectSchema = useMemo(() => (inputSchema ? JsonSchema.toEffectSchema(inputSchema) : undefined), [inputSchema]);
   const propertyCount = inputSchema?.properties ? Object.keys(inputSchema.properties).length : 0;
 
   const values = useMemo(() => getValue() ?? {}, [getValue]);

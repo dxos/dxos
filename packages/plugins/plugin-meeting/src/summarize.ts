@@ -3,8 +3,7 @@
 //
 
 import { DEFAULT_EDGE_MODEL, type AIServiceClient, Message, MixedStreamParser } from '@dxos/ai';
-import { Obj } from '@dxos/echo';
-import { getSchemaTypename } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
@@ -14,7 +13,7 @@ import { type MeetingType } from './types';
 // TODO(wittjosiah): Also include content of object which are linked to the meeting.
 export const getMeetingContent = async (meeting: MeetingType, resolve: (typename: string) => Record<string, any>) => {
   const notes = await meeting.notes.load();
-  const { getTextContent } = resolve(getSchemaTypename(TranscriptType)!);
+  const { getTextContent } = resolve(Type.getTypename(TranscriptType)!);
   const transcript = await meeting.transcript.load();
   const content = `${await getTextContent(transcript)}\n\n${notes.content}`;
   return content;

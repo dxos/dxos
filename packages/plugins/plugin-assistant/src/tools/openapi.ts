@@ -7,7 +7,8 @@ import jsonpointer from 'jsonpointer';
 import { type OpenAPIV2, type OpenAPIV3_1 } from 'openapi-types';
 
 import { type ExecutableTool, ToolResult, createRawTool } from '@dxos/ai';
-import { JsonSchemaType, normalizeSchema, toEffectSchema } from '@dxos/echo-schema';
+import { JsonSchema } from '@dxos/echo';
+import { normalizeSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
@@ -52,8 +53,7 @@ export const createToolsFromApi = async (
           return resolved;
         }) ?? [];
 
-      // TODO(burdon): Reconcile with toFunctionParameterSchema.
-      const inputSchema: JsonSchemaType = {
+      const inputSchema: JsonSchema.Type = {
         type: 'object',
         properties: {},
       };
@@ -86,7 +86,7 @@ export const createToolsFromApi = async (
       }
 
       log('inputSchema', { inputSchema });
-      Schema.validateSync(JsonSchemaType)(inputSchema);
+      Schema.validateSync(JsonSchema.Type)(inputSchema);
 
       const description = methodItem.description ?? methodItem.summary;
       if (!description) {
@@ -206,7 +206,7 @@ const callApiEndpoint = async (endpoint: EndpointDescriptor, input: any) => {
         const value = input[parameter.name];
 
         // Client-side validation
-        const effectSchema = toEffectSchema(parameter.schema);
+        const effectSchema = JsonSchema.toEffectSchema(parameter.schema);
         Schema.validateSync(effectSchema)(value);
 
         if (body) {

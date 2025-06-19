@@ -4,8 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { Type } from '@dxos/echo';
-import { TypedObject, FormatEnum, TypeEnum, type JsonProp, type EchoSchema, toJsonSchema } from '@dxos/echo-schema';
+import { JsonSchema, Type } from '@dxos/echo';
+import { TypedObject, FormatEnum, TypeEnum, type JsonProp, type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, live, makeRef } from '@dxos/react-client/echo';
@@ -54,7 +54,7 @@ export const initializeKanban = async ({
     const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
 
     const ast = staticSchema?.ast ?? schema?.ast;
-    const jsonSchema = staticSchema ? toJsonSchema(staticSchema) : schema?.jsonSchema;
+    const jsonSchema = staticSchema ? JsonSchema.toJsonSchema(staticSchema) : schema?.jsonSchema;
     invariant(ast, `Schema not found: ${typename}`);
     invariant(jsonSchema, `Schema not found: ${typename}`);
 

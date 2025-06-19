@@ -20,8 +20,7 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, Type } from '@dxos/echo';
-import { createQueueDxn } from '@dxos/echo-schema';
+import { Key, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live, makeRef, refFromDXN } from '@dxos/live-object';
@@ -69,7 +68,7 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
   const { editorState } = useCapability(MarkdownCapabilities.State);
 
   const space = useSpace();
-  const queueDxn = useMemo(() => space && createQueueDxn(space.id), [space]);
+  const queueDxn = useMemo(() => space && Key.createQueueDxn(space.id), [space]);
   const queue = useQueue<Message>(queueDxn);
 
   const handleInsert = async () => {

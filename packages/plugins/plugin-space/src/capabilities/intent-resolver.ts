@@ -366,7 +366,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         }
 
         if (target instanceof CollectionType) {
-          target.objects.push(makeRef(object as HasId));
+          target.objects.push(makeRef(object as HasId)); // TODO(burdon): HasId?
         } else if (isSpace(target) && hidden) {
           space.db.add(object);
         } else if (isSpace(target)) {
@@ -406,8 +406,14 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: SpaceAction.AddRelation,
       resolve: ({ space, schema, source, target, fields }) => {
-        const relation = live(schema, { [Relation.Source]: source, [Relation.Target]: target, ...fields });
-        space.db.add(relation);
+        const relation = space.db.add(
+          live(schema, {
+            [Relation.Source]: source,
+            [Relation.Target]: target,
+            ...fields,
+          }),
+        );
+
         return {
           data: {
             relation,

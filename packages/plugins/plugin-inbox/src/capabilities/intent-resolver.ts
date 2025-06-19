@@ -12,12 +12,10 @@ import {
   createIntent,
   chain,
 } from '@dxos/app-framework';
-import { createQueueDxn } from '@dxos/echo-schema';
-import { live, refFromDXN } from '@dxos/live-object';
+import { Filter, Key, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { TableAction } from '@dxos/plugin-table';
-import { Filter, makeRef } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 import { DataType } from '@dxos/schema';
 
@@ -30,9 +28,9 @@ export default (context: PluginContext) =>
       intent: InboxAction.CreateMailbox,
       resolve: ({ spaceId, name }) => ({
         data: {
-          object: live(MailboxType, {
+          object: Obj.make(MailboxType, {
             name,
-            queue: refFromDXN(createQueueDxn(spaceId)),
+            queue: Ref.fromDXN(Key.createQueueDxn(spaceId)),
           }),
         },
       }),
@@ -40,7 +38,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: InboxAction.CreateCalendar,
       resolve: () => ({
-        data: { object: live(CalendarType, {}) },
+        data: { object: Obj.make(CalendarType, {}) },
       }),
     }),
     createResolver({
@@ -51,7 +49,7 @@ export default (context: PluginContext) =>
           // TODO(wittjosiah): Static to live object fails.
           //  Needs to be a live object because graph is live and the current message is included in the companion.
           const { '@type': _, ...messageWithoutType } = { ...message } as any;
-          const liveMessage = live(DataType.Message, messageWithoutType);
+          const liveMessage = Obj.make(DataType.Message, messageWithoutType);
           // liveMessage.id = id;
           state[mailboxId] = liveMessage;
         } else {
@@ -83,7 +81,7 @@ export default (context: PluginContext) =>
           return;
         }
 
-        const newContact = live(DataType.Person, {
+        const newContact = Obj.make(DataType.Person, {
           emails: [{ value: email }],
         });
 
@@ -125,7 +123,7 @@ export default (context: PluginContext) =>
 
         if (matchingOrg) {
           log.info('Found matching organization', { organization: matchingOrg });
-          newContact.organization = makeRef(matchingOrg);
+          newContact.organization = Ref.make(matchingOrg);
         }
 
         space.db.add(newContact);

@@ -12,8 +12,8 @@ import {
   useIntentDispatcher,
   Capabilities,
 } from '@dxos/app-framework';
-import { Filter, Obj } from '@dxos/echo';
-import { Query, RelationSourceId } from '@dxos/echo-schema';
+import { Filter, Obj, Query } from '@dxos/echo';
+import { RelationSourceId } from '@dxos/echo-schema';
 import { fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';

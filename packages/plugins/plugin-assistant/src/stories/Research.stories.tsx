@@ -16,16 +16,14 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { findRelatedSchema, researchFn, type RelatedSchema } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
-import { Type, Obj } from '@dxos/echo';
+import { Type, Obj, Relation, JsonSchema } from '@dxos/echo';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
-  create,
   createQueueDxn,
   getSchema,
   getSchemaDXN,
   getTypename,
-  toJsonSchema,
   type BaseObject,
   Filter,
   RelationSourceId,
@@ -36,7 +34,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { useClient } from '@dxos/react-client';
-import { getSpace, live, useQuery, useQueue, type EchoDatabase, type Live } from '@dxos/react-client/echo';
+import { getSpace, useQuery, useQueue, type EchoDatabase, type Live } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncState } from '@dxos/react-ui';
 import {
   createMenuAction,
@@ -147,7 +145,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   useEffect(() => {
     if (queue?.objects.length === 0 && !queue.isLoading && prompts.length > 0) {
       queue.append([
-        create(Message, {
+        Obj.make(Message, {
           role: 'assistant',
           content: prompts.map(
             (prompt) =>
@@ -222,7 +220,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
       <schema>
         <description>${SchemaAST.getDescriptionAnnotation(relatedSchema.schema.ast).pipe(Option.getOrElse(() => ''))}</description>
         <json>
-          ${JSON.stringify(toJsonSchema(relatedSchema.schema), null, 2)}
+          ${JSON.stringify(JsonSchema.toJsonSchema(relatedSchema.schema), null, 2)}
         </json>
       </schema>
     `;
@@ -351,7 +349,7 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
       );
 
       reportStatus?.(
-        create(AgentStatusReport, {
+        Obj.make(AgentStatusReport, {
           message: 'Researching...',
         }),
       );
@@ -392,7 +390,7 @@ const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
     target = db.getObjectById(Type.DXN.parse(target).asEchoDXN()!.echoId) ?? raise(new Error('Target not found'));
   }
 
-  return live(schema, {
+  return Relation.make(schema, {
     id,
     ...props,
     [RelationSourceId]: source,

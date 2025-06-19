@@ -3,7 +3,7 @@
 //
 
 import { createTool, type ExecutableTool, ToolResult } from '@dxos/ai';
-import { toEffectSchema } from '@dxos/echo-schema';
+import { JsonSchema } from '@dxos/echo';
 import { getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { type FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -29,7 +29,7 @@ export const convertFunctionToTool = (
   return createTool('user-function', {
     name: fn.name,
     description: fn.description,
-    schema: toEffectSchema(fn.inputSchema),
+    schema: JsonSchema.toEffectSchema(fn.inputSchema),
     execute: async (input) => {
       log.info('execute function tool', { name: fn.name, url, input });
       const response = await fetch(url, {

@@ -7,8 +7,8 @@ import { EditorView } from '@codemirror/view';
 import { computed, effect } from '@preact/signals-core';
 
 import { createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { Filter, Obj } from '@dxos/echo';
-import { Query, RelationSourceId } from '@dxos/echo-schema';
+import { Filter, Obj, Query } from '@dxos/echo';
+import { RelationSourceId } from '@dxos/echo-schema';
 import { type DocumentType } from '@dxos/plugin-markdown/types';
 import { getSpace, getTextInRange, createDocAccessor, fullyQualifiedId, getSource } from '@dxos/react-client/echo';
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';

@@ -7,7 +7,8 @@ import { Schema, SchemaAST } from 'effect';
 import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
-import { FormatEnum, FormatEnums, SelectOptionSchema, GeoPoint, toJsonSchema } from '@dxos/echo-schema';
+import { JsonSchema } from '@dxos/echo';
+import { Format, FormatEnum, FormatEnums, SelectOptionSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { hues } from '@dxos/react-ui-theme';
 import { getSchemaFromPropertyDefinitions } from '@dxos/schema';
@@ -32,7 +33,7 @@ export const TypeNameSchema = Schema.String.pipe(
 );
 
 const formatDescription = `The format of the property. Additional information:
-  ${FormatEnum.GeoPoint}: ${JSON.stringify(toJsonSchema(GeoPoint))}
+  ${FormatEnum.GeoPoint}: ${JSON.stringify(JsonSchema.toJsonSchema(Format.GeoPoint))}
   This tuple is GeoJSON. You must specify \`${FormatEnum.GeoPoint}\` as [Longitude, Latitude]`;
 
 // TODO(ZaymonFC): All properties are default optional, but maybe we should allow for required properties.

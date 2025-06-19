@@ -18,9 +18,8 @@ import {
   processTranscriptMessage,
   getNer,
 } from '@dxos/assistant';
-import { Filter, Obj, type Type } from '@dxos/echo';
+import { Filter, Key, Obj, type Type } from '@dxos/echo';
 import { MemoryQueue } from '@dxos/echo-db';
-import { createQueueDxn } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -76,7 +75,7 @@ const DefaultStory = ({
   const isSpeaking = detectSpeaking ? useIsSpeaking(track) : true;
 
   // Queue.
-  const queueDxn = useMemo(() => createQueueDxn(), []);
+  const queueDxn = useMemo(() => Key.createQueueDxn(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderMarkdown([]), queue);
   const space = useSpace();

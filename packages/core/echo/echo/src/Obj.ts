@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
-import type { DXN } from '@dxos/keys';
+import { type DXN } from '@dxos/keys';
 import * as LiveObject from '@dxos/live-object';
 
 import type * as Ref from './Ref';
@@ -101,6 +101,7 @@ export const getLabel = (obj: Any): string | undefined => {
 /**
  * JSON representation of an object.
  */
+// TODO(burdon): Reconcile with JsonSchemaType.
 export type JSON = EchoSchema.ObjectJSON;
 
 /**

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FormatEnum, type GeoPoint } from '@dxos/echo-schema';
+import { type Format, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Space, live, makeRef } from '@dxos/react-client/echo';
 import { createView } from '@dxos/schema';
@@ -13,7 +13,7 @@ import { setLocationProperty } from '../util';
 type InitializeMapProps = {
   space: Space;
   name?: string;
-  coordinates?: GeoPoint;
+  coordinates?: Format.GeoPoint;
   initialSchema?: string;
   locationProperty?: string;
 };

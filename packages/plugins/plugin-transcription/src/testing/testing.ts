@@ -11,8 +11,7 @@ import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant
 import { scheduleTaskInterval } from '@dxos/async';
 import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Obj, Type } from '@dxos/echo';
-import { createQueueDxn, ObjectId } from '@dxos/echo-schema';
+import { Key, Obj, Type } from '@dxos/echo';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -63,7 +62,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
 
   override async createMessage(numSegments = 1): Promise<DataType.Message> {
     return {
-      id: ObjectId.random().toString(),
+      id: Key.ObjectId.random().toString(),
       created: this.next().toISOString(),
       sender: faker.helpers.arrayElement(this.users),
       blocks: Array.from({ length: numSegments }).map(() => this.createBlock()),
@@ -140,7 +139,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
 
 type UseTestTranscriptionQueue = (
   space: Space | undefined,
-  queueId?: ObjectId,
+  queueId?: Key.ObjectId,
   running?: boolean,
   interval?: number,
 ) => Queue<DataType.Message> | undefined;
@@ -150,11 +149,11 @@ type UseTestTranscriptionQueue = (
  */
 export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
   space: Space | undefined,
-  queueId?: ObjectId,
+  queueId?: Key.ObjectId,
   running = true,
   interval = 1_000,
 ) => {
-  const queueDxn = useMemo(() => (space ? createQueueDxn(space.id, queueId) : undefined), [space, queueId]);
+  const queueDxn = useMemo(() => (space ? Key.createQueueDxn(space.id, queueId) : undefined), [space, queueId]);
   const queue = useQueue<DataType.Message>(queueDxn);
   const builder = useMemo(() => new MessageBuilder(space), [space]);
 
@@ -180,11 +179,11 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
 // TODO(burdon): Reconcile with useTestTranscriptionQueue.
 export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscriptionQueue = (
   space: Space | undefined,
-  queueId?: ObjectId,
+  queueId?: Key.ObjectId,
   running = true,
   interval = 1_000,
 ) => {
-  const queueDxn = useMemo(() => (space ? createQueueDxn(space.id, queueId) : undefined), [space, queueId]);
+  const queueDxn = useMemo(() => (space ? Key.createQueueDxn(space.id, queueId) : undefined), [space, queueId]);
   const queue = useQueue<DataType.Message>(queueDxn);
   const [builder] = useState(() => new EntityExtractionMessageBuilder());
 

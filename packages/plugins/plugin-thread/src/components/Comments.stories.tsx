@@ -9,7 +9,7 @@ import React, { useEffect } from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, Query, Type } from '@dxos/echo';
+import { Obj, Query, Relation, Type } from '@dxos/echo';
 import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
@@ -36,8 +36,8 @@ const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
         const object = space.db.add(Obj.make(Type.Expando, {}));
         const thread1 = space.db.add(createCommentThread(identity));
         const thread2 = space.db.add(createCommentThread(identity));
-        space.db.add(Obj.make(AnchoredTo, { [RelationSourceId]: thread1, [RelationTargetId]: object }));
-        space.db.add(Obj.make(AnchoredTo, { [RelationSourceId]: thread2, [RelationTargetId]: object }));
+        space.db.add(Relation.make(AnchoredTo, { [RelationSourceId]: thread1, [RelationTargetId]: object }));
+        space.db.add(Relation.make(AnchoredTo, { [RelationSourceId]: thread2, [RelationTargetId]: object }));
       });
 
       return () => clearTimeout(t);

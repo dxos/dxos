@@ -6,7 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { isMutable, toJsonSchema } from '@dxos/echo-schema';
+import { JsonSchema, Type } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
@@ -69,14 +69,14 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
       return;
     }
 
-    return new ViewProjection(toJsonSchema(schema), table.view.target!);
+    return new ViewProjection(JsonSchema.toJsonSchema(schema), table.view.target!);
   }, [schema, table.view?.target]);
 
   const features: Partial<TableFeatures> = useMemo(
     () => ({
       selection: { enabled: true, mode: 'multiple' },
       dataEditable: true,
-      schemaEditable: schema && isMutable(schema),
+      schemaEditable: schema && Type.isMutable(schema),
     }),
     [],
   );

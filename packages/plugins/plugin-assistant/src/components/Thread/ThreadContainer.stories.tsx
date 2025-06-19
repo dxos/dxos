@@ -19,8 +19,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { Filter, Obj, Type } from '@dxos/echo';
-import { createQueueDxn, Query } from '@dxos/echo-schema';
+import { Filter, Key, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
@@ -81,12 +80,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [aiClient, tools, space, dispatch, artifactDefinitions]);
 
   // Queue.
-  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
+  const [queueDxn, setQueueDxn] = useState<string>(() => Key.createQueueDxn(space.id).toString());
   const queue = useQueue<Message>(Type.DXN.tryParse(queueDxn));
 
   useEffect(() => {
     if (space) {
-      setQueueDxn(createQueueDxn(space.id).toString());
+      setQueueDxn(Key.createQueueDxn(space.id).toString());
     }
   }, [space]);
 
@@ -174,7 +173,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
               iconOnly
               label='Clear history'
               icon='ph--trash--regular'
-              onClick={() => setQueueDxn(createQueueDxn(space.id).toString())}
+              onClick={() => setQueueDxn(Key.createQueueDxn(space.id).toString())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor?.cancel()} />
           </Input.Root>

@@ -3,8 +3,8 @@
 //
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { createQueueDxn } from '@dxos/echo-schema';
-import { live, refFromDXN } from '@dxos/live-object';
+import { Key, Obj, Ref } from '@dxos/echo';
+import { live } from '@dxos/live-object';
 
 import { AssistantAction, AIChatType, TemplateType } from '../types';
 
@@ -15,9 +15,9 @@ export default () => [
       intent: AssistantAction.CreateChat,
       resolve: ({ space, name }) => ({
         data: {
-          object: live(AIChatType, {
+          object: Obj.make(AIChatType, {
             name,
-            queue: refFromDXN(createQueueDxn(space.id)),
+            queue: Ref.fromDXN(Key.createQueueDxn(space.id)),
           }),
         },
       }),

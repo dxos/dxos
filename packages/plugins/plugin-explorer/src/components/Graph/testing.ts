@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AnyLiveObject, live, type Space } from '@dxos/client/echo';
-import { Query } from '@dxos/echo';
+import { type Space } from '@dxos/client/echo';
+import { Query, Relation, type Obj } from '@dxos/echo';
 import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 import { createObjectFactory, type ValueGenerator, type TypeSpec } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
-const getObject = (objects: AnyLiveObject[]) => objects[Math.floor(Math.random() * objects.length)];
+const getObject = (objects: Obj.Any[]) => objects[Math.floor(Math.random() * objects.length)];
 
 const defaultTypes: TypeSpec[] = [
   { type: DataType.Organization, count: 5 },
@@ -48,7 +48,7 @@ export const generate = async (
     }
 
     space.db.add(
-      live(DataType.HasRelationship, {
+      Relation.make(DataType.HasRelationship, {
         kind: relations.kind,
         [RelationSourceId]: source,
         [RelationTargetId]: target,

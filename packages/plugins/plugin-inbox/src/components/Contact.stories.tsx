@@ -9,8 +9,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { createIntent, IntentPlugin, LayoutAction, SettingsPlugin, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { createQueueDxn } from '@dxos/echo-schema';
-import { refFromDXN } from '@dxos/live-object';
+import { Key, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -135,10 +134,10 @@ const meta: Meta = {
             await client.spaces.default.waitUntilReady();
             const space = client.spaces.default;
             const { emails } = await seedTestData(space);
-            const queueDxn = createQueueDxn(space.id);
+            const queueDxn = Key.createQueueDxn(space.id);
             const queue = space.queues.get<DataType.Message>(queueDxn);
             queue.append(emails);
-            const mailbox = live(MailboxType, { queue: refFromDXN(queueDxn) });
+            const mailbox = live(MailboxType, { queue: Ref.fromDXN(queueDxn) });
             space.db.add(mailbox);
           },
         }),
