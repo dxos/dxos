@@ -6,9 +6,11 @@ import { Schema } from 'effect';
 
 import { type ExecutableTool, Tool, type ToolRegistry } from '@dxos/ai';
 import { raise } from '@dxos/debug';
+import { Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 
-export const BlueprintDefinition = Schema.Struct({
+export const BlueprintType = Schema.Struct({
+  name: Schema.optional(Schema.String),
   steps: Schema.Array(
     Schema.Struct({
       instructions: Schema.String,
@@ -16,8 +18,8 @@ export const BlueprintDefinition = Schema.Struct({
       tools: Schema.optional(Schema.Array(Schema.String)),
     }),
   ),
-});
-export type BlueprintDefinition = Schema.Schema.Type<typeof BlueprintDefinition>;
+}).pipe(Type.Obj({ typename: 'dxos.org/type/Blueprint', version: '0.1.0' }));
+export type BlueprintType = Schema.Schema.Type<typeof BlueprintType>;
 
 export const BlueprintStep = Schema.Struct({
   id: Schema.String,
@@ -68,7 +70,7 @@ export namespace BlueprintParser {
   class Parser {
     constructor(private readonly _registry: ToolRegistry) {}
 
-    parse({ steps }: BlueprintDefinition): Blueprint {
+    parse({ steps }: BlueprintType): Blueprint {
       const builder = BlueprintBuilder.create();
       for (const step of steps) {
         builder.step(step.instructions, {
