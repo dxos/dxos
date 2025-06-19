@@ -11,6 +11,7 @@ import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/proto/dxos/echo/service';
+
 import { FIND_PARAMS } from '../automerge';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
