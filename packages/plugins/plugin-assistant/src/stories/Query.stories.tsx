@@ -5,18 +5,19 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import { Schema } from 'effect';
-import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Match, Schema } from 'effect';
+import React, { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react';
 
 import { AIServiceEdgeClient, type AIServiceEdgeClientOptions } from '@dxos/ai';
 import { SpyAIService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { BlueprintParser, BlueprintMachine, Logger, setConsolePrinter, setLogger } from '@dxos/assistant';
+import { BlueprintMachine, BlueprintParser, Logger, setConsolePrinter, setLogger } from '@dxos/assistant';
 import { combine } from '@dxos/async';
-import { Filter, Queue, type Space } from '@dxos/client/echo';
+import { Filter, Queue, type EchoDatabase, type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
+<<<<<<< HEAD
 import {
   type AnyEchoObject,
   type BaseEchoObject,
@@ -25,7 +26,13 @@ import {
   getLabelForObject,
   getTypename,
 } from '@dxos/echo-schema';
+||||||| 5887169666
+import { type AnyEchoObject, Ref, create, getLabelForObject, getTypename } from '@dxos/echo-schema';
+=======
+import { Ref, create, getLabelForObject, getTypename, type AnyEchoObject } from '@dxos/echo-schema';
+>>>>>>> dm/blueprint-step
 import { SelectionModel } from '@dxos/graph';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
@@ -48,10 +55,18 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { addTestData } from './test-data';
 import { testPlugins } from './testing';
-import { AmbientDialog, PromptBar, type PromptController, type PromptBarProps } from '../components';
+import { AmbientDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
+<<<<<<< HEAD
 import { createFilter, type Expression, QueryParser } from '../parser';
 import { RESEARCH_BLUEPRINT, createTools as createRegistry } from '../testing';
+||||||| 5887169666
+import { createFilter, type Expression, QueryParser } from '../parser';
+import { RESEARCH_BLUEPRINT, createTools } from '../testing';
+=======
+import { QueryParser, createFilter, type Expression } from '../parser';
+import { RESEARCH_BLUEPRINT, createTools } from '../testing';
+>>>>>>> dm/blueprint-step
 import translations from '../translations';
 
 faker.seed(1);
@@ -206,12 +221,18 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     }
 
     const selected = selection.selected.value;
-
+    log.info('starting research...', { selected });
+    const resolver = space.db.graph.createRefResolver({
+      context: {
+        space: space.db.spaceId,
+        queue: researchGraph?.queue.dxn,
+      },
+    });
+    const objects = await Promise.all(selected.map((id) => resolver.resolve(DXN.fromLocalObjectId(id))));
     const machine = new BlueprintMachine(researchBlueprint);
     const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));
 
     log.info('starting research...', { selected });
-    const { objects } = await space.db.query(Filter.ids(...selected)).run();
     await machine.runToCompletion({ aiService: aiClient, input: objects });
 
     cleanup();
@@ -228,9 +249,6 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     } else {
       await addTestData(space);
     }
-
-    // TODO(burdon): BUG: objects are not persisted unless this is called.
-    await space.db.flush({ indexes: true });
   }, [space, generator, spec]);
 
   const handleReset = useCallback(
@@ -307,6 +325,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
                 label='reset'
                 onClick={(event) => handleReset(event.shiftKey)}
               />
+              <FlushButton db={space?.db} />
             </Toolbar.Root>
             <ItemList items={objects} />
             <Log logger={logger} />
@@ -393,6 +412,47 @@ const ItemList = <T extends BaseEchoObject>({ items = [] }: { items?: T[] }) => 
         </div>
       )}
     </List.Root>
+  );
+};
+
+const FlushButton = ({ db }: { db?: EchoDatabase }) => {
+  const [state, setState] = useState<'idle' | 'flushing' | 'flushed'>('idle');
+
+  const resetTimer = useRef<NodeJS.Timeout | null>(null);
+  const handleFlush = useCallback(() => {
+    if (!db) {
+      return;
+    }
+
+    queueMicrotask(async () => {
+      if (resetTimer.current) {
+        clearTimeout(resetTimer.current);
+      }
+
+      setState('flushing');
+      await db.flush();
+      setState('flushed');
+
+      resetTimer.current = setTimeout(() => {
+        setState('idle');
+        resetTimer.current = null;
+      }, 1000);
+    });
+  }, [db]);
+
+  return (
+    <IconButton
+      icon={Match.value(state).pipe(
+        Match.when('idle', () => 'ph--floppy-disk--regular'),
+        Match.when('flushing', () => 'ph--spinner--regular'),
+        Match.when('flushed', () => 'ph--check--regular'),
+        Match.exhaustive,
+      )}
+      iconOnly
+      label={state === 'flushing' ? 'flushing...' : state === 'flushed' ? 'flushed!' : 'flush'}
+      onClick={handleFlush}
+      disabled={state === 'flushing'}
+    />
   );
 };
 

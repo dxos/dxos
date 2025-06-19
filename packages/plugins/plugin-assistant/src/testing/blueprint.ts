@@ -16,10 +16,11 @@ export const createTools = (space: Space, queueDxn?: DXN): ToolRegistry => {
   return new ToolRegistry(
     [
       createExaTool({ apiKey: EXA_API_KEY }),
-      createLocalSearchTool(space.db),
+      createLocalSearchTool(space.db, queueDxn && space.queues.get(queueDxn)),
       queueDxn &&
         createGraphWriterTool({
           db: space.db,
+          queue: space.queues.get(queueDxn),
           schemaTypes: DataTypes,
           onDone: async (objects) => {
             const queue = space.queues.get(queueDxn);

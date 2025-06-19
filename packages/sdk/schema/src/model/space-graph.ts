@@ -221,8 +221,8 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
           const edge = this.addEdge({
             id: object.id,
             type: 'relation',
-            source: Relation.getSource(object).id,
-            target: Relation.getTarget(object).id,
+            source: Relation.getSourceDXN(object).asEchoDXN()!.echoId,
+            target: Relation.getTargetDXN(object).asEchoDXN()!.echoId,
             data: {
               object,
             },
@@ -282,7 +282,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
           // Link ot refs.
           const refs = getOutgoingReferences(object);
           for (const ref of refs) {
-            if (!ref.target) {
+            if (!Obj.isObject(ref.target)) {
               continue;
             }
 
