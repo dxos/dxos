@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { EchoSchema, getTypenameOrThrow, toJsonSchema, type TypedObject } from '@dxos/echo-schema';
+import { getTypenameOrThrow, type TypedObject } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
-import { Filter, useQuery, getSpace, live } from '@dxos/react-client/echo';
+import { Filter, useQuery, getSpace, live, useJsonSchema } from '@dxos/react-client/echo';
+import { useDeepCompareEffect } from '@dxos/react-ui';
 import { type KanbanType, useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
 import { StackItem } from '@dxos/react-ui-stack';
 import { ViewProjection } from '@dxos/schema';
@@ -16,17 +17,12 @@ import { ViewProjection } from '@dxos/schema';
 import { KanbanAction } from '../types';
 
 export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }) => {
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
+  const space = getSpace(kanban);
+
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
   const [projection, setProjection] = useState<ViewProjection>();
-  const space = getSpace(kanban);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-
-  const jsonSchema = useMemo(
-    () =>
-      cardSchema instanceof EchoSchema ? cardSchema.jsonSchema : cardSchema ? toJsonSchema(cardSchema) : undefined,
-    [cardSchema],
-  );
 
   useEffect(() => {
     const typename = kanban.cardView?.target?.query?.typename;
@@ -34,9 +30,10 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
     if (staticSchema) {
       setCardSchema(() => staticSchema as TypedObject<any, any>);
     }
+
     if (!staticSchema && typename && space) {
       const query = space.db.schemaRegistry.query({ typename });
-      const unsubscribe = query.subscribe(
+      return query.subscribe(
         () => {
           const [schema] = query.results;
           if (schema) {
@@ -45,16 +42,16 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
         },
         { fire: true },
       );
-      return unsubscribe;
     }
-  }, [kanban.cardView?.target?.query, space]);
+  }, [space, kanban.cardView?.target?.query]);
 
-  useEffect(() => {
+  // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
+  const jsonSchema = useJsonSchema(cardSchema);
+  useDeepCompareEffect(() => {
     if (kanban.cardView?.target && jsonSchema) {
       setProjection(new ViewProjection(jsonSchema, kanban.cardView.target));
     }
-    // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
-  }, [kanban.cardView?.target, JSON.stringify(jsonSchema)]);
+  }, [kanban.cardView?.target, jsonSchema]);
 
   const objects = useQuery(space, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);

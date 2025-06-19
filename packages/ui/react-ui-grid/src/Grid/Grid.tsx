@@ -59,7 +59,6 @@ type GridScopedProps<P> = P & { __gridScope?: Scope };
 const GRID_NAME = 'Grid';
 
 const [createGridContext, createGridScope] = createContextScope(GRID_NAME, []);
-
 const [GridProvider, useGridContext] = createGridContext<GridContextValue>(GRID_NAME);
 
 type GridRootProps = PropsWithChildren<
