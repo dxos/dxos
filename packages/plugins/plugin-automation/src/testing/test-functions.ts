@@ -5,7 +5,8 @@
 import { Schema } from 'effect';
 
 import { ContactType } from '@dxos/client/testing';
-import { Ref, toJsonSchema } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { toJsonSchema } from '@dxos/echo-schema';
 
 export const functions = [
   {
@@ -25,12 +26,8 @@ export const functions = [
     binding: 'FOREX',
     inputSchema: toJsonSchema(
       Schema.Struct({
-        from: Schema.String.annotations({
-          title: 'Currency from',
-        }),
-        to: Schema.String.annotations({
-          title: 'Currency to',
-        }),
+        from: Schema.String.annotations({ title: 'Currency from' }),
+        to: Schema.String.annotations({ title: 'Currency to' }),
       }),
     ),
   },
@@ -39,9 +36,7 @@ export const functions = [
     version: '0.0.1',
     inputSchema: toJsonSchema(
       Schema.Struct({
-        contact: Ref(ContactType).annotations({
-          title: 'Contact',
-        }),
+        contact: Type.Ref(ContactType).annotations({ title: 'Contact' }),
       }),
     ),
   },

@@ -4,7 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { Ref, TypedObject } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { TypedObject } from '@dxos/echo-schema';
 import { ThreadType } from '@dxos/plugin-thread/types';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
 import { DataType } from '@dxos/schema';
@@ -33,22 +34,22 @@ export const MeetingSchema = Schema.Struct({
   /**
    * Transcript of the meeting.
    */
-  transcript: Ref(TranscriptType),
+  transcript: Type.Ref(TranscriptType),
 
   /**
    * Markdown notes for the meeting.
    */
-  notes: Ref(DataType.Text),
+  notes: Type.Ref(DataType.Text),
 
   /**
    * Generated summary of the meeting.
    */
-  summary: Ref(DataType.Text),
+  summary: Type.Ref(DataType.Text),
 
   /**
    * Message thread for the meeting.
    */
-  thread: Ref(ThreadType),
+  thread: Type.Ref(ThreadType),
 });
 
 export class MeetingType extends TypedObject({

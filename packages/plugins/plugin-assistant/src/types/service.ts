@@ -5,7 +5,8 @@
 import { Schema } from 'effect';
 
 import { ComputeGraph } from '@dxos/conductor';
-import { Ref, TypedObject, type Ref$ } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { TypedObject } from '@dxos/echo-schema';
 import { FunctionType } from '@dxos/functions';
 
 const ApiAuthorizationKey = Schema.Struct({
@@ -35,12 +36,12 @@ export type ApiAuthorization = Schema.Schema.Type<typeof ApiAuthorization>;
 
 const ServiceInterfaceFunction = Schema.Struct({
   kind: Schema.Literal('function'),
-  fn: Ref(FunctionType) as Ref$<FunctionType>,
+  fn: Type.Ref(FunctionType),
 });
 
 const ServiceInterfaceWorkflow = Schema.Struct({
   kind: Schema.Literal('workflow'),
-  workflow: Ref(ComputeGraph) as Ref$<ComputeGraph>,
+  workflow: Type.Ref(ComputeGraph),
 });
 
 const ServiceInterfaceApi = Schema.Struct({
