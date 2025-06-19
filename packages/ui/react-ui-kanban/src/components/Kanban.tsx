@@ -16,7 +16,6 @@ import {
   CardStackDragPreview,
   Card,
   CardDragPreview,
-  cardRoot,
   cardStackContainer,
   cardStackHeading,
 } from '@dxos/react-ui-stack';
@@ -93,49 +92,49 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 getDropElement={getColumnDropElement}
               >
                 {cards.map((card, cardIndex, cardsArray) => (
-                  <StackItem.Root
-                    key={card.id}
-                    item={card}
-                    focusIndicatorVariant='group'
-                    classNames={cardRoot}
-                    onClick={() => singleSelect(card.id)}
-                    prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
-                    nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
-                  >
-                    <Card.Content>
-                      <Card.Toolbar>
-                        <StackItem.DragHandle asChild>
-                          <Card.DragHandle toolbarItem />
-                        </StackItem.DragHandle>
-                        <AttentionGlyph attended={selected === card.id} />
-                        {onRemoveCard && (
-                          <>
-                            <Card.ToolbarSeparator variant='gap' />
-                            <Card.ToolbarIconButton
-                              iconOnly
-                              variant='ghost'
-                              icon='ph--x--regular'
-                              label={t('remove card label')}
-                              onClick={() => onRemoveCard(card)}
-                            />
-                          </>
+                  <Card.Root asChild key={card.id}>
+                    <StackItem.Root
+                      item={card}
+                      focusIndicatorVariant='group'
+                      onClick={() => singleSelect(card.id)}
+                      prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
+                      nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
+                    >
+                      <Card.Content>
+                        <Card.Toolbar>
+                          <StackItem.DragHandle asChild>
+                            <Card.DragHandle toolbarItem />
+                          </StackItem.DragHandle>
+                          <AttentionGlyph attended={selected === card.id} />
+                          {onRemoveCard && (
+                            <>
+                              <Card.ToolbarSeparator variant='gap' />
+                              <Card.ToolbarIconButton
+                                iconOnly
+                                variant='ghost'
+                                icon='ph--x--regular'
+                                label={t('remove card label')}
+                                onClick={() => onRemoveCard(card)}
+                              />
+                            </>
+                          )}
+                        </Card.Toolbar>
+                        <Surface role='card--kanban' limit={1} data={{ subject: card }} />
+                      </Card.Content>
+                      <StackItem.DragPreview>
+                        {({ item }) => (
+                          <CardDragPreview.Root>
+                            <CardDragPreview.Content>
+                              <Card.Toolbar>
+                                <Card.DragHandle />
+                              </Card.Toolbar>
+                              <Surface role='card--kanban' limit={1} data={{ subject: item }} />
+                            </CardDragPreview.Content>
+                          </CardDragPreview.Root>
                         )}
-                      </Card.Toolbar>
-                      <Surface role='card--kanban' limit={1} data={{ subject: card }} />
-                    </Card.Content>
-                    <StackItem.DragPreview>
-                      {({ item }) => (
-                        <CardDragPreview.Root>
-                          <CardDragPreview.Content>
-                            <Card.Toolbar>
-                              <Card.DragHandle />
-                            </Card.Toolbar>
-                            <Surface role='card--kanban' limit={1} data={{ subject: item }} />
-                          </CardDragPreview.Content>
-                        </CardDragPreview.Root>
-                      )}
-                    </StackItem.DragPreview>
-                  </StackItem.Root>
+                      </StackItem.DragPreview>
+                    </StackItem.Root>
+                  </Card.Root>
                 ))}
               </CardStack.Stack>
 
