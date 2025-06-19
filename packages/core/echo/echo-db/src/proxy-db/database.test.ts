@@ -5,7 +5,7 @@
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { sleep, Trigger } from '@dxos/async';
+import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type BaseObject, Expando, getSchema, getTypename, Query, Ref } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -54,13 +54,20 @@ describe('Database', () => {
     await db.flush();
   });
 
-  test('objects are saved without a flush', async () => {
+  test('db is persisted to storage without a flush', { timeout: 100000 }, async () => {
     const level = createTestLevel();
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
+    debugger;
 
+    // Create database.
+    let spaceKey: PublicKey;
+    let rootUrl: string;
     {
-      const { db } = await testBuilder.createDatabase({ kv: level });
+      const testPeer = await testBuilder.createPeer({ kv: level });
+      const db = await testPeer.createDatabase();
+      spaceKey = db.spaceKey;
+      rootUrl = db.rootUrl!;
       db.add(live(Expando, { name: 'Test' }));
       const { objects } = await db.query(Query.select(Filter.everything())).run();
       expect(objects).to.have.length(1);
@@ -69,8 +76,10 @@ describe('Database', () => {
       db.close();
     }
 
+    // Load database.
     {
-      const { db } = await testBuilder.createDatabase({ kv: level });
+      const testPeer = await testBuilder.createPeer({ kv: level });
+      const db = await asyncTimeout(testPeer.openDatabase(spaceKey, rootUrl), 1000);
       const { objects } = await db.query(Query.select(Filter.everything())).run();
       expect(objects).to.have.length(1);
       expect(objects[0].name).to.eq('Test');

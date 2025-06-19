@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
-import { Trigger, asyncTimeout, latch } from '@dxos/async';
+import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-pipeline';
 import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
 import { IndexMetadataStore } from '@dxos/indexing';
@@ -114,6 +114,36 @@ describe('RepoProxy', () => {
 
       await clientRepo.flush();
       await host.repo!.flush();
+      await host.close();
+      await clientRepo.close();
+    }
+
+    {
+      const { dataService } = await setup(level);
+      const [clientRepo] = createProxyRepos(dataService);
+      await openAndClose(clientRepo);
+
+      const clientHandle = clientRepo.find<{ text: string }>(url);
+      await asyncTimeout(clientHandle.whenReady(), 1000);
+
+      expect(clientHandle.doc()?.text).to.equal('Hello World!');
+    }
+  });
+
+  test('document persists without flush', async () => {
+    const level = createTestLevel();
+
+    let url: AutomergeUrl;
+    {
+      const { host, dataService } = await setup(level);
+      const [clientRepo] = createProxyRepos(dataService);
+      await openAndClose(clientRepo);
+
+      const text = 'Hello World!';
+
+      const clientHandle = clientRepo.create<{ text: string }>({ text });
+      url = clientHandle.url;
+      await sleep(500);
       await host.close();
       await clientRepo.close();
     }
