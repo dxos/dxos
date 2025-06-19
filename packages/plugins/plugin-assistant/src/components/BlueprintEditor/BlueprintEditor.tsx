@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { BlueprintDefinition } from '@dxos/assistant';
+import { Blueprint } from '@dxos/assistant';
 import { toJsonSchema } from '@dxos/echo-schema';
 import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
@@ -17,7 +17,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 export type BlueprintEditorProps = ThemedClassName<{
-  blueprint: BlueprintDefinition;
+  blueprint: Blueprint;
 }>;
 
 // TODO(burdon): Factor out JsonEditor.
@@ -29,7 +29,7 @@ export const BlueprintEditor = ({ classNames, blueprint }: BlueprintEditorProps)
     extensions: [
       createBasicExtensions({ lineWrapping: false }),
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-      createJsonExtensions({ schema: toJsonSchema(BlueprintDefinition, { strict: true }) }),
+      createJsonExtensions({ schema: toJsonSchema(Blueprint, { strict: true }) }),
       editorMonospace,
     ],
   });

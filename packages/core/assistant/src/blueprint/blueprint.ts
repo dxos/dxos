@@ -4,33 +4,26 @@
 
 import { Schema } from 'effect';
 
-import { type ExecutableTool, Tool, type ToolRegistry } from '@dxos/ai';
-import { raise } from '@dxos/debug';
+import { Obj, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 
-export const BlueprintDefinition = Schema.Struct({
-  steps: Schema.Array(
-    Schema.Struct({
-      instructions: Schema.String,
-      // TODO(burdon): Tool DXN? Additional metadata?
-      tools: Schema.optional(Schema.Array(Schema.String)),
-    }),
-  ),
-});
-export type BlueprintDefinition = Schema.Schema.Type<typeof BlueprintDefinition>;
-
-export const BlueprintStep = Schema.Struct({
-  id: Schema.String,
+export const BlueprintStepSchema = Schema.Struct({
+  id: ObjectId,
   instructions: Schema.String,
-  // TODO(burdon): ExecutableTool can't be serialized.
-  tools: Schema.Array(Tool),
+  tools: Schema.Array(Schema.String),
 });
-export interface BlueprintStep extends Schema.Schema.Type<typeof BlueprintStep> {}
+export type BlueprintStep = Schema.Schema.Type<typeof BlueprintStepSchema>;
+
+export const BlueprintSchema = Schema.Struct({
+  steps: Schema.Array(BlueprintStepSchema.pipe(Schema.omit('id'))),
+});
+export type BlueprintDef = Schema.Schema.Type<typeof BlueprintSchema>;
 
 export const Blueprint = Schema.Struct({
-  steps: Schema.Array(BlueprintStep),
-});
-export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
+  name: Schema.optional(Schema.String),
+  steps: Schema.Array(BlueprintStepSchema),
+}).pipe(Type.Obj({ typename: 'dxos.org/type/Blueprint', version: '0.1.0' }));
+export type Blueprint = Schema.Schema.Type<typeof Blueprint>;
 
 /**
  * Blueprint builder API.
@@ -41,7 +34,7 @@ export namespace BlueprintBuilder {
   class Builder {
     private readonly _steps: BlueprintStep[] = [];
 
-    step(instructions: string, options?: { tools?: ExecutableTool[] }): Builder {
+    step(instructions: string, options?: { tools?: string[] }): Builder {
       this._steps.push({
         id: ObjectId.random(),
         instructions,
@@ -52,9 +45,7 @@ export namespace BlueprintBuilder {
     }
 
     build(): Blueprint {
-      return {
-        steps: this._steps,
-      };
+      return Obj.make(Blueprint, { steps: this._steps });
     }
   }
 }
@@ -63,16 +54,14 @@ export namespace BlueprintBuilder {
  * Blueprint parser API.
  */
 export namespace BlueprintParser {
-  export const create = (registry: ToolRegistry) => new Parser(registry);
+  export const create = () => new Parser();
 
   class Parser {
-    constructor(private readonly _registry: ToolRegistry) {}
-
-    parse({ steps }: BlueprintDefinition): Blueprint {
+    parse({ steps }: BlueprintDef): Blueprint {
       const builder = BlueprintBuilder.create();
       for (const step of steps) {
         builder.step(step.instructions, {
-          tools: step.tools?.map((tool) => this._registry.get(tool) ?? raise(new Error(`Tool not found: ${tool}`))),
+          tools: (step.tools ?? []) as string[],
         });
       }
 

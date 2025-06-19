@@ -172,17 +172,14 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   //
 
   const aiClient = useMemo(() => new SpyAIService(new AIServiceEdgeClient(aiConfig)), []);
+  const registry = useMemo(
+    () => space && researchGraph && createRegistry(space, researchGraph.queue.dxn),
+    [space, researchGraph?.queue.dxn],
+  );
 
   const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1_000 });
 
-  const researchBlueprint = useMemo(() => {
-    if (!space || !researchGraph) {
-      return undefined;
-    }
-
-    const registry = createRegistry(space, researchGraph?.queue.dxn);
-    return BlueprintParser.create(registry).parse(RESEARCH_BLUEPRINT);
-  }, [space, researchGraph?.queue.dxn]);
+  const researchBlueprint = useMemo(() => BlueprintParser.create().parse(RESEARCH_BLUEPRINT), []);
 
   const logger = useMemo(() => new Logger(), []);
 
@@ -195,7 +192,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   }, [model]);
 
   const handleResearch = useCallback(async () => {
-    if (!space || !researchBlueprint) {
+    if (!space || !registry || !researchBlueprint) {
       return;
     }
 
@@ -208,14 +205,14 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       },
     });
     const objects = await Promise.all(selected.map((id) => resolver.resolve(DXN.fromLocalObjectId(id))));
-    const machine = new BlueprintMachine(researchBlueprint);
+    const machine = new BlueprintMachine(registry, researchBlueprint);
     const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));
 
     log.info('starting research...', { selected });
     await machine.runToCompletion({ aiService: aiClient, input: objects });
 
     cleanup();
-  }, [space, aiClient, researchBlueprint, selection]);
+  }, [space, aiClient, registry, researchBlueprint, selection]);
 
   const handleGenerate = useCallback(async () => {
     if (!space) {
