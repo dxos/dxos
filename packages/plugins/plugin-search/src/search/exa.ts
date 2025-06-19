@@ -245,7 +245,7 @@ const SoftRef = Schema.Struct({
 });
 
 // TODO(burdon): Move to @dxos/echo.
-const mapSchemaRefs = (schema: Schema.Schema.AnyNoContext) => {
+const mapSchemaRefs = (schema: Schema.Schema.AnyNoContext): Schema.Schema.AnyNoContext => {
   const go = (ast: SchemaAST.AST): SchemaAST.AST => {
     if (SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome)) {
       return SoftRef.ast;

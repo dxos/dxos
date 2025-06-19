@@ -4,7 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type JsonPath, RefImpl, toEffectSchema } from '@dxos/echo-schema';
+import { Ref } from '@dxos/echo';
+import { type JsonPath, toEffectSchema } from '@dxos/echo-schema';
 import { type FunctionType } from '@dxos/functions';
 import { useOnTransition } from '@dxos/react-ui';
 import { Form, type FormInputStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
@@ -25,7 +26,7 @@ export const FunctionInputEditor = ({
 }: FunctionInputEditorProps) => {
   const selectedFunctionValue = useFormValues(['function' as JsonPath]);
   const selectedFunctionId = useMemo(() => {
-    if (selectedFunctionValue instanceof RefImpl) {
+    if (Ref.isRef(selectedFunctionValue)) {
       return selectedFunctionValue.dxn.toString().split('dxn:echo:@:').at(1);
     }
   }, [selectedFunctionValue]);
