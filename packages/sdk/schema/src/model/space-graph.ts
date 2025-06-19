@@ -239,7 +239,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
         // const typename = Obj.getTypename(object);
         const t = Obj.getTypename(object);
         if (!t) {
-          console.warn('no typename', { object });
+          console.warn('no typename', object);
         }
         const typename = getTypename(object);
         if (typename) {

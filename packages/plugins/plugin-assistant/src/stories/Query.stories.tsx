@@ -15,7 +15,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { BlueprintMachine, BlueprintParser, Logger, setConsolePrinter, setLogger } from '@dxos/assistant';
 import { combine } from '@dxos/async';
-import { Filter, Queue, type EchoDatabase, type Space } from '@dxos/client/echo';
+import { Filter, Queue, type Space } from '@dxos/client/echo';
 import { type Obj, Type } from '@dxos/echo';
 import { Ref, create, getLabelForObject, getTypename, type AnyEchoObject } from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
@@ -285,6 +285,8 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const extensions = useMemo(() => [typeahead({ onComplete: handleMatch })], [handleMatch]);
 
+  const { state: flushState, handleFlush } = useFlush(space);
+
   return (
     <div className='grow grid overflow-hidden'>
       <div className={mx('grow grid overflow-hidden', !mode && 'grid-cols-[1fr_30rem]')}>
@@ -304,7 +306,18 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
                 label='reset'
                 onClick={(event) => handleReset(event.shiftKey)}
               />
-              <FlushButton db={space?.db} />
+              <IconButton
+                icon={Match.value(flushState).pipe(
+                  Match.when('idle', () => 'ph--floppy-disk--regular'),
+                  Match.when('flushing', () => 'ph--spinner--regular'),
+                  Match.when('flushed', () => 'ph--check--regular'),
+                  Match.exhaustive,
+                )}
+                iconOnly
+                label='flush'
+                onClick={handleFlush}
+                disabled={flushState === 'flushing'}
+              />
             </Toolbar.Root>
             <ItemList items={objects} />
             <Log logger={logger} />
@@ -394,12 +407,12 @@ const ItemList = <T extends Obj.Any>({ items = [] }: { items?: T[] }) => {
   );
 };
 
-const FlushButton = ({ db }: { db?: EchoDatabase }) => {
+const useFlush = (space?: Space) => {
   const [state, setState] = useState<'idle' | 'flushing' | 'flushed'>('idle');
-
   const resetTimer = useRef<NodeJS.Timeout | null>(null);
+
   const handleFlush = useCallback(() => {
-    if (!db) {
+    if (!space) {
       return;
     }
 
@@ -409,30 +422,17 @@ const FlushButton = ({ db }: { db?: EchoDatabase }) => {
       }
 
       setState('flushing');
-      await db.flush();
+      await space.db.flush();
       setState('flushed');
 
       resetTimer.current = setTimeout(() => {
         setState('idle');
         resetTimer.current = null;
-      }, 1000);
+      }, 1_000);
     });
-  }, [db]);
+  }, [space]);
 
-  return (
-    <IconButton
-      icon={Match.value(state).pipe(
-        Match.when('idle', () => 'ph--floppy-disk--regular'),
-        Match.when('flushing', () => 'ph--spinner--regular'),
-        Match.when('flushed', () => 'ph--check--regular'),
-        Match.exhaustive,
-      )}
-      iconOnly
-      label={state === 'flushing' ? 'flushing...' : state === 'flushed' ? 'flushed!' : 'flush'}
-      onClick={handleFlush}
-      disabled={state === 'flushing'}
-    />
-  );
+  return { state, handleFlush };
 };
 
 const Log: FC<{ logger: Logger }> = ({ logger }) => {

@@ -73,7 +73,7 @@ export const getTypename = (obj: Any): string | undefined => {
     return getSchemaDXN(obj)?.asTypeDXN()?.type;
   }
 
-  return EchoSchema.getTypename(schema);
+  return EchoSchema.getSchemaTypename(schema);
 };
 
 // TODO(dmaretskyi): Allow returning undefined.
