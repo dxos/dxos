@@ -4,7 +4,7 @@
 
 import { type Completion } from '@codemirror/autocomplete';
 import { type Schema } from 'effect/Schema';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -102,6 +102,7 @@ export const TableCellEditor = ({
   const { id: gridId, editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
   const suppressNextBlur = useRef(false);
   const { themeMode } = useThemeContext();
+  const [_validationError, setValidationError] = useState<string | null>(null);
 
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
@@ -116,22 +117,32 @@ export const TableCellEditor = ({
   }, [model, editing]);
 
   const handleEnter = useCallback(
-    (value: any) => {
+    async (value: any) => {
       if (!model || !editing) {
         return;
       }
 
       const cell = parseCellIndex(editing.index);
-      model.setCellData(cell, value);
-      onEnter?.(cell);
-      onFocus?.();
-      setEditing(null);
+
+      // Validate the value
+      const result = await model.validateCellData(cell, value);
+
+      if (result.valid) {
+        setValidationError(null);
+        model.setCellData(cell, value);
+        onEnter?.(cell);
+        onFocus?.();
+        setEditing(null);
+      } else {
+        setValidationError(result.error);
+        // Editor stays open on validation failure
+      }
     },
     [model, editing, onEnter, onFocus, setEditing],
   );
 
   const handleBlur = useCallback<EditorBlurHandler>(
-    (value) => {
+    async (value) => {
       if (!model || !editing) {
         return;
       }
@@ -142,7 +153,16 @@ export const TableCellEditor = ({
 
       const cell = parseCellIndex(editing.index);
       if (value !== undefined) {
-        model.setCellData(cell, value);
+        // Validate on blur as well
+        const result = await model.validateCellData(cell, value);
+
+        if (result.valid) {
+          setValidationError(null);
+          model.setCellData(cell, value);
+        } else {
+          setValidationError(result.error);
+          // Don't close editor on validation failure during blur
+        }
       }
     },
     [model, editing],
@@ -209,9 +229,9 @@ export const TableCellEditor = ({
                 return;
               }
               if (mode === 'single-select') {
-                handleEnter(ids[0]);
+                void handleEnter(ids[0]);
               } else {
-                handleEnter(ids);
+                void handleEnter(ids);
               }
             }
           },
@@ -238,12 +258,12 @@ export const TableCellEditor = ({
                           [field.referencePath!]: data.text,
                         },
                         (data) => {
-                          handleEnter(data);
+                          void handleEnter(data);
                         },
                       );
                     }
                   } else {
-                    handleEnter(data);
+                    void handleEnter(data);
                   }
                 }
               },
