@@ -124,7 +124,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                             <CardDragPreview.Root>
                               <CardDragPreview.Content>
                                 <Card.Toolbar>
-                                  <Card.DragHandle />
+                                  <Card.DragHandle toolbarItem />
                                 </Card.Toolbar>
                                 <Surface role='card--kanban' limit={1} data={{ subject: item }} />
                               </CardDragPreview.Content>

@@ -74,6 +74,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     const { dropping } = useStackDropForElements({
       id: props.id,
       element: getDropElement && stackElement ? getDropElement(stackElement) : stackElement,
+      scrollElement: stackElement,
       selfDroppable,
       orientation,
       onRearrange,
