@@ -70,7 +70,7 @@ describe('Database', () => {
       const { objects } = await db.query(Query.select(Filter.everything())).run();
       expect(objects).to.have.length(1);
       expect(objects[0].name).to.eq('Test');
-      await sleep(300); // Wait for the object to be saved.
+      await sleep(500); // Wait for the object to be saved.
       await db.close();
     }
 
