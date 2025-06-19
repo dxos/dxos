@@ -21,6 +21,7 @@ import { ThreadAction, ThreadType } from '@dxos/plugin-thread/types';
 import { Filter, fullyQualifiedId, getSpace, Query, useQuery } from '@dxos/react-client/echo';
 import { type DxGridElement, type DxGridPosition, type GridContentProps } from '@dxos/react-ui-grid';
 import { AnchoredTo } from '@dxos/schema';
+import { Relation } from '@dxos/echo';
 
 import { useSheetContext } from '../components';
 import { SHEET_PLUGIN } from '../meta';
@@ -89,7 +90,7 @@ export const useSelectThreadOnCellFocus = () => {
       }
 
       const closestThread = anchors.find((anchor) => {
-        const source = anchor[RelationSourceId];
+        const source = Relation.getSource(anchor);
         if (anchor.anchor && isInstanceOf(ThreadType, source)) {
           const range = parseThreadAnchorAsCellRange(anchor.anchor);
           return range ? inRange(range, cellAddress) : false;

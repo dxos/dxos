@@ -16,7 +16,7 @@ import {
   DeletedId,
   EchoSchema,
   EntityKind,
-  EntityKindPropertyId,
+  EntityKindId,
   getRefSavedTarget,
   getTypeAnnotation,
   isInstanceOf,
@@ -37,6 +37,9 @@ import {
   getEntityKind,
   getSchema,
   requireTypeReference,
+  RelationTargetDXNId,
+  RelationSourceDXNId,
+  assertObjectModelShape,
 } from '@dxos/echo-schema';
 import { invariant, assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -146,8 +149,17 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // Non-reactive root properties.
     if (isRootDataObject(target)) {
       switch (prop) {
-        case EntityKindPropertyId: {
+        case 'id': {
+          return target[symbolInternals].core.id;
+        }
+        case EntityKindId: {
           return target[symbolInternals].core.getKind();
+        }
+        case RelationSourceDXNId: {
+          return target[symbolInternals].core.getSource()?.toDXN();
+        }
+        case RelationTargetDXNId: {
+          return target[symbolInternals].core.getTarget()?.toDXN();
         }
         case RelationSourceId: {
           const sourceRef = target[symbolInternals].core.getSource();
@@ -968,7 +980,9 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
   // TODO(dmaretskyi): Does this need to be disposed?
   core.updates.on(() => target[symbolInternals].signal.notifyWrite());
 
-  return createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
+  const obj = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
+  assertObjectModelShape(obj);
+  return obj;
 };
 
 const validateSchema = (schema: Schema.Schema.AnyNoContext) => {

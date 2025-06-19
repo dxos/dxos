@@ -21,11 +21,14 @@ import {
   ATTR_TYPE,
   EntityKindId,
   MetaId,
+  RelationSourceDXNId,
+  RelationTargetDXNId,
   RelationSourceId,
   RelationTargetId,
   TypeId,
   type InternalObjectProps,
   type ObjectJSON,
+  assertObjectModelShape,
 } from './model';
 import { getType, setTypename } from './typename';
 import { EntityKind } from '../ast';
@@ -87,20 +90,18 @@ export const objectFromJSON = async (
   const isRelation =
     typeof jsonData[ATTR_RELATION_SOURCE] === 'string' || typeof jsonData[ATTR_RELATION_TARGET] === 'string';
   if (isRelation) {
-    let source: AnyEchoObject | DXN = DXN.parse(
-      jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')),
-    );
-    let target: AnyEchoObject | DXN = DXN.parse(
-      jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')),
-    );
+    let sourceDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')));
+    let targetDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')));
 
     // TODO(dmaretskyi): Async!
-    source = ((await refResolver?.resolve(source)) as AnyEchoObject | undefined) ?? source;
-    target = ((await refResolver?.resolve(target)) as AnyEchoObject | undefined) ?? target;
+    const source = (await refResolver?.resolve(sourceDxn)) as AnyEchoObject | undefined;
+    const target = (await refResolver?.resolve(targetDxn)) as AnyEchoObject | undefined;
 
     defineHiddenProperty(obj, EntityKindId, EntityKind.Relation);
-    defineHiddenProperty(obj, RelationTargetId, target);
+    defineHiddenProperty(obj, RelationSourceDXNId, sourceDxn);
+    defineHiddenProperty(obj, RelationTargetDXNId, targetDxn);
     defineHiddenProperty(obj, RelationSourceId, source);
+    defineHiddenProperty(obj, RelationTargetId, target);
   } else {
     defineHiddenProperty(obj, EntityKindId, EntityKind.Object);
   }
@@ -114,14 +115,13 @@ export const objectFromJSON = async (
     defineHiddenProperty(obj, MetaId, meta);
   }
 
-  // Defensive programming.
-  invariant(obj[ATTR_TYPE] === undefined);
-  invariant(obj[ATTR_SELF_DXN] === undefined);
-  invariant(obj[ATTR_DELETED] === undefined);
-  invariant(obj[ATTR_RELATION_SOURCE] === undefined);
-  invariant(obj[ATTR_RELATION_TARGET] === undefined);
-  invariant(obj[ATTR_META] === undefined);
-
+  assertObjectModelShape(obj);
+  invariant((obj as any)[ATTR_TYPE] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_SELF_DXN] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_DELETED] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_RELATION_SOURCE] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_RELATION_TARGET] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_META] === undefined, 'Invalid object model');
   return obj;
 };
 
@@ -181,11 +181,15 @@ const typedJsonSerializer = function (this: any) {
     [ATTR_TYPE]: typename.toString(),
   };
 
-  if (this[RelationSourceId]) {
-    result[ATTR_RELATION_SOURCE] = formatRelationConnector(this[RelationSourceId]).toString();
+  if (this[RelationSourceDXNId]) {
+    const sourceDXN = this[RelationSourceDXNId];
+    invariant(sourceDXN instanceof DXN);
+    result[ATTR_RELATION_SOURCE] = sourceDXN.toString();
   }
-  if (this[RelationTargetId]) {
-    result[ATTR_RELATION_TARGET] = formatRelationConnector(this[RelationTargetId]).toString();
+  if (this[RelationTargetDXNId]) {
+    const targetDXN = this[RelationTargetDXNId];
+    invariant(targetDXN instanceof DXN);
+    result[ATTR_RELATION_TARGET] = targetDXN.toString();
   }
 
   if (meta) {
@@ -194,18 +198,6 @@ const typedJsonSerializer = function (this: any) {
 
   Object.assign(result, serializeData(rest));
   return result;
-};
-
-const formatRelationConnector = (value: BaseObject | DXN): DXN => {
-  if (value instanceof DXN) {
-    return value;
-  }
-
-  if (typeof value === 'object') {
-    return getObjectDXN(value as InternalObjectProps) ?? failedInvariant('Missing relation connector');
-  }
-
-  return failedInvariant('Invalid relation connector');
 };
 
 const serializeData = (data: unknown) => {

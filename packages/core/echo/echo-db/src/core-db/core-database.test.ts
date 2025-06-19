@@ -119,7 +119,7 @@ describe('CoreDatabase', () => {
     test('new inline objects are loaded', async () => {
       const db = await createClientDbInSpaceWithObject(createTextObject());
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
-      const newObject = addObjectToDoc(newRootDocHandle, { id: '123', title: 'title ' });
+      const newObject = addObjectToDoc(newRootDocHandle, { id: ObjectId.random(), title: 'title ' });
       await db.setSpaceRoot(newRootDocHandle.url);
       const retrievedObject = db.getObjectById(newObject.id);
       expect((retrievedObject as any).title).to.eq(newObject.title);

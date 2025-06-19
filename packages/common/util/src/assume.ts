@@ -16,6 +16,7 @@
  * ```
  */
 // NOTE: Keep as `function` to avoid type inference issues.
-export const assumeType = <T>(value: unknown): asserts value is T => {
+// eslint-disable-next-line func-style
+export function assumeType<T>(value: unknown): asserts value is T {
   // No-op.
-};
+}

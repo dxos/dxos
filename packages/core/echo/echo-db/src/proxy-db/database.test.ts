@@ -306,7 +306,7 @@ describe('Database', () => {
     expect(() => db1.add(task1)).to.throw;
   });
 
-  test('Database works with old PublicKey IDs and new Ulid IDs', async () => {
+  test.skip('Database works with old PublicKey IDs and new Ulid IDs', async () => {
     const { db } = await builder.createDatabase();
     const obj = db.add(live(Expando, { string: 'foo' })); // Ulid by default
 

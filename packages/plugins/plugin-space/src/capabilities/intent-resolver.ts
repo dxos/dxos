@@ -36,6 +36,7 @@ import {
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionAction, CollectionType, SpaceAction } from '../types';
 import { cloneObject, COMPOSER_SPACE_LOCK, getNestedObjects } from '../util';
+import { Relation } from '@dxos/echo';
 
 // TODO(wittjosiah): Remove.
 const SPACE_MAX_OBJECTS = 500;
@@ -405,7 +406,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: SpaceAction.AddRelation,
       resolve: ({ space, schema, source, target, fields }) => {
-        const relation = live(schema, { [RelationSourceId]: source, [RelationTargetId]: target, ...fields });
+        const relation = live(schema, { [Relation.Source]: source, [Relation.Target]: target, ...fields });
         space.db.add(relation);
         return {
           data: {

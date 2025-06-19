@@ -23,6 +23,8 @@ import {
   RelationSourceId,
   RelationTargetId,
   type BaseObject,
+  RelationSourceDXNId,
+  RelationTargetDXNId,
 } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
@@ -210,8 +212,8 @@ export const sanitizeObjects = async (
         }
         delete data.source;
         delete data.target;
-        data[RelationSourceId] = sourceDxn;
-        data[RelationTargetId] = targetDxn;
+        data[RelationSourceDXNId] = sourceDxn;
+        data[RelationTargetDXNId] = targetDxn;
       }
 
       return create(entry.schema, data);

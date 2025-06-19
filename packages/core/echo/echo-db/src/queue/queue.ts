@@ -3,7 +3,7 @@
 //
 
 import { Obj, type Ref } from '@dxos/echo';
-import { type AnyEchoObject, type HasId, getTypename } from '@dxos/echo-schema';
+import { type AnyEchoObject, type HasId, assertObjectModelShape, getTypename } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
@@ -73,10 +73,7 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
    * Insert into queue with optimistic update.
    */
   async append(items: T[]): Promise<void> {
-    assertArgument(
-      items.every((item) => item.id !== undefined && !!getTypename(item)),
-      'items must be valid echo objects',
-    );
+    items.forEach((item) => assertObjectModelShape(item));
 
     // Optimistic update.
     this._objects = [...this._objects, ...items];

@@ -28,7 +28,7 @@ describe('queues', (ctx) => {
     const obj = create(Testing.Contact, {
       name: 'john',
     });
-    queue.append([obj]);
+    await queue.append([obj]);
 
     {
       const resolved = await peer.client.graph
