@@ -8,7 +8,7 @@ import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { Relation, Obj, Type, Filter, Query, Ref } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { type EchoSchema, getLabel, getTypename } from '@dxos/echo-schema';
+import { getLabel, getTypename } from '@dxos/echo-schema';
 import { type GraphEdge, AbstractGraphBuilder, type Graph, ReactiveGraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -48,7 +48,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
   private _space?: Space;
   private _queue?: Queue;
-  private _schema?: EchoSchema[];
+  private _schema?: Type.Schema[];
   private _objects?: Obj.Any[];
   private _queueItems?: Obj.Any[];
   private _schemaSubscription?: CleanupFn;
@@ -176,48 +176,46 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     // TOOD(burdon): Causes D3 graph to reset since live? Batch preact changes?
     this.clear();
 
-    const addSchema = (typename: string) => {
-      if (!this._options?.showSchema) {
-        return;
-      }
+    // Schema nodes.
+    if (this._options?.showSchema) {
+      const schemas = [
+        // Database Schema.
+        ...(this._schema ?? []),
+        // Runtime schema.
+        ...(this._space?.db.graph.schemaRegistry.schemas ?? []),
+      ];
 
-      if (typename) {
-        let node = currentNodes.find((node) => node.id === typename);
-        if (!node) {
-          node = {
-            id: typename,
-            type: 'schema',
-            data: {
-              label: typename,
-            },
-          };
+      schemas.forEach((schema) => {
+        const typename = Type.getDXN(schema)?.typename;
+        if (typename) {
+          let node = currentNodes.find((node) => node.id === typename);
+          if (!node) {
+            node = {
+              id: typename,
+              type: 'schema',
+              data: {
+                label: typename,
+              },
+            };
+          }
+
+          this._graph.nodes.push(node);
         }
+      });
+    }
 
-        this._graph.nodes.push(node);
-      }
-    };
+    // Database Objects and Relations.
+    const objects = [
+      // ECHO Graph.
+      ...(this._objects ?? []),
+      // ECHO Queue.
+      ...(this._queueItems ?? []),
+    ];
 
-    // Runtime schema.
-    this._space?.db.graph.schemaRegistry.schemas.forEach((schema) => {
-      const typename = Type.getDXN(schema)?.typename;
-      if (typename) {
-        addSchema(typename);
-      }
-    });
-
-    // Database Schema.
-    this._schema?.forEach((schema) => {
-      const typename = Type.getDXN(schema)?.typename;
-      if (typename) {
-        addSchema(typename);
-      }
-    });
-
-    // Database Objects.
-    [...(this._objects ?? []), ...(this._queueItems ?? [])].forEach((object) => {
+    objects.forEach((object) => {
       const schema = Obj.getSchema(object);
 
-      // Relation.
+      // Relations.
       if (Relation.isRelation(object)) {
         try {
           const edge = this.addEdge({
@@ -236,8 +234,13 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
           log.error('onCreateEdge', { error: error?.message });
         }
       } else {
+        // TODO(burdon): Filter?
         // TODO(burdon): Obj.getTypename returns undefined for the same object.
         // const typename = Obj.getTypename(object);
+        const t = Obj.getTypename(object);
+        if (!t) {
+          console.warn('no typename', { object });
+        }
         const typename = getTypename(object);
         if (typename) {
           let node: SpaceGraphNode | undefined = currentNodes.find((node) => node.id === object.id);

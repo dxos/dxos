@@ -17,7 +17,14 @@ import { BlueprintParser, BlueprintMachine, Logger, setConsolePrinter, setLogger
 import { combine } from '@dxos/async';
 import { Filter, Queue, type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
-import { type AnyEchoObject, Ref, create, getLabelForObject, getTypename } from '@dxos/echo-schema';
+import {
+  type AnyEchoObject,
+  type BaseEchoObject,
+  Ref,
+  create,
+  getLabelForObject,
+  getTypename,
+} from '@dxos/echo-schema';
 import { SelectionModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
@@ -63,6 +70,18 @@ const aiConfig: AIServiceEdgeClientOptions = {
     // model: '@anthropic/claude-sonnet-4-20250514',
   },
 };
+
+/**
+ * Container for a set of ephemeral research results.
+ */
+const ResearchGraph = Schema.Struct({
+  queue: Ref(Queue),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/ResearchGraph',
+    version: '0.1.0',
+  }),
+);
 
 type Mode = 'graph' | 'list';
 
@@ -351,20 +370,8 @@ const createMatcher =
     }
   };
 
-/**
- * Container for a set of ephemeral research results.
- */
-const ResearchGraph = Schema.Struct({
-  queue: Ref(Queue),
-}).pipe(
-  Type.Obj({
-    typename: 'dxos.org/type/ResearchGraph',
-    version: '0.1.0',
-  }),
-);
-
 // TODO(burdon): Replace with card list.
-const ItemList = <T extends AnyEchoObject>({ items = [] }: { items?: T[] }) => {
+const ItemList = <T extends BaseEchoObject>({ items = [] }: { items?: T[] }) => {
   return (
     <List.Root<T> items={items}>
       {({ items }) => (
