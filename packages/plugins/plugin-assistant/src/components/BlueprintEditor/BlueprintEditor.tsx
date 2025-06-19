@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Blueprint, type BlueprintParser } from '@dxos/assistant';
+import { Blueprint } from '@dxos/assistant';
 import { toJsonSchema } from '@dxos/echo-schema';
 import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
@@ -17,7 +17,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 export type BlueprintEditorProps = ThemedClassName<{
-  blueprint: BlueprintParser.DSL;
+  blueprint: Blueprint;
 }>;
 
 // TODO(burdon): Factor out JsonEditor.
@@ -29,8 +29,7 @@ export const BlueprintEditor = ({ classNames, blueprint }: BlueprintEditorProps)
     extensions: [
       createBasicExtensions({ lineWrapping: false }),
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-      // TODO(burdon): ERROR: reference "/schemas/any" resolves to more than one schema
-      createJsonExtensions({ schema: toJsonSchema(Blueprint) }),
+      createJsonExtensions({ schema: toJsonSchema(Blueprint, { strict: true }) }),
       editorMonospace,
     ],
   });

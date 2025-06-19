@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { AIServiceEdgeClient, ToolResult, createTool } from '@dxos/ai';
+import { AIServiceEdgeClient, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { ArtifactId } from '@dxos/artifact';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -39,7 +39,8 @@ describe.skip('Blueprint', () => {
       .step('Write a pitch deck for the product')
       .build();
 
-    const machine = new BlueprintMachine(blueprint);
+    const registry = new ToolRegistry([]);
+    const machine = new BlueprintMachine(registry, blueprint);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiService });
   });
@@ -82,20 +83,21 @@ describe.skip('Blueprint', () => {
         'Determine if the email is introduction, question, or spam. Bail if email does not fit into one of these categories.',
       )
       .step('If the email is spam, label it as spam and do not respond.', {
-        tools: [labelTool],
+        tools: [labelTool.id],
       })
       .step(
         'If the email is an introduction, respond with a short introduction of yourself and ask for more information.',
         {
-          tools: [replyTool],
+          tools: [replyTool.id],
         },
       )
       .step('If the email is a question, respond with a short answer and ask for more information.', {
-        tools: [replyTool],
+        tools: [replyTool.id],
       })
       .build();
 
-    const machine = new BlueprintMachine(blueprint);
+    const registry = new ToolRegistry([replyTool, labelTool]);
+    const machine = new BlueprintMachine(registry, blueprint);
     setConsolePrinter(machine);
     await machine.runToCompletion({ aiService, input: TEST_EMAILS[0] });
   });
@@ -123,19 +125,24 @@ describe.skip('Blueprint', () => {
 
     await db.flush({ indexes: true });
 
+    const webSearchTool = createExaTool({ apiKey: EXA_API_KEY });
+    const localSearchTool = createLocalSearchTool(db);
+    const graphWriterTool = createGraphWriterTool({ db, schemaTypes: DataTypes });
+    const registry = new ToolRegistry([webSearchTool, localSearchTool, graphWriterTool]);
+
     const blueprint = BlueprintBuilder.create()
       .step('Research founders of the organization. Do deep research.', {
-        tools: [createExaTool({ apiKey: EXA_API_KEY })],
+        tools: [webSearchTool.id],
       })
       .step('Based on your research select matching entires that are already in the graph', {
-        tools: [createLocalSearchTool(db)],
+        tools: [localSearchTool.id],
       })
       .step('Add researched data to the graph', {
-        tools: [createLocalSearchTool(db), createGraphWriterTool({ db, schemaTypes: DataTypes })],
+        tools: [localSearchTool.id, graphWriterTool.id],
       })
       .build();
 
-    const machine = new BlueprintMachine(blueprint);
+    const machine = new BlueprintMachine(registry, blueprint);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiService, input: org1 });
   });

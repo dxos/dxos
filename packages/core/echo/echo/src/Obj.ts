@@ -73,7 +73,7 @@ export const getTypename = (obj: Any): string | undefined => {
     return getSchemaDXN(obj)?.asTypeDXN()?.type;
   }
 
-  return EchoSchema.getTypename(schema);
+  return EchoSchema.getSchemaTypename(schema);
 };
 
 // TODO(dmaretskyi): Allow returning undefined.
@@ -88,6 +88,13 @@ export const isDeleted = (obj: Any): boolean => {
   const deleted = EchoSchema.isDeleted(obj);
   invariant(typeof deleted === 'boolean', 'Invalid object.');
   return deleted;
+};
+
+export const getLabel = (obj: Any): string | undefined => {
+  const schema = getSchema(obj);
+  if (schema != null) {
+    return EchoSchema.getLabel(schema, obj);
+  }
 };
 
 /**

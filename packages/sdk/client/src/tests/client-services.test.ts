@@ -230,8 +230,7 @@ describe('Client services', () => {
     expect(guestInvitation?.spaceKey).to.deep.eq(hostSpace.key);
     expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
     expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
-
-    log('Invitation complete');
+    log('invitation complete');
 
     // TODO(burdon): Space should now be available?
     const trigger = new Trigger<Space>();
@@ -245,7 +244,6 @@ describe('Client services', () => {
       .toBeTruthy();
 
     const guestSpace = await trigger.wait();
-
     for (const space of [hostSpace, guestSpace]) {
       const getMembers = () => {
         const members = space.members.get();
@@ -284,6 +282,6 @@ describe('Client services', () => {
         );
     }
 
-    await syncItemsAutomerge(hostSpace.db, guestSpace.db);
+    await syncItemsAutomerge(expect, hostSpace.db, guestSpace.db);
   });
 });
