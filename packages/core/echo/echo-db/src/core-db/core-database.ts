@@ -82,6 +82,8 @@ export type AddCoreOptions = {
   placeIn?: ObjectPlacement;
 };
 
+const TRACE_LOADING = false;
+
 /**
  *
  */
@@ -341,7 +343,13 @@ export class CoreDatabase {
     const objectsToLoad: Array<{ id: string; resultIndex: number }> = [];
     for (let i = 0; i < objectIds.length; i++) {
       const objectId = objectIds[i];
-      const core = this.getObjectCoreById(objectId);
+
+      if (!this._automergeDocLoader.objectPresent(objectId)) {
+        result[i] = undefined;
+        continue;
+      }
+
+      const core = this.getObjectCoreById(objectId, { load: true });
       if (!returnDeleted && this._objects.get(objectId)?.isDeleted()) {
         result[i] = undefined;
       } else if (!returnWithUnsatisfiedDeps && core && !this._areDepsSatisfied(core)) {
@@ -358,44 +366,62 @@ export class CoreDatabase {
     const idsToLoad = objectsToLoad.map((v) => v.id);
     this._automergeDocLoader.loadObjectDocument(idsToLoad);
 
-    return new Promise((resolve, reject) => {
-      let unsubscribe: CleanupFn | null = null;
-      let inactivityTimeoutTimer: any | undefined;
-      const scheduleInactivityTimeout = () => {
-        inactivityTimeoutTimer = setTimeout(() => {
-          unsubscribe?.();
-          if (failOnTimeout) {
-            reject(new TimeoutError(inactivityTimeout));
-          } else {
+    const startTime = TRACE_LOADING ? performance.now() : 0;
+    const diagnostics: string[] = [];
+    try {
+      return await new Promise((resolve, reject) => {
+        let unsubscribe: CleanupFn | null = null;
+        let inactivityTimeoutTimer: any | undefined;
+        const scheduleInactivityTimeout = () => {
+          inactivityTimeoutTimer = setTimeout(() => {
+            unsubscribe?.();
+            if (failOnTimeout) {
+              diagnostics.push('inactivity-rejected');
+              reject(new TimeoutError(inactivityTimeout));
+            } else {
+              diagnostics.push('inactivity-resolved');
+              resolve(result);
+            }
+          }, inactivityTimeout);
+        };
+        unsubscribe = this._updateEvent.on(({ itemsUpdated }) => {
+          const updatedIds = itemsUpdated.map((v) => v.id);
+          for (let i = objectsToLoad.length - 1; i >= 0; i--) {
+            const objectToLoad = objectsToLoad[i];
+            if (updatedIds.includes(objectToLoad.id)) {
+              clearTimeout(inactivityTimeoutTimer);
+
+              const isDeleted = this._objects.get(objectToLoad.id)?.isDeleted();
+              const depsUnsatisfied =
+                this._objects.get(objectToLoad.id) && !this._areDepsSatisfied(this._objects.get(objectToLoad.id)!);
+
+              if (!returnDeleted && isDeleted) {
+                diagnostics.push('object-deleted');
+                result[objectToLoad.resultIndex] = undefined;
+              } else if (!returnWithUnsatisfiedDeps && depsUnsatisfied) {
+                diagnostics.push('deps-unsatisfied');
+                result[objectToLoad.resultIndex] = undefined;
+              } else {
+                result[objectToLoad.resultIndex] = this.getObjectCoreById(objectToLoad.id)!;
+              }
+
+              objectsToLoad.splice(i, 1);
+              scheduleInactivityTimeout();
+            }
+          }
+          if (objectsToLoad.length === 0) {
+            clearTimeout(inactivityTimeoutTimer);
+            unsubscribe?.();
             resolve(result);
           }
-        }, inactivityTimeout);
-      };
-      unsubscribe = this._updateEvent.on(({ itemsUpdated }) => {
-        const updatedIds = itemsUpdated.map((v) => v.id);
-        for (let i = objectsToLoad.length - 1; i >= 0; i--) {
-          const objectToLoad = objectsToLoad[i];
-          if (updatedIds.includes(objectToLoad.id)) {
-            clearTimeout(inactivityTimeoutTimer);
-            result[objectToLoad.resultIndex] =
-              (!returnDeleted && this._objects.get(objectToLoad.id)?.isDeleted()) ||
-              (!returnWithUnsatisfiedDeps &&
-                this._objects.get(objectToLoad.id) &&
-                !this._areDepsSatisfied(this._objects.get(objectToLoad.id)!))
-                ? undefined
-                : this.getObjectCoreById(objectToLoad.id)!;
-            objectsToLoad.splice(i, 1);
-            scheduleInactivityTimeout();
-          }
-        }
-        if (objectsToLoad.length === 0) {
-          clearTimeout(inactivityTimeoutTimer);
-          unsubscribe?.();
-          resolve(result);
-        }
+        });
+        scheduleInactivityTimeout();
       });
-      scheduleInactivityTimeout();
-    });
+    } finally {
+      if (TRACE_LOADING) {
+        log.info('loading objects', { objectIds, elapsed: performance.now() - startTime, diagnostics });
+      }
+    }
   }
 
   // Odd way to define methods types from a typedef.

@@ -8,7 +8,7 @@ import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { Relation, Obj, Type, Filter, Query, Ref } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { type EchoSchema, getLabel, getTypename } from '@dxos/echo-schema';
+import { getLabel, getTypename } from '@dxos/echo-schema';
 import { type GraphEdge, AbstractGraphBuilder, type Graph, ReactiveGraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -48,7 +48,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
   private _space?: Space;
   private _queue?: Queue;
-  private _schema?: EchoSchema[];
+  private _schema?: Type.Schema[];
   private _objects?: Obj.Any[];
   private _queueItems?: Obj.Any[];
   private _schemaSubscription?: CleanupFn;
@@ -223,8 +223,8 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
           const edge = this.addEdge({
             id: object.id,
             type: 'relation',
-            source: Relation.getSource(object).id,
-            target: Relation.getTarget(object).id,
+            source: Relation.getSourceDXN(object).asEchoDXN()!.echoId,
+            target: Relation.getTargetDXN(object).asEchoDXN()!.echoId,
             data: {
               object,
             },
@@ -279,7 +279,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
           // Link ot refs.
           const refs = getOutgoingReferences(object);
           for (const ref of refs) {
-            if (!ref.target) {
+            if (!Obj.isObject(ref.target)) {
               continue;
             }
 

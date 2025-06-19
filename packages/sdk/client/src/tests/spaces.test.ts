@@ -35,7 +35,7 @@ describe('Spaces', () => {
 
     await expect.poll(() => client.spaces.get()).toBeDefined();
     const space = client.spaces.default;
-    await testSpaceAutomerge(space.db);
+    await testSpaceAutomerge(expect, space.db);
 
     expect(space.members.get()).to.be.length(1);
   });
@@ -45,7 +45,7 @@ describe('Spaces', () => {
 
     // TODO(burdon): Extend basic queries.
     const space = await client.spaces.create();
-    await testSpaceAutomerge(space.db);
+    await testSpaceAutomerge(expect, space.db);
 
     expect(SpaceId.isValid(space.id)).to.be.true;
     expect(space.members.get()).to.be.length(1);
@@ -75,7 +75,7 @@ describe('Spaces', () => {
 
     // TODO(burdon): Extend basic queries.
     const space = await client.spaces.create();
-    await testSpaceAutomerge(space.db);
+    await testSpaceAutomerge(expect, space.db);
 
     expect(space.members.get()).to.be.length(1);
   });
@@ -87,7 +87,7 @@ describe('Spaces', () => {
     {
       await client.spaces.waitUntilReady();
       const space = client.spaces.default;
-      ({ objectId } = await testSpaceAutomerge(space.db));
+      ({ objectId } = await testSpaceAutomerge(expect, space.db));
       expect(space.members.get()).to.be.length(1);
       await space.db.flush();
     }

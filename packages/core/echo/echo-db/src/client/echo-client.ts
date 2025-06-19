@@ -12,12 +12,14 @@ import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
+import { QueueFactory, type QueuesService } from '../queue';
 
 export type EchoClientParams = {};
 
 export type ConnectToServiceParams = {
   dataService: DataService;
   queryService: QueryService;
+  queuesService?: QueuesService;
 };
 
 export type ConstructDatabaseParams = {
@@ -56,6 +58,8 @@ export class EchoClient extends Resource {
 
   private _dataService: DataService | undefined = undefined;
   private _queryService: QueryService | undefined = undefined;
+  private _queuesService: QueuesService | undefined = undefined;
+
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
   constructor(_: EchoClientParams = {}) {
@@ -75,10 +79,11 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService }: ConnectToServiceParams): void {
+  connectToService({ dataService, queryService, queuesService }: ConnectToServiceParams): void {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
+    this._queuesService = queuesService;
   }
 
   disconnectFromService(): void {
@@ -104,7 +109,7 @@ export class EchoClient extends Resource {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
     }
     for (const db of this._databases.values()) {
-      this._graph._unregister(db.spaceId);
+      this._graph._unregisterDatabase(db.spaceId);
       await db.close();
     }
     this._databases.clear();
@@ -129,9 +134,18 @@ export class EchoClient extends Resource {
       preloadSchemaOnOpen,
       spaceKey,
     });
-    this._graph._register(spaceId, spaceKey, db, owningObject);
+    this._graph._registerDatabase(spaceId, db, owningObject);
     this._databases.set(spaceId, db);
     return db;
+  }
+
+  constructQueueFactory(spaceId: SpaceId): QueueFactory {
+    const queueFactory = new QueueFactory(spaceId, this._graph);
+    this._graph._registerQueueFactory(spaceId, queueFactory);
+    if (this._queuesService) {
+      queueFactory.setService(this._queuesService);
+    }
+    return queueFactory;
   }
 
   private async _loadObjectFromDocument({ spaceId, objectId, documentId }: LoadObjectParams) {

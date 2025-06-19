@@ -30,7 +30,7 @@ describe('Spaces/invitations', () => {
 
     {
       const space = await waitForSpace(client2, guestInvitation!.spaceKey!, { ready: true });
-      await testSpaceAutomerge(space.db);
+      await testSpaceAutomerge(expect, space.db);
     }
   });
 

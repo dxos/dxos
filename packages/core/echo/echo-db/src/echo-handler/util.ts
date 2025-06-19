@@ -21,6 +21,9 @@ export const getDatabaseFromObject = (obj: Live<any>): EchoDatabase | undefined 
   return target[symbolInternals].database;
 };
 
+/**
+ * @deprecated
+ */
 export const getReferenceWithSpaceKey = (obj: AnyLiveObject<any>): Reference | undefined => {
   invariant(obj);
   const db = getDatabaseFromObject(obj);

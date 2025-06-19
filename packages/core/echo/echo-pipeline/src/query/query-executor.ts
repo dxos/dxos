@@ -97,6 +97,8 @@ type StepExecutionResult = {
   trace: ExecutionTrace;
 };
 
+const TRACE_QUERY_EXECUTION = false;
+
 /**
  * Executes query plans against the Indexer and AutomergeHost.
  *
@@ -186,12 +188,10 @@ export class QueryExecutor extends Resource {
           workingSet[index].documentId !== item.documentId,
       );
 
-    // log.info('Query execution result', {
-    //   changed,
-    //   trace: ExecutionTrace.format(trace),
-    // });
-    // eslint-disable-next-line no-console
-    // console.log(ExecutionTrace.format(trace));
+    if (TRACE_QUERY_EXECUTION) {
+      // eslint-disable-next-line no-console
+      console.log(ExecutionTrace.format(trace));
+    }
 
     return {
       changed,

@@ -5,7 +5,7 @@
 import {
   type BaseEchoObject,
   EntityKind,
-  EntityKindPropertyId,
+  EntityKindId,
   RelationSourceId,
   RelationTargetId,
   type BaseObject,
@@ -25,7 +25,7 @@ export type AnyLiveRelation<T extends BaseObject> = Live<T> & BaseEchoObject & R
  * @deprecated Use {@link @dxos/echo#Relation.isRelation} instead.
  */
 export const isRelation = <T extends BaseObject>(object: AnyLiveObject<T>): object is AnyLiveRelation<T> => {
-  const kind = (object as any)[EntityKindPropertyId];
+  const kind = (object as any)[EntityKindId];
   if (kind === undefined) {
     throw new TypeError('Provided value is not a valid ECHO object or relation');
   }

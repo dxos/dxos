@@ -9,6 +9,7 @@ import defaulstDeep from 'lodash.defaultsdeep';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { type ConfigProto } from '@dxos/config';
+import { log } from '@dxos/log';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -20,11 +21,7 @@ import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { Config } from '@dxos/react-client';
 import { DataTypes } from '@dxos/schema';
 
-type TestPluginsOptions = {
-  config?: ConfigProto;
-  types?: Schema.Schema.AnyNoContext[];
-  indexConfig?: IndexConfig;
-};
+type TestPluginsOptions = { config?: ConfigProto; types?: Schema.Schema.AnyNoContext[]; indexConfig?: IndexConfig };
 
 export const testPlugins = ({ config, types = DataTypes, indexConfig }: TestPluginsOptions = {}) => [
   ClientPlugin({
@@ -41,6 +38,7 @@ export const testPlugins = ({ config, types = DataTypes, indexConfig }: TestPlug
     ),
     types,
     onClientInitialized: async (_, client) => {
+      log.info('testPlugins.onClientInitialized', { types });
       if (!client.halo.identity.get()) {
         await client.halo.createIdentity();
       }

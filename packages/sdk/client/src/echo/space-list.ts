@@ -16,7 +16,7 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined, inspectObject } from '@dxos/debug';
-import { Filter, Query, type EchoClient, type QueryOptions, type QueuesService, type QueryFn } from '@dxos/echo-db';
+import { Filter, Query, type EchoClient, type QueryOptions, type QueryFn } from '@dxos/echo-db';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { live } from '@dxos/live-object';
@@ -61,8 +61,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _echoClient: EchoClient,
     private readonly _halo: HaloProxy,
-    // TODO(dmaretskyi): Move into services provider.
-    private readonly _queuesService: QueuesService,
     /**
      * @internal
      */
@@ -134,7 +132,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
         let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
         if (!spaceProxy) {
-          spaceProxy = new SpaceProxy(this._serviceProvider, space, this._echoClient, this._queuesService);
+          spaceProxy = new SpaceProxy(this._serviceProvider, space, this._echoClient);
 
           if (this._shouldOpenSpace(space)) {
             this._openSpaceAsync(spaceProxy);

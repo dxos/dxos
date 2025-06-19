@@ -18,6 +18,7 @@ export type MemoryQueueOptions<T extends BaseEchoObject = BaseEchoObject> = {
 
 /**
  * In-memory queue.
+ * @deprecated Use the actual queue with a mock service.
  */
 export class MemoryQueue<T extends BaseEchoObject = BaseEchoObject> implements Queue<T> {
   static make<T extends BaseEchoObject = BaseEchoObject>({
@@ -76,6 +77,14 @@ export class MemoryQueue<T extends BaseEchoObject = BaseEchoObject> implements Q
   async append(objects: T[]): Promise<void> {
     this._objects = [...this._objects, ...objects];
     this._signal.notifyWrite();
+  }
+
+  async queryObjects(): Promise<T[]> {
+    return this._objects;
+  }
+
+  async getObjectsById(ids: ObjectId[]): Promise<(T | null)[]> {
+    return ids.map((id) => this._objects.find((object) => (object as HasId).id === id) ?? null);
   }
 
   delete(ids: ObjectId[]): void {

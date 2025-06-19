@@ -17,8 +17,8 @@ export const Employer = Schema.Struct({
   id: Type.ObjectId,
   role: Schema.String,
   active: Schema.optional(Schema.Boolean),
-  startDate: Schema.optional(Schema.Date),
-  endDate: Schema.optional(Schema.Date),
+  startDate: Schema.optional(Schema.String),
+  endDate: Schema.optional(Schema.String),
 })
   .pipe(
     Type.Relation({

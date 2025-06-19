@@ -6,6 +6,7 @@ import type { ObjectId } from '@dxos/echo-schema';
 import type { EdgeHttpClient } from '@dxos/edge-client';
 import type { SpaceId } from '@dxos/keys';
 import type { QueryResult, QueueQuery } from '@dxos/protocols';
+import { ComplexMap } from '@dxos/util';
 
 /**
  * Service for managing queues.
@@ -52,5 +53,43 @@ export class QueueServiceStub implements QueuesService {
 
   deleteFromQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objectIds: ObjectId[]): Promise<void> {
     throw new Error('Not available.');
+  }
+}
+
+/**
+ * Mock implementation for testing.
+ */
+export class MockQueueService implements QueuesService {
+  private _queues = new ComplexMap<[subspaceTag: string, spaceId: SpaceId, queueId: ObjectId], unknown[]>(
+    ([subspaceTag, spaceId, queueId]) => `${subspaceTag}:${spaceId}:${queueId}`,
+  );
+
+  async queryQueue(subspaceTag: string, spaceId: SpaceId, query: QueueQuery): Promise<QueryResult> {
+    const objects = this._queues.get([subspaceTag, spaceId, query.queueId]) ?? [];
+    return {
+      objects,
+      nextCursor: null,
+      prevCursor: null,
+    };
+  }
+
+  async insertIntoQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objects: unknown[]): Promise<void> {
+    const key: [string, SpaceId, ObjectId] = [subspaceTag, spaceId, queueId];
+    const existing = this._queues.get(key) ?? [];
+    this._queues.set(key, [...existing, ...objects]);
+  }
+
+  async deleteFromQueue(
+    subspaceTag: string,
+    spaceId: SpaceId,
+    queueId: ObjectId,
+    objectIds: ObjectId[],
+  ): Promise<void> {
+    const key: [string, SpaceId, ObjectId] = [subspaceTag, spaceId, queueId];
+    const existing = this._queues.get(key) ?? [];
+    this._queues.set(
+      key,
+      existing.filter((obj: any) => !objectIds.includes(obj.id)),
+    );
   }
 }
