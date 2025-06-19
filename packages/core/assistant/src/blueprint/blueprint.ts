@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { type ExecutableTool, Tool } from '@dxos/ai';
+import { type ExecutableTool, Tool, type ToolRegistry } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import { ObjectId } from '@dxos/keys';
 
@@ -72,18 +72,14 @@ export namespace BlueprintParser {
     steps: Step[];
   };
 
-  export const create = (tools: ExecutableTool[] = []) => new Parser(tools);
+  export const create = (registry: ToolRegistry) => new Parser(registry);
 
   class Parser {
-    constructor(private readonly _tools: ExecutableTool[]) {}
+    constructor(private readonly _registry: ToolRegistry) {}
 
     toJSON() {
       return {
-        tools: this._tools.map((tool) => ({
-          name: tool.name,
-          namespace: tool.namespace,
-          type: tool.type,
-        })),
+        tools: this._registry.toJSON(),
       };
     }
 
@@ -92,10 +88,7 @@ export namespace BlueprintParser {
 
       for (const step of steps) {
         builder.step(step.instructions, {
-          // TODO(burdon): Tool resolution is duplicated in the session and ollama-client.
-          tools: step.tools?.map(
-            (tool) => this._tools.find(({ id }) => id === tool) ?? raise(new Error(`Tool not found: ${tool}`)),
-          ),
+          tools: step.tools?.map((tool) => this._registry.get(tool) ?? raise(new Error(`Tool not found: ${tool}`))),
         });
       }
 

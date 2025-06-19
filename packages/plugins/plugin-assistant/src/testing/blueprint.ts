@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ExecutableTool } from '@dxos/ai';
+import { ToolRegistry } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { type BlueprintParser, createExaTool, createGraphWriterTool, createLocalSearchTool } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
@@ -12,20 +12,22 @@ import { isNonNullable } from '@dxos/util';
 
 // TODO(dmaretskyi): make db available through services (same as function executor).
 // TODO(burdon): Can tools implement "aspects" so that variants can be used rather than an explicit reference?
-export const createTools = (space: Space, queueDxn?: DXN): ExecutableTool[] => {
-  return [
-    createExaTool({ apiKey: EXA_API_KEY }),
-    createLocalSearchTool(space.db),
-    queueDxn &&
-      createGraphWriterTool({
-        db: space.db,
-        schemaTypes: DataTypes,
-        onDone: async (objects) => {
-          const queue = space.queues.get(queueDxn);
-          queue.append(objects);
-        },
-      }),
-  ].filter(isNonNullable);
+export const createTools = (space: Space, queueDxn?: DXN): ToolRegistry => {
+  return new ToolRegistry(
+    [
+      createExaTool({ apiKey: EXA_API_KEY }),
+      createLocalSearchTool(space.db),
+      queueDxn &&
+        createGraphWriterTool({
+          db: space.db,
+          schemaTypes: DataTypes,
+          onDone: async (objects) => {
+            const queue = space.queues.get(queueDxn);
+            queue.append(objects);
+          },
+        }),
+    ].filter(isNonNullable),
+  );
 };
 
 export const RESEARCH_BLUEPRINT: BlueprintParser.DSL = {
