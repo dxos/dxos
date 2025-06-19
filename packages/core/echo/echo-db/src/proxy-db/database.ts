@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
+import { assertObjectModelShape, type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -288,6 +288,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
       obj = createObject(obj);
     }
+    assertObjectModelShape(obj);
 
     // TODO(burdon): Check if already added to db?
     invariant(isEchoObject(obj));

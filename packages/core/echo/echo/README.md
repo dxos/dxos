@@ -117,17 +117,19 @@ Obj.fromJSON(json, { graph, db });
 
 Defines attributes and encoding placed on objects.
 
-|                  | Optional               | Runtime prop                        | Runtime type           | JSON prop                   | JSON type  | Description                          |
-| ---------------- | ---------------------- | ----------------------------------- | ---------------------- | --------------------------- | ---------- | ------------------------------------ |
-| Id               | No                     | `id`                                | `ObjectID` ULID string | `id`                        | string     | Unique object ID                     |
-| Self DXN         | Yes                    | `Symbol(@dxos/echo/Self)`           | `DXN`                  | `@self`                     | string     | DXN to the object itself             |
-| Type             | No                     | `Symbol(@dxos/echo/Type)`           | `DXN`                  | `@type`                     | string     | DXN to the object type               |
-| Schema           | Yes                    | `Symbol(@dxos/echo/Schema)`         | Effect-Schema          | -                           | string     | Reference to the object schema       |
-| Tombstone marker | Yes                    | `Symbol(@dxos/echo/Deleted)`        | `boolean`              | `@deleted`                  | boolean    | Deletion marker                      |
-| Metadata         | Yes                    | `Symbol(@dxos/echo/Meta)`           | Metadata object        | `@meta`                     | object     | Metadata section                     |
-| Entity kind      | No                     | `Symbol(@dxos/echo/EntityKind)`     | `EntityKind`           | (inferred from other props) | string     | Obj vs Relation                      |
-| Relation Source  | No (only on relations) | `Symbol(@dxos/echo/RelationSource)` | `Object` or `DXN`      | `@relationSource`           | DXN string | Relation source DXN                  |
-| Relation Target  | No (only on relations) | `Symbol(@dxos/echo/RelationTarget)` | `Object` or `DXN`      | `@relationTarget`           | DXN string | Relation target DXN                  |
+|                     | Optional                | Runtime prop                           | Runtime type           | JSON prop                   | JSON type  | Description                    |
+| ------------------- | ----------------------- | -------------------------------------- | ---------------------- | --------------------------- | ---------- | ------------------------------ |
+| Id                  | No                      | `id`                                   | `ObjectID` ULID string | `id`                        | string     | Unique object ID               |
+| Self DXN            | Yes                     | `Symbol(@dxos/echo/Self)`              | `DXN`                  | `@self`                     | string     | DXN to the object itself       |
+| Type                | No                      | `Symbol(@dxos/echo/Type)`              | `DXN`                  | `@type`                     | string     | DXN to the object type         |
+| Schema              | Yes                     | `Symbol(@dxos/echo/Schema)`            | Effect-Schema          | -                           |            | Reference to the object schema |
+| Tombstone marker    | Yes                     | `Symbol(@dxos/echo/Deleted)`           | `boolean`              | `@deleted`                  | boolean    | Deletion marker                |
+| Metadata            | Yes                     | `Symbol(@dxos/echo/Meta)`              | Metadata object        | `@meta`                     | object     | Metadata section               |
+| Entity kind         | No                      | `Symbol(@dxos/echo/EntityKind)`        | `EntityKind`           | (inferred from other props) | string     | Obj vs Relation                |
+| Relation Source DXN | No (only on relations)  | `Symbol(@dxos/echo/RelationSourceDXN)` | `DXN`                  | `@relationSource`           | DXN string | Relation source DXN            |
+| Relation Target DXN | No (only on relations)  | `Symbol(@dxos/echo/RelationTargetDXN)` | `DXN`                  | `@relationTarget`           | DXN string | Relation target DXN            |
+| Relation Source     | Yes (only on relations) | `Symbol(@dxos/echo/RelationSource)`    | `Object`               | -                           |            | Relation source object         |
+| Relation Target     | Yes (only on relations) | `Symbol(@dxos/echo/RelationTarget)`    | `Object`               | -                           |            | Relation target object         |
 
 > NOTE: All of the API functions can return `undefined` since they are also designed to work with objects outside of the database.
 > TODO: Consider how Database, Hypergraph, and RefResolver are attached to the object.
