@@ -18,6 +18,7 @@ import {
   CardDragPreview,
   cardRoot,
   cardStackContainer,
+  cardStackHeading,
 } from '@dxos/react-ui-stack';
 
 import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanModel } from '../defs';
@@ -149,19 +150,17 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 </CardStack.Footer>
               )}
 
-              <StackItem.Heading asChild>
-                <CardStack.Heading>
-                  <StackItem.DragHandle asChild>
-                    <CardStack.DragHandle />
-                  </StackItem.DragHandle>
-                  <Tag
-                    palette={color as any}
-                    data-uncategorized={uncategorized}
-                    classNames='mis-1 data-[uncategorized="true"]:mis-2'
-                  >
-                    {title}
-                  </Tag>
-                </CardStack.Heading>
+              <StackItem.Heading classNames={cardStackHeading}>
+                <StackItem.DragHandle asChild>
+                  <CardStack.DragHandle />
+                </StackItem.DragHandle>
+                <Tag
+                  palette={color as any}
+                  data-uncategorized={uncategorized}
+                  classNames='mis-1 data-[uncategorized="true"]:mis-2'
+                >
+                  {title}
+                </Tag>
               </StackItem.Heading>
             </CardStack.Root>
             <StackItem.DragPreview>
