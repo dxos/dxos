@@ -6,7 +6,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
-import { Filter, toEffectSchema } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo';
+import { toEffectSchema } from '@dxos/echo-schema';
 import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';

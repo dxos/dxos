@@ -6,8 +6,8 @@ import { Effect } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
-import { Filter, Query } from '@dxos/echo-schema';
+import { Filter, Obj } from '@dxos/echo';
+import { Query } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import {

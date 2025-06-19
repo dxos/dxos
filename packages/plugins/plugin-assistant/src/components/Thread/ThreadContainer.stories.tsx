@@ -19,8 +19,8 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { Type, type Obj } from '@dxos/echo';
-import { createQueueDxn, create, Query, Filter } from '@dxos/echo-schema';
+import { Filter, Obj, Type } from '@dxos/echo';
+import { createQueueDxn, Query } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
@@ -93,7 +93,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   useEffect(() => {
     if (queue?.objects.length === 0 && !queue.isLoading && prompts.length > 0) {
       queue.append([
-        create(Message, {
+        Obj.make(Message, {
           role: 'assistant',
           content: prompts.map(
             (prompt) =>
@@ -262,7 +262,7 @@ export const WithInitialItems: Story = {
   args: {
     debug: true,
     items: [
-      create(ChessType, {
+      Obj.make(ChessType, {
         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
       }),
     ],
