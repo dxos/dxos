@@ -171,7 +171,7 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
       changed = objectSetChanged(this._objects, decodedObjects);
 
       TRACE_QUEUE_LOAD && log.info('queue refresh', { changed, objects: objects.length, refreshId: thisRefreshId });
-      this._objects = objects as T[];
+      this._objects = decodedObjects as T[];
     } catch (err) {
       log.catch(err);
       this._error = err as Error;
