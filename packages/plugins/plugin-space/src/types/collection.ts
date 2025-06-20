@@ -4,7 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { Ref } from '@dxos/echo';
+import { Queue } from '@dxos/client/echo';
+import { Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
 
 export class CollectionType extends TypedObject({
@@ -12,7 +13,7 @@ export class CollectionType extends TypedObject({
   version: '0.1.0',
 })({
   name: Schema.optional(Schema.String),
-  objects: Schema.mutable(Schema.Array(Ref.Queue)),
+  objects: Schema.mutable(Schema.Array(Type.Ref(Queue))),
   // Key is schema typename and value is reference to a view object of the associated schema.
   // Having collection reference the views rather than vice versa ensures that the state converges to a single view per key (i.e. type).
   // This also leaves open a future where this key could be changed to allow for multiple stack views per section.
@@ -21,7 +22,7 @@ export class CollectionType extends TypedObject({
   views: Schema.mutable(
     Schema.Record({
       key: Schema.String,
-      value: Ref.Queue,
+      value: Type.Ref(Queue),
     }),
   ),
 }) {}

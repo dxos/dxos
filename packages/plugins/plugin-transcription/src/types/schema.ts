@@ -4,7 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { Ref } from '@dxos/echo';
+import { Queue } from '@dxos/client/echo';
+import { Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
 
 /**
@@ -19,7 +20,7 @@ export const TranscriptSchema = Schema.Struct({
   /**
    * Queue containing TranscriptBlock objects.
    */
-  queue: Ref.Queue,
+  queue: Type.Ref(Queue),
 });
 
 export class TranscriptType extends TypedObject({

@@ -4,7 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { Key, Obj, Ref, Type } from '@dxos/echo';
+import { Queue } from '@dxos/client/echo';
+import { Key, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 // TODO(burdon): Reconcile with @dxos/graph (i.e., common types).
@@ -13,7 +14,7 @@ export const TreeNodeType = Schema.Struct({
   id: Key.ObjectId,
   children: Schema.mutable(Schema.Array(Key.ObjectId)),
   data: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any })),
-  ref: Schema.optional(Ref.Queue),
+  ref: Schema.optional(Type.Ref(Queue)),
 }).pipe(Schema.mutable);
 
 export interface TreeNodeType extends Schema.Schema.Type<typeof TreeNodeType> {}

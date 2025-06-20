@@ -15,7 +15,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { BlueprintMachine, BlueprintParser, Logger, setConsolePrinter, setLogger } from '@dxos/assistant';
 import { combine } from '@dxos/async';
-import { type Space } from '@dxos/client/echo';
+import { Queue, type Space } from '@dxos/client/echo';
 import { DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
 import { log } from '@dxos/log';
@@ -67,7 +67,7 @@ const aiConfig: AIServiceEdgeClientOptions = {
  * Container for a set of ephemeral research results.
  */
 const ResearchGraph = Schema.Struct({
-  queue: Ref.Queue,
+  queue: Type.Ref(Queue),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/ResearchGraph',
