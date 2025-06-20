@@ -72,23 +72,22 @@ const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLook
           {link.label}
         </Card.Heading>
         {!readonly && (
-          <Card.Toolbar classNames='is-min'>
+          <Card.Toolbar classNames='is-min pli-[calc(var(--dx-trimMd)-.25rem)]'>
             {(link.suggest && (
               <>
+                <Card.ToolbarIconButton
+                  label='Discard'
+                  icon={'ph--x--regular'}
+                  onClick={() => onAction({ type: 'delete', link })}
+                />
                 {target && (
                   <Card.ToolbarIconButton
-                    classNames='text-green-500'
+                    classNames='bg-successSurface text-successSurfaceText'
                     label='Apply'
                     icon={'ph--check--regular'}
                     onClick={() => onAction({ type: 'insert', link, target })}
                   />
                 )}
-                <Card.ToolbarIconButton
-                  classNames='text-red-500'
-                  label='Cancel'
-                  icon={'ph--x--regular'}
-                  onClick={() => onAction({ type: 'delete', link })}
-                />
               </>
             )) || (
               <Card.ToolbarIconButton
