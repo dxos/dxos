@@ -308,8 +308,8 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * Pipe the events into another event.
    * @param event
    */
-  pipeInto(event: Event<T>): CleanupFn {
-    return this.on((data) => event.emit(data));
+  pipeInto<U = T>(event: Event<U>, map?: (data: T) => U): CleanupFn {
+    return this.on((data) => event.emit(map?.(data) ?? (data as unknown as U)));
   }
 
   /**

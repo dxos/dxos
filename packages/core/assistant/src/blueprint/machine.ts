@@ -15,7 +15,7 @@ import {
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
-import { type ObjectId } from '@dxos/keys';
+import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
@@ -53,12 +53,12 @@ type ExecutionOptions = {
  * Blueprint state machine.
  */
 export class BlueprintMachine {
-  public readonly begin = new Event<void>();
-  public readonly end = new Event<void>();
-  public readonly stepStart = new Event<BlueprintStep>();
-  public readonly stepComplete = new Event<BlueprintStep>();
-  public readonly message = new Event<Message>();
-  public readonly block = new Event<MessageContentBlock>();
+  public readonly begin = new Event<ObjectId>();
+  public readonly end = new Event<ObjectId>();
+  public readonly stepStart = new Event<{ invocationId: ObjectId; step: BlueprintStep }>();
+  public readonly stepComplete = new Event<{ invocationId: ObjectId; step: BlueprintStep }>();
+  public readonly message = new Event<{ invocationId: ObjectId; message: Message }>();
+  public readonly block = new Event<{ invocationId: ObjectId; block: MessageContentBlock }>();
 
   state: BlueprintMachineState = structuredClone(INITIAL_STATE);
 
@@ -68,9 +68,10 @@ export class BlueprintMachine {
   ) {}
 
   async runToCompletion(options: ExecutionOptions): Promise<void> {
-    log.info('runToCompletion', options);
+    const invocationId = ObjectId.random();
+    log.info('runToCompletion', { invocationId, ...options });
 
-    this.begin.emit();
+    this.begin.emit(invocationId);
     let firstStep = true;
     while (this.state.state !== 'done') {
       const input = firstStep ? options.input : undefined;
@@ -78,20 +79,27 @@ export class BlueprintMachine {
       firstStep = false;
       this.state = await this._execStep(this.state, {
         input,
+        invocationId,
         aiService: options.aiService,
       });
 
-      this.stepComplete.emit(this.blueprint.steps.find((step) => step.id === this.state.trace.at(-1)?.stepId)!);
+      this.stepComplete.emit({
+        invocationId,
+        step: this.blueprint.steps.find((step) => step.id === this.state.trace.at(-1)?.stepId)!,
+      });
 
       if (this.state.state === 'bail') {
         throw new Error('Agent unable to follow the blueprint');
       }
     }
 
-    this.end.emit();
+    this.end.emit(invocationId);
   }
 
-  private async _execStep(state: BlueprintMachineState, options: ExecutionOptions): Promise<BlueprintMachineState> {
+  private async _execStep(
+    state: BlueprintMachineState,
+    { invocationId, ...options }: ExecutionOptions & { invocationId: ObjectId },
+  ): Promise<BlueprintMachineState> {
     const prevStep = this.blueprint.steps.findIndex((step) => step.id === this.state.trace.at(-1)?.stepId);
     if (prevStep === this.blueprint.steps.length - 1) {
       throw new Error('Done execution blueprint');
@@ -99,7 +107,7 @@ export class BlueprintMachine {
 
     const nextStep = this.blueprint.steps[prevStep + 1];
     const onLastStep = prevStep === this.blueprint.steps.length - 2;
-    this.stepStart.emit(nextStep);
+    this.stepStart.emit({ invocationId, step: nextStep });
 
     const ReportSchema = Schema.Struct({
       status: Schema.Literal('done', 'bailed', 'skipped').annotations({
@@ -122,9 +130,9 @@ export class BlueprintMachine {
       operationModel: 'configured',
     });
 
-    session.userMessage.pipeInto(this.message);
-    session.message.pipeInto(this.message);
-    session.block.pipeInto(this.block);
+    session.userMessage.pipeInto(this.message, (message) => ({ invocationId, message }));
+    session.message.pipeInto(this.message, (message) => ({ invocationId, message }));
+    session.block.pipeInto(this.block, (block) => ({ invocationId, block }));
 
     const inputMessages = options.input
       ? [
@@ -134,7 +142,7 @@ export class BlueprintMachine {
           }),
         ]
       : [];
-    inputMessages.forEach((message) => this.message.emit(message));
+    inputMessages.forEach((message) => this.message.emit({ invocationId, message }));
 
     // TODO(wittjosiah): Warn if tool is not found.
     const tools = nextStep.tools.map((tool) => this.registry.get(tool)).filter(isNonNullable);
