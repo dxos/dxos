@@ -105,10 +105,12 @@ const PopoverComboboxContent = forwardRef<HTMLDivElement, PopoverComboboxContent
         id={modalId}
         ref={forwardedRef}
       >
-        {/* TODO(thure): This skips over `Command`’s root component, which renders a DOM node probably unnecessarily without supporting `asChild`. */}
-        <SearchList.Root {...props} classNames='contents' role='none'>
-          {children}
-        </SearchList.Root>
+        <Popover.Viewport>
+          {/* TODO(thure): This skips over `Command`’s root component, which renders a DOM node probably unnecessarily without supporting `asChild`. */}
+          <SearchList.Root {...props} classNames='contents' role='none'>
+            {children}
+          </SearchList.Root>
+        </Popover.Viewport>
       </Popover.Content>
     );
   },

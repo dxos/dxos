@@ -51,10 +51,12 @@ const PreviewCard = () => {
   return (
     <Popover.Portal>
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-        <Card.Container role='popover'>
-          <Card.Heading>{target?.label}</Card.Heading>
-          {target && <Card.Text classNames='line-clamp-3'>{target.text}</Card.Text>}
-        </Card.Container>
+        <Popover.Viewport>
+          <Card.Container role='popover'>
+            <Card.Heading>{target?.label}</Card.Heading>
+            {target && <Card.Text classNames='line-clamp-3'>{target.text}</Card.Text>}
+          </Card.Container>
+        </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
     </Popover.Portal>

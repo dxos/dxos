@@ -29,7 +29,9 @@ const meta: Meta<typeof MarkdownPreview> = {
     return (
       <Popover.Root open>
         <Popover.Content>
-          <MarkdownPreview subject={subject} role='popover' />
+          <Popover.Viewport>
+            <MarkdownPreview subject={subject} role='popover' />
+          </Popover.Viewport>
           <Popover.Arrow />
         </Popover.Content>
         <Popover.Trigger>

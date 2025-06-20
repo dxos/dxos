@@ -32,7 +32,9 @@ const meta: Meta<StoryProps> = {
     return (
       <Popover.Root open>
         <Popover.Content>
-          <Component {...args} role='popover' />
+          <Popover.Viewport>
+            <Component {...args} role='popover' />
+          </Popover.Viewport>
           <Popover.Arrow />
         </Popover.Content>
         <Popover.Trigger>

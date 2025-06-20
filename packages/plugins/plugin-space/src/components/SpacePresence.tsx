@@ -149,19 +149,26 @@ export const FullPresence = (props: MemberPresenceProps) => {
           <Popover.Portal>
             <Popover.Content side='bottom'>
               <Popover.Arrow />
-              <List classNames='max-h-56 overflow-y-auto'>
-                {members.map((member) => (
-                  <ListItem.Root
-                    key={member.identity.identityKey.toHex()}
-                    classNames='flex gap-2 items-center cursor-pointer mbe-2'
-                    onClick={() => onMemberClick?.(member)}
-                    data-testid='identity-list-item'
-                  >
-                    {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
-                    <PresenceAvatar identity={member.identity} size={size} showName match={member.currentlyAttended} />
-                  </ListItem.Root>
-                ))}
-              </List>
+              <Popover.Viewport classNames='max-bs-56'>
+                <List>
+                  {members.map((member) => (
+                    <ListItem.Root
+                      key={member.identity.identityKey.toHex()}
+                      classNames='flex gap-2 items-center cursor-pointer mbe-2'
+                      onClick={() => onMemberClick?.(member)}
+                      data-testid='identity-list-item'
+                    >
+                      {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
+                      <PresenceAvatar
+                        identity={member.identity}
+                        size={size}
+                        showName
+                        match={member.currentlyAttended}
+                      />
+                    </ListItem.Root>
+                  ))}
+                </List>
+              </Popover.Viewport>
             </Popover.Content>
           </Popover.Portal>
         </Popover.Root>
