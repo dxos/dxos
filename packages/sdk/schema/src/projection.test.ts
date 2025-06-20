@@ -346,7 +346,7 @@ describe('ViewProjection', () => {
     // Capture initial state.
     const initialPropertyOrder = [...(mutable.jsonSchema.propertyOrder ?? [])];
     const initialRequired = [...(mutable.jsonSchema.required ?? [])];
-    
+
     expect(initialPropertyOrder).to.include('email');
     expect(initialRequired).to.include('email');
 
@@ -366,7 +366,7 @@ describe('ViewProjection', () => {
     expect(updatedPropertyOrder).to.not.include('email');
     expect(updatedPropertyOrder).to.include('primaryEmail');
     expect(updatedPropertyOrder.length).to.equal(initialPropertyOrder.length);
-    
+
     // Verify order is preserved (primaryEmail should be in the same position as email was).
     const emailIndex = initialPropertyOrder.indexOf('email');
     expect(updatedPropertyOrder[emailIndex]).to.equal('primaryEmail');

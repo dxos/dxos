@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
 import { Schema } from 'effect';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 
 import { Format, type EchoSchema, toJsonSchema, TypedObject } from '@dxos/echo-schema';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
@@ -18,6 +18,16 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 import translations from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
+
+// Symbol for accessing debug objects in tests.
+export const VIEW_EDITOR_DEBUG_SYMBOL = Symbol('viewEditorDebug');
+
+// Type definition for debug objects exposed to tests.
+export type ViewEditorDebugObjects = {
+  schema: EchoSchema;
+  view: ViewType;
+  projection: ViewProjection;
+};
 
 type StoryProps = Pick<ViewEditorProps, 'readonly'>;
 
@@ -62,8 +72,18 @@ const DefaultStory = (props: StoryProps) => {
 
   const handleDelete = useCallback((property: string) => projection?.deleteFieldProjection(property), [projection]);
 
+  // Expose objects on window for test access.
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] = { schema, view, projection } satisfies ViewEditorDebugObjects;
+    }
+  }, [schema, view, projection]);
+
   // NOTE(ZaymonFC): This looks awkward but it resolves an infinite parsing issue with sb.
-  const json = useMemo(() => JSON.parse(JSON.stringify({ schema, view, projection })), [schema, view, projection]);
+  const json = useMemo(
+    () => JSON.parse(JSON.stringify({ schema, view, projection })),
+    [JSON.stringify(schema), JSON.stringify(view), JSON.stringify(projection)],
+  );
 
   if (!schema || !view || !projection) {
     return <div />;
