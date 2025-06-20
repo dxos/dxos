@@ -179,6 +179,7 @@ export const PropertySchema = Schema.Union(
   //
 
   formatToSchema[FormatEnum.DID],
+  formatToSchema[FormatEnum.DXN],
   formatToSchema[FormatEnum.Email],
   formatToSchema[FormatEnum.Formula],
   formatToSchema[FormatEnum.Hostname],
