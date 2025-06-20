@@ -7,6 +7,7 @@ import { Option, SchemaAST, type JSONSchema, pipe } from 'effect';
 import { createAnnotationHelper } from '../ast';
 import { type JsonSchemaType } from '../json-schema';
 
+// TODO(burdon): Change to disciminated union
 export enum TypeEnum {
   Object = 'object',
   Array = 'array',
@@ -23,7 +24,7 @@ export type ScalarType =
   | JSONSchema.JsonSchema7Boolean
   | JSONSchema.JsonSchema7Ref;
 
-// TODO(burdon): Ref.
+// TODO(burdon): Ref?
 export const getTypeEnum = (property: JsonSchemaType): TypeEnum | undefined => {
   switch ((property as any).type) {
     case 'array':
