@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { previewChrome, previewProse } from '@dxos/plugin-preview';
 import { Avatar, Button, Icon, useTranslation } from '@dxos/react-ui';
+import { Card, cardText } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
@@ -21,10 +21,8 @@ export const RelatedContacts = ({
   const { t } = useTranslation(INBOX_PLUGIN);
   return contacts.length ? (
     <>
-      <h3 className={mx(previewProse, 'text-xs text-description uppercase font-medium')}>
-        {t('related contacts title')}
-      </h3>
-      <div className={previewChrome}>
+      <h3 className={mx(cardText, 'text-xs text-description uppercase font-medium')}>{t('related contacts title')}</h3>
+      <Card.Chrome>
         {contacts.map((contact) => (
           <Avatar.Root key={contact.id}>
             <Button classNames='gap-2 mbe-1 last:mbe-0' onClick={() => onContactClick?.(contact)}>
@@ -40,7 +38,7 @@ export const RelatedContacts = ({
             </Button>
           </Avatar.Root>
         ))}
-      </div>
+      </Card.Chrome>
     </>
   ) : null;
 };
@@ -55,10 +53,8 @@ export const RelatedMessages = ({
   const { t } = useTranslation(INBOX_PLUGIN);
   return messages.length ? (
     <>
-      <h3 className={mx(previewProse, 'text-xs text-description uppercase font-medium')}>
-        {t('related messages title')}
-      </h3>
-      <div className={previewChrome}>
+      <h3 className={mx(cardText, 'text-xs text-description uppercase font-medium')}>{t('related messages title')}</h3>
+      <Card.Chrome>
         {messages.map((message) => (
           <Button
             key={message.id}
@@ -70,7 +66,7 @@ export const RelatedMessages = ({
             <Icon icon='ph--arrow-right--regular' />
           </Button>
         ))}
-      </div>
+      </Card.Chrome>
     </>
   ) : null;
 };

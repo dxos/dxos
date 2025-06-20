@@ -4,12 +4,18 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, type FC, forwardRef } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
+  type FC,
+  forwardRef,
+  type PropsWithChildren,
+} from 'react';
 
-import { IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { cardContent, cardRoot } from './fragments';
+import { cardChrome, cardContent, cardHeading, cardRoot, cardText } from './fragments';
 import { StackItem } from '../../components';
 import { translationKey } from '../../translations';
 
@@ -41,10 +47,29 @@ const CardContent = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
+/**
+ * This should be used by Surface fulfillments in cases where the content may or may not already be encapsulated (e.g.
+ * in a Popover) and knows this based on the `role` it receives. This will render a `Card.Content` by default, otherwise
+ * it will render a `div` primitive with the appropriate styling for specific handled situations.
+ */
+const CardConditionalContent = ({ role, children }: PropsWithChildren<{ role?: string }>) => {
+  if (['popover', 'card--kanban'].includes(role ?? 'never')) {
+    return (
+      <div className={role === 'popover' ? 'popover-card-width' : role === 'card--kanban' ? 'contents' : ''}>
+        {children}
+      </div>
+    );
+  } else {
+    return <CardContent>{children}</CardContent>;
+  }
+};
+
 const CardHeading = forwardRef<HTMLDivElement, SharedCardProps>(
   ({ children, classNames, asChild, role = 'heading', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
-    const rootProps = asChild ? { classNames } : { className: mx(classNames), role };
+    const rootProps = asChild
+      ? { classNames: [cardHeading, cardText, classNames] }
+      : { className: mx(cardHeading, cardText, classNames), role };
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>
         {children}
@@ -53,19 +78,13 @@ const CardHeading = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
-const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(
-  ({ children, classNames, asChild, ...props }, forwardedRef) => {
-    return (
-      <Toolbar.Root
-        {...props}
-        classNames={['absolute block-start-0 inset-inline-0 bg-transparent', classNames]}
-        ref={forwardedRef}
-      >
-        {children}
-      </Toolbar.Root>
-    );
-  },
-);
+const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, ...props }, forwardedRef) => {
+  return (
+    <Toolbar.Root {...props} ref={forwardedRef}>
+      {children}
+    </Toolbar.Root>
+  );
+});
 
 const CardToolbarIconButton = Toolbar.IconButton;
 const CardToolbarSeparator = Toolbar.Separator;
@@ -89,11 +108,61 @@ const CardDragPreview = StackItem.DragPreview;
 
 const CardMenu = Primitive.div as FC<ComponentPropsWithRef<'div'>>;
 
-const CardMedia = Primitive.img as FC<ComponentPropsWithRef<'img'>>;
+type CardPosterProps = {
+  alt: string;
+  aspect?: 'video' | 'auto';
+} & Partial<{ image: string; icon: string }>;
+
+const CardPoster = (props: CardPosterProps) => {
+  const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
+  if (props.image) {
+    return (
+      <img className={`dx-card__poster ${aspect} object-cover is-full bs-auto`} src={props.image} alt={props.alt} />
+    );
+  }
+  if (props.icon) {
+    return (
+      <div
+        role='image'
+        className={`dx-card__poster grid ${aspect} place-items-center bg-inputSurface text-subdued`}
+        aria-label={props.alt}
+      >
+        <Icon icon={props.icon} size={10} />
+      </div>
+    );
+  }
+};
+
+const CardChrome = forwardRef<HTMLDivElement, SharedCardProps>(
+  ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
+    const Root = asChild ? Slot : 'div';
+    const rootProps = asChild
+      ? { classNames: [cardChrome, classNames] }
+      : { className: mx(cardChrome, classNames), role };
+    return (
+      <Root {...props} {...rootProps} ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  },
+);
+
+const CardText = forwardRef<HTMLParagraphElement, SharedCardProps>(
+  ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
+    const Root = asChild ? Slot : 'p';
+    const rootProps = asChild ? { classNames: [cardText, classNames] } : { className: mx(cardText, classNames), role };
+    return (
+      <Root {...props} {...rootProps} ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  },
+);
 
 export const Card = {
   Root: CardRoot,
   Content: CardContent,
+  Container: CardConditionalContent,
   Heading: CardHeading,
   Toolbar: CardToolbar,
   ToolbarIconButton: CardToolbarIconButton,
@@ -101,7 +170,9 @@ export const Card = {
   DragHandle: CardDragHandle,
   DragPreview: CardDragPreview,
   Menu: CardMenu,
-  Media: CardMedia,
+  Poster: CardPoster,
+  Chrome: CardChrome,
+  Text: CardText,
 };
 
-export { cardRoot, cardContent };
+export { cardRoot, cardContent, cardHeading, cardText, cardChrome };
