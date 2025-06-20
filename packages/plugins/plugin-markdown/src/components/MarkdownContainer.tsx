@@ -46,13 +46,13 @@ const MarkdownContainer = ({
   const text = isInstanceOf(DataType.Text, object) ? object : undefined;
   const extensions = useExtensions({ document: doc, text, id, settings, selectionManager, viewMode, editorStateStore });
 
+  // TODO(wittjosiah): Factor out.
   const manager = usePluginManager();
   const resolve = useCallback(
     (typename: string) =>
       manager.context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
     [manager],
   );
-
   const space = getSpace(object);
   const objectForms = useCapabilities(SpaceCapabilities.ObjectForm);
   const filter = useMemo(() => Filter.or(...objectForms.map((form) => Filter.type(form.objectSchema))), [objectForms]);
