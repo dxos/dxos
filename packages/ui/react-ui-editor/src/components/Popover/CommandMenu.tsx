@@ -8,6 +8,8 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { Icon, type Label, Popover, toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
+import { commandRangeEffect } from '../../extensions';
+
 export type CommandMenuGroup = {
   id: string;
   label?: Label;
@@ -243,6 +245,35 @@ export const coreSlashCommands: CommandMenuGroup = {
       label: 'Table',
       icon: 'ph--table--regular',
       onSelect: (view, head) => insertAtLineStart(view, head, '| | | |\n|---|---|---|\n| | | |'),
+    },
+  ],
+};
+
+export const linkSlashCommands: CommandMenuGroup = {
+  id: 'link',
+  label: 'Link',
+  items: [
+    {
+      id: 'inline-link',
+      label: 'Inline link',
+      icon: 'ph--link--regular',
+      onSelect: (view, head) =>
+        view.dispatch({
+          changes: { from: head, insert: '@' },
+          selection: { anchor: head + 1, head: head + 1 },
+          effects: commandRangeEffect.of({ trigger: '@', range: { from: head, to: head + 1 } }),
+        }),
+    },
+    {
+      id: 'block-embed',
+      label: 'Block embed',
+      icon: 'ph--lego--regular',
+      onSelect: (view, head) =>
+        view.dispatch({
+          changes: { from: head, insert: '@@' },
+          selection: { anchor: head + 2, head: head + 2 },
+          effects: commandRangeEffect.of({ trigger: '@', range: { from: head, to: head + 2 } }),
+        }),
     },
   ],
 };

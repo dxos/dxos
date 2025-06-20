@@ -24,6 +24,7 @@ import {
   type CommandMenuItem,
   insertAtCursor,
   insertAtLineStart,
+  linkSlashCommands,
 } from '../components';
 import { useCommandMenu, type UseCommandMenuOptions } from '../extensions';
 import { str } from '../testing';
@@ -46,6 +47,7 @@ const Story = ({ text, ...options }: Args) => {
 
 const groups: CommandMenuGroup[] = [
   coreSlashCommands,
+  linkSlashCommands,
   {
     id: 'custom',
     label: 'Custom',

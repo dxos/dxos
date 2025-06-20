@@ -36,6 +36,7 @@ import {
   filterItems,
   coreSlashCommands,
   CommandMenu,
+  linkSlashCommands,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNotFalsy, isNonNullable } from '@dxos/util';
@@ -82,7 +83,7 @@ export const MarkdownEditor = ({
           return onLinkQuery?.(query) ?? [];
         case '/':
         default:
-          return filterItems([coreSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
+          return filterItems([coreSlashCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
             query ? toLocalizedString(item.label, t).toLowerCase().includes(query.toLowerCase()) : true,
           );
       }
