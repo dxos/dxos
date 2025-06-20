@@ -113,8 +113,12 @@ export default (context: PluginContext) =>
           }
 
           const object = nodeOption.value.data;
+          if (!Obj.isObject(object)) {
+            return [];
+          }
+
           const space = getSpace(object);
-          if (!space || !Obj.isObject(object)) {
+          if (!space) {
             return [];
           }
 
