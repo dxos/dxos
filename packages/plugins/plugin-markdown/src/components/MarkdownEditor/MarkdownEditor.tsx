@@ -56,6 +56,7 @@ export type MarkdownEditorProps = {
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
+  onLinkQuery?: (query?: string) => Promise<CommandMenuGroup[]>;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
   Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
@@ -66,23 +67,33 @@ export type MarkdownEditorProps = {
  * This component provides all the features of the markdown editor that do no depend on ECHO.
  * This allows it to be used as a common editor for markdown content on arbitrary backends (e.g. files).
  */
-export const MarkdownEditor = ({ extensions: _extensions, slashCommandGroups, ...props }: MarkdownEditorProps) => {
+export const MarkdownEditor = ({
+  extensions: _extensions,
+  slashCommandGroups,
+  onLinkQuery,
+  ...props
+}: MarkdownEditorProps) => {
   const viewRef = useRef<EditorView>();
-  const {
-    commandMenu: slashMenu,
-    groupsRef,
-    currentItem,
-    onSelect,
-    ...refPopoverProps
-  } = useCommandMenu({
+  const getGroups = useCallback(
+    (trigger: string, query?: string) => {
+      switch (trigger) {
+        case '@':
+          return onLinkQuery?.(query) ?? [];
+        case '/':
+        default:
+          return filterItems([coreSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
+            query ? item.label.toLowerCase().includes(query.toLowerCase()) : true,
+          );
+      }
+    },
+    [onLinkQuery, slashCommandGroups],
+  );
+  const { commandMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useCommandMenu({
     viewRef,
-    getGroups: (query) =>
-      filterItems([coreSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
-        query ? item.label.toLowerCase().includes(query.toLowerCase()) : true,
-      ),
-    trigger: '/',
+    getGroups,
+    trigger: onLinkQuery ? ['/', '@'] : '/',
   });
-  const extensions = useMemo(() => [_extensions, slashMenu].filter(isNotFalsy), [_extensions, slashMenu]);
+  const extensions = useMemo(() => [_extensions, commandMenu].filter(isNotFalsy), [_extensions, commandMenu]);
 
   return (
     <RefPopover modal={false} {...refPopoverProps}>

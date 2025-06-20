@@ -143,11 +143,16 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
   }),
 ];
 
+type CommandState = {
+  trigger: string;
+  range: Range;
+};
+
 // State effects for managing command menu state.
-export const commandRangeEffect = StateEffect.define<Range | null>();
+export const commandRangeEffect = StateEffect.define<CommandState | null>();
 
 // State field to track the active command menu range.
-const commandMenuState = StateField.define<Range | null>({
+const commandMenuState = StateField.define<CommandState | null>({
   create: () => null,
   update: (value, tr) => {
     let newValue = value;
@@ -163,13 +168,13 @@ const commandMenuState = StateField.define<Range | null>({
 });
 
 export type CommandMenuOptions = {
-  trigger: string;
+  trigger: string | string[];
   placeholder?: Parameters<typeof multilinePlaceholder>[0];
   onArrowDown?: () => void;
   onArrowUp?: () => void;
   onDeactivate?: () => void;
   onEnter?: () => void;
-  onTextChange?: (text: string) => void;
+  onTextChange?: (trigger: string, text: string) => void;
 };
 
 export const commandMenu = (options: CommandMenuOptions) => {
@@ -183,7 +188,7 @@ export const commandMenu = (options: CommandMenuOptions) => {
       update(update: ViewUpdate) {
         const builder = new RangeSetBuilder<Decoration>();
         const selection = update.view.state.selection.main;
-        const activeRange = update.view.state.field(commandMenuState);
+        const { range: activeRange, trigger } = update.view.state.field(commandMenuState) ?? {};
 
         // Check if we should show the widget - only if cursor is within the active command range.
         const shouldShowWidget = activeRange && selection.head >= activeRange.from && selection.head <= activeRange.to;
@@ -197,6 +202,7 @@ export const commandMenu = (options: CommandMenuOptions) => {
               class: 'cm-ref-tag',
               attributes: {
                 'data-auto-trigger': 'true',
+                'data-trigger': trigger!,
               },
             }),
           );
@@ -205,12 +211,12 @@ export const commandMenu = (options: CommandMenuOptions) => {
         const activeRangeChanged = update.transactions.some((tr) =>
           tr.effects.some((effect) => effect.is(commandRangeEffect)),
         );
-        if (activeRange && activeRangeChanged) {
+        if (activeRange && activeRangeChanged && trigger) {
           const content = update.view.state.sliceDoc(
             activeRange.from + 1, // Skip the trigger character.
             activeRange.to,
           );
-          options.onTextChange?.(content);
+          options.onTextChange?.(trigger, content);
         }
 
         this.decorations = builder.finish();
@@ -221,10 +227,11 @@ export const commandMenu = (options: CommandMenuOptions) => {
     },
   );
 
+  const triggers = Array.isArray(options.trigger) ? options.trigger : [options.trigger];
   const commandKeymap = keymap.of([
-    {
-      key: options.trigger,
-      run: (view) => {
+    ...triggers.map((trigger) => ({
+      key: trigger,
+      run: (view: EditorView) => {
         const selection = view.state.selection.main;
         const line = view.state.doc.lineAt(selection.head);
 
@@ -238,20 +245,20 @@ export const commandMenu = (options: CommandMenuOptions) => {
 
         if (shouldTrigger) {
           view.dispatch({
-            changes: { from: selection.head, insert: options.trigger },
+            changes: { from: selection.head, insert: trigger },
             selection: { anchor: selection.head + 1, head: selection.head + 1 },
-            effects: commandRangeEffect.of({ from: selection.head, to: selection.head + 1 }),
+            effects: commandRangeEffect.of({ trigger, range: { from: selection.head, to: selection.head + 1 } }),
           });
           return true;
         }
 
         return false;
       },
-    },
+    })),
     {
       key: 'Enter',
       run: (view) => {
-        const activeRange = view.state.field(commandMenuState);
+        const activeRange = view.state.field(commandMenuState)?.range;
         if (activeRange) {
           view.dispatch({ changes: { from: activeRange.from, to: activeRange.to, insert: '' } });
           options.onEnter?.();
@@ -264,7 +271,7 @@ export const commandMenu = (options: CommandMenuOptions) => {
     {
       key: 'ArrowDown',
       run: (view) => {
-        const activeRange = view.state.field(commandMenuState);
+        const activeRange = view.state.field(commandMenuState)?.range;
         if (activeRange) {
           options.onArrowDown?.();
           return true;
@@ -276,7 +283,7 @@ export const commandMenu = (options: CommandMenuOptions) => {
     {
       key: 'ArrowUp',
       run: (view) => {
-        const activeRange = view.state.field(commandMenuState);
+        const activeRange = view.state.field(commandMenuState)?.range;
         if (activeRange) {
           options.onArrowUp?.();
           return true;
@@ -289,15 +296,15 @@ export const commandMenu = (options: CommandMenuOptions) => {
 
   // Listen for selection and document changes to clean up the command menu.
   const updateListener = EditorView.updateListener.of((update) => {
-    const activeRange = update.view.state.field(commandMenuState);
-    if (!activeRange) {
+    const { trigger, range: activeRange } = update.view.state.field(commandMenuState) ?? {};
+    if (!activeRange || !trigger) {
       return;
     }
 
     const selection = update.view.state.selection.main;
     const firstChar = update.view.state.doc.sliceString(activeRange.from, activeRange.from + 1);
     const shouldRemove =
-      firstChar !== options.trigger || // Trigger deleted.
+      firstChar !== trigger || // Trigger deleted.
       selection.head < activeRange.from || // Cursor moved before the range.
       selection.head > activeRange.to + 1; // Cursor moved after the range (+1 to handle selection changing before doc).
 
@@ -307,7 +314,7 @@ export const commandMenu = (options: CommandMenuOptions) => {
         ? { from: activeRange.from, to: selection.head }
         : activeRange;
     if (nextRange !== activeRange) {
-      update.view.dispatch({ effects: commandRangeEffect.of(nextRange) });
+      update.view.dispatch({ effects: commandRangeEffect.of(nextRange ? { trigger, range: nextRange } : null) });
     }
 
     if (shouldRemove) {
@@ -316,7 +323,10 @@ export const commandMenu = (options: CommandMenuOptions) => {
   });
 
   return [
-    multilinePlaceholder(options.placeholder ?? `Press '${options.trigger}' for commands`),
+    multilinePlaceholder(
+      options.placeholder ??
+        `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
+    ),
     Prec.highest(commandKeymap),
     updateListener,
     commandMenuState,
@@ -326,11 +336,12 @@ export const commandMenu = (options: CommandMenuOptions) => {
 
 export type UseCommandMenuOptions = {
   viewRef: RefObject<EditorView | undefined>;
-  trigger: string;
-  getGroups: (query?: string) => MaybePromise<CommandMenuGroup[]>;
+  trigger: string | string[];
+  placeholder?: Parameters<typeof multilinePlaceholder>[0];
+  getGroups: (trigger: string, query?: string) => MaybePromise<CommandMenuGroup[]>;
 };
 
-export const useCommandMenu = ({ viewRef, trigger, getGroups }: UseCommandMenuOptions) => {
+export const useCommandMenu = ({ viewRef, trigger, placeholder, getGroups }: UseCommandMenuOptions) => {
   const triggerRef = useRef<DxRefTag | null>(null);
   const currentRef = useRef<CommandMenuItem | null>(null);
   const groupsRef = useRef<CommandMenuGroup[]>([]);
@@ -338,17 +349,20 @@ export const useCommandMenu = ({ viewRef, trigger, getGroups }: UseCommandMenuOp
   const [open, setOpen] = useState(false);
   const [_, update] = useState({});
 
-  const handleOpenChange = useCallback(async (open: boolean) => {
-    if (open) {
-      groupsRef.current = await getGroups();
-    }
-    setOpen(open);
-    if (!open) {
-      triggerRef.current = null;
-      setCurrentItem(undefined);
-      viewRef.current?.dispatch({ effects: [commandRangeEffect.of(null)] });
-    }
-  }, []);
+  const handleOpenChange = useCallback(
+    async (open: boolean, trigger?: string) => {
+      if (open && trigger) {
+        groupsRef.current = await getGroups(trigger);
+      }
+      setOpen(open);
+      if (!open) {
+        triggerRef.current = null;
+        setCurrentItem(undefined);
+        viewRef.current?.dispatch({ effects: [commandRangeEffect.of(null)] });
+      }
+    },
+    [getGroups],
+  );
 
   const handleActivate = useCallback(
     async (event: DxRefTagActivate) => {
@@ -358,11 +372,12 @@ export const useCommandMenu = ({ viewRef, trigger, getGroups }: UseCommandMenuOp
       }
 
       triggerRef.current = event.trigger;
-      if (!open) {
-        await handleOpenChange(true);
+      const triggerKey = event.trigger.getAttribute('data-trigger');
+      if (!open && triggerKey) {
+        await handleOpenChange(true, triggerKey);
       }
     },
-    [open],
+    [open, handleOpenChange],
   );
 
   const handleSelect = useCallback((item: CommandMenuItem) => {
@@ -375,10 +390,12 @@ export const useCommandMenu = ({ viewRef, trigger, getGroups }: UseCommandMenuOp
     void item.onSelect?.(view, selection.head);
   }, []);
 
+  const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
   const _commandMenu = useMemo(
     () =>
       commandMenu({
         trigger,
+        placeholder,
         onArrowDown: () => {
           setCurrentItem((currentItem) => {
             const next = getNextItem(groupsRef.current, currentItem);
@@ -399,8 +416,8 @@ export const useCommandMenu = ({ viewRef, trigger, getGroups }: UseCommandMenuOp
             handleSelect(currentRef.current);
           }
         },
-        onTextChange: async (text) => {
-          groupsRef.current = await getGroups(text);
+        onTextChange: async (trigger, text) => {
+          groupsRef.current = await getGroups(trigger, text);
           const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
           if (firstItem) {
             setCurrentItem(firstItem.id);
@@ -409,7 +426,7 @@ export const useCommandMenu = ({ viewRef, trigger, getGroups }: UseCommandMenuOp
           update({});
         },
       }),
-    [handleOpenChange, trigger],
+    [handleOpenChange, getGroups, serializedTrigger, placeholder],
   );
 
   return {

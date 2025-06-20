@@ -82,7 +82,11 @@ export const Link: StoryObj<Args> = {
   render: (args) => {
     const { space } = useClientProvider();
     const getGroups = useCallback(
-      async (query?: string): Promise<CommandMenuGroup[]> => {
+      async (trigger: string, query?: string): Promise<CommandMenuGroup[]> => {
+        if (trigger === '/') {
+          return filterItems(groups, (item) => (query ? item.label.toLowerCase().includes(query.toLowerCase()) : true));
+        }
+
         if (!space) {
           return [];
         }
@@ -114,7 +118,7 @@ export const Link: StoryObj<Args> = {
     return <Story {...args} getGroups={getGroups} />;
   },
   args: {
-    trigger: '@',
+    trigger: ['/', '@'],
     text: str('# Link', '', names.join(' '), ''),
   },
   decorators: [
