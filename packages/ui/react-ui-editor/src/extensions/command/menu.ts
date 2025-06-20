@@ -4,10 +4,21 @@
 
 import { RangeSetBuilder, StateField, StateEffect, Prec } from '@codemirror/state';
 import { EditorView, ViewPlugin, type ViewUpdate, Decoration, keymap, type DecorationSet } from '@codemirror/view';
+import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 
 import { type CleanupFn, addEventListener } from '@dxos/async';
+import { type DxRefTag, type DxRefTagActivate } from '@dxos/lit-ui';
 
 import { closeEffect, openEffect } from './action';
+import {
+  coreSlashCommands,
+  filterItems,
+  getItem,
+  getNextItem,
+  getPreviousItem,
+  type SlashCommandGroup,
+  type SlashCommandItem,
+} from '../../components';
 import { multilinePlaceholder } from '../placeholder';
 
 export type FloatingMenuOptions = {
@@ -313,4 +324,91 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
     slashMenuState,
     slashMenuPlugin,
   ];
+};
+
+export const useSlashMenu = (viewRef: RefObject<EditorView | undefined>, groups?: SlashCommandGroup[]) => {
+  const defaultGroups = useMemo(() => [coreSlashCommands, ...(groups ?? [])], [groups]);
+  const triggerRef = useRef<DxRefTag | null>(null);
+  const [open, setOpen] = useState(false);
+  const [_, update] = useState({});
+  const [currentItem, setCurrentItem] = useState(coreSlashCommands.items[0].id);
+  const currentRef = useRef<SlashCommandItem | null>(null);
+  const groupsRef = useRef<SlashCommandGroup[]>(defaultGroups);
+
+  const handleOpenChange = useCallback((open: boolean) => {
+    setOpen(open);
+    if (!open) {
+      setCurrentItem(coreSlashCommands.items[0].id);
+      triggerRef.current = null;
+      groupsRef.current = defaultGroups;
+      viewRef.current?.dispatch({ effects: [slashLineEffect.of(null)] });
+    }
+  }, []);
+
+  const handleActivate = useCallback((event: DxRefTagActivate) => {
+    const item = getItem(groupsRef.current, currentItem);
+    if (item) {
+      currentRef.current = item;
+    }
+
+    triggerRef.current = event.trigger;
+    handleOpenChange(true);
+  }, []);
+
+  const handleSelect = useCallback((item: SlashCommandItem) => {
+    const view = viewRef.current;
+    if (!view) {
+      return;
+    }
+
+    const selection = view.state.selection.main;
+    const line = view.state.doc.lineAt(selection.head);
+    void item.onSelect?.(view, line);
+  }, []);
+
+  const _slashMenu = useMemo(
+    () =>
+      slashMenu({
+        onArrowDown: () => {
+          setCurrentItem((currentItem) => {
+            const next = getNextItem(groupsRef.current, currentItem);
+            currentRef.current = next;
+            return next.id;
+          });
+        },
+        onArrowUp: () => {
+          setCurrentItem((currentItem) => {
+            const previous = getPreviousItem(groupsRef.current, currentItem);
+            currentRef.current = previous;
+            return previous.id;
+          });
+        },
+        onDeactivate: () => {
+          handleOpenChange(false);
+        },
+        onEnter: () => {
+          if (currentRef.current) {
+            handleSelect(currentRef.current);
+          }
+        },
+        onTextChange: (text) => {
+          groupsRef.current = filterItems(defaultGroups, (item) =>
+            item.label.toLowerCase().includes(text.toLowerCase()),
+          );
+          update({});
+        },
+      }),
+    [handleOpenChange],
+  );
+
+  return {
+    slashMenu: _slashMenu,
+    currentItem,
+    groupsRef,
+    ref: triggerRef,
+    open,
+    onActivate: handleActivate,
+    onOpenChange: setOpen,
+    onSelect: handleSelect,
+  };
 };

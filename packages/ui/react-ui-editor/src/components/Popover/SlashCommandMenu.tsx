@@ -101,7 +101,7 @@ const SlashCommandMenuItem = ({
       className={tx('menu.item', 'menu__item--exotic-unfocusable', {}, [current && 'bg-hoverSurface'])}
       onClick={handleSelect}
     >
-      <Icon icon={item.icon} size={4} />
+      <Icon icon={item.icon} size={5} />
       <span className='grow truncate'>{item.label}</span>
     </li>
   );
