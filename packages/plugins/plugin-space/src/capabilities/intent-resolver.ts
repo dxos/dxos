@@ -365,7 +365,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         }
 
         if (target instanceof CollectionType) {
-          target.objects.push(Ref.make(object as HasId)); // TODO(burdon): HasId?
+          target.objects.push(Ref.make(object as HasId)); // TODO(burdon): ???
         } else if (isSpace(target) && hidden) {
           space.db.add(object);
         } else if (isSpace(target)) {

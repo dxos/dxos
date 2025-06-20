@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { JsonSchema, Obj, Ref, Type } from '@dxos/echo';
-import { TypedObject, FormatEnum, TypeEnum, type JsonProp, type EchoSchema } from '@dxos/echo-schema';
+import { TypedObject, FormatEnum, TypeEnum, type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -48,7 +48,7 @@ export const initializeKanban = async ({
   name,
   typename,
   initialPivotColumn,
-}: InitializeKanbanProps): Promise<{ kanban: KanbanType; schema?: EchoSchema }> => {
+}: InitializeKanbanProps): Promise<{ kanban: KanbanType; schema?: Type.Schema }> => {
   if (typename) {
     const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
     const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
