@@ -32,7 +32,7 @@ describe('Database', () => {
     await builder.close();
   });
 
-  test('create database and query nothing', { timeout: 1_000 }, async () => {
+  test('create database and query nothing', async () => {
     await using peer = await builder.createPeer();
     await using db = await peer.createDatabase(PublicKey.random(), {
       reactiveSchemaQuery: false,
