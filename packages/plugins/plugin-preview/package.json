@@ -36,6 +36,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/schema": "workspace:*",

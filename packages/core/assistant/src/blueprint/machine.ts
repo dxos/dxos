@@ -7,16 +7,17 @@ import { Match, Schema } from 'effect';
 import {
   createTool,
   type AIServiceClient,
-  type ExecutableTool,
   Message,
   type MessageContentBlock,
   ToolResult,
   type ToolUseContentBlock,
+  type ToolRegistry,
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { isNonNullable } from '@dxos/util';
 
 import type { Blueprint, BlueprintStep } from './blueprint';
 import { AISession } from '../session';
@@ -61,7 +62,10 @@ export class BlueprintMachine {
 
   state: BlueprintMachineState = structuredClone(INITIAL_STATE);
 
-  constructor(readonly blueprint: Blueprint) {}
+  constructor(
+    readonly registry: ToolRegistry,
+    readonly blueprint: Blueprint,
+  ) {}
 
   async runToCompletion(options: ExecutionOptions): Promise<void> {
     log.info('runToCompletion', options);
@@ -132,6 +136,8 @@ export class BlueprintMachine {
       : [];
     inputMessages.forEach((message) => this.message.emit(message));
 
+    // TODO(wittjosiah): Warn if tool is not found.
+    const tools = nextStep.tools.map((tool) => this.registry.get(tool)).filter(isNonNullable);
     const messages = await session.run({
       systemPrompt: `
         You are a smart Rule-Following Agent.
@@ -144,7 +150,7 @@ export class BlueprintMachine {
         The Rule-Following Agent precisely follows the instructions.
       `,
       history: [...state.history, ...inputMessages],
-      tools: [...nextStep.tools, report] as ExecutableTool[], // TODO(burdon): REMOVE CAST!
+      tools: [...tools, report],
       artifacts: [],
       client: options.aiService,
       prompt: nextStep.instructions,
