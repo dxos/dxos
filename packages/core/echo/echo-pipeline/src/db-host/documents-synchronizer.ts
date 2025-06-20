@@ -102,7 +102,7 @@ export class DocumentsSynchronizer extends Resource {
 
   private _startSync(doc: DocHandle<DatabaseDirectory>): void {
     if (this._syncStates.has(doc.documentId)) {
-      log.info('Document already being synced', { documentId: doc.documentId });
+      log('Document already being synced', { documentId: doc.documentId });
       return;
     }
 

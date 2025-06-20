@@ -73,6 +73,7 @@ export class PersistentLifecycle<T> extends Resource {
         this._restartTask?.schedule();
       }
     });
+
     this._currentState = await this._start().catch((err) => {
       log.warn('Start failed', { err });
       this._restartTask?.schedule();

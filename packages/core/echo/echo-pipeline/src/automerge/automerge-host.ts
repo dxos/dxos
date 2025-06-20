@@ -299,7 +299,7 @@ export class AutomergeHost extends Resource {
 
   async reIndexHeads(documentIds: DocumentId[]): Promise<void> {
     for (const documentId of documentIds) {
-      log.info('re-indexing heads for document', { documentId });
+      log('re-indexing heads for document', { documentId });
       const handle = await this._repo.find(documentId, FIND_PARAMS);
       if (!handle.isReady()) {
         log.warn('document is not available locally, skipping', { documentId });
@@ -311,7 +311,7 @@ export class AutomergeHost extends Resource {
       this._headsStore.setHeads(documentId, heads, batch);
       await batch.write();
     }
-    log.info('done re-indexing heads');
+    log('done re-indexing heads');
   }
 
   // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
@@ -554,7 +554,7 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    log.info('replicating documents after collection sync', {
+    log('replicating documents after collection sync', {
       collectionId,
       peerId,
       toReplicate,
