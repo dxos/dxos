@@ -5,6 +5,7 @@
 import { Schema } from 'effect';
 
 import { Queue } from '@dxos/client/echo';
+import { Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
 
 export enum MessageState {

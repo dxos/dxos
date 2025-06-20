@@ -333,8 +333,8 @@ export default (context: PluginContext) => {
                     Array.filter(isNonNullable),
                     Array.map((object) =>
                       createObjectNode({
-                        object,
                         space,
+                        object,
                         resolve,
                         navigable: state.navigableCollections,
                       }),

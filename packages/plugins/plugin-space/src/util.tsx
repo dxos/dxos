@@ -303,13 +303,13 @@ export const constructSpaceActions = ({
 };
 
 export const createObjectNode = ({
-  object,
   space,
+  object,
   navigable = false,
   resolve,
 }: {
-  object: Obj.Any;
   space: Space;
+  object: Obj.Any;
   navigable?: boolean;
   resolve: (typename: string) => Record<string, any>;
 }) => {
