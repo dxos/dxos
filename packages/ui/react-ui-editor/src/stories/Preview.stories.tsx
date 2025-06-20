@@ -12,7 +12,7 @@ import { hoverableHidden } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory } from './components';
-import { RefPopover, useRefPopover } from '../components';
+import { PreviewProvider, useRefPopover } from '../components';
 import {
   preview,
   image,
@@ -117,7 +117,7 @@ export default meta;
 
 export const Default = {
   render: () => (
-    <RefPopover.Provider onLookup={handlePreviewLookup}>
+    <PreviewProvider onLookup={handlePreviewLookup}>
       <EditorStory
         text={str(
           '# Preview',
@@ -144,6 +144,6 @@ export const Default = {
         ]}
       />
       <PreviewCard />
-    </RefPopover.Provider>
+    </PreviewProvider>
   ),
 };
