@@ -69,6 +69,7 @@ export default () => {
           invariant(extensions?.space, 'No space');
           const { objects: games } = await extensions.space.db.query(Filter.type(ChessType)).run();
           invariant(games.length > 0, 'No chess games found');
+
           return ToolResult.Success(games);
         },
       }),
