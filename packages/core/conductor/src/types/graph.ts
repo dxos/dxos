@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Type, Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
 import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
 
@@ -79,7 +79,6 @@ export const ComputeGraph = Schema.Struct({
   input: Schema.optional(BaseGraphNode),
   output: Schema.optional(BaseGraphNode),
 }).pipe(
-  Schema.mutable,
   Type.Obj({
     typename: 'dxos.org/type/ComputeGraph',
     version: '0.1.0',
