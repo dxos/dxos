@@ -8,6 +8,7 @@ import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 
 import { type CleanupFn, addEventListener } from '@dxos/async';
 import { type DxRefTag, type DxRefTagActivate } from '@dxos/lit-ui';
+import { type MaybePromise } from '@dxos/util';
 
 import { closeEffect, openEffect } from './action';
 import { getItem, getNextItem, getPreviousItem, type CommandMenuGroup, type CommandMenuItem } from '../../components';
@@ -326,36 +327,43 @@ export const commandMenu = (options: CommandMenuOptions) => {
 export type UseCommandMenuOptions = {
   viewRef: RefObject<EditorView | undefined>;
   trigger: string;
-  getGroups: (query?: string) => CommandMenuGroup[];
+  getGroups: (query?: string) => MaybePromise<CommandMenuGroup[]>;
 };
 
 export const useCommandMenu = ({ viewRef, trigger, getGroups }: UseCommandMenuOptions) => {
   const triggerRef = useRef<DxRefTag | null>(null);
   const currentRef = useRef<CommandMenuItem | null>(null);
-  const groupsRef = useRef<CommandMenuGroup[]>(getGroups());
-  const [currentItem, setCurrentItem] = useState(() => groupsRef.current[0].items[0].id);
+  const groupsRef = useRef<CommandMenuGroup[]>([]);
+  const [currentItem, setCurrentItem] = useState<string>();
   const [open, setOpen] = useState(false);
   const [_, update] = useState({});
 
-  const handleOpenChange = useCallback((open: boolean) => {
+  const handleOpenChange = useCallback(async (open: boolean) => {
+    if (open) {
+      groupsRef.current = await getGroups();
+    }
     setOpen(open);
     if (!open) {
       triggerRef.current = null;
-      groupsRef.current = getGroups();
-      setCurrentItem(groupsRef.current[0].items[0].id);
+      setCurrentItem(undefined);
       viewRef.current?.dispatch({ effects: [commandRangeEffect.of(null)] });
     }
   }, []);
 
-  const handleActivate = useCallback((event: DxRefTagActivate) => {
-    const item = getItem(groupsRef.current, currentItem);
-    if (item) {
-      currentRef.current = item;
-    }
+  const handleActivate = useCallback(
+    async (event: DxRefTagActivate) => {
+      const item = getItem(groupsRef.current, currentItem);
+      if (item) {
+        currentRef.current = item;
+      }
 
-    triggerRef.current = event.trigger;
-    handleOpenChange(true);
-  }, []);
+      triggerRef.current = event.trigger;
+      if (!open) {
+        await handleOpenChange(true);
+      }
+    },
+    [open],
+  );
 
   const handleSelect = useCallback((item: CommandMenuItem) => {
     const view = viewRef.current;
@@ -385,19 +393,18 @@ export const useCommandMenu = ({ viewRef, trigger, getGroups }: UseCommandMenuOp
             return previous.id;
           });
         },
-        onDeactivate: () => {
-          handleOpenChange(false);
-        },
+        onDeactivate: () => handleOpenChange(false),
         onEnter: () => {
           if (currentRef.current) {
             handleSelect(currentRef.current);
           }
         },
-        onTextChange: (text) => {
-          groupsRef.current = getGroups(text);
+        onTextChange: async (text) => {
+          groupsRef.current = await getGroups(text);
           const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
           if (firstItem) {
             setCurrentItem(firstItem.id);
+            currentRef.current = firstItem;
           }
           update({});
         },

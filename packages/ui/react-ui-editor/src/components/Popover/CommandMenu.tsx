@@ -17,13 +17,13 @@ export type CommandMenuGroup = {
 export type CommandMenuItem = {
   id: string;
   label: string;
-  icon: string;
+  icon?: string;
   onSelect?: (view: EditorView, head: number) => MaybePromise<void>;
 };
 
 export type CommandMenuProps = {
   groups: CommandMenuGroup[];
-  currentItem: string;
+  currentItem?: string;
   onSelect: (item: CommandMenuItem) => void;
 };
 
@@ -61,7 +61,7 @@ const CommandGroup = ({
   onSelect,
 }: {
   group: CommandMenuGroup;
-  currentItem: string;
+  currentItem?: string;
   onSelect: (item: CommandMenuItem) => void;
 }) => {
   const { tx } = useThemeContext();
@@ -104,7 +104,7 @@ const CommandItem = ({
       className={tx('menu.item', 'menu__item--exotic-unfocusable', {}, [current && 'bg-hoverSurface'])}
       onClick={handleSelect}
     >
-      <Icon icon={item.icon} size={5} />
+      {item.icon && <Icon icon={item.icon} size={5} />}
       <span className='grow truncate'>{item.label}</span>
     </li>
   );
@@ -116,17 +116,17 @@ const CommandItem = ({
 // Helpers
 //
 
-export const getItem = (groups: CommandMenuGroup[], id: string): CommandMenuItem | undefined => {
+export const getItem = (groups: CommandMenuGroup[], id?: string): CommandMenuItem | undefined => {
   return groups.flatMap((group) => group.items).find((item) => item.id === id);
 };
 
-export const getNextItem = (groups: CommandMenuGroup[], id: string): CommandMenuItem => {
+export const getNextItem = (groups: CommandMenuGroup[], id?: string): CommandMenuItem => {
   const items = groups.flatMap((group) => group.items);
   const index = items.findIndex((item) => item.id === id);
   return items[(index + 1) % items.length];
 };
 
-export const getPreviousItem = (groups: CommandMenuGroup[], id: string): CommandMenuItem => {
+export const getPreviousItem = (groups: CommandMenuGroup[], id?: string): CommandMenuItem => {
   const items = groups.flatMap((group) => group.items);
   const index = items.findIndex((item) => item.id === id);
   return items[(index - 1 + items.length) % items.length];
@@ -142,16 +142,21 @@ export const filterItems = (
   }));
 };
 
-// If the cursor is at the start of a line, insert the text at the cursor.
-// Otherwise, insert the text on a new line.
-const insertAtCursor = (view: EditorView, head: number, insert: string) => {
+export const insertAtCursor = (view: EditorView, head: number, insert: string) => {
+  view.dispatch({
+    changes: { from: head, to: head, insert },
+    selection: { anchor: head + insert.length, head: head + insert.length },
+  });
+};
+
+/**
+ * If the cursor is at the start of a line, insert the text at the cursor.
+ * Otherwise, insert the text on a new line.
+ */
+export const insertAtLineStart = (view: EditorView, head: number, insert: string) => {
   const line = view.state.doc.lineAt(head);
   if (line.from === head) {
-    // TODO(wittjosiah): This is inserting an extra newline after the inserted text.
-    view.dispatch({
-      changes: { from: head, to: head, insert },
-      selection: { anchor: head + insert.length, head: head + insert.length },
-    });
+    insertAtCursor(view, head, insert);
   } else {
     insert = '\n' + insert;
     view.dispatch({
@@ -169,73 +174,73 @@ export const coreSlashCommands: CommandMenuGroup = {
       id: 'heading-1',
       label: 'Heading 1',
       icon: 'ph--text-h-one--regular',
-      onSelect: (view, head) => insertAtCursor(view, head, '# '),
+      onSelect: (view, head) => insertAtLineStart(view, head, '# '),
     },
     {
       id: 'heading-2',
       label: 'Heading 2',
       icon: 'ph--text-h-two--regular',
-      onSelect: (view, head) => insertAtCursor(view, head, '## '),
+      onSelect: (view, head) => insertAtLineStart(view, head, '## '),
     },
     {
       id: 'heading-3',
       label: 'Heading 3',
       icon: 'ph--text-h-three--regular',
-      onSelect: (view, head) => insertAtCursor(view, head, '### '),
+      onSelect: (view, head) => insertAtLineStart(view, head, '### '),
     },
     {
       id: 'heading-4',
       label: 'Heading 4',
       icon: 'ph--text-h-four--regular',
-      onSelect: (view, head) => insertAtCursor(view, head, '#### '),
+      onSelect: (view, head) => insertAtLineStart(view, head, '#### '),
     },
     {
       id: 'heading-5',
       label: 'Heading 5',
       icon: 'ph--text-h-five--regular',
-      onSelect: (view, head) => insertAtCursor(view, head, '##### '),
+      onSelect: (view, head) => insertAtLineStart(view, head, '##### '),
     },
     {
       id: 'heading-6',
       label: 'Heading 6',
       icon: 'ph--text-h-six--regular',
-      onSelect: (view, head) => insertAtCursor(view, head, '###### '),
+      onSelect: (view, head) => insertAtLineStart(view, head, '###### '),
     },
     {
       id: 'bullet-list',
       label: 'Bullet List',
       icon: 'ph--list-bullets--regular',
-      onSelect: (view, head) => insertAtCursor(view, head, '- '),
+      onSelect: (view, head) => insertAtLineStart(view, head, '- '),
     },
     {
       id: 'numbered-list',
       label: 'Numbered List',
       icon: 'ph--list-numbers--regular',
-      onSelect: (view, head) => insertAtCursor(view, head, '1. '),
+      onSelect: (view, head) => insertAtLineStart(view, head, '1. '),
     },
     {
       id: 'task-list',
       label: 'Task List',
       icon: 'ph--list-checks--regular',
-      onSelect: (view, head) => insertAtCursor(view, head, '- [ ] '),
+      onSelect: (view, head) => insertAtLineStart(view, head, '- [ ] '),
     },
     {
       id: 'quote',
       label: 'Quote',
       icon: 'ph--quotes--regular',
-      onSelect: (view, head) => insertAtCursor(view, head, '> '),
+      onSelect: (view, head) => insertAtLineStart(view, head, '> '),
     },
     {
       id: 'code-block',
       label: 'Code Block',
       icon: 'ph--code-block--regular',
-      onSelect: (view, head) => insertAtCursor(view, head, '```\n\n```'),
+      onSelect: (view, head) => insertAtLineStart(view, head, '```\n\n```'),
     },
     {
       id: 'table',
       label: 'Table',
       icon: 'ph--table--regular',
-      onSelect: (view, head) => insertAtCursor(view, head, '| | | |\n|---|---|---|\n| | | |'),
+      onSelect: (view, head) => insertAtLineStart(view, head, '| | | |\n|---|---|---|\n| | | |'),
     },
   ],
 };
