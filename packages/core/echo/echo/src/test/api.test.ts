@@ -131,4 +131,13 @@ describe('Experimental API review', () => {
     const message = Obj.make(Testing.Message, Testing.MessageStruct.make({}));
     expect(message.timestamp).to.exist;
   });
+
+  test('Obj.isObject', ({ expect }) => {
+    const guy = Obj.make(Testing.Person, { name: 'Test' });
+    expect(Obj.isObject(guy)).to.be.true;
+    expect(Obj.isObject(null)).to.be.false;
+    expect(Obj.isObject(undefined)).to.be.false;
+    expect(Obj.isObject(1)).to.be.false;
+    expect(Obj.isObject('string')).to.be.false;
+  });
 });

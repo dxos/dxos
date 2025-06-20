@@ -11,15 +11,16 @@ import * as LiveObject from '@dxos/live-object';
 
 import type * as Ref from './Ref';
 import type * as Type from './Type';
+import { assumeType } from '@dxos/util';
 
 export type Obj<T = any> = EchoSchema.AnyEchoObject & T;
 export type Any = EchoSchema.AnyEchoObject;
 
 export const make = LiveObject.live;
 
-// TODO(dmaretskyi): Currently broken?
 export const isObject = (obj: unknown): obj is Any => {
-  return LiveObject.isLiveObject(obj);
+  assumeType<EchoSchema.InternalObjectProps>(obj);
+  return typeof obj === 'object' && obj !== null && obj[EchoSchema.EntityKindId] === EchoSchema.EntityKind.Object;
 };
 
 /**
