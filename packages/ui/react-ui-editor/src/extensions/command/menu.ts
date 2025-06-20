@@ -19,6 +19,7 @@ import {
   type SlashCommandGroup,
   type SlashCommandItem,
 } from '../../components';
+import { type Range } from '../../types';
 import { multilinePlaceholder } from '../placeholder';
 
 export type FloatingMenuOptions = {
@@ -150,17 +151,16 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
 ];
 
 // State effects for managing slash menu state.
-export const slashLineEffect = StateEffect.define<number | null>();
+export const slashRangeEffect = StateEffect.define<Range | null>();
 
-// State field to track which line the slash menu is active on.
-const slashMenuState = StateField.define<number | null>({
+// State field to track the active slash command range.
+const slashMenuState = StateField.define<Range | null>({
   create: () => null,
   update: (value, tr) => {
     let newValue = value;
 
-    // Apply effects.
     for (const effect of tr.effects) {
-      if (effect.is(slashLineEffect)) {
+      if (effect.is(slashRangeEffect)) {
         newValue = effect.value;
       }
     }
@@ -185,24 +185,19 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
 
       constructor(readonly view: EditorView) {}
 
+      // TODO(wittjosiah): The decorations are repainted on every update, this occasionally causes menu to flicker.
       update(update: ViewUpdate) {
         const builder = new RangeSetBuilder<Decoration>();
         const selection = update.view.state.selection.main;
-        const line = update.view.state.doc.lineAt(selection.head);
-        const activeSlashLine = update.view.state.field(slashMenuState);
+        const activeRange = update.view.state.field(slashMenuState);
 
-        // Check if we should show the widget - only if this line is in the active slash lines set.
-        const shouldShowWidget = activeSlashLine === line.number && line.text.startsWith('/');
-
+        // Check if we should show the widget - only if cursor is within the active slash range.
+        const shouldShowWidget = activeRange && selection.head >= activeRange.from && selection.head <= activeRange.to;
         if (shouldShowWidget) {
-          const slashPos = line.from;
-          const contentStart = slashPos + 1;
-          const content = update.view.state.sliceDoc(contentStart, line.to);
-
           // Create mark decoration that wraps the entire line content in a dx-ref-tag.
           builder.add(
-            slashPos,
-            line.to,
+            activeRange.from,
+            activeRange.to,
             Decoration.mark({
               tagName: 'dx-ref-tag',
               class: 'cm-ref-tag',
@@ -211,10 +206,17 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
               },
             }),
           );
+        }
 
-          if (update.docChanged) {
-            options.onTextChange?.(content);
-          }
+        const activeRangeChanged = update.transactions.some((tr) =>
+          tr.effects.some((effect) => effect.is(slashRangeEffect)),
+        );
+        if (activeRange && activeRangeChanged) {
+          const content = update.view.state.sliceDoc(
+            activeRange.from + 1, // Skip the slash character.
+            activeRange.to,
+          );
+          options.onTextChange?.(content);
         }
 
         this.decorations = builder.finish();
@@ -232,13 +234,19 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
         const selection = view.state.selection.main;
         const line = view.state.doc.lineAt(selection.head);
 
-        // Only trigger on empty lines or at the beginning of a line.
-        if (line.text.trim() === '' || selection.head === line.from) {
-          // Insert the slash character.
+        // Check if we should trigger the slash menu:
+        // 1. Empty lines or at the beginning of a line
+        // 2. When there's a preceding space
+        const shouldTrigger =
+          line.text.trim() === '' ||
+          selection.head === line.from ||
+          (selection.head > line.from && line.text[selection.head - line.from - 1] === ' ');
+
+        if (shouldTrigger) {
           view.dispatch({
             changes: { from: selection.head, insert: '/' },
             selection: { anchor: selection.head + 1, head: selection.head + 1 },
-            effects: slashLineEffect.of(line.number),
+            effects: slashRangeEffect.of({ from: selection.head, to: selection.head + 1 }),
           });
           return true;
         }
@@ -249,20 +257,11 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
     {
       key: 'Enter',
       run: (view) => {
-        const activeSlashLine = view.state.field(slashMenuState);
-        if (activeSlashLine !== null) {
-          const selection = view.state.selection.main;
-          const currentLine = view.state.doc.lineAt(selection.head);
-          // Clear the current line.
-          view.dispatch({
-            changes: { from: currentLine.from, to: currentLine.to, insert: '' },
-          });
-
-          // Check if cursor is on the active slash line.
-          if (currentLine.number === activeSlashLine && currentLine.text.startsWith('/')) {
-            options.onEnter?.();
-            return true;
-          }
+        const activeRange = view.state.field(slashMenuState);
+        if (activeRange) {
+          view.dispatch({ changes: { from: activeRange.from, to: activeRange.to, insert: '' } });
+          options.onEnter?.();
+          return true;
         }
 
         return false;
@@ -271,8 +270,8 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
     {
       key: 'ArrowDown',
       run: (view) => {
-        const activeSlashLine = view.state.field(slashMenuState);
-        if (activeSlashLine !== null) {
+        const activeSlashRange = view.state.field(slashMenuState);
+        if (activeSlashRange) {
           options.onArrowDown?.();
           return true;
         }
@@ -283,8 +282,8 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
     {
       key: 'ArrowUp',
       run: (view) => {
-        const activeSlashLine = view.state.field(slashMenuState);
-        if (activeSlashLine !== null) {
+        const activeSlashRange = view.state.field(slashMenuState);
+        if (activeSlashRange) {
           options.onArrowUp?.();
           return true;
         }
@@ -296,24 +295,28 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
 
   // Listen for selection and document changes to clean up the slash menu.
   const updateListener = EditorView.updateListener.of((update) => {
-    const activeSlashLine = update.view.state.field(slashMenuState);
+    const activeRange = update.view.state.field(slashMenuState);
+    if (!activeRange) {
+      return;
+    }
 
-    if (activeSlashLine !== null) {
-      const line = update.view.state.doc.line(activeSlashLine);
-      const selection = update.view.state.selection.main;
-      const currentLine = update.view.state.doc.lineAt(selection.head);
+    const selection = update.view.state.selection.main;
+    const shouldRemove =
+      update.view.state.doc.sliceString(activeRange.from, activeRange.from + 1) !== '/' || // Slash deleted.
+      selection.head < activeRange.from || // Cursor moved before the range.
+      selection.head > activeRange.to + 1; // Cursor moved after the range (+1 to handle selection changing before doc).
 
-      // Check if we should remove the slash menu.
-      const shouldRemove =
-        !line.text.startsWith('/') || // Line no longer starts with '/'.
-        currentLine.number !== activeSlashLine; // Cursor moved to different line.
+    const nextRange = shouldRemove
+      ? null
+      : update.docChanged
+        ? { from: activeRange.from, to: selection.head }
+        : activeRange;
+    if (nextRange !== activeRange) {
+      update.view.dispatch({ effects: slashRangeEffect.of(nextRange) });
+    }
 
-      if (shouldRemove) {
-        update.view.dispatch({
-          effects: slashLineEffect.of(null),
-        });
-        options.onDeactivate?.();
-      }
+    if (shouldRemove) {
+      options.onDeactivate?.();
     }
   });
 
@@ -341,7 +344,7 @@ export const useSlashMenu = (viewRef: RefObject<EditorView | undefined>, groups?
       setCurrentItem(coreSlashCommands.items[0].id);
       triggerRef.current = null;
       groupsRef.current = defaultGroups;
-      viewRef.current?.dispatch({ effects: [slashLineEffect.of(null)] });
+      viewRef.current?.dispatch({ effects: [slashRangeEffect.of(null)] });
     }
   }, []);
 
@@ -362,8 +365,7 @@ export const useSlashMenu = (viewRef: RefObject<EditorView | undefined>, groups?
     }
 
     const selection = view.state.selection.main;
-    const line = view.state.doc.lineAt(selection.head);
-    void item.onSelect?.(view, line);
+    void item.onSelect?.(view, selection.head);
   }, []);
 
   const _slashMenu = useMemo(
@@ -395,6 +397,10 @@ export const useSlashMenu = (viewRef: RefObject<EditorView | undefined>, groups?
           groupsRef.current = filterItems(defaultGroups, (item) =>
             item.label.toLowerCase().includes(text.toLowerCase()),
           );
+          const firstItem = groupsRef.current[0].items[0];
+          if (firstItem) {
+            setCurrentItem(firstItem.id);
+          }
           update({});
         },
       }),

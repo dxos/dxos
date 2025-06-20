@@ -9,7 +9,7 @@ import React, { useRef } from 'react';
 
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { EditorStory } from './components';
+import { EditorStory, names } from './components';
 import { RefPopover, type SlashCommandGroup, SlashCommandMenu } from '../components';
 import { useSlashMenu } from '../extensions';
 import { str } from '../testing';
@@ -37,7 +37,12 @@ const meta: Meta<typeof EditorStory> = {
 
     return (
       <RefPopover modal={false} {...props}>
-        <EditorStory ref={viewRef} text={str('# Slash', '', '', '')} placeholder={''} extensions={slashMenu} />
+        <EditorStory
+          ref={viewRef}
+          text={str('# Slash', '', names.join(' '), '')}
+          placeholder={''}
+          extensions={slashMenu}
+        />
         <SlashCommandMenu groups={groupsRef.current} currentItem={currentItem} onSelect={onSelect} />
       </RefPopover>
     );

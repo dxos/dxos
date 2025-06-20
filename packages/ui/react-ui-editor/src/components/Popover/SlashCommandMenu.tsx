@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Line } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import React, { useCallback, useEffect, useRef } from 'react';
 
@@ -18,7 +17,7 @@ export type SlashCommandItem = {
   id: string;
   label: string;
   icon: string;
-  onSelect?: (view: EditorView, line: Line) => MaybePromise<void>;
+  onSelect?: (view: EditorView, head: number) => MaybePromise<void>;
 };
 
 export type SlashCommandMenuProps = {
@@ -133,6 +132,25 @@ export const filterItems = (
   }));
 };
 
+// If the cursor is at the start of a line, insert the text at the cursor.
+// Otherwise, insert the text on a new line.
+const insertAtCursor = (view: EditorView, head: number, insert: string) => {
+  const line = view.state.doc.lineAt(head);
+  if (line.from === head) {
+    // TODO(wittjosiah): This is inserting an extra newline after the inserted text.
+    view.dispatch({
+      changes: { from: head, to: head, insert },
+      selection: { anchor: head + insert.length, head: head + insert.length },
+    });
+  } else {
+    insert = '\n' + insert;
+    view.dispatch({
+      changes: { from: line.to, to: line.to, insert },
+      selection: { anchor: line.to + insert.length, head: line.to + insert.length },
+    });
+  }
+};
+
 export const coreSlashCommands: SlashCommandGroup = {
   label: 'Markdown',
   items: [
@@ -140,145 +158,73 @@ export const coreSlashCommands: SlashCommandGroup = {
       id: 'heading-1',
       label: 'Heading 1',
       icon: 'ph--text-h-one--regular',
-      onSelect: (view, line) => {
-        const insert = '# ';
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert },
-          selection: { anchor: line.from + insert.length, head: line.from + insert.length },
-        });
-      },
+      onSelect: (view, head) => insertAtCursor(view, head, '# '),
     },
     {
       id: 'heading-2',
       label: 'Heading 2',
       icon: 'ph--text-h-two--regular',
-      onSelect: (view, line) => {
-        const insert = '## ';
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert },
-          selection: { anchor: line.from + insert.length, head: line.from + insert.length },
-        });
-      },
+      onSelect: (view, head) => insertAtCursor(view, head, '## '),
     },
     {
       id: 'heading-3',
       label: 'Heading 3',
       icon: 'ph--text-h-three--regular',
-      onSelect: (view, line) => {
-        const insert = '### ';
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert },
-          selection: { anchor: line.from + insert.length, head: line.from + insert.length },
-        });
-      },
+      onSelect: (view, head) => insertAtCursor(view, head, '### '),
     },
     {
       id: 'heading-4',
       label: 'Heading 4',
       icon: 'ph--text-h-four--regular',
-      onSelect: (view, line) => {
-        const insert = '#### ';
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert },
-          selection: { anchor: line.from + insert.length, head: line.from + insert.length },
-        });
-      },
+      onSelect: (view, head) => insertAtCursor(view, head, '#### '),
     },
     {
       id: 'heading-5',
       label: 'Heading 5',
       icon: 'ph--text-h-five--regular',
-      onSelect: (view, line) => {
-        const insert = '##### ';
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert },
-          selection: { anchor: line.from + insert.length, head: line.from + insert.length },
-        });
-      },
+      onSelect: (view, head) => insertAtCursor(view, head, '##### '),
     },
     {
       id: 'heading-6',
       label: 'Heading 6',
       icon: 'ph--text-h-six--regular',
-      onSelect: (view, line) => {
-        const insert = '###### ';
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert },
-          selection: { anchor: line.from + insert.length, head: line.from + insert.length },
-        });
-      },
+      onSelect: (view, head) => insertAtCursor(view, head, '###### '),
     },
     {
       id: 'bullet-list',
       label: 'Bullet List',
       icon: 'ph--list-bullets--regular',
-      onSelect: (view, line) => {
-        const insert = '- ';
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert },
-          selection: { anchor: line.from + insert.length, head: line.from + insert.length },
-        });
-      },
+      onSelect: (view, head) => insertAtCursor(view, head, '- '),
     },
     {
       id: 'numbered-list',
       label: 'Numbered List',
       icon: 'ph--list-numbers--regular',
-      onSelect: (view, line) => {
-        const insert = '1. ';
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert },
-          selection: { anchor: line.from + insert.length, head: line.from + insert.length },
-        });
-      },
+      onSelect: (view, head) => insertAtCursor(view, head, '1. '),
     },
     {
       id: 'task-list',
       label: 'Task List',
       icon: 'ph--list-checks--regular',
-      onSelect: (view, line) => {
-        const insert = '- [ ] ';
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert },
-          selection: { anchor: line.from + insert.length, head: line.from + insert.length },
-        });
-      },
+      onSelect: (view, head) => insertAtCursor(view, head, '- [ ] '),
     },
     {
       id: 'quote',
       label: 'Quote',
       icon: 'ph--quotes--regular',
-      onSelect: (view, line) => {
-        const insert = '> ';
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert },
-          selection: { anchor: line.from + insert.length, head: line.from + insert.length },
-        });
-      },
+      onSelect: (view, head) => insertAtCursor(view, head, '> '),
     },
     {
       id: 'code-block',
       label: 'Code Block',
       icon: 'ph--code-block--regular',
-      onSelect: (view, line) => {
-        const insert = '```\n\n```';
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert },
-          selection: { anchor: line.from + insert.length / 2, head: line.from + insert.length / 2 },
-        });
-      },
+      onSelect: (view, head) => insertAtCursor(view, head, '```\n\n```'),
     },
     {
       id: 'table',
       label: 'Table',
       icon: 'ph--table--regular',
-      onSelect: (view, line) => {
-        const insert = '| | | |\n|---|---|---|\n| | | |';
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert },
-          selection: { anchor: line.from + insert.length, head: line.from + insert.length },
-        });
-      },
+      onSelect: (view, head) => insertAtCursor(view, head, '| | | |\n|---|---|---|\n| | | |'),
     },
   ],
 };
