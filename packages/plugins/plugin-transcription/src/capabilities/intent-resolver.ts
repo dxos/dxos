@@ -13,6 +13,7 @@ export default (context: PluginContext) =>
       intent: TranscriptionAction.Create,
       resolve: ({ name, spaceId }) => {
         const transcript = Obj.make(TranscriptType, {
+          // TODO(dmaretskyi): Use space.queues.create() instead.
           queue: Ref.fromDXN(Key.createQueueDXN(spaceId as Key.SpaceId)),
         });
 

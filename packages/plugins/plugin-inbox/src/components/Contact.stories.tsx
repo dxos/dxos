@@ -134,7 +134,7 @@ const meta: Meta = {
             await client.spaces.default.waitUntilReady();
             const space = client.spaces.default;
             const { emails } = await seedTestData(space);
-            const queueDxn = Key.createQueueDXN(space.id);
+            const queueDxn = space.queues.create().dxn;
             const queue = space.queues.get<DataType.Message>(queueDxn);
             queue.append(emails);
             const mailbox = Obj.make(MailboxType, { queue: Ref.fromDXN(queueDxn) });

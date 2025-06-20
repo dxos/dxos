@@ -153,6 +153,7 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
   running = true,
   interval = 1_000,
 ) => {
+            // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => (space ? Key.createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
   const queue = useQueue<DataType.Message>(queueDxn);
   const builder = useMemo(() => new MessageBuilder(space), [space]);
@@ -183,6 +184,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
   running = true,
   interval = 1_000,
 ) => {
+            // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => (space ? Key.createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
   const queue = useQueue<DataType.Message>(queueDxn);
   const [builder] = useState(() => new EntityExtractionMessageBuilder());

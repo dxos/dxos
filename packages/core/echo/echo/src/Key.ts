@@ -4,5 +4,5 @@
 
 export { SpaceId, ObjectId } from '@dxos/keys';
 
-// TODO(burdon): Move to DXN?
-export { createQueueDXN, getObjectDXN, getSchemaDXN } from '@dxos/echo-schema';
+// TODO(burdon): Deprecated
+export { createQueueDXN } from '@dxos/echo-schema';

@@ -80,7 +80,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const menuProps = useMenuActions(actionCreator);
 
   // Queue.
-  const [queueDxn, setQueueDxn] = useState<string>(() => Key.createQueueDXN(space.id).toString());
+  const [queueDxn, setQueueDxn] = useState<string>(() => space.queues.create().dxn.toString());
   const queue = useQueue<Message>(Type.DXN.tryParse(queueDxn));
 
   // Function executor.
@@ -240,7 +240,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
               iconOnly
               label='Clear history'
               icon='ph--trash--regular'
-              onClick={() => setQueueDxn(Key.createQueueDXN(space.id).toString())}
+              onClick={() => setQueueDxn(space.queues.create().dxn.toString())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor?.cancel()} />
           </Input.Root>
@@ -307,7 +307,7 @@ const ResearchPrompts = ({ object, onResearch }: ResearchPromptsProps) => {
     <div>
       {relatedSchemas.map((schema) => (
         <button
-          key={Key.getSchemaDXN(schema.schema)?.toString()}
+          key={Type.getDXN(schema.schema)?.toString()}
           onClick={() => onResearch(object, schema)}
           className='border border-separator rounded px-2 py-1 m-1'
         >

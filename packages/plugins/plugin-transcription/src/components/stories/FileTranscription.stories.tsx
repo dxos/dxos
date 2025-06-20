@@ -80,6 +80,7 @@ const AudioFile = ({
   }, [audio, running]);
 
   // Transcriber.
+  // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => Key.createQueueDXN(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
 

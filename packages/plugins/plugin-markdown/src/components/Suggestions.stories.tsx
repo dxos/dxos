@@ -67,7 +67,7 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
   const { editorState } = useCapability(MarkdownCapabilities.State);
 
   const space = useSpace();
-  const queueDxn = useMemo(() => space && Key.createQueueDXN(space.id), [space]);
+  const queueDxn = useMemo(() => space && space.queues.create().dxn, [space]);
   const queue = useQueue<Message>(queueDxn);
 
   const handleInsert = async () => {

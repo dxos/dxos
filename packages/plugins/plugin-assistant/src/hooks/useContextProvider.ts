@@ -39,9 +39,9 @@ export const useContextProvider = (space?: Space): ContextProvider | undefined =
             // })
             .filter((object) => stringMatch(query, Obj.getLabel(object as any) ?? ''))
             // TODO(dmaretskyi): `Type.getDXN` (at the point of writing) didn't work here as it was schema-only.
-            .filter((object) => !!Key.getObjectDXN(object))
+            .filter((object) => !!Obj.getDXN(object as Obj.Any))
             .map((object) => ({
-              uri: Key.getObjectDXN(object as any)!.toString(),
+              uri: Obj.getDXN(object as any)!.toString(),
               label: Obj.getLabel(object as any) ?? '',
             }))
         );

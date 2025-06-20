@@ -17,7 +17,7 @@ export default () => [
         data: {
           object: Obj.make(AIChatType, {
             name,
-            queue: Ref.fromDXN(Key.createQueueDXN(space.id)),
+            queue: Ref.fromDXN(space.queues.create().dxn),
           }),
         },
       }),

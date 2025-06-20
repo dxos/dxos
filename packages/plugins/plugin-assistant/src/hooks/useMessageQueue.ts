@@ -13,6 +13,7 @@ import { type AIChatType } from '../types';
 export const useMessageQueue = (chat?: AIChatType) => {
   const space = getSpace(chat);
   const queueDxn = useMemo(() => {
+    // TODO(dmaretskyi): Chat.queue.dxn should be a valid DXN already.
     const dxn = space && chat?.queue.dxn;
     return dxn ? Key.createQueueDXN(space.id, dxn.parts.at(-1)) : undefined;
   }, [space, chat?.queue.dxn]);

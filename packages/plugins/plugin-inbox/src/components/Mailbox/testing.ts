@@ -82,7 +82,7 @@ export const createMessage = (space?: Space) => {
  * Initializes a mailbox with messages in the given space.
  */
 export const initializeMailbox = async (space: Space, messageCount = 30) => {
-  const queueDxn = Key.createQueueDXN(space.id);
+  const queueDxn = space.queues.create().dxn;
   const queue = space.queues.get<DataType.Message>(queueDxn);
   queue.append([...Array(messageCount)].map(() => createMessage(space)));
   const mailbox = Obj.make(MailboxType, { queue: Ref.fromDXN(queueDxn) });

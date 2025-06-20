@@ -30,6 +30,7 @@ export default (context: PluginContext) =>
         data: {
           object: Obj.make(MailboxType, {
             name,
+            // TODO(dmaretskyi): Use space.queues.create() instead.
             queue: Ref.fromDXN(Key.createQueueDXN(spaceId)),
           }),
         },
