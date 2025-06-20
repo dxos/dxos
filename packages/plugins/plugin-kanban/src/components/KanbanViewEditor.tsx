@@ -61,7 +61,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     .filter((field) => field.props.format === FormatEnum.SingleSelect)
     .map(({ field }) => ({ value: field.id, label: field.path }));
 
-  const onSave = useCallback(
+  const handleSave = useCallback(
     (values: Partial<{ columnFieldId: string }>) => {
       kanban.columnFieldId = values.columnFieldId;
     },
@@ -81,7 +81,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   return (
     <>
       <div role='none' className='p-2'>
-        <Form schema={KanbanSettingsSchema} values={initialValues} onSave={onSave} autoSave Custom={custom} />
+        <Form Custom={custom} schema={KanbanSettingsSchema} values={initialValues} onSave={handleSave} autoSave />
       </div>
       <ViewEditor
         registry={space.db.schemaRegistry}

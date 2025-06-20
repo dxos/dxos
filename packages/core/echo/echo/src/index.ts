@@ -12,6 +12,3 @@ export * as Type from './Type';
 export { DXN } from '@dxos/keys';
 export { Filter, Query } from '@dxos/echo-schema';
 export { type Live } from '@dxos/live-object';
-
-// TODO(burdon): Re-export Queue namespace.
-// TODO(burdon): Re-export JsonSchema namespace.
