@@ -11,12 +11,12 @@ import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant
 import { scheduleTaskInterval } from '@dxos/async';
 import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Key, Obj, Type } from '@dxos/echo';
+import { Key, Obj, Ref, Type } from '@dxos/echo';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
+import { useQueue, type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
 
@@ -73,8 +73,8 @@ export class MessageBuilder extends AbstractMessageBuilder {
     let text = faker.lorem.paragraph();
     if (this._space) {
       const label = faker.commerce.productName();
-      const obj = this._space.db.add(live(TestItem, { title: label, description: faker.lorem.paragraph() }));
-      const dxn = makeRef(obj).dxn.toString();
+      const obj = this._space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));
+      const dxn = Ref.make(obj).dxn.toString();
       const words = text.split(' ');
       words.splice(Math.floor(Math.random() * words.length), 0, `[${label}][${dxn}]`);
       text = words.join(' ');

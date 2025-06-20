@@ -5,10 +5,9 @@
 import { Rx } from '@effect-rx/rx-react';
 
 import { createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import {
   ACTION_GROUP_TYPE,
@@ -25,7 +24,6 @@ import {
   isEchoObject,
   type QueryResult,
   SpaceState,
-  type AnyLiveObject,
   type Space,
 } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
@@ -84,9 +82,9 @@ const getCollectionGraphNodePartials = ({
     role: 'branch',
     onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
-      collection.objects = nextOrder.filter(isEchoObject).map(makeRef);
+      collection.objects = nextOrder.filter(isEchoObject).map(Ref.make);
     },
-    onTransferStart: (child: Node<AnyLiveObject<any>>, index?: number) => {
+    onTransferStart: (child: Node<Obj.Any>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
       // if (space && childSpace && !childSpace.key.equals(space.key)) {
@@ -107,15 +105,15 @@ const getCollectionGraphNodePartials = ({
       // TODO(dmaretskyi): Compare by id.
       if (!collection.objects.find((object) => object.target === child.data)) {
         if (typeof index !== 'undefined') {
-          collection.objects.splice(index, 0, makeRef(child.data));
+          collection.objects.splice(index, 0, Ref.make(child.data));
         } else {
-          collection.objects.push(makeRef(child.data));
+          collection.objects.push(Ref.make(child.data));
         }
       }
 
       // }
     },
-    onTransferEnd: (child: Node<AnyLiveObject<any>>, destination: Node) => {
+    onTransferEnd: (child: Node<Obj.Any>, destination: Node) => {
       // Remove child from origin collection.
       const index = collection.objects.findIndex((object) => object.target === child.data);
       if (index > -1) {
@@ -131,14 +129,14 @@ const getCollectionGraphNodePartials = ({
       //   childSpace.db.remove(child.data);
       // }
     },
-    onCopy: async (child: Node<AnyLiveObject<any>>, index?: number) => {
+    onCopy: async (child: Node<Obj.Any>, index?: number) => {
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data, resolve, space);
       space.db.add(newObject);
       if (typeof index !== 'undefined') {
-        collection.objects.splice(index, 0, makeRef(newObject));
+        collection.objects.splice(index, 0, Ref.make(newObject));
       } else {
-        collection.objects.push(makeRef(newObject));
+        collection.objects.push(Ref.make(newObject));
       }
     },
   };
@@ -310,7 +308,7 @@ export const createObjectNode = ({
   navigable = false,
   resolve,
 }: {
-  object: AnyLiveObject<any>;
+  object: Obj.Any;
   space: Space;
   navigable?: boolean;
   resolve: (typename: string) => Record<string, any>;
@@ -337,8 +335,9 @@ export const createObjectNode = ({
     data: object,
     properties: {
       ...partials,
+      // TODO(burdon): Use annotation to get the name field.
       label: metadata.label?.(object) ||
-        object.name || ['object name placeholder', { ns: type, default: 'New object' }],
+        (object as any).name || ['object name placeholder', { ns: type, default: 'New object' }],
       icon: metadata.icon ?? 'ph--placeholder--regular',
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',
@@ -353,7 +352,7 @@ export const constructObjectActions = ({
   dispatch,
   navigable = false,
 }: {
-  object: AnyLiveObject<any>;
+  object: Obj.Any;
   graph: ReadableGraph;
   dispatch: PromiseIntentDispatcher;
   navigable?: boolean;
@@ -456,9 +455,9 @@ export const constructObjectActions = ({
  * @deprecated This is a temporary solution.
  */
 export const getNestedObjects = async (
-  object: AnyLiveObject<any>,
+  object: Obj.Any,
   resolve: (typename: string) => Record<string, any>,
-): Promise<AnyLiveObject<any>[]> => {
+): Promise<Obj.Any[]> => {
   const type = Obj.getTypename(object);
   if (!type) {
     return [];
@@ -470,7 +469,7 @@ export const getNestedObjects = async (
     return [];
   }
 
-  const objects: AnyLiveObject<any>[] = await loadReferences(object);
+  const objects: Obj.Any[] = await loadReferences(object);
   const nested = await Promise.all(objects.map((object) => getNestedObjects(object, resolve)));
   return [...objects, ...nested.flat()];
 };

@@ -6,11 +6,11 @@ import { Rx } from '@effect-rx/rx-react';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { JsonSchema, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Type, Obj } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
-import { live, fullyQualifiedId, getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
@@ -46,7 +46,7 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
 
   const handleInsertRow = useCallback(() => {
     if (schema && space) {
-      space.db.add(live(schema, {}));
+      space.db.add(Obj.make(schema, {}));
     }
   }, [space, schema]);
 

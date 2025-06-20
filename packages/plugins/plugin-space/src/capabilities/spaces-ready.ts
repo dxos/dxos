@@ -4,18 +4,17 @@
 
 import { Option } from 'effect';
 
-import { contributes, createIntent, type PluginContext, Capabilities, LayoutAction } from '@dxos/app-framework';
+import { contributes, createIntent, Capabilities, LayoutAction, type PluginContext } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
-import { Type } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { scheduledEffect } from '@dxos/echo-signals/core';
-import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
-import { Filter, FQ_ID_LENGTH, parseFullyQualifiedId, SpaceState } from '@dxos/react-client/echo';
+import { FQ_ID_LENGTH, parseFullyQualifiedId, SpaceState } from '@dxos/react-client/echo';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
 import { SpaceCapabilities } from './capabilities';
@@ -55,7 +54,7 @@ export default async (context: PluginContext) => {
   if (!spacesOrder) {
     // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
     //  Instead, we store order as an array of space ids.
-    defaultSpace.db.add(live({ key: SHARED, order: [] }));
+    defaultSpace.db.add(Obj.make({ key: SHARED, order: [] }));
   }
 
   // Await missing objects.

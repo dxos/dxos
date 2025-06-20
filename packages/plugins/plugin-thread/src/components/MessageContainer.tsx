@@ -7,10 +7,10 @@ import { Check, PencilSimple, X } from '@phosphor-icons/react';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { type Type } from '@dxos/echo';
+import { type Obj, type Type } from '@dxos/echo';
 import { RefArray } from '@dxos/live-object';
 import { PublicKey } from '@dxos/react-client';
-import { type AnyLiveObject, type SpaceMember } from '@dxos/react-client/echo';
+import { type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { Button, ButtonGroup, Tooltip, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
@@ -148,21 +148,20 @@ const TextboxBlock = ({
   return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
 };
 
-const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: AnyLiveObject<any> }>(
-  ({ subject }, forwardedRef) => {
-    let title = subject.name ?? subject.title ?? subject.type ?? 'Object';
-    if (typeof title !== 'string') {
-      title = title?.content ?? '';
-    }
+const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Any }>(({ subject }, forwardedRef) => {
+  // TODO(burdon): Use annotation to get title.
+  let title = (subject as any).name ?? (subject as any).title ?? (subject as any).type ?? 'Object';
+  if (typeof title !== 'string') {
+    title = title?.content ?? '';
+  }
 
-    return (
-      <div
-        role='group'
-        className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
-        ref={forwardedRef}
-      >
-        <Surface role='card' limit={1} data={{ subject }} fallback={title} />
-      </div>
-    );
-  },
-);
+  return (
+    <div
+      role='group'
+      className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
+      ref={forwardedRef}
+    >
+      <Surface role='card' limit={1} data={{ subject }} fallback={title} />
+    </div>
+  );
+});

@@ -24,9 +24,9 @@ export default (context: PluginContext) =>
       intent: ThreadAction.CreateChannel,
       resolve: ({ name }) => ({
         data: {
-          object: live(ChannelType, {
+          object: Obj.make(ChannelType, {
             name,
-            defaultThread: Ref.make(live(ThreadType, { messages: [], status: 'active' })),
+            defaultThread: Ref.make(Obj.make(ThreadType, { messages: [], status: 'active' })),
             threads: [],
           }),
         },
@@ -35,7 +35,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: ThreadAction.CreateChannelThread,
       resolve: ({ channel }) => {
-        const thread = live(ThreadType, { messages: [], status: 'active' });
+        const thread = Obj.make(ThreadType, { messages: [], status: 'active' });
         channel.threads.push(Ref.make(thread));
         return {
           data: {
@@ -182,12 +182,12 @@ export default (context: PluginContext) =>
         invariant(space, 'Space not found');
         const intents = [];
 
-        const message = live(DataType.Message, {
+        const message = Obj.make(DataType.Message, {
           sender,
           created: new Date().toISOString(),
           blocks: [{ type: 'text', text }],
           // TODO(wittjosiah): Context based on attention.
-          // context: context ? makeRef(context) : undefined,
+          // context: context ? Ref.make(context) : undefined,
         });
         thread.messages.push(Ref.make(message));
 

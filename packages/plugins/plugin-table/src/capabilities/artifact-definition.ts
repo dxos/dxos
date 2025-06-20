@@ -194,7 +194,7 @@ export default () => {
 
           // Validate all rows.
           // TODO(ZaymonFC): There should be a nicer way to do this!
-          const validationResults = data.map((row) => Schema.validateEither(schema)(live(schema, row)));
+          const validationResults = data.map((row) => Schema.validateEither(schema)(Obj.make(schema, row)));
           const validationError = validationResults.find((res) => res._tag === 'Left');
           if (validationError) {
             return ToolResult.Error(`Validation failed: ${validationError.left.message}`);

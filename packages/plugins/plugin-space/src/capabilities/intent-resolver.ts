@@ -12,10 +12,9 @@ import {
   LayoutAction,
   type PluginContext,
 } from '@dxos/app-framework';
-import { Obj, Relation, type Type } from '@dxos/echo';
+import { Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { live, makeRef, type Live } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
@@ -75,8 +74,8 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
         }
         await space.waitUntilReady();
-        const collection = live(CollectionType, { objects: [], views: {} });
-        space.properties[CollectionType.typename] = makeRef(collection);
+        const collection = Obj.make(CollectionType, { objects: [], views: {} });
+        space.properties[CollectionType.typename] = Ref.make(collection);
 
         if (Migrations.versionProperty) {
           space.properties[Migrations.versionProperty] = Migrations.targetVersion;
@@ -318,7 +317,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                 props: {
                   target,
                   shouldNavigate: navigable
-                    ? (object: Live<any>) => !(object instanceof CollectionType) || state.navigableCollections
+                    ? (object: Obj.Any) => !(object instanceof CollectionType) || state.navigableCollections
                     : () => false,
                 } satisfies Partial<CreateObjectDialogProps>,
               },
@@ -366,17 +365,17 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         }
 
         if (target instanceof CollectionType) {
-          target.objects.push(makeRef(object as HasId)); // TODO(burdon): HasId?
+          target.objects.push(Ref.make(object as HasId)); // TODO(burdon): HasId?
         } else if (isSpace(target) && hidden) {
           space.db.add(object);
         } else if (isSpace(target)) {
           const collection = space.properties[CollectionType.typename]?.target;
           if (collection instanceof CollectionType) {
-            collection.objects.push(makeRef(object as HasId));
+            collection.objects.push(Ref.make(object as HasId));
           } else {
             // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-            const collection = live(CollectionType, { objects: [makeRef(object as HasId)], views: {} });
-            space.properties[CollectionType.typename] = makeRef(collection);
+            const collection = Obj.make(CollectionType, { objects: [Ref.make(object as HasId)], views: {} });
+            space.properties[CollectionType.typename] = Ref.make(collection);
           }
         }
 
@@ -407,7 +406,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       intent: SpaceAction.AddRelation,
       resolve: ({ space, schema, source, target, fields }) => {
         const relation = space.db.add(
-          live(schema, {
+          Obj.make(schema, {
             [Relation.Source]: source,
             [Relation.Target]: target,
             ...fields,
@@ -504,7 +503,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
             deletionData.indices.forEach((index: number, i: number) => {
               if (index !== -1) {
-                deletionData.parentCollection.objects.splice(index, 0, makeRef(restoredObjects[i] as Type.Expando));
+                deletionData.parentCollection.objects.splice(index, 0, Ref.make(restoredObjects[i] as Type.Expando));
               }
             });
 
@@ -560,7 +559,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: CollectionAction.Create,
       resolve: async ({ name }) => ({
-        data: { object: live(CollectionType, { name, objects: [], views: {} }) },
+        data: { object: Obj.make(CollectionType, { name, objects: [], views: {} }) },
       }),
     }),
   ]);

@@ -6,17 +6,10 @@ import { Effect } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Filter, type Key, Obj, Query } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import {
-  type AnyLiveObject,
-  type SpaceId,
-  fullyQualifiedId,
-  getSpace,
-  getTypename,
-  isEchoObject,
-} from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, getTypename, isEchoObject } from '@dxos/react-client/echo';
 
 import { AssistantDialog, AssistantSettings, ChatContainer, PromptSettings, TemplateContainer } from '../components';
 import { ASSISTANT_PLUGIN, ASSISTANT_DIALOG } from '../meta';
@@ -47,7 +40,7 @@ export default () =>
     createSurface({
       id: `${ASSISTANT_PLUGIN}/object-chat`,
       role: 'article',
-      filter: (data): data is { companionTo: AnyLiveObject<any>; subject: AIChatType | 'assistant-chat' } =>
+      filter: (data): data is { companionTo: Obj.Any; subject: AIChatType | 'assistant-chat' } =>
         isEchoObject(data.companionTo) &&
         (Obj.instanceOf(AIChatType, data.subject) || data.subject === 'assistant-chat'),
       component: ({ data, role }) => {
@@ -56,7 +49,7 @@ export default () =>
           () => ({
             id: fullyQualifiedId(data.companionTo),
             typename: getTypename(data.companionTo) ?? 'unknown',
-            spaceId: (getSpace(data.companionTo)?.id ?? 'unknown') as SpaceId,
+            spaceId: (getSpace(data.companionTo)?.id ?? 'unknown') as Key.SpaceId,
           }),
           [data.companionTo],
         );

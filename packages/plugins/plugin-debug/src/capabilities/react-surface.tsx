@@ -43,21 +43,14 @@ import {
   TracingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
+import { type Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { ScriptAction } from '@dxos/plugin-script/types';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
-import {
-  SpaceState,
-  isSpace,
-  isEchoObject,
-  type AnyLiveObject,
-  type Live,
-  type Space,
-  parseId,
-} from '@dxos/react-client/echo';
+import { SpaceState, isSpace, isEchoObject, type Space, parseId } from '@dxos/react-client/echo';
 
 import {
   DebugApp,
@@ -107,7 +100,7 @@ export default (context: PluginContext) =>
       filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
       component: ({ data }) => {
         const handleCreateObject = useCallback(
-          (objects: Live<any>[]) => {
+          (objects: Obj.Any[]) => {
             if (!isSpace(data.subject.space)) {
               return;
             }
@@ -140,7 +133,7 @@ export default (context: PluginContext) =>
       id: `${DEBUG_PLUGIN}/wireframe`,
       role: ['article', 'section'],
       position: 'hoist',
-      filter: (data): data is { subject: AnyLiveObject<any> } => {
+      filter: (data): data is { subject: Obj.Any } => {
         const settings = context
           .getCapability(Capabilities.SettingsStore)
           .getStore<DebugSettingsProps>(DEBUG_PLUGIN)!.value;
@@ -153,8 +146,7 @@ export default (context: PluginContext) =>
     createSurface({
       id: `${DEBUG_PLUGIN}/object-debug`,
       role: 'article',
-      filter: (data): data is { companionTo: AnyLiveObject<any> } =>
-        data.subject === 'debug' && isEchoObject(data.companionTo),
+      filter: (data): data is { companionTo: Obj.Any } => data.subject === 'debug' && isEchoObject(data.companionTo),
       component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
     }),
     createSurface({

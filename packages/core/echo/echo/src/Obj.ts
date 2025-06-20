@@ -11,11 +11,12 @@ import * as LiveObject from '@dxos/live-object';
 
 import type * as Ref from './Ref';
 
+export type Obj<T = any> = EchoSchema.AnyEchoObject & T;
 export type Any = EchoSchema.AnyEchoObject;
 
 export const make = LiveObject.live;
 
-// TODO(dmaretskyi): Currently broken
+// TODO(dmaretskyi): Currently broken?
 export const isObject = (obj: unknown): obj is Any => {
   return LiveObject.isLiveObject(obj);
 };

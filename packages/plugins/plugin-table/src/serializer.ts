@@ -22,7 +22,7 @@ export const serializer: TypedObjectSerializer<TableType> = {
     // TODO(wittjosiah): Should the rows also be copied?
     // TODO(wittjosiah): This is a hack to get the schema to be deserialized correctly.
     const storedSchema = space.db.add(Obj.make(StoredSchema, parsedSchema));
-    const table = live(TableType, { name: parsed.name, view: parsed.view });
+    const table = Obj.make(TableType, { name: parsed.name, view: parsed.view });
 
     if (!newId) {
       const core = getObjectCore(table);

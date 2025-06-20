@@ -52,7 +52,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
 
   const handleAdd = useCallback(
     async (form: TokenForm) => {
-      const token = live(DataType.AccessToken, form);
+      const token = Obj.make(DataType.AccessToken, form);
       await handleAddAccessToken(token);
       setAdding(false);
     },

@@ -9,10 +9,9 @@ import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
-import { makeRef } from '@dxos/react-client/echo';
 import { Icon, Popover } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
@@ -56,7 +55,7 @@ export default meta;
 const data = (() => {
   const document = Obj.make(DocumentType, {
     name: faker.lorem.words(3),
-    content: makeRef(
+    content: Ref.make(
       Obj.make(DataType.Text, {
         content: faker.lorem.paragraphs(3),
       }),

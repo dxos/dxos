@@ -3,6 +3,7 @@
 //
 
 import { type Client } from '@dxos/client';
+import { Obj, Ref } from '@dxos/echo';
 import {
   FunctionType,
   type ScriptType,
@@ -13,12 +14,12 @@ import {
 import { Bundler } from '@dxos/functions/bundler';
 import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
 import { log } from '@dxos/log';
-import { live, getMeta, makeRef, type Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 
 import { updateFunctionMetadata } from './functions';
 
 export const isScriptDeployed = ({ script, fn }: { script: ScriptType; fn: any }): boolean => {
-  const existingFunctionUrl = fn && getUserFunctionUrlInMetadata(getMeta(fn));
+  const existingFunctionUrl = fn && getUserFunctionUrlInMetadata(Obj.getMeta(fn));
   return Boolean(existingFunctionUrl) && !script.changed;
 };
 
@@ -72,7 +73,7 @@ export const deployScript = async ({
     updateFunctionMetadata(script, storedFunction, meta, functionId);
 
     const functionUrl = makeFunctionUrl({ functionId });
-    setUserFunctionUrlInMetadata(getMeta(storedFunction), functionUrl);
+    setUserFunctionUrlInMetadata(Obj.getMeta(storedFunction), functionUrl);
 
     return { success: true, functionUrl };
   } catch (err: any) {
@@ -117,6 +118,6 @@ const createOrUpdateFunctionInSpace = (
     fn.version = version;
     return fn;
   } else {
-    return space.db.add(live(FunctionType, { name: functionId, version, source: makeRef(script) }));
+    return space.db.add(Obj.make(FunctionType, { name: functionId, version, source: Ref.make(script) }));
   }
 };

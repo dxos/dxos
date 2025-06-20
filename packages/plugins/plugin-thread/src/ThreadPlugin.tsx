@@ -3,11 +3,11 @@
 //
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Ref } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { type AnyLiveObject, RefArray } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { AnchoredTo, DataType } from '@dxos/schema';
 
@@ -69,7 +69,7 @@ export const ThreadPlugin = () =>
           id: ThreadType.typename,
           metadata: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (thread: ThreadType) => await RefArray.loadAll(thread.messages ?? []),
+            loadReferences: async (thread: ThreadType) => await Ref.Array.loadAll(thread.messages ?? []),
           },
         }),
         contributes(Capabilities.Metadata, {
@@ -82,10 +82,10 @@ export const ThreadPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: THREAD_ITEM,
           metadata: {
-            parse: (item: AnyLiveObject<any>, type: string) => {
+            parse: (item: ThreadType, type: string) => {
               switch (type) {
                 case 'node':
-                  return { id: item.id, label: item.title, data: item };
+                  return { id: item.id, label: item.name, data: item };
                 case 'object':
                   return item;
                 case 'view-object':

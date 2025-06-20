@@ -8,7 +8,6 @@ import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, JsonSchema, Key, Obj, Ref } from '@dxos/echo';
 import { FunctionTrigger, TriggerKind, EmailTriggerOutput, type TriggerType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { makeRef } from '@dxos/live-object';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import {
   type ComputeShape,
@@ -514,7 +513,7 @@ const addToSpace = (name: string, space: Space, canvas: CanvasGraphModel, comput
   return space.db.add(
     Obj.make(CanvasBoardType, {
       name,
-      computeGraph: makeRef(compute.root),
+      computeGraph: Ref.make(compute.root),
       layout: canvas.graph,
     }),
   );

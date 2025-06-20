@@ -6,9 +6,8 @@ import { Effect } from 'effect';
 
 import { AIServiceEdgeClient } from '@dxos/ai';
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
-import { Ref, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { live } from '@dxos/live-object';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadAction } from '@dxos/plugin-thread/types';
@@ -33,13 +32,13 @@ export default (context: PluginContext) =>
             createIntent(TranscriptionAction.Create, { spaceId: space.id }),
           );
           const { object: thread } = yield* dispatch(createIntent(ThreadAction.CreateChannelThread, { channel }));
-          const meeting = live(MeetingType, {
+          const meeting = Obj.make(MeetingType, {
             name,
             created: new Date().toISOString(),
             participants: [],
             transcript: Ref.make(transcript),
-            notes: Ref.make(live(DataType.Text, { content: '' })),
-            summary: Ref.make(live(DataType.Text, { content: '' })),
+            notes: Ref.make(Obj.make(DataType.Text, { content: '' })),
+            summary: Ref.make(Obj.make(DataType.Text, { content: '' })),
             thread: Ref.make(thread),
           });
 

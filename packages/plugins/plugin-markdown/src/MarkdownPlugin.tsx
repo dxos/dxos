@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { Obj, Ref } from '@dxos/echo';
+import { type Obj, Ref } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -53,9 +53,7 @@ export const MarkdownPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: DocumentType.typename,
           metadata: {
-            // TODO(burdon): !!!
-            label: (object: Obj.Any) =>
-              Obj.instanceOf(DocumentType, object) ? object.name || object.fallbackName : undefined,
+            label: (object: DocumentType) => object.name || object.fallbackName,
             icon: 'ph--text-aa--regular',
             graphProps: {
               managesAutofocus: true,
