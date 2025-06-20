@@ -20,10 +20,9 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Key, Obj, Type } from '@dxos/echo';
+import { Key, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { live, makeRef, refFromDXN } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -96,7 +95,7 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
     void dispatch(
       createIntent(CollaborationActions.InsertContent, {
         target: doc as any as Type.Expando,
-        object: refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
+        object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
         at: cursor,
         label: 'Proposal',
       }),
@@ -130,8 +129,8 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
 
         // Create links.
         content: document.replaceAll(/\[(\w+)\]/g, (_, label) => {
-          const obj = space.db.add(live(TestItem, { title: label, description: faker.lorem.paragraph() }));
-          const dxn = makeRef(obj).dxn.toString();
+          const obj = space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));
+          const dxn = Ref.make(obj).dxn.toString();
           return `[${label}][${dxn}]`;
         }),
       }),

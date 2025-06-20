@@ -5,11 +5,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { JsonSchema, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Type } from '@dxos/echo';
 import { EchoSchema, type TypedObject } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
-import { Filter, useQuery, getSpace, live } from '@dxos/react-client/echo';
+import { useQuery, getSpace } from '@dxos/react-client/echo';
 import { type KanbanType, useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
 import { StackItem } from '@dxos/react-ui-stack';
 import { ViewProjection } from '@dxos/schema';
@@ -75,7 +75,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
     (columnValue: string | undefined) => {
       const path = model?.columnFieldPath;
       if (space && cardSchema && path) {
-        const card = live(cardSchema, { [path]: columnValue });
+        const card = Obj.make(cardSchema, { [path]: columnValue });
         space.db.add(card);
         return card.id;
       }

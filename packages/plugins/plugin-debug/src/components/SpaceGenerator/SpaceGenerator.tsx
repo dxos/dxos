@@ -6,8 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
-import { Filter, JsonSchema } from '@dxos/echo';
-import { live, type Live } from '@dxos/live-object';
+import { Filter, JsonSchema, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { SheetType } from '@dxos/plugin-sheet/types';
@@ -27,7 +26,7 @@ import { presets } from './presets';
 
 export type SpaceGeneratorProps = {
   space: Space;
-  onCreateObjects?: (objects: Live<any>[]) => void;
+  onCreateObjects?: (objects: Obj.Any[]) => void;
 };
 
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
@@ -111,7 +110,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
           schemas.map(async (schema) => {
             const parts = schema.typename.split('/');
             const name = parts[parts.length - 1];
-            const table = live(TableType, { name, threads: [] });
+            const table = Obj.make(TableType, { name, threads: [] });
             await initializeTable({ client, space, table, typename: schema.typename });
             await dispatch(createIntent(SpaceAction.AddObject, { target: space, object: table }));
             return table;
@@ -125,7 +124,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
               log.warn('Missing schema for object', { id, typename });
               return;
             }
-            const object = live(schema, fields);
+            const object = Obj.make(schema, fields);
             space.db.add(object);
             return object;
           }),

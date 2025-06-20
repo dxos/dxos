@@ -7,20 +7,16 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
-import { createObject } from '@dxos/echo-db';
-import { live, makeRef } from '@dxos/live-object';
+import { Obj, Ref } from '@dxos/echo';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SketchContainer } from './SketchContainer';
 
 const createSketch = () => {
-  // TODO(burdon): Remove dependency on echo-db.
-  return createObject(
-    live(DiagramType, {
-      canvas: makeRef(live(CanvasType, { content: {} })),
-    }),
-  );
+  return Obj.make(DiagramType, {
+    canvas: Ref.make(Obj.make(CanvasType, { content: {} })),
+  });
 };
 
 const DefaultStory = () => {

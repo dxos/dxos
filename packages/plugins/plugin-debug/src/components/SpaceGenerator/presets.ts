@@ -5,10 +5,10 @@
 import { Schema, SchemaAST } from 'effect';
 
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, JsonSchema, Key, Ref } from '@dxos/echo';
+import { DXN, JsonSchema, Key, Obj, Ref } from '@dxos/echo';
 import { FunctionTrigger, TriggerKind, EmailTriggerOutput, type TriggerType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { live, makeRef } from '@dxos/live-object';
+import { makeRef } from '@dxos/live-object';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import {
   type ComputeShape,
@@ -512,7 +512,7 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
 
 const addToSpace = (name: string, space: Space, canvas: CanvasGraphModel, compute: ComputeGraphModel) => {
   return space.db.add(
-    live(CanvasBoardType, {
+    Obj.make(CanvasBoardType, {
       name,
       computeGraph: makeRef(compute.root),
       layout: canvas.graph,

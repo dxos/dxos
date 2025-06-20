@@ -9,13 +9,13 @@ import React, { useCallback, useRef } from 'react';
 
 import { createIntent, IntentPlugin, LayoutAction, SettingsPlugin, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Key, Ref } from '@dxos/echo';
+import { Filter, Key, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { Filter, live, useQuery, useSpace } from '@dxos/react-client/echo';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { List, ListItem } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
@@ -137,7 +137,7 @@ const meta: Meta = {
             const queueDxn = Key.createQueueDXN(space.id);
             const queue = space.queues.get<DataType.Message>(queueDxn);
             queue.append(emails);
-            const mailbox = live(MailboxType, { queue: Ref.fromDXN(queueDxn) });
+            const mailbox = Obj.make(MailboxType, { queue: Ref.fromDXN(queueDxn) });
             space.db.add(mailbox);
           },
         }),

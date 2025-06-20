@@ -4,7 +4,6 @@
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { Key, Obj, Ref } from '@dxos/echo';
-import { live } from '@dxos/live-object';
 
 import { AssistantAction, AIChatType, TemplateType } from '../types';
 
@@ -29,7 +28,7 @@ export default () => [
       intent: AssistantAction.CreateTemplate,
       resolve: ({ name }) => ({
         data: {
-          object: live(TemplateType, { name, kind: { include: 'manual' }, source: '{{! Template }}' }),
+          object: Obj.make(TemplateType, { name, kind: { include: 'manual' }, source: '{{! Template }}' }),
         },
       }),
     }),
