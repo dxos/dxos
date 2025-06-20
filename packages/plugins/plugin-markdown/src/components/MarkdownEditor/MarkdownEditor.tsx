@@ -8,7 +8,7 @@ import { useDropzone } from 'react-dropzone';
 
 import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   addLink,
   createBasicExtensions,
@@ -73,6 +73,7 @@ export const MarkdownEditor = ({
   onLinkQuery,
   ...props
 }: MarkdownEditorProps) => {
+  const { t } = useTranslation();
   const viewRef = useRef<EditorView>();
   const getGroups = useCallback(
     (trigger: string, query?: string) => {
@@ -82,7 +83,7 @@ export const MarkdownEditor = ({
         case '/':
         default:
           return filterItems([coreSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
-            query ? item.label.toLowerCase().includes(query.toLowerCase()) : true,
+            query ? toLocalizedString(item.label, t).toLowerCase().includes(query.toLowerCase()) : true,
           );
       }
     },

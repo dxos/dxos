@@ -5,18 +5,18 @@
 import { type EditorView } from '@codemirror/view';
 import React, { useCallback, useEffect, useRef } from 'react';
 
-import { Icon, Popover, useThemeContext } from '@dxos/react-ui';
+import { Icon, type Label, Popover, toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
 export type CommandMenuGroup = {
   id: string;
-  label?: string;
+  label?: Label;
   items: CommandMenuItem[];
 };
 
 export type CommandMenuItem = {
   id: string;
-  label: string;
+  label: Label;
   icon?: string;
   onSelect?: (view: EditorView, head: number) => MaybePromise<void>;
 };
@@ -65,11 +65,12 @@ const CommandGroup = ({
   onSelect: (item: CommandMenuItem) => void;
 }) => {
   const { tx } = useThemeContext();
+  const { t } = useTranslation();
   return (
     <>
       {group.label && (
         <div className={tx('menu.groupLabel', 'menu__group__label', {})}>
-          <span>{group.label}</span>
+          <span>{toLocalizedString(group.label, t)}</span>
         </div>
       )}
       {group.items.map((item) => (
@@ -90,6 +91,7 @@ const CommandItem = ({
 }) => {
   const ref = useRef<HTMLLIElement>(null);
   const { tx } = useThemeContext();
+  const { t } = useTranslation();
   const handleSelect = useCallback(() => onSelect(item), [item, onSelect]);
 
   useEffect(() => {
@@ -105,7 +107,7 @@ const CommandItem = ({
       onClick={handleSelect}
     >
       {item.icon && <Icon icon={item.icon} size={5} />}
-      <span className='grow truncate'>{item.label}</span>
+      <span className='grow truncate'>{toLocalizedString(item.label, t)}</span>
     </li>
   );
 };

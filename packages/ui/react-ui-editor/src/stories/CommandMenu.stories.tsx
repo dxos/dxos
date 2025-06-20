@@ -73,7 +73,9 @@ export const Slash: StoryObj<Args> = {
   args: {
     trigger: '/',
     getGroups: (query) =>
-      filterItems(groups, (item) => (query ? item.label.toLowerCase().includes(query.toLowerCase()) : true)),
+      filterItems(groups, (item) =>
+        query ? (item.label as string).toLowerCase().includes(query.toLowerCase()) : true,
+      ),
     text: str('# Slash', '', names.join(' '), ''),
   },
 };
@@ -84,7 +86,9 @@ export const Link: StoryObj<Args> = {
     const getGroups = useCallback(
       async (trigger: string, query?: string): Promise<CommandMenuGroup[]> => {
         if (trigger === '/') {
-          return filterItems(groups, (item) => (query ? item.label.toLowerCase().includes(query.toLowerCase()) : true));
+          return filterItems(groups, (item) =>
+            query ? (item.label as string).toLowerCase().includes(query.toLowerCase()) : true,
+          );
         }
 
         if (!space) {
