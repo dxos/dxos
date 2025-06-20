@@ -74,7 +74,7 @@ const DefaultStory = (props: StoryProps) => {
 
   // Expose objects on window for test access.
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && schema && view && projection) {
       (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] = { schema, view, projection } satisfies ViewEditorDebugObjects;
     }
   }, [schema, view, projection]);

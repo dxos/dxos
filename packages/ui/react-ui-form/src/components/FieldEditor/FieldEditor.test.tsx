@@ -48,7 +48,7 @@ describe('FieldEditor', () => {
     // Access the live objects directly from window using symbol.
     const debugObjects = getFieldEditorDebugObjects();
 
-    const name = debugObjects.projection._schema.properties.name;
+    const name = debugObjects.projection.schema.properties!.name;
     expect(name.type).toBe('number');
     expect(name.format).toBe('number');
     expect(name.description).toBe('Full name.');

@@ -66,20 +66,21 @@ describe('ViewEditor', () => {
     const debugObjects = getViewEditorDebugObjects();
 
     // Check schema contains new_property
-    const schemaProperties = debugObjects.schema._storedSchema.jsonSchema.properties;
-    expect(schemaProperties.new_property).toBeDefined();
-    expect(schemaProperties.name).toBeUndefined();
+    const schemaProperties = debugObjects.schema.jsonSchema.properties;
+    expect(schemaProperties).toBeDefined();
+    expect(schemaProperties!.new_property).toBeDefined();
+    expect(schemaProperties!.name).toBeUndefined();
 
     // Check view contains new_property field
     const newPropertyField = debugObjects.view.fields.find((field: any) => field.path === 'new_property');
     expect(newPropertyField).toBeDefined();
-    expect(newPropertyField.path).toBe('new_property');
+    expect(newPropertyField!.path).toBe('new_property');
 
     // Check projection contains new_property
     const fieldProjections = debugObjects.projection.getFieldProjections();
     const newPropertyProjection = fieldProjections.find((proj: any) => proj.field.path === 'new_property');
     expect(newPropertyProjection).toBeDefined();
-    expect(newPropertyProjection.props.property).toBe('new_property');
+    expect(newPropertyProjection!.props.property).toBe('new_property');
   });
 
   test('add new property', async () => {
@@ -113,19 +114,20 @@ describe('ViewEditor', () => {
     const debugObjects = getViewEditorDebugObjects();
 
     // Check schema contains added_property
-    const schemaProperties = debugObjects.schema._storedSchema.jsonSchema.properties;
-    expect(schemaProperties.added_property).toBeDefined();
+    const schemaProperties = debugObjects.schema.jsonSchema.properties;
+    expect(schemaProperties).toBeDefined();
+    expect(schemaProperties!.added_property).toBeDefined();
 
     // Check view contains added_property field
     const addedPropertyField = debugObjects.view.fields.find((field: any) => field.path === 'added_property');
     expect(addedPropertyField).toBeDefined();
-    expect(addedPropertyField.path).toBe('added_property');
+    expect(addedPropertyField!.path).toBe('added_property');
 
     // Check projection contains added_property
     const fieldProjections = debugObjects.projection.getFieldProjections();
     const addedPropertyProjection = fieldProjections.find((proj: any) => proj.field.path === 'added_property');
     expect(addedPropertyProjection).toBeDefined();
-    expect(addedPropertyProjection.props.property).toBe('added_property');
+    expect(addedPropertyProjection!.props.property).toBe('added_property');
   });
 
   test('delete property', async () => {
@@ -153,8 +155,9 @@ describe('ViewEditor', () => {
     const debugObjects = getViewEditorDebugObjects();
 
     // Check schema no longer contains the name property
-    const schemaProperties = debugObjects.schema._storedSchema.jsonSchema.properties;
-    expect(schemaProperties.name).toBeUndefined();
+    const schemaProperties = debugObjects.schema.jsonSchema.properties;
+    expect(schemaProperties).toBeDefined();
+    expect(schemaProperties!.name).toBeUndefined();
 
     // Check view no longer contains the name field
     const nameField = debugObjects.view.fields.find((field: any) => field.path === 'name');
@@ -184,14 +187,14 @@ describe('ViewEditor', () => {
 
     // Check that hiddenFields is non-empty
     expect(debugObjects.view.hiddenFields).toBeDefined();
-    expect(debugObjects.view.hiddenFields.length).toBeGreaterThan(0);
+    expect(debugObjects.view.hiddenFields!.length).toBeGreaterThan(0);
 
     // Click the show button
     fireEvent.click(screen.getByTestId('show-field-button'));
 
     // Wait for the data to update and check that hiddenFields is empty
     await waitFor(() => {
-      expect(debugObjects.view.hiddenFields.length).toBe(0);
+      expect(debugObjects.view.hiddenFields!.length).toBe(0);
     });
 
     // Also verify that the field is back in the visible fields list
