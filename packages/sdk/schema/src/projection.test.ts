@@ -865,6 +865,7 @@ describe('ViewProjection', () => {
     const testCases = [
       { format: FormatEnum.Integer, expectedType: TypeEnum.Number, fieldName: 'count' },
       { format: FormatEnum.DXN, expectedType: TypeEnum.String, fieldName: 'identifier' },
+      { format: FormatEnum.Hostname, expectedType: TypeEnum.String, fieldName: 'host' },
     ];
 
     for (const { format, expectedType, fieldName } of testCases) {

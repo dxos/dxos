@@ -102,7 +102,7 @@ export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon
   [FormatEnum.DXN]: extend(FormatEnum.DXN, TypeEnum.String),
   [FormatEnum.Email]: extend(FormatEnum.Email, TypeEnum.String),
   [FormatEnum.Formula]: extend(FormatEnum.Formula, TypeEnum.String),
-  [FormatEnum.Hostname]: extend(FormatEnum.Markdown, TypeEnum.String),
+  [FormatEnum.Hostname]: extend(FormatEnum.Hostname, TypeEnum.String),
   [FormatEnum.JSON]: extend(FormatEnum.JSON, TypeEnum.String),
   [FormatEnum.Markdown]: extend(FormatEnum.Markdown, TypeEnum.String),
   [FormatEnum.Regex]: extend(FormatEnum.Regex, TypeEnum.String),
@@ -144,7 +144,7 @@ export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon
   [FormatEnum.Percent]: extend(FormatEnum.Percent, TypeEnum.Number, {
     multipleOf: Schema.optional(DecimalPrecision),
   }),
-  [FormatEnum.Timestamp]: extend(FormatEnum.UUID, TypeEnum.Number),
+  [FormatEnum.Timestamp]: extend(FormatEnum.Timestamp, TypeEnum.Number),
 
   //
   // Dates
