@@ -21,6 +21,30 @@ const generator: ValueGenerator = faker as any;
 
 export type ObjectGenerator<T extends Obj.Any> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
 
+export const createGenerator = <T extends Obj.Any>(type: TypedObject<T>): ObjectGenerator<T> => {
+  return async (space: Space, n: number, cb?: (objects: T[]) => void): Promise<T[]> => {
+    // Find or create mutable schema.
+    const schema =
+      (await space.db.schemaRegistry.query({ typename: type.typename }).firstOrUndefined()) ??
+      (await space.db.schemaRegistry.register([type]))[0];
+
+    // Create objects.
+    const generate = createAsyncGenerator(generator, schema.snapshot, { db: space.db });
+    const objects = await generate.createObjects(n);
+
+    // Find or create table and view.
+    const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
+    const table = tables.find((table) => table.view?.target?.query?.typename === type.typename);
+    if (!table) {
+      const name = type.typename.split('/').pop() ?? type.typename;
+      const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
+      space.db.add(Obj.make(TableType, { name, view: Ref.make(view) }));
+    }
+
+    return objects;
+  };
+};
+
 export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   [
     DocumentType.typename,
@@ -123,28 +147,3 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     },
   ],
 ]);
-
-export const createGenerator = <T extends Obj.Any>(type: TypedObject<T>): ObjectGenerator<T> => {
-  return async (space: Space, n: number, cb?: (objects: T[]) => void): Promise<T[]> => {
-    // Find or create mutable schema.
-    const schema =
-      (await space.db.schemaRegistry.query({ typename: type.typename }).firstOrUndefined()) ??
-      (await space.db.schemaRegistry.register([type]))[0];
-
-    // Create objects.
-    const generate = createAsyncGenerator(generator, schema.snapshot, { db: space.db });
-    const objects = await generate.createObjects(n);
-
-    // Find or create table and view.
-    const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-    const table = tables.find((table) => table.view?.target?.query?.typename === type.typename);
-    if (!table) {
-      const name = type.typename.split('/').pop() ?? type.typename;
-      const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
-      const table = space.db.add(Obj.make(TableType, { name, view: Ref.make(view) }));
-      cb?.([table]);
-    }
-
-    return objects;
-  };
-};
