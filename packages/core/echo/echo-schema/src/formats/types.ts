@@ -7,16 +7,18 @@ import { Option, SchemaAST, type JSONSchema, pipe } from 'effect';
 import { createAnnotationHelper } from '../ast';
 import { type JsonSchemaType } from '../json-schema';
 
-// TODO(burdon): Change to disciminated union
+// TODO(burdon): Rename ValueType and change to disciminated union.
+// export type ValueType = 'array' | 'object' | 'string' | 'number' | 'boolean' | 'ref';
 export enum TypeEnum {
-  Object = 'object',
   Array = 'array',
+  Object = 'object',
   String = 'string',
   Number = 'number',
   Boolean = 'boolean',
   Ref = 'ref',
 }
 
+// TODO(burdon): Rename JsonType.
 export type ScalarType =
   | JSONSchema.JsonSchema7Object
   | JSONSchema.JsonSchema7String
@@ -53,7 +55,7 @@ export const FormatAnnotation = createAnnotationHelper<FormatEnum>(FormatAnnotat
 export const getFormatAnnotation = (node: SchemaAST.AST): FormatEnum | undefined =>
   pipe(SchemaAST.getAnnotation<FormatEnum>(FormatAnnotationId)(node), Option.getOrUndefined);
 
-// TODO(burdon): Rename to Format and change enum to string literals (remove need to import).
+// TODO(burdon): Rename to FormatType and change to discriminated union.
 export enum FormatEnum {
   None = 'none',
   String = 'string',

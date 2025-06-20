@@ -29,6 +29,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import {
+  MAX_COLS,
+  MAX_ROWS,
   ReadonlyException,
   addressFromIndex,
   addressToIndex,
@@ -36,8 +38,6 @@ import {
   insertIndices,
   mapFormulaIndicesToRefs,
   mapFormulaRefsToIndices,
-  MAX_ROWS,
-  MAX_COLS,
 } from '../types';
 import { type SheetAction, type CellValue, type SheetType } from '../types';
 
