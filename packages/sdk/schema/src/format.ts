@@ -195,6 +195,7 @@ export const PropertySchema = Schema.Union(
   //
 
   formatToSchema[FormatEnum.Currency],
+  formatToSchema[FormatEnum.Integer],
   formatToSchema[FormatEnum.Percent],
   formatToSchema[FormatEnum.Timestamp],
 

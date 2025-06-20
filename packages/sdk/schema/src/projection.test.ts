@@ -860,4 +860,47 @@ describe('ViewProjection', () => {
 
     console.log(field);
   });
+
+  test('changing format to integer', async ({ expect }) => {
+    // Arrange.
+    const { db } = await builder.createDatabase();
+    const registry = new EchoSchemaRegistry(db);
+
+    const schema = Schema.Struct({
+      count: Schema.Number,
+    }).annotations({
+      [TypeAnnotationId]: {
+        kind: EntityKind.Object,
+        typename: 'example.com/type/Counter',
+        version: '0.1.0',
+      },
+    });
+
+    const [mutable] = await registry.register([schema]);
+    const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    const projection = new ViewProjection(mutable.jsonSchema, view);
+    const fieldId = projection.getFieldId('count');
+    invariant(fieldId);
+
+    // Act.
+    projection.setFieldProjection({
+      field: { id: fieldId, path: 'count' as JsonPath },
+      props: {
+        property: 'count' as JsonProp,
+        type: TypeEnum.Number,
+        format: FormatEnum.Integer,
+      },
+    });
+
+    // Assert.
+    const { props } = projection.getFieldProjection(fieldId);
+    expect(props.format).to.equal(FormatEnum.Integer);
+    expect(props.type).to.equal(TypeEnum.Number);
+
+    // Verify the underlying JSON schema was updated correctly.
+    expect(mutable.jsonSchema.properties?.count).to.deep.include({
+      type: 'number',
+      format: 'integer',
+    });
+  });
 });
