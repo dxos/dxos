@@ -44,7 +44,7 @@ import { testPlugins } from './testing';
 import { AmbientDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { QueryParser, createFilter, type Expression } from '../parser';
-import { RESEARCH_BLUEPRINT, createRegistry } from '../testing';
+import { createRegistry, RESEARCH_BLUEPRINT } from '../testing';
 import translations from '../translations';
 
 faker.seed(1);
@@ -178,8 +178,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       return undefined;
     }
 
-    const registry = createRegistry(space, researchGraph?.queue.dxn);
-    return BlueprintParser.create(registry).parse(RESEARCH_BLUEPRINT);
+    return BlueprintParser.create().parse(RESEARCH_BLUEPRINT);
   }, [space, researchGraph?.queue.dxn]);
 
   const logger = useMemo(() => new Logger(), []);
@@ -206,8 +205,12 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       },
     });
     const objects = await Promise.all(selected.map((id) => resolver.resolve(DXN.fromLocalObjectId(id))));
-    const machine = new BlueprintMachine(researchBlueprint);
-    const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));
+    const machine = new BlueprintMachine(researchBlueprint, createRegistry(space, researchGraph?.queue.dxn));
+    const cleanup = combine(
+      //
+      setConsolePrinter(machine, true),
+      setLogger(machine, logger),
+    );
 
     log.info('starting research...', { selected });
     await machine.runToCompletion({ aiService: aiClient, input: objects });

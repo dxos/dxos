@@ -7,13 +7,14 @@ import { Match, Schema } from 'effect';
 import {
   createTool,
   type AIServiceClient,
-  type ExecutableTool,
   Message,
   type MessageContentBlock,
   ToolResult,
   type ToolUseContentBlock,
+  type ToolRegistry,
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
+import { raise } from '@dxos/debug';
 import { create } from '@dxos/echo-schema';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -61,7 +62,10 @@ export class BlueprintMachine {
 
   state: BlueprintMachineState = structuredClone(INITIAL_STATE);
 
-  constructor(readonly blueprint: Blueprint) {}
+  constructor(
+    readonly blueprint: Blueprint,
+    readonly registry?: ToolRegistry,
+  ) {}
 
   async runToCompletion(options: ExecutionOptions): Promise<void> {
     log.info('runToCompletion', options);
@@ -70,13 +74,9 @@ export class BlueprintMachine {
     let firstStep = true;
     while (this.state.state !== 'done') {
       const input = firstStep ? options.input : undefined;
-
       firstStep = false;
-      this.state = await this._execStep(this.state, {
-        input,
-        aiService: options.aiService,
-      });
 
+      this.state = await this._execStep(this.state, { input, aiService: options.aiService });
       this.stepComplete.emit(this.blueprint.steps.find((step) => step.id === this.state.trace.at(-1)?.stepId)!);
 
       if (this.state.state === 'bail') {
@@ -144,7 +144,11 @@ export class BlueprintMachine {
         The Rule-Following Agent precisely follows the instructions.
       `,
       history: [...state.history, ...inputMessages],
-      tools: [...nextStep.tools, report] as ExecutableTool[], // TODO(burdon): REMOVE CAST!
+      tools: [
+        // TODO(burdon): Should detect missing tools before running.
+        ...nextStep.tools.map((tool) => this.registry?.get(tool) ?? raise(new Error(`Tool not found: ${tool}`))),
+        report,
+      ],
       artifacts: [],
       client: options.aiService,
       prompt: nextStep.instructions,
