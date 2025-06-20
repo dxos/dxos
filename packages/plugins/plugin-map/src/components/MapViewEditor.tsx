@@ -5,7 +5,8 @@
 import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { FormatEnum, toJsonSchema, type EchoSchema } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { FormatEnum, type EchoSchema } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
@@ -51,7 +52,7 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
     }));
   }, [allSchemata]);
 
-  const jsonSchema = useMemo(() => (currentSchema ? toJsonSchema(currentSchema) : {}), [currentSchema]);
+  const jsonSchema = useMemo(() => (currentSchema ? Type.toJsonSchema(currentSchema) : {}), [currentSchema]);
   const locationFields = useMemo(() => {
     if (!jsonSchema?.properties) {
       return [];

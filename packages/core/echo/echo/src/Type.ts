@@ -117,16 +117,15 @@ export { EntityKind as Kind } from '@dxos/echo-schema';
 /**
  * @returns True if the schema is mutable.
  */
-export const isMutable = (schema: Obj.Any | Relation.Any): boolean => {
-  return EchoSchema.isMutable(schema);
-};
+export const isMutable = EchoSchema.isMutable;
 
 export { SpaceId, ObjectId, DXN } from '@dxos/keys';
 
 export {
   //
   Expando,
-  JsonSchemaType as JsonSchema,
-  toJsonSchema,
   Format,
+  JsonSchemaType as JsonSchema,
+  toEffectSchema,
+  toJsonSchema,
 } from '@dxos/echo-schema';

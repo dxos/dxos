@@ -13,8 +13,9 @@ import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Key, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { MemoryQueue } from '@dxos/echo-db';
+import { createQueueDXN } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -81,7 +82,7 @@ const AudioFile = ({
 
   // Transcriber.
   // TODO(dmaretskyi): Use space.queues.create() instead.
-  const queueDxn = useMemo(() => Key.createQueueDXN(), []);
+  const queueDxn = useMemo(() => createQueueDXN(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
 
   const model = useQueueModelAdapter(renderMarkdown([]), queue);

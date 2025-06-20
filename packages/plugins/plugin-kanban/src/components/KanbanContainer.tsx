@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { Filter, JsonSchema, Obj, Type } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { EchoSchema, type TypedObject } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
@@ -25,11 +25,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
 
   const jsonSchema = useMemo(
     () =>
-      cardSchema instanceof EchoSchema
-        ? cardSchema.jsonSchema
-        : cardSchema
-          ? JsonSchema.toJsonSchema(cardSchema)
-          : undefined,
+      cardSchema instanceof EchoSchema ? cardSchema.jsonSchema : cardSchema ? Type.toJsonSchema(cardSchema) : undefined,
     [cardSchema],
   );
 

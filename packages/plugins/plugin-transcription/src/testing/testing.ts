@@ -12,6 +12,7 @@ import { scheduleTaskInterval } from '@dxos/async';
 import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { Key, Obj, Ref, Type } from '@dxos/echo';
+import { createQueueDXN } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -154,7 +155,7 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
   interval = 1_000,
 ) => {
   // TODO(dmaretskyi): Use space.queues.create() instead.
-  const queueDxn = useMemo(() => (space ? Key.createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
+  const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
   const queue = useQueue<DataType.Message>(queueDxn);
   const builder = useMemo(() => new MessageBuilder(space), [space]);
 
@@ -185,7 +186,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
   interval = 1_000,
 ) => {
   // TODO(dmaretskyi): Use space.queues.create() instead.
-  const queueDxn = useMemo(() => (space ? Key.createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
+  const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
   const queue = useQueue<DataType.Message>(queueDxn);
   const [builder] = useState(() => new EntityExtractionMessageBuilder());
 

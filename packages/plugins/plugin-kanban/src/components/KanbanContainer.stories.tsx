@@ -9,7 +9,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Type } from '@dxos/echo';
-import { assertEchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -100,8 +99,10 @@ const StorybookKanban = () => {
   const handleTypenameChanged = useCallback(
     (typename: string) => {
       invariant(schema);
+      invariant(Type.isMutable(schema));
       invariant(kanban?.cardView?.target);
-      assertEchoSchema(schema).updateTypename(typename);
+
+      schema.updateTypename(typename);
       kanban.cardView.target.query.typename = typename;
     },
     [kanban?.cardView?.target, schema],

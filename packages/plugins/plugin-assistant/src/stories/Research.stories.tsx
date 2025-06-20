@@ -16,7 +16,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { findRelatedSchema, researchFn, type RelatedSchema } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
-import { Filter, JsonSchema, Obj, Relation, Type } from '@dxos/echo';
+import { Type, Filter, Obj, Relation } from '@dxos/echo';
 import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -209,7 +209,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
       <schema>
         <description>${SchemaAST.getDescriptionAnnotation(relatedSchema.schema.ast).pipe(Option.getOrElse(() => ''))}</description>
         <json>
-          ${JSON.stringify(JsonSchema.toJsonSchema(relatedSchema.schema), null, 2)}
+          ${JSON.stringify(Type.toJsonSchema(relatedSchema.schema), null, 2)}
         </json>
       </schema>
     `;

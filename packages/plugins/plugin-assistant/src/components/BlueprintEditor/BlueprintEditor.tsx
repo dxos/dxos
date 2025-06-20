@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { BlueprintDefinition } from '@dxos/assistant';
-import { JsonSchema } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
   createBasicExtensions,
@@ -28,7 +28,7 @@ export const BlueprintEditor = ({ classNames, blueprint }: BlueprintEditorProps)
     extensions: [
       createBasicExtensions({ lineWrapping: false }),
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-      createJsonExtensions({ schema: JsonSchema.toJsonSchema(BlueprintDefinition, { strict: true }) }),
+      createJsonExtensions({ schema: Type.toJsonSchema(BlueprintDefinition, { strict: true }) }),
       editorMonospace,
     ],
   });

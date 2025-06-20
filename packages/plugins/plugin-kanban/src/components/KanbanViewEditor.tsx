@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
-import { assertEchoSchema, FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -32,12 +32,14 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   const handleUpdateTypename = useCallback(
     (newTypename: string) => {
       invariant(schema);
+      invariant(Type.isMutable(schema));
+
       const matchingViews = views.filter((view) => view.query.typename === currentTypename);
       for (const view of matchingViews) {
         view.query.typename = newTypename;
       }
 
-      assertEchoSchema(schema).updateTypename(newTypename);
+      schema.updateTypename(newTypename);
     },
     [views, schema],
   );

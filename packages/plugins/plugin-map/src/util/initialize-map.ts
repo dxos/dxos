@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Obj, Ref } from '@dxos/echo';
-import { type Format, FormatEnum } from '@dxos/echo-schema';
+import { Obj, Ref, type Type } from '@dxos/echo';
+import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
 import { createView } from '@dxos/schema';
@@ -14,7 +14,7 @@ import { setLocationProperty } from '../util';
 type InitializeMapProps = {
   space: Space;
   name?: string;
-  coordinates?: Format.GeoPoint;
+  coordinates?: Type.Format.GeoPoint;
   initialSchema?: string;
   locationProperty?: string;
 };

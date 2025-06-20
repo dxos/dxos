@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { JsonSchema, Ref } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo-schema';
 import { type FunctionType } from '@dxos/functions';
 import { useOnTransition } from '@dxos/react-ui';
@@ -32,7 +32,7 @@ export const FunctionInputEditor = ({
   }, [selectedFunctionValue]);
 
   const selectedFunction = useMemo(
-    () => functions.find((f) => f.id === selectedFunctionId),
+    () => functions.find((fn) => fn.id === selectedFunctionId),
     [functions, selectedFunctionId],
   );
 
@@ -45,7 +45,7 @@ export const FunctionInputEditor = ({
   );
 
   const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
-  const effectSchema = useMemo(() => (inputSchema ? JsonSchema.toEffectSchema(inputSchema) : undefined), [inputSchema]);
+  const effectSchema = useMemo(() => (inputSchema ? Type.toEffectSchema(inputSchema) : undefined), [inputSchema]);
   const propertyCount = inputSchema?.properties ? Object.keys(inputSchema.properties).length : 0;
 
   const values = useMemo(() => getValue() ?? {}, [getValue]);

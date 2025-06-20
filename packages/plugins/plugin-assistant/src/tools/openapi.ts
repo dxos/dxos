@@ -7,7 +7,7 @@ import jsonpointer from 'jsonpointer';
 import { type OpenAPIV2, type OpenAPIV3_1 } from 'openapi-types';
 
 import { type ExecutableTool, ToolResult, createRawTool } from '@dxos/ai';
-import { JsonSchema } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { normalizeSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -53,7 +53,7 @@ export const createToolsFromApi = async (
           return resolved;
         }) ?? [];
 
-      const inputSchema: JsonSchema.Type = {
+      const inputSchema: Type.JsonSchema = {
         type: 'object',
         properties: {},
       };
@@ -86,7 +86,7 @@ export const createToolsFromApi = async (
       }
 
       log('inputSchema', { inputSchema });
-      Schema.validateSync(JsonSchema.Type)(inputSchema);
+      Schema.validateSync(Type.JsonSchema)(inputSchema);
 
       const description = methodItem.description ?? methodItem.summary;
       if (!description) {
@@ -206,7 +206,7 @@ const callApiEndpoint = async (endpoint: EndpointDescriptor, input: any) => {
         const value = input[parameter.name];
 
         // Client-side validation
-        const effectSchema = JsonSchema.toEffectSchema(parameter.schema);
+        const effectSchema = Type.toEffectSchema(parameter.schema);
         Schema.validateSync(effectSchema)(value);
 
         if (body) {

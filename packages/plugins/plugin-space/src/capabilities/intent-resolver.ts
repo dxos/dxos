@@ -13,7 +13,6 @@ import {
   createResolver,
 } from '@dxos/app-framework';
 import { Obj, Ref, Relation, type Type } from '@dxos/echo';
-import { type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -365,16 +364,16 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         }
 
         if (target instanceof CollectionType) {
-          target.objects.push(Ref.make(object as HasId)); // TODO(burdon): ???
+          target.objects.push(Ref.make(object));
         } else if (isSpace(target) && hidden) {
           space.db.add(object);
         } else if (isSpace(target)) {
           const collection = space.properties[CollectionType.typename]?.target;
           if (collection instanceof CollectionType) {
-            collection.objects.push(Ref.make(object as HasId));
+            collection.objects.push(Ref.make(object));
           } else {
             // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-            const collection = Obj.make(CollectionType, { objects: [Ref.make(object as HasId)], views: {} });
+            const collection = Obj.make(CollectionType, { objects: [Ref.make(object)], views: {} });
             space.properties[CollectionType.typename] = Ref.make(collection);
           }
         }
@@ -383,7 +382,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           data: {
             id: fullyQualifiedId(object),
             subject: [fullyQualifiedId(object)],
-            object: object as HasId,
+            object,
           },
           intents: [
             ...(observability

@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
-import { Filter, JsonSchema, Obj } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { SheetType } from '@dxos/plugin-sheet/types';
@@ -104,7 +104,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
       try {
         const content = await file.text();
         const data = JSON.parse(content);
-        const schemas = await space.db.schemaRegistry.register(data.schemas.map(JsonSchema.toEffectSchema));
+        const schemas = await space.db.schemaRegistry.register(data.schemas.map(Type.toEffectSchema));
         // TODO(wittjosiah): If the schema is already registered this should skip.
         await Promise.all(
           schemas.map(async (schema) => {

@@ -11,6 +11,7 @@ import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Key } from '@dxos/echo';
 import { MemoryQueue } from '@dxos/echo-db';
+import { createQueueDXN } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type DataType } from '@dxos/schema';
@@ -108,7 +109,7 @@ describe.skip('SentenceNormalization', () => {
   test.only('queue', { timeout: 120_000 }, async () => {
     // Create queue.
     // TODO(dmaretskyi): Use space.queues.create() instead.
-    const queue = new MemoryQueue<DataType.Message>(Key.createQueueDXN());
+    const queue = new MemoryQueue<DataType.Message>(createQueueDXN());
     const ctx = new Context();
     let idx = 0;
     scheduleTaskInterval(

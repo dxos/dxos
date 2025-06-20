@@ -12,7 +12,8 @@ import {
   createIntent,
   chain,
 } from '@dxos/app-framework';
-import { Filter, Key, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { createQueueDXN } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { TableAction } from '@dxos/plugin-table';
@@ -31,7 +32,7 @@ export default (context: PluginContext) =>
           object: Obj.make(MailboxType, {
             name,
             // TODO(dmaretskyi): Use space.queues.create() instead.
-            queue: Ref.fromDXN(Key.createQueueDXN(spaceId)),
+            queue: Ref.fromDXN(createQueueDXN(spaceId)),
           }),
         },
       }),
@@ -51,7 +52,6 @@ export default (context: PluginContext) =>
           //  Needs to be a live object because graph is live and the current message is included in the companion.
           const { '@type': _, ...messageWithoutType } = { ...message } as any;
           const liveMessage = Obj.make(DataType.Message, messageWithoutType);
-          // liveMessage.id = id;
           state[mailboxId] = liveMessage;
         } else {
           delete state[mailboxId];

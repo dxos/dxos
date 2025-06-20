@@ -18,8 +18,9 @@ import {
   processTranscriptMessage,
   getNer,
 } from '@dxos/assistant';
-import { Filter, Key, Obj, type Type } from '@dxos/echo';
+import { Filter, Obj, type Type } from '@dxos/echo';
 import { MemoryQueue } from '@dxos/echo-db';
+import { createQueueDXN } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -76,7 +77,7 @@ const DefaultStory = ({
 
   // Queue.
   // TODO(dmaretskyi): Use space.queues.create() instead.
-  const queueDxn = useMemo(() => Key.createQueueDXN(), []);
+  const queueDxn = useMemo(() => createQueueDXN(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderMarkdown([]), queue);
   const space = useSpace();
