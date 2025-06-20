@@ -17,12 +17,12 @@ import { Filter, fullyQualifiedId, getSchema, getSpace, isEchoObject, type AnyLi
 import { isInstanceOf, type JsonPath, setValue } from '@dxos/echo-schema';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import { Card } from '@dxos/react-ui-stack';
 import { TableType } from '@dxos/react-ui-table';
 import { descriptionMessage } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
-import { CardContainer } from '../components/CardContainer';
 import { PREVIEW_PLUGIN } from '../meta';
 
 export default () =>
@@ -65,11 +65,9 @@ export default () =>
           [dispatch],
         );
         return (
-          <CardContainer role={role}>
-            <ContactCard subject={data.subject} onOrgClick={handleOrgClick}>
-              {role === 'popover' && <Surface role='related' data={data} />}
-            </ContactCard>
-          </CardContainer>
+          <ContactCard role={role} subject={data.subject} onOrgClick={handleOrgClick}>
+            {role === 'popover' && <Surface role='related' data={data} />}
+          </ContactCard>
         );
       },
     }),
@@ -78,22 +76,16 @@ export default () =>
       role: ['popover', 'card--kanban', 'card'],
       filter: (data): data is { subject: DataType.Organization } => isInstanceOf(DataType.Organization, data.subject),
       component: ({ data, role }) => (
-        <CardContainer role={role}>
-          <OrganizationCard subject={data.subject}>
-            {role === 'popover' && <Surface role='related' data={data} />}
-          </OrganizationCard>
-        </CardContainer>
+        <OrganizationCard role={role} subject={data.subject}>
+          {role === 'popover' && <Surface role='related' data={data} />}
+        </OrganizationCard>
       ),
     }),
     createSurface({
       id: `${PREVIEW_PLUGIN}/schema-popover--project`,
       role: ['popover', 'card--kanban', 'card'],
       filter: (data): data is { subject: DataType.Project } => isInstanceOf(DataType.Project, data.subject),
-      component: ({ data, role }) => (
-        <CardContainer role={role}>
-          <ProjectCard subject={data.subject} />
-        </CardContainer>
-      ),
+      component: ({ data, role }) => <ProjectCard subject={data.subject} role={role} />,
     }),
 
     //
@@ -120,9 +112,9 @@ export default () =>
         }, []);
 
         return (
-          <CardContainer role={role}>
+          <Card.Container role={role}>
             <Form schema={schema} values={data.subject} readonly={role === 'popover'} onSave={handleSave} autoSave />
-          </CardContainer>
+          </Card.Container>
         );
       },
     }),

@@ -4,7 +4,13 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, type FC, forwardRef } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
+  type FC,
+  forwardRef,
+  type PropsWithChildren,
+} from 'react';
 
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -27,8 +33,8 @@ const CardRoot = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
-const CardContent = forwardRef<HTMLDivElement, SharedCardProps & { surfaceRole?: string }>(
-  ({ children, classNames, asChild, role = 'group', surfaceRole, ...props }, forwardedRef) => {
+const CardContent = forwardRef<HTMLDivElement, SharedCardProps>(
+  ({ children, classNames, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     const rootProps = asChild
       ? { classNames: [cardContent, classNames] }
@@ -40,6 +46,23 @@ const CardContent = forwardRef<HTMLDivElement, SharedCardProps & { surfaceRole?:
     );
   },
 );
+
+/**
+ * This should be used by Surface fulfillments in cases where the content may or may not already be encapsulated (e.g.
+ * in a Popover) and knows this based on the `role` it receives. This will render a `Card.Content` by default, otherwise
+ * it will render a `div` primitive with the appropriate styling for specific handled situations.
+ */
+const CardConditionalContent = ({ role, children }: PropsWithChildren<{ role?: string }>) => {
+  if (['popover', 'card--kanban'].includes(role ?? 'never')) {
+    return (
+      <div className={role === 'popover' ? 'popover-card-width' : role === 'card--kanban' ? 'contents' : ''}>
+        {children}
+      </div>
+    );
+  } else {
+    return <CardContent>{children}</CardContent>;
+  }
+};
 
 const CardHeading = forwardRef<HTMLDivElement, SharedCardProps>(
   ({ children, classNames, asChild, role = 'heading', ...props }, forwardedRef) => {
@@ -139,6 +162,7 @@ const CardText = forwardRef<HTMLParagraphElement, SharedCardProps>(
 export const Card = {
   Root: CardRoot,
   Content: CardContent,
+  Container: CardConditionalContent,
   Heading: CardHeading,
   Toolbar: CardToolbar,
   ToolbarIconButton: CardToolbarIconButton,

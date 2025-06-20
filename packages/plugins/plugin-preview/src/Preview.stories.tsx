@@ -15,13 +15,13 @@ import { DataType } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ContactCard, OrganizationCard, ProjectCard } from './components';
-import { CardContainer } from './components/CardContainer';
 import translations from './translations';
+import { type PreviewProps } from './types';
 
 faker.seed(1234);
 
 type StoryProps = {
-  Component: FC<{ subject: any }>;
+  Component: FC<PreviewProps<any>>;
   icon: string;
   subject: any;
 };
@@ -32,9 +32,7 @@ const meta: Meta<StoryProps> = {
     return (
       <Popover.Root open>
         <Popover.Content>
-          <CardContainer role='popover'>
-            <Component {...args} />
-          </CardContainer>
+          <Component {...args} role='popover' />
           <Popover.Arrow />
         </Popover.Content>
         <Popover.Trigger>

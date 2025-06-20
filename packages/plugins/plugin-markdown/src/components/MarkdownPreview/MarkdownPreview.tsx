@@ -11,7 +11,6 @@ import { type PreviewProps } from '@dxos/plugin-preview';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 
 import { MARKDOWN_PLUGIN } from '../../meta';
@@ -36,7 +35,7 @@ const getSnippet = (subject: DocumentType | DataType.Text, fallback: string) => 
   }
 };
 
-export const MarkdownPreview = ({ classNames, subject, role }: PreviewProps<DocumentType | DataType.Text>) => {
+export const MarkdownPreview = ({ subject, role }: PreviewProps<DocumentType | DataType.Text>) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const snippet = getSnippet(subject, t('fallback abstract'));
@@ -58,7 +57,7 @@ export const MarkdownPreview = ({ classNames, subject, role }: PreviewProps<Docu
   );
 
   return (
-    <Card.Content classNames={mx(role === 'popover' && 'popover-card-width', classNames)}>
+    <Card.Container role={role}>
       <Card.Heading>{getTitle(subject, t('fallback title'))}</Card.Heading>
       {snippet && <Card.Text classNames='line-clamp-3 break-words col-span-2'>{snippet}</Card.Text>}
       <Card.Chrome>
@@ -67,6 +66,6 @@ export const MarkdownPreview = ({ classNames, subject, role }: PreviewProps<Docu
           <Icon icon='ph--arrow-right--regular' />
         </Button>
       </Card.Chrome>
-    </Card.Content>
+    </Card.Container>
   );
 };
