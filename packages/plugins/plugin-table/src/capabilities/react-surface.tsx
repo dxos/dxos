@@ -11,7 +11,7 @@ import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
-import { getSpace, isEchoObject, isSpace, type Space } from '@dxos/react-client/echo';
+import { getSpace, Obj, isSpace, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TableType } from '@dxos/react-ui-table';
@@ -56,7 +56,7 @@ export default () =>
       ): data is {
         companionTo: Obj.Obj<{ view: Ref.Ref<ViewType> } | { cardView: Ref.Ref<ViewType> }>;
       } => {
-        if (data.subject !== 'selected-objects' || !data.companionTo || !isEchoObject(data.companionTo)) {
+        if (data.subject !== 'selected-objects' || !data.companionTo || !Obj.isObject(data.companionTo)) {
           return false;
         }
 

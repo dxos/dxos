@@ -18,14 +18,7 @@ import {
   type Node,
   type NodeArg,
 } from '@dxos/plugin-graph';
-import {
-  fullyQualifiedId,
-  getSpace,
-  isEchoObject,
-  type QueryResult,
-  SpaceState,
-  type Space,
-} from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, type QueryResult, SpaceState, type Space } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
 import { SPACE_PLUGIN } from './meta';
@@ -82,7 +75,7 @@ const getCollectionGraphNodePartials = ({
     role: 'branch',
     onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
-      collection.objects = nextOrder.filter(isEchoObject).map(Ref.make);
+      collection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
     },
     onTransferStart: (child: Node<Obj.Any>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.

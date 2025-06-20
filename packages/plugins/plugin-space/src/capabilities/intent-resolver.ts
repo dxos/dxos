@@ -18,7 +18,7 @@ import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { isSpace, getSpace, SpaceState, fullyQualifiedId, isEchoObject } from '@dxos/react-client/echo';
+import { isSpace, getSpace, SpaceState, fullyQualifiedId } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
@@ -426,7 +426,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         // All objects must be a member of the same space.
         const space = getSpace(objects[0]);
-        invariant(space && objects.every((obj) => isEchoObject(obj) && getSpace(obj) === space));
+        invariant(space && objects.every((obj) => Obj.isObject(obj) && getSpace(obj) === space));
         const openObjectIds = new Set<string>(layout.active);
 
         if (!undo) {
@@ -489,7 +489,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         } else {
           if (
             deletionData?.objects?.length &&
-            deletionData.objects.every(isEchoObject) &&
+            deletionData.objects.every(Obj.isObject) &&
             deletionData.parentCollection instanceof CollectionType
           ) {
             // Restore the object to the space.

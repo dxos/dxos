@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
-import { fullyQualifiedId, isEchoObject } from '@dxos/react-client/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { ThreadCapabilities } from './capabilities';
 import { meta, THREAD_PLUGIN } from '../meta';
@@ -99,7 +99,7 @@ export default (context: PluginContext) => {
           pipe(
             get(node),
             Option.flatMap((node) => {
-              if (!isEchoObject(node.data) || Obj.instanceOf(ChannelType, node.data)) {
+              if (!Obj.isObject(node.data) || Obj.instanceOf(ChannelType, node.data)) {
                 return Option.none();
               }
               const metadata = resolve(Obj.getTypename(node.data)!);
@@ -129,7 +129,7 @@ export default (context: PluginContext) => {
           pipe(
             get(node),
             Option.flatMap((node) => {
-              if (!isEchoObject(node.data) || Obj.instanceOf(ChannelType, node.data)) {
+              if (!Obj.isObject(node.data) || Obj.instanceOf(ChannelType, node.data)) {
                 return Option.none();
               }
               const metadata = resolve(Obj.getTypename(node.data)!);

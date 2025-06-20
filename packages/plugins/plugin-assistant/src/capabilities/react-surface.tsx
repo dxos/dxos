@@ -10,7 +10,7 @@ import { Blueprint } from '@dxos/assistant';
 import { Filter, type Key, Obj, Query } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { fullyQualifiedId, getSpace, getTypename, isEchoObject } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, getTypename } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import {
@@ -44,7 +44,7 @@ export default () =>
       id: `${ASSISTANT_PLUGIN}/object-chat`,
       role: 'article',
       filter: (data): data is { companionTo: Obj.Any; subject: AIChatType | 'assistant-chat' } =>
-        isEchoObject(data.companionTo) &&
+        Obj.isObject(data.companionTo) &&
         (Obj.instanceOf(AIChatType, data.subject) || data.subject === 'assistant-chat'),
       component: ({ data, role }) => {
         const { dispatch } = useIntentDispatcher();

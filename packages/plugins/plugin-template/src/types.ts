@@ -4,9 +4,9 @@
 
 import { Schema } from 'effect';
 
-import { type Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
-import { isEchoObject, ReactiveObjectSchema } from '@dxos/react-client/echo';
+import { ReactiveObjectSchema } from '@dxos/react-client/echo';
 
 import { TEMPLATE_PLUGIN } from './meta';
 
@@ -24,7 +24,8 @@ export namespace TemplateAction {
 }
 
 export const isObject = (object: unknown): object is Obj.Any => {
-  return isEchoObject(object) && object.type === 'template';
+  // TODO(dmaretskyi): Can this be Obj.instanceOf(TemplateType)?
+  return Obj.isObject(object) && (object as any).type === 'template';
 };
 
 export class TemplateType extends TypedObject({

@@ -13,7 +13,7 @@ import {
   createSurface,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { fullyQualifiedId, getSchema, getSpace, isEchoObject } from '@dxos/client/echo';
+import { fullyQualifiedId, getSchema, getSpace } from '@dxos/client/echo';
 import { Obj, Filter } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { useTranslation } from '@dxos/react-ui';
@@ -96,7 +96,7 @@ export default () =>
       id: `${PREVIEW_PLUGIN}/fallback-popover`,
       role: ['popover', 'card--kanban', 'card'],
       position: 'fallback',
-      filter: (data): data is { subject: Obj.Any } => isEchoObject(data.subject),
+      filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
       component: ({ data, role }) => {
         const schema = getSchema(data.subject);
         const { t } = useTranslation(PREVIEW_PLUGIN);

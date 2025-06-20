@@ -9,16 +9,7 @@ import { Capabilities, contributes, createSurface, Surface, useCapability, useLa
 import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
-import {
-  getSpace,
-  isEchoObject,
-  isLiveObject,
-  isSpace,
-  parseId,
-  SpaceState,
-  useSpace,
-  type Space,
-} from '@dxos/react-client/echo';
+import { getSpace, isLiveObject, isSpace, parseId, SpaceState, useSpace, type Space } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { type InputProps } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
@@ -90,7 +81,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/companion/object-settings`,
       role: 'article',
-      filter: (data): data is { companionTo: Obj.Any } => isEchoObject(data.companionTo) && data.subject === 'settings',
+      filter: (data): data is { companionTo: Obj.Any } => Obj.isObject(data.companionTo) && data.subject === 'settings',
       component: ({ data, role }) => <ObjectSettingsContainer object={data.companionTo} role={role} />,
     }),
     createSurface({
@@ -211,14 +202,14 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/menu-footer`,
       role: 'menu-footer',
-      filter: (data): data is { subject: Obj.Any } => isEchoObject(data.subject),
+      filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
       component: ({ data }) => <MenuFooter object={data.subject} />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/navtree-presence`,
       role: 'navtree-item-end',
       filter: (data): data is { id: string; subject: Obj.Any; open?: boolean } =>
-        typeof data.id === 'string' && isEchoObject(data.subject),
+        typeof data.id === 'string' && Obj.isObject(data.subject),
       component: ({ data }) => {
         // TODO(wittjosiah): Doesn't need to be mutable but readonly type messes with ComplexMap.
         const state = useCapability(SpaceCapabilities.MutableState);
@@ -244,7 +235,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: `${SPACE_PLUGIN}/navbar-presence`,
       role: 'navbar-end',
       position: 'hoist',
-      filter: (data): data is { subject: Space | Obj.Any } => isSpace(data.subject) || isEchoObject(data.subject),
+      filter: (data): data is { subject: Space | Obj.Any } => isSpace(data.subject) || Obj.isObject(data.subject),
       component: ({ data }) => {
         const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
         const object = isSpace(data.subject)

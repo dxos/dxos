@@ -9,7 +9,7 @@ import { Capabilities, contributes, type PluginContext } from '@dxos/app-framewo
 import { Obj } from '@dxos/echo';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
-import { isEchoObject } from '@dxos/react-client/echo';
+import { Obj } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 import { ViewType } from '@dxos/schema';
 
@@ -49,7 +49,7 @@ export default (context: PluginContext) =>
           pipe(
             get(node),
             Option.flatMap((node) => {
-              if (!node.data || !isEchoObject(node.data)) {
+              if (!node.data || !Obj.isObject(node.data)) {
                 return Option.none();
               }
 
