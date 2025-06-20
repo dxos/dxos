@@ -10,6 +10,7 @@ import { defaultMap } from '@dxos/util';
 
 import { StoredSchema } from './stored-schema';
 import { getSchemaTypename, getSchemaVersion } from '../ast';
+import { raise } from '@dxos/debug';
 
 /**
  * Runtime registry of static schema objects (i.e., not Dynamic .
@@ -62,8 +63,8 @@ export class RuntimeSchemaRegistry {
 
   addSchema(types: Schema.Schema.AnyNoContext[]): void {
     types.forEach((schema) => {
-      const typename = getSchemaTypename(schema);
-      const version = getSchemaVersion(schema);
+      const typename = getSchemaTypename(schema) ?? raise(new TypeError(`Schema has no typename`));
+      const version = getSchemaVersion(schema) ?? raise(new TypeError(`Schema has no version`));
       const versions = defaultMap(this._registry, typename, () => []);
       if (versions.some((schema) => getSchemaVersion(schema) === version)) {
         throw new Error(`Schema version already registered: ${typename}:${version}`);
