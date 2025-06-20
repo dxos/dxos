@@ -58,9 +58,6 @@ export class EchoTestBuilder extends Resource {
   async createDatabase(options: PeerOptions = {}) {
     const peer = await this.createPeer(options);
     const db = await peer.createDatabase(PublicKey.random());
-    if (options.types) {
-      db.graph.schemaRegistry.addSchema(options.types);
-    }
     return {
       peer,
       host: peer.host,
