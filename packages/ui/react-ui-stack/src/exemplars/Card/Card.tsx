@@ -78,9 +78,9 @@ const CardHeading = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
-const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, ...props }, forwardedRef) => {
+const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, classNames, ...props }, forwardedRef) => {
   return (
-    <Toolbar.Root {...props} ref={forwardedRef}>
+    <Toolbar.Root {...props} classNames={['bg-transparent', classNames]} ref={forwardedRef}>
       {children}
     </Toolbar.Root>
   );

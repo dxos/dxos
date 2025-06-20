@@ -12544,6 +12544,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../react-ui-menu
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -13671,9 +13674,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../react-ui-editor
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme

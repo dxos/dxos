@@ -7,7 +7,8 @@ import '@dxos-theme';
 import React, { useState, useEffect, type FC } from 'react';
 
 import { faker } from '@dxos/random';
-import { IconButton, Popover } from '@dxos/react-ui';
+import { Popover } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-stack';
 import { hoverableHidden } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
@@ -49,11 +50,11 @@ const PreviewCard = () => {
   const { target } = useRefPopover('PreviewCard');
   return (
     <Popover.Portal>
-      <Popover.Content classNames='popover-card-width p-2' onOpenAutoFocus={(event) => event.preventDefault()}>
-        <Popover.Viewport>
-          <h2 className='grow truncate'>{target?.label}</h2>
-          {target && <div className='line-clamp-3'>{target.text}</div>}
-        </Popover.Viewport>
+      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+        <Card.Container role='popover'>
+          <Card.Heading>{target?.label}</Card.Heading>
+          {target && <Card.Text classNames='line-clamp-3'>{target.text}</Card.Text>}
+        </Card.Container>
         <Popover.Arrow />
       </Popover.Content>
     </Popover.Portal>
@@ -64,25 +65,25 @@ const PreviewCard = () => {
 const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLookup }) => {
   const target = useRefTarget(link, onLookup);
   return (
-    <div className='group flex flex-col gap-2'>
-      <div className='flex items-center gap-4'>
-        <div className='grow truncate'>
+    <Card.Container role='block--preview'>
+      <div className='contents md:flex items-center gap-4'>
+        <Card.Heading classNames='grow'>
           {/* <span className='text-xs text-subdued mie-2'>Prompt</span> */}
           {link.label}
-        </div>
+        </Card.Heading>
         {!readonly && (
-          <div className='flex gap-1'>
+          <Card.Toolbar classNames='is-min'>
             {(link.suggest && (
               <>
                 {target && (
-                  <IconButton
+                  <Card.ToolbarIconButton
                     classNames='text-green-500'
                     label='Apply'
                     icon={'ph--check--regular'}
                     onClick={() => onAction({ type: 'insert', link, target })}
                   />
                 )}
-                <IconButton
+                <Card.ToolbarIconButton
                   classNames='text-red-500'
                   label='Cancel'
                   icon={'ph--x--regular'}
@@ -90,7 +91,7 @@ const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLook
                 />
               </>
             )) || (
-              <IconButton
+              <Card.ToolbarIconButton
                 iconOnly
                 label='Delete'
                 icon={'ph--x--regular'}
@@ -98,11 +99,11 @@ const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLook
                 onClick={() => onAction({ type: 'delete', link })}
               />
             )}
-          </div>
+          </Card.Toolbar>
         )}
       </div>
-      {target && <div className='line-clamp-3'>{target.text}</div>}
-    </div>
+      {target && <Card.Text classNames='line-clamp-3'>{target.text}</Card.Text>}
+    </Card.Container>
   );
 };
 
