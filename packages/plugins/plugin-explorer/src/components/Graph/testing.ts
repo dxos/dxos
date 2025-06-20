@@ -25,7 +25,7 @@ export type GenerateOptions = {
   };
 };
 
-const defaultRelations: GenerateOptions['relations'] = { count: 10, kind: 'friend' };
+const defaultRelations: GenerateOptions['relations'] = { kind: 'friend', count: 10 };
 
 /**
  * @deprecated Use @dxos/schema.
@@ -43,16 +43,14 @@ export const generate = async (
   for (const _ of range(relations.count)) {
     const source = getObject(contacts);
     const target = getObject(contacts);
-    if (source.id === target.id) {
-      continue;
+    if (source.id !== target.id) {
+      space.db.add(
+        Relation.make(DataType.HasRelationship, {
+          kind: relations.kind,
+          [RelationSourceId]: source,
+          [RelationTargetId]: target,
+        }),
+      );
     }
-
-    space.db.add(
-      Relation.make(DataType.HasRelationship, {
-        kind: relations.kind,
-        [RelationSourceId]: source,
-        [RelationTargetId]: target,
-      }),
-    );
   }
 };
