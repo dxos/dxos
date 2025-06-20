@@ -19,7 +19,6 @@ export type Schema = EchoSchema.EchoSchema;
  */
 export const Obj = EchoSchema.EchoObject;
 
-
 // TODO(buurdon): Move to Obj?
 export namespace Obj {
   /**

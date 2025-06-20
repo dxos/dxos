@@ -4,9 +4,9 @@
 
 import { Schema } from 'effect';
 
+import { Type, Obj } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
 import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
-import { Type, Obj, Ref } from '@dxos/echo';
 
 export const ComputeValueType = Schema.Literal('string', 'number', 'boolean', 'object');
 export type ComputeValueType = Schema.Schema.Type<typeof ComputeValueType>;
@@ -83,8 +83,8 @@ export const ComputeGraph = Schema.Struct({
   Type.Obj({
     typename: 'dxos.org/type/ComputeGraph',
     version: '0.1.0',
-  })
-)
+  }),
+);
 export interface ComputeGraph extends Schema.Schema.Type<typeof ComputeGraph> {}
 
 export const isComputeGraph = Obj.instanceOf(ComputeGraph);

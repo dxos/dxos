@@ -13,9 +13,7 @@ import {
   Expando,
   type ObjectMeta,
   ObjectMetaSchema,
-  EchoSchema,
   EntityKindId,
-  EntityKind,
 } from '@dxos/echo-schema';
 import { MetaId } from '@dxos/echo-schema';
 

@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/assistant';
-import { Key, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 
 import { AssistantAction, AIChatType } from '../types';
 

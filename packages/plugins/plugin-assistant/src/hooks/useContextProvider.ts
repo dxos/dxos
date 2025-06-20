@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
-import { Filter, Key, Obj, type Type } from '@dxos/echo';
+import { Filter, Obj, type Type } from '@dxos/echo';
 
 export type ContextProvider = {
   query: (params: { query: string }) => Promise<Array<{ uri: string; label: string }>>;

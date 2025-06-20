@@ -122,7 +122,7 @@ describe('Experimental API review', () => {
 
     const isPerson = Obj.instanceOf(Testing.Person);
     const x: any = {};
-    if(isPerson(x)) {
+    if (isPerson(x)) {
       x.name;
     }
   });

@@ -8,10 +8,10 @@ import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import * as LiveObject from '@dxos/live-object';
+import { assumeType } from '@dxos/util';
 
 import type * as Ref from './Ref';
 import type * as Type from './Type';
-import { assumeType } from '@dxos/util';
 
 export type Obj<T = any> = EchoSchema.AnyEchoObject & T;
 export type Any = EchoSchema.AnyEchoObject;
@@ -38,15 +38,16 @@ export const isObject = (obj: unknown): obj is Any => {
  */
 export const instanceOf: {
   <S extends Type.Relation.Any | Type.Obj.Any>(schema: S): (value: unknown) => value is Schema.Schema.Type<S>;
-  <S extends Type.Relation.Any | Type.Obj.Any>(schema: S, value: unknown): value  is Schema.Schema.Type<S>;
-} = ((...args: [schema: Type.Relation.Any | Type.Obj.Any, value: unknown] | [schema: Type.Relation.Any | Type.Obj.Any]) => {
+  <S extends Type.Relation.Any | Type.Obj.Any>(schema: S, value: unknown): value is Schema.Schema.Type<S>;
+} = ((
+  ...args: [schema: Type.Relation.Any | Type.Obj.Any, value: unknown] | [schema: Type.Relation.Any | Type.Obj.Any]
+) => {
   if (args.length === 1) {
     return (obj: unknown) => EchoSchema.isInstanceOf(args[0], obj);
   }
 
   return EchoSchema.isInstanceOf(args[0], args[1]);
 }) as any;
-
 
 export const getSchema = EchoSchema.getSchema;
 

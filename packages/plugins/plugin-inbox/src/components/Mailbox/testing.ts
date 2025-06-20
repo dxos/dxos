@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Key, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
