@@ -18,6 +18,7 @@ import { LabelAnnotationId } from '../ast';
 
 /**
  * Returns a DXN for an object or schema.
+ * @deprecated Use `Obj.getDXN`.
  */
 export const getObjectDXN = (object: any): DXN | undefined => {
   invariant(!Schema.isSchema(object), 'schema not allowed in this function');
