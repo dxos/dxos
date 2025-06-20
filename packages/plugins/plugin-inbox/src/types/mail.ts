@@ -14,7 +14,10 @@ export enum MessageState {
   SPAM = 3,
 }
 
-export class MailboxType extends TypedObject({ typename: 'dxos.org/type/Mailbox', version: '0.1.0' })({
+export class MailboxType extends TypedObject({
+  typename: 'dxos.org/type/Mailbox',
+  version: '0.1.0',
+})({
   name: Schema.optional(Schema.String),
   queue: Ref.Queue,
 }) {}

@@ -7,7 +7,10 @@ import { Schema } from 'effect';
 import { Ref } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
 
-export class CollectionType extends TypedObject({ typename: 'dxos.org/type/Collection', version: '0.1.0' })({
+export class CollectionType extends TypedObject({
+  typename: 'dxos.org/type/Collection',
+  version: '0.1.0',
+})({
   name: Schema.optional(Schema.String),
   objects: Schema.mutable(Schema.Array(Ref.Queue)),
   // Key is schema typename and value is reference to a view object of the associated schema.

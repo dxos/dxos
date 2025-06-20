@@ -6,8 +6,7 @@ import { type Schema } from 'effect';
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
-import { toJsonSchema } from '@dxos/echo-schema';
+import { JsonSchema, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CollectionType } from '@dxos/plugin-space/types';
@@ -98,7 +97,7 @@ export default () =>
 
         const singleSelectColumns = useMemo(() => {
           const properties = staticSchema
-            ? toJsonSchema(staticSchema).properties
+            ? JsonSchema.toJsonSchema(staticSchema).properties
             : selectedSchema?.jsonSchema?.properties;
           if (!properties) {
             return [];

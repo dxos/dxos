@@ -58,7 +58,10 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
 
   project: {
     createSchema: () =>
-      class ProjectType extends TypedObject({ typename: 'example.com/type/Project', version: '0.1.0' })({
+      class ProjectType extends TypedObject({
+        typename: 'example.com/type/Project',
+        version: '0.1.0',
+      })({
         title: Schema.String,
         repo: Schema.String,
         status: Schema.String,

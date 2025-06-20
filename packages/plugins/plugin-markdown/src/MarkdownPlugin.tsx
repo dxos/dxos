@@ -3,8 +3,7 @@
 //
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
-import { RefArray } from '@dxos/live-object';
+import { Obj, Ref } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -62,7 +61,7 @@ export const MarkdownPlugin = () =>
               managesAutofocus: true,
             },
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (doc: DocumentType) => await RefArray.loadAll<Obj.Any>([doc.content]),
+            loadReferences: async (doc: DocumentType) => await Ref.Array.loadAll<Obj.Any>([doc.content]),
             serializer,
             // TODO(wittjosiah): Consider how to do generic comments without these.
             comments: 'anchored',

@@ -28,6 +28,9 @@ export const isObject = (object: unknown): object is AnyLiveObject<any> => {
   return isEchoObject(object) && object.type === 'template';
 };
 
-export class TemplateType extends TypedObject({ typename: 'dxos.org/type/Template', version: '0.1.0' })({
+export class TemplateType extends TypedObject({ 
+  typename: 'dxos.org/type/Template', 
+  version: '0.1.0',
+})({
   name: Schema.optional(Schema.String),
 }) {}

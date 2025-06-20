@@ -66,7 +66,10 @@ const ServiceInterfaceApi = Schema.Struct({
 const ServiceInterface = Schema.Union(ServiceInterfaceFunction, ServiceInterfaceWorkflow, ServiceInterfaceApi);
 export type ServiceInterface = Schema.Schema.Type<typeof ServiceInterface>;
 
-export class ServiceType extends TypedObject({ typename: 'dxos.org/type/ServiceType', version: '0.1.0' })({
+export class ServiceType extends TypedObject({
+  typename: 'dxos.org/type/ServiceType',
+  version: '0.1.0',
+})({
   serviceId: Schema.String,
   name: Schema.optional(Schema.String),
   description: Schema.optional(Schema.String),

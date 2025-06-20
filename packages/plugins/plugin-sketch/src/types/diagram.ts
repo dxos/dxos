@@ -19,7 +19,10 @@ export class CanvasType extends TypedObject({
   content: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any })),
 }) {}
 
-export class DiagramType extends TypedObject({ typename: 'dxos.org/type/Diagram', version: '0.1.0' })({
+export class DiagramType extends TypedObject({
+  typename: 'dxos.org/type/Diagram',
+  version: '0.1.0',
+})({
   name: Schema.optional(Schema.String),
   canvas: Type.Ref(CanvasType),
 }) {}

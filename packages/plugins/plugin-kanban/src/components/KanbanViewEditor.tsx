@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
-import { assertEchoSchema, FormatEnum, isMutable } from '@dxos/echo-schema';
+import { assertEchoSchema, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -87,8 +87,8 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
         registry={space.db.schemaRegistry}
         schema={schema}
         view={kanban.cardView.target}
-        onTypenameChanged={isMutable(schema) ? handleUpdateTypename : undefined}
-        onDelete={isMutable(schema) ? handleDelete : undefined}
+        onTypenameChanged={Type.isMutable(schema) ? handleUpdateTypename : undefined}
+        onDelete={Type.isMutable(schema) ? handleDelete : undefined}
       />
     </>
   );

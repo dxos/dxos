@@ -16,19 +16,8 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { findRelatedSchema, researchFn, type RelatedSchema } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
-import { Type, Obj, Relation, JsonSchema } from '@dxos/echo';
-import {
-  ATTR_RELATION_SOURCE,
-  ATTR_RELATION_TARGET,
-  createQueueDxn,
-  getSchema,
-  getSchemaDXN,
-  getTypename,
-  type BaseObject,
-  Filter,
-  RelationSourceId,
-  RelationTargetId,
-} from '@dxos/echo-schema';
+import { Filter, JsonSchema, Key, Obj, Relation, Type } from '@dxos/echo';
+import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -91,7 +80,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const menuProps = useMenuActions(actionCreator);
 
   // Queue.
-  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
+  const [queueDxn, setQueueDxn] = useState<string>(() => Key.createQueueDxn(space.id).toString());
   const queue = useQueue<Message>(Type.DXN.tryParse(queueDxn));
 
   // Function executor.
@@ -207,13 +196,13 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   );
 
   // TODO(dmaretskyi): Pull in relations automatically.
-  const handleAddToGraph = useCallback(async (object: BaseObject) => {
+  const handleAddToGraph = useCallback(async (object: Obj.Any) => {
     space.db.add(instantiate(space.db, object));
     await space.db.flush({ indexes: true });
     forceUpdate({});
   }, []);
 
-  const handleResearchMore = useCallback((object: BaseObject, relatedSchema: RelatedSchema) => {
+  const handleResearchMore = useCallback((object: Obj.Any, relatedSchema: RelatedSchema) => {
     const prompt = `
       Research more about objects related to the object in terms of the by the specific relation schema:
       <object>${JSON.stringify(object, null, 2)}</object>
@@ -251,7 +240,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
               iconOnly
               label='Clear history'
               icon='ph--trash--regular'
-              onClick={() => setQueueDxn(createQueueDxn().toString())}
+              onClick={() => setQueueDxn(Key.createQueueDxn(space.id).toString())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor?.cancel()} />
           </Input.Root>
@@ -305,20 +294,20 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 };
 
 type ResearchPromptsProps = {
-  object: BaseObject;
-  onResearch: (object: BaseObject, relatedSchema: RelatedSchema) => void;
+  object: Obj.Any;
+  onResearch: (object: Obj.Any, relatedSchema: RelatedSchema) => void;
 };
 
 const ResearchPrompts = ({ object, onResearch }: ResearchPromptsProps) => {
   const [relatedSchemas = []] = useAsyncState(
-    async () => findRelatedSchema(getSpace(object)!.db, getSchema(object)!),
+    async () => findRelatedSchema(getSpace(object)!.db, Obj.getSchema(object)!),
     [object],
   );
   return (
     <div>
       {relatedSchemas.map((schema) => (
         <button
-          key={getSchemaDXN(schema.schema)?.toString()}
+          key={Key.getSchemaDXN(schema.schema)?.toString()}
           onClick={() => onResearch(object, schema)}
           className='border border-separator rounded px-2 py-1 m-1'
         >
@@ -379,7 +368,7 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
 // TODO(dmaretskyi): Move into core.
 const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
   const schema =
-    db.graph.schemaRegistry.getSchemaByDXN(Type.DXN.parse(getTypename(object as any)!)) ??
+    db.graph.schemaRegistry.getSchemaByDXN(Type.DXN.parse(Obj.getTypename(object as any)!)) ??
     raise(new Error('Schema not found'));
 
   let { id, [ATTR_RELATION_SOURCE]: source, [ATTR_RELATION_TARGET]: target, ...props } = object as any;

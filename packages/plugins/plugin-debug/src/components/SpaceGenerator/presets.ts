@@ -5,10 +5,9 @@
 import { Schema, SchemaAST } from 'effect';
 
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { Json, Key, Ref } from '@dxos/echo';
+import { DXN, JsonSchema, Key, Ref } from '@dxos/echo';
 import { FunctionTrigger, TriggerKind, EmailTriggerOutput, type TriggerType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
 import { live, makeRef } from '@dxos/live-object';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import {
@@ -183,7 +182,7 @@ export const presets = {
           const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
           invariant(templateComputeNode, 'Template compute node was not created.');
           templateComputeNode.value = templateContent.join('\n');
-          templateComputeNode.inputSchema = Json.toJsonSchema(EmailTriggerOutput);
+          templateComputeNode.inputSchema = JsonSchema.toJsonSchema(EmailTriggerOutput);
 
           attachTrigger(functionTrigger, computeModel);
 
@@ -307,7 +306,7 @@ export const presets = {
           invariant(templateComputeNode, 'Template compute node was not created.');
           templateComputeNode.value = templateContent.join('\n');
           const extendedSchema = Schema.extend(EmailTriggerOutput, Schema.Struct({ text: Schema.String }));
-          templateComputeNode.inputSchema = Json.toJsonSchema(extendedSchema);
+          templateComputeNode.inputSchema = JsonSchema.toJsonSchema(extendedSchema);
 
           attachTrigger(functionTrigger, computeModel);
 
@@ -502,7 +501,9 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
   const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
   invariant(templateComputeNode, 'Template compute node was not created.');
   templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "@{{changeId}}"', '}'].join('\n');
-  templateComputeNode.inputSchema = Json.toJsonSchema(Schema.Struct({ type: Schema.String, changeId: Schema.String }));
+  templateComputeNode.inputSchema = JsonSchema.toJsonSchema(
+    Schema.Struct({ type: Schema.String, changeId: Schema.String }),
+  );
 
   attachTrigger(functionTrigger, computeModel);
 
