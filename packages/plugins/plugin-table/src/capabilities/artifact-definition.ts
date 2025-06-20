@@ -11,7 +11,7 @@ import { createArtifactElement } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { live, fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
+import { fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 
 import { meta } from '../meta';

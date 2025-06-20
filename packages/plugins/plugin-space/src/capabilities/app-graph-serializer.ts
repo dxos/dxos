@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 
 import { SPACE_PLUGIN } from '../meta';
 import translations from '../translations';

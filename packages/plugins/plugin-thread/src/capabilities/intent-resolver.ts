@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { live, fullyQualifiedId, getSpace, Ref } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, Ref } from '@dxos/react-client/echo';
 import { AnchoredTo, DataType } from '@dxos/schema';
 
 import { ThreadCapabilities } from './capabilities';

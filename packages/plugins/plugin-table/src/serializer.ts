@@ -5,7 +5,7 @@
 import { Obj } from '@dxos/echo';
 import { StoredSchema } from '@dxos/echo-schema';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
-import { live, getObjectCore } from '@dxos/react-client/echo';
+import { getObjectCore } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table/types';
 
 export const serializer: TypedObjectSerializer<TableType> = {

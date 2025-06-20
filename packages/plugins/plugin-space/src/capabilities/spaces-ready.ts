@@ -6,7 +6,7 @@ import { Option } from 'effect';
 
 import { contributes, createIntent, Capabilities, LayoutAction, type PluginContext } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
