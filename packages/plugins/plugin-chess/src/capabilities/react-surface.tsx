@@ -23,7 +23,7 @@ export default () =>
     createSurface({
       id: 'plugin-chess',
       role: 'canvas-node',
-      filter: (data): data is any => Obj.instanceOf(ChessType, data),
+      filter: Obj.instanceOf(ChessType),
       component: ({ data }) => <ChessComponent game={data} />,
     }),
   ]);

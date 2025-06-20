@@ -23,6 +23,4 @@ export namespace ChessAction {
   }) {}
 }
 
-export const isObject = (object: unknown): object is typeof ChessType => {
-  return Obj.instanceOf(ChessType, object);
-};
+export const isObject = Obj.instanceOf(ChessType);
