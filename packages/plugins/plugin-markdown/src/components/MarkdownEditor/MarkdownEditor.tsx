@@ -20,7 +20,6 @@ import {
   EditorToolbar,
   processEditorPayload,
   RefPopover,
-  SlashCommandMenu,
   stackItemContentEditorClassNames,
   type DNDOptions,
   type EditorInputMode,
@@ -28,12 +27,15 @@ import {
   type EditorStateStore,
   type EditorToolbarActionGraphProps,
   type EditorViewMode,
-  type SlashCommandGroup,
+  type CommandMenuGroup,
   type UseTextEditorProps,
   useEditorToolbarState,
   useFormattingState,
-  useSlashMenu,
+  useCommandMenu,
   useTextEditor,
+  filterItems,
+  coreSlashCommands,
+  CommandMenu,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNotFalsy, isNonNullable } from '@dxos/util';
@@ -47,7 +49,7 @@ export type MarkdownEditorProps = {
   role?: string;
   inputMode?: EditorInputMode;
   scrollPastEnd?: boolean;
-  slashCommandGroups?: SlashCommandGroup[];
+  slashCommandGroups?: CommandMenuGroup[];
   toolbar?: boolean;
   customActions?: EditorToolbarActionGraphProps['customActions'];
   // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
@@ -66,13 +68,26 @@ export type MarkdownEditorProps = {
  */
 export const MarkdownEditor = ({ extensions: _extensions, slashCommandGroups, ...props }: MarkdownEditorProps) => {
   const viewRef = useRef<EditorView>();
-  const { slashMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useSlashMenu(viewRef, slashCommandGroups);
+  const {
+    commandMenu: slashMenu,
+    groupsRef,
+    currentItem,
+    onSelect,
+    ...refPopoverProps
+  } = useCommandMenu({
+    viewRef,
+    getGroups: (query) =>
+      filterItems([coreSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
+        query ? item.label.toLowerCase().includes(query.toLowerCase()) : true,
+      ),
+    trigger: '/',
+  });
   const extensions = useMemo(() => [_extensions, slashMenu].filter(isNotFalsy), [_extensions, slashMenu]);
 
   return (
     <RefPopover modal={false} {...refPopoverProps}>
       <MarkdownEditorImpl ref={viewRef} {...props} extensions={extensions} />
-      <SlashCommandMenu groups={groupsRef.current} currentItem={currentItem} onSelect={onSelect} />
+      <CommandMenu groups={groupsRef.current} currentItem={currentItem} onSelect={onSelect} />
     </RefPopover>
   );
 };

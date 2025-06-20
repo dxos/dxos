@@ -8,27 +8,29 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { Icon, Popover, useThemeContext } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
-export type SlashCommandGroup = {
-  label: string;
-  items: SlashCommandItem[];
+export type CommandMenuGroup = {
+  id: string;
+  label?: string;
+  items: CommandMenuItem[];
 };
 
-export type SlashCommandItem = {
+export type CommandMenuItem = {
   id: string;
   label: string;
   icon: string;
   onSelect?: (view: EditorView, head: number) => MaybePromise<void>;
 };
 
-export type SlashCommandMenuProps = {
-  groups: SlashCommandGroup[];
+export type CommandMenuProps = {
+  groups: CommandMenuGroup[];
   currentItem: string;
-  onSelect: (item: SlashCommandItem) => void;
+  onSelect: (item: CommandMenuItem) => void;
 };
 
-// NOTE: Not using DropdownMenu because the slash menu needs to manage focus explicitly.
-export const SlashCommandMenu = ({ groups, currentItem, onSelect }: SlashCommandMenuProps) => {
+// NOTE: Not using DropdownMenu because the command menu needs to manage focus explicitly.
+export const CommandMenu = ({ groups, currentItem, onSelect }: CommandMenuProps) => {
   const { tx } = useThemeContext();
+  const groupsWithItems = groups.filter((group) => group.items.length > 0);
   return (
     <Popover.Portal>
       <Popover.Content
@@ -40,10 +42,10 @@ export const SlashCommandMenu = ({ groups, currentItem, onSelect }: SlashCommand
       >
         <Popover.Viewport classNames={tx('menu.viewport', 'menu__viewport--exotic-unfocusable', {})}>
           <ul>
-            {groups.map((group, index) => (
-              <React.Fragment key={group.label}>
-                <SlashCommandGroup group={group} currentItem={currentItem} onSelect={onSelect} />
-                {index < groups.length - 1 && <div className={tx('menu.separator', 'menu__item', {})} />}
+            {groupsWithItems.map((group, index) => (
+              <React.Fragment key={group.id}>
+                <CommandGroup group={group} currentItem={currentItem} onSelect={onSelect} />
+                {index < groupsWithItems.length - 1 && <div className={tx('menu.separator', 'menu__item', {})} />}
               </React.Fragment>
             ))}
           </ul>
@@ -53,36 +55,38 @@ export const SlashCommandMenu = ({ groups, currentItem, onSelect }: SlashCommand
   );
 };
 
-const SlashCommandGroup = ({
+const CommandGroup = ({
   group,
   currentItem,
   onSelect,
 }: {
-  group: SlashCommandGroup;
+  group: CommandMenuGroup;
   currentItem: string;
-  onSelect: (item: SlashCommandItem) => void;
+  onSelect: (item: CommandMenuItem) => void;
 }) => {
   const { tx } = useThemeContext();
   return (
     <>
-      <div className={tx('menu.groupLabel', 'menu__group__label', {})}>
-        <span>{group.label}</span>
-      </div>
+      {group.label && (
+        <div className={tx('menu.groupLabel', 'menu__group__label', {})}>
+          <span>{group.label}</span>
+        </div>
+      )}
       {group.items.map((item) => (
-        <SlashCommandMenuItem key={item.id} item={item} current={currentItem === item.id} onSelect={onSelect} />
+        <CommandItem key={item.id} item={item} current={currentItem === item.id} onSelect={onSelect} />
       ))}
     </>
   );
 };
 
-const SlashCommandMenuItem = ({
+const CommandItem = ({
   item,
   current,
   onSelect,
 }: {
-  item: SlashCommandItem;
+  item: CommandMenuItem;
   current: boolean;
-  onSelect: (item: SlashCommandItem) => void;
+  onSelect: (item: CommandMenuItem) => void;
 }) => {
   const ref = useRef<HTMLLIElement>(null);
   const { tx } = useThemeContext();
@@ -106,26 +110,32 @@ const SlashCommandMenuItem = ({
   );
 };
 
-export const getItem = (groups: SlashCommandGroup[], id: string): SlashCommandItem | undefined => {
+// TODO(wittjosiah): Factor out into a separate file.
+
+//
+// Helpers
+//
+
+export const getItem = (groups: CommandMenuGroup[], id: string): CommandMenuItem | undefined => {
   return groups.flatMap((group) => group.items).find((item) => item.id === id);
 };
 
-export const getNextItem = (groups: SlashCommandGroup[], id: string): SlashCommandItem => {
+export const getNextItem = (groups: CommandMenuGroup[], id: string): CommandMenuItem => {
   const items = groups.flatMap((group) => group.items);
   const index = items.findIndex((item) => item.id === id);
   return items[(index + 1) % items.length];
 };
 
-export const getPreviousItem = (groups: SlashCommandGroup[], id: string): SlashCommandItem => {
+export const getPreviousItem = (groups: CommandMenuGroup[], id: string): CommandMenuItem => {
   const items = groups.flatMap((group) => group.items);
   const index = items.findIndex((item) => item.id === id);
   return items[(index - 1 + items.length) % items.length];
 };
 
 export const filterItems = (
-  groups: SlashCommandGroup[],
-  filter: (item: SlashCommandItem) => boolean,
-): SlashCommandGroup[] => {
+  groups: CommandMenuGroup[],
+  filter: (item: CommandMenuItem) => boolean,
+): CommandMenuGroup[] => {
   return groups.map((group) => ({
     ...group,
     items: group.items.filter(filter),
@@ -151,7 +161,8 @@ const insertAtCursor = (view: EditorView, head: number, insert: string) => {
   }
 };
 
-export const coreSlashCommands: SlashCommandGroup = {
+export const coreSlashCommands: CommandMenuGroup = {
+  id: 'markdown',
   label: 'Markdown',
   items: [
     {

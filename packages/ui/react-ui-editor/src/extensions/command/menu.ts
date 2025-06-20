@@ -10,15 +10,7 @@ import { type CleanupFn, addEventListener } from '@dxos/async';
 import { type DxRefTag, type DxRefTagActivate } from '@dxos/lit-ui';
 
 import { closeEffect, openEffect } from './action';
-import {
-  coreSlashCommands,
-  filterItems,
-  getItem,
-  getNextItem,
-  getPreviousItem,
-  type SlashCommandGroup,
-  type SlashCommandItem,
-} from '../../components';
+import { getItem, getNextItem, getPreviousItem, type CommandMenuGroup, type CommandMenuItem } from '../../components';
 import { type Range } from '../../types';
 import { multilinePlaceholder } from '../placeholder';
 
@@ -150,17 +142,17 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
   }),
 ];
 
-// State effects for managing slash menu state.
-export const slashRangeEffect = StateEffect.define<Range | null>();
+// State effects for managing command menu state.
+export const commandRangeEffect = StateEffect.define<Range | null>();
 
-// State field to track the active slash command range.
-const slashMenuState = StateField.define<Range | null>({
+// State field to track the active command menu range.
+const commandMenuState = StateField.define<Range | null>({
   create: () => null,
   update: (value, tr) => {
     let newValue = value;
 
     for (const effect of tr.effects) {
-      if (effect.is(slashRangeEffect)) {
+      if (effect.is(commandRangeEffect)) {
         newValue = effect.value;
       }
     }
@@ -169,7 +161,8 @@ const slashMenuState = StateField.define<Range | null>({
   },
 });
 
-export type SlashMenuOptions = {
+export type CommandMenuOptions = {
+  trigger: string;
   placeholder?: Parameters<typeof multilinePlaceholder>[0];
   onArrowDown?: () => void;
   onArrowUp?: () => void;
@@ -178,8 +171,8 @@ export type SlashMenuOptions = {
   onTextChange?: (text: string) => void;
 };
 
-export const slashMenu = (options: SlashMenuOptions = {}) => {
-  const slashMenuPlugin = ViewPlugin.fromClass(
+export const commandMenu = (options: CommandMenuOptions) => {
+  const commandMenuPlugin = ViewPlugin.fromClass(
     class {
       decorations: DecorationSet = Decoration.none;
 
@@ -189,9 +182,9 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
       update(update: ViewUpdate) {
         const builder = new RangeSetBuilder<Decoration>();
         const selection = update.view.state.selection.main;
-        const activeRange = update.view.state.field(slashMenuState);
+        const activeRange = update.view.state.field(commandMenuState);
 
-        // Check if we should show the widget - only if cursor is within the active slash range.
+        // Check if we should show the widget - only if cursor is within the active command range.
         const shouldShowWidget = activeRange && selection.head >= activeRange.from && selection.head <= activeRange.to;
         if (shouldShowWidget) {
           // Create mark decoration that wraps the entire line content in a dx-ref-tag.
@@ -209,11 +202,11 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
         }
 
         const activeRangeChanged = update.transactions.some((tr) =>
-          tr.effects.some((effect) => effect.is(slashRangeEffect)),
+          tr.effects.some((effect) => effect.is(commandRangeEffect)),
         );
         if (activeRange && activeRangeChanged) {
           const content = update.view.state.sliceDoc(
-            activeRange.from + 1, // Skip the slash character.
+            activeRange.from + 1, // Skip the trigger character.
             activeRange.to,
           );
           options.onTextChange?.(content);
@@ -227,14 +220,14 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
     },
   );
 
-  const slashKeymap = keymap.of([
+  const commandKeymap = keymap.of([
     {
-      key: '/',
+      key: options.trigger,
       run: (view) => {
         const selection = view.state.selection.main;
         const line = view.state.doc.lineAt(selection.head);
 
-        // Check if we should trigger the slash menu:
+        // Check if we should trigger the command menu:
         // 1. Empty lines or at the beginning of a line
         // 2. When there's a preceding space
         const shouldTrigger =
@@ -244,9 +237,9 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
 
         if (shouldTrigger) {
           view.dispatch({
-            changes: { from: selection.head, insert: '/' },
+            changes: { from: selection.head, insert: options.trigger },
             selection: { anchor: selection.head + 1, head: selection.head + 1 },
-            effects: slashRangeEffect.of({ from: selection.head, to: selection.head + 1 }),
+            effects: commandRangeEffect.of({ from: selection.head, to: selection.head + 1 }),
           });
           return true;
         }
@@ -257,7 +250,7 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
     {
       key: 'Enter',
       run: (view) => {
-        const activeRange = view.state.field(slashMenuState);
+        const activeRange = view.state.field(commandMenuState);
         if (activeRange) {
           view.dispatch({ changes: { from: activeRange.from, to: activeRange.to, insert: '' } });
           options.onEnter?.();
@@ -270,8 +263,8 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
     {
       key: 'ArrowDown',
       run: (view) => {
-        const activeSlashRange = view.state.field(slashMenuState);
-        if (activeSlashRange) {
+        const activeRange = view.state.field(commandMenuState);
+        if (activeRange) {
           options.onArrowDown?.();
           return true;
         }
@@ -282,8 +275,8 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
     {
       key: 'ArrowUp',
       run: (view) => {
-        const activeSlashRange = view.state.field(slashMenuState);
-        if (activeSlashRange) {
+        const activeRange = view.state.field(commandMenuState);
+        if (activeRange) {
           options.onArrowUp?.();
           return true;
         }
@@ -293,16 +286,17 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
     },
   ]);
 
-  // Listen for selection and document changes to clean up the slash menu.
+  // Listen for selection and document changes to clean up the command menu.
   const updateListener = EditorView.updateListener.of((update) => {
-    const activeRange = update.view.state.field(slashMenuState);
+    const activeRange = update.view.state.field(commandMenuState);
     if (!activeRange) {
       return;
     }
 
     const selection = update.view.state.selection.main;
+    const firstChar = update.view.state.doc.sliceString(activeRange.from, activeRange.from + 1);
     const shouldRemove =
-      update.view.state.doc.sliceString(activeRange.from, activeRange.from + 1) !== '/' || // Slash deleted.
+      firstChar !== options.trigger || // Trigger deleted.
       selection.head < activeRange.from || // Cursor moved before the range.
       selection.head > activeRange.to + 1; // Cursor moved after the range (+1 to handle selection changing before doc).
 
@@ -312,7 +306,7 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
         ? { from: activeRange.from, to: selection.head }
         : activeRange;
     if (nextRange !== activeRange) {
-      update.view.dispatch({ effects: slashRangeEffect.of(nextRange) });
+      update.view.dispatch({ effects: commandRangeEffect.of(nextRange) });
     }
 
     if (shouldRemove) {
@@ -321,30 +315,35 @@ export const slashMenu = (options: SlashMenuOptions = {}) => {
   });
 
   return [
-    multilinePlaceholder(options.placeholder ?? "Press '/' for commands"),
-    Prec.highest(slashKeymap),
+    multilinePlaceholder(options.placeholder ?? `Press '${options.trigger}' for commands`),
+    Prec.highest(commandKeymap),
     updateListener,
-    slashMenuState,
-    slashMenuPlugin,
+    commandMenuState,
+    commandMenuPlugin,
   ];
 };
 
-export const useSlashMenu = (viewRef: RefObject<EditorView | undefined>, groups?: SlashCommandGroup[]) => {
-  const defaultGroups = useMemo(() => [coreSlashCommands, ...(groups ?? [])], [groups]);
+export type UseCommandMenuOptions = {
+  viewRef: RefObject<EditorView | undefined>;
+  trigger: string;
+  getGroups: (query?: string) => CommandMenuGroup[];
+};
+
+export const useCommandMenu = ({ viewRef, trigger, getGroups }: UseCommandMenuOptions) => {
   const triggerRef = useRef<DxRefTag | null>(null);
+  const currentRef = useRef<CommandMenuItem | null>(null);
+  const groupsRef = useRef<CommandMenuGroup[]>(getGroups());
+  const [currentItem, setCurrentItem] = useState(() => groupsRef.current[0].items[0].id);
   const [open, setOpen] = useState(false);
   const [_, update] = useState({});
-  const [currentItem, setCurrentItem] = useState(coreSlashCommands.items[0].id);
-  const currentRef = useRef<SlashCommandItem | null>(null);
-  const groupsRef = useRef<SlashCommandGroup[]>(defaultGroups);
 
   const handleOpenChange = useCallback((open: boolean) => {
     setOpen(open);
     if (!open) {
-      setCurrentItem(coreSlashCommands.items[0].id);
       triggerRef.current = null;
-      groupsRef.current = defaultGroups;
-      viewRef.current?.dispatch({ effects: [slashRangeEffect.of(null)] });
+      groupsRef.current = getGroups();
+      setCurrentItem(groupsRef.current[0].items[0].id);
+      viewRef.current?.dispatch({ effects: [commandRangeEffect.of(null)] });
     }
   }, []);
 
@@ -358,7 +357,7 @@ export const useSlashMenu = (viewRef: RefObject<EditorView | undefined>, groups?
     handleOpenChange(true);
   }, []);
 
-  const handleSelect = useCallback((item: SlashCommandItem) => {
+  const handleSelect = useCallback((item: CommandMenuItem) => {
     const view = viewRef.current;
     if (!view) {
       return;
@@ -368,9 +367,10 @@ export const useSlashMenu = (viewRef: RefObject<EditorView | undefined>, groups?
     void item.onSelect?.(view, selection.head);
   }, []);
 
-  const _slashMenu = useMemo(
+  const _commandMenu = useMemo(
     () =>
-      slashMenu({
+      commandMenu({
+        trigger,
         onArrowDown: () => {
           setCurrentItem((currentItem) => {
             const next = getNextItem(groupsRef.current, currentItem);
@@ -394,21 +394,19 @@ export const useSlashMenu = (viewRef: RefObject<EditorView | undefined>, groups?
           }
         },
         onTextChange: (text) => {
-          groupsRef.current = filterItems(defaultGroups, (item) =>
-            item.label.toLowerCase().includes(text.toLowerCase()),
-          );
-          const firstItem = groupsRef.current[0].items[0];
+          groupsRef.current = getGroups(text);
+          const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
           if (firstItem) {
             setCurrentItem(firstItem.id);
           }
           update({});
         },
       }),
-    [handleOpenChange],
+    [handleOpenChange, trigger],
   );
 
   return {
-    slashMenu: _slashMenu,
+    commandMenu: _commandMenu,
     currentItem,
     groupsRef,
     ref: triggerRef,
