@@ -17,7 +17,7 @@ import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-te
 import { findRelatedSchema, researchFn, type RelatedSchema } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
 import { Filter, JsonSchema, Key, Obj, Relation, Type } from '@dxos/echo';
-import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
+import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -28,12 +28,12 @@ import { IconButton, Input, Toolbar, useAsyncState } from '@dxos/react-ui';
 import {
   createMenuAction,
   createMenuItemGroup,
-  MenuProvider,
-  ToolbarMenu,
+  rxFromSignal,
   useMenuActions,
   type ActionGraphProps,
+  MenuProvider,
+  ToolbarMenu,
   type ToolbarMenuActionGroupProperties,
-  rxFromSignal,
 } from '@dxos/react-ui-menu';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -382,8 +382,8 @@ const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
   return Relation.make(schema, {
     id,
     ...props,
-    [RelationSourceId]: source,
-    [RelationTargetId]: target,
+    [Relation.Source]: source,
+    [Relation.Target]: target,
   });
 };
 

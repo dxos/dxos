@@ -10,7 +10,7 @@ import { DataType } from '@dxos/schema';
 
 import { ThreadType } from '../types';
 
-export const createCommentThread = (identity: Identity) => {
+export const createCommentThread = (identity: Identity): ThreadType => {
   return Obj.make(ThreadType, {
     messages: faker.helpers.multiple(
       () =>
