@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { EchoSchema, type TypedObject } from '@dxos/echo-schema';
+import { type TypedObject } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
 import { useQuery, getSpace } from '@dxos/react-client/echo';
@@ -23,11 +23,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
   const space = getSpace(kanban);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
-  const jsonSchema = useMemo(
-    () =>
-      cardSchema instanceof EchoSchema ? cardSchema.jsonSchema : cardSchema ? Type.toJsonSchema(cardSchema) : undefined,
-    [cardSchema],
-  );
+  const jsonSchema = useMemo(() => (cardSchema ? Type.toJsonSchema(cardSchema) : undefined), [cardSchema]);
 
   useEffect(() => {
     const typename = kanban.cardView?.target?.query?.typename;

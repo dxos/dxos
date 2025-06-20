@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Type } from '@dxos/echo';
-import { FormatEnum, type EchoSchema } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
@@ -28,7 +28,7 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
   const currentCoordinateProperty = useMemo(() => getLocationProperty(map?.view?.target), [map?.view?.target]);
   const currentSchema = useSchema(client, space, currentTypename);
 
-  const [allSchemata, setAllSchemata] = useState<EchoSchema[]>([]);
+  const [allSchemata, setAllSchemata] = useState<Type.Schema[]>([]);
 
   useEffect(() => {
     if (!space) {

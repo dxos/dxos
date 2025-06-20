@@ -124,6 +124,7 @@ export { SpaceId, ObjectId, DXN } from '@dxos/keys';
 export {
   //
   Expando,
+  // TODO(burdon): Standardize.
   Format,
   JsonSchemaType as JsonSchema,
   toEffectSchema,
