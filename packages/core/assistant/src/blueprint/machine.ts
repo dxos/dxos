@@ -14,7 +14,6 @@ import {
   type ToolRegistry,
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
-import { raise } from '@dxos/debug';
 import { create } from '@dxos/echo-schema';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -64,8 +63,8 @@ export class BlueprintMachine {
   state: BlueprintMachineState = structuredClone(INITIAL_STATE);
 
   constructor(
+    readonly registry: ToolRegistry,
     readonly blueprint: Blueprint,
-    readonly registry?: ToolRegistry,
   ) {}
 
   async runToCompletion(options: ExecutionOptions): Promise<void> {

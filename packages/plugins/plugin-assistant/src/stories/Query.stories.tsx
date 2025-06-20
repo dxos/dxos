@@ -193,14 +193,14 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       return;
     }
 
-    const selected = selection.selected.value;
-    log.info('starting research...', { selected });
     const resolver = space.db.graph.createRefResolver({
       context: {
         space: space.db.spaceId,
         queue: researchGraph?.queue.dxn,
       },
     });
+
+    const selected = selection.selected.value;
     const objects = await Promise.all(selected.map((id) => resolver.resolve(DXN.fromLocalObjectId(id))));
     const machine = new BlueprintMachine(tools, researchBlueprint);
     const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));

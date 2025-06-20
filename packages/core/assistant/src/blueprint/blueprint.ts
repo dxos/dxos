@@ -12,12 +12,12 @@ export const BlueprintStep = Schema.Struct({
   instructions: Schema.String,
   tools: Schema.Array(Schema.String),
 });
-export type BlueprintStep = Schema.Schema.Type<typeof BlueprintStep>;
+export interface BlueprintStep extends Schema.Schema.Type<typeof BlueprintStep> {}
 
 export const BlueprintDefinition = Schema.Struct({
   steps: Schema.Array(BlueprintStep.pipe(Schema.omit('id'))),
 });
-export type BlueprintDefinition = Schema.Schema.Type<typeof BlueprintDefinition>;
+export interface BlueprintDefinition extends Schema.Schema.Type<typeof BlueprintDefinition> {}
 
 export const Blueprint = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -28,7 +28,7 @@ export const Blueprint = Schema.Struct({
     version: '0.1.0',
   }),
 );
-export type Blueprint = Schema.Schema.Type<typeof Blueprint>;
+export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
 
 /**
  * Blueprint builder API.

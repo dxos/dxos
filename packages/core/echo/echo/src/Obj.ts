@@ -99,30 +99,21 @@ export const getLabel = (obj: Any): string | undefined => {
   }
 };
 
-export const getLabel = (obj: Any): string | undefined => {
-  const schema = getSchema(obj);
-  if (schema != null) {
-    return EchoSchema.getLabel(schema, obj);
-  }
-};
-
 /**
  * JSON representation of an object.
  */
-// TODO(burdon): Reconcile with JsonSchemaType.
 export type JSON = EchoSchema.ObjectJSON;
 
 /**
- * Converts object to it's JSON representation.
+ * Converts object to its JSON representation.
  *
  * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
  */
 export const toJSON = (obj: Any): JSON => EchoSchema.objectToJSON(obj);
 
 /**
- * Creates an object from it's json representation.
- * Performs schema validation.
- * References and schema will be resolvable if the `refResolver` is provided.
+ * Creates an object from its json representation, performing schema validation.
+ * References and schemas will be resolvable if the `refResolver` is provided.
  *
  * The function need to be async to support resolving the schema as well as the relation endpoints.
  */

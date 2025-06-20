@@ -39,13 +39,13 @@ export const AssistantPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: getSchemaTypename(Blueprint)!,
+          id: Type.getTypename(Blueprint),
           metadata: {
             icon: 'ph--blueprint--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: Type.getTypename(AIChatType)!,
+          id: Type.getTypename(AIChatType),
           metadata: {
             icon: 'ph--atom--regular',
           },

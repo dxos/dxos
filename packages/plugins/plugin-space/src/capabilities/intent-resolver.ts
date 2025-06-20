@@ -6,13 +6,12 @@ import { Effect } from 'effect';
 
 import {
   Capabilities,
+  LayoutAction,
+  type PluginContext,
   contributes,
   createIntent,
   createResolver,
-  LayoutAction,
-  type PluginContext,
 } from '@dxos/app-framework';
-import { Relation } from '@dxos/echo';
 import { Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -26,13 +25,13 @@ import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
 import { SpaceCapabilities } from './capabilities';
 import {
+  CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
   JOIN_DIALOG,
-  type JoinDialogProps,
-  POPOVER_RENAME_SPACE,
-  CREATE_OBJECT_DIALOG,
-  type CreateObjectDialogProps,
   POPOVER_RENAME_OBJECT,
+  POPOVER_RENAME_SPACE,
+  type CreateObjectDialogProps,
+  type JoinDialogProps,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionAction, CollectionType, SpaceAction } from '../types';

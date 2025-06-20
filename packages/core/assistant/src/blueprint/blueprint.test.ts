@@ -39,8 +39,8 @@ describe.skip('Blueprint', () => {
       .step('Write a pitch deck for the product')
       .build();
 
-    const registry = new ToolRegistry([]);
-    const machine = new BlueprintMachine(registry, blueprint);
+    const tools = new ToolRegistry([]);
+    const machine = new BlueprintMachine(tools, blueprint);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiService });
   });
@@ -96,8 +96,8 @@ describe.skip('Blueprint', () => {
       })
       .build();
 
-    const registry = new ToolRegistry([replyTool, labelTool]);
-    const machine = new BlueprintMachine(registry, blueprint);
+    const tools = new ToolRegistry([replyTool, labelTool]);
+    const machine = new BlueprintMachine(tools, blueprint);
     setConsolePrinter(machine);
     await machine.runToCompletion({ aiService, input: TEST_EMAILS[0] });
   });
@@ -143,8 +143,8 @@ describe.skip('Blueprint', () => {
       })
       .build();
 
-    const registry = new ToolRegistry([exa, localSearch, graphWriter]);
-    const machine = new BlueprintMachine(registry, blueprint, registry);
+    const tools = new ToolRegistry([exa, localSearch, graphWriter]);
+    const machine = new BlueprintMachine(tools, blueprint);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiService, input: org1 });
   });
