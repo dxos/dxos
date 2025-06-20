@@ -18,13 +18,13 @@ import { Obj, Filter } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import { Card } from '@dxos/react-ui-stack';
 import { TableType } from '@dxos/react-ui-table';
 import { descriptionMessage } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
 import { PREVIEW_PLUGIN } from '../meta';
-import { kanbanCardWithoutPoster } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -66,7 +66,7 @@ export default () =>
           [dispatch],
         );
         return (
-          <ContactCard subject={data.subject} onOrgClick={handleOrgClick} role={role}>
+          <ContactCard role={role} subject={data.subject} onOrgClick={handleOrgClick}>
             {role === 'popover' && <Surface role='related' data={data} />}
           </ContactCard>
         );
@@ -77,7 +77,7 @@ export default () =>
       role: ['popover', 'card--kanban', 'card'],
       filter: (data): data is { subject: DataType.Organization } => Obj.instanceOf(DataType.Organization, data.subject),
       component: ({ data, role }) => (
-        <OrganizationCard subject={data.subject} role={role}>
+        <OrganizationCard role={role} subject={data.subject}>
           {role === 'popover' && <Surface role='related' data={data} />}
         </OrganizationCard>
       ),
@@ -113,14 +113,9 @@ export default () =>
         }, []);
 
         return (
-          <Form
-            schema={schema}
-            values={data.subject}
-            readonly={role === 'popover'}
-            onSave={handleSave}
-            autoSave
-            {...(role === 'card--kanban' && { classNames: kanbanCardWithoutPoster })}
-          />
+          <Card.Container role={role}>
+            <Form schema={schema} values={data.subject} readonly={role === 'popover'} onSave={handleSave} autoSave />
+          </Card.Container>
         );
       },
     }),

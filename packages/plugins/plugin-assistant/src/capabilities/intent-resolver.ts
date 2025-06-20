@@ -3,9 +3,10 @@
 //
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
+import { Blueprint } from '@dxos/assistant';
 import { Key, Obj, Ref } from '@dxos/echo';
 
-import { AssistantAction, AIChatType, TemplateType } from '../types';
+import { AssistantAction, AIChatType } from '../types';
 
 export default () => [
   contributes(
@@ -25,10 +26,10 @@ export default () => [
   contributes(
     Capabilities.IntentResolver,
     createResolver({
-      intent: AssistantAction.CreateTemplate,
+      intent: AssistantAction.CreateBlueprint,
       resolve: ({ name }) => ({
         data: {
-          object: Obj.make(TemplateType, { name, kind: { include: 'manual' }, source: '{{! Template }}' }),
+          object: Obj.make(Blueprint, { name, steps: [] }),
         },
       }),
     }),

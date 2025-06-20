@@ -18,6 +18,7 @@ import { raise } from '@dxos/debug';
 import { create } from '@dxos/echo-schema';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { isNonNullable } from '@dxos/util';
 
 import type { Blueprint, BlueprintStep } from './blueprint';
 import { AISession } from '../session';
@@ -132,6 +133,8 @@ export class BlueprintMachine {
       : [];
     inputMessages.forEach((message) => this.message.emit(message));
 
+    // TODO(wittjosiah): Warn if tool is not found.
+    const tools = nextStep.tools.map((tool) => this.registry.get(tool)).filter(isNonNullable);
     const messages = await session.run({
       systemPrompt: `
         You are a smart Rule-Following Agent.
@@ -144,11 +147,7 @@ export class BlueprintMachine {
         The Rule-Following Agent precisely follows the instructions.
       `,
       history: [...state.history, ...inputMessages],
-      tools: [
-        // TODO(burdon): Should detect missing tools before running.
-        ...nextStep.tools.map((tool) => this.registry?.get(tool) ?? raise(new Error(`Tool not found: ${tool}`))),
-        report,
-      ],
+      tools: [...tools, report],
       artifacts: [],
       client: options.aiService,
       prompt: nextStep.instructions,

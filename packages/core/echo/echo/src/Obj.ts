@@ -99,6 +99,13 @@ export const getLabel = (obj: Any): string | undefined => {
   }
 };
 
+export const getLabel = (obj: Any): string | undefined => {
+  const schema = getSchema(obj);
+  if (schema != null) {
+    return EchoSchema.getLabel(schema, obj);
+  }
+};
+
 /**
  * JSON representation of an object.
  */

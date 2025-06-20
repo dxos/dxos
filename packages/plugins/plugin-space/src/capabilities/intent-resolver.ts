@@ -12,6 +12,7 @@ import {
   LayoutAction,
   type PluginContext,
 } from '@dxos/app-framework';
+import { Relation } from '@dxos/echo';
 import { Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';

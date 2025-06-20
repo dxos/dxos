@@ -18,7 +18,6 @@ import { combine } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
@@ -68,7 +67,7 @@ const aiConfig: AIServiceEdgeClientOptions = {
  * Container for a set of ephemeral research results.
  */
 const ResearchGraph = Schema.Struct({
-  queue: Ref.Queue,
+  queue: Ref(Queue),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/ResearchGraph',
@@ -170,16 +169,14 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   //
 
   const aiClient = useMemo(() => new SpyAIService(new AIServiceEdgeClient(aiConfig)), []);
+  const tools = useMemo(
+    () => space && researchGraph && createRegistry(space, researchGraph.queue.dxn),
+    [space, researchGraph?.queue.dxn],
+  );
 
   const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1_000 });
 
-  const researchBlueprint = useMemo(() => {
-    if (!space || !researchGraph) {
-      return undefined;
-    }
-
-    return BlueprintParser.create().parse(RESEARCH_BLUEPRINT);
-  }, [space, researchGraph?.queue.dxn]);
+  const researchBlueprint = useMemo(() => BlueprintParser.create().parse(RESEARCH_BLUEPRINT), []);
 
   const logger = useMemo(() => new Logger(), []);
 
@@ -192,7 +189,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   }, [model]);
 
   const handleResearch = useCallback(async () => {
-    if (!space || !researchBlueprint) {
+    if (!space || !tools || !researchBlueprint) {
       return;
     }
 
@@ -205,18 +202,14 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       },
     });
     const objects = await Promise.all(selected.map((id) => resolver.resolve(DXN.fromLocalObjectId(id))));
-    const machine = new BlueprintMachine(researchBlueprint, createRegistry(space, researchGraph?.queue.dxn));
-    const cleanup = combine(
-      //
-      setConsolePrinter(machine, true),
-      setLogger(machine, logger),
-    );
+    const machine = new BlueprintMachine(tools, researchBlueprint);
+    const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));
 
     log.info('starting research...', { selected });
     await machine.runToCompletion({ aiService: aiClient, input: objects });
 
     cleanup();
-  }, [space, aiClient, researchBlueprint, selection]);
+  }, [space, aiClient, tools, researchBlueprint, selection]);
 
   const handleGenerate = useCallback(async () => {
     if (!space) {

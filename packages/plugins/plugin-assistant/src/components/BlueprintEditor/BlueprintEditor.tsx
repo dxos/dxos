@@ -21,7 +21,6 @@ export type BlueprintEditorProps = ThemedClassName<{
 }>;
 
 // TODO(burdon): Factor out JsonEditor.
-// TODO(burdon): Make editable.
 export const BlueprintEditor = ({ classNames, blueprint }: BlueprintEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor({

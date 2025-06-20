@@ -10,8 +10,17 @@ import { Filter, type Key, Obj, Query } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, getSpace, getTypename, isEchoObject } from '@dxos/react-client/echo';
+import { Blueprint } from '@dxos/assistant';
+import { StackItem } from '@dxos/react-ui-stack';
 
-import { AssistantDialog, AssistantSettings, ChatContainer, PromptSettings, TemplateContainer } from '../components';
+import {
+  AssistantDialog,
+  AssistantSettings,
+  BlueprintEditor,
+  ChatContainer,
+  PromptSettings,
+  TemplateContainer,
+} from '../components';
 import { ASSISTANT_PLUGIN, ASSISTANT_DIALOG } from '../meta';
 import { AIChatType, AssistantAction, type AssistantSettingsProps, CompanionTo, TemplateType } from '../types';
 
@@ -23,12 +32,6 @@ export default () =>
       filter: (data): data is { subject: SettingsStore<AssistantSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === ASSISTANT_PLUGIN,
       component: ({ data: { subject } }) => <AssistantSettings settings={subject.value} />,
-    }),
-    createSurface({
-      id: ASSISTANT_DIALOG,
-      role: 'dialog',
-      filter: (data): data is { props: { chat: AIChatType } } => data.component === ASSISTANT_DIALOG,
-      component: ({ data }) => <AssistantDialog {...data.props} />,
     }),
     createSurface({
       id: `${ASSISTANT_PLUGIN}/chat`,
@@ -93,10 +96,26 @@ export default () =>
       },
     }),
     createSurface({
+      id: `${ASSISTANT_PLUGIN}/blueprint`,
+      role: 'article',
+      filter: (data): data is { subject: Blueprint } => Obj.instanceOf(Blueprint, data.subject),
+      component: ({ data, role }) => (
+        <StackItem.Content role={role}>
+          <BlueprintEditor blueprint={data.subject} />
+        </StackItem.Content>
+      ),
+    }),
+    createSurface({
       id: `${ASSISTANT_PLUGIN}/template`,
       role: 'article',
       filter: (data): data is { subject: TemplateType } => Obj.instanceOf(TemplateType, data.subject),
       component: ({ data, role }) => <TemplateContainer role={role} template={data.subject} />,
+    }),
+    createSurface({
+      id: ASSISTANT_DIALOG,
+      role: 'dialog',
+      filter: (data): data is { props: { chat: AIChatType } } => data.component === ASSISTANT_DIALOG,
+      component: ({ data }) => <AssistantDialog {...data.props} />,
     }),
     createSurface({
       id: `${ASSISTANT_PLUGIN}/prompt-settings`,

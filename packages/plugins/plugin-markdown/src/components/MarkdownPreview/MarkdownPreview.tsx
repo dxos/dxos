@@ -7,18 +7,10 @@ import React, { useCallback } from 'react';
 
 import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import {
-  type PreviewProps,
-  defaultCard,
-  kanbanCardWithoutPoster,
-  popoverCard,
-  previewTitle,
-  previewProse,
-  previewChrome,
-} from '@dxos/plugin-preview';
+import { type PreviewProps } from '@dxos/plugin-preview';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
 import { MARKDOWN_PLUGIN } from '../../meta';
@@ -43,7 +35,7 @@ const getSnippet = (subject: DocumentType | DataType.Text, fallback: string) => 
   }
 };
 
-export const MarkdownPreview = ({ classNames, subject, role }: PreviewProps<DocumentType | DataType.Text>) => {
+export const MarkdownPreview = ({ subject, role }: PreviewProps<DocumentType | DataType.Text>) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const snippet = getSnippet(subject, t('fallback abstract'));
@@ -65,21 +57,15 @@ export const MarkdownPreview = ({ classNames, subject, role }: PreviewProps<Docu
   );
 
   return (
-    <div
-      role='none'
-      className={mx(
-        role === 'popover' ? popoverCard : role === 'card--kanban' ? kanbanCardWithoutPoster : defaultCard,
-        classNames,
-      )}
-    >
-      <h2 className={mx(previewTitle, previewProse)}>{getTitle(subject, t('fallback title'))}</h2>
-      {snippet && <p className={mx(previewProse, 'line-clamp-3 break-words col-span-2')}>{snippet}</p>}
-      <div role='none' className={previewChrome}>
+    <Card.Container role={role}>
+      <Card.Heading>{getTitle(subject, t('fallback title'))}</Card.Heading>
+      {snippet && <Card.Text classNames='line-clamp-3 break-words col-span-2'>{snippet}</Card.Text>}
+      <Card.Chrome>
         <Button onClick={handleNavigate}>
           <span className='grow'>{t('navigate to document label')}</span>
           <Icon icon='ph--arrow-right--regular' />
         </Button>
-      </div>
-    </div>
+      </Card.Chrome>
+    </Card.Container>
   );
 };

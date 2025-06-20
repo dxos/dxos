@@ -39,7 +39,8 @@ describe.skip('Blueprint', () => {
       .step('Write a pitch deck for the product')
       .build();
 
-    const machine = new BlueprintMachine(blueprint);
+    const registry = new ToolRegistry([]);
+    const machine = new BlueprintMachine(registry, blueprint);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiService });
   });
@@ -82,20 +83,21 @@ describe.skip('Blueprint', () => {
         'Determine if the email is introduction, question, or spam. Bail if email does not fit into one of these categories.',
       )
       .step('If the email is spam, label it as spam and do not respond.', {
-        tools: [labelTool.name],
+        tools: [labelTool.id],
       })
       .step(
         'If the email is an introduction, respond with a short introduction of yourself and ask for more information.',
         {
-          tools: [replyTool.name],
+          tools: [replyTool.id],
         },
       )
       .step('If the email is a question, respond with a short answer and ask for more information.', {
-        tools: [replyTool.name],
+        tools: [replyTool.id],
       })
       .build();
 
-    const machine = new BlueprintMachine(blueprint);
+    const registry = new ToolRegistry([replyTool, labelTool]);
+    const machine = new BlueprintMachine(registry, blueprint);
     setConsolePrinter(machine);
     await machine.runToCompletion({ aiService, input: TEST_EMAILS[0] });
   });
@@ -131,18 +133,18 @@ describe.skip('Blueprint', () => {
 
     const blueprint = BlueprintBuilder.create()
       .step('Research founders of the organization. Do deep research.', {
-        tools: [exa.name],
+        tools: [exa.id],
       })
       .step('Based on your research select matching entires that are already in the graph', {
-        tools: [localSearch.name],
+        tools: [localSearch.id],
       })
       .step('Add researched data to the graph', {
-        tools: [localSearch.name, graphWriter.name],
+        tools: [localSearch.id, graphWriter.id],
       })
       .build();
 
     const registry = new ToolRegistry([exa, localSearch, graphWriter]);
-    const machine = new BlueprintMachine(blueprint, registry);
+    const machine = new BlueprintMachine(registry, blueprint, registry);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiService, input: org1 });
   });
