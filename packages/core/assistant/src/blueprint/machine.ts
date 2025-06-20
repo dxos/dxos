@@ -78,7 +78,6 @@ export class BlueprintMachine {
 
       this.state = await this._execStep(this.state, { input, aiService: options.aiService });
       this.stepComplete.emit(this.blueprint.steps.find((step) => step.id === this.state.trace.at(-1)?.stepId)!);
-
       if (this.state.state === 'bail') {
         throw new Error('Agent unable to follow the blueprint');
       }
@@ -109,7 +108,7 @@ export class BlueprintMachine {
 
     const report = createTool('system', {
       name: 'report',
-      description: 'This tool reports that the agent has completed the task or is unable to do so',
+      description: 'This tool reports that the agent has completed the task or is unable to do so.',
       schema: ReportSchema,
       execute: async (input) => ToolResult.Break(input),
     });
@@ -153,9 +152,8 @@ export class BlueprintMachine {
     });
 
     const { messages: trimmedHistory, call: lastBlock } = popLastToolCall(messages);
-
     if (!lastBlock) {
-      // TODO(dmaretskyi): Handle this with grace
+      // TODO(dmaretskyi): Handle this with grace.
       throw new Error('Agent did not call the report tool');
     }
 
