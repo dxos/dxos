@@ -80,12 +80,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [aiClient, tools, space, dispatch, artifactDefinitions]);
 
   // Queue.
-  const [queueDxn, setQueueDxn] = useState<string>(() => Key.createQueueDxn(space.id).toString());
+  const [queueDxn, setQueueDxn] = useState<string>(() => Key.createQueueDXN(space.id).toString());
   const queue = useQueue<Message>(Type.DXN.tryParse(queueDxn));
 
   useEffect(() => {
     if (space) {
-      setQueueDxn(Key.createQueueDxn(space.id).toString());
+      setQueueDxn(Key.createQueueDXN(space.id).toString());
     }
   }, [space]);
 
@@ -173,7 +173,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
               iconOnly
               label='Clear history'
               icon='ph--trash--regular'
-              onClick={() => setQueueDxn(Key.createQueueDxn(space.id).toString())}
+              onClick={() => setQueueDxn(Key.createQueueDXN(space.id).toString())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor?.cancel()} />
           </Input.Root>

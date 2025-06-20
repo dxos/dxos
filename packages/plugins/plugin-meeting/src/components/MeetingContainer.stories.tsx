@@ -15,7 +15,7 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { ThreadType } from '@dxos/plugin-thread/types';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
-import { useQuery, Query, live, Ref, createQueueDxn, refFromDXN, useSpace } from '@dxos/react-client/echo';
+import { useQuery, Query, live, Ref, createQueueDXN, refFromDXN, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
@@ -55,7 +55,7 @@ const meta: Meta<MeetingContainerProps> = {
               live(MeetingType, {
                 created: new Date().toISOString(),
                 participants: [],
-                transcript: Ref.make(live(TranscriptType, { queue: refFromDXN(createQueueDxn(space.id)) })),
+                transcript: Ref.make(live(TranscriptType, { queue: refFromDXN(createQueueDXN(space.id)) })),
                 notes: Ref.make(live(DataType.Text, { content: 'Notes' })),
                 summary: Ref.make(live(DataType.Text, { content: '' })),
                 thread: Ref.make(live(ThreadType, { messages: [] })),

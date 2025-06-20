@@ -8,5 +8,5 @@ import { DXN, ObjectId, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 /**
  * @deprecated Use `db.queues.make`
  */
-export const createQueueDxn = (spaceId = SpaceId.random(), queueId = ObjectId.random()) =>
+export const createQueueDXN = (spaceId = SpaceId.random(), queueId = ObjectId.random()) =>
   new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, queueId]);

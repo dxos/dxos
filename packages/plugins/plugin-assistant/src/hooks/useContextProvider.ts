@@ -7,7 +7,6 @@ import { useMemo } from 'react';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Key, Obj, type Type } from '@dxos/echo';
-import { log } from '@dxos/log';
 
 export type ContextProvider = {
   query: (params: { query: string }) => Promise<Array<{ uri: string; label: string }>>;
@@ -33,10 +32,11 @@ export const useContextProvider = (space?: Space): ContextProvider | undefined =
 
         return (
           objects
-            .map((object) => {
-              log.info('object', { object, label: Obj.getLabel(object as any) }); // TODO(burdon): ??? (+ two instances below).
-              return object;
-            })
+            // TODO(burdon): Remove cast ??? (+ two instances below).
+            // .map((object) => {
+            //   log.info('object', { object, label: Obj.getLabel(object as any) });
+            //   return object;
+            // })
             .filter((object) => stringMatch(query, Obj.getLabel(object as any) ?? ''))
             // TODO(dmaretskyi): `Type.getDXN` (at the point of writing) didn't work here as it was schema-only.
             .filter((object) => !!Key.getObjectDXN(object))
@@ -48,10 +48,7 @@ export const useContextProvider = (space?: Space): ContextProvider | undefined =
       },
       resolveMetadata: async ({ uri }) => {
         const object = await space.db.query(Filter.ids(uri)).first();
-        return {
-          uri,
-          label: Obj.getLabel(object) ?? '',
-        };
+        return { uri, label: Obj.getLabel(object) ?? '' };
       },
     };
   }, [space, artifactDefinitions]);

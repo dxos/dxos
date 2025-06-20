@@ -107,7 +107,7 @@ describe.skip('SentenceNormalization', () => {
 
   test.only('queue', { timeout: 120_000 }, async () => {
     // Create queue.
-    const queue = new MemoryQueue<DataType.Message>(Key.createQueueDxn());
+    const queue = new MemoryQueue<DataType.Message>(Key.createQueueDXN());
     const ctx = new Context();
     let idx = 0;
     scheduleTaskInterval(

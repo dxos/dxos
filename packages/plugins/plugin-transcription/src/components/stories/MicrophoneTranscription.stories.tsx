@@ -75,7 +75,7 @@ const DefaultStory = ({
   const isSpeaking = detectSpeaking ? useIsSpeaking(track) : true;
 
   // Queue.
-  const queueDxn = useMemo(() => Key.createQueueDxn(), []);
+  const queueDxn = useMemo(() => Key.createQueueDXN(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderMarkdown([]), queue);
   const space = useSpace();
