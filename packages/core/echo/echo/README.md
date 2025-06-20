@@ -26,28 +26,29 @@ License: [MIT](./LICENSE) Copyright 2022 © DXOS
 import { Type, Obj, Relation, Ref, Query, Filter } from '@dxos/echo';
 ```
 
-|                               | Object                          | Relation                                    | Ref             |
-| ----------------------------- | ------------------------------- | ------------------------------------------- | --------------- |
+|                               | Object                          | Relation (extends Obj)                      | Ref              |
+| ----------------------------- | ------------------------------- | ------------------------------------------- | ---------------- |
 | **SCHEMA API**                |
-| Define schema                 | `Type.Obj()`                    | `Type.Relation()`                           | `Type.Ref()`    |
-| Any schema type               | `Type.Obj.Any`                  | `Type.Relation.Any`                         | `Type.Ref.Any`  |
-| Get DXN (of schema)           | `Type.getDXN(schema)`           | `Type.getDXN(schema)`                       |                 |
-| Get typename (of schema)      | `Type.getTypename(schema)`      | `Type.getTypename(schema)`                  |                 |
-| Get type metadata (of schema) | `Type.getMeta(schema)`          | `Type.getMeta(schema)`                      |                 |
-| Is mutable schema             | `Type.isMutable(schema)`        | `Type.isMutable(schema)`                    |
+| Define schema                 | `Type.Obj()`                    | `Type.Relation()`                           | `Type.Ref()`     |
+| Any schema type               | `Type.Obj.Any`                  | `Type.Relation.Any`                         | `Type.Ref.Any`   |
+| Get DXN (of schema)           | `Type.getDXN(schema)`           | `Type.getDXN(schema)`                       |                  |
+| Get typename (of schema)      | `Type.getTypename(schema)`      | `Type.getTypename(schema)`                  |                  |
+| Get type metadata (of schema) | `Type.getMeta(schema)`          | `Type.getMeta(schema)`                      |                  |
+| Is mutable schema             | `Type.isMutable(schema)`        | `Type.isMutable(schema)`                    |                  |
+| Expando                       | `Type.Expando`                  |
+|
 | **DATA API**                  |
-| Any instance type             | `Obj.Any`                       | `Relation.Any`                              | `Ref.Any`       |
-| Create object                 | `Obj.make(Schema, { ... })`     | `Relation.make(Schema, { ... })`            | `Ref.make(obj)` |
-| Check kind                    | `Obj.isObject(x): x is Obj.Any` | `Relation.isRelation(x): x is Relation.Any` | `Ref.isRef(x)`  |
-| Check instance of             | `Obj.instanceOf(Schema, obj)`   | `Obj.instanceOf(Schema, rel)`               |                 |
-| Get schema                    | `Obj.getSchema(obj)`            | `Obj.getSchema(obj)`                        |                 |
-| Get DXN (of instance)         | `Obj.getDXN(obj)`               | `Obj.getDXN(obj)`                           |                 |
-| Get typename (of instance)    | `Obj.getTypename(obj)`          | `Obj.getTypename(obj)`                      |                 |
-| Get Meta                      | `Obj.getMeta(obj)`              | `Obj.getMeta(relation)`                     |                 |
-| Is deleted                    | `Obj.isDeleted(obj)`            | `Obj.isDeleted(obj)`                        |                 |
-| Get relation source           |                                 | `Relation.getSource(relation)`              |
-| Get relation target           |                                 | `Relation.getTarget(relation)`              |                 |
-| Expando                       | `Expando`                       |
+| Any instance type             | `Obj.Any`                       | `Relation.Any`                              | `Ref.Any`        |
+| Create object                 | `Obj.make(Schema, { ... })`     | `Relation.make(Schema, { ... })`            | `Ref.make(obj)`  |
+| Check kind                    | `Obj.isObject(obj)`             | `Relation.isRelation(obj)`                  | `Ref.isRef(ref)` |
+| Get relation source           |                                 | `Relation.getSource(relation)`              |                  |
+| Get relation target           |                                 | `Relation.getTarget(relation)`              |                  |
+| Check instance of             | `Obj.instanceOf(Schema, obj)`   |
+| Get schema                    | `Obj.getSchema(obj)`            |
+| Get DXN (of instance)         | `Obj.getDXN(obj)`               |
+| Get typename (of instance)    | `Obj.getTypename(obj)`          |
+| Get Meta                      | `Obj.getMeta(obj)`              |
+| Is deleted                    | `Obj.isDeleted(obj)`            |
 
 ```ts
 Type.getDXN(schema) == DXN.parse('dxn:type:example.com/type/Person:0.1.0');

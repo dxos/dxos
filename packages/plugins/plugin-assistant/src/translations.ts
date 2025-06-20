@@ -15,7 +15,7 @@ export default [
         'typename label': 'Assistant',
         'object name placeholder': 'AI Chat',
       },
-      [getSchemaTypename(Blueprint)!]: {
+      [Type.getTypename(Blueprint)!]: {
         'typename label': 'Blueprint',
         'object name placeholder': 'New blueprint',
       },

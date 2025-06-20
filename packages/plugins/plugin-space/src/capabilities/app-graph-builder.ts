@@ -313,7 +313,6 @@ export default (context: PluginContext) => {
             ),
             Option.map((space) => {
               const state = context.getCapability(SpaceCapabilities.State);
-
               const spaceState = get(rxFromObservable(space.state));
               if (spaceState !== SpaceState.SPACE_READY) {
                 return [];

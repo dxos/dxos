@@ -6866,6 +6866,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug

@@ -4,12 +4,13 @@
 
 import { Schema } from 'effect';
 
-import { Ref, Type } from '@dxos/echo';
+import { Queue } from '@dxos/client/echo';
+import { Type } from '@dxos/echo';
 
 export const AIChatType = Schema.Struct({
   id: Type.ObjectId,
   name: Schema.optional(Schema.String),
-  queue: Ref.Queue,
+  queue: Type.Ref(Queue),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/AIChat',

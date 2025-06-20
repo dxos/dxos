@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Ref } from '@dxos/echo';
+import { Queue } from '@dxos/client/echo';
 import { TypedObject } from '@dxos/echo-schema';
 
 export enum MessageState {
@@ -19,5 +19,5 @@ export class MailboxType extends TypedObject({
   version: '0.1.0',
 })({
   name: Schema.optional(Schema.String),
-  queue: Ref.Queue,
+  queue: Type.Ref(Queue),
 }) {}
