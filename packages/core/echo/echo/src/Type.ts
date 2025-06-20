@@ -19,15 +19,6 @@ export type Schema = EchoSchema.EchoSchema;
  */
 export const Obj = EchoSchema.EchoObject;
 
-/**
- * EchoRelation schema.
- */
-export const Relation = EchoSchema.EchoRelation;
-
-/**
- * Ref schema.
- */
-export const Ref: <S extends Obj.Any>(schema: S) => EchoSchema.Ref$<Schema.Schema.Type<S>> = EchoSchema.Ref;
 
 // TODO(buurdon): Move to Obj?
 export namespace Obj {
@@ -38,6 +29,11 @@ export namespace Obj {
   // TODO(dmaretskyi): If schema was covariant, we could specify props in here, like `id: ObjectId`.
   export type Any = Schema.Schema.AnyNoContext;
 }
+
+/**
+ * EchoRelation schema.
+ */
+export const Relation = EchoSchema.EchoRelation;
 
 // TODO(buurdon): Move to Relation?
 export namespace Relation {
@@ -58,6 +54,13 @@ export namespace Relation {
    */
   export type Source<A> = A extends EchoSchema.RelationSourceTargetRefs<infer _T, infer S> ? S : never;
 }
+
+/**
+ * Ref schema.
+ */
+export const Ref: <S extends Obj.Any>(schema: S) => EchoSchema.Ref$<Schema.Schema.Type<S>> = EchoSchema.Ref;
+
+export interface Ref<T> extends Schema.SchemaClass<EchoSchema.Ref<T>, EncodedReference> {}
 
 // TODO(buurdon): Move to Ref?
 export namespace Ref {

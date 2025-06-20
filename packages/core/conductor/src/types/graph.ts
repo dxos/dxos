@@ -4,9 +4,9 @@
 
 import { Schema } from 'effect';
 
-import { JsonSchemaType, Ref, type Ref$, TypedObject } from '@dxos/echo-schema';
 import { FunctionType } from '@dxos/functions';
 import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
+import { Type, Obj, Ref } from '@dxos/echo';
 
 export const ComputeValueType = Schema.Literal('string', 'number', 'boolean', 'object');
 export type ComputeValueType = Schema.Schema.Type<typeof ComputeValueType>;
@@ -24,14 +24,14 @@ export const ComputeNode = Schema.extend(
   Schema.Struct({
     /** For template nodes. */
     // TODO(dmaretskyi): Compute at runtime -- don't persist.
-    inputSchema: Schema.optional(JsonSchemaType),
-    outputSchema: Schema.optional(JsonSchemaType),
+    inputSchema: Schema.optional(Type.JsonSchema),
+    outputSchema: Schema.optional(Type.JsonSchema),
 
     /** For composition nodes. */
-    subgraph: Schema.optional(Schema.suspend((): Ref$<ComputeGraph> => Ref(ComputeGraph))),
+    subgraph: Schema.optional(Schema.suspend((): Type.Ref<ComputeGraph> => Type.Ref(ComputeGraph))),
 
     /** For composition of function nodes. */
-    function: Schema.optional(Ref(FunctionType) as Ref$<FunctionType>),
+    function: Schema.optional(Type.Ref(FunctionType) as Type.Ref<FunctionType>),
 
     /**
      * For template nodes determines the type of the value.
@@ -71,16 +71,20 @@ export type ComputeEdge = Schema.Schema.Type<typeof ComputeEdge>;
 /**
  * Persistent graph.
  */
-export class ComputeGraph extends TypedObject({
-  typename: 'dxos.org/type/ComputeGraph',
-  version: '0.1.0',
-})({
+export const ComputeGraph = Schema.Struct({
   // NOTE: Cast required as workaround for TS compiler bug.
   graph: Graph as Schema.Schema<Graph>,
 
   // Reference nodes.
   input: Schema.optional(BaseGraphNode),
   output: Schema.optional(BaseGraphNode),
-}) {}
+}).pipe(
+  Schema.mutable,
+  Type.Obj({
+    typename: 'dxos.org/type/ComputeGraph',
+    version: '0.1.0',
+  })
+)
+export interface ComputeGraph extends Schema.Schema.Type<typeof ComputeGraph> {}
 
-export const isComputeGraph = Schema.is(ComputeGraph);
+export const isComputeGraph = Obj.instanceOf(ComputeGraph);
