@@ -9,9 +9,10 @@ import type * as Obj from './Obj';
 export type Ref<T extends Obj.Any> = EchoSchema.Ref<T>;
 export type Any = EchoSchema.Ref<Obj.Any>;
 
+export const Ref = EchoSchema.Ref;
 export const Array = EchoSchema.RefArray;
 
-// TODO(wittjosiah): Should be a ref to a Queue.
+// TODO(wittjosiah): Should be a ref to a Queue?
 export const Queue = EchoSchema.Ref(EchoSchema.Expando);
 
 /**

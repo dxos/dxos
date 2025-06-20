@@ -16,7 +16,7 @@ import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-te
 import { BlueprintMachine, BlueprintParser, Logger, setConsolePrinter, setLogger } from '@dxos/assistant';
 import { combine } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
@@ -26,8 +26,8 @@ import { useQueue } from '@dxos/react-client/echo';
 import { Dialog, IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
 import {
   matchCompletion,
-  staticCompletion,
   typeahead,
+  staticCompletion,
   type TypeaheadContext,
   type TypeaheadOptions,
 } from '@dxos/react-ui-editor';
@@ -67,7 +67,7 @@ const aiConfig: AIServiceEdgeClientOptions = {
  * Container for a set of ephemeral research results.
  */
 const ResearchGraph = Schema.Struct({
-  queue: Ref(Queue),
+  queue: Ref.Queue,
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/ResearchGraph',
