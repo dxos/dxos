@@ -119,6 +119,12 @@ describe('Experimental API review', () => {
     expect(Testing.Person.instanceOf(contact)).to.be.true;
     expect(Obj.instanceOf(Testing.Person, contact)).to.be.true;
     expect(Obj.instanceOf(Testing.Organization, organization)).to.be.true;
+
+    const isPerson = Obj.instanceOf(Testing.Person);
+    const x: any = {};
+    if(isPerson(x)) {
+      x.name;
+    }
   });
 
   test('default props', ({ expect }) => {
