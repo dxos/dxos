@@ -62,12 +62,15 @@ const DefaultStory = (props: StoryProps) => {
 
   const handleDelete = useCallback((property: string) => projection?.deleteFieldProjection(property), [projection]);
 
+  // NOTE(ZaymonFC): This looks awkward but it resolves an infinite parsing issue with sb.
+  const json = useMemo(() => JSON.parse(JSON.stringify({ schema, view, projection })), [schema, view, projection]);
+
   if (!schema || !view || !projection) {
     return <div />;
   }
 
   return (
-    <TestLayout json={{ schema, view, projection }}>
+    <TestLayout json={json}>
       <TestPanel>
         <ViewEditor
           schema={schema}
