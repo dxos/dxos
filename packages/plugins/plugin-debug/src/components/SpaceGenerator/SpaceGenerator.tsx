@@ -139,8 +139,8 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   }, []);
 
   return (
-    <div role='none' className='flex flex-col divide-y divide-separator overflow-y-auto'>
-      <Toolbar.Root classNames='p-1'>
+    <div role='none' className='flex flex-col grow overflow-hidden'>
+      <Toolbar.Root classNames='border-be'>
         <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
         <IconButton
           icon='ph--file-arrow-up--regular'
@@ -149,28 +149,31 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
           onClick={handleLoadTables}
         />
         <Toolbar.Separator variant='gap' />
-        <div className='flex'>
-          <Input.Root>
-            <Input.TextInput
-              type='number'
-              min={1}
-              max={100}
-              placeholder={'Count'}
-              classNames='w-[80px]'
-              value={count}
-              onChange={(ev) => setCount(parseInt(ev.target.value))}
-            />
-          </Input.Root>
-        </div>
+        <Input.Root>
+          <Input.TextInput
+            type='number'
+            min={1}
+            max={100}
+            placeholder={'Count'}
+            classNames='!w-[4rem] !text-right'
+            size={8}
+            value={count}
+            onChange={(ev) => setCount(parseInt(ev.target.value))}
+          />
+        </Input.Root>
       </Toolbar.Root>
 
-      <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
-      <SchemaTable types={mutableTypes} objects={info.objects} label='Mutable Types' onClick={handleCreateData} />
-      <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
+      <div className='flex flex-col overflow-y-auto divide-y divide-separator'>
+        <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
+        <SchemaTable types={mutableTypes} objects={info.objects} label='Mutable Types' onClick={handleCreateData} />
+        <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
 
-      <SyntaxHighlighter classNames='flex text-xs' language='json'>
-        {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
-      </SyntaxHighlighter>
+        <div>
+          <SyntaxHighlighter classNames='flex text-xs' language='json'>
+            {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
+          </SyntaxHighlighter>
+        </div>
+      </div>
     </div>
   );
 };

@@ -246,16 +246,14 @@ const PlankComponent = memo(
               companioned={companioned}
               companions={companions}
             />
-            <div role='none' className='grid overflow-hidden'>
-              <Surface
-                key={node.id}
-                role='article'
-                data={data}
-                limit={1}
-                fallback={PlankContentError}
-                placeholder={placeholder}
-              />
-            </div>
+            <Surface
+              key={node.id}
+              role='article'
+              data={data}
+              limit={1}
+              fallback={PlankContentError}
+              placeholder={placeholder}
+            />
           </>
         ) : (
           <PlankError id={id} part={part} />
