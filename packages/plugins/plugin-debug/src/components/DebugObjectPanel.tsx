@@ -20,7 +20,7 @@ export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
   return (
     <Clipboard.Provider>
       <StackItem.Content toolbar>
-        <Toolbar.Root classNames='border-be border-separator'>
+        <Toolbar.Root classNames='border-be border-subduedSeparator'>
           <Input.Root>
             <Input.TextInput disabled value={dxn} />
             <Clipboard.IconButton value={dxn} />

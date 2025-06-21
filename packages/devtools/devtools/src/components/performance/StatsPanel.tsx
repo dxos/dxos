@@ -101,7 +101,7 @@ export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<Que
         info={
           <Toggle
             pressed={live}
-            classNames='bg-transparent p-0'
+            classNames='p-0 bg-transparent'
             density='fine'
             value='ghost'
             onClick={handleToggleLive}
