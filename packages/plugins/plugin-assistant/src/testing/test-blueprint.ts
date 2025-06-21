@@ -18,7 +18,7 @@ import { isNonNullable } from '@dxos/util';
 
 // TODO(dmaretskyi): make db available through services (same as function executor).
 // TODO(burdon): Can tools implement "aspects" so that variants can be used rather than an explicit reference?
-export const createRegistry = (space: Space, queueDxn?: DXN): ToolRegistry => {
+export const createToolRegistry = (space: Space, queueDxn?: DXN): ToolRegistry => {
   return new ToolRegistry(
     [
       createExaTool({ apiKey: EXA_API_KEY }),

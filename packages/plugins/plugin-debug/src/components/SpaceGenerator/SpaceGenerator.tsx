@@ -140,7 +140,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
 
   return (
     <div role='none' className='flex flex-col grow overflow-hidden'>
-      <Toolbar.Root classNames='border-be'>
+      <Toolbar.Root classNames='border-be border-subduedSeparator'>
         <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
         <IconButton
           icon='ph--file-arrow-up--regular'

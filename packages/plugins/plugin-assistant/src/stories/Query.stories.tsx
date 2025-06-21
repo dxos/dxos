@@ -43,7 +43,7 @@ import { testPlugins } from './testing';
 import { AmbientDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { QueryParser, createFilter, type Expression } from '../parser';
-import { createRegistry, RESEARCH_BLUEPRINT } from '../testing';
+import { createToolRegistry, RESEARCH_BLUEPRINT } from '../testing';
 import translations from '../translations';
 
 faker.seed(1);
@@ -170,7 +170,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const aiClient = useMemo(() => new SpyAIService(new AIServiceEdgeClient(aiConfig)), []);
   const tools = useMemo(
-    () => space && researchGraph && createRegistry(space, researchGraph.queue.dxn),
+    () => space && researchGraph && createToolRegistry(space, researchGraph.queue.dxn),
     [space, researchGraph?.queue.dxn],
   );
 
@@ -206,7 +206,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));
 
     log.info('starting research...', { selected });
-    await machine.runToCompletion({ aiService: aiClient, input: objects });
+    await machine.runToCompletion({ aiClient, input: objects });
 
     cleanup();
   }, [space, aiClient, tools, researchBlueprint, selection]);

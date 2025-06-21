@@ -41,7 +41,7 @@ const INITIAL_STATE: BlueprintMachineState = {
 };
 
 type ExecutionOptions = {
-  aiService: AIServiceClient;
+  aiClient: AIServiceClient;
 
   /**
    * Input to the blueprint.
@@ -76,7 +76,7 @@ export class BlueprintMachine {
       const input = firstStep ? options.input : undefined;
       firstStep = false;
 
-      this.state = await this._execStep(this.state, { input, aiService: options.aiService });
+      this.state = await this._execStep(this.state, { input, aiClient: options.aiClient });
       this.stepComplete.emit(this.blueprint.steps.find((step) => step.id === this.state.trace.at(-1)?.stepId)!);
       if (this.state.state === 'bail') {
         throw new Error('Agent unable to follow the blueprint');
@@ -147,7 +147,7 @@ export class BlueprintMachine {
       history: [...state.history, ...inputMessages],
       tools: [...tools, report],
       artifacts: [],
-      client: options.aiService,
+      client: options.aiClient,
       prompt: nextStep.instructions,
     });
 

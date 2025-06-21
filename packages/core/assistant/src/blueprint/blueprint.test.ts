@@ -23,7 +23,7 @@ import { createExaTool } from '../research/exa';
 
 // TODO(burdon): Don't run on CI.
 describe.skip('Blueprint', () => {
-  const aiService = new AIServiceEdgeClient({
+  const aiClient = new AIServiceEdgeClient({
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
     defaultGenerationOptions: {
       // model: '@anthropic/claude-sonnet-4-20250514',
@@ -42,7 +42,7 @@ describe.skip('Blueprint', () => {
     const tools = new ToolRegistry([]);
     const machine = new BlueprintMachine(tools, blueprint);
     setConsolePrinter(machine, true);
-    await machine.runToCompletion({ aiService });
+    await machine.runToCompletion({ aiClient });
   });
 
   test('email bot', { timeout: 60_000 }, async () => {
@@ -99,7 +99,7 @@ describe.skip('Blueprint', () => {
     const tools = new ToolRegistry([replyTool, labelTool]);
     const machine = new BlueprintMachine(tools, blueprint);
     setConsolePrinter(machine);
-    await machine.runToCompletion({ aiService, input: TEST_EMAILS[0] });
+    await machine.runToCompletion({ aiClient, input: TEST_EMAILS[0] });
   });
 
   test.only('research', { timeout: 120_000 }, async () => {
@@ -146,6 +146,6 @@ describe.skip('Blueprint', () => {
     const tools = new ToolRegistry([exa, localSearch, graphWriter]);
     const machine = new BlueprintMachine(tools, blueprint);
     setConsolePrinter(machine, true);
-    await machine.runToCompletion({ aiService, input: org1 });
+    await machine.runToCompletion({ aiClient, input: org1 });
   });
 });

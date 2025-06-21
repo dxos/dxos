@@ -38,11 +38,8 @@ export default (context: PluginContext) => {
     .getCapability(Capabilities.SettingsStore)
     .getStore<MeetingSettingsProps>(MEETING_PLUGIN)!.value;
 
-  // TODO(dmaretskyi): Request via capability.
-  const aiClient: AIServiceClient | undefined = new AIServiceEdgeClient({
-    // TODO(burdon): Get from config.
-    endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-  });
+  // TODO(dmaretskyi): Get via capability.
+  const aiClient = new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
 
   return contributes(ThreadCapabilities.CallExtension, {
     onJoin: async ({ channel }: { channel?: ChannelType }) => {
