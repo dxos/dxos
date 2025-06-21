@@ -11,12 +11,11 @@ import { Filter, type Key, Obj, Query } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, getSpace, getTypename } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
 
 import {
   AssistantDialog,
   AssistantSettings,
-  BlueprintEditor,
+  BlueprintContainer,
   ChatContainer,
   PromptSettings,
   TemplateContainer,
@@ -99,11 +98,7 @@ export default () =>
       id: `${ASSISTANT_PLUGIN}/blueprint`,
       role: 'article',
       filter: (data): data is { subject: Blueprint } => Obj.instanceOf(Blueprint, data.subject),
-      component: ({ data, role }) => (
-        <StackItem.Content role={role}>
-          <BlueprintEditor blueprint={data.subject} />
-        </StackItem.Content>
-      ),
+      component: ({ data, role }) => <BlueprintContainer role={role} blueprint={data.subject} />,
     }),
     createSurface({
       id: `${ASSISTANT_PLUGIN}/template`,

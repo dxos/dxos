@@ -28,6 +28,7 @@ export const editorSlots: ThemeExtensionsOptions['slots'] = {
 
 export const editorGutter = EditorView.theme({
   '.cm-gutters': {
+    background: 'var(--dx-baseSurface)',
     paddingRight: '1rem',
   },
 });

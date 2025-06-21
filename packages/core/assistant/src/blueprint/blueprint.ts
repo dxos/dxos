@@ -4,13 +4,12 @@
 
 import { Schema } from 'effect';
 
-import { Obj, Type } from '@dxos/echo';
-import { ObjectId } from '@dxos/keys';
+import { Key, Obj, Type } from '@dxos/echo';
 
 export const BlueprintStep = Schema.Struct({
-  id: ObjectId,
+  id: Key.ObjectId,
   instructions: Schema.String,
-  tools: Schema.Array(Schema.String),
+  tools: Schema.optional(Schema.Array(Schema.String)),
 });
 export interface BlueprintStep extends Schema.Schema.Type<typeof BlueprintStep> {}
 
@@ -41,7 +40,7 @@ export namespace BlueprintBuilder {
 
     step(instructions: string, options?: { tools?: string[] }): Builder {
       this._steps.push({
-        id: ObjectId.random(),
+        id: Key.ObjectId.random(),
         instructions,
         tools: options?.tools ?? [],
       });

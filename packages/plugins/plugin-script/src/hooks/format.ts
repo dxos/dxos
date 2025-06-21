@@ -42,6 +42,11 @@ export const createFormat = (script: ScriptType) => {
 
   return {
     nodes: [formatAction],
-    edges: [{ source: 'root', target: 'format' }],
+    edges: [
+      {
+        source: 'root',
+        target: 'format',
+      },
+    ],
   };
 };
