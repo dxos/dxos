@@ -13,44 +13,49 @@ import { continueKeymap } from '@valtown/codemirror-continue';
 import { tsSync, tsFacet, tsLinter, tsAutocomplete, tsHover, type HoverInfo } from '@valtown/codemirror-ts';
 import React from 'react';
 
-import { type ThemeMode, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, type ThemeMode, useThemeContext } from '@dxos/react-ui';
 import {
+  type EditorInputMode,
+  EditorView,
+  InputModeExtensions,
+  type UseTextEditorProps,
   autocomplete,
   createBasicExtensions,
   createThemeExtensions,
-  type EditorInputMode,
   editorMonospace,
-  EditorView,
   folding,
-  InputModeExtensions,
   useTextEditor,
-  type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
+import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-export type TypescriptEditorProps = {
-  id: string;
-  inputMode?: EditorInputMode;
-  env?: VirtualTypeScriptEnvironment;
-  toolbar?: boolean;
-} & Pick<UseTextEditorProps, 'className' | 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>;
+export type TypescriptEditorProps = ThemedClassName<
+  {
+    id: string;
+    inputMode?: EditorInputMode;
+    toolbar?: boolean;
+    env?: VirtualTypeScriptEnvironment;
+  } & Pick<UseTextEditorProps, 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>
+>;
 
 export const TypescriptEditor = ({
+  classNames,
   id,
+  inputMode = 'vscode',
+  toolbar,
   env,
-  className,
   initialValue,
   extensions,
   scrollTo,
   selection,
-  toolbar,
-  inputMode = 'vscode',
 }: TypescriptEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       id,
       initialValue,
+      selection,
+      scrollTo,
       extensions: [
         extensions,
         createBasicExtensions({
@@ -60,10 +65,7 @@ export const TypescriptEditor = ({
           lineWrapping: false,
           scrollPastEnd: true,
         }),
-        createThemeExtensions({
-          themeMode,
-          syntaxHighlighting: true,
-        }),
+        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         // NOTE: Not using default editor gutter because folding for code works best right beside text.
         EditorView.theme({
           '.cm-gutters': {
@@ -72,32 +74,32 @@ export const TypescriptEditor = ({
         }),
         InputModeExtensions[inputMode],
         folding(),
-        // Continues block comments when you hit Enter.
+        // Continues block comments when pressing Enter.
         Prec.high(keymap.of(continueKeymap)),
+
         // TODO(burdon): Factor out.
-        [
-          editorMonospace,
-          javascript({ typescript: true }),
-          // https://github.com/val-town/codemirror-ts
-          autocomplete({ override: env ? [tsAutocomplete()] : [] }),
-          env
-            ? [
-                tsFacet.of({ env, path: `/src/${id}.ts` }),
-                tsSync(),
-                tsLinter(),
-                tsHover({ renderTooltip: createTooltipRenderer(themeMode) }),
-              ]
-            : [],
+        editorMonospace,
+        javascript({ typescript: true }),
+        // https://github.com/val-town/codemirror-ts
+        autocomplete({ override: env ? [tsAutocomplete()] : undefined }),
+        env && [
+          tsFacet.of({ env, path: `/src/${id}.ts` }),
+          tsSync(),
+          tsLinter(),
+          tsHover({ renderTooltip: createTooltipRenderer(themeMode) }),
         ],
       ].filter(isNonNullable),
-      selection,
-      scrollTo,
     }),
     [id, extensions, themeMode, inputMode, selection, scrollTo],
   );
 
   return (
-    <div ref={parentRef} data-toolbar={toolbar ? 'enabled' : 'disabled'} className={className} {...focusAttributes} />
+    <div
+      ref={parentRef}
+      data-toolbar={toolbar ? 'enabled' : 'disabled'}
+      className={mx(classNames)}
+      {...focusAttributes}
+    />
   );
 };
 

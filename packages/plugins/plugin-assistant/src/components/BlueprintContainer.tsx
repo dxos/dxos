@@ -11,6 +11,7 @@ import { StackItem, type StackItemContentProps } from '@dxos/react-ui-stack';
 import { BlueprintEditor } from './BlueprintEditor';
 import { meta } from '../meta';
 
+// TODO(burdon): Compare with ScriptContainer.
 export const BlueprintContainer = ({
   role,
   blueprint,
@@ -18,10 +19,12 @@ export const BlueprintContainer = ({
   const { t } = useTranslation(meta.id);
   const [definition] = useState<BlueprintDefinition>({ steps: blueprint.steps });
 
-  const handleSave = () => {};
+  const handleSave = () => {
+    console.log('save blueprint', definition);
+  };
 
   return (
-    <StackItem.Content role={role} classNames='container-max-width' toolbar>
+    <StackItem.Content role={role} toolbar>
       <Toolbar.Root>
         <Toolbar.Button onClick={handleSave}>{t('button save')}</Toolbar.Button>
       </Toolbar.Root>
