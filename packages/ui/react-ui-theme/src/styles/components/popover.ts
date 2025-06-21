@@ -23,7 +23,7 @@ export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrai
 
 export const popoverContent: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'border border-separator rounded-md overflow-hidden',
+    'border border-separator rounded-md',
     modalSurface,
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),

@@ -69,9 +69,9 @@ export const FunctionInputEditor = ({
       <Form
         schema={effectSchema}
         values={values}
-        classNames='p-0'
         onValuesChanged={handleValuesChanged}
         onQueryRefOptions={onQueryRefOptions}
+        flush
       />
     </>
   );

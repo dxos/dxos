@@ -11,6 +11,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-stack';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getHashColor, mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
@@ -252,15 +253,16 @@ const DefaultStory = ({
       </div>
 
       <Popover.VirtualTrigger virtualRef={popoverAnchorRef} />
-      <Popover.Content
-        classNames='p-1 bg-groupSurface popover-card-width'
-        onOpenAutoFocus={(event) => event.preventDefault()}
-      >
-        <SyntaxHighlighter
-          classNames='p-0 bg-transparent text-xs'
-          language='json'
-          code={JSON.stringify(popover, null, 2)}
-        />
+      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+        <Popover.Viewport>
+          <Card.Container role='popover'>
+            <SyntaxHighlighter
+              classNames='bg-transparent text-xs !mlb-card-spacing-block !pli-card-spacing-inline !overflow-visible'
+              language='json'
+              code={JSON.stringify(popover, null, 2)}
+            />
+          </Card.Container>
+        </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
     </Popover.Root>
