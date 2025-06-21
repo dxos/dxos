@@ -4,14 +4,14 @@
 
 import { type Schema } from 'effect';
 
-import { AIServiceEdgeClient, type AIServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
-import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { type AIServiceClient } from '@dxos/ai';
+import { Capabilities, contributes, createIntent, useCapability, type PluginContext } from '@dxos/app-framework';
 import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { AssistantCapabilities } from '@dxos/plugin-assistant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
@@ -33,13 +33,11 @@ type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 export default (context: PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const client = context.getCapability(ClientCapabilities.Client);
+  const aiClient = useCapability(AssistantCapabilities.AiClient);
   const state = context.getCapability(MeetingCapabilities.State);
   const settings = context
     .getCapability(Capabilities.SettingsStore)
     .getStore<MeetingSettingsProps>(MEETING_PLUGIN)!.value;
-
-  // TODO(dmaretskyi): Get via capability.
-  const aiClient = new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
 
   return contributes(ThreadCapabilities.CallExtension, {
     onJoin: async ({ channel }: { channel?: ChannelType }) => {
@@ -51,7 +49,7 @@ export default (context: PluginContext) => {
       let messageEnricher;
       if (aiClient && settings.entityExtraction) {
         messageEnricher = createEntityExtractionEnricher({
-          aiClient,
+          aiClient: aiClient.value,
           // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities?
           //  This forced me to add a dependency on markdown plugin.
           //  This will be replaced with a vector search index anyway, so its not a big deal.

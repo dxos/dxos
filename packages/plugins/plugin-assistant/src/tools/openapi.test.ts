@@ -73,9 +73,7 @@ describe.skip('openapi', () => {
   describe.skip('AI uses tools', () => {
     test('amadeus flight availabilities', { timeout: 60_000 }, async () => {
       const tools = await createToolsFromApi(FLIGHT_SEARCH_API, { authorization: AMADEUS_AUTH });
-      const aiClient = new AIServiceEdgeClient({
-        endpoint: AI_SERVICE_ENDPOINT.LOCAL,
-      });
+      const aiClient = new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL });
       const processor = new ChatProcessor(aiClient, tools);
       const reply = await processor.request(
         `What is the cheapest flight from New York to Paris? going on ${new Date().toISOString()} and returning after a week. 1 adult traveler`,

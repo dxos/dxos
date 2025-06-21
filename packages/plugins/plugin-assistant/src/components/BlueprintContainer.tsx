@@ -40,9 +40,11 @@ export const BlueprintContainer = ({
       return;
     }
 
+    // TODO(burdon): Get tool registry from capabilities.
     // const space = getSpace(blueprint);
-    const blueprint = BlueprintParser.create().parse(definition);
     const tools = new ToolRegistry([]);
+
+    const blueprint = BlueprintParser.create().parse(definition);
     const machine = new BlueprintMachine(tools, blueprint);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiClient: aiClient.value, input: [] });
