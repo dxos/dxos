@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import React, { type FC } from 'react';
 
 import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { createAnchors, getAnchorPoints } from '@dxos/react-ui-canvas-editor';
+import { createAnchors } from '@dxos/react-ui-canvas-editor';
 
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 
@@ -34,26 +34,18 @@ const createGate = (props: CreateGateProps): GateShape =>
     ...props,
   });
 
-const GateComponent = (Symbol: FC<GateSymbolProps>) => () => {
-  return (
-    <div className='flex w-full justify-center items-center'>
-      <Symbol />
-    </div>
-  );
-};
-
 // TODO(burdon): Create custom icons.
 const defineShape = <S extends GateShape>({
   type,
   name,
   icon,
-  Symbol,
+  symbol: Symbol,
   createShape,
   inputs,
   outputs = [createAnchorId('output')],
 }: {
   type: GateType;
-  Symbol: FC<GateSymbolProps>;
+  symbol: FC<GateSymbolProps>;
   createShape: ShapeDef<S>['createShape'];
   inputs: string[];
   outputs?: string[];
@@ -61,7 +53,15 @@ const defineShape = <S extends GateShape>({
   type,
   name,
   icon,
-  component: GateComponent(Symbol),
+  // NOTE: Preact interprets captitalized properties as React components.
+  // Be careful not to name component factories with a capital letter.
+  component: () => {
+    return (
+      <div className='flex w-full justify-center items-center'>
+        <Symbol />
+      </div>
+    );
+  },
   createShape,
   getAnchors: (shape) => createAnchors({ shape, inputs, outputs }),
 });
@@ -80,43 +80,45 @@ type GateSymbolProps = {
 };
 
 // TODO(burdon): Note inputs should line up with anchors.
-const Symbol =
+const createSymbol =
   (pathConstructor: PathConstructor, inputs: number): FC<GateSymbolProps> =>
-  ({
-    width = 64,
-    height = 32,
-    // TODO(burdon): Same as line color.
-    className = 'fill-neutral-200 dark:fill-neutral-800 stroke-neutral-500',
-    strokeWidth = 1,
-  }) => {
-    const startX = width * 0.25;
-    const endX = width * 0.75;
-    const centerY = height / 2;
-    const paths = pathConstructor({ startX, endX, height });
+  () =>
+    null;
+// ({
+//   width = 64,
+//   height = 32,
+//   // TODO(burdon): Same as line color.
+//   className = 'fill-neutral-200 dark:fill-neutral-800 stroke-neutral-500',
+//   strokeWidth = 1,
+// }) => {
+//   const startX = width * 0.25;
+//   const endX = width * 0.75;
+//   const centerY = height / 2;
+//   const paths = pathConstructor({ startX, endX, height });
 
-    return (
-      <svg viewBox={`0 0 ${width} ${height}`} className='w-full h-full'>
-        {/* Input line. */}
-        {getAnchorPoints({ x: 0, y: centerY }, inputs).map(({ x, y }, i) => (
-          <line key={i} x1={x} y1={y} x2={startX * 1.3} y2={y} strokeWidth={strokeWidth} className={className} />
-        ))}
+//   return (
+//     <svg viewBox={`0 0 ${width} ${height}`} className='w-full h-full'>
+//       {/* Input line. */}
+//       {getAnchorPoints({ x: 0, y: centerY }, inputs).map(({ x, y }, i) => (
+//         <line key={i} x1={x} y1={y} x2={startX * 1.3} y2={y} strokeWidth={strokeWidth} className={className} />
+//       ))}
 
-        {/* Output line. */}
-        <line x1={endX} y1={centerY} x2={width} y2={centerY} strokeWidth={strokeWidth} className={className} />
+//       {/* Output line. */}
+//       <line x1={endX} y1={centerY} x2={width} y2={centerY} strokeWidth={strokeWidth} className={className} />
 
-        {/* And body. */}
-        {paths.map((path, i) => (
-          <path key={i} d={path} strokeWidth={strokeWidth} className={className} />
-        ))}
-      </svg>
-    );
-  };
+//       {/* And body. */}
+//       {paths.map((path, i) => (
+//         <path key={i} d={path} strokeWidth={strokeWidth} className={className} />
+//       ))}
+//     </svg>
+//   );
+// };
 
 //
 // AND
 //
 
-const AndSymbol = Symbol(({ startX, endX, height }) => {
+const AndSymbol = createSymbol(({ startX, endX, height }) => {
   const arcRadius = (endX - startX) / 2;
   return [
     `
@@ -139,7 +141,7 @@ export const andShape = defineShape({
   type: 'and',
   name: 'AND',
   icon: 'ph--intersection--regular',
-  Symbol: AndSymbol,
+  symbol: AndSymbol,
   createShape: createAnd,
   inputs: ['input.a', 'input.b'],
 });
@@ -149,7 +151,7 @@ export const andShape = defineShape({
 //
 
 // TODO(burdon): Should have sharper point.
-const OrSymbol = Symbol(({ startX, endX, height }) => {
+const OrSymbol = createSymbol(({ startX, endX, height }) => {
   const arcRadius = (endX - startX) / 2;
   return [
     `
@@ -173,7 +175,7 @@ export const orShape = defineShape({
   type: 'or',
   name: 'OR',
   icon: 'ph--union--regular',
-  Symbol: OrSymbol,
+  symbol: OrSymbol,
   createShape: createOr,
   inputs: ['input.a', 'input.b'],
 });
@@ -182,7 +184,7 @@ export const orShape = defineShape({
 // NOT
 //
 
-const NotSymbol = Symbol(({ startX, endX, height }) => {
+const NotSymbol = createSymbol(({ startX, endX, height }) => {
   return [
     `
     M ${startX},${height * 0.1}
@@ -209,7 +211,7 @@ export const notShape = defineShape({
   type: 'not',
   name: 'NOT',
   icon: 'ph--x--regular',
-  Symbol: NotSymbol,
+  symbol: NotSymbol,
   createShape: createNot,
   inputs: [createAnchorId('input')],
 });
