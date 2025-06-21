@@ -52,7 +52,7 @@ export const CreateSpaceDialog = () => {
       <div className='p-4'>
         <Form
           testId='create-space-form'
-          classNames='!p-0'
+          flush
           autoFocus
           values={initialValues}
           schema={SpaceForm}

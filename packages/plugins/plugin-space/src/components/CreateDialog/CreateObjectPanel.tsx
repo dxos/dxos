@@ -92,7 +92,7 @@ export const CreateObjectPanel = ({
         <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={setTarget} />
       ) : form.formSchema ? (
         <Form
-          classNames='!p-0'
+          flush
           autoFocus
           values={{ name: initialName }}
           schema={form.formSchema}

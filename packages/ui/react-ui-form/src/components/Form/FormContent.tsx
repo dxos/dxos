@@ -169,7 +169,7 @@ export const FormField = ({
     if (typeLiteral) {
       return (
         <>
-          {!inline && <h3 className='text-lg mbs-2 mbe-1 first:mbs-0'>{label}</h3>}
+          {!inline && <h3 className={mx('text-lg mlb-card-spacing-block first:mbs-0')}>{label}</h3>}
           <FormFields
             schema={Schema.make(typeLiteral)}
             path={path}
@@ -219,7 +219,7 @@ export const FormFields = ({
 
   return (
     // TODO(burdon): Consistent padding (with composite forms).
-    <div role='form' className={mx('p-2 is-full', classNames)}>
+    <div role='form' className={mx('is-full', classNames)}>
       {properties
         .map((property) => {
           return (
