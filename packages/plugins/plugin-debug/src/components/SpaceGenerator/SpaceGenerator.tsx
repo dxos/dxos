@@ -31,7 +31,7 @@ export type SpaceGeneratorProps = {
 
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const client = useClient();
+  const client = useClient();\
   const staticTypes = [DocumentType, DiagramType, SheetType, ComputeGraph]; // TODO(burdon): Make extensible.
   const mutableTypes = [DataType.Organization, DataType.Project, DataType.Person, DataType.Message];
   const [count, setCount] = useState(1);
