@@ -135,7 +135,8 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
         orientation='horizontal'
         classNames='contents [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin'
       >
-        <Tabs.Tablist classNames='p-1 gap-1 bs-[--rail-action] border-be border-separator'>
+        {/* TODO(burdon): Should have common container/frags with toolbar. Standardize border-be for all StackItem toolbars. */}
+        <Tabs.Tablist classNames='p-1 gap-1 overflow-y-hidden border-be border-separator'>
           <Tabs.Tab value='unresolved' classNames='text-sm'>
             {t('show unresolved label')}
           </Tabs.Tab>
