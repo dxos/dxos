@@ -80,9 +80,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   return (
     <>
-      <div role='none' className='p-2'>
-        <Form schema={KanbanSettingsSchema} values={initialValues} onSave={onSave} autoSave Custom={custom} />
-      </div>
+      <Form schema={KanbanSettingsSchema} values={initialValues} onSave={onSave} autoSave Custom={custom} />
       <ViewEditor
         registry={space.db.schemaRegistry}
         schema={schema}

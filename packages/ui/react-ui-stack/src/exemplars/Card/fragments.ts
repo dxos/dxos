@@ -7,7 +7,9 @@ export const cardRoot = 'contain-layout pli-2 plb-1 first-of-type:pbs-0 last-of-
 export const cardContent =
   'rounded overflow-hidden bg-cardSurface border border-separator dark:border-subduedSeparator dx-focus-ring-group-y-indicator relative min-bs-[--rail-item] group/card';
 
-export const cardText = 'pli-[--dx-card-spacing-inline] mlb-[--dx-card-spacing-block]';
+export const cardSpacing = 'pli-card-spacing-inline mlb-card-spacing-block';
+
+export const cardText = cardSpacing;
 
 export const cardHeading = 'text-lg font-medium line-clamp-2';
 

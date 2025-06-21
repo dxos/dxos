@@ -7,6 +7,7 @@ import React, { type ReactElement, useEffect, useMemo, useRef } from 'react';
 
 import { type BaseObject, type PropertyKey } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { cardSpacing } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { type SchemaProperty } from '@dxos/schema';
 
@@ -40,6 +41,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
     filter?: PropsFilter<T>;
     sort?: PropertyKey<T>[];
     autoSave?: boolean;
+    flush?: boolean;
     testId?: string;
     onCancel?: () => void;
     onQueryRefOptions?: QueryRefOptions;
@@ -62,6 +64,7 @@ export const Form = <T extends BaseObject>({
   filter,
   sort,
   autoSave,
+  flush,
   testId,
   onValuesChanged,
   onValidate,
@@ -95,7 +98,7 @@ export const Form = <T extends BaseObject>({
       onValid={onValid}
       onSave={onSave}
     >
-      <div ref={formRef} role='none' className={mx(classNames)} data-testid={testId}>
+      <div ref={formRef} role='none' className={mx(!flush && cardSpacing, classNames)} data-testid={testId}>
         <FormFields
           schema={schema}
           path={path}

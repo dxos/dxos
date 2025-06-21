@@ -12761,6 +12761,9 @@ importers:
       '@dxos/react-ui-pickers':
         specifier: workspace:*
         version: link:../react-ui-pickers
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../react-ui-stack
       '@dxos/react-ui-tag-picker':
         specifier: workspace:*
         version: link:../react-ui-tag-picker
