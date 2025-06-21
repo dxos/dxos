@@ -8,7 +8,7 @@ import { AbstractGraphBuilder, AbstractGraphModel, Graph } from '@dxos/graph';
 import { live, isLiveObject } from '@dxos/live-object';
 import { type MakeOptional } from '@dxos/util';
 
-import { type Connection, type Shape } from '.';
+import { type Connection, type Shape } from './schema';
 
 export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphModel<
   S,
@@ -20,6 +20,7 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
     if (isLiveObject(graph) as any) {
       return new CanvasGraphModel<S>(graph as Graph);
     }
+
     return new CanvasGraphModel<S>(
       live(Graph, {
         nodes: graph?.nodes ?? [],

@@ -67,5 +67,6 @@
   ],
   "circleci.notifications.mine": true,
   "search.useParentIgnoreFiles": true,
-  "search.useGlobalIgnoreFiles": false
+  "search.useGlobalIgnoreFiles": false,
+  "nxConsole.generateAiAgentRules": true
 }
