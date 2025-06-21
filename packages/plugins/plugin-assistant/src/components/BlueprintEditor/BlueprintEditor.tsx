@@ -11,7 +11,6 @@ import {
   createBasicExtensions,
   createJsonExtensions,
   createThemeExtensions,
-  editorMonospace,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -26,14 +25,21 @@ export const BlueprintEditor = ({ classNames, blueprint }: BlueprintEditorProps)
   const { parentRef } = useTextEditor({
     initialValue: JSON.stringify(blueprint, null, 2),
     extensions: [
-      createBasicExtensions({ lineWrapping: false }),
-      createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-      createJsonExtensions({ schema: Type.toJsonSchema(BlueprintDefinition, { strict: true }) }),
-      editorMonospace,
+      createBasicExtensions({
+        lineNumbers: true,
+        lineWrapping: false,
+        monospace: true,
+        scrollPastEnd: true,
+      }),
+      createThemeExtensions({
+        themeMode,
+        syntaxHighlighting: true,
+      }),
+      createJsonExtensions({
+        schema: Type.toJsonSchema(BlueprintDefinition, { strict: true }),
+      }),
     ],
   });
 
-  return (
-    <div ref={parentRef} className={mx('flex w-full pli-2 overflow-x-scroll border-x border-separator', classNames)} />
-  );
+  return <div ref={parentRef} className={mx('overflow-hidden', classNames)} />;
 };
