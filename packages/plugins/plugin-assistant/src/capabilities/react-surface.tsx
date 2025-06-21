@@ -16,7 +16,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import {
   AssistantDialog,
   AssistantSettings,
-  BlueprintEditor,
+  BlueprintContainer,
   ChatContainer,
   PromptSettings,
   TemplateContainer,
@@ -101,7 +101,7 @@ export default () =>
       filter: (data): data is { subject: Blueprint } => Obj.instanceOf(Blueprint, data.subject),
       component: ({ data, role }) => (
         <StackItem.Content role={role}>
-          <BlueprintEditor blueprint={data.subject} />
+          <BlueprintContainer blueprint={data.subject} />
         </StackItem.Content>
       ),
     }),
