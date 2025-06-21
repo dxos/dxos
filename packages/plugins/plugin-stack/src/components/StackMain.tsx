@@ -8,13 +8,14 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   Capabilities,
-  createIntent,
   LayoutAction,
+  createIntent,
   useAppGraph,
   useCapabilities,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { fullyQualifiedId, getTypename, isLiveObject, live, makeRef } from '@dxos/client/echo';
+import { fullyQualifiedId, isLiveObject } from '@dxos/client/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { SpaceAction, type CollectionType } from '@dxos/plugin-space/types';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
@@ -43,13 +44,13 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   const { graph } = useAppGraph();
   const { t } = useTranslation(STACK_PLUGIN);
   const allMetadata = useCapabilities(Capabilities.Metadata);
-  const defaultStack = useMemo(() => live(StackViewType, { sections: {} }), [collection]);
+  const defaultStack = useMemo(() => Obj.make(StackViewType, { sections: {} }), [collection]);
   const stack = (collection.views[StackViewType.typename]?.target as StackViewType | undefined) ?? defaultStack;
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 
   useEffect(() => {
     if (!collection.views[StackViewType.typename]) {
-      collection.views[StackViewType.typename] = makeRef(stack);
+      collection.views[StackViewType.typename] = Ref.make(stack);
     }
   }, [collection, stack]);
 
@@ -60,7 +61,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
       .map((object) => object.target)
       .filter(isNonNullable)
       .map((object) => {
-        const metadata = allMetadata.find((m) => m.id === (getTypename(object) ?? 'never'))
+        const metadata = allMetadata.find((m) => m.id === (Obj.getTypename(object) ?? 'never'))
           ?.metadata as StackSectionMetadata;
         const view = {
           ...stack.sections[object.id],

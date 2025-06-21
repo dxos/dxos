@@ -43,6 +43,13 @@ export type EchoNetworkAdapterParams = {
   monitor?: NetworkDataMonitor;
 };
 
+type ConnectionEntry = {
+  isOpen: boolean;
+  connection: ReplicatorConnection;
+  reader: ReadableStreamDefaultReader<AutomergeProtocolMessage>;
+  writer: WritableStreamDefaultWriter<AutomergeProtocolMessage>;
+};
+
 /**
  * Manages a set of {@link EchoReplicator} instances.
  */
@@ -108,6 +115,13 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
   async whenConnected(): Promise<void> {
     await this._connected.wait({ timeout: 10_000 });
+  }
+
+  public onConnectionAuthScopeChanged(peer: PeerId): void {
+    const entry = this._connections.get(peer);
+    if (entry) {
+      this._onConnectionAuthScopeChanged(entry.connection);
+    }
   }
 
   @synchronized
@@ -178,28 +192,6 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._send(message);
   }
 
-  private _send(message: Message): void {
-    const connectionEntry = this._connections.get(message.targetId);
-    if (!connectionEntry) {
-      throw new Error('Connection not found.');
-    }
-
-    const writeStart = Date.now();
-    // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
-    connectionEntry.writer
-      .write(message as AutomergeProtocolMessage)
-      .then(() => {
-        const durationMs = Date.now() - writeStart;
-        this._params.monitor?.recordMessageSent(message, durationMs);
-      })
-      .catch((err) => {
-        if (connectionEntry.isOpen) {
-          log.catch(err);
-        }
-        this._params.monitor?.recordMessageSendingFailed(message);
-      });
-  }
-
   // TODO(dmaretskyi): Remove.
   getPeersInterestedInCollection(collectionId: string): PeerId[] {
     return Array.from(this._connections.values())
@@ -211,19 +203,46 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       .filter(isNonNullable);
   }
 
+  private _send(message: Message): void {
+    const connectionEntry = this._connections.get(message.targetId);
+    if (!connectionEntry) {
+      throw new Error('Connection not found.');
+    }
+
+    // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
+    const start = Date.now();
+    connectionEntry.writer
+      .write(message as AutomergeProtocolMessage)
+      .then(() => {
+        this._params.monitor?.recordMessageSent(message, Date.now() - start);
+      })
+      .catch((err) => {
+        if (connectionEntry.isOpen) {
+          log.catch(err);
+        }
+
+        this._params.monitor?.recordMessageSendingFailed(message);
+      });
+  }
+
   private _onConnectionOpen(connection: ReplicatorConnection): void {
-    log('Connection opened', { peerId: connection.peerId });
+    log('connection opened', { peerId: connection.peerId });
     invariant(!this._connections.has(connection.peerId as PeerId));
-    const reader = connection.readable.getReader();
-    const writer = connection.writable.getWriter();
-    const connectionEntry: ConnectionEntry = { connection, reader, writer, isOpen: true };
+    const connectionEntry: ConnectionEntry = {
+      isOpen: true,
+      connection,
+      reader: connection.readable.getReader(),
+      writer: connection.writable.getWriter(),
+    };
+
     this._connections.set(connection.peerId as PeerId, connectionEntry);
 
+    // Read inbound messages.
     queueMicrotask(async () => {
       try {
         while (true) {
           // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
-          const { done, value } = await reader.read();
+          const { done, value } = await connectionEntry.reader.read();
           if (done) {
             break;
           }
@@ -253,11 +272,18 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._params.monitor?.recordMessageReceived(message);
   }
 
-  public onConnectionAuthScopeChanged(peer: PeerId): void {
-    const entry = this._connections.get(peer);
-    if (entry) {
-      this._onConnectionAuthScopeChanged(entry.connection);
-    }
+  private _onConnectionClosed(connection: ReplicatorConnection): void {
+    log('connection closed', { peerId: connection.peerId });
+    const entry = this._connections.get(connection.peerId as PeerId);
+    invariant(entry);
+
+    entry.isOpen = false;
+    this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
+    this._params.monitor?.recordPeerDisconnected(connection.peerId);
+
+    void entry.reader.cancel().catch((err) => log.catch(err));
+    void entry.writer.abort().catch((err) => log.catch(err));
+    this._connections.delete(connection.peerId as PeerId);
   }
 
   /**
@@ -272,21 +298,6 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._emitPeerCandidate(connection);
   }
 
-  private _onConnectionClosed(connection: ReplicatorConnection): void {
-    log('Connection closed', { peerId: connection.peerId });
-    const entry = this._connections.get(connection.peerId as PeerId);
-    invariant(entry);
-
-    entry.isOpen = false;
-    this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
-    this._params.monitor?.recordPeerDisconnected(connection.peerId);
-
-    void entry.reader.cancel().catch((err) => log.catch(err));
-    void entry.writer.abort().catch((err) => log.catch(err));
-
-    this._connections.delete(connection.peerId as PeerId);
-  }
-
   private _emitPeerCandidate(connection: ReplicatorConnection): void {
     this.emit('peer-candidate', {
       peerId: connection.peerId as PeerId,
@@ -294,13 +305,6 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     });
   }
 }
-
-type ConnectionEntry = {
-  connection: ReplicatorConnection;
-  reader: ReadableStreamDefaultReader<AutomergeProtocolMessage>;
-  writer: WritableStreamDefaultWriter<AutomergeProtocolMessage>;
-  isOpen: boolean;
-};
 
 export const createEchoPeerMetadata = (): PeerMetadata =>
   ({

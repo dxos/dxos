@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { type AnyLiveObject } from '@dxos/client/echo';
+import { type Obj } from '@dxos/echo';
 import { Clipboard, Input } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugObjectPanelProps = {
-  object: AnyLiveObject<any>;
+  object: Obj.Any;
 };
 
 // TODO(burdon): Get schema and traverse references.

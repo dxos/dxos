@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
@@ -36,7 +36,7 @@ export const TranscriptionPlugin = () =>
               const queue = space?.queues.get<DataType.Message>(transcript.queue.dxn);
               await queue?.refresh();
               const content = queue?.objects
-                .filter((message) => isInstanceOf(DataType.Message, message))
+                .filter((message) => Obj.instanceOf(DataType.Message, message))
                 .flatMap((message, index) => renderMarkdown(members)(message, index))
                 .join('\n\n');
               return content;

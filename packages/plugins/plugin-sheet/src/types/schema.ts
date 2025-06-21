@@ -31,7 +31,10 @@ export const RowColumnMeta = Schema.Struct({
 
 // TODO(burdon): Reconcile col/column (across packages).
 // TODO(burdon): Index to all updates when rows/columns are inserted/deleted.
-export class SheetType extends TypedObject({ typename: 'dxos.org/type/Sheet', version: '0.1.0' })({
+export class SheetType extends TypedObject({
+  typename: 'dxos.org/type/Sheet',
+  version: '0.1.0',
+})({
   name: Schema.optional(Schema.String),
 
   // Sparse map of cells referenced by index.

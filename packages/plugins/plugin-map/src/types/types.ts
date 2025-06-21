@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { GeoPoint } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 import { SpaceSchema } from '@dxos/react-client/echo';
 
 import { MapType } from './map';
@@ -37,7 +37,7 @@ export namespace MapAction {
 
   export class Create extends Schema.TaggedClass<Create>()(`${MAP_ACTION}/create`, {
     input: Schema.extend(
-      Schema.Struct({ space: SpaceSchema, coordinates: Schema.optional(GeoPoint) }),
+      Schema.Struct({ space: SpaceSchema, coordinates: Schema.optional(Type.Format.GeoPoint) }),
       CreateMapSchema,
     ),
     output: Schema.Struct({ object: MapType }),

@@ -130,9 +130,6 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
     '[data-has-focus] & .cm-ref-tag': {
       opacity: '1',
     },
-    '[data-is-attention-source] & .cm-ref-tag': {
-      opacity: '1',
-    },
     '.cm-ref-tag button': {
       display: 'grid',
       alignItems: 'center',

@@ -8,14 +8,8 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import { Schema } from 'effect';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import {
-  assertEchoSchema,
-  FormatEnum,
-  isMutable,
-  toJsonSchema,
-  EchoObject,
-  GeneratorAnnotation,
-} from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { FormatEnum, isMutable, toJsonSchema, EchoObject, GeneratorAnnotation } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
@@ -144,8 +138,9 @@ const StoryViewEditor = () => {
   const handleTypenameChanged = useCallback(
     (typename: string) => {
       invariant(schema);
+      invariant(Type.isMutable(schema));
+      schema.updateTypename(typename);
       invariant(table?.view?.target);
-      assertEchoSchema(schema).updateTypename(typename);
       table.view.target.query.typename = typename;
     },
     [schema, table?.view?.target],

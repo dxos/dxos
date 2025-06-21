@@ -8,8 +8,7 @@ import { AIServiceEdgeClient, type AIServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
-import { type Obj } from '@dxos/echo';
-import { Filter, getSchemaTypename, Query } from '@dxos/echo-schema';
+import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -75,7 +74,7 @@ export default (context: PluginContext) => {
       state.activeMeeting = undefined;
     },
     onCallStateUpdated: async (callState: CallState) => {
-      const typename = getSchemaTypename(MeetingType);
+      const typename = Type.getTypename(MeetingType);
       const activity = typename ? callState.activities?.[typename] : undefined;
       if (!activity?.payload) {
         return;
@@ -126,7 +125,7 @@ const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: Entit
 const processContextObject = async (object: Obj.Any): Promise<any> => {
   // TODO(dmaretskyi): Documents need special processing is the content is behind a ref.
   // TODO(dmaretskyi): Think about a way to handle this serialization with a decorator.
-  // if (isInstanceOf(DocumentType, object)) {
+  // if (Obj.instanceOf(DocumentType, object)) {
   //   return {
   //     ...object,
   //     content: await object.content.load(),

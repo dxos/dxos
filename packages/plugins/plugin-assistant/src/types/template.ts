@@ -49,7 +49,10 @@ export const TemplateKindSchema = Schema.Union(
 );
 
 export type TemplateKindType = Schema.Schema.Type<typeof TemplateKindSchema>;
-export class TemplateType extends TypedObject({ typename: 'dxos.org/type/Template', version: '0.1.0' })({
+export class TemplateType extends TypedObject({
+  typename: 'dxos.org/type/Template',
+  version: '0.1.0',
+})({
   name: Schema.optional(Schema.String),
   kind: Schema.mutable(TemplateKindSchema),
   source: Schema.String,

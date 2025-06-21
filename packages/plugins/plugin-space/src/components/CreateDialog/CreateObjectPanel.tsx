@@ -4,6 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
+import { Type } from '@dxos/echo';
 import { getTypeAnnotation, type TypeAnnotation } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type Space } from '@dxos/react-client/echo';
@@ -47,7 +48,7 @@ export const CreateObjectPanel = ({
   const { t } = useTranslation(SPACE_PLUGIN);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const [target, setTarget] = useState<Space | CollectionType | undefined>(initialTarget);
-  const form = forms.find((form) => getTypeAnnotation(form.objectSchema)?.typename === typename);
+  const form = forms.find((form) => Type.getTypename(form.objectSchema) === typename);
   const options: TypeAnnotation[] = forms
     .map((form) => getTypeAnnotation(form.objectSchema))
     .filter(isNonNullable)

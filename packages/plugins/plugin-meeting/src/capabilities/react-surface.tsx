@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { ChannelType } from '@dxos/plugin-thread/types';
 
@@ -25,15 +25,15 @@ export default () =>
     createSurface({
       id: `${meta.id}/meeting`,
       role: 'article',
-      filter: (data): data is { subject: MeetingType } => isInstanceOf(MeetingType, data.subject),
+      filter: (data): data is { subject: MeetingType } => Obj.instanceOf(MeetingType, data.subject),
       component: ({ data }) => <MeetingContainer meeting={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/meeting-companion`,
       role: 'article',
       filter: (data): data is { subject: MeetingType | 'meeting'; companionTo: ChannelType } =>
-        (isInstanceOf(MeetingType, data.subject) || data.subject === 'meeting') &&
-        isInstanceOf(ChannelType, data.companionTo),
+        (Obj.instanceOf(MeetingType, data.subject) || data.subject === 'meeting') &&
+        Obj.instanceOf(ChannelType, data.companionTo),
       component: ({ data }) => {
         return data.subject === 'meeting' ? (
           <MeetingsList channel={data.companionTo} />

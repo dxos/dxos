@@ -12,8 +12,7 @@ import {
   createResolver,
   type PluginContext,
 } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
-import { live } from '@dxos/live-object';
+import { Obj } from '@dxos/echo';
 import { createDocAccessor, getRangeFromCursor, Ref } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
@@ -25,9 +24,9 @@ export default (context: PluginContext) =>
     createResolver({
       intent: MarkdownAction.Create,
       resolve: ({ name, content }) => {
-        const doc = live(DocumentType, {
+        const doc = Obj.make(DocumentType, {
           name,
-          content: Ref.make(live(DataType.Text, { content: content ?? '' })),
+          content: Ref.make(Obj.make(DataType.Text, { content: content ?? '' })),
         });
 
         return { data: { object: doc } };
@@ -46,7 +45,7 @@ export default (context: PluginContext) =>
         data,
       ): data is Omit<Schema.Schema.Type<typeof CollaborationActions.InsertContent.fields.input>, 'target'> & {
         target: DocumentType;
-      } => isInstanceOf(DocumentType, data.target),
+      } => Obj.instanceOf(DocumentType, data.target),
       resolve: async ({ target, object: objectRef, at, label }) => {
         const text = await target.content.load();
         const accessor = createDocAccessor(text, ['content']);

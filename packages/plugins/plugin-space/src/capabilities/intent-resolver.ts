@@ -6,33 +6,31 @@ import { Effect } from 'effect';
 
 import {
   Capabilities,
+  LayoutAction,
+  type PluginContext,
   contributes,
   createIntent,
   createResolver,
-  LayoutAction,
-  type PluginContext,
 } from '@dxos/app-framework';
-import { Relation } from '@dxos/echo';
-import { type Expando, getTypename, type HasId } from '@dxos/echo-schema';
+import { Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { live, makeRef, type Live } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { isSpace, getSpace, SpaceState, fullyQualifiedId, isEchoObject } from '@dxos/react-client/echo';
+import { isSpace, getSpace, SpaceState, fullyQualifiedId } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
 import { SpaceCapabilities } from './capabilities';
 import {
+  CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
   JOIN_DIALOG,
-  type JoinDialogProps,
-  POPOVER_RENAME_SPACE,
-  CREATE_OBJECT_DIALOG,
-  type CreateObjectDialogProps,
   POPOVER_RENAME_OBJECT,
+  POPOVER_RENAME_SPACE,
+  type CreateObjectDialogProps,
+  type JoinDialogProps,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionAction, CollectionType, SpaceAction } from '../types';
@@ -75,8 +73,8 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
         }
         await space.waitUntilReady();
-        const collection = live(CollectionType, { objects: [], views: {} });
-        space.properties[CollectionType.typename] = makeRef(collection);
+        const collection = Obj.make(CollectionType, { objects: [], views: {} });
+        space.properties[CollectionType.typename] = Ref.make(collection);
 
         if (Migrations.versionProperty) {
           space.properties[Migrations.versionProperty] = Migrations.targetVersion;
@@ -318,7 +316,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                 props: {
                   target,
                   shouldNavigate: navigable
-                    ? (object: Live<any>) => !(object instanceof CollectionType) || state.navigableCollections
+                    ? (object: Obj.Any) => !(object instanceof CollectionType) || state.navigableCollections
                     : () => false,
                 } satisfies Partial<CreateObjectDialogProps>,
               },
@@ -366,17 +364,17 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         }
 
         if (target instanceof CollectionType) {
-          target.objects.push(makeRef(object as HasId));
+          target.objects.push(Ref.make(object));
         } else if (isSpace(target) && hidden) {
           space.db.add(object);
         } else if (isSpace(target)) {
           const collection = space.properties[CollectionType.typename]?.target;
           if (collection instanceof CollectionType) {
-            collection.objects.push(makeRef(object as HasId));
+            collection.objects.push(Ref.make(object));
           } else {
             // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-            const collection = live(CollectionType, { objects: [makeRef(object as HasId)], views: {} });
-            space.properties[CollectionType.typename] = makeRef(collection);
+            const collection = Obj.make(CollectionType, { objects: [Ref.make(object)], views: {} });
+            space.properties[CollectionType.typename] = Ref.make(collection);
           }
         }
 
@@ -384,7 +382,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           data: {
             id: fullyQualifiedId(object),
             subject: [fullyQualifiedId(object)],
-            object: object as HasId,
+            object,
           },
           intents: [
             ...(observability
@@ -394,7 +392,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                     properties: {
                       spaceId: space.id,
                       objectId: object.id,
-                      typename: getTypename(object),
+                      typename: Obj.getTypename(object),
                     },
                   }),
                 ]
@@ -406,8 +404,14 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: SpaceAction.AddRelation,
       resolve: ({ space, schema, source, target, fields }) => {
-        const relation = live(schema, { [Relation.Source]: source, [Relation.Target]: target, ...fields });
-        space.db.add(relation);
+        const relation = space.db.add(
+          Obj.make(schema, {
+            [Relation.Source]: source,
+            [Relation.Target]: target,
+            ...fields,
+          }),
+        );
+
         return {
           data: {
             relation,
@@ -422,7 +426,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         // All objects must be a member of the same space.
         const space = getSpace(objects[0]);
-        invariant(space && objects.every((obj) => isEchoObject(obj) && getSpace(obj) === space));
+        invariant(space && objects.every((obj) => Obj.isObject(obj) && getSpace(obj) === space));
         const openObjectIds = new Set<string>(layout.active);
 
         if (!undo) {
@@ -485,20 +489,20 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         } else {
           if (
             deletionData?.objects?.length &&
-            deletionData.objects.every(isEchoObject) &&
+            deletionData.objects.every(Obj.isObject) &&
             deletionData.parentCollection instanceof CollectionType
           ) {
             // Restore the object to the space.
-            const restoredObjects = deletionData.objects.map((obj: Expando) => space.db.add(obj));
+            const restoredObjects = deletionData.objects.map((obj: Type.Expando) => space.db.add(obj));
 
             // Restore nested objects to the space.
-            deletionData.nestedObjectsList.flat().forEach((obj: Expando) => {
+            deletionData.nestedObjectsList.flat().forEach((obj: Type.Expando) => {
               space.db.add(obj);
             });
 
             deletionData.indices.forEach((index: number, i: number) => {
               if (index !== -1) {
-                deletionData.parentCollection.objects.splice(index, 0, makeRef(restoredObjects[i] as Expando));
+                deletionData.parentCollection.objects.splice(index, 0, Ref.make(restoredObjects[i] as Type.Expando));
               }
             });
 
@@ -554,7 +558,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: CollectionAction.Create,
       resolve: async ({ name }) => ({
-        data: { object: live(CollectionType, { name, objects: [], views: {} }) },
+        data: { object: Obj.make(CollectionType, { name, objects: [], views: {} }) },
       }),
     }),
   ]);
