@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { Clipboard, Input } from '@dxos/react-ui';
+import { Clipboard, Input, Toolbar } from '@dxos/react-ui';
+import { StackItem } from '@dxos/react-ui-stack';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugObjectPanelProps = {
@@ -15,21 +16,20 @@ export type DebugObjectPanelProps = {
 // TODO(burdon): Get schema and traverse references.
 export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
   const dxn = `dxn:echo:@:${object.id}`;
+
   return (
     <Clipboard.Provider>
-      <div className='flex flex-col'>
-        <Input.Root>
-          <div role='none' className='flex flex-col gap-1'>
-            <div role='none' className='flex gap-1'>
-              <Input.TextInput disabled value={dxn} />
-              <Clipboard.IconButton value={dxn} />
-            </div>
-          </div>
-        </Input.Root>
+      <StackItem.Content toolbar>
+        <Toolbar.Root classNames='border-be border-separator'>
+          <Input.Root>
+            <Input.TextInput disabled value={dxn} />
+            <Clipboard.IconButton value={dxn} />
+          </Input.Root>
+        </Toolbar.Root>
         <SyntaxHighlighter classNames='flex text-xs' language='json'>
           {JSON.stringify(object, null, 2)}
         </SyntaxHighlighter>
-      </div>
+      </StackItem.Content>
     </Clipboard.Provider>
   );
 };

@@ -40,8 +40,8 @@ const WithCompanionStory = () => {
   const [mailbox] = useQuery(space, Filter.type(MailboxType));
   const state = useCapability(InboxCapabilities.MailboxState);
 
-  const mailboxData = useMemo(() => ({ subject: mailbox }), [mailbox]);
   const message = mailbox && state[fullyQualifiedId(mailbox)];
+  const mailboxData = useMemo(() => ({ subject: mailbox }), [mailbox]);
   const companionData = useMemo(() => ({ subject: message ?? 'message', companionTo: mailbox }), [message, mailbox]);
 
   // NOTE: Attention required for scrolling.
