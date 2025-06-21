@@ -22,3 +22,4 @@ export const hoverableFocusedControls = 'focus:[--controls-opacity:1]';
 export const hoverableOpenControlItem = 'hover-hover:aria-[expanded=true]:[--controls-opacity:1]';
 export const hoverableControlItem = 'opacity-[--controls-opacity]';
 export const staticHoverableControls = 'hover-hover:[--controls-opacity:1]';
+export const hoverableControlItemTransition = 'transition-opacity duration-200';
