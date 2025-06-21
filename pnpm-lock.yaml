@@ -733,6 +733,9 @@ importers:
       rollup-plugin-visualizer:
         specifier: ^5.12.0
         version: 5.12.0(rollup@4.40.2)
+      taurify:
+        specifier: 1.1.1
+        version: 1.1.1
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -33800,6 +33803,35 @@ packages:
     resolution: {integrity: sha512-5S7Va8hKfV7W5U6g3aYxXmlPoZVAwUMy9AOKyF2fVuZa2UD3qZjg578OrLRt8PcNN1PleVaL/5/yYATNL0ICUw==}
     engines: {node: '>=18'}
 
+  taurify-binding-darwin-arm64@1.1.1:
+    resolution: {integrity: sha512-kPQN6YIGCj7csBYLUEH4so1w2+Qgyssud7MOu4CExXnXh5bPyYViREmOdq14Xnook5+vsdZimjSmGOa2bgzqIg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  taurify-binding-darwin-x64@1.1.1:
+    resolution: {integrity: sha512-8VWMADDHIC1uh47+gFA6tFxPcWFjGKFwMS9ULUa6ynmMwephV4TbVJ+yRO/2UJXzDiQgCkxb/qxHdPiUP04/0A==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
+  taurify-binding-linux-x64-gnu@1.1.1:
+    resolution: {integrity: sha512-kXOl6csoEfJLKpLd5BuzL9FnX1NjAMeMlVyuY7UORRRYJcYbSgurth6pJCUB1uBdmDMVZ/K/lGKT95ay6pOfuA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  taurify-binding-win32-x64-msvc@1.1.1:
+    resolution: {integrity: sha512-wxewY14UNXSuIjqwqQebiz6azWFCtwXXmP/H4DqA4x2UYKA75YfYvHh1LzEMtSwQdKn388Dd2nY8vohOPX0ceg==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
+  taurify@1.1.1:
+    resolution: {integrity: sha512-bFc8gzSt4rThuTv9MoMu6GG+8zax2IjvIJ6r9L0Hp2BUZPRRy0sMUu7vQ98r+xArKPWhX+6W9usrRC0knOsskQ==}
+    engines: {node: '>= 10'}
+    hasBin: true
+
   telejson@7.2.0:
     resolution: {integrity: sha512-1QTEcJkJEhc8OnStBx/ILRu5J2p0GjvWsBx56bmZRqnrkdBMUe+nX92jxV+p3dB4CP6PZCdJMQJwCggkNBMzkQ==}
 
@@ -60632,6 +60664,25 @@ snapshots:
       minizlib: 3.0.2
       mkdirp: 3.0.1
       yallist: 5.0.0
+
+  taurify-binding-darwin-arm64@1.1.1:
+    optional: true
+
+  taurify-binding-darwin-x64@1.1.1:
+    optional: true
+
+  taurify-binding-linux-x64-gnu@1.1.1:
+    optional: true
+
+  taurify-binding-win32-x64-msvc@1.1.1:
+    optional: true
+
+  taurify@1.1.1:
+    optionalDependencies:
+      taurify-binding-darwin-arm64: 1.1.1
+      taurify-binding-darwin-x64: 1.1.1
+      taurify-binding-linux-x64-gnu: 1.1.1
+      taurify-binding-win32-x64-msvc: 1.1.1
 
   telejson@7.2.0:
     dependencies:
