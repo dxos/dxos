@@ -22,7 +22,7 @@ import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
 import { createGenerator, staticGenerators, type ObjectGenerator } from './ObjectGenerator';
 import { SchemaTable } from './SchemaTable';
-import { presets } from './presets';
+import { generator } from './presets';
 
 export type SpaceGeneratorProps = {
   space: Space;
@@ -36,6 +36,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   const mutableTypes = [DataType.Organization, DataType.Project, DataType.Person, DataType.Message];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
+  const presets = useMemo(() => generator(), []);
 
   // Create type generators.
   const typeMap = useMemo(() => {
