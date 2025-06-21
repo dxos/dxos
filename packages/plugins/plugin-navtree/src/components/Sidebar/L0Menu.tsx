@@ -228,11 +228,10 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
         role='none'
         data-frame={true}
         className={mx(
-          'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded',
-          // TODO(burdon): Create reusable button/component and/or create var for size.
+          'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm',
           pinned
-            ? 'bg-transparent w-[50px] p-2 group-hover/l0item:bg-activeSurface'
-            : 'bg-activeSurface w-[50px] h-[50px]',
+            ? 'bg-transparent is-[--rail-action] group-hover/l0item:bg-activeSurface'
+            : 'bg-activeSurface is-[--rail-action] bs-[--rail-action]',
         )}
         {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
       >
@@ -241,7 +240,7 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       </div>
       <div
         role='none'
-        className='hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
+        className='hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-2 is-1 bg-accentSurface rounded-ie'
       />
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
@@ -317,37 +316,37 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
   return (
     <Tabs.Tablist
       classNames={[
-        'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg',
-        'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] gap-1 contain-layout',
+        'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is',
+        'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] _gap-1 contain-layout',
         '!is-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
       ]}
     >
-      <div role='none' className='flex justify-center p-1'>
+      <div role='none' className='flex justify-center p-1 border-be'>
         <MenuProvider>
           <DropdownMenu.Root group={parent} items={menuActions}>
             <DropdownMenu.Trigger asChild>
               {/* TODO(wittjosiah): Use L0Item trigger. */}
-              {/* TODO(burdon): Replace with Sigil. */}
               <IconButton
                 iconOnly
                 icon='ph--dots-three--regular'
                 size={5}
                 label={t('app menu label')}
                 tooltipSide='right'
-                classNames='w-[50px] _bg-primary-500'
                 data-testid='spacePlugin.addSpace'
+                classNames='is-[--rail-action] bs-[--rail-action]'
               />
             </DropdownMenu.Trigger>
           </DropdownMenu.Root>
         </MenuProvider>
       </div>
 
+      {/* Space list. */}
       <ScrollArea.Root>
         <ScrollArea.Viewport>
           <div
             role='none'
             className={mx([
-              'flex flex-col gap-2 pbs-1',
+              'flex flex-col gap-1 pbs-1',
               '[body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]',
               '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
             ])}
@@ -382,7 +381,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
               hue={userAccountItem.properties.hue}
               emoji={userAccountItem.properties.emoji}
               status={userAccountItem.properties.status}
-              size={11}
+              size={9}
             />
           </L0ItemRoot>
         </div>

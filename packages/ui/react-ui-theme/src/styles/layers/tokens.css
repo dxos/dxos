@@ -6,16 +6,15 @@
     --sticky-top: 0;
 
     /* Lengths / sizes */
-
     --rail-content: 3rem;
     --rail-size: calc(var(--rail-content) + 1px);
-    --rail-action: calc(var(--rail-content) - .5rem);
+    --rail-action: calc(var(--rail-content) - 0.5rem);
     --rail-item: calc(var(--rail-content) - 1rem);
     --topbar-size: var(--rail-size);
     --statusbar-size: theme(spacing.8);
     --nav-sidebar-size: 22.5rem;
     /* NOTE(thure): 74px (rather than rem) is intentional in order to match the size of macOS windowing controls. */
-    --l0-size: 74px;
+    --l0-size: 3rem;
     --l1-size: calc(var(--nav-sidebar-size) - var(--l0-size));
     --complementary-sidebar-size: 25rem;
     --r0-size: var(--rail-size);
