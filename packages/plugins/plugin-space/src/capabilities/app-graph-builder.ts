@@ -6,16 +6,8 @@ import { Rx } from '@effect-rx/rx-react';
 import { Array, Option, pipe } from 'effect';
 
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
-import {
-  Expando,
-  Filter,
-  getSpace,
-  isEchoObject,
-  SpaceState,
-  type Space,
-  isSpace,
-  type QueryResult,
-} from '@dxos/client/echo';
+import { getSpace, SpaceState, type Space, isSpace, type QueryResult } from '@dxos/client/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
@@ -67,7 +59,7 @@ export default (context: PluginContext) => {
 
         const {
           objects: [spacesOrder],
-        } = await client.spaces.default.db.query(Filter.type(Expando, { key: SHARED })).run();
+        } = await client.spaces.default.db.query(Filter.type(Type.Expando, { key: SHARED })).run();
         if (spacesOrder) {
           spacesOrder.order = nextOrder.map(({ id }) => id);
         } else {
@@ -175,7 +167,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: SPACES,
       connector: (node) => {
-        let query: QueryResult<Expando> | undefined;
+        let query: QueryResult<Type.Expando> | undefined;
         return Rx.make((get) =>
           pipe(
             get(node),
@@ -200,7 +192,7 @@ export default (context: PluginContext) => {
               // TODO(wittjosiah): During client reset, accessing default space throws.
               try {
                 if (!query) {
-                  query = client.spaces.default.db.query(Filter.type(Expando, { key: SHARED }));
+                  query = client.spaces.default.db.query(Filter.type(Type.Expando, { key: SHARED }));
                 }
                 const [spacesOrder] = get(rxFromQuery(query));
                 return get(
@@ -321,7 +313,6 @@ export default (context: PluginContext) => {
             ),
             Option.map((space) => {
               const state = context.getCapability(SpaceCapabilities.State);
-
               const spaceState = get(rxFromObservable(space.state));
               if (spaceState !== SpaceState.SPACE_READY) {
                 return [];
@@ -342,8 +333,8 @@ export default (context: PluginContext) => {
                     Array.filter(isNonNullable),
                     Array.map((object) =>
                       createObjectNode({
-                        object,
                         space,
+                        object,
                         resolve,
                         navigable: state.navigableCollections,
                       }),
@@ -434,7 +425,7 @@ export default (context: PluginContext) => {
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (isEchoObject(node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) => (Obj.isObject(node.data) ? Option.some(node.data) : Option.none())),
             Option.flatMap((object) => {
               const [dispatcher] = get(context.capabilities(Capabilities.IntentDispatcher));
               const [appGraph] = get(context.capabilities(Capabilities.AppGraph));
@@ -464,7 +455,7 @@ export default (context: PluginContext) => {
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (isEchoObject(node.data) ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (Obj.isObject(node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => [
               {
                 id: [node.id, 'settings'].join(ATTENDABLE_PATH_SEPARATOR),

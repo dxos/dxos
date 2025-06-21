@@ -7,7 +7,8 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
-import { makeRef, live, useSpace } from '@dxos/react-client/echo';
+import { Obj, Ref } from '@dxos/echo';
+import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
@@ -55,12 +56,12 @@ export const Default: Story = {
 
 export const Jounals: Story = {
   args: {
-    journal: live(JournalType, {
+    journal: Obj.make(JournalType, {
       name: 'Journal 1',
       entries: [
-        makeRef(createJournalEntry()),
-        makeRef(createJournalEntry(new Date(Date.now() - 5 * 24 * 60 * 60 * 1_000))),
-        makeRef(createJournalEntry(new Date(2025, 0, 1))),
+        Ref.make(createJournalEntry()),
+        Ref.make(createJournalEntry(new Date(Date.now() - 5 * 24 * 60 * 60 * 1_000))),
+        Ref.make(createJournalEntry(new Date(2025, 0, 1))),
       ],
     }),
   },

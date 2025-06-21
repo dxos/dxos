@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { type Live, live } from '@dxos/live-object';
+import { type Live, Obj } from '@dxos/echo';
 import { Path } from '@dxos/react-ui-list';
 
 import { NavTreeCapabilities } from './capabilities';
@@ -21,15 +21,10 @@ const getInitialState = () => {
 
   try {
     const cached: [string, { open: boolean; current: boolean }][] = JSON.parse(stringified);
-    return cached.map(
-      ([key, value]): [
-        string,
-        Live<{
-          open: boolean;
-          current: boolean;
-        }>,
-      ] => [key, live({ open: value.open, current: false })],
-    );
+    return cached.map(([key, value]): [string, Live<{ open: boolean; current: boolean }>] => [
+      key,
+      Obj.make({ open: value.open, current: false }),
+    ]);
   } catch {}
 };
 
@@ -43,15 +38,15 @@ export default (context: PluginContext) => {
   const state = new Map<string, Live<{ open: boolean; current: boolean; alternateTree?: boolean }>>(
     getInitialState() ?? [
       // TODO(thure): Initialize these dynamically.
-      ['root', live({ open: true, current: false })],
-      ['root~dxos.org/plugin/space-spaces', live({ open: true, current: false })],
-      ['root~dxos.org/plugin/files', live({ open: true, current: false })],
+      ['root', Obj.make({ open: true, current: false })],
+      ['root~dxos.org/plugin/space-spaces', Obj.make({ open: true, current: false })],
+      ['root~dxos.org/plugin/files', Obj.make({ open: true, current: false })],
     ],
   );
 
   const getItem = (_path: string[]) => {
     const path = Path.create(..._path);
-    const value = state.get(path) ?? live({ open: false, current: false, alternateTree: false });
+    const value = state.get(path) ?? Obj.make({ open: false, current: false, alternateTree: false });
     if (!state.has(path)) {
       state.set(path, value);
     }

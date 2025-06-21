@@ -18,8 +18,9 @@ import {
   processTranscriptMessage,
   getNer,
 } from '@dxos/assistant';
-import { Filter, MemoryQueue } from '@dxos/echo-db';
-import { create, createQueueDxn, type Expando } from '@dxos/echo-schema';
+import { Filter, Obj, type Type } from '@dxos/echo';
+import { MemoryQueue } from '@dxos/echo-db';
+import { createQueueDXN } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -75,7 +76,8 @@ const DefaultStory = ({
   const isSpeaking = detectSpeaking ? useIsSpeaking(track) : true;
 
   // Queue.
-  const queueDxn = useMemo(() => createQueueDxn(), []);
+  // TODO(dmaretskyi): Use space.queues.create() instead.
+  const queueDxn = useMemo(() => createQueueDXN(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderMarkdown([]), queue);
   const space = useSpace();
@@ -95,7 +97,7 @@ const DefaultStory = ({
 
     let executor: FunctionExecutor | undefined;
     let extractionFunction: ExtractionFunction | undefined;
-    let objects: Promise<Expando[]> | undefined;
+    let objects: Promise<Type.Expando[]> | undefined;
 
     if (entityExtraction === 'ner') {
       // Init model loading. Takes time.
@@ -129,7 +131,11 @@ const DefaultStory = ({
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
-      const message = create(DataType.Message, { sender: { name: 'You' }, created: new Date().toISOString(), blocks });
+      const message = Obj.make(DataType.Message, {
+        sender: { name: 'You' },
+        created: new Date().toISOString(),
+        blocks,
+      });
       if (!space) {
         void queue.append([message]);
         return;

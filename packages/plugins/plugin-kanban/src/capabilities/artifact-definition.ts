@@ -8,7 +8,7 @@ import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
@@ -113,7 +113,7 @@ export default () => {
           const space = extensions.space;
           const { objects: boards } = await space.db.query(Filter.type(KanbanType)).run();
           const board = boards.find((board: KanbanType) => fullyQualifiedId(board) === id);
-          invariant(isInstanceOf(KanbanType, board));
+          invariant(Obj.instanceOf(KanbanType, board));
 
           const view = await board.cardView?.load();
           invariant(view);

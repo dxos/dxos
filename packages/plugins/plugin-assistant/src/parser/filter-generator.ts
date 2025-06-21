@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Filter } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo';
 
 import {
   type BinaryExpression,

@@ -6,10 +6,9 @@ import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
-import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { Obj } from '@dxos/echo';
+import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
-import { isEchoObject } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 import { ViewType } from '@dxos/schema';
 
@@ -24,7 +23,7 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (isInstanceOf(TableType, node.data) ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (Obj.instanceOf(TableType, node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => [
               {
                 id: [node.id, 'schema'].join(ATTENDABLE_PATH_SEPARATOR),
@@ -49,7 +48,7 @@ export default (context: PluginContext) =>
           pipe(
             get(node),
             Option.flatMap((node) => {
-              if (!node.data || !isEchoObject(node.data)) {
+              if (!node.data || !Obj.isObject(node.data)) {
                 return Option.none();
               }
 
@@ -57,8 +56,9 @@ export default (context: PluginContext) =>
               // TODO(ZaymonFC): Unify the path of view between table and kanban.
               const hasValidView = get(
                 rxFromSignal(() => {
-                  const hasValidView = subject.view?.target instanceof ViewType;
-                  const hasValidCardView = subject.cardView?.target instanceof ViewType;
+                  // TODO(dmaretskyi): There should be a type instanceof check
+                  const hasValidView = (subject as any).view?.target instanceof ViewType;
+                  const hasValidCardView = (subject as any).cardView?.target instanceof ViewType;
                   return hasValidView || hasValidCardView;
                 }),
               );

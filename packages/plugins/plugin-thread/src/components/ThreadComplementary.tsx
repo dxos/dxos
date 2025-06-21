@@ -12,7 +12,8 @@ import {
   useIntentDispatcher,
   Capabilities,
 } from '@dxos/app-framework';
-import { Filter, getTypename, isInstanceOf, Query, RelationSourceId } from '@dxos/echo-schema';
+import { Filter, Obj, Query } from '@dxos/echo';
+import { RelationSourceId } from '@dxos/echo-schema';
 import { fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
@@ -43,13 +44,16 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const drafts = state.drafts[fullyQualifiedId(subject)];
 
   const anchorSorts = useCapabilities(Capabilities.AnchorSort);
-  const sort = useMemo(() => anchorSorts.find(({ key }) => key === getTypename(subject))?.sort, [anchorSorts, subject]);
+  const sort = useMemo(
+    () => anchorSorts.find(({ key }) => key === Obj.getTypename(subject))?.sort,
+    [anchorSorts, subject],
+  );
 
   const space = getSpace(subject);
   const objectsAnchoredTo = useQuery(space, Query.select(Filter.ids(subject.id)).targetOf(AnchoredTo));
   const anchors = objectsAnchoredTo
     .toSorted((a, b) => sort?.(a, b) ?? 0)
-    .filter((anchor) => isInstanceOf(ThreadType, anchor[RelationSourceId]))
+    .filter((anchor) => Obj.instanceOf(ThreadType, anchor[RelationSourceId]))
     .concat(drafts ?? []);
 
   const attended = useAttended();

@@ -6,7 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { createExtension } from '@dxos/plugin-graph';
 
 import { MAP_PLUGIN } from '../meta';
@@ -21,7 +21,7 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (isInstanceOf(MapType, node.data) ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (Obj.instanceOf(MapType, node.data) ? Option.some(node) : Option.none())),
             Option.map(() => [
               {
                 id: `${MAP_PLUGIN}/toggle`,

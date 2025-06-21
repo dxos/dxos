@@ -6,8 +6,8 @@ import { signal } from '@preact/signals-core';
 
 import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
+import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { create } from '@dxos/echo-schema';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { DataType } from '@dxos/schema';
 
@@ -131,7 +131,7 @@ export class TranscriptionManager extends Resource {
     if (this._enabled.value) {
       await this._transcriber?.open();
       // TODO(burdon): Started and stopped blocks appear twice.
-      const block = create(DataType.Message, {
+      const block = Obj.make(DataType.Message, {
         created: new Date().toISOString(),
         blocks: [{ type: 'transcription', text: 'Started', started: new Date().toISOString() }],
         sender: { role: 'assistant' },
@@ -139,7 +139,7 @@ export class TranscriptionManager extends Resource {
       this._queue?.append([block]);
     } else {
       await this._transcriber?.close();
-      const block = create(DataType.Message, {
+      const block = Obj.make(DataType.Message, {
         created: new Date().toISOString(),
         blocks: [{ type: 'transcription', text: 'Stopped', started: new Date().toISOString() }],
         sender: { role: 'assistant' },
@@ -180,7 +180,7 @@ export class TranscriptionManager extends Resource {
       return;
     }
 
-    let block = create(DataType.Message, {
+    let block = Obj.make(DataType.Message, {
       created: new Date().toISOString(),
       blocks: segments,
       sender: { identityDid: this._identityDid },

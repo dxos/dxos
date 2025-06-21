@@ -35,6 +35,7 @@ test.skip('cypher query', async () => {
   const result = await runLLM({
     model: DEFAULT_EDGE_MODEL,
     tools: [cypherTool],
+    client,
     spaceId,
     threadId,
     system: createSystemPrompt(schemaTypes),
@@ -45,7 +46,6 @@ test.skip('cypher query', async () => {
         'Query the database and give me all employees from DXOS organization that work on Composer and what their tasks are.',
       ),
     ],
-    client,
     logger: createLogger({ stream: false }),
   });
 
@@ -71,10 +71,10 @@ test.skip('query ECHO', async () => {
   const result = await runLLM({
     model: DEFAULT_EDGE_MODEL,
     tools: [cypherTool],
+    client,
     spaceId,
     threadId,
     system: createSystemPrompt(schemaTypes),
-    client,
     history: [
       createUserMessage(
         spaceId,

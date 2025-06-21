@@ -6,8 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { Capabilities, useAppGraph, useCapabilities, usePluginManager } from '@dxos/app-framework';
-import { Filter, Obj } from '@dxos/echo';
-import { isInstanceOf, Query } from '@dxos/echo-schema';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -42,8 +41,8 @@ const MarkdownContainer = ({
 }: MarkdownContainerProps) => {
   const { t } = useTranslation();
   const scrollPastEnd = role === 'article';
-  const doc = isInstanceOf(DocumentType, object) ? object : undefined;
-  const text = isInstanceOf(DataType.Text, object) ? object : undefined;
+  const doc = Obj.instanceOf(DocumentType, object) ? object : undefined;
+  const text = Obj.instanceOf(DataType.Text, object) ? object : undefined;
   const extensions = useExtensions({ document: doc, text, id, settings, selectionManager, viewMode, editorStateStore });
 
   // TODO(wittjosiah): Factor out.

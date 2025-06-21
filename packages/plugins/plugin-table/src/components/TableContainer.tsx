@@ -6,11 +6,11 @@ import { Rx } from '@effect-rx/rx-react';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { isMutable, toJsonSchema } from '@dxos/echo-schema';
+import { Filter, Type, Obj } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
-import { live, fullyQualifiedId, getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
@@ -46,7 +46,7 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
 
   const handleInsertRow = useCallback(() => {
     if (schema && space) {
-      space.db.add(live(schema, {}));
+      space.db.add(Obj.make(schema, {}));
     }
   }, [space, schema]);
 
@@ -69,14 +69,14 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
       return;
     }
 
-    return new ViewProjection(toJsonSchema(schema), table.view.target!);
+    return new ViewProjection(Type.toJsonSchema(schema), table.view.target!);
   }, [schema, table.view?.target]);
 
   const features: Partial<TableFeatures> = useMemo(
     () => ({
       selection: { enabled: true, mode: 'multiple' },
       dataEditable: true,
-      schemaEditable: schema && isMutable(schema),
+      schemaEditable: schema && Type.isMutable(schema),
     }),
     [],
   );
