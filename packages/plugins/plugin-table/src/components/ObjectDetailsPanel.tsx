@@ -48,7 +48,7 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   const handleRefQueryLookup = useRefQueryLookupHandler({ space });
 
   return (
-    <div role='none' className='bs-full is-full flex flex-col gap-1 overflow-y-auto p-1'>
+    <div role='none' className='bs-full is-full flex flex-col gap-1 overflow-y-auto p-2'>
       {selectedObjects.length === 0 && <div className='text-sm'>{t('row details no selection label')}</div>}
       {schema &&
         selectedObjects.map((object) => (
