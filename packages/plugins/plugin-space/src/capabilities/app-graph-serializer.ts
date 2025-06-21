@@ -4,11 +4,11 @@
 
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
-import { live } from '@dxos/live-object';
+import { Obj } from '@dxos/echo';
 
 import { SPACE_PLUGIN } from '../meta';
 import translations from '../translations';
-import { CollectionType, SpaceAction, SPACE_TYPE } from '../types';
+import { SPACE_TYPE, CollectionType, SpaceAction } from '../types';
 import { SPACES } from '../util';
 
 // https://stackoverflow.com/a/19016910
@@ -63,7 +63,7 @@ export default (context: PluginContext) =>
         const result = await dispatch(
           createIntent(SpaceAction.AddObject, {
             target: collection,
-            object: live(CollectionType, { name: data.name, objects: [], views: {} }),
+            object: Obj.make(CollectionType, { name: data.name, objects: [], views: {} }),
           }),
         );
 

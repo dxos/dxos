@@ -323,6 +323,61 @@ describe('ViewProjection', () => {
     expect(mutable.jsonSchema.properties?.['email' as const]).to.be.undefined;
   });
 
+  test('property rename updates schema propertyOrder and required arrays', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const registry = new EchoSchemaRegistry(db);
+
+    const schema = Schema.Struct({
+      name: Schema.String,
+      email: Format.Email,
+      age: Schema.Number,
+    }).annotations({
+      [TypeAnnotationId]: {
+        kind: EntityKind.Object,
+        typename: 'example.com/type/Person',
+        version: '0.1.0',
+      },
+    });
+
+    const [mutable] = await registry.register([schema]);
+    const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    const projection = new ViewProjection(mutable.jsonSchema, view);
+
+    // Capture initial state.
+    const initialPropertyOrder = [...(mutable.jsonSchema.propertyOrder ?? [])];
+    const initialRequired = [...(mutable.jsonSchema.required ?? [])];
+
+    expect(initialPropertyOrder).to.include('email');
+    expect(initialRequired).to.include('email');
+
+    // Perform rename: email -> primaryEmail.
+    const { field, props } = projection.getFieldProjection(getFieldId(view, 'email'));
+    projection.setFieldProjection({
+      field,
+      props: { ...props, property: 'primaryEmail' as JsonProp },
+    });
+
+    // Verify schema properties are updated correctly.
+    expect(mutable.jsonSchema.properties?.['email' as const]).to.be.undefined;
+    expect(mutable.jsonSchema.properties?.['primaryEmail' as const]).to.exist;
+
+    // Verify propertyOrder array is updated.
+    const updatedPropertyOrder = mutable.jsonSchema.propertyOrder ?? [];
+    expect(updatedPropertyOrder).to.not.include('email');
+    expect(updatedPropertyOrder).to.include('primaryEmail');
+    expect(updatedPropertyOrder.length).to.equal(initialPropertyOrder.length);
+
+    // Verify order is preserved (primaryEmail should be in the same position as email was).
+    const emailIndex = initialPropertyOrder.indexOf('email');
+    expect(updatedPropertyOrder[emailIndex]).to.equal('primaryEmail');
+
+    // Verify required array is updated.
+    const updatedRequired = mutable.jsonSchema.required ?? [];
+    expect(updatedRequired).to.not.include('email');
+    expect(updatedRequired).to.include('primaryEmail');
+    expect(updatedRequired.length).to.equal(initialRequired.length);
+  });
+
   test('single select format', async ({ expect }) => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);

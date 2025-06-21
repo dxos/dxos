@@ -5,12 +5,13 @@
 import { batch } from '@preact/signals-core';
 
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
+import { Obj, Relation } from '@dxos/echo';
 import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { live, fullyQualifiedId, getSpace, Ref } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, Ref } from '@dxos/react-client/echo';
 import { AnchoredTo, DataType } from '@dxos/schema';
 
 import { ThreadCapabilities } from './capabilities';
@@ -23,9 +24,9 @@ export default (context: PluginContext) =>
       intent: ThreadAction.CreateChannel,
       resolve: ({ name }) => ({
         data: {
-          object: live(ChannelType, {
+          object: Obj.make(ChannelType, {
             name,
-            defaultThread: Ref.make(live(ThreadType, { messages: [], status: 'active' })),
+            defaultThread: Ref.make(Obj.make(ThreadType, { messages: [], status: 'active' })),
             threads: [],
           }),
         },
@@ -34,7 +35,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: ThreadAction.CreateChannelThread,
       resolve: ({ channel }) => {
-        const thread = live(ThreadType, { messages: [], status: 'active' });
+        const thread = Obj.make(ThreadType, { messages: [], status: 'active' });
         channel.threads.push(Ref.make(thread));
         return {
           data: {
@@ -52,8 +53,8 @@ export default (context: PluginContext) =>
 
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
-        const thread = live(ThreadType, { name, messages: [], status: 'staged' });
-        const anchor = live(AnchoredTo, {
+        const thread = Obj.make(ThreadType, { name, messages: [], status: 'staged' });
+        const anchor = Relation.make(AnchoredTo, {
           [RelationSourceId]: thread,
           [RelationTargetId]: subject,
           anchor: _anchor,
@@ -181,12 +182,12 @@ export default (context: PluginContext) =>
         invariant(space, 'Space not found');
         const intents = [];
 
-        const message = live(DataType.Message, {
+        const message = Obj.make(DataType.Message, {
           sender,
           created: new Date().toISOString(),
           blocks: [{ type: 'text', text }],
           // TODO(wittjosiah): Context based on attention.
-          // context: context ? makeRef(context) : undefined,
+          // context: context ? Ref.make(context) : undefined,
         });
         thread.messages.push(Ref.make(message));
 

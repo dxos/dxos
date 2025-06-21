@@ -16,7 +16,10 @@ export const MoveSchema = Schema.mutable(
   ),
 );
 
-export class ChessType extends TypedObject({ typename: 'dxos.org/type/Chess', version: '0.1.0' })(
+export class ChessType extends TypedObject({
+  typename: 'dxos.org/type/Chess',
+  version: '0.1.0',
+})(
   {
     name: Schema.optional(Schema.String),
     playerWhite: Schema.String,

@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table/types';
 import { FieldSchema } from '@dxos/schema';
@@ -67,4 +67,4 @@ export namespace TableAction {
   }) {}
 }
 
-export const isTable = (object: unknown): object is TableType => isInstanceOf(TableType, object);
+export const isTable = (object: unknown): object is TableType => Obj.instanceOf(TableType, object);

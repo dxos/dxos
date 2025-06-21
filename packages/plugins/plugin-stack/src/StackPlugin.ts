@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { type AnyLiveObject } from '@dxos/client/echo';
+import { type Obj } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { ReactSurface } from './capabilities';
@@ -25,11 +25,10 @@ export const StackPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: SECTION_IDENTIFIER,
           metadata: {
-            parse: (section: { object: AnyLiveObject<any> }, type: string) => {
+            parse: (section: { object: Obj.Any }, type: string) => {
               switch (type) {
                 case 'node':
-                  // TODO(wittjosiah): Remove cast.
-                  return { id: section.object.id, label: section.object.title, data: section.object };
+                  return { id: section.object.id, label: (section.object as any).title, data: section.object };
                 case 'object':
                   return section.object;
                 case 'view-object':

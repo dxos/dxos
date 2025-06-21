@@ -15,8 +15,7 @@ import {
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
-import { Relation } from '@dxos/echo';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj, Relation } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ThreadAction, ThreadType } from '@dxos/plugin-thread/types';
 import { Filter, fullyQualifiedId, getSpace, Query, useQuery } from '@dxos/react-client/echo';
@@ -91,7 +90,7 @@ export const useSelectThreadOnCellFocus = () => {
 
       const closestThread = anchors.find((anchor) => {
         const source = Relation.getSource(anchor);
-        if (anchor.anchor && isInstanceOf(ThreadType, source)) {
+        if (anchor.anchor && Obj.instanceOf(ThreadType, source)) {
           const range = parseThreadAnchorAsCellRange(anchor.anchor);
           return range ? inRange(range, cellAddress) : false;
         } else {

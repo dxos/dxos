@@ -138,7 +138,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
    * Re-index all loaded documents.
    */
   async reindex(): Promise<void> {
-    log.info('Reindexing all documents...');
+    log('Reindexing all documents...');
     const iterator = createDocumentsIterator(this._params.automergeHost);
     const ids: IdToHeads = new Map();
     for await (const documents of iterator()) {
@@ -146,11 +146,11 @@ export class QueryServiceImpl extends Resource implements QueryService {
         ids.set(id, heads);
       }
       if (ids.size % 100 === 0) {
-        log.info('Collected documents...', { count: ids.size });
+        log('Collected documents...', { count: ids.size });
       }
     }
 
-    log.info('Marking all documents as dirty...', { count: ids.size });
+    log('Marking all documents as dirty...', { count: ids.size });
     await this._params.indexer.reindex(ids);
   }
 }

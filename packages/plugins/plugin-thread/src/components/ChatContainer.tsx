@@ -4,8 +4,8 @@
 
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { live, makeRef } from '@dxos/live-object';
-import { type AnyLiveObject, fullyQualifiedId, type Space, useMembers } from '@dxos/react-client/echo';
+import { Obj, Ref } from '@dxos/echo';
+import { fullyQualifiedId, type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
@@ -44,7 +44,7 @@ export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
 export type ChatContainerProps = {
   space: Space;
   thread: ThreadType;
-  context?: AnyLiveObject<any>;
+  context?: Obj.Any;
   autoFocusTextbox?: boolean;
 } & Pick<ThreadProps, 'current'>;
 
@@ -91,12 +91,12 @@ export const ChatContainer = ({ space, thread, context, current, autoFocusTextbo
     }
 
     thread.messages.push(
-      makeRef(
-        live(DataType.Message, {
+      Ref.make(
+        Obj.make(DataType.Message, {
           sender: { identityDid: identity.did },
           created: new Date().toISOString(),
           blocks: [{ type: 'text', text: messageRef.current }],
-          properties: context ? { context: makeRef(context) } : undefined,
+          properties: context ? { context: Ref.make(context) } : undefined,
         }),
       ),
     );

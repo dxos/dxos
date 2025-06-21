@@ -19,16 +19,7 @@ export type Schema = EchoSchema.EchoSchema;
  */
 export const Obj = EchoSchema.EchoObject;
 
-/**
- * EchoRelation schema.
- */
-export const Relation = EchoSchema.EchoRelation;
-
-/**
- * Ref schema.
- */
-export const Ref: <S extends Obj.Any>(schema: S) => EchoSchema.Ref$<Schema.Schema.Type<S>> = EchoSchema.Ref;
-
+// TODO(buurdon): Move to Obj?
 export namespace Obj {
   /**
    * Type that represents an arbitrary schema type of an object.
@@ -38,6 +29,12 @@ export namespace Obj {
   export type Any = Schema.Schema.AnyNoContext;
 }
 
+/**
+ * EchoRelation schema.
+ */
+export const Relation = EchoSchema.EchoRelation;
+
+// TODO(buurdon): Move to Relation?
 export namespace Relation {
   /**
    * Type that represents an arbitrary schema type of a relation.
@@ -57,6 +54,14 @@ export namespace Relation {
   export type Source<A> = A extends EchoSchema.RelationSourceTargetRefs<infer _T, infer S> ? S : never;
 }
 
+/**
+ * Ref schema.
+ */
+export const Ref: <S extends Obj.Any>(schema: S) => EchoSchema.Ref$<Schema.Schema.Type<S>> = EchoSchema.Ref;
+
+export interface Ref<T> extends Schema.SchemaClass<EchoSchema.Ref<T>, EncodedReference> {}
+
+// TODO(buurdon): Move to Ref?
 export namespace Ref {
   /**
    * Type that represents an arbitrary schema type of a reference.
@@ -112,16 +117,16 @@ export { EntityKind as Kind } from '@dxos/echo-schema';
 /**
  * @returns True if the schema is mutable.
  */
-export const isMutable = (schema: Obj.Any | Relation.Any): boolean => {
-  return EchoSchema.isMutable(schema);
-};
+export const isMutable = EchoSchema.isMutable;
 
 export { SpaceId, ObjectId, DXN } from '@dxos/keys';
 
 export {
   //
   Expando,
-  JsonSchemaType as JsonSchema,
-  toJsonSchema,
+  // TODO(burdon): Standardize.
   Format,
+  JsonSchemaType as JsonSchema,
+  toEffectSchema,
+  toJsonSchema,
 } from '@dxos/echo-schema';

@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Obj, Ref } from '@dxos/echo';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
-import { live, createObject, getObjectCore, makeRef } from '@dxos/react-client/echo';
+import { getObjectCore } from '@dxos/react-client/echo';
 
 import { CanvasType, DiagramType } from '../types';
 
@@ -16,8 +17,8 @@ export const serializer: TypedObjectSerializer<DiagramType> = {
 
   deserialize: async ({ content, newId }) => {
     const parsed = JSON.parse(content);
-    const canvas = live(CanvasType, { content: {} });
-    const diagram = createObject(live(DiagramType, { name: parsed.name, canvas: makeRef(canvas) }));
+    const canvas = Obj.make(CanvasType, { content: {} });
+    const diagram = Obj.make(DiagramType, { name: parsed.name, canvas: Ref.make(canvas) });
 
     if (!newId) {
       const core = getObjectCore(diagram);

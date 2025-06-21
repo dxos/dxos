@@ -5,15 +5,15 @@
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
-import { PRESENTER_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { PresenterSettingsSchema, type PresenterSettingsProps } from '../types';
 
 export default () => {
   const settings = live<PresenterSettingsProps>({});
 
   return contributes(Capabilities.Settings, {
+    prefix: meta.id,
     schema: PresenterSettingsSchema,
-    prefix: PRESENTER_PLUGIN,
     value: settings,
   });
 };

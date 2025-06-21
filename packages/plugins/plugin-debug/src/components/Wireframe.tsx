@@ -5,7 +5,8 @@
 import React from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { fullyQualifiedId, type AnyLiveObject } from '@dxos/react-client/echo';
+import { type Obj } from '@dxos/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -14,7 +15,7 @@ import { mx } from '@dxos/react-ui-theme';
 // TODO(burdon): Create generic container with wireframe mode.
 export type WireframeProps = ThemedClassName<{
   label?: string;
-  object: AnyLiveObject<any>;
+  object: Obj.Any;
 }>;
 
 // TODO(burdon): Make focusable and attendable with input.

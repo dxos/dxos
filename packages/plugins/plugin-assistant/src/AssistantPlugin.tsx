@@ -3,16 +3,16 @@
 //
 
 import {
-  allOf,
   Capabilities,
+  Events,
+  allOf,
   contributes,
   createIntent,
   defineModule,
   definePlugin,
-  Events,
 } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/assistant';
-import { getSchemaTypename } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -39,13 +39,13 @@ export const AssistantPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: getSchemaTypename(Blueprint)!,
+          id: Type.getTypename(Blueprint),
           metadata: {
             icon: 'ph--blueprint--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: getSchemaTypename(AIChatType)!,
+          id: Type.getTypename(AIChatType),
           metadata: {
             icon: 'ph--atom--regular',
           },

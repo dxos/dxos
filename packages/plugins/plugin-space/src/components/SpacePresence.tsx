@@ -7,7 +7,7 @@ import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
-import { type Expando } from '@dxos/echo-schema';
+import { type Type } from '@dxos/echo';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { getSpace, useMembers, type SpaceMember, fullyQualifiedId } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
@@ -42,7 +42,7 @@ const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 // TODO(wittjosiah): Factor out?
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
 
-export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?: PublicKey }) => {
+export const SpacePresence = ({ object, spaceKey }: { object: Type.Expando; spaceKey?: PublicKey }) => {
   // TODO(wittjosiah): Doesn't need to be mutable but readonly type messes with ComplexMap.
   const spaceState = useCapability(SpaceCapabilities.MutableState);
   const client = useClient();

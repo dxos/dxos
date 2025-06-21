@@ -4,8 +4,9 @@
 
 import { Schema } from 'effect';
 
+import { Obj } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
-import { isEchoObject, ReactiveObjectSchema, type AnyLiveObject } from '@dxos/react-client/echo';
+import { ReactiveObjectSchema } from '@dxos/react-client/echo';
 
 import { TEMPLATE_PLUGIN } from './meta';
 
@@ -22,12 +23,14 @@ export namespace TemplateAction {
   }) {}
 }
 
-// TODO(burdon): Warning: Encountered two children with the same key, `dxos.org/plugin/template`.
-// TODO(burdon): Better way to detect?
-export const isObject = (object: unknown): object is AnyLiveObject<any> => {
-  return isEchoObject(object) && object.type === 'template';
+export const isObject = (object: unknown): object is Obj.Any => {
+  // TODO(dmaretskyi): Can this be Obj.instanceOf(TemplateType)?
+  return Obj.isObject(object) && (object as any).type === 'template';
 };
 
-export class TemplateType extends TypedObject({ typename: 'dxos.org/type/Template', version: '0.1.0' })({
+export class TemplateType extends TypedObject({
+  typename: 'dxos.org/type/Template',
+  version: '0.1.0',
+})({
   name: Schema.optional(Schema.String),
 }) {}
