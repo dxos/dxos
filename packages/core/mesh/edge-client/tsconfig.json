@@ -4,45 +4,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../../common/async"
-    },
-    {
-      "path": "../../../common/context"
-    },
-    {
-      "path": "../../../common/crypto"
-    },
-    {
-      "path": "../../../common/debug"
-    },
-    {
-      "path": "../../../common/invariant"
-    },
-    {
-      "path": "../../../common/keys"
-    },
-    {
-      "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/node-std"
-    },
-    {
-      "path": "../../../common/test-utils"
-    },
-    {
-      "path": "../../../common/util"
-    },
-    {
-      "path": "../../halo/credentials"
-    },
-    {
-      "path": "../../halo/keyring"
-    },
-    {
-      "path": "../../protocols"
-    }
-  ]
+  "references": []
 }
