@@ -6,8 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { Capabilities, useAppGraph, useCapabilities, usePluginManager } from '@dxos/app-framework';
-import { Filter, Obj } from '@dxos/echo';
-import { Obj, Query } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
