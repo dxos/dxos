@@ -257,7 +257,7 @@ const DefaultStory = ({
         <Popover.Viewport>
           <Card.Container role='popover'>
             <SyntaxHighlighter
-              classNames='p-0 bg-transparent text-xs'
+              classNames='bg-transparent text-xs !mlb-card-spacing-block !pli-card-spacing-inline !overflow-visible'
               language='json'
               code={JSON.stringify(popover, null, 2)}
             />
