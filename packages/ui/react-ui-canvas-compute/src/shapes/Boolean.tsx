@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import React, { type FC } from 'react';
 
-import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
+import { getAnchorPoints, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchors } from '@dxos/react-ui-canvas-editor';
 
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
@@ -82,37 +82,35 @@ type GateSymbolProps = {
 // TODO(burdon): Note inputs should line up with anchors.
 const createSymbol =
   (pathConstructor: PathConstructor, inputs: number): FC<GateSymbolProps> =>
-  () =>
-    null;
-// ({
-//   width = 64,
-//   height = 32,
-//   // TODO(burdon): Same as line color.
-//   className = 'fill-neutral-200 dark:fill-neutral-800 stroke-neutral-500',
-//   strokeWidth = 1,
-// }) => {
-//   const startX = width * 0.25;
-//   const endX = width * 0.75;
-//   const centerY = height / 2;
-//   const paths = pathConstructor({ startX, endX, height });
+  ({
+    width = 64,
+    height = 32,
+    // TODO(burdon): Same as line color.
+    className = 'fill-neutral-200 dark:fill-neutral-800 stroke-neutral-500',
+    strokeWidth = 1,
+  }) => {
+    const startX = width * 0.25;
+    const endX = width * 0.75;
+    const centerY = height / 2;
+    const paths = pathConstructor({ startX, endX, height });
 
-//   return (
-//     <svg viewBox={`0 0 ${width} ${height}`} className='w-full h-full'>
-//       {/* Input line. */}
-//       {getAnchorPoints({ x: 0, y: centerY }, inputs).map(({ x, y }, i) => (
-//         <line key={i} x1={x} y1={y} x2={startX * 1.3} y2={y} strokeWidth={strokeWidth} className={className} />
-//       ))}
+    return (
+      <svg viewBox={`0 0 ${width} ${height}`} className='w-full h-full'>
+        {/* Input line. */}
+        {getAnchorPoints({ x: 0, y: centerY }, inputs).map(({ x, y }, i) => (
+          <line key={i} x1={x} y1={y} x2={startX * 1.3} y2={y} strokeWidth={strokeWidth} className={className} />
+        ))}
 
-//       {/* Output line. */}
-//       <line x1={endX} y1={centerY} x2={width} y2={centerY} strokeWidth={strokeWidth} className={className} />
+        {/* Output line. */}
+        <line x1={endX} y1={centerY} x2={width} y2={centerY} strokeWidth={strokeWidth} className={className} />
 
-//       {/* And body. */}
-//       {paths.map((path, i) => (
-//         <path key={i} d={path} strokeWidth={strokeWidth} className={className} />
-//       ))}
-//     </svg>
-//   );
-// };
+        {/* And body. */}
+        {paths.map((path, i) => (
+          <path key={i} d={path} strokeWidth={strokeWidth} className={className} />
+        ))}
+      </svg>
+    );
+  };
 
 //
 // AND
