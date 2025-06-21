@@ -9,7 +9,7 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { BlueprintEditor } from './BlueprintEditor';
-import { RESEARCH_BLUEPRINT } from '../../testing';
+import { RESEARCH_BLUEPRINT_DEFINITION } from '../../testing';
 import translations from '../../translations';
 
 const meta: Meta<typeof BlueprintEditor> = {
@@ -27,6 +27,6 @@ type Story = StoryObj<typeof BlueprintEditor>;
 
 export const Default: Story = {
   args: {
-    blueprint: RESEARCH_BLUEPRINT,
+    blueprint: RESEARCH_BLUEPRINT_DEFINITION,
   },
 };

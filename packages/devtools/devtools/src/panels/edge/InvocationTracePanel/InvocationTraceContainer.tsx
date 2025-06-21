@@ -139,7 +139,7 @@ export const InvocationTraceContainer = ({
     <PanelContainer
       toolbar={
         showSpaceSelector && (
-          <Toolbar.Root classNames='border-be border-separator'>
+          <Toolbar.Root classNames='border-be border-subduedSeparator'>
             <DataSpaceSelector />
           </Toolbar.Root>
         )

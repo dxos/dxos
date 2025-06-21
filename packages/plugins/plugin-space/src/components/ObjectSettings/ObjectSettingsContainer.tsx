@@ -21,7 +21,7 @@ export const ObjectSettingsContainer = ({ object, role }: ObjectSettingsContaine
 
   return (
     <Clipboard.Provider>
-      <StackItem.Content toolbar={false} role={role}>
+      <StackItem.Content role={role}>
         <div className='flex flex-col overflow-y-auto divide-y divide-separator'>
           <BaseObjectSettings object={object}>
             <Surface role='base-object-settings' data={data} />

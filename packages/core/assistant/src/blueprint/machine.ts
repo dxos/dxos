@@ -132,7 +132,7 @@ export class BlueprintMachine {
     inputMessages.forEach((message) => this.message.emit(message));
 
     // TODO(wittjosiah): Warn if tool is not found.
-    const tools = nextStep.tools.map((tool) => this.registry.get(tool)).filter(isNonNullable);
+    const tools = nextStep.tools?.map((tool) => this.registry.get(tool)).filter(isNonNullable) ?? [];
     const messages = await session.run({
       systemPrompt: `
         You are a smart Rule-Following Agent.

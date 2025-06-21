@@ -76,7 +76,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
     >
       <StoryPlankHeading attendableId={attendableId} />
       <StackItem.Content toolbar>
-        <Toolbar.Root classNames='border-b border-separator'>
+        <Toolbar.Root classNames='border-b border-subduedSeparator'>
           <Toolbar.Button>Test</Toolbar.Button>
         </Toolbar.Root>
 

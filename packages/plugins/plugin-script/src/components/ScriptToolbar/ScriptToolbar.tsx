@@ -21,12 +21,6 @@ import {
 } from '../../hooks';
 import { SCRIPT_PLUGIN } from '../../meta';
 
-export type ScriptToolbarProps = ThemedClassName<{
-  role?: string;
-  script: ScriptType;
-  state: ScriptToolbarState;
-}>;
-
 const createToolbar = ({ state, script, ...options }: CreateDeployOptions) =>
   Rx.make((get) =>
     get(
@@ -42,6 +36,12 @@ const createToolbar = ({ state, script, ...options }: CreateDeployOptions) =>
       }),
     ),
   );
+
+export type ScriptToolbarProps = ThemedClassName<{
+  role?: string;
+  script: ScriptType;
+  state: ScriptToolbarState;
+}>;
 
 export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbarProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);

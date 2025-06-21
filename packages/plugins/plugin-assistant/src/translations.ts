@@ -3,7 +3,6 @@
 //
 
 import { Blueprint } from '@dxos/assistant';
-import { Type } from '@dxos/echo';
 
 import { ASSISTANT_PLUGIN } from './meta';
 import { AIChatType, TemplateType } from './types';
@@ -11,11 +10,11 @@ import { AIChatType, TemplateType } from './types';
 export default [
   {
     'en-US': {
-      [Type.getTypename(AIChatType)!]: {
+      [AIChatType.typename]: {
         'typename label': 'Assistant',
         'object name placeholder': 'AI Chat',
       },
-      [Type.getTypename(Blueprint)!]: {
+      [Blueprint.typename]: {
         'typename label': 'Blueprint',
         'object name placeholder': 'New blueprint',
       },
@@ -47,6 +46,8 @@ export default [
         'search input placeholder': 'Search...',
         'chat input placeholder': 'Ask a question...',
         'chat stop': 'Cancel request.',
+
+        'button save': 'Save',
 
         'prompt placeholder': 'Ask a question...',
         'microphone button': 'Click to speak',
