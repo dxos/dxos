@@ -199,6 +199,7 @@ export class RepoProxy extends Resource {
     return handle;
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   private _receiveUpdate({ updates }: BatchedDocumentUpdates): void {
     if (!updates) {
       return;
