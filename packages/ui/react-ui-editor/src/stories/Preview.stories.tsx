@@ -9,7 +9,7 @@ import React, { useState, useEffect, type FC } from 'react';
 import { faker } from '@dxos/random';
 import { Popover } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
-import { hoverableHidden } from '@dxos/react-ui-theme';
+import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory } from './components';
@@ -67,14 +67,10 @@ const PreviewCard = () => {
 const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLookup }) => {
   const target = useRefTarget(link, onLookup);
   return (
-    <Card.Container role='block--preview'>
-      <div className='contents md:flex items-center gap-4'>
-        <Card.Heading classNames='grow'>
-          {/* <span className='text-xs text-subdued mie-2'>Prompt</span> */}
-          {link.label}
-        </Card.Heading>
+    <Card.Content classNames={hoverableControls}>
+      <div className='flex items-start'>
         {!readonly && (
-          <Card.Toolbar classNames='is-min pli-[calc(var(--dx-trimMd)-.25rem)]'>
+          <Card.Toolbar classNames='is-min p-[--dx-card-spacing-inline]'>
             {(link.suggest && (
               <>
                 <Card.ToolbarIconButton
@@ -86,7 +82,7 @@ const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLook
                   <Card.ToolbarIconButton
                     classNames='bg-successSurface text-successSurfaceText'
                     label='Apply'
-                    icon={'ph--check--regular'}
+                    icon='ph--check--regular'
                     onClick={() => onAction({ type: 'insert', link, target })}
                   />
                 )}
@@ -95,16 +91,20 @@ const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLook
               <Card.ToolbarIconButton
                 iconOnly
                 label='Delete'
-                icon={'ph--x--regular'}
-                classNames={hoverableHidden}
+                icon='ph--x--regular'
+                classNames={[hoverableControlItem, hoverableControlItemTransition]}
                 onClick={() => onAction({ type: 'delete', link })}
               />
             )}
           </Card.Toolbar>
         )}
+        <Card.Heading classNames='grow order-first mie-0'>
+          {/* <span className='text-xs text-subdued mie-2'>Prompt</span> */}
+          {link.label}
+        </Card.Heading>
       </div>
-      {target && <Card.Text classNames='line-clamp-3'>{target.text}</Card.Text>}
-    </Card.Container>
+      {target && <Card.Text classNames='line-clamp-3 mbs-0'>{target.text}</Card.Text>}
+    </Card.Content>
   );
 };
 

@@ -95,7 +95,7 @@ export const Form = <T extends BaseObject>({
       onValid={onValid}
       onSave={onSave}
     >
-      <div ref={formRef} role='none' className={mx('flex flex-col gap-4', classNames)} data-testid={testId}>
+      <div ref={formRef} role='none' className={mx(classNames)} data-testid={testId}>
         <FormFields
           schema={schema}
           path={path}
