@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React from 'react';
+import React, { useMemo, useEffect } from 'react';
 
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { log } from '@dxos/log';
@@ -17,17 +17,40 @@ import { FieldEditor, type FieldEditorProps } from './FieldEditor';
 import translations from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
 
+// Symbol for accessing debug objects in tests.
+export const FIELD_EDITOR_DEBUG_SYMBOL = Symbol('fieldEditorDebug');
+
+// Type definition for debug objects exposed to tests.
+export type FieldEditorDebugObjects = {
+  props: FieldEditorProps;
+  projection: ViewProjection;
+};
+
 type StoryProps = FieldEditorProps;
 
 const DefaultStory = (props: FieldEditorProps) => {
+  const projection = useMemo(() => new ViewProjection(createEchoSchema(TestSchema).jsonSchema, testView), []);
   const handleComplete: FieldEditorProps['onSave'] = () => {
     log.info('onClose', { props });
   };
 
+  // Expose objects on window for test access.
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any)[FIELD_EDITOR_DEBUG_SYMBOL] = { props, projection } satisfies FieldEditorDebugObjects;
+    }
+  }, [props, projection]);
+
+  // NOTE(ZaymonFC): This looks awkward but it resolves an infinite parsing issue with sb.
+  const json = useMemo(
+    () => JSON.parse(JSON.stringify({ props, projection })),
+    [JSON.stringify(props), JSON.stringify(projection)],
+  );
+
   return (
-    <TestLayout json={{ props }}>
+    <TestLayout json={json}>
       <TestPanel>
-        <FieldEditor {...props} onSave={handleComplete} />
+        <FieldEditor {...props} projection={projection} onSave={handleComplete} />
       </TestPanel>
     </TestLayout>
   );
@@ -49,8 +72,8 @@ type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
-    projection: new ViewProjection(createEchoSchema(TestSchema).jsonSchema, testView),
     view: testView,
     field: testView.fields[0],
   },
+  parameters: { controls: { disabled: true } },
 };
