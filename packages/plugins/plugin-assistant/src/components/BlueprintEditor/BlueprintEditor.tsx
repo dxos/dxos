@@ -33,7 +33,5 @@ export const BlueprintEditor = ({ classNames, blueprint }: BlueprintEditorProps)
     ],
   });
 
-  return (
-    <div ref={parentRef} className={mx('flex w-full pli-2 overflow-x-scroll border-x border-separator', classNames)} />
-  );
+  return <div ref={parentRef} className={mx('flex w-full pli-2 overflow-x-scroll', classNames)} />;
 };

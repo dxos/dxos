@@ -5,15 +5,26 @@
 import React, { useState } from 'react';
 
 import { type BlueprintDefinition, type Blueprint } from '@dxos/assistant';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { StackItem, type StackItemContentProps } from '@dxos/react-ui-stack';
 
 import { BlueprintEditor } from './BlueprintEditor';
+import { meta } from '../meta';
 
-export const BlueprintContainer = ({ role, blueprint }: { role: string; blueprint: Blueprint }) => {
-  const [definition, setDefinition] = useState<BlueprintDefinition>({ steps: blueprint.steps });
+export const BlueprintContainer = ({
+  role,
+  blueprint,
+}: Pick<StackItemContentProps, 'role'> & { blueprint: Blueprint }) => {
+  const { t } = useTranslation(meta.id);
+  const [definition] = useState<BlueprintDefinition>({ steps: blueprint.steps });
+
+  const handleSave = () => {};
 
   return (
-    <StackItem.Content role={role} classNames='container-max-width'>
+    <StackItem.Content role={role} classNames='container-max-width' toolbar>
+      <Toolbar.Root>
+        <Toolbar.Button onClick={handleSave}>{t('button save')}</Toolbar.Button>
+      </Toolbar.Root>
       <BlueprintEditor blueprint={definition} />
     </StackItem.Content>
   );

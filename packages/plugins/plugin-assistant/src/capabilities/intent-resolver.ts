@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/assistant';
-import { Obj, Ref } from '@dxos/echo';
+import { Key, Obj, Ref } from '@dxos/echo';
 
 import { AssistantAction, AIChatType } from '../types';
 
@@ -29,7 +29,15 @@ export default () => [
       intent: AssistantAction.CreateBlueprint,
       resolve: ({ name }) => ({
         data: {
-          object: Obj.make(Blueprint, { name, steps: [] }),
+          object: Obj.make(Blueprint, {
+            name,
+            steps: [
+              {
+                id: Key.ObjectId.random(),
+                instructions: 'You are a helpful assistant.',
+              },
+            ],
+          }),
         },
       }),
     }),
