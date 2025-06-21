@@ -13,7 +13,7 @@ import { SpyAIService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { BlueprintMachine, BlueprintParser, Logger, setConsolePrinter, setLogger } from '@dxos/assistant';
+import { BlueprintMachine, BlueprintParser, BufferedLogger, setConsolePrinter, setLogger } from '@dxos/assistant';
 import { combine } from '@dxos/async';
 import { Queue, type Space } from '@dxos/client/echo';
 import { DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -178,7 +178,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const researchBlueprint = useMemo(() => BlueprintParser.create().parse(RESEARCH_BLUEPRINT), []);
 
-  const logger = useMemo(() => new Logger(), []);
+  const logger = useMemo(() => new BufferedLogger(), []);
 
   //
   // Handlers
@@ -431,7 +431,7 @@ const useFlush = (space?: Space) => {
   return { state, handleFlush };
 };
 
-const Log: FC<{ logger: Logger }> = ({ logger }) => {
+const Log: FC<{ logger: BufferedLogger }> = ({ logger }) => {
   return (
     <div className='grow flex flex-col p-1 overflow-y-auto text-sm'>
       {logger.messages.value.map((message, index) => (

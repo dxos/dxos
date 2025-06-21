@@ -11,7 +11,7 @@ import {
   type Blueprint,
   BlueprintParser,
   BlueprintMachine,
-  setConsolePrinter,
+  BlueprintLoggerImpl,
 } from '@dxos/assistant';
 import { log } from '@dxos/log';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
@@ -45,8 +45,7 @@ export const BlueprintContainer = ({
     const tools = new ToolRegistry([]);
 
     const blueprint = BlueprintParser.create().parse(definition);
-    const machine = new BlueprintMachine(tools, blueprint);
-    setConsolePrinter(machine, true);
+    const machine = new BlueprintMachine(tools, blueprint).setLogger(new BlueprintLoggerImpl());
     await machine.runToCompletion({ aiClient: aiClient.value, input: [] });
   }, [aiClient.value, blueprint]);
 
