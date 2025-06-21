@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { Message, type AIServiceClient, MixedStreamParser, createTool } from '@dxos/ai';
 import { raise } from '@dxos/debug';
-import { create } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { failedInvariant } from '@dxos/invariant';
 import { type DataType } from '@dxos/schema';
 import { type Testing } from '@dxos/schema/testing';
@@ -58,7 +58,7 @@ export const processEmail = async (params: ProcessEmailParams): Promise<ProcessE
       model: '@anthropic/claude-3-5-sonnet-20241022',
       systemPrompt,
       history: [
-        create(Message, {
+        Obj.make(Message, {
           role: 'user',
           content: [
             {

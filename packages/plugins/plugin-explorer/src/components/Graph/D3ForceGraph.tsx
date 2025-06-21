@@ -4,7 +4,7 @@
 
 import React, { type FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { getTypename } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
@@ -85,7 +85,7 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
               const obj = node.data?.data.object;
               return {
                 data: {
-                  color: getHashColor(obj && getTypename(obj))?.color,
+                  color: getHashColor(obj && Obj.getTypename(obj))?.color,
                 },
                 classes: {
                   'dx-selected': selection.contains(node.id),

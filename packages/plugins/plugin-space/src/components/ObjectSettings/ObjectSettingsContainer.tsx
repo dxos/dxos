@@ -5,14 +5,14 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { type AnyLiveObject } from '@dxos/react-client/echo';
+import { type Obj } from '@dxos/echo';
 import { Clipboard } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { BaseObjectSettings } from './BaseObjectSettings';
 
 export type ObjectSettingsContainerProps = {
-  object: AnyLiveObject<any>;
+  object: Obj.Any;
   role: string;
 };
 

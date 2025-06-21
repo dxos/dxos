@@ -5,7 +5,7 @@
 import { format } from 'date-fns/format';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { makeRef, RefArray } from '@dxos/live-object';
+import { Ref } from '@dxos/echo';
 import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -48,7 +48,7 @@ export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
     }
 
     const entry = createJournalEntry();
-    journal.entries.push(makeRef(entry));
+    journal.entries.push(Ref.make(entry));
     setShowAddEntry(false);
   }, [journal, date]);
 
@@ -59,7 +59,7 @@ export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
           <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
         </div>
       )}
-      {RefArray.targets(journal?.entries ?? [])
+      {Ref.Array.targets(journal?.entries ?? [])
         .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0))
         .map((entry, i) => (
           <JournalEntry key={entry.id} entry={entry} classNames='p-2' {...props} autoFocus={i === 0} />

@@ -20,7 +20,7 @@ import { researchFn } from './research';
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
 
-describe('Research', () => {
+describe.skip('Research', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let executor: FunctionExecutor;

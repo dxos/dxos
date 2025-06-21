@@ -39,8 +39,8 @@ describe.skip('Blueprint', () => {
       .step('Write a pitch deck for the product')
       .build();
 
-    const registry = new ToolRegistry([]);
-    const machine = new BlueprintMachine(registry, blueprint);
+    const tools = new ToolRegistry([]);
+    const machine = new BlueprintMachine(tools, blueprint);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiService });
   });
@@ -96,8 +96,8 @@ describe.skip('Blueprint', () => {
       })
       .build();
 
-    const registry = new ToolRegistry([replyTool, labelTool]);
-    const machine = new BlueprintMachine(registry, blueprint);
+    const tools = new ToolRegistry([replyTool, labelTool]);
+    const machine = new BlueprintMachine(tools, blueprint);
     setConsolePrinter(machine);
     await machine.runToCompletion({ aiService, input: TEST_EMAILS[0] });
   });
@@ -125,24 +125,26 @@ describe.skip('Blueprint', () => {
 
     await db.flush({ indexes: true });
 
-    const webSearchTool = createExaTool({ apiKey: EXA_API_KEY });
-    const localSearchTool = createLocalSearchTool(db);
-    const graphWriterTool = createGraphWriterTool({ db, schemaTypes: DataTypes });
-    const registry = new ToolRegistry([webSearchTool, localSearchTool, graphWriterTool]);
+    const [exa, localSearch, graphWriter] = [
+      createExaTool({ apiKey: EXA_API_KEY }),
+      createLocalSearchTool(db),
+      createGraphWriterTool({ db, schemaTypes: DataTypes }),
+    ];
 
     const blueprint = BlueprintBuilder.create()
       .step('Research founders of the organization. Do deep research.', {
-        tools: [webSearchTool.id],
+        tools: [exa.id],
       })
       .step('Based on your research select matching entires that are already in the graph', {
-        tools: [localSearchTool.id],
+        tools: [localSearch.id],
       })
       .step('Add researched data to the graph', {
-        tools: [localSearchTool.id, graphWriterTool.id],
+        tools: [localSearch.id, graphWriter.id],
       })
       .build();
 
-    const machine = new BlueprintMachine(registry, blueprint);
+    const tools = new ToolRegistry([exa, localSearch, graphWriter]);
+    const machine = new BlueprintMachine(tools, blueprint);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiService, input: org1 });
   });

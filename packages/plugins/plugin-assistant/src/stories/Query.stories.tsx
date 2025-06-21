@@ -15,11 +15,9 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { BlueprintMachine, BlueprintParser, Logger, setConsolePrinter, setLogger } from '@dxos/assistant';
 import { combine } from '@dxos/async';
-import { Filter, Queue, type Space } from '@dxos/client/echo';
-import { type Obj, Type } from '@dxos/echo';
-import { Ref, create, getLabelForObject, getTypename, type AnyEchoObject } from '@dxos/echo-schema';
+import { Queue, type Space } from '@dxos/client/echo';
+import { DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
@@ -28,8 +26,8 @@ import { useQueue } from '@dxos/react-client/echo';
 import { Dialog, IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
 import {
   matchCompletion,
-  staticCompletion,
   typeahead,
+  staticCompletion,
   type TypeaheadContext,
   type TypeaheadOptions,
 } from '@dxos/react-ui-editor';
@@ -45,7 +43,7 @@ import { testPlugins } from './testing';
 import { AmbientDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { QueryParser, createFilter, type Expression } from '../parser';
-import { RESEARCH_BLUEPRINT, createRegistry } from '../testing';
+import { createRegistry, RESEARCH_BLUEPRINT } from '../testing';
 import translations from '../translations';
 
 faker.seed(1);
@@ -69,7 +67,7 @@ const aiConfig: AIServiceEdgeClientOptions = {
  * Container for a set of ephemeral research results.
  */
 const ResearchGraph = Schema.Struct({
-  queue: Ref(Queue),
+  queue: Type.Ref(Queue),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/ResearchGraph',
@@ -130,8 +128,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     } else {
       const queue = space.queues.create();
       return space.db.add(
-        create(ResearchGraph, {
-          // TODO(dmaretskyi): Ref.make(queue)
+        Obj.make(ResearchGraph, {
           queue: Ref.fromDXN(queue.dxn),
         }),
       );
@@ -159,20 +156,20 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     model?.nodes
       .filter((node) => {
         try {
-          getTypename(node.data.object as AnyEchoObject);
+          Obj.getTypename(node.data.object as Obj.Any);
           return true;
         } catch {
           return false;
         }
       })
-      .map((node) => node.data.object as AnyEchoObject) ?? [];
+      .map((node) => node.data.object as Obj.Any) ?? [];
 
   //
   // AI
   //
 
   const aiClient = useMemo(() => new SpyAIService(new AIServiceEdgeClient(aiConfig)), []);
-  const registry = useMemo(
+  const tools = useMemo(
     () => space && researchGraph && createRegistry(space, researchGraph.queue.dxn),
     [space, researchGraph?.queue.dxn],
   );
@@ -192,27 +189,27 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   }, [model]);
 
   const handleResearch = useCallback(async () => {
-    if (!space || !registry || !researchBlueprint) {
+    if (!space || !tools || !researchBlueprint) {
       return;
     }
 
-    const selected = selection.selected.value;
-    log.info('starting research...', { selected });
     const resolver = space.db.graph.createRefResolver({
       context: {
         space: space.db.spaceId,
         queue: researchGraph?.queue.dxn,
       },
     });
+
+    const selected = selection.selected.value;
     const objects = await Promise.all(selected.map((id) => resolver.resolve(DXN.fromLocalObjectId(id))));
-    const machine = new BlueprintMachine(registry, researchBlueprint);
+    const machine = new BlueprintMachine(tools, researchBlueprint);
     const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));
 
     log.info('starting research...', { selected });
     await machine.runToCompletion({ aiService: aiClient, input: objects });
 
     cleanup();
-  }, [space, aiClient, registry, researchBlueprint, selection]);
+  }, [space, aiClient, tools, researchBlueprint, selection]);
 
   const handleGenerate = useCallback(async () => {
     if (!space) {
@@ -392,10 +389,12 @@ const ItemList = <T extends Obj.Any>({ items = [] }: { items?: T[] }) => {
               classNames='grid grid-cols-[4rem_16rem_1fr] min-h-[32px] items-center'
             >
               <div className='text-xs font-mono font-thin px-1 text-subdued'>{item.id.slice(-6)}</div>
-              <div className={mx('text-xs font-mono font-thin truncate px-1', getHashColor(getTypename(item))?.text)}>
-                {getTypename(item)}
+              <div
+                className={mx('text-xs font-mono font-thin truncate px-1', getHashColor(Obj.getTypename(item))?.text)}
+              >
+                {Obj.getTypename(item)}
               </div>
-              <List.ItemTitle>{getLabelForObject(item)}</List.ItemTitle>
+              <List.ItemTitle>{Obj.getLabel(item)}</List.ItemTitle>
             </List.Item>
           ))}
         </div>

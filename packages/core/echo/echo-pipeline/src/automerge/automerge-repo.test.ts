@@ -3,13 +3,13 @@
 //
 
 import {
+  type Heads,
   change,
   clone,
   equals,
   from,
   getBackend,
   getHeads,
-  type Heads,
   next as A,
   save,
   saveSince,
@@ -18,13 +18,13 @@ import {
   type AutomergeUrl,
   type DocHandle,
   type DocumentId,
-  generateAutomergeUrl,
   type HandleState,
-  parseAutomergeUrl,
   type StorageAdapterInterface,
   type PeerId,
   Repo,
   type SharePolicy,
+  generateAutomergeUrl,
+  parseAutomergeUrl,
 } from '@automerge/automerge-repo';
 import { onTestFinished, describe, expect, test } from 'vitest';
 

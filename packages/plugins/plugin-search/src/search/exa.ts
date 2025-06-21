@@ -13,8 +13,9 @@ import {
   type TextContentBlock,
   createTool,
 } from '@dxos/ai';
+import { Key, Obj, Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import { create, getTypeAnnotation, ObjectId, ReferenceAnnotationId } from '@dxos/echo-schema';
+import { ReferenceAnnotationId } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -84,7 +85,7 @@ export const search = async <Schema extends Schema.Schema.AnyNoContext>(
     model: '@anthropic/claude-3-5-haiku-20241022',
     systemPrompt,
     history: [
-      create(Message, {
+      Obj.make(Message, {
         role: 'user',
 
         content: context.results.map(
@@ -101,7 +102,7 @@ export const search = async <Schema extends Schema.Schema.AnyNoContext>(
         mappedSchema.map((schema, index) => [
           `objects_${index}`,
           Schema.Array(schema).annotations({
-            description: `The objects to answer the query of type ${getTypeAnnotation(schema)?.typename ?? SchemaAST.getIdentifierAnnotation(schema.ast).pipe(Option.getOrNull)}`,
+            description: `The objects to answer the query of type ${Type.getTypename(schema) ?? SchemaAST.getIdentifierAnnotation(schema.ast).pipe(Option.getOrNull)}`,
           }),
         ]),
       ),
@@ -188,7 +189,7 @@ const getSearchTerms = async (aiService: AIServiceClient, context: string) => {
       Prefer own names of people, companies, and projects, technologies, and other entities.
     `,
     history: [
-      create(Message, {
+      Obj.make(Message, {
         role: 'user',
         content: [
           {
@@ -213,7 +214,7 @@ const sanitizeObjects = (entries: { data: any; schema: Schema.Schema.AnyNoContex
 
   return entries
     .map((entry) => {
-      idMap.set(entry.data.id, ObjectId.random());
+      idMap.set(entry.data.id, Key.ObjectId.random());
       entry.data.id = idMap.get(entry.data.id);
       return entry;
     })
@@ -233,7 +234,7 @@ const sanitizeObjects = (entries: { data: any; schema: Schema.Schema.AnyNoContex
         return recurse(value);
       });
 
-      return create(entry.schema, data);
+      return Obj.make(entry.schema, data);
     });
 };
 
@@ -243,7 +244,8 @@ const SoftRef = Schema.Struct({
   description: 'Reference to another object.',
 });
 
-const mapSchemaRefs = (schema: Schema.Schema.AnyNoContext) => {
+// TODO(burdon): Move to @dxos/echo.
+const mapSchemaRefs = (schema: Schema.Schema.AnyNoContext): Schema.Schema.AnyNoContext => {
   const go = (ast: SchemaAST.AST): SchemaAST.AST => {
     if (SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome)) {
       return SoftRef.ast;

@@ -6,7 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
 
@@ -22,7 +22,7 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (isInstanceOf(MailboxType, node.data) ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (Obj.instanceOf(MailboxType, node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => {
               const state = get(context.capabilities(InboxCapabilities.MailboxState))[0];
               const message = get(rxFromSignal(() => state?.[node.id]));

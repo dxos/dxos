@@ -6,7 +6,8 @@ import { type Schema } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
-import { FormatEnum, isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
+import { FormatEnum } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
@@ -24,7 +25,7 @@ export default () =>
     createSurface({
       id: `${MAP_PLUGIN}/map`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: MapType } => isInstanceOf(MapType, data.subject),
+      filter: (data): data is { subject: MapType } => Obj.instanceOf(MapType, data.subject),
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
         const [lng = 0, lat = 0] = data.subject?.coordinates ?? [];
@@ -51,7 +52,7 @@ export default () =>
     createSurface({
       id: 'plugin-map',
       role: 'canvas-node',
-      filter: (data) => isInstanceOf(MapType, data),
+      filter: (data) => Obj.instanceOf(MapType, data),
       component: ({ data }) => {
         const [lng = 0, lat = 0] = data?.coordinates ?? [];
         return <MapControl center={{ lat, lng }} zoom={14} />;
@@ -60,7 +61,7 @@ export default () =>
     createSurface({
       id: `${MAP_PLUGIN}/object-settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: MapType } => isInstanceOf(MapType, data.subject),
+      filter: (data): data is { subject: MapType } => Obj.instanceOf(MapType, data.subject),
       component: ({ data }) => <MapViewEditor map={data.subject} />,
     }),
     createSurface({

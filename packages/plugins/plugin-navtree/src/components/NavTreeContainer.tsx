@@ -16,12 +16,13 @@ import {
   useIntentDispatcher,
   useLayout,
 } from '@dxos/app-framework';
-import { isAction, isActionLike, type ReadableGraph, ROOT_ID, type Node } from '@dxos/app-graph';
+import { isAction, isActionLike, ROOT_ID, type Node, type ReadableGraph } from '@dxos/app-graph';
+import { Obj } from '@dxos/echo';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { useConnections } from '@dxos/plugin-graph';
-import { isEchoObject, isSpace } from '@dxos/react-client/echo';
+import { isSpace } from '@dxos/react-client/echo';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { isTreeData, type TreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
+import { isTreeData, type PropsFromTreeItem, type TreeData } from '@dxos/react-ui-list';
 import { mx } from '@dxos/react-ui-theme';
 import { arrayMove, byPosition } from '@dxos/util';
 
@@ -31,7 +32,7 @@ import { type NavTreeContextValue } from './types';
 import { NavTreeCapabilities } from '../capabilities';
 import { NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
-import { getActions as naturalGetActions, getChildren, getParent, resolveMigrationOperation } from '../util';
+import { getChildren, getParent, getActions as naturalGetActions, resolveMigrationOperation } from '../util';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
@@ -157,9 +158,9 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     // TODO(wittjosiah): This shouldn't depend directly on client, there should be a graph-level abstraction.
     if (isSpace(targetNode.data)) {
       // TODO(wittjosiah): Find a way to only allow space as source for rearranging.
-      return isEchoObject(sourceNode.data) || isSpace(sourceNode.data);
-    } else if (isEchoObject(targetNode.data)) {
-      return isEchoObject(sourceNode.data);
+      return Obj.isObject(sourceNode.data) || isSpace(sourceNode.data);
+    } else if (Obj.isObject(targetNode.data)) {
+      return Obj.isObject(sourceNode.data);
     } else {
       return false;
     }

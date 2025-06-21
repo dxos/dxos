@@ -9,9 +9,10 @@ import React, { useEffect } from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Expando, Query, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
+import { Obj, Query, Relation, Type } from '@dxos/echo';
+import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { live, useQuery, useSpace } from '@dxos/react-client/echo';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { AnchoredTo, DataType } from '@dxos/schema';
@@ -32,11 +33,11 @@ const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
   useEffect(() => {
     if (identity && space) {
       const t = setTimeout(async () => {
-        const object = space.db.add(live(Expando, {}));
+        const object = space.db.add(Obj.make(Type.Expando, {}));
         const thread1 = space.db.add(createCommentThread(identity));
         const thread2 = space.db.add(createCommentThread(identity));
-        space.db.add(live(AnchoredTo, { [RelationSourceId]: thread1, [RelationTargetId]: object }));
-        space.db.add(live(AnchoredTo, { [RelationSourceId]: thread2, [RelationTargetId]: object }));
+        space.db.add(Relation.make(AnchoredTo, { [RelationSourceId]: thread1, [RelationTargetId]: object }));
+        space.db.add(Relation.make(AnchoredTo, { [RelationSourceId]: thread2, [RelationTargetId]: object }));
       });
 
       return () => clearTimeout(t);

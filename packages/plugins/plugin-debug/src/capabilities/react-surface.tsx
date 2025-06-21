@@ -43,21 +43,14 @@ import {
   TracingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
+import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { ScriptAction } from '@dxos/plugin-script/types';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
-import {
-  SpaceState,
-  isSpace,
-  isEchoObject,
-  type AnyLiveObject,
-  type Live,
-  type Space,
-  parseId,
-} from '@dxos/react-client/echo';
+import { SpaceState, isSpace, type Space, parseId } from '@dxos/react-client/echo';
 
 import {
   DebugApp,
@@ -107,7 +100,7 @@ export default (context: PluginContext) =>
       filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
       component: ({ data }) => {
         const handleCreateObject = useCallback(
-          (objects: Live<any>[]) => {
+          (objects: Obj.Any[]) => {
             if (!isSpace(data.subject.space)) {
               return;
             }
@@ -140,11 +133,11 @@ export default (context: PluginContext) =>
       id: `${DEBUG_PLUGIN}/wireframe`,
       role: ['article', 'section'],
       position: 'hoist',
-      filter: (data): data is { subject: AnyLiveObject<any> } => {
+      filter: (data): data is { subject: Obj.Any } => {
         const settings = context
           .getCapability(Capabilities.SettingsStore)
           .getStore<DebugSettingsProps>(DEBUG_PLUGIN)!.value;
-        return isEchoObject(data.subject) && !!settings.wireframe;
+        return Obj.isObject(data.subject) && !!settings.wireframe;
       },
       component: ({ data, role }) => (
         <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
@@ -153,8 +146,7 @@ export default (context: PluginContext) =>
     createSurface({
       id: `${DEBUG_PLUGIN}/object-debug`,
       role: 'article',
-      filter: (data): data is { companionTo: AnyLiveObject<any> } =>
-        data.subject === 'debug' && isEchoObject(data.companionTo),
+      filter: (data): data is { companionTo: Obj.Any } => data.subject === 'debug' && Obj.isObject(data.companionTo),
       component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
     }),
     createSurface({
