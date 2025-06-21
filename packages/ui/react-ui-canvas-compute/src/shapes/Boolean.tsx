@@ -34,7 +34,7 @@ const createGate = (props: CreateGateProps): GateShape =>
     ...props,
   });
 
-const GateComponent = (Symbol: FC<GateSymbolProps>) => () => {
+const gateComponent = (Symbol: FC<GateSymbolProps>) => () => {
   return (
     <div className='flex w-full justify-center items-center'>
       <Symbol />
@@ -61,7 +61,7 @@ const defineShape = <S extends GateShape>({
   type,
   name,
   icon,
-  component: GateComponent(Symbol),
+  component: gateComponent(Symbol),
   createShape,
   getAnchors: (shape) => createAnchors({ shape, inputs, outputs }),
 });
@@ -80,7 +80,7 @@ type GateSymbolProps = {
 };
 
 // TODO(burdon): Note inputs should line up with anchors.
-const Symbol =
+const createSymbol =
   (pathConstructor: PathConstructor, inputs: number): FC<GateSymbolProps> =>
   ({
     width = 64,
@@ -116,7 +116,7 @@ const Symbol =
 // AND
 //
 
-const AndSymbol = Symbol(({ startX, endX, height }) => {
+const AndSymbol = createSymbol(({ startX, endX, height }) => {
   const arcRadius = (endX - startX) / 2;
   return [
     `
@@ -149,7 +149,7 @@ export const andShape = defineShape({
 //
 
 // TODO(burdon): Should have sharper point.
-const OrSymbol = Symbol(({ startX, endX, height }) => {
+const OrSymbol = createSymbol(({ startX, endX, height }) => {
   const arcRadius = (endX - startX) / 2;
   return [
     `
@@ -182,7 +182,7 @@ export const orShape = defineShape({
 // NOT
 //
 
-const NotSymbol = Symbol(({ startX, endX, height }) => {
+const NotSymbol = createSymbol(({ startX, endX, height }) => {
   return [
     `
     M ${startX},${height * 0.1}
