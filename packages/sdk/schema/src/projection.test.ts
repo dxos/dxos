@@ -915,4 +915,56 @@ describe('ViewProjection', () => {
 
     console.log(field);
   });
+
+  test('changing format to missing formats', async ({ expect }) => {
+    const testCases = [
+      { format: FormatEnum.Integer, expectedType: TypeEnum.Number, fieldName: 'count' },
+      { format: FormatEnum.DXN, expectedType: TypeEnum.String, fieldName: 'identifier' },
+      { format: FormatEnum.Hostname, expectedType: TypeEnum.String, fieldName: 'host' },
+    ];
+
+    for (const { format, expectedType, fieldName } of testCases) {
+      // Arrange.
+      const { db } = await builder.createDatabase();
+      const registry = new EchoSchemaRegistry(db);
+
+      const schemaType = expectedType === TypeEnum.Number ? Schema.Number : Schema.String;
+      const schema = Schema.Struct({
+        [fieldName]: schemaType,
+      }).annotations({
+        [TypeAnnotationId]: {
+          kind: EntityKind.Object,
+          typename: 'example.com/type/TestObject',
+          version: '0.1.0',
+        },
+      });
+
+      const [mutable] = await registry.register([schema]);
+      const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+      const projection = new ViewProjection(mutable.jsonSchema, view);
+      const fieldId = projection.getFieldId(fieldName);
+      invariant(fieldId);
+
+      // Act.
+      projection.setFieldProjection({
+        field: { id: fieldId, path: fieldName as JsonPath },
+        props: {
+          property: fieldName as JsonProp,
+          type: expectedType,
+          format,
+        },
+      });
+
+      // Assert.
+      const { props } = projection.getFieldProjection(fieldId);
+      expect(props.format).to.equal(format);
+      expect(props.type).to.equal(expectedType);
+
+      // Verify the underlying JSON schema was updated correctly.
+      expect(mutable.jsonSchema.properties?.[fieldName]).to.deep.include({
+        type: expectedType.toLowerCase(),
+        format: format,
+      });
+    }
+  });
 });

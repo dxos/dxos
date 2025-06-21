@@ -35,6 +35,7 @@ export default [
         'format date-time': 'DateTime',
         'format did': 'DID',
         'format duration': 'Duration',
+        'format dxn': 'DXN',
         'format email': 'Email',
         'format formula': 'Formula',
         'format hostname': 'Hostname',
@@ -47,12 +48,14 @@ export default [
         'format regex': 'RegExp',
         'format string': 'String',
         'format single-select': 'Select',
+        'format multi-select': 'Multi-select',
         'format text': 'Long text',
         'format time': 'Time',
         'format timestamp': 'Timestamp',
         'format user': 'User',
         'format number': 'Number',
         'format uri': 'URI',
+        'format url': 'URL',
         'format uuid': 'UUID',
 
         // Placeholders.
