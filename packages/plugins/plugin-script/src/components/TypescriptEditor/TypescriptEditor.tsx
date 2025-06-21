@@ -16,13 +16,11 @@ import React from 'react';
 import { type ThemedClassName, type ThemeMode, useThemeContext } from '@dxos/react-ui';
 import {
   type EditorInputMode,
-  EditorView,
   InputModeExtensions,
   type UseTextEditorProps,
   autocomplete,
   createBasicExtensions,
   createThemeExtensions,
-  editorMonospace,
   folding,
   useTextEditor,
 } from '@dxos/react-ui-editor';
@@ -63,22 +61,16 @@ export const TypescriptEditor = ({
           indentWithTab: true,
           lineNumbers: true,
           lineWrapping: false,
+          monospace: true,
           scrollPastEnd: true,
         }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        // NOTE: Not using default editor gutter because folding for code works best right beside text.
-        EditorView.theme({
-          '.cm-gutters': {
-            background: 'var(--dx-baseSurface)',
-          },
-        }),
         InputModeExtensions[inputMode],
         folding(),
         // Continues block comments when pressing Enter.
         Prec.high(keymap.of(continueKeymap)),
 
         // TODO(burdon): Factor out.
-        editorMonospace,
         javascript({ typescript: true }),
         // https://github.com/val-town/codemirror-ts
         autocomplete({ override: env ? [tsAutocomplete()] : undefined }),

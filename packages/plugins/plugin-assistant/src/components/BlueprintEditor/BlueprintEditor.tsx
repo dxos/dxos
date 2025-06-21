@@ -11,7 +11,6 @@ import {
   createBasicExtensions,
   createJsonExtensions,
   createThemeExtensions,
-  editorMonospace,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -26,10 +25,14 @@ export const BlueprintEditor = ({ classNames, blueprint }: BlueprintEditorProps)
   const { parentRef } = useTextEditor({
     initialValue: JSON.stringify(blueprint, null, 2),
     extensions: [
-      createBasicExtensions({ lineWrapping: false }),
+      createBasicExtensions({
+        lineNumbers: true,
+        lineWrapping: false,
+        monospace: true,
+        scrollPastEnd: true,
+      }),
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),
       createJsonExtensions({ schema: Type.toJsonSchema(BlueprintDefinition, { strict: true }) }),
-      editorMonospace,
     ],
   });
 
