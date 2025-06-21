@@ -31,10 +31,15 @@ export const BlueprintEditor = ({ classNames, blueprint }: BlueprintEditorProps)
         monospace: true,
         scrollPastEnd: true,
       }),
-      createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-      createJsonExtensions({ schema: Type.toJsonSchema(BlueprintDefinition, { strict: true }) }),
+      createThemeExtensions({
+        themeMode,
+        syntaxHighlighting: true,
+      }),
+      createJsonExtensions({
+        schema: Type.toJsonSchema(BlueprintDefinition, { strict: true }),
+      }),
     ],
   });
 
-  return <div ref={parentRef} className={mx('flex w-full pli-2 overflow-x-scroll', classNames)} />;
+  return <div ref={parentRef} className={mx('overflow-hidden', classNames)} />;
 };

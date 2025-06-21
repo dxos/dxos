@@ -34,7 +34,7 @@ import { hexToHue, isNotFalsy } from '@dxos/util';
 import { automerge } from './automerge';
 import { SpaceAwarenessProvider, awareness } from './awareness';
 import { focus } from './focus';
-import { editorMonospace } from '../defaults';
+import { editorGutter, editorMonospace } from '../defaults';
 import { type ThemeStyles, defaultTheme } from '../styles';
 
 //
@@ -109,14 +109,7 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.focus && focus,
     props.highlightActiveLine && highlightActiveLine(),
     props.history && history(),
-    props.lineNumbers && [
-      lineNumbers(),
-      EditorView.theme({
-        '.cm-gutters': {
-          background: 'var(--dx-baseSurface)',
-        },
-      }),
-    ],
+    props.lineNumbers && [lineNumbers(), editorGutter],
     props.lineWrapping && EditorView.lineWrapping,
     props.monospace && editorMonospace,
     props.placeholder && placeholder(props.placeholder),
