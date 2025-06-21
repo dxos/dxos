@@ -17,6 +17,13 @@ export const lengthsFacet = {
           slope: 1,
         },
       },
+      lacuna: {
+        root: {
+          unit: 'rem',
+          initial: 0,
+          slope: 0.125,
+        },
+      },
     },
   } satisfies LinearPhysicalLayer,
 
@@ -27,6 +34,9 @@ export const lengthsFacet = {
       noLine: { root: ['line', 0] },
       hairLine: { root: ['line', 1] },
       thickLine: { root: ['line', 2] },
+      trimXs: { root: ['lacuna', 3] },
+      trimSm: { root: ['lacuna', 6] },
+      trimMd: { root: ['lacuna', 9] },
     },
   },
 
@@ -37,6 +47,8 @@ export const lengthsFacet = {
       noLine: { root: ['focusOffset'] },
       hairLine: { root: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap'] },
       thickLine: { root: ['focusLine'] },
+      trimSm: { root: ['card-spacing-inline', 'card-spacing-block'] },
+      trimXs: { root: ['card-spacing-chrome'] },
     },
   },
 } satisfies Facet;

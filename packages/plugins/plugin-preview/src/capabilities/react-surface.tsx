@@ -18,7 +18,7 @@ import { Obj, Filter } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Card } from '@dxos/react-ui-stack';
+import { Card, cardSpacing } from '@dxos/react-ui-stack';
 import { TableType } from '@dxos/react-ui-table';
 import { descriptionMessage } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
@@ -114,7 +114,14 @@ export default () =>
 
         return (
           <Card.Container role={role}>
-            <Form schema={schema} values={data.subject} readonly={role === 'popover'} onSave={handleSave} autoSave />
+            <Form
+              schema={schema}
+              values={data.subject}
+              readonly={role === 'popover'}
+              onSave={handleSave}
+              autoSave
+              classNames={cardSpacing}
+            />
           </Card.Container>
         );
       },
