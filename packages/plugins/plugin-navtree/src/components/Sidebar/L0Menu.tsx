@@ -161,10 +161,8 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const itemElement = useRef<HTMLElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
-  const type = l0ItemType(item);
   const localizedString = toLocalizedString(item.properties.label, t);
   const hue = item.properties.hue ?? null;
-  const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
 
   useLayoutEffect(() => {
     // NOTE(thure): This is copied from StackItem, perhaps this should be DRYed out.
@@ -227,16 +225,13 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       <div
         role='none'
         data-frame={true}
+        {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
         className={mx(
           'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm',
-          pinned
-            ? 'bg-transparent is-[--rail-action] group-hover/l0item:bg-activeSurface'
-            : 'bg-activeSurface is-[--rail-action] bs-[--rail-action]',
+          pinned ? 'p-2 group-hover/l0item:bg-activeSurface' : 'is-[--rail-action] bs-[--rail-action] bg-activeSurface',
         )}
-        {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
       >
-        {(item.properties.icon && <Icon icon={item.properties.icon} size={pinned ? 5 : 6} {...hueFgStyle} />) ||
-          (type === 'tab' && item.properties.disposition !== 'pin-end' && <L0Avator item={item} />)}
+        <ItemAvatar item={item} />
       </div>
       <div
         role='none'
@@ -245,9 +240,24 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
-      {onRearrange && closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
+      {closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
   );
+};
+
+const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
+  const type = l0ItemType(item);
+  if (item.properties.icon) {
+    const hue = item.properties.hue ?? null;
+    const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
+    return <Icon icon={item.properties.icon} size={5} {...hueFgStyle} />;
+  }
+
+  if (type === 'tab' && item.properties.disposition !== 'pin-end') {
+    return <L0Avator item={item} />;
+  }
+
+  return null;
 };
 
 //
@@ -321,7 +331,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
         '!is-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
       ]}
     >
-      <div role='none' className='flex justify-center p-1 border-be'>
+      <div role='none' className='flex p-1 justify-center border-be'>
         <MenuProvider>
           <DropdownMenu.Root group={parent} items={menuActions}>
             <DropdownMenu.Trigger asChild>
@@ -365,6 +375,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
         </ScrollArea.Viewport>
       </ScrollArea.Root>
 
+      {/* Actions. */}
       <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>
         {pinnedItems
           .filter((item) => l0ItemType(item) !== 'collection')
