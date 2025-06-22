@@ -228,7 +228,9 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
         {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
         className={mx(
           'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm',
-          pinned ? 'p-2 group-hover/l0item:bg-activeSurface' : 'is-[--rail-action] bs-[--rail-action] bg-activeSurface',
+          pinned
+            ? 'p-2 group-hover/l0item:bg-activeSurface'
+            : 'is-[--l0-avatar-size] bs-[--l0-avatar-size] bg-activeSurface',
         )}
       >
         <ItemAvatar item={item} />

@@ -274,7 +274,7 @@ const Fallback = ({ error }: { error?: Error }) => {
     <div role='none' className='overflow-auto p-8 attention-surface grid place-items-center'>
       <p
         role='alert'
-        className={mx(descriptionMessage, 'break-words rounded-lg p-8', errorString.length < 256 && 'text-lg')}
+        className={mx(descriptionMessage, 'break-words rounded-md p-8', errorString.length < 256 && 'text-lg')}
       >
         {error ? errorString : 'error'}
       </p>

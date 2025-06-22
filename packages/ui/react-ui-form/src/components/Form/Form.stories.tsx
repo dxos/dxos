@@ -13,7 +13,7 @@ import { type BaseObject, Expando, Format, getObjectDXN, Ref, type TypeAnnotatio
 import { live } from '@dxos/live-object';
 import { withSurfaceVariantsLayout } from '@dxos/react-ui/testing';
 import { Testing } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SelectInput } from './Defaults';
 import { Form, type FormProps } from './Form';
@@ -68,7 +68,7 @@ const meta: Meta<StoryProps<any>> = {
   title: 'ui/react-ui-form/Form',
   component: Form,
   render: DebugStory,
-  decorators: [withTheme],
+  decorators: [withLayout({ fullscreen: true }), withTheme],
   parameters: {
     translations,
   },

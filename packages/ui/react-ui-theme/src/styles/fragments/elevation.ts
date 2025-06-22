@@ -11,7 +11,7 @@ export const contentShadow: ComponentFragment<{ elevation?: Elevation }> = (_) =
 
 // TODO(thure): These should become tokens.
 export const surfaceShadow: ComponentFragment<{ elevation?: Elevation }> = ({ elevation }) => [
-  elevation === 'positioned' ? 'shadow' : elevation === 'dialog' || elevation === 'toast' ? 'shadow-lg' : 'shadow-none',
+  elevation === 'positioned' ? 'shadow' : elevation === 'dialog' || elevation === 'toast' ? 'shadow-md' : 'shadow-none',
 ];
 
 export const surfaceZIndex: ComponentFragment<{ level?: SurfaceLevel; elevation?: Elevation }> = ({
