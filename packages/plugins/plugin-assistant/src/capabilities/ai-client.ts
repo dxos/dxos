@@ -28,7 +28,13 @@ export default (context: PluginContext) => {
     if (settings?.llmProvider === 'ollama') {
       aiClient.value = new OllamaClient();
     } else {
-      aiClient.value = new AIServiceEdgeClient({ endpoint });
+      aiClient.value = new AIServiceEdgeClient({
+        endpoint,
+        defaultGenerationOptions: {
+          // model: '@anthropic/claude-sonnet-4-20250514',
+          model: '@anthropic/claude-3-5-haiku-20241022',
+        },
+      });
     }
   });
 
