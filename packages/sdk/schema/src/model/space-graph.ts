@@ -217,31 +217,19 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
       // Relations.
       if (Relation.isRelation(object)) {
-        try {
-          const edge = this.addEdge({
-            id: object.id,
-            type: 'relation',
-            source: Relation.getSourceDXN(object).asEchoDXN()!.echoId,
-            target: Relation.getTargetDXN(object).asEchoDXN()!.echoId,
-            data: {
-              object,
-            },
-          });
+        const edge = this.addEdge({
+          id: object.id,
+          type: 'relation',
+          source: Relation.getSourceDXN(object).asEchoDXN()!.echoId,
+          target: Relation.getTargetDXN(object).asEchoDXN()!.echoId,
+          data: {
+            object,
+          },
+        });
 
-          this._options?.onCreateEdge?.(edge, object);
-        } catch (error: any) {
-          // TODO(burdon): FIX API and remove.
-          log.error('onCreateEdge', { error: error?.message });
-        }
+        this._options?.onCreateEdge?.(edge, object);
       } else {
-        // TODO(burdon): Filter?
-        let typename: string | undefined;
-        try {
-          // TODO(burdon): Should not throw (Expando does not have a type?)
-          typename = Obj.getTypename(object);
-        } catch (error: any) {
-          log.error('getTypename', { error: error?.message, object: JSON.stringify(object) });
-        }
+        const typename = Obj.getTypename(object);
         if (typename) {
           let node: SpaceGraphNode | undefined = currentNodes.find((node) => node.id === object.id);
           if (!node) {
