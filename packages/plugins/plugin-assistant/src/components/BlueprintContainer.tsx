@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import { type EditorView } from '@codemirror/view';
+import JSON5 from 'json5';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ToolRegistry } from '@dxos/ai';
 import { useCapability } from '@dxos/app-framework';
@@ -17,9 +19,11 @@ import {
   createGraphWriterTool,
 } from '@dxos/assistant';
 import { getSpace } from '@dxos/client/echo';
-import { log } from '@dxos/log';
+import { DXN, Key } from '@dxos/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { useSelectionManager } from '@dxos/react-ui-attention';
 import { StackItem, type StackItemContentProps } from '@dxos/react-ui-stack';
+import { ComplexSet } from '@dxos/util';
 
 import { BlueprintEditor } from './BlueprintEditor';
 import { AssistantCapabilities } from '../capabilities';
@@ -28,15 +32,32 @@ import { meta } from '../meta';
 // TODO(burdon): Move to config.
 export const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 
+// TODO(burdon): Validate.
+const parseBlueprint = (text: string): BlueprintDefinition | undefined => {
+  try {
+    const json = JSON5.parse(text);
+    const { steps } = json;
+    return { steps };
+  } catch (error) {
+    // Ignore.
+  }
+};
+
 export const BlueprintContainer = ({
   role,
   blueprint,
 }: Pick<StackItemContentProps, 'role'> & { blueprint: Blueprint }) => {
   const { t } = useTranslation(meta.id);
   const aiClient = useCapability(AssistantCapabilities.AiClient);
-  const [definition] = useState<BlueprintDefinition>({
-    steps: blueprint.steps.map(({ instructions, tools }) => ({ instructions, tools })),
-  });
+  const selectionManager = useSelectionManager();
+  const [definition, setDefinition] = useState<BlueprintDefinition>();
+  useEffect(() => {
+    setDefinition({
+      steps: blueprint.steps.map(({ instructions, tools }) => ({ instructions, tools })),
+    });
+  }, [blueprint]);
+
+  const editorRef = useRef<EditorView | undefined>(undefined);
 
   // TODO(burdon): Factor out.
   const toolRegistry = useMemo(() => {
@@ -62,23 +83,74 @@ export const BlueprintContainer = ({
     ]);
   }, [blueprint]);
 
-  // TODO(burdon): Need to save raw blueprint separately from parsed blueprint? (like Script).
-  const handleSave = () => {
-    log.info('save blueprint', definition);
+  const formatAndSave = (): BlueprintDefinition | undefined => {
+    if (!blueprint) {
+      return;
+    }
+
+    const text = editorRef.current?.state.doc.toString();
+    if (!text) {
+      return;
+    }
+
+    const definition = parseBlueprint(text);
+    if (!definition) {
+      return;
+    }
+
+    setDefinition(definition);
+    const formatted = JSON.stringify(definition, null, 2);
+    editorRef.current?.dispatch({
+      changes: { from: 0, to: text.length, insert: formatted },
+    });
+
+    blueprint.steps.length = 0;
+    for (const step of definition.steps) {
+      blueprint.steps.push({
+        id: Key.ObjectId.random(),
+        instructions: step.instructions,
+        tools: step.tools,
+      });
+    }
+
+    return definition;
   };
+
+  // TODO(burdon): Save raw blueprint separately from parsed blueprint? (like Script).
+  const handleSave = useCallback(() => {
+    const definition = formatAndSave();
+    if (!definition) {
+      return;
+    }
+
+    setDefinition(definition);
+  }, [blueprint]);
 
   const handleRun = useCallback(async () => {
     if (!aiClient?.value || !toolRegistry) {
       return;
     }
 
-    // TODO(burdon): Get input from selection?
-    const input: any[] = [];
+    const definition = formatAndSave();
+    if (!definition) {
+      return;
+    }
+
+    // Get input from selection.
+    const input = new ComplexSet<DXN>(DXN.hash);
+    for (const context of selectionManager.getSelectionContexts()) {
+      const selection = selectionManager.getSelection(context);
+      if (selection?.mode === 'multi') {
+        for (const id of selection.ids) {
+          input.add(DXN.fromLocalObjectId(id));
+        }
+      }
+    }
 
     const blueprint = BlueprintParser.create().parse(definition);
     const machine = new BlueprintMachine(toolRegistry, blueprint).setLogger(new BlueprintLoggerAdapter());
-    await machine.runToCompletion({ aiClient: aiClient.value, input });
-  }, [aiClient.value, toolRegistry, blueprint]);
+    await machine.runToCompletion({ aiClient: aiClient.value, input: Array.from(input.values()) });
+  }, [aiClient.value, toolRegistry]);
 
   return (
     <StackItem.Content role={role} toolbar>
@@ -86,7 +158,7 @@ export const BlueprintContainer = ({
         <Toolbar.Button onClick={handleSave}>{t('button save')}</Toolbar.Button>
         <Toolbar.Button onClick={handleRun}>{t('button run')}</Toolbar.Button>
       </Toolbar.Root>
-      <BlueprintEditor blueprint={definition} />
+      {definition && <BlueprintEditor ref={editorRef} blueprint={definition} />}
     </StackItem.Content>
   );
 };

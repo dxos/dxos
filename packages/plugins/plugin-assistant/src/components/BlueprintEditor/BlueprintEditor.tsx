@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { BlueprintDefinition } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
 import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
+  type EditorView,
   createBasicExtensions,
   createJsonExtensions,
   createThemeExtensions,
@@ -20,26 +21,30 @@ export type BlueprintEditorProps = ThemedClassName<{
 }>;
 
 // TODO(burdon): Factor out JsonEditor.
-export const BlueprintEditor = ({ classNames, blueprint }: BlueprintEditorProps) => {
-  const { themeMode } = useThemeContext();
-  const { parentRef } = useTextEditor({
-    initialValue: JSON.stringify(blueprint, null, 2),
-    extensions: [
-      createBasicExtensions({
-        lineNumbers: true,
-        lineWrapping: false,
-        monospace: true,
-        scrollPastEnd: true,
-      }),
-      createThemeExtensions({
-        themeMode,
-        syntaxHighlighting: true,
-      }),
-      createJsonExtensions({
-        schema: Type.toJsonSchema(BlueprintDefinition, { strict: true }),
-      }),
-    ],
-  });
+export const BlueprintEditor = forwardRef<EditorView | undefined, BlueprintEditorProps>(
+  ({ classNames, blueprint }, forwardedRef) => {
+    const { themeMode } = useThemeContext();
+    const { parentRef, view } = useTextEditor({
+      initialValue: JSON.stringify(blueprint, null, 2),
+      extensions: [
+        createBasicExtensions({
+          lineNumbers: true,
+          lineWrapping: false,
+          monospace: true,
+          scrollPastEnd: true,
+        }),
+        createThemeExtensions({
+          themeMode,
+          syntaxHighlighting: true,
+        }),
+        createJsonExtensions({
+          schema: Type.toJsonSchema(BlueprintDefinition, { strict: true }),
+        }),
+      ],
+    });
 
-  return <div ref={parentRef} className={mx('overflow-hidden', classNames)} />;
-};
+    useImperativeHandle(forwardedRef, () => view, [view]);
+
+    return <div ref={parentRef} className={mx('overflow-hidden', classNames)} />;
+  },
+);

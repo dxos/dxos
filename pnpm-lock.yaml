@@ -5488,6 +5488,9 @@ importers:
       '@dxos/react-edge-client':
         specifier: workspace:*
         version: link:../../sdk/react-edge-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-canvas-compute':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas-compute
@@ -5542,6 +5545,9 @@ importers:
       exa-js:
         specifier: ^1.5.12
         version: 1.7.0(encoding@0.1.13)
+      json5:
+        specifier: ^2.2.3
+        version: 2.2.3
       jsonpointer:
         specifier: ^5.0.1
         version: 5.0.1
