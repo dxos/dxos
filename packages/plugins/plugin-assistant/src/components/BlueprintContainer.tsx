@@ -21,9 +21,8 @@ import {
 import { getSpace } from '@dxos/client/echo';
 import { DXN, Key } from '@dxos/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
-import { useSelectionManager } from '@dxos/react-ui-attention';
+import { getSelectionSet, useSelectionManager } from '@dxos/react-ui-attention';
 import { StackItem, type StackItemContentProps } from '@dxos/react-ui-stack';
-import { ComplexSet } from '@dxos/util';
 
 import { BlueprintEditor } from './BlueprintEditor';
 import { AssistantCapabilities } from '../capabilities';
@@ -137,19 +136,14 @@ export const BlueprintContainer = ({
     }
 
     // Get input from selection.
-    const input = new ComplexSet<DXN>(DXN.hash);
-    for (const context of selectionManager.getSelectionContexts()) {
-      const selection = selectionManager.getSelection(context);
-      if (selection?.mode === 'multi') {
-        for (const id of selection.ids) {
-          input.add(DXN.fromLocalObjectId(id));
-        }
-      }
+    const input = Array.from(getSelectionSet(selectionManager)).map((id) => DXN.fromLocalObjectId(id));
+    if (!input.length) {
+      return;
     }
 
     const blueprint = BlueprintParser.create().parse(definition);
     const machine = new BlueprintMachine(toolRegistry, blueprint).setLogger(new BlueprintLoggerAdapter());
-    await machine.runToCompletion({ aiClient: aiClient.value, input: Array.from(input.values()) });
+    await machine.runToCompletion({ aiClient: aiClient.value, input });
   }, [aiClient.value, toolRegistry]);
 
   return (

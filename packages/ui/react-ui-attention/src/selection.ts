@@ -36,6 +36,21 @@ export type SelectionResult<T extends SelectionMode> = T extends 'single'
         ? { from: string; to: string }[]
         : never;
 
+// TODO(burdon): Refactor.
+export const getSelectionSet = (selectionManager: SelectionManager, contextId?: string) => {
+  const ids = new Set<string>(contextId ? [contextId] : []);
+  for (const context of selectionManager.getSelectionContexts()) {
+    const selection = selectionManager.getSelection(context);
+    if (selection?.mode === 'multi') {
+      for (const id of selection.ids) {
+        ids.add(id);
+      }
+    }
+  }
+
+  return ids;
+};
+
 /**
  * Manages selection state for different contexts.
  * Each context maintains its own selection mode and state.

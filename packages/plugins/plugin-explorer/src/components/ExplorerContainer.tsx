@@ -21,6 +21,7 @@ const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {
   const space = getSpace(view);
   const model = useGraphModel(space);
   const { match } = useGlobalSearch();
+
   if (!space || !model) {
     return null;
   }
