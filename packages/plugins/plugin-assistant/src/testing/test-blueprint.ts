@@ -27,7 +27,7 @@ export const createToolRegistry = (space: Space, queueDxn?: DXN): ToolRegistry =
         createGraphWriterTool({
           db: space.db,
           queue: space.queues.get(queueDxn),
-          schemaTypes: DataTypes,
+          schema: DataTypes,
           onDone: async (objects) => {
             const queue = space.queues.get(queueDxn);
             queue.append(objects);

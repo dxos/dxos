@@ -128,7 +128,7 @@ describe.skip('Blueprint', () => {
     const [exa, localSearch, graphWriter] = [
       createExaTool({ apiKey: EXA_API_KEY }),
       createLocalSearchTool(db),
-      createGraphWriterTool({ db, schemaTypes: DataTypes }),
+      createGraphWriterTool({ db, schema: DataTypes }),
     ];
 
     const blueprint = BlueprintBuilder.create()

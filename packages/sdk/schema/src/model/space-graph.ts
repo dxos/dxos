@@ -115,6 +115,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     this._objectSubscription?.();
     this._objectSubscription = undefined;
     this._space = undefined;
+
     return this;
   }
 
@@ -234,7 +235,13 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
         }
       } else {
         // TODO(burdon): Filter?
-        const typename = Obj.getTypename(object);
+        let typename: string | undefined;
+        try {
+          // TODO(burdon): Should not throw (Expando does not have a type?)
+          typename = Obj.getTypename(object);
+        } catch (error: any) {
+          log.error('getTypename', { error: error?.message, object: JSON.stringify(object) });
+        }
         if (typename) {
           let node: SpaceGraphNode | undefined = currentNodes.find((node) => node.id === object.id);
           if (!node) {

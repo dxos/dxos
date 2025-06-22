@@ -60,7 +60,7 @@ export const researchFn = defineFunction({
     });
     session.streamEvent.on((event) => log('stream', { event }));
 
-    const graphWriteTool = createGraphWriterTool({ db, schemaTypes: DataTypes });
+    const graphWriteTool = createGraphWriterTool({ db, schema: DataTypes });
     log.info('graphWriteTool', { schema: graphWriteTool.parameters });
 
     // TODO(dmaretskyi): Consider adding this pattern as the "Graph" output mode for the session.
