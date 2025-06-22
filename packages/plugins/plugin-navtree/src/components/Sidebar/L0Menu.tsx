@@ -338,7 +338,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
               {/* TODO(wittjosiah): Use L0Item trigger. */}
               <IconButton
                 iconOnly
-                icon='ph--dots-three--regular'
+                icon='ph--list--regular'
                 size={5}
                 label={t('app menu label')}
                 tooltipSide='right'
