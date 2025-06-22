@@ -5,7 +5,7 @@
 import { type Schema } from 'effect';
 
 import { type AIServiceClient } from '@dxos/ai';
-import { Capabilities, contributes, createIntent, useCapability, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
@@ -33,7 +33,7 @@ type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 export default (context: PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const client = context.getCapability(ClientCapabilities.Client);
-  const aiClient = useCapability(AssistantCapabilities.AiClient);
+  const aiClient = context.getCapability(AssistantCapabilities.AiClient);
   const state = context.getCapability(MeetingCapabilities.State);
   const settings = context
     .getCapability(Capabilities.SettingsStore)
