@@ -49,7 +49,7 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   );
 
   return (
-    <div role='none' className='bs-full is-full flex flex-col gap-1 overflow-y-auto p-1'>
+    <div role='none' className='bs-full is-full flex flex-col p-2 gap-1 overflow-y-auto'>
       {selectedObjects.length === 0 && (
         // TODO(burdon): Standardize treatment of these messages.
         <div className='flex p-2 justify-center text-subdued'>{t('row details no selection label')}</div>
