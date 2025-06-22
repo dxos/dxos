@@ -48,7 +48,7 @@ export enum PresetName {
   KANBAN_QUEUE = 'kanban-queue',
 }
 
-export const presets = {
+export const generator = () => ({
   schemas: [CanvasBoardType, FunctionTrigger],
   types: Object.values(PresetName).map((name) => ({ typename: name })),
   items: [
@@ -444,7 +444,7 @@ export const presets = {
       },
     ],
   ] as [PresetName, ObjectGenerator<any>][],
-};
+});
 
 const createQueueSinkPreset = <SpecType extends TriggerKind>(
   space: Space,

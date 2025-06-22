@@ -99,6 +99,8 @@ export default (context: PluginContext) =>
       role: 'article',
       filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
       component: ({ data }) => {
+        const { dispatchPromise: dispatch } = useIntentDispatcher();
+
         const handleCreateObject = useCallback(
           (objects: Obj.Any[]) => {
             if (!isSpace(data.subject.space)) {
@@ -108,11 +110,10 @@ export default (context: PluginContext) =>
             const collection =
               data.subject.space.state.get() === SpaceState.SPACE_READY &&
               data.subject.space.properties[CollectionType.typename]?.target;
-            if (!(collection instanceof CollectionType)) {
+            if (!Obj.instanceOf(CollectionType, collection)) {
               return;
             }
 
-            const { dispatchPromise: dispatch } = useIntentDispatcher();
             objects.forEach((object) => {
               void dispatch(createIntent(SpaceAction.AddObject, { target: collection, object }));
             });
