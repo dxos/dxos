@@ -4,7 +4,7 @@
 
 import { forceLink, forceManyBody } from 'd3';
 import NativeForceGraph from 'force-graph';
-import React, { type FC, useEffect, useRef } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { filterObjectsSync, type SearchResult } from '@dxos/plugin-search';
@@ -24,6 +24,13 @@ export const ForceGraph: FC<ForceGraphProps> = ({ model, match }) => {
 
   const filteredRef = useRef<SearchResult[]>();
   filteredRef.current = filterObjectsSync(model?.objects ?? [], match);
+
+  const [data, setData] = useState<GraphAdapter>();
+  useEffect(() => {
+    return model?.subscribe((model) => {
+      setData(new GraphAdapter(model.graph));
+    });
+  }, [model]);
 
   useEffect(() => {
     if (rootRef.current) {
@@ -46,11 +53,9 @@ export const ForceGraph: FC<ForceGraphProps> = ({ model, match }) => {
   }, []);
 
   useEffect(() => {
-    if (!model || !forceGraph.current || !width || !height) {
+    if (!data || !width || !height || !forceGraph.current) {
       return;
     }
-
-    const data = new GraphAdapter(model);
 
     // https://github.com/vasturiano/force-graph?tab=readme-ov-file#container-layout
     forceGraph.current
@@ -73,7 +78,7 @@ export const ForceGraph: FC<ForceGraphProps> = ({ model, match }) => {
       .warmupTicks(100)
       .cooldownTime(1_000)
       .resumeAnimation();
-  }, [model, width, height]);
+  }, [data, width, height, forceGraph.current]);
 
   const handleZoomToFit = () => {
     forceGraph.current?.zoomToFit(400, 40);

@@ -8,7 +8,7 @@ import { useGlobalSearch } from '@dxos/plugin-search';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { ForceGraph } from './Graph';
+import { D3ForceGraph } from './Graph';
 import { useGraphModel } from '../hooks';
 import { type ViewType } from '../types';
 
@@ -27,7 +27,7 @@ const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {
 
   return (
     <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
-      <ForceGraph model={model} match={match} />
+      <D3ForceGraph model={model} match={match} />
     </StackItem.Content>
   );
 };
