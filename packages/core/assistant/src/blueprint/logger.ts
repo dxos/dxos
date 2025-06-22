@@ -25,13 +25,16 @@ chalk.level = 2;
 // TODO(burdon): Factor out.
 type ConsoleLogSignature = (message: string, arg?: any) => void;
 
-interface ILogger {
+interface Logger {
   log: ConsoleLogSignature;
 }
 
-const DEFAULT_LOGGER: ILogger = { log: log.info };
+const DEFAULT_LOGGER: Logger = { log: log.info };
 
-export class BufferedLogger implements ILogger {
+/**
+ * Reactive bufferedlogger.
+ */
+export class BufferedLogger implements Logger {
   private _messages = signal<string[]>([]);
 
   get messages(): ReadonlySignal<string[]> {
@@ -48,8 +51,8 @@ export class BufferedLogger implements ILogger {
 }
 
 // TODO(burdon): Reconcile with ConsolePrinter.
-export class BlueprintLoggerImpl implements BlueprintLogger {
-  constructor(private readonly logger: ILogger = DEFAULT_LOGGER) {}
+export class BlueprintLoggerAdapter implements BlueprintLogger {
+  constructor(private readonly logger: Logger = DEFAULT_LOGGER) {}
 
   log(event: BlueprintEvent) {
     switch (event.type) {

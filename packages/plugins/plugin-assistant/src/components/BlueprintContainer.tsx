@@ -7,11 +7,11 @@ import React, { useCallback, useState } from 'react';
 import { ToolRegistry } from '@dxos/ai';
 import { useCapability } from '@dxos/app-framework';
 import {
-  type BlueprintDefinition,
   type Blueprint,
+  type BlueprintDefinition,
+  BlueprintLoggerAdapter,
   BlueprintParser,
   BlueprintMachine,
-  BlueprintLoggerImpl,
 } from '@dxos/assistant';
 import { log } from '@dxos/log';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
@@ -31,6 +31,7 @@ export const BlueprintContainer = ({
     steps: blueprint.steps.map(({ instructions, tools }) => ({ instructions, tools })),
   });
 
+  // TODO(burdon): Need to save raw blueprint separately from parsed blueprint? (like Script).
   const handleSave = () => {
     log.info('save blueprint', definition);
   };
@@ -45,7 +46,7 @@ export const BlueprintContainer = ({
     const tools = new ToolRegistry([]);
 
     const blueprint = BlueprintParser.create().parse(definition);
-    const machine = new BlueprintMachine(tools, blueprint).setLogger(new BlueprintLoggerImpl());
+    const machine = new BlueprintMachine(tools, blueprint).setLogger(new BlueprintLoggerAdapter());
     await machine.runToCompletion({ aiClient: aiClient.value, input: [] });
   }, [aiClient.value, blueprint]);
 
