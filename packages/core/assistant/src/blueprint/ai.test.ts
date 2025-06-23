@@ -104,18 +104,18 @@ describe.runIf(process.env.OPENAI_API_KEY)('AiLanguageModel', () => {
     Effect.gen(function* () {
       const model = yield* OpenAiLanguageModel.model('gpt-4o');
       const chat = yield* AiChat.empty.pipe(Effect.provide(model));
-      const tools = yield* Tools;
+      const toolkit = yield* Tools;
 
       // Initial request.
       let response = yield* chat.generateText({
-        toolkit: tools,
+        toolkit,
         prompt,
       });
 
       // Agentic loop.
       while (response.results.size > 0) {
         response = yield* chat.generateText({
-          toolkit: tools,
+          toolkit,
           prompt: AiInput.empty,
         });
       }
