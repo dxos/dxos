@@ -24,6 +24,7 @@ import { APP_KEY } from './src/constants';
 
 const rootDir = resolve(__dirname, '../../..');
 const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
+const dxosIcons = join(rootDir, '/packages/ui/brand/assets/icons');
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
@@ -115,9 +116,15 @@ export default defineConfig((env) => ({
       ],
     }),
     IconsPlugin({
-      symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
-      assetPath: (name, variant) =>
-        `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+      symbolPattern: '(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      assetPath: (iconSet, name, variant) => {
+        switch (iconSet) {
+          case 'dx':
+            return `${dxosIcons}/${name}.svg`;
+          default:
+            return `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
+        }
+      },
       spriteFile: 'icons.svg',
       contentPaths: [
         join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
