@@ -91,7 +91,7 @@ export const systemSememes = {
   //
   baseSurface: elevationCadence(0),
   groupSurface: elevationCadence(1),
-  modalSurface: elevationCadence(2),
+  modalSurface: elevationCadence(2, 1.7),
 
   //
   // Contrast cadence tokens

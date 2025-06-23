@@ -25,7 +25,7 @@ type StoryProps = MarkdownEditorProps & {
 };
 
 const DefaultStory = ({ content = '# Test', toolbar }: StoryProps) => {
-  const doc = useMemo(() => createObject({ content }), [content]);
+  const doc = useMemo(() => createObject({ content }), [content]); // TODO(burdon): Remove dependency on createObject.
   const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
   return <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />;
 };
@@ -35,10 +35,10 @@ const meta: Meta<typeof MarkdownEditor> = {
   component: MarkdownEditor,
   render: DefaultStory,
   decorators: [
+    withPluginManager({ plugins: [IntentPlugin()] }),
+    withAttention,
     withTheme,
     withLayout({ fullscreen: true }),
-    withAttention,
-    withPluginManager({ plugins: [IntentPlugin()] }),
   ],
   parameters: {
     translations: [...translations, ...editorTranslations],

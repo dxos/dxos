@@ -77,12 +77,9 @@ export const preview = (options: PreviewOptions = {}): Extension => {
 
     EditorView.theme({
       '.cm-preview-block': {
-        marginLeft: '-1rem',
-        marginRight: '-1rem',
-        padding: '1rem',
-        borderRadius: '0.5rem',
-        background: 'var(--dx-modalSurface)',
-        border: '1px solid var(--dx-separator)',
+        '--dx-card-spacing-inline': 'var(--dx-trimMd)',
+        '--dx-card-spacing-block': 'var(--dx-trimMd)',
+        marginInline: 'calc(-1*var(--dx-trimMd))',
       },
     }),
   ];

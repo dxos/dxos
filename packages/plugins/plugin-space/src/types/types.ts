@@ -5,7 +5,8 @@
 import { Schema } from 'effect';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
-import { Expando, type BaseObject, type TypedObject } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
@@ -80,7 +81,7 @@ export type SpaceSettingsProps = Schema.Schema.Type<typeof SpaceSettingsSchema>;
 
 export type SerializerMap = Record<string, TypedObjectSerializer>;
 
-export interface TypedObjectSerializer<T extends Expando = Expando> {
+export interface TypedObjectSerializer<T extends Type.Expando = Type.Expando> {
   serialize(params: { object: T }): Promise<string>;
 
   /**
@@ -242,8 +243,8 @@ export namespace SpaceAction {
       space: SpaceSchema,
       // TODO(wittjosiah): Relation schema.
       schema: Schema.Any,
-      source: Expando,
-      target: Expando,
+      source: Type.Expando,
+      target: Type.Expando,
       // TODO(wittjosiah): Type based on relation schema.
       fields: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
     }),

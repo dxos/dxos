@@ -3,13 +3,13 @@
 //
 
 import {
+  type Heads,
   change,
   clone,
   equals,
   from,
   getBackend,
   getHeads,
-  type Heads,
   next as A,
   save,
   saveSince,
@@ -18,13 +18,13 @@ import {
   type AutomergeUrl,
   type DocHandle,
   type DocumentId,
-  generateAutomergeUrl,
   type HandleState,
-  parseAutomergeUrl,
   type StorageAdapterInterface,
   type PeerId,
   Repo,
   type SharePolicy,
+  generateAutomergeUrl,
+  parseAutomergeUrl,
 } from '@automerge/automerge-repo';
 import { onTestFinished, describe, expect, test } from 'vitest';
 
@@ -430,7 +430,7 @@ describe('AutomergeRepo', () => {
       let clientDoc = A.from<{ field?: string }>({});
       const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
       // Sync handshake.
-      let sentHeads = getHeads(clientDoc);
+      let sentHeads: Heads = [];
 
       // Sync protocol.
       const sendDoc = async (doc: A.Doc<any>) => {
@@ -446,6 +446,50 @@ describe('AutomergeRepo', () => {
         });
         await sendDoc(clientDoc);
 
+        const serverHandle = await repo.find<any>(documentId);
+        expect(serverHandle.doc()!.field).to.deep.equal(value);
+      }
+    });
+
+    test('client creates doc and Repo persists it to disk', async () => {
+      const storage = await createLevelAdapter();
+
+      const repo = new Repo({ network: [], storage });
+      const receiveByServer = async (blob: Uint8Array, docId: DocumentId) => {
+        const serverHandle = await repo.find(docId, FIND_PARAMS);
+        serverHandle.update((doc) => {
+          return A.loadIncremental(doc, blob);
+        });
+      };
+
+      let clientDoc = A.from<{ field?: string }>({ field: 'foo' });
+      const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
+      // Sync handshake.
+      let sentHeads: Heads = [];
+
+      // Sync protocol.
+      const sendDoc = async (doc: A.Doc<any>) => {
+        await receiveByServer(saveSince(doc, sentHeads), documentId);
+        sentHeads = getHeads(doc);
+      };
+
+      // Change doc and send changes to server.
+      const value = 'text to test if sync works';
+      {
+        clientDoc = A.change(clientDoc, (doc: any) => {
+          doc.field = value;
+        });
+        await sendDoc(clientDoc);
+
+        const serverHandle = await repo.find<any>(documentId);
+        expect(serverHandle.doc()!.field).to.deep.equal(value);
+      }
+
+      await sleep(100);
+
+      // Re-open repo.
+      {
+        const repo = new Repo({ network: [], storage });
         const serverHandle = await repo.find<any>(documentId);
         expect(serverHandle.doc()!.field).to.deep.equal(value);
       }

@@ -4,7 +4,6 @@
 
 import { useCallback, useMemo } from 'react';
 
-import { decodeReference } from '@dxos/echo-protocol';
 import { ScriptType, FunctionType, createInvocationSpans, type InvocationTraceEvent } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { Filter, getSpace, useQuery, useQueue, type Space } from '@dxos/react-client/echo';
@@ -62,7 +61,7 @@ export const useInvocationSpans = ({ space, script }: { space?: Space; script?: 
   const scopedInvocationSpans = useMemo(() => {
     if (functionsForScript) {
       return invocationSpans.filter((span) => {
-        const targetId = decodeReference(span.invocationTarget).dxn;
+        const targetId = span.invocationTarget.dxn;
         const uuidPart = getUuidFromDxn(targetId);
         return uuidPart ? functionsForScript?.has(uuidPart) : false;
       });

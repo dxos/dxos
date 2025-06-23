@@ -6,7 +6,7 @@ import React, { type FC, type PropsWithChildren } from 'react';
 
 import { type MessageContentBlock, type Message, type Tool } from '@dxos/ai';
 import { Surface } from '@dxos/app-framework';
-import type { BaseEchoObject } from '@dxos/echo-schema';
+import { type Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
 import { Button, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
@@ -48,7 +48,7 @@ export type ThreadMessageProps = ThemedClassName<{
   tools?: Tool[];
   onPrompt?: (text: string) => void;
   onDelete?: (id: string) => void;
-  onAddToGraph?: (object: BaseEchoObject) => void;
+  onAddToGraph?: (object: Obj.Any) => void;
 }>;
 
 export const ThreadMessage: FC<ThreadMessageProps> = ({
@@ -94,7 +94,7 @@ type BlockComponent = FC<{
   space?: Space;
   block: MessageContentBlock;
   onPrompt?: (text: string) => void;
-  onAddToGraph?: (object: BaseEchoObject) => void;
+  onAddToGraph?: (object: Obj.Any) => void;
 }>;
 
 const components: Record<string, BlockComponent> = {

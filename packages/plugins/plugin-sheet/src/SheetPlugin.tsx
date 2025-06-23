@@ -33,7 +33,7 @@ export const SheetPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: SheetType.typename,
           metadata: {
-            label: (object: any) => (object instanceof SheetType ? object.name : undefined),
+            label: (object: SheetType) => object.name,
             icon: 'ph--grid-nine--regular',
             serializer,
             comments: 'anchored',

@@ -2050,6 +2050,12 @@ importers:
         specifier: ^8.3.6
         version: 8.3.6
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -2462,6 +2468,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@preact/signals-core':
+        specifier: ^1.9.0
+        version: 1.10.0
       '@xenova/transformers':
         specifier: ^2.17.2
         version: 2.17.2
@@ -2472,6 +2481,33 @@ importers:
         specifier: ^1.5.12
         version: 1.7.0(encoding@0.1.13)
     devDependencies:
+      '@effect/ai':
+        specifier: ^0.19.4
+        version: 0.19.4(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21)
+      '@effect/ai-anthropic':
+        specifier: ^0.9.5
+        version: 0.9.5(@effect/ai@0.19.4(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21))(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)
+      '@effect/ai-openai':
+        specifier: ^0.22.4
+        version: 0.22.4(@effect/ai@0.19.4(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21))(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)
+      '@effect/cluster':
+        specifier: ^0.39.4
+        version: 0.39.5(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21)
+      '@effect/experimental':
+        specifier: ^0.49.2
+        version: 0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2)
+      '@effect/platform':
+        specifier: ^0.85.2
+        version: 0.85.2(effect@3.14.21)
+      '@effect/platform-node':
+        specifier: ^0.86.4
+        version: 0.86.5(@effect/cluster@0.39.5(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21))(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21)
+      '@effect/rpc':
+        specifier: ^0.62.4
+        version: 0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)
+      '@effect/sql':
+        specifier: ^0.38.2
+        version: 0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)
       effect:
         specifier: 3.14.21
         version: 3.14.21
@@ -2563,6 +2599,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
@@ -5476,6 +5515,9 @@ importers:
       '@dxos/react-edge-client':
         specifier: workspace:*
         version: link:../../sdk/react-edge-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-canvas-compute':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas-compute
@@ -5530,6 +5572,9 @@ importers:
       exa-js:
         specifier: ^1.5.12
         version: 1.7.0(encoding@0.1.13)
+      json5:
+        specifier: ^2.2.3
+        version: 2.2.3
       jsonpointer:
         specifier: ^5.0.1
         version: 5.0.1
@@ -6508,6 +6553,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-graph':
         specifier: workspace:*
         version: link:../../ui/react-ui-graph
@@ -6857,6 +6905,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -7301,9 +7352,6 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-card':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-card
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
@@ -7434,6 +7482,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../plugin-assistant
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -7926,121 +7977,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
-      '@dxos/react-ui-editor':
+      '@dxos/react-ui-attention':
         specifier: workspace:*
-        version: link:../../ui/react-ui-editor
-      '@dxos/react-ui-stack':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-stack
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: ^0.9.0
-        version: 0.9.0(@babel/core@7.25.9)(@swc/helpers@0.5.17)(react@18.2.0)
-      '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.10.0
-      date-fns:
-        specifier: ^3.3.1
-        version: 3.6.0
-    devDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@effect-rx/rx-react':
-        specifier: ^0.34.1
-        version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
-      '@effect/platform':
-        specifier: 0.80.12
-        version: 0.80.12(effect@3.14.21)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/react':
-        specifier: ~18.2.0
-        version: 18.2.79
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
-      effect:
-        specifier: ^3.13.3
-        version: 3.14.21
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
-
-  packages/plugins/plugin-outliner-deprecated:
-    dependencies:
-      '@codemirror/state':
-        specifier: ^6.4.1
-        version: 6.4.1
-      '@codemirror/view':
-        specifier: ^6.34.1
-        version: 6.34.1
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../sdk/app-framework
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
-      '@dxos/plugin-deck':
-        specifier: workspace:*
-        version: link:../plugin-deck
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
-      '@dxos/plugin-meeting':
-        specifier: workspace:*
-        version: link:../plugin-meeting
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
-      '@dxos/plugin-stack':
-        specifier: workspace:*
-        version: link:../plugin-stack
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
@@ -8274,6 +8213,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
@@ -8719,12 +8661,12 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
-      '@dxos/react-ui-card':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-card
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../../ui/react-ui-searchlist
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -12484,58 +12426,6 @@ importers:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
 
-  packages/ui/react-ui-card:
-    dependencies:
-      '@preact-signals/safe-react':
-        specifier: ^0.9.0
-        version: 0.9.0(@babel/core@7.25.9)(@swc/helpers@0.5.17)(react@18.2.0)
-      '@radix-ui/react-primitive':
-        specifier: 2.0.2
-        version: 2.0.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-    devDependencies:
-      '@dnd-kit/core':
-        specifier: ^6.0.5
-        version: 6.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@dnd-kit/sortable':
-        specifier: ^7.0.1
-        version: 7.0.1(@dnd-kit/core@6.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
-      '@dnd-kit/utilities':
-        specifier: ^3.2.0
-        version: 3.2.0(react@18.2.0)
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/react':
-        specifier: ~18.2.0
-        version: 18.2.79
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
-
   packages/ui/react-ui-components:
     dependencies:
       '@dxos/invariant':
@@ -12702,6 +12592,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../react-ui-menu
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -12766,6 +12659,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -12781,12 +12677,18 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../react-ui-attention
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -12907,6 +12809,9 @@ importers:
       '@dxos/react-ui-pickers':
         specifier: workspace:*
         version: link:../react-ui-pickers
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../react-ui-stack
       '@dxos/react-ui-tag-picker':
         specifier: workspace:*
         version: link:../react-ui-tag-picker
@@ -13224,6 +13129,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../react-ui-stack
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
@@ -13704,6 +13612,9 @@ importers:
       motion:
         specifier: ^12.0.6
         version: 12.11.0(@emotion/is-prop-valid@1.2.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      ogl:
+        specifier: ^1.0.11
+        version: 1.0.11
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -13795,6 +13706,9 @@ importers:
       '@radix-ui/react-menu':
         specifier: 2.1.6
         version: 2.1.6(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@radix-ui/react-primitive':
+        specifier: 2.0.2
+        version: 2.0.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@radix-ui/react-slot':
         specifier: 1.1.2
         version: 1.1.2(@types/react@18.2.79)(react@18.2.0)
@@ -13817,9 +13731,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../react-ui-editor
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -13908,6 +13819,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -14877,6 +14791,9 @@ packages:
 
   '@antfu/utils@0.7.7':
     resolution: {integrity: sha512-gFPqTG7otEJ8uP6wrhDv6mqwGWYZKNvAcCq6u9hOj0c+IKCEsY4L1oC9trPq2SaWIzAfHvqfBDxF591JkMf+kg==}
+
+  '@anthropic-ai/tokenizer@0.0.4':
+    resolution: {integrity: sha512-EHRKbxlxlc8W4KCBEseByJ7YwyYCmgu9OyN59H9+IYIGPoKv8tXyQXinkeGDI+cI8Tiuz9wk2jZb/kK7AyvL7g==}
 
   '@antv/event-emitter@0.1.3':
     resolution: {integrity: sha512-4ddpsiHN9Pd4UIlWuKVK1C4IiZIdbwQvy9i7DUSI3xNJ89FPUFt8lxDYj8GzzfdllV0NkJTRxnG+FvLk0llidg==}
@@ -16951,22 +16868,104 @@ packages:
       '@effect/platform': ^0.82.0
       effect: ^3.15.0
 
+  '@effect/ai-anthropic@0.9.5':
+    resolution: {integrity: sha512-03vk/aBgDLxQqRNdgDkNTRytsZXc+gfBMIxurnq9lM6Rzq0tVM6o0CZEv2zimuj9iJaqHB4UT20TrDqsjzMbyA==}
+    peerDependencies:
+      '@effect/ai': ^0.19.4
+      '@effect/experimental': ^0.49.2
+      '@effect/platform': ^0.85.2
+      effect: ^3.16.8
+
+  '@effect/ai-openai@0.22.4':
+    resolution: {integrity: sha512-ZuUwaJivXoYzYHyTSA79PZhkDn1IoR7IvCiNCXUmQ6VfwJ9ubtWutA1GxBpmNaZ0UcUrgRTkDlOHpK0UJUGmPA==}
+    peerDependencies:
+      '@effect/ai': ^0.19.4
+      '@effect/experimental': ^0.49.2
+      '@effect/platform': ^0.85.2
+      effect: ^3.16.8
+
+  '@effect/ai@0.19.4':
+    resolution: {integrity: sha512-sLNS1apR/KSPrfDd+iU3jpwFFHppwx39FUAkg6Wucgoo2opgM9+byAWvkOjGyYMEh4TVvBaMfqbqn8CEdfXvuQ==}
+    peerDependencies:
+      '@effect/experimental': ^0.49.2
+      '@effect/platform': ^0.85.2
+      '@effect/rpc': ^0.62.4
+      effect: ^3.16.8
+
   '@effect/ai@0.8.0':
     resolution: {integrity: sha512-IqlMIL5gurllSvQNMBFIhWAJDs/W5qt98nbM+80QQDnvhCz34PmIKyaq5GaLwLk/RBTBALXSnQpTBSme38qigg==}
     peerDependencies:
       '@effect/platform': ^0.75.0
       effect: ^3.12.6
 
+  '@effect/cluster@0.39.5':
+    resolution: {integrity: sha512-KdixcfCteksRIVEe/X9vsPhEbxQxOr2ID/PD0mwgkQHD5enN1gU1WVG0EOkNux9XA4K4KO6BuHzilqXZSeNdNg==}
+    peerDependencies:
+      '@effect/platform': ^0.85.2
+      '@effect/rpc': ^0.62.4
+      '@effect/sql': ^0.38.2
+      '@effect/workflow': ^0.2.4
+      effect: ^3.16.8
+
+  '@effect/experimental@0.49.2':
+    resolution: {integrity: sha512-0J4oEt2zlDoetg5pv+mE3eH+d7VMLeXIfvEu1VO7eA8CKoU4j8KYcN6E4YlIewmeXJJXNwlOW3IkUD0TQ1IBCg==}
+    peerDependencies:
+      '@effect/platform': ^0.85.2
+      effect: ^3.16.8
+      ioredis: ^5
+      lmdb: ^3
+    peerDependenciesMeta:
+      ioredis:
+        optional: true
+      lmdb:
+        optional: true
+
+  '@effect/platform-node-shared@0.40.5':
+    resolution: {integrity: sha512-Ru86IQ0E3tZNgO6UiWXBWNj4qZOgMT10z4fGF7Y4XwaB6lASWaFmCsDAkfYSqsmoesbtWvPQXbJkOr2QHYeU0Q==}
+    peerDependencies:
+      '@effect/cluster': ^0.39.5
+      '@effect/platform': ^0.85.2
+      '@effect/rpc': ^0.62.4
+      '@effect/sql': ^0.38.2
+      effect: ^3.16.8
+
+  '@effect/platform-node@0.86.5':
+    resolution: {integrity: sha512-IO/aTOqPR4SIQKHhxAtLtrUgrMf+/u5EMOSliw2bwiaioRbSNK2532hgmoFd9MTIjFqGtyP1tmAi30CAFCZ6zg==}
+    peerDependencies:
+      '@effect/cluster': ^0.39.5
+      '@effect/platform': ^0.85.2
+      '@effect/rpc': ^0.62.4
+      '@effect/sql': ^0.38.2
+      effect: ^3.16.8
+
   '@effect/platform@0.80.12':
     resolution: {integrity: sha512-JeQSGeUyLrVrgS4vYwLTshFYlU+rsXXKJOzr1tnj6i62qGPz2nIaLxTMhJNmr4Vo9vCzIphyvGr0hy0gtwNKQg==}
     peerDependencies:
       effect: ^3.14.12
+
+  '@effect/platform@0.85.2':
+    resolution: {integrity: sha512-zIRixbQeO6QniR0k2mwR7DmR2HO1w6+qQlzQ5nb8lyPyPgd1gV9wo/9yBeB6zRC+CGnxiUiYsRMamclVISuxLw==}
+    peerDependencies:
+      effect: ^3.16.8
+
+  '@effect/rpc@0.62.4':
+    resolution: {integrity: sha512-5oPVKLZEoqJs3hDAKIcpTRe5qvX1pA4U5ai0LL3pcVLpXZrv0z3mi0gslySM/q85IxrZo+sOcuo18OS2jsuA0g==}
+    peerDependencies:
+      '@effect/platform': ^0.85.2
+      effect: ^3.16.8
 
   '@effect/schema@0.75.5':
     resolution: {integrity: sha512-TQInulTVCuF+9EIbJpyLP6dvxbQJMphrnRqgexm/Ze39rSjfhJuufF7XvU3SxTgg3HnL7B/kpORTJbHhlE6thw==}
     deprecated: this package has been merged into the main effect package
     peerDependencies:
       effect: ^3.9.2
+
+  '@effect/sql@0.38.2':
+    resolution: {integrity: sha512-hZNFlVDINrORcLyVuL8zhjjR3ghR4WxzQZZdqmkKKi3C5sE7AOl6TUNogkqmepKw0aLWF0MbLi46/htgeRtsCQ==}
+    peerDependencies:
+      '@effect/experimental': ^0.49.2
+      '@effect/platform': ^0.85.2
+      effect: ^3.16.8
 
   '@effect/vitest@0.17.8':
     resolution: {integrity: sha512-FPI+mgiCzR950y1nnOEB2FPPY3LnCSwqg+RZ8EyWSzqb1IU1iDmVGxfxgtK3MM9obubXcVk5e1hBz0+/485olQ==}
@@ -19430,6 +19429,10 @@ packages:
     resolution: {integrity: sha512-ZDjMJJQRlyk8A1KZFCc+bCbsyrn1wTwdNt56F7twdfUfnHUZUq77/WfONCj8p72NZOyP7pNTdUWSTYC3GTbuuQ==}
     engines: {node: '>=14'}
 
+  '@opentelemetry/semantic-conventions@1.34.0':
+    resolution: {integrity: sha512-aKcOkyrorBGlajjRdVoJWHTxfxO1vCNHLJVlSDaRHDIdjU+pX8IYQPvPDkYiujKLbRnWU+1TBwEt0QRgSm4SGA==}
+    engines: {node: '>=14'}
+
   '@opentelemetry/sql-common@0.40.0':
     resolution: {integrity: sha512-vSqRJYUPJVjMFQpYkQS3ruexCPSZJ8esne3LazLwtCPaPRvzZ7WG3tX44RouAn7w4wMp8orKguBqtt+ng2UTnw==}
     engines: {node: '>=14'}
@@ -19476,6 +19479,88 @@ packages:
     resolution: {integrity: sha512-BR1bIRWOMqkf8IoU576YDhij1Wd/Zf2kX/kCI0b2qzCKC8wcc2GQJaaRMCpzvCCrmliO4vtJ6RITp/AnoYUUmQ==}
     cpu: [x64]
     os: [win32]
+
+  '@parcel/watcher-android-arm64@2.5.1':
+    resolution: {integrity: sha512-KF8+j9nNbUN8vzOFDpRMsaKBHZ/mcjEjMToVMJOhTozkDonQFFrRcfdLWn6yWKCmJKmdVxSgHiYvTCef4/qcBA==}
+    engines: {node: '>= 10.0.0'}
+    cpu: [arm64]
+    os: [android]
+
+  '@parcel/watcher-darwin-arm64@2.5.1':
+    resolution: {integrity: sha512-eAzPv5osDmZyBhou8PoF4i6RQXAfeKL9tjb3QzYuccXFMQU0ruIc/POh30ePnaOyD1UXdlKguHBmsTs53tVoPw==}
+    engines: {node: '>= 10.0.0'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@parcel/watcher-darwin-x64@2.5.1':
+    resolution: {integrity: sha512-1ZXDthrnNmwv10A0/3AJNZ9JGlzrF82i3gNQcWOzd7nJ8aj+ILyW1MTxVk35Db0u91oD5Nlk9MBiujMlwmeXZg==}
+    engines: {node: '>= 10.0.0'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@parcel/watcher-freebsd-x64@2.5.1':
+    resolution: {integrity: sha512-SI4eljM7Flp9yPuKi8W0ird8TI/JK6CSxju3NojVI6BjHsTyK7zxA9urjVjEKJ5MBYC+bLmMcbAWlZ+rFkLpJQ==}
+    engines: {node: '>= 10.0.0'}
+    cpu: [x64]
+    os: [freebsd]
+
+  '@parcel/watcher-linux-arm-glibc@2.5.1':
+    resolution: {integrity: sha512-RCdZlEyTs8geyBkkcnPWvtXLY44BCeZKmGYRtSgtwwnHR4dxfHRG3gR99XdMEdQ7KeiDdasJwwvNSF5jKtDwdA==}
+    engines: {node: '>= 10.0.0'}
+    cpu: [arm]
+    os: [linux]
+
+  '@parcel/watcher-linux-arm-musl@2.5.1':
+    resolution: {integrity: sha512-6E+m/Mm1t1yhB8X412stiKFG3XykmgdIOqhjWj+VL8oHkKABfu/gjFj8DvLrYVHSBNC+/u5PeNrujiSQ1zwd1Q==}
+    engines: {node: '>= 10.0.0'}
+    cpu: [arm]
+    os: [linux]
+
+  '@parcel/watcher-linux-arm64-glibc@2.5.1':
+    resolution: {integrity: sha512-LrGp+f02yU3BN9A+DGuY3v3bmnFUggAITBGriZHUREfNEzZh/GO06FF5u2kx8x+GBEUYfyTGamol4j3m9ANe8w==}
+    engines: {node: '>= 10.0.0'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@parcel/watcher-linux-arm64-musl@2.5.1':
+    resolution: {integrity: sha512-cFOjABi92pMYRXS7AcQv9/M1YuKRw8SZniCDw0ssQb/noPkRzA+HBDkwmyOJYp5wXcsTrhxO0zq1U11cK9jsFg==}
+    engines: {node: '>= 10.0.0'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@parcel/watcher-linux-x64-glibc@2.5.1':
+    resolution: {integrity: sha512-GcESn8NZySmfwlTsIur+49yDqSny2IhPeZfXunQi48DMugKeZ7uy1FX83pO0X22sHntJ4Ub+9k34XQCX+oHt2A==}
+    engines: {node: '>= 10.0.0'}
+    cpu: [x64]
+    os: [linux]
+
+  '@parcel/watcher-linux-x64-musl@2.5.1':
+    resolution: {integrity: sha512-n0E2EQbatQ3bXhcH2D1XIAANAcTZkQICBPVaxMeaCVBtOpBZpWJuf7LwyWPSBDITb7In8mqQgJ7gH8CILCURXg==}
+    engines: {node: '>= 10.0.0'}
+    cpu: [x64]
+    os: [linux]
+
+  '@parcel/watcher-win32-arm64@2.5.1':
+    resolution: {integrity: sha512-RFzklRvmc3PkjKjry3hLF9wD7ppR4AKcWNzH7kXR7GUe0Igb3Nz8fyPwtZCSquGrhU5HhUNDr/mKBqj7tqA2Vw==}
+    engines: {node: '>= 10.0.0'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@parcel/watcher-win32-ia32@2.5.1':
+    resolution: {integrity: sha512-c2KkcVN+NJmuA7CGlaGD1qJh1cLfDnQsHjE89E60vUEMlqduHGCdCLJCID5geFVM0dOtA3ZiIO8BoEQmzQVfpQ==}
+    engines: {node: '>= 10.0.0'}
+    cpu: [ia32]
+    os: [win32]
+
+  '@parcel/watcher-win32-x64@2.5.1':
+    resolution: {integrity: sha512-9lHBdJITeNR++EvSQVUcaZoWupyHfXe1jZvGZ06O/5MflPcuPLtEphScIBL+AiCWBO46tDSHzWyD0uDmmZqsgA==}
+    engines: {node: '>= 10.0.0'}
+    cpu: [x64]
+    os: [win32]
+
+  '@parcel/watcher@2.5.1':
+    resolution: {integrity: sha512-dfUnCxiN9H4ap84DvD2ubjw+3vUNpstxa0TneY/Paat8a3R4uQZDLSvWjmznAY/DoahqTHl9V46HF/Zs3F29pg==}
+    engines: {node: '>= 10.0.0'}
 
   '@peermetrics/webrtc-stats@5.7.1':
     resolution: {integrity: sha512-yRnGuCBcs4r6JWUt1MgF/FE4+DJonyncuPcij+BYkQt3IO7EcIgHN27pvR989GInPvlT8poNOq70tan1rcaAgw==}
@@ -23581,11 +23666,6 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -25883,6 +25963,11 @@ packages:
     resolution: {integrity: sha512-Mc7QhQ8s+cLrnUfU/Ji94vG/r8M26m8f++vyres4ZoojaRDpZ1eSIh/EpzLNwlWuvzSZ3UbDFspjFvTDXe6e/g==}
     engines: {node: '>=12.20'}
 
+  detect-libc@1.0.3:
+    resolution: {integrity: sha512-pGjwhsmsp4kL2RTz08wcOlGN83otlqHeD/Z5T8GXZB+/YcpQ/dgo+lbU8ZsGxV0HIvqqxo9l7mqYwyYMD9bKDg==}
+    engines: {node: '>=0.10'}
+    hasBin: true
+
   detect-libc@2.0.3:
     resolution: {integrity: sha512-bwy0MGW55bG41VqxxypOsdSdGqLwXPI/focwgTYCFMbdUiBAxLg9CFzG08sz2aqzknwiX7Hkl0bQENjg8iLByw==}
     engines: {node: '>=8'}
@@ -27558,6 +27643,9 @@ packages:
   got@13.0.0:
     resolution: {integrity: sha512-XfBk1CxOOScDcMr9O1yKkNaQyy865NbYs+F7dr4H0LZMVgCj2Le59k6PqbNHoL5ToeaEQUYh6c6yMfVcc6SJxA==}
     engines: {node: '>=16'}
+
+  gpt-tokenizer@2.9.0:
+    resolution: {integrity: sha512-YSpexBL/k4bfliAzMrRqn3M6+it02LutVyhVpDeMKrC/O9+pCe/5s8U2hYKa2vFLD5/vHhsKc8sOn/qGqII8Kg==}
 
   graceful-fs@4.1.15:
     resolution: {integrity: sha512-6uHUhOPEBgQ24HM+r6b/QwWfZq+yiFcipKFrOFiBEnWdy5sdzYoi+pJeQaPI5qOLRFqWmAXUPQNsielzdLoecA==}
@@ -30317,6 +30405,9 @@ packages:
   node-addon-api@6.1.0:
     resolution: {integrity: sha512-+eawOlIgy680F0kBzPUNFhMZGtJ1YmqM6l4+Crf4IkImjYrO/mqPwRMh352g23uIaQKFItcQ64I7KMaJxHgAVA==}
 
+  node-addon-api@7.1.1:
+    resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
+
   node-clipboardy@1.0.3:
     resolution: {integrity: sha512-/ErAFOtWDNhZh38rrwlAo05Soxbht/rgWugLOt2Ds+NDpZ+2sPiGiwOmFWzV+65fUYjwi+EJfHByIJ4waTHbVg==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
@@ -30664,6 +30755,9 @@ packages:
 
   ofetch@1.4.1:
     resolution: {integrity: sha512-QZj2DfGplQAr2oj9KzceK9Hwz6Whxazmn85yYeVuS3u9XTMOGMRx0kO95MQ+vLsj/S/NwBDMMLU5hpxvI6Tklw==}
+
+  ogl@1.0.11:
+    resolution: {integrity: sha512-kUpC154AFfxi16pmZUK4jk3J+8zxwTWGPo03EoYA8QPbzikHoaC82n6pNTbd+oEaJonaE8aPWBlX7ad9zrqLsA==}
 
   ohash@1.1.4:
     resolution: {integrity: sha512-FlDryZAahJmEF3VR3w1KogSEdWX3WhA5GPakFx4J81kEAiHyLMpdLLElS8n8dfNadMgAne/MywcvmogzscVt4g==}
@@ -33805,6 +33899,9 @@ packages:
   thunky@1.1.0:
     resolution: {integrity: sha512-eHY7nBftgThBqOyHGVN+l8gF0BucP09fMo0oO/Lb0w1OF80dJv+lDVpXG60WMQvkcxAkNybKsrEIE3ZtKGmPrA==}
 
+  tiktoken@1.0.21:
+    resolution: {integrity: sha512-/kqtlepLMptX0OgbYD9aMYbM7EFrMZCL7EoHM8Psmg2FuhXoo/bH64KqOiZGGwa6oS9TPdSEDKBnV2LuB8+5vQ==}
+
   timeout-refresh@1.0.3:
     resolution: {integrity: sha512-Mz0CX4vBGM5lj8ttbIFt7o4ZMxk/9rgudJRh76EvB7xXZMur7T/cjRiH2w4Fmkq0zxf2QpM8IFvOSRn8FEu3gA==}
 
@@ -34338,6 +34435,10 @@ packages:
     resolution: {integrity: sha512-Q2rtqmZWrbP8nePMq7mOJIN98M0fYvSgV89vwl/BQRT4mDOeY2GXZngfGpcBBhtky3woM7G24wZV3Q304Bv6cw==}
     engines: {node: '>=18.0'}
 
+  undici@7.10.0:
+    resolution: {integrity: sha512-u5otvFBOBZvmdjWLVW+5DAc9Nkq8f24g0O9oY7qw2JVIF1VocIFoyz9JFkuVOS2j41AufeO0xnlweJ2RLT8nGw==}
+    engines: {node: '>=20.18.1'}
+
   unenv-nightly@2.0.0-20241009-125958-e8ea22f:
     resolution: {integrity: sha512-hRxmKz1iSVRmuFx/vBdPsx7rX4o7Cas9vdjDNeUeWpQTK2LzU3Xy3Jz0zbo7MJX0bpqo/LEFCA+GPwsbl6zKEQ==}
 
@@ -34710,6 +34811,10 @@ packages:
   utils-merge@1.0.1:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
+
+  uuid@11.1.0:
+    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
+    hasBin: true
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
@@ -35741,6 +35846,11 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.25
 
   '@antfu/utils@0.7.7': {}
+
+  '@anthropic-ai/tokenizer@0.0.4':
+    dependencies:
+      '@types/node': 22.10.2
+      tiktoken: 1.0.21
 
   '@antv/event-emitter@0.1.3': {}
 
@@ -39287,10 +39397,78 @@ snapshots:
       '@effect/platform': 0.80.12(effect@3.14.21)
       effect: 3.14.21
 
+  '@effect/ai-anthropic@0.9.5(@effect/ai@0.19.4(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21))(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)':
+    dependencies:
+      '@anthropic-ai/tokenizer': 0.0.4
+      '@effect/ai': 0.19.4(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21)
+      '@effect/experimental': 0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2)
+      '@effect/platform': 0.85.2(effect@3.14.21)
+      effect: 3.14.21
+
+  '@effect/ai-openai@0.22.4(@effect/ai@0.19.4(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21))(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)':
+    dependencies:
+      '@effect/ai': 0.19.4(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21)
+      '@effect/experimental': 0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2)
+      '@effect/platform': 0.85.2(effect@3.14.21)
+      effect: 3.14.21
+      gpt-tokenizer: 2.9.0
+
+  '@effect/ai@0.19.4(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21)':
+    dependencies:
+      '@effect/experimental': 0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2)
+      '@effect/platform': 0.85.2(effect@3.14.21)
+      '@effect/rpc': 0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)
+      effect: 3.14.21
+      find-my-way-ts: 0.1.5
+
   '@effect/ai@0.8.0(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)':
     dependencies:
       '@effect/platform': 0.80.12(effect@3.14.21)
       effect: 3.14.21
+
+  '@effect/cluster@0.39.5(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21)':
+    dependencies:
+      '@effect/platform': 0.85.2(effect@3.14.21)
+      '@effect/rpc': 0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)
+      '@effect/sql': 0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)
+      effect: 3.14.21
+
+  '@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2)':
+    dependencies:
+      '@effect/platform': 0.85.2(effect@3.14.21)
+      effect: 3.14.21
+      uuid: 11.1.0
+    optionalDependencies:
+      ioredis: 5.3.2
+
+  '@effect/platform-node-shared@0.40.5(@effect/cluster@0.39.5(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21))(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21)':
+    dependencies:
+      '@effect/cluster': 0.39.5(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21)
+      '@effect/platform': 0.85.2(effect@3.14.21)
+      '@effect/rpc': 0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)
+      '@effect/sql': 0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)
+      '@parcel/watcher': 2.5.1
+      effect: 3.14.21
+      multipasta: 0.2.5
+      ws: 8.18.2
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@effect/platform-node@0.86.5(@effect/cluster@0.39.5(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21))(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21)':
+    dependencies:
+      '@effect/cluster': 0.39.5(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21)
+      '@effect/platform': 0.85.2(effect@3.14.21)
+      '@effect/platform-node-shared': 0.40.5(@effect/cluster@0.39.5(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21))(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21)
+      '@effect/rpc': 0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)
+      '@effect/sql': 0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)
+      effect: 3.14.21
+      mime: 3.0.0
+      undici: 7.10.0
+      ws: 8.18.2
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   '@effect/platform@0.80.12(effect@3.14.21)':
     dependencies:
@@ -39299,10 +39477,30 @@ snapshots:
       msgpackr: 1.11.4
       multipasta: 0.2.5
 
+  '@effect/platform@0.85.2(effect@3.14.21)':
+    dependencies:
+      effect: 3.14.21
+      find-my-way-ts: 0.1.5
+      msgpackr: 1.11.4
+      multipasta: 0.2.5
+
+  '@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)':
+    dependencies:
+      '@effect/platform': 0.85.2(effect@3.14.21)
+      effect: 3.14.21
+
   '@effect/schema@0.75.5(effect@3.14.21)':
     dependencies:
       effect: 3.14.21
       fast-check: 3.23.1
+
+  '@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)':
+    dependencies:
+      '@effect/experimental': 0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2)
+      '@effect/platform': 0.85.2(effect@3.14.21)
+      '@opentelemetry/semantic-conventions': 1.34.0
+      effect: 3.14.21
+      uuid: 11.1.0
 
   '@effect/vitest@0.17.8(effect@3.14.21)(vitest@3.2.0)':
     dependencies:
@@ -42487,6 +42685,8 @@ snapshots:
 
   '@opentelemetry/semantic-conventions@1.25.1': {}
 
+  '@opentelemetry/semantic-conventions@1.34.0': {}
+
   '@opentelemetry/sql-common@0.40.0(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
@@ -42517,6 +42717,66 @@ snapshots:
 
   '@pagefind/windows-x64@1.3.0':
     optional: true
+
+  '@parcel/watcher-android-arm64@2.5.1':
+    optional: true
+
+  '@parcel/watcher-darwin-arm64@2.5.1':
+    optional: true
+
+  '@parcel/watcher-darwin-x64@2.5.1':
+    optional: true
+
+  '@parcel/watcher-freebsd-x64@2.5.1':
+    optional: true
+
+  '@parcel/watcher-linux-arm-glibc@2.5.1':
+    optional: true
+
+  '@parcel/watcher-linux-arm-musl@2.5.1':
+    optional: true
+
+  '@parcel/watcher-linux-arm64-glibc@2.5.1':
+    optional: true
+
+  '@parcel/watcher-linux-arm64-musl@2.5.1':
+    optional: true
+
+  '@parcel/watcher-linux-x64-glibc@2.5.1':
+    optional: true
+
+  '@parcel/watcher-linux-x64-musl@2.5.1':
+    optional: true
+
+  '@parcel/watcher-win32-arm64@2.5.1':
+    optional: true
+
+  '@parcel/watcher-win32-ia32@2.5.1':
+    optional: true
+
+  '@parcel/watcher-win32-x64@2.5.1':
+    optional: true
+
+  '@parcel/watcher@2.5.1':
+    dependencies:
+      detect-libc: 1.0.3
+      is-glob: 4.0.3
+      micromatch: 4.0.8
+      node-addon-api: 7.1.1
+    optionalDependencies:
+      '@parcel/watcher-android-arm64': 2.5.1
+      '@parcel/watcher-darwin-arm64': 2.5.1
+      '@parcel/watcher-darwin-x64': 2.5.1
+      '@parcel/watcher-freebsd-x64': 2.5.1
+      '@parcel/watcher-linux-arm-glibc': 2.5.1
+      '@parcel/watcher-linux-arm-musl': 2.5.1
+      '@parcel/watcher-linux-arm64-glibc': 2.5.1
+      '@parcel/watcher-linux-arm64-musl': 2.5.1
+      '@parcel/watcher-linux-x64-glibc': 2.5.1
+      '@parcel/watcher-linux-x64-musl': 2.5.1
+      '@parcel/watcher-win32-arm64': 2.5.1
+      '@parcel/watcher-win32-ia32': 2.5.1
+      '@parcel/watcher-win32-x64': 2.5.1
 
   '@peermetrics/webrtc-stats@5.7.1':
     dependencies:
@@ -47443,8 +47703,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1(ajv@8.17.1):
-    optionalDependencies:
+  ajv-formats@2.1.1:
+    dependencies:
       ajv: 8.17.1
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -49121,7 +49381,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.17.1
-      ajv-formats: 2.1.1(ajv@8.17.1)
+      ajv-formats: 2.1.1
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -50128,6 +50388,8 @@ snapshots:
   detect-indent@6.1.0: {}
 
   detect-indent@7.0.1: {}
+
+  detect-libc@1.0.3: {}
 
   detect-libc@2.0.3: {}
 
@@ -52363,6 +52625,8 @@ snapshots:
       lowercase-keys: 3.0.0
       p-cancelable: 3.0.0
       responselike: 3.0.0
+
+  gpt-tokenizer@2.9.0: {}
 
   graceful-fs@4.1.15: {}
 
@@ -56065,6 +56329,8 @@ snapshots:
 
   node-addon-api@6.1.0: {}
 
+  node-addon-api@7.1.1: {}
+
   node-clipboardy@1.0.3:
     dependencies:
       arch: 2.2.0
@@ -56507,6 +56773,8 @@ snapshots:
       destr: 2.0.5
       node-fetch-native: 1.6.6
       ufo: 1.6.1
+
+  ogl@1.0.11: {}
 
   ohash@1.1.4: {}
 
@@ -59127,7 +59395,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.17.1
-      ajv-formats: 2.1.1(ajv@8.17.1)
+      ajv-formats: 2.1.1
       ajv-keywords: 5.1.0(ajv@8.17.1)
 
   screenfull@5.2.0: {}
@@ -60483,6 +60751,8 @@ snapshots:
 
   thunky@1.1.0: {}
 
+  tiktoken@1.0.21: {}
+
   timeout-refresh@1.0.3: {}
 
   tiny-each-async@2.0.3: {}
@@ -61002,6 +61272,8 @@ snapshots:
 
   undici@6.13.0: {}
 
+  undici@7.10.0: {}
+
   unenv-nightly@2.0.0-20241009-125958-e8ea22f:
     dependencies:
       defu: 6.1.4
@@ -61402,6 +61674,8 @@ snapshots:
   utility-types@3.11.0: {}
 
   utils-merge@1.0.1: {}
+
+  uuid@11.1.0: {}
 
   uuid@8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye): {}
 

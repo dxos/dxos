@@ -6,9 +6,8 @@ import React, { useCallback, type FC, useEffect } from 'react';
 
 import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type AssociatedArtifact } from '@dxos/artifact';
+import { DXN, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
-import { refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -50,7 +49,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
         void dispatch(
           createIntent(CollaborationActions.InsertContent, {
             target: associatedArtifact,
-            object: refFromDXN(new DXN(DXN.kind.QUEUE, [...chat.queue.dxn.parts, message.id])),
+            object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...chat.queue.dxn.parts, message.id])),
             label: 'View proposal',
           }),
         );

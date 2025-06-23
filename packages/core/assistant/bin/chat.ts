@@ -21,7 +21,7 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 // TOOD(burdon): Get from config.
-const client = new AIServiceEdgeClient({
+const aiClient = new AIServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.LOCAL,
 });
 
@@ -43,6 +43,7 @@ while (true) {
   ]);
 
   await runLLM({
+    aiClient,
     model: DEFAULT_EDGE_MODEL,
     spaceId,
     threadId,
@@ -55,7 +56,6 @@ while (true) {
       //   type: ToolTypes.TextToImage,
       // }),
     ],
-    client,
     history: [createUserMessage(spaceId, threadId, prompt.message)],
     logger: createLogger({
       stream: true,

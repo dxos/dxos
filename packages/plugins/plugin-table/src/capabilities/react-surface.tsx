@@ -6,12 +6,12 @@ import { type Schema } from 'effect';
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos/app-framework';
-import { getTypenameOrThrow, isInstanceOf, type Ref } from '@dxos/echo-schema';
+import { Obj, type Ref, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
-import { getSpace, isEchoObject, isSpace, type AnyLiveObject, type Space } from '@dxos/react-client/echo';
+import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TableType } from '@dxos/react-ui-table';
@@ -26,14 +26,14 @@ export default () =>
     createSurface({
       id: `${meta.id}/table`,
       role: ['article', 'section', 'slide'],
-      filter: (data): data is { subject: TableType } => isInstanceOf(TableType, data.subject) && !data.variant,
+      filter: (data): data is { subject: TableType } => Obj.instanceOf(TableType, data.subject) && !data.variant,
       component: ({ data, role }) => <TableContainer table={data.subject} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/companion/schema`,
       role: 'article',
       filter: (data): data is { companionTo: TableType; subject: 'schema' } =>
-        isInstanceOf(TableType, data.companionTo) && data.subject === 'schema',
+        Obj.instanceOf(TableType, data.companionTo) && data.subject === 'schema',
       component: ({ data, role }) => {
         return (
           <StackItem.Content role={role}>
@@ -42,21 +42,15 @@ export default () =>
         );
       },
     }),
-    // createSurface({
-    //   id: `${meta.id}/object-settings`,
-    //   role: 'object-settings',
-    //   filter: (data): data is { subject: TableType } => isInstanceOf(TableType, data.subject),
-    //   component: ({ data }) => <TableViewEditor table={data.subject} />,
-    // }),
     createSurface({
       id: `${meta.id}/selected-objects`,
       role: 'article',
       filter: (
         data,
       ): data is {
-        companionTo: AnyLiveObject<{ view: Ref<ViewType> } | { cardView: Ref<ViewType> }>;
+        companionTo: Obj.Obj<{ view: Ref.Ref<ViewType> } | { cardView: Ref.Ref<ViewType> }>;
       } => {
-        if (data.subject !== 'selected-objects' || !data.companionTo || !isEchoObject(data.companionTo)) {
+        if (data.subject !== 'selected-objects' || !data.companionTo || !Obj.isObject(data.companionTo)) {
           return false;
         }
 
@@ -105,12 +99,12 @@ export default () =>
         );
 
         const fixed = client.graph.schemaRegistry.schemas.filter((schema) =>
-          whitelistedTypenames.has(getTypenameOrThrow(schema)),
+          whitelistedTypenames.has(Type.getTypename(schema)),
         );
         const dynamic = space?.db.schemaRegistry.query().runSync();
         const typenames = Array.from(
           new Set<string>([
-            ...fixed.map((schema) => getTypenameOrThrow(schema)),
+            ...fixed.map((schema) => Type.getTypename(schema)),
             ...dynamic.map((schema) => schema.typename),
           ]),
         ).sort();

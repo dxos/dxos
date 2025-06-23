@@ -12,13 +12,15 @@ export const primaryButtonColors =
 
 export const staticDefaultButtonColors = 'bg-inputSurface';
 
-export const defaultButtonColors =
-  staticDefaultButtonColors +
-  ' data-[state=open]:bg-inputSurface aria-pressed:text-accentText aria-pressed:bg-baseSurface aria-checked:text-accentText aria-checked:bg-baseSurface';
+export const defaultButtonColors = mx(
+  staticDefaultButtonColors,
+  'data-[state=open]:bg-inputSurface aria-pressed:text-accentText aria-pressed:bg-baseSurface aria-checked:text-accentText aria-checked:bg-baseSurface',
+);
 
-export const ghostButtonColors =
-  ghostHover +
-  ' hover:text-inherit data-[state=open]:bg-inputSurface aria-pressed:text-accentText aria-pressed:bg-baseSurface aria-checked:text-accentText aria-checked:bg-baseSurface';
+export const ghostButtonColors = mx(
+  ghostHover,
+  'hover:text-inherit data-[state=open]:bg-inputSurface aria-pressed:text-accentText aria-pressed:bg-baseSurface aria-checked:text-accentText aria-checked:bg-baseSurface',
+);
 
 export type ButtonStyleProps = Partial<{
   inGroup?: boolean;

@@ -10,6 +10,7 @@ import { DXN, ObjectId, QueueSubspaceTags, type QueueSubspaceTag, type SpaceId }
 import { QueueImpl } from './queue';
 import type { QueuesService } from './queue-service';
 import type { Queue } from './types';
+import { type Hypergraph } from '../hypergraph';
 
 export interface QueueAPI {
   get<T extends BaseEchoObject = BaseEchoObject>(dxn: DXN): Queue<T>;
@@ -20,7 +21,10 @@ export class QueueFactory extends Resource implements QueueAPI {
   private readonly _queues = new Map<DXN.String, Queue<BaseEchoObject>>();
   private _service?: QueuesService = undefined;
 
-  constructor(private readonly _spaceId: SpaceId) {
+  constructor(
+    private readonly _spaceId: SpaceId,
+    private readonly _graph: Hypergraph,
+  ) {
     super();
   }
 
@@ -37,7 +41,11 @@ export class QueueFactory extends Resource implements QueueAPI {
       return queue as Queue<T>;
     }
 
-    const newQueue = new QueueImpl<T>(this._service, dxn);
+    const newQueue = new QueueImpl<T>(
+      this._service,
+      this._graph.createRefResolver({ context: { space: this._spaceId, queue: dxn } }),
+      dxn,
+    );
     this._queues.set(stringDxn, newQueue);
     return newQueue as Queue<T>;
   }

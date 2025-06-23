@@ -5,18 +5,18 @@
 import { Schema } from 'effect';
 
 import {
-  allOf,
   Capabilities,
+  Events,
+  allOf,
   contributes,
   createIntent,
   defineModule,
   definePlugin,
-  Events,
   oneOf,
 } from '@dxos/app-framework';
+import { Ref } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
-import { RefArray } from '@dxos/react-client/echo';
 import { osTranslations } from '@dxos/shell/react';
 
 import {
@@ -96,7 +96,7 @@ export const SpacePlugin = ({
             icon: 'ph--cards-three--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: async (collection: CollectionType) =>
-              await RefArray.loadAll([...collection.objects, ...Object.values(collection.views)]),
+              await Ref.Array.loadAll([...collection.objects, ...Object.values(collection.views)]),
           },
         }),
     }),

@@ -6,7 +6,7 @@ import { useComputed, useSignal } from '@preact/signals-react';
 import React, { useMemo, useCallback, useEffect } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { getDXN } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { fullyQualifiedId, type Space, Filter, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
@@ -43,7 +43,9 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
   const hasEmail = useComputed(() => !!message?.sender.email);
   const contacts = useQuery(space, Filter.type(DataType.Person));
   const existingContact = useSignal<DataType.Person | undefined>(undefined);
-  const contactDxn = useComputed(() => (existingContact.value ? getDXN(existingContact.value)?.toString() : undefined));
+  const contactDxn = useComputed(() =>
+    existingContact.value ? Obj.getDXN(existingContact.value)?.toString() : undefined,
+  );
 
   useEffect(() => {
     existingContact.value = contacts.find((contact) =>

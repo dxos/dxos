@@ -5,8 +5,8 @@
 import { Schema } from 'effect';
 
 import { type Space } from '@dxos/client-protocol';
-import { type Type } from '@dxos/echo';
-import { type SpaceSyncState, type AnyLiveObject, getDatabaseFromObject, isEchoObject } from '@dxos/echo-db';
+import { type Type, Obj } from '@dxos/echo';
+import { type SpaceSyncState, type AnyLiveObject, getDatabaseFromObject } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject, type Live } from '@dxos/live-object';
 
@@ -30,7 +30,7 @@ export const ReactiveObjectSchema: Schema.Schema<Live<any>> = Schema.Any.pipe(
   Schema.annotations({ title: 'Live' }),
 );
 export const EchoObjectSchema: Schema.Schema<AnyLiveObject<any>> = Schema.Any.pipe(
-  Schema.filter((x) => isEchoObject(x)),
+  Schema.filter((x) => Obj.isObject(x)),
   Schema.annotations({ title: 'EchoObject' }),
 );
 

@@ -6,30 +6,32 @@ export type Color = {
   color: string;
   text: string;
   bg: string;
+  tag: string;
 };
 
 // NOTE: Don't include blue/red which are used as system colors.
 const colors: Color[] = [
-  { color: 'orange', bg: 'bg-orange-500', text: 'text-orange-500' },
-  { color: 'amber', bg: 'bg-amber-500', text: 'text-amber-500' },
-  { color: 'yellow', bg: 'bg-yellow-500', text: 'text-yellow-500' },
-  { color: 'lime', bg: 'bg-lime-500', text: 'text-lime-500' },
-  { color: 'green', bg: 'bg-green-500', text: 'text-green-500' },
-  { color: 'emerald', bg: 'bg-emerald-500', text: 'text-emerald-500' },
-  { color: 'teal', bg: 'bg-teal-500', text: 'text-teal-500' },
-  { color: 'cyan', bg: 'bg-cyan-500', text: 'text-cyan-500' },
-  { color: 'sky', bg: 'bg-sky-500', text: 'text-sky-500' },
-  { color: 'indigo', bg: 'bg-indigo-500', text: 'text-indigo-500' },
-  { color: 'violet', bg: 'bg-violet-500', text: 'text-violet-500' },
-  { color: 'purple', bg: 'bg-purple-500', text: 'text-purple-500' },
-  { color: 'fuchsia', bg: 'bg-fuchsia-500', text: 'text-fuchsia-500' },
-  { color: 'rose', bg: 'bg-rose-500', text: 'text-rose-500' },
-  { color: 'pink', bg: 'bg-pink-500', text: 'text-pink-500' },
+  { color: 'orange', bg: 'bg-orangeFill', text: 'text-orangeFill', tag: 'bg-orangeSurface' },
+  { color: 'amber', bg: 'bg-amberFill', text: 'text-amberFill', tag: 'bg-amberSurface' },
+  { color: 'yellow', bg: 'bg-yellowFill', text: 'text-yellowFill', tag: 'bg-yellowSurface' },
+  { color: 'lime', bg: 'bg-limeFill', text: 'text-limeFill', tag: 'bg-limeSurface' },
+  { color: 'green', bg: 'bg-greenFill', text: 'text-greenFill', tag: 'bg-greenSurface' },
+  { color: 'emerald', bg: 'bg-emeraldFill', text: 'text-emeraldFill', tag: 'bg-emeraldSurface' },
+  { color: 'teal', bg: 'bg-tealFill', text: 'text-tealFill', tag: 'bg-tealSurface' },
+  { color: 'cyan', bg: 'bg-cyanFill', text: 'text-cyanFill', tag: 'bg-cyanSurface' },
+  { color: 'sky', bg: 'bg-skyFill', text: 'text-skyFill', tag: 'bg-skySurface' },
+  { color: 'indigo', bg: 'bg-indigoFill', text: 'text-indigoFill', tag: 'bg-indigoSurface' },
+  { color: 'violet', bg: 'bg-violetFill', text: 'text-violetFill', tag: 'bg-violetSurface' },
+  { color: 'purple', bg: 'bg-purpleFill', text: 'text-purpleFill', tag: 'bg-purpleSurface' },
+  { color: 'fuchsia', bg: 'bg-fuchsiaFill', text: 'text-fuchsiaFill', tag: 'bg-fuchsiaSurface' },
+  { color: 'rose', bg: 'bg-roseFill', text: 'text-roseFill', tag: 'bg-roseSurface' },
+  { color: 'pink', bg: 'bg-pinkFill', text: 'text-pinkFill', tag: 'bg-pinkSurface' },
 ];
 
+// TODO(thure): Reconcile with `to-fallback.ts` which exports `toHue` which overlaps a lot.
 export const getHashColor = (type: string | undefined): Color => {
   if (!type) {
-    return { color: 'neutral', bg: 'bg-neutral-500', text: 'text-neutral-500' };
+    return { color: 'neutral', bg: 'bg-neutralFill', text: 'text-neutralFill', tag: 'bg-neutralSurface' };
   }
 
   const hash = type.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);

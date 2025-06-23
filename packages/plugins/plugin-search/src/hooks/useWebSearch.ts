@@ -6,7 +6,7 @@ import { useState } from 'react';
 
 import { AIServiceEdgeClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
-import { getSchema, getTypename } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { getIconAnnotation } from '@dxos/schema';
@@ -37,10 +37,10 @@ export const useWebSearch = ({ query, context }: { query?: string; context?: str
       });
 
       const mappedResults = results.data.map((result): SearchResult => {
-        const schema = getSchema(result);
+        const schema = Obj.getSchema(result);
         return {
           id: result.id,
-          objectType: getTypename(result) as DXN.String | undefined,
+          objectType: Obj.getTypename(result) as DXN.String | undefined,
           label: getStringProperty(result, ['name', 'title', 'label']),
           snippet: getStringProperty(result, ['description', 'content', 'website', 'email']),
           object: result,

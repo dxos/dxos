@@ -6,10 +6,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { getTypenameOrThrow, type TypedObject } from '@dxos/echo-schema';
+import { Filter, Obj, Type } from '@dxos/echo';
+import { type TypedObject } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, getSpace, live, useJsonSchema } from '@dxos/react-client/echo';
 import { useDeepCompareEffect } from '@dxos/react-ui';
+import { useQuery, getSpace } from '@dxos/react-client/echo';
 import { type KanbanType, useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
 import { StackItem } from '@dxos/react-ui-stack';
 import { ViewProjection } from '@dxos/schema';
@@ -23,10 +26,14 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
 
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
   const [projection, setProjection] = useState<ViewProjection>();
+  const space = getSpace(kanban);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+
+  const jsonSchema = useMemo(() => (cardSchema ? Type.toJsonSchema(cardSchema) : undefined), [cardSchema]);
 
   useEffect(() => {
     const typename = kanban.cardView?.target?.query?.typename;
-    const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => getTypenameOrThrow(schema) === typename);
+    const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
       setCardSchema(() => staticSchema as TypedObject<any, any>);
     }
@@ -67,7 +74,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
     (columnValue: string | undefined) => {
       const path = model?.columnFieldPath;
       if (space && cardSchema && path) {
-        const card = live(cardSchema, { [path]: columnValue });
+        const card = Obj.make(cardSchema, { [path]: columnValue });
         space.db.add(card);
         return card.id;
       }

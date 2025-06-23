@@ -5,7 +5,6 @@
 import { formatDate } from 'date-fns/format';
 import React, { type FC, useEffect, useState, useMemo } from 'react';
 
-import { decodeReference } from '@dxos/echo-protocol';
 import { type InvocationSpan, InvocationOutcome } from '@dxos/functions';
 import { type Space } from '@dxos/react-client/echo';
 import { type ChromaticPalette, IconButton, Tag } from '@dxos/react-ui';
@@ -40,7 +39,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ space, span, onClose }) => {
     return () => clearInterval(interval);
   }, [span]);
 
-  const targetDxn = useMemo(() => decodeReference(span.invocationTarget).dxn, [span.invocationTarget]);
+  const targetDxn = useMemo(() => span.invocationTarget.dxn, [span.invocationTarget]);
   const resolver = useScriptNameResolver({ space });
   const targetName = useMemo(() => resolver(targetDxn), [targetDxn, resolver]);
 
@@ -63,8 +62,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ space, span, onClose }) => {
 
         {span.trigger && (
           <div className='mt-2 text-sm' role='none'>
-            Trigger ID:{' '}
-            <span className='font-mono'>{decodeReference(span.trigger).dxn?.toString().split(':').pop()}</span>
+            Trigger ID: <span className='font-mono'>{span.trigger.dxn?.toString().split(':').pop()}</span>
           </div>
         )}
       </div>

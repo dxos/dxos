@@ -75,13 +75,14 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         run: pnpm install
 
+      # TODO(wittjosiah): Remove? Currently no prerelease targets.
       # TODO(wittjosiah): Is there a release please hook to have this happen before tagging the release?
-      - name: Run and commit prerelease updates
-        if: ${{ steps.release.outputs.release_created }}
-        run: |
-          pnpm nx run-many --target=prerelease
-          git add .
-          git commit -m "chore: apidoc update for ${{ steps.release.outputs.tag_name }}"
+      # - name: Run and commit prerelease updates
+      #   if: ${{ steps.release.outputs.release_created }}
+      #   run: |
+      #     pnpm nx run-many --target=prerelease
+      #     git add .
+      #     git commit -m "chore: apidoc update for ${{ steps.release.outputs.tag_name }}"
 
       - name: Merge production
         if: ${{ steps.release.outputs.release_created }}

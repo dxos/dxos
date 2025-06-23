@@ -331,9 +331,6 @@
       "path": "packages/plugins/plugin-outliner/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-outliner-deprecated/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-presenter/tsconfig.json"
     },
     {
@@ -470,9 +467,6 @@
     },
     {
       "path": "packages/ui/react-ui-canvas-editor/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-card/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-components/tsconfig.json"

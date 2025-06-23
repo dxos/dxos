@@ -8,14 +8,8 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import { Schema } from 'effect';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import {
-  assertEchoSchema,
-  FormatEnum,
-  isMutable,
-  toJsonSchema,
-  EchoObject,
-  GeneratorAnnotation,
-} from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { FormatEnum, isMutable, toJsonSchema, EchoObject, GeneratorAnnotation } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
@@ -144,8 +138,9 @@ const StoryViewEditor = () => {
   const handleTypenameChanged = useCallback(
     (typename: string) => {
       invariant(schema);
+      invariant(Type.isMutable(schema));
+      schema.updateTypename(typename);
       invariant(table?.view?.target);
-      assertEchoSchema(schema).updateTypename(typename);
       table.view.target.query.typename = typename;
     },
     [schema, table?.view?.target],
@@ -180,7 +175,7 @@ const DefaultStory = () => {
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
       <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
-        <TableToolbar classNames='border-be border-separator' onAdd={handleInsertRow} onSave={handleSaveView} />
+        <TableToolbar classNames='border-be border-subduedSeparator' onAdd={handleInsertRow} onSave={handleSaveView} />
         <Table.Root>
           <Table.Main ref={tableRef} model={model} presentation={presentation} schema={schema} ignoreAttention />
         </Table.Root>
@@ -206,7 +201,7 @@ type StoryProps = { rows?: number };
 const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
-  parameters: { translations },
+  parameters: { translations, controls: { disable: true } },
   decorators: [
     withClientProvider({
       types: [TableType, ViewType],

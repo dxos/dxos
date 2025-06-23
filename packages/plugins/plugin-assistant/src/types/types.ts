@@ -4,10 +4,10 @@
 
 import { Schema } from 'effect';
 
+import { Blueprint } from '@dxos/assistant';
 import { SpaceSchema } from '@dxos/react-client/echo';
 
 import { AIChatType } from './chat';
-import { TemplateType } from './template';
 import { ASSISTANT_PLUGIN } from '../meta';
 
 export namespace AssistantAction {
@@ -23,12 +23,12 @@ export namespace AssistantAction {
     }),
   }) {}
 
-  export class CreateTemplate extends Schema.TaggedClass<CreateTemplate>()(`${ASSISTANT_ACTION}/create-template`, {
+  export class CreateBlueprint extends Schema.TaggedClass<CreateBlueprint>()(`${ASSISTANT_ACTION}/create-blueprint`, {
     input: Schema.Struct({
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: TemplateType,
+      object: Blueprint,
     }),
   }) {}
 }

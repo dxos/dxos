@@ -49,8 +49,8 @@ export type ToolboxConfig = {
        */
       include: string[];
     };
-    noProjectReferences?: boolean;
     noDirectOutDir?: boolean;
+    noProjectReferences?: boolean;
   };
 };
 
@@ -320,7 +320,10 @@ export class Toolbox {
    * - Update references.
    */
   async updateTsConfig(): Promise<void> {
-    console.log('Updating all tsconfig.json');
+    // NOTE: Rerun `pnpm toolbox` when updating config.
+    const { noProjectReferences = process.env.DX_NO_PROJECT_REFERENCES } = this.config.tsconfig ?? {};
+    console.log('Updating all tsconfig.json', { noProjectReferences });
+
     for (const project of this.graph.projects) {
       const projectPath = join(project.path, 'package.json');
       const projectPackage = await loadJson<PackageJson>(projectPath);
@@ -339,14 +342,14 @@ export class Toolbox {
         );
 
         const deps = Array.from(depsMap.entries());
-        if (!this.config.tsconfig?.noProjectReferences) {
+        if (noProjectReferences) {
+          tsConfigJson.references = [];
+        } else {
           tsConfigJson.references = deps.map(([dependencyName]) => {
             const dependency = this._getProjectByPackageName(dependencyName)!;
             const path = relative(project.path, dependency.path);
             return { path };
           });
-        } else {
-          tsConfigJson.references = [];
         }
 
         // if (!this.config.tsconfig?.noDirectOutDir && `${tsConfigJson?.extends}`.endsWith('tsconfig.base.json')) {

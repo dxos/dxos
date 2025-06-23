@@ -6,20 +6,38 @@ import { Match, Schema } from 'effect';
 
 import {
   createTool,
-  type ExecutableTool,
-  Message,
-  ToolResult,
   type AIServiceClient,
+  Message,
   type MessageContentBlock,
+  ToolResult,
   type ToolUseContentBlock,
+  type ToolRegistry,
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { isNonNullable } from '@dxos/util';
 
 import type { Blueprint, BlueprintStep } from './blueprint';
 import { AISession } from '../session';
+
+const SYSTEM_PROMPT = `
+You are a smart Rule-Following Agent.
+Rule-Following Agent executes the command that the user sent in the last message.
+After doing the work, the Rule-Following Agent calls report tool.
+If the Rule-Following agent believes that no action is needed, it calls the report tool with "skipped" status.
+If the Rule-Following Agent is unable to perform the task, it calls the report tool with "bail" status.
+Rule-Following Agent explains the reason it is unable to perform the task before bailing.
+The Rule-Following Agent can express creativity and imagination in the way it performs the task.
+The Rule-Following Agent precisely follows the instructions.
+`;
+
+export type BlueprintTraceStep = {
+  status: 'done' | 'bailed' | 'skipped';
+  stepId: ObjectId;
+  comment: string;
+};
 
 export type BlueprintMachineState = {
   history: Message[];
@@ -33,20 +51,26 @@ const INITIAL_STATE: BlueprintMachineState = {
   trace: [],
 };
 
-export type BlueprintTraceStep = {
-  status: 'done' | 'bailed' | 'skipped';
-  stepId: ObjectId;
-  comment: string;
-};
-
 type ExecutionOptions = {
-  aiService: AIServiceClient;
+  aiClient: AIServiceClient;
 
   /**
    * Input to the blueprint.
    */
   input?: unknown;
 };
+
+export type BlueprintEvent =
+  | { type: 'begin' }
+  | { type: 'end' }
+  | { type: 'step-start'; step: BlueprintStep }
+  | { type: 'step-complete'; step: BlueprintStep }
+  | { type: 'message'; message: Message }
+  | { type: 'block'; block: MessageContentBlock };
+
+export interface BlueprintLogger {
+  log(event: BlueprintEvent): void;
+}
 
 /**
  * Blueprint state machine.
@@ -59,43 +83,62 @@ export class BlueprintMachine {
   public readonly message = new Event<Message>();
   public readonly block = new Event<MessageContentBlock>();
 
-  state: BlueprintMachineState = structuredClone(INITIAL_STATE);
+  // TODO(burdon): Replace events with logger?
+  private logger?: BlueprintLogger;
 
-  constructor(readonly blueprint: Blueprint) {}
+  private _state: BlueprintMachineState = structuredClone(INITIAL_STATE);
+
+  constructor(
+    readonly registry: ToolRegistry,
+    readonly blueprint: Blueprint,
+  ) {}
+
+  get state(): BlueprintMachineState {
+    return this._state;
+  }
+
+  setLogger(logger: BlueprintLogger): this {
+    this.logger = logger;
+    return this;
+  }
 
   async runToCompletion(options: ExecutionOptions): Promise<void> {
     log.info('runToCompletion', options);
 
     this.begin.emit();
+    this.logger?.log({ type: 'begin' });
+
     let firstStep = true;
-    while (this.state.state !== 'done') {
+    while (this._state.state !== 'done') {
       const input = firstStep ? options.input : undefined;
-
       firstStep = false;
-      this.state = await this._execStep(this.state, {
-        input,
-        aiService: options.aiService,
-      });
 
-      this.stepComplete.emit(this.blueprint.steps.find((step) => step.id === this.state.trace.at(-1)?.stepId)!);
+      this._state = await this._execStep(this._state, { input, aiClient: options.aiClient });
 
-      if (this.state.state === 'bail') {
+      const step = this.blueprint.steps.find((step) => step.id === this._state.trace.at(-1)?.stepId)!;
+      this.stepComplete.emit(step);
+      this.logger?.log({ type: 'step-complete', step });
+
+      if (this._state.state === 'bail') {
         throw new Error('Agent unable to follow the blueprint');
       }
     }
 
     this.end.emit();
+    this.logger?.log({ type: 'end' });
   }
 
   private async _execStep(state: BlueprintMachineState, options: ExecutionOptions): Promise<BlueprintMachineState> {
-    const prevStep = this.blueprint.steps.findIndex((step) => step.id === this.state.trace.at(-1)?.stepId);
+    const prevStep = this.blueprint.steps.findIndex((step) => step.id === this._state.trace.at(-1)?.stepId);
     if (prevStep === this.blueprint.steps.length - 1) {
       throw new Error('Done execution blueprint');
     }
 
     const nextStep = this.blueprint.steps[prevStep + 1];
     const onLastStep = prevStep === this.blueprint.steps.length - 2;
+
     this.stepStart.emit(nextStep);
+    this.logger?.log({ type: 'step-start', step: nextStep });
 
     const ReportSchema = Schema.Struct({
       status: Schema.Literal('done', 'bailed', 'skipped').annotations({
@@ -109,7 +152,7 @@ export class BlueprintMachine {
 
     const report = createTool('system', {
       name: 'report',
-      description: 'This tool reports that the agent has completed the task or is unable to do so',
+      description: 'This tool reports that the agent has completed the task or is unable to do so.',
       schema: ReportSchema,
       execute: async (input) => ToolResult.Break(input),
     });
@@ -130,30 +173,25 @@ export class BlueprintMachine {
           }),
         ]
       : [];
-    inputMessages.forEach((message) => this.message.emit(message));
+    inputMessages.forEach((message) => {
+      this.message.emit(message);
+      this.logger?.log({ type: 'message', message });
+    });
 
+    // TODO(wittjosiah): Warn if tool is not found.
+    const tools = nextStep.tools?.map((tool) => this.registry.get(tool)).filter(isNonNullable) ?? [];
     const messages = await session.run({
-      systemPrompt: `
-        You are a smart Rule-Following Agent.
-        Rule-Following Agent executes the command that the user sent in the last message.
-        After doing the work, the Rule-Following Agent calls report tool.
-        If the Rule-Following agent believes that no action is needed, it calls the report tool with "skipped" status.
-        If the Rule-Following Agent is unable to perform the task, it calls the report tool with "bail" status.
-        Rule-Following Agent explains the reason it is unable to perform the task before bailing.
-        The Rule-Following Agent can express creativity and imagination in the way it performs the task.
-        The Rule-Following Agent precisely follows the instructions.
-      `,
+      systemPrompt: SYSTEM_PROMPT,
       history: [...state.history, ...inputMessages],
-      tools: [...nextStep.tools, report] as ExecutableTool[], // TODO(burdon): REMOVE CAST!
+      tools: [...tools, report],
       artifacts: [],
-      client: options.aiService,
+      client: options.aiClient,
       prompt: nextStep.instructions,
     });
 
     const { messages: trimmedHistory, call: lastBlock } = popLastToolCall(messages);
-
     if (!lastBlock) {
-      // TODO(dmaretskyi): Handle this with grace
+      // TODO(dmaretskyi): Handle this with grace.
       throw new Error('Agent did not call the report tool');
     }
 
