@@ -159,6 +159,7 @@ export type EdgeAuthChallenge = {
 
 export enum OAuthProvider {
   GOOGLE = 'google',
+  BLUESKY = 'bluesky',
 }
 
 export const InitiateOAuthFlowRequestSchema = Schema.Struct({
@@ -166,6 +167,10 @@ export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   spaceId: Schema.String.pipe(Schema.filter(SpaceId.isValid)), // TODO(burdon): Use SpaceId.
   accessTokenId: Schema.String,
   scopes: Schema.mutable(Schema.Array(Schema.String)),
+  // Set to true if we don't want periodic token refreshes in background, for cases like account connect
+  noRefresh: Schema.optional(Schema.Boolean),
+  // Provider-specific (user handle or did for bluesky) hint for auth server resolution
+  loginHint: Schema.optional(Schema.String),
 });
 export type InitiateOAuthFlowRequest = Schema.Schema.Type<typeof InitiateOAuthFlowRequestSchema>;
 
