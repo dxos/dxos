@@ -70,7 +70,14 @@ describe.runIf(process.env.OPENAI_API_KEY)('AiLanguageModel', () => {
     Calculator: ({ input }) =>
       Effect.gen(function* () {
         yield* Console.log(`Executing calculation: ${input}`);
-        return { result: 42 };
+        const result = (() => {
+          // Only allow basic arithmetic operations for safety.
+          const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
+          // eslint-disable-next-line no-new-func
+          return Function(`"use strict"; return (${sanitizedInput})`)();
+        })();
+
+        return { result };
       }),
   });
 
