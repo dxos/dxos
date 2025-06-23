@@ -346,7 +346,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
                 label={t('app menu label')}
                 tooltipSide='right'
                 data-testid='spacePlugin.addSpace'
-                classNames='is-[--rail-action] bs-[--rail-action]'
+                classNames='bg-transparent is-[--rail-action] bs-[--rail-action]'
               />
             </DropdownMenu.Trigger>
           </DropdownMenu.Root>
