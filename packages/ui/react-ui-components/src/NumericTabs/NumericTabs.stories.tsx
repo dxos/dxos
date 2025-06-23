@@ -36,7 +36,7 @@ export const Default: Story = {
         <ToggleContainer
           open
           title={content[selected].title}
-          classNames='p-1 rounded-lg bg-baseSurface border border-neutral-500'
+          classNames='p-1 rounded-md bg-baseSurface border border-neutral-500'
         >
           <div className='flex w-full overflow-hidden'>
             <NumericTabs length={content.length} selected={selected} onSelect={setSelected} />

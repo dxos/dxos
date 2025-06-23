@@ -42,8 +42,8 @@ export const FormField = ({
   lookupComponent,
   Custom,
 }: FormFieldProps) => {
-  const inputProps = useInputProps(path);
   const { ast, name, type, format, title, description, options, examples, array } = property;
+  const inputProps = useInputProps(path);
 
   const label = useMemo(() => title ?? pipe(name, capitalize), [title, name]);
   const placeholder = useMemo(
@@ -218,7 +218,6 @@ export const FormFields = ({
   }, [schema, values, filter, sort]);
 
   return (
-    // TODO(burdon): Consistent padding (with composite forms).
     <div role='form' className={mx('is-full', classNames)}>
       {properties
         .map((property) => {

@@ -107,7 +107,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     expect(result).toBeDefined();
   });
 
-  // TODO(burdon): Is thisthe effectful way to do this?
+  // TODO(burdon): Is this the effectful way to do this?
   const createChat = (prompt: string) =>
     Effect.gen(function* () {
       const chat = yield* AiChat.empty;
