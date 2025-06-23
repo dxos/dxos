@@ -58,7 +58,7 @@ export default defineConfig((env) => ({
     keepNames: true,
   },
   build: {
-    sourcemap: true,
+    sourcemap: !isFalse(process.env.DX_SOURCEMAP),
     minify: !isFalse(process.env.DX_MINIFY),
     target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
     rollupOptions: {

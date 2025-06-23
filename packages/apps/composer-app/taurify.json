@@ -1,5 +1,7 @@
 {
   "api": null,
+  "cloudOrgSlug": "dxos",
+  "cloudAppSlug": "composer",
   "productName": "Composer",
   "version": "0.1.0",
   "identifier": "org.dxos.composer",
@@ -28,7 +30,7 @@
   "iOS": {
     "targets": [
       {
-        "bundle": "app-store-connect"
+        "bundle": "debugging"
       }
     ]
   },
