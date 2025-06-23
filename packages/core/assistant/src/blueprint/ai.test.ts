@@ -1,15 +1,19 @@
+//
 // Copyright 2025 DXOS.org
 //
 
-import { AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
+import { AiChat, AiInput, AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
-import { NodeHttpClient } from '@effect/platform-node';
+import { NodeHttpClient, NodeRuntime } from '@effect/platform-node';
 import { Config, Console, Effect, Layer, pipe, Schedule, Schema } from 'effect';
 import { describe, it } from 'vitest';
 
+import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
+// https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md
+// https://discord.com/channels/795981131316985866/1338871274398679130
 
 /**
  * Rationale:
@@ -50,55 +54,86 @@ describe.runIf(process.env.OPENAI_API_KEY)('AiLanguageModel', () => {
     AiTool.make('Calculator', {
       description: 'Test tool',
       parameters: {
-        calculation: Schema.String.annotations({
+        input: Schema.String.annotations({
           description: 'The calculation to perform.',
         }),
       },
-      success: Schema.String,
+      success: Schema.Struct({
+        result: Schema.Number,
+      }),
       failure: Schema.Never,
     }),
   ) {}
 
   // Tool handlers.
-  const ToolHandlers = Tools.toLayer({
-    Calculator: ({ calculation }) =>
+  const ToolkitLayer = Tools.toLayer({
+    Calculator: ({ input }) =>
       Effect.gen(function* () {
-        yield* Console.log(`Executing calculation: ${calculation}`);
-        return '42';
+        yield* Console.log(`Executing calculation: ${input}`);
+        return { result: 42 };
       }),
   });
 
-  const createProgram = (prompt: string) =>
-    AiLanguageModel.generateText({
-      toolkit: Tools,
-      prompt,
-    }).pipe(
-      Effect.tap((response) => Console.log(`Response: ${response.text}`)),
-      Effect.map((response) => response.text),
-      // TODO(burdon): Factor out model.
-      Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
-      Effect.retry(pipe(Schedule.exponential('1 second'), Schedule.intersect(Schedule.recurs(2)))),
-      Effect.timeout('30 seconds'),
-    );
+  // Provider.
+  const OpenAiLayer = OpenAiClient.layerConfig({
+    apiKey: Config.redacted('OPENAI_API_KEY'),
+  }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
-  it.only('OpenAI tool call', async ({ expect }) => {
+  it.only('should make a tool call', async ({ expect }) => {
+    const createProgram = (prompt: string) =>
+      AiLanguageModel.generateText({
+        toolkit: Tools,
+        prompt,
+      }).pipe(
+        Effect.tap((response) => Console.log(`Response: ${response.text}`)),
+        Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
+        Effect.retry(pipe(Schedule.exponential('1 second'), Schedule.intersect(Schedule.recurs(2)))),
+        Effect.timeout('30 seconds'),
+      );
+
     const program = createProgram('What is six times seven? Use appropriate tools and just answer with the number.');
-    const result = await program.pipe(
-      // TODO(burdon): Factor out layers.
-      Effect.provide([
-        ToolHandlers,
-        OpenAiClient.layerConfig({
-          apiKey: Config.redacted('OPENAI_API_KEY'),
-        }).pipe(Layer.provide(NodeHttpClient.layerUndici)),
-      ]),
-      Effect.runPromise,
-    );
+    const result = await program.pipe(Effect.provide([ToolkitLayer, OpenAiLayer]), Effect.runPromise);
+    expect(result).toBeDefined();
+  });
 
+  // TODO(burdon): What is the effectful way to do this?
+  // TODO(burdon): Factor out model and OpenAiLayer.
+  const chat = async (prompt: string) => {
+    const trigger = new Trigger<string>();
+
+    Effect.gen(function* () {
+      const model = yield* OpenAiLanguageModel.model('gpt-4o');
+      const chat = yield* AiChat.empty.pipe(Effect.provide(model));
+      const tools = yield* Tools;
+
+      // Initial request.
+      let response = yield* chat.generateText({
+        toolkit: tools,
+        prompt,
+      });
+
+      // Agentic loop.
+      while (response.results.size > 0) {
+        response = yield* chat.generateText({
+          toolkit: tools,
+          prompt: AiInput.empty,
+        });
+      }
+
+      // Done.
+      trigger.wake(response.text);
+    }).pipe(Effect.provide([ToolkitLayer, OpenAiLayer]), NodeRuntime.runMain);
+
+    return trigger.wait();
+  };
+
+  it.only('should process an agentic loop', async ({ expect }) => {
+    const result = await chat('What is six times seven?');
     log.info('result', { result });
     expect(result).toContain('42');
   });
 
-  // TODO(burdon): MCP tool call.
+  // TODO(burdon): Implement MCP server for ECHO on CF.
   // TODO(burdon): Test function call with Anthropic.
 
   // it.skip('Anthropic tool call', async ({ expect }) => {
