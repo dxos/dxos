@@ -4,7 +4,7 @@
 
 import { type BlueprintLogger, type BlueprintEvent, type Blueprint } from '@dxos/assistant';
 import { getSpace, Ref, type Space, type Queue } from '@dxos/client/echo';
-import { DXN } from '@dxos/echo';
+import { DXN, Key } from '@dxos/echo';
 import { create } from '@dxos/echo-schema';
 import {
   InvocationTraceStartEvent,
@@ -25,8 +25,12 @@ export class QueueLogger implements BlueprintLogger {
     const space = getSpace(blueprint);
     invariant(space, 'Space not found');
     this._space = space;
-    invariant(space.properties.invocationTraceQueue?.dxn, 'Invocation trace queue not found');
-    this._invocationTraceQueue = this._space.queues.get(this._space.properties.invocationTraceQueue.dxn);
+    let dxn = this._space.properties.invocationTraceQueue?.dxn;
+    if (!dxn) {
+      dxn = DXN.fromQueue(QueueSubspaceTags.TRACE, this._space.id, Key.ObjectId.random());
+      this._space.properties.invocationTraceQueue = Ref.fromDXN(dxn);
+    }
+    this._invocationTraceQueue = this._space.queues.get(dxn);
   }
 
   log(event: BlueprintEvent) {
