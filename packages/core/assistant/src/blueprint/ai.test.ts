@@ -3,12 +3,12 @@
 //
 
 import { AiChat, AiInput, AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
+import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
-import { NodeHttpClient, NodeRuntime } from '@effect/platform-node';
+import { NodeHttpClient } from '@effect/platform-node';
 import { Config, Console, Effect, Layer, pipe, Schedule, Schema } from 'effect';
 import { describe, it } from 'vitest';
 
-import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
@@ -24,8 +24,8 @@ import { log } from '@dxos/log';
  * - Simple API for plugins/artifacts.
  * - Ecosystem and design partner.
  */
-describe.runIf(process.env.OPENAI_API_KEY)('AiLanguageModel', () => {
-  it.only('Debug: Verify API configuration', async ({ expect }) => {
+describe.runIf(!process.env.CI)('AiLanguageModel', () => {
+  it.runIf(process.env.OPENAI_API_KEY)('Debug: Verify API configuration', async ({ expect }) => {
     const program = Effect.gen(function* () {
       yield* Console.log('Testing API connectivity...');
       const response = yield* AiLanguageModel.generateText({ prompt: 'Hello, respond with "API is working"' });
@@ -69,7 +69,6 @@ describe.runIf(process.env.OPENAI_API_KEY)('AiLanguageModel', () => {
   const ToolkitLayer = Toolkit.toLayer({
     Calculator: ({ input }) =>
       Effect.gen(function* () {
-        yield* Console.log(`Executing calculation: ${input}`);
         const result = (() => {
           // Only allow basic arithmetic operations for safety.
           const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
@@ -77,22 +76,27 @@ describe.runIf(process.env.OPENAI_API_KEY)('AiLanguageModel', () => {
           return Function(`"use strict"; return (${sanitizedInput})`)();
         })();
 
+        yield* Console.log(`Executing calculation: ${input} = ${result}`);
         return { result };
       }),
   });
 
-  // Provider.
+  // Providers.
   const OpenAiLayer = OpenAiClient.layerConfig({
     apiKey: Config.redacted('OPENAI_API_KEY'),
   }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
-  it.only('should make a tool call', async ({ expect }) => {
+  const AnthropicLayer = AnthropicClient.layerConfig({
+    apiKey: Config.redacted('ANTHROPIC_API_KEY'),
+  }).pipe(Layer.provide(NodeHttpClient.layerUndici));
+
+  it.runIf(process.env.OPENAI_API_KEY)('should make a tool call', async ({ expect }) => {
     const createProgram = (prompt: string) =>
       AiLanguageModel.generateText({
         toolkit: Toolkit,
         prompt,
       }).pipe(
-        Effect.tap((response) => Console.log(`Response: ${response.text}`)),
+        Effect.tap((response) => Console.log(response)),
         Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
         Effect.retry(pipe(Schedule.exponential('1 second'), Schedule.intersect(Schedule.recurs(2)))),
         Effect.timeout('30 seconds'),
@@ -103,14 +107,10 @@ describe.runIf(process.env.OPENAI_API_KEY)('AiLanguageModel', () => {
     expect(result).toBeDefined();
   });
 
-  // TODO(burdon): Factor out model and OpenAiLayer.
-  const chat = async (prompt: string) => {
-    // TODO(burdon): What is the effectful way to do this?
-    const trigger = new Trigger<string>();
-
+  // TODO(burdon): Is thisthe effectful way to do this?
+  const createChat = (prompt: string) =>
     Effect.gen(function* () {
-      const model = yield* OpenAiLanguageModel.model('gpt-4o');
-      const chat = yield* AiChat.empty.pipe(Effect.provide(model));
+      const chat = yield* AiChat.empty;
       const toolkit = yield* Toolkit;
 
       // Initial request.
@@ -122,40 +122,35 @@ describe.runIf(process.env.OPENAI_API_KEY)('AiLanguageModel', () => {
       }
 
       // Done.
-      trigger.wake(response.text);
-    }).pipe(Effect.provide([ToolkitLayer, OpenAiLayer]), NodeRuntime.runMain);
+      return response.text;
+    });
 
-    return trigger.wait();
-  };
+  it.runIf(process.env.OPENAI_API_KEY)('should process an agentic loop using OpenAI', async ({ expect }) => {
+    const chat = createChat('What is six times seven?');
+    const result = await chat.pipe(
+      Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
+      Effect.provide(OpenAiLayer),
+      Effect.provide(ToolkitLayer),
+      Effect.runPromise,
+    );
 
-  it.only('should process an agentic loop', async ({ expect }) => {
-    const result = await chat('What is six times seven?');
+    log.info('result', { result });
+    expect(result).toContain('42');
+  });
+
+  // TODO(burdon): Fix Anthropic.
+  it.runIf(process.env.ANTHROPIC_API_KEY).skip('should process an agentic loop using Anthropic', async ({ expect }) => {
+    const chat = createChat('What is six times seven?');
+    const result = await chat.pipe(
+      Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+      Effect.provide(AnthropicLayer),
+      Effect.provide(ToolkitLayer),
+      Effect.runPromise,
+    );
+
     log.info('result', { result });
     expect(result).toContain('42');
   });
 
   // TODO(burdon): Implement MCP server for ECHO on CF.
-  // TODO(burdon): Test function call with Anthropic.
-
-  // it.skip('Anthropic tool call', async ({ expect }) => {
-  //   const program = AiLanguageModel.generateText({
-  //     toolkit: Tools,
-  //     prompt: 'What is six times seven?',
-  //   }).pipe(
-  //     Effect.map((response) => response.text),
-  //     Effect.provide(AnthropicLanguageModel.model('claude-3-7-sonnet-latest')),
-  //   );
-
-  //   const result = await program.pipe(
-  //     Effect.provide([
-  //       ToolHandlers,
-  //       AnthropicClient.layerConfig({
-  //         apiKey: Config.redacted('ANTHROPIC_API_KEY'),
-  //       }).pipe(Layer.provide(NodeHttpClient.layerUndici)),
-  //     ]),
-  //     Effect.runPromise,
-  //   );
-  //   console.log({ result });
-  //   expect(result).toBeDefined();
-  // });
 });
