@@ -79,6 +79,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-edge-client": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-canvas-compute": "workspace:*",
     "@dxos/react-ui-canvas-editor": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
@@ -97,6 +98,7 @@
     "@preact/signals-core": "^1.9.0",
     "@xiechao/codemirror-lang-handlebars": "1.0.4",
     "exa-js": "^1.5.12",
+    "json5": "^2.2.3",
     "jsonpointer": "^5.0.1",
     "lodash.defaultsdeep": "^4.6.1",
     "unified": "^11.0.0"

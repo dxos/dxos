@@ -55,6 +55,10 @@ export class DXN {
     }),
   );
 
+  static hash(dxn: DXN): string {
+    return dxn.toString();
+  }
+
   /**
    * Kind constants.
    */

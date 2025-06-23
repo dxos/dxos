@@ -19,7 +19,7 @@ import { AI_SERVICE_ENDPOINT } from '../testing';
 import { createUserMessage } from '../tools';
 import { createLogger } from '../util';
 
-const client = new AIServiceEdgeClient({
+const aiClient = new AIServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.LOCAL,
 });
 
@@ -33,9 +33,9 @@ test.skip('cypher query', async () => {
   const threadId = ObjectId.random();
 
   const result = await runLLM({
+    aiClient,
     model: DEFAULT_EDGE_MODEL,
     tools: [cypherTool],
-    client,
     spaceId,
     threadId,
     system: createSystemPrompt(schemaTypes),
@@ -69,9 +69,9 @@ test.skip('query ECHO', async () => {
   const threadId = ObjectId.random();
 
   const result = await runLLM({
+    aiClient,
     model: DEFAULT_EDGE_MODEL,
     tools: [cypherTool],
-    client,
     spaceId,
     threadId,
     system: createSystemPrompt(schemaTypes),

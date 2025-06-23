@@ -40,11 +40,9 @@ export const getObjectDXN = (object: any): DXN | undefined => {
 // TODO(burdon): Reconcile with `getTypename`.
 // TODO(dmaretskyi): For echo objects, this always returns the root schema.
 export const getSchema = (obj: unknown | undefined): Schema.Schema.AnyNoContext | undefined => {
-  if (!obj) {
-    return undefined;
+  if (obj) {
+    return (obj as any)[SchemaId];
   }
-
-  return (obj as any)[SchemaId];
 };
 
 /**
