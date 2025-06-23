@@ -57,22 +57,22 @@ export class BlueprintLoggerAdapter implements BlueprintLogger {
   log(event: BlueprintEvent) {
     switch (event.type) {
       case 'begin':
-        this.logger.log('begin');
+        this.logger.log('begin', { invocationId: event.invocationId });
         break;
       case 'end':
-        this.logger.log('end');
+        this.logger.log('end', { invocationId: event.invocationId });
         break;
       case 'step-start':
-        this.logger.log('step-start', { step: event.step });
+        this.logger.log('step-start', { invocationId: event.invocationId, step: event.step });
         break;
       case 'step-complete':
-        this.logger.log('step-complete', { step: event.step });
+        this.logger.log('step-complete', { invocationId: event.invocationId, step: event.step });
         break;
       case 'message':
-        this.logger.log('message', { message: event.message });
+        this.logger.log('message', { invocationId: event.invocationId, message: event.message });
         break;
       case 'block':
-        this.logger.log('block', { block: event.block });
+        this.logger.log('block', { invocationId: event.invocationId, block: event.block });
         break;
     }
   }

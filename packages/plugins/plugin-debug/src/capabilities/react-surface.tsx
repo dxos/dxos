@@ -360,7 +360,7 @@ export default (context: PluginContext) =>
       filter: (data): data is any => data.subject === Devtools.Edge.Traces,
       component: () => {
         const space = useCurrentSpace();
-        return <InvocationTraceContainer space={space} />;
+        return <InvocationTraceContainer space={space} detailAxis='block' />;
       },
     }),
     createSurface({
