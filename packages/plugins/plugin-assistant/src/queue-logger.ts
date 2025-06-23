@@ -42,7 +42,7 @@ export class QueueLogger implements BlueprintLogger {
             invocationId: event.invocationId,
             timestampMs: Date.now(),
             input: {},
-            invocationTraceQueue: Ref.fromDXN(this._invocationTraceQueue.dxn),
+            invocationTraceQueue: Ref.fromDXN(this._getTraceQueueDxn(event.invocationId)),
             invocationTarget: Ref.make(this.blueprint),
           }),
         ]);
@@ -61,7 +61,7 @@ export class QueueLogger implements BlueprintLogger {
       case 'step-complete':
         this._getTraceEventQueue(event.invocationId).append([
           create(TraceEvent, {
-            outcome: 'pending',
+            outcome: event.type,
             truncated: false,
             ingestionTimestampMs: Date.now(),
             logs: [
@@ -79,7 +79,7 @@ export class QueueLogger implements BlueprintLogger {
       case 'message':
         this._getTraceEventQueue(event.invocationId).append([
           create(TraceEvent, {
-            outcome: 'pending',
+            outcome: event.type,
             truncated: false,
             ingestionTimestampMs: Date.now(),
             logs: [
@@ -97,7 +97,7 @@ export class QueueLogger implements BlueprintLogger {
       case 'block':
         this._getTraceEventQueue(event.invocationId).append([
           create(TraceEvent, {
-            outcome: 'pending',
+            outcome: event.type,
             truncated: false,
             ingestionTimestampMs: Date.now(),
             logs: [
@@ -115,8 +115,12 @@ export class QueueLogger implements BlueprintLogger {
     }
   }
 
+  private _getTraceQueueDxn(invocationId: string): DXN {
+    return DXN.fromQueue(QueueSubspaceTags.TRACE, this._space.id, invocationId);
+  }
+
   private _getTraceEventQueue(invocationId: string): Queue<TraceEvent> {
-    const dxn = DXN.fromQueue(QueueSubspaceTags.TRACE, this._space.id, invocationId);
+    const dxn = this._getTraceQueueDxn(invocationId);
     return this._space.queues.get(dxn);
   }
 }

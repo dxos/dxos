@@ -40,6 +40,8 @@ export default [
         'select preset template placeholder': 'Select preset',
         'service registry label': 'Service Registry',
 
+        'blueprint logs label': 'Logs',
+
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
 

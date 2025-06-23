@@ -4,6 +4,7 @@
 
 import { useCallback, useMemo } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { ScriptType, FunctionType, createInvocationSpans, type InvocationTraceEvent } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { Filter, getSpace, useQuery, useQueue, type Space } from '@dxos/react-client/echo';
@@ -39,21 +40,21 @@ export const useScriptNameResolver = ({ space }: { space?: Space }) => {
   );
 };
 
-export const useInvocationTargetsForScript = (script: ScriptType | undefined) => {
-  const space = getSpace(script);
+export const useInvocationTargetsForScript = (target: Obj.Any | undefined) => {
+  const space = Obj.instanceOf(ScriptType, target) ? getSpace(target) : undefined;
   const functions = useQuery(space, Filter.type(FunctionType));
 
   return useMemo(() => {
-    if (!script) {
+    if (!Obj.instanceOf(ScriptType, target)) {
       return undefined;
     }
 
-    return new Set(functions.filter((func) => func.source?.target?.id === script.id).map((func) => func.name));
-  }, [functions, script]);
+    return new Set(functions.filter((func) => func.source?.target?.id === target.id).map((func) => func.name));
+  }, [functions, target]);
 };
 
-export const useInvocationSpans = ({ space, script }: { space?: Space; script?: ScriptType }) => {
-  const functionsForScript = useInvocationTargetsForScript(script);
+export const useInvocationSpans = ({ space, target }: { space?: Space; target?: Obj.Any }) => {
+  const functionsForScript = useInvocationTargetsForScript(target);
   const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn, {
     pollInterval: 1000,
   });
@@ -65,6 +66,8 @@ export const useInvocationSpans = ({ space, script }: { space?: Space; script?: 
         const uuidPart = getUuidFromDxn(targetId);
         return uuidPart ? functionsForScript?.has(uuidPart) : false;
       });
+    } else if (target) {
+      return invocationSpans.filter((span) => span.invocationTarget.dxn.toString() === Obj.getDXN(target).toString());
     }
     return invocationSpans;
   }, [invocationSpans]);
