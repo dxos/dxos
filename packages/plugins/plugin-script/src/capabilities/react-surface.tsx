@@ -74,7 +74,7 @@ export default () =>
         const space = getSpace(data.companionTo);
         return (
           <StackItem.Content role={role}>
-            <InvocationTraceContainer space={space} script={data.companionTo} detailAxis='block' />
+            <InvocationTraceContainer space={space} target={data.companionTo} detailAxis='block' />
           </StackItem.Content>
         );
       },
