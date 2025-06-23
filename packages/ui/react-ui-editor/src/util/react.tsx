@@ -28,8 +28,8 @@ export const createElement = (tag: string, options?: ElementOptions, children?: 
   return el;
 };
 
-// TODO(burdon): Remove react rendering; use DOM directly.
-// NOTE: CM seems to remove/detach/overwrite portals that are attached to the DOM it control.s
+/** @deprecated */
+// TODO(wittjosiah): Replace with portals which are lighter weight and inherit context from the main react tree.
 export const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
   createRoot(root).render(<ThemeProvider tx={defaultTx}>{node}</ThemeProvider>);
   return root;
@@ -37,6 +37,7 @@ export const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
 
 /**
  * Utility to create a renderer for a React component.
+ * @deprecated
  */
 export const createRenderer =
   <Props extends object>(Component: FC<Props>): RenderCallback<Props> =>
