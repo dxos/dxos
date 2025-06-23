@@ -18,6 +18,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
+import { AssistantEvents } from './events';
 import { meta } from './meta';
 import translations from './translations';
 import { AssistantAction, AIChatType, ServiceType, TemplateType, CompanionTo } from './types';
@@ -97,6 +98,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/ai-client`,
       activatesOn: allOf(ClientEvents.ClientReady, Events.SettingsReady),
+      activatesAfter: [AssistantEvents.AiClientReady],
       activate: AiClient,
     }),
   ]);
