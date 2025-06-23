@@ -42,12 +42,6 @@ export default () =>
         );
       },
     }),
-    // createSurface({
-    //   id: `${meta.id}/object-settings`,
-    //   role: 'object-settings',
-    //   filter: (data): data is { subject: TableType } => Obj.instanceOf(TableType, data.subject),
-    //   component: ({ data }) => <TableViewEditor table={data.subject} />,
-    // }),
     createSurface({
       id: `${meta.id}/selected-objects`,
       role: 'article',

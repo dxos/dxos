@@ -9,6 +9,7 @@ import { defineCapability } from '@dxos/app-framework';
 
 import { ASSISTANT_PLUGIN } from '../meta';
 
+// TODO(burdon): Move to types to import from other plugins?
 export namespace AssistantCapabilities {
   export const AiClient = defineCapability<ReadonlySignal<AIServiceClient>>(`${ASSISTANT_PLUGIN}/capability/ai-client`);
 }

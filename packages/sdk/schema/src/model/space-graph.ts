@@ -115,6 +115,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     this._objectSubscription?.();
     this._objectSubscription = undefined;
     this._space = undefined;
+
     return this;
   }
 
@@ -216,24 +217,18 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
       // Relations.
       if (Relation.isRelation(object)) {
-        try {
-          const edge = this.addEdge({
-            id: object.id,
-            type: 'relation',
-            source: Relation.getSourceDXN(object).asEchoDXN()!.echoId,
-            target: Relation.getTargetDXN(object).asEchoDXN()!.echoId,
-            data: {
-              object,
-            },
-          });
+        const edge = this.addEdge({
+          id: object.id,
+          type: 'relation',
+          source: Relation.getSourceDXN(object).asEchoDXN()!.echoId,
+          target: Relation.getTargetDXN(object).asEchoDXN()!.echoId,
+          data: {
+            object,
+          },
+        });
 
-          this._options?.onCreateEdge?.(edge, object);
-        } catch (error: any) {
-          // TODO(burdon): FIX API and remove.
-          log.error('onCreateEdge', { error: error?.message });
-        }
+        this._options?.onCreateEdge?.(edge, object);
       } else {
-        // TODO(burdon): Filter?
         const typename = Obj.getTypename(object);
         if (typename) {
           let node: SpaceGraphNode | undefined = currentNodes.find((node) => node.id === object.id);

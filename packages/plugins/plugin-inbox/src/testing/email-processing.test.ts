@@ -11,7 +11,7 @@ import { createTestData } from '@dxos/schema/testing';
 
 import { processEmail } from './email-processor';
 
-const aiService = new AIServiceEdgeClient({
+const aiClient = new AIServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.REMOTE,
 });
 
@@ -21,7 +21,7 @@ describe.skip('Email Processing', () => {
     for (const email of emails) {
       const result = await processEmail({
         email,
-        aiService,
+        aiClient,
         context: {
           labels,
           contacts: Object.values(contacts),

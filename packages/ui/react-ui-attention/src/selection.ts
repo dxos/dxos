@@ -8,6 +8,8 @@ import { Match } from 'effect';
 import { invariant } from '@dxos/invariant';
 import { live, type Live } from '@dxos/live-object';
 
+// TODO(burdon): Reconcile with @dxos/graph.
+
 export type SelectionMode = 'single' | 'multi' | 'range' | 'multi-range';
 
 export type Selection =
@@ -24,6 +26,31 @@ export const defaultSelection = Match.type<SelectionMode>().pipe(
   Match.exhaustive,
 );
 
+export type SelectionResult<T extends SelectionMode> = T extends 'single'
+  ? string | undefined
+  : T extends 'multi'
+    ? string[]
+    : T extends 'range'
+      ? { from: string; to: string } | undefined
+      : T extends 'multi-range'
+        ? { from: string; to: string }[]
+        : never;
+
+// TODO(burdon): Refactor.
+export const getSelectionSet = (selectionManager: SelectionManager, contextId?: string) => {
+  const ids = new Set<string>(contextId ? [contextId] : []);
+  for (const context of selectionManager.getSelectionContexts()) {
+    const selection = selectionManager.getSelection(context);
+    if (selection?.mode === 'multi') {
+      for (const id of selection.ids) {
+        ids.add(id);
+      }
+    }
+  }
+
+  return ids;
+};
+
 /**
  * Manages selection state for different contexts.
  * Each context maintains its own selection mode and state.
@@ -37,6 +64,10 @@ export class SelectionManager {
         this._state.selections = initial;
       });
     }
+  }
+
+  getSelectionContexts(): string[] {
+    return Object.keys(this._state.selections);
   }
 
   getSelection<T extends SelectionMode | undefined>(
@@ -54,18 +85,8 @@ export class SelectionManager {
     });
   }
 
-  getSelected<T extends SelectionMode>(
-    contextId: string,
-    mode: T = 'multi' as T,
-  ): T extends 'single'
-    ? string | undefined
-    : T extends 'multi'
-      ? string[]
-      : T extends 'range'
-        ? { from: string; to: string } | undefined
-        : T extends 'multi-range'
-          ? { from: string; to: string }[]
-          : never {
+  // TODO(burdon): Disambiguate with getSelection?
+  getSelected<T extends SelectionMode>(contextId: string, mode: T = 'multi' as T): SelectionResult<T> {
     const selection = this.getSelection(contextId, mode);
     invariant(selection?.mode === mode, 'Selection mode mismatch');
     return Match.type<Selection>().pipe(

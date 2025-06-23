@@ -63,12 +63,8 @@ export const getDXN = (obj: Any): DXN => {
  * @returns The DXN of the object's type.
  * @example dxn:example.com/type/Contact:1.0.0
  */
-// TODO(dmaretskyi): Allow returning undefined.
-export const getSchemaDXN = (obj: Any): DXN => {
-  const type = EchoSchema.getType(obj);
-  invariant(type != null, 'Invalid object.');
-  return type;
-};
+// TODO(burdon): Expando does not have a type.
+export const getTypeDXN = EchoSchema.getType;
 
 /**
  * @returns The typename of the object's type.
@@ -78,7 +74,7 @@ export const getTypename = (obj: Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema == null) {
     // Try to extract typename from DXN.
-    return getSchemaDXN(obj)?.asTypeDXN()?.type;
+    return EchoSchema.getType(obj)?.asTypeDXN()?.type;
   }
 
   return EchoSchema.getSchemaTypename(schema);

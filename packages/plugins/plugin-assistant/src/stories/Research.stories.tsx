@@ -59,8 +59,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const [, forceUpdate] = useState({});
 
   const client = useClient();
-  // TODO(burdon): Hook.
-  const [aiClient] = useState(
+  const aiClient = useMemo(
     () =>
       new SpyAIService(
         new AIServiceEdgeClient({
@@ -71,6 +70,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
           },
         }),
       ),
+    [],
   );
 
   const space = client.spaces.default;
