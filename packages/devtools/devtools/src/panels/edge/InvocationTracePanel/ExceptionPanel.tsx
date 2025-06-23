@@ -4,7 +4,6 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { decodeReference } from '@dxos/echo-protocol';
 import { type TraceEvent, type InvocationSpan } from '@dxos/functions';
 import { useQueue } from '@dxos/react-client/echo';
 import { mx } from '@dxos/react-ui-theme';
@@ -15,7 +14,7 @@ type ExceptionPanelProps = {
 
 export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
   const traceQueueDxn = useMemo(() => {
-    return span.invocationTraceQueue ? decodeReference(span.invocationTraceQueue).dxn : undefined;
+    return span.invocationTraceQueue ? span.invocationTraceQueue.dxn : undefined;
   }, [span.invocationTraceQueue]);
 
   const eventQueue = useQueue<TraceEvent>(traceQueueDxn, { pollInterval: 2000 });
