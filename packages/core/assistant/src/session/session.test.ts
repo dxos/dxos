@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { AIServiceEdgeClient, ConsolePrinter, createTool, ToolResult } from '@dxos/ai';
+import { AiServiceEdgeClient, ConsolePrinter, createTool, ToolResult } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { Type } from '@dxos/echo';
@@ -33,7 +33,7 @@ type CalendarEvent = Schema.Schema.Type<typeof CalendarEventSchema>;
 // TODO(burdon): Flaky.
 describe.skip('AISession with Ollama', () => {
   test('create calendar itinerary', { timeout: 60_000 }, async () => {
-    const aiClient = new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
+    const aiClient = new AiServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
     // const aiClient = new OllamaClient({
     //   overrides: { model: 'llama3.1:8b' },
     // });

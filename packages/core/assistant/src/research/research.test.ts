@@ -5,7 +5,7 @@
 import { inspect } from 'node:util';
 import { beforeAll, describe, test } from 'vitest';
 
-import { AIServiceEdgeClient, OllamaClient, structuredOutputParser } from '@dxos/ai';
+import { AiServiceEdgeClient, OllamaClient, structuredOutputParser } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -35,7 +35,7 @@ describe.skip('Research', () => {
       new ServiceContainer().setServices({
         ai: {
           client: REMOTE_AI
-            ? new AIServiceEdgeClient({
+            ? new AiServiceEdgeClient({
                 endpoint: AI_SERVICE_ENDPOINT.REMOTE,
                 defaultGenerationOptions: {
                   // model: '@anthropic/claude-sonnet-4-20250514',

@@ -5,17 +5,17 @@
 import { type Signal, signal } from '@preact/signals-core';
 
 import { createReplaySSEStream } from './test-stream';
-import { createGenerationStream, type GenerationStream, type AIServiceClient, GenerationStreamImpl } from '../service';
+import { createGenerationStream, type GenerationStream, type AiServiceClient, GenerationStreamImpl } from '../service';
 import { type GenerationStreamEvent, type GenerateRequest, type GenerateResponse } from '../types';
 
-export type SpyAIServiceMode = 'mock' | 'spy';
+export type SpyAiServiceMode = 'mock' | 'spy';
 
-export class SpyAIService implements AIServiceClient {
+export class SpyAiService implements AiServiceClient {
   // TODO(wittjosiah): Factor out signal to higher level?
-  private _mode: Signal<SpyAIServiceMode> = signal('spy');
+  private _mode: Signal<SpyAiServiceMode> = signal('spy');
   private _events: GenerationStreamEvent[] = [];
 
-  constructor(private readonly _service: AIServiceClient) {}
+  constructor(private readonly _service: AiServiceClient) {}
 
   /** @reactive */
   get mode() {
@@ -26,7 +26,7 @@ export class SpyAIService implements AIServiceClient {
     return this._events;
   }
 
-  setMode(mode: SpyAIServiceMode): void {
+  setMode(mode: SpyAiServiceMode): void {
     this._mode.value = mode;
   }
 
@@ -79,7 +79,7 @@ export class SpyAIService implements AIServiceClient {
       }
       case 'spy': {
         const stream = await this._service.execStream(request);
-        const iterator = async function* (this: SpyAIService) {
+        const iterator = async function* (this: SpyAiService) {
           for await (const item of stream) {
             this._events.push(item);
             yield item;

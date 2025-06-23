@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AIServiceEdgeClient, Message } from '@dxos/ai';
+import { AiServiceEdgeClient, Message } from '@dxos/ai';
 import {
   Capabilities,
   Events,
@@ -57,7 +57,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const tools = useCapabilities(Capabilities.Tools);
 
-  const aiClient = useMemo(() => new AIServiceEdgeClient({ endpoint: endpoints.ai }), []);
+  const aiClient = useMemo(() => new AiServiceEdgeClient({ endpoint: endpoints.ai }), []);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // TODO(burdon): Replace with useChatProcessor.

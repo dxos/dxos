@@ -4,7 +4,7 @@
 
 import { effect, signal } from '@preact/signals-core';
 
-import { type AIServiceClient, AIServiceEdgeClient, OllamaClient } from '@dxos/ai';
+import { type AiServiceClient, AiServiceEdgeClient, OllamaClient } from '@dxos/ai';
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
@@ -18,7 +18,7 @@ const DEFAULT_AI_SERVICE_URL = 'http://localhost:8788';
 export default (context: PluginContext) => {
   const client = context.getCapability(ClientCapabilities.Client);
   const endpoint = client.config.values.runtime?.services?.ai?.server ?? DEFAULT_AI_SERVICE_URL;
-  const aiClient = signal<AIServiceClient>(new AIServiceEdgeClient({ endpoint }));
+  const aiClient = signal<AiServiceClient>(new AiServiceEdgeClient({ endpoint }));
 
   const unsubscribe = effect(() => {
     const settings = context
@@ -28,7 +28,7 @@ export default (context: PluginContext) => {
     if (settings?.llmProvider === 'ollama') {
       aiClient.value = new OllamaClient();
     } else {
-      aiClient.value = new AIServiceEdgeClient({
+      aiClient.value = new AiServiceEdgeClient({
         endpoint,
         defaultGenerationOptions: {
           // model: '@anthropic/claude-sonnet-4-20250514',

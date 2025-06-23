@@ -10,7 +10,7 @@ import {
   runTools,
   type AgentStatus,
   structuredOutputParser,
-  type AIServiceClient,
+  type AiServiceClient,
   type GenerationStream,
   type GenerateRequest,
   Message,
@@ -57,7 +57,7 @@ export type ArtifactDiffResolver = (artifacts: { id: ObjectId; lastVersion: Obje
 >;
 
 export type SessionRunOptions = {
-  client: AIServiceClient;
+  client: AiServiceClient;
 
   artifacts: ArtifactDefinition[];
 

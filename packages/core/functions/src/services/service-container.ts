@@ -11,18 +11,18 @@ import { QueuesService } from './queues';
 import { TracingService } from './tracing';
 
 export interface Services {
-  database: Context.Tag.Service<DatabaseService>;
   ai: Context.Tag.Service<AiService>;
-  queues: Context.Tag.Service<QueuesService>;
   credentials: Context.Tag.Service<CredentialsService>;
+  database: Context.Tag.Service<DatabaseService>;
+  queues: Context.Tag.Service<QueuesService>;
   tracing: Context.Tag.Service<TracingService>;
 }
 
 const SERVICE_MAPPING: Record<string, keyof Services> = {
-  [DatabaseService.key]: 'database',
   [AiService.key]: 'ai',
-  [QueuesService.key]: 'queues',
   [CredentialsService.key]: 'credentials',
+  [DatabaseService.key]: 'database',
+  [QueuesService.key]: 'queues',
   [TracingService.key]: 'tracing',
 };
 

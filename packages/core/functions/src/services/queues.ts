@@ -10,7 +10,6 @@ export class QueuesService extends Context.Tag('QueuesService')<
   QueuesService,
   {
     readonly contextQueue: Queue | undefined;
-
     readonly queues: QueueFactory;
   }
 >() {}

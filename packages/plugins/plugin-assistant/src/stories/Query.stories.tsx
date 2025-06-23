@@ -8,8 +8,8 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import { Match, Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react';
 
-import { AIServiceEdgeClient, type AIServiceEdgeClientOptions } from '@dxos/ai';
-import { SpyAIService } from '@dxos/ai/testing';
+import { AiServiceEdgeClient, type AiServiceEdgeClientOptions } from '@dxos/ai';
+import { SpyAiService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
@@ -55,7 +55,7 @@ const LOCAL = false;
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
 
 // TODO(burdon) Move to story args.
-const aiConfig: AIServiceEdgeClientOptions = {
+const aiConfig: AiServiceEdgeClientOptions = {
   endpoint: endpoints.ai,
   defaultGenerationOptions: {
     model: '@anthropic/claude-3-5-sonnet-20241022',
@@ -168,7 +168,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   // AI
   //
 
-  const aiClient = useMemo(() => new SpyAIService(new AIServiceEdgeClient(aiConfig)), []);
+  const aiClient = useMemo(() => new SpyAiService(new AiServiceEdgeClient(aiConfig)), []);
   const tools = useMemo(
     () => space && researchGraph && createToolRegistry(space, researchGraph.queue.dxn),
     [space, researchGraph?.queue.dxn],

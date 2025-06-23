@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type AIServiceClient } from '../service';
+import { type AiServiceClient } from '../service';
 import { type ExecutableTool, type Message } from '../tools';
 import { type LLMModel, type GenerationStreamEvent } from '../types';
 
@@ -25,7 +25,7 @@ export type CreateLLMConversationParams = {
 
   tools: ExecutableTool[];
   history?: Message[];
-  aiClient: AIServiceClient;
+  aiClient: AiServiceClient;
 
   logger?: (event: ConversationEvent) => void;
 };

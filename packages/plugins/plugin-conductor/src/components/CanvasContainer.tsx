@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { AiServiceEdgeClient } from '@dxos/ai';
 import { type Config } from '@dxos/client';
 import { ComputeGraphModel, EdgeGpt } from '@dxos/conductor';
 import { createStubEdgeIdentity, EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
@@ -42,7 +42,7 @@ const createServices = (config: Config, space?: Space): Partial<Services> => {
     gpt:
       config.values.runtime?.services?.ai?.server == null
         ? undefined
-        : new EdgeGpt(new AIServiceEdgeClient({ endpoint: config.values.runtime?.services?.ai?.server })),
+        : new EdgeGpt(new AiServiceEdgeClient({ endpoint: config.values.runtime?.services?.ai?.server })),
     edgeClient:
       config.values.runtime?.services?.edge?.url == null
         ? undefined

@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { AiServiceEdgeClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { Obj } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
@@ -17,7 +17,7 @@ import { search } from '../search';
 import { type SearchResult } from '../types';
 
 export const useWebSearch = ({ query, context }: { query?: string; context?: string }) => {
-  const aiService = new AIServiceEdgeClient({
+  const AiService = new AiServiceEdgeClient({
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
   });
 
@@ -32,7 +32,7 @@ export const useWebSearch = ({ query, context }: { query?: string; context?: str
         query,
         context,
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        aiService,
+        AiService,
         exaApiKey: EXA_API_KEY,
       });
 

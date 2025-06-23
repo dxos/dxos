@@ -5,7 +5,7 @@
 import { pipe, Schema } from 'effect';
 import { beforeAll, describe, test } from 'vitest';
 
-import { AIServiceEdgeClient, Message, MixedStreamParser, OllamaClient, type TextContentBlock } from '@dxos/ai';
+import { AiServiceEdgeClient, Message, MixedStreamParser, OllamaClient, type TextContentBlock } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import type { EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -151,7 +151,7 @@ describe.skip('Summarization', () => {
       new ServiceContainer().setServices({
         ai: {
           client: REMOTE_AI
-            ? new AIServiceEdgeClient({
+            ? new AiServiceEdgeClient({
                 endpoint: AI_SERVICE_ENDPOINT.REMOTE,
                 defaultGenerationOptions: {
                   // model: '@anthropic/claude-sonnet-4-20250514',

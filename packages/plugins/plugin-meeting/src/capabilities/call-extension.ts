@@ -4,7 +4,7 @@
 
 import { type Schema } from 'effect';
 
-import { type AIServiceClient } from '@dxos/ai';
+import { type AiServiceClient } from '@dxos/ai';
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
@@ -86,7 +86,7 @@ export default (context: PluginContext) => {
 };
 
 type EntityExtractionEnricherFactoryOptions = {
-  aiClient: AIServiceClient;
+  aiClient: AiServiceClient;
   contextTypes: Schema.Schema.AnyNoContext[];
   space: Space;
 };

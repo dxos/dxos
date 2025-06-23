@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 import { describe, test } from 'vitest';
 
-import { AIServiceEdgeClient, OllamaClient } from '@dxos/ai';
+import { AiServiceEdgeClient, OllamaClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -65,7 +65,7 @@ describe.skip('SentenceNormalization', () => {
       new ServiceContainer().setServices({
         ai: {
           client: REMOTE_AI
-            ? new AIServiceEdgeClient({
+            ? new AiServiceEdgeClient({
                 endpoint: AI_SERVICE_ENDPOINT.REMOTE,
                 defaultGenerationOptions: {
                   model: '@anthropic/claude-3-5-sonnet-20241022',

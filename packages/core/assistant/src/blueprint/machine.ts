@@ -6,7 +6,7 @@ import { Match, Schema } from 'effect';
 
 import {
   createTool,
-  type AIServiceClient,
+  type AiServiceClient,
   Message,
   type MessageContentBlock,
   ToolResult,
@@ -52,7 +52,7 @@ const INITIAL_STATE: BlueprintMachineState = {
 };
 
 type ExecutionOptions = {
-  aiClient: AIServiceClient;
+  aiClient: AiServiceClient;
 
   /**
    * Input to the blueprint.

@@ -4,14 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { AiServiceEdgeClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 import { createTestData } from '@dxos/schema/testing';
 
 import { processEmail } from './email-processor';
 
-const aiClient = new AIServiceEdgeClient({
+const aiClient = new AiServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.REMOTE,
 });
 
