@@ -50,7 +50,7 @@ describe.runIf(process.env.OPENAI_API_KEY)('AiLanguageModel', () => {
   });
 
   // Tool definitions.
-  class Tools extends AiToolkit.make(
+  class Toolkit extends AiToolkit.make(
     AiTool.make('Calculator', {
       description: 'Test tool',
       parameters: {
@@ -66,7 +66,7 @@ describe.runIf(process.env.OPENAI_API_KEY)('AiLanguageModel', () => {
   ) {}
 
   // Tool handlers.
-  const ToolkitLayer = Tools.toLayer({
+  const ToolkitLayer = Toolkit.toLayer({
     Calculator: ({ input }) =>
       Effect.gen(function* () {
         yield* Console.log(`Executing calculation: ${input}`);
@@ -89,7 +89,7 @@ describe.runIf(process.env.OPENAI_API_KEY)('AiLanguageModel', () => {
   it.only('should make a tool call', async ({ expect }) => {
     const createProgram = (prompt: string) =>
       AiLanguageModel.generateText({
-        toolkit: Tools,
+        toolkit: Toolkit,
         prompt,
       }).pipe(
         Effect.tap((response) => Console.log(`Response: ${response.text}`)),
@@ -103,28 +103,22 @@ describe.runIf(process.env.OPENAI_API_KEY)('AiLanguageModel', () => {
     expect(result).toBeDefined();
   });
 
-  // TODO(burdon): What is the effectful way to do this?
   // TODO(burdon): Factor out model and OpenAiLayer.
   const chat = async (prompt: string) => {
+    // TODO(burdon): What is the effectful way to do this?
     const trigger = new Trigger<string>();
 
     Effect.gen(function* () {
       const model = yield* OpenAiLanguageModel.model('gpt-4o');
       const chat = yield* AiChat.empty.pipe(Effect.provide(model));
-      const toolkit = yield* Tools;
+      const toolkit = yield* Toolkit;
 
       // Initial request.
-      let response = yield* chat.generateText({
-        toolkit,
-        prompt,
-      });
+      let response = yield* chat.generateText({ toolkit, prompt });
 
       // Agentic loop.
       while (response.results.size > 0) {
-        response = yield* chat.generateText({
-          toolkit,
-          prompt: AiInput.empty,
-        });
+        response = yield* chat.generateText({ toolkit, prompt: AiInput.empty });
       }
 
       // Done.
