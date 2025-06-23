@@ -4,8 +4,7 @@
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/assistant';
-import { createQueueDxn } from '@dxos/echo-schema';
-import { live, refFromDXN } from '@dxos/live-object';
+import { Key, Obj, Ref } from '@dxos/echo';
 
 import { AssistantAction, AIChatType } from '../types';
 
@@ -16,9 +15,9 @@ export default () => [
       intent: AssistantAction.CreateChat,
       resolve: ({ space, name }) => ({
         data: {
-          object: live(AIChatType, {
+          object: Obj.make(AIChatType, {
             name,
-            queue: refFromDXN(createQueueDxn(space.id)),
+            queue: Ref.fromDXN(space.queues.create().dxn),
           }),
         },
       }),
@@ -30,7 +29,15 @@ export default () => [
       intent: AssistantAction.CreateBlueprint,
       resolve: ({ name }) => ({
         data: {
-          object: live(Blueprint, { name, steps: [] }),
+          object: Obj.make(Blueprint, {
+            name,
+            steps: [
+              {
+                id: Key.ObjectId.random(),
+                instructions: 'You are a helpful assistant.',
+              },
+            ],
+          }),
         },
       }),
     }),

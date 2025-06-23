@@ -18,8 +18,7 @@ const DEFAULT_AI_SERVICE_URL = 'http://localhost:8788';
 export default (context: PluginContext) => {
   const client = context.getCapability(ClientCapabilities.Client);
   const endpoint = client.config.values.runtime?.services?.ai?.server ?? DEFAULT_AI_SERVICE_URL;
-
-  const ai = signal<AIServiceClient>(new AIServiceEdgeClient({ endpoint }));
+  const aiClient = signal<AIServiceClient>(new AIServiceEdgeClient({ endpoint }));
 
   const unsubscribe = effect(() => {
     const settings = context
@@ -27,11 +26,17 @@ export default (context: PluginContext) => {
       .getStore<AssistantSettingsProps>(ASSISTANT_PLUGIN)?.value;
 
     if (settings?.llmProvider === 'ollama') {
-      ai.value = new OllamaClient();
+      aiClient.value = new OllamaClient();
     } else {
-      ai.value = new AIServiceEdgeClient({ endpoint });
+      aiClient.value = new AIServiceEdgeClient({
+        endpoint,
+        defaultGenerationOptions: {
+          // model: '@anthropic/claude-sonnet-4-20250514',
+          model: '@anthropic/claude-3-5-haiku-20241022',
+        },
+      });
     }
   });
 
-  return contributes(AssistantCapabilities.AiClient, ai, () => unsubscribe());
+  return contributes(AssistantCapabilities.AiClient, aiClient, () => unsubscribe());
 };

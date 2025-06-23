@@ -3,7 +3,6 @@
 //
 
 import { Capabilities, Events, allOf, contributes, defineModule, definePlugin, oneOf } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import {
@@ -45,8 +44,7 @@ export const MeetingPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: MeetingType.typename,
           metadata: {
-            label: (object: any) =>
-              isInstanceOf(MeetingType, object) ? object.name || new Date(object.created).toLocaleString() : undefined,
+            label: (object: MeetingType) => object.name || new Date(object.created).toLocaleString(),
             icon: 'ph--note--regular',
           },
         }),

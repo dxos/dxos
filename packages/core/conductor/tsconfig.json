@@ -42,6 +42,9 @@
       "path": "../assistant"
     },
     {
+      "path": "../echo/echo"
+    },
+    {
       "path": "../echo/echo-db"
     },
     {

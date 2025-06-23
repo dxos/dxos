@@ -8,7 +8,7 @@
 
 import { Filter, Query } from '@dxos/echo-schema';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
-import type { Live } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 

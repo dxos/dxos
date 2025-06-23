@@ -7,7 +7,7 @@ import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
-import { type Expando } from '@dxos/echo-schema';
+import { type Type } from '@dxos/echo';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { getSpace, useMembers, type SpaceMember, fullyQualifiedId } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
@@ -42,7 +42,7 @@ const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 // TODO(wittjosiah): Factor out?
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
 
-export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?: PublicKey }) => {
+export const SpacePresence = ({ object, spaceKey }: { object: Type.Expando; spaceKey?: PublicKey }) => {
   // TODO(wittjosiah): Doesn't need to be mutable but readonly type messes with ComplexMap.
   const spaceState = useCapability(SpaceCapabilities.MutableState);
   const client = useClient();
@@ -149,19 +149,26 @@ export const FullPresence = (props: MemberPresenceProps) => {
           <Popover.Portal>
             <Popover.Content side='bottom'>
               <Popover.Arrow />
-              <List classNames='max-h-56 overflow-y-auto'>
-                {members.map((member) => (
-                  <ListItem.Root
-                    key={member.identity.identityKey.toHex()}
-                    classNames='flex gap-2 items-center cursor-pointer mbe-2'
-                    onClick={() => onMemberClick?.(member)}
-                    data-testid='identity-list-item'
-                  >
-                    {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
-                    <PresenceAvatar identity={member.identity} size={size} showName match={member.currentlyAttended} />
-                  </ListItem.Root>
-                ))}
-              </List>
+              <Popover.Viewport classNames='max-bs-56'>
+                <List>
+                  {members.map((member) => (
+                    <ListItem.Root
+                      key={member.identity.identityKey.toHex()}
+                      classNames='flex gap-2 items-center cursor-pointer mbe-2'
+                      onClick={() => onMemberClick?.(member)}
+                      data-testid='identity-list-item'
+                    >
+                      {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
+                      <PresenceAvatar
+                        identity={member.identity}
+                        size={size}
+                        showName
+                        match={member.currentlyAttended}
+                      />
+                    </ListItem.Root>
+                  ))}
+                </List>
+              </Popover.Viewport>
             </Popover.Content>
           </Popover.Portal>
         </Popover.Root>

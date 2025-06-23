@@ -161,9 +161,6 @@ const decorations = () => [
       '[data-has-focus] & .cm-list-item-selected': {
         borderColor: 'var(--dx-separator)',
       },
-      '[data-is-attention-source] & .cm-list-item-selected': {
-        borderColor: 'var(--dx-separator)',
-      },
     }),
   ),
 ];

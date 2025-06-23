@@ -4,7 +4,13 @@
 
 import { ToolRegistry } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { BlueprintParser, createExaTool, createGraphWriterTool, createLocalSearchTool } from '@dxos/assistant';
+import {
+  type BlueprintDefinition,
+  BlueprintParser,
+  createExaTool,
+  createGraphWriterTool,
+  createLocalSearchTool,
+} from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
 import { type DXN } from '@dxos/keys';
 import { DataTypes } from '@dxos/schema';
@@ -12,7 +18,7 @@ import { isNonNullable } from '@dxos/util';
 
 // TODO(dmaretskyi): make db available through services (same as function executor).
 // TODO(burdon): Can tools implement "aspects" so that variants can be used rather than an explicit reference?
-export const createRegistry = (space: Space, queueDxn?: DXN): ToolRegistry => {
+export const createToolRegistry = (space: Space, queueDxn?: DXN): ToolRegistry => {
   return new ToolRegistry(
     [
       createExaTool({ apiKey: EXA_API_KEY }),
@@ -21,7 +27,7 @@ export const createRegistry = (space: Space, queueDxn?: DXN): ToolRegistry => {
         createGraphWriterTool({
           db: space.db,
           queue: space.queues.get(queueDxn),
-          schemaTypes: DataTypes,
+          schema: DataTypes,
           onDone: async (objects) => {
             const queue = space.queues.get(queueDxn);
             queue.append(objects);
@@ -31,7 +37,7 @@ export const createRegistry = (space: Space, queueDxn?: DXN): ToolRegistry => {
   );
 };
 
-export const RESEARCH_BLUEPRINT = BlueprintParser.create().parse({
+export const RESEARCH_BLUEPRINT_DEFINITION: BlueprintDefinition = {
   steps: [
     {
       instructions: 'Research information and entities related to the selected objects.',
@@ -47,4 +53,6 @@ export const RESEARCH_BLUEPRINT = BlueprintParser.create().parse({
       tools: ['search/local_search', 'graph/writer'],
     },
   ],
-});
+};
+
+export const RESEARCH_BLUEPRINT = BlueprintParser.create().parse(RESEARCH_BLUEPRINT_DEFINITION);

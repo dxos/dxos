@@ -23,7 +23,7 @@ import { createExaTool } from '../research/exa';
 
 // TODO(burdon): Don't run on CI.
 describe.skip('Blueprint', () => {
-  const aiService = new AIServiceEdgeClient({
+  const aiClient = new AIServiceEdgeClient({
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
     defaultGenerationOptions: {
       // model: '@anthropic/claude-sonnet-4-20250514',
@@ -39,10 +39,10 @@ describe.skip('Blueprint', () => {
       .step('Write a pitch deck for the product')
       .build();
 
-    const registry = new ToolRegistry([]);
-    const machine = new BlueprintMachine(registry, blueprint);
+    const tools = new ToolRegistry([]);
+    const machine = new BlueprintMachine(tools, blueprint);
     setConsolePrinter(machine, true);
-    await machine.runToCompletion({ aiService });
+    await machine.runToCompletion({ aiClient });
   });
 
   test('email bot', { timeout: 60_000 }, async () => {
@@ -96,10 +96,10 @@ describe.skip('Blueprint', () => {
       })
       .build();
 
-    const registry = new ToolRegistry([replyTool, labelTool]);
-    const machine = new BlueprintMachine(registry, blueprint);
+    const tools = new ToolRegistry([replyTool, labelTool]);
+    const machine = new BlueprintMachine(tools, blueprint);
     setConsolePrinter(machine);
-    await machine.runToCompletion({ aiService, input: TEST_EMAILS[0] });
+    await machine.runToCompletion({ aiClient, input: TEST_EMAILS[0] });
   });
 
   test.only('research', { timeout: 120_000 }, async () => {
@@ -125,25 +125,27 @@ describe.skip('Blueprint', () => {
 
     await db.flush({ indexes: true });
 
-    const webSearchTool = createExaTool({ apiKey: EXA_API_KEY });
-    const localSearchTool = createLocalSearchTool(db);
-    const graphWriterTool = createGraphWriterTool({ db, schemaTypes: DataTypes });
-    const registry = new ToolRegistry([webSearchTool, localSearchTool, graphWriterTool]);
+    const [exa, localSearch, graphWriter] = [
+      createExaTool({ apiKey: EXA_API_KEY }),
+      createLocalSearchTool(db),
+      createGraphWriterTool({ db, schema: DataTypes }),
+    ];
 
     const blueprint = BlueprintBuilder.create()
       .step('Research founders of the organization. Do deep research.', {
-        tools: [webSearchTool.id],
+        tools: [exa.id],
       })
       .step('Based on your research select matching entires that are already in the graph', {
-        tools: [localSearchTool.id],
+        tools: [localSearch.id],
       })
       .step('Add researched data to the graph', {
-        tools: [localSearchTool.id, graphWriterTool.id],
+        tools: [localSearch.id, graphWriter.id],
       })
       .build();
 
-    const machine = new BlueprintMachine(registry, blueprint);
+    const tools = new ToolRegistry([exa, localSearch, graphWriter]);
+    const machine = new BlueprintMachine(tools, blueprint);
     setConsolePrinter(machine, true);
-    await machine.runToCompletion({ aiService, input: org1 });
+    await machine.runToCompletion({ aiClient, input: org1 });
   });
 });

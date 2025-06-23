@@ -15,7 +15,7 @@ import React, {
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { cardChrome, cardContent, cardHeading, cardRoot, cardText } from './fragments';
+import { cardChrome, cardContent, cardHeading, cardRoot, cardText, cardSpacing } from './fragments';
 import { StackItem } from '../../components';
 import { translationKey } from '../../translations';
 
@@ -78,9 +78,9 @@ const CardHeading = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
-const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, ...props }, forwardedRef) => {
+const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, classNames, ...props }, forwardedRef) => {
   return (
-    <Toolbar.Root {...props} ref={forwardedRef}>
+    <Toolbar.Root {...props} classNames={['bg-transparent', classNames]} ref={forwardedRef}>
       {children}
     </Toolbar.Root>
   );
@@ -175,4 +175,4 @@ export const Card = {
   Text: CardText,
 };
 
-export { cardRoot, cardContent, cardHeading, cardText, cardChrome };
+export { cardRoot, cardContent, cardHeading, cardText, cardChrome, cardSpacing };

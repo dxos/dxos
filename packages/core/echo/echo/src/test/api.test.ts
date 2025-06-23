@@ -117,12 +117,27 @@ describe('Experimental API review', () => {
 
     expect(Schema.is(Testing.Person)(contact)).to.be.true;
     expect(Testing.Person.instanceOf(contact)).to.be.true;
-    expect(Obj.instanceOf(Testing.Person)(contact)).to.be.true;
-    expect(Obj.instanceOf(Testing.Organization)(organization)).to.be.true;
+    expect(Obj.instanceOf(Testing.Person, contact)).to.be.true;
+    expect(Obj.instanceOf(Testing.Organization, organization)).to.be.true;
+
+    const isPerson = Obj.instanceOf(Testing.Person);
+    const x: any = {};
+    if (isPerson(x)) {
+      x.name;
+    }
   });
 
   test('default props', ({ expect }) => {
     const message = Obj.make(Testing.Message, Testing.MessageStruct.make({}));
     expect(message.timestamp).to.exist;
+  });
+
+  test('Obj.isObject', ({ expect }) => {
+    const guy = Obj.make(Testing.Person, { name: 'Test' });
+    expect(Obj.isObject(guy)).to.be.true;
+    expect(Obj.isObject(null)).to.be.false;
+    expect(Obj.isObject(undefined)).to.be.false;
+    expect(Obj.isObject(1)).to.be.false;
+    expect(Obj.isObject('string')).to.be.false;
   });
 });

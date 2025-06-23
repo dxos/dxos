@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Obj } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
-import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { DataType } from '@dxos/schema';
 
@@ -15,7 +15,7 @@ export const createMessages = (count = 10) => {
   // TODO(burdon): Timestamp.
   return faker.helpers.multiple(
     () =>
-      live(DataType.Message, {
+      Obj.make(DataType.Message, {
         sender: {
           identityDid: IdentityDid.random(),
           name: faker.person.fullName(),

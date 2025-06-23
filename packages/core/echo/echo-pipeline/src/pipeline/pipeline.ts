@@ -409,7 +409,7 @@ export class Pipeline implements PipelineAccessor {
       if (err) {
         // log.warn(err); // TODO(burdon): Feed is closed/Download was cancelled.
       } else {
-        log.info('downloaded', { data }); // TODO(burdon): Never called.
+        log('downloaded', { data }); // TODO(burdon): Never called.
       }
     });
 

@@ -7,7 +7,8 @@ import { EditorView } from '@codemirror/view';
 import { computed, effect } from '@preact/signals-core';
 
 import { createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { Filter, isInstanceOf, Query, RelationSourceId } from '@dxos/echo-schema';
+import { Filter, Obj, Query } from '@dxos/echo';
+import { RelationSourceId } from '@dxos/echo-schema';
 import { type DocumentType } from '@dxos/plugin-markdown/types';
 import { getSpace, getTextInRange, createDocAccessor, fullyQualifiedId, getSource } from '@dxos/react-client/echo';
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
@@ -41,7 +42,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Promi
     query.objects
       .filter((anchor) => {
         const thread = anchor[RelationSourceId];
-        return isInstanceOf(ThreadType, thread) && thread.status !== 'resolved';
+        return Obj.instanceOf(ThreadType, thread) && thread.status !== 'resolved';
       })
       .concat(state.drafts[fullyQualifiedId(doc)] ?? []),
   );
@@ -109,7 +110,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Promi
         const relation = query.objects.find((object) => getSource(object).id === id);
         if (relation) {
           const thread = getSource(relation);
-          if (isInstanceOf(ThreadType, thread)) {
+          if (Obj.instanceOf(ThreadType, thread)) {
             thread.name = getName(doc, cursor);
             relation.anchor = cursor;
           }

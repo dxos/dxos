@@ -7,8 +7,9 @@ import '@dxos-theme';
 import React, { useState, useEffect, type FC } from 'react';
 
 import { faker } from '@dxos/random';
-import { IconButton, Popover } from '@dxos/react-ui';
-import { hoverableHidden } from '@dxos/react-ui-theme';
+import { Popover } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-stack';
+import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory } from './components';
@@ -49,10 +50,12 @@ const PreviewCard = () => {
   const { target } = useRefPopover('PreviewCard');
   return (
     <Popover.Portal>
-      <Popover.Content classNames='popover-card-width p-2' onOpenAutoFocus={(event) => event.preventDefault()}>
+      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
-          <h2 className='grow truncate'>{target?.label}</h2>
-          {target && <div className='line-clamp-3'>{target.text}</div>}
+          <Card.Container role='popover'>
+            <Card.Heading>{target?.label}</Card.Heading>
+            {target && <Card.Text classNames='line-clamp-3'>{target.text}</Card.Text>}
+          </Card.Container>
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
@@ -64,45 +67,44 @@ const PreviewCard = () => {
 const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLookup }) => {
   const target = useRefTarget(link, onLookup);
   return (
-    <div className='group flex flex-col gap-2'>
-      <div className='flex items-center gap-4'>
-        <div className='grow truncate'>
-          {/* <span className='text-xs text-subdued mie-2'>Prompt</span> */}
-          {link.label}
-        </div>
+    <Card.Content classNames={hoverableControls}>
+      <div className='flex items-start'>
         {!readonly && (
-          <div className='flex gap-1'>
+          <Card.Toolbar classNames='is-min p-[--dx-card-spacing-inline]'>
             {(link.suggest && (
               <>
-                {target && (
-                  <IconButton
-                    classNames='text-green-500'
-                    label='Apply'
-                    icon={'ph--check--regular'}
-                    onClick={() => onAction({ type: 'insert', link, target })}
-                  />
-                )}
-                <IconButton
-                  classNames='text-red-500'
-                  label='Cancel'
+                <Card.ToolbarIconButton
+                  label='Discard'
                   icon={'ph--x--regular'}
                   onClick={() => onAction({ type: 'delete', link })}
                 />
+                {target && (
+                  <Card.ToolbarIconButton
+                    classNames='bg-successSurface text-successSurfaceText'
+                    label='Apply'
+                    icon='ph--check--regular'
+                    onClick={() => onAction({ type: 'insert', link, target })}
+                  />
+                )}
               </>
             )) || (
-              <IconButton
+              <Card.ToolbarIconButton
                 iconOnly
                 label='Delete'
-                icon={'ph--x--regular'}
-                classNames={hoverableHidden}
+                icon='ph--x--regular'
+                classNames={[hoverableControlItem, hoverableControlItemTransition]}
                 onClick={() => onAction({ type: 'delete', link })}
               />
             )}
-          </div>
+          </Card.Toolbar>
         )}
+        <Card.Heading classNames='grow order-first mie-0'>
+          {/* <span className='text-xs text-subdued mie-2'>Prompt</span> */}
+          {link.label}
+        </Card.Heading>
       </div>
-      {target && <div className='line-clamp-3'>{target.text}</div>}
-    </div>
+      {target && <Card.Text classNames='line-clamp-3 mbs-0'>{target.text}</Card.Text>}
+    </Card.Content>
   );
 };
 

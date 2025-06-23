@@ -52,6 +52,7 @@ const meta: Meta<typeof AmbientDialog> = {
     );
   },
   decorators: [
+    // TODO(burdon): Replace with ClientPlugin.
     withClientProvider({
       config: new Config({
         runtime: {

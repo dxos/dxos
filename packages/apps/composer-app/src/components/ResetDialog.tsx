@@ -161,7 +161,10 @@ export const ResetDialog = ({
                 </Popover.Trigger>
                 <Popover.Portal>
                   <Popover.Content>
-                    <FeedbackForm onSave={handleSaveFeedback} />
+                    <Popover.Viewport>
+                      <FeedbackForm onSave={handleSaveFeedback} />
+                    </Popover.Viewport>
+                    <Popover.Arrow />
                   </Popover.Content>
                 </Popover.Portal>
               </Popover.Root>
