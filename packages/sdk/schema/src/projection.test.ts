@@ -967,4 +967,45 @@ describe('ViewProjection', () => {
       });
     }
   });
+
+  test('BUG: Email validation is lost after schema registration round-trip', async ({ expect }) => {
+    // PROBLEM: Format.Email has regex validation, but after registering the schema
+    // and reconstructing it from JSON schema, the validation is lost.
+    //
+    // This test demonstrates the issue where:
+    // 1. Format.Email correctly validates emails with regex pattern
+    // 2. JSON schema correctly stores the pattern constraint
+    // 3. But the reconstructed Effect schema loses the pattern validation
+    //
+    // ROOT CAUSE: toEffectSchema() doesn't convert JSON schema "pattern" back to Schema.pattern()
+
+    const { db } = await builder.createDatabase();
+    const registry = new EchoSchemaRegistry(db);
+
+    // Step 1: Verify Format.Email has validation
+    expect(() => Schema.validateSync(Format.Email)('valid@example.com')).not.toThrow();
+    expect(() => Schema.validateSync(Format.Email)('invalid-email')).toThrow(/Email/);
+
+    // Step 2: Create and register schema using Format.Email
+    const schema = Schema.Struct({ email: Format.Email });
+
+    const [registeredSchema] = await registry.register([schema]);
+
+    // Step 3: Verify JSON schema preserves the validation constraint
+    const emailJsonSchema = registeredSchema.jsonSchema.properties?.email;
+    expect(emailJsonSchema).toMatchObject({
+      type: 'string',
+      format: 'email',
+      pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$', // ✅ Pattern is preserved
+    });
+
+    // Step 4: BUG - Reconstructed Effect schema should validate but doesn't
+    const reconstructedSchema = registeredSchema.snapshot;
+
+    // This should pass (valid email)
+    expect(() => Schema.validateSync(reconstructedSchema)({ email: 'valid@example.com' })).not.toThrow();
+
+    // 🐛 BUG: This should fail but passes - validation is lost!
+    expect(() => Schema.validateSync(reconstructedSchema)({ email: 'invalid-email' })).toThrow();
+  });
 });
