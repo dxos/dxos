@@ -48,6 +48,7 @@ export default [
         'chat stop': 'Cancel request.',
 
         'button save': 'Save',
+        'button run': 'Run',
 
         'prompt placeholder': 'Ask a question...',
         'microphone button': 'Click to speak',

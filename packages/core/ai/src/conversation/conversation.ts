@@ -20,11 +20,12 @@ export type CreateLLMConversationParams = {
   /**
    * System prompt that specifies instructions for the LLM.
    */
+  // TODO(burdon): Rename systemPrompt.
   system?: string;
 
   tools: ExecutableTool[];
   history?: Message[];
-  client: AIServiceClient;
+  aiClient: AIServiceClient;
 
   logger?: (event: ConversationEvent) => void;
 };
@@ -37,22 +38,21 @@ export type ConversationEvent =
   | GenerationStreamEvent;
 
 // TODO(burdon): Replace with processor from plugin-automation?
-export const runLLM = async (params: CreateLLMConversationParams) => {
+export const runLLM = async ({ aiClient, system, model, history = [], tools, logger }: CreateLLMConversationParams) => {
   let conversationResult: any = null;
-  const history = params.history ?? [];
 
   const generate = async () => {
-    log('llm generate', { tools: params.tools });
+    log('llm generate', { tools });
     const beginTs = Date.now();
-    const stream = await params.client.execStream({
-      model: params.model,
+    const stream = await aiClient.execStream({
+      model,
       history,
-      systemPrompt: params.system,
-      tools: params.tools as any,
+      systemPrompt: system,
+      tools: tools as any,
     });
 
     for await (const event of stream) {
-      params.logger?.(event);
+      logger?.(event);
     }
 
     // TODO(burdon): !!!
@@ -63,7 +63,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
 
     log('llm result', { time: Date.now() - beginTs, message });
     invariant(message);
-    params.logger?.({ type: 'message', message });
+    logger?.({ type: 'message', message });
     history.push(
       ...messages.map(
         (message): Message => ({ ...message, content: message.content.filter((block) => block.type !== 'image') }),
@@ -75,7 +75,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
       const toolCalls = message.content.filter((block) => block.type === 'tool_use');
       invariant(toolCalls.length === 1);
       const toolCall = toolCalls[0];
-      const tool = params.tools.find((tool) => tool.name === toolCall.name);
+      const tool = tools.find((tool) => tool.name === toolCall.name);
       if (!tool) {
         throw new Error(`Tool not found: ${toolCall.name}`);
       }
@@ -97,7 +97,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
               },
             ],
           };
-          params.logger?.({ type: 'message', message: resultMessage });
+          logger?.({ type: 'message', message: resultMessage });
           history.push(resultMessage);
 
           return true;
@@ -116,7 +116,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
               },
             ],
           };
-          params.logger?.({ type: 'message', message: resultMessage });
+          logger?.({ type: 'message', message: resultMessage });
           history.push(resultMessage);
 
           return true;

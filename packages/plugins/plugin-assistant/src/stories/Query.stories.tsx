@@ -13,7 +13,7 @@ import { SpyAIService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { BlueprintMachine, BlueprintParser, Logger, setConsolePrinter, setLogger } from '@dxos/assistant';
+import { BlueprintMachine, BlueprintParser, BufferedLogger, setConsolePrinter, setLogger } from '@dxos/assistant';
 import { combine } from '@dxos/async';
 import { Queue, type Space } from '@dxos/client/echo';
 import { DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -43,7 +43,7 @@ import { testPlugins } from './testing';
 import { AmbientDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { QueryParser, createFilter, type Expression } from '../parser';
-import { createRegistry, RESEARCH_BLUEPRINT } from '../testing';
+import { createToolRegistry, RESEARCH_BLUEPRINT } from '../testing';
 import translations from '../translations';
 
 faker.seed(1);
@@ -170,7 +170,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const aiClient = useMemo(() => new SpyAIService(new AIServiceEdgeClient(aiConfig)), []);
   const tools = useMemo(
-    () => space && researchGraph && createRegistry(space, researchGraph.queue.dxn),
+    () => space && researchGraph && createToolRegistry(space, researchGraph.queue.dxn),
     [space, researchGraph?.queue.dxn],
   );
 
@@ -178,7 +178,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const researchBlueprint = useMemo(() => BlueprintParser.create().parse(RESEARCH_BLUEPRINT), []);
 
-  const logger = useMemo(() => new Logger(), []);
+  const logger = useMemo(() => new BufferedLogger(), []);
 
   //
   // Handlers
@@ -206,7 +206,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));
 
     log.info('starting research...', { selected });
-    await machine.runToCompletion({ aiService: aiClient, input: objects });
+    await machine.runToCompletion({ aiClient, input: objects });
 
     cleanup();
   }, [space, aiClient, tools, researchBlueprint, selection]);
@@ -431,7 +431,7 @@ const useFlush = (space?: Space) => {
   return { state, handleFlush };
 };
 
-const Log: FC<{ logger: Logger }> = ({ logger }) => {
+const Log: FC<{ logger: BufferedLogger }> = ({ logger }) => {
   return (
     <div className='grow flex flex-col p-1 overflow-y-auto text-sm'>
       {logger.messages.value.map((message, index) => (

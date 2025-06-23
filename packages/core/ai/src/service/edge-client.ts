@@ -48,10 +48,10 @@ export class AIServiceEdgeClient implements AIServiceClient {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        // TODO(dmaretskyi): Errors if tools are not provided.
-        tools: request.tools ?? [],
         ...request,
         model: request.model ?? this._defaultGenerationOptions?.model,
+        // TODO(dmaretskyi): Errors if tools are not provided.
+        tools: request.tools ?? [],
       }),
     });
 

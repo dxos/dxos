@@ -23,11 +23,14 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   const space = getSpace(view);
   const schema = useSchema(client, space, view.query?.typename);
 
-  // NOTE(ZaymonFC): Since selection is currently a set, the order these objects show
-  //   up in will not necessarily match the order in the selected context.
+  // NOTE(ZaymonFC): Since selection is currently a set, the order of these objects may not
+  //  match the order in the selected context.
+  // TODO(burdon): Implement ordered set.
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const selectedRows = useSelected(objectId, 'multi');
   const selectedObjects = queriedObjects.filter((obj) => selectedRows.includes(obj.id));
+
+  const handleRefQueryLookup = useRefQueryLookupHandler({ space });
 
   const handleSave = useCallback(
     (values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
@@ -45,19 +48,20 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
     [queriedObjects],
   );
 
-  const handleRefQueryLookup = useRefQueryLookupHandler({ space });
-
   return (
-    <div role='none' className='bs-full is-full flex flex-col gap-1 overflow-y-auto p-1'>
-      {selectedObjects.length === 0 && <div className='text-sm'>{t('row details no selection label')}</div>}
+    <div role='none' className='bs-full is-full flex flex-col p-2 gap-1 overflow-y-auto'>
+      {selectedObjects.length === 0 && (
+        // TODO(burdon): Standardize treatment of these messages.
+        <div className='flex p-2 justify-center text-subdued'>{t('row details no selection label')}</div>
+      )}
       {schema &&
         selectedObjects.map((object) => (
           <div key={object.id} className='border border-separator rounded'>
             <Form
+              autoSave
               schema={schema}
               values={object}
               onSave={handleSave}
-              autoSave
               onQueryRefOptions={handleRefQueryLookup}
             />
           </div>

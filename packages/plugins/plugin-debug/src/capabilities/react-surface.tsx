@@ -51,6 +51,7 @@ import { Graph } from '@dxos/plugin-graph';
 import { ScriptAction } from '@dxos/plugin-script/types';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import { SpaceState, isSpace, type Space, parseId } from '@dxos/react-client/echo';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import {
   DebugApp,
@@ -121,7 +122,11 @@ export default (context: PluginContext) =>
           [data.subject.space],
         );
 
-        return <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />;
+        return (
+          <StackItem.Content>
+            <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
+          </StackItem.Content>
+        );
       },
     }),
     createSurface({
