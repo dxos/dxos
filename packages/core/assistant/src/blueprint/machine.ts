@@ -64,9 +64,9 @@ export type BlueprintEvent =
   | { type: 'begin' }
   | { type: 'end' }
   | { type: 'step-start'; step: BlueprintStep }
-  | { type: 'step-complete'; step: BlueprintStep }
+  | { type: 'step-complete'; step: BlueprintStep; trace: BlueprintTraceStep }
   | { type: 'message'; message: Message }
-  | { type: 'block'; block: MessageContentBlock };
+  | { type: 'block'; block: MessageContentBlock }
 
 export interface BlueprintLogger {
   log(event: BlueprintEvent): void;
@@ -117,7 +117,7 @@ export class BlueprintMachine {
 
       const step = this.blueprint.steps.find((step) => step.id === this._state.trace.at(-1)?.stepId)!;
       this.stepComplete.emit(step);
-      this.logger?.log({ type: 'step-complete', step });
+      this.logger?.log({ type: 'step-complete', step, trace: this._state.trace.at(-1)! });
 
       if (this._state.state === 'bail') {
         throw new Error('Agent unable to follow the blueprint');
