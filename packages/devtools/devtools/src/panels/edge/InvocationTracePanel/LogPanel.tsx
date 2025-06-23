@@ -4,7 +4,6 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { decodeReference } from '@dxos/echo-protocol';
 import { FormatEnum } from '@dxos/echo-schema';
 import { type TraceEvent, type InvocationSpan } from '@dxos/functions';
 import { useQueue } from '@dxos/react-client/echo';
@@ -18,7 +17,7 @@ type LogPanelProps = {
 export const LogPanel: FC<LogPanelProps> = ({ span }) => {
   // Get the trace queue for this invocation
   const traceQueueDxn = useMemo(() => {
-    return span?.invocationTraceQueue ? decodeReference(span.invocationTraceQueue).dxn : undefined;
+    return span?.invocationTraceQueue ? span.invocationTraceQueue.dxn : undefined;
   }, [span?.invocationTraceQueue]);
 
   // Fetch all trace events from the queue
