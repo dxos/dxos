@@ -57,7 +57,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const tools = useCapabilities(Capabilities.Tools);
 
-  const [aiClient] = useState(() => new AIServiceEdgeClient({ endpoint: endpoints.ai }));
+  const aiClient = useMemo(() => new AIServiceEdgeClient({ endpoint: endpoints.ai }), []);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // TODO(burdon): Replace with useChatProcessor.

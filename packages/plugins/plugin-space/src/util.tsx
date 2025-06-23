@@ -39,7 +39,6 @@ export const rxFromQuery = <T extends Obj.Any>(query: QueryResult<T>): Rx.Rx<T[]
     });
 
     get.addFinalizer(() => unsubscribe());
-
     return query.objects;
   });
 };

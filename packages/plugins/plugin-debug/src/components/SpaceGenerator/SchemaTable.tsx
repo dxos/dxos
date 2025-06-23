@@ -16,9 +16,7 @@ export type SchemaTableProps = {
 export const SchemaTable = ({ types, objects = {}, label, onClick }: SchemaTableProps) => {
   return (
     <div className='grid grid-cols-[1fr_80px_40px] gap-1 overflow-none'>
-      <div className='grid grid-cols-subgrid col-span-3'>
-        <h2 className='px-2 text-primary-500'>{label}</h2>
-      </div>
+      <h2 className='p-2'>{label}</h2>
       {types.map((type) => (
         <div key={type.typename} className='grid grid-cols-subgrid col-span-3 items-center'>
           <div className='px-2 text-sm font-mono text-subdued'>{type.typename}</div>
