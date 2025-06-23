@@ -111,10 +111,9 @@ export const TraceEvent = Schema.Struct({
 export type TraceEvent = Schema.Schema.Type<typeof TraceEvent>;
 
 /**
- * Deprecated InvocationTrace event format.
- * @deprecated
+ * InvocationTrace event format.
+ * This is the combined format of InvocationTraceStartEvent and InvocationTraceEndEvents for UI consumption.
  */
-// TODO(burdon): Remove.
 export type InvocationSpan = {
   id: string;
   timestampMs: number;
