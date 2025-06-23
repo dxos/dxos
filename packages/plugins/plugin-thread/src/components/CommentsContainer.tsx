@@ -49,7 +49,7 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
           return <CommentContainer key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
         })
       ) : (
-        <div role='alert' className={mx(descriptionMessage, 'place-self-center rounded-lg text-center m-4')}>
+        <div role='alert' className={mx(descriptionMessage, 'place-self-center rounded-md text-center m-4')}>
           <h2 className='mbe-2 font-medium text-baseText'>{t('no comments title')}</h2>
           <p>
             <Trans

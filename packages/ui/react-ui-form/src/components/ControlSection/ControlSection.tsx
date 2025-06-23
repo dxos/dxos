@@ -7,8 +7,8 @@ import React, { type ComponentPropsWithoutRef, type PropsWithChildren } from 're
 import {
   Button,
   type ButtonProps,
-  type Label,
   Input,
+  type Label,
   type ThemedClassName,
   toLocalizedString,
   useTranslation,
@@ -71,7 +71,7 @@ export const ControlGroup = ({ children, classNames }: ControlGroupProps) => (
 export const ControlFrame = ({ children }: ControlGroupProps) => (
   <div
     role='none'
-    className='p-4 border border-separator rounded-lg container-max-width grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-2 md:gap-8'
+    className='p-4 container-max-width grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-2 md:gap-8 border border-separator rounded-md'
   >
     {children}
   </div>
@@ -83,7 +83,7 @@ export type ControlItemProps = PropsWithChildren<{
 }>;
 
 export const controlItemClasses =
-  'p-4 border border-separator rounded-lg container-max-width grid md:col-span-2 grid-cols-subgrid items-center gap-2';
+  'p-4 container-max-width grid md:col-span-2 grid-cols-subgrid items-center gap-2 border border-separator rounded-md';
 
 const controlItemTitleClasses = 'text-lg font-normal';
 const controlItemDescriptionClasses = 'text-base mlb-2 md:mbe-0 text-description';
