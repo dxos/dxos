@@ -85,7 +85,7 @@ const createContactSchema = () =>
     version: '0.1.0',
   })({
     name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
-    active: Schema.optional(Schema.Boolean),
+    active: Schema.optional(Schema.Boolean).annotations({ title: 'Active' }),
     email: Schema.optional(Format.Email),
     salary: Schema.optional(Format.Currency()).annotations({ title: 'Salary' }),
   });
