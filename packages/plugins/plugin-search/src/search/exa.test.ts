@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { AiServiceEdgeClient, OllamaClient } from '@dxos/ai';
+import { EdgeAiServiceClient, OllamaAiServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 import { Testing } from '@dxos/schema/testing';
@@ -14,10 +14,10 @@ import { search } from './exa';
 const REMOTE_AI = true;
 
 const AiService = REMOTE_AI
-  ? new AiServiceEdgeClient({
+  ? new EdgeAiServiceClient({
       endpoint: AI_SERVICE_ENDPOINT.REMOTE,
     })
-  : new OllamaClient({
+  : new OllamaAiServiceClient({
       overrides: {
         model: 'llama3.1:8b',
       },

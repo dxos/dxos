@@ -7,14 +7,14 @@ import { type Context } from 'effect';
 import { AiService } from './ai';
 import { CredentialsService } from './credentials';
 import { DatabaseService } from './database';
-import { QueuesService } from './queues';
+import { QueueService } from './queues';
 import { TracingService } from './tracing';
 
 export interface Services {
   ai: Context.Tag.Service<AiService>;
   credentials: Context.Tag.Service<CredentialsService>;
   database: Context.Tag.Service<DatabaseService>;
-  queues: Context.Tag.Service<QueuesService>;
+  queues: Context.Tag.Service<QueueService>;
   tracing: Context.Tag.Service<TracingService>;
 }
 
@@ -22,7 +22,7 @@ const SERVICE_MAPPING: Record<string, keyof Services> = {
   [AiService.key]: 'ai',
   [CredentialsService.key]: 'credentials',
   [DatabaseService.key]: 'database',
-  [QueuesService.key]: 'queues',
+  [QueueService.key]: 'queues',
   [TracingService.key]: 'tracing',
 };
 

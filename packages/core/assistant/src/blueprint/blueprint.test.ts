@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { AiServiceEdgeClient, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
+import { EdgeAiServiceClient, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { ArtifactId } from '@dxos/artifact';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -23,7 +23,7 @@ import { createExaTool } from '../research/exa';
 
 // TODO(burdon): Don't run on CI.
 describe.skip('Blueprint', () => {
-  const aiClient = new AiServiceEdgeClient({
+  const aiClient = new EdgeAiServiceClient({
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
     defaultGenerationOptions: {
       // model: '@anthropic/claude-sonnet-4-20250514',

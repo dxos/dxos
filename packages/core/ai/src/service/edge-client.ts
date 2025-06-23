@@ -16,7 +16,7 @@ export type AiServiceEdgeClientOptions = {
   };
 };
 
-export class AiServiceEdgeClient implements AiServiceClient {
+export class EdgeAiServiceClient implements AiServiceClient {
   private readonly _endpoint: string;
   private readonly _defaultGenerationOptions: AiServiceEdgeClientOptions['defaultGenerationOptions'];
 

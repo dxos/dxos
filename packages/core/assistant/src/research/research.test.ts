@@ -5,7 +5,7 @@
 import { inspect } from 'node:util';
 import { beforeAll, describe, test } from 'vitest';
 
-import { AiServiceEdgeClient, OllamaClient, structuredOutputParser } from '@dxos/ai';
+import { EdgeAiServiceClient, OllamaAiServiceClient, structuredOutputParser } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -35,14 +35,14 @@ describe.skip('Research', () => {
       new ServiceContainer().setServices({
         ai: {
           client: REMOTE_AI
-            ? new AiServiceEdgeClient({
+            ? new EdgeAiServiceClient({
                 endpoint: AI_SERVICE_ENDPOINT.REMOTE,
                 defaultGenerationOptions: {
                   // model: '@anthropic/claude-sonnet-4-20250514',
                   model: '@anthropic/claude-3-5-sonnet-20241022',
                 },
               })
-            : new OllamaClient({
+            : new OllamaAiServiceClient({
                 overrides: {
                   model: 'llama3.1:8b',
                 },

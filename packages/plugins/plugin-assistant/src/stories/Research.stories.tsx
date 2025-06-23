@@ -9,7 +9,7 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import { Option, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AgentStatusReport, AiServiceEdgeClient, createTool, type ExecutableTool, Message, ToolResult } from '@dxos/ai';
+import { AgentStatusReport, EdgeAiServiceClient, createTool, type ExecutableTool, Message, ToolResult } from '@dxos/ai';
 import { EXA_API_KEY, SpyAiService } from '@dxos/ai/testing';
 import { Capabilities, contributes, createSurface, Events, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -62,7 +62,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const aiClient = useMemo(
     () =>
       new SpyAiService(
-        new AiServiceEdgeClient({
+        new EdgeAiServiceClient({
           endpoint: endpoints.ai,
           defaultGenerationOptions: {
             // model: '@anthropic/claude-sonnet-4-20250514',

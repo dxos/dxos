@@ -5,7 +5,7 @@
 import inquirer from 'inquirer';
 import { writeFileSync } from 'node:fs';
 
-import { DEFAULT_EDGE_MODEL, AiServiceEdgeClient, createLogger, createUserMessage, runLLM } from '@dxos/ai';
+import { DEFAULT_EDGE_MODEL, EdgeAiServiceClient, createLogger, createUserMessage, runLLM } from '@dxos/ai';
 import {
   AI_SERVICE_ENDPOINT,
   createCypherTool,
@@ -21,7 +21,7 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 // TOOD(burdon): Get from config.
-const aiClient = new AiServiceEdgeClient({
+const aiClient = new EdgeAiServiceClient({
   endpoint: AI_SERVICE_ENDPOINT.LOCAL,
 });
 

@@ -11,13 +11,13 @@ import { log } from '@dxos/log';
 
 import { runLLM, type ConversationEvent } from './conversation';
 import { DEFAULT_EDGE_MODEL } from '../defs';
-import { AiServiceEdgeClient } from '../service';
+import { EdgeAiServiceClient } from '../service';
 import { AI_SERVICE_ENDPOINT } from '../testing';
 import { createUserMessage, createTool, ToolResult } from '../tools';
 
 // TODO(burdon): Local live LLM test.
 describe.skip('Conversation tests', () => {
-  const aiClient = new AiServiceEdgeClient({
+  const aiClient = new EdgeAiServiceClient({
     endpoint: AI_SERVICE_ENDPOINT.LOCAL,
   });
 

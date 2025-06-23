@@ -47,7 +47,7 @@ export type OllamaClientParams = {
   maxToolInvocations?: number;
 };
 
-export class OllamaClient implements AiServiceClient {
+export class OllamaAiServiceClient implements AiServiceClient {
   /**
    * Check if Ollama server is running and accessible.
    * @returns Promise that resolves to true if Ollama is running, false otherwise.
@@ -320,7 +320,7 @@ export class OllamaClient implements AiServiceClient {
     try {
       return new GenerationStreamImpl(
         controller,
-        async function* (this: OllamaClient) {
+        async function* (this: OllamaAiServiceClient) {
           const collector = new MessageCollector();
 
           // Loop while running tools.

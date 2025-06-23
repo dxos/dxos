@@ -6,7 +6,7 @@ import { it } from '@effect/vitest';
 import { Cause, Chunk, Console, Effect, Exit, Fiber, Option, Scope, Stream } from 'effect';
 import { describe, expect, test, type TaskContext } from 'vitest';
 
-import { AiServiceEdgeClient, defineTool, OllamaClient, ToolTypes, type GenerationStreamEvent } from '@dxos/ai';
+import { EdgeAiServiceClient, defineTool, OllamaAiServiceClient, ToolTypes, type GenerationStreamEvent } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 
@@ -119,7 +119,7 @@ describe.skip('GPT pipelines', () => {
             Effect.provide(
               testServices({
                 enableLogging: ENABLE_LOGGING,
-                gpt: new EdgeGpt(new AiServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL })),
+                gpt: new EdgeGpt(new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL })),
               }),
             ),
             Scope.extend(scope),
@@ -156,7 +156,7 @@ describe.skip('GPT pipelines', () => {
             Effect.provide(
               testServices({
                 enableLogging: ENABLE_LOGGING,
-                gpt: new EdgeGpt(new AiServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL })),
+                gpt: new EdgeGpt(new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL })),
               }),
             ),
             Scope.extend(scope),
@@ -189,7 +189,7 @@ describe.skip('GPT pipelines', () => {
 
   it.effect('gpt simple', (ctx) =>
     Effect.gen(function* () {
-      if (!(yield* Effect.promise(() => OllamaClient.isRunning()))) {
+      if (!(yield* Effect.promise(() => OllamaAiServiceClient.isRunning()))) {
         ctx!.skip();
         return;
       }
@@ -202,7 +202,7 @@ describe.skip('GPT pipelines', () => {
         Effect.provide(
           testServices({
             enableLogging: ENABLE_LOGGING,
-            gpt: new EdgeGpt(new AiServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL })),
+            gpt: new EdgeGpt(new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL })),
           }),
         ),
       );
@@ -217,7 +217,7 @@ describe.skip('GPT pipelines', () => {
     { timeout: 60_000 },
     testEffect((ctx) =>
       Effect.gen(function* () {
-        if (!(yield* Effect.promise(() => OllamaClient.isRunning()))) {
+        if (!(yield* Effect.promise(() => OllamaAiServiceClient.isRunning()))) {
           ctx!.skip();
           return;
         }
