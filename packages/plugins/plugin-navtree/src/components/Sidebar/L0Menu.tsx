@@ -138,7 +138,7 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
   },
 );
 
-const L0Avator = ({ item }: Pick<L0ItemProps, 'item'>) => {
+const L0Avatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const type = l0ItemType(item);
   const hue = item.properties.hue ?? null;
@@ -256,7 +256,7 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   }
 
   if (type === 'tab' && item.properties.disposition !== 'pin-end') {
-    return <L0Avator item={item} />;
+    return <L0Avatar item={item} />;
   }
 
   return null;
@@ -329,11 +329,11 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
     <Tabs.Tablist
       classNames={[
         'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is',
-        'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] _gap-1 contain-layout',
+        'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] contain-layout',
         '!is-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
       ]}
     >
-      <div role='none' className='flex p-1 justify-center border-be'>
+      <div role='none' className='grid p-1'>
         <MenuProvider>
           <DropdownMenu.Root group={parent} items={menuActions}>
             <DropdownMenu.Trigger asChild>
@@ -394,7 +394,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
               hue={userAccountItem.properties.hue}
               emoji={userAccountItem.properties.emoji}
               status={userAccountItem.properties.status}
-              size={9}
+              size={10}
             />
           </L0ItemRoot>
         </div>
