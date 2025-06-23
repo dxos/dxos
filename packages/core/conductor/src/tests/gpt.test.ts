@@ -6,7 +6,13 @@ import { it } from '@effect/vitest';
 import { Cause, Chunk, Console, Effect, Exit, Fiber, Option, Scope, Stream } from 'effect';
 import { describe, expect, test, type TaskContext } from 'vitest';
 
-import { EdgeAiServiceClient, defineTool, OllamaAiServiceClient, ToolTypes, type GenerationStreamEvent } from '@dxos/ai';
+import {
+  EdgeAiServiceClient,
+  defineTool,
+  OllamaAiServiceClient,
+  ToolTypes,
+  type GenerationStreamEvent,
+} from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 
