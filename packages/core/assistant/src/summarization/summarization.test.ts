@@ -5,7 +5,13 @@
 import { pipe, Schema } from 'effect';
 import { beforeAll, describe, test } from 'vitest';
 
-import { EdgeAiServiceClient, Message, MixedStreamParser, OllamaAiServiceClient, type TextContentBlock } from '@dxos/ai';
+import {
+  EdgeAiServiceClient,
+  Message,
+  MixedStreamParser,
+  OllamaAiServiceClient,
+  type TextContentBlock,
+} from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import type { EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
