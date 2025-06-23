@@ -58,7 +58,6 @@ export const preview = (options: PreviewOptions = {}): Extension => {
       '.cm-preview-block': {
         '--dx-card-spacing-inline': 'var(--dx-trimMd)',
         '--dx-card-spacing-block': 'var(--dx-trimMd)',
-        marginInline: 'calc(-1*var(--dx-trimMd))',
       },
     }),
   ];

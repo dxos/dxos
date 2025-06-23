@@ -13,7 +13,7 @@ import React, {
 } from 'react';
 
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { hoverableControls, mx } from '@dxos/react-ui-theme';
 
 import { cardChrome, cardContent, cardHeading, cardRoot, cardText, cardSpacing } from './fragments';
 import { StackItem } from '../../components';
@@ -60,7 +60,11 @@ const CardConditionalContent = ({ role, children }: PropsWithChildren<{ role?: s
       </div>
     );
   } else {
-    return <CardContent>{children}</CardContent>;
+    return (
+      <CardContent {...(role === 'card--document' && { classNames: ['-mli-trimMd mlb-[1em]', hoverableControls] })}>
+        {children}
+      </CardContent>
+    );
   }
 };
 

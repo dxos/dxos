@@ -20,8 +20,6 @@ import {
   type PreviewLinkRef,
   type PreviewOptions,
 } from '@dxos/react-ui-editor';
-import { Card } from '@dxos/react-ui-stack';
-import { hoverableControls } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
@@ -183,12 +181,7 @@ const PreviewBlock = ({ link, el }: { link: PreviewLinkRef; el: HTMLElement }) =
   const [subject] = useQuery(space, Query.select(Filter.ids(echoDXN?.echoId ?? '')));
   const data = useMemo(() => ({ subject }), [subject]);
 
-  return createPortal(
-    <Card.Content classNames={hoverableControls}>
-      <Surface role='card' data={data} />
-    </Card.Content>,
-    el,
-  );
+  return createPortal(<Surface role='card--document' data={data} limit={1} />, el);
 };
 
 type DocumentEditorProps = Omit<MarkdownContainerProps, 'object' | 'extensionProviders' | 'editorStateStore'> &
