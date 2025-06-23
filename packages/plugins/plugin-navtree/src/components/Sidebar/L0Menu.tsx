@@ -24,16 +24,7 @@ import React, {
 
 import { type Node } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
-import {
-  Icon,
-  IconButton,
-  ListItem,
-  ScrollArea,
-  Tooltip,
-  toLocalizedString,
-  useMediaQuery,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Icon, ListItem, ScrollArea, Tooltip, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { MenuProvider, DropdownMenu, type MenuItem } from '@dxos/react-ui-menu';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -100,6 +91,11 @@ const l0Breakpoints: Record<string, string> = {
   lg: 'hidden lg:grid',
 };
 
+const l0ItemRoot =
+  'group/l0item flex w-full justify-center items-center relative data[type!="collection"]:cursor-pointer app-no-drag dx-focus-ring-group';
+
+const l0ItemContent = 'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm';
+
 const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
   ({ item, parent, path, children }, forwardedRef) => {
     const { getProps } = useNavTreeContext();
@@ -125,10 +121,7 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
         <Root
           {...(rootProps as any)}
           data-type={type}
-          className={mx(
-            'group/l0item flex w-full justify-center items-center relative data[type!="collection"]:cursor-pointer app-no-drag dx-focus-ring-group',
-            l0Breakpoints[item.properties.l0Breakpoint],
-          )}
+          className={mx(l0ItemRoot, l0Breakpoints[item.properties.l0Breakpoint])}
           ref={forwardedRef}
         >
           {children}
@@ -227,7 +220,7 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
         data-frame={true}
         {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
         className={mx(
-          'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm',
+          l0ItemContent,
           pinned
             ? 'p-2 group-hover/l0item:bg-activeSurface'
             : 'is-[--l0-avatar-size] bs-[--l0-avatar-size] bg-activeSurface',
@@ -334,25 +327,27 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
         '!is-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
       ]}
     >
-      <div role='none' className='grid p-1 justify-center'>
-        <MenuProvider>
-          <DropdownMenu.Root group={parent} items={menuActions}>
-            <DropdownMenu.Trigger asChild>
-              {/* TODO(wittjosiah): Use L0Item trigger. */}
-              <IconButton
-                iconOnly
-                variant='ghost'
-                icon='ph--list--regular'
-                size={5}
-                label={t('app menu label')}
-                tooltipSide='right'
-                data-testid='spacePlugin.addSpace'
-                classNames='is-[--l0-avatar-size] bs-[--rail-action]'
-              />
+      {/* TODO(wittjosiah): Use L0Item trigger. */}
+      <MenuProvider>
+        <DropdownMenu.Root group={parent} items={menuActions}>
+          <Tooltip.Trigger content={t('app menu label')} side='right' asChild>
+            <DropdownMenu.Trigger
+              data-testid='spacePlugin.addSpace'
+              className={mx(l0ItemRoot, 'grid place-items-center')}
+            >
+              <div
+                role='none'
+                className={mx(
+                  l0ItemContent,
+                  'is-[--l0-avatar-size] bs-[--rail-action] group-hover/l0item:bg-hoverSurface',
+                )}
+              >
+                <Icon icon='ph--list--regular' size={5} />
+              </div>
             </DropdownMenu.Trigger>
-          </DropdownMenu.Root>
-        </MenuProvider>
-      </div>
+          </Tooltip.Trigger>
+        </DropdownMenu.Root>
+      </MenuProvider>
 
       {/* Space list. */}
       <ScrollArea.Root>
