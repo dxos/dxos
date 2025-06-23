@@ -341,12 +341,13 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
               {/* TODO(wittjosiah): Use L0Item trigger. */}
               <IconButton
                 iconOnly
+                variant='ghost'
                 icon='ph--list--regular'
                 size={5}
                 label={t('app menu label')}
                 tooltipSide='right'
                 data-testid='spacePlugin.addSpace'
-                classNames='bg-transparent is-[--rail-action] bs-[--rail-action]'
+                classNames='is-[--l0-avatar-size] bs-[--rail-action]'
               />
             </DropdownMenu.Trigger>
           </DropdownMenu.Root>
