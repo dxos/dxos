@@ -272,6 +272,7 @@ const L0Collection = ({ item, path }: L0ItemProps) => {
   const collectionItems = navTreeContext.useItems(item);
   const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
   const { id, testId } = navTreeContext.getProps?.(item, path) ?? {};
+
   const handleRearrange = useCallback<StackItemRearrangeHandler<L0ItemData>>(
     (source, target, closestEdge) => {
       invariant(item.properties.onRearrangeChildren);
@@ -333,7 +334,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
         '!is-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
       ]}
     >
-      <div role='none' className='grid p-1'>
+      <div role='none' className='grid p-1 justify-center'>
         <MenuProvider>
           <DropdownMenu.Root group={parent} items={menuActions}>
             <DropdownMenu.Trigger asChild>
