@@ -1,10 +1,15 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { createTestOllamaClient } from './ollama';
-import { create } from '@dxos/echo-schema';
-import { createTool, defineTool, Message } from '../tools';
-import { Schema } from 'effect';
 import { todo } from '@dxos/debug';
+import { create } from '@dxos/echo-schema';
+
+import { createTestOllamaClient } from './ollama';
+import { createTool, Message } from '../tools';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Ollama', () => {
   test('basic', async () => {

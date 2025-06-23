@@ -1,11 +1,15 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
 import { todo } from '@dxos/debug';
 import { create } from '@dxos/echo-schema';
-import { Schema } from 'effect';
-import { createTool, Message } from '../tools';
-import { createTestOllamaClient } from './ollama';
+
 import { createTestLMStudioClient } from './lmstudio';
+import { createTool, Message } from '../tools';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('LM Studio', () => {
   test('basic', async () => {
