@@ -11,7 +11,6 @@ import { useCapability } from '@dxos/app-framework';
 import {
   type Blueprint,
   type BlueprintDefinition,
-  BlueprintLoggerAdapter,
   BlueprintParser,
   BlueprintMachine,
   createLocalSearchTool,
@@ -27,6 +26,7 @@ import { StackItem, type StackItemContentProps } from '@dxos/react-ui-stack';
 import { BlueprintEditor } from './BlueprintEditor';
 import { AssistantCapabilities } from '../capabilities';
 import { meta } from '../meta';
+import { QueueLogger } from '../queue-logger';
 
 // TODO(burdon): Move to config.
 export const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
@@ -142,7 +142,7 @@ export const BlueprintContainer = ({
     }
 
     const blueprint = BlueprintParser.create().parse(definition);
-    const machine = new BlueprintMachine(toolRegistry, blueprint).setLogger(new BlueprintLoggerAdapter());
+    const machine = new BlueprintMachine(toolRegistry, blueprint).setLogger(new QueueLogger(blueprint));
     await machine.runToCompletion({ aiClient: aiClient.value, input });
   }, [aiClient.value, toolRegistry]);
 
