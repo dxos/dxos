@@ -20,7 +20,7 @@ const makeGet = (url: string) =>
     // Effect.tap((response) => Effect.log(response.status)),
     Effect.tap((response) => log.info('response', { status: response.status })),
     Effect.flatMap((response) =>
-      // Treat 500 errors as retryable.
+      // Treat 500 errors as retryable?
       response.status === 500 ? Effect.fail(new Error(response.status.toString())) : response.json,
     ),
     Effect.timeout('1 second'),
