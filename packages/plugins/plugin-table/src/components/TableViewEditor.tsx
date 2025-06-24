@@ -58,7 +58,7 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
       schema={schema}
       view={table.view.target!}
       onTypenameChanged={Type.isMutable(schema) ? undefined : handleUpdateTypename}
-      onDelete={Type.isMutable(schema) ? undefined : handleDelete}
+      onDelete={Type.isMutable(schema) ? handleDelete : undefined}
     />
   );
 };
