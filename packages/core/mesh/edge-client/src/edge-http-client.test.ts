@@ -42,6 +42,7 @@ const withRetry = (
 
 describe.skipIf(process.env.CI)('EdgeHttpClient', () => {
   let server: TestServer | undefined;
+  // eslint-disable-next-line mocha/no-top-level-hooks
   afterEach(() => {
     server?.close();
     server = undefined;
