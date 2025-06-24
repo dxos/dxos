@@ -3381,6 +3381,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/platform':
+        specifier: ^0.87.0
+        version: 0.87.0(effect@3.14.21)
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.18.0)
@@ -16953,6 +16956,11 @@ packages:
     resolution: {integrity: sha512-zIRixbQeO6QniR0k2mwR7DmR2HO1w6+qQlzQ5nb8lyPyPgd1gV9wo/9yBeB6zRC+CGnxiUiYsRMamclVISuxLw==}
     peerDependencies:
       effect: ^3.16.8
+
+  '@effect/platform@0.87.0':
+    resolution: {integrity: sha512-0PxdNY1EmE0w/4pc/SpMmp6hFsyWNfpThn+01p3BVks3mfeYeDbFqkR1LDzMWhiDqRmZ3H5iXPuMQsCAIbCbDg==}
+    peerDependencies:
+      effect: ^3.16.9
 
   '@effect/rpc@0.62.4':
     resolution: {integrity: sha512-5oPVKLZEoqJs3hDAKIcpTRe5qvX1pA4U5ai0LL3pcVLpXZrv0z3mi0gslySM/q85IxrZo+sOcuo18OS2jsuA0g==}
@@ -39479,6 +39487,13 @@ snapshots:
       multipasta: 0.2.5
 
   '@effect/platform@0.85.2(effect@3.14.21)':
+    dependencies:
+      effect: 3.14.21
+      find-my-way-ts: 0.1.5
+      msgpackr: 1.11.4
+      multipasta: 0.2.5
+
+  '@effect/platform@0.87.0(effect@3.14.21)':
     dependencies:
       effect: 3.14.21
       find-my-way-ts: 0.1.5
