@@ -211,9 +211,9 @@ export const ViewEditor = ({
                       onClick={() => handleHide(field.id)}
                       data-testid='hide-field-button'
                     />
+                    {/* TODO(burdon): Remove unless implement undo. */}
                     {!readonly && (
                       <List.ItemDeleteButton
-                        icon='ph--trash--regular'
                         disabled={view.fields.length <= 1}
                         onClick={() => handleDelete(field.id)}
                       />
