@@ -239,7 +239,7 @@ export const ViewEditor = ({
               getId={(property) => property}
             >
               {({ items: properties }) => (
-                <div role='list' className='flex flex-col w-full px-2'>
+                <div role='list' className='flex flex-col w-full pli-card-spacing-inline'>
                   {properties?.map((property) => (
                     <List.Item<string>
                       key={property}
