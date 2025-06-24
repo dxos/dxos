@@ -3391,6 +3391,12 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../../common/test-utils
+      '@effect/platform':
+        specifier: ^0.87.0
+        version: 0.87.0(effect@3.14.21)
+      '@effect/platform-browser':
+        specifier: ^0.67.0
+        version: 0.67.0(@effect/platform@0.87.0(effect@3.14.21))(effect@3.14.21)
 
   packages/core/mesh/messaging:
     dependencies:
@@ -16926,6 +16932,12 @@ packages:
       lmdb:
         optional: true
 
+  '@effect/platform-browser@0.67.0':
+    resolution: {integrity: sha512-gUr3/8pYVJwimZEKgQwnurQvdaHHdPHDS0bqzau2cRALYFOD2Bs0yzLoB7nnhaXzfRjaV4/iNjsymQwlFj7dsQ==}
+    peerDependencies:
+      '@effect/platform': ^0.87.0
+      effect: ^3.16.9
+
   '@effect/platform-node-shared@0.40.4':
     resolution: {integrity: sha512-EfnRTSHKs33OTfKN9pF+G2AyxMXm/+4rKrGM8yEw56Ij6QV5dq2g28yi0eOH7BytvilnreVmcbAec7M77EArgg==}
     peerDependencies:
@@ -16953,6 +16965,11 @@ packages:
     resolution: {integrity: sha512-zIRixbQeO6QniR0k2mwR7DmR2HO1w6+qQlzQ5nb8lyPyPgd1gV9wo/9yBeB6zRC+CGnxiUiYsRMamclVISuxLw==}
     peerDependencies:
       effect: ^3.16.8
+
+  '@effect/platform@0.87.0':
+    resolution: {integrity: sha512-0PxdNY1EmE0w/4pc/SpMmp6hFsyWNfpThn+01p3BVks3mfeYeDbFqkR1LDzMWhiDqRmZ3H5iXPuMQsCAIbCbDg==}
+    peerDependencies:
+      effect: ^3.16.9
 
   '@effect/rpc@0.62.4':
     resolution: {integrity: sha512-5oPVKLZEoqJs3hDAKIcpTRe5qvX1pA4U5ai0LL3pcVLpXZrv0z3mi0gslySM/q85IxrZo+sOcuo18OS2jsuA0g==}
@@ -39442,6 +39459,12 @@ snapshots:
     optionalDependencies:
       ioredis: 5.3.2
 
+  '@effect/platform-browser@0.67.0(@effect/platform@0.87.0(effect@3.14.21))(effect@3.14.21)':
+    dependencies:
+      '@effect/platform': 0.87.0(effect@3.14.21)
+      effect: 3.14.21
+      multipasta: 0.2.5
+
   '@effect/platform-node-shared@0.40.4(@effect/cluster@0.39.4(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21))(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21)':
     dependencies:
       '@effect/cluster': 0.39.4(@effect/platform@0.85.2(effect@3.14.21))(@effect/rpc@0.62.4(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(@effect/sql@0.38.2(@effect/experimental@0.49.2(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21)(ioredis@5.3.2))(@effect/platform@0.85.2(effect@3.14.21))(effect@3.14.21))(effect@3.14.21)
@@ -39479,6 +39502,13 @@ snapshots:
       multipasta: 0.2.5
 
   '@effect/platform@0.85.2(effect@3.14.21)':
+    dependencies:
+      effect: 3.14.21
+      find-my-way-ts: 0.1.5
+      msgpackr: 1.11.4
+      multipasta: 0.2.5
+
+  '@effect/platform@0.87.0(effect@3.14.21)':
     dependencies:
       effect: 3.14.21
       find-my-way-ts: 0.1.5

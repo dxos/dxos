@@ -22,6 +22,7 @@ export type EdgeHttpSuccess<T> = {
 export type EdgeErrorData = { type: string } & Record<string, any>;
 
 export type EdgeHttpFailure = {
+  // TODO(burdon): Why is this required?
   success: false;
   /**
    * An explanation of why the call failed. Used mostly for logging and monitoring.
