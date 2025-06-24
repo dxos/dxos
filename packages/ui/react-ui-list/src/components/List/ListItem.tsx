@@ -82,7 +82,7 @@ export type ListItemProps<T extends ListItemRecord> = ThemedClassName<
  * Draggable list item.
  */
 export const ListItem = <T extends ListItemRecord>({ children, classNames, item, ...props }: ListItemProps<T>) => {
-  const { isItem, dragPreview, setState: setRootState } = useListContext(LIST_ITEM_NAME);
+  const { isItem, readonly, dragPreview, setState: setRootState } = useListContext(LIST_ITEM_NAME);
   const ref = useRef<HTMLDivElement | null>(null);
   const dragHandleRef = useRef<HTMLElement | null>(null);
   const [state, setState] = useState<ItemDragState>(idle);
@@ -96,6 +96,7 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
       draggable({
         element,
         dragHandle: dragHandleRef.current!,
+        canDrag: () => !readonly,
         getInitialData: () => item as any,
         onGenerateDragPreview: dragPreview
           ? ({ nativeSetDragImage, source }) => {
@@ -225,9 +226,9 @@ export const ListItemButton = ({
   return <IconButton disabled={isDisabled} classNames={[classNames, autoHide && disabled && 'hidden']} {...props} />;
 };
 
-export const ListItemDragHandle = () => {
+export const ListItemDragHandle = ({ disabled }: Pick<IconButtonProps, 'disabled'>) => {
   const { dragHandleRef } = useListItemContext('DRAG_HANDLE');
-  return <IconButton ref={dragHandleRef as any} icon='ph--dots-six-vertical--regular' />;
+  return <IconButton ref={dragHandleRef as any} icon='ph--dots-six-vertical--regular' disabled={disabled} />;
 };
 
 export const ListItemDragPreview = <T extends ListItemRecord>({
