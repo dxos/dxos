@@ -153,7 +153,7 @@ export const ViewEditor = ({
   return (
     <div role='none' className={mx('overflow-y-auto', classNames)}>
       {readonly && (
-        <div role='none' className='p-3'>
+        <div role='none' className='plb-card-spacing-block pli-card-spacing-inline'>
           <Message.Root valence='neutral' className='rounded'>
             <Message.Title>
               <Icon icon='ph--info--regular' size={5} classNames='inline' /> {t('system schema title')}
@@ -191,7 +191,7 @@ export const ViewEditor = ({
               {showHeading && (
                 <div role='heading' className={grid}>
                   <div />
-                  <div className='flex px-2 items-center text-sm'>{t('field path label')}</div>
+                  <div className='flex pli-card-spacing-inline items-center text-sm'>{t('field path label')}</div>
                 </div>
               )}
 
@@ -239,7 +239,7 @@ export const ViewEditor = ({
               getId={(property) => property}
             >
               {({ items: properties }) => (
-                <div role='list' className='flex flex-col w-full px-2'>
+                <div role='list' className='flex flex-col w-full pli-card-spacing-inline'>
                   {properties?.map((property) => (
                     <List.Item<string>
                       key={property}
