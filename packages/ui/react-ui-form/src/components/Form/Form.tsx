@@ -8,7 +8,6 @@ import React, { type ReactElement, useEffect, useMemo, useRef } from 'react';
 import { type BaseObject, type PropertyKey } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { cardSpacing } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
 import { type SchemaProperty } from '@dxos/schema';
 
 import { FormActions } from './FormActions';
@@ -29,6 +28,7 @@ export type CustomInputMap = Partial<Record<string, InputComponent>>;
 
 export type FormProps<T extends BaseObject> = ThemedClassName<
   {
+    testId?: string;
     values: Partial<T>;
 
     /** Path to the current object from the root. Used with nested forms. */
@@ -41,21 +41,23 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
     filter?: PropsFilter<T>;
     sort?: PropertyKey<T>[];
     autoSave?: boolean;
+    // TODO(burdon): Rename noPadding.
     flush?: boolean;
-    testId?: string;
-    onCancel?: () => void;
-    onQueryRefOptions?: QueryRefOptions;
     lookupComponent?: ComponentLookup;
+
     /**
      * Map of custom renderers for specific properties.
      * Prefer lookupComponent for plugin specific input surfaces.
      */
     Custom?: CustomInputMap;
+    onCancel?: () => void;
+    onQueryRefOptions?: QueryRefOptions;
   } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'>
 >;
 
 export const Form = <T extends BaseObject>({
   classNames,
+  testId,
   schema,
   values: initialValues,
   path = [],
@@ -65,17 +67,18 @@ export const Form = <T extends BaseObject>({
   sort,
   autoSave,
   flush,
-  testId,
+  lookupComponent,
+  Custom,
   onValuesChanged,
   onValidate,
   onSave,
   onCancel,
   onQueryRefOptions,
-  lookupComponent,
-  Custom,
 }: FormProps<T>) => {
   const formRef = useRef<HTMLDivElement>(null);
-  const onValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
+
+  // TODO(burdon): Rename.
+  const handleValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
 
   // Focus the first input element within this form.
   useEffect(() => {
@@ -95,22 +98,23 @@ export const Form = <T extends BaseObject>({
       initialValues={initialValues}
       onValuesChanged={onValuesChanged}
       onValidate={onValidate}
-      onValid={onValid}
+      onValid={handleValid}
       onSave={onSave}
     >
-      <div ref={formRef} role='none' className={mx(!flush && cardSpacing, classNames)} data-testid={testId}>
-        <FormFields
-          schema={schema}
-          path={path}
-          readonly={readonly}
-          filter={filter}
-          sort={sort}
-          onQueryRefOptions={onQueryRefOptions}
-          lookupComponent={lookupComponent}
-          Custom={Custom}
-        />
-        {(onCancel || onSave) && !autoSave && <FormActions onCancel={onCancel} readonly={readonly} />}
-      </div>
+      <FormFields
+        ref={formRef}
+        testId={testId}
+        classNames={[!flush && cardSpacing, classNames]}
+        schema={schema}
+        path={path}
+        readonly={readonly}
+        filter={filter}
+        sort={sort}
+        lookupComponent={lookupComponent}
+        Custom={Custom}
+        onQueryRefOptions={onQueryRefOptions}
+      />
+      {(onCancel || onSave) && !autoSave && <FormActions onCancel={onCancel} readonly={readonly} />}
     </FormProvider>
   );
 };
