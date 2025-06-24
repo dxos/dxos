@@ -30,7 +30,7 @@ describe('EdgeHttpClient', () => {
         response.status === 500 ? Effect.fail(new Error(response.status.toString())) : response.json,
       ),
       Effect.timeout('1 second'),
-      Effect.retry({ schedule: Schedule.exponential(Duration.millis(1_000)), times: 3 }),
+      Effect.retry({ schedule: Schedule.exponential(Duration.millis(1_000)).pipe(Schedule.jittered), times: 3 }),
       Effect.withSpan('EdgeHttpClient'), // TODO(burdon): OTEL.
     );
 
