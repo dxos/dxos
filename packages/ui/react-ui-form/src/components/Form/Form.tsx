@@ -87,10 +87,15 @@ export const Form = <T extends BaseObject>({
         ref={formRef}
         testId={testId}
         classNames={[!flush && cardSpacing, classNames]}
-        schema={schema}
         readonly={readonly}
+        schema={schema}
       />
-      {(onCancel || onSave) && !autoSave && <FormActions readonly={readonly} onCancel={onCancel} />}
+
+      {(onCancel || onSave) && !autoSave && (
+        <div role='none' className='pli-card-spacing-chrome'>
+          <FormActions readonly={readonly} onCancel={onCancel} />
+        </div>
+      )}
     </FormProvider>
   );
 };
