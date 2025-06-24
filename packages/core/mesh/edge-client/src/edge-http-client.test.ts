@@ -11,6 +11,23 @@ import { log } from '@dxos/log';
 
 import { EdgeHttpClient } from './edge-http-client';
 
+/**
+ * Create a fetch effect.
+ */
+const makeGet = (url: string) =>
+  HttpClient.get(url).pipe(
+    // Effect.tap((response) => Effect.log(response.status)),
+    Effect.tap((response) => log.info('response', { status: response.status })),
+    Effect.flatMap((response) =>
+      // Treat 500 errors as retryable.
+      response.status === 500 ? Effect.fail(new Error(response.status.toString())) : response.json,
+    ),
+    Effect.timeout('1 second'),
+    Effect.retry({ schedule: Schedule.exponential(Duration.millis(1_000)).pipe(Schedule.jittered), times: 3 }),
+    Effect.withSpan('EdgeHttpClient'), // TODO(burdon): OTEL.
+    Effect.provide(FetchHttpClient.layer),
+  );
+
 describe('EdgeHttpClient', () => {
   let server: TestServer | undefined;
   afterEach(() => {
@@ -22,20 +39,7 @@ describe('EdgeHttpClient', () => {
   // TODO(burdon): Add request/response schema type checking.
   it('should retry with effect', async ({ expect }) => {
     const server = await createTestServer(responseHandler((attempt) => (attempt > 1 ? { value: 100 } : false)));
-
-    const fetch = HttpClient.get(server.url).pipe(
-      Effect.tap((response) => Effect.log(response.status)),
-      Effect.flatMap((response) =>
-        // Treat 500 errors as retryable.
-        response.status === 500 ? Effect.fail(new Error(response.status.toString())) : response.json,
-      ),
-      Effect.timeout('1 second'),
-      Effect.retry({ schedule: Schedule.exponential(Duration.millis(1_000)).pipe(Schedule.jittered), times: 3 }),
-      Effect.withSpan('EdgeHttpClient'), // TODO(burdon): OTEL.
-      Effect.provide(FetchHttpClient.layer),
-    );
-
-    const result = await pipe(fetch, Effect.runPromise);
+    const result = await pipe(makeGet(server.url), Effect.runPromise);
     expect(result).toMatchObject({ success: true, data: { value: 100 } });
   });
 
@@ -46,7 +50,6 @@ describe('EdgeHttpClient', () => {
     expect(result).toBeDefined();
   });
 
-  // TODO(burdon): Implement status endpoint.
   it('should get status', async ({ expect }) => {
     const server = await createTestServer(responseHandler((attempt) => ({ status: 'ok' })));
     const client = new EdgeHttpClient(server.url);
@@ -82,12 +85,11 @@ const responseHandler = (cb: (attempt: number) => false | object): ResponseHandl
   return (req, res) => {
     const data = cb(++attempt) ?? {};
     if (data === false) {
-      log.info('Simulating failure', { attempt });
+      log('simulating failure', { attempt });
       res.statusCode = 500;
       res.statusMessage = 'Simulating failure';
       res.end('');
     } else {
-      log.info('Success', { data });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true, data }));
     }

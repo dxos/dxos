@@ -100,6 +100,7 @@ export class EdgeHttpClient {
   // Status
   //
 
+  // TODO(burdon): Implement status endpoint.
   public async getStatus(args?: EdgeHttpGetArgs): Promise<GetStatusResponseBody> {
     return this._call(new URL('/status', this.baseUrl), { ...args, method: 'GET' });
   }
