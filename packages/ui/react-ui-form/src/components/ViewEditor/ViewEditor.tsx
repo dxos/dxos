@@ -153,7 +153,7 @@ export const ViewEditor = ({
   return (
     <div role='none' className={mx('overflow-y-auto', classNames)}>
       {immutable && (
-        <div role='none' className='mbe-card-spacing-block'>
+        <div role='none' className='p-2'>
           <Message.Root valence='neutral' className='rounded'>
             <Message.Title>
               <Icon icon='ph--info--regular' size={5} classNames='inline' /> {t('system schema title')}
