@@ -18,3 +18,6 @@ export const TestLayout = ({ classNames, json, children }: ThemedClassName<Props
 export const TestPanel = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
   <div className={mx('w-full max-w-[30rem] border border-separator rounded-md', classNames)}>{children}</div>
 );
+
+// Symbol for accessing debug objects in tests.
+export const VIEW_EDITOR_DEBUG_SYMBOL = Symbol('viewEditorDebug');

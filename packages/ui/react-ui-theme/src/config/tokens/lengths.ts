@@ -51,8 +51,9 @@ export const lengthsFacet = {
       noLine: { root: ['focusOffset'] },
       hairLine: { root: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap'] },
       thickLine: { root: ['focusLine'] },
-      trimSm: { root: ['card-spacing-inline', 'card-spacing-block'] },
-      trimXs: { root: ['card-spacing-chrome'] },
+      trimXs: { root: ['cardSpacingChrome'] },
+      trimSm: { root: ['cardSpacingInline', 'cardSpacingBlock'] },
+      trimMd: { coarse: ['cardSpacingInline', 'cardSpacingBlock'] },
     },
   },
 } satisfies Facet;

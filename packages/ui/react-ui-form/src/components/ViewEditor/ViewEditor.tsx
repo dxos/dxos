@@ -153,7 +153,7 @@ export const ViewEditor = ({
   return (
     <div role='none' className={mx('overflow-y-auto', classNames)}>
       {readonly && (
-        <div role='none' className='plb-card-spacing-block pli-card-spacing-inline'>
+        <div role='none' className='plb-cardSpacingBlock pli-cardSpacingInline'>
           <Message.Root valence='neutral' className='rounded'>
             <Message.Title>
               <Icon icon='ph--info--regular' size={5} classNames='inline' /> {t('system schema title')}
@@ -175,7 +175,7 @@ export const ViewEditor = ({
       />
 
       <div role='none' className='min-bs-0 overflow-y-auto'>
-        <div role='none' className='pli-card-spacing-inline'>
+        <div role='none' className='pli-cardSpacingInline'>
           <label className={mx(inputTextLabel)}>{t('fields label')}</label>
         </div>
 
@@ -191,11 +191,11 @@ export const ViewEditor = ({
               {showHeading && (
                 <div role='heading' className={grid}>
                   <div />
-                  <div className='flex pli-card-spacing-inline items-center text-sm'>{t('field path label')}</div>
+                  <div className='flex pli-cardSpacingInline items-center text-sm'>{t('field path label')}</div>
                 </div>
               )}
 
-              <div role='list' className='flex flex-col w-full pli-card-spacing-inline'>
+              <div role='list' className='flex flex-col w-full pli-cardSpacingInline'>
                 {fields?.map((field) => (
                   <List.Item<FieldType>
                     key={field.id}
@@ -227,7 +227,7 @@ export const ViewEditor = ({
 
         {hiddenProperties.length > 0 && (
           <div>
-            <div role='none' className='pli-card-spacing-inline'>
+            <div role='none' className='pli-cardSpacingInline'>
               <label className={mx(inputTextLabel)}>{t('hidden fields label')}</label>
             </div>
 
@@ -237,7 +237,7 @@ export const ViewEditor = ({
               getId={(property) => property}
             >
               {({ items: properties }) => (
-                <div role='list' className='flex flex-col w-full pli-card-spacing-inline'>
+                <div role='list' className='flex flex-col w-full pli-cardSpacingInline'>
                   {properties?.map((property) => (
                     <List.Item<string>
                       key={property}
@@ -272,7 +272,7 @@ export const ViewEditor = ({
       )}
 
       {!readonly && !field && (
-        <div role='none' className='pli-card-spacing-chrome mlb-card-spacing-chrome'>
+        <div role='none' className='pli-cardSpacingChrome mlb-cardSpacingChrome'>
           <IconButton
             icon='ph--plus--regular'
             label={t('button add property')}
