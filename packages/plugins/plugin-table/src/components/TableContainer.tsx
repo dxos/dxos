@@ -72,7 +72,7 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
 
     const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
     return new ViewProjection(jsonSchema, table.view.target);
-  }, [schema, table.view?.target]);
+  }, [table.view?.target, JSON.stringify(schema)]);
 
   const features: Partial<TableFeatures> = useMemo(
     () => ({
