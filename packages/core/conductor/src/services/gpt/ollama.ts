@@ -15,7 +15,7 @@ import { type GptInput, type GptOutput } from '../../nodes';
 import { makeValueBag, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
 
 /**
- * @deprecated See OllamaClient.
+ * @deprecated See OllamaAiServiceClient.
  */
 export class OllamaGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.

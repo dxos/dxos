@@ -20,6 +20,10 @@ import {
 } from '../types';
 import { pickProperty } from '../util';
 
+/**
+ * Compute graph executor.
+ */
+// TODO(burdon): Rename.
 export class Workflow {
   constructor(
     private readonly _dxn: DXN,

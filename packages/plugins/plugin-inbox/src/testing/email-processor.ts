@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Message, type AIServiceClient, MixedStreamParser, createTool } from '@dxos/ai';
+import { Message, type AiServiceClient, MixedStreamParser, createTool } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { failedInvariant } from '@dxos/invariant';
@@ -18,7 +18,7 @@ type ProcessEmailResult = {
 
 type ProcessEmailParams = {
   email: DataType.Message;
-  aiClient: AIServiceClient;
+  aiClient: AiServiceClient;
   context: {
     labels: Testing.Label[];
     documents?: Testing.DocumentType[];

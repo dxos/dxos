@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { useEffect, useMemo, useState } from 'react';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { EdgeAiServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
 import { scheduleTaskInterval } from '@dxos/async';
@@ -96,11 +96,11 @@ export class MessageBuilder extends AbstractMessageBuilder {
 
 // TODO(burdon): Reconcile with BlockBuilder.
 class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
-  aiService = new AIServiceEdgeClient({
+  AiService = new EdgeAiServiceClient({
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
   });
 
-  executor = new FunctionExecutor(new ServiceContainer().setServices({ ai: { client: this.aiService } }));
+  executor = new FunctionExecutor(new ServiceContainer().setServices({ ai: { client: this.AiService } }));
 
   space: Space | undefined;
   currentMessage: number = 0;
