@@ -6,6 +6,7 @@ import { it } from '@effect/vitest';
 import { Effect, Either, Schema } from 'effect';
 import { describe, test } from 'vitest';
 
+import { testServices } from '@dxos/functions/testing';
 import { DXN } from '@dxos/keys';
 import { refFromDXN } from '@dxos/live-object';
 import { mapValues } from '@dxos/util';
@@ -13,7 +14,6 @@ import { mapValues } from '@dxos/util';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { logCustomEvent } from '../services';
 import { TestRuntime } from '../testing';
-import { testServices } from '@dxos/functions/testing';
 import {
   type ComputeGraph,
   ComputeGraphModel,

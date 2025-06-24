@@ -4,9 +4,9 @@
 
 import { Effect, type Schema, type Scope } from 'effect';
 
+import type { Services } from '@dxos/functions';
 import { mapValues } from '@dxos/util';
 
-import type { Services } from '@dxos/functions';
 import type { ComputeNode } from './graph';
 
 //

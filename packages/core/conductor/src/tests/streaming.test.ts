@@ -5,9 +5,10 @@
 import { Effect, Stream, Schema } from 'effect';
 import { describe, test } from 'vitest';
 
+import { testServices } from '@dxos/functions/testing';
+
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
-import { testServices } from '@dxos/functions/testing';
 import { ComputeGraphModel, defineComputeNode, ValueBag, synchronizedComputeFunction } from '../types';
 import { StreamSchema } from '../util';
 

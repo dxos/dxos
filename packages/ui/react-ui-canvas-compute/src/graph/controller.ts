@@ -9,7 +9,7 @@ import { type ImageContentBlock } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
 import {
   isNotExecuted,
-  ValueBag.make,
+  ValueBag
   type ComputeEdge,
   type ComputeEvent,
   type ComputeGraphModel,

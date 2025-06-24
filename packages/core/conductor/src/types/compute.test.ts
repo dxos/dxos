@@ -5,8 +5,9 @@
 import { Effect } from 'effect';
 import { describe, test } from 'vitest';
 
-import { ValueBag } from './compute';
 import { testServices } from '@dxos/functions/testing';
+
+import { ValueBag } from './compute';
 
 describe('ValueBag', () => {
   test('ValueBag.unwrap', async ({ expect }) => {

@@ -5,6 +5,7 @@
 import { Effect, Layer, Scope, Schema } from 'effect';
 
 import { raise } from '@dxos/debug';
+import { AiService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -21,7 +22,6 @@ import {
   isNotExecuted,
   ValueBag,
 } from '../types';
-import { AiService } from '@dxos/functions';
 
 export type ValidateParams = {
   graph: ComputeGraphModel;

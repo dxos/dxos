@@ -2,20 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FetchHttpClient } from '@effect/platform';
-import { type Context, Effect, Layer, type Scope } from 'effect';
+import { type Context, Effect, type Layer, type Scope } from 'effect';
 import { describe, test, expect } from 'vitest';
 
+import { MockAi } from '@dxos/ai/testing';
 import { todo } from '@dxos/debug';
 import { ObjectId, type Ref, type RefResolver, setRefResolver } from '@dxos/echo-schema';
-import {
-  AiService,
-  DatabaseService,
-  FunctionType,
-  QueueService,
-  ServiceContainer,
-  setUserFunctionUrlInMetadata,
-} from '@dxos/functions';
+import { AiService, FunctionType, ServiceContainer, setUserFunctionUrlInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live, getMeta, refFromDXN } from '@dxos/live-object';
@@ -23,7 +16,7 @@ import { LogLevel } from '@dxos/log';
 
 import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { createDxosEventLogger, EventLogger, FunctionCallService } from '../services';
+import { createDxosEventLogger, type FunctionCallService } from '../services';
 import {
   AnyInput,
   AnyOutput,
@@ -36,7 +29,6 @@ import {
   ValueBag,
   synchronizedComputeFunction,
 } from '../types';
-import { MockAi } from '@dxos/ai/testing';
 
 describe('workflow', () => {
   test('run', async () => {

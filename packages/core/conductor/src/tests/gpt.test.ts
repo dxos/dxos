@@ -14,11 +14,11 @@ import {
   type GenerationStreamEvent,
 } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from '@dxos/ai/testing';
+import { testServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT, registry, type GptInput } from '../nodes';
 import { TestRuntime } from '../testing';
-import { testServices } from '@dxos/functions/testing';
 import { ComputeGraphModel, ValueBag, type ValueEffect } from '../types';
 
 const ENABLE_LOGGING = true;

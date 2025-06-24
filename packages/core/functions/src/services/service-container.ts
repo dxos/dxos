@@ -7,10 +7,10 @@ import { Layer, type Context } from 'effect';
 import { AiService } from './ai';
 import { ConfiguredCredentialsService, CredentialsService } from './credentials';
 import { DatabaseService } from './database';
-import { QueueService } from './queues';
-import { TracingService } from './tracing';
 import { EventLogger } from './event-logger';
 import { FunctionCallService } from './function-call-service';
+import { QueueService } from './queues';
+import { TracingService } from './tracing';
 
 /**
  * List of all service tags and their names.

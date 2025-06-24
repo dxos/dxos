@@ -17,8 +17,7 @@ import {
   OllamaGpt,
   type WorkflowLoader,
   createDxosEventLogger,
-  ValueBag.make,
-  ValueBag.unwrap,
+  ValueBag,
 } from '@dxos/conductor';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
