@@ -2,14 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type HttpClient } from '@effect/platform';
 import { Effect, type Schema, type Scope } from 'effect';
 
 import { mapValues } from '@dxos/util';
 
+import type { Services } from '@dxos/functions';
 import type { ComputeNode } from './graph';
-import type { EventLogger, FunctionCallService } from '../services';
-import type { AiService, DatabaseService, QueueService } from '@dxos/functions';
 
 //
 // Errors
@@ -86,14 +84,7 @@ export type ComputeFunction<I extends ValueRecord, O extends ValueRecord> = (
   node?: ComputeNode, // TODO(burdon): Why could node be undefined?
 ) => ComputeEffect<ValueBag<O>>;
 
-export type ComputeRequirements =
-  | HttpClient.HttpClient
-  | EventLogger
-  | QueueService
-  | DatabaseService
-  | FunctionCallService
-  | AiService
-  | Scope.Scope;
+export type ComputeRequirements = Services | Scope.Scope;
 
 /**
  * For results of compute functions.

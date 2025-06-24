@@ -12,7 +12,8 @@ import { mapValues } from '@dxos/util';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { logCustomEvent } from '../services';
-import { TestRuntime, testServices } from '../testing';
+import { TestRuntime } from '../testing';
+import { testServices } from '@dxos/functions/testing';
 import {
   type ComputeGraph,
   ComputeGraphModel,
@@ -36,7 +37,7 @@ describe('Graph as a fiber runtime', () => {
 
       const result = yield* runtime.runGraph('dxn:test:g1', makeValueBag({ number1: 1, number2: 2 })).pipe(
         Effect.withSpan('runGraph'),
-        Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
+        Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()),
         Effect.scoped,
 
         // Unwrapping without services to test that computing values doesn't require services.
@@ -55,7 +56,7 @@ describe('Graph as a fiber runtime', () => {
 
     const result = await Effect.runPromise(
       runtime.runGraph('dxn:test:g2', makeValueBag({ a: 1, b: 2, c: 3 })).pipe(
-        Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
+        Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()),
         Effect.scoped,
 
         // Unwrapping without services to test that computing values doesn't require services.
@@ -75,7 +76,7 @@ describe('Graph as a fiber runtime', () => {
 
     const result = await Effect.runPromise(
       runtime.runGraph('dxn:test:g2', makeValueBag({ a: 1, b: 2, c: 3 })).pipe(
-        Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
+        Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()),
         Effect.scoped,
 
         // Unwrapping without services to test that computing values doesn't require services.
@@ -97,7 +98,7 @@ describe('Graph as a fiber runtime', () => {
       ).pipe(
         Effect.map((results) =>
           mapValues(results, (eff) =>
-            eff.pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
+            eff.pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()), Effect.scoped),
           ),
         ),
       );
@@ -115,7 +116,7 @@ describe('Graph as a fiber runtime', () => {
 
       const result = yield* runtime
         .runGraph('dxn:test:g4', makeValueBag({ condition: true, value: 1 }))
-        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped);
+        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()), Effect.scoped);
 
       expect(yield* Effect.either(result.values.true)).toEqual(Either.right(1));
       expect(yield* Effect.either(result.values.false)).toEqual(Either.left(NotExecuted));

@@ -2,43 +2,64 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Context } from 'effect';
+import { Layer, type Context } from 'effect';
 
 import { AiService } from './ai';
-import { CredentialsService } from './credentials';
+import { ConfiguredCredentialsService, CredentialsService } from './credentials';
 import { DatabaseService } from './database';
 import { QueueService } from './queues';
 import { TracingService } from './tracing';
+import { EventLogger } from './event-logger';
+import { FunctionCallService } from './function-call-service';
 
-export interface Services {
-  ai: Context.Tag.Service<AiService>;
-  credentials: Context.Tag.Service<CredentialsService>;
-  database: Context.Tag.Service<DatabaseService>;
-  queues: Context.Tag.Service<QueueService>;
-  tracing: Context.Tag.Service<TracingService>;
+/**
+ * List of all service tags and their names.
+ */
+export interface ServiceTagRecord {
+  ai: AiService;
+  credentials: CredentialsService;
+  database: DatabaseService;
+  queues: QueueService;
+  tracing: TracingService;
+  eventLogger: EventLogger;
+  functionCallService: FunctionCallService;
 }
 
-const SERVICE_MAPPING: Record<string, keyof Services> = {
+/**
+ * List of all services and their runtime types.
+ */
+export type ServiceRecord = {
+  [K in keyof ServiceTagRecord]: Context.Tag.Service<ServiceTagRecord[K]>;
+};
+
+/**
+ * Union of all services.
+ */
+export type Services = ServiceTagRecord[keyof ServiceTagRecord];
+
+const SERVICE_MAPPING: Record<string, keyof ServiceRecord> = {
   [AiService.key]: 'ai',
   [CredentialsService.key]: 'credentials',
   [DatabaseService.key]: 'database',
   [QueueService.key]: 'queues',
   [TracingService.key]: 'tracing',
+  [EventLogger.key]: 'eventLogger',
+  [FunctionCallService.key]: 'functionCallService',
 };
 
-const DEFAULT_SERVICES: Partial<Services> = {
+const DEFAULT_SERVICES: Partial<ServiceRecord> = {
   tracing: TracingService.noop,
 };
 
 export class ServiceContainer {
-  private _services: Partial<Services> = { ...DEFAULT_SERVICES };
+  private _services: Partial<ServiceRecord> = { ...DEFAULT_SERVICES };
 
   /**
    * Set services.
    * @param services - Services to set.
    * @returns The container instance.
    */
-  setServices(services: Partial<Services>): this {
+  setServices(services: Partial<ServiceRecord>): this {
     this._services = { ...this._services, ...services };
     return this;
   }
@@ -54,5 +75,25 @@ export class ServiceContainer {
 
   clone(): ServiceContainer {
     return new ServiceContainer().setServices({ ...this._services });
+  }
+
+  // TODO(dmaretskyi): `getService` is designed to error at runtime if the service is not available, but layer forces us to provide all services and makes stubs for the ones that are not available.
+  createLayer(): Layer.Layer<Services> {
+    const ai = this._services.ai != null ? Layer.succeed(AiService, this._services.ai) : AiService.notAvailable;
+    const credentials = Layer.succeed(CredentialsService, new ConfiguredCredentialsService());
+    const database =
+      this._services.database != null
+        ? Layer.succeed(DatabaseService, this._services.database)
+        : DatabaseService.notAvailable;
+    const queues =
+      this._services.queues != null ? Layer.succeed(QueueService, this._services.queues) : QueueService.notAvailable;
+    const tracing = Layer.succeed(TracingService, this._services.tracing ?? TracingService.noop);
+    const eventLogger = Layer.succeed(EventLogger, this._services.eventLogger ?? EventLogger.noop);
+    const functionCallService = Layer.succeed(
+      FunctionCallService,
+      this._services.functionCallService ?? FunctionCallService.mock(),
+    );
+
+    return Layer.mergeAll(ai, credentials, database, queues, tracing, eventLogger, functionCallService);
   }
 }

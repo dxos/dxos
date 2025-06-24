@@ -13,13 +13,16 @@ export class AiService extends Context.Tag('AiService')<
     readonly client: AiServiceClient;
   }
 >() {
-  static makeLayer(client: AiServiceClient): Layer.Layer<AiService> {
-    return Layer.succeed(AiService, {
+  static make = (client: AiServiceClient): Context.Tag.Service<AiService> => {
+    return {
       get client() {
         return client;
       },
-    });
-  }
+    };
+  };
+
+  static makeLayer = (client: AiServiceClient): Layer.Layer<AiService> =>
+    Layer.succeed(AiService, AiService.make(client));
 
   static notAvailable = Layer.succeed(AiService, {
     get client(): AiServiceClient {

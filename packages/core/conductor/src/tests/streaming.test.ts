@@ -6,7 +6,8 @@ import { Effect, Stream, Schema } from 'effect';
 import { describe, test } from 'vitest';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { TestRuntime, testServices } from '../testing';
+import { TestRuntime } from '../testing';
+import { testServices } from '@dxos/functions/testing';
 import {
   ComputeGraphModel,
   defineComputeNode,
@@ -29,7 +30,7 @@ describe('Streaming pipelines', () => {
         .runGraph('dxn:compute:stream-sum', makeValueBag({ stream: Effect.succeed(Stream.range(1, 10)) }))
         .pipe(
           Effect.flatMap(unwrapValueBag),
-          Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
+          Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()),
           Effect.scoped,
         ),
     );
@@ -51,7 +52,7 @@ describe('Streaming pipelines', () => {
         .runGraph('dxn:compute:stream-sum', makeValueBag({ stream: Effect.succeed(delayedStream) }))
         .pipe(
           Effect.flatMap(unwrapValueBag),
-          Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
+          Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()),
           Effect.scoped,
         ),
     );

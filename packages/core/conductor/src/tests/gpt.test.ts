@@ -17,7 +17,8 @@ import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT, registry, type GptInput } from '../nodes';
-import { TestRuntime, testServices } from '../testing';
+import { TestRuntime } from '../testing';
+import { testServices } from '@dxos/functions/testing';
 import { ComputeGraphModel, makeValueBag, unwrapValueBag, type ValueEffect } from '../types';
 
 const ENABLE_LOGGING = true;
@@ -39,7 +40,7 @@ describe.skip('GPT pipelines', () => {
         expect(text).toEqual('This is a mock response that simulates a GPT-like output.');
 
         yield* Scope.close(scope, Exit.void).pipe(Effect.withSpan('closeScope'));
-      }).pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.withSpan('test'));
+      }).pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()), Effect.withSpan('test'));
     }),
   );
 
@@ -57,7 +58,7 @@ describe.skip('GPT pipelines', () => {
               prompt: 'What is the meaning of life?',
             }),
           )
-          .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Scope.extend(scope));
+          .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()), Scope.extend(scope));
 
         // log.info('text in test', { text: getDebugName(text) });
         const logger = Effect.runPromise(output.values.text).then((token) => {
@@ -125,7 +126,7 @@ describe.skip('GPT pipelines', () => {
               testServices({
                 enableLogging: ENABLE_LOGGING,
                 ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
-              }),
+              }).createLayer(),
             ),
             Scope.extend(scope),
           );
@@ -162,7 +163,7 @@ describe.skip('GPT pipelines', () => {
               testServices({
                 enableLogging: ENABLE_LOGGING,
                 ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
-              }),
+              }).createLayer(),
             ),
             Scope.extend(scope),
           );
@@ -208,7 +209,7 @@ describe.skip('GPT pipelines', () => {
           testServices({
             enableLogging: ENABLE_LOGGING,
             ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
-          }),
+          }).createLayer(),
         ),
       );
       log.info('output', { output });
@@ -245,7 +246,7 @@ describe.skip('GPT pipelines', () => {
             testServices({
               enableLogging: ENABLE_LOGGING,
               ai: createTestOllamaClient(),
-            }),
+            }).createLayer(),
           ),
         );
         log.info('output', { output });

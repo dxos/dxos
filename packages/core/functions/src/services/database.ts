@@ -17,4 +17,12 @@ export class DatabaseService extends Context.Tag('DatabaseService')<
       throw new Error('Database not available');
     },
   });
+
+  static make = (db: EchoDatabase): Context.Tag.Service<DatabaseService> => {
+    return {
+      get db() {
+        return db;
+      },
+    };
+  };
 }

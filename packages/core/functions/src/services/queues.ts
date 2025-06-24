@@ -27,4 +27,11 @@ export class QueueService extends Context.Tag('QueueService')<
     },
     contextQueue: undefined,
   });
+
+  static make = (queues: QueueFactory, contextQueue: Queue | undefined): Context.Tag.Service<QueueService> => {
+    return {
+      queues,
+      contextQueue,
+    };
+  };
 }
