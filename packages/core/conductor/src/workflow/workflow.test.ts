@@ -16,7 +16,7 @@ import { LogLevel } from '@dxos/log';
 
 import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { createDxosEventLogger, EventLogger, FunctionCallService, MockGpt } from '../services';
+import { createDxosEventLogger, EventLogger, FunctionCallService } from '../services';
 import {
   AnyInput,
   AnyOutput,

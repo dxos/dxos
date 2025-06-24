@@ -12,7 +12,6 @@ import { type QueueFactory } from '@dxos/echo-db';
 import { consoleLogger, noopLogger } from './logger';
 import { EventLogger, FunctionCallService } from '../services';
 import { AiService, DatabaseService, QueueService } from '@dxos/functions';
-import {} from '../services/testing';
 import type { ComputeRequirements } from '../types';
 import type { AiServiceClient } from '@dxos/ai';
 

@@ -4,6 +4,3 @@
 
 export * from './event-logger';
 export * from './function-call-service';
-
-// TODO(burdon): Separate entry point.
-export * from './testing';
