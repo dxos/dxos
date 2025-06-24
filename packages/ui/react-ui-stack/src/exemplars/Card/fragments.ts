@@ -8,6 +8,7 @@ export const cardContent =
   'rounded overflow-hidden bg-cardSurface border border-separator dark:border-subduedSeparator dx-focus-ring-group-y-indicator relative min-bs-[--rail-item] group/card';
 
 export const cardSpacing = 'pli-cardSpacingInline mlb-cardSpacingBlock';
+export const labelSpacing = 'mbs-inputSpacingBlock mbe-labelSpacingBlock';
 
 export const cardText = cardSpacing;
 

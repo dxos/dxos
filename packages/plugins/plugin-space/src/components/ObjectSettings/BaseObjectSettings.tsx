@@ -6,6 +6,7 @@ import React, { type PropsWithChildren, useRef } from 'react';
 
 import { type Obj } from '@dxos/echo';
 import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { cardSpacing } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
 import { meta } from '../../meta';
@@ -24,7 +25,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
   //  The form should only include fields with a specific settings annotation.
   //  Perhaps also including the field of the title annotation as well.
   return (
-    <form className={mx('flex flex-col p-2 gap-2', classNames)}>
+    <form className={mx(cardSpacing, classNames)}>
       <Input.Root>
         <Input.Label>{t('name label')}</Input.Label>
         <Input.TextInput
