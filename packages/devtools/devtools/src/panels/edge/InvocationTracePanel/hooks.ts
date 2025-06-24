@@ -2,10 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { ScriptType, FunctionType, createInvocationSpans, type InvocationTraceEvent } from '@dxos/functions';
+import {
+  ScriptType,
+  FunctionType,
+  createInvocationSpans,
+  type InvocationTraceEvent,
+  InvocationOutcome,
+} from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { Filter, getSpace, useQuery, useQueue, type Space } from '@dxos/react-client/echo';
 
@@ -70,7 +76,16 @@ export const useInvocationSpans = ({ space, target }: { space?: Space; target?: 
       return invocationSpans.filter((span) => span.invocationTarget.dxn.toString() === Obj.getDXN(target).toString());
     }
     return invocationSpans;
-  }, [invocationSpans]);
+  }, [functionsForScript, target, invocationSpans]);
+
+  // If there are any pending spans, update the current time every second.
+  const [_, update] = useState({});
+  useEffect(() => {
+    if (scopedInvocationSpans.some((span) => span.outcome === InvocationOutcome.PENDING)) {
+      const interval = setInterval(() => update({}), 1_000);
+      return () => clearInterval(interval);
+    }
+  }, [scopedInvocationSpans]);
 
   return scopedInvocationSpans;
 };
