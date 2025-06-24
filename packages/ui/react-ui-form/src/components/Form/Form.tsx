@@ -91,11 +91,7 @@ export const Form = <T extends BaseObject>({
         schema={schema}
       />
 
-      {(onCancel || onSave) && !autoSave && (
-        <div role='none' className='pli-card-spacing-chrome'>
-          <FormActions readonly={readonly} onCancel={onCancel} />
-        </div>
-      )}
+      {(onCancel || onSave) && !autoSave && <FormActions readonly={readonly} onCancel={onCancel} />}
     </FormProvider>
   );
 };

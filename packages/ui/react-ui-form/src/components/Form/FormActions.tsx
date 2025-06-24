@@ -5,6 +5,8 @@
 import React from 'react';
 
 import { IconButton, useTranslation } from '@dxos/react-ui';
+import { cardSpacing } from '@dxos/react-ui-stack';
+import { mx } from '@dxos/react-ui-theme';
 
 import { useFormContext } from './FormContext';
 import { translationKey } from '../../translations';
@@ -19,7 +21,7 @@ export const FormActions = ({ readonly, onCancel }: FormActionsProps) => {
   const { canSave, handleSave } = useFormContext();
 
   return (
-    <div role='none' className='flex [&_button]:grow gap-1 mlb-3 last:mbe-0 first:mbs-0'>
+    <div role='none' className={mx('flex [&_button]:grow gap-1 last:mbe-0 first:mbs-0', cardSpacing)}>
       {onCancel && !readonly && (
         <IconButton data-testid='cancel-button' icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
       )}

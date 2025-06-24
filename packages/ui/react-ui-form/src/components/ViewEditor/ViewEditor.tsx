@@ -10,6 +10,7 @@ import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxo
 import { invariant } from '@dxos/invariant';
 import { Icon, IconButton, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
+import { cardSpacing } from '@dxos/react-ui-stack';
 import { ghostHover, inputTextLabel, mx } from '@dxos/react-ui-theme';
 import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
 
@@ -174,10 +175,8 @@ export const ViewEditor = ({
         classNames='min-bs-0 overflow-y-auto'
       />
 
-      <div role='none' className='min-bs-0 overflow-y-auto'>
-        <div role='none' className='pli-cardSpacingInline'>
-          <label className={mx(inputTextLabel)}>{t('fields label')}</label>
-        </div>
+      <div role='none' className={mx('min-bs-0 overflow-y-auto', cardSpacing)}>
+        <label className={mx(inputTextLabel)}>{t('fields label')}</label>
 
         <List.Root<FieldType>
           items={view.fields}
@@ -191,11 +190,11 @@ export const ViewEditor = ({
               {showHeading && (
                 <div role='heading' className={grid}>
                   <div />
-                  <div className='flex pli-cardSpacingInline items-center text-sm'>{t('field path label')}</div>
+                  <div className='flex items-center text-sm'>{t('field path label')}</div>
                 </div>
               )}
 
-              <div role='list' className='flex flex-col w-full pli-cardSpacingInline'>
+              <div role='list' className='flex flex-col is-full'>
                 {fields?.map((field) => (
                   <List.Item<FieldType>
                     key={field.id}
@@ -227,9 +226,7 @@ export const ViewEditor = ({
 
         {hiddenProperties.length > 0 && (
           <>
-            <div role='none' className='pli-cardSpacingInline'>
-              <label className={mx(inputTextLabel)}>{t('hidden fields label')}</label>
-            </div>
+            <label className={mx(inputTextLabel)}>{t('hidden fields label')}</label>
 
             <List.Root<string>
               items={hiddenProperties}
@@ -237,7 +234,7 @@ export const ViewEditor = ({
               getId={(property) => property}
             >
               {({ items: properties }) => (
-                <div role='list' className='flex flex-col w-full pli-cardSpacingInline'>
+                <div role='list' className='flex flex-col is-full'>
                   {properties?.map((property) => (
                     <List.Item<string>
                       key={property}
@@ -272,7 +269,7 @@ export const ViewEditor = ({
       )}
 
       {!readonly && !field && (
-        <div role='none' className='pli-cardSpacingChrome mlb-cardSpacingChrome'>
+        <div role='none' className={cardSpacing}>
           <IconButton
             icon='ph--plus--regular'
             label={t('button add property')}
