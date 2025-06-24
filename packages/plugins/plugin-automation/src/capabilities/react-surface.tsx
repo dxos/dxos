@@ -8,9 +8,8 @@ import { Capabilities, contributes, createSurface, useLayout } from '@dxos/app-f
 import { Obj } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
 import { getSpace, parseId, useSpace } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
 
-import { AutomationContainer, AutomationPanel, FunctionsContainer } from '../components';
+import { AutomationContainer, FunctionsContainer } from '../components';
 import { meta } from '../meta';
 
 export default () =>
@@ -51,11 +50,7 @@ export default () =>
       filter: (data): data is { companionTo: ScriptType; subject: 'automation' } =>
         Obj.instanceOf(ScriptType, data.companionTo) && data.subject === 'automation',
       component: ({ data, role }) => {
-        return (
-          <StackItem.Content role={role}>
-            <AutomationPanel space={getSpace(data.companionTo)!} object={data.companionTo} />
-          </StackItem.Content>
-        );
+        return <AutomationContainer space={getSpace(data.companionTo)!} object={data.companionTo} />;
       },
     }),
   ]);
