@@ -17,8 +17,8 @@ import {
   OllamaGpt,
   type WorkflowLoader,
   createDxosEventLogger,
-  makeValueBag,
-  unwrapValueBag,
+  ValueBag.make,
+  ValueBag.unwrap,
 } from '@dxos/conductor';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -129,10 +129,10 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
         const compiled = await props.loader.load(DXN.fromLocalObjectId(props.graph.id));
         response = await Effect.runPromise(
           compiled
-            .run(makeValueBag(requestBody))
+            .run(ValueBag.make(requestBody))
             .pipe(
               Effect.withSpan('runWorkflow'),
-              Effect.flatMap(unwrapValueBag),
+              Effect.flatMap(ValueBag.unwrap),
               Effect.provide(createLocalExecutionContext(space)),
               Effect.scoped,
             ),

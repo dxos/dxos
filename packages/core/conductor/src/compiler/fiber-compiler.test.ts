@@ -20,9 +20,8 @@ import {
   NotExecuted,
   VoidOutput,
   defineComputeNode,
-  makeValueBag,
+  ValueBag,
   synchronizedComputeFunction,
-  unwrapValueBag,
 } from '../types';
 
 const ENABLE_LOGGING = false;
@@ -35,13 +34,13 @@ describe('Graph as a fiber runtime', () => {
         .registerNode('dxn:test:sum', sum)
         .registerGraph('dxn:test:g1', g1());
 
-      const result = yield* runtime.runGraph('dxn:test:g1', makeValueBag({ number1: 1, number2: 2 })).pipe(
+      const result = yield* runtime.runGraph('dxn:test:g1', ValueBag.make({ number1: 1, number2: 2 })).pipe(
         Effect.withSpan('runGraph'),
         Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()),
         Effect.scoped,
 
         // Unwrapping without services to test that computing values doesn't require services.
-        Effect.flatMap(unwrapValueBag),
+        Effect.flatMap(ValueBag.unwrap),
         Effect.withSpan('test'), // TODO(burdon): Why span here and not in other tests?
       );
       expect(result).toEqual({ sum: 3 });
@@ -55,12 +54,12 @@ describe('Graph as a fiber runtime', () => {
       .registerGraph('dxn:test:g2', g2a(DXN.parse('dxn:test:g1')));
 
     const result = await Effect.runPromise(
-      runtime.runGraph('dxn:test:g2', makeValueBag({ a: 1, b: 2, c: 3 })).pipe(
+      runtime.runGraph('dxn:test:g2', ValueBag.make({ a: 1, b: 2, c: 3 })).pipe(
         Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()),
         Effect.scoped,
 
         // Unwrapping without services to test that computing values doesn't require services.
-        Effect.flatMap(unwrapValueBag),
+        Effect.flatMap(ValueBag.unwrap),
       ),
     );
     expect(result).toEqual({ result: 6 });
@@ -75,12 +74,12 @@ describe('Graph as a fiber runtime', () => {
       .registerGraph('dxn:test:g2', g2b(runtime.getGraph(DXN.parse('dxn:test:g1')).root));
 
     const result = await Effect.runPromise(
-      runtime.runGraph('dxn:test:g2', makeValueBag({ a: 1, b: 2, c: 3 })).pipe(
+      runtime.runGraph('dxn:test:g2', ValueBag.make({ a: 1, b: 2, c: 3 })).pipe(
         Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()),
         Effect.scoped,
 
         // Unwrapping without services to test that computing values doesn't require services.
-        Effect.flatMap(unwrapValueBag),
+        Effect.flatMap(ValueBag.unwrap),
       ),
     );
     expect(result).toEqual({ result: 6 });
@@ -94,7 +93,7 @@ describe('Graph as a fiber runtime', () => {
         .registerGraph('dxn:test:g3', g3());
 
       const result = yield* Effect.promise(() =>
-        runtime.runFromInput('dxn:test:g3', 'I', makeValueBag({ a: 1, b: 2 })),
+        runtime.runFromInput('dxn:test:g3', 'I', ValueBag.make({ a: 1, b: 2 })),
       ).pipe(
         Effect.map((results) =>
           mapValues(results, (eff) =>
@@ -103,8 +102,8 @@ describe('Graph as a fiber runtime', () => {
         ),
       );
 
-      const v1 = yield* unwrapValueBag(yield* result.V1);
-      const v2 = yield* unwrapValueBag(yield* result.V2);
+      const v1 = yield* ValueBag.unwrap(yield* result.V1);
+      const v2 = yield* ValueBag.unwrap(yield* result.V2);
       expect(v1).toEqual({ result: 3 });
       expect(v2).toEqual({ result: 3 });
     }),
@@ -115,7 +114,7 @@ describe('Graph as a fiber runtime', () => {
       const runtime = new TestRuntime().registerGraph('dxn:test:g4', g4());
 
       const result = yield* runtime
-        .runGraph('dxn:test:g4', makeValueBag({ condition: true, value: 1 }))
+        .runGraph('dxn:test:g4', ValueBag.make({ condition: true, value: 1 }))
         .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()), Effect.scoped);
 
       expect(yield* Effect.either(result.values.true)).toEqual(Either.right(1));

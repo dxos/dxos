@@ -40,36 +40,37 @@ export type ValueEffect<T> = Effect.Effect<T, Error | NotExecuted, never>;
  * The whole bag itself can be a not-executed marker in case the entire node did not execute.
  */
 export type ValueBag<T extends ValueRecord = ValueRecord> = {
-  // TODO(dmaretskyi): Rename `_tag` to be consistent with effect.
-  type: 'bag';
+  _tag: 'ValueBag';
   values: {
     [K in keyof T]: ValueEffect<T[K]>;
   };
 };
 
-export const isValueBag = (value: any): value is ValueBag => value.type === 'bag';
+export const ValueBag = Object.freeze({
+  isValueBag: (value: any): value is ValueBag => value._tag === 'ValueBag',
 
-export const makeValueBag = <T extends ValueRecord>(values: {
-  [K in keyof T]: T[K] | ValueEffect<T[K]>;
-}): ValueBag<T> => ({
-  type: 'bag',
-  values: mapValues(values as any, (value) => (Effect.isEffect(value) ? value : Effect.succeed(value))) as any,
+  make: <T extends ValueRecord>(values: {
+    [K in keyof T]: T[K] | ValueEffect<T[K]>;
+  }): ValueBag<T> => ({
+    _tag: 'ValueBag',
+    values: mapValues(values as any, (value) => (Effect.isEffect(value) ? value : Effect.succeed(value))) as any,
+  }),
+
+  /**
+   * Unwraps the bag into a single effect.
+   */
+  unwrap: <T extends ValueRecord>(bag: ValueBag<T>): ValueEffect<T> => {
+    if (isNotExecuted(bag)) {
+      return Effect.fail(NotExecuted);
+    }
+
+    return Effect.all(
+      Object.entries(bag.values as Record<string, ValueEffect<any>>).map(([key, eff]) =>
+        eff.pipe(Effect.map((value) => [key, value] as const)),
+      ),
+    ).pipe(Effect.map((entries) => Object.fromEntries(entries) as T));
+  },
 });
-
-/**
- * Unwraps the bag into a single effect.
- */
-export const unwrapValueBag = <T extends ValueRecord>(bag: ValueBag<T>): ValueEffect<T> => {
-  if (isNotExecuted(bag)) {
-    return Effect.fail(NotExecuted);
-  }
-
-  return Effect.all(
-    Object.entries(bag.values as Record<string, ValueEffect<any>>).map(([key, eff]) =>
-      eff.pipe(Effect.map((value) => [key, value] as const)),
-    ),
-  ).pipe(Effect.map((entries) => Object.fromEntries(entries) as T));
-};
 
 //
 // Functions
@@ -102,9 +103,9 @@ export const synchronizedComputeFunction =
   ): ComputeFunction<I, O> =>
   (inputBag, node) =>
     Effect.gen(function* () {
-      const input = yield* unwrapValueBag(inputBag);
+      const input = yield* ValueBag.unwrap(inputBag);
       const output = yield* fn(input, node);
-      return makeValueBag<O>(output);
+      return ValueBag.make<O>(output);
     });
 
 // TODO(dmaretskyi): To effect schema.

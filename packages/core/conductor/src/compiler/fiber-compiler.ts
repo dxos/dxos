@@ -18,10 +18,8 @@ import {
   type ComputeNode,
   type ComputeRequirements,
   NotExecuted,
-  type ValueBag,
   isNotExecuted,
-  isValueBag,
-  makeValueBag,
+  ValueBag,
 } from '../types';
 import { AiService } from '@dxos/functions';
 
@@ -110,7 +108,7 @@ export const compile = async ({
 
       exec: (input) => {
         return Effect.gen(function* () {
-          invariant(isValueBag(input));
+          invariant(ValueBag.isValueBag(input));
 
           const instance = executor.clone();
           const logger = yield* EventLogger;
@@ -291,14 +289,14 @@ export class GraphExecutor {
             ),
           ] as const,
       );
-      return makeValueBag(Object.fromEntries(entries));
+      return ValueBag.make(Object.fromEntries(entries));
     }).pipe(Effect.withSpan('compute-inputs', { attributes: { nodeId } }));
   }
 
   computeOutput(nodeId: string, prop: string): Effect.Effect<any, Error | NotExecuted, ComputeRequirements> {
     return Effect.gen(this, function* () {
       const output = yield* this.computeOutputs(nodeId);
-      invariant(output.type === 'bag', 'Output must be a value bag');
+      invariant(ValueBag.isValueBag(output), 'Output must be a value bag');
       if (isNotExecuted(output)) {
         return yield* Effect.fail(NotExecuted);
       }
@@ -328,7 +326,7 @@ export class GraphExecutor {
       invariant(this._topology, 'Graph not loaded');
       if (this._computeCache.has(nodeId)) {
         const result = yield* this._computeCache.get(nodeId)!;
-        if (result.type !== 'bag') {
+        if (!ValueBag.isValueBag(result)) {
           throw new Error(`Output is not a value bag: ${JSON.stringify(result)}`);
         }
         return result;
@@ -353,7 +351,7 @@ export class GraphExecutor {
 
         // const sanitizedInputs = yield* Schema.decode(node.meta.input)(inputValues);
         // TODO(dmaretskyi): Figure out schema validation on value bags.
-        invariant(isValueBag(inputValues), 'Input must be a value bag');
+        invariant(ValueBag.isValueBag(inputValues), 'Input must be a value bag');
         const output = yield* nodeSpec.exec(inputValues, node.graphNode).pipe(
           Effect.withSpan('call-node'),
           Effect.provideService(EventLogger, {
@@ -361,7 +359,7 @@ export class GraphExecutor {
             nodeId: node.id,
           }),
         );
-        invariant(isValueBag(output), 'Output must be a value bag');
+        invariant(ValueBag.isValueBag(output), 'Output must be a value bag');
         // log.info('output', { output });
         // if ('text' in output) {
         //   log.info('text in fiber', { text: getDebugName(output.text) });
@@ -375,7 +373,7 @@ export class GraphExecutor {
             Effect.withSpan('cached-output', { attributes: { key } }),
           );
         }
-        const resBag = makeValueBag(res);
+        const resBag = ValueBag.make(res);
 
         logger.log({
           type: 'end-compute',
@@ -389,7 +387,7 @@ export class GraphExecutor {
       this._computeCache.set(node.id, cachedCompute);
 
       const result = yield* cachedCompute;
-      invariant(isValueBag(result), 'Output must be a value bag');
+      invariant(ValueBag.isValueBag(result), 'Output must be a value bag');
       return result;
     }).pipe(Effect.withSpan('compute-outputs', { attributes: { nodeId } }));
   }

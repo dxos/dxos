@@ -33,9 +33,8 @@ import {
   type ComputeNode,
   type ComputeRequirements,
   type Executable,
-  makeValueBag,
+  ValueBag,
   synchronizedComputeFunction,
-  unwrapValueBag,
 } from '../types';
 import { MockAi } from '@dxos/ai/testing';
 
@@ -166,14 +165,14 @@ describe('workflow', () => {
     return Effect.runPromise(
       effect.pipe(
         Effect.withSpan('runTestWorkflow'),
-        Effect.flatMap(unwrapValueBag),
+        Effect.flatMap(ValueBag.unwrap),
         Effect.provide(services),
         Effect.scoped,
       ),
     ).then((r) => r.result);
   };
 
-  const makeInput = (input: any) => makeValueBag({ input });
+  const makeInput = (input: any) => ValueBag.make({ input });
 
   const createSimpleTransformGraph = (transform: Transform): TestWorkflowGraph => {
     return createGraphFromTransformMap('I', { I: transform });

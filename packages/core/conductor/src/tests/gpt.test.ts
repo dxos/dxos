@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 import { NODE_INPUT, NODE_OUTPUT, registry, type GptInput } from '../nodes';
 import { TestRuntime } from '../testing';
 import { testServices } from '@dxos/functions/testing';
-import { ComputeGraphModel, makeValueBag, unwrapValueBag, type ValueEffect } from '../types';
+import { ComputeGraphModel, ValueBag, type ValueEffect } from '../types';
 
 const ENABLE_LOGGING = true;
 const SKIP_AI_SERVICE_TESTS = true;
@@ -33,7 +33,7 @@ describe.skip('GPT pipelines', () => {
       yield* Effect.gen(function* () {
         const scope = yield* Scope.make();
         const computeResult = yield* runtime
-          .runGraph('dxn:compute:gpt1', makeValueBag({ prompt: 'What is the meaning of life?' }))
+          .runGraph('dxn:compute:gpt1', ValueBag.make({ prompt: 'What is the meaning of life?' }))
           .pipe(Scope.extend(scope), Effect.withSpan('runGraph'));
 
         const text: string = yield* computeResult.values.text;
@@ -54,7 +54,7 @@ describe.skip('GPT pipelines', () => {
         const output = yield* runtime
           .runGraph(
             'dxn:compute:gpt2',
-            makeValueBag({
+            ValueBag.make({
               prompt: 'What is the meaning of life?',
             }),
           )
@@ -117,7 +117,7 @@ describe.skip('GPT pipelines', () => {
         const computeResult = yield* runtime
           .runGraph(
             'dxn:compute:gpt1',
-            makeValueBag({
+            ValueBag.make({
               prompt: 'What is the meaning of life?',
             }),
           )
@@ -153,12 +153,12 @@ describe.skip('GPT pipelines', () => {
         }: { tokenStream: Stream.Stream<GenerationStreamEvent>; text: Effect.Effect<string> } = yield* runtime
           .runGraph(
             'dxn:compute:gpt2',
-            makeValueBag({
+            ValueBag.make({
               prompt: 'What is the meaning of life?',
             }),
           )
           .pipe(
-            Effect.flatMap(unwrapValueBag),
+            Effect.flatMap(ValueBag.unwrap),
             Effect.provide(
               testServices({
                 enableLogging: ENABLE_LOGGING,
@@ -203,8 +203,8 @@ describe.skip('GPT pipelines', () => {
       const input: GptInput = {
         prompt: 'What is the meaning of life? Answer in 10 words or less.',
       };
-      const output = yield* registry.gpt.exec!(makeValueBag(input)).pipe(
-        Effect.flatMap(unwrapValueBag),
+      const output = yield* registry.gpt.exec!(ValueBag.make(input)).pipe(
+        Effect.flatMap(ValueBag.unwrap),
         Effect.provide(
           testServices({
             enableLogging: ENABLE_LOGGING,
@@ -240,8 +240,8 @@ describe.skip('GPT pipelines', () => {
             }),
           ],
         };
-        const output = yield* registry.gpt.exec!(makeValueBag(input)).pipe(
-          Effect.flatMap(unwrapValueBag),
+        const output = yield* registry.gpt.exec!(ValueBag.make(input)).pipe(
+          Effect.flatMap(ValueBag.unwrap),
           Effect.provide(
             testServices({
               enableLogging: ENABLE_LOGGING,

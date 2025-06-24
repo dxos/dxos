@@ -55,9 +55,8 @@ import {
   VoidInput,
   VoidOutput,
   defineComputeNode,
-  makeValueBag,
   synchronizedComputeFunction,
-  unwrapValueBag,
+  ValueBag,
 } from '../types';
 import { log } from '@dxos/log';
 import { makePushIterable } from '@dxos/async';
@@ -134,7 +133,7 @@ export const registry: Record<NodeType, Executable> = {
   ['constant' as const]: defineComputeNode({
     input: VoidInput,
     output: ConstantOutput,
-    exec: (_, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.value })),
+    exec: (_, node) => Effect.succeed(ValueBag.make({ [DEFAULT_OUTPUT]: node!.value })),
   }),
 
   ['switch' as const]: defineComputeNode({
@@ -155,7 +154,7 @@ export const registry: Record<NodeType, Executable> = {
   ['rng' as const]: defineComputeNode({
     input: VoidInput,
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Number }),
-    exec: () => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: Math.random() })),
+    exec: () => Effect.succeed(ValueBag.make({ [DEFAULT_OUTPUT]: Math.random() })),
   }),
 
   //
@@ -333,15 +332,15 @@ export const registry: Record<NodeType, Executable> = {
     output: Schema.Struct({ true: Schema.optional(Schema.Any), false: Schema.optional(Schema.Any) }),
     exec: (input) =>
       Effect.gen(function* () {
-        const { value, condition } = yield* unwrapValueBag(input);
+        const { value, condition } = yield* ValueBag.unwrap(input);
         if (isTruthy(condition)) {
-          return makeValueBag({
+          return ValueBag.make({
             true: Effect.succeed(value),
             // TODO(burdon): Replace Effect.fail with Effect.succeedNone,
             false: Effect.fail(NotExecuted),
           });
         } else {
-          return makeValueBag({
+          return ValueBag.make({
             true: Effect.fail(NotExecuted),
             false: Effect.succeed(value),
           });
@@ -387,7 +386,7 @@ export const registry: Record<NodeType, Executable> = {
     output: GptOutput,
     exec: (input) =>
       Effect.gen(function* () {
-        const { systemPrompt, prompt, history = [], tools = [] } = yield* unwrapValueBag(input);
+        const { systemPrompt, prompt, history = [], tools = [] } = yield* ValueBag.unwrap(input);
         const { client: aiClient } = yield* AiService;
 
         const messages: Message[] = [
@@ -473,7 +472,7 @@ export const registry: Record<NodeType, Executable> = {
         });
 
         // TODO(burdon): Parse COT on the server (message ontology).
-        return makeValueBag<GptOutput>({
+        return ValueBag.make<GptOutput>({
           messages: outputWithAPrompt,
           tokenCount: 0,
           text,

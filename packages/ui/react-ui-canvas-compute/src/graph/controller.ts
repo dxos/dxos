@@ -9,7 +9,7 @@ import { type ImageContentBlock } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
 import {
   isNotExecuted,
-  makeValueBag,
+  ValueBag.make,
   type ComputeEdge,
   type ComputeEvent,
   type ComputeGraphModel,
@@ -237,7 +237,7 @@ export class ComputeGraphController extends Resource {
     await executor.load(this._graph);
 
     for (const [nodeId, outputs] of Object.entries(this._forcedOutputs)) {
-      executor.setOutputs(nodeId, Effect.succeed(makeValueBag(outputs)));
+      executor.setOutputs(nodeId, Effect.succeed(ValueBag.make(outputs)));
     }
 
     const services = this._createServiceLayer();
@@ -288,7 +288,7 @@ export class ComputeGraphController extends Resource {
     await executor.load(this._graph);
 
     for (const [nodeId, outputs] of Object.entries(this._forcedOutputs)) {
-      executor.setOutputs(nodeId, Effect.succeed(makeValueBag(outputs)));
+      executor.setOutputs(nodeId, Effect.succeed(ValueBag.make(outputs)));
     }
 
     // TODO(dmaretskyi): Stop hardcoding.

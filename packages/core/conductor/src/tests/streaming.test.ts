@@ -8,13 +8,7 @@ import { describe, test } from 'vitest';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
 import { testServices } from '@dxos/functions/testing';
-import {
-  ComputeGraphModel,
-  defineComputeNode,
-  makeValueBag,
-  synchronizedComputeFunction,
-  unwrapValueBag,
-} from '../types';
+import { ComputeGraphModel, defineComputeNode, ValueBag, synchronizedComputeFunction } from '../types';
 import { StreamSchema } from '../util';
 
 const ENABLE_LOGGING = false;
@@ -27,9 +21,9 @@ describe('Streaming pipelines', () => {
 
     const { result } = await Effect.runPromise(
       runtime
-        .runGraph('dxn:compute:stream-sum', makeValueBag({ stream: Effect.succeed(Stream.range(1, 10)) }))
+        .runGraph('dxn:compute:stream-sum', ValueBag.make({ stream: Effect.succeed(Stream.range(1, 10)) }))
         .pipe(
-          Effect.flatMap(unwrapValueBag),
+          Effect.flatMap(ValueBag.unwrap),
           Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()),
           Effect.scoped,
         ),
@@ -49,9 +43,9 @@ describe('Streaming pipelines', () => {
 
     const { result } = await Effect.runPromise(
       runtime
-        .runGraph('dxn:compute:stream-sum', makeValueBag({ stream: Effect.succeed(delayedStream) }))
+        .runGraph('dxn:compute:stream-sum', ValueBag.make({ stream: Effect.succeed(delayedStream) }))
         .pipe(
-          Effect.flatMap(unwrapValueBag),
+          Effect.flatMap(ValueBag.unwrap),
           Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()),
           Effect.scoped,
         ),
