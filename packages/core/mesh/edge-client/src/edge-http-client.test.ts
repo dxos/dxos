@@ -32,15 +32,10 @@ describe('EdgeHttpClient', () => {
       Effect.timeout('1 second'),
       Effect.retry({ schedule: Schedule.exponential(Duration.millis(1_000)).pipe(Schedule.jittered), times: 3 }),
       Effect.withSpan('EdgeHttpClient'), // TODO(burdon): OTEL.
-    );
-
-    const result = await pipe(
-      // prettier-ignore
-      fetch,
       Effect.provide(FetchHttpClient.layer),
-      Effect.runPromise,
     );
 
+    const result = await pipe(fetch, Effect.runPromise);
     expect(result).toMatchObject({ success: true, data: { value: 100 } });
   });
 
