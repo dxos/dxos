@@ -987,7 +987,15 @@ describe('ViewProjection', () => {
     expect(() => Schema.validateSync(Format.Email)('invalid-email')).toThrow(/Email/);
 
     // Step 2: Create and register schema using Format.Email
-    const schema = Schema.Struct({ email: Format.Email });
+    const schema = Schema.Struct({
+      email: Format.Email,
+    }).annotations({
+      [TypeAnnotationId]: {
+        kind: EntityKind.Object,
+        typename: 'example.com/type/EmailTest',
+        version: '0.1.0',
+      },
+    });
 
     const [registeredSchema] = await registry.register([schema]);
 
