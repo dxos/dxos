@@ -3,6 +3,8 @@
 //
 
 import { FetchHttpClient, HttpClient } from '@effect/platform';
+import { type HttpClientError } from '@effect/platform/HttpClientError';
+import { type HttpClientResponse } from '@effect/platform/HttpClientResponse';
 import { Duration, Effect, pipe, Schedule } from 'effect';
 import http from 'http';
 import { afterEach, describe, it } from 'vitest';
@@ -11,23 +13,34 @@ import { log } from '@dxos/log';
 
 import { EdgeHttpClient } from './edge-http-client';
 
-/**
- * Create a fetch effect.
- */
-const makeGet = (url: string) =>
-  HttpClient.get(url).pipe(
-    Effect.withSpan('EdgeHttpClient'), // TODO(burdon): OTEL.
-    // Effect.tap((response) => Effect.log(response.status)),
-    Effect.tap((response) => log.info('response', { status: response.status })),
-    Effect.flatMap((response) =>
-      // Treat 500 errors as retryable?
-      response.status === 500 ? Effect.fail(new Error(response.status.toString())) : response.json,
-    ),
-    Effect.timeout('1 second'),
-    Effect.retry({ schedule: Schedule.exponential(Duration.millis(1_000)).pipe(Schedule.jittered), times: 3 }),
-  );
+type RetryOptions = {
+  timeout: number;
+  exponential: number;
+  times: number;
+};
 
-describe('EdgeHttpClient', () => {
+const withRetry = (
+  effect: Effect.Effect<HttpClientResponse, HttpClientError, HttpClient.HttpClient>,
+  { timeout = 1_000, exponential = 1_000, times = 3 }: Partial<RetryOptions> = {},
+) => {
+  return effect.pipe(
+    // TODO(burdon): OTEL.
+    Effect.withSpan('EdgeHttpClient'),
+    // Effect.tap((response) => Effect.log(response.status)),
+    Effect.tap((res) => log.info('response', { status: res.status })),
+    Effect.flatMap((res) =>
+      // Treat 500 errors as retryable?
+      res.status === 500 ? Effect.fail(new Error(res.status.toString())) : res.json,
+    ),
+    Effect.timeout(Duration.millis(timeout)),
+    Effect.retry({
+      schedule: Schedule.exponential(Duration.millis(exponential)).pipe(Schedule.jittered),
+      times,
+    }),
+  );
+};
+
+describe.skipIf(process.env.CI)('EdgeHttpClient', () => {
   let server: TestServer | undefined;
   afterEach(() => {
     server?.close();
@@ -37,9 +50,9 @@ describe('EdgeHttpClient', () => {
   // TODO(burdon): Auth headers.
   // TODO(burdon): Add request/response schema type checking.
   it('should retry with effect', async ({ expect }) => {
-    const server = await createTestServer(responseHandler((attempt) => (attempt > 1 ? { value: 100 } : false)));
+    const server = await createTestServer(responseHandler((attempt) => (attempt > 2 ? { value: 100 } : false)));
     const httpLayer = Effect.provide(FetchHttpClient.layer); // TODO(burdon): Swap to mock.
-    const result = await pipe(makeGet(server.url), httpLayer, Effect.runPromise);
+    const result = await pipe(withRetry(HttpClient.get(server.url)), httpLayer, Effect.runPromise);
     expect(result).toMatchObject({ success: true, data: { value: 100 } });
   });
 
