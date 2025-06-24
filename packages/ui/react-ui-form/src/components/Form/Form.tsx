@@ -11,10 +11,10 @@ import { cardSpacing } from '@dxos/react-ui-stack';
 import { type SchemaProperty } from '@dxos/schema';
 
 import { FormActions } from './FormActions';
-import { FormFields } from './FormContent';
+import { FormFields, type FormFieldsProps } from './FormContent';
 import { FormProvider } from './FormContext';
 import { type InputProps, type InputComponent } from './Input';
-import { type FormOptions, type QueryRefOptions } from '../../hooks';
+import { type FormOptions } from '../../hooks';
 
 export type PropsFilter<T extends BaseObject> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
@@ -26,54 +26,35 @@ export type ComponentLookup = (args: {
 
 export type CustomInputMap = Partial<Record<string, InputComponent>>;
 
-export type FormProps<T extends BaseObject> = ThemedClassName<
-  {
-    testId?: string;
-    values: Partial<T>;
-
-    /** Path to the current object from the root. Used with nested forms. */
-    path?: string[];
-
-    // TODO(burdon): Autofocus first input.
-    autoFocus?: boolean;
-    readonly?: boolean;
-    // TODO(burdon): Change to JsonPath includes/excludes.
-    filter?: PropsFilter<T>;
-    sort?: PropertyKey<T>[];
-    autoSave?: boolean;
-    // TODO(burdon): Rename noPadding.
-    flush?: boolean;
-    lookupComponent?: ComponentLookup;
-
-    /**
-     * Map of custom renderers for specific properties.
-     * Prefer lookupComponent for plugin specific input surfaces.
-     */
-    Custom?: CustomInputMap;
-    onCancel?: () => void;
-    onQueryRefOptions?: QueryRefOptions;
-  } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'>
->;
+export type FormProps<T extends BaseObject> = ThemedClassName<{
+  values: Partial<T>;
+  // TODO(burdon): Autofocus first input.
+  autoFocus?: boolean;
+  // TODO(burdon): Change to JsonPath includes/excludes.
+  filter?: PropsFilter<T>;
+  sort?: PropertyKey<T>[];
+  autoSave?: boolean;
+  // TODO(burdon): Rename noPadding.
+  flush?: boolean;
+  onCancel?: () => void;
+}> &
+  Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'> &
+  FormFieldsProps;
 
 export const Form = <T extends BaseObject>({
   classNames,
   testId,
-  schema,
   values: initialValues,
-  path = [],
   autoFocus,
   readonly,
-  filter,
-  sort,
   autoSave,
   flush,
-  lookupComponent,
-  Custom,
+  onCancel,
+  schema,
   onValuesChanged,
   onValidate,
   onSave,
-  onCancel,
-  onQueryRefOptions,
+  ...props
 }: FormProps<T>) => {
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -102,19 +83,14 @@ export const Form = <T extends BaseObject>({
       onSave={onSave}
     >
       <FormFields
+        {...props}
         ref={formRef}
         testId={testId}
         classNames={[!flush && cardSpacing, classNames]}
         schema={schema}
-        path={path}
         readonly={readonly}
-        filter={filter}
-        sort={sort}
-        lookupComponent={lookupComponent}
-        Custom={Custom}
-        onQueryRefOptions={onQueryRefOptions}
       />
-      {(onCancel || onSave) && !autoSave && <FormActions onCancel={onCancel} readonly={readonly} />}
+      {(onCancel || onSave) && !autoSave && <FormActions readonly={readonly} onCancel={onCancel} />}
     </FormProvider>
   );
 };

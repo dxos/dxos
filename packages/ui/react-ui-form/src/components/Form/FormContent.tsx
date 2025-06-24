@@ -188,12 +188,19 @@ export const FormField = ({
 
 export type FormFieldsProps = ThemedClassName<{
   testId?: string;
+  readonly?: boolean;
   schema: Schema.Schema.All;
+  /**
+   * Path to the current object from the root. Used with nested forms.
+   */
   path?: (string | number)[];
   filter?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
   sort?: string[];
-  readonly?: boolean;
   lookupComponent?: ComponentLookup;
+  /**
+   * Map of custom renderers for specific properties.
+   * Prefer lookupComponent for plugin specific input surfaces.
+   */
   Custom?: Partial<Record<string, InputComponent>>;
   onQueryRefOptions?: QueryRefOptions;
 }>;
