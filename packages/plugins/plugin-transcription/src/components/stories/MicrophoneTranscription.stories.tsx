@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { EdgeAiServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -117,11 +117,11 @@ const DefaultStory = ({
         .then((result) => result.objects);
     }
     if (entityExtraction !== 'none') {
-      const aiService = new AIServiceEdgeClient({
+      const AiService = new EdgeAiServiceClient({
         endpoint: AI_SERVICE_ENDPOINT.REMOTE,
       });
       executor = new FunctionExecutor(
-        new ServiceContainer().setServices({ ai: { client: aiService }, database: { db: space!.db } }),
+        new ServiceContainer().setServices({ ai: { client: AiService }, database: { db: space!.db } }),
       );
     }
 

@@ -113,7 +113,7 @@ export const toFunctionParameterSchema = (jsonSchema: Type.JsonSchema): Type.Jso
  *
  * ```ts
  * const outputParser = structuredOutputParser(Schema.Struct({ ... }))
- * const messages = await aiService.exec({
+ * const messages = await AiService.exec({
  *   ...
  *   tools: [outputParser.tool],
  * })

@@ -8,7 +8,7 @@ import { type GenerateRequest, type GenerationStreamEvent, type GenerateResponse
  * Interface for AI service.
  * Generates chat completions, supports, history and tools.
  */
-export interface AIServiceClient {
+export interface AiServiceClient {
   /**
    * Generate chat completions, supports, history and tools.
    * Generate non-streaming response.

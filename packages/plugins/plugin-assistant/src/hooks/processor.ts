@@ -7,7 +7,7 @@ import { type Signal, batch, computed, signal } from '@preact/signals-core';
 import {
   DEFAULT_EDGE_MODEL,
   type ExecutableTool,
-  type AIServiceClient,
+  type AiServiceClient,
   type GenerateRequest,
   type Message,
   type MessageContentBlock,
@@ -86,7 +86,7 @@ export class ChatProcessor {
   });
 
   constructor(
-    private readonly _ai: AIServiceClient,
+    private readonly _ai: AiServiceClient,
     private _tools?: ExecutableTool[],
     private _artifacts?: ArtifactDefinition[],
     private readonly _extensions?: ToolContextExtensions,
@@ -177,7 +177,7 @@ export class ChatProcessor {
     } catch (err) {
       log.catch(err);
       if (err instanceof Error && err.message.includes('Overloaded')) {
-        this.error.value = new AIServiceOverloadedError('AI service overloaded', { cause: err });
+        this.error.value = new AiServiceOverloadedError('AI service overloaded', { cause: err });
       } else {
         this.error.value = new Error('AI service error', { cause: err });
       }
@@ -233,6 +233,6 @@ export class ChatProcessor {
 }
 
 // TODO(wittjosiah): Move to ai-service-client.
-export class AIServiceOverloadedError extends Error {
+export class AiServiceOverloadedError extends Error {
   code = 'AI_SERVICE_OVERLOADED';
 }

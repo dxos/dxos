@@ -168,10 +168,12 @@ type GraphExecutorParams = {
  * - Execute individual nodes and propagate values through the graph
  */
 export class GraphExecutor {
+  private readonly _computeCache = new Map<string, ComputeEffect<ValueBag<any>>>();
+
   private readonly _computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
   private readonly _computeNodeResolver: (node: ComputeNode) => Promise<Executable>;
+
   private _topology?: Topology = undefined;
-  private _computeCache = new Map<string, ComputeEffect<ValueBag<any>>>();
 
   constructor({ computeMetaResolver, computeNodeResolver }: GraphExecutorParams) {
     this._computeNodeResolver = computeNodeResolver ?? (() => raise(new Error('Compute node resolver not provided')));

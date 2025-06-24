@@ -12,14 +12,14 @@ import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
-import { QueueFactory, type QueuesService } from '../queue';
+import { QueueFactory, type QueueService } from '../queue';
 
 export type EchoClientParams = {};
 
 export type ConnectToServiceParams = {
   dataService: DataService;
   queryService: QueryService;
-  queuesService?: QueuesService;
+  queueService?: QueueService;
 };
 
 export type ConstructDatabaseParams = {
@@ -58,7 +58,7 @@ export class EchoClient extends Resource {
 
   private _dataService: DataService | undefined = undefined;
   private _queryService: QueryService | undefined = undefined;
-  private _queuesService: QueuesService | undefined = undefined;
+  private _queuesService: QueueService | undefined = undefined;
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
@@ -79,11 +79,11 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService, queuesService }: ConnectToServiceParams): void {
+  connectToService({ dataService, queryService, queueService }: ConnectToServiceParams): void {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
-    this._queuesService = queuesService;
+    this._queuesService = queueService;
   }
 
   disconnectFromService(): void {

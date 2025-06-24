@@ -963,7 +963,7 @@ describe('ViewProjection', () => {
       // Verify the underlying JSON schema was updated correctly.
       expect(mutable.jsonSchema.properties?.[fieldName]).to.deep.include({
         type: expectedType.toLowerCase(),
-        format: format,
+        format,
       });
     }
   });

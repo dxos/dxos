@@ -4,7 +4,7 @@
 
 import { test } from 'vitest';
 
-import { DEFAULT_EDGE_MODEL, AIServiceEdgeClient } from '@dxos/ai';
+import { DEFAULT_EDGE_MODEL, EdgeAiServiceClient } from '@dxos/ai';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
@@ -19,7 +19,7 @@ import { AI_SERVICE_ENDPOINT } from '../testing';
 import { createUserMessage } from '../tools';
 import { createLogger } from '../util';
 
-const aiClient = new AIServiceEdgeClient({
+const aiClient = new EdgeAiServiceClient({
   endpoint: AI_SERVICE_ENDPOINT.LOCAL,
 });
 

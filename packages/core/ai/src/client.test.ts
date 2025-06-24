@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { DEFAULT_EDGE_MODEL } from './defs';
-import { AIServiceEdgeClient, MixedStreamParser, OllamaClient } from './service';
+import { EdgeAiServiceClient, MixedStreamParser, OllamaAiServiceClient } from './service';
 import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from './testing';
 import { createTool, defineTool, Message, ToolResult } from './tools';
 import { ToolTypes } from './types';
@@ -19,7 +19,7 @@ import { ToolTypes } from './types';
 
 describe.skip('AI Service Client', () => {
   test('client generation', async () => {
-    const aiClient = new AIServiceEdgeClient({
+    const aiClient = new EdgeAiServiceClient({
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
@@ -31,7 +31,7 @@ describe.skip('AI Service Client', () => {
     //     role: 'user',
     //     content: [{ type: 'text', text: 'Hello' }],
     //   },
-    //     ]);
+    // ]);
 
     const stream = await aiClient.execStream({
       model: DEFAULT_EDGE_MODEL,
@@ -48,7 +48,7 @@ describe.skip('AI Service Client', () => {
   });
 
   test('tool calls', async () => {
-    const aiClient = new AIServiceEdgeClient({
+    const aiClient = new EdgeAiServiceClient({
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
@@ -124,7 +124,7 @@ describe.skip('AI Service Client', () => {
   });
 
   test.skip('image generation', async () => {
-    const aiClient = new AIServiceEdgeClient({
+    const aiClient = new EdgeAiServiceClient({
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
@@ -161,7 +161,7 @@ describe.skip('AI Service Client', () => {
 
 describe.skip('Ollama Client', () => {
   test('basic', async (ctx) => {
-    const isRunning = await OllamaClient.isRunning();
+    const isRunning = await OllamaAiServiceClient.isRunning();
     if (!isRunning) {
       ctx.skip();
     }
@@ -182,7 +182,7 @@ describe.skip('Ollama Client', () => {
   });
 
   test('tool calls', async (ctx) => {
-    const isRunning = await OllamaClient.isRunning();
+    const isRunning = await OllamaAiServiceClient.isRunning();
     if (!isRunning) {
       ctx.skip();
     }
@@ -217,7 +217,7 @@ describe.skip('Ollama Client', () => {
   });
 
   test('text-to-image', async (ctx) => {
-    const isRunning = await OllamaClient.isRunning();
+    const isRunning = await OllamaAiServiceClient.isRunning();
     if (!isRunning) {
       ctx.skip();
     }

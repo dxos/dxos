@@ -41,7 +41,7 @@ export const researchFn = defineFunction({
     const ai = context.getService(AiService);
     const credentials = context.getService(CredentialsService);
     const { db } = context.getService(DatabaseService);
-    // const queues = context.getService(QueuesService);
+    // const queues = context.getService(QueueService);
     const tracing = context.getService(TracingService);
 
     tracing.write(create(AgentStatusReport, { message: 'Researching...' }));
