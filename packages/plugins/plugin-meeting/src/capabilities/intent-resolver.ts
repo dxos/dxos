@@ -4,7 +4,7 @@
 
 import { Effect } from 'effect';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { EdgeAiServiceClient } from '@dxos/ai';
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -82,7 +82,7 @@ export default (context: PluginContext) =>
         const endpoint = client.config.values.runtime?.services?.ai?.server;
         invariant(endpoint, 'AI service not configured.');
         // TODO(wittjosiah): Use capability (but note that this creates a dependency on the assistant plugin being available for summarization to work).
-        const ai = new AIServiceEdgeClient({ endpoint });
+        const ai = new EdgeAiServiceClient({ endpoint });
         const resolve = (typename: string) =>
           context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 

@@ -6,7 +6,7 @@ import { Match, Schema } from 'effect';
 
 import {
   createTool,
-  type AIServiceClient,
+  type AiServiceClient,
   Message,
   type MessageContentBlock,
   ToolResult,
@@ -14,6 +14,7 @@ import {
   type ToolRegistry,
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
+import { Key } from '@dxos/echo';
 import { create } from '@dxos/echo-schema';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -52,7 +53,7 @@ const INITIAL_STATE: BlueprintMachineState = {
 };
 
 type ExecutionOptions = {
-  aiClient: AIServiceClient;
+  aiClient: AiServiceClient;
 
   /**
    * Input to the blueprint.
@@ -61,12 +62,12 @@ type ExecutionOptions = {
 };
 
 export type BlueprintEvent =
-  | { type: 'begin' }
-  | { type: 'end' }
-  | { type: 'step-start'; step: BlueprintStep }
-  | { type: 'step-complete'; step: BlueprintStep }
-  | { type: 'message'; message: Message }
-  | { type: 'block'; block: MessageContentBlock };
+  | { type: 'begin'; invocationId: string }
+  | { type: 'end'; invocationId: string }
+  | { type: 'step-start'; invocationId: string; step: BlueprintStep }
+  | { type: 'step-complete'; invocationId: string; step: BlueprintStep }
+  | { type: 'message'; invocationId: string; message: Message }
+  | { type: 'block'; invocationId: string; block: MessageContentBlock };
 
 export interface BlueprintLogger {
   log(event: BlueprintEvent): void;
@@ -103,21 +104,22 @@ export class BlueprintMachine {
   }
 
   async runToCompletion(options: ExecutionOptions): Promise<void> {
-    log.info('runToCompletion', options);
+    const invocationId = Key.ObjectId.random();
+    log.info('runToCompletion', { invocationId, options });
 
     this.begin.emit();
-    this.logger?.log({ type: 'begin' });
+    this.logger?.log({ type: 'begin', invocationId });
 
     let firstStep = true;
     while (this._state.state !== 'done') {
       const input = firstStep ? options.input : undefined;
       firstStep = false;
 
-      this._state = await this._execStep(this._state, { input, aiClient: options.aiClient });
+      this._state = await this._execStep(invocationId, this._state, { input, aiClient: options.aiClient });
 
       const step = this.blueprint.steps.find((step) => step.id === this._state.trace.at(-1)?.stepId)!;
       this.stepComplete.emit(step);
-      this.logger?.log({ type: 'step-complete', step });
+      this.logger?.log({ type: 'step-complete', invocationId, step });
 
       if (this._state.state === 'bail') {
         throw new Error('Agent unable to follow the blueprint');
@@ -125,10 +127,14 @@ export class BlueprintMachine {
     }
 
     this.end.emit();
-    this.logger?.log({ type: 'end' });
+    this.logger?.log({ type: 'end', invocationId });
   }
 
-  private async _execStep(state: BlueprintMachineState, options: ExecutionOptions): Promise<BlueprintMachineState> {
+  private async _execStep(
+    invocationId: string,
+    state: BlueprintMachineState,
+    options: ExecutionOptions,
+  ): Promise<BlueprintMachineState> {
     const prevStep = this.blueprint.steps.findIndex((step) => step.id === this._state.trace.at(-1)?.stepId);
     if (prevStep === this.blueprint.steps.length - 1) {
       throw new Error('Done execution blueprint');
@@ -138,7 +144,7 @@ export class BlueprintMachine {
     const onLastStep = prevStep === this.blueprint.steps.length - 2;
 
     this.stepStart.emit(nextStep);
-    this.logger?.log({ type: 'step-start', step: nextStep });
+    this.logger?.log({ type: 'step-start', invocationId, step: nextStep });
 
     const ReportSchema = Schema.Struct({
       status: Schema.Literal('done', 'bailed', 'skipped').annotations({
@@ -175,7 +181,7 @@ export class BlueprintMachine {
       : [];
     inputMessages.forEach((message) => {
       this.message.emit(message);
-      this.logger?.log({ type: 'message', message });
+      this.logger?.log({ type: 'message', invocationId, message });
     });
 
     // TODO(wittjosiah): Warn if tool is not found.

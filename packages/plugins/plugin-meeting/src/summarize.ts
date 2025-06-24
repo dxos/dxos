@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DEFAULT_EDGE_MODEL, type AIServiceClient, Message, MixedStreamParser } from '@dxos/ai';
+import { DEFAULT_EDGE_MODEL, type AiServiceClient, Message, MixedStreamParser } from '@dxos/ai';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -19,7 +19,7 @@ export const getMeetingContent = async (meeting: MeetingType, resolve: (typename
   return content;
 };
 
-export const summarizeTranscript = async (ai: AIServiceClient, content: string): Promise<string> => {
+export const summarizeTranscript = async (ai: AiServiceClient, content: string): Promise<string> => {
   log.info('summarizing meeting', { contentLength: content.length });
 
   const parser = new MixedStreamParser();

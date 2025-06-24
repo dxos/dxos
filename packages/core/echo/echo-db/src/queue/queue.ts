@@ -9,7 +9,7 @@ import { failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import type { QueuesService } from './queue-service';
+import type { QueueService } from './queue-service';
 import type { Queue } from './types';
 
 const TRACE_QUEUE_LOAD = false;
@@ -32,7 +32,7 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
   private _querying = false;
 
   constructor(
-    private readonly _service: QueuesService,
+    private readonly _service: QueueService,
     private readonly _refResolver: Ref.Resolver,
     private readonly _dxn: DXN,
   ) {

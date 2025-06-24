@@ -12,7 +12,7 @@ import { ComplexMap } from '@dxos/util';
  * Service for managing queues.
  */
 // TODO(burdon): Base type for all services?
-export interface QueuesService {
+export interface QueueService {
   queryQueue(subspaceTag: string, spaceId: SpaceId, query: QueueQuery): Promise<QueryResult>;
 
   insertIntoQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objects: unknown[]): Promise<void>;
@@ -23,7 +23,7 @@ export interface QueuesService {
 /**
  * Backed by Edge.
  */
-export class QueueServiceImpl implements QueuesService {
+export class QueueServiceImpl implements QueueService {
   constructor(private readonly _client: EdgeHttpClient) {}
 
   queryQueue(subspaceTag: string, spaceId: SpaceId, query: QueueQuery): Promise<QueryResult> {
@@ -42,7 +42,7 @@ export class QueueServiceImpl implements QueuesService {
 /**
  * Stub implementation for when Edge is not available.
  */
-export class QueueServiceStub implements QueuesService {
+export class QueueServiceStub implements QueueService {
   queryQueue(subspaceTag: string, spaceId: SpaceId, query: QueueQuery): Promise<QueryResult> {
     throw new Error('Not available.');
   }
@@ -59,7 +59,7 @@ export class QueueServiceStub implements QueuesService {
 /**
  * Mock implementation for testing.
  */
-export class MockQueueService implements QueuesService {
+export class MockQueueService implements QueueService {
   private _queues = new ComplexMap<[subspaceTag: string, spaceId: SpaceId, queueId: ObjectId], unknown[]>(
     ([subspaceTag, spaceId, queueId]) => `${subspaceTag}:${spaceId}:${queueId}`,
   );

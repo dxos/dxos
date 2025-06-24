@@ -9,8 +9,8 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import { Option, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AgentStatusReport, AIServiceEdgeClient, createTool, type ExecutableTool, Message, ToolResult } from '@dxos/ai';
-import { EXA_API_KEY, SpyAIService } from '@dxos/ai/testing';
+import { AgentStatusReport, EdgeAiServiceClient, createTool, type ExecutableTool, Message, ToolResult } from '@dxos/ai';
+import { EXA_API_KEY, SpyAiService } from '@dxos/ai/testing';
 import { Capabilities, contributes, createSurface, Events, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
@@ -61,8 +61,8 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const client = useClient();
   const aiClient = useMemo(
     () =>
-      new SpyAIService(
-        new AIServiceEdgeClient({
+      new SpyAiService(
+        new EdgeAiServiceClient({
           endpoint: endpoints.ai,
           defaultGenerationOptions: {
             // model: '@anthropic/claude-sonnet-4-20250514',
@@ -387,7 +387,7 @@ const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
   });
 };
 
-const createToolbar = (aiClient: SpyAIService) =>
+const createToolbar = (aiClient: SpyAiService) =>
   Rx.make((get) => {
     const result: ActionGraphProps = { nodes: [], edges: [] };
     const save = createMenuAction('save', () => aiClient.saveEvents(), {

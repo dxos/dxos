@@ -21,7 +21,7 @@ export const CollectionMain = ({ collection }: { collection: CollectionType }) =
     >
       <p
         role='alert'
-        className={mx(descriptionMessage, 'rounded-lg p-8 font-normal text-lg max-is-[24rem] break-words')}
+        className={mx(descriptionMessage, 'rounded-md p-8 font-normal text-lg max-is-[24rem] break-words')}
       >
         {collection.name ?? t('unnamed collection label')}
       </p>

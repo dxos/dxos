@@ -8,7 +8,7 @@ import { assertState } from '@dxos/invariant';
 import { DXN, ObjectId, QueueSubspaceTags, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
 
 import { QueueImpl } from './queue';
-import type { QueuesService } from './queue-service';
+import type { QueueService } from './queue-service';
 import type { Queue } from './types';
 import { type Hypergraph } from '../hypergraph';
 
@@ -19,7 +19,7 @@ export interface QueueAPI {
 
 export class QueueFactory extends Resource implements QueueAPI {
   private readonly _queues = new Map<DXN.String, Queue<BaseEchoObject>>();
-  private _service?: QueuesService = undefined;
+  private _service?: QueueService = undefined;
 
   constructor(
     private readonly _spaceId: SpaceId,
@@ -28,7 +28,7 @@ export class QueueFactory extends Resource implements QueueAPI {
     super();
   }
 
-  setService(service: QueuesService): void {
+  setService(service: QueueService): void {
     this._service = service;
   }
 

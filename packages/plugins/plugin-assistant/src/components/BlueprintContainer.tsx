@@ -11,8 +11,6 @@ import { useCapability } from '@dxos/app-framework';
 import {
   type Blueprint,
   type BlueprintDefinition,
-  BlueprintLoggerAdapter,
-  BlueprintParser,
   BlueprintMachine,
   createLocalSearchTool,
   createExaTool,
@@ -27,6 +25,7 @@ import { StackItem, type StackItemContentProps } from '@dxos/react-ui-stack';
 import { BlueprintEditor } from './BlueprintEditor';
 import { AssistantCapabilities } from '../capabilities';
 import { meta } from '../meta';
+import { QueueLogger } from '../queue-logger';
 
 // TODO(burdon): Move to config.
 export const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
@@ -82,7 +81,7 @@ export const BlueprintContainer = ({
     ]);
   }, [blueprint]);
 
-  const formatAndSave = (): BlueprintDefinition | undefined => {
+  const formatAndSave = useCallback((): BlueprintDefinition | undefined => {
     if (!blueprint) {
       return;
     }
@@ -112,28 +111,18 @@ export const BlueprintContainer = ({
       });
     }
 
-    return definition;
-  };
+    return blueprint;
+  }, [blueprint]);
 
   // TODO(burdon): Save raw blueprint separately from parsed blueprint? (like Script).
-  const handleSave = useCallback(() => {
-    const definition = formatAndSave();
-    if (!definition) {
-      return;
-    }
-
-    setDefinition(definition);
-  }, [blueprint]);
+  const handleSave = useCallback(() => formatAndSave(), [formatAndSave]);
 
   const handleRun = useCallback(async () => {
     if (!aiClient?.value || !toolRegistry) {
       return;
     }
 
-    const definition = formatAndSave();
-    if (!definition) {
-      return;
-    }
+    formatAndSave();
 
     // Get input from selection.
     const input = Array.from(getSelectionSet(selectionManager)).map((id) => DXN.fromLocalObjectId(id));
@@ -141,10 +130,9 @@ export const BlueprintContainer = ({
       return;
     }
 
-    const blueprint = BlueprintParser.create().parse(definition);
-    const machine = new BlueprintMachine(toolRegistry, blueprint).setLogger(new BlueprintLoggerAdapter());
+    const machine = new BlueprintMachine(toolRegistry, blueprint).setLogger(new QueueLogger(blueprint));
     await machine.runToCompletion({ aiClient: aiClient.value, input });
-  }, [aiClient.value, toolRegistry]);
+  }, [aiClient.value, blueprint, formatAndSave, selectionManager, toolRegistry]);
 
   return (
     <StackItem.Content role={role} toolbar>

@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AIServiceEdgeClient, Message } from '@dxos/ai';
+import { EdgeAiServiceClient, Message } from '@dxos/ai';
 import {
   Capabilities,
   Events,
@@ -57,7 +57,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const tools = useCapabilities(Capabilities.Tools);
 
-  const aiClient = useMemo(() => new AIServiceEdgeClient({ endpoint: endpoints.ai }), []);
+  const aiClient = useMemo(() => new EdgeAiServiceClient({ endpoint: endpoints.ai }), []);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // TODO(burdon): Replace with useChatProcessor.
@@ -274,7 +274,7 @@ const Fallback = ({ error }: { error?: Error }) => {
     <div role='none' className='overflow-auto p-8 attention-surface grid place-items-center'>
       <p
         role='alert'
-        className={mx(descriptionMessage, 'break-words rounded-lg p-8', errorString.length < 256 && 'text-lg')}
+        className={mx(descriptionMessage, 'break-words rounded-md p-8', errorString.length < 256 && 'text-lg')}
       >
         {error ? errorString : 'error'}
       </p>
