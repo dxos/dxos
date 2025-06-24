@@ -28,9 +28,10 @@ describe.skip('Research', () => {
   beforeAll(async () => {
     // TODO(dmaretskyi): Helper to scaffold this from a config.
     builder = await new EchoTestBuilder().open();
-    const { db: db1 } = await builder.createDatabase({ indexing: { vector: true } });
-    db = db1;
+
+    db = (await builder.createDatabase({ indexing: { vector: true } })).db;
     db.graph.schemaRegistry.addSchema(DataTypes);
+
     executor = new FunctionExecutor(
       new ServiceContainer().setServices({
         ai: {
