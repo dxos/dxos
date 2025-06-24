@@ -17,7 +17,7 @@ import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
 import { Form } from '../Form';
 
-const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
+const grid = 'grid grid-cols-[32px_1fr_32px_32px] min-bs-[2.5rem]';
 
 const ViewMetaSchema = Schema.Struct({
   name: Schema.String.annotations({
@@ -195,31 +195,29 @@ export const ViewEditor = ({
                 </div>
               )}
 
-              <div role='list' className='flex flex-col w-full px-2'>
+              <div role='list' className='flex flex-col w-full pli-card-spacing-inline'>
                 {fields?.map((field) => (
                   <List.Item<FieldType>
                     key={field.id}
                     item={field}
-                    classNames={mx(grid, ghostHover, !readonly && 'cursor-pointer')}
+                    classNames={mx(grid, ghostHover, 'overflow-hidden', !readonly && 'cursor-pointer')}
                   >
                     <List.ItemDragHandle />
                     <List.ItemTitle onClick={() => handleSelect(field)}>{field.path}</List.ItemTitle>
-                    <div className='flex items-center gap-2'>
-                      <List.ItemButton
-                        icon='ph--eye-slash--regular'
-                        // TDOO(burdon): Is this the correct test?
+                    <List.ItemButton
+                      icon='ph--eye-slash--regular'
+                      // TDOO(burdon): Is this the correct test?
+                      disabled={view.fields.length <= 1}
+                      onClick={() => handleHide(field.id)}
+                      data-testid='hide-field-button'
+                    />
+                    {!readonly && (
+                      <List.ItemDeleteButton
+                        icon='ph--trash--regular'
                         disabled={view.fields.length <= 1}
-                        onClick={() => handleHide(field.id)}
-                        data-testid='hide-field-button'
+                        onClick={() => handleDelete(field.id)}
                       />
-                      {!readonly && (
-                        <List.ItemDeleteButton
-                          icon='ph--trash--regular'
-                          disabled={view.fields.length <= 1}
-                          onClick={() => handleDelete(field.id)}
-                        />
-                      )}
-                    </div>
+                    )}
                   </List.Item>
                 ))}
               </div>
@@ -229,7 +227,7 @@ export const ViewEditor = ({
 
         {hiddenProperties.length > 0 && (
           <div>
-            <div role='none' className='pli-card-spacing-inline px-2'>
+            <div role='none' className='pli-card-spacing-inline'>
               <label className={mx(inputTextLabel)}>{t('hidden fields label')}</label>
             </div>
 
@@ -248,13 +246,11 @@ export const ViewEditor = ({
                     >
                       <List.ItemDragHandle disabled />
                       <List.ItemTitle>{property}</List.ItemTitle>
-                      <div className='flex items-center gap-2'>
-                        <List.ItemButton
-                          icon='ph--eye--regular'
-                          onClick={() => handleShow(property)}
-                          data-testid='show-field-button'
-                        />
-                      </div>
+                      <List.ItemButton
+                        icon='ph--eye--regular'
+                        onClick={() => handleShow(property)}
+                        data-testid='show-field-button'
+                      />
                     </List.Item>
                   ))}
                 </div>
