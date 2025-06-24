@@ -17,7 +17,7 @@ import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
 import { Form } from '../Form';
 
-const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
+const grid = 'grid grid-cols-[32px_1fr_32px_32px] min-bs-[2.5rem]';
 
 const ViewMetaSchema = Schema.Struct({
   name: Schema.String.annotations({
@@ -48,7 +48,7 @@ export const ViewEditor = ({
   schema,
   view,
   registry,
-  readonly,
+  readonly: _readonly,
   showHeading = false,
   onTypenameChanged,
   onDelete,
@@ -60,7 +60,7 @@ export const ViewEditor = ({
     return new ViewProjection(jsonSchema, view);
   }, [schema, view]);
   const [field, setField] = useState<FieldType>();
-  const immutable = readonly || !isMutable(schema);
+  const readonly = _readonly || !isMutable(schema);
 
   // TODO(burdon): Should be reactive.
   const viewValues = useMemo(() => {
@@ -74,60 +74,60 @@ export const ViewEditor = ({
 
   const handleSelect = useCallback(
     (field: FieldType) => {
-      if (immutable) {
+      if (readonly) {
         return;
       }
       setField((f) => (f === field ? undefined : field));
     },
-    [immutable],
+    [readonly],
   );
 
   // TODO(burdon): Check if mutable; variant of useCallback that return undefined if readonly?
 
   const handleAdd = useCallback(() => {
-    invariant(!immutable);
+    invariant(!readonly);
     const field = projection.createFieldProjection();
     setField(field);
-  }, [schema, view]);
+  }, [schema, view, readonly]);
 
   const handleUpdate = useCallback(
     ({ name, typename }: ViewMetaType) => {
-      invariant(!immutable);
+      invariant(!readonly);
       requestAnimationFrame(() => {
         if (view.name !== name) {
           view.name = name;
         }
 
-        if (view.query.typename !== typename && !immutable) {
+        if (view.query.typename !== typename && !readonly) {
           onTypenameChanged?.(typename);
         }
       });
     },
-    [schema, view, onTypenameChanged, immutable],
+    [schema, view, onTypenameChanged, readonly],
   );
 
   const handleDelete = useCallback(
     (fieldId: string) => {
-      invariant(!immutable);
+      invariant(!readonly);
       if (fieldId === field?.id) {
         setField(undefined);
       }
 
       onDelete?.(fieldId);
     },
-    [schema, field, onDelete],
+    [schema, field, onDelete, readonly],
   );
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
-      invariant(!immutable);
+      invariant(!readonly);
       // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
       const fields = [...view.fields];
       const [moved] = fields.splice(fromIndex, 1);
       fields.splice(toIndex, 0, moved);
       view.fields = fields;
     },
-    [schema, view.fields],
+    [schema, view.fields, readonly],
   );
 
   const handleClose = useCallback(() => setField(undefined), []);
@@ -152,8 +152,8 @@ export const ViewEditor = ({
 
   return (
     <div role='none' className={mx('overflow-y-auto', classNames)}>
-      {immutable && (
-        <div role='none' className='mbe-card-spacing-block'>
+      {readonly && (
+        <div role='none' className='plb-card-spacing-block pli-card-spacing-inline'>
           <Message.Root valence='neutral' className='rounded'>
             <Message.Title>
               <Icon icon='ph--info--regular' size={5} classNames='inline' /> {t('system schema title')}
@@ -162,17 +162,20 @@ export const ViewEditor = ({
           </Message.Root>
         </div>
       )}
+
+      {/* TODO(burdon): Is the form read-only or just the schema? */}
+      {/* TODO(burdon): Readonly fields should take up the same space as editable fields (just be ghosted). */}
       <Form<ViewMetaType>
         autoSave
         schema={ViewMetaSchema}
         values={viewValues}
+        readonly={readonly}
         onSave={handleUpdate}
         classNames='min-bs-0 overflow-y-auto'
       />
 
       <div role='none' className='min-bs-0 overflow-y-auto'>
-        {/* TODO(burdon): Clean up common form ux. */}
-        <div role='none' className='pli-card-spacing-inline mlb-card-spacing-block'>
+        <div role='none' className='pli-card-spacing-inline'>
           <label className={mx(inputTextLabel)}>{t('fields label')}</label>
         </div>
 
@@ -180,41 +183,41 @@ export const ViewEditor = ({
           items={view.fields}
           isItem={Schema.is(FieldSchema)}
           getId={(field) => field.id}
-          onMove={immutable ? undefined : handleMove}
+          readonly={readonly}
+          onMove={readonly ? undefined : handleMove}
         >
           {({ items: fields }) => (
             <>
               {showHeading && (
                 <div role='heading' className={grid}>
                   <div />
-                  <div className='flex items-center text-sm'>{t('field path label')}</div>
+                  <div className='flex pli-card-spacing-inline items-center text-sm'>{t('field path label')}</div>
                 </div>
               )}
 
-              <div role='list' className='flex flex-col w-full'>
+              <div role='list' className='flex flex-col w-full pli-card-spacing-inline'>
                 {fields?.map((field) => (
                   <List.Item<FieldType>
                     key={field.id}
                     item={field}
-                    classNames={mx(grid, ghostHover, !immutable && 'cursor-pointer')}
+                    classNames={mx(grid, ghostHover, 'overflow-hidden', !readonly && 'cursor-pointer')}
                   >
                     <List.ItemDragHandle />
                     <List.ItemTitle onClick={() => handleSelect(field)}>{field.path}</List.ItemTitle>
-                    <div className='flex items-center gap-2 -ml-4'>
-                      <List.ItemButton
-                        icon='ph--eye-slash--regular'
+                    <List.ItemButton
+                      data-testid='hide-field-button'
+                      icon='ph--eye-slash--regular'
+                      // TDOO(burdon): Is this the correct test?
+                      disabled={view.fields.length <= 1}
+                      onClick={() => handleHide(field.id)}
+                    />
+                    {/* TODO(burdon): Remove unless implement undo. */}
+                    {!readonly && (
+                      <List.ItemDeleteButton
                         disabled={view.fields.length <= 1}
-                        onClick={() => handleHide(field.id)}
-                        data-testid='hide-field-button'
+                        onClick={() => handleDelete(field.id)}
                       />
-                      {!immutable && (
-                        <List.ItemDeleteButton
-                          icon='ph--trash--regular'
-                          disabled={view.fields.length <= 1}
-                          onClick={() => handleDelete(field.id)}
-                        />
-                      )}
-                    </div>
+                    )}
                   </List.Item>
                 ))}
               </div>
@@ -224,7 +227,7 @@ export const ViewEditor = ({
 
         {hiddenProperties.length > 0 && (
           <div>
-            <div role='none' className='pli-card-spacing-inline mlb-card-spacing-block'>
+            <div role='none' className='pli-card-spacing-inline'>
               <label className={mx(inputTextLabel)}>{t('hidden fields label')}</label>
             </div>
 
@@ -234,14 +237,14 @@ export const ViewEditor = ({
               getId={(property) => property}
             >
               {({ items: properties }) => (
-                <div role='list' className='flex flex-col w-full'>
+                <div role='list' className='flex flex-col w-full pli-card-spacing-inline'>
                   {properties?.map((property) => (
                     <List.Item<string>
                       key={property}
                       item={property}
-                      classNames={mx(grid, ghostHover, !immutable && 'cursor-pointer')}
+                      classNames={mx(grid, ghostHover, !readonly && 'cursor-pointer')}
                     >
-                      <div />
+                      <List.ItemDragHandle disabled />
                       <List.ItemTitle>{property}</List.ItemTitle>
                       <List.ItemButton
                         icon='ph--eye--regular'
@@ -273,7 +276,7 @@ export const ViewEditor = ({
           <IconButton
             icon='ph--plus--regular'
             label={t('button add property')}
-            onClick={immutable ? undefined : handleAdd}
+            onClick={readonly ? undefined : handleAdd}
             // TODO(burdon): Show field limit in ux (not tooltip).
             disabled={view.fields.length >= VIEW_FIELD_LIMIT}
             classNames='flex is-full'
