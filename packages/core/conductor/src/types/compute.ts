@@ -8,8 +8,8 @@ import { Effect, type Schema, type Scope } from 'effect';
 import { mapValues } from '@dxos/util';
 
 import type { ComputeNode } from './graph';
-import type { EventLogger, FunctionCallService, GptService } from '../services';
-import type { DatabaseService, QueueService } from '@dxos/functions';
+import type { EventLogger, FunctionCallService } from '../services';
+import type { AiService, DatabaseService, QueueService } from '@dxos/functions';
 
 //
 // Errors
@@ -90,9 +90,9 @@ export type ComputeRequirements =
   | HttpClient.HttpClient
   | EventLogger
   | QueueService
-  | GptService
   | DatabaseService
   | FunctionCallService
+  | AiService
   | Scope.Scope;
 
 /**

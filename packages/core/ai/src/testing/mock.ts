@@ -7,6 +7,7 @@ import { type Signal, signal } from '@preact/signals-core';
 import { createReplaySSEStream } from './test-stream';
 import { createGenerationStream, type GenerationStream, type AiServiceClient, GenerationStreamImpl } from '../service';
 import { type GenerationStreamEvent, type GenerateRequest, type GenerateResponse } from '../types';
+import { ObjectId } from '@dxos/keys';
 
 export type SpyAiServiceMode = 'mock' | 'spy';
 
@@ -94,5 +95,112 @@ export class SpyAiService implements AiServiceClient {
         return new GenerationStreamImpl(controller, iterator);
       }
     }
+  }
+}
+
+export type MockGPTConfig = {
+  initDelay?: number;
+  minDelay?: number;
+  maxDelay?: number;
+  errorRate?: number;
+  responses?: Record<string, string>;
+};
+
+export class MockAi implements AiServiceClient {
+  private config: Required<MockGPTConfig>;
+
+  constructor(config: MockGPTConfig = {}) {
+    this.config = {
+      initDelay: config.initDelay ?? 100,
+      minDelay: config.minDelay ?? 10,
+      maxDelay: config.maxDelay ?? 50,
+      errorRate: config.errorRate ?? 0,
+      responses: config.responses ?? {
+        default: 'This is a mock response that simulates a GPT-like output.',
+      },
+    };
+  }
+
+  /**
+   * Generate non-streaming response.
+   */
+  async exec(request: GenerateRequest): Promise<GenerateResponse> {
+    throw new Error('Not implemented');
+  }
+
+  /**
+   * Process request and open message stream.
+   */
+  async execStream(request: GenerateRequest): Promise<GenerationStream> {
+    const controller = new AbortController();
+    const block = request.prompt?.content[0];
+    const prompt = block?.type === 'text' ? block.text : '';
+    const response = this.config.responses[prompt] || this.config.responses.default;
+    return new GenerationStreamImpl(controller, () => this.createStream(response, () => {}));
+  }
+
+  private async *createStream(response: string, onDone: () => void): AsyncGenerator<GenerationStreamEvent> {
+    // Simulate initial API delay.
+    await this.delay(this.config.initDelay);
+
+    // Random error simulation.
+    if (Math.random() < this.config.errorRate) {
+      throw new Error('Mock GPT API error');
+    }
+
+    const tokens = this.tokenize(response);
+
+    yield {
+      type: 'message_start',
+      message: {
+        id: ObjectId.random(),
+        role: 'assistant',
+        content: [],
+      },
+    };
+    yield {
+      type: 'content_block_start',
+      index: 0,
+      content: { type: 'text', text: '' },
+    };
+    for (const token of tokens) {
+      yield {
+        type: 'content_block_delta',
+        index: 0,
+        delta: { type: 'text_delta', text: token },
+      };
+
+      // Simulate token streaming delay.
+      await this.delay(this.getRandomDelay());
+    }
+    yield {
+      type: 'content_block_stop',
+      index: 0,
+    };
+    yield {
+      type: 'message_stop',
+    };
+
+    onDone();
+  }
+
+  private *tokenize(text: string): Generator<string> {
+    // Simple word-based tokenization for demo.
+    const words = text.split(/(\s+|[.,!?])/g);
+    for (const word of words) {
+      if (word.trim()) {
+        yield word;
+      } else {
+        yield word; // Preserve whitespace.
+      }
+    }
+  }
+
+  private async delay(ms = 0): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private getRandomDelay(): number {
+    return Math.random() * (this.config.maxDelay - this.config.minDelay) + this.config.minDelay;
   }
 }

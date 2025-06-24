@@ -10,13 +10,14 @@ import { invariant } from '@dxos/invariant';
 import { type QueueFactory } from '@dxos/echo-db';
 
 import { consoleLogger, noopLogger } from './logger';
-import { EventLogger, GptService, FunctionCallService } from '../services';
-import { DatabaseService, QueueService } from '@dxos/functions';
-import { MockGpt } from '../services/testing';
+import { EventLogger, FunctionCallService } from '../services';
+import { AiService, DatabaseService, QueueService } from '@dxos/functions';
+import {} from '../services/testing';
 import type { ComputeRequirements } from '../types';
+import type { AiServiceClient } from '@dxos/ai';
 
 export type TestServiceOptions = {
-  gpt?: Context.Tag.Service<GptService>;
+  ai?: AiServiceClient;
   // TODO(burdon): Create common interface for EdgeClient and EdgeHttpClient?
   edgeClient?: EdgeClient;
   edgeHttpClient?: EdgeHttpClient;
@@ -26,7 +27,7 @@ export type TestServiceOptions = {
 };
 
 export const testServices = ({
-  gpt = DEFAULT_MOCK_GPT,
+  ai,
   edgeClient,
   edgeHttpClient,
   queueFactory,
@@ -41,19 +42,22 @@ export const testServices = ({
       ? Layer.succeed(QueueService, { queues: queueFactory, contextQueue: undefined })
       : QueueService.notAvailable;
 
-  const gptLayer = Layer.succeed(GptService, gpt);
+  const aiLayer =
+    ai != null
+      ? Layer.succeed(AiService, {
+          get client() {
+            return ai;
+          },
+        })
+      : AiService.notAvailable;
   const databaseLayer = DatabaseService.notAvailable;
   const functionCallServiceLayer = Layer.succeed(FunctionCallService, FunctionCallService.mock());
   return Layer.mergeAll(
     logLayer,
     edgeClientLayer,
-    gptLayer,
+    aiLayer,
     databaseLayer,
     FetchHttpClient.layer,
     functionCallServiceLayer,
   );
 };
-
-const DEFAULT_MOCK_GPT = new MockGpt({
-  responses: { default: 'This is a mock response that simulates a GPT-like output.' },
-});

@@ -9,7 +9,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
 import { createTopology, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
-import { createDefectLogger, EventLogger, GptService } from '../services';
+import { createDefectLogger, EventLogger } from '../services';
 import {
   type ComputeGraphModel,
   type ComputeEffect,
@@ -23,6 +23,7 @@ import {
   isValueBag,
   makeValueBag,
 } from '../types';
+import { AiService } from '@dxos/functions';
 
 export type ValidateParams = {
   graph: ComputeGraphModel;
@@ -263,7 +264,7 @@ export class GraphExecutor {
       const layer = Layer.mergeAll(
         Layer.succeed(Scope.Scope, yield* Scope.Scope),
         Layer.succeed(EventLogger, yield* EventLogger),
-        Layer.succeed(GptService, yield* GptService),
+        Layer.succeed(AiService, yield* AiService),
       );
 
       const entries = node.inputs.map(

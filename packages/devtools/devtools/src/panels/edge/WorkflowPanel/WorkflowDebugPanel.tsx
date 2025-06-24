@@ -15,8 +15,6 @@ import {
   FunctionCallService,
   GptService,
   OllamaGpt,
-  SpaceService,
-  QueueService,
   type WorkflowLoader,
   createDxosEventLogger,
   makeValueBag,
@@ -237,10 +235,10 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<Exclude<ComputeR
   const logLayer = Layer.succeed(EventLogger, createDxosEventLogger(LogLevel.INFO));
   // TODO(wittjosiah): Breaks bundle.
   const gptLayer = Layer.succeed(GptService, new OllamaGpt(null as any /* new Ollama() */));
-  const spaceService = Layer.succeed(SpaceService, {
+  const spaceService = Layer.succeed(DatabaseService, {
     spaceId: space.id,
     db: space.db,
-  });
+  } as any);
   const queueService = QueueService.notAvailable;
   const functionCallService = Layer.succeed(FunctionCallService, FunctionCallService.mock());
   return Layer.mergeAll(logLayer, gptLayer, spaceService, queueService, FetchHttpClient.layer, functionCallService);

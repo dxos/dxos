@@ -8,7 +8,7 @@ import { describe, test, expect } from 'vitest';
 
 import { todo } from '@dxos/debug';
 import { ObjectId, type Ref, type RefResolver, setRefResolver } from '@dxos/echo-schema';
-import { DatabaseService, FunctionType, QueueService, setUserFunctionUrlInMetadata } from '@dxos/functions';
+import { AiService, DatabaseService, FunctionType, QueueService, setUserFunctionUrlInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live, getMeta, refFromDXN } from '@dxos/live-object';
@@ -16,7 +16,7 @@ import { LogLevel } from '@dxos/log';
 
 import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { createDxosEventLogger, EventLogger, FunctionCallService, GptService, MockGpt } from '../services';
+import { createDxosEventLogger, EventLogger, FunctionCallService, MockGpt } from '../services';
 import {
   AnyInput,
   AnyOutput,
@@ -30,6 +30,7 @@ import {
   synchronizedComputeFunction,
   unwrapValueBag,
 } from '../types';
+import { MockAi } from '@dxos/ai/testing';
 
 describe('workflow', () => {
   test('run', async () => {
@@ -249,11 +250,11 @@ const createTestExecutionContext = (mocks?: {
   functions?: Context.Tag.Service<FunctionCallService>;
 }): TestEffectLayers => {
   const logLayer = Layer.succeed(EventLogger, createDxosEventLogger(LogLevel.INFO));
-  const gptLayer = Layer.succeed(GptService, new MockGpt());
+  const aiLayer = AiService.makeLayer(new MockAi());
   const spaceService = DatabaseService.notAvailable;
   const queueService = QueueService.notAvailable;
   const functionCallService = Layer.succeed(FunctionCallService, mocks?.functions ?? FunctionCallService.mock());
-  return Layer.mergeAll(logLayer, gptLayer, spaceService, queueService, FetchHttpClient.layer, functionCallService);
+  return Layer.mergeAll(logLayer, aiLayer, spaceService, queueService, FetchHttpClient.layer, functionCallService);
 };
 
 type TestEffectLayers = Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>>;

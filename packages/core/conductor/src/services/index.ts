@@ -3,7 +3,6 @@
 //
 
 export * from './event-logger';
-export * from './gpt';
 export * from './function-call-service';
 
 // TODO(burdon): Separate entry point.

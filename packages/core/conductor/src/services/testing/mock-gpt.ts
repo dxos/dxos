@@ -5,14 +5,15 @@
 import type { Context } from 'effect';
 import { Effect, Stream } from 'effect';
 
-import { type GenerationStreamEvent } from '@dxos/ai';
+import { type AiServiceClient, type GenerationStreamEvent } from '@dxos/ai';
 import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { getDebugName } from '@dxos/util';
 
+import { todo } from '@dxos/debug';
+import { type AiService } from '@dxos/functions';
 import { type GptInput, type GptOutput } from '../../nodes';
 import { makeValueBag, NotExecuted, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
-import { type GptService } from '../gpt';
 
 export type MockGPTConfig = {
   initDelay?: number;
@@ -22,7 +23,8 @@ export type MockGPTConfig = {
   responses?: Record<string, string>;
 };
 
-export class MockGpt implements Context.Tag.Service<GptService> {
+// TODO(dmaretskyi): Convert to mocked AI client and move to @dxos/ai.
+export class MockGpt implements Context.Tag.Service<AiService> {
   private config: Required<MockGPTConfig>;
 
   constructor(config: MockGPTConfig = {}) {
@@ -35,6 +37,10 @@ export class MockGpt implements Context.Tag.Service<GptService> {
         default: 'This is a mock response that simulates a GPT-like output.',
       },
     };
+  }
+
+  get client(): AiServiceClient {
+    return todo();
   }
 
   public invoke(inputs: ValueBag<GptInput>): ComputeEffect<ValueBag<GptOutput>> {

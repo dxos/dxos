@@ -17,7 +17,6 @@ import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT, registry, type GptInput } from '../nodes';
-import { EdgeGpt } from '../services';
 import { TestRuntime, testServices } from '../testing';
 import { ComputeGraphModel, makeValueBag, unwrapValueBag, type ValueEffect } from '../types';
 
@@ -125,7 +124,7 @@ describe.skip('GPT pipelines', () => {
             Effect.provide(
               testServices({
                 enableLogging: ENABLE_LOGGING,
-                gpt: new EdgeGpt(new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL })),
+                ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
               }),
             ),
             Scope.extend(scope),
@@ -162,7 +161,7 @@ describe.skip('GPT pipelines', () => {
             Effect.provide(
               testServices({
                 enableLogging: ENABLE_LOGGING,
-                gpt: new EdgeGpt(new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL })),
+                ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
               }),
             ),
             Scope.extend(scope),
@@ -208,7 +207,7 @@ describe.skip('GPT pipelines', () => {
         Effect.provide(
           testServices({
             enableLogging: ENABLE_LOGGING,
-            gpt: new EdgeGpt(new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL })),
+            ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
           }),
         ),
       );
@@ -245,7 +244,7 @@ describe.skip('GPT pipelines', () => {
           Effect.provide(
             testServices({
               enableLogging: ENABLE_LOGGING,
-              gpt: new EdgeGpt(createTestOllamaClient()),
+              ai: createTestOllamaClient(),
             }),
           ),
         );

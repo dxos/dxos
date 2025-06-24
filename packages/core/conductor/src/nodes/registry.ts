@@ -2,11 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Schema } from 'effect';
+import { Effect, Schema, Stream } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
-import { defineTool, Message, type Tool, ToolTypes } from '@dxos/ai';
-import { Filter, getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
+import {
+  type AiServiceClient,
+  DEFAULT_EDGE_MODEL,
+  defineTool,
+  type GenerateRequest,
+  type GenerationStreamEvent,
+  Message,
+  MixedStreamParser,
+  type Tool,
+  ToolTypes,
+} from '@dxos/ai';
+import { ATTR_TYPE, Filter, getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
@@ -32,8 +42,8 @@ import {
   TemplateOutput,
   TextToImageOutput,
 } from './types';
-import { GptService } from '../services';
-import { DatabaseService, QueueService } from '@dxos/functions';
+import { EventLogger } from '../services';
+import { AiService, DatabaseService, QueueService } from '@dxos/functions';
 import {
   DEFAULT_INPUT,
   DEFAULT_OUTPUT,
@@ -49,6 +59,9 @@ import {
   synchronizedComputeFunction,
   unwrapValueBag,
 } from '../types';
+import { log } from '@dxos/log';
+import { makePushIterable } from '@dxos/async';
+import { Obj, Type } from '@dxos/echo';
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).
@@ -95,6 +108,7 @@ export const isFalsy = (value: any) =>
 
 export const isTruthy = (value: any) => !isFalsy(value);
 
+// TODO(dmaretskyi): Separate into definition and implementation.
 export const registry: Record<NodeType, Executable> = {
   //
   // System
@@ -373,8 +387,100 @@ export const registry: Record<NodeType, Executable> = {
     output: GptOutput,
     exec: (input) =>
       Effect.gen(function* () {
-        const gpt = yield* GptService;
-        return yield* gpt.invoke(input);
+        const { systemPrompt, prompt, history = [], tools = [] } = yield* unwrapValueBag(input);
+        const { client: aiClient } = yield* AiService;
+
+        const messages: Message[] = [
+          ...history,
+          {
+            id: ObjectId.random(),
+            role: 'user',
+            content: [{ type: 'text', text: prompt }],
+          },
+        ];
+
+        log.info('generating', { systemPrompt, prompt, history, tools: tools.map((tool) => tool.name) });
+        const generationStream = yield* Effect.promise(() =>
+          generate(aiClient, {
+            model: DEFAULT_EDGE_MODEL,
+            history: messages,
+            systemPrompt,
+            tools: tools as Tool[],
+          }),
+        );
+        const logger = yield* EventLogger;
+
+        const stream = Stream.fromAsyncIterable(generationStream, (e) => new Error(String(e))).pipe(
+          Stream.tap((event) => {
+            logger.log({
+              type: 'custom',
+              nodeId: logger.nodeId!,
+              event,
+            });
+            return Effect.void;
+          }),
+        );
+
+        // Separate tokens into a separate stream.
+        const [resultStream, tokenStream] = yield* Stream.broadcast(stream, 2, { capacity: 'unbounded' });
+
+        const outputMessages = yield* resultStream.pipe(
+          Stream.runDrain,
+          Effect.map(() => generationStream.result),
+          Effect.cached, // Cache the result to avoid re-draining the stream.
+        );
+
+        const outputWithAPrompt = outputMessages.pipe(
+          Effect.map((messages) =>
+            // TODO(dmaretskyi): Why do we need to prepend the last message
+            [messages.at(-1)!, ...messages].map((msg) => ({
+              [ATTR_TYPE]: Type.getDXN(Message),
+              ...msg,
+            })),
+          ),
+        );
+
+        const text = outputWithAPrompt.pipe(
+          Effect.map((messages) =>
+            messages
+              .map((message) => message.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])))
+              .join(''),
+          ),
+        );
+
+        const cot = outputWithAPrompt.pipe(
+          Effect.map(
+            (messages) =>
+              messages
+                .at(-1)!
+                .content.filter((block) => block.type === 'text')
+                .find((block) => block.disposition === 'cot')?.text,
+          ),
+        );
+
+        const artifact = Effect.gen(function* () {
+          const output = yield* outputMessages;
+          const textContent = yield* text;
+          const begin = textContent.lastIndexOf('<artifact>');
+          const end = textContent.indexOf('</artifact>');
+          if (begin === -1 || end === -1) {
+            return undefined;
+          }
+
+          const artifactData = textContent.slice(begin + '<artifact>'.length, end).trim();
+
+          return artifactData;
+        });
+
+        // TODO(burdon): Parse COT on the server (message ontology).
+        return makeValueBag<GptOutput>({
+          messages: outputWithAPrompt,
+          tokenCount: 0,
+          text,
+          tokenStream,
+          cot,
+          artifact,
+        });
       }),
   }),
 
@@ -416,3 +522,47 @@ const textToImageTool: Tool = defineTool('testing', {
     // model: '@testing/kitten-in-bubble',
   },
 });
+
+const generate = async (
+  ai: AiServiceClient,
+  generationRequest: GenerateRequest,
+  { abort }: { abort?: AbortSignal } = {},
+): Promise<GenerateResult> => {
+  const stream = await ai.execStream(generationRequest);
+  const parser = new MixedStreamParser();
+  const resultIterable = makePushIterable<GenerationStreamEvent>();
+
+  let completed = false;
+  parser.streamEvent.on((event) => {
+    log.info('stream event', { event });
+    resultIterable.next(event);
+  });
+  const messages = await parser.parse(stream);
+  completed = true;
+
+  resultIterable.return(messages);
+
+  abort?.addEventListener('abort', () => {
+    if (!completed) {
+      resultIterable.throw(new Error('Aborted'));
+    }
+  });
+
+  return {
+    [Symbol.asyncIterator]: resultIterable[Symbol.asyncIterator],
+    get result() {
+      if (!completed) {
+        throw new Error('Iterable not completed');
+      }
+
+      return messages;
+    },
+  };
+};
+
+interface GenerateResult extends AsyncIterable<GenerationStreamEvent> {
+  /**
+   * @throws If the iterable is not completed.
+   */
+  get result(): Message[];
+}
