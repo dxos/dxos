@@ -31,7 +31,7 @@ export default async (context: PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const { graph } = context.getCapability(Capabilities.AppGraph);
   const layout = context.getCapability(Capabilities.Layout);
-  const deck = context.getCapability(DeckCapabilities.DeckState);
+  const deck = context.getCapabilities(DeckCapabilities.DeckState)[0];
   const attention = context.getCapability(AttentionCapabilities.Attention);
   const state = context.getCapability(SpaceCapabilities.MutableState);
   const client = context.getCapability(ClientCapabilities.Client);
@@ -39,7 +39,7 @@ export default async (context: PluginContext) => {
   const defaultSpace = client.spaces.default;
   await defaultSpace.waitUntilReady();
 
-  if (deck.activeDeck === 'default') {
+  if (deck?.activeDeck === 'default') {
     await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: defaultSpace.id }));
   }
 

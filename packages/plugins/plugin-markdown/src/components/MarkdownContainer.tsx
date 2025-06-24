@@ -3,15 +3,23 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-import { Capabilities, useAppGraph, useCapabilities, usePluginManager } from '@dxos/app-framework';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Capabilities, Surface, useAppGraph, useCapabilities, usePluginManager } from '@dxos/app-framework';
+import { DXN, Filter, Obj, Query } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
-import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, useQuery, useSpace } from '@dxos/react-client/echo';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
-import { type CommandMenuGroup, type CommandMenuItem, insertAtCursor, insertAtLineStart } from '@dxos/react-ui-editor';
+import {
+  type CommandMenuGroup,
+  type CommandMenuItem,
+  insertAtCursor,
+  insertAtLineStart,
+  type PreviewLinkRef,
+  type PreviewOptions,
+} from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
@@ -43,7 +51,28 @@ const MarkdownContainer = ({
   const scrollPastEnd = role === 'article';
   const doc = Obj.instanceOf(DocumentType, object) ? object : undefined;
   const text = Obj.instanceOf(DataType.Text, object) ? object : undefined;
-  const extensions = useExtensions({ document: doc, text, id, settings, selectionManager, viewMode, editorStateStore });
+  const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
+  const previewOptions = useMemo(
+    (): PreviewOptions => ({
+      addBlockContainer: (link, el) => {
+        setPreviewBlocks((prev) => [...prev, { link, el }]);
+      },
+      removeBlockContainer: (link) => {
+        setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== link.ref));
+      },
+    }),
+    [],
+  );
+  const extensions = useExtensions({
+    document: doc,
+    text,
+    id,
+    settings,
+    selectionManager,
+    viewMode,
+    editorStateStore,
+    previewOptions,
+  });
 
   // TODO(wittjosiah): Factor out.
   const manager = usePluginManager();
@@ -93,52 +122,66 @@ const MarkdownContainer = ({
     [filter, resolve, space],
   );
 
-  if (doc) {
-    return (
-      <DocumentEditor
-        id={fullyQualifiedId(object)}
-        role={role}
-        document={doc}
-        extensions={extensions}
-        viewMode={viewMode}
-        settings={settings}
-        scrollPastEnd={scrollPastEnd}
-        onViewModeChange={onViewModeChange}
-        onLinkQuery={space ? onLinkQuery : undefined}
-      />
-    );
-  } else if (text) {
-    return (
-      <MarkdownEditor
-        id={id}
-        role={role}
-        initialValue={text.content}
-        extensions={extensions}
-        viewMode={viewMode}
-        toolbar={settings.toolbar}
-        inputMode={settings.editorInputMode}
-        scrollPastEnd={scrollPastEnd}
-        onViewModeChange={onViewModeChange}
-        onLinkQuery={space ? onLinkQuery : undefined}
-      />
-    );
-  } else {
+  const editor = doc ? (
+    <DocumentEditor
+      id={fullyQualifiedId(object)}
+      role={role}
+      document={doc}
+      extensions={extensions}
+      viewMode={viewMode}
+      settings={settings}
+      scrollPastEnd={scrollPastEnd}
+      onViewModeChange={onViewModeChange}
+      onLinkQuery={space ? onLinkQuery : undefined}
+    />
+  ) : text ? (
+    <MarkdownEditor
+      id={id}
+      role={role}
+      initialValue={text.content}
+      extensions={extensions}
+      viewMode={viewMode}
+      toolbar={settings.toolbar}
+      inputMode={settings.editorInputMode}
+      scrollPastEnd={scrollPastEnd}
+      onViewModeChange={onViewModeChange}
+      onLinkQuery={space ? onLinkQuery : undefined}
+    />
+  ) : (
     // TODO(burdon): Normalize with above.
-    return (
-      <MarkdownEditor
-        id={id}
-        role={role}
-        initialValue={object.text}
-        extensions={extensions}
-        viewMode={viewMode}
-        toolbar={settings.toolbar}
-        inputMode={settings.editorInputMode}
-        scrollPastEnd={scrollPastEnd}
-        onViewModeChange={onViewModeChange}
-        onLinkQuery={space ? onLinkQuery : undefined}
-      />
-    );
-  }
+    <MarkdownEditor
+      id={id}
+      role={role}
+      initialValue={object.text}
+      extensions={extensions}
+      viewMode={viewMode}
+      toolbar={settings.toolbar}
+      inputMode={settings.editorInputMode}
+      scrollPastEnd={scrollPastEnd}
+      onViewModeChange={onViewModeChange}
+      onLinkQuery={space ? onLinkQuery : undefined}
+    />
+  );
+
+  return (
+    <>
+      {editor}
+      {previewBlocks.map(({ link, el }) => (
+        <PreviewBlock key={link.ref} link={link} el={el} />
+      ))}
+    </>
+  );
+};
+
+// TODO(wittjosiah): This shouldn't be "card" but "block".
+//   It's not a preview card but an interactive embedded object.
+const PreviewBlock = ({ link, el }: { link: PreviewLinkRef; el: HTMLElement }) => {
+  const echoDXN = useMemo(() => DXN.parse(link.ref).asEchoDXN(), [link.ref]);
+  const space = useSpace(echoDXN?.spaceId);
+  const [subject] = useQuery(space, Query.select(Filter.ids(echoDXN?.echoId ?? '')));
+  const data = useMemo(() => ({ subject }), [subject]);
+
+  return createPortal(<Surface role='card--document' data={data} limit={1} />, el);
 };
 
 type DocumentEditorProps = Omit<MarkdownContainerProps, 'object' | 'extensionProviders' | 'editorStateStore'> &

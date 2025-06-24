@@ -4,8 +4,12 @@
 
 import '@dxos-theme';
 
-import React, { useState, useEffect, type FC } from 'react';
+import { syntaxTree } from '@codemirror/language';
+import { type EditorView } from '@codemirror/view';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
+import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Popover } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
@@ -14,16 +18,8 @@ import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory } from './components';
 import { PreviewProvider, useRefPopover } from '../components';
-import {
-  preview,
-  image,
-  type PreviewOptions,
-  type PreviewLinkRef,
-  type PreviewLinkTarget,
-  type PreviewRenderProps,
-} from '../extensions';
+import { preview, image, type PreviewLinkRef, type PreviewLinkTarget, getLinkRef } from '../extensions';
 import { str } from '../testing';
-import { createRenderer } from '../util';
 
 const handlePreviewLookup = async ({ label, ref }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
   // Random text.
@@ -37,11 +33,11 @@ const handlePreviewLookup = async ({ label, ref }: PreviewLinkRef): Promise<Prev
 
 // Async lookup.
 // TODO(burdon): Handle errors.
-const useRefTarget = (link: PreviewLinkRef, onLookup: PreviewOptions['onLookup']): PreviewLinkTarget | undefined => {
+const useRefTarget = (link: PreviewLinkRef): PreviewLinkTarget | undefined => {
   const [target, setTarget] = useState<PreviewLinkTarget | undefined>();
   useEffect(() => {
-    void onLookup?.(link).then((target) => setTarget(target ?? undefined));
-  }, [link, onLookup]);
+    void handlePreviewLookup(link).then((target) => setTarget(target ?? undefined));
+  }, [link]);
 
   return target;
 };
@@ -63,27 +59,86 @@ const PreviewCard = () => {
   );
 };
 
-// TODO(burdon): Replace with card.
-const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLookup }) => {
-  const target = useRefTarget(link, onLookup);
-  return (
+type PreviewAction =
+  | {
+      type: 'insert';
+      link: PreviewLinkRef;
+      target: PreviewLinkTarget;
+    }
+  | {
+      type: 'delete';
+      link: PreviewLinkRef;
+    };
+
+const PreviewBlock = ({ link, el, view }: { link: PreviewLinkRef; el: HTMLElement; view?: EditorView }) => {
+  const target = useRefTarget(link);
+
+  const handleAction = useCallback(
+    (action: PreviewAction) => {
+      invariant(view, 'View not found');
+      const pos = view.posAtDOM(el);
+      const node = syntaxTree(view.state).resolve(pos + 1).node.parent;
+      if (!node) {
+        return;
+      }
+
+      const link = getLinkRef(view.state, node);
+      if (link?.ref !== action.link.ref) {
+        return;
+      }
+
+      switch (action.type) {
+        // TODO(burdon): Should we dispatch to the view or mutate the document? (i.e., handle externally?)
+        // Insert ref text.
+        case 'insert': {
+          view.dispatch({
+            changes: {
+              from: node.from,
+              to: node.to,
+              insert: action.target.text,
+            },
+          });
+          break;
+        }
+        // Remove ref.
+        case 'delete': {
+          view.dispatch({
+            changes: {
+              from: node.from,
+              to: node.to,
+            },
+          });
+          break;
+        }
+      }
+    },
+    [view, el],
+  );
+
+  const handleDelete = useCallback(() => {
+    handleAction({ type: 'delete', link });
+  }, [handleAction, link]);
+
+  const handleInsert = useCallback(() => {
+    if (target) {
+      handleAction({ type: 'insert', link, target });
+    }
+  }, [handleAction, link, target]);
+
+  return createPortal(
     <Card.Content classNames={hoverableControls}>
       <div className='flex items-start'>
-        {!readonly && (
+        {!view?.state.readOnly && (
           <Card.Toolbar classNames='is-min p-[--dx-card-spacing-inline]'>
             {(link.suggest && (
               <>
-                <Card.ToolbarIconButton
-                  label='Discard'
-                  icon={'ph--x--regular'}
-                  onClick={() => onAction({ type: 'delete', link })}
-                />
+                <Card.ToolbarIconButton label='Discard' icon={'ph--x--regular'} onClick={handleDelete} />
                 {target && (
                   <Card.ToolbarIconButton
                     classNames='bg-successSurface text-successSurfaceText'
                     label='Apply'
                     icon='ph--check--regular'
-                    onClick={() => onAction({ type: 'insert', link, target })}
+                    onClick={handleInsert}
                   />
                 )}
               </>
@@ -93,7 +148,7 @@ const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLook
                 label='Delete'
                 icon='ph--x--regular'
                 classNames={[hoverableControlItem, hoverableControlItemTransition]}
-                onClick={() => onAction({ type: 'delete', link })}
+                onClick={handleDelete}
               />
             )}
           </Card.Toolbar>
@@ -104,7 +159,8 @@ const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLook
         </Card.Heading>
       </div>
       {target && <Card.Text classNames='line-clamp-3 mbs-0'>{target.text}</Card.Text>}
-    </Card.Content>
+    </Card.Content>,
+    el,
   );
 };
 
@@ -118,34 +174,55 @@ const meta: Meta<typeof EditorStory> = {
 export default meta;
 
 export const Default = {
-  render: () => (
-    <PreviewProvider onLookup={handlePreviewLookup}>
-      <EditorStory
-        text={str(
-          '# Preview',
-          '',
-          'This project is part of the [DXOS][dxn:queue:data:123] SDK.',
-          '',
-          '![DXOS][?dxn:queue:data:123]',
-          '',
-          'It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].',
-          '',
-          '## Deep dive',
-          '',
-          '![ECHO][dxn:queue:data:echo]',
-          '',
-          '',
-          '',
-        )}
-        extensions={[
-          image(),
-          preview({
-            renderBlock: createRenderer(PreviewBlock),
-            onLookup: handlePreviewLookup,
-          }),
-        ]}
-      />
-      <PreviewCard />
-    </PreviewProvider>
-  ),
+  render: () => {
+    const [view, setView] = useState<EditorView>();
+    const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
+
+    const extensions = useMemo(() => {
+      return [
+        image(),
+        preview({
+          addBlockContainer: (link, el) => {
+            setPreviewBlocks((prev) => [...prev, { link, el }]);
+          },
+          removeBlockContainer: (link) => {
+            setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== link.ref));
+          },
+        }),
+      ];
+    }, []);
+
+    const handleViewRef = useCallback((instance?: EditorView | null) => {
+      setView(instance ?? undefined);
+    }, []);
+
+    return (
+      <PreviewProvider onLookup={handlePreviewLookup}>
+        <EditorStory
+          ref={handleViewRef}
+          text={str(
+            '# Preview',
+            '',
+            'This project is part of the [DXOS][dxn:queue:data:123] SDK.',
+            '',
+            '![DXOS][?dxn:queue:data:123]',
+            '',
+            'It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].',
+            '',
+            '## Deep dive',
+            '',
+            '![ECHO][dxn:queue:data:echo]',
+            '',
+            '',
+            '',
+          )}
+          extensions={extensions}
+        />
+        <PreviewCard />
+        {previewBlocks.map(({ link, el }) => (
+          <PreviewBlock key={link.ref} link={link} el={el} view={view} />
+        ))}
+      </PreviewProvider>
+    );
+  },
 };
