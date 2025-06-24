@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './queue-service';
 export * from './event-logger';
 export * from './gpt';
 export * from './function-call-service';

@@ -8,7 +8,7 @@ import { describe, test, expect } from 'vitest';
 
 import { todo } from '@dxos/debug';
 import { ObjectId, type Ref, type RefResolver, setRefResolver } from '@dxos/echo-schema';
-import { DatabaseService, FunctionType, setUserFunctionUrlInMetadata } from '@dxos/functions';
+import { DatabaseService, FunctionType, QueueService, setUserFunctionUrlInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live, getMeta, refFromDXN } from '@dxos/live-object';
@@ -16,14 +16,7 @@ import { LogLevel } from '@dxos/log';
 
 import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import {
-  createDxosEventLogger,
-  EventLogger,
-  FunctionCallService,
-  QueueService,
-  GptService,
-  MockGpt,
-} from '../services';
+import { createDxosEventLogger, EventLogger, FunctionCallService, GptService, MockGpt } from '../services';
 import {
   AnyInput,
   AnyOutput,

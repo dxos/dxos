@@ -32,8 +32,8 @@ import {
   TemplateOutput,
   TextToImageOutput,
 } from './types';
-import { GptService, QueueService } from '../services';
-import { DatabaseService } from '@dxos/functions';
+import { GptService } from '../services';
+import { DatabaseService, QueueService } from '@dxos/functions';
 import {
   DEFAULT_INPUT,
   DEFAULT_OUTPUT,
@@ -204,8 +204,8 @@ export const registry: Record<NodeType, Executable> = {
     output: QueueOutput,
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
-        const edgeClientService = yield* QueueService;
-        const { objects: messages } = yield* Effect.promise(() => edgeClientService.queryQueue(DXN.parse(id)));
+        const { queues } = yield* QueueService;
+        const messages = yield* Effect.promise(() => queues.get(DXN.parse(id)).queryObjects());
 
         const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
@@ -227,8 +227,8 @@ export const registry: Record<NodeType, Executable> = {
           case DXN.kind.QUEUE: {
             const mappedItems = items.map((item: any) => ({ ...item, id: item.id ?? ObjectId.random() }));
 
-            const edgeClientService = yield* QueueService;
-            yield* Effect.promise(() => edgeClientService.insertIntoQueue(DXN.parse(id), mappedItems));
+            const { queues } = yield* QueueService;
+            yield* Effect.promise(() => queues.get(DXN.parse(id)).append(mappedItems));
 
             return {};
           }
