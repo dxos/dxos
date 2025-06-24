@@ -23,6 +23,7 @@ export type CreateLLMConversationParams = {
   // TODO(burdon): Rename systemPrompt.
   system?: string;
 
+  // TODO(burdon): Tool registry.
   tools: ExecutableTool[];
   history?: Message[];
   aiClient: AiServiceClient;
