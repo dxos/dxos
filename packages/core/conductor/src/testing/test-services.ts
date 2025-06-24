@@ -9,9 +9,11 @@ import { type EdgeClient, type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 
 import { consoleLogger, noopLogger } from './logger';
-import { EventLogger, GptService, SpaceService, QueueService, FunctionCallService } from '../services';
+import { EventLogger, GptService, QueueService, FunctionCallService } from '../services';
+import { DatabaseService } from '@dxos/functions';
 import { MockGpt } from '../services/testing';
 import type { ComputeRequirements } from '../types';
+import type { EchoDatabase } from '@dxos/echo-db';
 
 export type TestServiceOptions = {
   gpt?: Context.Tag.Service<GptService>;
@@ -35,13 +37,13 @@ export const testServices = ({
   const edgeClientLayer =
     edgeClient != null && edgeHttpClient != null ? QueueService.fromClient(edgeHttpClient) : QueueService.notAvailable;
   const gptLayer = Layer.succeed(GptService, gpt);
-  const spaceLayer = SpaceService.empty;
+  const databaseLayer = DatabaseService.notAvailable;
   const functionCallServiceLayer = Layer.succeed(FunctionCallService, FunctionCallService.mock());
   return Layer.mergeAll(
     logLayer,
     edgeClientLayer,
     gptLayer,
-    spaceLayer,
+    databaseLayer,
     FetchHttpClient.layer,
     functionCallServiceLayer,
   );

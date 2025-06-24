@@ -8,7 +8,7 @@ import { describe, test, expect } from 'vitest';
 
 import { todo } from '@dxos/debug';
 import { ObjectId, type Ref, type RefResolver, setRefResolver } from '@dxos/echo-schema';
-import { FunctionType, setUserFunctionUrlInMetadata } from '@dxos/functions';
+import { DatabaseService, FunctionType, setUserFunctionUrlInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live, getMeta, refFromDXN } from '@dxos/live-object';
@@ -21,7 +21,6 @@ import {
   EventLogger,
   FunctionCallService,
   QueueService,
-  SpaceService,
   GptService,
   MockGpt,
 } from '../services';
@@ -258,7 +257,7 @@ const createTestExecutionContext = (mocks?: {
 }): TestEffectLayers => {
   const logLayer = Layer.succeed(EventLogger, createDxosEventLogger(LogLevel.INFO));
   const gptLayer = Layer.succeed(GptService, new MockGpt());
-  const spaceService = SpaceService.empty;
+  const spaceService = DatabaseService.notAvailable;
   const queueService = QueueService.notAvailable;
   const functionCallService = Layer.succeed(FunctionCallService, mocks?.functions ?? FunctionCallService.mock());
   return Layer.mergeAll(logLayer, gptLayer, spaceService, queueService, FetchHttpClient.layer, functionCallService);

@@ -32,7 +32,8 @@ import {
   TemplateOutput,
   TextToImageOutput,
 } from './types';
-import { GptService, QueueService, SpaceService } from '../services';
+import { GptService, QueueService } from '../services';
+import { DatabaseService } from '@dxos/functions';
 import {
   DEFAULT_INPUT,
   DEFAULT_OUTPUT,
@@ -233,17 +234,17 @@ export const registry: Record<NodeType, Executable> = {
           }
           case DXN.kind.ECHO: {
             const { echoId, spaceId } = dxn.asEchoDXN() ?? failedInvariant();
-            const spaceService = yield* SpaceService;
+            const { db } = yield* DatabaseService;
             if (spaceId != null) {
-              invariant(spaceService.spaceId === spaceId, 'Space mismatch');
+              invariant(db.spaceId === spaceId, 'Space mismatch');
             }
 
             const {
               objects: [container],
-            } = yield* Effect.promise(() => spaceService.db.query(Filter.ids(echoId)).run());
+            } = yield* Effect.promise(() => db.query(Filter.ids(echoId)).run());
             if (isInstanceOf(TableType, container)) {
               const schema = yield* Effect.promise(async () =>
-                spaceService.db.schemaRegistry
+                db.schemaRegistry
                   .query({
                     typename: (await container.view?.load())?.query.typename,
                   })
@@ -253,12 +254,12 @@ export const registry: Record<NodeType, Executable> = {
               for (const item of items) {
                 const { id: _id, '@type': _type, ...rest } = item as any;
                 // TODO(dmaretskyi): Forbid type on create.
-                spaceService.db.add(live(schema, rest));
+                db.add(live(schema, rest));
               }
-              yield* Effect.promise(() => spaceService.db.flush());
+              yield* Effect.promise(() => db.flush());
             } else if (isInstanceOf(KanbanType, container)) {
               const schema = yield* Effect.promise(async () =>
-                spaceService.db.schemaRegistry
+                db.schemaRegistry
                   .query({
                     typename: (await container.cardView?.load())?.query.typename,
                   })
@@ -268,9 +269,9 @@ export const registry: Record<NodeType, Executable> = {
               for (const item of items) {
                 const { id: _id, '@type': _type, ...rest } = item as any;
                 // TODO(dmaretskyi): Forbid type on create.
-                spaceService.db.add(live(schema, rest));
+                db.add(live(schema, rest));
               }
-              yield* Effect.promise(() => spaceService.db.flush());
+              yield* Effect.promise(() => db.flush());
             } else {
               throw new Error(`Unsupported ECHO container type: ${getTypename(container)}`);
             }
