@@ -205,11 +205,11 @@ export const ViewEditor = ({
                     <List.ItemDragHandle />
                     <List.ItemTitle onClick={() => handleSelect(field)}>{field.path}</List.ItemTitle>
                     <List.ItemButton
+                      data-testid='hide-field-button'
                       icon='ph--eye-slash--regular'
                       // TDOO(burdon): Is this the correct test?
                       disabled={view.fields.length <= 1}
                       onClick={() => handleHide(field.id)}
-                      data-testid='hide-field-button'
                     />
                     {/* TODO(burdon): Remove unless implement undo. */}
                     {!readonly && (
