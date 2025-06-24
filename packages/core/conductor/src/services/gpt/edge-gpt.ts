@@ -7,7 +7,7 @@ import { Effect, Stream } from 'effect';
 
 import {
   DEFAULT_EDGE_MODEL,
-  type AIServiceClient,
+  type AiServiceClient,
   type GenerateRequest,
   type GenerationStreamEvent,
   type Tool,
@@ -28,7 +28,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
   public readonly imageCache = new Map<string, ImageContentBlock>();
 
-  constructor(private readonly _ai: AIServiceClient) {}
+  constructor(private readonly _ai: AiServiceClient) {}
 
   public invoke(input: ValueBag<GptInput>): ComputeEffect<ValueBag<GptOutput>> {
     return Effect.gen(this, function* () {
@@ -160,7 +160,7 @@ interface GenerateResult extends AsyncIterable<GenerationStreamEvent> {
 }
 
 const generate = async (
-  ai: AIServiceClient,
+  ai: AiServiceClient,
   generationRequest: GenerateRequest,
   { abort }: { abort?: AbortSignal } = {},
 ): Promise<GenerateResult> => {

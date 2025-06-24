@@ -20,7 +20,7 @@ import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { EchoClient, type QueuesService, QueueServiceImpl, QueueServiceStub, type Hypergraph } from '@dxos/echo-db';
+import { EchoClient, type QueueService, QueueServiceImpl, QueueServiceStub, type Hypergraph } from '@dxos/echo-db';
 import { getTypename } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -104,7 +104,7 @@ export class Client {
   private _shellManager?: ShellManager;
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
   private _edgeClient?: EdgeHttpClient = undefined;
-  private _queuesService?: QueuesService = undefined;
+  private _queuesService?: QueueService = undefined;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -402,7 +402,7 @@ export class Client {
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
       queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
-      queuesService: this._queuesService,
+      queueService: this._queuesService,
     });
     await this._echoClient.open(this._ctx);
 

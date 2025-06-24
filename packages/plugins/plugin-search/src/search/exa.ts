@@ -6,7 +6,7 @@ import { Option, Schema, SchemaAST } from 'effect';
 import Exa from 'exa-js';
 
 import {
-  type AIServiceClient,
+  type AiServiceClient,
   type GenerateRequest,
   Message,
   MixedStreamParser,
@@ -29,7 +29,7 @@ export type SearchOptions<Schema extends Schema.Schema.AnyNoContext> = {
 
   schema: Schema[];
 
-  aiService: AIServiceClient;
+  AiService: AiServiceClient;
   exaApiKey: string;
 
   liveCrawl?: boolean;
@@ -50,7 +50,7 @@ export const search = async <Schema extends Schema.Schema.AnyNoContext>(
 
   let contextSearchTerms: readonly string[] = [];
   if (options.context) {
-    contextSearchTerms = await getSearchTerms(options.aiService, options.context);
+    contextSearchTerms = await getSearchTerms(options.AiService, options.context);
     log.info('context search terms', { additionalSearchTerms: contextSearchTerms });
   }
 
@@ -81,7 +81,7 @@ export const search = async <Schema extends Schema.Schema.AnyNoContext>(
     systemPrompt += `\n<search_context>${options.context}</search_context>`;
   }
 
-  const result = await getStructuredOutput(options.aiService, {
+  const result = await getStructuredOutput(options.AiService, {
     model: '@anthropic/claude-3-5-haiku-20241022',
     systemPrompt,
     history: [
@@ -157,11 +157,11 @@ const DATA_EXTRACTION_INSTRUCTIONS = `
  * Runs the LLM to produce a structured output matching a schema
  */
 const getStructuredOutput = async <S extends Schema.Schema.AnyNoContext>(
-  aiService: AIServiceClient,
+  AiService: AiServiceClient,
   request: Omit<GenerateRequest, 'tools'> & { schema: S },
 ): Promise<Schema.Schema.Type<S>> => {
   const result = await new MixedStreamParser().parse(
-    await aiService.execStream({
+    await AiService.execStream({
       ...request,
       systemPrompt:
         request.systemPrompt +
@@ -179,8 +179,8 @@ const getStructuredOutput = async <S extends Schema.Schema.AnyNoContext>(
   return result[0].content.find((c) => c.type === 'tool_use')?.input as any;
 };
 
-const getSearchTerms = async (aiService: AIServiceClient, context: string) => {
-  const { terms } = await getStructuredOutput(aiService, {
+const getSearchTerms = async (AiService: AiServiceClient, context: string) => {
+  const { terms } = await getStructuredOutput(AiService, {
     model: '@anthropic/claude-3-5-haiku-20241022',
     systemPrompt: `
       You are a search term extraction agent.

@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { MessageCollector, emitMessageAsEvents } from './message-collector';
-import { type AIServiceClient, type GenerationStream } from './service';
+import { type AiServiceClient, type GenerationStream } from './service';
 import { GenerationStreamImpl } from './stream';
 import { DEFAULT_OLLAMA_ENDPOINT } from '../defs';
 import {
@@ -47,7 +47,7 @@ export type OllamaClientParams = {
   maxToolInvocations?: number;
 };
 
-export class OllamaClient implements AIServiceClient {
+export class OllamaAiServiceClient implements AiServiceClient {
   /**
    * Check if Ollama server is running and accessible.
    * @returns Promise that resolves to true if Ollama is running, false otherwise.
@@ -320,7 +320,7 @@ export class OllamaClient implements AIServiceClient {
     try {
       return new GenerationStreamImpl(
         controller,
-        async function* (this: OllamaClient) {
+        async function* (this: OllamaAiServiceClient) {
           const collector = new MessageCollector();
 
           // Loop while running tools.

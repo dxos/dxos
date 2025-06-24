@@ -39,7 +39,6 @@ export class WorkflowLoader {
 
   public async load(graphDxn: DXN): Promise<Workflow> {
     const graph = new ComputeGraphModel(await this._graphLoader(graphDxn));
-
     this._validateWorkflowInOut(graph);
 
     const { resolver, resolvedNodes } = this._createComputeResolver();
