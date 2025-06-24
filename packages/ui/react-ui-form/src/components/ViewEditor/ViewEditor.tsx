@@ -226,7 +226,7 @@ export const ViewEditor = ({
         </List.Root>
 
         {hiddenProperties.length > 0 && (
-          <div>
+          <>
             <div role='none' className='pli-cardSpacingInline'>
               <label className={mx(inputTextLabel)}>{t('hidden fields label')}</label>
             </div>
@@ -256,7 +256,7 @@ export const ViewEditor = ({
                 </div>
               )}
             </List.Root>
-          </div>
+          </>
         )}
       </div>
 
