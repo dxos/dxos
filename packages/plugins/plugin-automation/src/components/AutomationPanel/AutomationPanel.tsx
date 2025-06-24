@@ -87,55 +87,53 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   }
 
   return (
-    <div className='flex flex-col w-full'>
-      <div role='none' className={controlItemClasses}>
-        {triggers.length > 0 && (
-          <List.Root<FunctionTrigger> items={triggers} isItem={Schema.is(FunctionTrigger)} getId={(field) => field.id}>
-            {({ items: triggers }) => (
-              <div role='list' className='flex flex-col w-full'>
-                {triggers?.map((trigger) => {
-                  const copyAction = getCopyAction(client, trigger);
-                  return (
-                    <List.Item<FunctionTrigger>
-                      key={trigger.id}
-                      item={trigger}
-                      classNames={mx(grid, ghostHover, 'items-center', 'px-2')}
-                    >
-                      <Input.Root>
-                        <Input.Switch
-                          checked={trigger.enabled}
-                          onCheckedChange={(checked) => (trigger.enabled = checked)}
+    <div className={controlItemClasses}>
+      {triggers.length > 0 && (
+        <List.Root<FunctionTrigger> items={triggers} isItem={Schema.is(FunctionTrigger)} getId={(field) => field.id}>
+          {({ items: triggers }) => (
+            <div role='list' className='flex flex-col w-full'>
+              {triggers?.map((trigger) => {
+                const copyAction = getCopyAction(client, trigger);
+                return (
+                  <List.Item<FunctionTrigger>
+                    key={trigger.id}
+                    item={trigger}
+                    classNames={mx(grid, ghostHover, 'items-center', 'px-2')}
+                  >
+                    <Input.Root>
+                      <Input.Switch
+                        checked={trigger.enabled}
+                        onCheckedChange={(checked) => (trigger.enabled = checked)}
+                      />
+                    </Input.Root>
+
+                    <div className={'flex'}>
+                      <List.ItemTitle
+                        classNames='px-1 cursor-pointer w-0 shrink truncate'
+                        onClick={() => handleSelect(trigger)}
+                      >
+                        {getFunctionName(scripts, functions, trigger) ?? '∅'}
+                      </List.ItemTitle>
+
+                      {/* TODO: a better way to expose copy action */}
+                      {copyAction && (
+                        <Clipboard.IconButton
+                          label={t(copyAction.translationKey)}
+                          value={copyAction.contentProvider()}
                         />
-                      </Input.Root>
+                      )}
+                    </div>
 
-                      <div className={'flex'}>
-                        <List.ItemTitle
-                          classNames='px-1 cursor-pointer w-0 shrink truncate'
-                          onClick={() => handleSelect(trigger)}
-                        >
-                          {getFunctionName(scripts, functions, trigger) ?? '∅'}
-                        </List.ItemTitle>
-
-                        {/* TODO: a better way to expose copy action */}
-                        {copyAction && (
-                          <Clipboard.IconButton
-                            label={t(copyAction.translationKey)}
-                            value={copyAction.contentProvider()}
-                          />
-                        )}
-                      </div>
-
-                      <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
-                    </List.Item>
-                  );
-                })}
-              </div>
-            )}
-          </List.Root>
-        )}
-        {triggers.length > 0 && <Separator classNames='mlb-4' />}
-        <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
-      </div>
+                    <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
+                  </List.Item>
+                );
+              })}
+            </div>
+          )}
+        </List.Root>
+      )}
+      {triggers.length > 0 && <Separator classNames='mlb-4' />}
+      <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
     </div>
   );
 };
