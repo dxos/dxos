@@ -191,7 +191,7 @@ export const ViewEditor = ({
               {showHeading && (
                 <div role='heading' className={grid}>
                   <div />
-                  <div className='flex px-2 items-center text-sm'>{t('field path label')}</div>
+                  <div className='flex pli-card-spacing-inline items-center text-sm'>{t('field path label')}</div>
                 </div>
               )}
 
