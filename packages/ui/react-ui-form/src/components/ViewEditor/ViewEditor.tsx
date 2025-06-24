@@ -162,10 +162,14 @@ export const ViewEditor = ({
           </Message.Root>
         </div>
       )}
+
+      {/* TODO(burdon): Is the form read-only or just the schema? */}
+      {/* TODO(burdon): Readonly fields should take up the same space as editable fields (just be ghosted). */}
       <Form<ViewMetaType>
         autoSave
         schema={ViewMetaSchema}
         values={viewValues}
+        readonly={readonly}
         onSave={handleUpdate}
         classNames='min-bs-0 overflow-y-auto'
       />
