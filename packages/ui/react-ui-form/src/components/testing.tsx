@@ -5,8 +5,9 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-stack';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
+import { mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 export const TestLayout = ({ classNames, json, children }: ThemedClassName<PropsWithChildren<{ json?: any }>>) => (
   <div className='w-full h-full grid grid-cols-[1fr_1fr] gap-2 overflow-hidden'>
@@ -16,7 +17,7 @@ export const TestLayout = ({ classNames, json, children }: ThemedClassName<Props
 );
 
 export const TestPanel = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <div className={mx('w-full max-w-[30rem] border border-separator rounded-md', classNames)}>{children}</div>
+  <Card.Content classNames={[textBlockWidth, classNames]}>{children}</Card.Content>
 );
 
 // Symbol for accessing debug objects in tests.
