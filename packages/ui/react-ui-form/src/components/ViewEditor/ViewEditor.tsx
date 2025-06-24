@@ -153,7 +153,7 @@ export const ViewEditor = ({
   return (
     <div role='none' className={mx('overflow-y-auto', classNames)}>
       {immutable && (
-        <div role='none' className='p-2'>
+        <div role='none' className='p-3'>
           <Message.Root valence='neutral' className='rounded'>
             <Message.Title>
               <Icon icon='ph--info--regular' size={5} classNames='inline' /> {t('system schema title')}
@@ -171,8 +171,7 @@ export const ViewEditor = ({
       />
 
       <div role='none' className='min-bs-0 overflow-y-auto'>
-        {/* TODO(burdon): Clean up common form ux. */}
-        <div role='none' className='pli-card-spacing-inline mlb-card-spacing-block'>
+        <div role='none' className='pli-card-spacing-inline'>
           <label className={mx(inputTextLabel)}>{t('fields label')}</label>
         </div>
 
@@ -187,11 +186,11 @@ export const ViewEditor = ({
               {showHeading && (
                 <div role='heading' className={grid}>
                   <div />
-                  <div className='flex items-center text-sm'>{t('field path label')}</div>
+                  <div className='flex px-2 items-center text-sm'>{t('field path label')}</div>
                 </div>
               )}
 
-              <div role='list' className='flex flex-col w-full'>
+              <div role='list' className='flex flex-col w-full px-2'>
                 {fields?.map((field) => (
                   <List.Item<FieldType>
                     key={field.id}
