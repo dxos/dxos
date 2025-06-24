@@ -61,7 +61,9 @@ const CardConditionalContent = ({ role, children }: PropsWithChildren<{ role?: s
     );
   } else {
     return (
-      <CardContent {...(role === 'card--document' && { classNames: ['lg:-mli-trimMd mlb-[1em]', hoverableControls] })}>
+      <CardContent
+        {...(role === 'card--document' && { classNames: ['mlb-[1em]' /* -mli-trimMd */, hoverableControls] })}
+      >
         {children}
       </CardContent>
     );
