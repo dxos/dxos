@@ -246,7 +246,7 @@ export const ViewEditor = ({
                       item={property}
                       classNames={mx(grid, ghostHover, !readonly && 'cursor-pointer')}
                     >
-                      <List.ItemDragHandle />
+                      <List.ItemDragHandle disabled />
                       <List.ItemTitle>{property}</List.ItemTitle>
                       <div className='flex items-center gap-2'>
                         <List.ItemButton

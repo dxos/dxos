@@ -226,9 +226,9 @@ export const ListItemButton = ({
   return <IconButton disabled={isDisabled} classNames={[classNames, autoHide && disabled && 'hidden']} {...props} />;
 };
 
-export const ListItemDragHandle = () => {
+export const ListItemDragHandle = ({ disabled }: Pick<IconButtonProps, 'disabled'>) => {
   const { dragHandleRef } = useListItemContext('DRAG_HANDLE');
-  return <IconButton ref={dragHandleRef as any} icon='ph--dots-six-vertical--regular' />;
+  return <IconButton ref={dragHandleRef as any} icon='ph--dots-six-vertical--regular' disabled={disabled} />;
 };
 
 export const ListItemDragPreview = <T extends ListItemRecord>({
