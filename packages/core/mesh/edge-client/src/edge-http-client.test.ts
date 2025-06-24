@@ -24,7 +24,6 @@ const makeGet = (url: string) =>
     ),
     Effect.timeout('1 second'),
     Effect.retry({ schedule: Schedule.exponential(Duration.millis(1_000)).pipe(Schedule.jittered), times: 3 }),
-    Effect.withSpan('EdgeHttpClient'), // TODO(burdon): OTEL.
     Effect.provide(FetchHttpClient.layer),
   );
 
@@ -39,7 +38,11 @@ describe('EdgeHttpClient', () => {
   // TODO(burdon): Add request/response schema type checking.
   it('should retry with effect', async ({ expect }) => {
     const server = await createTestServer(responseHandler((attempt) => (attempt > 1 ? { value: 100 } : false)));
-    const result = await pipe(makeGet(server.url), Effect.runPromise);
+    const result = await pipe(
+      makeGet(server.url),
+      Effect.withSpan('EdgeHttpClient'), // TODO(burdon): OTEL.
+      Effect.runPromise,
+    );
     expect(result).toMatchObject({ success: true, data: { value: 100 } });
   });
 
