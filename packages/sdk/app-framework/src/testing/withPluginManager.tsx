@@ -37,7 +37,7 @@ export const setupPluginManager = ({
 }: CreateAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
   const pluginManager = new PluginManager({
     pluginLoader: () => raise(new Error('Not implemented')),
-    plugins: [StoryPlugin(), ...plugins],
+    plugins: [storyPlugin(), ...plugins],
     core: [STORY_PLUGIN, ...core],
     ...options,
   });
@@ -104,7 +104,7 @@ export const withPluginManager = (options: WithPluginManagerOptions = {}): Decor
 // No-op plugin to ensure there exists at least one plugin for the startup event.
 // This is necessary because `createApp` expects the startup event to complete before the app is ready.
 const STORY_PLUGIN = 'dxos.org/app-framework/story';
-const StoryPlugin = () =>
+const storyPlugin = () =>
   definePlugin({ id: STORY_PLUGIN, name: 'Story' }, [
     defineModule({ id: STORY_PLUGIN, activatesOn: Events.Startup, activate: () => [] }),
   ]);
