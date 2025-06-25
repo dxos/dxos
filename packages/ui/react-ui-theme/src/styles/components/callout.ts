@@ -2,28 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Theme, type ComponentFunction } from '@dxos/react-ui-types';
+import { type MessageValence, type Theme, type ComponentFunction } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { descriptionMessage } from '../fragments';
-
-// TODO(burdon): Move shared def to react-ui-types.
-type Severity = 'info' | 'warning' | 'success' | 'error';
+import { descriptionMessage, messageValence } from '../fragments';
 
 export type CalloutStyleProps = {
-  severity?: Severity;
+  valence?: MessageValence;
 };
 
-export const calloutRoot: ComponentFunction<CalloutStyleProps> = ({ severity }, etc) => {
-  return mx('flex gap-3 items-center rounded-md', descriptionMessage, etc);
+export const calloutRoot: ComponentFunction<CalloutStyleProps> = ({ valence }, etc) => {
+  return mx('flex gap-3 items-center rounded-md', messageValence(valence), descriptionMessage, etc);
 };
 
-export const calloutIcon: ComponentFunction<CalloutStyleProps> = ({ severity }, etc) => {
+export const calloutIcon: ComponentFunction<CalloutStyleProps> = ({ valence }, etc) => {
   return mx(etc);
 };
 
-export const calloutText: ComponentFunction<CalloutStyleProps> = ({ severity }, etc) => {
-  return mx('font-medium text-baseText', etc);
+export const calloutText: ComponentFunction<CalloutStyleProps> = ({ valence }, etc) => {
+  return mx('font-medium text-subdued', etc);
 };
 
 export const calloutTheme: Theme<CalloutStyleProps> = {

@@ -5,40 +5,41 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
+import { type MessageValence } from '@dxos/react-ui-types';
+
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Icon } from '../Icon';
 
-type Severity = 'info' | 'warning' | 'success' | 'error';
+const [CalloutProvider, useCalloutContext] = createContext<{ valence: MessageValence }>('Callout');
 
-const [CalloutProvider, useCalloutContext] = createContext<{ severity: Severity }>('Callout');
+type CalloutRootProps = ThemedClassName<PropsWithChildren<{ valence?: MessageValence }>>;
 
-type CalloutRootProps = ThemedClassName<PropsWithChildren<{ severity?: Severity }>>;
-
-const CalloutRoot = ({ classNames, children, severity = 'info' }: CalloutRootProps) => {
+const CalloutRoot = ({ classNames, children, valence = 'neutral' }: CalloutRootProps) => {
   const { tx } = useThemeContext();
   return (
-    <CalloutProvider severity={severity}>
-      <div role='alert' className={tx('callout.root', 'callout__root', { severity }, classNames)}>
+    <CalloutProvider valence={valence}>
+      <div role='alert' className={tx('callout.root', 'callout__root', { valence }, classNames)}>
         {children}
       </div>
     </CalloutProvider>
   );
 };
 
-const icons: Record<Severity, string> = {
+const icons: Record<MessageValence, string> = {
+  success: 'ph--check-circle--regular',
   info: 'ph--info--regular',
   warning: 'ph--warning--regular',
-  success: 'ph--check-circle--regular',
   error: 'ph--warning-circle--regular',
+  neutral: 'ph--info--regular',
 };
 
 const CalloutIcon = () => {
   const { tx } = useThemeContext();
-  const { severity } = useCalloutContext('CalloutIcon');
+  const { valence } = useCalloutContext('CalloutIcon');
   return (
     <div role='none' className='items-center'>
-      <Icon classNames={tx('callout.icon', 'callout__icon', { severity })} size={6} icon={icons[severity]} />
+      <Icon classNames={tx('callout.icon', 'callout__icon', { valence })} size={5} icon={icons[valence]} />
     </div>
   );
 };
@@ -47,8 +48,8 @@ type CalloutTextProps = PropsWithChildren;
 
 const CalloutText = ({ children }: CalloutTextProps) => {
   const { tx } = useThemeContext();
-  const { severity } = useCalloutContext('CalloutIcon');
-  return <p className={tx('callout.text', 'callout__text', { severity })}>{children}</p>;
+  const { valence } = useCalloutContext('CalloutIcon');
+  return <p className={tx('callout.text', 'callout__text', { valence })}>{children}</p>;
 };
 
 /**

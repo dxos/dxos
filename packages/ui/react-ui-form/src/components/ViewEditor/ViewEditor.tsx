@@ -155,7 +155,7 @@ export const ViewEditor = ({
     <div role='none' className={mx('overflow-y-auto', classNames)}>
       {readonly && (
         <div role='none' className={mx('is-full plb-cardSpacingBlock pli-cardSpacingInline')}>
-          <Callout.Root classNames='is-full' severity='info'>
+          <Callout.Root classNames='is-full' valence='info'>
             <Callout.Icon />
             <Callout.Text>{t('system schema description')}</Callout.Text>
           </Callout.Root>

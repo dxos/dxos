@@ -49,7 +49,7 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
   if (errorLogs.length === 0) {
     return (
       <div role='none' className={mx('flex is-full items-center justify-center m-4')}>
-        <Callout.Root classNames='is-full' severity='info'>
+        <Callout.Root classNames='is-full'>
           <Callout.Icon />
           <Callout.Text>No exceptions.</Callout.Text>
         </Callout.Root>
