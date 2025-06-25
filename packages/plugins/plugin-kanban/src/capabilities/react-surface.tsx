@@ -9,11 +9,11 @@ import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos
 import { Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { type CollectionType } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
 import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
 import { type KanbanType } from '@dxos/react-ui-kanban';
+import { type DataType } from '@dxos/schema';
 
 import { KanbanContainer, KanbanViewEditor } from '../components';
 import { KANBAN_PLUGIN } from '../meta';
@@ -38,7 +38,7 @@ export default () =>
       role: 'form-input',
       filter: (
         data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection | undefined } => {
         if (data.prop !== 'typename') {
           return false;
         }
@@ -79,7 +79,7 @@ export default () =>
       role: 'form-input',
       filter: (
         data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection | undefined } => {
         const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, PivotColumnAnnotationId);
         return !!annotation;
       },
