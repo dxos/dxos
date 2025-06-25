@@ -35,6 +35,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/util": "workspace:*",
     "chess.js": "^1.0.0"
   },
   "devDependencies": {
