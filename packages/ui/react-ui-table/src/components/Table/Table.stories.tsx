@@ -81,7 +81,6 @@ const useTestTableModel = () => {
   const handleDeleteRows = useCallback(
     (_: number, objects: any[]) => {
       for (const object of objects) {
-        console.log('Deleting row', object);
         space?.db.remove(object);
       }
     },
