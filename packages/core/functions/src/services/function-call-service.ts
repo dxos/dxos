@@ -6,6 +6,9 @@ import { Context } from 'effect';
 
 import type { SpaceId } from '@dxos/keys';
 
+/**
+ * Allows calling into other functions.
+ */
 export class FunctionCallService extends Context.Tag('FunctionCallService')<
   FunctionCallService,
   {
@@ -16,14 +19,13 @@ export class FunctionCallService extends Context.Tag('FunctionCallService')<
     return {
       callFunction: async (deployedFunctionId: string, input: any) => {
         const url = getInvocationUrl(deployedFunctionId, baseUrl, { spaceId });
-
         const result = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(input),
         });
         if (result.status >= 300 || result.status < 200) {
-          throw new Error(`Failed to invoke function: ${await result.text()}`);
+          throw new Error(`Failed to invoke function`, { cause: new Error(`HTTP error: ${await result.text()}`) });
         }
         return await result.json();
       },

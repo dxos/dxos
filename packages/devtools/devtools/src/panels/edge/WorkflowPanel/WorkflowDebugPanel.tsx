@@ -10,7 +10,7 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { createTestOllamaClient } from '@dxos/ai/testing';
 import {
   type ComputeGraph,
-  createDxosEventLogger,
+  createEventLogger,
   FunctionCallService,
   ValueBag,
   type WorkflowLoader,
@@ -230,7 +230,7 @@ const RobotAvatar = () => (
 const createLocalExecutionContext = (space: Space): Layer.Layer<Services> => {
   return new ServiceContainer()
     .setServices({
-      eventLogger: createDxosEventLogger(LogLevel.INFO),
+      eventLogger: createEventLogger(LogLevel.INFO),
       ai: AiService.make(createTestOllamaClient()),
       database: DatabaseService.make(space.db),
       queues: QueueService.make(space.queues, undefined),

@@ -5,7 +5,7 @@
 import { type Context, Effect, type Layer, type Scope } from 'effect';
 import { describe, test, expect } from 'vitest';
 
-import { MockAi } from '@dxos/ai/testing';
+import { MockAiServiceClient } from '@dxos/ai/testing';
 import { todo } from '@dxos/debug';
 import { ObjectId, type Ref, type RefResolver, setRefResolver } from '@dxos/echo-schema';
 import { AiService, FunctionType, ServiceContainer, setUserFunctionUrlInMetadata } from '@dxos/functions';
@@ -16,7 +16,7 @@ import { LogLevel } from '@dxos/log';
 
 import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { createDxosEventLogger, type FunctionCallService } from '../services';
+import { createEventLogger, type FunctionCallService } from '../services';
 import {
   AnyInput,
   AnyOutput,
@@ -249,9 +249,9 @@ const createTestExecutionContext = (mocks?: {
 }): TestEffectLayers => {
   return new ServiceContainer()
     .setServices({
-      eventLogger: createDxosEventLogger(LogLevel.INFO),
+      eventLogger: createEventLogger(LogLevel.INFO),
       functionCallService: mocks?.functions,
-      ai: AiService.make(new MockAi()),
+      ai: AiService.make(new MockAiServiceClient()),
     })
     .createLayer();
 };

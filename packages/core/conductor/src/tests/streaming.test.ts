@@ -5,7 +5,7 @@
 import { Effect, Stream, Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { testServices } from '@dxos/functions/testing';
+import { createTestServices } from '@dxos/functions/testing';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
@@ -16,7 +16,7 @@ const ENABLE_LOGGING = false;
 
 describe('Streaming pipelines', () => {
   test('synchronous stream sum pipeline', async ({ expect }) => {
-    const runtime = new TestRuntime(testServices({ enableLogging: ENABLE_LOGGING }));
+    const runtime = new TestRuntime(createTestServices({ enableLogging: ENABLE_LOGGING }));
     runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
     runtime.registerGraph('dxn:compute:stream-sum', streamSum());
 
@@ -30,7 +30,7 @@ describe('Streaming pipelines', () => {
   });
 
   test('asynchronous stream sum pipeline', async ({ expect }) => {
-    const runtime = new TestRuntime(testServices({ enableLogging: ENABLE_LOGGING }));
+    const runtime = new TestRuntime(createTestServices({ enableLogging: ENABLE_LOGGING }));
     runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
     runtime.registerGraph('dxn:compute:stream-sum', streamSum());
 

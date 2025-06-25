@@ -14,7 +14,7 @@ import {
   type GenerationStreamEvent,
 } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from '@dxos/ai/testing';
-import { testServices } from '@dxos/functions/testing';
+import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT, registry, type GptInput } from '../nodes';
@@ -27,7 +27,7 @@ const SKIP_AI_SERVICE_TESTS = true;
 describe.skip('GPT pipelines', () => {
   it.effect('text output', ({ expect }) =>
     Effect.gen(function* () {
-      const runtime = new TestRuntime(testServices({ enableLogging: ENABLE_LOGGING }));
+      const runtime = new TestRuntime(createTestServices({ enableLogging: ENABLE_LOGGING }));
       runtime.registerGraph('dxn:compute:gpt1', gpt1());
 
       yield* Effect.gen(function* () {
@@ -45,7 +45,7 @@ describe.skip('GPT pipelines', () => {
   );
 
   test('stream output', { timeout: 1000 }, async ({ expect }) => {
-    const runtime = new TestRuntime(testServices({ enableLogging: ENABLE_LOGGING }));
+    const runtime = new TestRuntime(createTestServices({ enableLogging: ENABLE_LOGGING }));
     runtime.registerGraph('dxn:compute:gpt2', gpt2());
 
     await Effect.runPromise(
@@ -109,7 +109,7 @@ describe.skip('GPT pipelines', () => {
 
   test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt output only', async ({ expect }) => {
     const runtime = new TestRuntime(
-      testServices({
+      createTestServices({
         enableLogging: ENABLE_LOGGING,
         ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
       }),
@@ -139,7 +139,7 @@ describe.skip('GPT pipelines', () => {
 
   test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt stream', async ({ expect }) => {
     const runtime = new TestRuntime(
-      testServices({
+      createTestServices({
         enableLogging: ENABLE_LOGGING,
         ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
       }),
@@ -199,7 +199,7 @@ describe.skip('GPT pipelines', () => {
       const output = yield* registry.gpt.exec!(ValueBag.make(input)).pipe(
         Effect.flatMap(ValueBag.unwrap),
         Effect.provide(
-          testServices({
+          createTestServices({
             enableLogging: ENABLE_LOGGING,
             ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
           }).createLayer(),
@@ -236,7 +236,7 @@ describe.skip('GPT pipelines', () => {
         const output = yield* registry.gpt.exec!(ValueBag.make(input)).pipe(
           Effect.flatMap(ValueBag.unwrap),
           Effect.provide(
-            testServices({
+            createTestServices({
               enableLogging: ENABLE_LOGGING,
               ai: createTestOllamaClient(),
             }).createLayer(),

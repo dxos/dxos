@@ -107,7 +107,7 @@ export type MockGPTConfig = {
   responses?: Record<string, string>;
 };
 
-export class MockAi implements AiServiceClient {
+export class MockAiServiceClient implements AiServiceClient {
   private config: Required<MockGPTConfig>;
 
   constructor(config: MockGPTConfig = {}) {
