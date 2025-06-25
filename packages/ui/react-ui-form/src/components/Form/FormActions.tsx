@@ -14,15 +14,15 @@ import { translationKey } from '../../translations';
 export type FormActionsProps = {
   readonly?: boolean;
   onCancel?: () => void;
-  flush?: boolean;
+  outerSpacing?: boolean;
 };
 
-export const FormActions = ({ readonly, onCancel, flush }: FormActionsProps) => {
+export const FormActions = ({ readonly, onCancel, outerSpacing = true }: FormActionsProps) => {
   const { t } = useTranslation(translationKey);
   const { canSave, handleSave } = useFormContext();
 
   return (
-    <div role='none' className={mx(cardSpacing, 'flex [&_button]:grow gap-1 first:mbs-0', flush && '!pli-0')}>
+    <div role='none' className={mx(cardSpacing, 'flex [&_button]:grow gap-1 first:mbs-0', !outerSpacing && '!pli-0')}>
       {onCancel && !readonly && (
         <IconButton data-testid='cancel-button' icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
       )}

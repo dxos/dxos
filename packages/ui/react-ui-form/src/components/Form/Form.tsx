@@ -34,8 +34,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<{
   filter?: PropsFilter<T>;
   sort?: PropertyKey<T>[];
   autoSave?: boolean;
-  // TODO(burdon): Rename noPadding.
-  flush?: boolean;
+  outerSpacing?: boolean | 'blockStart';
   onCancel?: () => void;
 }> &
   Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'> &
@@ -48,7 +47,7 @@ export const Form = <T extends BaseObject>({
   autoFocus,
   readonly,
   autoSave,
-  flush,
+  outerSpacing = true,
   onCancel,
   schema,
   onValuesChanged,
@@ -86,11 +85,20 @@ export const Form = <T extends BaseObject>({
         <FormFields
           {...props}
           ref={formRef}
-          classNames={[!flush && cardSpacing, classNames]}
+          classNames={[
+            outerSpacing === 'blockStart'
+              ? 'pli-cardSpacingInline mbe-cardSpacingBlock'
+              : outerSpacing
+                ? cardSpacing
+                : false,
+            classNames,
+          ]}
           readonly={readonly}
           schema={schema}
         />
-        {(onCancel || onSave) && !autoSave && <FormActions readonly={readonly} onCancel={onCancel} flush={flush} />}
+        {(onCancel || onSave) && !autoSave && (
+          <FormActions readonly={readonly} onCancel={onCancel} outerSpacing={!!outerSpacing} />
+        )}
       </div>
     </FormProvider>
   );

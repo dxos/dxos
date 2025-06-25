@@ -174,7 +174,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
             autoSave
             onSave={handleSave}
             Custom={customElements}
-            flush
+            outerSpacing={false}
             classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-4'
           />
         </ControlSection>

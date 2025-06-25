@@ -36,7 +36,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
 
   return (
     <Form
-      flush
+      outerSpacing={false}
       Custom={Custom}
       schema={FunctionTriggerSchema}
       values={trigger}
