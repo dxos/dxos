@@ -24,11 +24,11 @@ import {
 } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import { Organization } from './common/organization';
 import { ViewProjection } from './projection';
 import { createView, type ViewType } from './view';
-import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 
