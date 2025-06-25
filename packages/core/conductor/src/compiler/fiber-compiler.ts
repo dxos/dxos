@@ -2,34 +2,33 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Layer, Scope, Schema } from 'effect';
+import { Effect, Layer, Schema, Scope } from 'effect';
 
 import { raise } from '@dxos/debug';
 import {
   AiService,
-  DatabaseService,
   CredentialsService,
+  DatabaseService,
   FunctionCallService,
   QueueService,
-  SERVICE_TAGS,
   TracingService,
 } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
-import { createTopology, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
 import { createDefectLogger, EventLogger } from '../services';
 import {
-  type ComputeGraphModel,
   type ComputeEffect,
-  type Executable,
+  type ComputeGraphModel,
   type ComputeMeta,
   type ComputeNode,
   type ComputeRequirements,
-  NotExecuted,
+  type Executable,
   isNotExecuted,
+  NotExecuted,
   ValueBag,
 } from '../types';
+import { createTopology, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
 
 export type ValidateParams = {
   graph: ComputeGraphModel;
