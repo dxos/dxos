@@ -155,7 +155,7 @@ export const PlankHeading = memo(
     return (
       <StackItem.Heading
         classNames={[
-          'plb-1 border-be border-subduedSeparator items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 contain-layout',
+          'plb-1 items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 contain-layout',
           part === 'solo' ? soloInlinePadding : 'pli-1',
           ...(layoutMode === 'solo--fullscreen'
             ? [

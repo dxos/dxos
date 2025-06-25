@@ -34,6 +34,7 @@ import {
   StackItemHeadingLabel,
   type StackItemHeadingProps,
   type StackItemHeadingLabelProps,
+  StackItemHeadingStickyContent,
 } from './StackItemHeading';
 import { StackItemResizeHandle, type StackItemResizeHandleProps } from './StackItemResizeHandle';
 import {
@@ -229,6 +230,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
                 : 'dx-focus-ring-group-y',
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
+            role === 'section' && orientation !== 'horizontal' && 'border-be border-subduedSeparator',
             classNames,
           )}
           data-dx-stack-item
@@ -266,6 +268,7 @@ export const StackItem = {
   Content: StackItemContent,
   Heading: StackItemHeading,
   HeadingLabel: StackItemHeadingLabel,
+  HeadingStickyContent: StackItemHeadingStickyContent,
   ResizeHandle: StackItemResizeHandle,
   DragHandle: StackItemDragHandle,
   Sigil: StackItemSigil,
