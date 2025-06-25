@@ -9,15 +9,13 @@ import { SchemaAST } from 'effect';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
-  type ComputeRequirements,
   type ComputeGraph,
+  type ComputeRequirements,
+  createDxosEventLogger,
   EventLogger,
   FunctionCallService,
-  GptService,
-  OllamaGpt,
-  type WorkflowLoader,
-  createDxosEventLogger,
   ValueBag,
+  type WorkflowLoader,
 } from '@dxos/conductor';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';

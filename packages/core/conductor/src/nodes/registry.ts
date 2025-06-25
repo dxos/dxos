@@ -458,7 +458,6 @@ export const registry: Record<NodeType, Executable> = {
         );
 
         const artifact = Effect.gen(function* () {
-          const output = yield* outputMessages;
           const textContent = yield* text;
           const begin = textContent.lastIndexOf('<artifact>');
           const end = textContent.indexOf('</artifact>');

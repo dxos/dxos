@@ -8,8 +8,6 @@ import { type Context, Effect, Either, Exit, Layer, Scope } from 'effect';
 import { type ImageContentBlock } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
 import {
-  isNotExecuted,
-  ValueBag
   type ComputeEdge,
   type ComputeEvent,
   type ComputeGraphModel,
@@ -17,16 +15,17 @@ import {
   type ComputeNode,
   type ComputeRequirements,
   EventLogger,
+  FunctionCallService,
   type GptInput,
   type GptOutput,
   GptService,
+  type GraphDiagnostic,
   GraphExecutor,
+  isNotExecuted,
   MockGpt,
   QueueService,
   SpaceService,
-  type ValueBag,
-  type GraphDiagnostic,
-  FunctionCallService,
+  ValueBag,
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
 import type { EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
