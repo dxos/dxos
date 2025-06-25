@@ -9,10 +9,10 @@ import { Capabilities, contributes, createSurface, useCapability } from '@dxos/a
 import { Obj } from '@dxos/echo';
 import { FormatEnum } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
-import { type CollectionType } from '@dxos/plugin-space/types';
 import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
+import { type DataType } from '@dxos/schema';
 
 import { MapCapabilities } from './capabilities';
 import { MapContainer, MapControl } from '../components';
@@ -69,7 +69,7 @@ export default () =>
       role: 'form-input',
       filter: (
         data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection | undefined } => {
         const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, TypenameAnnotationId);
         return !!annotation;
       },
@@ -89,7 +89,7 @@ export default () =>
       role: 'form-input',
       filter: (
         data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection | undefined } => {
         const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, LocationAnnotationId);
         return !!annotation;
       },

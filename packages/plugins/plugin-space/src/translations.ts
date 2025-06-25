@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
+import { DataType } from '@dxos/schema';
+
 import { SPACE_PLUGIN } from './meta';
-import { CollectionType } from './types';
 
 export default [
   {
     'en-US': {
-      [CollectionType.typename]: {
+      [Type.getTypename(DataType.Collection)]: {
         'typename label': 'Collection',
         'object name placeholder': 'New collection',
       },

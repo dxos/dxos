@@ -8,7 +8,7 @@ import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { DocumentType } from '@dxos/plugin-markdown/types';
-import { CollectionType } from '@dxos/plugin-space/types';
+import { DataType } from '@dxos/schema';
 
 import {
   MarkdownSlide,
@@ -33,8 +33,8 @@ export default () =>
       id: `${PRESENTER_PLUGIN}/collection`,
       role: 'article',
       position: 'hoist',
-      filter: (data): data is { subject: CollectionType; variant: 'presenter' } =>
-        Obj.instanceOf(CollectionType, data.subject) && data.variant === 'presenter',
+      filter: (data): data is { subject: DataType.Collection; variant: 'presenter' } =>
+        Obj.instanceOf(DataType.Collection, data.subject) && data.variant === 'presenter',
       component: ({ data }) => <CollectionPresenterContainer collection={data.subject} />,
     }),
     createSurface({

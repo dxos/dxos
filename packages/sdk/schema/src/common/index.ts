@@ -4,6 +4,7 @@
 
 import * as AccessToken$ from './access-token';
 import * as Actor$ from './actor';
+import * as Collection$ from './collection';
 import * as Event$ from './event';
 import * as Message$ from './message';
 import * as Organization$ from './organization';
@@ -51,6 +52,15 @@ export namespace DataType {
 
   export const Event = Event$.Event;
   export type Event = Event$.Event;
+
+  //
+  // Collection
+  //
+
+  export const Collection = Collection$.Collection;
+  export type Collection = Collection$.Collection;
+  export const QueryCollection = Collection$.QueryCollection;
+  export type QueryCollection = Collection$.QueryCollection;
 
   //
   // Message
@@ -137,6 +147,8 @@ export namespace DataType {
 export const DataTypes = [
   // Objects
   DataType.AccessToken,
+  DataType.Collection,
+  DataType.QueryCollection,
   DataType.Event,
   DataType.Organization,
   DataType.Person,
