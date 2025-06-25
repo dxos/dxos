@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTranslation, Input, ElevationProvider } from '@dxos/react-ui';
+import { useTranslation, Input, ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import { ControlGroup, ControlItemInput, ControlGroupButton } from '@dxos/react-ui-form';
 import { ToolbarMenu, MenuProvider, createMenuAction, useMenuActions, createMenuItemGroup } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
@@ -122,7 +122,12 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
       )}
       {!isJoined && channel && channel.defaultThread.target && space && (
         <>
-          <ChannelToolbar attendableId={fullyQualifiedId(channel)} role={role} onJoinCall={handleJoin} />
+          <ChannelToolbar
+            classNames='border-be border-subduedSeparator'
+            attendableId={fullyQualifiedId(channel)}
+            role={role}
+            onJoinCall={handleJoin}
+          />
           <ChatContainer space={space} thread={channel.defaultThread.target} />
         </>
       )}
@@ -160,23 +165,19 @@ const useChannelToolbarActions = (onJoinCall?: () => void) => {
   const creator = useMemo(
     () =>
       Rx.make(() => {
-        const nodes = [];
-        const edges = [];
-
-        const rootGroup = createMenuItemGroup('root', {
-          label: ['channel toolbar title', { ns: THREAD_PLUGIN }],
-        });
-        nodes.push(rootGroup);
-
-        const sortAction = createMenuAction('video-call', () => onJoinCall?.(), {
-          label: ['start video call label', { ns: THREAD_PLUGIN }],
-          icon: 'ph--video-camera--regular',
-          type: 'video-call',
-        });
-        nodes.push(sortAction);
-        edges.push({ source: 'root', target: sortAction.id });
-
-        return { nodes, edges };
+        return {
+          nodes: [
+            createMenuItemGroup('root', {
+              label: ['channel toolbar title', { ns: THREAD_PLUGIN }],
+            }),
+            createMenuAction('video-call', () => onJoinCall?.(), {
+              label: ['start video call label', { ns: THREAD_PLUGIN }],
+              icon: 'ph--video-camera--regular',
+              type: 'video-call',
+            }),
+          ],
+          edges: [{ source: 'root', target: 'video-call' }],
+        };
       }),
     [],
   );
@@ -184,19 +185,19 @@ const useChannelToolbarActions = (onJoinCall?: () => void) => {
   return useMenuActions(creator);
 };
 
-type ChannelToolbarProps = {
+type ChannelToolbarProps = ThemedClassName<{
   attendableId?: string;
   role?: string;
   onJoinCall?: () => void;
-};
+}>;
 
-const ChannelToolbar = ({ attendableId, role, onJoinCall }: ChannelToolbarProps) => {
+const ChannelToolbar = ({ attendableId, role, onJoinCall, classNames }: ChannelToolbarProps) => {
   const menuProps = useChannelToolbarActions(onJoinCall);
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
       <MenuProvider {...menuProps} attendableId={attendableId}>
-        <ToolbarMenu />
+        <ToolbarMenu classNames={classNames} />
       </MenuProvider>
     </ElevationProvider>
   );
