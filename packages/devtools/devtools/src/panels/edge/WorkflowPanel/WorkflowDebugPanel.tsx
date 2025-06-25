@@ -28,6 +28,8 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
 import { useDevtoolsState } from '../../../hooks';
+import { AiService, DatabaseService, QueueService, ServiceContainer, type Services } from '@dxos/functions';
+import { createTestOllamaClient } from '@dxos/ai/testing';
 
 // TODO: reconcile with DebugPanel in ScriptPlugin
 
@@ -228,17 +230,16 @@ const RobotAvatar = () => (
   </Avatar.Root>
 );
 
-const createLocalExecutionContext = (space: Space): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> => {
-  const logLayer = Layer.succeed(EventLogger, createDxosEventLogger(LogLevel.INFO));
-  // TODO(wittjosiah): Breaks bundle.
-  const gptLayer = Layer.succeed(GptService, new OllamaGpt(null as any /* new Ollama() */));
-  const spaceService = Layer.succeed(DatabaseService, {
-    spaceId: space.id,
-    db: space.db,
-  } as any);
-  const queueService = QueueService.notAvailable;
-  const functionCallService = Layer.succeed(FunctionCallService, FunctionCallService.mock());
-  return Layer.mergeAll(logLayer, gptLayer, spaceService, queueService, FetchHttpClient.layer, functionCallService);
+const createLocalExecutionContext = (space: Space): Layer.Layer<Services> => {
+  return new ServiceContainer()
+    .setServices({
+      eventLogger: createDxosEventLogger(LogLevel.INFO),
+      ai: AiService.make(createTestOllamaClient()),
+      database: DatabaseService.make(space.db),
+      queues: QueueService.make(space.queues, undefined),
+      functionCallService: FunctionCallService.mock(),
+    })
+    .createLayer();
 };
 
 const inputTemplateFromAst = (ast: SchemaAST.AST): string => {

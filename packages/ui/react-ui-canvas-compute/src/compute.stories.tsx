@@ -9,12 +9,18 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 
 import { createTestOllamaClient } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { capabilities, createEdgeServices } from '@dxos/artifact-testing';
-import { EdgeGpt, type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
+import { capabilities, createEdgeServices, localServiceEndpoints } from '@dxos/artifact-testing';
+import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { Editor, type EditorController, type EditorRootProps, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
+import {
+  CanvasGraphModel,
+  Editor,
+  type EditorController,
+  type EditorRootProps,
+  ShapeRegistry,
+} from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -37,6 +43,8 @@ import {
   createTemplateCircuit,
   createArtifactCircuit,
 } from './testing';
+import { AiService, ServiceContainer } from '@dxos/functions';
+import { EdgeAiServiceClient } from '@dxos/ai';
 
 // const FormSchema = Schema.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
 
@@ -193,7 +201,7 @@ export const Default: Story = {
     snapToGrid: false,
     sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(),
+    ...createComputeGraphController(CanvasGraphModel.create<ComputeShape>(), new ServiceContainer()),
   },
 };
 
@@ -204,7 +212,7 @@ export const Beacon: Story = {
     snapToGrid: false,
     sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createBasicCircuit()),
+    ...createComputeGraphController(createBasicCircuit(), new ServiceContainer()),
   },
 };
 
@@ -215,7 +223,7 @@ export const Transform: Story = {
     snapToGrid: false,
     sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createTransformCircuit()),
+    ...createComputeGraphController(createTransformCircuit(), new ServiceContainer()),
   },
 };
 
@@ -226,7 +234,7 @@ export const Logic: Story = {
     snapToGrid: false,
     sidebar: 'compute',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createLogicCircuit()),
+    ...createComputeGraphController(createLogicCircuit(), new ServiceContainer()),
   },
 };
 
@@ -237,7 +245,7 @@ export const Control: Story = {
     snapToGrid: false,
     sidebar: 'compute',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createControlCircuit()),
+    ...createComputeGraphController(createControlCircuit(), new ServiceContainer()),
   },
 };
 
@@ -257,7 +265,12 @@ export const Template: Story = {
     snapToGrid: false,
     // sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createTemplateCircuit(), createEdgeServices()),
+    ...createComputeGraphController(
+      createTemplateCircuit(),
+      new ServiceContainer().setServices({
+        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
+      }),
+    ),
   },
 };
 
@@ -269,7 +282,12 @@ export const GPT: Story = {
     // sidebar: 'json',
     sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createGptCircuit({ history: true }), createEdgeServices()),
+    ...createComputeGraphController(
+      createGptCircuit({ history: true }),
+      new ServiceContainer().setServices({
+        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
+      }),
+    ),
   },
 };
 
@@ -282,7 +300,9 @@ export const Plugins: Story = {
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(
       createGptCircuit({ history: true, image: true, artifact: true }),
-      createEdgeServices(),
+      new ServiceContainer().setServices({
+        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
+      }),
     ),
   },
 };
@@ -294,7 +314,12 @@ export const Artifact: Story = {
     snapToGrid: false,
     // sidebar: 'json',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createArtifactCircuit(), createEdgeServices()),
+    ...createComputeGraphController(
+      createArtifactCircuit(),
+      new ServiceContainer().setServices({
+        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
+      }),
+    ),
   },
 };
 
@@ -306,9 +331,12 @@ export const ImageGen: Story = {
     // sidebar: 'json',
     sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createGptCircuit({ image: true, artifact: true }), {
-      gpt: new EdgeGpt(createTestOllamaClient()),
-    }),
+    ...createComputeGraphController(
+      createGptCircuit({ image: true, artifact: true }),
+      new ServiceContainer().setServices({
+        ai: AiService.make(createTestOllamaClient()),
+      }),
+    ),
   },
 };
 
@@ -319,7 +347,12 @@ export const Audio: Story = {
     snapToGrid: false,
     sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createAudioCircuit(), createEdgeServices()),
+    ...createComputeGraphController(
+      createAudioCircuit(),
+      new ServiceContainer().setServices({
+        ai: AiService.make(createTestOllamaClient()),
+      }),
+    ),
   },
 };
 
@@ -329,6 +362,11 @@ export const Voice: Story = {
     snapToGrid: false,
     sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createGPTRealtimeCircuit(), createEdgeServices()),
+    ...createComputeGraphController(
+      createGPTRealtimeCircuit(),
+      new ServiceContainer().setServices({
+        ai: AiService.make(createTestOllamaClient()),
+      }),
+    ),
   },
 };
