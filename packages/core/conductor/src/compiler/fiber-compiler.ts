@@ -16,6 +16,7 @@ import {
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
+import { createTopology, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
 import { createDefectLogger, EventLogger } from '../services';
 import {
   type ComputeEffect,
@@ -28,7 +29,6 @@ import {
   NotExecuted,
   ValueBag,
 } from '../types';
-import { createTopology, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
 
 export type ValidateParams = {
   graph: ComputeGraphModel;

@@ -2,22 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FetchHttpClient } from '@effect/platform';
-import { Effect, Layer, type Scope } from 'effect';
+import { Effect, type Layer } from 'effect';
 // import { Ollama } from 'ollama';
 import { SchemaAST } from 'effect';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
+import { createTestOllamaClient } from '@dxos/ai/testing';
 import {
   type ComputeGraph,
-  type ComputeRequirements,
   createDxosEventLogger,
-  EventLogger,
   FunctionCallService,
   ValueBag,
   type WorkflowLoader,
 } from '@dxos/conductor';
 import { EdgeHttpClient } from '@dxos/edge-client';
+import { AiService, DatabaseService, QueueService, ServiceContainer, type Services } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log, LogLevel } from '@dxos/log';
@@ -28,8 +27,6 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
 import { useDevtoolsState } from '../../../hooks';
-import { AiService, DatabaseService, QueueService, ServiceContainer, type Services } from '@dxos/functions';
-import { createTestOllamaClient } from '@dxos/ai/testing';
 
 // TODO: reconcile with DebugPanel in ScriptPlugin
 

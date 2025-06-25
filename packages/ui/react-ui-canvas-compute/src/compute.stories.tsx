@@ -7,10 +7,12 @@ import '@dxos-theme';
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
+import { EdgeAiServiceClient } from '@dxos/ai';
 import { createTestOllamaClient } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { capabilities, createEdgeServices, localServiceEndpoints } from '@dxos/artifact-testing';
+import { capabilities, localServiceEndpoints } from '@dxos/artifact-testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
+import { AiService, ServiceContainer } from '@dxos/functions';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -43,8 +45,6 @@ import {
   createTemplateCircuit,
   createArtifactCircuit,
 } from './testing';
-import { AiService, ServiceContainer } from '@dxos/functions';
-import { EdgeAiServiceClient } from '@dxos/ai';
 
 // const FormSchema = Schema.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
 

@@ -3,13 +3,13 @@
 //
 
 import { Effect } from 'effect';
+import type { Scope } from 'effect/Scope';
 
 import { raise } from '@dxos/debug';
+import type { ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import type { ServiceContainer } from '@dxos/functions';
-import type { Scope } from 'effect/Scope';
 import { GraphExecutor } from '../compiler';
 import {
   type ComputeGraphModel,

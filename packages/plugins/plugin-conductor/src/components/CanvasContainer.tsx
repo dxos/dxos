@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { EdgeAiServiceClient } from '@dxos/ai';
 import { type Config } from '@dxos/client';
 import { ComputeGraphModel } from '@dxos/conductor';
-import { createStubEdgeIdentity, EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
+import { AiService, DatabaseService, QueueService, ServiceContainer } from '@dxos/functions';
 import { useConfig } from '@dxos/react-client';
 import { fullyQualifiedId, getSpace, type Space } from '@dxos/react-client/echo';
 import {
@@ -28,7 +28,6 @@ import {
   ShapeRegistry,
 } from '@dxos/react-ui-canvas-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { AiService, DatabaseService, QueueService, ServiceContainer } from '@dxos/functions';
 
 const createServices = (config: Config, space?: Space): ServiceContainer => {
   return new ServiceContainer().setServices({
