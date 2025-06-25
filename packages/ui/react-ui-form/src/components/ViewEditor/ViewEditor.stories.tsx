@@ -17,10 +17,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 import translations from '../../translations';
-import { TestLayout, TestPanel } from '../testing';
-
-// Symbol for accessing debug objects in tests.
-export const VIEW_EDITOR_DEBUG_SYMBOL = Symbol('viewEditorDebug');
+import { TestLayout, TestPanel, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
 
 // Type definition for debug objects exposed to tests.
 export type ViewEditorDebugObjects = {

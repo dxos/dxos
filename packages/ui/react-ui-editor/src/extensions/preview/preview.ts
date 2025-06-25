@@ -53,13 +53,6 @@ export const preview = (options: PreviewOptions = {}): Extension => {
         EditorView.atomicRanges.of((view) => view.state.field(field)),
       ],
     }),
-
-    EditorView.theme({
-      '.cm-preview-block': {
-        '--dx-card-spacing-inline': 'var(--dx-trimMd)',
-        '--dx-card-spacing-block': 'var(--dx-trimMd)',
-      },
-    }),
   ];
 };
 
@@ -189,7 +182,7 @@ class PreviewBlockWidget extends WidgetType {
 
   override toDOM(view: EditorView): HTMLDivElement {
     const root = document.createElement('div');
-    root.classList.add('cm-preview-block');
+    root.classList.add('cm-preview-block', 'density-coarse');
     this._options.addBlockContainer?.(this._link, root);
     return root;
   }

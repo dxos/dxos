@@ -29,9 +29,7 @@ export const TupleInput = ({
 
   return (
     <Input.Root validationValence={status}>
-      <InputHeader error={error}>
-        <Input.Label>{label}</Input.Label>
-      </InputHeader>
+      <InputHeader error={error} label={label} />
       <div className={mx('grid gap-2', gridCols[binding.length - 1])}>
         {binding.map((prop) => (
           <Input.TextInput
