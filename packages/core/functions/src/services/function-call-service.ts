@@ -25,7 +25,7 @@ export class FunctionCallService extends Context.Tag('FunctionCallService')<
           body: JSON.stringify(input),
         });
         if (result.status >= 300 || result.status < 200) {
-          throw new Error(`Failed to invoke function`, { cause: new Error(`HTTP error: ${await result.text()}`) });
+          throw new Error('Failed to invoke function', { cause: new Error(`HTTP error: ${await result.text()}`) });
         }
         return await result.json();
       },
