@@ -82,16 +82,16 @@ export const Form = <T extends BaseObject>({
       onValid={handleValid}
       onSave={onSave}
     >
-      <FormFields
-        {...props}
-        ref={formRef}
-        testId={testId}
-        classNames={[!flush && cardSpacing, classNames]}
-        readonly={readonly}
-        schema={schema}
-      />
-
-      {(onCancel || onSave) && !autoSave && <FormActions readonly={readonly} onCancel={onCancel} flush={flush} />}
+      <div role='none' className='contents' data-testid={testId}>
+        <FormFields
+          {...props}
+          ref={formRef}
+          classNames={[!flush && cardSpacing, classNames]}
+          readonly={readonly}
+          schema={schema}
+        />
+        {(onCancel || onSave) && !autoSave && <FormActions readonly={readonly} onCancel={onCancel} flush={flush} />}
+      </div>
     </FormProvider>
   );
 };

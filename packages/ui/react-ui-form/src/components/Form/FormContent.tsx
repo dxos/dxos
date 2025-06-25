@@ -218,7 +218,7 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
     }, [schema, values, filter, sort]);
 
     return (
-      <div role='form' className={mx('is-full', classNames)} ref={forwardRef} data-testid={testId}>
+      <div role='form' className={mx('is-full', classNames)} ref={forwardRef}>
         {properties
           .map((property) => {
             return (
