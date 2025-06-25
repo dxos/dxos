@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { beforeAll, describe, expect, test } from 'vitest';
+import { Effect, Schema } from 'effect';
+import { inspect } from 'node:util';
+import { beforeAll, describe, test } from 'vitest';
 
-import { createTool, defineTool, EdgeAiServiceClient, OllamaAiServiceClient, ToolRegistry, ToolResult } from '@dxos/ai';
+import { createTool, EdgeAiServiceClient, OllamaAiServiceClient, ToolRegistry, ToolResult } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import {
   AISession,
@@ -18,8 +19,11 @@ import {
   setConsolePrinter,
   type BlueprintDefinition,
 } from '@dxos/assistant';
+import { ComputeGraphModel, type GptOutput, NODE_INPUT, NODE_OUTPUT, ValueBag } from '@dxos/conductor';
+import { TestRuntime } from '@dxos/conductor/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   AiService,
   ConfiguredCredentialsService,
@@ -30,10 +34,6 @@ import {
 import { log } from '@dxos/log';
 import { DataType, DataTypes } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
-import { inspect } from 'node:util';
-import { ComputeGraphModel, GptOutput, NODE_INPUT, NODE_OUTPUT, ValueBag } from '@dxos/conductor';
-import { TestRuntime } from '@dxos/conductor/testing';
-import { Effect, Exit, Schema, Scope } from 'effect';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
@@ -168,7 +168,7 @@ describe('experimental', () => {
         question: Schema.String,
       }),
       execute: async (params) => {
-        return ToolResult.Success(`The meaning of life is your own to decide.`);
+        return ToolResult.Success('The meaning of life is your own to decide.');
       },
     });
 
