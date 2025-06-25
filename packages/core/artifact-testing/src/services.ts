@@ -3,7 +3,6 @@
 //
 
 import { EdgeAiServiceClient } from '@dxos/ai';
-import { EdgeGpt } from '@dxos/conductor';
 import { EdgeClient, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
 
 export type ServiceEndpoints = {
@@ -28,7 +27,7 @@ export const remoteServiceEndpoints = {
 
 export const createEdgeServices = (services: ServiceEndpoints = localServiceEndpoints) => {
   return {
-    gpt: new EdgeGpt(new EdgeAiServiceClient({ endpoint: services.ai })),
+    gpt: new EdgeAiServiceClient({ endpoint: services.ai }),
     edgeClient: new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: services.edge }),
     edgeHttpClient: new EdgeHttpClient(services.edge),
   };

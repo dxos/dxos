@@ -75,7 +75,7 @@ export const BlueprintContainer = ({
         queue,
         schema: [], // TODO(burdon): Get schema from client/blueprint?
         onDone: async (objects) => {
-          queue.append(objects);
+          await queue.append(objects);
         },
       }),
     ]);
