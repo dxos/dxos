@@ -38,7 +38,7 @@ import { isNonNullable } from '@dxos/util';
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
 
-describe('experimental', () => {
+describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let queues: QueueFactory;
