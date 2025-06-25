@@ -153,8 +153,8 @@ export const ProfileContainer = () => {
               autoSave
               onSave={handleSave}
               Custom={customElements}
-              classNames='container-max-width [&_[role="form"]]:grid [&_[role="form"]]:grid-cols-1 md:[&_[role="form"]]:grid-cols-[1fr_min-content] [&_[role="form"]]:gap-4'
-              flush
+              classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-4'
+              outerSpacing={false}
             />
           </ControlSection>
         </Clipboard.Provider>

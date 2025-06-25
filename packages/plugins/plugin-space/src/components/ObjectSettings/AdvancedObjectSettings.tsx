@@ -66,7 +66,15 @@ export const AdvancedObjectSettings = ({ object }: AdvancedObjectSettingsProps) 
         {!adding && <ForeignKeys keys={keys} onDelete={handleDelete} />}
       </div>
 
-      {adding && <Form flush schema={ForeignKey} values={initialValues} onSave={handleSave} onCancel={handleCancel} />}
+      {adding && (
+        <Form
+          outerSpacing={false}
+          schema={ForeignKey}
+          values={initialValues}
+          onSave={handleSave}
+          onCancel={handleCancel}
+        />
+      )}
     </>
   );
 };
