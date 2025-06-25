@@ -128,6 +128,17 @@ describe('query api', () => {
     console.log('PeopleOrOrganizations', JSON.stringify(PeopleOrOrganizations.ast, null, 2));
   });
 
+  test('get all people not in orgs', () => {
+    const PeopleNotInOrganizations = Query.without(
+      Query.select(Filter.type(Person)),
+      Query.select(Filter.type(Person)).sourceOf(WorksFor).source(),
+    );
+
+    log('query', { ast: PeopleNotInOrganizations.ast });
+    Schema.validateSync(QueryAST.Query)(PeopleNotInOrganizations.ast);
+    console.log('PeopleNotInOrganizations', JSON.stringify(PeopleNotInOrganizations.ast, null, 2));
+  });
+
   test('get assignees of all tasks created after 2020', () => {
     const AssigneesOfAllTasksCreatedAfter2020 = Query.select(
       Filter.type(Task, { createdAt: Filter.gt('2020') }),

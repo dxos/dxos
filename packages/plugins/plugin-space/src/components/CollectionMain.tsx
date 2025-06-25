@@ -6,11 +6,11 @@ import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
 import { baseSurface, descriptionMessage, mx } from '@dxos/react-ui-theme';
+import { type DataType } from '@dxos/schema';
 
 import { SPACE_PLUGIN } from '../meta';
-import type { CollectionType } from '../types';
 
-export const CollectionMain = ({ collection }: { collection: CollectionType }) => {
+export const CollectionMain = ({ collection }: { collection: DataType.Collection }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
 
   return (

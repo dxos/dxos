@@ -236,6 +236,9 @@ export class QueryExecutor extends Resource {
       case 'UnionStep':
         ({ workingSet: newWorkingSet, trace } = await this._execUnionStep(step, workingSet));
         break;
+      case 'SetDifferenceStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execSetDifferenceStep(step, workingSet));
+        break;
       case 'TraverseStep':
         ({ workingSet: newWorkingSet, trace } = await this._execTraverseStep(step, workingSet));
         break;
@@ -553,6 +556,28 @@ export class QueryExecutor extends Resource {
 
     return {
       workingSet: [...results.values()],
+      trace,
+    };
+  }
+
+  private async _execSetDifferenceStep(
+    step: QueryPlan.SetDifferenceStep,
+    workingSet: QueryItem[],
+  ): Promise<StepExecutionResult> {
+    const trace: ExecutionTrace = {
+      ...ExecutionTrace.makeEmpty(),
+      name: 'SetDifference',
+    };
+
+    const sourceResult = await this._execPlan(step.source, [...workingSet]);
+    const excludeResult = await this._execPlan(step.exclude, [...workingSet]);
+    trace.children.push(sourceResult.trace, excludeResult.trace);
+
+    return {
+      workingSet: sourceResult.workingSet.filter((item) => {
+        const index = excludeResult.workingSet.findIndex((i) => i.objectId === item.objectId);
+        return index === -1;
+      }),
       trace,
     };
   }

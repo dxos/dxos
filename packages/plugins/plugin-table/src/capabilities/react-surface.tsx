@@ -9,13 +9,12 @@ import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos
 import { Obj, type Ref, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { type CollectionType } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
 import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TableType } from '@dxos/react-ui-table';
-import { ViewType } from '@dxos/schema';
+import { type DataType, ViewType } from '@dxos/schema';
 
 import { ObjectDetailsPanel, TableContainer, TableViewEditor } from '../components';
 import { meta } from '../meta';
@@ -76,7 +75,7 @@ export default () =>
       role: 'form-input',
       filter: (
         data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection | undefined } => {
         if (data.prop !== 'typename') {
           return false;
         }
