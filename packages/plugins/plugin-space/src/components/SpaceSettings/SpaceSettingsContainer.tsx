@@ -175,7 +175,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
             onSave={handleSave}
             Custom={customElements}
             flush
-            classNames='container-max-width [&_[role="form"]]:grid [&_[role="form"]]:grid-cols-1 md:[&_[role="form"]]:grid-cols-[1fr_min-content] [&_[role="form"]]:gap-4'
+            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-4'
           />
         </ControlSection>
       </ControlPage>
