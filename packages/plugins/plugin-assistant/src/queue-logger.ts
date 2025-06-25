@@ -36,7 +36,7 @@ export class QueueLogger implements BlueprintLogger {
   log(event: BlueprintEvent) {
     switch (event.type) {
       case 'begin':
-        this._invocationTraceQueue.append([
+        void this._invocationTraceQueue.append([
           create(InvocationTraceStartEvent, {
             type: InvocationTraceEventType.START,
             invocationId: event.invocationId,
@@ -48,7 +48,7 @@ export class QueueLogger implements BlueprintLogger {
         ]);
         break;
       case 'end':
-        this._invocationTraceQueue.append([
+        void this._invocationTraceQueue.append([
           create(InvocationTraceEndEvent, {
             type: InvocationTraceEventType.END,
             invocationId: event.invocationId,
@@ -59,7 +59,7 @@ export class QueueLogger implements BlueprintLogger {
         break;
       case 'step-start':
       case 'step-complete':
-        this._getTraceEventQueue(event.invocationId).append([
+        void this._getTraceEventQueue(event.invocationId).append([
           create(TraceEvent, {
             outcome: event.type,
             truncated: false,
@@ -77,7 +77,7 @@ export class QueueLogger implements BlueprintLogger {
         ]);
         break;
       case 'message':
-        this._getTraceEventQueue(event.invocationId).append([
+        void this._getTraceEventQueue(event.invocationId).append([
           create(TraceEvent, {
             outcome: event.type,
             truncated: false,
@@ -95,7 +95,7 @@ export class QueueLogger implements BlueprintLogger {
         ]);
         break;
       case 'block':
-        this._getTraceEventQueue(event.invocationId).append([
+        void this._getTraceEventQueue(event.invocationId).append([
           create(TraceEvent, {
             outcome: event.type,
             truncated: false,

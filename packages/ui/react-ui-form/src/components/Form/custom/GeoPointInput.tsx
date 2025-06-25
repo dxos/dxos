@@ -46,9 +46,7 @@ export const GeoPointInput = ({ type, label, disabled, getStatus, getValue, onVa
 
   return (
     <Input.Root validationValence={status}>
-      <InputHeader error={error}>
-        <Input.Label>{label}</Input.Label>
-      </InputHeader>
+      <InputHeader error={error} label={label} />
       <div role='none' className='grid grid-cols-2 gap-2'>
         <Input.TextInput
           type='text'

@@ -94,5 +94,15 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
     return null;
   }
 
-  return <Form schema={MapSettingsSchema} values={initialValues} onSave={onSave} autoSave Custom={custom} />;
+  return (
+    <Form
+      schema={MapSettingsSchema}
+      values={initialValues}
+      onSave={onSave}
+      autoSave
+      Custom={custom}
+      outerSpacing='blockStart-0'
+      classNames='pbs-inputSpacingBlock'
+    />
+  );
 };

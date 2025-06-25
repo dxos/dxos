@@ -94,7 +94,12 @@ export const PlankHeading = memo(
       } else if (variant) {
         return [];
       } else {
-        return [actions, graph.getActions(node.id)].filter((a) => a.length > 0);
+        return [
+          actions,
+          graph
+            .getActions(node.id)
+            .filter((a) => ['list-item', 'list-item-primary', 'heading-list-item'].includes(a.properties.disposition)),
+        ].filter((a) => a.length > 0);
       }
     }, [actions, node, variant, graph]);
 

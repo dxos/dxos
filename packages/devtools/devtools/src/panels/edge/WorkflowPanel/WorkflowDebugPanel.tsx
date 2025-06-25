@@ -2,27 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FetchHttpClient } from '@effect/platform';
-import { Effect, Layer, type Scope } from 'effect';
+import { Effect, type Layer } from 'effect';
 // import { Ollama } from 'ollama';
 import { SchemaAST } from 'effect';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
+import { createTestOllamaClient } from '@dxos/ai/testing';
 import {
-  type ComputeRequirements,
   type ComputeGraph,
-  EventLogger,
+  createEventLogger,
   FunctionCallService,
-  GptService,
-  OllamaGpt,
-  SpaceService,
-  QueueService,
+  ValueBag,
   type WorkflowLoader,
-  createDxosEventLogger,
-  makeValueBag,
-  unwrapValueBag,
 } from '@dxos/conductor';
 import { EdgeHttpClient } from '@dxos/edge-client';
+import { AiService, DatabaseService, QueueService, ServiceContainer, type Services } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log, LogLevel } from '@dxos/log';
@@ -131,10 +125,10 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
         const compiled = await props.loader.load(DXN.fromLocalObjectId(props.graph.id));
         response = await Effect.runPromise(
           compiled
-            .run(makeValueBag(requestBody))
+            .run(ValueBag.make(requestBody))
             .pipe(
               Effect.withSpan('runWorkflow'),
-              Effect.flatMap(unwrapValueBag),
+              Effect.flatMap(ValueBag.unwrap),
               Effect.provide(createLocalExecutionContext(space)),
               Effect.scoped,
             ),
@@ -233,17 +227,16 @@ const RobotAvatar = () => (
   </Avatar.Root>
 );
 
-const createLocalExecutionContext = (space: Space): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> => {
-  const logLayer = Layer.succeed(EventLogger, createDxosEventLogger(LogLevel.INFO));
-  // TODO(wittjosiah): Breaks bundle.
-  const gptLayer = Layer.succeed(GptService, new OllamaGpt(null as any /* new Ollama() */));
-  const spaceService = Layer.succeed(SpaceService, {
-    spaceId: space.id,
-    db: space.db,
-  });
-  const queueService = QueueService.notAvailable;
-  const functionCallService = Layer.succeed(FunctionCallService, FunctionCallService.mock());
-  return Layer.mergeAll(logLayer, gptLayer, spaceService, queueService, FetchHttpClient.layer, functionCallService);
+const createLocalExecutionContext = (space: Space): Layer.Layer<Services> => {
+  return new ServiceContainer()
+    .setServices({
+      eventLogger: createEventLogger(LogLevel.INFO),
+      ai: AiService.make(createTestOllamaClient()),
+      database: DatabaseService.make(space.db),
+      queues: QueueService.make(space.queues, undefined),
+      functionCallService: FunctionCallService.mock(),
+    })
+    .createLayer();
 };
 
 const inputTemplateFromAst = (ast: SchemaAST.AST): string => {
