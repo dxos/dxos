@@ -74,12 +74,13 @@ MessageRoot.displayName = MESSAGE_NAME;
 
 type MessageTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
   asChild?: boolean;
+  icon?: string;
 };
 
 const MESSAGE_TITLE_NAME = 'MessageTitle';
 
 const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
-  ({ asChild, classNames, children, ...props }, forwardedRef) => {
+  ({ asChild, classNames, children, icon, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { titleId, valence } = useMessageContext(MESSAGE_TITLE_NAME);
     const Root = asChild ? Slot : Primitive.h2;
@@ -90,7 +91,11 @@ const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
         id={titleId}
         ref={forwardedRef}
       >
-        <Icon size={5} icon={messageIcons[valence]} classNames={tx('message.icon', 'message__icon', { valence })} />
+        <Icon
+          size={5}
+          icon={icon ?? messageIcons[valence]}
+          classNames={tx('message.icon', 'message__icon', { valence })}
+        />
         <span>{children}</span>
       </Root>
     );
