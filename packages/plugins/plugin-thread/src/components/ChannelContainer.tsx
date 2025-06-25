@@ -123,10 +123,10 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
       {!isJoined && channel && channel.defaultThread.target && space && (
         <>
           <ChannelToolbar
+            classNames='border-be border-subduedSeparator'
             attendableId={fullyQualifiedId(channel)}
             role={role}
             onJoinCall={handleJoin}
-            classNames='border-be border-subduedSeparator'
           />
           <ChatContainer space={space} thread={channel.defaultThread.target} />
         </>
