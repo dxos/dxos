@@ -19,6 +19,7 @@ import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { getSpace, isLiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
+import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
 
 import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
 import { SpaceCapabilities } from '../../capabilities';
@@ -81,8 +82,8 @@ export const CreateObjectDialog = ({
   return (
     // TODO(wittjosiah): The tablist dialog pattern is copied from @dxos/plugin-manager.
     //  Consider factoring it out to the tabs package.
-    <Dialog.Content classNames='p-0 bs-content max-bs-full md:max-is-[40rem] overflow-hidden'>
-      <div role='none' className='flex justify-between pbs-2 pis-2 pie-2 @md:pbs-4 @md:pis-4 @md:pie-4'>
+    <Dialog.Content classNames={cardDialogContent}>
+      <div role='none' className={cardDialogHeader}>
         <Dialog.Title>{t('create object dialog title')}</Dialog.Title>
         <Dialog.Close asChild>
           <Button ref={closeRef} density='fine' variant='ghost' autoFocus>
@@ -92,7 +93,6 @@ export const CreateObjectDialog = ({
       </div>
 
       <CreateObjectPanel
-        classNames='p-4'
         forms={forms}
         spaces={spaces}
         target={target}

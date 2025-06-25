@@ -11,6 +11,7 @@ import { type SpaceId, type Space } from '@dxos/react-client/echo';
 import { Icon, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
+import { cardSpacing } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable, type MaybePromise } from '@dxos/util';
 
@@ -85,14 +86,13 @@ export const CreateObjectPanel = ({
 
   // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
   return (
-    <div role='form' className={mx('flex flex-col gap-2', classNames)}>
+    <div role='form' className={mx('contents', classNames)}>
       {!form ? (
         <SelectSchema options={options} resolve={resolve} onChange={handleSetTypename} />
       ) : !target ? (
         <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={setTarget} />
       ) : form.formSchema ? (
         <Form
-          flush
           autoFocus
           values={{ name: initialName }}
           schema={form.formSchema}
@@ -113,14 +113,13 @@ const SelectSpace = ({
   const { t } = useTranslation(SPACE_PLUGIN);
 
   return (
-    <SearchList.Root label={t('space input label')} classNames='flex flex-col grow overflow-hidden'>
+    <SearchList.Root label={t('space input label')} classNames={cardSpacing}>
       <SearchList.Input
         autoFocus
         data-testid='create-object-form.space-input'
         placeholder={t('space input placeholder')}
-        classNames='px-1 my-2'
       />
-      <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
+      <SearchList.Content>
         {spaces
           .sort((a, b) => {
             const aName = toLocalizedString(getSpaceDisplayName(a, { personal: a.id === defaultSpaceId }), t);
@@ -155,14 +154,13 @@ const SelectSchema = ({
   const { t } = useTranslation(SPACE_PLUGIN);
 
   return (
-    <SearchList.Root label={t('schema input label')} classNames='flex flex-col grow overflow-hidden'>
+    <SearchList.Root label={t('schema input label')} classNames={cardSpacing}>
       <SearchList.Input
         autoFocus
         data-testid='create-object-form.schema-input'
         placeholder={t('schema input placeholder')}
-        classNames='px-1 my-2'
       />
-      <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
+      <SearchList.Content>
         {options.map((option) => (
           <SearchList.Item
             key={option.typename}

@@ -91,7 +91,7 @@ export const Form = <T extends BaseObject>({
         schema={schema}
       />
 
-      {(onCancel || onSave) && !autoSave && <FormActions readonly={readonly} onCancel={onCancel} />}
+      {(onCancel || onSave) && !autoSave && <FormActions readonly={readonly} onCancel={onCancel} flush={flush} />}
     </FormProvider>
   );
 };

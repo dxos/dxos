@@ -10,6 +10,9 @@ export const cardContent =
 export const cardSpacing = 'pli-cardSpacingInline mlb-cardSpacingBlock';
 export const labelSpacing = 'mbs-inputSpacingBlock mbe-labelSpacingBlock';
 
+export const cardDialogContent = 'p-0 block bs-content min-bs-[8rem] max-bs-full md:max-is-[32rem] overflow-hidden';
+export const cardDialogHeader = `${cardSpacing} flex justify-between`;
+
 export const cardText = cardSpacing;
 
 export const cardHeading = 'text-lg font-medium line-clamp-2';
