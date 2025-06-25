@@ -12,12 +12,13 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromObservable, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
+import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities } from './capabilities';
 import { getActiveSpace } from '../hooks';
 import { SPACE_PLUGIN } from '../meta';
-import { CollectionType, SPACE_TYPE, SpaceAction, type SpaceSettingsProps } from '../types';
+import { SPACE_TYPE, SpaceAction, type SpaceSettingsProps } from '../types';
 import {
   constructObjectActions,
   constructSpaceActions,
@@ -319,7 +320,10 @@ export default (context: PluginContext) => {
               }
 
               const collection = get(
-                rxFromSignal(() => space.properties[CollectionType.typename]?.target as CollectionType | undefined),
+                rxFromSignal(
+                  () =>
+                    space.properties[Type.getTypename(DataType.Collection)]?.target as DataType.Collection | undefined,
+                ),
               );
               if (!collection) {
                 return [];
@@ -356,7 +360,9 @@ export default (context: PluginContext) => {
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (node.data instanceof CollectionType ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) =>
+              Obj.instanceOf(DataType.Collection, node.data) ? Option.some(node.data) : Option.none(),
+            ),
             Option.map((collection) => {
               const state = context.getCapability(SpaceCapabilities.State);
               const space = getSpace(collection);
