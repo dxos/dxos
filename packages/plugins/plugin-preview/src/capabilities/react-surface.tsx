@@ -20,7 +20,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
 import { TableType } from '@dxos/react-ui-table';
-import { descriptionMessage } from '@dxos/react-ui-theme';
+import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
@@ -101,7 +101,8 @@ export default () =>
         const schema = getSchema(data.subject);
         const { t } = useTranslation(PREVIEW_PLUGIN);
         if (!schema) {
-          return <p className={descriptionMessage}>{t('unable to create preview message')}</p>;
+          // TODO(burdon): Use Alert.
+          return <p className={mx(descriptionMessage)}>{t('unable to create preview message')}</p>;
         }
 
         const handleSave = useCallback((values: any, { changed }: { changed: Record<string, boolean> }) => {
