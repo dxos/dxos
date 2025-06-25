@@ -83,7 +83,7 @@ export type ControlItemProps = PropsWithChildren<{
 }>;
 
 export const controlItemClasses =
-  'p-4 container-max-width grid md:col-span-2 grid-cols-subgrid items-center gap-2 border border-separator rounded-md';
+  'p-4 container-max-width grid md:col-span-2 grid-cols-subgrid items-center gap-2 border border-separator rounded-md *:first:!mbs-0 *:last:!mbe-0';
 
 const controlItemTitleClasses = 'text-lg font-normal';
 const controlItemDescriptionClasses = 'text-base mlb-2 md:mbe-0 text-description';
