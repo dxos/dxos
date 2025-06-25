@@ -52,26 +52,25 @@ describe('useQuery', () => {
     // Wait for all reactive updates to complete.
     await new Promise((resolve) => setTimeout(resolve, 500));
 
+    // TODO(ZaymonFC): Remove this comment once the flash bug is resolved.
     /*
-     * Expected: 3 renders
-     * 1. [] (empty)
-     * 2. ['Alice', 'Bob', 'Charlie'] (all loaded, order doesn't matter)
-     * 3. ['Alice', 'Charlie'] (Bob removed, no flash)
+     * NOTE(ZaymonFC):
+     *   Expected: 3 renders
+     *   1. [] (empty)
+     *   2. ['Alice', 'Bob', 'Charlie'] (all loaded)
+     *   3. ['Alice', 'Charlie'] (Bob removed, no flash)
      *
-     * Actual: 4 renders
-     * 1. [] (empty)
-     * 2. ['Alice', 'Bob', 'Charlie'] (all loaded)
-     * 3. ['Alice', 'Charlie', 'Bob'] (FLASH BUG - Bob moves to end!)
-     * 4. ['Alice', 'Charlie'] (Bob finally removed)
+     *   Actual: 4 renders
+     *   1. [] (empty)
+     *   2. ['Alice', 'Bob', 'Charlie'] (all loaded)
+     *   3. ['Alice', 'Charlie', 'Bob'] (FLASH BUG - Bob moves to end!)
+     *   4. ['Alice', 'Charlie'] (Bob finally removed)
      */
 
-    // Convert to sets for order-independent comparison.
-    const renderSets = allRenders.map((render) => new Set(render));
-
-    expect(renderSets).toEqual([
-      new Set([]), // Initial loading state.
-      new Set(['Alice', 'Bob', 'Charlie']), // All objects loaded.
-      new Set(['Alice', 'Charlie']), // Bob removed (no flash).
+    expect(allRenders).toEqual([
+      [], // Initial loading state.
+      ['Alice', 'Bob', 'Charlie'], // All objects loaded.
+      ['Alice', 'Charlie'], // Bob removed (no flash).
     ]);
   });
 
@@ -114,6 +113,7 @@ describe('useQuery', () => {
     // Wait for all reactive updates to complete.
     await new Promise((resolve) => setTimeout(resolve, 500));
 
+    // TODO(ZaymonFC): Remove this comment once the bulk delete bug is resolved.
     /*
      * NOTE(ZaymonFC):
      *   Expected: 3 renders
