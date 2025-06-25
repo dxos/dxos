@@ -395,37 +395,7 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SetDifferenceStep",
-            "left": {
-              "steps": [
-                {
-                  "_tag": "SelectStep",
-                  "selector": {
-                    "_tag": "TypeSelector",
-                    "inverted": false,
-                    "typename": [
-                      "dxn:type:dxos.org/type/Person:0.1.0",
-                    ],
-                  },
-                  "spaces": [
-                    "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-                  ],
-                },
-                {
-                  "_tag": "FilterDeletedStep",
-                  "mode": "only-non-deleted",
-                },
-                {
-                  "_tag": "FilterStep",
-                  "filter": {
-                    "id": undefined,
-                    "props": {},
-                    "type": "object",
-                    "typename": null,
-                  },
-                },
-              ],
-            },
-            "right": {
+            "exclude": {
               "steps": [
                 {
                   "_tag": "SelectStep",
@@ -483,6 +453,36 @@ describe('QueryPlanner', () => {
                 {
                   "_tag": "FilterDeletedStep",
                   "mode": "only-non-deleted",
+                },
+              ],
+            },
+            "source": {
+              "steps": [
+                {
+                  "_tag": "SelectStep",
+                  "selector": {
+                    "_tag": "TypeSelector",
+                    "inverted": false,
+                    "typename": [
+                      "dxn:type:dxos.org/type/Person:0.1.0",
+                    ],
+                  },
+                  "spaces": [
+                    "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+                  ],
+                },
+                {
+                  "_tag": "FilterDeletedStep",
+                  "mode": "only-non-deleted",
+                },
+                {
+                  "_tag": "FilterStep",
+                  "filter": {
+                    "id": undefined,
+                    "props": {},
+                    "type": "object",
+                    "typename": null,
+                  },
                 },
               ],
             },

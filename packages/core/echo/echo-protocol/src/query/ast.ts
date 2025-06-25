@@ -199,8 +199,8 @@ export const QueryUnionClause: Schema.Schema<QueryUnionClause> = QueryUnionClaus
  */
 const QuerySetDifferenceClause_ = Schema.Struct({
   type: Schema.Literal('set-difference'),
-  left: Schema.suspend(() => Query),
-  right: Schema.suspend(() => Query),
+  source: Schema.suspend(() => Query),
+  exclude: Schema.suspend(() => Query),
 });
 export interface QuerySetDifferenceClause extends Schema.Schema.Type<typeof QuerySetDifferenceClause_> {}
 export const QuerySetDifferenceClause: Schema.Schema<QuerySetDifferenceClause> = QuerySetDifferenceClause_;
@@ -259,6 +259,10 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
       break;
     case 'union':
       query.queries.forEach((q) => visit(q, visitor));
+      break;
+    case 'set-difference':
+      visit(query.source, visitor);
+      visit(query.exclude, visitor);
       break;
   }
 };

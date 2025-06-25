@@ -251,8 +251,8 @@ export class QueryPlanner {
     return QueryPlan.Plan.make([
       {
         _tag: 'SetDifferenceStep',
-        left: this._generate(query.left, context),
-        right: this._generate(query.right, context),
+        source: this._generate(query.source, context),
+        exclude: this._generate(query.exclude, context),
       },
     ]);
   }

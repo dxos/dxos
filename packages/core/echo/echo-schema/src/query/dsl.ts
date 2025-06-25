@@ -557,8 +557,8 @@ class QueryClass implements Query<any> {
   static without<T>(source: Query<T>, exclude: Query<T>): Query<T> {
     return new QueryClass({
       type: 'set-difference',
-      left: source.ast,
-      right: exclude.ast,
+      source: source.ast,
+      exclude: exclude.ast,
     });
   }
 

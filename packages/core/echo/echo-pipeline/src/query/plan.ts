@@ -190,7 +190,7 @@ export namespace QueryPlan {
   export type SetDifferenceStep = {
     _tag: 'SetDifferenceStep';
 
-    left: Plan;
-    right: Plan;
+    source: Plan;
+    exclude: Plan;
   };
 }

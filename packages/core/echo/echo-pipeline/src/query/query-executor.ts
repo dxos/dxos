@@ -569,11 +569,17 @@ export class QueryExecutor extends Resource {
       name: 'SetDifference',
     };
 
-    const left = await this._execPlan(step.left, [...workingSet]);
-    const right = await this._execPlan(step.right, [...workingSet]);
-    trace.children.push(left.trace, right.trace);
+    const sourceResult = await this._execPlan(step.source, [...workingSet]);
+    const excludeResult = await this._execPlan(step.exclude, [...workingSet]);
+    trace.children.push(sourceResult.trace, excludeResult.trace);
 
-    return { workingSet: left.workingSet.filter((item) => !right.workingSet.includes(item)), trace };
+    return {
+      workingSet: sourceResult.workingSet.filter((item) => {
+        const index = excludeResult.workingSet.findIndex((i) => i.objectId === item.objectId);
+        return index === -1;
+      }),
+      trace,
+    };
   }
 
   private async _loadDocumentsAfterIndexQuery(indexHits: FindResult[]): Promise<(QueryItem | null)[]> {
