@@ -52,8 +52,7 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
     return (
       <div role='none' className='plb-cardSpacingBlock pli-cardSpacingInline'>
         <Callout.Root classNames='is-full'>
-          <Callout.Icon />
-          <Callout.Text>{t('row details no selection label')}</Callout.Text>
+          <Callout.Title>{t('row details no selection label')}</Callout.Title>
         </Callout.Root>
       </div>
     );

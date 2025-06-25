@@ -8,7 +8,7 @@ import React from 'react';
 
 import { type MessageValence } from '@dxos/react-ui-types';
 
-import { Message } from './Message';
+import { Callout } from './Message';
 import { withTheme } from '../../testing';
 
 type StoryProps = {
@@ -18,15 +18,15 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ valence, title, body }: StoryProps) => (
-  <Message.Root valence={valence}>
-    <Message.Title>{title}</Message.Title>
-    <Message.Content>{body}</Message.Content>
-  </Message.Root>
+  <Callout.Root valence={valence}>
+    <Callout.Title>{title}</Callout.Title>
+    <Callout.Content>{body}</Callout.Content>
+  </Callout.Root>
 );
 
 export default {
-  title: 'ui/react-ui-core/Message',
-  component: Message,
+  title: 'ui/react-ui-core/Callout',
+  component: Callout,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

@@ -41,9 +41,8 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
   if (filteredAnchors.length === 0) {
     return (
       <div role='none' className='plb-cardSpacingBlock pli-cardSpacingInline'>
-        <Callout.Root classNames='is-full'>
-          <Callout.Icon />
-          <Callout.Text>
+        <Callout.Root>
+          <Callout.Title>
             <Trans
               {...{
                 t,
@@ -53,7 +52,7 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
                 },
               }}
             />
-          </Callout.Text>
+          </Callout.Title>
         </Callout.Root>
       </div>
     );
