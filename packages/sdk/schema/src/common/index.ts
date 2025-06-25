@@ -56,6 +56,7 @@ export namespace DataType {
   //
   // Collection
   //
+
   export const Collection = Collection$.Collection;
   export type Collection = Collection$.Collection;
   export const QueryCollection = Collection$.QueryCollection;
