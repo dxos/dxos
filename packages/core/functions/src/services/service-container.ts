@@ -19,10 +19,10 @@ export interface ServiceTagRecord {
   ai: AiService;
   credentials: CredentialsService;
   database: DatabaseService;
-  queues: QueueService;
-  tracing: TracingService;
   eventLogger: EventLogger;
   functionCallService: FunctionCallService;
+  tracing: TracingService;
+  queues: QueueService;
 }
 
 /**
@@ -41,11 +41,21 @@ const SERVICE_MAPPING: Record<string, keyof ServiceRecord> = {
   [AiService.key]: 'ai',
   [CredentialsService.key]: 'credentials',
   [DatabaseService.key]: 'database',
-  [QueueService.key]: 'queues',
-  [TracingService.key]: 'tracing',
   [EventLogger.key]: 'eventLogger',
   [FunctionCallService.key]: 'functionCallService',
+  [QueueService.key]: 'queues',
+  [TracingService.key]: 'tracing',
 };
+
+export const SERVICE_TAGS: Context.Tag<any, any>[] = [
+  AiService,
+  CredentialsService,
+  DatabaseService,
+  EventLogger,
+  FunctionCallService,
+  TracingService,
+  QueueService,
+];
 
 const DEFAULT_SERVICES: Partial<ServiceRecord> = {
   tracing: TracingService.noop,

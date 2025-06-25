@@ -19,6 +19,8 @@ export const NotExecuted: NotExecuted = { kind: 'not-executed' };
 
 export const isNotExecuted = (value: any): value is NotExecuted => value.kind === 'not-executed';
 
+export type ConductorError = Error | NotExecuted;
+
 //
 // Values
 //
@@ -28,7 +30,7 @@ export type ValueRecord = Record<string, any>;
 /**
  * For individual values passed through the compute function.
  */
-export type ValueEffect<T> = Effect.Effect<T, Error | NotExecuted, never>;
+export type ValueEffect<T> = Effect.Effect<T, ConductorError, never>;
 
 /**
  * A bag of values that can be fulfilled asynchronously and independently.
@@ -90,7 +92,7 @@ export type ComputeRequirements = Services | Scope.Scope;
 /**
  * For results of compute functions.
  */
-export type ComputeEffect<T> = Effect.Effect<T, Error | NotExecuted, ComputeRequirements>;
+export type ComputeEffect<T> = Effect.Effect<T, ConductorError, ComputeRequirements>;
 
 /**
  * Lifts a compute function that takes all inputs together and returns all outputs together.

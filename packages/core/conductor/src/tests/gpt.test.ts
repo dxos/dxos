@@ -27,7 +27,7 @@ const SKIP_AI_SERVICE_TESTS = true;
 describe.skip('GPT pipelines', () => {
   it.effect('text output', ({ expect }) =>
     Effect.gen(function* () {
-      const runtime = new TestRuntime();
+      const runtime = new TestRuntime(testServices({ enableLogging: ENABLE_LOGGING }));
       runtime.registerGraph('dxn:compute:gpt1', gpt1());
 
       yield* Effect.gen(function* () {
@@ -40,12 +40,12 @@ describe.skip('GPT pipelines', () => {
         expect(text).toEqual('This is a mock response that simulates a GPT-like output.');
 
         yield* Scope.close(scope, Exit.void).pipe(Effect.withSpan('closeScope'));
-      }).pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()), Effect.withSpan('test'));
+      }).pipe(Effect.withSpan('test'));
     }),
   );
 
   test('stream output', { timeout: 1000 }, async ({ expect }) => {
-    const runtime = new TestRuntime();
+    const runtime = new TestRuntime(testServices({ enableLogging: ENABLE_LOGGING }));
     runtime.registerGraph('dxn:compute:gpt2', gpt2());
 
     await Effect.runPromise(
@@ -58,7 +58,7 @@ describe.skip('GPT pipelines', () => {
               prompt: 'What is the meaning of life?',
             }),
           )
-          .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()), Scope.extend(scope));
+          .pipe(Scope.extend(scope));
 
         // log.info('text in test', { text: getDebugName(text) });
         const logger = Effect.runPromise(output.values.text).then((token) => {
@@ -108,7 +108,12 @@ describe.skip('GPT pipelines', () => {
   });
 
   test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt output only', async ({ expect }) => {
-    const runtime = new TestRuntime();
+    const runtime = new TestRuntime(
+      testServices({
+        enableLogging: ENABLE_LOGGING,
+        ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
+      }),
+    );
     runtime.registerGraph('dxn:compute:gpt1', gpt1());
 
     await Effect.runPromise(
@@ -121,15 +126,7 @@ describe.skip('GPT pipelines', () => {
               prompt: 'What is the meaning of life?',
             }),
           )
-          .pipe(
-            Effect.provide(
-              testServices({
-                enableLogging: ENABLE_LOGGING,
-                ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
-              }).createLayer(),
-            ),
-            Scope.extend(scope),
-          );
+          .pipe(Scope.extend(scope));
 
         const text: ValueEffect<string> = computeResult.values.text;
         const llmTextOutput = yield* text;
@@ -141,7 +138,12 @@ describe.skip('GPT pipelines', () => {
   });
 
   test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt stream', async ({ expect }) => {
-    const runtime = new TestRuntime();
+    const runtime = new TestRuntime(
+      testServices({
+        enableLogging: ENABLE_LOGGING,
+        ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
+      }),
+    );
     runtime.registerGraph('dxn:compute:gpt2', gpt2());
 
     await Effect.runPromise(
@@ -157,16 +159,7 @@ describe.skip('GPT pipelines', () => {
               prompt: 'What is the meaning of life?',
             }),
           )
-          .pipe(
-            Effect.flatMap(ValueBag.unwrap),
-            Effect.provide(
-              testServices({
-                enableLogging: ENABLE_LOGGING,
-                ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
-              }).createLayer(),
-            ),
-            Scope.extend(scope),
-          );
+          .pipe(Effect.flatMap(ValueBag.unwrap), Scope.extend(scope));
 
         // log.info('text in test', { text: getDebugName(text) });
 

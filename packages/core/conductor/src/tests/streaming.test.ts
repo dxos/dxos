@@ -16,25 +16,21 @@ const ENABLE_LOGGING = false;
 
 describe('Streaming pipelines', () => {
   test('synchronous stream sum pipeline', async ({ expect }) => {
-    const runtime = new TestRuntime();
+    const runtime = new TestRuntime(testServices({ enableLogging: ENABLE_LOGGING }));
     runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
     runtime.registerGraph('dxn:compute:stream-sum', streamSum());
 
     const { result } = await Effect.runPromise(
       runtime
         .runGraph('dxn:compute:stream-sum', ValueBag.make({ stream: Effect.succeed(Stream.range(1, 10)) }))
-        .pipe(
-          Effect.flatMap(ValueBag.unwrap),
-          Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()),
-          Effect.scoped,
-        ),
+        .pipe(Effect.flatMap(ValueBag.unwrap), Effect.scoped),
     );
 
     expect(result).toEqual(55);
   });
 
   test('asynchronous stream sum pipeline', async ({ expect }) => {
-    const runtime = new TestRuntime();
+    const runtime = new TestRuntime(testServices({ enableLogging: ENABLE_LOGGING }));
     runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
     runtime.registerGraph('dxn:compute:stream-sum', streamSum());
 
@@ -45,11 +41,7 @@ describe('Streaming pipelines', () => {
     const { result } = await Effect.runPromise(
       runtime
         .runGraph('dxn:compute:stream-sum', ValueBag.make({ stream: Effect.succeed(delayedStream) }))
-        .pipe(
-          Effect.flatMap(ValueBag.unwrap),
-          Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }).createLayer()),
-          Effect.scoped,
-        ),
+        .pipe(Effect.flatMap(ValueBag.unwrap), Effect.scoped),
     );
 
     expect(result).toEqual(55);

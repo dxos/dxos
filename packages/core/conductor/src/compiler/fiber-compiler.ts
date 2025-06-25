@@ -5,7 +5,15 @@
 import { Effect, Layer, Scope, Schema } from 'effect';
 
 import { raise } from '@dxos/debug';
-import { AiService } from '@dxos/functions';
+import {
+  AiService,
+  DatabaseService,
+  CredentialsService,
+  FunctionCallService,
+  QueueService,
+  SERVICE_TAGS,
+  TracingService,
+} from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -106,8 +114,8 @@ export const compile = async ({
         output: executor.getOutputSchema(outputNodeId),
       },
 
-      exec: (input) => {
-        return Effect.gen(function* () {
+      exec: Effect.fn('compile/compute')(
+        function* (input) {
           invariant(ValueBag.isValueBag(input));
 
           const instance = executor.clone();
@@ -121,10 +129,9 @@ export const compile = async ({
           // Log the output node inputs.
           logger.log({ type: 'begin-compute', nodeId: outputNodeId, inputs: Object.keys(outputs.values) });
           return outputs;
-        })
-          .pipe(createDefectLogger())
-          .pipe(Effect.withSpan('compile/compute'));
-      },
+        },
+        (effect) => effect.pipe(createDefectLogger()),
+      ),
     },
 
     diagnostics: executor.getDiagnostics(),
@@ -259,10 +266,16 @@ export class GraphExecutor {
     return Effect.gen(this, function* () {
       const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
 
+      // TODO(dmaretskyi): There's a generic way to copy all requirements in Effect but I don't remember how to do it.
       const layer = Layer.mergeAll(
         Layer.succeed(Scope.Scope, yield* Scope.Scope),
         Layer.succeed(EventLogger, yield* EventLogger),
         Layer.succeed(AiService, yield* AiService),
+        Layer.succeed(CredentialsService, yield* CredentialsService),
+        Layer.succeed(DatabaseService, yield* DatabaseService),
+        Layer.succeed(FunctionCallService, yield* FunctionCallService),
+        Layer.succeed(TracingService, yield* TracingService),
+        Layer.succeed(QueueService, yield* QueueService),
       );
 
       const entries = node.inputs.map(
