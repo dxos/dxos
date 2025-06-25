@@ -9,31 +9,49 @@ import { commandState } from './state';
 import { clientRectsFor, flattenRect } from '../../util';
 
 export type HintOptions = {
+  delay?: number;
   onHint: () => string | undefined;
 };
 
-export const hintViewPlugin = ({ onHint }: HintOptions) =>
+export const hintViewPlugin = ({ delay = 3_000, onHint }: HintOptions) =>
   ViewPlugin.fromClass(
     class {
       decorations = Decoration.none;
+      timeout: number | undefined;
+
       update(update: ViewUpdate) {
+        if (this.timeout) {
+          window.clearTimeout(this.timeout);
+          this.timeout = undefined;
+        }
+
         const builder = new RangeSetBuilder<Decoration>();
         const cState = update.view.state.field(commandState, false);
         if (!cState?.tooltip) {
           const selection = update.view.state.selection.main;
           const line = update.view.state.doc.lineAt(selection.from);
           // Only show if blank line.
-          // TODO(burdon): Clashes with placeholder if pos === 0.
-          // TODO(burdon): Show after delay or if blank line above?
           if (selection.from === selection.to && line.from === line.to) {
-            const hint = onHint();
-            if (hint) {
-              builder.add(selection.from, selection.to, Decoration.widget({ widget: new Hint(hint) }));
-            }
+            // Set timeout to add decoration after delay
+            this.timeout = window.setTimeout(() => {
+              const hint = onHint();
+              if (hint) {
+                const builder = new RangeSetBuilder<Decoration>();
+                builder.add(selection.from, selection.to, Decoration.widget({ widget: new Hint(hint) }));
+                this.decorations = builder.finish();
+                update.view.update([]);
+              }
+            }, delay);
           }
         }
 
         this.decorations = builder.finish();
+      }
+
+      destroy() {
+        if (this.timeout) {
+          window.clearTimeout(this.timeout);
+        }
       }
     },
     {
