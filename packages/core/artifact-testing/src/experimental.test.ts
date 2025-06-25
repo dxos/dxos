@@ -6,8 +6,8 @@ import { Effect, Schema } from 'effect';
 import { inspect } from 'node:util';
 import { beforeAll, describe, test } from 'vitest';
 
-import { createTool, EdgeAiServiceClient, OllamaAiServiceClient, ToolRegistry, ToolResult } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
+import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
+import { EXA_API_KEY } from '@dxos/ai/testing';
 import {
   AISession,
   BlueprintMachine,
@@ -19,18 +19,13 @@ import {
   setConsolePrinter,
   type BlueprintDefinition,
 } from '@dxos/assistant';
-import { ComputeGraphModel, type GptOutput, NODE_INPUT, NODE_OUTPUT, ValueBag } from '@dxos/conductor';
+import { ComputeGraphModel, NODE_INPUT, NODE_OUTPUT, ValueBag, type GptOutput } from '@dxos/conductor';
 import { TestRuntime } from '@dxos/conductor/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import {
-  AiService,
-  ConfiguredCredentialsService,
-  FunctionExecutor,
-  ServiceContainer,
-  TracingService,
-} from '@dxos/functions';
+import { AiService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
+import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DataType, DataTypes } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -45,31 +40,21 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
   let serviceContainer: ServiceContainer;
 
   beforeAll(async () => {
-    // TODO(dmaretskyi): Helper to scaffold this from a config.
     builder = await new EchoTestBuilder().open();
+    ({ db, queues } = await builder.createDatabase({ indexing: { vector: true }, types: DataTypes }));
 
-    ({ db, queues } = await builder.createDatabase({ indexing: { vector: true } }));
-    db.graph.schemaRegistry.addSchema(DataTypes);
-
-    serviceContainer = new ServiceContainer().setServices({
+    // TODO(dmaretskyi): Helper to scaffold this from a config.
+    serviceContainer = createTestServices({
       ai: {
-        client: REMOTE_AI
-          ? new EdgeAiServiceClient({
-              endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-              defaultGenerationOptions: {
-                // model: '@anthropic/claude-sonnet-4-20250514',
-                model: '@anthropic/claude-3-5-sonnet-20241022',
-              },
-            })
-          : new OllamaAiServiceClient({
-              overrides: {
-                model: 'llama3.1:8b',
-              },
-            }),
+        location: REMOTE_AI ? 'remote-edge' : 'ollama',
       },
-      credentials: new ConfiguredCredentialsService([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-      database: { db },
-      tracing: TracingService.console,
+      credentials: { credentials: [{ service: 'exa.ai', apiKey: EXA_API_KEY }] },
+      db,
+      queues,
+      logging: { enabled: true },
+      tracing: {
+        service: TracingService.console,
+      },
     });
   });
 

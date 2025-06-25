@@ -27,7 +27,7 @@ const SKIP_AI_SERVICE_TESTS = true;
 describe.skip('GPT pipelines', () => {
   it.effect('text output', ({ expect }) =>
     Effect.gen(function* () {
-      const runtime = new TestRuntime(createTestServices({ enableLogging: ENABLE_LOGGING }));
+      const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }));
       runtime.registerGraph('dxn:compute:gpt1', gpt1());
 
       yield* Effect.gen(function* () {
@@ -45,7 +45,7 @@ describe.skip('GPT pipelines', () => {
   );
 
   test('stream output', { timeout: 1000 }, async ({ expect }) => {
-    const runtime = new TestRuntime(createTestServices({ enableLogging: ENABLE_LOGGING }));
+    const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }));
     runtime.registerGraph('dxn:compute:gpt2', gpt2());
 
     await Effect.runPromise(
@@ -110,8 +110,12 @@ describe.skip('GPT pipelines', () => {
   test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt output only', async ({ expect }) => {
     const runtime = new TestRuntime(
       createTestServices({
-        enableLogging: ENABLE_LOGGING,
-        ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
+        logging: {
+          enabled: ENABLE_LOGGING,
+        },
+        ai: {
+          location: 'local-edge',
+        },
       }),
     );
     runtime.registerGraph('dxn:compute:gpt1', gpt1());
@@ -140,8 +144,12 @@ describe.skip('GPT pipelines', () => {
   test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt stream', async ({ expect }) => {
     const runtime = new TestRuntime(
       createTestServices({
-        enableLogging: ENABLE_LOGGING,
-        ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
+        logging: {
+          enabled: ENABLE_LOGGING,
+        },
+        ai: {
+          location: 'local-edge',
+        },
       }),
     );
     runtime.registerGraph('dxn:compute:gpt2', gpt2());
@@ -200,8 +208,12 @@ describe.skip('GPT pipelines', () => {
         Effect.flatMap(ValueBag.unwrap),
         Effect.provide(
           createTestServices({
-            enableLogging: ENABLE_LOGGING,
-            ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
+            logging: {
+              enabled: ENABLE_LOGGING,
+            },
+            ai: {
+              location: 'local-edge',
+            },
           }).createLayer(),
         ),
       );
@@ -237,8 +249,12 @@ describe.skip('GPT pipelines', () => {
           Effect.flatMap(ValueBag.unwrap),
           Effect.provide(
             createTestServices({
-              enableLogging: ENABLE_LOGGING,
-              ai: createTestOllamaClient(),
+              logging: {
+                enabled: ENABLE_LOGGING,
+              },
+              ai: {
+                location: 'ollama',
+              },
             }).createLayer(),
           ),
         );
