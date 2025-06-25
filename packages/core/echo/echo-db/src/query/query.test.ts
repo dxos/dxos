@@ -466,6 +466,25 @@ describe('Queries', () => {
 
       expect(objects).toMatchObject([{ name: 'Alice' }]);
     });
+
+    test('query union', async () => {
+      const query1 = Query.select(Filter.type(Testing.Contact, { name: 'Alice' })).referencedBy(
+        Testing.Task,
+        'assignee',
+      );
+      const query2 = Query.select(Filter.type(Testing.Contact, { name: 'Bob' })).referencedBy(Testing.Task, 'assignee');
+      const query = Query.all(query1, query2);
+      const { objects } = await db.query(query).run();
+      expect(objects).toHaveLength(3);
+    });
+
+    test('query set difference', async () => {
+      const query1 = Query.select(Filter.type(Testing.Contact));
+      const query2 = Query.select(Filter.type(Testing.Contact)).sourceOf(Testing.HasManager).source();
+      const query = Query.without(query1, query2);
+      const { objects } = await db.query(query).run();
+      expect(objects).toEqual([alice]);
+    });
   });
 
   describe.skip('text search', () => {
