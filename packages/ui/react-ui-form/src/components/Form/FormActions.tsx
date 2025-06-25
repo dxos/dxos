@@ -31,7 +31,7 @@ export const FormActions = ({ readonly, onCancel, outerSpacing = true }: FormAct
           ? 'pli-cardSpacingInline mbe-cardSpacingBlock'
           : outerSpacing
             ? cardSpacing
-            : false,
+            : 'mbs-cardSpacingBlock',
         'flex [&_button]:grow gap-1 first:mbs-0',
       )}
     >
