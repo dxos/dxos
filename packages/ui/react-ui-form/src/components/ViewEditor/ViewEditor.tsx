@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { type SchemaRegistry } from '@dxos/echo-db';
 import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Icon, IconButton, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Alert, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, inputTextLabel, mx } from '@dxos/react-ui-theme';
 import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
@@ -152,16 +152,7 @@ export const ViewEditor = ({
 
   return (
     <div role='none' className={mx('overflow-y-auto', classNames)}>
-      {readonly && (
-        <div role='none' className='plb-card-spacing-block pli-card-spacing-inline'>
-          <Message.Root valence='neutral' className='rounded'>
-            <Message.Title>
-              <Icon icon='ph--info--regular' size={5} classNames='inline' /> {t('system schema title')}
-            </Message.Title>
-            <Message.Body>{t('system schema description')}</Message.Body>
-          </Message.Root>
-        </div>
-      )}
+      {readonly && <Alert title={t('system schema title')}>{t('system schema description')}</Alert>}
 
       {/* TODO(burdon): Is the form read-only or just the schema? */}
       {/* TODO(burdon): Readonly fields should take up the same space as editable fields (just be ghosted). */}

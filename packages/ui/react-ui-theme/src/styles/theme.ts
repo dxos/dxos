@@ -6,6 +6,7 @@ import { type ComponentFunction, type Theme } from '@dxos/react-ui-types';
 import { get } from '@dxos/util';
 
 import {
+  alertTheme,
   anchoredOverflowTheme,
   avatarTheme,
   breadcrumbTheme,
@@ -34,6 +35,7 @@ import {
 export const defaultTheme: Theme<Record<string, any>> = {
   themeName: () => 'default',
 
+  alert: alertTheme,
   anchoredOverflow: anchoredOverflowTheme,
   avatar: avatarTheme,
   breadcrumb: breadcrumbTheme,

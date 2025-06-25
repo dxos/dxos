@@ -8,7 +8,7 @@ import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { Alert, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 import { type ViewType } from '@dxos/schema';
@@ -51,8 +51,9 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   return (
     <div role='none' className='bs-full is-full flex flex-col p-2 gap-1 overflow-y-auto'>
       {selectedObjects.length === 0 && (
-        // TODO(burdon): Standardize treatment of these messages.
-        <div className='flex p-2 justify-center text-subdued'>{t('row details no selection label')}</div>
+        <Alert>
+          <p>{t('row details no selection label')}</p>
+        </Alert>
       )}
       {schema &&
         selectedObjects.map((object) => (

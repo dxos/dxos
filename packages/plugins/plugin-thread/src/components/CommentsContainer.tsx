@@ -7,8 +7,7 @@ import React, { useEffect } from 'react';
 
 import { RelationSourceId } from '@dxos/echo-schema';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { useTranslation, Trans } from '@dxos/react-ui';
-import { descriptionMessage, mx } from '@dxos/react-ui-theme';
+import { Alert, Trans, useTranslation } from '@dxos/react-ui';
 import { type AnchoredTo } from '@dxos/schema';
 
 import { CommentContainer, type CommentContainerProps } from './CommentContainer';
@@ -49,20 +48,17 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
           return <CommentContainer key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
         })
       ) : (
-        <div role='alert' className={mx(descriptionMessage, 'place-self-center rounded-md text-center m-4')}>
-          <h2 className='mbe-2 font-medium text-baseText'>{t('no comments title')}</h2>
-          <p>
-            <Trans
-              {...{
-                t,
-                i18nKey: 'no comments message',
-                components: {
-                  commentIcon: <ChatText className='inline-block' />,
-                },
-              }}
-            />
-          </p>
-        </div>
+        <Alert title={t('no comments title')}>
+          <Trans
+            {...{
+              t,
+              i18nKey: 'no comments message',
+              components: {
+                commentIcon: <ChatText className='inline-block' />,
+              },
+            }}
+          />
+        </Alert>
       )}
     </>
   );

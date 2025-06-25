@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './Alert';
 export * from './AnchoredOverflow';
 export * from './Avatars';
 export * from './Breadcrumb';
