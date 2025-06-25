@@ -66,7 +66,6 @@ export const useTableModel = <T extends TableRow = TableRow>({
   // Update data.
   useEffect(() => {
     if (rows) {
-      console.log('Rows from query updated', rows);
       model?.setRows(rows);
     }
   }, [model, rows]);
