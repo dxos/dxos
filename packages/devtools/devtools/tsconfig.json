@@ -52,6 +52,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
       "path": "../../core/conductor"
     },
     {

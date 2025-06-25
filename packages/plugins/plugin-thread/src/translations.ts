@@ -39,7 +39,7 @@ export default [
         'open comments panel label': 'Show Comments',
         'comments label': 'Comments',
         'show all label': 'All comments',
-        'show unresolved label': 'Unresolved only',
+        'show unresolved label': 'Unresolved comments',
 
         'channel companion label': 'Channel',
         'call panel label': 'Active Call',

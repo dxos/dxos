@@ -14,9 +14,8 @@ import {
   type ComputeGraphModel,
   type ComputeNode,
   type Executable,
-  makeValueBag,
+  ValueBag,
   NotExecuted,
-  type ValueBag,
 } from '../types';
 import { pickProperty } from '../util';
 
@@ -72,7 +71,7 @@ export class Workflow {
 
       const outputNodeId = this._graph.nodes.find((node) => node.type === NODE_OUTPUT)?.id;
       const outputNodeIndex = allAffectedNodes.findIndex((nodeId) => nodeId === outputNodeId);
-      return outputNodeIndex >= 0 ? results[outputNodeIndex] : makeValueBag({});
+      return outputNodeIndex >= 0 ? results[outputNodeIndex] : ValueBag.make({});
     })
       .pipe(createDefectLogger())
       .pipe(Effect.withSpan('workflow', { attributes: { workflowDxn: this._dxn } }));

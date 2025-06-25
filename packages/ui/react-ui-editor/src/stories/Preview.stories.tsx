@@ -129,7 +129,7 @@ const PreviewBlock = ({ link, el, view }: { link: PreviewLinkRef; el: HTMLElemen
     <Card.Content classNames={hoverableControls}>
       <div className='flex items-start'>
         {!view?.state.readOnly && (
-          <Card.Toolbar classNames='is-min p-[--dx-card-spacing-inline]'>
+          <Card.Toolbar classNames='is-min p-[--dx-cardSpacingInline]'>
             {(link.suggest && (
               <>
                 <Card.ToolbarIconButton label='Discard' icon={'ph--x--regular'} onClick={handleDelete} />

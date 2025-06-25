@@ -8,8 +8,9 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { type SchemaRegistry } from '@dxos/echo-db';
 import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Icon, IconButton, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Callout, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
+import { cardSpacing } from '@dxos/react-ui-stack';
 import { ghostHover, inputTextLabel, mx } from '@dxos/react-ui-theme';
 import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
 
@@ -153,13 +154,10 @@ export const ViewEditor = ({
   return (
     <div role='none' className={mx('overflow-y-auto', classNames)}>
       {readonly && (
-        <div role='none' className='plb-card-spacing-block pli-card-spacing-inline'>
-          <Message.Root valence='neutral' className='rounded'>
-            <Message.Title>
-              <Icon icon='ph--info--regular' size={5} classNames='inline' /> {t('system schema title')}
-            </Message.Title>
-            <Message.Body>{t('system schema description')}</Message.Body>
-          </Message.Root>
+        <div role='none' className={mx('is-full plb-cardSpacingBlock pli-cardSpacingInline')}>
+          <Callout.Root valence='info'>
+            <Callout.Title>{t('system schema description')}</Callout.Title>
+          </Callout.Root>
         </div>
       )}
 
@@ -171,13 +169,10 @@ export const ViewEditor = ({
         values={viewValues}
         readonly={readonly}
         onSave={handleUpdate}
-        classNames='min-bs-0 overflow-y-auto'
       />
 
-      <div role='none' className='min-bs-0 overflow-y-auto'>
-        <div role='none' className='pli-card-spacing-inline'>
-          <label className={mx(inputTextLabel)}>{t('fields label')}</label>
-        </div>
+      <div role='none' className={mx('min-bs-0 overflow-y-auto', cardSpacing)}>
+        <label className={mx(inputTextLabel)}>{t('fields label')}</label>
 
         <List.Root<FieldType>
           items={view.fields}
@@ -191,11 +186,11 @@ export const ViewEditor = ({
               {showHeading && (
                 <div role='heading' className={grid}>
                   <div />
-                  <div className='flex pli-card-spacing-inline items-center text-sm'>{t('field path label')}</div>
+                  <div className='flex items-center text-sm'>{t('field path label')}</div>
                 </div>
               )}
 
-              <div role='list' className='flex flex-col w-full pli-card-spacing-inline'>
+              <div role='list' className='flex flex-col is-full'>
                 {fields?.map((field) => (
                   <List.Item<FieldType>
                     key={field.id}
@@ -227,9 +222,7 @@ export const ViewEditor = ({
 
         {hiddenProperties.length > 0 && (
           <>
-            <div role='none' className='pli-card-spacing-inline'>
-              <label className={mx(inputTextLabel)}>{t('hidden fields label')}</label>
-            </div>
+            <label className={mx(inputTextLabel)}>{t('hidden fields label')}</label>
 
             <List.Root<string>
               items={hiddenProperties}
@@ -237,7 +230,7 @@ export const ViewEditor = ({
               getId={(property) => property}
             >
               {({ items: properties }) => (
-                <div role='list' className='flex flex-col w-full pli-card-spacing-inline'>
+                <div role='list' className='flex flex-col is-full'>
                   {properties?.map((property) => (
                     <List.Item<string>
                       key={property}
@@ -272,7 +265,7 @@ export const ViewEditor = ({
       )}
 
       {!readonly && !field && (
-        <div role='none' className='pli-card-spacing-chrome mlb-card-spacing-chrome'>
+        <div role='none' className={cardSpacing}>
           <IconButton
             icon='ph--plus--regular'
             label={t('button add property')}
