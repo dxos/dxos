@@ -11,7 +11,7 @@ import { useQuery } from './useQuery';
 import { createClient, createClientContextProvider } from '../testing/util';
 
 describe('useQuery', () => {
-  test('reproduces deletion flash bug where deleted object moves to end before disappearing', async () => {
+  test('deleting an element should result in correct render sequence', async () => {
     // Setup: Create client and space.
     const { client, space } = await createClient({ createIdentity: true, createSpace: true });
     const wrapper = await createClientContextProvider(client);
@@ -52,10 +52,88 @@ describe('useQuery', () => {
     // Wait for all reactive updates to complete.
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    expect(allRenders).toEqual([
-      [], // Initial loading state.
-      ['Alice', 'Bob', 'Charlie'], // All objects loaded.
-      ['Alice', 'Charlie'], // Bob removed (no flash).
+    /*
+     * Expected: 3 renders
+     * 1. [] (empty)
+     * 2. ['Alice', 'Bob', 'Charlie'] (all loaded, order doesn't matter)
+     * 3. ['Alice', 'Charlie'] (Bob removed, no flash)
+     *
+     * Actual: 4 renders
+     * 1. [] (empty)
+     * 2. ['Alice', 'Bob', 'Charlie'] (all loaded)
+     * 3. ['Alice', 'Charlie', 'Bob'] (FLASH BUG - Bob moves to end!)
+     * 4. ['Alice', 'Charlie'] (Bob finally removed)
+     */
+
+    // Convert to sets for order-independent comparison.
+    const renderSets = allRenders.map((render) => new Set(render));
+
+    expect(renderSets).toEqual([
+      new Set([]), // Initial loading state.
+      new Set(['Alice', 'Bob', 'Charlie']), // All objects loaded.
+      new Set(['Alice', 'Charlie']), // Bob removed (no flash).
+    ]);
+  });
+
+  test('bulk deleting multiple items should remove them from query results', async () => {
+    // Setup: Create client and space.
+    const { client, space } = await createClient({ createIdentity: true, createSpace: true });
+    const wrapper = await createClientContextProvider(client);
+
+    // Create 10 test objects: 1, 2, 3, ..., 10.
+    const objects = Array.from({ length: 10 }, (_, i) => live(Expando, { value: i + 1 }));
+
+    objects.forEach((obj) => space!.db.add(obj));
+    await space!.db.flush();
+
+    // Track all renders to observe the bug.
+    const allRenders: number[][] = [];
+
+    // Setup useQuery hook that captures every render.
+    renderHook(
+      () => {
+        const queryObjects = useQuery(space, Filter.type(Expando));
+
+        // Capture the values in this render.
+        const valuesInThisRender = queryObjects.map((obj) => obj.value);
+        allRenders.push([...valuesInThisRender]);
+
+        return queryObjects;
+      },
+      { wrapper },
+    );
+
+    // Wait for initial renders to complete.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // THE BUG REPRODUCTION: Delete all items in a loop.
+    for (const item of objects) {
+      space!.db.remove(item);
+    }
+
+    // Wait for all reactive updates to complete.
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    /*
+     * NOTE(ZaymonFC):
+     *   Expected: 3 renders
+     *   1. [] (empty)
+     *   2. [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] (all loaded, order doesn't matter)
+     *   3. [] (all deleted)
+     *
+     *   Actual: 3 renders
+     *   1. [] (empty)
+     *   2. [1, 4, 10, 5, 2, 9, 3, 8, 6, 7] (loaded)
+     *   3. [1, 4, 10, 5, 2, 9, 3, 8, 6, 7] (NO CHANGE - bulk delete didn't work!)
+     */
+
+    // Convert to sets for order-independent comparison.
+    const renderSets = allRenders.map((render) => new Set(render));
+
+    expect(renderSets).toEqual([
+      new Set([]), // Initial loading state.
+      new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), // All objects loaded.
+      new Set([]), // All items deleted.
     ]);
   });
 });
