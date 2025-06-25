@@ -16,15 +16,15 @@ export const messageRoot: ComponentFunction<MessageStyleProps> = ({ valence }, e
   return mx('p-trimMd rounded-md is-full', messageValence(valence), etc);
 };
 
-export const messageTitle: ComponentFunction<MessageStyleProps> = ({ valence }, etc) => {
-  return mx('mbe-trimSm font-medium flex gap-trimXs items-center', etc);
+export const messageTitle: ComponentFunction<MessageStyleProps> = (_, etc) => {
+  return mx('mbe-trimSm last:mbe-0 font-medium flex items-center gap-trimXs', etc);
 };
 
-export const messageIcon: ComponentFunction<MessageStyleProps> = ({ valence }, etc) => {
+export const messageIcon: ComponentFunction<MessageStyleProps> = (_, etc) => {
   return mx(etc);
 };
 
-export const messageContent: ComponentFunction<MessageStyleProps> = ({ valence }, etc) => {
+export const messageContent: ComponentFunction<MessageStyleProps> = (_, etc) => {
   return mx('font-medium', etc);
 };
 

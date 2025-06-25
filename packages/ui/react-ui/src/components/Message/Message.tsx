@@ -91,11 +91,13 @@ const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
         id={titleId}
         ref={forwardedRef}
       >
-        <Icon
-          size={5}
-          icon={icon ?? messageIcons[valence]}
-          classNames={tx('message.icon', 'message__icon', { valence })}
-        />
+        {!icon && valence === 'neutral' ? null : (
+          <Icon
+            size={5}
+            icon={icon ?? messageIcons[valence]}
+            classNames={tx('message.icon', 'message__icon', { valence })}
+          />
+        )}
         <span>{children}</span>
       </Root>
     );
