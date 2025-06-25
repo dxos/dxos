@@ -48,6 +48,12 @@
       "path": "../echo/echo"
     },
     {
+      "path": "../echo/echo-db"
+    },
+    {
+      "path": "../functions"
+    },
+    {
       "path": "../mesh/edge-client"
     }
   ]

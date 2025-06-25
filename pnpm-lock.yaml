@@ -2377,9 +2377,15 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../echo/echo-db
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../mesh/edge-client
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
