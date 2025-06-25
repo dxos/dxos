@@ -25,7 +25,14 @@ export namespace QueryPlan {
     make: (steps: Step[]): Plan => ({ steps }),
   });
 
-  export type Step = ClearWorkingSetStep | SelectStep | FilterStep | FilterDeletedStep | TraverseStep | UnionStep;
+  export type Step =
+    | ClearWorkingSetStep
+    | SelectStep
+    | FilterStep
+    | FilterDeletedStep
+    | TraverseStep
+    | UnionStep
+    | SetDifferenceStep;
 
   /**
    * Clear the current working set.
@@ -175,5 +182,15 @@ export namespace QueryPlan {
     _tag: 'UnionStep';
 
     plans: Plan[];
+  };
+
+  /**
+   * Subtract the results of one plan from another.
+   */
+  export type SetDifferenceStep = {
+    _tag: 'SetDifferenceStep';
+
+    source: Plan;
+    exclude: Plan;
   };
 }
