@@ -195,6 +195,17 @@ export interface QueryUnionClause extends Schema.Schema.Type<typeof QueryUnionCl
 export const QueryUnionClause: Schema.Schema<QueryUnionClause> = QueryUnionClause_;
 
 /**
+ * Set difference of two queries.
+ */
+const QuerySetDifferenceClause_ = Schema.Struct({
+  type: Schema.Literal('set-difference'),
+  left: Schema.suspend(() => Query),
+  right: Schema.suspend(() => Query),
+});
+export interface QuerySetDifferenceClause extends Schema.Schema.Type<typeof QuerySetDifferenceClause_> {}
+export const QuerySetDifferenceClause: Schema.Schema<QuerySetDifferenceClause> = QuerySetDifferenceClause_;
+
+/**
  * Add options to a query.
  */
 const QueryOptionsClause_ = Schema.Struct({
@@ -213,6 +224,7 @@ const Query_ = Schema.Union(
   QueryRelationClause,
   QueryRelationTraversalClause,
   QueryUnionClause,
+  QuerySetDifferenceClause,
   QueryOptionsClause,
 );
 
