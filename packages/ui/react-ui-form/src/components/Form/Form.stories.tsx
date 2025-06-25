@@ -66,7 +66,7 @@ const DebugStory = <T extends BaseObject>({ schema, values: initialValues, ...pr
 
 const meta: Meta<StoryProps<any>> = {
   title: 'ui/react-ui-form/Form',
-  component: Form,
+  component: Form<any>,
   render: DebugStory,
   decorators: [withLayout({ fullscreen: true }), withTheme],
   parameters: {

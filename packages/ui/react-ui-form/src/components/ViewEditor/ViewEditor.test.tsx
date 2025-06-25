@@ -10,7 +10,8 @@ import { EchoSchema } from '@dxos/echo-schema';
 import { ViewProjection, ViewType } from '@dxos/schema';
 
 import * as stories from './ViewEditor.stories';
-import { VIEW_EDITOR_DEBUG_SYMBOL, type ViewEditorDebugObjects } from './ViewEditor.stories';
+import { type ViewEditorDebugObjects } from './ViewEditor.stories';
+import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
 
 const { Default } = composeStories(stories);
 

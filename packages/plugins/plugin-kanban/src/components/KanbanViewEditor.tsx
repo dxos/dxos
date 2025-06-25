@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
-import { FormatEnum } from '@dxos/echo-schema';
+import { EchoSchema, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -53,10 +53,10 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   const projection = useMemo(() => {
     if (kanban?.cardView?.target && schema) {
-      const jsonSchema = Type.toJsonSchema(schema);
+      const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
       return new ViewProjection(jsonSchema, kanban.cardView.target);
     }
-  }, [kanban?.cardView?.target, schema, JSON.stringify(schema ? Type.toJsonSchema(schema) : {})]);
+  }, [kanban?.cardView?.target, JSON.stringify(schema)]);
 
   const fieldProjections = projection?.getFieldProjections() || [];
   const selectFields = fieldProjections
@@ -82,7 +82,15 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   return (
     <>
-      <Form Custom={custom} schema={KanbanSettingsSchema} values={initialValues} onSave={handleSave} autoSave />
+      <Form
+        Custom={custom}
+        schema={KanbanSettingsSchema}
+        values={initialValues}
+        onSave={handleSave}
+        autoSave
+        outerSpacing='blockStart-0'
+        classNames='pbs-inputSpacingBlock'
+      />
       <ViewEditor
         registry={space.db.schemaRegistry}
         schema={schema}

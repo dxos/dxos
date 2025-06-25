@@ -71,7 +71,7 @@ export const FunctionInputEditor = ({
         values={values}
         onValuesChanged={handleValuesChanged}
         onQueryRefOptions={onQueryRefOptions}
-        flush
+        outerSpacing={false}
       />
     </>
   );
