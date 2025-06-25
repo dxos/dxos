@@ -172,7 +172,6 @@ export const ViewEditor = ({
         values={viewValues}
         readonly={readonly}
         onSave={handleUpdate}
-        classNames='min-bs-0 overflow-y-auto'
       />
 
       <div role='none' className={mx('min-bs-0 overflow-y-auto', cardSpacing)}>
