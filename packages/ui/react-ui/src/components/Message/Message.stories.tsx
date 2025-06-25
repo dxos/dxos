@@ -4,7 +4,6 @@
 
 import '@dxos-theme';
 
-import { Info } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type MessageValence } from '@dxos/react-ui-types';
@@ -20,10 +19,8 @@ type StoryProps = {
 
 const DefaultStory = ({ valence, title, body }: StoryProps) => (
   <Message.Root valence={valence}>
-    <Message.Title>
-      <Info className='inline w-5 h-5 mb-1' weight='duotone' /> {title}
-    </Message.Title>
-    <Message.Body>{body}</Message.Body>
+    <Message.Title>{title}</Message.Title>
+    <Message.Content>{body}</Message.Content>
   </Message.Root>
 );
 

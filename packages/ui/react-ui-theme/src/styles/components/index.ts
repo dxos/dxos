@@ -6,7 +6,6 @@ export * from './anchored-overflow';
 export * from './avatar';
 export * from './breadcrumb';
 export * from './button';
-export * from './callout';
 export * from './dialog';
 export * from './icon';
 export * from './icon-button';
