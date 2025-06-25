@@ -28,6 +28,7 @@ import { invariant } from '@dxos/invariant';
 import { Organization } from './common/organization';
 import { ViewProjection } from './projection';
 import { createView, type ViewType } from './view';
+import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 
@@ -997,6 +998,13 @@ describe('ViewProjection', () => {
       },
     });
 
+    // Check with the primary schema.
+    // This should pass (valid email)
+    expect(() => Schema.validateSync(schema)({ email: 'valid@example.com' })).not.toThrow();
+
+    // 🐛 BUG: This should fail but passes - validation is lost!
+    expect(() => Schema.validateSync(schema)({ email: 'invalid-email' })).toThrow();
+
     const [registeredSchema] = await registry.register([schema]);
 
     // Step 3: Verify JSON schema preserves the validation constraint
@@ -1009,6 +1017,8 @@ describe('ViewProjection', () => {
 
     // Step 4: BUG - Reconstructed Effect schema should validate but doesn't
     const reconstructedSchema = registeredSchema.snapshot;
+
+    log.info('reconstructedSchema', { ast: reconstructedSchema.ast });
 
     // This should pass (valid email)
     expect(() => Schema.validateSync(reconstructedSchema)({ email: 'valid@example.com' })).not.toThrow();
