@@ -73,7 +73,7 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
   const handleInsert = async () => {
     invariant(space);
     invariant(queue);
-    queue.append([Obj.make(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
+    await queue.append([Obj.make(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
     const message = queue.objects.at(-1);
     invariant(message);
 

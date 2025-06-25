@@ -39,7 +39,12 @@ export type ComputeEvent =
 export class EventLogger extends Context.Tag('EventLogger')<
   EventLogger,
   { readonly log: (event: ComputeEvent) => void; readonly nodeId: string | undefined }
->() {}
+>() {
+  static noop: Context.Tag.Service<EventLogger> = {
+    log: () => {},
+    nodeId: undefined,
+  };
+}
 
 export const logCustomEvent = (data: any) =>
   Effect.gen(function* () {

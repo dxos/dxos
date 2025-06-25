@@ -13,7 +13,8 @@
         "entryPoints": [
           "{projectRoot}/src/bundler/index.ts",
           "{projectRoot}/src/edge/index.ts",
-          "{projectRoot}/src/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/testing/index.ts"
         ]
       }
     },

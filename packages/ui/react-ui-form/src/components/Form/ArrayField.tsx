@@ -69,7 +69,7 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
 
   return readonly && values.length < 1 ? null : (
     <>
-      <InputHeader>{label}</InputHeader>
+      <InputHeader readonly label={label} />
       <div
         role='none'
         className={

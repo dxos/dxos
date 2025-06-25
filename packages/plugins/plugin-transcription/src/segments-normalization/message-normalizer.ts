@@ -103,6 +103,6 @@ export class MessageNormalizer extends Resource {
     log.info('writing messages', { messages });
     const lastMessage = messages[messages.length - 1];
     this._cursor.timestamp = lastMessage.created;
-    this._queue.append(messages);
+    void this._queue.append(messages);
   }
 }

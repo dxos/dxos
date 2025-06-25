@@ -82,7 +82,15 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   return (
     <>
-      <Form Custom={custom} schema={KanbanSettingsSchema} values={initialValues} onSave={handleSave} autoSave />
+      <Form
+        Custom={custom}
+        schema={KanbanSettingsSchema}
+        values={initialValues}
+        onSave={handleSave}
+        autoSave
+        outerSpacing='blockStart-0'
+        classNames='pbs-inputSpacingBlock'
+      />
       <ViewEditor
         registry={space.db.schemaRegistry}
         schema={schema}
