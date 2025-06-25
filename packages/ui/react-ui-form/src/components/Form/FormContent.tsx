@@ -169,7 +169,7 @@ export const FormField = ({
     if (typeLiteral) {
       return (
         <>
-          {!inline && <h3 className={mx('text-lg mlb-card-spacing-block first:mbs-0')}>{label}</h3>}
+          {!inline && <h3 className={mx('text-lg mlb-inputSpacingBlock first:mbs-0')}>{label}</h3>}
           <FormFields
             schema={Schema.make(typeLiteral)}
             path={path}
@@ -218,7 +218,7 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
     }, [schema, values, filter, sort]);
 
     return (
-      <div role='form' className={mx('is-full', classNames)} ref={forwardRef} data-testid={testId}>
+      <div role='form' className={mx('is-full', classNames)} ref={forwardRef}>
         {properties
           .map((property) => {
             return (

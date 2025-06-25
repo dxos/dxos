@@ -121,6 +121,14 @@ interface QueryAPI {
    */
   // TODO(dmaretskyi): Rename to `combine` or `union`.
   all<T>(...queries: Query<T>[]): Query<T>;
+
+  /**
+   * Subtract one query from another.
+   * @param source - Query to subtract from.
+   * @param exclude - Query to subtract.
+   * @returns Query for the results of the source query minus the results of the exclude query.
+   */
+  without<T>(source: Query<T>, exclude: Query<T>): Query<T>;
 }
 
 export declare namespace Query {
@@ -543,6 +551,14 @@ class QueryClass implements Query<any> {
     return new QueryClass({
       type: 'union',
       queries: queries.map((q) => q.ast),
+    });
+  }
+
+  static without<T>(source: Query<T>, exclude: Query<T>): Query<T> {
+    return new QueryClass({
+      type: 'set-difference',
+      source: source.ast,
+      exclude: exclude.ast,
     });
   }
 

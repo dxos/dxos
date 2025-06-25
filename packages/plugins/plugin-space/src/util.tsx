@@ -382,10 +382,11 @@ export const constructObjectActions = ({
           { ns: SPACE_PLUGIN },
         ],
         icon: 'ph--pencil-simple-line--regular',
-        // TODO(wittjosiah): Need's focus.
-        keyBinding: {
-          macos: 'shift+F6',
-        },
+        disposition: 'list-item',
+        // TODO(wittjosiah): Not working.
+        // keyBinding: {
+        //   macos: 'shift+F6',
+        // },
         testId: 'spacePlugin.renameObject',
       },
     },
@@ -404,7 +405,9 @@ export const constructObjectActions = ({
           { ns: SPACE_PLUGIN },
         ],
         icon: 'ph--trash--regular',
-        keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
+        disposition: 'list-item',
+        // TODO(wittjosiah): This is a browser shortcut.
+        // keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
         testId: 'spacePlugin.deleteObject',
       },
     },
@@ -420,6 +423,7 @@ export const constructObjectActions = ({
             properties: {
               label: ['copy link label', { ns: SPACE_PLUGIN }],
               icon: 'ph--link--regular',
+              disposition: 'list-item',
               testId: 'spacePlugin.copyLink',
             },
           },
@@ -435,6 +439,7 @@ export const constructObjectActions = ({
       properties: {
         label: ['expose object label', { ns: SPACE_PLUGIN }],
         icon: 'ph--eye--regular',
+        disposition: 'heading-list-item',
         testId: 'spacePlugin.exposeObject',
       },
     },
