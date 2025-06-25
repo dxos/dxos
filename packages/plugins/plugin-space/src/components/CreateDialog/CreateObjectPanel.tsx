@@ -12,24 +12,25 @@ import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { cardDialogOverflow, cardDialogPaddedOverflow, cardDialogSearchListRoot } from '@dxos/react-ui-stack';
+import { type DataType } from '@dxos/schema';
 import { isNonNullable, type MaybePromise } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '../../hooks';
 import { SPACE_PLUGIN } from '../../meta';
-import { type ObjectForm, type CollectionType } from '../../types';
+import { type ObjectForm } from '../../types';
 import { getSpaceDisplayName } from '../../util';
 
 export type CreateObjectPanelProps = {
   forms: ObjectForm[];
   spaces: Space[];
   typename?: string;
-  target?: Space | CollectionType;
+  target?: Space | DataType.Collection;
   name?: string;
   defaultSpaceId?: SpaceId;
   resolve?: (typename: string) => Record<string, any>;
   onCreateObject?: (params: {
     form: ObjectForm;
-    target: Space | CollectionType;
+    target: Space | DataType.Collection;
     data?: Record<string, any>;
   }) => MaybePromise<void>;
 };
@@ -46,7 +47,7 @@ export const CreateObjectPanel = ({
 }: CreateObjectPanelProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
-  const [target, setTarget] = useState<Space | CollectionType | undefined>(initialTarget);
+  const [target, setTarget] = useState<Space | DataType.Collection | undefined>(initialTarget);
   const form = forms.find((form) => Type.getTypename(form.objectSchema) === typename);
   const options: TypeAnnotation[] = forms
     .map((form) => getTypeAnnotation(form.objectSchema))

@@ -43,15 +43,16 @@ import {
   TracingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { ScriptAction } from '@dxos/plugin-script/types';
-import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { SpaceState, isSpace, type Space, parseId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
+import { DataType } from '@dxos/schema';
 
 import {
   DebugApp,
@@ -110,8 +111,8 @@ export default (context: PluginContext) =>
 
             const collection =
               data.subject.space.state.get() === SpaceState.SPACE_READY &&
-              data.subject.space.properties[CollectionType.typename]?.target;
-            if (!Obj.instanceOf(CollectionType, collection)) {
+              data.subject.space.properties[Type.getTypename(DataType.Collection)]?.target;
+            if (!Obj.instanceOf(DataType.Collection, collection)) {
               return;
             }
 
