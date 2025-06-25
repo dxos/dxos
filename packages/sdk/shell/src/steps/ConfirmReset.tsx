@@ -2,12 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Warning } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Message, useTranslation } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { type StepProps } from './StepProps';
 import { Action, Actions, StepHeading, Input } from '../components';
@@ -70,11 +68,8 @@ export const ConfirmResetImpl = ({
     <>
       <div role='none' className='grow flex flex-col gap-2 justify-center'>
         <Message.Root valence='error'>
-          <Message.Title>
-            <Warning className={mx(getSize(6), 'inline mie-2')} />
-            {t('sign out chooser title')}
-          </Message.Title>
-          <Message.Body>{t('sign out chooser message')}</Message.Body>
+          <Message.Title>{t('sign out chooser title')}</Message.Title>
+          <Message.Content>{t('sign out chooser message')}</Message.Content>
         </Message.Root>
         <Input
           {...{ validationMessage }}
