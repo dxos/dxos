@@ -160,6 +160,7 @@ export const TableCellEditor = ({
           setValidationError(null);
           model.setCellData(cell, value);
         } else {
+          console.log('Precommit failed with', { error: result.error });
           setValidationError(result.error);
           // Don't close editor on validation failure during blur
         }
@@ -332,7 +333,37 @@ export const TableCellEditor = ({
     }
   }, [model, editing]);
 
-  return <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} />;
+  return (
+    <>
+      <ValidationMessageRefactorMe />
+      <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} />
+    </>
+  );
+};
+
+const ValidationMessageRefactorMe = (props: GridScopedProps<{}>) => {
+  const { editing, editBox: box } = useGridContext('GridSheetCellEditor', props.__gridScope);
+
+  if (!editing) {
+    return null;
+  }
+
+  return (
+    <div
+      role='none'
+      className='absolute bg-errorSurface text-errorSurfaceText rounded-bs-sm text-xs p-1'
+      style={{
+        ...{ '--dx-gridCellWidth': `${box?.inlineSize ?? 200}px` },
+        zIndex: 10,
+        insetBlockEnd: `calc(100% - ${box.insetBlockStart}px)`,
+        insetInlineStart: box.insetInlineStart,
+        inlineSize: box.inlineSize,
+      }}
+    >
+      Hello.
+      <div>This is a bunch of ¯\_(ツ)_/¯\_(ツ)_/¯.</div>
+    </div>
+  );
 };
 
 const determineNavigationAxis = ({ key }: EditorKeyEvent): 'col' | 'row' | undefined => {
