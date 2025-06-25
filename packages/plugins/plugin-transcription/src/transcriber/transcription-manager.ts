@@ -136,7 +136,7 @@ export class TranscriptionManager extends Resource {
         blocks: [{ type: 'transcription', text: 'Started', started: new Date().toISOString() }],
         sender: { role: 'assistant' },
       });
-      this._queue?.append([block]);
+      await this._queue?.append([block]);
     } else {
       await this._transcriber?.close();
       const block = Obj.make(DataType.Message, {
@@ -144,7 +144,7 @@ export class TranscriptionManager extends Resource {
         blocks: [{ type: 'transcription', text: 'Stopped', started: new Date().toISOString() }],
         sender: { role: 'assistant' },
       });
-      this._queue?.append([block]);
+      await this._queue?.append([block]);
     }
   }
 
@@ -190,6 +190,6 @@ export class TranscriptionManager extends Resource {
       block = await this._messageEnricher(block);
     }
 
-    this._queue.append([block]);
+    await this._queue.append([block]);
   }
 }
