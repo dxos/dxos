@@ -3,11 +3,12 @@
 //
 
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { beforeAll, describe, test } from 'vitest';
+import { beforeAll, describe, expect, test } from 'vitest';
 
-import { EdgeAiServiceClient, OllamaAiServiceClient, ToolRegistry } from '@dxos/ai';
+import { createTool, defineTool, EdgeAiServiceClient, OllamaAiServiceClient, ToolRegistry, ToolResult } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import {
+  AISession,
   BlueprintMachine,
   BlueprintParser,
   createExaTool,
@@ -30,6 +31,9 @@ import { log } from '@dxos/log';
 import { DataType, DataTypes } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 import { inspect } from 'node:util';
+import { ComputeGraphModel, GptOutput, NODE_INPUT, NODE_OUTPUT, ValueBag } from '@dxos/conductor';
+import { TestRuntime } from '@dxos/conductor/testing';
+import { Effect, Exit, Schema, Scope } from 'effect';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
@@ -70,6 +74,7 @@ describe('experimental', () => {
   });
 
   test('blueprint', { timeout: 120_000 }, async () => {
+    // TODO(dmaretskyi): Store in ECHO.
     const blueprintDefinition: BlueprintDefinition = {
       steps: [
         {
@@ -124,9 +129,59 @@ describe('experimental', () => {
     });
   });
 
-  test('circuit');
+  test('circuit', { timeout: 120_000 }, async () => {
+    // TODO(dmaretskyi): Can we type graph inputs/outputs?
+    // TODO(dmaretskyi): Store in ECHO.
+    const gptCircuit = () => {
+      const model = ComputeGraphModel.create();
+      model.builder
+        .createNode({ id: 'gpt1-INPUT', type: NODE_INPUT })
+        .createNode({ id: 'gpt1-GPT', type: 'gpt' })
+        .createNode({ id: 'gpt1-OUTPUT', type: NODE_OUTPUT })
+        .createEdge({ node: 'gpt1-INPUT', property: 'prompt' }, { node: 'gpt1-GPT', property: 'prompt' })
+        .createEdge({ node: 'gpt1-GPT', property: 'text' }, { node: 'gpt1-OUTPUT', property: 'text' });
 
-  test('conversation');
+      return model;
+    };
+
+    const runtime = new TestRuntime(serviceContainer);
+    runtime.registerGraph('dxn:compute:gpt1', gptCircuit());
+
+    const { text } = await runtime
+      .runGraph<GptOutput>('dxn:compute:gpt1', ValueBag.make({ prompt: 'What is the meaning of life?' }))
+      .pipe(Effect.flatMap(ValueBag.unwrap), Effect.scoped, Effect.runPromise);
+
+    log.info('text', { text });
+  });
+
+  test('conversation', { timeout: 120_000 }, async () => {
+    const { client } = serviceContainer.getService(AiService);
+    const session = new AISession({
+      operationModel: 'configured',
+    });
+
+    // TODO(dmaretskyi): Use tool registry.
+    const sage = createTool('test', {
+      name: 'sage',
+      description: 'Can say what the meaning of life is.',
+      schema: Schema.Struct({
+        question: Schema.String,
+      }),
+      execute: async (params) => {
+        return ToolResult.Success(`The meaning of life is your own to decide.`);
+      },
+    });
+
+    const result = await session.run({
+      client,
+      history: [],
+      prompt: 'What is the meaning of life?',
+      tools: [sage],
+      artifacts: [],
+    });
+
+    log.info('result', { result });
+  });
 
   test('function', { timeout: 120_000 }, async () => {
     db.add(
