@@ -6,7 +6,7 @@ import React, { type FC, useMemo } from 'react';
 
 import { type TraceEvent, type InvocationSpan } from '@dxos/functions';
 import { useQueue } from '@dxos/react-client/echo';
-import { Alert, Icon } from '@dxos/react-ui';
+import { Callout, Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 type ExceptionPanelProps = {
@@ -40,7 +40,7 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
   if (traceQueueDxn && eventQueue?.isLoading) {
     // TODO(burdon): Create alert variant?
     return (
-      <div className={mx('flex is-full items-center justify-center m-4')}>
+      <div role='none' className={mx('flex is-full items-center justify-center m-4')}>
         <Icon icon='ph--spinner-gap--regular' size={5} classNames='animate-spin' />
       </div>
     );
@@ -48,9 +48,12 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
 
   if (errorLogs.length === 0) {
     return (
-      <Alert>
-        <p>No exceptions.</p>
-      </Alert>
+      <div role='none' className={mx('flex is-full items-center justify-center m-4')}>
+        <Callout.Root classNames='is-full' severity='info'>
+          <Callout.Icon />
+          <Callout.Text>No exceptions.</Callout.Text>
+        </Callout.Root>
+      </div>
     );
   }
 

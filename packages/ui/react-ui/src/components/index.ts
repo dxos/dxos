@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './Alert';
 export * from './AnchoredOverflow';
 export * from './Avatars';
 export * from './Breadcrumb';
 export * from './Buttons';
+export * from './Callout';
 export * from './Clipboard';
 export * from './Dialogs';
 export * from './Icon';

@@ -8,7 +8,7 @@ import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
-import { Alert, useTranslation } from '@dxos/react-ui';
+import { Callout, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 import { type ViewType } from '@dxos/schema';
@@ -48,13 +48,19 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
     [queriedObjects],
   );
 
+  if (selectedObjects.length === 0) {
+    return (
+      <div role='none' className='plb-cardSpacingBlock pli-cardSpacingInline'>
+        <Callout.Root classNames='is-full' severity='info'>
+          <Callout.Icon />
+          <Callout.Text>{t('row details no selection label')}</Callout.Text>
+        </Callout.Root>
+      </div>
+    );
+  }
+
   return (
     <div role='none' className='bs-full is-full flex flex-col p-2 gap-1 overflow-y-auto'>
-      {selectedObjects.length === 0 && (
-        <Alert>
-          <p>{t('row details no selection label')}</p>
-        </Alert>
-      )}
       {schema &&
         selectedObjects.map((object) => (
           <div key={object.id} className='border border-separator rounded'>

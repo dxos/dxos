@@ -2,12 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ChatText } from '@phosphor-icons/react';
 import React, { useEffect } from 'react';
 
 import { RelationSourceId } from '@dxos/echo-schema';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { Alert, Trans, useTranslation } from '@dxos/react-ui';
+import { Callout, Icon, Trans, useTranslation } from '@dxos/react-ui';
 import { type AnchoredTo } from '@dxos/schema';
 
 import { CommentContainer, type CommentContainerProps } from './CommentContainer';
@@ -39,27 +38,30 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
     }
   }, [currentId]);
 
-  return (
-    <>
-      {filteredAnchors.length > 0 ? (
-        filteredAnchors.map((anchor) => {
-          const thread = anchor[RelationSourceId] as ThreadType;
-          const threadId = fullyQualifiedId(thread);
-          return <CommentContainer key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
-        })
-      ) : (
-        <Alert title={t('no comments title')}>
-          <Trans
-            {...{
-              t,
-              i18nKey: 'no comments message',
-              components: {
-                commentIcon: <ChatText className='inline-block' />,
-              },
-            }}
-          />
-        </Alert>
-      )}
-    </>
-  );
+  if (filteredAnchors.length === 0) {
+    return (
+      <div role='none' className='plb-cardSpacingBlock pli-cardSpacingInline'>
+        <Callout.Root classNames='is-full' severity='info'>
+          <Callout.Icon />
+          <Callout.Text>
+            <Trans
+              {...{
+                t,
+                i18nKey: 'no comments message',
+                components: {
+                  commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='inline-block' />,
+                },
+              }}
+            />
+          </Callout.Text>
+        </Callout.Root>
+      </div>
+    );
+  }
+
+  return filteredAnchors.map((anchor) => {
+    const thread = anchor[RelationSourceId] as ThreadType;
+    const threadId = fullyQualifiedId(thread);
+    return <CommentContainer key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
+  });
 };

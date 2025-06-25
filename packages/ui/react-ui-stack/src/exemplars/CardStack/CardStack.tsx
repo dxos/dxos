@@ -28,6 +28,7 @@ const CardStackStack = forwardRef<
       }
       itemsCount={itemsCount}
       separatorOnScroll={9}
+      data-density='fine'
       {...props}
       ref={forwardedRef}
     >
