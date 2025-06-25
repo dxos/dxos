@@ -7,10 +7,10 @@ import React, { type ReactElement, useEffect, useMemo, useRef } from 'react';
 
 import { type BaseObject, type PropertyKey } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { cardSpacing } from '@dxos/react-ui-stack';
+import { cardDialogOverflow, cardSpacing } from '@dxos/react-ui-stack';
 import { type SchemaProperty } from '@dxos/schema';
 
-import { FormActions } from './FormActions';
+import { FormActions, type FormOuterSpacing } from './FormActions';
 import { FormFields, type FormFieldsProps } from './FormContent';
 import { FormProvider } from './FormContext';
 import { type InputProps, type InputComponent } from './Input';
@@ -34,7 +34,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<{
   filter?: PropsFilter<T>;
   sort?: PropertyKey<T>[];
   autoSave?: boolean;
-  outerSpacing?: boolean | 'blockStart';
+  outerSpacing?: FormOuterSpacing;
   onCancel?: () => void;
 }> &
   Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'> &
@@ -86,18 +86,21 @@ export const Form = <T extends BaseObject>({
           {...props}
           ref={formRef}
           classNames={[
-            outerSpacing === 'blockStart'
-              ? 'pli-cardSpacingInline mbe-cardSpacingBlock'
-              : outerSpacing
-                ? cardSpacing
-                : false,
+            outerSpacing === 'blockStart-0'
+              ? 'pli-cardSpacingInline mbe-cardSpacingBlock [&>.mbs-inputSpacingBlock:first-child]:!mbs-0'
+              : outerSpacing === 'scroll-fields'
+                ? 'pli-cardSpacingInline pbe-cardSpacingBlock'
+                : outerSpacing
+                  ? cardSpacing
+                  : false,
+            outerSpacing === 'scroll-fields' && cardDialogOverflow,
             classNames,
           ]}
           readonly={readonly}
           schema={schema}
         />
         {(onCancel || onSave) && !autoSave && (
-          <FormActions readonly={readonly} onCancel={onCancel} outerSpacing={!!outerSpacing} />
+          <FormActions readonly={readonly} onCancel={onCancel} outerSpacing={outerSpacing} />
         )}
       </div>
     </FormProvider>

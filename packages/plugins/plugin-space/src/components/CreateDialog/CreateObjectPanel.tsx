@@ -8,11 +8,10 @@ import { Type } from '@dxos/echo';
 import { getTypeAnnotation, type TypeAnnotation } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type Space } from '@dxos/react-client/echo';
-import { Icon, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { cardSpacing } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { cardDialogOverflow, cardDialogPaddedOverflow, cardDialogSearchListRoot } from '@dxos/react-ui-stack';
 import { isNonNullable, type MaybePromise } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '../../hooks';
@@ -20,7 +19,7 @@ import { SPACE_PLUGIN } from '../../meta';
 import { type ObjectForm, type CollectionType } from '../../types';
 import { getSpaceDisplayName } from '../../util';
 
-export type CreateObjectPanelProps = ThemedClassName<{
+export type CreateObjectPanelProps = {
   forms: ObjectForm[];
   spaces: Space[];
   typename?: string;
@@ -33,10 +32,9 @@ export type CreateObjectPanelProps = ThemedClassName<{
     target: Space | CollectionType;
     data?: Record<string, any>;
   }) => MaybePromise<void>;
-}>;
+};
 
 export const CreateObjectPanel = ({
-  classNames,
   forms,
   spaces,
   typename: initialTypename,
@@ -85,24 +83,23 @@ export const CreateObjectPanel = ({
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
   // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
-  return (
-    <div role='form' className={mx('contents', classNames)}>
-      {!form ? (
-        <SelectSchema options={options} resolve={resolve} onChange={handleSetTypename} />
-      ) : !target ? (
-        <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={setTarget} />
-      ) : form.formSchema ? (
-        <Form
-          autoFocus
-          values={{ name: initialName }}
-          schema={form.formSchema}
-          testId='create-object-form'
-          onSave={handleCreateObject}
-          lookupComponent={inputSurfaceLookup}
-        />
-      ) : undefined}
+  return !form ? (
+    <SelectSchema options={options} resolve={resolve} onChange={handleSetTypename} />
+  ) : !target ? (
+    <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={setTarget} />
+  ) : form.formSchema ? (
+    <div role='none' className={cardDialogOverflow}>
+      <Form
+        autoFocus
+        values={{ name: initialName }}
+        schema={form.formSchema}
+        testId='create-object-form'
+        onSave={handleCreateObject}
+        lookupComponent={inputSurfaceLookup}
+        outerSpacing='blockStart-0'
+      />
     </div>
-  );
+  ) : null;
 };
 
 const SelectSpace = ({
@@ -113,13 +110,13 @@ const SelectSpace = ({
   const { t } = useTranslation(SPACE_PLUGIN);
 
   return (
-    <SearchList.Root label={t('space input label')} classNames={cardSpacing}>
+    <SearchList.Root label={t('space input label')} classNames={cardDialogSearchListRoot}>
       <SearchList.Input
         autoFocus
         data-testid='create-object-form.space-input'
         placeholder={t('space input placeholder')}
       />
-      <SearchList.Content>
+      <SearchList.Content classNames={[cardDialogOverflow, 'plb-cardSpacingBlock']}>
         {spaces
           .sort((a, b) => {
             const aName = toLocalizedString(getSpaceDisplayName(a, { personal: a.id === defaultSpaceId }), t);
@@ -154,13 +151,13 @@ const SelectSchema = ({
   const { t } = useTranslation(SPACE_PLUGIN);
 
   return (
-    <SearchList.Root label={t('schema input label')} classNames={cardSpacing}>
+    <SearchList.Root label={t('schema input label')} classNames={cardDialogSearchListRoot}>
       <SearchList.Input
         autoFocus
         data-testid='create-object-form.schema-input'
         placeholder={t('schema input placeholder')}
       />
-      <SearchList.Content>
+      <SearchList.Content classNames={cardDialogPaddedOverflow}>
         {options.map((option) => (
           <SearchList.Item
             key={option.typename}

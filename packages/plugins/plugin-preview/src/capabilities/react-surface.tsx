@@ -120,7 +120,7 @@ export default () =>
               readonly={role === 'popover'}
               onSave={handleSave}
               autoSave
-              {...(role === 'card--kanban' && { flush: 'blockStart' })}
+              {...(role === 'card--kanban' && { outerSpacing: 'blockStart-0' })}
             />
           </Card.Container>
         );

@@ -11,10 +11,12 @@ import { mx } from '@dxos/react-ui-theme';
 import { useFormContext } from './FormContext';
 import { translationKey } from '../../translations';
 
+export type FormOuterSpacing = boolean | 'blockStart-0' | 'scroll-fields';
+
 export type FormActionsProps = {
   readonly?: boolean;
   onCancel?: () => void;
-  outerSpacing?: boolean;
+  outerSpacing?: FormOuterSpacing;
 };
 
 export const FormActions = ({ readonly, onCancel, outerSpacing = true }: FormActionsProps) => {
@@ -22,7 +24,17 @@ export const FormActions = ({ readonly, onCancel, outerSpacing = true }: FormAct
   const { canSave, handleSave } = useFormContext();
 
   return (
-    <div role='none' className={mx(cardSpacing, 'flex [&_button]:grow gap-1 first:mbs-0', !outerSpacing && '!pli-0')}>
+    <div
+      role='none'
+      className={mx(
+        outerSpacing === 'scroll-fields'
+          ? 'pli-cardSpacingInline mbe-cardSpacingBlock'
+          : outerSpacing
+            ? cardSpacing
+            : false,
+        'flex [&_button]:grow gap-1 first:mbs-0',
+      )}
+    >
       {onCancel && !readonly && (
         <IconButton data-testid='cancel-button' icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
       )}

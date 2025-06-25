@@ -50,14 +50,17 @@ export const CreateSpaceDialog = () => {
           </Button>
         </Dialog.Close>
       </div>
-      <Form
-        testId='create-space-form'
-        autoFocus
-        values={initialValues}
-        schema={SpaceForm}
-        lookupComponent={inputSurfaceLookup}
-        onSave={handleCreateSpace}
-      />
+      <div role='none' className='contents'>
+        <Form
+          testId='create-space-form'
+          autoFocus
+          values={initialValues}
+          schema={SpaceForm}
+          lookupComponent={inputSurfaceLookup}
+          onSave={handleCreateSpace}
+          outerSpacing='scroll-fields'
+        />
+      </div>
     </Dialog.Content>
   );
 };
