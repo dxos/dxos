@@ -19,8 +19,8 @@ type StoryProps = {
 
 const DefaultStory = ({ valence, title, body }: StoryProps) => (
   <Callout.Root valence={valence}>
-    <Callout.Title>{title}</Callout.Title>
-    <Callout.Content>{body}</Callout.Content>
+    {title && <Callout.Title>{title}</Callout.Title>}
+    {body && <Callout.Content>{body}</Callout.Content>}
   </Callout.Root>
 );
 

@@ -25,7 +25,7 @@ export const messageIcon: ComponentFunction<MessageStyleProps> = (_, etc) => {
 };
 
 export const messageContent: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('font-medium', etc);
+  return mx('first:font-medium', etc);
 };
 
 export const messageTheme: Theme<MessageStyleProps> = {
