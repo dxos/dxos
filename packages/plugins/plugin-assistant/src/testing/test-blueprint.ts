@@ -30,7 +30,7 @@ export const createToolRegistry = (space: Space, queueDxn?: DXN): ToolRegistry =
           schema: DataTypes,
           onDone: async (objects) => {
             const queue = space.queues.get(queueDxn);
-            queue.append(objects);
+            await queue.append(objects);
           },
         }),
     ].filter(isNonNullable),
