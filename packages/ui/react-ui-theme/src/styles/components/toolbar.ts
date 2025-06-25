@@ -10,7 +10,7 @@ export type ToolbarStyleProps = Partial<{}>;
 
 export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = (_props, ...etc) => {
   return mx(
-    'flex shrink-0 items-center gap-1 p-1 is-full overflow-x-auto overflow-y-hidden contain-layout bg-toolbarSurface',
+    'flex shrink-0 items-center gap-1 p-1 is-full overflow-x-auto contain-layout bg-toolbarSurface dx-toolbar',
     ...etc,
   );
 };

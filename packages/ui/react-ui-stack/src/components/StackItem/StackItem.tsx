@@ -20,6 +20,7 @@ import React, {
   type ComponentPropsWithRef,
   useCallback,
   type ReactNode,
+  useMemo,
 } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -215,8 +216,13 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
       return true;
     };
 
+    const stackItemContextValue = useMemo(
+      () => ({ selfDragHandleRef, size, setSize, state: dragState, setState: setDragState, role }),
+      [selfDragHandleRef, size, setSize, dragState, setDragState, role],
+    );
+
     return (
-      <StackItemContext.Provider value={{ selfDragHandleRef, size, setSize, state: dragState, setState: setDragState }}>
+      <StackItemContext.Provider value={stackItemContextValue}>
         <Root
           {...props}
           tabIndex={0}
