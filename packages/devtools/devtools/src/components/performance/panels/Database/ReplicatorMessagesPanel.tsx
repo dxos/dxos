@@ -6,29 +6,31 @@ import React from 'react';
 
 import { type EchoDataStats } from '@dxos/echo-pipeline';
 
-import { formatNumber, Table, type TableProps } from './Table';
 import { type DatabaseInfo } from '../../../../hooks';
 import { type CustomPanelProps, Panel } from '../../Panel';
+import { Table, Unit } from '../Table';
 
 type CountsByMessage = EchoDataStats['replicator']['countByMessage'];
+
+type Data = [string, string, number];
 
 export const ReplicatorMessagesPanel = ({ database, ...props }: CustomPanelProps<{ database?: DatabaseInfo }>) => {
   let recvTotal = 0;
   let sentTotal = 0;
 
   const replicatorStats = database?.dataStats?.replicator;
-  const rows: TableProps['rows'] = Object.entries(replicatorStats?.countByMessage ?? ({} as CountsByMessage))
-    .flatMap(([type, counts]) => {
+  const rows: Data[] = Object.entries(replicatorStats?.countByMessage ?? ({} as CountsByMessage))
+    .flatMap<Data>(([type, counts]) => {
       sentTotal += counts.sent;
       recvTotal += counts.received;
 
       const avgSize = replicatorStats?.avgSizeByMessage[type];
-      const size = avgSize !== undefined ? ` (${formatNumber(avgSize, 1000)} k)` : '';
+      const size = avgSize !== undefined ? ` (${Unit.KB(avgSize)} KB)` : '';
 
       return [
-        ['↑', type + size, formatNumber(counts.sent, 1, 0)],
-        ['↓', type + size, formatNumber(counts.received, 1, 0)],
-      ];
+        ['↑', type + size, counts.sent],
+        ['↓', type + size, counts.received],
+      ] as Data[];
     })
     .sort(([d1, t1], [d2, t2]) => {
       const cmp = d1.localeCompare(d2);
@@ -43,13 +45,13 @@ export const ReplicatorMessagesPanel = ({ database, ...props }: CustomPanelProps
       info={
         <div className='flex gap-1 items-center'>
           <span>
-            <span>{formatNumber(recvTotal, 1, 0)}</span>
+            <span>{recvTotal}</span>
             <span className='text-green-500' title='Received'>
               ↓
             </span>
           </span>
           <span>
-            <span>{formatNumber(sentTotal, 1, 0)}</span>
+            <span>{sentTotal}</span>
             <span className='text-orange-500' title='Sent'>
               ↑
             </span>

@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { K, Table, type TableProps } from './Table';
 import { type DatabaseInfo } from '../../../../hooks';
 import { type CustomPanelProps, Panel } from '../../Panel';
+import { Table, type TableProps, Unit } from '../Table';
 
 export const DatabasePanel = ({ database, ...props }: CustomPanelProps<{ database?: DatabaseInfo }>) => {
   const interval = database?.dataStats?.meta?.rateAverageOverSeconds
@@ -21,11 +21,11 @@ export const DatabasePanel = ({ database, ...props }: CustomPanelProps<{ databas
 
     ['μ', `read rate ${interval}`, storageStats?.reads?.countPerSecond ?? 0, 'op/s'],
     ['μ', 'read duration', storageStats?.reads?.opDuration ?? 0, 'ms'],
-    ['μ', 'read chunk size', K(storageStats?.reads?.payloadSize), 'KB'],
+    ['μ', 'read chunk size', Unit.KB(storageStats?.reads?.payloadSize), 'KB'],
 
     ['μ', `write rate ${interval}`, storageStats?.writes?.countPerSecond ?? 0, 'op/s'],
     ['μ', 'write duration', storageStats?.writes?.opDuration ?? 0, 'ms'],
-    ['μ', 'write chunk size', K(storageStats?.writes?.payloadSize), 'KB'],
+    ['μ', 'write chunk size', Unit.KB(storageStats?.writes?.payloadSize), 'KB'],
   ];
 
   return (

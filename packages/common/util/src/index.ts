@@ -19,7 +19,6 @@ export * from './defer';
 export * from './entry';
 export * from './first-two-chars';
 export * from './for-each-async';
-export * from './format';
 export * from './human-hash';
 export * from './instance-id';
 export * from './interval';
