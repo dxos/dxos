@@ -44,6 +44,7 @@ export type StackItemContextValue = {
   setSize: (nextSize: StackItemSize, commit?: boolean) => void;
   state: ItemDragState;
   setState: (state: ItemDragState) => void;
+  role?: string;
 };
 
 export const StackItemContext = createContext<StackItemContextValue>({

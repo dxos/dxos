@@ -105,7 +105,6 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
     <StackItem.Content role={role} toolbar>
       <TableToolbar
         attendableId={fullyQualifiedId(table)}
-        classNames='border-be border-subduedSeparator'
         customActions={customActions}
         onAdd={handleInsertRow}
         onSave={handleSave}

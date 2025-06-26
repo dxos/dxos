@@ -327,7 +327,7 @@ export const GridSheet = () => {
         onContextMenu={handleContextMenu}
         onClick={handleClick}
         overscroll='trap'
-        className='[--dx-grid-base:var(--baseSurface)] [&_.dx-grid]:border-bs [&_.dx-grid]:border-be [&_.dx-grid]:absolute [&_.dx-grid]:inset-0 [&_.dx-grid]:border-separator'
+        className='[--dx-grid-base:var(--baseSurface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
         activeRefs={activeRefs}
         ref={setDxGrid}
       />
