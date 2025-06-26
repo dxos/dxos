@@ -44,6 +44,7 @@ export default [
         'object placeholder': 'Type a title here…',
         'personal space label': 'Personal Space',
         'spaces label': 'Spaces',
+        'space settings label': 'Spaces',
         'show hidden spaces label': 'Show archived spaces',
         'save files to directory label': 'Save files to disk',
         'select path label': 'Select path',
