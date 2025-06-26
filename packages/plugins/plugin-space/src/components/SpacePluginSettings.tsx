@@ -16,9 +16,9 @@ import { getSpaceDisplayName } from '../util';
 
 export const SpacePluginSettings = ({ settings }: { settings: SpaceSettingsProps }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const spaces = useSpaces({ all: settings.showHidden });
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // TODO(wittjosiah): Migrate to new form container.
   return (
@@ -28,6 +28,7 @@ export const SpacePluginSettings = ({ settings }: { settings: SpaceSettingsProps
       </DeprecatedFormInput>
       <div role='none'>
         <h2 className='text-xl my-4'>{t('space settings label')}</h2>
+        {/* TODO(burdon): Consider fragment for a callout border section. */}
         <div className='-mis-4 -mie-4 p-4 border border-separator rounded-md'>
           <List classNames='flex flex-col gap-2'>
             {spaces.map((space) => (
