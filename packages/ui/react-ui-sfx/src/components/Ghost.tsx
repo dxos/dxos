@@ -2,6 +2,7 @@
 // Copyright 2025 David Haz
 // Copyright 2025 DXOS.org
 // https://github.com/DavidHDev/react-bits/blob/main/LICENSE.md
+// https://reactbits.dev/animations/splash-cursor
 //
 
 import React, { useEffect, useRef } from 'react';
