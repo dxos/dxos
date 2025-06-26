@@ -967,4 +967,44 @@ describe('ViewProjection', () => {
       });
     }
   });
+
+  test('Email validation persists after schema registration round-trip', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const registry = new EchoSchemaRegistry(db);
+
+    // Verify Format.Email has validation
+    expect(() => Schema.validateSync(Format.Email)('valid@example.com')).not.toThrow();
+    expect(() => Schema.validateSync(Format.Email)('invalid-email')).toThrow(/Email/);
+
+    // Create and register schema using Format.Email
+    const schema = Schema.Struct({
+      email: Format.Email,
+    }).annotations({
+      [TypeAnnotationId]: {
+        kind: EntityKind.Object,
+        typename: 'example.com/type/EmailTest',
+        version: '0.1.0',
+      },
+    });
+
+    // Check with the primary schema
+    expect(() => Schema.validateSync(schema)({ email: 'valid@example.com' })).not.toThrow();
+    expect(() => Schema.validateSync(schema)({ email: 'invalid-email' })).toThrow();
+
+    const [registeredSchema] = await registry.register([schema]);
+
+    // Verify JSON schema preserves the validation constraint
+    const emailJsonSchema = registeredSchema.jsonSchema.properties?.email;
+    expect(emailJsonSchema).toMatchObject({
+      type: 'string',
+      format: 'email',
+      pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
+    });
+
+    // Verify reconstructed Effect schema maintains validation
+    const reconstructedSchema = registeredSchema.snapshot;
+
+    expect(() => Schema.validateSync(reconstructedSchema)({ email: 'valid@example.com' })).not.toThrow();
+    expect(() => Schema.validateSync(reconstructedSchema)({ email: 'invalid-email' })).toThrow();
+  });
 });
