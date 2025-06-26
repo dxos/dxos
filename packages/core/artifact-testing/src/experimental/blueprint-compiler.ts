@@ -4,30 +4,37 @@ import { ComputeGraphModel, NODE_INPUT, NODE_OUTPUT, type ComputeGraph, type Com
 export const compileBlueprint = async (blueprint: Blueprint): Promise<ComputeGraph> => {
   const model = ComputeGraphModel.create();
 
-  model.builder.createNode({ id: 'input', type: NODE_INPUT });
+  const inputNode = model.createNode({ id: 'input', type: NODE_INPUT });
+  const systemPrompt = model.createNode({ id: 'system-prompt', type: 'constant', value: '**BP system prompt**' });
+  const conversation = model.createNode({
+    id: 'conversation-queue',
+    type: 'constant',
+    value: '**conversation queue**',
+  });
 
+  const nodes: ComputeNode[] = [];
   for (let i = 0; i < blueprint.steps.length; i++) {
-    model.builder.createNode({ id: stepNodeId(i), type: 'gpt' });
+    const node = model.createNode({ id: stepNodeId(i), type: 'gpt' });
+    nodes.push(node);
+
+    model.builder.createEdge({ node: systemPrompt }, { node: node, property: 'systemPrompt' });
 
     if (i === 0) {
       // Link to input node.
-      model.builder.createEdge({ node: 'input', property: 'input' }, { node: stepNodeId(i), property: 'prompt' });
+      model.builder.createEdge({ node: inputNode, property: 'input' }, { node: node, property: 'prompt' });
+      model.builder.createEdge({ node: conversation }, { node: node, property: 'conversation' });
     } else {
       // Link to previous step.
       model.builder.createEdge(
-        { node: stepNodeId(i - 1), property: 'text' },
-        { node: stepNodeId(i), property: 'prompt' },
+        { node: nodes[i - 1], property: 'conversation' },
+        { node: node, property: 'conversation' },
       );
     }
   }
 
   // Link output.
-  model.builder.createEdge(
-    { node: stepNodeId(blueprint.steps.length - 1), property: 'text' },
-    { node: 'output', property: 'text' },
-  );
-
-  model.builder.createNode({ id: 'output', type: NODE_OUTPUT });
+  const outputNode = model.createNode({ id: 'output', type: NODE_OUTPUT });
+  model.builder.createEdge({ node: nodes.at(-1)!, property: 'text' }, { node: outputNode, property: 'text' });
 
   return model.root;
 };
