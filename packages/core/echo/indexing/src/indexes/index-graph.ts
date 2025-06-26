@@ -177,11 +177,11 @@ export class IndexGraph extends Resource implements Index {
             continue;
           }
           if (property !== null) {
-            const source = sources.get(property);
-            if (!source) {
-              continue;
+            for (const [prop, source] of sources.entries()) {
+              if (prop === property || prop.startsWith(`${property}.`)) {
+                results.push(...Array.from(source).map((id) => ({ id, rank: 0 })));
+              }
             }
-            results.push(...Array.from(source).map((id) => ({ id, rank: 0 })));
           } else {
             for (const source of sources.values()) {
               results.push(...Array.from(source).map((id) => ({ id, rank: 0 })));
