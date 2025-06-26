@@ -358,7 +358,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     const snapshot = getSnapshot(currentRow);
     const transformedValue = editorTextToCellValue(props, value);
 
-    // Sent the proposed value.
+    // Set the proposed value.
     setValue(snapshot, field.path, transformedValue);
 
     const schema = getSchema(currentRow);
