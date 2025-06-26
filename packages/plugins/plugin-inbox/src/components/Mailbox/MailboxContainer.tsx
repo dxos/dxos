@@ -105,7 +105,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   );
 
   return (
-    <StackItem.Content classNames='relative'>
+    <StackItem.Content classNames='relative' toolbar>
       <div role='none' className={gridLayout}>
         <ElevationProvider elevation='positioned'>
           <MenuProvider {...menu} attendableId={id}>
