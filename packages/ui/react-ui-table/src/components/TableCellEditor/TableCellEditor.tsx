@@ -151,10 +151,7 @@ export const TableCellEditor = ({
         return;
       }
 
-      const cell = parseCellIndex(editing.index);
-      if (value !== undefined) {
-        model.setCellData(cell, value);
-      }
+      // Don't save on blur - let handleClose handle validation and saving
     },
     [model, editing],
   );
@@ -173,22 +170,24 @@ export const TableCellEditor = ({
 
         if (result.valid) {
           setValidationError(null);
+          model.setCellData(cell, value);
+          setEditing(null);
           onEnter?.(cell);
           if (event && onFocus) {
             onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
           }
         } else {
           setValidationError(result.error);
-          // Editor stays open on validation failure
         }
       } else {
-        onEnter?.(cell);
+        setValidationError(null);
+        setEditing(null);
         if (event && onFocus) {
           onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
         }
       }
     },
-    [model, editing, onFocus, onEnter, fieldProjection],
+    [model, editing, onFocus, onEnter, fieldProjection, setEditing],
   );
 
   const extension = useMemo(() => {
