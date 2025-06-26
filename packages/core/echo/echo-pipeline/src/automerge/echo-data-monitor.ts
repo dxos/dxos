@@ -304,6 +304,7 @@ type StorageAverages = {
   storeDuration: SlidingWindowSummary;
 };
 
+// TODO(burdon): Standardize: `sent`/`recv`.
 type NetworkAverages = {
   receivedMessageSize: SlidingWindowSummary;
   receivedPerSecond: SlidingWindowSummary;

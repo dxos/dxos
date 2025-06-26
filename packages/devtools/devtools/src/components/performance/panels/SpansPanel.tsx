@@ -9,7 +9,6 @@ import { type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { type CustomPanelProps, Panel } from '../Panel';
 import { Duration } from '../util';
 
-// TODO(burdon): Classname?
 export const SpansPanel = ({ spans, ...props }: CustomPanelProps<{ spans?: Span[] }>) => {
   if (!spans?.length) {
     return null;
@@ -29,7 +28,7 @@ export const SpansPanel = ({ spans, ...props }: CustomPanelProps<{ spans?: Span[
               endTs &&
               startTs && (
                 <tr key={id}>
-                  <td className='p-1 text-right'>{methodName}</td>
+                  <td className='p-1'>{methodName}</td>
                   <td className='p-1 w-[80px] text-right'>{resourceId}</td>
                   <td className='p-1 w-[80px] text-right'>
                     <Duration duration={parseInt(endTs) - parseInt(startTs)} />
