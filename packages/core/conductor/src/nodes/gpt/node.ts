@@ -1,8 +1,8 @@
 import { Effect, Schema } from 'effect';
 
 import { DEFAULT_EDGE_MODEL, type GenerationStreamEvent, Message, Tool } from '@dxos/ai';
-import { Ref, Type } from '@dxos/echo';
-import { ATTR_TYPE, ObjectId } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
+import { ATTR_TYPE } from '@dxos/echo-schema';
 import { AiService, QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
 
@@ -88,16 +88,14 @@ export const gptNode = defineComputeNode({
         ? yield* Effect.promise(() => queues.get<Message>(conversation.dxn).queryObjects())
         : history ?? [];
 
-      const messages: Message[] = [
-        ...historyMessages,
-        {
-          id: ObjectId.random(),
-          role: 'user',
-          content: [{ type: 'text', text: prompt }],
-        },
-      ];
+      const promptMessage: Message = Obj.make(Message, {
+        role: 'user',
+        content: [{ type: 'text', text: prompt }],
+      });
 
-      log.info('generating', { systemPrompt, prompt, history, tools: tools.map((tool) => tool.name) });
+      const messages: Message[] = [...historyMessages, promptMessage];
+
+      log.info('generating', { systemPrompt, prompt, historyMessages, tools: tools.map((tool) => tool.name) });
       const generationStream = yield* Effect.promise(() =>
         generate(aiClient, {
           model: DEFAULT_EDGE_MODEL,
@@ -127,7 +125,7 @@ export const gptNode = defineComputeNode({
         Effect.map(() => generationStream.result),
         Effect.tap((messages) => {
           if (conversation) {
-            return Effect.promise(() => queues.get<Message>(conversation.dxn).append(messages));
+            return Effect.promise(() => queues.get<Message>(conversation.dxn).append([promptMessage, ...messages]));
           }
         }),
         Effect.cached, // Cache the result to avoid re-draining the stream.
