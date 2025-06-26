@@ -88,7 +88,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
         values={initialValues}
         onSave={handleSave}
         autoSave
-        outerSpacing='blockStart-0'
+        outerSpacing={false}
         classNames='pbs-inputSpacingBlock'
       />
       <ViewEditor
@@ -97,6 +97,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
         view={kanban.cardView.target}
         onTypenameChanged={Type.isMutable(schema) ? handleUpdateTypename : undefined}
         onDelete={Type.isMutable(schema) ? handleDelete : undefined}
+        outerSpacing={false}
       />
     </>
   );

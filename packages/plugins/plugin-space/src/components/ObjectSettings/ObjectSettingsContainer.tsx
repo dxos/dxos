@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { Surface } from '@dxos/app-framework';
 import { type Obj } from '@dxos/echo';
 import { Clipboard } from '@dxos/react-ui';
-import { StackItem } from '@dxos/react-ui-stack';
+import { cardSpacing, StackItem } from '@dxos/react-ui-stack';
 
 import { BaseObjectSettings } from './BaseObjectSettings';
 
@@ -21,13 +21,15 @@ export const ObjectSettingsContainer = ({ object, role }: ObjectSettingsContaine
 
   return (
     <Clipboard.Provider>
-      <StackItem.Content role={role} classNames='divide-y divide-separator'>
-        <BaseObjectSettings object={object}>
-          <Surface role='base-object-settings' data={data} />
-        </BaseObjectSettings>
-        <Surface role='object-settings' data={data} />
-        {/* TODO(wittjosiah): Remove? */}
-        {/* <AdvancedObjectSettings object={object} /> */}
+      <StackItem.Content toolbar={false}>
+        <div role='none' className={cardSpacing}>
+          <BaseObjectSettings object={object}>
+            <Surface role='base-object-settings' data={data} />
+          </BaseObjectSettings>
+          <Surface role='object-settings' data={data} />
+          {/* TODO(wittjosiah): Remove? */}
+          {/* <AdvancedObjectSettings object={object} /> */}
+        </div>
       </StackItem.Content>
     </Clipboard.Provider>
   );
