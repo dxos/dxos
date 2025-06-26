@@ -177,9 +177,11 @@ export class IndexGraph extends Resource implements Index {
             continue;
           }
           if (property !== null) {
-            for (const [prop, source] of sources.entries()) {
-              const [segment] = prop.split('.');
-              if (segment === property) {
+            for (const [escapedProp, source] of sources.entries()) {
+              const prop = EscapedPropPath.unescape(escapedProp);
+              const firstSegmentMatches = prop[0] === property;
+              const secondSegmentIsNumeric = !isNaN(Number(prop[1]));
+              if (firstSegmentMatches && (prop.length === 1 || (prop.length === 2 && secondSegmentIsNumeric))) {
                 results.push(...Array.from(source).map((id) => ({ id, rank: 0 })));
               }
             }
