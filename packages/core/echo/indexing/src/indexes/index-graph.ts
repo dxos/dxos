@@ -178,7 +178,8 @@ export class IndexGraph extends Resource implements Index {
           }
           if (property !== null) {
             for (const [prop, source] of sources.entries()) {
-              if (prop === property || prop.startsWith(`${property}.`)) {
+              const [segment] = prop.split('.');
+              if (segment === property) {
                 results.push(...Array.from(source).map((id) => ({ id, rank: 0 })));
               }
             }
