@@ -153,32 +153,39 @@ export const TableCellEditor = ({
 
       const cell = parseCellIndex(editing.index);
       if (value !== undefined) {
-        // Validate on blur as well
-        const result = await model.validateCellData(cell, value);
-
-        if (result.valid) {
-          setValidationError(null);
-          model.setCellData(cell, value);
-        } else {
-          console.log('Precommit failed with', { error: result.error });
-          setValidationError(result.error);
-          // Don't close editor on validation failure during blur
-        }
+        model.setCellData(cell, value);
       }
     },
     [model, editing],
   );
 
   const handleClose = useCallback<EditorKeyOrBlurHandler>(
-    (value, event) => {
+    async (value, event) => {
       if (!model || !editing || !fieldProjection) {
         return;
       }
 
       const cell = parseCellIndex(editing.index);
-      onEnter?.(cell);
-      if (event && onFocus) {
-        onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
+
+      if (value !== undefined) {
+        // Pre-commit validation check
+        const result = await model.validateCellData(cell, value);
+
+        if (result.valid) {
+          setValidationError(null);
+          onEnter?.(cell);
+          if (event && onFocus) {
+            onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
+          }
+        } else {
+          setValidationError(result.error);
+          // Editor stays open on validation failure
+        }
+      } else {
+        onEnter?.(cell);
+        if (event && onFocus) {
+          onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
+        }
       }
     },
     [model, editing, onFocus, onEnter, fieldProjection],

@@ -342,6 +342,9 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   };
 
   public validateCellData = async ({ col, row }: DxGridPlanePosition, value: any): Promise<ValidationResult> => {
+    // TODO: Remove this development stub
+    // return { valid: false, error: 'Development validation error stub' };
+
     const rowIdx = this._sorting.getDataIndex(row);
     const fields = this._view?.fields ?? [];
     if (col < 0 || col >= fields.length) {
