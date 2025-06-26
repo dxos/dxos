@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { Surface } from '@dxos/app-framework';
 import { type Obj } from '@dxos/echo';
 import { Clipboard } from '@dxos/react-ui';
-import { cardSpacing, StackItem } from '@dxos/react-ui-stack';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { BaseObjectSettings } from './BaseObjectSettings';
 
@@ -22,7 +22,7 @@ export const ObjectSettingsContainer = ({ object, role }: ObjectSettingsContaine
   return (
     <Clipboard.Provider>
       <StackItem.Content toolbar={false}>
-        <div role='none' className={cardSpacing}>
+        <div role='none' className='overflow-y-auto pli-cardSpacingInline plb-cardSpacingBlock'>
           <BaseObjectSettings object={object}>
             <Surface role='base-object-settings' data={data} />
           </BaseObjectSettings>
