@@ -18,7 +18,7 @@ import {
   researchFn,
   setConsolePrinter,
 } from '@dxos/assistant';
-import { ComputeGraphModel, NODE_INPUT, NODE_OUTPUT, ValueBag, type GptOutput } from '@dxos/conductor';
+import { ComputeGraphModel, computeGraphToGraphViz, NODE_INPUT, NODE_OUTPUT, ValueBag, type GptOutput } from '@dxos/conductor';
 import { TestRuntime } from '@dxos/conductor/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
@@ -28,6 +28,7 @@ import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DataType, DataTypes } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
+import { compileBlueprint } from './blueprint-compiler';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
@@ -118,34 +119,24 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     );
 
     // TODO(dmaretskyi): Store in ECHO.
-    const blueprint = BlueprintParser.create().parse({
-      steps: [
-        {
-          instructions: 'Research information and entities related to the selected objects.',
-          tools: ['search/web_search'],
-        },
-        {
-          instructions:
-            'Based on your research find matching entires that are already in the graph. Do exaustive research.',
-          tools: ['search/local_search'],
-        },
-        {
-          instructions: 'Add researched data to the graph. Make connections to existing objects.',
-          tools: ['search/local_search', 'graph/writer'],
-        },
-      ],
-    });
+
 
     const org = db.add(Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }));
     await db.flush({ indexes: true });
 
-    const machine = new BlueprintMachine(tools, blueprint);
+    const machine = new BlueprintMachine(tools, BLUEPRINT);
     const { client } = serviceContainer.getService(AiService);
     setConsolePrinter(machine, true);
     console.log(client);
 
     await machine.runToCompletion({ aiClient: client, input: [org] });
     log.info('researched', { objects: await researchQueue.queryObjects() });
+  });
+
+  test('blueprint (compiled)', { timeout: 120_000 }, async () => {
+    const graph = await compileBlueprint(BLUEPRINT);
+    log.info('graph', { graph: graph.graph });
+    console.log(computeGraphToGraphViz(graph));
   });
 
   test('conversation', { timeout: 120_000 }, async () => {
@@ -190,4 +181,23 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     console.log(inspect(result, { depth: null, colors: true }));
     console.log(JSON.stringify(result, null, 2));
   });
+});
+
+
+const BLUEPRINT = BlueprintParser.create().parse({
+  steps: [
+    {
+      instructions: 'Research information and entities related to the selected objects.',
+      tools: ['search/web_search'],
+    },
+    {
+      instructions:
+        'Based on your research find matching entires that are already in the graph. Do exaustive research.',
+      tools: ['search/local_search'],
+    },
+    {
+      instructions: 'Add researched data to the graph. Make connections to existing objects.',
+      tools: ['search/local_search', 'graph/writer'],
+    },
+  ],
 });
