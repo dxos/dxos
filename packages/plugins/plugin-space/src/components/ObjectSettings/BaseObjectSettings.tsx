@@ -24,25 +24,23 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
   //  Perhaps also including the field of the title annotation as well.
   return (
     <>
-      <div role='none' className='pli-cardSpacingInline pbs-cardSpacingBlock'>
-        <Input.Root>
-          <Input.Label>{t('name label')}</Input.Label>
-          <Input.TextInput
-            ref={inputRef}
-            placeholder={t('name placeholder')}
-            // TODO(burdon): Use annotation to get the name field.
-            value={(object as any).name ?? ''}
-            onChange={(event) => {
-              (object as any).name = event.target.value;
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                inputRef.current?.blur();
-              }
-            }}
-          />
-        </Input.Root>
-      </div>
+      <Input.Root>
+        <Input.Label>{t('name label')}</Input.Label>
+        <Input.TextInput
+          ref={inputRef}
+          placeholder={t('name placeholder')}
+          // TODO(burdon): Use annotation to get the name field.
+          value={(object as any).name ?? ''}
+          onChange={(event) => {
+            (object as any).name = event.target.value;
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              inputRef.current?.blur();
+            }
+          }}
+        />
+      </Input.Root>
       {children}
     </>
   );
