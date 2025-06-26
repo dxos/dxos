@@ -9,7 +9,6 @@ import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ElevationProvider, Icon } from '@dxos/react-ui';
-import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TagPicker } from '@dxos/react-ui-tag-picker';
@@ -108,13 +107,11 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   return (
     <StackItem.Content classNames='relative'>
       <div role='none' className={gridLayout}>
-        <div role='none' className={stackItemContentToolbarClassNames('section')}>
-          <ElevationProvider elevation='positioned'>
-            <MenuProvider {...menu} attendableId={id}>
-              <ToolbarMenu />
-            </MenuProvider>
-          </ElevationProvider>
-        </div>
+        <ElevationProvider elevation='positioned'>
+          <MenuProvider {...menu} attendableId={id}>
+            <ToolbarMenu />
+          </MenuProvider>
+        </ElevationProvider>
 
         {tagFilterVisible.value && (
           <div role='none' className='pli-1 pbs-[1px] border-be bs-8 flex items-center border-separator'>
