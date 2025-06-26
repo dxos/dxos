@@ -6,14 +6,15 @@ import { type Context } from 'effect';
 
 import { EdgeAiServiceClient, type AiServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from '@dxos/ai/testing';
-import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
-
 import type { Space } from '@dxos/client/echo';
+import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { assertArgument } from '@dxos/invariant';
+
+import { consoleLogger, noopLogger } from './logger';
 import {
   AiService,
   ConfiguredCredentialsService,
-  CredentialsService,
+  type CredentialsService,
   DatabaseService,
   QueueService,
   ServiceContainer,
@@ -21,7 +22,8 @@ import {
   type TracingService,
 } from '../services';
 import type { EventLogger } from '../services/event-logger';
-import { consoleLogger, noopLogger } from './logger';
+
+export type AiServiceProvider = 'dev' | 'edge' | 'ollama' | 'lmstudio';
 
 export type TestServiceOptions = {
   /**
@@ -30,30 +32,39 @@ export type TestServiceOptions = {
   ai?: {
     /**
      * Predefined AI service configuration.
-     *
      * Exclusive with: `endpoint`, `client`
      */
-    location?: 'local-edge' | 'remote-edge' | 'ollama' | 'lmstudio';
+    provider?: AiServiceProvider;
 
     /**
      * Edge AI service at specified endpoint.
-     *
-     * Exclusive with: `location`, `client`
+     * Exclusive with: `provider`, `client`
      */
     edgeEndpoint?: string;
 
     /**
      * Custom AI service client.
-     *
      * Exclusive with: `location`, `edgeEndpoint`
      */
     client?: AiServiceClient;
   };
 
   /**
-   * Queue service configuration.
+   * Credentials service configuration.
    */
-  queues?: QueueFactory;
+  credentials?: {
+    /**
+     * Predefined credentials list.
+     * Exclusive with: `service`
+     */
+    credentials?: ServiceCredential[];
+
+    /**
+     * Custom credentials service.
+     * Exclusive with: `credentials`
+     */
+    service?: Context.Tag.Service<CredentialsService>;
+  };
 
   /**
    * Database configuration.
@@ -62,29 +73,9 @@ export type TestServiceOptions = {
 
   /**
    * Gets database and queue services from the space.
-   *
    * Exclusive with: `db`, `queues`
    */
   space?: Space;
-
-  /**
-   * Credentials service configuration.
-   */
-  credentials?: {
-    /**
-     * Predefined credentials list.
-     *
-     * Exclusive with: `service`
-     */
-    credentials?: ServiceCredential[];
-
-    /**
-     * Custom credentials service.
-     *
-     * Exclusive with: `credentials`
-     */
-    service?: Context.Tag.Service<CredentialsService>;
-  };
 
   /**
    * Logging configuration.
@@ -94,6 +85,11 @@ export type TestServiceOptions = {
     logger?: Context.Tag.Service<EventLogger>;
   };
 
+  /**
+   * Queue service configuration.
+   */
+  queues?: QueueFactory;
+
   tracing?: {
     service?: Context.Tag.Service<TracingService>;
   };
@@ -101,11 +97,11 @@ export type TestServiceOptions = {
 
 export const createTestServices = ({
   ai,
-  queues,
-  db,
-  space,
   credentials,
+  db,
   logging,
+  queues,
+  space,
   tracing,
 }: TestServiceOptions = {}): ServiceContainer => {
   assertArgument(!(!!space && (!!db || !!queues)), 'space can be provided only if db and queues are not');
@@ -113,10 +109,10 @@ export const createTestServices = ({
   return new ServiceContainer().setServices({
     ai: createAiService(ai),
     database: space || db ? DatabaseService.make(space?.db! || db!) : undefined,
-    queues: space || queues ? QueueService.make(space?.queues! || queues!, undefined) : undefined,
     credentials: createCredentialsService(credentials),
-    tracing: tracing?.service,
     eventLogger: logging?.logger ?? logging?.enabled ? consoleLogger : noopLogger,
+    queues: space || queues ? QueueService.make(space?.queues! || queues!, undefined) : undefined,
+    tracing: tracing?.service,
   });
 };
 
@@ -126,12 +122,12 @@ const createAiService = (ai: TestServiceOptions['ai'] | undefined): Context.Tag.
   }
 
   assertArgument(
-    (ai.location != null ? 1 : 0) + (ai.edgeEndpoint != null ? 1 : 0) + (ai.client != null ? 1 : 0) === 1,
-    'only one of ai.location, ai.edgeEndpoint, or ai.client must be specified',
+    (ai.provider != null ? 1 : 0) + (ai.edgeEndpoint != null ? 1 : 0) + (ai.client != null ? 1 : 0) === 1,
+    'only one of ai.provider, ai.edgeEndpoint, or ai.client must be specified',
   );
 
-  switch (ai.location) {
-    case 'local-edge':
+  switch (ai.provider) {
+    case 'dev':
       return AiService.make(
         new EdgeAiServiceClient({
           endpoint: AI_SERVICE_ENDPOINT.LOCAL,
@@ -141,7 +137,7 @@ const createAiService = (ai: TestServiceOptions['ai'] | undefined): Context.Tag.
           },
         }),
       );
-    case 'remote-edge':
+    case 'edge':
       return AiService.make(
         new EdgeAiServiceClient({
           endpoint: AI_SERVICE_ENDPOINT.REMOTE,

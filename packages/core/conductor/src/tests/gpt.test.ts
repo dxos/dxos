@@ -6,14 +6,7 @@ import { it } from '@effect/vitest';
 import { Cause, Chunk, Console, Effect, Exit, Fiber, Option, Scope, Stream } from 'effect';
 import { describe, expect, test, type TaskContext } from 'vitest';
 
-import {
-  EdgeAiServiceClient,
-  defineTool,
-  OllamaAiServiceClient,
-  ToolTypes,
-  type GenerationStreamEvent,
-} from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from '@dxos/ai/testing';
+import { defineTool, OllamaAiServiceClient, ToolTypes, type GenerationStreamEvent } from '@dxos/ai';
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 
@@ -110,11 +103,11 @@ describe.skip('GPT pipelines', () => {
   test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt output only', async ({ expect }) => {
     const runtime = new TestRuntime(
       createTestServices({
+        ai: {
+          provider: 'dev',
+        },
         logging: {
           enabled: ENABLE_LOGGING,
-        },
-        ai: {
-          location: 'local-edge',
         },
       }),
     );
@@ -148,7 +141,7 @@ describe.skip('GPT pipelines', () => {
           enabled: ENABLE_LOGGING,
         },
         ai: {
-          location: 'local-edge',
+          provider: 'dev',
         },
       }),
     );
@@ -208,11 +201,11 @@ describe.skip('GPT pipelines', () => {
         Effect.flatMap(ValueBag.unwrap),
         Effect.provide(
           createTestServices({
+            ai: {
+              provider: 'dev',
+            },
             logging: {
               enabled: ENABLE_LOGGING,
-            },
-            ai: {
-              location: 'local-edge',
             },
           }).createLayer(),
         ),
@@ -249,11 +242,11 @@ describe.skip('GPT pipelines', () => {
           Effect.flatMap(ValueBag.unwrap),
           Effect.provide(
             createTestServices({
+              ai: {
+                provider: 'ollama',
+              },
               logging: {
                 enabled: ENABLE_LOGGING,
-              },
-              ai: {
-                location: 'ollama',
               },
             }).createLayer(),
           ),
