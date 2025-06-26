@@ -39,7 +39,7 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
     const style = useMemo(
       () => ({
         gridTemplateRows: [
-          ...(toolbar ? ['var(--rail-action)'] : []),
+          ...(toolbar ? [role === 'section' ? 'calc(var(--rail-action) - 1px)' : 'var(--rail-action)'] : []),
           '1fr',
           ...(statusbar ? ['var(--statusbar-size)'] : []),
         ].join(' '),
