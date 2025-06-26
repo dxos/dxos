@@ -409,21 +409,22 @@ export class QueryExecutor extends Resource {
             const property = EscapedPropPath.unescape(step.traversal.property);
 
             const refs = workingSet
-              .map((item) => {
+              .flatMap((item) => {
                 const ref = getDeep(item.doc.data, property);
-                if (!isEncodedReference(ref)) {
-                  return null;
-                }
-
-                try {
-                  return {
-                    ref: DXN.parse(ref['/']),
-                    spaceId: item.spaceId,
-                  };
-                } catch {
-                  log.warn('Invalid reference', { ref: ref['/'] });
-                  return null;
-                }
+                const refs = Array.isArray(ref) ? ref : [ref];
+                return refs.map((ref) => {
+                  try {
+                    return isEncodedReference(ref)
+                      ? {
+                          ref: DXN.parse(ref['/']),
+                          spaceId: item.spaceId,
+                        }
+                      : null;
+                  } catch {
+                    log.warn('Invalid reference', { ref: ref['/'] });
+                    return null;
+                  }
+                });
               })
               .filter(isNonNullable);
 
