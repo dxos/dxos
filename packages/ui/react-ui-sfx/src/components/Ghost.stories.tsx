@@ -34,7 +34,7 @@ export const Default: Story = {
     SPLAT_FORCE: 6000,
     SHADING: false,
     COLOR_UPDATE_SPEED: 10,
-    BACK_COLOR: { r: 0.1, g: 0.1, b: 0.1 },
-    TRANSPARENT: true,
+    BACK_COLOR: { r: 0.3, g: 0.1, b: 0.1 },
+    TRANSPARENT: false,
   },
 };

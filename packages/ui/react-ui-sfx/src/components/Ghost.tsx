@@ -6,6 +6,8 @@
 
 import React, { useEffect, useRef } from 'react';
 
+type Color = { r: number; g: number; b: number };
+
 class PointerPrototype {
   id = -1;
   texcoordX = 0;
@@ -16,7 +18,7 @@ class PointerPrototype {
   deltaY = 0;
   down = false;
   moved = false;
-  color = [0, 0, 0];
+  color: Color = { r: 0, g: 0, b: 0 };
 }
 
 export type GhostProps = {
@@ -32,7 +34,7 @@ export type GhostProps = {
   SPLAT_FORCE?: number;
   SHADING?: boolean;
   COLOR_UPDATE_SPEED?: number;
-  BACK_COLOR?: { r: number; g: number; b: number };
+  BACK_COLOR?: Color;
   TRANSPARENT?: boolean;
 };
 
@@ -55,11 +57,11 @@ export const Ghost = ({
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) {
+    if (!canvasRef.current) {
       return;
     }
 
+    const canvas = canvasRef.current! as HTMLCanvasElement;
     const config = {
       SIM_RESOLUTION,
       DYE_RESOLUTION,
@@ -78,7 +80,7 @@ export const Ghost = ({
       TRANSPARENT,
     };
 
-    const getWebGLContext = (canvas) => {
+    const getWebGLContext = (canvas: any) => {
       const params = {
         alpha: true,
         depth: false,
@@ -86,7 +88,7 @@ export const Ghost = ({
         antialias: false,
         preserveDrawingBuffer: false,
       };
-      let gl = canvas.getContext('webgl2', params);
+      let gl: WebGL2RenderingContext = canvas.getContext('webgl2', params);
       const isWebGL2 = !!gl;
       if (!isWebGL2) {
         gl = canvas.getContext('webgl', params) || canvas.getContext('experimental-webgl', params);
@@ -101,7 +103,7 @@ export const Ghost = ({
         supportLinearFiltering = gl.getExtension('OES_texture_half_float_linear');
       }
       gl.clearColor(0.0, 0.0, 0.0, 1.0);
-      const halfFloatTexType = isWebGL2 ? gl.HALF_FLOAT : halfFloat && halfFloat.HALF_FLOAT_OES;
+      const halfFloatTexType = isWebGL2 ? gl.HALF_FLOAT : ((halfFloat && halfFloat.HALF_FLOAT_OES) as number);
       let formatRGBA;
       let formatRG;
       let formatR;
@@ -148,7 +150,7 @@ export const Ghost = ({
       return status === gl.FRAMEBUFFER_COMPLETE;
     };
 
-    const getSupportedFormat = (gl, internalFormat, format, type) => {
+    const getSupportedFormat = (gl: WebGL2RenderingContext, internalFormat: number, format: number, type: number) => {
       if (!supportRenderTextureFormat(gl, internalFormat, format, type)) {
         switch (internalFormat) {
           case gl.R16F:
@@ -165,7 +167,7 @@ export const Ghost = ({
       };
     };
 
-    const pointers = [new PointerPrototype()];
+    const pointers: PointerPrototype[] = [new PointerPrototype()];
 
     const { gl, ext } = getWebGLContext(canvas);
     if (!ext.supportLinearFiltering) {
@@ -174,7 +176,13 @@ export const Ghost = ({
     }
 
     class Material {
-      constructor(vertexShader, fragmentShaderSource) {
+      vertexShader: any;
+      fragmentShaderSource: any;
+      programs: any[];
+      activeProgram: any;
+      uniforms: any;
+
+      constructor(vertexShader: any, fragmentShaderSource: any) {
         this.vertexShader = vertexShader;
         this.fragmentShaderSource = fragmentShaderSource;
         this.programs = [];
@@ -182,7 +190,7 @@ export const Ghost = ({
         this.uniforms = [];
       }
 
-      setKeywords(keywords) {
+      setKeywords(keywords: any[]) {
         let hash = 0;
         for (let i = 0; i < keywords.length; i++) {
           hash += hashCode(keywords[i]);
@@ -206,7 +214,13 @@ export const Ghost = ({
     }
 
     class Program {
-      constructor(vertexShader, fragmentShader) {
+      vertexShader: any;
+      fragmentShader: any;
+      uniforms: any;
+      program: any;
+
+      constructor(vertexShader: any, fragmentShader: any) {
+        this.vertexShader = vertexShader;
         this.uniforms = {};
         this.program = createProgram(vertexShader, fragmentShader);
         this.uniforms = getUniforms(this.program);
@@ -217,7 +231,7 @@ export const Ghost = ({
       }
     }
 
-    const createProgram = (vertexShader, fragmentShader) => {
+    const createProgram = (vertexShader: any, fragmentShader: any) => {
       const program = gl.createProgram();
       gl.attachShader(program, vertexShader);
       gl.attachShader(program, fragmentShader);
@@ -228,19 +242,19 @@ export const Ghost = ({
       return program;
     };
 
-    const getUniforms = (program) => {
-      const uniforms = [];
+    const getUniforms = (program: any) => {
+      const uniforms: any = {};
       const uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
       for (let i = 0; i < uniformCount; i++) {
-        const uniformName = gl.getActiveUniform(program, i).name;
+        const uniformName = gl.getActiveUniform(program, i)!.name;
         uniforms[uniformName] = gl.getUniformLocation(program, uniformName);
       }
       return uniforms;
     };
 
-    const compileShader = (type, source, keywords) => {
+    const compileShader = (type: number, source: string, keywords?: string[]) => {
       source = addKeywords(source, keywords);
-      const shader = gl.createShader(type);
+      const shader = gl.createShader(type) as WebGLShader;
       gl.shaderSource(shader, source);
       gl.compileShader(shader);
       // if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
@@ -249,7 +263,7 @@ export const Ghost = ({
       return shader;
     };
 
-    const addKeywords = (source, keywords) => {
+    const addKeywords = (source: string, keywords?: string[]) => {
       if (!keywords) {
         return source;
       }
@@ -273,12 +287,12 @@ export const Ghost = ({
         uniform vec2 texelSize;
 
         void main () {
-            vUv = aPosition * 0.5 + 0.5;
-            vL = vUv - vec2(texelSize.x, 0.0);
-            vR = vUv + vec2(texelSize.x, 0.0);
-            vT = vUv + vec2(0.0, texelSize.y);
-            vB = vUv - vec2(0.0, texelSize.y);
-            gl_Position = vec4(aPosition, 0.0, 1.0);
+          vUv = aPosition * 0.5 + 0.5;
+          vL = vUv - vec2(texelSize.x, 0.0);
+          vR = vUv + vec2(texelSize.x, 0.0);
+          vT = vUv + vec2(0.0, texelSize.y);
+          vB = vUv - vec2(0.0, texelSize.y);
+          gl_Position = vec4(aPosition, 0.0, 1.0);
         }
       `,
     );
@@ -292,7 +306,7 @@ export const Ghost = ({
         uniform sampler2D uTexture;
 
         void main () {
-            gl_FragColor = texture2D(uTexture, vUv);
+          gl_FragColor = texture2D(uTexture, vUv);
         }
       `,
     );
@@ -307,7 +321,7 @@ export const Ghost = ({
         uniform float value;
 
         void main () {
-            gl_FragColor = value * texture2D(uTexture, vUv);
+          gl_FragColor = value * texture2D(uTexture, vUv);
         }
      `,
     );
@@ -326,30 +340,30 @@ export const Ghost = ({
       uniform vec2 texelSize;
 
       vec3 linearToGamma (vec3 color) {
-          color = max(color, vec3(0));
-          return max(1.055 * pow(color, vec3(0.416666667)) - 0.055, vec3(0));
+        color = max(color, vec3(0));
+        return max(1.055 * pow(color, vec3(0.416666667)) - 0.055, vec3(0));
       }
 
       void main () {
-          vec3 c = texture2D(uTexture, vUv).rgb;
-          #ifdef SHADING
-              vec3 lc = texture2D(uTexture, vL).rgb;
-              vec3 rc = texture2D(uTexture, vR).rgb;
-              vec3 tc = texture2D(uTexture, vT).rgb;
-              vec3 bc = texture2D(uTexture, vB).rgb;
+        vec3 c = texture2D(uTexture, vUv).rgb;
+        #ifdef SHADING
+          vec3 lc = texture2D(uTexture, vL).rgb;
+          vec3 rc = texture2D(uTexture, vR).rgb;
+          vec3 tc = texture2D(uTexture, vT).rgb;
+          vec3 bc = texture2D(uTexture, vB).rgb;
 
-              float dx = length(rc) - length(lc);
-              float dy = length(tc) - length(bc);
+          float dx = length(rc) - length(lc);
+          float dy = length(tc) - length(bc);
 
-              vec3 n = normalize(vec3(dx, dy, length(texelSize)));
-              vec3 l = vec3(0.0, 0.0, 1.0);
+          vec3 n = normalize(vec3(dx, dy, length(texelSize)));
+          vec3 l = vec3(0.0, 0.0, 1.0);
 
-              float diffuse = clamp(dot(n, l) + 0.7, 0.7, 1.0);
-              c *= diffuse;
-          #endif
+          float diffuse = clamp(dot(n, l) + 0.7, 0.7, 1.0);
+          c *= diffuse;
+        #endif
 
-          float a = max(c.r, max(c.g, c.b));
-          gl_FragColor = vec4(c, a);
+        float a = max(c.r, max(c.g, c.b));
+        gl_FragColor = vec4(c, a);
       }
     `;
 
@@ -366,11 +380,11 @@ export const Ghost = ({
         uniform float radius;
 
         void main () {
-            vec2 p = vUv - point.xy;
-            p.x *= aspectRatio;
-            vec3 splat = exp(-dot(p, p) / radius) * color;
-            vec3 base = texture2D(uTarget, vUv).xyz;
-            gl_FragColor = vec4(base + splat, 1.0);
+          vec2 p = vUv - point.xy;
+          p.x *= aspectRatio;
+          vec3 splat = exp(-dot(p, p) / radius) * color;
+          vec3 base = texture2D(uTarget, vUv).xyz;
+          gl_FragColor = vec4(base + splat, 1.0);
         }
       `,
     );
@@ -389,31 +403,31 @@ export const Ghost = ({
         uniform float dissipation;
 
         vec4 bilerp (sampler2D sam, vec2 uv, vec2 tsize) {
-            vec2 st = uv / tsize - 0.5;
-            vec2 iuv = floor(st);
-            vec2 fuv = fract(st);
+          vec2 st = uv / tsize - 0.5;
+          vec2 iuv = floor(st);
+          vec2 fuv = fract(st);
 
-            vec4 a = texture2D(sam, (iuv + vec2(0.5, 0.5)) * tsize);
-            vec4 b = texture2D(sam, (iuv + vec2(1.5, 0.5)) * tsize);
-            vec4 c = texture2D(sam, (iuv + vec2(0.5, 1.5)) * tsize);
-            vec4 d = texture2D(sam, (iuv + vec2(1.5, 1.5)) * tsize);
+          vec4 a = texture2D(sam, (iuv + vec2(0.5, 0.5)) * tsize);
+          vec4 b = texture2D(sam, (iuv + vec2(1.5, 0.5)) * tsize);
+          vec4 c = texture2D(sam, (iuv + vec2(0.5, 1.5)) * tsize);
+          vec4 d = texture2D(sam, (iuv + vec2(1.5, 1.5)) * tsize);
 
-            return mix(mix(a, b, fuv.x), mix(c, d, fuv.x), fuv.y);
+          return mix(mix(a, b, fuv.x), mix(c, d, fuv.x), fuv.y);
         }
 
         void main () {
-            #ifdef MANUAL_FILTERING
-                vec2 coord = vUv - dt * bilerp(uVelocity, vUv, texelSize).xy * texelSize;
-                vec4 result = bilerp(uSource, coord, dyeTexelSize);
-            #else
-                vec2 coord = vUv - dt * texture2D(uVelocity, vUv).xy * texelSize;
-                vec4 result = texture2D(uSource, coord);
-            #endif
-            float decay = 1.0 + dissipation * dt;
-            gl_FragColor = result / decay;
-        }
+          #ifdef MANUAL_FILTERING
+            vec2 coord = vUv - dt * bilerp(uVelocity, vUv, texelSize).xy * texelSize;
+            vec4 result = bilerp(uSource, coord, dyeTexelSize);
+          #else
+            vec2 coord = vUv - dt * texture2D(uVelocity, vUv).xy * texelSize;
+            vec4 result = texture2D(uSource, coord);
+          #endif
+          float decay = 1.0 + dissipation * dt;
+          gl_FragColor = result / decay;
+        } 
       `,
-      ext.supportLinearFiltering ? null : ['MANUAL_FILTERING'],
+      ext.supportLinearFiltering ? undefined : ['MANUAL_FILTERING'],
     );
 
     const divergenceShader = compileShader(
@@ -429,19 +443,19 @@ export const Ghost = ({
         uniform sampler2D uVelocity;
 
         void main () {
-            float L = texture2D(uVelocity, vL).x;
-            float R = texture2D(uVelocity, vR).x;
-            float T = texture2D(uVelocity, vT).y;
-            float B = texture2D(uVelocity, vB).y;
+          float L = texture2D(uVelocity, vL).x;
+          float R = texture2D(uVelocity, vR).x;
+          float T = texture2D(uVelocity, vT).y;
+          float B = texture2D(uVelocity, vB).y;
 
-            vec2 C = texture2D(uVelocity, vUv).xy;
-            if (vL.x < 0.0) { L = -C.x; }
-            if (vR.x > 1.0) { R = -C.x; }
-            if (vT.y > 1.0) { T = -C.y; }
-            if (vB.y < 0.0) { B = -C.y; }
+          vec2 C = texture2D(uVelocity, vUv).xy;
+          if (vL.x < 0.0) { L = -C.x; }
+          if (vR.x > 1.0) { R = -C.x; }
+          if (vT.y > 1.0) { T = -C.y; }
+          if (vB.y < 0.0) { B = -C.y; }
 
-            float div = 0.5 * (R - L + T - B);
-            gl_FragColor = vec4(div, 0.0, 0.0, 1.0);
+          float div = 0.5 * (R - L + T - B);
+          gl_FragColor = vec4(div, 0.0, 0.0, 1.0);
         }
       `,
     );
@@ -459,12 +473,12 @@ export const Ghost = ({
         uniform sampler2D uVelocity;
 
         void main () {
-            float L = texture2D(uVelocity, vL).y;
-            float R = texture2D(uVelocity, vR).y;
-            float T = texture2D(uVelocity, vT).x;
-            float B = texture2D(uVelocity, vB).x;
-            float vorticity = R - L - T + B;
-            gl_FragColor = vec4(0.5 * vorticity, 0.0, 0.0, 1.0);
+          float L = texture2D(uVelocity, vL).y;
+          float R = texture2D(uVelocity, vR).y;
+          float T = texture2D(uVelocity, vT).x;
+          float B = texture2D(uVelocity, vB).x;
+          float vorticity = R - L - T + B;
+          gl_FragColor = vec4(0.5 * vorticity, 0.0, 0.0, 1.0);
         }
       `,
     );
@@ -485,21 +499,21 @@ export const Ghost = ({
         uniform float dt;
 
         void main () {
-            float L = texture2D(uCurl, vL).x;
-            float R = texture2D(uCurl, vR).x;
-            float T = texture2D(uCurl, vT).x;
-            float B = texture2D(uCurl, vB).x;
-            float C = texture2D(uCurl, vUv).x;
+          float L = texture2D(uCurl, vL).x;
+          float R = texture2D(uCurl, vR).x;
+          float T = texture2D(uCurl, vT).x;
+          float B = texture2D(uCurl, vB).x;
+          float C = texture2D(uCurl, vUv).x;
 
-            vec2 force = 0.5 * vec2(abs(T) - abs(B), abs(R) - abs(L));
-            force /= length(force) + 0.0001;
-            force *= curl * C;
-            force.y *= -1.0;
+          vec2 force = 0.5 * vec2(abs(T) - abs(B), abs(R) - abs(L));
+          force /= length(force) + 0.0001;
+          force *= curl * C;
+          force.y *= -1.0;
 
-            vec2 velocity = texture2D(uVelocity, vUv).xy;
-            velocity += force * dt;
-            velocity = min(max(velocity, -1000.0), 1000.0);
-            gl_FragColor = vec4(velocity, 0.0, 1.0);
+          vec2 velocity = texture2D(uVelocity, vUv).xy;
+          velocity += force * dt;
+          velocity = min(max(velocity, -1000.0), 1000.0);
+          gl_FragColor = vec4(velocity, 0.0, 1.0);
         }
       `,
     );
@@ -562,7 +576,7 @@ export const Ghost = ({
       gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0, 1, 2, 0, 2, 3]), gl.STATIC_DRAW);
       gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(0);
-      return (target, clear = false) => {
+      return (target: FBO | null, clear = false) => {
         if (target == null) {
           gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
           gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -578,7 +592,11 @@ export const Ghost = ({
       };
     })();
 
-    let dye, velocity, divergence, curl, pressure;
+    let dye: DoubleFBO | null = null;
+    let velocity: DoubleFBO | null = null;
+    let divergence: FBO | null = null;
+    let curl: FBO | null = null;
+    let pressure: DoubleFBO | null = null;
 
     const copyProgram = new Program(baseVertexShader, copyShader);
     const clearProgram = new Program(baseVertexShader, clearShader);
@@ -591,7 +609,7 @@ export const Ghost = ({
     const gradienSubtractProgram = new Program(baseVertexShader, gradientSubtractShader);
     const displayMaterial = new Material(baseVertexShader, displayShaderSource);
 
-    const getResolution = (resolution) => {
+    const getResolution = (resolution: number) => {
       let aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight;
       if (aspectRatio < 1) {
         aspectRatio = 1.0 / aspectRatio;
@@ -609,9 +627,9 @@ export const Ghost = ({
       const simRes = getResolution(config.SIM_RESOLUTION);
       const dyeRes = getResolution(config.DYE_RESOLUTION);
       const texType = ext.halfFloatTexType;
-      const rgba = ext.formatRGBA;
-      const rg = ext.formatRG;
-      const r = ext.formatR;
+      const rgba = ext.formatRGBA!;
+      const rg = ext.formatRG!;
+      const r = ext.formatR!;
       const filtering = ext.supportLinearFiltering ? gl.LINEAR : gl.NEAREST;
       gl.disable(gl.BLEND);
 
@@ -640,7 +658,7 @@ export const Ghost = ({
       pressure = createDoubleFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
     };
 
-    const createFBO = (w, h, internalFormat, format, type, param) => {
+    const createFBO = (w: number, h: number, internalFormat: number, format: number, type: number, param: number) => {
       gl.activeTexture(gl.TEXTURE0);
       const texture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -665,7 +683,7 @@ export const Ghost = ({
         height: h,
         texelSizeX,
         texelSizeY,
-        attach: (id) => {
+        attach: (id: number) => {
           gl.activeTexture(gl.TEXTURE0 + id);
           gl.bindTexture(gl.TEXTURE_2D, texture);
           return id;
@@ -809,7 +827,7 @@ export const Ghost = ({
       return false;
     };
 
-    const updateColors = (dt) => {
+    const updateColors = (dt: number) => {
       colorUpdateTimer += dt * config.COLOR_UPDATE_SPEED;
       if (colorUpdateTimer >= 1) {
         colorUpdateTimer = wrap(colorUpdateTimer, 0, 1);
@@ -828,7 +846,11 @@ export const Ghost = ({
       });
     };
 
-    const step = (dt) => {
+    const step = (dt: number) => {
+      if (!velocity || !curl || !divergence || !pressure) {
+        return;
+      }
+
       gl.disable(gl.BLEND);
       curlProgram.bind();
       gl.uniform2f(curlProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
@@ -884,40 +906,44 @@ export const Ghost = ({
       blit(velocity.write);
       velocity.swap();
 
-      if (!ext.supportLinearFiltering) {
-        gl.uniform2f(advectionProgram.uniforms.dyeTexelSize, dye.texelSizeX, dye.texelSizeY);
+      if (dye) {
+        if (!ext.supportLinearFiltering) {
+          gl.uniform2f(advectionProgram.uniforms.dyeTexelSize, dye.texelSizeX, dye.texelSizeY);
+        }
+        gl.uniform1i(advectionProgram.uniforms.uVelocity, velocity.read.attach(0));
+        gl.uniform1i(advectionProgram.uniforms.uSource, dye.read.attach(1));
+        gl.uniform1f(advectionProgram.uniforms.dissipation, config.DENSITY_DISSIPATION);
+        blit(dye.write);
+        dye.swap();
       }
-      gl.uniform1i(advectionProgram.uniforms.uVelocity, velocity.read.attach(0));
-      gl.uniform1i(advectionProgram.uniforms.uSource, dye.read.attach(1));
-      gl.uniform1f(advectionProgram.uniforms.dissipation, config.DENSITY_DISSIPATION);
-      blit(dye.write);
-      dye.swap();
     };
 
-    const render = (target) => {
+    const render = (target: FBO | null) => {
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.enable(gl.BLEND);
       drawDisplay(target);
     };
 
-    const drawDisplay = (target) => {
+    const drawDisplay = (target: FBO | null) => {
       const width = target == null ? gl.drawingBufferWidth : target.width;
       const height = target == null ? gl.drawingBufferHeight : target.height;
       displayMaterial.bind();
       if (config.SHADING) {
         gl.uniform2f(displayMaterial.uniforms.texelSize, 1.0 / width, 1.0 / height);
       }
-      gl.uniform1i(displayMaterial.uniforms.uTexture, dye.read.attach(0));
+      if (dye) {
+        gl.uniform1i(displayMaterial.uniforms.uTexture, dye.read.attach(0));
+      }
       blit(target);
     };
 
-    const splatPointer = (pointer) => {
+    const splatPointer = (pointer: PointerPrototype) => {
       const dx = pointer.deltaX * config.SPLAT_FORCE;
       const dy = pointer.deltaY * config.SPLAT_FORCE;
       splat(pointer.texcoordX, pointer.texcoordY, dx, dy, pointer.color);
     };
 
-    const clickSplat = (pointer) => {
+    const clickSplat = (pointer: PointerPrototype) => {
       const color = generateColor();
       color.r *= 10.0;
       color.g *= 10.0;
@@ -927,23 +953,27 @@ export const Ghost = ({
       splat(pointer.texcoordX, pointer.texcoordY, dx, dy, color);
     };
 
-    const splat = (x, y, dx, dy, color) => {
+    const splat = (x: number, y: number, dx: number, dy: number, color: { r: number; g: number; b: number }) => {
       splatProgram.bind();
-      gl.uniform1i(splatProgram.uniforms.uTarget, velocity.read.attach(0));
-      gl.uniform1f(splatProgram.uniforms.aspectRatio, canvas.width / canvas.height);
-      gl.uniform2f(splatProgram.uniforms.point, x, y);
-      gl.uniform3f(splatProgram.uniforms.color, dx, dy, 0.0);
-      gl.uniform1f(splatProgram.uniforms.radius, correctRadius(config.SPLAT_RADIUS / 100.0));
-      blit(velocity.write);
-      velocity.swap();
+      if (velocity) {
+        gl.uniform1i(splatProgram.uniforms.uTarget, velocity.read.attach(0));
+        gl.uniform1f(splatProgram.uniforms.aspectRatio, canvas.width / canvas.height);
+        gl.uniform2f(splatProgram.uniforms.point, x, y);
+        gl.uniform3f(splatProgram.uniforms.color, dx, dy, 0.0);
+        gl.uniform1f(splatProgram.uniforms.radius, correctRadius(config.SPLAT_RADIUS / 100.0));
+        blit(velocity.write);
+        velocity.swap();
+      }
 
-      gl.uniform1i(splatProgram.uniforms.uTarget, dye.read.attach(0));
-      gl.uniform3f(splatProgram.uniforms.color, color.r, color.g, color.b);
-      blit(dye.write);
-      dye.swap();
+      if (dye) {
+        gl.uniform1i(splatProgram.uniforms.uTarget, dye.read.attach(0));
+        gl.uniform3f(splatProgram.uniforms.color, color.r, color.g, color.b);
+        blit(dye.write);
+        dye.swap();
+      }
     };
 
-    const correctRadius = (radius) => {
+    const correctRadius = (radius: number) => {
       const aspectRatio = canvas.width / canvas.height;
       if (aspectRatio > 1) {
         radius *= aspectRatio;
@@ -951,7 +981,7 @@ export const Ghost = ({
       return radius;
     };
 
-    const updatePointerDownData = (pointer, id, posX, posY) => {
+    const updatePointerDownData = (pointer: PointerPrototype, id: number, posX: number, posY: number) => {
       pointer.id = id;
       pointer.down = true;
       pointer.moved = false;
@@ -964,7 +994,7 @@ export const Ghost = ({
       pointer.color = generateColor();
     };
 
-    const updatePointerMoveData = (pointer, posX, posY, color) => {
+    const updatePointerMoveData = (pointer: PointerPrototype, posX: number, posY: number, color: Color) => {
       pointer.prevTexcoordX = pointer.texcoordX;
       pointer.prevTexcoordY = pointer.texcoordY;
       pointer.texcoordX = posX / canvas.width;
@@ -975,11 +1005,11 @@ export const Ghost = ({
       pointer.color = color;
     };
 
-    const updatePointerUpData = (pointer) => {
+    const updatePointerUpData = (pointer: PointerPrototype) => {
       pointer.down = false;
     };
 
-    const correctDeltaX = (delta) => {
+    const correctDeltaX = (delta: number) => {
       const aspectRatio = canvas.width / canvas.height;
       if (aspectRatio < 1) {
         delta *= aspectRatio;
@@ -987,7 +1017,7 @@ export const Ghost = ({
       return delta;
     };
 
-    const correctDeltaY = (delta) => {
+    const correctDeltaY = (delta: number) => {
       const aspectRatio = canvas.width / canvas.height;
       if (aspectRatio > 1) {
         delta /= aspectRatio;
@@ -995,15 +1025,17 @@ export const Ghost = ({
       return delta;
     };
 
-    const generateColor = () => {
-      const c = HSVtoRGB(Math.random(), 1.0, 1.0);
-      c.r *= 0.15;
-      c.g *= 0.15;
-      c.b *= 0.15;
-      return c;
+    // TODO(burdon): Create mask.
+    const generateColor = (): { r: number; g: number; b: number } => {
+      const c = HSVtoRGB(Math.random(), 1, 1);
+      return {
+        r: (c.r ?? 0) * 0.15,
+        g: (c.g ?? 0) * 0.15,
+        b: (c.b ?? 0) * 0.15,
+      };
     };
 
-    const wrap = (value, min, max) => {
+    const wrap = (value: number, min: number, max: number) => {
       const range = max - min;
       if (range === 0) {
         return min;
@@ -1011,7 +1043,7 @@ export const Ghost = ({
       return ((value - min) % range) + min;
     };
 
-    const HSVtoRGB = (h, s, v) => {
+    const HSVtoRGB = (h: number, s: number, v: number) => {
       let r, g, b;
       const i = Math.floor(h * 6);
       const f = h * 6 - i;
@@ -1055,6 +1087,8 @@ export const Ghost = ({
       return { r, g, b };
     };
 
+    // TODO(burdon): Remove handlers.
+
     window.addEventListener('mousedown', (e) => {
       const pointer = pointers[0];
       const posX = scaleByPixelRatio(e.clientX);
@@ -1063,36 +1097,12 @@ export const Ghost = ({
       clickSplat(pointer);
     });
 
-    document.body.addEventListener('mousemove', function handleFirstMouseMove(e) {
-      this;
-      const pointer = pointers[0];
-      const posX = scaleByPixelRatio(e.clientX);
-      const posY = scaleByPixelRatio(e.clientY);
-      const color = generateColor();
-      updateFrame();
-      updatePointerMoveData(pointer, posX, posY, color);
-      document.body.removeEventListener('mousemove', handleFirstMouseMove);
-    });
-
     window.addEventListener('mousemove', (e) => {
       const pointer = pointers[0];
       const posX = scaleByPixelRatio(e.clientX);
       const posY = scaleByPixelRatio(e.clientY);
       const color = pointer.color;
       updatePointerMoveData(pointer, posX, posY, color);
-    });
-
-    document.body.addEventListener('touchstart', function handleFirstTouchStart(e) {
-      this;
-      const touches = e.targetTouches;
-      const pointer = pointers[0];
-      for (let i = 0; i < touches.length; i++) {
-        const posX = scaleByPixelRatio(touches[i].clientX);
-        const posY = scaleByPixelRatio(touches[i].clientY);
-        updateFrame();
-        updatePointerDownData(pointer, touches[i].identifier, posX, posY);
-      }
-      document.body.removeEventListener('touchstart', handleFirstTouchStart);
     });
 
     window.addEventListener('touchstart', (e) => {
@@ -1152,12 +1162,12 @@ export const Ghost = ({
   );
 };
 
-const scaleByPixelRatio = (input) => {
+const scaleByPixelRatio = (input: number) => {
   const pixelRatio = window.devicePixelRatio || 1;
   return Math.floor(input * pixelRatio);
 };
 
-const hashCode = (s) => {
+const hashCode = (s: string) => {
   if (s.length === 0) {
     return 0;
   }
