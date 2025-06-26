@@ -4,11 +4,15 @@
 
 import React from 'react';
 
+import { Unit } from '@dxos/util';
+
 export const formatNumber = (n?: number, d = 1, p = 2) => ((n ?? 0) / d).toFixed(p);
 
 export type TableProps = {
-  rows: string[][];
+  rows: (string | number)[][];
 };
+
+export const K = Unit.toFixed(Unit.KB);
 
 export const Table = ({ rows }: TableProps) => {
   return (

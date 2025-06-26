@@ -4,29 +4,28 @@
 
 import React from 'react';
 
-import { formatNumber, Table, type TableProps } from './Table';
+import { K, Table, type TableProps } from './Table';
 import { type DatabaseInfo } from '../../../../hooks';
 import { type CustomPanelProps, Panel } from '../../Panel';
 
 export const DatabasePanel = ({ database, ...props }: CustomPanelProps<{ database?: DatabaseInfo }>) => {
-  const windowLengthSuffix = database?.dataStats?.meta?.rateAverageOverSeconds
-    ? ` [${database?.dataStats?.meta?.rateAverageOverSeconds}s]`
+  const interval = database?.dataStats?.meta?.rateAverageOverSeconds
+    ? ` (${database?.dataStats?.meta?.rateAverageOverSeconds}s)`
     : '';
 
   const storageStats = database?.dataStats?.storage;
-
   const rows: TableProps['rows'] = [
-    ['#', 'objects', formatNumber(database?.objects, 1, 0)],
-    ['#', 'documents', formatNumber(database?.documents, 1, 0)],
-    ['#', 'documents (syncing)', formatNumber(database?.documentsToReconcile, 1, 0)],
+    ['#', 'objects', database?.objects ?? 0],
+    ['#', 'documents', database?.documents ?? 0],
+    ['#', 'documents (syncing)', database?.documentsToReconcile ?? 0],
 
-    ['μ', `read rate ${windowLengthSuffix}`, `${formatNumber(storageStats?.reads?.countPerSecond)}`, 'op/s'],
-    ['μ', 'read duration', `${formatNumber(storageStats?.reads?.opDuration)}`, 'ms'],
-    ['μ', 'read chunk size', `${formatNumber(storageStats?.reads?.payloadSize, 1000)}`, 'k'],
+    ['μ', `read rate ${interval}`, storageStats?.reads?.countPerSecond ?? 0, 'op/s'],
+    ['μ', 'read duration', storageStats?.reads?.opDuration ?? 0, 'ms'],
+    ['μ', 'read chunk size', K(storageStats?.reads?.payloadSize), 'KB'],
 
-    ['μ', `write rate ${windowLengthSuffix}`, `${formatNumber(storageStats?.writes?.countPerSecond)}`, 'op/s'],
-    ['μ', 'write duration', `${formatNumber(storageStats?.writes?.opDuration)}`, 'ms'],
-    ['μ', 'write chunk size', `${formatNumber(storageStats?.writes?.payloadSize, 1000)}`, 'k'],
+    ['μ', `write rate ${interval}`, storageStats?.writes?.countPerSecond ?? 0, 'op/s'],
+    ['μ', 'write duration', storageStats?.writes?.opDuration ?? 0, 'ms'],
+    ['μ', 'write chunk size', K(storageStats?.writes?.payloadSize), 'KB'],
   ];
 
   return (
@@ -34,14 +33,7 @@ export const DatabasePanel = ({ database, ...props }: CustomPanelProps<{ databas
       {...props}
       icon='ph--database--regular'
       title='Database'
-      info={
-        <div className='flex items-center gap-2'>
-          <div className='flex gap-1'>
-            {formatNumber(database?.spaces, 1, 0)}
-            <span>Space(s)</span>
-          </div>
-        </div>
-      }
+      info={<div className='flex items-center gap-2'>{database?.spaces ?? 0} Space(s)</div>}
     >
       <Table rows={rows} />
     </Panel>
