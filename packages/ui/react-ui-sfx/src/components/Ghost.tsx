@@ -1,5 +1,7 @@
 //
+// Copyright 2025 David Haz
 // Copyright 2025 DXOS.org
+// https://github.com/DavidHDev/react-bits/blob/main/LICENSE.md
 //
 
 import React, { useEffect, useRef } from 'react';
@@ -16,6 +18,23 @@ class PointerPrototype {
   moved = false;
   color = [0, 0, 0];
 }
+
+export type GhostProps = {
+  SIM_RESOLUTION?: number;
+  DYE_RESOLUTION?: number;
+  CAPTURE_RESOLUTION?: number;
+  DENSITY_DISSIPATION?: number;
+  VELOCITY_DISSIPATION?: number;
+  PRESSURE?: number;
+  PRESSURE_ITERATIONS?: number;
+  CURL?: number;
+  SPLAT_RADIUS?: number;
+  SPLAT_FORCE?: number;
+  SHADING?: boolean;
+  COLOR_UPDATE_SPEED?: number;
+  BACK_COLOR?: { r: number; g: number; b: number };
+  TRANSPARENT?: boolean;
+};
 
 export const Ghost = ({
   SIM_RESOLUTION = 128,
@@ -203,9 +222,9 @@ export const Ghost = ({
       gl.attachShader(program, vertexShader);
       gl.attachShader(program, fragmentShader);
       gl.linkProgram(program);
-      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        console.trace(gl.getProgramInfoLog(program));
-      }
+      // if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      //   console.trace(gl.getProgramInfoLog(program));
+      // }
       return program;
     };
 
@@ -224,9 +243,9 @@ export const Ghost = ({
       const shader = gl.createShader(type);
       gl.shaderSource(shader, source);
       gl.compileShader(shader);
-      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        console.trace(gl.getShaderInfoLog(shader));
-      }
+      // if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      //   console.trace(gl.getShaderInfoLog(shader));
+      // }
       return shader;
     };
 
@@ -993,12 +1012,12 @@ export const Ghost = ({
     };
 
     const HSVtoRGB = (h, s, v) => {
-      let r, g, b, i, f, p, q, t;
-      i = Math.floor(h * 6);
-      f = h * 6 - i;
-      p = v * (1 - s);
-      q = v * (1 - f * s);
-      t = v * (1 - (1 - f) * s);
+      let r, g, b;
+      const i = Math.floor(h * 6);
+      const f = h * 6 - i;
+      const p = v * (1 - s);
+      const q = v * (1 - f * s);
+      const t = v * (1 - (1 - f) * s);
       switch (i % 6) {
         case 0:
           r = v;

@@ -8,17 +8,17 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Ghost } from './Ghost';
+import { Ghost, type GhostProps } from './Ghost';
 
-const meta: Meta<any> = {
+const meta: Meta<GhostProps> = {
   title: 'ui/react-ui-sfx/Ghost',
-  component: Ghost as any,
+  component: Ghost,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export default meta;
 
-type Story = StoryObj<any>;
+type Story = StoryObj<GhostProps>;
 
 export const Default: Story = {
   args: {
