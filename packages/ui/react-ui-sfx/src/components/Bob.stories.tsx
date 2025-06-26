@@ -22,8 +22,15 @@ type Story = StoryObj<BlobProps>;
 
 export const Default: Story = {
   args: {
-    color: '#005500',
-    cursorBallColor: '#000000',
+    color: '#005599',
+    speed: 0.3,
+    enableMouseInteraction: true,
+    hoverSmoothness: 0.05,
+    animationSize: 30,
+    ballCount: 15,
+    clumpFactor: 1,
+    cursorBallSize: 3,
+    cursorBallColor: '#000077',
     enableTransparency: true,
   },
 };
