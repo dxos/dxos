@@ -28,6 +28,7 @@ import { tagPickerExtension, createLinks } from '@dxos/react-ui-tag-picker';
 import { type FieldProjection } from '@dxos/schema';
 
 import { FormCellEditor } from './FormCellEditor';
+import { ValidationMessage } from './ValidationMessage';
 import { completion } from './extension';
 import { type TableModel, type ModalController } from '../../model';
 
@@ -343,30 +344,6 @@ export const TableCellEditor = ({
       <ValidationMessage validationError={_validationError} __gridScope={__gridScope} />
       <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} />
     </>
-  );
-};
-
-const ValidationMessage = ({ validationError, __gridScope }: GridScopedProps<{ validationError: string | null }>) => {
-  const { editing, editBox: box } = useGridContext('GridSheetCellEditor', __gridScope);
-
-  if (!editing || !validationError) {
-    return null;
-  }
-
-  return (
-    <div
-      role='none'
-      className='absolute bg-errorSurface text-errorSurfaceText rounded-bs-sm text-xs p-1'
-      style={{
-        ...{ '--dx-gridCellWidth': `${box?.inlineSize ?? 200}px` },
-        zIndex: 10,
-        insetBlockEnd: `calc(100% - ${box.insetBlockStart}px)`,
-        insetInlineStart: box.insetInlineStart,
-        inlineSize: box.inlineSize,
-      }}
-    >
-      {validationError}
-    </div>
   );
 };
 
