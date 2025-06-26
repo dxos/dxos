@@ -196,7 +196,7 @@ const LinkButton: FC<{ url: string }> = ({ url }) => {
 
 export const renderLinkButton = createRenderer(LinkButton);
 
-// Shared extensions
+// Shared extensions.
 export const defaultExtensions: Extension[] = [
   decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100 }),
   formattingKeymap(),
@@ -212,7 +212,7 @@ export const allExtensions: Extension[] = [
   folding(),
 ];
 
-// Long text for scrolling stories
+// Long text for scrolling stories.
 export const longText = faker.helpers
   .multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 })
   .join('\n\n');
