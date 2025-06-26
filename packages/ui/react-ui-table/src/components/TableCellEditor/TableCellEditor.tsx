@@ -168,7 +168,7 @@ export const TableCellEditor = ({
       const cell = parseCellIndex(editing.index);
 
       if (value !== undefined) {
-        // Pre-commit validation check
+        // Pre-commit validation check.
         const result = await model.validateCellData(cell, value);
 
         if (result.valid) {
@@ -342,16 +342,16 @@ export const TableCellEditor = ({
 
   return (
     <>
-      <ValidationMessageRefactorMe />
+      <ValidationMessage validationError={_validationError} __gridScope={__gridScope} />
       <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} />
     </>
   );
 };
 
-const ValidationMessageRefactorMe = (props: GridScopedProps<{}>) => {
-  const { editing, editBox: box } = useGridContext('GridSheetCellEditor', props.__gridScope);
+const ValidationMessage = ({ validationError, __gridScope }: GridScopedProps<{ validationError: string | null }>) => {
+  const { editing, editBox: box } = useGridContext('GridSheetCellEditor', __gridScope);
 
-  if (!editing) {
+  if (!editing || !validationError) {
     return null;
   }
 
@@ -367,8 +367,7 @@ const ValidationMessageRefactorMe = (props: GridScopedProps<{}>) => {
         inlineSize: box.inlineSize,
       }}
     >
-      Hello.
-      <div>This is a bunch of ¯\_(ツ)_/¯\_(ツ)_/¯.</div>
+      {validationError}
     </div>
   );
 };
