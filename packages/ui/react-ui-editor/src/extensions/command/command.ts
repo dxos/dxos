@@ -5,8 +5,10 @@
 import { type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 
+import { isNonNullable } from '@dxos/util';
+
 import { closeEffect, commandKeyBindings } from './action';
-import { hintViewPlugin, type HintOptions } from './hint';
+import { hint, type HintOptions } from './hint';
 import { commandConfig, commandState, type PopupOptions } from './state';
 
 // TODO(burdon): Create knowledge base for CM notes and ideas.
@@ -21,12 +23,12 @@ export const command = (options: CommandOptions = {}): Extension => {
     keymap.of(commandKeyBindings),
     commandConfig.of(options),
     commandState,
-    options.onHint ? hintViewPlugin({ onHint: options.onHint }) : [],
+    options.onHint && hint(options),
     EditorView.focusChangeEffect.of((_, focusing) => (focusing ? closeEffect.of(null) : null)),
     EditorView.theme({
       '.cm-tooltip': {
         background: 'transparent',
       },
     }),
-  ];
+  ].filter(isNonNullable);
 };

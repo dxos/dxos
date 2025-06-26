@@ -75,7 +75,7 @@ const meta: Meta<typeof EditorStory> = {
           floatingMenu(),
           command({
             renderDialog: createRenderer(CommandDialog),
-            onHint: () => 'Press / for commands.',
+            onHint: () => "Press '/' for commands",
           }),
         ]}
       />
