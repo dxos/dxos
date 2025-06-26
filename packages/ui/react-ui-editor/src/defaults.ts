@@ -47,9 +47,3 @@ export const stackItemContentEditorClassNames = (role?: string) =>
     'attention-surface dx-focus-ring-inset data-[toolbar=disabled]:pbs-2',
     role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-bs-24' : 'min-bs-0',
   );
-
-export const stackItemContentToolbarClassNames = (role?: string) =>
-  mx(
-    'relative z-[1] flex is-full bg-toolbarSurface border-be border-subduedSeparator',
-    role === 'section' && 'sticky block-start-0 -mbe-px min-is-0',
-  );
