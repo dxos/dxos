@@ -969,16 +969,7 @@ describe('ViewProjection', () => {
     }
   });
 
-  test('BUG: Email validation is lost after schema registration round-trip', async ({ expect }) => {
-    // PROBLEM: Format.Email has regex validation, but after registering the schema
-    // and reconstructing it from JSON schema, the validation is lost.
-    //
-    // This test demonstrates the issue where:
-    // 1. Format.Email correctly validates emails with regex pattern
-    // 2. JSON schema correctly stores the pattern constraint
-    // 3. But the reconstructed Effect schema loses the pattern validation
-    //
-    // ROOT CAUSE: toEffectSchema() doesn't convert JSON schema "pattern" back to Schema.pattern()
+  test('Email validation persists after schema registration round-trip', async ({ expect }) => {
 
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
