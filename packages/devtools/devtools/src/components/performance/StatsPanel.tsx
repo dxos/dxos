@@ -132,6 +132,7 @@ export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<Que
         onToggle={handleToggle}
         database={stats?.database}
       />
+      <SpansPanel id='spans' open={panelState.spans} onToggle={handleToggle} spans={spans} />
       <QueriesPanel id='queries' open={panelState.queries} onToggle={handleToggle} queries={queries} />
       <RawQueriesPanel id='rawQueries' open={panelState.rawQueries} onToggle={handleToggle} queries={rawQueries} />
       <SyncStatusPanel
@@ -142,7 +143,6 @@ export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<Que
         summary={syncSummary}
         debug
       />
-      <SpansPanel id='spans' open={panelState.spans} onToggle={handleToggle} spans={spans} />
       <TimeSeries id='ts' open={panelState.ts} onToggle={handleToggle} />
       {children}
     </div>
