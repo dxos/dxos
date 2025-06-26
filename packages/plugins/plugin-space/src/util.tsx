@@ -20,9 +20,10 @@ import {
 } from '@dxos/plugin-graph';
 import { fullyQualifiedId, getSpace, type QueryResult, SpaceState, type Space } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+import { DataType } from '@dxos/schema';
 
 import { SPACE_PLUGIN } from './meta';
-import { CollectionType, SpaceAction, SPACE_TYPE } from './types';
+import { SpaceAction, SPACE_TYPE } from './types';
 
 export const SPACES = `${SPACE_PLUGIN}-spaces`;
 export const COMPOSER_SPACE_LOCK = 'dxos.org/plugin/space/lock';
@@ -64,7 +65,7 @@ const getCollectionGraphNodePartials = ({
   resolve,
 }: {
   navigable: boolean;
-  collection: CollectionType;
+  collection: DataType.Collection;
   space: Space;
   resolve: (typename: string) => Record<string, any>;
 }) => {
@@ -157,9 +158,10 @@ export const constructSpaceNode = ({
   resolve: (typename: string) => Record<string, any>;
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
-  const collection = space.state.get() === SpaceState.SPACE_READY && space.properties[CollectionType.typename]?.target;
+  const collection =
+    space.state.get() === SpaceState.SPACE_READY && space.properties[Type.getTypename(DataType.Collection)]?.target;
   const partials =
-    space.state.get() === SpaceState.SPACE_READY && collection instanceof CollectionType
+    space.state.get() === SpaceState.SPACE_READY && Obj.instanceOf(DataType.Collection, collection)
       ? getCollectionGraphNodePartials({ collection, space, resolve, navigable })
       : {};
 
@@ -315,10 +317,9 @@ export const createObjectNode = ({
     return undefined;
   }
 
-  const partials =
-    object instanceof CollectionType
-      ? getCollectionGraphNodePartials({ collection: object, space, resolve, navigable })
-      : metadata.graphProps;
+  const partials = Obj.instanceOf(DataType.Collection, object)
+    ? getCollectionGraphNodePartials({ collection: object, space, resolve, navigable })
+    : metadata.graphProps;
 
   return {
     id: fullyQualifiedId(object),
@@ -353,7 +354,7 @@ export const constructObjectActions = ({
   invariant(space, 'Space not found');
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
   const actions: NodeArg<ActionData>[] = [
-    ...(object instanceof CollectionType
+    ...(Obj.instanceOf(DataType.Collection, object)
       ? [
           {
             id: getId(SpaceAction.OpenCreateObject._tag),
@@ -378,14 +379,15 @@ export const constructObjectActions = ({
       },
       properties: {
         label: [
-          object instanceof CollectionType ? 'rename collection label' : 'rename object label',
+          Obj.instanceOf(DataType.Collection, object) ? 'rename collection label' : 'rename object label',
           { ns: SPACE_PLUGIN },
         ],
         icon: 'ph--pencil-simple-line--regular',
-        // TODO(wittjosiah): Need's focus.
-        keyBinding: {
-          macos: 'shift+F6',
-        },
+        disposition: 'list-item',
+        // TODO(wittjosiah): Not working.
+        // keyBinding: {
+        //   macos: 'shift+F6',
+        // },
         testId: 'spacePlugin.renameObject',
       },
     },
@@ -395,20 +397,22 @@ export const constructObjectActions = ({
       data: async () => {
         const collection = graph
           .getConnections(fullyQualifiedId(object), 'inbound')
-          .find(({ data }) => data instanceof CollectionType)?.data;
+          .find(({ data }) => Obj.instanceOf(DataType.Collection, data))?.data;
         await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
       },
       properties: {
         label: [
-          object instanceof CollectionType ? 'delete collection label' : 'delete object label',
+          Obj.instanceOf(DataType.Collection, object) ? 'delete collection label' : 'delete object label',
           { ns: SPACE_PLUGIN },
         ],
         icon: 'ph--trash--regular',
-        keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
+        disposition: 'list-item',
+        // TODO(wittjosiah): This is a browser shortcut.
+        // keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
         testId: 'spacePlugin.deleteObject',
       },
     },
-    ...(navigable || !(object instanceof CollectionType)
+    ...(navigable || !Obj.instanceOf(DataType.Collection, object)
       ? [
           {
             id: getId('copy-link'),
@@ -420,6 +424,7 @@ export const constructObjectActions = ({
             properties: {
               label: ['copy link label', { ns: SPACE_PLUGIN }],
               icon: 'ph--link--regular',
+              disposition: 'list-item',
               testId: 'spacePlugin.copyLink',
             },
           },
@@ -435,6 +440,7 @@ export const constructObjectActions = ({
       properties: {
         label: ['expose object label', { ns: SPACE_PLUGIN }],
         icon: 'ph--eye--regular',
+        disposition: 'heading-list-item',
         testId: 'spacePlugin.exposeObject',
       },
     },

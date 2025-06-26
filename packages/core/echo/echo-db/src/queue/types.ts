@@ -23,12 +23,12 @@ export interface Queue<T = AnyEchoObject> {
   /**
    * Appends objects to the queue.
    */
-  append(objects: T[]): void;
+  append(objects: T[]): Promise<void>;
 
   /**
    * Deletes objects from the queue.
    */
-  delete(ids: string[]): void;
+  delete(ids: string[]): Promise<void>;
 
   /**
    * Query all objects in the queue.

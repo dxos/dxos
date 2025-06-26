@@ -7,6 +7,7 @@ import React, { useCallback, useMemo, useRef } from 'react';
 
 import { createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
 import { Filter, Type, Obj } from '@dxos/echo';
+import { EchoSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
@@ -69,8 +70,9 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
       return;
     }
 
-    return new ViewProjection(Type.toJsonSchema(schema), table.view.target!);
-  }, [schema, table.view?.target]);
+    const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
+    return new ViewProjection(jsonSchema, table.view.target);
+  }, [table.view?.target, JSON.stringify(schema)]);
 
   const features: Partial<TableFeatures> = useMemo(
     () => ({
@@ -103,7 +105,6 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
     <StackItem.Content role={role} toolbar>
       <TableToolbar
         attendableId={fullyQualifiedId(table)}
-        classNames='border-be border-subduedSeparator'
         customActions={customActions}
         onAdd={handleInsertRow}
         onSave={handleSave}

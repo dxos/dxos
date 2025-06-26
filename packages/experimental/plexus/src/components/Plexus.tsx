@@ -106,7 +106,7 @@ export const Plexus = <N,>({ model, slots, onSelect, onTransition }: PlexusProps
   }, [graphRef, data]);
 
   return (
-    <g className={'[&>*]:fill-transparent [&>*]:stroke-[1px] [&>*]:stroke-slate-500'}>
+    <g className={'*:fill-transparent *:stroke-[1px] *:stroke-slate-500'}>
       <g ref={graphRef} className={slots?.root?.className} />;
       <g
         className={mx(
@@ -120,7 +120,7 @@ export const Plexus = <N,>({ model, slots, onSelect, onTransition }: PlexusProps
           y={-64}
           width={128}
           height={128}
-          className={mx('[&>rect]:stroke-0 [&>*]:stroke-2', slots?.thorax?.className)}
+          className={mx('[&>rect]:stroke-0 *:stroke-2', slots?.thorax?.className)}
         />
       </g>
     </g>

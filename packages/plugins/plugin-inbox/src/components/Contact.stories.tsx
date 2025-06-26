@@ -136,7 +136,7 @@ const meta: Meta = {
             const { emails } = await seedTestData(space);
             const queueDxn = space.queues.create().dxn;
             const queue = space.queues.get<DataType.Message>(queueDxn);
-            queue.append(emails);
+            await queue.append(emails);
             const mailbox = Obj.make(MailboxType, { queue: Ref.fromDXN(queueDxn) });
             space.db.add(mailbox);
           },

@@ -133,7 +133,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
   useEffect(() => {
     if (queue?.objects.length === 0 && !queue.isLoading && prompts.length > 0) {
-      queue.append([
+      void queue.append([
         Obj.make(Message, {
           role: 'assistant',
           content: prompts.map(
@@ -171,7 +171,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
           await processor.request(message, {
             history: queue.objects,
             onComplete: (messages) => {
-              queue.append(messages);
+              void queue.append(messages);
             },
           });
         });

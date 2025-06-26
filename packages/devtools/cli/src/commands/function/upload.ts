@@ -8,7 +8,6 @@ import { basename } from 'node:path';
 import path from 'path';
 
 import { asyncTimeout } from '@dxos/async';
-import { CollectionType } from '@dxos/cli-composer';
 import { type PublicKey, type Client } from '@dxos/client';
 import { type AnyLiveObject, getMeta, live, makeRef } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
@@ -194,7 +193,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
 const makeObjectNavigableInComposer = async (client: Client, space: Space, obj: AnyLiveObject<any>) => {
   const collection = space.properties['dxos.org/type/Collection'];
   if (collection) {
-    client.addTypes([CollectionType]);
+    client.addTypes([DataType.Collection]);
     const composerCollection = await collection.load();
     if (composerCollection) {
       composerCollection.objects.push(makeRef(obj));

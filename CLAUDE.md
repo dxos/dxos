@@ -1,0 +1,3 @@
+- Project uses nx to run tasks, tests, lint etc. (pnpm nx run package-name:task-name)
+- check the `project.json` for any package to see available tasks
+- lint task takes `--fix` argument to fix issues

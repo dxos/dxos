@@ -71,7 +71,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
       void processor.request(text, {
         history: messageQueue.objects,
         onComplete: (messages) => {
-          messageQueue.append(messages);
+          void messageQueue.append(messages);
         },
       });
 
