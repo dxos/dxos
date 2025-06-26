@@ -45,6 +45,8 @@ export default [
         'personal space label': 'Personal Space',
         'spaces label': 'Spaces',
         'space settings label': 'Spaces',
+        'space settings description':
+          'Each space has its own settings you can configure, where you can adjust its properties, membership, integrations, and other items specific to that space.',
         'show hidden spaces label': 'Show archived spaces',
         'save files to directory label': 'Save files to disk',
         'select path label': 'Select path',
@@ -119,7 +121,7 @@ export default [
         'advanced settings label': 'Advanced',
         'foreign keys': 'Foreign Keys',
         'add key': 'Add Key',
-        'open space settings label': 'Open',
+        'open space settings label': 'Open settings',
 
         'members panel label': 'Members',
         'members verbose label': 'Manage space members',
