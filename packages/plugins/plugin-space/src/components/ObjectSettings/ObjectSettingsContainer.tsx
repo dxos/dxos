@@ -21,13 +21,15 @@ export const ObjectSettingsContainer = ({ object, role }: ObjectSettingsContaine
 
   return (
     <Clipboard.Provider>
-      <StackItem.Content role={role} classNames='divide-y divide-separator'>
-        <BaseObjectSettings object={object}>
-          <Surface role='base-object-settings' data={data} />
-        </BaseObjectSettings>
-        <Surface role='object-settings' data={data} />
-        {/* TODO(wittjosiah): Remove? */}
-        {/* <AdvancedObjectSettings object={object} /> */}
+      <StackItem.Content toolbar={false}>
+        <div role='none' className='overflow-y-auto pli-cardSpacingInline plb-cardSpacingBlock'>
+          <BaseObjectSettings object={object}>
+            <Surface role='base-object-settings' data={data} />
+          </BaseObjectSettings>
+          <Surface role='object-settings' data={data} />
+          {/* TODO(wittjosiah): Remove? */}
+          {/* <AdvancedObjectSettings object={object} /> */}
+        </div>
       </StackItem.Content>
     </Clipboard.Provider>
   );
