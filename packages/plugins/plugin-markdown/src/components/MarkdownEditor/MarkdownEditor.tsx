@@ -10,7 +10,6 @@ import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  CommandMenu,
   type DNDOptions,
   type EditorInputMode,
   type EditorSelectionState,
@@ -19,7 +18,6 @@ import {
   type EditorToolbarActionGraphProps,
   type EditorViewMode,
   type CommandMenuGroup,
-  RefPopover,
   type UseTextEditorProps,
   addLink,
   coreSlashCommands,
@@ -33,7 +31,6 @@ import {
   linkSlashCommands,
   processEditorPayload,
   stackItemContentEditorClassNames,
-  useCommandMenu,
   useEditorToolbarState,
   useFormattingState,
   useTextEditor,
@@ -77,7 +74,7 @@ export const MarkdownEditor = ({
   const { t } = useTranslation();
   const viewRef = useRef<EditorView>();
 
-  const getGroups = useCallback(
+  const getMenu = useCallback(
     (trigger: string, query?: string) => {
       switch (trigger) {
         case '@':
@@ -91,29 +88,31 @@ export const MarkdownEditor = ({
     },
     [onLinkQuery, slashCommandGroups],
   );
-  const { commandMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useCommandMenu({
-    viewRef,
-    getGroups,
-    trigger: onLinkQuery ? ['/', '@'] : '/',
-    placeholder: {
-      delay: 500,
-      // content: () => {
-      //   return createElement('div', undefined, [
-      //     createElement('span', { text: 'Press' }),
-      //     createElement('span', { className: 'border border-separator rounded-sm mx-1 px-1', text: '/' }),
-      //     createElement('span', { text: 'for commands' }),
-      //   ]);
-      // },
-    },
-  });
+
+  const commandMenu = undefined;
+  // const { commandMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useCommandMenu({
+  //   viewRef,
+  //   trigger: onLinkQuery ? ['/', '@'] : '/',
+  //   placeholder: {
+  //     delay: 500,
+  //     // content: () => {
+  //     //   return createElement('div', undefined, [
+  //     //     createElement('span', { text: 'Press' }),
+  //     //     createElement('span', { className: 'border border-separator rounded-sm mx-1 px-1', text: '/' }),
+  //     //     createElement('span', { text: 'for commands' }),
+  //     //   ]);
+  //     // },
+  //   },
+  //   getMenu,
+  // });
 
   const extensions = useMemo(() => [_extensions, commandMenu].filter(isNotFalsy), [_extensions, commandMenu]);
 
   return (
-    <RefPopover modal={false} {...refPopoverProps}>
-      <MarkdownEditorImpl ref={viewRef} {...props} extensions={extensions} />
-      <CommandMenu groups={groupsRef.current} currentItem={currentItem} onSelect={onSelect} />
-    </RefPopover>
+    // <RefPopover modal={false} {...refPopoverProps}>
+    <MarkdownEditorImpl ref={viewRef} {...props} extensions={extensions} />
+    // <CommandMenu groups={groupsRef.current} currentItem={currentItem} onSelect={onSelect} />
+    // </RefPopover>
   );
 };
 

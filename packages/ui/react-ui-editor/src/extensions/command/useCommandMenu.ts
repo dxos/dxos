@@ -16,10 +16,10 @@ export type UseCommandMenuOptions = {
   viewRef: RefObject<EditorView | undefined>;
   trigger: string | string[];
   placeholder?: Partial<PlaceholderOptions>;
-  getGroups: (trigger: string, query?: string) => MaybePromise<CommandMenuGroup[]>;
+  getMenu: (trigger: string, query?: string) => MaybePromise<CommandMenuGroup[]>;
 };
 
-export const useCommandMenu = ({ viewRef, trigger, placeholder, getGroups }: UseCommandMenuOptions) => {
+export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCommandMenuOptions) => {
   const triggerRef = useRef<DxRefTag | null>(null);
   const currentRef = useRef<CommandMenuItem | null>(null);
   const groupsRef = useRef<CommandMenuGroup[]>([]);
@@ -30,7 +30,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getGroups }: Use
   const handleOpenChange = useCallback(
     async (open: boolean, trigger?: string) => {
       if (open && trigger) {
-        groupsRef.current = await getGroups(trigger);
+        groupsRef.current = await getMenu(trigger);
       }
       setOpen(open);
       if (!open) {
@@ -39,7 +39,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getGroups }: Use
         viewRef.current?.dispatch({ effects: [commandRangeEffect.of(null)] });
       }
     },
-    [getGroups],
+    [getMenu],
   );
 
   const handleActivate = useCallback(
@@ -95,7 +95,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getGroups }: Use
           }
         },
         onTextChange: async (trigger, text) => {
-          groupsRef.current = await getGroups(trigger, text);
+          groupsRef.current = await getMenu(trigger, text);
           const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
           if (firstItem) {
             setCurrentItem(firstItem.id);
@@ -104,7 +104,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getGroups }: Use
           update({});
         },
       }),
-    [handleOpenChange, getGroups, serializedTrigger, placeholder],
+    [handleOpenChange, getMenu, serializedTrigger, placeholder],
   );
 
   return {

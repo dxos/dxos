@@ -10,7 +10,7 @@ import { type Range } from '../../types';
 
 export type CommandMenuOptions = {
   trigger: string | string[];
-  placeholder?: PlaceholderOptions;
+  placeholder?: Partial<PlaceholderOptions>;
 
   // TODO(burdon): Replace with onKey?
   onClose?: () => void;
