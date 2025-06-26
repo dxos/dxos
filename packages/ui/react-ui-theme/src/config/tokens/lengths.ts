@@ -37,6 +37,7 @@ export const lengthsFacet = {
       trimXs: { root: ['lacuna', 3] },
       trimSm: { root: ['lacuna', 6] },
       trimMd: { root: ['lacuna', 9] },
+      trimLg: { root: ['lacuna', 12] },
     },
   },
 

@@ -22,9 +22,7 @@ export const command = (options: CommandOptions = {}): Extension => {
     commandConfig.of(options),
     commandState,
     options.onHint ? hintViewPlugin({ onHint: options.onHint }) : [],
-    EditorView.focusChangeEffect.of((_, focusing) => {
-      return focusing ? closeEffect.of(null) : null;
-    }),
+    EditorView.focusChangeEffect.of((_, focusing) => (focusing ? closeEffect.of(null) : null)),
     EditorView.theme({
       '.cm-tooltip': {
         background: 'transparent',

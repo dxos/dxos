@@ -18,6 +18,7 @@ export const SectionSchema = Schema.Struct({
   custom: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 });
 
+// TODO(wittjosiah): This needs a relation to be connected to a stack.
 export class StackViewType extends TypedObject({
   typename: 'dxos.org/type/StackView',
   version: '0.1.0',

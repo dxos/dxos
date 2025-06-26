@@ -4,7 +4,7 @@
 
 import { Plus } from '@phosphor-icons/react';
 import { Option } from 'effect';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import {
   Capabilities,
@@ -15,18 +15,18 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { fullyQualifiedId, isLiveObject } from '@dxos/client/echo';
-import { Obj, Ref } from '@dxos/echo';
-import { SpaceAction, type CollectionType } from '@dxos/plugin-space/types';
+import { Obj } from '@dxos/echo';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
 import { Stack } from '@dxos/react-ui-stack';
+import { type DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { StackContext } from './StackContext';
 import { StackSection } from './StackSection';
 import { STACK_PLUGIN } from '../meta';
 import {
-  StackViewType,
   type AddSectionPosition,
   type CollapsedSections,
   type StackSectionItem,
@@ -36,7 +36,7 @@ import {
 
 type StackMainProps = {
   id: string;
-  collection: CollectionType;
+  collection: DataType.Collection;
 };
 
 const StackMain = ({ id, collection }: StackMainProps) => {
@@ -44,15 +44,16 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   const { graph } = useAppGraph();
   const { t } = useTranslation(STACK_PLUGIN);
   const allMetadata = useCapabilities(Capabilities.Metadata);
-  const defaultStack = useMemo(() => Obj.make(StackViewType, { sections: {} }), [collection]);
-  const stack = (collection.views[StackViewType.typename]?.target as StackViewType | undefined) ?? defaultStack;
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 
-  useEffect(() => {
-    if (!collection.views[StackViewType.typename]) {
-      collection.views[StackViewType.typename] = Ref.make(stack);
-    }
-  }, [collection, stack]);
+  // TODO(wittjosiah): Re-implement stack views with relations.
+  // const defaultStack = useMemo(() => Obj.make(StackViewType, { sections: {} }), [collection]);
+  // const stack = (collection.views[StackViewType.typename]?.target as StackViewType | undefined) ?? defaultStack;
+  // useEffect(() => {
+  //   if (!collection.views[StackViewType.typename]) {
+  //     collection.views[StackViewType.typename] = Ref.make(stack);
+  //   }
+  // }, [collection, stack]);
 
   const items =
     collection.objects
@@ -64,7 +65,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
         const metadata = allMetadata.find((m) => m.id === (Obj.getTypename(object) ?? 'never'))
           ?.metadata as StackSectionMetadata;
         const view = {
-          ...stack.sections[object.id],
+          // ...stack.sections[object.id],
           collapsed: collapsedSections[fullyQualifiedId(object)],
           title:
             (object as any)?.title ??
