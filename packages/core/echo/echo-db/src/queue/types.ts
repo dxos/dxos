@@ -23,12 +23,24 @@ export interface Queue<T = AnyEchoObject> {
   /**
    * Appends objects to the queue.
    */
-  append(objects: T[]): void;
+  append(objects: T[]): Promise<void>;
 
   /**
    * Deletes objects from the queue.
    */
-  delete(ids: string[]): void;
+  delete(ids: string[]): Promise<void>;
+
+  /**
+   * Query all objects in the queue.
+   */
+  // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
+  queryObjects(): Promise<T[]>;
+
+  /**
+   * Queries objects by id.
+   */
+  // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
+  getObjectsById(ids: ObjectId[]): Promise<(T | null)[]>;
 
   /**
    * Query all objects in the queue.

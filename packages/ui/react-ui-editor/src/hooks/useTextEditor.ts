@@ -22,15 +22,7 @@ import { getProviderValue, isNotFalsy, type MaybeProvider } from '@dxos/util';
 import { type EditorSelection, documentId, createEditorStateTransaction, editorInputMode } from '../extensions';
 import { debugDispatcher } from '../util';
 
-export type UseTextEditor = {
-  // TODO(burdon): Rename.
-  parentRef: RefObject<HTMLDivElement>;
-  view?: EditorView;
-  focusAttributes?: TabsterTypes.TabsterDOMAttribute & {
-    tabIndex: 0;
-    onKeyUp: KeyboardEventHandler<HTMLDivElement>;
-  };
-};
+let instanceCount = 0;
 
 export type CursorInfo = {
   from: number;
@@ -41,19 +33,26 @@ export type CursorInfo = {
   after?: string;
 };
 
+export type UseTextEditor = {
+  // TODO(burdon): Rename.
+  parentRef: RefObject<HTMLDivElement>;
+  view?: EditorView;
+  focusAttributes?: TabsterTypes.TabsterDOMAttribute & {
+    tabIndex: 0;
+    onKeyUp: KeyboardEventHandler<HTMLDivElement>;
+  };
+};
+
 export type UseTextEditorProps = Pick<EditorStateConfig, 'extensions'> & {
   id?: string;
   doc?: Text;
   initialValue?: string;
-  className?: string;
   autoFocus?: boolean;
   scrollTo?: number;
   selection?: EditorSelection;
   moveToEndOfLine?: boolean;
   debug?: boolean;
 };
-
-let instanceCount = 0;
 
 /**
  * Creates codemirror text editor.

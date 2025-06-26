@@ -13,7 +13,8 @@ import {
   type PromiseIntentDispatcher,
   type PluginContext,
 } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Blueprint } from '@dxos/assistant';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
@@ -23,12 +24,11 @@ import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
 import {
   type Space,
   Filter,
+  Query,
+  type QueryResult,
   fullyQualifiedId,
   getSpace,
   isSpace,
-  Query,
-  type QueryResult,
-  isEchoObject,
 } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, ASSISTANT_PLUGIN } from '../meta';
@@ -107,38 +107,66 @@ export default (context: PluginContext) =>
       id: `${ASSISTANT_PLUGIN}/object-chat-companion`,
       connector: (node) => {
         let query: QueryResult<AIChatType> | undefined;
-        return Rx.make((get) =>
+        return Rx.make((get) => {
+          const nodeOption = get(node);
+          if (Option.isNone(nodeOption)) {
+            return [];
+          }
+
+          const object = nodeOption.value.data;
+          if (!Obj.isObject(object)) {
+            return [];
+          }
+
+          const space = getSpace(object);
+          if (!space) {
+            return [];
+          }
+
+          if (!query) {
+            query = space.db.query(Query.select(Filter.ids(object.id)).targetOf(CompanionTo).source());
+          }
+
+          const chat = get(rxFromQuery(query))[0];
+          return [
+            {
+              id: [fullyQualifiedId(object), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
+              type: PLANK_COMPANION_TYPE,
+              data: chat ?? 'assistant-chat',
+              properties: {
+                label: ['assistant chat label', { ns: ASSISTANT_PLUGIN }],
+                icon: 'ph--sparkle--regular',
+                position: 'hoist',
+                disposition: 'hidden',
+              },
+            },
+          ];
+        });
+      },
+    }),
+
+    createExtension({
+      id: `${ASSISTANT_PLUGIN}/blueprint-logs`,
+      connector: (node) =>
+        Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (isEchoObject(node.data) ? Option.some(node.data) : Option.none())),
-            Option.flatMap((object) => {
-              const space = getSpace(object);
-              return space ? Option.some({ space, object }) : Option.none();
-            }),
-            Option.map(({ space, object }) => {
-              if (!query) {
-                query = space.db.query(Query.select(Filter.ids(object.id)).targetOf(CompanionTo).source());
-              }
-
-              const chat = get(rxFromQuery(query))[0];
-              return [
-                {
-                  id: [fullyQualifiedId(object), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
-                  type: PLANK_COMPANION_TYPE,
-                  data: chat ?? 'assistant-chat',
-                  properties: {
-                    label: ['assistant chat label', { ns: ASSISTANT_PLUGIN }],
-                    icon: 'ph--sparkle--regular',
-                    position: 'hoist',
-                    disposition: 'hidden',
-                  },
+            Option.flatMap((node) => (Obj.instanceOf(Blueprint, node.data) ? Option.some(node) : Option.none())),
+            Option.map((node) => [
+              {
+                id: [node.id, 'logs'].join(ATTENDABLE_PATH_SEPARATOR),
+                type: PLANK_COMPANION_TYPE,
+                data: 'logs',
+                properties: {
+                  label: ['blueprint logs label', { ns: ASSISTANT_PLUGIN }],
+                  icon: 'ph--clock-countdown--regular',
+                  disposition: 'hidden',
                 },
-              ];
-            }),
+              },
+            ]),
             Option.getOrElse(() => []),
           ),
-        );
-      },
+        ),
     }),
 
     createExtension({
@@ -227,7 +255,7 @@ const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space):
   }
 
   const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { space }));
-  invariant(isInstanceOf(AIChatType, data?.object));
+  invariant(Obj.instanceOf(AIChatType, data?.object));
   await dispatch(createIntent(SpaceAction.AddObject, { target: space, object: data.object }));
   return data.object;
 };

@@ -35,6 +35,7 @@ export default [
         'add row after label': 'Add row after',
         'delete row label': 'Delete row',
         'range list heading': 'Ranges',
+        'no ranges message': 'No ranges',
         'range title': '{{position}} — {{value}}',
         'col dropped label': 'Deleted a column',
         'row dropped label': 'Deleted a row',

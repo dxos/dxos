@@ -20,11 +20,9 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Type } from '@dxos/echo';
-import { create, createQueueDxn, type Expando } from '@dxos/echo-schema';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { live, makeRef, refFromDXN } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -69,13 +67,13 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
   const { editorState } = useCapability(MarkdownCapabilities.State);
 
   const space = useSpace();
-  const queueDxn = useMemo(() => space && createQueueDxn(space.id), [space]);
+  const queueDxn = useMemo(() => space && space.queues.create().dxn, [space]);
   const queue = useQueue<Message>(queueDxn);
 
   const handleInsert = async () => {
     invariant(space);
     invariant(queue);
-    queue.append([create(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
+    await queue.append([Obj.make(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
     const message = queue.objects.at(-1);
     invariant(message);
 
@@ -96,8 +94,8 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
 
     void dispatch(
       createIntent(CollaborationActions.InsertContent, {
-        target: doc as any as Expando, // TODO(burdon): Common base type.
-        object: refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
+        target: doc as any as Type.Expando,
+        object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
         at: cursor,
         label: 'Proposal',
       }),
@@ -131,8 +129,8 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
 
         // Create links.
         content: document.replaceAll(/\[(\w+)\]/g, (_, label) => {
-          const obj = space.db.add(live(TestItem, { title: label, description: faker.lorem.paragraph() }));
-          const dxn = makeRef(obj).dxn.toString();
+          const obj = space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));
+          const dxn = Ref.make(obj).dxn.toString();
           return `[${label}][${dxn}]`;
         }),
       }),

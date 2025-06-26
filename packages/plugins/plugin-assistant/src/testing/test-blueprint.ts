@@ -2,9 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ExecutableTool } from '@dxos/ai';
+import { ToolRegistry } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { type BlueprintParser, createExaTool, createGraphWriterTool, createLocalSearchTool } from '@dxos/assistant';
+import {
+  type BlueprintDefinition,
+  BlueprintParser,
+  createExaTool,
+  createGraphWriterTool,
+  createLocalSearchTool,
+} from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
 import { type DXN } from '@dxos/keys';
 import { DataTypes } from '@dxos/schema';
@@ -12,24 +18,26 @@ import { isNonNullable } from '@dxos/util';
 
 // TODO(dmaretskyi): make db available through services (same as function executor).
 // TODO(burdon): Can tools implement "aspects" so that variants can be used rather than an explicit reference?
-export const createTools = (space: Space, queueDxn?: DXN): ExecutableTool[] => {
-  return [
-    createExaTool({ apiKey: EXA_API_KEY }),
-    createLocalSearchTool(space.db, queueDxn && space.queues.get(queueDxn)),
-    queueDxn &&
-      createGraphWriterTool({
-        db: space.db,
-        queue: space.queues.get(queueDxn),
-        schemaTypes: DataTypes,
-        onDone: async (objects) => {
-          const queue = space.queues.get(queueDxn);
-          queue.append(objects);
-        },
-      }),
-  ].filter(isNonNullable);
+export const createToolRegistry = (space: Space, queueDxn?: DXN): ToolRegistry => {
+  return new ToolRegistry(
+    [
+      createExaTool({ apiKey: EXA_API_KEY }),
+      createLocalSearchTool(space.db, queueDxn && space.queues.get(queueDxn)),
+      queueDxn &&
+        createGraphWriterTool({
+          db: space.db,
+          queue: space.queues.get(queueDxn),
+          schema: DataTypes,
+          onDone: async (objects) => {
+            const queue = space.queues.get(queueDxn);
+            await queue.append(objects);
+          },
+        }),
+    ].filter(isNonNullable),
+  );
 };
 
-export const RESEARCH_BLUEPRINT: BlueprintParser.DSL = {
+export const RESEARCH_BLUEPRINT_DEFINITION: BlueprintDefinition = {
   steps: [
     {
       instructions: 'Research information and entities related to the selected objects.',
@@ -46,3 +54,5 @@ export const RESEARCH_BLUEPRINT: BlueprintParser.DSL = {
     },
   ],
 };
+
+export const RESEARCH_BLUEPRINT = BlueprintParser.create().parse(RESEARCH_BLUEPRINT_DEFINITION);

@@ -87,8 +87,8 @@ export namespace Capabilities {
   // export type Settings = Parameters<RootSettingsStore['createStore']>[0];
   // export type Settings<T extends SettingsValue = SettingsValue> = SettingsProps<T>;
   export type Settings = {
-    schema: Schema.Schema.All;
     prefix: string;
+    schema: Schema.Schema.All;
     value?: Record<string, any>;
   };
   export const Settings = defineCapability<Settings>('dxos.org/app-framework/capability/settings');

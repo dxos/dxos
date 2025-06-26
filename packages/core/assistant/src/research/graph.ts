@@ -319,20 +319,20 @@ const preprocessSchema = (schema: Schema.Schema.AnyNoContext) => {
 export const createGraphWriterTool = ({
   db,
   queue,
-  schemaTypes,
+  schema,
   onDone = async (x) => x,
 }: {
   db: EchoDatabase;
   queue?: Queue;
-  schemaTypes: Schema.Schema.AnyNoContext[];
+  schema: Schema.Schema.AnyNoContext[];
   onDone?: (data: AnyEchoObject[]) => Promise<any>;
 }) => {
   return createTool('graph', {
     name: 'writer',
     description: 'Write to the local graph database',
-    schema: createExtractionSchema(schemaTypes),
+    schema: createExtractionSchema(schema),
     execute: async (input) => {
-      const data = await sanitizeObjects(schemaTypes, input as any, db, queue);
+      const data = await sanitizeObjects(schema, input as any, db, queue);
       return ToolResult.Success(await onDone(data as AnyEchoObject[]));
     },
   });

@@ -19,7 +19,7 @@ import {
   useCapability,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { live } from '@dxos/live-object';
+import { Obj } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
@@ -76,7 +76,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
     >
       <StoryPlankHeading attendableId={attendableId} />
       <StackItem.Content toolbar>
-        <Toolbar.Root classNames='border-b border-separator'>
+        <Toolbar.Root classNames='border-b border-subduedSeparator'>
           <Toolbar.Button>Test</Toolbar.Button>
         </Toolbar.Root>
 
@@ -130,7 +130,7 @@ const meta: Meta<typeof NavTreeContainer> = {
         NavTreePlugin(),
       ],
       capabilities: (context) => [
-        contributes(StoryState, live({ tab: 'space-0' })),
+        contributes(StoryState, Obj.make({ tab: 'space-0' })),
         contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders),
         contributes(Capabilities.IntentResolver, [
           createResolver({

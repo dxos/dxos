@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { InvocationTraceContainer } from '@dxos/devtools';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
 import { SettingsStore } from '@dxos/local-storage';
 import { getSpace } from '@dxos/react-client/echo';
@@ -38,7 +38,7 @@ export default () =>
     createSurface({
       id: `${meta.id}/article`,
       role: 'article',
-      filter: (data): data is { subject: ScriptType } => isInstanceOf(ScriptType, data.subject),
+      filter: (data): data is { subject: ScriptType } => Obj.instanceOf(ScriptType, data.subject),
       component: ({ data, role }) => {
         const compiler = useCapability(ScriptCapabilities.Compiler);
         // TODO(dmaretskyi): Since settings store is not reactive, this would break on the script plugin being enabled without a page reload.
@@ -49,32 +49,32 @@ export default () =>
     createSurface({
       id: `${meta.id}/companion/base-settings`,
       role: 'base-object-settings',
-      filter: (data): data is { subject: ScriptType } => isInstanceOf(ScriptType, data.subject),
+      filter: (data): data is { subject: ScriptType } => Obj.instanceOf(ScriptType, data.subject),
       component: ({ data }) => <ScriptProperties object={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/companion/settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: ScriptType } => isInstanceOf(ScriptType, data.subject),
+      filter: (data): data is { subject: ScriptType } => Obj.instanceOf(ScriptType, data.subject),
       component: ({ data }) => <ScriptObjectSettings object={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/companion/execute`,
       role: 'article',
       filter: (data): data is { companionTo: ScriptType } =>
-        isInstanceOf(ScriptType, data.companionTo) && data.subject === 'execute',
+        Obj.instanceOf(ScriptType, data.companionTo) && data.subject === 'execute',
       component: ({ data, role }) => <TestContainer script={data.companionTo} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/companion/logs`,
       role: 'article',
       filter: (data): data is { companionTo: ScriptType } =>
-        isInstanceOf(ScriptType, data.companionTo) && data.subject === 'logs',
+        Obj.instanceOf(ScriptType, data.companionTo) && data.subject === 'logs',
       component: ({ data, role }) => {
         const space = getSpace(data.companionTo);
         return (
           <StackItem.Content role={role}>
-            <InvocationTraceContainer space={space} script={data.companionTo} detailAxis='block' />
+            <InvocationTraceContainer space={space} target={data.companionTo} detailAxis='block' />
           </StackItem.Content>
         );
       },

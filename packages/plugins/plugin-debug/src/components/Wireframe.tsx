@@ -5,7 +5,8 @@
 import React from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { fullyQualifiedId, type AnyLiveObject } from '@dxos/react-client/echo';
+import { type Obj } from '@dxos/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -14,7 +15,7 @@ import { mx } from '@dxos/react-ui-theme';
 // TODO(burdon): Create generic container with wireframe mode.
 export type WireframeProps = ThemedClassName<{
   label?: string;
-  object: AnyLiveObject<any>;
+  object: Obj.Any;
 }>;
 
 // TODO(burdon): Make focusable and attendable with input.
@@ -34,7 +35,7 @@ export const Wireframe = ({ classNames, label, object }: WireframeProps) => {
           </SyntaxHighlighter>
         )}
       </div>
-      <svg width={width} height={height} className='bg-transparent [&>*]:text-subdued'>
+      <svg width={width} height={height} className='bg-transparent *:text-subdued'>
         <rect x={0} y={0} width={width} height={height} strokeWidth={1} fill='none' />
         <line x1={0} y1={0} x2={width} y2={height} strokeWidth={1} />
         <line x1={0} y1={height} x2={width} y2={0} strokeWidth={1} />

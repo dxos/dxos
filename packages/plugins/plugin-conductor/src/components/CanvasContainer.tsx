@@ -4,10 +4,10 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { EdgeAiServiceClient } from '@dxos/ai';
 import { type Config } from '@dxos/client';
-import { ComputeGraphModel, EdgeGpt } from '@dxos/conductor';
-import { createStubEdgeIdentity, EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
+import { ComputeGraphModel } from '@dxos/conductor';
+import { AiService, DatabaseService, QueueService, ServiceContainer } from '@dxos/functions';
 import { useConfig } from '@dxos/react-client';
 import { fullyQualifiedId, getSpace, type Space } from '@dxos/react-client/echo';
 import {
@@ -15,7 +15,6 @@ import {
   ComputeGraphController,
   type ComputeShape,
   ComputeShapeLayout,
-  type Services,
   computeShapes,
   useComputeGraphController,
   useGraphMonitor,
@@ -30,28 +29,15 @@ import {
 } from '@dxos/react-ui-canvas-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 
-const createServices = (config: Config, space?: Space): Partial<Services> => {
-  return {
-    spaceService:
-      space == null
-        ? undefined
-        : {
-            spaceId: space.id,
-            db: space.db,
-          },
-    gpt:
+const createServices = (config: Config, space?: Space): ServiceContainer => {
+  return new ServiceContainer().setServices({
+    database: space == null ? undefined : DatabaseService.make(space.db),
+    queues: space == null ? undefined : QueueService.make(space.queues, undefined),
+    ai:
       config.values.runtime?.services?.ai?.server == null
         ? undefined
-        : new EdgeGpt(new AIServiceEdgeClient({ endpoint: config.values.runtime?.services?.ai?.server })),
-    edgeClient:
-      config.values.runtime?.services?.edge?.url == null
-        ? undefined
-        : new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: config.values.runtime?.services?.edge?.url }),
-    edgeHttpClient:
-      config.values.runtime?.services?.edge?.url == null
-        ? undefined
-        : new EdgeHttpClient(config.values.runtime?.services?.edge?.url),
-  };
+        : AiService.make(new EdgeAiServiceClient({ endpoint: config.values.runtime?.services?.ai?.server })),
+  });
 };
 
 const useGraphController = (canvas: CanvasBoardType) => {
@@ -62,8 +48,7 @@ const useGraphController = (canvas: CanvasBoardType) => {
       return null;
     }
     const model = new ComputeGraphModel(canvas.computeGraph?.target);
-    const controller = new ComputeGraphController(model);
-    controller.setServices(createServices(config, space));
+    const controller = new ComputeGraphController(createServices(config, space), model);
     return controller;
   }, [canvas.computeGraph?.target, space]);
 

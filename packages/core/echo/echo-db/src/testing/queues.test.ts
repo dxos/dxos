@@ -44,9 +44,7 @@ describe('queues', (ctx) => {
     const queues = peer.client.constructQueueFactory(spaceId);
     const queue = queues.create();
 
-    const obj = create(Testing.Contact, {
-      name: 'john',
-    });
+    const obj = create(Testing.Contact, { name: 'Alice' });
     await queue.append([obj]);
 
     {
@@ -54,7 +52,7 @@ describe('queues', (ctx) => {
         .createRefResolver({ context: { space: spaceId } })
         .resolve(DXN.fromQueue('data', spaceId, queue.dxn.asQueueDXN()!.queueId, obj.id));
       expect(resolved?.id).toEqual(obj.id);
-      expect(resolved?.name).toEqual('john');
+      expect(resolved?.name).toEqual('Alice');
       expect(getSchema(resolved)).toEqual(Testing.Contact);
     }
 
@@ -63,7 +61,7 @@ describe('queues', (ctx) => {
         .createRefResolver({ context: { space: spaceId, queue: queue.dxn } })
         .resolve(DXN.fromLocalObjectId(obj.id));
       expect(resolved?.id).toEqual(obj.id);
-      expect(resolved?.name).toEqual('john');
+      expect(resolved?.name).toEqual('Alice');
       expect(getSchema(resolved)).toEqual(Testing.Contact);
     }
   });
@@ -75,25 +73,22 @@ describe('queues', (ctx) => {
     const queue = queues.create();
 
     {
-      const obj = create(Testing.Contact, {
-        name: 'john',
-      });
-      const obj2 = create(Testing.Contact, {
-        name: 'jane',
-      });
+      const obj1 = create(Testing.Contact, { name: 'Alice' });
+      const obj2 = create(Testing.Contact, { name: 'Bob' });
       const relation = create(Testing.HasManager, {
-        [RelationSourceId]: obj,
+        [RelationSourceId]: obj1,
         [RelationTargetId]: obj2,
       });
-      await queue.append([obj, obj2, relation]);
+
+      await queue.append([obj1, obj2, relation]);
     }
 
     {
-      const [obj, obj2, relation] = await queue.queryObjects();
-      expect((obj as Testing.Contact).name).toEqual('john');
-      expect((obj2 as Testing.Contact).name).toEqual('jane');
-      expect(Relation.getSource(relation as Testing.HasManager).name).toEqual('john');
-      expect(Relation.getTarget(relation as Testing.HasManager).name).toEqual('jane');
+      const [obj1, obj2, relation] = await queue.queryObjects();
+      expect((obj1 as Testing.Contact).name).toEqual('Alice');
+      expect((obj2 as Testing.Contact).name).toEqual('Bob');
+      expect(Relation.getSource(relation as Testing.HasManager).name).toEqual('Alice');
+      expect(Relation.getTarget(relation as Testing.HasManager).name).toEqual('Bob');
     }
   });
 
@@ -104,28 +99,21 @@ describe('queues', (ctx) => {
     const queue = queues.create();
 
     {
-      const obj = db.add(
-        live(Testing.Contact, {
-          name: 'john',
-        }),
-      );
-
-      const jane = create(Testing.Contact, {
-        name: 'jane',
-      });
+      const obj1 = db.add(live(Testing.Contact, { name: 'Alice' }));
+      const obj2 = create(Testing.Contact, { name: 'Bob' });
       const relation = create(Testing.HasManager, {
-        [RelationSourceId]: obj,
-        [RelationTargetId]: jane,
+        [RelationSourceId]: obj1,
+        [RelationTargetId]: obj2,
       });
 
-      await queue.append([jane, relation]);
+      await queue.append([obj2, relation]);
     }
 
     {
-      const [jane, relation] = await queue.queryObjects();
-      expect((jane as Testing.Contact).name).toEqual('jane');
-      expect(Relation.getSource(relation as Testing.HasManager).name).toEqual('john');
-      expect(Relation.getTarget(relation as Testing.HasManager).name).toEqual('jane');
+      const [obj1, relation] = await queue.queryObjects();
+      expect((obj1 as Testing.Contact).name).toEqual('Bob');
+      expect(Relation.getSource(relation as Testing.HasManager).name).toEqual('Alice');
+      expect(Relation.getTarget(relation as Testing.HasManager).name).toEqual('Bob');
     }
   });
 });

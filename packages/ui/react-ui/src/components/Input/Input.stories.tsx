@@ -78,10 +78,10 @@ const DefaultStory = (props: BaseProps) => {
       <div className={mx(baseSurface, 'p-4')}>
         <Wrapper {...props} />
       </div>
-      <div className={mx(activeSurface, 'p-4 rounded-lg', surfaceShadow({ elevation: 'positioned' }))}>
+      <div className={mx(activeSurface, 'p-4 rounded-md', surfaceShadow({ elevation: 'positioned' }))}>
         <Wrapper {...props} />
       </div>
-      <div className={mx(modalSurface, 'p-4 rounded-lg', surfaceShadow({ elevation: 'dialog' }))}>
+      <div className={mx(modalSurface, 'p-4 rounded-md', surfaceShadow({ elevation: 'dialog' }))}>
         <Wrapper {...props} />
       </div>
     </div>

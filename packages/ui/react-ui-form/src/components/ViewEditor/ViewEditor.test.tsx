@@ -6,14 +6,31 @@ import { composeStories } from '@storybook/react';
 import { screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
+import { EchoSchema } from '@dxos/echo-schema';
+import { ViewProjection, ViewType } from '@dxos/schema';
+
 import * as stories from './ViewEditor.stories';
+import { type ViewEditorDebugObjects } from './ViewEditor.stories';
+import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
 
 const { Default } = composeStories(stories);
 
+const getViewEditorDebugObjects = (): ViewEditorDebugObjects => {
+  const debugObjects = (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] as ViewEditorDebugObjects;
+  expect(debugObjects).toBeDefined();
+  expect(debugObjects.schema).toBeInstanceOf(EchoSchema);
+  expect(debugObjects.view).toBeInstanceOf(ViewType);
+  expect(debugObjects.projection).toBeInstanceOf(ViewProjection);
+  return debugObjects;
+};
+
 const waitForViewEditor = async () => {
-  await waitFor(() => {
-    expect(screen.getByTestId('debug')).toBeInTheDocument();
-  });
+  await waitFor(
+    () => {
+      expect(screen.getByTestId('debug')).toBeInTheDocument();
+    },
+    { timeout: 15000 },
+  );
 };
 
 describe('ViewEditor', () => {
@@ -41,26 +58,30 @@ describe('ViewEditor', () => {
 
     fireEvent.click(screen.getByTestId('save-button'));
 
-    // Assert.
-    expect(screen.getByText('new_property')).toBeInTheDocument();
+    // Wait for the changes to propagate to both UI and schema
+    await waitFor(() => {
+      expect(screen.getByText('new_property')).toBeInTheDocument();
+    });
 
-    const debugInfo = JSON.parse(screen.getByTestId('debug').textContent!);
+    // Access the live objects directly from window using symbol.
+    const debugObjects = getViewEditorDebugObjects();
 
-    // Check schema contains new_property.
-    const schemaProperties = debugInfo.schema._storedSchema.jsonSchema.properties;
-    expect(schemaProperties.new_property).toBeDefined();
+    // Check schema contains new_property
+    const schemaProperties = debugObjects.schema.jsonSchema.properties;
+    expect(schemaProperties).toBeDefined();
+    expect(schemaProperties!.new_property).toBeDefined();
+    expect(schemaProperties!.name).toBeUndefined();
 
-    // Check view contains new_property field.
-    const newPropertyField = debugInfo.view.fields.find((field: any) => field.path === 'new_property');
+    // Check view contains new_property field
+    const newPropertyField = debugObjects.view.fields.find((field: any) => field.path === 'new_property');
     expect(newPropertyField).toBeDefined();
-    expect(newPropertyField.path).toBe('new_property');
+    expect(newPropertyField!.path).toBe('new_property');
 
-    // Check projection contains new_property.
-    const newPropertyProjection = debugInfo.projection._fieldProjections.find(
-      (proj: any) => proj.field.path === 'new_property',
-    );
+    // Check projection contains new_property
+    const fieldProjections = debugObjects.projection.getFieldProjections();
+    const newPropertyProjection = fieldProjections.find((proj: any) => proj.field.path === 'new_property');
     expect(newPropertyProjection).toBeDefined();
-    expect(newPropertyProjection.props.property).toBe('new_property');
+    expect(newPropertyProjection!.props.property).toBe('new_property');
   });
 
   test('add new property', async () => {
@@ -85,26 +106,29 @@ describe('ViewEditor', () => {
     // Save the changes
     fireEvent.click(screen.getByTestId('save-button'));
 
-    // Assert the new property exists
-    expect(screen.getByText('added_property')).toBeInTheDocument();
+    // Wait for the changes to propagate
+    await waitFor(() => {
+      expect(screen.getByText('added_property')).toBeInTheDocument();
+    });
 
-    const debugInfo = JSON.parse(screen.getByTestId('debug').textContent!);
+    // Access the live objects directly from window using symbol.
+    const debugObjects = getViewEditorDebugObjects();
 
     // Check schema contains added_property
-    const schemaProperties = debugInfo.schema._storedSchema.jsonSchema.properties;
-    expect(schemaProperties.added_property).toBeDefined();
+    const schemaProperties = debugObjects.schema.jsonSchema.properties;
+    expect(schemaProperties).toBeDefined();
+    expect(schemaProperties!.added_property).toBeDefined();
 
     // Check view contains added_property field
-    const addedPropertyField = debugInfo.view.fields.find((field: any) => field.path === 'added_property');
+    const addedPropertyField = debugObjects.view.fields.find((field: any) => field.path === 'added_property');
     expect(addedPropertyField).toBeDefined();
-    expect(addedPropertyField.path).toBe('added_property');
+    expect(addedPropertyField!.path).toBe('added_property');
 
     // Check projection contains added_property
-    const addedPropertyProjection = debugInfo.projection._fieldProjections.find(
-      (proj: any) => proj.field.path === 'added_property',
-    );
+    const fieldProjections = debugObjects.projection.getFieldProjections();
+    const addedPropertyProjection = fieldProjections.find((proj: any) => proj.field.path === 'added_property');
     expect(addedPropertyProjection).toBeDefined();
-    expect(addedPropertyProjection.props.property).toBe('added_property');
+    expect(addedPropertyProjection!.props.property).toBe('added_property');
   });
 
   test('delete property', async () => {
@@ -123,21 +147,26 @@ describe('ViewEditor', () => {
     // Click the delete button
     fireEvent.click(deleteButton);
 
-    // Assert the property is no longer visible
-    expect(screen.queryByText('name')).not.toBeInTheDocument();
+    // Wait for the changes to propagate
+    await waitFor(() => {
+      expect(screen.queryByText('name')).not.toBeInTheDocument();
+    });
 
-    const debugInfo = JSON.parse(screen.getByTestId('debug').textContent!);
+    // Access the live objects directly from window using symbol.
+    const debugObjects = getViewEditorDebugObjects();
 
     // Check schema no longer contains the name property
-    const schemaProperties = debugInfo.schema._storedSchema.jsonSchema.properties;
-    expect(schemaProperties.name).toBeUndefined();
+    const schemaProperties = debugObjects.schema.jsonSchema.properties;
+    expect(schemaProperties).toBeDefined();
+    expect(schemaProperties!.name).toBeUndefined();
 
     // Check view no longer contains the name field
-    const nameField = debugInfo.view.fields.find((field: any) => field.path === 'name');
+    const nameField = debugObjects.view.fields.find((field: any) => field.path === 'name');
     expect(nameField).toBeUndefined();
 
     // Check projection no longer contains the name property
-    const nameProjection = debugInfo.projection._fieldProjections.find((proj: any) => proj.field.path === 'name');
+    const fieldProjections = debugObjects.projection.getFieldProjections();
+    const nameProjection = fieldProjections.find((proj: any) => proj.field.path === 'name');
     expect(nameProjection).toBeUndefined();
   });
 
@@ -150,17 +179,26 @@ describe('ViewEditor', () => {
     fireEvent.click(hideButtons[0]);
 
     // Check that hiddenFields is non-empty
-    let debugInfo = JSON.parse(screen.getByTestId('debug').textContent!);
-    expect(debugInfo.view.hiddenFields.length).toBeGreaterThan(0);
-
-    // Wait for the show button to appear and click it
     await waitFor(() => {
       expect(screen.getByTestId('show-field-button')).toBeInTheDocument();
     });
+
+    // Access the live objects directly from window using symbol.
+    const debugObjects = getViewEditorDebugObjects();
+
+    // Check that hiddenFields is non-empty
+    expect(debugObjects.view.hiddenFields).toBeDefined();
+    expect(debugObjects.view.hiddenFields!.length).toBeGreaterThan(0);
+
+    // Click the show button
     fireEvent.click(screen.getByTestId('show-field-button'));
 
-    // Check that hiddenFields is empty again
-    debugInfo = JSON.parse(screen.getByTestId('debug').textContent!);
-    expect(debugInfo.view.hiddenFields.length).toBe(0);
+    // Wait for the data to update and check that hiddenFields is empty
+    await waitFor(() => {
+      expect(debugObjects.view.hiddenFields!.length).toBe(0);
+    });
+
+    // Also verify that the field is back in the visible fields list
+    expect(debugObjects.view.fields.length).toBeGreaterThan(0);
   });
 });

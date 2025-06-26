@@ -6,34 +6,42 @@ import { Schema } from 'effect';
 
 import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
-import type { DXN } from '@dxos/keys';
+import { type DXN } from '@dxos/keys';
 import * as LiveObject from '@dxos/live-object';
+import { assumeType } from '@dxos/util';
 
 import type * as Ref from './Ref';
 import type * as Type from './Type';
 
+export type Obj<T = any> = EchoSchema.AnyEchoObject & T;
 export type Any = EchoSchema.AnyEchoObject;
 
 export const make = LiveObject.live;
 
-// TODO(dmaretskyi): Currently broken
 export const isObject = (obj: unknown): obj is Any => {
-  return LiveObject.isLiveObject(obj);
+  assumeType<EchoSchema.InternalObjectProps>(obj);
+  return typeof obj === 'object' && obj !== null && obj[EchoSchema.EntityKindId] === EchoSchema.EntityKind.Object;
 };
 
 /**
- * Check that object or relation is an instance of a schema.
+ * Test if object or relation is an instance of a schema.
  * @example
  * ```ts
- * const person = Obj.make(Person, { name: 'John' });
+ * const john = Obj.make(Person, { name: 'John' });
+ * const johnIsPerson = Obj.instanceOf(Person)(john);
+ *
  * const isPerson = Obj.instanceOf(Person);
- * isPerson(person); // true
+ * if(isPerson(john)) {
+ *   // john is Person
+ * }
  * ```
  */
 export const instanceOf: {
-  <S extends Type.Relation.Any | Type.Obj.Any>(schema: S): (value: unknown) => value is S;
-  <S extends Type.Relation.Any | Type.Obj.Any>(schema: S, value: unknown): value is S;
-} = ((...args: any[]) => {
+  <S extends Type.Relation.Any | Type.Obj.Any>(schema: S): (value: unknown) => value is Schema.Schema.Type<S>;
+  <S extends Type.Relation.Any | Type.Obj.Any>(schema: S, value: unknown): value is Schema.Schema.Type<S>;
+} = ((
+  ...args: [schema: Type.Relation.Any | Type.Obj.Any, value: unknown] | [schema: Type.Relation.Any | Type.Obj.Any]
+) => {
   if (args.length === 1) {
     return (obj: unknown) => EchoSchema.isInstanceOf(args[0], obj);
   }
@@ -55,12 +63,8 @@ export const getDXN = (obj: Any): DXN => {
  * @returns The DXN of the object's type.
  * @example dxn:example.com/type/Contact:1.0.0
  */
-// TODO(dmaretskyi): Allow returning undefined.
-export const getSchemaDXN = (obj: Any): DXN => {
-  const type = EchoSchema.getType(obj);
-  invariant(type != null, 'Invalid object.');
-  return type;
-};
+// TODO(burdon): Expando does not have a type.
+export const getTypeDXN = EchoSchema.getType;
 
 /**
  * @returns The typename of the object's type.
@@ -70,10 +74,10 @@ export const getTypename = (obj: Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema == null) {
     // Try to extract typename from DXN.
-    return getSchemaDXN(obj)?.asTypeDXN()?.type;
+    return EchoSchema.getType(obj)?.asTypeDXN()?.type;
   }
 
-  return EchoSchema.getTypename(schema);
+  return EchoSchema.getSchemaTypename(schema);
 };
 
 // TODO(dmaretskyi): Allow returning undefined.
@@ -90,22 +94,28 @@ export const isDeleted = (obj: Any): boolean => {
   return deleted;
 };
 
+export const getLabel = (obj: Any): string | undefined => {
+  const schema = getSchema(obj);
+  if (schema != null) {
+    return EchoSchema.getLabel(schema, obj);
+  }
+};
+
 /**
  * JSON representation of an object.
  */
 export type JSON = EchoSchema.ObjectJSON;
 
 /**
- * Converts object to it's JSON representation.
+ * Converts object to its JSON representation.
  *
  * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
  */
 export const toJSON = (obj: Any): JSON => EchoSchema.objectToJSON(obj);
 
 /**
- * Creates an object from it's json representation.
- * Performs schema validation.
- * References and schema will be resolvable if the `refResolver` is provided.
+ * Creates an object from its json representation, performing schema validation.
+ * References and schemas will be resolvable if the `refResolver` is provided.
  *
  * The function need to be async to support resolving the schema as well as the relation endpoints.
  */

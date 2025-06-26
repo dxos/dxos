@@ -8,18 +8,16 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import { Match, Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react';
 
-import { AIServiceEdgeClient, type AIServiceEdgeClientOptions } from '@dxos/ai';
-import { SpyAIService } from '@dxos/ai/testing';
+import { EdgeAiServiceClient, type AiServiceEdgeClientOptions } from '@dxos/ai';
+import { SpyAiService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { BlueprintMachine, BlueprintParser, Logger, setConsolePrinter, setLogger } from '@dxos/assistant';
+import { BlueprintMachine, BlueprintParser, BufferedLogger, setConsolePrinter, setLogger } from '@dxos/assistant';
 import { combine } from '@dxos/async';
-import { Filter, Queue, type EchoDatabase, type Space } from '@dxos/client/echo';
-import { Type } from '@dxos/echo';
-import { Ref, create, getLabelForObject, getTypename, type AnyEchoObject } from '@dxos/echo-schema';
+import { Queue, type Space } from '@dxos/client/echo';
+import { DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
@@ -28,8 +26,8 @@ import { useQueue } from '@dxos/react-client/echo';
 import { Dialog, IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
 import {
   matchCompletion,
-  staticCompletion,
   typeahead,
+  staticCompletion,
   type TypeaheadContext,
   type TypeaheadOptions,
 } from '@dxos/react-ui-editor';
@@ -45,7 +43,7 @@ import { testPlugins } from './testing';
 import { AmbientDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { QueryParser, createFilter, type Expression } from '../parser';
-import { RESEARCH_BLUEPRINT, createTools } from '../testing';
+import { createToolRegistry, RESEARCH_BLUEPRINT } from '../testing';
 import translations from '../translations';
 
 faker.seed(1);
@@ -57,13 +55,25 @@ const LOCAL = false;
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
 
 // TODO(burdon) Move to story args.
-const aiConfig: AIServiceEdgeClientOptions = {
+const aiConfig: AiServiceEdgeClientOptions = {
   endpoint: endpoints.ai,
   defaultGenerationOptions: {
     model: '@anthropic/claude-3-5-sonnet-20241022',
     // model: '@anthropic/claude-sonnet-4-20250514',
   },
 };
+
+/**
+ * Container for a set of ephemeral research results.
+ */
+const ResearchGraph = Schema.Struct({
+  queue: Type.Ref(Queue),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/ResearchGraph',
+    version: '0.1.0',
+  }),
+);
 
 type Mode = 'graph' | 'list';
 
@@ -118,8 +128,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     } else {
       const queue = space.queues.create();
       return space.db.add(
-        create(ResearchGraph, {
-          // TODO(dmaretskyi): Ref.make(queue)
+        Obj.make(ResearchGraph, {
           queue: Ref.fromDXN(queue.dxn),
         }),
       );
@@ -147,32 +156,29 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
     model?.nodes
       .filter((node) => {
         try {
-          getTypename(node.data.object as AnyEchoObject);
+          Obj.getTypename(node.data.object as Obj.Any);
           return true;
         } catch {
           return false;
         }
       })
-      .map((node) => node.data.object as AnyEchoObject) ?? [];
+      .map((node) => node.data.object as Obj.Any) ?? [];
 
   //
   // AI
   //
 
-  const aiClient = useMemo(() => new SpyAIService(new AIServiceEdgeClient(aiConfig)), []);
+  const aiClient = useMemo(() => new SpyAiService(new EdgeAiServiceClient(aiConfig)), []);
+  const tools = useMemo(
+    () => space && researchGraph && createToolRegistry(space, researchGraph.queue.dxn),
+    [space, researchGraph?.queue.dxn],
+  );
 
   const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1_000 });
 
-  const researchBlueprint = useMemo(() => {
-    if (!space || !researchGraph) {
-      return undefined;
-    }
+  const researchBlueprint = useMemo(() => BlueprintParser.create().parse(RESEARCH_BLUEPRINT), []);
 
-    const tools = createTools(space, researchGraph?.queue.dxn);
-    return BlueprintParser.create(tools).parse(RESEARCH_BLUEPRINT);
-  }, [space, researchGraph?.queue.dxn]);
-
-  const logger = useMemo(() => new Logger(), []);
+  const logger = useMemo(() => new BufferedLogger(), []);
 
   //
   // Handlers
@@ -183,24 +189,27 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   }, [model]);
 
   const handleResearch = useCallback(async () => {
-    if (!space || !researchBlueprint) {
+    if (!space || !tools || !researchBlueprint) {
       return;
     }
 
-    const selected = selection.selected.value;
-    log.info('starting research...', { selected });
     const resolver = space.db.graph.createRefResolver({
       context: {
         space: space.db.spaceId,
         queue: researchGraph?.queue.dxn,
       },
     });
+
+    const selected = selection.selected.value;
     const objects = await Promise.all(selected.map((id) => resolver.resolve(DXN.fromLocalObjectId(id))));
-    const machine = new BlueprintMachine(researchBlueprint);
+    const machine = new BlueprintMachine(tools, researchBlueprint);
     const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));
-    await machine.runToCompletion({ aiService: aiClient, input: objects });
+
+    log.info('starting research...', { selected });
+    await machine.runToCompletion({ aiClient, input: objects });
+
     cleanup();
-  }, [space, aiClient, researchBlueprint, selection]);
+  }, [space, aiClient, tools, researchBlueprint, selection]);
 
   const handleGenerate = useCallback(async () => {
     if (!space) {
@@ -270,6 +279,8 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const extensions = useMemo(() => [typeahead({ onComplete: handleMatch })], [handleMatch]);
 
+  const { state: flushState, handleFlush } = useFlush(space);
+
   return (
     <div className='grow grid overflow-hidden'>
       <div className={mx('grow grid overflow-hidden', !mode && 'grid-cols-[1fr_30rem]')}>
@@ -289,7 +300,18 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
                 label='reset'
                 onClick={(event) => handleReset(event.shiftKey)}
               />
-              <FlushButton db={space?.db} />
+              <IconButton
+                disabled={flushState === 'flushing'}
+                icon={Match.value(flushState).pipe(
+                  Match.when('idle', () => 'ph--floppy-disk--regular'),
+                  Match.when('flushing', () => 'ph--spinner--regular'),
+                  Match.when('flushed', () => 'ph--check--regular'),
+                  Match.exhaustive,
+                )}
+                iconOnly
+                label='flush'
+                onClick={handleFlush}
+              />
             </Toolbar.Root>
             <ItemList items={objects} />
             <Log logger={logger} />
@@ -353,20 +375,8 @@ const createMatcher =
     }
   };
 
-/**
- * Container for a set of ephemeral research results.
- */
-const ResearchGraph = Schema.Struct({
-  queue: Ref(Queue),
-}).pipe(
-  Type.Obj({
-    typename: 'dxos.org/type/ResearchGraph',
-    version: '0.1.0',
-  }),
-);
-
 // TODO(burdon): Replace with card list.
-const ItemList = <T extends AnyEchoObject>({ items = [] }: { items?: T[] }) => {
+const ItemList = <T extends Obj.Any>({ items = [] }: { items?: T[] }) => {
   return (
     <List.Root<T> items={items}>
       {({ items }) => (
@@ -379,10 +389,12 @@ const ItemList = <T extends AnyEchoObject>({ items = [] }: { items?: T[] }) => {
               classNames='grid grid-cols-[4rem_16rem_1fr] min-h-[32px] items-center'
             >
               <div className='text-xs font-mono font-thin px-1 text-subdued'>{item.id.slice(-6)}</div>
-              <div className={mx('text-xs font-mono font-thin truncate px-1', getHashColor(getTypename(item))?.text)}>
-                {getTypename(item)}
+              <div
+                className={mx('text-xs font-mono font-thin truncate px-1', getHashColor(Obj.getTypename(item))?.text)}
+              >
+                {Obj.getTypename(item)}
               </div>
-              <List.ItemTitle>{getLabelForObject(item)}</List.ItemTitle>
+              <List.ItemTitle>{Obj.getLabel(item)}</List.ItemTitle>
             </List.Item>
           ))}
         </div>
@@ -391,12 +403,12 @@ const ItemList = <T extends AnyEchoObject>({ items = [] }: { items?: T[] }) => {
   );
 };
 
-const FlushButton = ({ db }: { db?: EchoDatabase }) => {
+const useFlush = (space?: Space) => {
   const [state, setState] = useState<'idle' | 'flushing' | 'flushed'>('idle');
-
   const resetTimer = useRef<NodeJS.Timeout | null>(null);
+
   const handleFlush = useCallback(() => {
-    if (!db) {
+    if (!space) {
       return;
     }
 
@@ -406,33 +418,20 @@ const FlushButton = ({ db }: { db?: EchoDatabase }) => {
       }
 
       setState('flushing');
-      await db.flush();
+      await space.db.flush();
       setState('flushed');
 
       resetTimer.current = setTimeout(() => {
         setState('idle');
         resetTimer.current = null;
-      }, 1000);
+      }, 1_000);
     });
-  }, [db]);
+  }, [space]);
 
-  return (
-    <IconButton
-      icon={Match.value(state).pipe(
-        Match.when('idle', () => 'ph--floppy-disk--regular'),
-        Match.when('flushing', () => 'ph--spinner--regular'),
-        Match.when('flushed', () => 'ph--check--regular'),
-        Match.exhaustive,
-      )}
-      iconOnly
-      label={state === 'flushing' ? 'flushing...' : state === 'flushed' ? 'flushed!' : 'flush'}
-      onClick={handleFlush}
-      disabled={state === 'flushing'}
-    />
-  );
+  return { state, handleFlush };
 };
 
-const Log: FC<{ logger: Logger }> = ({ logger }) => {
+const Log: FC<{ logger: BufferedLogger }> = ({ logger }) => {
   return (
     <div className='grow flex flex-col p-1 overflow-y-auto text-sm'>
       {logger.messages.value.map((message, index) => (

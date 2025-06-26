@@ -343,7 +343,6 @@ export class CoreDatabase {
     const objectsToLoad: Array<{ id: string; resultIndex: number }> = [];
     for (let i = 0; i < objectIds.length; i++) {
       const objectId = objectIds[i];
-
       if (!this._automergeDocLoader.objectPresent(objectId)) {
         result[i] = undefined;
         continue;

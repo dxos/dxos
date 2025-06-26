@@ -5,14 +5,15 @@
 import { Schema } from 'effect';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
-import { Expando, type BaseObject, type TypedObject } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
+import { DataType } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
 
-import { CollectionType } from './collection';
 import { SPACE_PLUGIN } from '../meta';
 
 export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
@@ -80,7 +81,7 @@ export type SpaceSettingsProps = Schema.Schema.Type<typeof SpaceSettingsSchema>;
 
 export type SerializerMap = Record<string, TypedObjectSerializer>;
 
-export interface TypedObjectSerializer<T extends Expando = Expando> {
+export interface TypedObjectSerializer<T extends Type.Expando = Type.Expando> {
   serialize(params: { object: T }): Promise<string>;
 
   /**
@@ -218,7 +219,7 @@ export namespace SpaceAction {
 
   export class OpenCreateObject extends Schema.TaggedClass<OpenCreateObject>()(`${SPACE_ACTION}/open-create-object`, {
     input: Schema.Struct({
-      target: Schema.Union(SpaceSchema, CollectionType),
+      target: Schema.Union(SpaceSchema, DataType.Collection),
       navigable: Schema.optional(Schema.Boolean),
     }),
     output: Schema.Void,
@@ -227,7 +228,7 @@ export namespace SpaceAction {
   export class AddObject extends Schema.TaggedClass<AddObject>()(`${SPACE_ACTION}/add-object`, {
     input: Schema.Struct({
       object: ReactiveObjectSchema,
-      target: Schema.Union(SpaceSchema, CollectionType),
+      target: Schema.Union(SpaceSchema, DataType.Collection),
       hidden: Schema.optional(Schema.Boolean),
     }),
     output: Schema.Struct({
@@ -242,8 +243,8 @@ export namespace SpaceAction {
       space: SpaceSchema,
       // TODO(wittjosiah): Relation schema.
       schema: Schema.Any,
-      source: Expando,
-      target: Expando,
+      source: Type.Expando,
+      target: Type.Expando,
       // TODO(wittjosiah): Type based on relation schema.
       fields: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
     }),
@@ -254,7 +255,7 @@ export namespace SpaceAction {
 
   export const DeletionData = Schema.Struct({
     objects: Schema.Array(EchoObjectSchema),
-    parentCollection: CollectionType,
+    parentCollection: DataType.Collection,
     indices: Schema.Array(Schema.Number),
     nestedObjectsList: Schema.Array(Schema.Array(EchoObjectSchema)),
     wasActive: Schema.Array(Schema.String),
@@ -265,7 +266,7 @@ export namespace SpaceAction {
   export class RemoveObjects extends Schema.TaggedClass<RemoveObjects>()(`${SPACE_ACTION}/remove-objects`, {
     input: Schema.Struct({
       objects: Schema.Array(EchoObjectSchema),
-      target: Schema.optional(CollectionType),
+      target: Schema.optional(DataType.Collection),
       deletionData: Schema.optional(DeletionData),
     }),
     output: Schema.Void,
@@ -282,7 +283,7 @@ export namespace SpaceAction {
   export class DuplicateObject extends Schema.TaggedClass<DuplicateObject>()(`${SPACE_ACTION}/duplicate-object`, {
     input: Schema.Struct({
       object: EchoObjectSchema,
-      target: Schema.Union(SpaceSchema, CollectionType),
+      target: Schema.Union(SpaceSchema, DataType.Collection),
     }),
     output: Schema.Void,
   }) {}
@@ -301,7 +302,7 @@ export namespace CollectionAction {
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: CollectionType,
+      object: DataType.Collection,
     }),
   }) {}
 }

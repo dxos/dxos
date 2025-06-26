@@ -43,7 +43,11 @@ export class MemoryQueue<T extends BaseEchoObject = BaseEchoObject> implements Q
 
   private readonly _signal = compositeRuntime.createSignal();
 
+;
+
   private _objects: T[] = [];
+
+;
 
   constructor(private readonly _dxn: DXN) {}
 
@@ -87,7 +91,7 @@ export class MemoryQueue<T extends BaseEchoObject = BaseEchoObject> implements Q
     return ids.map((id) => this._objects.find((object) => (object as HasId).id === id) ?? null);
   }
 
-  delete(ids: ObjectId[]): void {
+  async delete(ids: ObjectId[]): Promise<void> {
     // TODO(dmaretskyi): Restrict types.
     this._objects = this._objects.filter((object) => !ids.includes((object as HasId).id));
     this._signal.notifyWrite();

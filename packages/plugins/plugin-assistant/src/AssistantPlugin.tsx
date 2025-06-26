@@ -3,20 +3,22 @@
 //
 
 import {
-  allOf,
   Capabilities,
+  Events,
+  allOf,
   contributes,
   createIntent,
   defineModule,
   definePlugin,
-  Events,
 } from '@dxos/app-framework';
-import { getSchemaTypename } from '@dxos/echo-schema';
+import { Blueprint } from '@dxos/assistant';
+import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
+import { AssistantEvents } from './events';
 import { meta } from './meta';
 import translations from './translations';
 import { AssistantAction, AIChatType, ServiceType, TemplateType, CompanionTo } from './types';
@@ -38,13 +40,13 @@ export const AssistantPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: TemplateType.typename,
+          id: Type.getTypename(Blueprint),
           metadata: {
-            icon: 'ph--code-block--regular',
+            icon: 'ph--blueprint--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: getSchemaTypename(AIChatType)!,
+          id: Type.getTypename(AIChatType),
           metadata: {
             icon: 'ph--atom--regular',
           },
@@ -65,9 +67,8 @@ export const AssistantPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: TemplateType,
-            hidden: true,
-            getIntent: () => createIntent(AssistantAction.CreateTemplate),
+            objectSchema: Blueprint,
+            getIntent: () => createIntent(AssistantAction.CreateBlueprint),
           }),
         ),
       ],
@@ -97,6 +98,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/ai-client`,
       activatesOn: allOf(ClientEvents.ClientReady, Events.SettingsReady),
+      activatesAfter: [AssistantEvents.AiClientReady],
       activate: AiClient,
     }),
   ]);

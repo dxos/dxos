@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { DEFAULT_EDGE_MODEL } from './defs';
-import { AIServiceEdgeClient, MixedStreamParser, OllamaClient } from './service';
+import { EdgeAiServiceClient, MixedStreamParser, OllamaAiServiceClient } from './service';
 import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from './testing';
 import { createTool, defineTool, Message, ToolResult } from './tools';
 import { ToolTypes } from './types';
@@ -19,7 +19,7 @@ import { ToolTypes } from './types';
 
 describe.skip('AI Service Client', () => {
   test('client generation', async () => {
-    const client = new AIServiceEdgeClient({
+    const aiClient = new EdgeAiServiceClient({
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
@@ -31,9 +31,9 @@ describe.skip('AI Service Client', () => {
     //     role: 'user',
     //     content: [{ type: 'text', text: 'Hello' }],
     //   },
-    //     ]);
+    // ]);
 
-    const stream = await client.execStream({
+    const stream = await aiClient.execStream({
       model: DEFAULT_EDGE_MODEL,
       systemPrompt: 'You are a poet',
       tools: [],
@@ -48,7 +48,7 @@ describe.skip('AI Service Client', () => {
   });
 
   test('tool calls', async () => {
-    const client = new AIServiceEdgeClient({
+    const aiClient = new EdgeAiServiceClient({
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
@@ -73,7 +73,7 @@ describe.skip('AI Service Client', () => {
     // ]);
 
     {
-      const stream1 = await client.execStream({
+      const stream1 = await aiClient.execStream({
         model: DEFAULT_EDGE_MODEL,
         systemPrompt: 'You are a helpful assistant.',
         tools: [custodian],
@@ -105,7 +105,7 @@ describe.skip('AI Service Client', () => {
     }
 
     {
-      const stream2 = await client.execStream({
+      const stream2 = await aiClient.execStream({
         model: DEFAULT_EDGE_MODEL,
         systemPrompt: 'You are a helpful assistant.',
         tools: [custodian],
@@ -124,7 +124,7 @@ describe.skip('AI Service Client', () => {
   });
 
   test.skip('image generation', async () => {
-    const client = new AIServiceEdgeClient({
+    const aiClient = new EdgeAiServiceClient({
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
@@ -138,7 +138,7 @@ describe.skip('AI Service Client', () => {
     //   },
     // ]);
 
-    const stream = await client.execStream({
+    const stream = await aiClient.execStream({
       model: DEFAULT_EDGE_MODEL,
       tools: [
         defineTool('testing', {
@@ -161,7 +161,7 @@ describe.skip('AI Service Client', () => {
 
 describe.skip('Ollama Client', () => {
   test('basic', async (ctx) => {
-    const isRunning = await OllamaClient.isRunning();
+    const isRunning = await OllamaAiServiceClient.isRunning();
     if (!isRunning) {
       ctx.skip();
     }
@@ -182,12 +182,12 @@ describe.skip('Ollama Client', () => {
   });
 
   test('tool calls', async (ctx) => {
-    const isRunning = await OllamaClient.isRunning();
+    const isRunning = await OllamaAiServiceClient.isRunning();
     if (!isRunning) {
       ctx.skip();
     }
 
-    const client = createTestOllamaClient({
+    const aiClient = createTestOllamaClient({
       tools: [
         createTool('test', {
           name: 'encrypt',
@@ -205,7 +205,7 @@ describe.skip('Ollama Client', () => {
     });
 
     const messages = await parser.parse(
-      await client.execStream({
+      await aiClient.execStream({
         prompt: create(Message, {
           role: 'user',
           content: [{ type: 'text', text: 'What is the encrypted message for "Hello, world!"' }],
@@ -217,7 +217,7 @@ describe.skip('Ollama Client', () => {
   });
 
   test('text-to-image', async (ctx) => {
-    const isRunning = await OllamaClient.isRunning();
+    const isRunning = await OllamaAiServiceClient.isRunning();
     if (!isRunning) {
       ctx.skip();
     }

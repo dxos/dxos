@@ -6,7 +6,7 @@ import React, { useEffect, useState, type CSSProperties, type PropsWithChildren 
 
 import { Icon, IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { Waveform } from '@dxos/react-ui-sfx';
-import { hoverableHidden, mx } from '@dxos/react-ui-theme';
+import { groupHoverControlItemWithTransition, mx } from '@dxos/react-ui-theme';
 
 import { THREAD_PLUGIN } from '../../meta';
 
@@ -89,7 +89,7 @@ export const ResponsiveGridItem = <T extends object = any>({
       {onClick && (
         <div className='z-10 absolute top-1 right-1 flex'>
           <IconButton
-            classNames={mx('p-1 min-bs-1 rounded', hoverableHidden)}
+            classNames={mx('p-1 min-bs-1 rounded', groupHoverControlItemWithTransition)}
             iconOnly
             icon={pinned ? 'ph--x--regular' : 'ph--arrows-out--regular'}
             size={pinned ? 5 : 4}

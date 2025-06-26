@@ -165,13 +165,14 @@ export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationVal
  *
  * For non-stored schema returns `dxn:type:`.
  * For stored schema returns `dxn:echo:`.
+ * @deprecated Use `Type.getDXN`.
  */
 export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
-  assertArgument(Schema.isSchema(schema), 'schema must be a schema');
+  assertArgument(Schema.isSchema(schema), 'invalid schema');
 
-  const echoId = getTypeIdentifierAnnotation(schema);
-  if (echoId) {
-    return DXN.parse(echoId);
+  const id = getTypeIdentifierAnnotation(schema);
+  if (id) {
+    return DXN.parse(id);
   }
 
   // TODO(dmaretskyi): Add support for dynamic schema.

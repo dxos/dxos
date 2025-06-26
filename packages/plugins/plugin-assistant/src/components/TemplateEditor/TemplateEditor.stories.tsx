@@ -8,7 +8,7 @@ import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { createSystemPrompt } from '@dxos/artifact';
-import { live } from '@dxos/live-object';
+import { Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -38,7 +38,7 @@ const DefaultStory = ({ text }: TemplateEditorProps & { text: string }) => {
   const client = useClient();
   const [template] = useState(() => {
     const space = client.spaces.default;
-    return space.db.add(live(TemplateType, { source: text, kind: { include: 'manual' } }));
+    return space.db.add(Obj.make(TemplateType, { source: text, kind: { include: 'manual' } }));
   });
 
   return (

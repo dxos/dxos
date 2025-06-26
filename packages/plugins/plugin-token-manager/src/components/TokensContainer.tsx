@@ -6,9 +6,9 @@ import { Schema } from 'effect';
 import React, { useCallback, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { live, Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
 import { ControlItem, controlItemClasses, ControlPage, ControlSection, Form } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -43,7 +43,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
       const result = await dispatch(
         createIntent(SpaceAction.AddObject, { object: token, target: space, hidden: true }),
       );
-      if (isInstanceOf(DataType.AccessToken, result.data?.object)) {
+      if (Obj.instanceOf(DataType.AccessToken, result.data?.object)) {
         void dispatch(createIntent(TokenManagerAction.AccessTokenCreated, { accessToken: result.data?.object }));
       }
     },
@@ -52,7 +52,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
 
   const handleAdd = useCallback(
     async (form: TokenForm) => {
-      const token = live(DataType.AccessToken, form);
+      const token = Obj.make(DataType.AccessToken, form);
       await handleAddAccessToken(token);
       setAdding(false);
     },
@@ -71,7 +71,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
           {adding ? (
             <ControlItem title={t('new integration label')}>
               <Form
-                classNames='p-0'
+                outerSpacing={false}
                 schema={FormSchema}
                 values={initialValues}
                 onCancel={handleCancel}

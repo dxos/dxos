@@ -40,19 +40,16 @@ export const VersionNumber = () => {
           role='message'
           classNames='z-[12] bg-warning-500 max-is-[min(calc(100vw-16px),40ch)]'
         >
-          <Message.Root valence='warning' className='rounded-be-none p-5'>
-            <Message.Title>
-              <Icon icon='ph--warning--duotone' size={6} classNames='inline mie-2' />
-              <span>{t('warning title')}</span>
-            </Message.Title>
-            <Message.Body>
+          <Message.Root valence='warning' classNames='rounded-be-none p-5'>
+            <Message.Title>{t('warning title')}</Message.Title>
+            <Message.Content>
               {t('technology preview message')}
               <br />
               <Link href={previewUrl} target='_blank' rel='noreferrer' variant='neutral'>
                 {t('learn more label')}
                 <Icon icon='ph--arrow-square-out--bold' classNames='inline mis-1' />
               </Link>
-            </Message.Body>
+            </Message.Content>
           </Message.Root>
           <div role='none' className='plb-4 pli-5 space-b-2 text-baseText'>
             {timestamp && (

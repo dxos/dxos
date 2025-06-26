@@ -43,7 +43,7 @@ const Panel: FC<{ node: TestNode; className?: string }> = ({ node, className }) 
   const Icon = icons[hash(node.label ?? '') % icons.length];
 
   return (
-    <div className={mx('flex overflow-hidden w-[300px] h-[370px] p-2 px-3 rounded-lg border-2', className)}>
+    <div className={mx('flex overflow-hidden w-[300px] h-[370px] p-2 px-3 rounded-md border-2', className)}>
       <div className='flex flex-1 flex-col w-full text-sm'>
         <div className='flex w-full justify-center text-lg'>{node.label}</div>
         <div className='flex justify-center py-1'>
@@ -116,12 +116,12 @@ const Test = () => {
   const slots = dark
     ? {
         grid: {
-          className: '[&>*]:stroke-slate-700 [&>*]:stroke-[1px] [&>*]:opacity-40',
+          className: '*:stroke-slate-700 *:stroke-[1px] *:opacity-40',
         },
         plexus: {
           thorax: {
             // TODO(burdon): Reconcile classes vs. slots/className.
-            className: '[&>*]:stroke-slate-500',
+            className: '*:stroke-slate-500',
           },
           renderer: {
             labels: {
@@ -165,7 +165,7 @@ const Test = () => {
         <SVG.Root>
           {/* <SVG classNames={slots?.root}> */}
           <SVG.Markers arrowSize={6} />
-          <SVG.Grid /*className={slots?.grid?.className} */ />
+          <SVG.Grid /* className={slots?.grid?.className} */ />
           <SVG.Zoom extent={[1, 4]}>
             <g className={mx('visible', spinning && 'invisible')}>
               <line className='stroke-slate-700 stroke-[3px]' x1={0} y1={0} x2={lineLength} y2={0} />

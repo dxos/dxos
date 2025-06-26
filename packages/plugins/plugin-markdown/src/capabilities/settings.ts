@@ -5,7 +5,7 @@
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
-import { MARKDOWN_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type MarkdownSettingsProps, MarkdownSettingsSchema } from '../types';
 
 export default () => {
@@ -18,8 +18,8 @@ export default () => {
   });
 
   return contributes(Capabilities.Settings, {
+    prefix: meta.id,
     schema: MarkdownSettingsSchema,
-    prefix: MARKDOWN_PLUGIN,
     value: settings,
   });
 };

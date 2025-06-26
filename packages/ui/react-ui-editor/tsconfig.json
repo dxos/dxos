@@ -45,6 +45,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -66,6 +69,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../lit-ui"
     },
     {
@@ -79,6 +85,9 @@
     },
     {
       "path": "../react-ui-menu"
+    },
+    {
+      "path": "../react-ui-stack"
     },
     {
       "path": "../react-ui-syntax-highlighter"

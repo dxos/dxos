@@ -112,11 +112,6 @@ export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): 
 };
 
 /**
- * Returns a typename of a schema.
- */
-export const getTypenameOrThrow = (schema: Schema.Schema.AnyNoContext): string => requireTypeReference(schema).objectId;
-
-/**
  * Returns a reference that will be used to point to a schema.
  * @deprecated Use {@link getSchemaDXN} instead.
  */

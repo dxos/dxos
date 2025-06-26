@@ -35,11 +35,6 @@ export class DxRefTag extends LitElement {
   @property({ type: String })
   rootclassname: string | undefined = undefined;
 
-  constructor () {
-    super();
-    this.addEventListener('click', this.handleActivate);
-  }
-
   override connectedCallback (): void {
     super.connectedCallback();
     this.tabIndex = 0;
@@ -48,6 +43,12 @@ export class DxRefTag extends LitElement {
       this.classList.add(this.rootclassname);
     }
     this.setAttribute('role', 'button');
+
+    if (this.getAttribute('data-auto-trigger') === 'true') {
+      this.handleActivate({ type: 'auto-trigger' });
+    } else {
+      this.addEventListener('click', this.handleActivate);
+    }
   }
 
   private handleActivate(event: { type: string }): void {

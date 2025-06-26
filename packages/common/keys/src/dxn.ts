@@ -44,6 +44,8 @@ export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubs
  */
 export class DXN {
   // TODO(dmaretskyi): Should this be a transformation into the DXN type?
+
+  // TODO(dmaretskyi): Should this be a transformation into the DXN type?
   static Schema = Schema.NonEmptyString.pipe(
     Schema.pattern(/^dxn:([^:]+):(?:[^:]+:?)+[^:]$/),
     // TODO(dmaretskyi): To set the format we need to move the annotation IDs out of the echo-schema package.
@@ -54,6 +56,12 @@ export class DXN {
       examples: ['dxn:type:example.com/type/MyType', 'dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6'],
     }),
   );
+
+;
+
+  static hash(dxn: DXN): string {
+    return dxn.toString();
+  }
 
   /**
    * Kind constants.
@@ -79,15 +87,19 @@ export class DXN {
      * dxn:queue:trace:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
      */
     QUEUE: 'queue',
-  });
+  })
 
   get kind() {
     return this.#kind;
-  }
+  };
+
+;
 
   static equals(a: DXN, b: DXN): boolean {
     return a.kind === b.kind && a.parts.length === b.parts.length && a.parts.every((part, i) => part === b.parts[i]);
   }
+
+  // TODO(burdon): Rename isValid.
 
   // TODO(burdon): Rename isValid.
   static isDXNString(dxn: string): boolean {
@@ -131,6 +143,8 @@ export class DXN {
    * @example `dxn:type:example.com/type/Contact:0.1.0`
    */
   // TODO(dmaretskyi): Consider using @ as the version separator.
+
+  // TODO(dmaretskyi): Consider using @ as the version separator.
   static fromTypenameAndVersion(typename: string, version: string): DXN {
     return new DXN(DXN.kind.TYPE, [typename, version]);
   }
@@ -151,7 +165,11 @@ export class DXN {
   }
 
   #kind: string;
+
+;
   #parts: string[];
+
+;
 
   constructor(kind: string, parts: string[]) {
     invariant(parts.length > 0);
@@ -178,6 +196,8 @@ export class DXN {
   get parts() {
     return this.#parts;
   }
+
+  // TODO(burdon): Should getters fail?
 
   // TODO(burdon): Should getters fail?
   get typename() {

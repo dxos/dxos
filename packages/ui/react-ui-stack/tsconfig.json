@@ -48,9 +48,6 @@
       "path": "../react-ui-dnd"
     },
     {
-      "path": "../react-ui-editor"
-    },
-    {
       "path": "../react-ui-theme"
     }
   ]

@@ -5,18 +5,19 @@
 import { Schema } from 'effect';
 
 import {
-  allOf,
   Capabilities,
+  Events,
+  allOf,
   contributes,
   createIntent,
   defineModule,
   definePlugin,
-  Events,
   oneOf,
 } from '@dxos/app-framework';
+import { Ref, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
-import { RefArray } from '@dxos/react-client/echo';
+import { DataType } from '@dxos/schema';
 import { osTranslations } from '@dxos/shell/react';
 
 import {
@@ -36,7 +37,7 @@ import {
 import { SpaceEvents } from './events';
 import { meta } from './meta';
 import translations from './translations';
-import { CollectionAction, CollectionType, defineObjectForm } from './types';
+import { CollectionAction, defineObjectForm } from './types';
 
 export type SpacePluginOptions = {
   /**
@@ -91,12 +92,11 @@ export const SpacePlugin = ({
       activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
-          id: CollectionType.typename,
+          id: Type.getTypename(DataType.Collection),
           metadata: {
             icon: 'ph--cards-three--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (collection: CollectionType) =>
-              await RefArray.loadAll([...collection.objects, ...Object.values(collection.views)]),
+            loadReferences: async (collection: DataType.Collection) => await Ref.Array.loadAll(collection.objects),
           },
         }),
     }),
@@ -107,7 +107,7 @@ export const SpacePlugin = ({
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: CollectionType,
+            objectSchema: DataType.Collection,
             formSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
             getIntent: (props) => createIntent(CollectionAction.Create, props),
           }),

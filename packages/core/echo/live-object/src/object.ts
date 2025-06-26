@@ -13,6 +13,7 @@ import {
   Expando,
   type ObjectMeta,
   ObjectMetaSchema,
+  EntityKindId,
 } from '@dxos/echo-schema';
 import { MetaId } from '@dxos/echo-schema';
 
@@ -37,6 +38,7 @@ export const live: {
   obj?: ExcludeId<T>,
   meta?: ObjectMeta,
 ): Live<T> => {
+  // TODO(dmaretskyi): Remove Expando special case.
   if (obj && (objOrSchema as any) !== Expando) {
     return createReactiveObject<T>({ ...obj } as T, meta, objOrSchema as Schema.Schema<T, any>);
   } else if (obj && (objOrSchema as any) === Expando) {
@@ -57,9 +59,13 @@ const createReactiveObject = <T extends BaseObject>(
   }
 
   if (schema) {
-    const shouldGenerateId = options?.expando || getTypeAnnotation(schema);
+    const annotation = getTypeAnnotation(schema);
+    const shouldGenerateId = options?.expando || !!annotation;
     if (shouldGenerateId) {
       setIdOnTarget(obj);
+    }
+    if (annotation) {
+      defineHiddenProperty(obj, EntityKindId, annotation.kind);
     }
     initMeta(obj, meta);
     prepareTypedTarget(obj, schema);

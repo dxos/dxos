@@ -6,14 +6,14 @@ import { type Schema } from 'effect';
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos/app-framework';
-import { getTypenameOrThrow, toJsonSchema } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { type CollectionType } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
 import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
 import { type KanbanType } from '@dxos/react-ui-kanban';
+import { type DataType } from '@dxos/schema';
 
 import { KanbanContainer, KanbanViewEditor } from '../components';
 import { KANBAN_PLUGIN } from '../meta';
@@ -38,7 +38,7 @@ export default () =>
       role: 'form-input',
       filter: (
         data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection | undefined } => {
         if (data.prop !== 'typename') {
           return false;
         }
@@ -61,12 +61,12 @@ export default () =>
         );
 
         const fixed = client.graph.schemaRegistry.schemas.filter((schema) =>
-          whitelistedTypenames.has(getTypenameOrThrow(schema)),
+          whitelistedTypenames.has(Type.getTypename(schema)),
         );
         const dynamic = space?.db.schemaRegistry.query().runSync();
         const typenames = Array.from(
           new Set<string>([
-            ...fixed.map((schema) => getTypenameOrThrow(schema)),
+            ...fixed.map((schema) => Type.getTypename(schema)),
             ...dynamic.map((schema) => schema.typename),
           ]),
         ).sort();
@@ -79,7 +79,7 @@ export default () =>
       role: 'form-input',
       filter: (
         data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection | undefined } => {
         const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, PivotColumnAnnotationId);
         return !!annotation;
       },
@@ -92,12 +92,12 @@ export default () =>
         const { typename } = useFormValues();
         // TODO(wittjosiah): Unify this schema lookup.
         const schemaWhitelists = useCapabilities(ClientCapabilities.SchemaWhiteList);
-        const staticSchema = schemaWhitelists.flat().find((schema) => getTypenameOrThrow(schema) === typename);
+        const staticSchema = schemaWhitelists.flat().find((schema) => Type.getTypename(schema) === typename);
         const [selectedSchema] = space?.db.schemaRegistry.query({ typename }).runSync();
 
         const singleSelectColumns = useMemo(() => {
           const properties = staticSchema
-            ? toJsonSchema(staticSchema).properties
+            ? Type.toJsonSchema(staticSchema).properties
             : selectedSchema?.jsonSchema?.properties;
           if (!properties) {
             return [];

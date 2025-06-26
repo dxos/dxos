@@ -18,6 +18,7 @@ import { LabelAnnotationId } from '../ast';
 
 /**
  * Returns a DXN for an object or schema.
+ * @deprecated Use `Obj.getDXN`.
  */
 export const getObjectDXN = (object: any): DXN | undefined => {
   invariant(!Schema.isSchema(object), 'schema not allowed in this function');
@@ -39,11 +40,9 @@ export const getObjectDXN = (object: any): DXN | undefined => {
 // TODO(burdon): Reconcile with `getTypename`.
 // TODO(dmaretskyi): For echo objects, this always returns the root schema.
 export const getSchema = (obj: unknown | undefined): Schema.Schema.AnyNoContext | undefined => {
-  if (!obj) {
-    return undefined;
+  if (obj) {
+    return (obj as any)[SchemaId];
   }
-
-  return (obj as any)[SchemaId];
 };
 
 /**
@@ -59,6 +58,7 @@ export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext) => {
 };
 
 /**
+ * @deprecated Use {@link Obj.getLabel} instead.
  * Returns the label for a given object based on {@link LabelAnnotationId}.
  */
 export const getLabelForObject = (obj: unknown | undefined): string | undefined => {
