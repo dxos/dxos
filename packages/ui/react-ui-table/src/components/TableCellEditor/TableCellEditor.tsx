@@ -148,7 +148,6 @@ export const TableCellEditor = ({
       }
       if (suppressNextBlur.current) {
         suppressNextBlur.current = false;
-        return;
       }
 
       // Don't save on blur - let handleClose handle validation and saving
