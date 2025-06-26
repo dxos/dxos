@@ -1,9 +1,9 @@
 import { Effect, Schema } from 'effect';
 
 import { DEFAULT_EDGE_MODEL, type GenerationStreamEvent, Message, Tool } from '@dxos/ai';
-import { Type } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { ATTR_TYPE, ObjectId } from '@dxos/echo-schema';
-import { AiService } from '@dxos/functions';
+import { AiService, QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { EventLogger } from '../../services';
@@ -14,6 +14,8 @@ import { Stream } from 'effect';
 
 import { type AiServiceClient, type GenerateRequest, MixedStreamParser } from '@dxos/ai';
 import { makePushIterable } from '@dxos/async';
+import { Queue } from '@dxos/echo-db';
+import { assertArgument } from '@dxos/invariant';
 
 // TODO(dmaretskyi): Use `Schema.declare` to define the schema.
 const GptStreamEventSchema = Schema.Any as Schema.Schema<GenerationStreamEvent>;
@@ -26,11 +28,37 @@ export const GptMessage = Schema.Struct({
 export type GptMessage = Schema.Schema.Type<typeof GptMessage>;
 
 export const GptInput = Schema.Struct({
+  /**
+   * System instruction.
+   */
   systemPrompt: Schema.optional(Schema.String),
+
+  /**
+   * User prompt.
+   */
   prompt: Schema.String,
+
+  /**
+   * Model to use.
+   */
   model: Schema.optional(Schema.String),
-  tools: Schema.optional(Schema.Array(Tool)),
+
+  /**
+   * Conversation queue.
+   * If specified, node will read the history, and write the new messages to the queue.
+   */
+  conversation: Schema.optional(Type.Ref(Queue)),
+
+  /**
+   * History messages.
+   * Cannot be used together with `conversation`.
+   */
   history: Schema.optional(Schema.Array(Message)),
+
+  /**
+   * Tools to use.
+   */
+  tools: Schema.optional(Schema.Array(Tool)),
 });
 
 export type GptInput = Schema.Schema.Type<typeof GptInput>;
@@ -51,11 +79,17 @@ export const gptNode = defineComputeNode({
   output: GptOutput,
   exec: (input) =>
     Effect.gen(function* () {
-      const { systemPrompt, prompt, history = [], tools = [] } = yield* ValueBag.unwrap(input);
+      const { systemPrompt, prompt, history, conversation, tools = [] } = yield* ValueBag.unwrap(input);
       const { client: aiClient } = yield* AiService;
+      const { queues } = yield* QueueService;
+      assertArgument(history === undefined || conversation === undefined, 'Cannot use both history and conversation');
+
+      const historyMessages = conversation
+        ? yield* Effect.promise(() => queues.get<Message>(conversation.dxn).queryObjects())
+        : history ?? [];
 
       const messages: Message[] = [
-        ...history,
+        ...historyMessages,
         {
           id: ObjectId.random(),
           role: 'user',
@@ -91,6 +125,11 @@ export const gptNode = defineComputeNode({
       const outputMessages = yield* resultStream.pipe(
         Stream.runDrain,
         Effect.map(() => generationStream.result),
+        Effect.tap((messages) => {
+          if (conversation) {
+            return Effect.promise(() => queues.get<Message>(conversation.dxn).append(messages));
+          }
+        }),
         Effect.cached, // Cache the result to avoid re-draining the stream.
       );
 
