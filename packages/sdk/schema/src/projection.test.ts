@@ -24,7 +24,6 @@ import {
 } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
 import { Organization } from './common/organization';
 import { ViewProjection } from './projection';
@@ -970,7 +969,6 @@ describe('ViewProjection', () => {
   });
 
   test('Email validation persists after schema registration round-trip', async ({ expect }) => {
-
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
