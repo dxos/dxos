@@ -27,8 +27,8 @@ import {
 import { tagPickerExtension, createLinks } from '@dxos/react-ui-tag-picker';
 import { type FieldProjection } from '@dxos/schema';
 
+import { CellValidationMessage } from './CellValidationMessage';
 import { FormCellEditor } from './FormCellEditor';
-import { ValidationMessage } from './ValidationMessage';
 import { completion } from './extension';
 import { type TableModel, type ModalController } from '../../model';
 
@@ -341,7 +341,7 @@ export const TableCellEditor = ({
 
   return (
     <>
-      <ValidationMessage validationError={_validationError} __gridScope={__gridScope} />
+      <CellValidationMessage validationError={_validationError} __gridScope={__gridScope} />
       <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} />
     </>
   );

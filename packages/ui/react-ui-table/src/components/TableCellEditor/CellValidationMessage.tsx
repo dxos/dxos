@@ -6,10 +6,14 @@ import React from 'react';
 
 import { useGridContext, type GridScopedProps } from '@dxos/react-ui-grid';
 
-export const ValidationMessage = ({
+export type CellValidationMessageProps = {
+  validationError: string | null;
+};
+
+export const CellValidationMessage = ({
   validationError,
   __gridScope,
-}: GridScopedProps<{ validationError: string | null }>) => {
+}: GridScopedProps<CellValidationMessageProps>) => {
   const { editing, editBox: box } = useGridContext('GridSheetCellEditor', __gridScope);
 
   if (!editing || !validationError) {
