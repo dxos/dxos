@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { Fragment, useCallback } from 'react';
 
 import { Icon, Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import { mx, textBlockWidth, toolbarLayout } from '@dxos/react-ui-theme';
 
 import { actionLabel, ActionLabel } from './ActionLabel';
 import { DropdownMenu } from './DropdownMenu';
@@ -38,7 +39,7 @@ export type ToolbarMenuActionGroupProperties = (
 ) &
   (MenuSingleSelectActionGroup | MenuMultipleSelectActionGroup);
 
-export type ToolbarMenuProps = ToolbarRootProps;
+export type ToolbarMenuProps = ToolbarRootProps & { textBlockWidth?: boolean };
 
 export type ToolbarMenuActionGroupProps = {
   group: MenuItemGroup<ToolbarMenuActionGroupProperties>;
@@ -152,31 +153,41 @@ const ToggleGroupToolbarItem = ({
   );
 };
 
-export const ToolbarMenu = ({ __menuScope, classNames, ...props }: MenuScopedProps<ToolbarMenuProps>) => {
+export const ToolbarMenu = ({
+  __menuScope,
+  classNames,
+  textBlockWidth: wrapContents,
+  ...props
+}: MenuScopedProps<ToolbarMenuProps>) => {
   const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
   const { attendableId } = useMenu('ToolbarMenu', __menuScope);
   const { hasAttention } = useAttention(attendableId);
+  const InnerRoot = wrapContents ? 'div' : Fragment;
+  const innerRootProps = wrapContents ? { role: 'none', className: mx(textBlockWidth, toolbarLayout) } : {};
   return (
     <NaturalToolbar.Root
       {...props}
-      classNames={['p-1', attendableId && !hasAttention && '[&>*]:opacity-20 !bg-transparent', classNames]}
+      layoutManaged={wrapContents}
+      classNames={[attendableId && !hasAttention && '*:opacity-20 !bg-transparent', classNames]}
     >
-      {items?.map((item: MenuItem, i: number) =>
-        isSeparator(item) ? (
-          <NaturalToolbar.Separator key={i} variant={item.properties.variant} />
-        ) : isMenuGroup(item) ? (
-          item.properties.variant === 'dropdownMenu' ? (
-            // TODO(thure): Figure out type narrowing that doesn’t require so much use of `as`.
-            <DropdownMenuToolbarItem key={item.id} group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>} />
+      <InnerRoot {...innerRootProps}>
+        {items?.map((item: MenuItem, i: number) =>
+          isSeparator(item) ? (
+            <NaturalToolbar.Separator key={i} variant={item.properties.variant} />
+          ) : isMenuGroup(item) ? (
+            item.properties.variant === 'dropdownMenu' ? (
+              // TODO(thure): Figure out type narrowing that doesn’t require so much use of `as`.
+              <DropdownMenuToolbarItem key={item.id} group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>} />
+            ) : (
+              // TODO(thure): Figure out type narrowing that doesn’t require so much use of `as`.
+              <ToggleGroupToolbarItem key={item.id} group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>} />
+            )
           ) : (
             // TODO(thure): Figure out type narrowing that doesn’t require so much use of `as`.
-            <ToggleGroupToolbarItem key={item.id} group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>} />
-          )
-        ) : (
-          // TODO(thure): Figure out type narrowing that doesn’t require so much use of `as`.
-          <ActionToolbarItem key={item.id} action={item as MenuAction} />
-        ),
-      )}
+            <ActionToolbarItem key={item.id} action={item as MenuAction} />
+          ),
+        )}
+      </InnerRoot>
     </NaturalToolbar.Root>
   );
 };

@@ -16,7 +16,7 @@ import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
-import { Form } from '../Form';
+import { Form, type FormProps } from '../Form';
 
 const grid = 'grid grid-cols-[32px_1fr_32px_32px] min-bs-[2.5rem]';
 
@@ -31,15 +31,17 @@ const ViewMetaSchema = Schema.Struct({
 
 type ViewMetaType = Schema.Schema.Type<typeof ViewMetaSchema>;
 
-export type ViewEditorProps = ThemedClassName<{
-  schema: Schema.Schema.AnyNoContext;
-  view: ViewType;
-  registry?: SchemaRegistry;
-  readonly?: boolean;
-  showHeading?: boolean;
-  onTypenameChanged?: (typename: string) => void;
-  onDelete?: (fieldId: string) => void;
-}>;
+export type ViewEditorProps = ThemedClassName<
+  {
+    schema: Schema.Schema.AnyNoContext;
+    view: ViewType;
+    registry?: SchemaRegistry;
+    readonly?: boolean;
+    showHeading?: boolean;
+    onTypenameChanged?: (typename: string) => void;
+    onDelete?: (fieldId: string) => void;
+  } & Pick<FormProps<any>, 'outerSpacing'>
+>;
 
 /**
  * Schema-based object form.
@@ -53,6 +55,7 @@ export const ViewEditor = ({
   showHeading = false,
   onTypenameChanged,
   onDelete,
+  outerSpacing = true,
 }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
   const projection = useMemo(() => {
@@ -152,9 +155,9 @@ export const ViewEditor = ({
   );
 
   return (
-    <div role='none' className={mx('overflow-y-auto', classNames)}>
+    <div role='none' className={mx(classNames)}>
       {readonly && (
-        <div role='none' className={mx('is-full plb-cardSpacingBlock pli-cardSpacingInline')}>
+        <div role='none' className={mx('is-full', outerSpacing && 'plb-cardSpacingBlock pli-cardSpacingInline')}>
           <Callout.Root valence='info'>
             <Callout.Title>{t('system schema description')}</Callout.Title>
           </Callout.Root>
@@ -169,9 +172,10 @@ export const ViewEditor = ({
         values={viewValues}
         readonly={readonly}
         onSave={handleUpdate}
+        outerSpacing={outerSpacing}
       />
 
-      <div role='none' className={mx('min-bs-0 overflow-y-auto', cardSpacing)}>
+      <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>
         <label className={mx(inputTextLabel)}>{t('fields label')}</label>
 
         <List.Root<FieldType>
@@ -265,7 +269,7 @@ export const ViewEditor = ({
       )}
 
       {!readonly && !field && (
-        <div role='none' className={cardSpacing}>
+        <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>
           <IconButton
             icon='ph--plus--regular'
             label={t('button add property')}

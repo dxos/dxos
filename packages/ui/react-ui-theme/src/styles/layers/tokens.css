@@ -8,7 +8,7 @@
     /* Lengths / sizes */
     --rail-content: 3rem;
     --rail-size: calc(var(--rail-content) + 1px);
-    --rail-action: calc(var(--rail-content) - 0.5rem);
+    --rail-action: calc(var(--rail-content) - 0.5rem + 1px);
     --rail-item: calc(var(--rail-content) - 1rem);
     --topbar-size: var(--rail-size);
     --statusbar-size: theme(spacing.8);
