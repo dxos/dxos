@@ -974,11 +974,11 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    // Step 1: Verify Format.Email has validation
+    // Verify Format.Email has validation
     expect(() => Schema.validateSync(Format.Email)('valid@example.com')).not.toThrow();
     expect(() => Schema.validateSync(Format.Email)('invalid-email')).toThrow(/Email/);
 
-    // Step 2: Create and register schema using Format.Email
+    // Create and register schema using Format.Email
     const schema = Schema.Struct({
       email: Format.Email,
     }).annotations({
@@ -989,32 +989,24 @@ describe('ViewProjection', () => {
       },
     });
 
-    // Check with the primary schema.
-    // This should pass (valid email)
+    // Check with the primary schema
     expect(() => Schema.validateSync(schema)({ email: 'valid@example.com' })).not.toThrow();
-
-    // 🐛 BUG: This should fail but passes - validation is lost!
     expect(() => Schema.validateSync(schema)({ email: 'invalid-email' })).toThrow();
 
     const [registeredSchema] = await registry.register([schema]);
 
-    // Step 3: Verify JSON schema preserves the validation constraint
+    // Verify JSON schema preserves the validation constraint
     const emailJsonSchema = registeredSchema.jsonSchema.properties?.email;
     expect(emailJsonSchema).toMatchObject({
       type: 'string',
       format: 'email',
-      pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$', // ✅ Pattern is preserved
+      pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
     });
 
-    // Step 4: BUG - Reconstructed Effect schema should validate but doesn't
+    // Verify reconstructed Effect schema maintains validation
     const reconstructedSchema = registeredSchema.snapshot;
 
-    log.info('reconstructedSchema', { ast: reconstructedSchema.ast });
-
-    // This should pass (valid email)
     expect(() => Schema.validateSync(reconstructedSchema)({ email: 'valid@example.com' })).not.toThrow();
-
-    // 🐛 BUG: This should fail but passes - validation is lost!
     expect(() => Schema.validateSync(reconstructedSchema)({ email: 'invalid-email' })).toThrow();
   });
 });
