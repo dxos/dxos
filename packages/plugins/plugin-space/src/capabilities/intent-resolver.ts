@@ -304,7 +304,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.OpenCreateObject,
-      resolve: ({ target, navigable = true }) => {
+      resolve: ({ target, typename, navigable = true }) => {
         const state = context.getCapability(SpaceCapabilities.State);
 
         return {
@@ -316,8 +316,13 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                 blockAlign: 'start',
                 props: {
                   target,
+                  typename,
                   shouldNavigate: navigable
-                    ? (object: Obj.Any) => !Obj.instanceOf(DataType.Collection, object) || state.navigableCollections
+                    ? (object: Obj.Any) => {
+                        const isCollection = Obj.instanceOf(DataType.Collection, object);
+                        const isQueryCollection = Obj.instanceOf(DataType.QueryCollection, object);
+                        return (!isCollection && !isQueryCollection) || state.navigableCollections;
+                      }
                     : () => false,
                 } satisfies Partial<CreateObjectDialogProps>,
               },
@@ -561,6 +566,12 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       intent: CollectionAction.Create,
       resolve: async ({ name }) => ({
         data: { object: Obj.make(DataType.Collection, { name, objects: [] }) },
+      }),
+    }),
+    createResolver({
+      intent: CollectionAction.CreateQueryCollection,
+      resolve: async ({ name, typename }) => ({
+        data: { object: Obj.make(DataType.QueryCollection, { name, query: { typename } }) },
       }),
     }),
   ]);

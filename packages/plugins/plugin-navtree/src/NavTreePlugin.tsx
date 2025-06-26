@@ -65,7 +65,8 @@ export const NavTreePlugin = () =>
           //   That is the point at which the graph is expanded and the path should be available.
           void graph
             .waitForPath({ target: layout.active[0] }, { timeout: 30_000 })
-            .then(() => dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: layout.active[0] })));
+            .then(() => dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: layout.active[0] })))
+            .catch(() => {});
         }
 
         return [];

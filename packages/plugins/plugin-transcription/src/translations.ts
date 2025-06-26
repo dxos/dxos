@@ -3,15 +3,10 @@
 //
 
 import { TRANSCRIPTION_PLUGIN } from './meta';
-import { TranscriptType } from './types';
 
 export default [
   {
     'en-US': {
-      [TranscriptType.typename]: {
-        'typename label': 'Transcript',
-        'object name placeholder': 'New transcript',
-      },
       [TRANSCRIPTION_PLUGIN]: {
         'plugin name': 'Transcription',
         'transcript companion label': 'Transcript',

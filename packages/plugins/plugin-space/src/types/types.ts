@@ -11,7 +11,7 @@ import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
-import { DataType } from '@dxos/schema';
+import { DataType, TypenameAnnotationId } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -220,6 +220,7 @@ export namespace SpaceAction {
   export class OpenCreateObject extends Schema.TaggedClass<OpenCreateObject>()(`${SPACE_ACTION}/open-create-object`, {
     input: Schema.Struct({
       target: Schema.Union(SpaceSchema, DataType.Collection),
+      typename: Schema.optional(Schema.String),
       navigable: Schema.optional(Schema.Boolean),
     }),
     output: Schema.Void,
@@ -305,4 +306,23 @@ export namespace CollectionAction {
       object: DataType.Collection,
     }),
   }) {}
+
+  export const QueryCollectionForm = Schema.Struct({
+    name: Schema.optional(Schema.String),
+    typename: Schema.optional(
+      Schema.String.annotations({
+        [TypenameAnnotationId]: ['object-form'],
+      }),
+    ),
+  });
+
+  export class CreateQueryCollection extends Schema.TaggedClass<CreateQueryCollection>()(
+    'dxos.org/plugin/collection/action/create-query-collection',
+    {
+      input: QueryCollectionForm,
+      output: Schema.Struct({
+        object: DataType.QueryCollection,
+      }),
+    },
+  ) {}
 }
