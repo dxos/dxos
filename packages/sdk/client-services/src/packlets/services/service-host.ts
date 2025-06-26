@@ -219,10 +219,10 @@ export class ClientServicesHost {
       log.warn('running signaling without telemetry metadata.');
     }
 
-    const edgeEndpoint = config?.get('runtime.services.edge.url');
-    if (edgeEndpoint) {
-      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: edgeEndpoint });
-      this._edgeHttpClient = new EdgeHttpClient(edgeEndpoint);
+    const endpoint = config?.get('runtime.services.edge.url');
+    if (endpoint) {
+      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint });
+      this._edgeHttpClient = new EdgeHttpClient(endpoint);
     }
 
     const {
