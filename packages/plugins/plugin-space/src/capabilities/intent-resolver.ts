@@ -33,6 +33,7 @@ import {
   type CreateObjectDialogProps,
   type JoinDialogProps,
 } from '../components';
+import { SpaceEvents } from '../events';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionAction, SpaceAction } from '../types';
 import { cloneObject, COMPOSER_SPACE_LOCK, getNestedObjects } from '../util';
@@ -80,6 +81,12 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         if (Migrations.versionProperty) {
           space.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
+
+        await context.activatePromise(SpaceEvents.SpaceCreated);
+        const onSpaceCreatedCallbacks = context.getCapabilities(SpaceCapabilities.OnSpaceCreated);
+        await Promise.all(
+          onSpaceCreatedCallbacks.map((onSpaceCreated) => onSpaceCreated({ space, rootCollection: collection })),
+        );
 
         return {
           data: {

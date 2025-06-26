@@ -31,7 +31,7 @@ export const CreateSpaceDialog = () => {
       const program = Effect.gen(function* () {
         const { space } = yield* dispatch(createIntent(SpaceAction.Create, data));
         yield* dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
-        yield* dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space }));
+        yield* dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
       });
       await Effect.runPromise(program);
     },

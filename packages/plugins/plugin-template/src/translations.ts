@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
+
 import { TEMPLATE_PLUGIN } from './meta';
 import { TemplateType } from './types';
 
