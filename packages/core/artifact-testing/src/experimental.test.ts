@@ -10,6 +10,7 @@ import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import {
   AISession,
+  type BlueprintDefinition,
   BlueprintMachine,
   BlueprintParser,
   createExaTool,
@@ -17,14 +18,13 @@ import {
   createLocalSearchTool,
   researchFn,
   setConsolePrinter,
-  type BlueprintDefinition,
 } from '@dxos/assistant';
 import { ComputeGraphModel, NODE_INPUT, NODE_OUTPUT, ValueBag, type GptOutput } from '@dxos/conductor';
 import { TestRuntime } from '@dxos/conductor/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { AiService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
+import { AiService, FunctionExecutor, type ServiceContainer, TracingService } from '@dxos/functions';
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DataType, DataTypes } from '@dxos/schema';
@@ -48,10 +48,19 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
       ai: {
         location: REMOTE_AI ? 'remote-edge' : 'ollama',
       },
-      credentials: { credentials: [{ service: 'exa.ai', apiKey: EXA_API_KEY }] },
+      credentials: {
+        credentials: [
+          {
+            service: 'exa.ai',
+            apiKey: EXA_API_KEY,
+          },
+        ],
+      },
       db,
       queues,
-      logging: { enabled: true },
+      logging: {
+        enabled: true,
+      },
       tracing: {
         service: TracingService.console,
       },
@@ -96,22 +105,22 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
       ].filter(isNonNullable),
     );
 
-    const company = db.add(
+    const org = db.add(
       Obj.make(DataType.Organization, {
         name: 'Notion',
         website: 'https://www.notion.com',
       }),
     );
+
     await db.flush({ indexes: true });
 
     const machine = new BlueprintMachine(tools, blueprint);
     const { client } = serviceContainer.getService(AiService);
     setConsolePrinter(machine, true);
-    await machine.runToCompletion({ aiClient: client, input: [company] });
+    console.log(client);
 
-    log.info('researched', {
-      objects: await researchQueue.queryObjects(),
-    });
+    await machine.runToCompletion({ aiClient: client, input: [org] });
+    log.info('researched', { objects: await researchQueue.queryObjects() });
   });
 
   test('circuit', { timeout: 120_000 }, async () => {
