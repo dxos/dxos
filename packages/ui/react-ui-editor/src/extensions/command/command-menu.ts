@@ -13,7 +13,7 @@ export type CommandMenuOptions = {
   placeholder?: PlaceholderOptions;
 
   // TODO(burdon): Replace with onKey?
-  onDeactivate?: () => void;
+  onClose?: () => void;
   onArrowDown?: () => void;
   onArrowUp?: () => void;
   onEnter?: () => void;
@@ -72,9 +72,11 @@ export const commandMenu = (options: CommandMenuOptions) => {
   );
 
   const triggers = Array.isArray(options.trigger) ? options.trigger : [options.trigger];
+
   const commandKeymap = keymap.of([
     ...triggers.map((trigger) => ({
       key: trigger,
+      preventDefault: true,
       run: (view: EditorView) => {
         const selection = view.state.selection.main;
         const line = view.state.doc.lineAt(selection.head);
@@ -87,11 +89,13 @@ export const commandMenu = (options: CommandMenuOptions) => {
           selection.head === line.from ||
           (selection.head > line.from && line.text[selection.head - line.from - 1] === ' ')
         ) {
+          // Insert and select the trigger.
           view.dispatch({
             changes: { from: selection.head, insert: trigger },
-            selection: { anchor: selection.head + 1, head: selection.head + 1 },
+            selection: { anchor: selection.head, head: selection.head + 1 },
             effects: commandRangeEffect.of({ trigger, range: { from: selection.head, to: selection.head + 1 } }),
           });
+
           return true;
         }
 
@@ -160,18 +164,19 @@ export const commandMenu = (options: CommandMenuOptions) => {
       update.view.dispatch({ effects: commandRangeEffect.of(nextRange ? { trigger, range: nextRange } : null) });
     }
 
+    // TODO(burdon): Should delete if user presses escape.
     if (shouldRemove) {
-      options.onDeactivate?.();
+      options.onClose?.();
     }
   });
 
   return [
+    Prec.highest(commandKeymap),
     placeholder(
       options.placeholder ?? {
         content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
       },
     ),
-    Prec.highest(commandKeymap),
     updateListener,
     commandMenuState,
     commandMenuPlugin,

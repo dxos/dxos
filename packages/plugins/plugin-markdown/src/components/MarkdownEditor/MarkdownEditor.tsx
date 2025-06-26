@@ -3,40 +3,40 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { useMemo, useEffect, useCallback, forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useMemo, useEffect, useCallback, useImperativeHandle, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
+  CommandMenu,
+  type DNDOptions,
+  type EditorInputMode,
+  type EditorSelectionState,
+  type EditorStateStore,
+  EditorToolbar,
+  type EditorToolbarActionGraphProps,
+  type EditorViewMode,
+  type CommandMenuGroup,
+  RefPopover,
+  type UseTextEditorProps,
   addLink,
+  coreSlashCommands,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
   editorGutter,
   editorSlots,
-  EditorToolbar,
+  filterItems,
+  linkSlashCommands,
   processEditorPayload,
-  RefPopover,
   stackItemContentEditorClassNames,
-  type DNDOptions,
-  type EditorInputMode,
-  type EditorSelectionState,
-  type EditorStateStore,
-  type EditorToolbarActionGraphProps,
-  type EditorViewMode,
-  type CommandMenuGroup,
-  type UseTextEditorProps,
+  useCommandMenu,
   useEditorToolbarState,
   useFormattingState,
-  useCommandMenu,
   useTextEditor,
-  filterItems,
-  coreSlashCommands,
-  CommandMenu,
-  linkSlashCommands,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNotFalsy, isNonNullable } from '@dxos/util';
@@ -76,6 +76,7 @@ export const MarkdownEditor = ({
 }: MarkdownEditorProps) => {
   const { t } = useTranslation();
   const viewRef = useRef<EditorView>();
+
   const getGroups = useCallback(
     (trigger: string, query?: string) => {
       switch (trigger) {
@@ -94,7 +95,18 @@ export const MarkdownEditor = ({
     viewRef,
     getGroups,
     trigger: onLinkQuery ? ['/', '@'] : '/',
+    placeholder: {
+      delay: 500,
+      // content: () => {
+      //   return createElement('div', undefined, [
+      //     createElement('span', { text: 'Press' }),
+      //     createElement('span', { className: 'border border-separator rounded-sm mx-1 px-1', text: '/' }),
+      //     createElement('span', { text: 'for commands' }),
+      //   ]);
+      // },
+    },
   });
+
   const extensions = useMemo(() => [_extensions, commandMenu].filter(isNotFalsy), [_extensions, commandMenu]);
 
   return (

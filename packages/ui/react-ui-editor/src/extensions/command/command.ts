@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Extension } from '@codemirror/state';
+import { Prec, type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 
 import { isNonNullable } from '@dxos/util';
@@ -20,7 +20,7 @@ export type CommandOptions = Partial<PopupOptions & HintOptions>;
 
 export const command = (options: CommandOptions = {}): Extension => {
   return [
-    keymap.of(commandKeyBindings),
+    Prec.highest(keymap.of(commandKeyBindings)),
     commandConfig.of(options),
     commandState,
     options.onHint && hint(options),

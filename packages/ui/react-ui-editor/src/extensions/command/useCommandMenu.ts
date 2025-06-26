@@ -15,7 +15,7 @@ import { getItem, getNextItem, getPreviousItem, type CommandMenuGroup, type Comm
 export type UseCommandMenuOptions = {
   viewRef: RefObject<EditorView | undefined>;
   trigger: string | string[];
-  placeholder?: PlaceholderOptions;
+  placeholder?: Partial<PlaceholderOptions>;
   getGroups: (trigger: string, query?: string) => MaybePromise<CommandMenuGroup[]>;
 };
 
@@ -74,7 +74,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getGroups }: Use
       commandMenu({
         trigger,
         placeholder,
-        onDeactivate: () => handleOpenChange(false),
+        onClose: () => handleOpenChange(false),
         onArrowDown: () => {
           setCurrentItem((currentItem) => {
             const next = getNextItem(groupsRef.current, currentItem);

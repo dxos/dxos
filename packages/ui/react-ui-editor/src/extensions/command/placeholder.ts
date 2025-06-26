@@ -40,6 +40,8 @@ export const placeholder = ({ delay = 3_000, content }: PlaceholderOptions): Ext
                 side: 1,
               }).range(lineStart),
             ]);
+
+            update.view.update([]);
           }, delay);
         }
 
@@ -53,7 +55,9 @@ export const placeholder = ({ delay = 3_000, content }: PlaceholderOptions): Ext
       }
     },
     {
-      provide: (plugin) => [EditorView.decorations.of((view) => view.plugin(plugin)?.decorations ?? Decoration.none)],
+      provide: (plugin) => {
+        return [EditorView.decorations.of((view) => view.plugin(plugin)?.decorations ?? Decoration.none)];
+      },
     },
   );
 
