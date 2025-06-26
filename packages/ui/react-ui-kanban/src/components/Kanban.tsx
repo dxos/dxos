@@ -140,7 +140,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   </CardStack.Footer>
                 )}
 
-                <StackItem.Heading classNames={cardStackHeading}>
+                <StackItem.Heading classNames={cardStackHeading} separateOnScroll>
                   <StackItem.DragHandle asChild>
                     <CardStack.DragHandle />
                   </StackItem.DragHandle>

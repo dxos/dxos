@@ -8,7 +8,6 @@ import React, { useMemo } from 'react';
 import { type ScriptType } from '@dxos/functions';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ElevationProvider, useTranslation, type ThemedClassName } from '@dxos/react-ui';
-import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
 import { createGapSeparator, MenuProvider, rxFromSignal, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
 
 import {
@@ -50,12 +49,10 @@ export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbar
   const menu = useMenuActions(toolbarCreator);
 
   return (
-    <div role='none' className={stackItemContentToolbarClassNames(role)}>
-      <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-        <MenuProvider {...menu} attendableId={fullyQualifiedId(script)}>
-          <ToolbarMenu classNames={classNames} />
-        </MenuProvider>
-      </ElevationProvider>
-    </div>
+    <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
+      <MenuProvider {...menu} attendableId={fullyQualifiedId(script)}>
+        <ToolbarMenu classNames={classNames} />
+      </MenuProvider>
+    </ElevationProvider>
   );
 };
