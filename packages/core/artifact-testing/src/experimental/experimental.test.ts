@@ -18,7 +18,14 @@ import {
   researchFn,
   setConsolePrinter,
 } from '@dxos/assistant';
-import { ComputeGraphModel, computeGraphToGraphViz, NODE_INPUT, NODE_OUTPUT, ValueBag, type GptOutput } from '@dxos/conductor';
+import {
+  ComputeGraphModel,
+  computeGraphToGraphViz,
+  NODE_INPUT,
+  NODE_OUTPUT,
+  ValueBag,
+  type GptOutput,
+} from '@dxos/conductor';
 import { TestRuntime } from '@dxos/conductor/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
@@ -120,7 +127,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
 
     // TODO(dmaretskyi): Store in ECHO.
 
-
     const org = db.add(Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }));
     await db.flush({ indexes: true });
 
@@ -135,7 +141,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
 
   test('blueprint (compiled)', { timeout: 120_000 }, async () => {
     const graph = await compileBlueprint(BLUEPRINT);
-    log.info('graph', { graph: graph.graph });
     console.log(computeGraphToGraphViz(graph));
   });
 
@@ -182,7 +187,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     console.log(JSON.stringify(result, null, 2));
   });
 });
-
 
 const BLUEPRINT = BlueprintParser.create().parse({
   steps: [
