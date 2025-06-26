@@ -31,7 +31,7 @@ export const RangeList = ({ sheet }: RangeListProps) => {
   );
   return (
     <>
-      <h2 className='p-2 text-sm font-semibold'>{t('range list heading')}</h2>
+      <h2 className='mbs-cardSpacingBlock mbe-labelSpacingBlock text-sm font-semibold'>{t('range list heading')}</h2>
       <List.Root<Range> items={sheet.ranges} isItem={Schema.is(Range)}>
         {({ items: ranges }) =>
           ranges.map((range, i) => (
