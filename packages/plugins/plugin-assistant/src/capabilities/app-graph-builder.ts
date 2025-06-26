@@ -19,7 +19,7 @@ import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, ROOT_ID } from '@dxos/plugin-graph';
-import { rxFromQuery } from '@dxos/plugin-space';
+import { getActiveSpace, rxFromQuery } from '@dxos/plugin-space';
 import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
 import {
   type Space,
@@ -49,25 +49,9 @@ export default (context: PluginContext) =>
                 data: async () => {
                   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                   const client = context.getCapability(ClientCapabilities.Client);
-                  const layout = context.getCapability(Capabilities.Layout);
-                  const { graph } = context.getCapability(Capabilities.AppGraph);
 
-                  // TODO(burdon): Get space from workspace.
-                  // TODO(burdon): If need to create chat, then add to dispatch stack below.
-                  let chat: AIChatType | undefined;
-                  if (layout.active.length > 0) {
-                    const node = graph.getNode(layout.active[0]).pipe(Option.getOrNull);
-                    if (node) {
-                      const space = getSpace(node.data);
-                      if (space) {
-                        chat = await getOrCreateChat(dispatch, space);
-                      }
-                    }
-                  } else {
-                    const space = client.spaces.default;
-                    chat = await getOrCreateChat(dispatch, space);
-                  }
-
+                  const space = getActiveSpace(context) ?? client.spaces.default;
+                  const chat = await getOrCreateChat(dispatch, space);
                   if (!chat) {
                     return;
                   }
@@ -247,11 +231,14 @@ export default (context: PluginContext) =>
 
 // TODO(burdon): Factor out.
 const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space): Promise<AIChatType | undefined> => {
-  const { objects } = await space.db.query(Filter.type(AIChatType)).run();
+  // TODO(wittjosiah): This should be possible with a single query.
+  const { objects: allChats } = await space.db.query(Query.type(AIChatType)).run();
+  const { objects: relatedChats } = await space.db.query(Query.type(AIChatType).sourceOf(CompanionTo).source()).run();
+  const chats = allChats.filter((chat) => !relatedChats.includes(chat));
   // console.log('objects', JSON.stringify(objects, null, 2));
-  if (objects.length > 0) {
+  if (chats.length > 0) {
     // TODO(burdon): Is this the most recent?
-    return objects[objects.length - 1];
+    return chats[chats.length - 1];
   }
 
   const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { space }));
