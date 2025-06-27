@@ -2,14 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
+
 import { THREAD_PLUGIN } from './meta';
 import { ChannelType } from './types';
 
 export default [
   {
     'en-US': {
-      [ChannelType.typename]: {
+      [Type.getTypename(ChannelType)]: {
         'typename label': 'Channel',
+        'typename label_zero': 'Channels',
+        'typename label_one': 'Channel',
+        'typename label_other': 'Channels',
         'object name placeholder': 'New channel',
       },
       [THREAD_PLUGIN]: {

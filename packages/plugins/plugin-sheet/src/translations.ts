@@ -2,14 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
+
 import { SHEET_PLUGIN } from './meta';
 import { SheetType } from './types';
 
 export default [
   {
     'en-US': {
-      [SheetType.typename]: {
+      [Type.getTypename(SheetType)]: {
         'typename label': 'Sheet',
+        'typename label_zero': 'Sheets',
+        'typename label_one': 'Sheet',
+        'typename label_other': 'Sheets',
         'object name placeholder': 'New sheet',
       },
       [SHEET_PLUGIN]: {
