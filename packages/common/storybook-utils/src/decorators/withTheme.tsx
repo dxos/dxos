@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { addons } from '@storybook/preview-api';
+// import { addons } from '@storybook/preview-api';
 import { type Decorator } from '@storybook/react';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';

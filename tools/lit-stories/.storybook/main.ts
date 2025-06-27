@@ -25,8 +25,6 @@ export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConf
   },
   addons: [
     '@storybook/addon-links',
-    '@storybook/addon-essentials',
-    '@storybook/addon-interactions',
     '@storybook/addon-themes',
   ],
   docs: {
