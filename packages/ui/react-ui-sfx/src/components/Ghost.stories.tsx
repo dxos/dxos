@@ -5,7 +5,9 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
+import React from 'react';
 
+import { DXOS } from '@dxos/brand';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Ghost, type GhostProps } from './Ghost';
@@ -13,6 +15,14 @@ import { Ghost, type GhostProps } from './Ghost';
 const meta: Meta<GhostProps> = {
   title: 'ui/react-ui-sfx/Ghost',
   component: Ghost,
+  render: (props) => (
+    <>
+      <Ghost {...props} />
+      <div className='inset-0 absolute flex justify-center items-center opacity-5'>
+        <DXOS className='w-[40rem] h-[40rem]' />
+      </div>
+    </>
+  ),
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-black' })],
 };
 
@@ -26,39 +36,23 @@ export const Default: Story = {
 
 export const Variant: Story = {
   args: {
-    SIM_RESOLUTION: 128,
-    DYE_RESOLUTION: 1440,
-    CAPTURE_RESOLUTION: 512,
     DENSITY_DISSIPATION: 3.5,
     VELOCITY_DISSIPATION: 2,
     PRESSURE: 0.1,
     PRESSURE_ITERATIONS: 20,
     CURL: 2,
-    SPLAT_RADIUS: 0.1,
-    SPLAT_FORCE: 9000,
-    SHADING: true,
     COLOR_UPDATE_SPEED: 0.3,
-    BACK_COLOR: { r: 1.3, g: 0.1, b: 0.1 },
-    TRANSPARENT: false,
     COLOR_MASK: { r: 0.1, g: 0.1, b: 0.1 },
   },
 };
 
 export const Trace: Story = {
   args: {
-    SIM_RESOLUTION: 128,
-    DYE_RESOLUTION: 1440,
-    CAPTURE_RESOLUTION: 512,
     DENSITY_DISSIPATION: 1.5,
     VELOCITY_DISSIPATION: 20,
     PRESSURE: 0.1,
     PRESSURE_ITERATIONS: 20,
     CURL: 3,
-    SPLAT_RADIUS: 0.1,
-    SPLAT_FORCE: 6000,
-    SHADING: true,
     COLOR_UPDATE_SPEED: 10,
-    BACK_COLOR: { r: 1.3, g: 0.1, b: 0.1 },
-    TRANSPARENT: false,
   },
 };

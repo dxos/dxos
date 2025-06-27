@@ -1,8 +1,7 @@
 //
 // Copyright 2025 David Haz
 // Copyright 2025 DXOS.org
-// https://github.com/DavidHDev/react-bits/blob/main/LICENSE.md
-// https://reactbits.dev/animations/splash-cursor
+// Based on https://reactbits.dev/animations/splash-cursor
 //
 
 import React, { useEffect, useRef } from 'react';
@@ -22,9 +21,9 @@ export type GhostProps = {
   SPLAT_FORCE: number;
   SHADING: boolean;
   COLOR_UPDATE_SPEED: number;
+  COLOR_MASK: Color;
   BACK_COLOR: Color;
   TRANSPARENT: boolean;
-  COLOR_MASK: Color;
 };
 
 const defaultConfig: GhostProps = {
@@ -40,9 +39,9 @@ const defaultConfig: GhostProps = {
   SPLAT_FORCE: 6000,
   SHADING: true,
   COLOR_UPDATE_SPEED: 10,
-  BACK_COLOR: { r: 0.5, g: 0, b: 0 },
-  TRANSPARENT: true,
   COLOR_MASK: { r: 0.15, g: 0.15, b: 0.15 },
+  BACK_COLOR: { r: 0, g: 0, b: 0 },
+  TRANSPARENT: true,
 };
 
 export const Ghost = (props: Partial<GhostProps>) => {
@@ -485,7 +484,7 @@ const render = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): Cleanu
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(0);
 
-    return (target: FBO | null, clear = false) => {
+    return (target: FBO | null, clear = !config.TRANSPARENT) => {
       if (target == null) {
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -494,7 +493,7 @@ const render = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): Cleanu
         gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
       }
       if (clear) {
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clearColor(config.BACK_COLOR.r, config.BACK_COLOR.g, config.BACK_COLOR.b, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
       }
       gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
