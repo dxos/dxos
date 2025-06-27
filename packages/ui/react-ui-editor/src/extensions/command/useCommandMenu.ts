@@ -25,7 +25,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
   const groupsRef = useRef<CommandMenuGroup[]>([]);
   const [currentItem, setCurrentItem] = useState<string>();
   const [open, setOpen] = useState(false);
-  const [_, update] = useState({});
+  const [_, refresh] = useState({});
 
   const handleOpenChange = useCallback(
     async (open: boolean, trigger?: string) => {
@@ -69,43 +69,41 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
   }, []);
 
   const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
-  const _commandMenu = useMemo(
-    () =>
-      commandMenu({
-        trigger,
-        placeholder,
-        onClose: () => handleOpenChange(false),
-        onArrowDown: () => {
-          setCurrentItem((currentItem) => {
-            const next = getNextItem(groupsRef.current, currentItem);
-            currentRef.current = next;
-            return next.id;
-          });
-        },
-        onArrowUp: () => {
-          setCurrentItem((currentItem) => {
-            const previous = getPreviousItem(groupsRef.current, currentItem);
-            currentRef.current = previous;
-            return previous.id;
-          });
-        },
-        onEnter: () => {
-          if (currentRef.current) {
-            handleSelect(currentRef.current);
-          }
-        },
-        onTextChange: async (trigger, text) => {
-          groupsRef.current = await getMenu(trigger, text);
-          const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
-          if (firstItem) {
-            setCurrentItem(firstItem.id);
-            currentRef.current = firstItem;
-          }
-          update({});
-        },
-      }),
-    [handleOpenChange, getMenu, serializedTrigger, placeholder],
-  );
+  const _commandMenu = useMemo(() => {
+    return commandMenu({
+      trigger,
+      placeholder,
+      onClose: () => handleOpenChange(false),
+      onArrowDown: () => {
+        setCurrentItem((currentItem) => {
+          const next = getNextItem(groupsRef.current, currentItem);
+          currentRef.current = next;
+          return next.id;
+        });
+      },
+      onArrowUp: () => {
+        setCurrentItem((currentItem) => {
+          const previous = getPreviousItem(groupsRef.current, currentItem);
+          currentRef.current = previous;
+          return previous.id;
+        });
+      },
+      onEnter: () => {
+        if (currentRef.current) {
+          handleSelect(currentRef.current);
+        }
+      },
+      onTextChange: async (trigger, text) => {
+        groupsRef.current = await getMenu(trigger, text);
+        const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
+        if (firstItem) {
+          setCurrentItem(firstItem.id);
+          currentRef.current = firstItem;
+        }
+        refresh({});
+      },
+    });
+  }, [handleOpenChange, getMenu, serializedTrigger]); // NOTE: `placeholder` object would trigger re-render.
 
   return {
     commandMenu: _commandMenu,

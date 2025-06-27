@@ -8,8 +8,10 @@ import { useDropzone } from 'react-dropzone';
 
 import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
+  CommandMenu,
+  type CommandMenuGroup,
   type DNDOptions,
   type EditorInputMode,
   type EditorSelectionState,
@@ -17,20 +19,26 @@ import {
   EditorToolbar,
   type EditorToolbarActionGraphProps,
   type EditorViewMode,
-  type CommandMenuGroup,
+  RefPopover,
   type UseTextEditorProps,
   addLink,
+  createElement,
+  coreSlashCommands,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
   editorGutter,
   editorSlots,
+  filterItems,
+  linkSlashCommands,
   processEditorPayload,
   stackItemContentEditorClassNames,
   useEditorToolbarState,
   useFormattingState,
   useTextEditor,
+  useCommandMenu,
+  type UseCommandMenuOptions,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNotFalsy, isNonNullable } from '@dxos/util';
@@ -58,7 +66,6 @@ export type MarkdownEditorProps = {
 
 /**
  * Base markdown editor component.
- *
  * This component provides all the features of the markdown editor that do no depend on ECHO.
  * This allows it to be used as a common editor for markdown content on arbitrary backends (e.g. files).
  */
@@ -71,44 +78,55 @@ export const MarkdownEditor = ({
   const { t } = useTranslation();
   const viewRef = useRef<EditorView>();
 
-  // const getMenu = useCallback(
-  //   (trigger: string, query?: string) => {
-  //     switch (trigger) {
-  //       case '@':
-  //         return onLinkQuery?.(query) ?? [];
-  //       case '/':
-  //       default:
-  //         return filterItems([coreSlashCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
-  //           query ? toLocalizedString(item.label, t).toLowerCase().includes(query.toLowerCase()) : true,
-  //         );
-  //     }
-  //   },
-  //   [onLinkQuery, slashCommandGroups],
-  // );
+  const getMenu = useCallback(
+    (trigger: string, query?: string) => {
+      switch (trigger) {
+        case '@':
+          return onLinkQuery?.(query) ?? [];
+        case '/':
+        default:
+          return filterItems([coreSlashCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
+            query ? toLocalizedString(item.label, t).toLowerCase().includes(query.toLowerCase()) : true,
+          );
+      }
+    },
+    [onLinkQuery, slashCommandGroups],
+  );
 
-  // const { commandMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useCommandMenu({
-  //   viewRef,
-  //   trigger: onLinkQuery ? ['/', '@'] : '/',
-  //   placeholder: {
-  //     delay: 500,
-  //     // content: () => {
-  //     //   return createElement('div', undefined, [
-  //     //     createElement('span', { text: 'Press' }),
-  //     //     createElement('span', { className: 'border border-separator rounded-sm mx-1 px-1', text: '/' }),
-  //     //     createElement('span', { text: 'for commands' }),
-  //     //   ]);
-  //     // },
-  //   },
-  //   getMenu,
-  // });
+  const trigger = onLinkQuery ? ['/', '@'] : ['/'];
+  const options = useMemo<UseCommandMenuOptions>(
+    () => ({
+      viewRef,
+      trigger,
+      placeholder: {
+        delay: 3_000,
+        content: () => {
+          return createElement('div', undefined, [
+            createElement('span', { text: 'Press' }),
+            ...trigger.map((text) =>
+              createElement('span', {
+                className: 'border border-separator rounded-sm mx-1 px-1.5 pt-[1px] pb-[2px]',
+                text,
+              }),
+            ),
+            createElement('span', { text: 'for commands.' }),
+          ]);
+        },
+      },
+      getMenu,
+    }),
+    [trigger, getMenu],
+  );
 
-  // const extensions = useMemo(() => [_extensions, commandMenu].filter(isNotFalsy), [_extensions, commandMenu]);
+  const { commandMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useCommandMenu(options);
+
+  const extensions = useMemo(() => [_extensions, commandMenu].filter(isNotFalsy), [_extensions, commandMenu]);
 
   return (
-    // <RefPopover modal={false} {...refPopoverProps}>
-    <MarkdownEditorImpl ref={viewRef} {...props} extensions={_extensions} />
-    // <CommandMenu groups={groupsRef.current} currentItem={currentItem} onSelect={onSelect} />
-    // </RefPopover>
+    <RefPopover modal={false} {...refPopoverProps}>
+      <MarkdownEditorImpl ref={viewRef} {...props} extensions={extensions} />
+      <CommandMenu groups={groupsRef.current} currentItem={currentItem} onSelect={onSelect} />
+    </RefPopover>
   );
 };
 
@@ -118,13 +136,13 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
       id,
       role = 'article',
       initialValue,
+      customActions,
+      editorStateStore,
       extensions,
       extensionProviders,
       scrollPastEnd,
       toolbar,
-      customActions,
       viewMode,
-      editorStateStore,
       onFileUpload,
       onViewModeChange,
     },
