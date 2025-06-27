@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { DiagramType } from '@dxos/plugin-sketch/types';
 
 import { EXCALIDRAW_PLUGIN } from './meta';
@@ -9,8 +10,11 @@ import { EXCALIDRAW_PLUGIN } from './meta';
 export default [
   {
     'en-US': {
-      [DiagramType.typename]: {
+      [Type.getTypename(DiagramType)]: {
         'typename label': 'Excalidraw',
+        'typename label_zero': 'Excalidraws',
+        'typename label_one': 'Excalidraw',
+        'typename label_other': 'Excalidraws',
         'object name placeholder': 'New excalidraw',
       },
       [EXCALIDRAW_PLUGIN]: {

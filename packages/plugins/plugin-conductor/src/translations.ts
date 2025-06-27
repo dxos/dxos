@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
 import { CONDUCTOR_PLUGIN } from './meta';
@@ -9,8 +10,11 @@ import { CONDUCTOR_PLUGIN } from './meta';
 export default [
   {
     'en-US': {
-      [CanvasBoardType.typename]: {
+      [Type.getTypename(CanvasBoardType)]: {
         'typename label': 'Circuit',
+        'typename label_zero': 'Circuits',
+        'typename label_one': 'Circuit',
+        'typename label_other': 'Circuits',
         'object name placeholder': 'New circuit',
       },
       [CONDUCTOR_PLUGIN]: {

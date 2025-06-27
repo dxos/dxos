@@ -6,19 +6,19 @@ import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 import { SpaceSchema } from '@dxos/react-client/echo';
+import { TypenameAnnotationId } from '@dxos/schema';
 
 import { MapType } from './map';
 import { MAP_PLUGIN } from '../meta';
 
-// TODO(burdon): Move to FormatEnum or SDK.
-export const TypenameAnnotationId = Symbol.for('@dxos/plugin-map/annotation/Typename');
+// TODO(wittjosiah): Factor out?
 export const LocationAnnotationId = Symbol.for('@dxos/plugin-map/annotation/Location');
 
 export const CreateMapSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   initialSchema: Schema.optional(
     Schema.String.annotations({
-      [TypenameAnnotationId]: true,
+      [TypenameAnnotationId]: ['dynamic'],
       title: 'Schema',
     }),
   ),

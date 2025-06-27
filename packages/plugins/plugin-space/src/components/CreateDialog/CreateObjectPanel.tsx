@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { Type } from '@dxos/echo';
 import { getTypeAnnotation, type TypeAnnotation } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { type SpaceId, type Space } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -28,26 +27,24 @@ export type CreateObjectPanelProps = {
   name?: string;
   defaultSpaceId?: SpaceId;
   resolve?: (typename: string) => Record<string, any>;
-  onCreateObject?: (params: {
-    form: ObjectForm;
-    target: Space | DataType.Collection;
-    data?: Record<string, any>;
-  }) => MaybePromise<void>;
+  onTargetChange?: (target: Space) => void;
+  onTypenameChange?: (typename: string) => void;
+  onCreateObject?: (params: { form: ObjectForm; data?: Record<string, any> }) => MaybePromise<void>;
 };
 
 export const CreateObjectPanel = ({
   forms,
   spaces,
-  typename: initialTypename,
-  target: initialTarget,
+  typename,
+  target,
   name: initialName,
   defaultSpaceId,
   resolve,
+  onTargetChange,
+  onTypenameChange,
   onCreateObject,
 }: CreateObjectPanelProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
-  const [typename, setTypename] = useState<string | undefined>(initialTypename);
-  const [target, setTarget] = useState<Space | DataType.Collection | undefined>(initialTarget);
   const form = forms.find((form) => Type.getTypename(form.objectSchema) === typename);
   const options: TypeAnnotation[] = forms
     .map((form) => getTypeAnnotation(form.objectSchema))
@@ -60,25 +57,24 @@ export const CreateObjectPanel = ({
 
   const handleCreateObject = useCallback(
     async (props: Record<string, any>) => {
-      if (!form || !target) {
+      if (!form) {
         return;
       }
-      await onCreateObject?.({ form, target, data: props });
+      await onCreateObject?.({ form, data: props });
     },
-    [onCreateObject, form, target],
+    [onCreateObject, form],
   );
 
   const handleSetTypename = useCallback(
     async (typename: string) => {
-      invariant(target, 'target is required');
       const form = forms.find((form) => getTypeAnnotation(form.objectSchema)?.typename === typename);
       if (form && !form.formSchema) {
-        await onCreateObject?.({ form, target });
+        await onCreateObject?.({ form });
       } else {
-        setTypename(typename);
+        onTypenameChange?.(typename);
       }
     },
-    [forms, onCreateObject, target],
+    [forms, onCreateObject],
   );
 
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
@@ -87,7 +83,7 @@ export const CreateObjectPanel = ({
   return !form ? (
     <SelectSchema options={options} resolve={resolve} onChange={handleSetTypename} />
   ) : !target ? (
-    <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={setTarget} />
+    <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />
   ) : form.formSchema ? (
     <div role='none' className={cardDialogOverflow}>
       <Form
@@ -107,7 +103,7 @@ const SelectSpace = ({
   spaces,
   defaultSpaceId,
   onChange,
-}: { onChange: (space: Space) => void } & Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'>) => {
+}: { onChange?: (space: Space) => void } & Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'>) => {
   const { t } = useTranslation(SPACE_PLUGIN);
 
   return (
@@ -128,7 +124,7 @@ const SelectSpace = ({
             <SearchList.Item
               key={space.id}
               value={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
-              onSelect={() => onChange(space)}
+              onSelect={() => onChange?.(space)}
               classNames='flex items-center gap-2'
             >
               <span className='grow truncate'>
