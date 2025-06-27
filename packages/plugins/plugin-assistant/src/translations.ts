@@ -3,6 +3,7 @@
 //
 
 import { Blueprint } from '@dxos/assistant';
+import { Type } from '@dxos/echo';
 
 import { ASSISTANT_PLUGIN } from './meta';
 import { AIChatType, TemplateType } from './types';
@@ -10,16 +11,25 @@ import { AIChatType, TemplateType } from './types';
 export default [
   {
     'en-US': {
-      [AIChatType.typename]: {
+      [Type.getTypename(AIChatType)]: {
         'typename label': 'Assistant',
-        'object name placeholder': 'AI Chat',
+        'typename label_zero': 'Assistants',
+        'typename label_one': 'Assistant',
+        'typename label_other': 'Assistants',
+        'object name placeholder': 'New assistant',
       },
-      [Blueprint.typename]: {
+      [Type.getTypename(Blueprint)]: {
         'typename label': 'Blueprint',
+        'typename label_zero': 'Blueprints',
+        'typename label_one': 'Blueprint',
+        'typename label_other': 'Blueprints',
         'object name placeholder': 'New blueprint',
       },
-      [TemplateType.typename]: {
+      [Type.getTypename(TemplateType)]: {
         'typename label': 'Template',
+        'typename label_zero': 'Templates',
+        'typename label_one': 'Template',
+        'typename label_other': 'Templates',
         'object name placeholder': 'New template',
       },
       [ASSISTANT_PLUGIN]: {

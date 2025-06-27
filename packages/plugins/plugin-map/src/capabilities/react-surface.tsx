@@ -18,7 +18,7 @@ import { MapCapabilities } from './capabilities';
 import { MapContainer, MapControl } from '../components';
 import { MapViewEditor } from '../components/MapViewEditor';
 import { MAP_PLUGIN } from '../meta';
-import { TypenameAnnotationId, MapType, LocationAnnotationId } from '../types';
+import { MapType, LocationAnnotationId } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -63,26 +63,6 @@ export default () =>
       role: 'object-settings',
       filter: (data): data is { subject: MapType } => Obj.instanceOf(MapType, data.subject),
       component: ({ data }) => <MapViewEditor map={data.subject} />,
-    }),
-    createSurface({
-      id: `${MAP_PLUGIN}/create-initial-schema-form-[schema]`,
-      role: 'form-input',
-      filter: (
-        data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection | undefined } => {
-        const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, TypenameAnnotationId);
-        return !!annotation;
-      },
-      component: ({ data: { target }, ...inputProps }) => {
-        const props = inputProps as any as InputProps;
-        const space = isSpace(target) ? target : getSpace(target);
-        if (!space) {
-          return null;
-        }
-
-        const schemata = space?.db.schemaRegistry.query().runSync();
-        return <SelectInput {...props} options={schemata.map((schema) => ({ value: schema.typename }))} />;
-      },
     }),
     createSurface({
       id: `${MAP_PLUGIN}/create-initial-schema-form-[property-of-interest]`,

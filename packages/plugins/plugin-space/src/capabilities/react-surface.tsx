@@ -3,17 +3,27 @@
 //
 
 import { type Schema } from 'effect';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { Capabilities, contributes, createSurface, Surface, useCapability, useLayout } from '@dxos/app-framework';
+import {
+  Capabilities,
+  contributes,
+  createSurface,
+  Surface,
+  useCapabilities,
+  useCapability,
+  useLayout,
+} from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { useClient } from '@dxos/react-client';
 import { getSpace, isLiveObject, isSpace, parseId, SpaceState, useSpace, type Space } from '@dxos/react-client/echo';
-import { Input } from '@dxos/react-ui';
-import { type InputProps } from '@dxos/react-ui-form';
+import { Input, useTranslation } from '@dxos/react-ui';
+import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { DataType } from '@dxos/schema';
+import { DataType, type TypenameAnnotation, TypenameAnnotationId } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { SpaceCapabilities } from './capabilities';
@@ -48,6 +58,8 @@ import { HueAnnotationId, IconAnnotationId, type SpaceSettingsProps } from '../t
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
 };
+
+const OMIT = [Type.getTypename(DataType.Collection), Type.getTypename(DataType.QueryCollection)];
 
 export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
   contributes(Capabilities.ReactSurface, [
@@ -188,6 +200,78 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
             <IconPicker disabled={disabled} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
           </Input.Root>
         );
+      },
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/typename-form-input`,
+      role: 'form-input',
+      filter: (
+        data,
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection | undefined } => {
+        if (data.prop !== 'typename') {
+          return false;
+        }
+
+        const annotation = findAnnotation((data.schema as Schema.Schema.All).ast, TypenameAnnotationId);
+        return !!annotation;
+      },
+      component: ({ data: { schema, target }, ...inputProps }) => {
+        const { t } = useTranslation();
+        const client = useClient();
+        const props = inputProps as any as InputProps;
+        const space = isSpace(target) ? target : getSpace(target);
+        if (!space) {
+          return null;
+        }
+
+        const annotation = findAnnotation<TypenameAnnotation[]>(schema.ast, TypenameAnnotationId)!;
+
+        const schemaWhitelists = useCapabilities(ClientCapabilities.SchemaWhiteList);
+        const whitelistedTypenames = useMemo(
+          () => new Set(schemaWhitelists.flatMap((typeArray) => typeArray.map((type) => type.typename))),
+          [schemaWhitelists],
+        );
+
+        const objectForms = useCapabilities(SpaceCapabilities.ObjectForm);
+        const objectFormTypenames = useMemo(
+          () =>
+            new Set(
+              objectForms
+                .map((form) => Type.getTypename(form.objectSchema))
+                // TODO(wittjosiah): Remove.
+                .filter((typename) => !OMIT.includes(typename)),
+            ),
+          [objectForms],
+        );
+
+        const fixed = client.graph.schemaRegistry.schemas.filter((schema) => {
+          const limitedStatic =
+            annotation.includes('limited-static') && whitelistedTypenames.has(Type.getTypename(schema));
+          const objectForm = annotation.includes('object-form') && objectFormTypenames.has(Type.getTypename(schema));
+          return annotation.includes('static') || limitedStatic || objectForm;
+        });
+        const dynamic = space?.db.schemaRegistry.query().runSync();
+        const typenames = Array.from(
+          new Set<string>([
+            ...(annotation.includes('limited-static') ||
+            annotation.includes('static') ||
+            annotation.includes('object-form')
+              ? fixed.map((schema) => Type.getTypename(schema))
+              : []),
+            ...(annotation.includes('dynamic') ? dynamic.map((schema) => schema.typename) : []),
+          ]),
+        ).sort();
+
+        const options = useMemo(
+          () =>
+            typenames.map((typename) => ({
+              value: typename,
+              label: t('typename label', { ns: typename, defaultValue: typename }),
+            })),
+          [t, typenames],
+        );
+
+        return <SelectInput {...props} options={options} />;
       },
     }),
     createSurface({

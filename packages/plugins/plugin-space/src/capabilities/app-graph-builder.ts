@@ -7,7 +7,7 @@ import { Array, Option, pipe } from 'effect';
 
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { getSpace, SpaceState, type Space, isSpace, type QueryResult } from '@dxos/client/echo';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
@@ -424,6 +424,59 @@ export default (context: PluginContext) => {
       // },
     }),
 
+    createExtension({
+      id: `${SPACE_PLUGIN}/query-collection-objects`,
+      connector: (node) => {
+        let query: QueryResult<Type.Expando> | undefined;
+        return Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) =>
+              Obj.instanceOf(DataType.QueryCollection, node.data) ? Option.some(node.data) : Option.none(),
+            ),
+            Option.flatMap((collection) => {
+              const space = getSpace(collection);
+              return collection.query.typename && space
+                ? Option.some({ typename: collection.query.typename, space })
+                : Option.none();
+            }),
+            Option.map(({ typename, space }) => {
+              const state = context.getCapability(SpaceCapabilities.State);
+              if (!query) {
+                query = space.db.query(
+                  Query.without(
+                    Query.select(Filter.typename(typename)),
+                    // TODO(wittjosiah): This query is broader than it should be.
+                    //   It will return all objects in the collection, not just the ones of the given type.
+                    //   However this works fine for now because this query is only used for exclusions.
+                    Query.select(Filter.typename(typename))
+                      .referencedBy(DataType.Collection, 'objects')
+                      .reference('objects'),
+                  ),
+                );
+              }
+              return get(rxFromQuery(query))
+                .map((object) =>
+                  get(
+                    rxFromSignal(() =>
+                      createObjectNode({
+                        object,
+                        space,
+                        resolve,
+                        droppable: false, // Cannot rearrange query collections.
+                        navigable: state.navigableCollections,
+                      }),
+                    ),
+                  ),
+                )
+                .filter(isNonNullable);
+            }),
+            Option.getOrElse(() => []),
+          ),
+        );
+      },
+    }),
+
     // Create collection actions and action groups.
     createExtension({
       id: `${SPACE_PLUGIN}/object-actions`,
@@ -436,6 +489,7 @@ export default (context: PluginContext) => {
               const [dispatcher] = get(context.capabilities(Capabilities.IntentDispatcher));
               const [appGraph] = get(context.capabilities(Capabilities.AppGraph));
               const [state] = get(context.capabilities(SpaceCapabilities.State));
+              const objectForms = get(context.capabilities(SpaceCapabilities.ObjectForm));
 
               if (!dispatcher || !appGraph || !state) {
                 return Option.none();
@@ -444,6 +498,7 @@ export default (context: PluginContext) => {
                   object,
                   graph: appGraph.graph,
                   dispatch: dispatcher.dispatchPromise,
+                  objectForms,
                   navigable: get(rxFromSignal(() => state.navigableCollections)),
                 });
               }
