@@ -13,12 +13,8 @@ import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
  */
 
 addons.register('dxos', (api) => {
-  const config = addons.getConfig();
-  console.log(JSON.stringify(config, null, 2));
-
   const onThemeChange = (darkMode: boolean) => {
     addons.setConfig({
-      showPanel: false,
       theme: create({
         base: darkMode ? 'dark' : 'light',
         brandTitle: 'DXOS',
