@@ -152,13 +152,10 @@ export class AppManager {
   // Spaces
   //
 
-  async createSpace({ type = 'Document', timeout = 10_000 }: { type?: string; timeout?: number } = {}): Promise<void> {
+  async createSpace({ timeout = 10_000 }: { timeout?: number } = {}): Promise<void> {
     await this.page.getByTestId('spacePlugin.addSpace').click();
     await this.page.getByTestId('spacePlugin.createSpace').click();
     await this.page.getByTestId('create-space-form').getByTestId('save-button').click({ delay: 100 });
-
-    await this.page.getByTestId('create-object-form.schema-input').fill(type);
-    await this.page.keyboard.press('Enter');
 
     await this.waitForSpaceReady(timeout);
   }
@@ -240,7 +237,6 @@ export class AppManager {
       .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
-    await this.page.pause();
     await this.page.getByTestId('spacePlugin.deleteObject').last().focus();
     await this.page.keyboard.press('Enter');
   }

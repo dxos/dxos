@@ -9,7 +9,6 @@ import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { fullyQualifiedId, type Space, Filter, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
-import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
@@ -71,13 +70,11 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
   return (
     <StackItem.Content classNames='relative'>
       <div role='none' className='grid grid-rows-[min-content_1fr]'>
-        <div role='none' className={stackItemContentToolbarClassNames('section')}>
-          <ElevationProvider elevation='positioned'>
-            <MenuProvider {...menu} attendableId={fullyQualifiedId(inMailbox)}>
-              <ToolbarMenu />
-            </MenuProvider>
-          </ElevationProvider>
-        </div>
+        <ElevationProvider elevation='positioned'>
+          <MenuProvider {...menu} attendableId={fullyQualifiedId(inMailbox)}>
+            <ToolbarMenu />
+          </MenuProvider>
+        </ElevationProvider>
         <Message
           space={space}
           message={message}

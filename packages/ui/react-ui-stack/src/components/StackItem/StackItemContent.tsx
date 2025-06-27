@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithoutRef, forwardRef, useMemo } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useStack } from '../StackContext';
+import { useStack, useStackItem } from '../StackContext';
 
 export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   /**
@@ -35,7 +35,17 @@ export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'di
 export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps>(
   ({ children, toolbar, statusbar, classNames, size = 'intrinsic', ...props }, forwardedRef) => {
     const { size: stackItemSize } = useStack();
-
+    const { role } = useStackItem();
+    const style = useMemo(
+      () => ({
+        gridTemplateRows: [
+          ...(toolbar ? [role === 'section' ? 'calc(var(--rail-action) - 1px)' : 'var(--rail-action)'] : []),
+          '1fr',
+          ...(statusbar ? ['var(--statusbar-size)'] : []),
+        ].join(' '),
+      }),
+      [toolbar, statusbar],
+    );
     return (
       <div
         role='none'
@@ -44,15 +54,13 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
           'group grid grid-cols-[100%]',
           stackItemSize === 'contain' && 'min-bs-0 overflow-hidden',
           size === 'video' ? 'aspect-video' : size === 'square' && 'aspect-square',
+          toolbar && '[&_.dx-toolbar]:relative [&_.dx-toolbar]:border-be [&_.dx-toolbar]:border-subduedSeparator',
+          role === 'section' &&
+            toolbar &&
+            '[&_.dx-toolbar]:sticky [&_.dx-toolbar]:z-[1] [&_.dx-toolbar]:block-start-0 [&_.dx-toolbar]:-mbe-px [&_.dx-toolbar]:min-is-0',
           classNames,
         )}
-        style={{
-          gridTemplateRows: [
-            ...(toolbar ? ['var(--rail-action)'] : []),
-            '1fr',
-            ...(statusbar ? ['var(--statusbar-size)'] : []),
-          ].join(' '),
-        }}
+        style={style}
         data-popover-collision-boundary={true}
         ref={forwardedRef}
       >
