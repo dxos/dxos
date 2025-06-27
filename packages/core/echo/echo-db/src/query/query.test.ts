@@ -10,7 +10,7 @@ import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { Obj, Type } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { Expando, RelationSourceId, RelationTargetId, TypedObject, Ref, EchoObject } from '@dxos/echo-schema';
-import { Testing } from '@dxos/echo-schema/testing';
+import { Testing, type updateCounter } from '@dxos/echo-schema/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { live, getMeta, type Live } from '@dxos/live-object';
@@ -24,6 +24,7 @@ import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
 import type { Hypergraph } from '../hypergraph';
+import { effect } from '@preact/signals-core';
 
 const createTestObject = (idx: number, label?: string) => {
   return live(Expando, { idx, title: `Task ${idx}`, label });
@@ -710,6 +711,107 @@ describe('Query', () => {
 
       expect(count1).toEqual(1);
       expect(count2).toEqual(1);
+    });
+
+    test('deleting an element', async (ctx) => {
+      const { db } = await builder.createDatabase({ types: [Testing.Contact] });
+
+      // Create 3 test objects: Alice, Bob, Charlie.
+      const alice = db.add(Obj.make(Testing.Contact, { name: 'Alice' }));
+      const bob = db.add(Obj.make(Testing.Contact, { name: 'Bob' }));
+      const charlie = db.add(Obj.make(Testing.Contact, { name: 'Charlie' }));
+      await db.flush({ indexes: true });
+
+      // Track all updates to observe the bug.
+      const updates: string[][] = [];
+      const unsub = db.query(Query.select(Filter.type(Testing.Contact))).subscribe(
+        (query) => {
+          const names = query.objects.map((obj) => obj.name!);
+          updates.push(names);
+        },
+        { fire: true },
+      );
+      ctx.onTestFinished(unsub);
+
+      // Wait for initial renders to complete.
+      await sleep(100);
+
+      // THE BUG REPRODUCTION: Delete Bob.
+      db.remove(bob);
+
+      // Wait for all reactive updates to complete.
+      await sleep(500);
+
+      // TODO(ZaymonFC): Remove this comment once the flash bug is resolved.
+      /*
+       * NOTE(ZaymonFC):
+       *   Expected: 3 renders
+       *   1. [] (empty)
+       *   2. ['Alice', 'Bob', 'Charlie'] (all loaded)
+       *   3. ['Alice', 'Charlie'] (Bob removed, no flash)
+       *
+       *   Actual: 4 renders
+       *   1. [] (empty)
+       *   2. ['Alice', 'Bob', 'Charlie'] (all loaded)
+       *   3. ['Alice', 'Charlie', 'Bob'] (FLASH BUG - Bob moves to end!)
+       *   4. ['Alice', 'Charlie'] (Bob finally removed)
+       */
+
+      expect(updates).toEqual([
+        ['Alice', 'Bob', 'Charlie'], // All objects loaded.
+        ['Alice', 'Charlie'], // Bob removed (no flash).
+      ]);
+    });
+
+    test('bulk deleting multiple items should remove them from query results', async (ctx) => {
+      // Setup: Create client and space.
+      const { db } = await builder.createDatabase();
+
+      // Create 10 test objects: 1, 2, 3, ..., 10.
+      const objects = Array.from({ length: 10 }, (_, i) => db.add(Obj.make(Expando, { value: i + 1 })));
+      await db.flush({ indexes: true });
+
+      // Track all updates to observe the bug.
+      const updates: Set<number>[] = [];
+      const unsub = db.query(Query.select(Filter.type(Expando))).subscribe(
+        (query) => {
+          const values = query.objects.map((obj) => obj.value);
+          updates.push(new Set(values));
+        },
+        { fire: true },
+      );
+      ctx.onTestFinished(unsub);
+
+      // Wait for initial renders to complete.
+      await sleep(100);
+
+      // THE BUG REPRODUCTION: Delete all items in a loop.
+      for (const item of objects) {
+        db.remove(item);
+      }
+
+      // Wait for all reactive updates to complete.
+      await sleep(500);
+
+      // TODO(ZaymonFC): Remove this comment once the bulk delete bug is resolved.
+      /*
+       * NOTE(ZaymonFC):
+       *   Expected: 3 renders
+       *   1. [] (empty)
+       *   2. [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] (all loaded, order doesn't matter)
+       *   3. [] (all deleted)
+       *
+       *   Actual: 3 renders
+       *   1. [] (empty)
+       *   2. [1, 4, 10, 5, 2, 9, 3, 8, 6, 7] (loaded)
+       *   3. [1, 4, 10, 5, 2, 9, 3, 8, 6, 7] (NO CHANGE - bulk delete didn't work!)
+       */
+
+      // Convert to sets for order-independent comparison.
+      expect(updates).toEqual([
+        new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), // All objects loaded.
+        new Set([]), // All items deleted.
+      ]);
     });
   });
 
