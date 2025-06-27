@@ -13,7 +13,7 @@ import { Ghost, type GhostProps } from './Ghost';
 const meta: Meta<GhostProps> = {
   title: 'ui/react-ui-sfx/Ghost',
   component: Ghost,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-black' })],
 };
 
 export default meta;

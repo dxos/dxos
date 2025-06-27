@@ -60,7 +60,12 @@ export default (context: PluginContext) => {
 
   let cleanup: () => void;
   if (document.defaultView) {
-    cleanup = addEventListener(document.defaultView, 'dx-ref-tag-activate', handleDxRefTagActivate, customEventOptions);
+    cleanup = addEventListener(
+      document.defaultView,
+      'dx-ref-tag-activate' as any,
+      handleDxRefTagActivate,
+      customEventOptions,
+    );
   } else {
     log.warn('No default view found');
   }
