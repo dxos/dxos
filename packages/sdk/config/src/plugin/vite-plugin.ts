@@ -11,12 +11,12 @@ import { type ConfigPluginOpts } from './types';
 export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => ({
   name: 'dxos-config',
   config: () => {
+    // Update paths.
     const configPath = options.root && resolve(options.root, options.configPath ?? 'dx.yml');
     const envPath = options.root && resolve(options.root, options.envPath ?? 'dx-env.yml');
-    // TODO(burdon): Change to dx-dev.yml
+    // TODO(burdon): Change to dx-dev.yml?
     const devPath = options.root && resolve(options.root, options.devPath ?? 'dx-local.yml');
 
-    console.log(JSON.stringify({ options, configPath, envPath, devPath }, null, 2));
     const define = Object.entries(definitions({ ...options, configPath, envPath, devPath })).reduce(
       (define, [key, value]) => {
         define[key] = JSON.stringify(value);
