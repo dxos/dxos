@@ -22,8 +22,8 @@ export const JsonPath = Schema.String.pipe(Schema.pattern(PATH_REGEX)).annotatio
 }) as any as Schema.Schema<JsonPath>;
 export const JsonProp = Schema.NonEmptyString.pipe(
   Schema.pattern(PROP_REGEX, {
-    message: () => 'Property name must contain only letters, numbers, and underscores'
-  })
+    message: () => 'Property name must contain only letters, numbers, and underscores',
+  }),
 ) as any as Schema.Schema<JsonProp>;
 
 export const isJsonPath = (value: unknown): value is JsonPath => {

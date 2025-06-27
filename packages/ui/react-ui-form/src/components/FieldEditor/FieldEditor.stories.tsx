@@ -17,7 +17,6 @@ import { FieldEditor, type FieldEditorProps } from './FieldEditor';
 import translations from '../../translations';
 import { TestLayout, TestPanel, FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
 
-
 // Type definition for debug objects exposed to tests.
 export type FieldEditorDebugObjects = {
   props: FieldEditorProps;
