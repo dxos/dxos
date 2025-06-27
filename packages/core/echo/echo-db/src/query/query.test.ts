@@ -722,10 +722,12 @@ describe('Query', () => {
       await db.flush({ indexes: true });
 
       // Track all updates to observe the bug.
+      log.break();
       const updates: string[][] = [];
       const unsub = db.query(Query.select(Filter.type(Testing.Contact))).subscribe(
         (query) => {
           const names = query.objects.map((obj) => obj.name!);
+          log.info('upd', { names });
           updates.push(names);
         },
         { fire: true },
@@ -734,12 +736,16 @@ describe('Query', () => {
 
       // Wait for initial renders to complete.
       await sleep(100);
+      log.break();
 
       // THE BUG REPRODUCTION: Delete Bob.
       db.remove(bob);
+      log.info('removed bob');
+      log.break();
 
       // Wait for all reactive updates to complete.
       await sleep(500);
+      log.break();
 
       // TODO(ZaymonFC): Remove this comment once the flash bug is resolved.
       /*
