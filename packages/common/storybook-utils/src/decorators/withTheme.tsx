@@ -2,17 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-// import { addons } from '@storybook/preview-api';
 import { type Decorator } from '@storybook/react';
-import React, { memo, useCallback, useState } from 'react';
-// import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
+import React, { memo, useCallback, useEffect, useState } from 'react';
+import { addons } from 'storybook/manager-api';
+import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
 
 import { DxThemeEditor as NaturalDxThemeEditor } from '@dxos/lit-theme-editor';
 import '@dxos/lit-theme-editor/dx-theme-editor.pcss';
 import { createComponent } from '@dxos/lit-ui/react';
 import { type ThemeMode, ThemeProvider, Tooltip, Dialog, IconButton } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
-// import { PARAM_KEY } from '@dxos/theme-editor-addon';
+import { PARAM_KEY } from '@dxos/theme-editor-addon';
 
 const DxThemeEditor = createComponent({
   tagName: 'dx-theme-editor',
@@ -33,23 +33,22 @@ export const withTheme: Decorator = (Story, context) => {
     setEditorOpen(nextOpen);
   }, []);
 
-  // TODO(burdon): addons are deprecated.
   // https://www.npmjs.com/package/storybook-dark-mode
   // NOTE: The `useDarkMode` hook causes the story to continually re-render.
   // NOTE: Changing the theme will cause the story to remount.
-  // useEffect(() => {
-  //   const handleDarkModeUpdate = (darkMode: boolean) => setThemeMode(darkMode ? 'dark' : 'light');
-  //   addons.getChannel().on(DARK_MODE_EVENT_NAME, handleDarkModeUpdate);
-  //   return () => addons.getChannel().off(DARK_MODE_EVENT_NAME, handleDarkModeUpdate);
-  // }, []);
+  useEffect(() => {
+    const handleDarkModeUpdate = (darkMode: boolean) => setThemeMode(darkMode ? 'dark' : 'light');
+    addons.getChannel().on(DARK_MODE_EVENT_NAME, handleDarkModeUpdate);
+    return () => addons.getChannel().off(DARK_MODE_EVENT_NAME, handleDarkModeUpdate);
+  }, []);
 
-  // useEffect(() => {
-  //   const openEditor = () => {
-  //     handleOpenChange(true);
-  //   };
-  //   addons.getChannel().on(PARAM_KEY, openEditor);
-  //   return () => addons.getChannel().off(PARAM_KEY, openEditor);
-  // }, []);
+  useEffect(() => {
+    const openEditor = () => {
+      handleOpenChange(true);
+    };
+    addons.getChannel().on(PARAM_KEY, openEditor);
+    return () => addons.getChannel().off(PARAM_KEY, openEditor);
+  }, []);
 
   return (
     <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={context?.parameters?.translations} noCache>

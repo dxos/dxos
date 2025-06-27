@@ -3,7 +3,7 @@
 //
 
 import { type Decorator, type Preview } from '@storybook/react';
-// import { themes } from '@storybook/theming';
+import { themes } from 'storybook/theming';
 import React, { memo, useEffect } from 'react';
 
 import { log, LogLevel } from '@dxos/log';
@@ -80,10 +80,12 @@ export const preview: Preview = {
     darkMode: {
       classTarget: 'html',
       stylePreview: true,
-      // dark: { ...themes.dark },
+      dark: { ...themes.dark },
       darkClass: 'dark',
-      // light: { ...themes.light },
+      light: { ...themes.light },
       lightClass: 'light',
     },
   },
 };
+
+export default preview;

@@ -30,6 +30,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/theme-editor-addon": "workspace:*",
     "lodash.defaultsdeep": "^4.6.1",
+    "storybook": "^9.0.13",
     "storybook-dark-mode": "^4.0.2"
   },
   "devDependencies": {
@@ -39,8 +40,7 @@
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
-    "react-dom": "~18.2.0",
-    "storybook": "^9.0.13"
+    "react-dom": "~18.2.0"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
