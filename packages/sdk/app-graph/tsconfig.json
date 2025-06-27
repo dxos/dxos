@@ -52,6 +52,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-theme"
     },
     {
