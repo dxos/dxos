@@ -318,14 +318,11 @@ const TableMain = forwardRef<TableController, TableMainProps>(
             schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
           }
 
-          console.log('schema found:', !!schema);
           if (schema) {
             const { objects } = await space.db.query(Filter.type(schema)).run();
-            console.log('query results:', objects.length, 'objects');
             const options = objects
               .map((obj) => {
                 const value = getValue(obj, field.referencePath!);
-                console.log('object value for', field.referencePath, ':', value);
                 if (!value || typeof value !== 'string') {
                   return undefined;
                 }
