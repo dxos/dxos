@@ -22,7 +22,7 @@ const perfomInvitation = async (host: AppManager, guest: AppManager) => {
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
-test.describe.only('Collaboration tests', () => {
+test.describe('Collaboration tests', () => {
   let host: AppManager;
   let guest: AppManager;
 
