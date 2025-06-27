@@ -40,11 +40,11 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
       Effect.retry({ times: 1 }),
     );
 
-    const aiClient = OpenAiClient.layerConfig({ apiKey: Config.redacted('OPENAI_API_KEY') }).pipe(
-      Layer.provide(NodeHttpClient.layerUndici),
-    );
+    const OpenAiLayer = OpenAiClient.layerConfig({
+      apiKey: Config.redacted('OPENAI_API_KEY'),
+    }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
-    const result = await program.pipe(Effect.provide(aiClient), Effect.runPromise);
+    const result = await program.pipe(Effect.provide(OpenAiLayer), Effect.runPromise);
     expect(result).to.contain('API is working');
   });
 
@@ -65,12 +65,13 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
   ) {}
 
   // Tool handlers.
-  const ToolkitLayer = Toolkit.toLayer({
+  const toolkitLayer = Toolkit.toLayer({
     Calculator: ({ input }) =>
       Effect.gen(function* () {
         const result = (() => {
           // Restrict to basic arithmetic operations for safety.
           const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
+          log.info('calculate', { sanitizedInput });
           // eslint-disable-next-line no-new-func
           return Function(`"use strict"; return (${sanitizedInput})`)();
         })();
@@ -95,14 +96,14 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
         toolkit: Toolkit,
         prompt,
       }).pipe(
-        Effect.tap((response) => Console.log(response)),
+        // Effect.tap((response) => Console.log(response)),
         Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
         Effect.retry(pipe(Schedule.exponential('1 second'), Schedule.intersect(Schedule.recurs(2)))),
         Effect.timeout('30 seconds'),
       );
 
     const program = createProgram('What is six times seven? Use appropriate tools and just answer with the number.');
-    const result = await program.pipe(Effect.provide([ToolkitLayer, OpenAiLayer]), Effect.runPromise);
+    const result = await program.pipe(Effect.provide([toolkitLayer, OpenAiLayer]), Effect.runPromise);
     expect(result).toBeDefined();
   });
 
@@ -128,7 +129,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     const result = await chat.pipe(
       Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
       Effect.provide(OpenAiLayer),
-      Effect.provide(ToolkitLayer),
+      Effect.provide(toolkitLayer),
       Effect.runPromise,
     );
 
@@ -142,7 +143,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     const result = await chat.pipe(
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
       Effect.provide(AnthropicLayer),
-      Effect.provide(ToolkitLayer),
+      Effect.provide(toolkitLayer),
       Effect.runPromise,
     );
 
