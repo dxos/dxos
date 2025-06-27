@@ -24,6 +24,7 @@ export type GhostProps = {
   COLOR_UPDATE_SPEED: number;
   BACK_COLOR: Color;
   TRANSPARENT: boolean;
+  COLOR_MASK: Color;
 };
 
 const defaultConfig: GhostProps = {
@@ -41,6 +42,7 @@ const defaultConfig: GhostProps = {
   COLOR_UPDATE_SPEED: 10,
   BACK_COLOR: { r: 0.5, g: 0, b: 0 },
   TRANSPARENT: true,
+  COLOR_MASK: { r: 0.15, g: 0.15, b: 0.15 },
 };
 
 export const Ghost = (props: Partial<GhostProps>) => {
@@ -737,10 +739,10 @@ const render = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): Cleanu
 
   const updateColors = (dt: number) => {
     colorUpdateTimer += dt * config.COLOR_UPDATE_SPEED;
-    if (colorUpdateTimer >= 1) {
+    if (config.COLOR_UPDATE_SPEED === 0 || colorUpdateTimer >= 1) {
       colorUpdateTimer = wrap(colorUpdateTimer, 0, 1);
       pointers.forEach((p) => {
-        p.color = generateColor();
+        p.color = generateColor(config.COLOR_MASK);
       });
     }
   };
@@ -852,7 +854,7 @@ const render = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): Cleanu
   };
 
   const clickSplat = (pointer: PointerPrototype) => {
-    const color = generateColor();
+    const color = generateColor(config.COLOR_MASK);
     color.r *= 10.0;
     color.g *= 10.0;
     color.b *= 10.0;
@@ -889,33 +891,11 @@ const render = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): Cleanu
     return radius;
   };
 
-  const updatePointerDownData = (pointer: PointerPrototype, id: number, posX: number, posY: number) => {
-    pointer.id = id;
-    pointer.down = true;
-    pointer.moved = false;
-    pointer.texcoordX = posX / canvas.width;
-    pointer.texcoordY = 1.0 - posY / canvas.height;
-    pointer.prevTexcoordX = pointer.texcoordX;
-    pointer.prevTexcoordY = pointer.texcoordY;
-    pointer.deltaX = 0;
-    pointer.deltaY = 0;
-    pointer.color = generateColor();
-  };
+  updateFrame();
 
-  const updatePointerMoveData = (pointer: PointerPrototype, posX: number, posY: number, color: Color) => {
-    pointer.prevTexcoordX = pointer.texcoordX;
-    pointer.prevTexcoordY = pointer.texcoordY;
-    pointer.texcoordX = posX / canvas.width;
-    pointer.texcoordY = 1.0 - posY / canvas.height;
-    pointer.deltaX = correctDeltaX(pointer.texcoordX - pointer.prevTexcoordX);
-    pointer.deltaY = correctDeltaY(pointer.texcoordY - pointer.prevTexcoordY);
-    pointer.moved = Math.abs(pointer.deltaX) > 0 || Math.abs(pointer.deltaY) > 0;
-    pointer.color = color;
-  };
-
-  const updatePointerUpData = (pointer: PointerPrototype) => {
-    pointer.down = false;
-  };
+  //
+  // Event utils.
+  //
 
   const correctDeltaX = (delta: number) => {
     const aspectRatio = canvas.width / canvas.height;
@@ -933,7 +913,33 @@ const render = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): Cleanu
     return delta;
   };
 
-  updateFrame();
+  const updatePointerDownData = (pointer: PointerPrototype, id: number, posX: number, posY: number) => {
+    pointer.id = id;
+    pointer.down = true;
+    pointer.moved = false;
+    pointer.texcoordX = posX / canvas.width;
+    pointer.texcoordY = 1.0 - posY / canvas.height;
+    pointer.prevTexcoordX = pointer.texcoordX;
+    pointer.prevTexcoordY = pointer.texcoordY;
+    pointer.deltaX = 0;
+    pointer.deltaY = 0;
+    pointer.color = generateColor(config.COLOR_MASK);
+  };
+
+  const updatePointerMoveData = (pointer: PointerPrototype, posX: number, posY: number, color: Color) => {
+    pointer.prevTexcoordX = pointer.texcoordX;
+    pointer.prevTexcoordY = pointer.texcoordY;
+    pointer.texcoordX = posX / canvas.width;
+    pointer.texcoordY = 1.0 - posY / canvas.height;
+    pointer.deltaX = correctDeltaX(pointer.texcoordX - pointer.prevTexcoordX);
+    pointer.deltaY = correctDeltaY(pointer.texcoordY - pointer.prevTexcoordY);
+    pointer.moved = Math.abs(pointer.deltaX) > 0 || Math.abs(pointer.deltaY) > 0;
+    pointer.color = color;
+  };
+
+  const updatePointerUpData = (pointer: PointerPrototype) => {
+    pointer.down = false;
+  };
 
   //
   // Event handlers
@@ -987,13 +993,12 @@ const render = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): Cleanu
 // Utils
 //
 
-// TODO(burdon): Create color mask.
-const generateColor = (): { r: number; g: number; b: number } => {
+const generateColor = (mask: Color = { r: 0, g: 0, b: 0 }): { r: number; g: number; b: number } => {
   const c = HSVtoRGB(Math.random(), 1, 1);
   return {
-    r: (c.r ?? 0) * 0.15,
-    g: (c.g ?? 0) * 0.15,
-    b: (c.b ?? 0) * 0.15,
+    r: (c.r ?? 0) * mask.r,
+    g: (c.g ?? 0) * mask.g,
+    b: (c.b ?? 0) * mask.b,
   };
 };
 

@@ -37,9 +37,10 @@ export const Variant: Story = {
     SPLAT_RADIUS: 0.1,
     SPLAT_FORCE: 9000,
     SHADING: true,
-    COLOR_UPDATE_SPEED: 10,
+    COLOR_UPDATE_SPEED: 0.3,
     BACK_COLOR: { r: 1.3, g: 0.1, b: 0.1 },
     TRANSPARENT: false,
+    COLOR_MASK: { r: 0.1, g: 0.1, b: 0.1 },
   },
 };
 
