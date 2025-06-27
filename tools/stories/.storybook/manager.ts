@@ -11,16 +11,12 @@ import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
  * UX state stored in Application/Storage/Local Storage: @storybook/manager/store
  * https://storybook.js.org/docs/configure/features-and-behavior
  */
-addons.setConfig({
-  enableShortcuts: true,
-  // NOTE: Option is ignored, so we toggle the panel off below.
-  showPanel: false,
-});
 
 addons.register('dxos', (api) => {
-  // const config = addons.getConfig();
+  const config = addons.getConfig();
+  console.log(JSON.stringify(config, null, 2));
 
-  const update = (darkMode: boolean) => {
+  const onThemeChange = (darkMode: boolean) => {
     addons.setConfig({
       showPanel: false,
       theme: create({
@@ -38,7 +34,7 @@ addons.register('dxos', (api) => {
   const channel = addons.getChannel();
   channel.on(DARK_MODE_EVENT_NAME, (darkMode) => {
     if (currentDarkMode !== darkMode) {
-      update(darkMode);
+      onThemeChange(darkMode);
     }
   });
 });
