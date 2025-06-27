@@ -6,7 +6,6 @@ import { Schema, SchemaAST } from 'effect';
 
 import { defineObjectMigration } from '@dxos/echo-db';
 import {
-  FieldLookupAnnotationId,
   FormatEnum,
   JsonPath,
   JsonSchemaType,
@@ -14,6 +13,8 @@ import {
   FieldSortType,
   TypedObject,
   toEffectSchema,
+  PropertyMetaAnnotationId,
+  type PropertyMetaAnnotation,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { live, type Live } from '@dxos/live-object';
@@ -135,7 +136,8 @@ export const createView = ({ name, typename, jsonSchema, fields: include }: Crea
 
       const referencePath =
         property.format === FormatEnum.Ref
-          ? findAnnotation<JsonPath>(property.ast, FieldLookupAnnotationId)
+          ? (findAnnotation<PropertyMetaAnnotation>(property.ast, PropertyMetaAnnotationId)
+              ?.referenceProperty as JsonPath)
           : undefined;
 
       fields.push(
