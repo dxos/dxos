@@ -32,6 +32,7 @@ export default async ({ context, namespace, observability }: ClientReadyOptions)
     const environment = client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
     const notify =
       environment && environment !== 'ci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
+    console.log('sendPrivacyNotice', environment, notify);
     if (!state.notified && notify) {
       await dispatch(
         createIntent(LayoutAction.AddToast, {
