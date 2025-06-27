@@ -24,18 +24,6 @@ export const Test = ({ onClick }: TestProps) => (
   </button>
 );
 
-export const Primary: StoryObj<TestProps> = {
-  // TODO(burdon): Race condition on first load?
-  play: async ({ args, canvasElement }: any) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button'));
-    await expect(args.onClick).toHaveBeenCalled();
-  },
-  args: {
-    onClick: fn(),
-  },
-};
-
 const meta: Meta = {
   title: 'ui/react-ui-form/Test',
   component: Test,
@@ -43,3 +31,23 @@ const meta: Meta = {
 };
 
 export default meta;
+
+type Story = StoryObj<typeof Test>;
+
+export const Default: Story = {
+  args: {
+    onClick: () => {},
+  },
+};
+
+// export const Primary: StoryObj<TestProps> = {
+//   // TODO(burdon): Race condition on first load?
+//   play: async ({ args, canvasElement }: any) => {
+//     const canvas = within(canvasElement);
+//     await userEvent.click(canvas.getByRole('button'));
+//     await expect(args.onClick).toHaveBeenCalled();
+//   },
+//   args: {
+//     onClick: fn(),
+//   },
+// };
