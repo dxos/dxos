@@ -15,6 +15,8 @@ import { log } from '@dxos/log';
 // https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md
 // https://discord.com/channels/795981131316985866/1338871274398679130
 
+// TODO(burdon): Implement MCP server for ECHO on CF.
+
 /**
  * Rationale:
  * - Separation of concerns: config, execution pipline, error handling/retry, tool dispatch, async.
@@ -25,28 +27,25 @@ import { log } from '@dxos/log';
  * - Ecosystem and design partner.
  */
 describe.runIf(!process.env.CI)('AiLanguageModel', () => {
+  // Sanity test.
   it.runIf(process.env.OPENAI_API_KEY)('Debug: Verify API configuration', async ({ expect }) => {
     const program = Effect.gen(function* () {
       yield* Console.log('Testing API connectivity...');
-      const response = yield* AiLanguageModel.generateText({ prompt: 'Hello, respond with "API is working"' });
-      yield* Console.log('API Response received:', response.text);
-      return response.text;
+      const { text } = yield* AiLanguageModel.generateText({ prompt: 'Hello, respond with "API is working"' });
+      yield* Console.log('API Response received:', text);
+      return text;
     }).pipe(
       Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
       Effect.timeout('10 seconds'),
       Effect.retry({ times: 1 }),
     );
 
-    const result = await program.pipe(
-      Effect.provide([
-        OpenAiClient.layerConfig({
-          apiKey: Config.redacted('OPENAI_API_KEY'),
-        }).pipe(Layer.provide(NodeHttpClient.layerUndici)),
-      ]),
-      Effect.runPromise,
+    const aiClient = OpenAiClient.layerConfig({ apiKey: Config.redacted('OPENAI_API_KEY') }).pipe(
+      Layer.provide(NodeHttpClient.layerUndici),
     );
 
-    expect(result).to.contain('working');
+    const result = await program.pipe(Effect.provide(aiClient), Effect.runPromise);
+    expect(result).to.contain('API is working');
   });
 
   // Tool definitions.
@@ -70,7 +69,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     Calculator: ({ input }) =>
       Effect.gen(function* () {
         const result = (() => {
-          // Only allow basic arithmetic operations for safety.
+          // Restrict to basic arithmetic operations for safety.
           const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
           // eslint-disable-next-line no-new-func
           return Function(`"use strict"; return (${sanitizedInput})`)();
@@ -107,7 +106,6 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     expect(result).toBeDefined();
   });
 
-  // TODO(burdon): Is this the effectful way to do this?
   const createChat = (prompt: string) =>
     Effect.gen(function* () {
       const chat = yield* AiChat.empty;
@@ -151,6 +149,4 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     log.info('result', { result });
     expect(result).toContain('42');
   });
-
-  // TODO(burdon): Implement MCP server for ECHO on CF.
 });

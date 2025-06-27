@@ -19,12 +19,12 @@ import {
   setConsolePrinter,
 } from '@dxos/assistant';
 import {
-  ComputeGraphModel,
-  computeGraphToGraphViz,
   NODE_INPUT,
   NODE_OUTPUT,
-  ValueBag,
+  ComputeGraphModel,
   type GptOutput,
+  ValueBag,
+  computeGraphToGraphViz,
 } from '@dxos/conductor';
 import { TestRuntime } from '@dxos/conductor/testing';
 import { Obj } from '@dxos/echo';
@@ -35,6 +35,7 @@ import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DataType, DataTypes } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
+
 import { compileBlueprint } from './blueprint-compiler';
 
 const REMOTE_AI = true;
@@ -126,7 +127,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     );
 
     // TODO(dmaretskyi): Store in ECHO.
-
     const org = db.add(Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }));
     await db.flush({ indexes: true });
 

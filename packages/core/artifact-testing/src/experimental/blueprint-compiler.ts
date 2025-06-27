@@ -1,11 +1,27 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import type { Blueprint } from '@dxos/assistant';
 import { ComputeGraphModel, NODE_INPUT, NODE_OUTPUT, type ComputeGraph, type ComputeNode } from '@dxos/conductor';
 
+/**
+ *
+ */
 export const compileBlueprint = async (blueprint: Blueprint): Promise<ComputeGraph> => {
   const model = ComputeGraphModel.create();
 
-  const inputNode = model.createNode({ id: 'input', type: NODE_INPUT });
-  const systemPrompt = model.createNode({ id: 'system-prompt', type: 'constant', value: '**BP system prompt**' });
+  const inputNode = model.createNode({
+    id: 'input',
+    type: NODE_INPUT,
+  });
+
+  const systemPrompt = model.createNode({
+    id: 'system-prompt',
+    type: 'constant',
+    value: '**BP system prompt**',
+  });
+
   const conversation = model.createNode({
     id: 'conversation-queue',
     type: 'constant',
@@ -17,18 +33,14 @@ export const compileBlueprint = async (blueprint: Blueprint): Promise<ComputeGra
     const node = model.createNode({ id: stepNodeId(i), type: 'gpt' });
     nodes.push(node);
 
-    model.builder.createEdge({ node: systemPrompt }, { node: node, property: 'systemPrompt' });
-
+    model.builder.createEdge({ node: systemPrompt }, { node, property: 'systemPrompt' });
     if (i === 0) {
       // Link to input node.
-      model.builder.createEdge({ node: inputNode, property: 'input' }, { node: node, property: 'prompt' });
-      model.builder.createEdge({ node: conversation }, { node: node, property: 'conversation' });
+      model.builder.createEdge({ node: inputNode, property: 'input' }, { node, property: 'prompt' });
+      model.builder.createEdge({ node: conversation }, { node, property: 'conversation' });
     } else {
       // Link to previous step.
-      model.builder.createEdge(
-        { node: nodes[i - 1], property: 'conversation' },
-        { node: node, property: 'conversation' },
-      );
+      model.builder.createEdge({ node: nodes[i - 1], property: 'conversation' }, { node, property: 'conversation' });
     }
   }
 

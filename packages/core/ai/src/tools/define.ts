@@ -47,6 +47,7 @@ interface CreateRawToolParams extends BaseProps {
 /**
  * Creates a runnable tool definition.
  */
+// TODO(burdon): Use @effect/ai AiTool.
 export const createTool = <Params extends Schema.Schema.AnyNoContext>(
   namespace: string,
   { name, schema, execute, ...props }: CreateToolParams<Params>,
@@ -86,6 +87,7 @@ export const toFunctionParameterSchema = (jsonSchema: Type.JsonSchema): Type.Jso
         go(jsonSchema.properties![key]);
       }
     }
+
     if (jsonSchema.items) {
       if (Array.isArray(jsonSchema.items)) {
         for (const item of jsonSchema.items) {
