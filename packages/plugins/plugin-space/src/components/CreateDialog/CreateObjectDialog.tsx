@@ -3,7 +3,7 @@
 //
 
 import { pipe } from 'effect';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import {
   Capabilities,
@@ -14,12 +14,14 @@ import {
   useIntentDispatcher,
   usePluginManager,
 } from '@dxos/app-framework';
-import { type Obj } from '@dxos/echo';
+import { Query, Type, type Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
-import { getSpace, isLiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
+import { getSpace, isLiveObject, isSpace, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
+import { DataType } from '@dxos/schema';
+import { isNonNullable } from '@dxos/util';
 
 import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
 import { SpaceCapabilities } from '../../capabilities';
@@ -33,8 +35,8 @@ export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'target' | 't
 };
 
 export const CreateObjectDialog = ({
-  target,
-  typename,
+  target: initialTarget,
+  typename: initialTypename,
   name,
   shouldNavigate: _shouldNavigate,
 }: CreateObjectDialogProps) => {
@@ -45,6 +47,11 @@ export const CreateObjectDialog = ({
   const spaces = useSpaces();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const forms = useCapabilities(SpaceCapabilities.ObjectForm);
+  const [target, setTarget] = useState<Space | DataType.Collection | undefined>(initialTarget);
+  const [typename, setTypename] = useState<string | undefined>(initialTypename);
+  const space = isSpace(target) ? target : getSpace(target);
+  const queryCollections = useQuery(space, Query.type(DataType.QueryCollection));
+  const hiddenTypenames = queryCollections.map((collection) => collection.query.typename).filter(isNonNullable);
 
   const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(
     (typename) =>
@@ -53,7 +60,7 @@ export const CreateObjectDialog = ({
   );
 
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(
-    async ({ form, target, data = {} }) => {
+    async ({ form, data = {} }) => {
       if (!target) {
         // TODO(wittjosiah): UI feedback.
         return;
@@ -67,7 +74,9 @@ export const CreateObjectDialog = ({
       const result = await dispatch(form.getIntent(data, { space }));
       const object = result.data?.object;
       if (isLiveObject(object)) {
-        const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object, hidden: form.hidden });
+        // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
+        const hidden = form.hidden || hiddenTypenames.includes(Type.getTypename(form.objectSchema));
+        const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object, hidden });
         const shouldNavigate = _shouldNavigate ?? (() => true);
         if (shouldNavigate(object)) {
           await dispatch(pipe(addObjectIntent, chain(LayoutAction.Open, { part: 'main' })));
@@ -76,7 +85,7 @@ export const CreateObjectDialog = ({
         }
       }
     },
-    [dispatch, resolve],
+    [dispatch, target, resolve, hiddenTypenames, _shouldNavigate],
   );
 
   return (
@@ -84,7 +93,9 @@ export const CreateObjectDialog = ({
     //  Consider factoring it out to the tabs package.
     <Dialog.Content classNames={cardDialogContent}>
       <div role='none' className={cardDialogHeader}>
-        <Dialog.Title>{t('create object dialog title')}</Dialog.Title>
+        <Dialog.Title>
+          {t('create object dialog title', { object: t('typename label', { ns: typename, defaultValue: 'Item' }) })}
+        </Dialog.Title>
         <Dialog.Close asChild>
           <Button ref={closeRef} density='fine' variant='ghost' autoFocus>
             <Icon icon='ph--x--regular' size={4} />
@@ -100,6 +111,8 @@ export const CreateObjectDialog = ({
         name={name}
         defaultSpaceId={client.spaces.default.id}
         resolve={resolve}
+        onTargetChange={setTarget}
+        onTypenameChange={setTypename}
         onCreateObject={handleCreateObject}
       />
     </Dialog.Content>

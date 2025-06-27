@@ -3190,6 +3190,9 @@ importers:
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../common/crypto
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
