@@ -15,6 +15,7 @@ import React, {
   useEffect,
 } from 'react';
 
+import { type Client } from '@dxos/client';
 import { getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Filter } from '@dxos/react-client/echo';
@@ -77,13 +78,14 @@ export type TableMainProps = {
   model?: TableModel;
   presentation?: TablePresentation;
   schema?: Schema.AnyNoContext;
+  client?: Client;
   // TODO(burdon): Rename since attention isn't a useful concept here? Standardize across other components. Pass property into useAttention.
   ignoreAttention?: boolean;
   onRowClick?: (row: any) => void;
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(
-  ({ model, presentation, ignoreAttention, schema, onRowClick }, forwardedRef) => {
+  ({ model, presentation, ignoreAttention, schema, client, onRowClick }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const { t } = useTranslation(translationKey);
@@ -307,12 +309,23 @@ const TableMain = forwardRef<TableController, TableMainProps>(
         if (model && props.referenceSchema && field.referencePath) {
           const space = model.space;
           invariant(space);
-          const schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
+
+          let schema;
+          if (client) {
+            schema = client.graph.schemaRegistry.getSchema(props.referenceSchema);
+          }
+          if (!schema) {
+            schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
+          }
+
+          console.log('schema found:', !!schema);
           if (schema) {
             const { objects } = await space.db.query(Filter.type(schema)).run();
+            console.log('query results:', objects.length, 'objects');
             const options = objects
               .map((obj) => {
                 const value = getValue(obj, field.referencePath!);
+                console.log('object value for', field.referencePath, ':', value);
                 if (!value || typeof value !== 'string') {
                   return undefined;
                 }
@@ -336,7 +349,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
         return [];
       },
-      [model, t],
+      [model, client, t],
     );
 
     if (!model || !modals) {
