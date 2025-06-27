@@ -524,7 +524,7 @@ describe('Query', () => {
     });
   });
 
-  describe.skip('text search', () => {
+  describe('text search', () => {
     beforeEach(async () => {});
 
     test.skipIf(process.env.CI)('vector', async () => {
@@ -556,8 +556,7 @@ describe('Query', () => {
       }
     });
 
-    // TODO(wittjosiah): Currently disabled by default because it's expensive.
-    test.skip('full-text', async () => {
+    test('full-text', async () => {
       const { db } = await builder.createDatabase({ indexing: { fullText: true }, types: [Testing.Task] });
 
       db.add(live(Testing.Task, { title: 'apples' }));
