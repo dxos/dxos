@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { assertObjectModelShape, type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
+import { assertObjectModelShape, type AnyEchoObject, type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -77,12 +77,12 @@ export interface EchoDatabase {
   /**
    * Adds object to the database.
    */
-  add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): AnyLiveObject<T>;
+  add<T extends AnyEchoObject>(obj: Live<T>, opts?: AddOptions): Live<T>;
 
   /**
    * Removes object from the database.
    */
-  remove<T extends BaseObject>(obj: T): void;
+  remove<T extends AnyEchoObject>(obj: T): void;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -277,7 +277,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add reactive object.
    */
-  add<T extends BaseObject>(obj: T, opts?: AddOptions): AnyLiveObject<T> {
+  add<T extends BaseObject>(obj: T, opts?: AddOptions): Live<T> {
     if (!isEchoObject(obj)) {
       const schema = getSchema(obj);
       if (schema != null) {

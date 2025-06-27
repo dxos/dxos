@@ -735,7 +735,7 @@ describe('Query', () => {
       ctx.onTestFinished(unsub);
 
       // Wait for initial renders to complete.
-      await sleep(100);
+      await db.flush({ indexes: true, updates: true });
       log.break();
 
       // THE BUG REPRODUCTION: Delete Bob.
@@ -744,7 +744,7 @@ describe('Query', () => {
       log.break();
 
       // Wait for all reactive updates to complete.
-      await sleep(500);
+      await db.flush({ indexes: true, updates: true });
       log.break();
 
       // TODO(ZaymonFC): Remove this comment once the flash bug is resolved.
@@ -788,7 +788,7 @@ describe('Query', () => {
       ctx.onTestFinished(unsub);
 
       // Wait for initial renders to complete.
-      await sleep(100);
+      await db.flush({ indexes: true, updates: true });
 
       // THE BUG REPRODUCTION: Delete all items in a loop.
       for (const item of objects) {
@@ -796,7 +796,7 @@ describe('Query', () => {
       }
 
       // Wait for all reactive updates to complete.
-      await sleep(500);
+      await db.flush({ indexes: true, updates: true });
 
       // TODO(ZaymonFC): Remove this comment once the bulk delete bug is resolved.
       /*
