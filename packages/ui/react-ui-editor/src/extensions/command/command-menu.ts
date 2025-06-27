@@ -173,9 +173,12 @@ export const commandMenu = (options: CommandMenuOptions) => {
   return [
     Prec.highest(commandKeymap),
     placeholder(
-      options.placeholder ?? {
-        content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
-      },
+      Object.assign(
+        {
+          content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
+        },
+        options.placeholder,
+      ),
     ),
     updateListener,
     commandMenuState,

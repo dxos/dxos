@@ -8,7 +8,7 @@ import { useDropzone } from 'react-dropzone';
 
 import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type DNDOptions,
   type EditorInputMode,
@@ -20,15 +20,12 @@ import {
   type CommandMenuGroup,
   type UseTextEditorProps,
   addLink,
-  coreSlashCommands,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
   editorGutter,
   editorSlots,
-  filterItems,
-  linkSlashCommands,
   processEditorPayload,
   stackItemContentEditorClassNames,
   useEditorToolbarState,
@@ -74,22 +71,21 @@ export const MarkdownEditor = ({
   const { t } = useTranslation();
   const viewRef = useRef<EditorView>();
 
-  const getMenu = useCallback(
-    (trigger: string, query?: string) => {
-      switch (trigger) {
-        case '@':
-          return onLinkQuery?.(query) ?? [];
-        case '/':
-        default:
-          return filterItems([coreSlashCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
-            query ? toLocalizedString(item.label, t).toLowerCase().includes(query.toLowerCase()) : true,
-          );
-      }
-    },
-    [onLinkQuery, slashCommandGroups],
-  );
+  // const getMenu = useCallback(
+  //   (trigger: string, query?: string) => {
+  //     switch (trigger) {
+  //       case '@':
+  //         return onLinkQuery?.(query) ?? [];
+  //       case '/':
+  //       default:
+  //         return filterItems([coreSlashCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
+  //           query ? toLocalizedString(item.label, t).toLowerCase().includes(query.toLowerCase()) : true,
+  //         );
+  //     }
+  //   },
+  //   [onLinkQuery, slashCommandGroups],
+  // );
 
-  const commandMenu = undefined;
   // const { commandMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useCommandMenu({
   //   viewRef,
   //   trigger: onLinkQuery ? ['/', '@'] : '/',
@@ -106,11 +102,11 @@ export const MarkdownEditor = ({
   //   getMenu,
   // });
 
-  const extensions = useMemo(() => [_extensions, commandMenu].filter(isNotFalsy), [_extensions, commandMenu]);
+  // const extensions = useMemo(() => [_extensions, commandMenu].filter(isNotFalsy), [_extensions, commandMenu]);
 
   return (
     // <RefPopover modal={false} {...refPopoverProps}>
-    <MarkdownEditorImpl ref={viewRef} {...props} extensions={extensions} />
+    <MarkdownEditorImpl ref={viewRef} {...props} extensions={_extensions} />
     // <CommandMenu groups={groupsRef.current} currentItem={currentItem} onSelect={onSelect} />
     // </RefPopover>
   );
