@@ -80,9 +80,9 @@ export const preview: Preview = {
     darkMode: {
       classTarget: 'html',
       stylePreview: true,
-      dark: { ...themes.dark },
+      // dark: { ...themes.dark },
       darkClass: 'dark',
-      light: { ...themes.light },
+      // light: { ...themes.light },
       lightClass: 'light',
     },
   },
