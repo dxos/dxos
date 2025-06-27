@@ -716,9 +716,9 @@ describe('Query', () => {
       const { db } = await builder.createDatabase({ types: [Testing.Contact] });
 
       // Create 3 test objects: Alice, Bob, Charlie.
-      const alice = db.add(Obj.make(Testing.Contact, { name: 'Alice' }));
+      const _alice = db.add(Obj.make(Testing.Contact, { name: 'Alice' }));
       const bob = db.add(Obj.make(Testing.Contact, { name: 'Bob' }));
-      const charlie = db.add(Obj.make(Testing.Contact, { name: 'Charlie' }));
+      const _charlie = db.add(Obj.make(Testing.Contact, { name: 'Charlie' }));
       await db.flush({ indexes: true });
 
       // Track all updates to observe the bug.
@@ -775,7 +775,7 @@ describe('Query', () => {
       const unsub = db.query(Query.select(Filter.type(Expando))).subscribe(
         (query) => {
           const values = query.objects.map((obj) => obj.value);
-          updates.push(new Set(values));
+          updates.push(new Set(values.sort()));
         },
         { fire: true },
       );
