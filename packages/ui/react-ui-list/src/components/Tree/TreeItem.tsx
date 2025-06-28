@@ -81,8 +81,8 @@ const RawTreeItem = <T extends HasId = any>({
   const [instruction, setInstruction] = useState<Instruction | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const { getTraversal, getProps, isOpen, isCurrent } = useTree();
-  const items = getTraversal(item);
+  const { getChildItems, getProps, isOpen, isCurrent } = useTree();
+  const items = getChildItems(item);
   const { id, label, parentOf, icon, disabled, className, headingClassName, testId } = useMemo(
     () => getProps(item, _path),
     [getProps, item, _path],

@@ -17,8 +17,8 @@ import {
   useLayout,
 } from '@dxos/app-framework';
 import { isAction, isActionLike, ROOT_ID, type Node, type ReadableGraph } from '@dxos/app-graph';
+import { log } from '@dxos/log';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { useConnections } from '@dxos/plugin-graph';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { isTreeData, type TreeItemDataProps, type TreeData } from '@dxos/react-ui-list';
 import { mx } from '@dxos/react-ui-theme';
@@ -71,15 +71,14 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const layout = useLayout();
 
   const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
+  const getChildItems = (node?: Node, { disposition, sort = false }: TraveralOptions = {}) => {
+    log.info('getChildItems', { node: node?.id });
+    if (!node) {
+      return [];
+    }
 
-  // TODO(burdon): CANNOT PROVIDE HOOKS LIKE THIS.
-  const getTraversal = (node?: Node, { sort = false }: TraveralOptions = {}) => {
-    console.log('getTraversal', node?.id);
-    const connections = useConnections(graph, node?.id ?? ROOT_ID).filter((node) =>
-      filterNodeItems(node, options?.disposition),
-    );
-
-    return options?.sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
+    const connections = graph.getConnections(node.id).filter((node) => filterNodeItems(node, disposition));
+    return sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
   };
 
   const getProps = useCallback(
@@ -273,7 +272,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     () => ({
       tab,
       getProps,
-      getTraversal,
+      getChildItems,
       getActions,
       loadDescendents,
       renderItemEnd,
@@ -291,12 +290,12 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     }),
     [
       tab,
+      getProps,
       getActions,
       loadDescendents,
       renderItemEnd,
       popoverAnchorId,
       topbar,
-      getProps,
       isCurrent,
       isOpen,
       canDrop,

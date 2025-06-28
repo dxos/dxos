@@ -12,11 +12,11 @@ import type { MaybePromise } from '@dxos/util';
 import { type L1PanelProps } from './Sidebar';
 import type { FlattenedActions, NavTreeItemGraphNode } from '../types';
 
-export type TraveralOptions = { connections?: Node[]; disposition?: string; sort?: boolean };
+export type TraveralOptions = { disposition?: string; sort?: boolean };
 
 export type NavTreeContextValue = Pick<
   TreeProps<NavTreeItemGraphNode, TraveralOptions>,
-  'getProps' | 'getTraversal' | 'isCurrent' | 'isOpen' | 'canDrop' | 'onOpenChange' | 'onSelect'
+  'getProps' | 'getChildItems' | 'isCurrent' | 'isOpen' | 'canDrop' | 'onOpenChange' | 'onSelect'
 > &
   Pick<L1PanelProps, 'onBack'> & {
     tab: string;

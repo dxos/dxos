@@ -19,9 +19,14 @@ export type TreeItemDataProps = {
 };
 
 export type TreeContextType<T = any, O = any> = {
+  /**
+   * Get custom props for node.
+   */
   getProps: (item: T, parent: string[]) => TreeItemDataProps;
-  // TODO(burdon): Rename.
-  getTraversal: (parent?: T, options?: O) => T[];
+  /**
+   * Get traversal of nodes.
+   */
+  getChildItems: (parent?: T, options?: O) => T[];
   isOpen: (path: string[], item: T) => boolean;
   isCurrent: (path: string[], item: T) => boolean;
 };

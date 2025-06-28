@@ -57,9 +57,6 @@ const meta: Meta<typeof Tree<TestItem>> = {
   },
   args: {
     id: tree.id,
-    getTraversal: (testItem?: TestItem) => {
-      return testItem?.items ?? tree.items;
-    },
     getProps: (testItem: TestItem) => ({
       id: testItem.id,
       label: testItem.name,
@@ -68,6 +65,9 @@ const meta: Meta<typeof Tree<TestItem>> = {
         parentOf: testItem.items!.map(({ id }) => id),
       }),
     }),
+    getChildItems: (testItem?: TestItem) => {
+      return testItem?.items ?? tree.items;
+    },
     isOpen: (_path: string[]) => {
       const path = Path.create(..._path);
       const object = state.get(path) ?? live({ open: false, current: false });

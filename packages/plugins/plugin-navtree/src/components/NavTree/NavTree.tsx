@@ -4,9 +4,6 @@
 
 import React, { useMemo } from 'react';
 
-import { useAppGraph } from '@dxos/app-framework';
-import { type Node } from '@dxos/app-graph';
-import { ROOT_ID, useConnections } from '@dxos/plugin-graph';
 import { type TreeProps } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 
@@ -20,15 +17,12 @@ export const NAV_TREE_ITEM = 'NavTreeItem';
 export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'> & Pick<L1PanelsProps, 'open'>;
 
 export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
-  const { tab, getTraversal, onBack } = useNavTreeContext();
+  const { tab, getChildItems, onBack } = useNavTreeContext();
 
-  const { graph } = useAppGraph();
-  const connections: Node[] = useConnections(graph, root?.id ?? ROOT_ID);
-
-  const topLevelActions = getTraversal(root, { connections, disposition: 'menu', sort: true });
-  const topLevelCollections = getTraversal(root, { connections, disposition: 'collection' });
-  const topLevelWorkspaces = getTraversal(root, { connections, disposition: 'workspace' });
-  const topLevelNavigation = getTraversal(root, { connections, disposition: 'navigation' });
+  const topLevelActions = getChildItems(root, { disposition: 'menu', sort: true });
+  const topLevelCollections = getChildItems(root, { disposition: 'collection' });
+  const topLevelWorkspaces = getChildItems(root, { disposition: 'workspace' });
+  const topLevelNavigation = getChildItems(root, { disposition: 'navigation' });
   const l0Items = useMemo(
     () => [
       // prettier-ignore
@@ -38,8 +32,8 @@ export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
     ],
     [topLevelCollections, topLevelWorkspaces, topLevelNavigation],
   );
-  const pinnedItems = getTraversal(root, { connections, disposition: 'pin-end', sort: true });
-  const userAccountItem = getTraversal(root, { connections, disposition: 'user-account' })[0];
+  const pinnedItems = getChildItems(root, { disposition: 'pin-end', sort: true });
+  const userAccountItem = getChildItems(root, { disposition: 'user-account' })[0];
   const topLevelItems = useMemo(
     () => [
       // prettier-ignore

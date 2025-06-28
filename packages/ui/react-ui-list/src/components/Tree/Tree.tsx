@@ -23,7 +23,7 @@ export const Tree = <T extends HasId = any>({
   path,
   id,
   getProps,
-  getTraversal,
+  getChildItems,
   isOpen,
   isCurrent,
   draggable = false,
@@ -37,14 +37,14 @@ export const Tree = <T extends HasId = any>({
 }: TreeProps<T>) => {
   const context = useMemo<TreeContextType>(
     () => ({
-      getTraversal,
+      getChildItems,
       getProps,
       isOpen,
       isCurrent,
     }),
-    [getTraversal, getProps, isOpen, isCurrent],
+    [getChildItems, getProps, isOpen, isCurrent],
   );
-  const items = getTraversal(root);
+  const items = getChildItems(root);
   const treePath = useMemo(() => (path ? [...path, id] : [id]), [id, path]);
 
   return (
