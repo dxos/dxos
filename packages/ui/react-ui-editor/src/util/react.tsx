@@ -10,24 +10,6 @@ import { defaultTx } from '@dxos/react-ui-theme';
 
 import { type RenderCallback } from '../types';
 
-// TODO(burdon): Factor out.
-
-export type ElementOptions = {
-  className?: string;
-};
-
-export const createElement = (tag: string, options?: ElementOptions, children?: ReactNode): HTMLElement => {
-  const el = document.createElement(tag);
-  if (options?.className) {
-    el.className = options.className;
-  }
-  if (children) {
-    el.append(...(Array.isArray(children) ? children : [children]));
-  }
-
-  return el;
-};
-
 /** @deprecated */
 // TODO(wittjosiah): Replace with portals which are lighter weight and inherit context from the main react tree.
 export const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
