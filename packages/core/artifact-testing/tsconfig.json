@@ -24,6 +24,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -46,6 +49,12 @@
     },
     {
       "path": "../echo/echo"
+    },
+    {
+      "path": "../echo/echo-db"
+    },
+    {
+      "path": "../functions"
     },
     {
       "path": "../mesh/edge-client"

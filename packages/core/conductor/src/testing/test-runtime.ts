@@ -17,6 +17,7 @@ import {
   type ConductorError,
   type Executable,
   type ValueBag,
+  type ValueRecord,
 } from '../types';
 import { WorkflowLoader } from '../workflow';
 
@@ -58,7 +59,10 @@ export class TestRuntime {
     return this;
   }
 
-  runGraph(graphDxn: string, input: ValueBag<any>): Effect.Effect<ValueBag<any>, ConductorError, Scope> {
+  runGraph<T extends ValueRecord = any>(
+    graphDxn: string,
+    input: ValueBag<any>,
+  ): Effect.Effect<ValueBag<T>, ConductorError, Scope> {
     const serviceLayer = this._serviceContainer.createLayer();
     return Effect.gen(this, function* () {
       const program = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));

@@ -80,6 +80,7 @@ export class ServiceContainer {
     if (!service) {
       throw new Error(`Service not available: ${tag.key}`);
     }
+
     return service as Context.Tag.Service<T>;
   }
 
