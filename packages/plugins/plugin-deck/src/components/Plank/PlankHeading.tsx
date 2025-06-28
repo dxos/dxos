@@ -169,7 +169,7 @@ export const PlankHeading = memo(
       >
         {companions && isCompanionNode ? (
           /* TODO(thure): IMPORTANT: This is a tablist; it should be implemented as such. */
-          <div role='none' className='flex-1 min-is-0 overflow-x-auto scrollbar-thin flex gap-1'>
+          <div role='none' className='flex-1 min-is-0 overflow-x-auto scrollbar-none flex gap-1'>
             {companions.map(({ id, properties: { icon, label } }) => (
               <IconButton
                 key={id}
