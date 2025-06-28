@@ -18,7 +18,6 @@
     "@storybook/blocks": "~8.3.6",
     "@storybook/builder-vite": "~8.3.6",
     "@storybook/core-server": "~8.3.6",
-    "@storybook/test": "~8.3.6",
     "@storybook/web-components": "~8.3.6",
     "@storybook/web-components-vite": "~8.3.6",
     "lit": "^3.2.0",

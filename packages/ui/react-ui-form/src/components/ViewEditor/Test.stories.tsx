@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import { within, userEvent, expect, fn } from '@storybook/test';
+import { expect, fn, within, userEvent } from '@storybook/test';
 import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
