@@ -4,6 +4,9 @@
     "defaultBase": "main"
   },
   "parallel": 6,
+  "tui": {
+    "enabled": false
+  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "sharedGlobals": [

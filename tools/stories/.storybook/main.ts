@@ -29,6 +29,13 @@ export const config = (
   baseConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
   turbosnapRootDir?: string,
 ): StorybookConfig => ({
+  addons: [
+    '@dxos/theme-editor-addon',
+    '@storybook/addon-links',
+    '@storybook/addon-themes',
+    '@storybook/addon-vitest',
+    'storybook-dark-mode',
+  ],
   framework: {
     name: '@storybook/react-vite',
     options: {
@@ -37,15 +44,8 @@ export const config = (
   },
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
-    // reactDocgen: false,
+    reactDocgen: false,
   },
-  addons: [
-    '@dxos/theme-editor-addon',
-    '@storybook/addon-links',
-    '@storybook/addon-themes',
-    '@storybook/addon-vitest',
-    'storybook-dark-mode',
-  ],
   ...baseConfig,
 
   /**

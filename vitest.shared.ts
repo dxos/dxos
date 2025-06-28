@@ -35,7 +35,7 @@ const createNodeConfig = (cwd: string) =>
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui
     // http://localhost:51204/__inspect/#/
-    plugins: [process.env.VITE_INSPECT && Inspect()],
+    plugins: [process.env.VITE_INSPECT ? Inspect() : undefined],
   });
 
 type BrowserOptions = {
@@ -131,7 +131,7 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
 
 export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
 
-export const baseConfig = (options: ConfigOptions = {}): ViteConfig => {
+export const baseConfig = (options: ConfigOptions): ViteConfig => {
   switch (environment) {
     case 'chromium':
       return createBrowserConfig({ browserName: environment, ...options });
