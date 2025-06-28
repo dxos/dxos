@@ -6,12 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import { within, userEvent, expect, fn } from '@storybook/test';
 import React from 'react';
 
-// TODO(burdon): Need node exports.
 import { withTheme } from '@dxos/storybook-utils';
-
-// https://storybook.js.org/blog/storybook-test
-// https://github.com/storybookjs/storybook/tree/next/code/lib/test
-// TODO(burdon): Set-up: https://www.chromatic.com/storybook
 
 type TestProps = {
   onClick: () => void;
