@@ -43,6 +43,7 @@ export const config = (
     '@dxos/theme-editor-addon',
     '@storybook/addon-links',
     '@storybook/addon-themes',
+    '@storybook/addon-vitest',
     'storybook-dark-mode',
   ],
   ...baseConfig,
