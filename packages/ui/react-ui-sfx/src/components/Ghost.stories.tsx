@@ -60,9 +60,18 @@ export const Trace: Story = {
 
 export const Dragon: Story = {
   args: {
-    DENSITY_DISSIPATION: 3.5,
+    DENSITY_DISSIPATION: 1.5,
     VELOCITY_DISSIPATION: 20,
-    // SPLAT_RADIUS: 5,
+    CURL: 100,
+    COLOR_UPDATE_SPEED: 0.1,
+  },
+};
+
+export const Atomic: Story = {
+  args: {
+    DENSITY_DISSIPATION: 1.5,
+    VELOCITY_DISSIPATION: 15,
+    SPLAT_RADIUS: 5,
     CURL: 100,
     COLOR_UPDATE_SPEED: 0.1,
   },
