@@ -15,14 +15,16 @@ import { Ghost, type GhostProps } from './Ghost';
 const meta: Meta<GhostProps> = {
   title: 'ui/react-ui-sfx/Ghost',
   component: Ghost,
-  render: (props) => (
-    <>
-      <Ghost {...props} />
-      <div className='inset-0 absolute flex justify-center items-center opacity-5'>
-        <DXOS className='w-[40rem] h-[40rem]' />
-      </div>
-    </>
-  ),
+  render: (props: GhostProps) => {
+    return (
+      <>
+        <Ghost {...props} />
+        <div className='inset-0 absolute grid place-content-center'>
+          <DXOS className='w-[40rem] h-[40rem] opacity-5' />
+        </div>
+      </>
+    );
+  },
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-black' })],
 };
 
@@ -50,9 +52,18 @@ export const Trace: Story = {
   args: {
     DENSITY_DISSIPATION: 1.5,
     VELOCITY_DISSIPATION: 20,
-    PRESSURE: 0.1,
-    PRESSURE_ITERATIONS: 20,
+    SPLAT_RADIUS: 0.02,
     CURL: 3,
     COLOR_UPDATE_SPEED: 10,
+  },
+};
+
+export const Dragon: Story = {
+  args: {
+    DENSITY_DISSIPATION: 3.5,
+    VELOCITY_DISSIPATION: 20,
+    // SPLAT_RADIUS: 5,
+    CURL: 100,
+    COLOR_UPDATE_SPEED: 0.1,
   },
 };
