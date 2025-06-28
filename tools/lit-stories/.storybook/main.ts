@@ -19,16 +19,14 @@ const contentFiles = '*.{ts,tsx,js,jsx,css}';
 const isTrue = (str?: string) => str === 'true' || str === '1';
 
 export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>): StorybookConfig => ({
+  addons: [
+    '@storybook/addon-links',
+    '@storybook/addon-themes',
+  ],
   framework: {
     name: '@storybook/web-components-vite',
     options: {},
   },
-  addons: [
-    '@storybook/addon-links',
-    '@storybook/addon-essentials',
-    '@storybook/addon-interactions',
-    '@storybook/addon-themes',
-  ],
   docs: {
     autodocs: 'tag',
   },

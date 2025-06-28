@@ -4,6 +4,11 @@
 
 export interface ConfigPluginOpts {
   /**
+   * Root directory of the project.
+   */
+  root?: string;
+
+  /**
    * Path to the DX config files, defaults to current working directory.
    */
   configPath?: string;

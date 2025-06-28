@@ -29,6 +29,13 @@ export const config = (
   baseConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
   turbosnapRootDir?: string,
 ): StorybookConfig => ({
+  addons: [
+    '@dxos/theme-editor-addon',
+    '@storybook/addon-links',
+    '@storybook/addon-themes',
+    '@storybook/addon-vitest',
+    'storybook-dark-mode',
+  ],
   framework: {
     name: '@storybook/react-vite',
     options: {
@@ -39,17 +46,7 @@ export const config = (
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
     reactDocgen: false,
   },
-  addons: [
-    // Please do not disable `addon-essentials` for all stories if one story is crashing due to an infinite loop.
-    // Set `controls: { disable: true }` in the story’s parameters, or set `argTypes` that works for your story instead
-    // of relying on Storybook’s automatic analysis in these cases. See also: https://github.com/storybookjs/storybook/issues/17098
-    '@storybook/addon-essentials',
-    '@storybook/addon-interactions',
-    '@storybook/addon-links',
-    '@storybook/addon-themes',
-    'storybook-dark-mode',
-    '@dxos/theme-editor-addon',
-  ],
+
   ...baseConfig,
 
   /**

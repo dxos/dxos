@@ -46,8 +46,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
     await rm(options.outputPath, { recursive: true });
   } catch {}
 
-  // TODO(wittjosiah): Workspace from context is deprecated.
-  const packagePath = join(context.workspace!.projects[context.projectName!].root, 'package.json');
+  const packagePath = join(context.projectsConfigurations!.projects[context.projectName!].root, 'package.json');
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
   const swcTransformPlugin = new SwcTransformPlugin({

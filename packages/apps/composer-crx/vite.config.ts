@@ -49,13 +49,15 @@ export default defineConfig({
   },
   plugins: [
     SourceMapsPlugin(),
-    ConfigPlugin(),
+    ConfigPlugin({
+      root: __dirname,
+    }),
     ThemePlugin({
       root: __dirname,
       content: [
         join(__dirname, './index.html'),
         join(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),    
+        join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
     IconsPlugin({

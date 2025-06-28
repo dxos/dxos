@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Plugin } from 'esbuild';
+import { type Plugin } from 'esbuild';
 
 // Keep in sync with packages/common/node-std/src/inject-globals.js
 const GLOBALS = ['global', 'Buffer', 'process'];
@@ -10,7 +10,11 @@ const GLOBALS = ['global', 'Buffer', 'process'];
 /**
  * Rewrite `node:` imports to `@dxos/node-std` package and mark them as external.
  */
-export const NodeExternalPlugin = ({ injectGlobals = false, importGlobals = false, nodeStd = false } = {}): Plugin => ({
+export const NodeExternalPlugin = ({ 
+  injectGlobals = false, 
+  importGlobals = false, 
+  nodeStd = false,
+} = {}): Plugin => ({
   name: 'node-external',
   setup: ({ initialOptions, onResolve, onLoad }) => {
     if (initialOptions.platform === 'node') {

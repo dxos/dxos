@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import type { Plugin } from 'esbuild';
+import { type Plugin } from 'esbuild';
 
 /**
  * Replace graceful-fs with an empty module when bundling for browser.

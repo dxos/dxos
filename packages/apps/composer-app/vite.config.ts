@@ -102,7 +102,9 @@ export default defineConfig((env) => ({
       tsconfigPaths({
         projects: ['../../../tsconfig.paths.json'],
       }),
-    ConfigPlugin(),
+    ConfigPlugin({
+      root: __dirname,
+    }),
     ThemePlugin({
       root: __dirname,
       content: [
