@@ -253,7 +253,7 @@ export class QueryResult<T extends AnyEchoObject = AnyEchoObject> {
       this._objectCache.length !== objects.length ||
       this._objectCache.some((obj, index) => obj.id !== objects[index].id);
 
-    log('recomputeResult', {
+    log.info('recomputeResult', {
       old: this._objectCache?.map((obj) => obj.id),
       new: objects.map((obj) => obj.id),
       changed,
