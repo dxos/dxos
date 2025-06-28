@@ -7,7 +7,6 @@ import { defaultKeymap, indentWithTab } from '@codemirror/commands';
 import { markdownLanguage, markdown } from '@codemirror/lang-markdown';
 import { syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
-import { lintKeymap } from '@codemirror/lint';
 import { type Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 
@@ -66,7 +65,6 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
         // https://codemirror.net/docs/ref/#commands.defaultKeymap
         ...defaultKeymap,
         ...completionKeymap,
-        ...lintKeymap,
       ].filter(isNotFalsy),
     ),
   ];
