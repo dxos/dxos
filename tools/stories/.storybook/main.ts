@@ -48,6 +48,8 @@ export const config = (
     '@storybook/addon-interactions',
     '@storybook/addon-links',
     '@storybook/addon-themes',
+    // TOOD(burdon): Configure testing.
+    // '@storybook/addon-vitest',
     'storybook-dark-mode',
   ],
   ...baseConfig,
