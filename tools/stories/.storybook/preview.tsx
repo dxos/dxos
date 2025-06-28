@@ -85,9 +85,5 @@ export const preview: Preview = {
       light: { ...themes.light },
       lightClass: 'light',
     },
-
-    options: {
-      showPanel: false,
-    },
   },
 };
