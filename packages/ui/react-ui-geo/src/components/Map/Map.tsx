@@ -38,7 +38,7 @@ type MapRootProps = ThemedClassName<MapContainerProps>;
 const MapRoot = ({ classNames, center = defaults.center, zoom = defaults.zoom, ...props }: MapRootProps) => {
   return (
     <MapContainer
-      className={mx('relative flex w-full h-full grow bg-baseSurface', classNames)}
+      className={mx('relative grid grow bg-baseSurface', classNames)}
       attributionControl={false}
       // TODO(burdon): Only if attention.
       scrollWheelZoom={true}

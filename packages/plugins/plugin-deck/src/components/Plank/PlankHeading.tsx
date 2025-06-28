@@ -167,8 +167,9 @@ export const PlankHeading = memo(
         ]}
         data-plank-heading
       >
-        {companions && isCompanionNode /* TODO(thure): This is a tablist, it should be implemented as such. */ ? (
-          <div role='none' className='flex-1 min-is-0 overflow-x-auto scrollbar-thin flex gap-1'>
+        {companions && isCompanionNode ? (
+          /* TODO(thure): IMPORTANT: This is a tablist; it should be implemented as such. */
+          <div role='none' className='flex-1 min-is-0 overflow-x-auto scrollbar-none flex gap-1'>
             {companions.map(({ id, properties: { icon, label } }) => (
               <IconButton
                 key={id}
@@ -177,7 +178,7 @@ export const PlankHeading = memo(
                 iconOnly={companions.length > MAX_COMPANIONS && node?.id !== id}
                 label={toLocalizedString(label, t)}
                 size={5}
-                variant={node?.id === id ? 'primary' : 'default'}
+                variant={node?.id === id ? 'primary' : 'ghost'}
                 onClick={handleTabClick}
               />
             ))}

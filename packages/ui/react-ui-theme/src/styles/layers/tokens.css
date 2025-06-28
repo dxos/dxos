@@ -11,14 +11,14 @@
     --rail-action: calc(var(--rail-content) - 0.5rem + 1px);
     --rail-item: calc(var(--rail-content) - 1rem);
     --topbar-size: var(--rail-size);
+    --toolbar-size: var(--rail-content);
     --statusbar-size: theme(spacing.8);
     --nav-sidebar-size: 22.5rem;
+    --complementary-sidebar-size: 25rem;
     /* NOTE(thure): 74px (rather than rem) is intentional in order to match the size of macOS windowing controls. */
     --l0-size: 74px;
-    /* --l0-avatar-size: var(--rail-action); */
     --l0-avatar-size: 3rem;
     --l1-size: calc(var(--nav-sidebar-size) - var(--l0-size));
-    --complementary-sidebar-size: 25rem;
     --r0-size: var(--rail-size);
     --r1-size: calc(var(--complementary-sidebar-size) - var(--r0-size));
     --text-content: calc(50rem - env(safe-area-inset-left) - env(safe-area-inset-right));
