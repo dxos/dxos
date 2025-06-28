@@ -263,8 +263,8 @@ const L0Collection = ({ item, path }: L0ItemProps) => {
   useLoadDescendents(item);
   const navTreeContext = useNavTreeContext();
   const collectionItems = navTreeContext.useItems(item);
+  const { id, testId } = navTreeContext.getProps(item, path) ?? {};
   const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
-  const { id, testId } = navTreeContext.getProps?.(item, path) ?? {};
 
   const handleRearrange = useCallback<StackItemRearrangeHandler<L0ItemData>>(
     (source, target, closestEdge) => {

@@ -10,6 +10,7 @@ import { type ThreadState, type ViewStore } from '../types';
 
 const initialViewState = { showResolvedThreads: false };
 
+// TODO(burdon): Comment?
 export default () => {
   const state = live<ThreadState>({ toolbar: {}, drafts: {} });
   const viewStore = live<ViewStore>({});

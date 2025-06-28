@@ -62,7 +62,7 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
     } else {
       onBack?.();
     }
-  }, [isAlternate, onBack, alternatePath, setAlternateTree]);
+  }, [onBack, isAlternate, alternatePath, setAlternateTree]);
 
   const title = toLocalizedString(item.properties.label, t);
   const backCapable = item.id.startsWith('!') || isAlternate;
@@ -140,6 +140,7 @@ const L1PanelCollection = ({ item, path, ...props }: L1PanelProps) => {
   useLoadDescendents(item);
   const collectionItems = useItems(item);
   const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
+
   return (
     <>
       {collectionItems
