@@ -42,19 +42,22 @@ export type L1PanelProps = {
 const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
   const { isAlternateTree, setAlternateTree, ...navTreeContext } = useNavTreeContext();
   const { t } = useTranslation(NAVTREE_PLUGIN);
+  console.log('L1Panel', item.id);
 
   // TODO(wittjosiah): Support multiple alternate trees.
-  const alternateTree = navTreeContext.useItems(item, { disposition: 'alternate-tree' })[0];
+  const alternateTree = navTreeContext.getTraversal(item, { disposition: 'alternate-tree' })[0];
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
-  const handleOpen = useCallback(() => setAlternateTree?.(alternatePath, true), [alternatePath, setAlternateTree]);
   const isAlternate = isAlternateTree?.(alternatePath, item) ?? false;
-  const useAlternateItems = useCallback(
+
+  const getAlternateItems = useCallback(
     (node?: Node, { disposition }: { disposition?: string } = {}) => {
       // TODO(wittjosiah): Sorting is expensive, limit to necessary items for now.
-      return navTreeContext.useItems(node, { disposition, sort: node?.id === alternateTree.id });
+      return navTreeContext.getTraversal(node, { disposition, sort: node?.id === alternateTree.id });
     },
     [navTreeContext, alternateTree],
   );
+
+  const handleOpen = useCallback(() => setAlternateTree?.(alternatePath, true), [alternatePath, setAlternateTree]);
 
   const handleBack = useCallback(() => {
     if (isAlternate) {
@@ -108,7 +111,7 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
             {isAlternate ? (
               <Tree
                 {...navTreeContext}
-                useItems={useAlternateItems}
+                getTraversal={getAlternateItems}
                 id={alternateTree.id}
                 root={alternateTree}
                 path={alternatePath}
@@ -136,9 +139,9 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
 };
 
 const L1PanelCollection = ({ item, path, ...props }: L1PanelProps) => {
-  const { useItems } = useNavTreeContext();
   useLoadDescendents(item);
-  const collectionItems = useItems(item);
+  const { getTraversal } = useNavTreeContext();
+  const collectionItems = getTraversal(item);
   const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
 
   return (

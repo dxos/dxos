@@ -26,7 +26,7 @@ import { arrayMove, byPosition } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree } from './NavTree';
 import { NavTreeContext } from './NavTreeContext';
-import { type NavTreeContextValue } from './types';
+import { type TraveralOptions, type NavTreeContextValue } from './types';
 import { NavTreeCapabilities } from '../capabilities';
 import { NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
@@ -42,7 +42,7 @@ const renderItemEnd = ({ node, open }: { node: Node; open: boolean }) => (
 const getChildrenFilter = (node: Node): node is Node =>
   untracked(() => !isActionLike(node) && node.type !== PLANK_COMPANION_TYPE);
 
-const filterItems = (node: Node, disposition?: string) => {
+const filterNodeItems = (node: Node, disposition?: string) => {
   if (!disposition && (node.properties.disposition === 'hidden' || node.properties.disposition === 'alternate-tree')) {
     return false;
   } else if (!disposition) {
@@ -54,13 +54,16 @@ const filterItems = (node: Node, disposition?: string) => {
 };
 
 const getItems = (graph: ReadableGraph, node?: Node, disposition?: string) => {
-  return graph.getConnections(node?.id ?? ROOT_ID, 'outbound').filter((node) => filterItems(node, disposition));
+  return graph.getConnections(node?.id ?? ROOT_ID, 'outbound').filter((node) => filterNodeItems(node, disposition));
 };
 
-const useItems = (node?: Node, options?: { disposition?: string; sort?: boolean }) => {
+// TODO(burdon): Reconcile with getChildren.
+// TODO(burdon): CANNOT PROVIDE HOOKS LIKE THIS.
+const getTraversal = (node?: Node, options?: TraveralOptions) => {
+  console.log('getTraversal', node?.id);
   const { graph } = useAppGraph();
   const connections = useConnections(graph, node?.id ?? ROOT_ID).filter((node) =>
-    filterItems(node, options?.disposition),
+    filterNodeItems(node, options?.disposition),
   );
 
   return options?.sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
@@ -270,9 +273,9 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
   const navTreeContextValue = useMemo<NavTreeContextValue>(
     () => ({
-      useItems,
       tab,
       getActions,
+      getTraversal,
       loadDescendents,
       renderItemEnd,
       popoverAnchorId,

@@ -19,8 +19,7 @@ export type TreeItemDataProps = {
 };
 
 export type TreeContextType<T = any> = {
-  // TODO(burdon): Don't provide hooks like this.
-  useItems: (parent?: T) => T[];
+  getTraversal: (parent?: T) => T[];
   getProps: (item: T, parent: string[]) => TreeItemDataProps;
   isOpen: (path: string[], item: T) => boolean;
   isCurrent: (path: string[], item: T) => boolean;
@@ -28,6 +27,6 @@ export type TreeContextType<T = any> = {
 
 const TreeContext = createContext<null | TreeContextType>(null);
 
-export const useTree = () => useContext(TreeContext) ?? raise(new Error('TreeContext not found'));
-
 export const TreeProvider = TreeContext.Provider;
+
+export const useTree = () => useContext(TreeContext) ?? raise(new Error('TreeContext not found'));

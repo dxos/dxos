@@ -57,7 +57,7 @@ const meta: Meta<typeof Tree<TestItem>> = {
   },
   args: {
     id: tree.id,
-    useItems: (testItem?: TestItem) => {
+    getTraversal: (testItem?: TestItem) => {
       return testItem?.items ?? tree.items;
     },
     getProps: (testItem: TestItem) => ({

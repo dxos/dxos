@@ -17,11 +17,11 @@ export const NAV_TREE_ITEM = 'NavTreeItem';
 export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'> & Pick<L1PanelsProps, 'open'>;
 
 export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
-  const { tab, useItems, onBack } = useNavTreeContext();
-  const topLevelActions = useItems(root, { disposition: 'menu', sort: true });
-  const topLevelCollections = useItems(root, { disposition: 'collection' });
-  const topLevelWorkspaces = useItems(root, { disposition: 'workspace' });
-  const topLevelNavigation = useItems(root, { disposition: 'navigation' });
+  const { tab, getTraversal, onBack } = useNavTreeContext();
+  const topLevelActions = getTraversal(root, { disposition: 'menu', sort: true });
+  const topLevelCollections = getTraversal(root, { disposition: 'collection' });
+  const topLevelWorkspaces = getTraversal(root, { disposition: 'workspace' });
+  const topLevelNavigation = getTraversal(root, { disposition: 'navigation' });
   const l0Items = useMemo(
     () => [
       // prettier-ignore
@@ -31,8 +31,8 @@ export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
     ],
     [topLevelCollections, topLevelWorkspaces, topLevelNavigation],
   );
-  const pinnedItems = useItems(root, { disposition: 'pin-end', sort: true });
-  const userAccountItem = useItems(root, { disposition: 'user-account' })[0];
+  const pinnedItems = getTraversal(root, { disposition: 'pin-end', sort: true });
+  const userAccountItem = getTraversal(root, { disposition: 'user-account' })[0];
   const topLevelItems = useMemo(
     () => [
       // prettier-ignore

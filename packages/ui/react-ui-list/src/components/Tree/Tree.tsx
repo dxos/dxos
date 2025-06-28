@@ -22,7 +22,7 @@ export const Tree = <T extends HasId = any>({
   root,
   path,
   id,
-  useItems,
+  getTraversal,
   getProps,
   isOpen,
   isCurrent,
@@ -30,21 +30,21 @@ export const Tree = <T extends HasId = any>({
   gridTemplateColumns = '[tree-row-start] 1fr min-content [tree-row-end]',
   classNames,
   renderColumns,
+  levelOffset,
   canDrop,
   onOpenChange,
   onSelect,
-  levelOffset,
 }: TreeProps<T>) => {
-  const context = useMemo(
+  const context = useMemo<TreeContextType>(
     () => ({
-      useItems,
+      getTraversal,
       getProps,
       isOpen,
       isCurrent,
     }),
-    [useItems, getProps, isOpen, isCurrent],
+    [getTraversal, getProps, isOpen, isCurrent],
   );
-  const items = useItems(root);
+  const items = getTraversal(root);
   const treePath = useMemo(() => (path ? [...path, id] : [id]), [id, path]);
 
   return (
