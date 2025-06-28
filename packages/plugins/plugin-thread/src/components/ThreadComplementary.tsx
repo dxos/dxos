@@ -5,16 +5,16 @@
 import React, { useCallback, useMemo } from 'react';
 
 import {
-  createIntent,
+  Capabilities,
   LayoutAction,
+  createIntent,
   useCapability,
   useCapabilities,
   useIntentDispatcher,
-  Capabilities,
 } from '@dxos/app-framework';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { RelationSourceId } from '@dxos/echo-schema';
-import { fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, useObjectId, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
@@ -32,9 +32,10 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const identity = useIdentity();
   const { t } = useTranslation(THREAD_PLUGIN);
   const { tx } = useThemeContext();
+  const subjectId = useObjectId(subject);
 
   const { state, getViewState } = useCapability(ThreadCapabilities.MutableState);
-  const viewState = getViewState(fullyQualifiedId(subject));
+  const viewState = useMemo(() => getViewState(subjectId), [getViewState, subject]);
   const { showResolvedThreads } = viewState;
   const onChangeViewState = useCallback(
     (nextValue: string) => {
@@ -42,7 +43,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
     },
     [viewState],
   );
-  const drafts = state.drafts[fullyQualifiedId(subject)];
+  const drafts = state.drafts[subjectId];
 
   const anchorSorts = useCapabilities(Capabilities.AnchorSort);
   const sort = useMemo(
@@ -58,8 +59,6 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
     .concat(drafts ?? []);
 
   const attended = useAttended();
-  const qualifiedSubjectId = fullyQualifiedId(subject);
-
   const handleAttend = useCallback(
     (anchor: AnchoredTo) => {
       const thread = anchor[RelationSourceId] as ThreadType;
@@ -118,7 +117,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const comments = (
     <CommentsContainer
       anchors={anchors}
-      currentId={attended.includes(qualifiedSubjectId) ? state.current : undefined}
+      currentId={attended.includes(subjectId) ? state.current : undefined}
       showResolvedThreads={showResolvedThreads}
       onAttend={handleAttend}
       onComment={handleComment}
@@ -132,9 +131,9 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
     <StackItem.Content toolbar>
       <Tabs.Root
         value={showResolvedThreads ? 'all' : 'unresolved'}
-        onValueChange={onChangeViewState}
         orientation='horizontal'
         classNames='contents [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin'
+        onValueChange={onChangeViewState}
       >
         <Tabs.Tablist classNames={tx('toolbar.root', 'toolbar', {})}>
           <Tabs.Tab value='unresolved' classNames='text-sm'>
