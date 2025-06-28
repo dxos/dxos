@@ -1,0 +1,77 @@
+
+> @dxos/stories@0.8.2 build-storybook /Users/burdon/Code/dxos/dxos/tools/stories
+> nx run stories:bundle "--output-dir=/var/folders/hr/48cdk7kn6jj464hn09w2x8mr0000gn/T/chromatic--51903-1OomIIGyHgwV"
+
+
+ NX   Running target bundle for project stories and 191 tasks it depends on:
+
+
+
+> nx run log-hook:compile  [local cache]
+
+
+> nx run vite-plugin-icons:build  [local cache]
+
+
+> nx run esbuild-plugins:compile  [local cache]
+
+
+> nx run react-ui-sfx:gen  [local cache]
+
+
+> nx run protobuf-test:build  [local cache]
+
+
+> nx run react-ui-gameboard:gen  [local cache]
+
+
+> nx run vite-plugin-icons:compile  [existing outputs match the cache, left as is]
+
+
+> nx run esbuild:compile  [local cache]
+
+
+> nx run stories:mkdist
+
+> mkdir -p tools/stories/static
+
+
+> nx run errors:compile
+
+
+[0m[7m[1m[31m NX [39m[22m[27m[0m  [31mENOENT: no such file or directory, open 'packages/common/errors/package.json'[39m
+
+Pass --verbose to see the stacktrace.
+
+
+> nx run node-std:compile
+
+
+[0m[7m[1m[31m NX [39m[22m[27m[0m  [31mENOENT: no such file or directory, open 'packages/common/node-std/package.json'[39m
+
+Pass --verbose to see the stacktrace.
+
+
+> nx run react-ui-gameboard:compile
+
+
+[0m[7m[1m[31m NX [39m[22m[27m[0m  [31mENOENT: no such file or directory, open 'packages/ui/react-ui-gameboard/package.json'[39m
+
+Pass --verbose to see the stacktrace.
+
+
+
+
+ NX   Running target bundle for project stories and 191 tasks it depends on failed
+
+Failed tasks:
+
+- errors:compile
+- node-std:compile
+- react-ui-gameboard:compile
+
+Hint: run the command with --verbose for more details.
+
+View structured, searchable error logs at https://cloud.nx.app/runs/8nHWI6ebzv
+
+ ELIFECYCLE  Command failed with exit code 1.
