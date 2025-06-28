@@ -62,6 +62,7 @@ const useItems = (node?: Node, options?: { disposition?: string; sort?: boolean 
   const connections = useConnections(graph, node?.id ?? ROOT_ID).filter((node) =>
     filterItems(node, options?.disposition),
   );
+
   return options?.sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
 };
 
@@ -75,8 +76,8 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useAppGraph();
   const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
-  const layout = useLayout();
   const { navigationSidebarState } = useSidebars(NAVTREE_PLUGIN);
+  const layout = useLayout();
 
   const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
 
@@ -85,6 +86,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       const children = getChildren(graph, node, path).filter(getChildrenFilter);
       const parentOf =
         children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
+
       return {
         id: node.id,
         label: node.properties.label ?? node.id,
@@ -266,7 +268,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [setItem],
   );
 
-  const navTreeContextValue = useMemo(
+  const navTreeContextValue = useMemo<NavTreeContextValue>(
     () => ({
       useItems,
       tab,

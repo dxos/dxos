@@ -21,6 +21,7 @@ export type NavTreeContextValue = Pick<
     topbar?: boolean;
     popoverAnchorId?: string;
     renderItemEnd?: FC<{ node: Node; open: boolean }>;
+    // TODO(burdon): Don't provide hooks like this.
     useItems: (
       node?: NavTreeItemGraphNode,
       options?: { disposition?: string; sort?: boolean },
