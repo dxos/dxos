@@ -4,7 +4,6 @@
 
 import { addons } from '@storybook/manager-api';
 import { create } from '@storybook/theming';
-import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
 
 /**
  * Referenced when story is previewed in browser.
@@ -13,32 +12,11 @@ import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
  */
 addons.setConfig({
   enableShortcuts: true,
-  // NOTE: Option is ignored, so we toggle the panel off below.
-  showPanel: false,
-});
-
-addons.register('dxos', (api) => {
-  // const config = addons.getConfig();
-
-  const update = (darkMode: boolean) => {
-    addons.setConfig({
-      showPanel: false,
-      theme: create({
-        base: darkMode ? 'dark' : 'light',
-        brandTitle: 'DXOS',
-        brandImage: darkMode ? '/dxos-horizontal-white.png' : '/dxos-horizontal-black.png',
-        brandTarget: '_blank',
-        brandUrl: 'https://github.com/dxos',
-      }),
-    });
-  };
-
-  // Manage dark mode from toolbar (not system settings).
-  const currentDarkMode = undefined;
-  const channel = addons.getChannel();
-  channel.on(DARK_MODE_EVENT_NAME, (darkMode) => {
-    if (currentDarkMode !== darkMode) {
-      update(darkMode);
-    }
-  });
+  theme: create({
+    base: 'dark',
+    brandTitle: 'DXOS',
+    brandImage: '/dxos.png',
+    brandTarget: '_blank',
+    brandUrl: 'https://github.com/dxos',
+  }),
 });
