@@ -8,9 +8,15 @@ import { afterEach, describe, expect, test } from 'vitest';
 
 import { ViewProjection } from '@dxos/schema';
 
+import { type FieldEditorProps } from './FieldEditor';
 import * as stories from './FieldEditor.stories';
-import { type FieldEditorDebugObjects } from './FieldEditor.stories';
 import { FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
+
+// Type definition for debug objects exposed to tests.
+export type FieldEditorDebugObjects = {
+  props: FieldEditorProps;
+  projection: ViewProjection;
+};
 
 const { Default } = composeStories(stories);
 

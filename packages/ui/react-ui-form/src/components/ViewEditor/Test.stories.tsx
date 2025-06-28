@@ -11,20 +11,29 @@ import { withTheme } from '@dxos/storybook-utils';
 
 // https://storybook.js.org/blog/storybook-test
 // https://github.com/storybookjs/storybook/tree/next/code/lib/test
-
 // TODO(burdon): Set-up: https://www.chromatic.com/storybook
 
-export type TestProps = {
+type TestProps = {
   onClick: () => void;
 };
 
-export const Test = ({ onClick }: TestProps) => (
+const Test = ({ onClick }: TestProps) => (
   <button className='p-2' onClick={onClick}>
     Test
   </button>
 );
 
-export const Primary: StoryObj<TestProps> = {
+const meta: Meta<TestProps> = {
+  title: 'ui/react-ui-form/Test',
+  component: Test,
+  decorators: [withTheme],
+};
+
+export default meta;
+
+type Story = StoryObj<TestProps>;
+
+export const Default: Story = {
   // TODO(burdon): Race condition on first load?
   play: async ({ args, canvasElement }: any) => {
     const canvas = within(canvasElement);
@@ -35,11 +44,3 @@ export const Primary: StoryObj<TestProps> = {
     onClick: fn(),
   },
 };
-
-const meta: Meta = {
-  title: 'ui/react-ui-form/Test',
-  component: Test,
-  decorators: [withTheme],
-};
-
-export default meta;
