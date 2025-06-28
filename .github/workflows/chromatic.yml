@@ -1,0 +1,17 @@
+name: 'Chromatic'
+on:
+  push:
+    branches: ['main']
+  pull_request:
+
+jobs:
+  chromatic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - run: pnpm install
+      - run: pnpm exec nx run stories:bundle
+      - run: pnpm exec chromatic --project-token=${{ secrets.CHROMATIC_PROJECT_TOKEN }} --storybook-dir=tools/stories/out/stories
