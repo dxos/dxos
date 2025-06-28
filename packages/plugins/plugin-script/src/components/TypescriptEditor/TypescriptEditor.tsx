@@ -4,6 +4,7 @@
 
 import { javascript } from '@codemirror/lang-javascript';
 import { defaultHighlightStyle } from '@codemirror/language';
+import { lintKeymap } from '@codemirror/lint';
 import { Prec } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { keymap } from '@codemirror/view';
@@ -74,6 +75,7 @@ export const TypescriptEditor = ({
         javascript({ typescript: true }),
         // https://github.com/val-town/codemirror-ts
         autocomplete({ override: env ? [tsAutocomplete()] : undefined }),
+        keymap.of(lintKeymap),
         env && [
           tsFacet.of({ env, path: `/src/${id}.ts` }),
           tsSync(),

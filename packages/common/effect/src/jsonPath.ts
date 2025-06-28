@@ -11,7 +11,7 @@ export type JsonProp = string & { __JsonPath: true; __JsonProp: true };
 export type JsonPath = string & { __JsonPath: true };
 
 const PATH_REGEX = /^($|[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*|\[\d+\](?:\.)?)*$)/;
-const PROP_REGEX = /\w+/;
+const PROP_REGEX = /^\w+$/;
 
 /**
  * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
@@ -20,7 +20,11 @@ export const JsonPath = Schema.String.pipe(Schema.pattern(PATH_REGEX)).annotatio
   title: 'JSON path',
   description: 'JSON path to a property',
 }) as any as Schema.Schema<JsonPath>;
-export const JsonProp = Schema.NonEmptyString.pipe(Schema.pattern(PROP_REGEX)) as any as Schema.Schema<JsonProp>;
+export const JsonProp = Schema.NonEmptyString.pipe(
+  Schema.pattern(PROP_REGEX, {
+    message: () => 'Property name must contain only letters, numbers, and underscores',
+  }),
+) as any as Schema.Schema<JsonProp>;
 
 export const isJsonPath = (value: unknown): value is JsonPath => {
   return Option.isSome(Schema.validateOption(JsonPath)(value));

@@ -21,7 +21,6 @@ export * from './markdown';
 export * from './mention';
 export * from './modes';
 export * from './outliner';
-export * from './placeholder';
 export * from './preview';
 export * from './selection';
 export * from './typewriter';
