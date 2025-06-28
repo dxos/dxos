@@ -9,7 +9,7 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "scripts": {
-    "chromatic-ui": "chromatic --only-changed --storybook-base-dir packages/ui --project-token=\"chpt_54d88c077f59534\" --storybook-build-dir out/ui --exit-zero-on-changes"
+    "chromatic": "chromatic --only-changed --storybook-base-dir stories --project-token=\"chpt_8565ce3985dc41b\" --storybook-build-dir out/stories --exit-zero-on-changes"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
