@@ -16,7 +16,7 @@
     "changed-packages": "scripts/changed",
     "check-cycles": "node scripts/check-cycles.mjs",
     "check-dependencies": "syncpack list-mismatches --filter '!ink'",
-    "chromatic": "chromatic --only-changed --project-token=\"chpt_8565ce3985dc41b\" --storybook-build-dir ./tools/stories/out/stories --exit-zero-on-changes",
+    "chromatic": "chromatic --project-token=\"chpt_8565ce3985dc41b\" --storybook-build-dir ./tools/stories/out/stories",
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
     "postinstall": "tsx tools/executors/toolbox/src/main.ts",
