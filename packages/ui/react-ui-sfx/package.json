@@ -45,6 +45,7 @@
     "three": "0.165.0"
   },
   "devDependencies": {
+    "@dxos/brand": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

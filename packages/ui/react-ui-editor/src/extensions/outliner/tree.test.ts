@@ -4,7 +4,7 @@
 
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
-import { describe, test } from 'vitest';
+import { beforeEach, describe, test } from 'vitest';
 
 import { outlinerTree, treeFacet, listItemToString, type Item } from './tree';
 import { str } from '../../testing';
@@ -71,7 +71,11 @@ describe('tree (boundary conditions)', () => {
 });
 
 describe('tree (advanced)', () => {
-  const state = EditorState.create({ doc: str(...lines), extensions });
+  let state: EditorState;
+
+  beforeEach(() => {
+    state = EditorState.create({ doc: str(...lines), extensions });
+  });
 
   test('traverse', ({ expect }) => {
     const tree = state.facet(treeFacet);
@@ -103,7 +107,6 @@ describe('tree (advanced)', () => {
 
   test('find', ({ expect }) => {
     const tree = state.facet(treeFacet);
-
     expect(tree.find(0)).to.include({ type: 'task' });
     expect(tree.find(state.doc.length)).to.include({ type: 'task' });
 
