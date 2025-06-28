@@ -20,10 +20,11 @@ export const useNode = <T = any>(graph: ReadableGraph, id?: string): Node<T> | u
   return Option.getOrElse(useRxValue(graph.node(id ?? '')), () => undefined);
 };
 
-export const useConnections = (graph: ReadableGraph, id?: string, relation?: Relation): Node[] => {
+export const useConnections = <T = any>(graph: ReadableGraph, id?: string, relation?: Relation): Node<T>[] => {
   return useRxValue(graph.connections(id ?? '', relation));
 };
 
+// TODO(burdon): Add generic.
 export const useActions = (graph: ReadableGraph, id?: string): Node[] => {
   return useRxValue(graph.actions(id ?? ''));
 };

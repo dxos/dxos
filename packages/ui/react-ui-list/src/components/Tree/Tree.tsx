@@ -10,11 +10,11 @@ import { Treegrid, type TreegridRootProps } from '@dxos/react-ui';
 import { type TreeContextType, TreeProvider } from './TreeContext';
 import { TreeItem, type TreeItemProps } from './TreeItem';
 
-export type TreeProps<T extends HasId = any> = {
+export type TreeProps<T extends HasId = any, O = any> = {
   root?: T;
   path?: string[];
   id: string;
-} & TreeContextType<T> &
+} & TreeContextType<T, O> &
   Partial<Pick<TreegridRootProps, 'gridTemplateColumns' | 'classNames'>> &
   Pick<TreeItemProps<T>, 'draggable' | 'renderColumns' | 'canDrop' | 'onOpenChange' | 'onSelect' | 'levelOffset'>;
 
@@ -22,8 +22,8 @@ export const Tree = <T extends HasId = any>({
   root,
   path,
   id,
-  getTraversal,
   getProps,
+  getTraversal,
   isOpen,
   isCurrent,
   draggable = false,

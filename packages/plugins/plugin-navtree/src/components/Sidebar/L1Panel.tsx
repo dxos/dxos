@@ -40,21 +40,21 @@ export type L1PanelProps = {
 };
 
 const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
-  const { isAlternateTree, setAlternateTree, ...navTreeContext } = useNavTreeContext();
+  const { isAlternateTree, setAlternateTree, getTraversal, ...context } = useNavTreeContext();
   const { t } = useTranslation(NAVTREE_PLUGIN);
   console.log('L1Panel', item.id);
 
   // TODO(wittjosiah): Support multiple alternate trees.
-  const alternateTree = navTreeContext.getTraversal(item, { disposition: 'alternate-tree' })[0];
+  const alternateTree = getTraversal(item, { disposition: 'alternate-tree' })[0];
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
   const isAlternate = isAlternateTree?.(alternatePath, item) ?? false;
 
   const getAlternateItems = useCallback(
     (node?: Node, { disposition }: { disposition?: string } = {}) => {
       // TODO(wittjosiah): Sorting is expensive, limit to necessary items for now.
-      return navTreeContext.getTraversal(node, { disposition, sort: node?.id === alternateTree.id });
+      return getTraversal(node, { disposition, sort: node?.id === alternateTree.id });
     },
-    [navTreeContext, alternateTree],
+    [getTraversal, alternateTree],
   );
 
   const handleOpen = useCallback(() => setAlternateTree?.(alternatePath, true), [alternatePath, setAlternateTree]);
@@ -94,6 +94,7 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
             )}
             {alternateTree && !isAlternate && (
               <IconButton
+                data-testid='treeView.alternateTreeButton'
                 variant='ghost'
                 classNames={mx('shrink-0', hoverableControlItem, hoverableOpenControlItem, 'pli-2 pointer-fine:pli-1')}
                 iconOnly
@@ -101,7 +102,6 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
                 density='coarse'
                 icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
                 label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
-                data-testid='treeView.alternateTreeButton'
                 onClick={handleOpen}
               />
             )}
@@ -110,9 +110,9 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
           <div role='none' className='overflow-y-auto'>
             {isAlternate ? (
               <Tree
-                {...navTreeContext}
-                getTraversal={getAlternateItems}
+                {...context}
                 id={alternateTree.id}
+                getTraversal={getAlternateItems}
                 root={alternateTree}
                 path={alternatePath}
                 levelOffset={5}
@@ -121,12 +121,13 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
               />
             ) : (
               <Tree
-                {...navTreeContext}
+                {...context}
                 id={item.id}
+                getTraversal={getAlternateItems}
                 root={item}
                 path={path}
-                levelOffset={5}
                 draggable
+                levelOffset={5}
                 gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
                 renderColumns={NavTreeItemColumns}
               />

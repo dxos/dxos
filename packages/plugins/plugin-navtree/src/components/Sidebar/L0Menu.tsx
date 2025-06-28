@@ -263,9 +263,9 @@ const L0Collection = ({ item, path }: L0ItemProps) => {
   console.log('L0Collection', item.id);
 
   useLoadDescendents(item);
-  const navTreeContext = useNavTreeContext();
-  const collectionItems = navTreeContext.getTraversal(item);
-  const { id, testId } = navTreeContext.getProps(item, path) ?? {};
+  const { getTraversal, getProps } = useNavTreeContext();
+  const collectionItems = getTraversal(item);
+  const { id, testId } = getProps(item, path) ?? {};
   const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
 
   const handleRearrange = useCallback<StackItemRearrangeHandler<L0ItemData>>(

@@ -57,18 +57,6 @@ const getItems = (graph: ReadableGraph, node?: Node, disposition?: string) => {
   return graph.getConnections(node?.id ?? ROOT_ID, 'outbound').filter((node) => filterNodeItems(node, disposition));
 };
 
-// TODO(burdon): Reconcile with getChildren.
-// TODO(burdon): CANNOT PROVIDE HOOKS LIKE THIS.
-const getTraversal = (node?: Node, options?: TraveralOptions) => {
-  console.log('getTraversal', node?.id);
-  const { graph } = useAppGraph();
-  const connections = useConnections(graph, node?.id ?? ROOT_ID).filter((node) =>
-    filterNodeItems(node, options?.disposition),
-  );
-
-  return options?.sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
-};
-
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;
   topbar?: boolean;
@@ -83,6 +71,16 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const layout = useLayout();
 
   const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
+
+  // TODO(burdon): CANNOT PROVIDE HOOKS LIKE THIS.
+  const getTraversal = (node?: Node, { sort = false }: TraveralOptions = {}) => {
+    console.log('getTraversal', node?.id);
+    const connections = useConnections(graph, node?.id ?? ROOT_ID).filter((node) =>
+      filterNodeItems(node, options?.disposition),
+    );
+
+    return options?.sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
+  };
 
   const getProps = useCallback(
     (node: Node, path: string[]): TreeItemDataProps => {
@@ -274,13 +272,13 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const navTreeContextValue = useMemo<NavTreeContextValue>(
     () => ({
       tab,
-      getActions,
+      getProps,
       getTraversal,
+      getActions,
       loadDescendents,
       renderItemEnd,
       popoverAnchorId,
       topbar,
-      getProps,
       isCurrent,
       isOpen,
       canDrop,

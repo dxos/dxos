@@ -18,9 +18,10 @@ export type TreeItemDataProps = {
   testId?: string;
 };
 
-export type TreeContextType<T = any> = {
-  getTraversal: (parent?: T) => T[];
+export type TreeContextType<T = any, O = any> = {
   getProps: (item: T, parent: string[]) => TreeItemDataProps;
+  // TODO(burdon): Rename.
+  getTraversal: (parent?: T, options?: O) => T[];
   isOpen: (path: string[], item: T) => boolean;
   isCurrent: (path: string[], item: T) => boolean;
 };
