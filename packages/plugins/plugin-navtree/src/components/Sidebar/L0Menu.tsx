@@ -24,6 +24,7 @@ import React, {
 
 import { type Node } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { Icon, ListItem, ScrollArea, Tooltip, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { MenuProvider, DropdownMenu, type MenuItem } from '@dxos/react-ui-menu';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
@@ -260,11 +261,13 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
 //
 
 const L0Collection = ({ item, path }: L0ItemProps) => {
-  const navTreeContext = useNavTreeContext();
+  log.info('L0Collection', { item: item.id });
+
   useLoadDescendents(item);
-  const collectionItems = navTreeContext.useItems(item);
+  const { getChildItems, getProps } = useNavTreeContext();
+  const collectionItems = getChildItems(item);
+  const { id, testId } = getProps(item, path) ?? {};
   const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
-  const { id, testId } = navTreeContext.getProps?.(item, path) ?? {};
 
   const handleRearrange = useCallback<StackItemRearrangeHandler<L0ItemData>>(
     (source, target, closestEdge) => {

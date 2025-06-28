@@ -5,6 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { type Node } from '@dxos/app-graph';
+import { log } from '@dxos/log';
 import { Button, type ButtonProps, Icon, IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -40,21 +41,24 @@ export type L1PanelProps = {
 };
 
 const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
-  const { isAlternateTree, setAlternateTree, ...navTreeContext } = useNavTreeContext();
+  log.info('L1Panel', { item: item.id });
+  const { isAlternateTree, setAlternateTree, getChildItems, ...context } = useNavTreeContext();
   const { t } = useTranslation(NAVTREE_PLUGIN);
 
   // TODO(wittjosiah): Support multiple alternate trees.
-  const alternateTree = navTreeContext.useItems(item, { disposition: 'alternate-tree' })[0];
+  const [alternateTree] = getChildItems(item, { disposition: 'alternate-tree' });
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
-  const handleOpen = useCallback(() => setAlternateTree?.(alternatePath, true), [alternatePath, setAlternateTree]);
   const isAlternate = isAlternateTree?.(alternatePath, item) ?? false;
-  const useAlternateItems = useCallback(
+
+  const getAlternateItems = useCallback(
     (node?: Node, { disposition }: { disposition?: string } = {}) => {
       // TODO(wittjosiah): Sorting is expensive, limit to necessary items for now.
-      return navTreeContext.useItems(node, { disposition, sort: node?.id === alternateTree.id });
+      return getChildItems(node, { disposition, sort: node?.id === alternateTree.id });
     },
-    [navTreeContext, alternateTree],
+    [getChildItems, alternateTree],
   );
+
+  const handleOpen = useCallback(() => setAlternateTree?.(alternatePath, true), [alternatePath, setAlternateTree]);
 
   const handleBack = useCallback(() => {
     if (isAlternate) {
@@ -62,7 +66,7 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
     } else {
       onBack?.();
     }
-  }, [isAlternate, onBack, alternatePath, setAlternateTree]);
+  }, [onBack, isAlternate, alternatePath, setAlternateTree]);
 
   const title = toLocalizedString(item.properties.label, t);
   const backCapable = item.id.startsWith('!') || isAlternate;
@@ -91,6 +95,7 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
             )}
             {alternateTree && !isAlternate && (
               <IconButton
+                data-testid='treeView.alternateTreeButton'
                 variant='ghost'
                 classNames={mx('shrink-0', hoverableControlItem, hoverableOpenControlItem, 'pli-2 pointer-fine:pli-1')}
                 iconOnly
@@ -98,7 +103,6 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
                 density='coarse'
                 icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
                 label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
-                data-testid='treeView.alternateTreeButton'
                 onClick={handleOpen}
               />
             )}
@@ -107,23 +111,24 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
           <div role='none' className='overflow-y-auto'>
             {isAlternate ? (
               <Tree
-                {...navTreeContext}
-                useItems={useAlternateItems}
+                {...context}
                 id={alternateTree.id}
                 root={alternateTree}
                 path={alternatePath}
+                getChildItems={getAlternateItems}
                 levelOffset={5}
                 gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
                 renderColumns={NavTreeItemColumns}
               />
             ) : (
               <Tree
-                {...navTreeContext}
+                {...context}
                 id={item.id}
                 root={item}
                 path={path}
-                levelOffset={5}
+                getChildItems={getAlternateItems}
                 draggable
+                levelOffset={5}
                 gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
                 renderColumns={NavTreeItemColumns}
               />
@@ -136,10 +141,11 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
 };
 
 const L1PanelCollection = ({ item, path, ...props }: L1PanelProps) => {
-  const { useItems } = useNavTreeContext();
   useLoadDescendents(item);
-  const collectionItems = useItems(item);
+  const { getChildItems } = useNavTreeContext();
+  const collectionItems = getChildItems(item);
   const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
+
   return (
     <>
       {collectionItems

@@ -17,11 +17,12 @@ export const NAV_TREE_ITEM = 'NavTreeItem';
 export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'> & Pick<L1PanelsProps, 'open'>;
 
 export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
-  const { tab, useItems, onBack } = useNavTreeContext();
-  const topLevelActions = useItems(root, { disposition: 'menu', sort: true });
-  const topLevelCollections = useItems(root, { disposition: 'collection' });
-  const topLevelWorkspaces = useItems(root, { disposition: 'workspace' });
-  const topLevelNavigation = useItems(root, { disposition: 'navigation' });
+  const { tab, getChildItems, onBack } = useNavTreeContext();
+
+  const topLevelActions = getChildItems(root, { disposition: 'menu', sort: true });
+  const topLevelCollections = getChildItems(root, { disposition: 'collection' });
+  const topLevelWorkspaces = getChildItems(root, { disposition: 'workspace' });
+  const topLevelNavigation = getChildItems(root, { disposition: 'navigation' });
   const l0Items = useMemo(
     () => [
       // prettier-ignore
@@ -31,8 +32,8 @@ export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
     ],
     [topLevelCollections, topLevelWorkspaces, topLevelNavigation],
   );
-  const pinnedItems = useItems(root, { disposition: 'pin-end', sort: true });
-  const userAccountItem = useItems(root, { disposition: 'user-account' })[0];
+  const pinnedItems = getChildItems(root, { disposition: 'pin-end', sort: true });
+  const userAccountItem = getChildItems(root, { disposition: 'user-account' })[0];
   const topLevelItems = useMemo(
     () => [
       // prettier-ignore

@@ -47,7 +47,6 @@ export const isTreeData = (data: unknown): data is TreeData => Schema.is(TreeDat
 export type TreeItemProps<T extends HasId = any> = {
   item: T;
   path: string[];
-  levelOffset?: number;
   last: boolean;
   draggable?: boolean;
   renderColumns?: FC<{
@@ -58,6 +57,7 @@ export type TreeItemProps<T extends HasId = any> = {
     setMenuOpen: (open: boolean) => void;
   }>;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
+  levelOffset?: number;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean }) => void;
 };
@@ -69,9 +69,9 @@ const RawTreeItem = <T extends HasId = any>({
   draggable: _draggable,
   renderColumns: Columns,
   canDrop,
+  levelOffset = 2,
   onOpenChange,
   onSelect,
-  levelOffset = 2,
 }: TreeItemProps<T>) => {
   const rowRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -81,9 +81,12 @@ const RawTreeItem = <T extends HasId = any>({
   const [instruction, setInstruction] = useState<Instruction | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const { useItems, getProps, isOpen, isCurrent } = useTree();
-  const items = useItems(item);
-  const { id, label, parentOf, icon, disabled, className, headingClassName, testId } = getProps(item, _path);
+  const { getChildItems, getProps, isOpen, isCurrent } = useTree();
+  const items = getChildItems(item);
+  const { id, label, parentOf, icon, disabled, className, headingClassName, testId } = useMemo(
+    () => getProps(item, _path),
+    [getProps, item, _path],
+  );
   const path = useMemo(() => [..._path, id], [_path, id]);
   const open = isOpen(path, item);
   const current = isCurrent(path, item);

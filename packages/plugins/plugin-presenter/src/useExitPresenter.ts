@@ -24,6 +24,7 @@ export const useExitPresenter = (object: Live<any>) => {
         }),
       );
     }
+
     return dispatch(
       createIntent(LayoutAction.Open, {
         part: 'main',

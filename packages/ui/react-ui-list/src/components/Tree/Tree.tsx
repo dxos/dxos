@@ -10,11 +10,11 @@ import { Treegrid, type TreegridRootProps } from '@dxos/react-ui';
 import { type TreeContextType, TreeProvider } from './TreeContext';
 import { TreeItem, type TreeItemProps } from './TreeItem';
 
-export type TreeProps<T extends HasId = any> = {
+export type TreeProps<T extends HasId = any, O = any> = {
   root?: T;
   path?: string[];
   id: string;
-} & TreeContextType<T> &
+} & TreeContextType<T, O> &
   Partial<Pick<TreegridRootProps, 'gridTemplateColumns' | 'classNames'>> &
   Pick<TreeItemProps<T>, 'draggable' | 'renderColumns' | 'canDrop' | 'onOpenChange' | 'onSelect' | 'levelOffset'>;
 
@@ -22,29 +22,29 @@ export const Tree = <T extends HasId = any>({
   root,
   path,
   id,
-  useItems,
   getProps,
+  getChildItems,
   isOpen,
   isCurrent,
   draggable = false,
   gridTemplateColumns = '[tree-row-start] 1fr min-content [tree-row-end]',
   classNames,
   renderColumns,
+  levelOffset,
   canDrop,
   onOpenChange,
   onSelect,
-  levelOffset,
 }: TreeProps<T>) => {
-  const context = useMemo(
+  const context = useMemo<TreeContextType>(
     () => ({
-      useItems,
+      getChildItems,
       getProps,
       isOpen,
       isCurrent,
     }),
-    [useItems, getProps, isOpen, isCurrent],
+    [getChildItems, getProps, isOpen, isCurrent],
   );
-  const items = useItems(root);
+  const items = getChildItems(root);
   const treePath = useMemo(() => (path ? [...path, id] : [id]), [id, path]);
 
   return (

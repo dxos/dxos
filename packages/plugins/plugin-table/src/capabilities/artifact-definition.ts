@@ -129,9 +129,11 @@ export default () => {
 
           const view = await table.view?.load();
           invariant(view);
+
           const typename = view?.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
+
           return ToolResult.Success(schema);
         },
       }),
