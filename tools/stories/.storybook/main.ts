@@ -46,6 +46,7 @@ export const config = (
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
     reactDocgen: false,
   },
+
   ...baseConfig,
 
   /**
