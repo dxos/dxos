@@ -150,7 +150,7 @@
     "vite-plugin-top-level-await": "^1.5.0",
     "vite-plugin-wasm": "^3.4.1",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.2.0",
+    "vitest": "^3.2.4",
     "webdriverio": "^8.32.4",
     "wrangler": "^3.51.2",
     "yargs": "~16.2.0",

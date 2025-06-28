@@ -57,7 +57,7 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
       esbuildOptions: {
         plugins: [
           FixGracefulFsPlugin(),
-          // TODO(wittjosiah): Compute nodeStd from package.json.
+          // TODO(wittjosiah): Compute nodeStd from package.json
           ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
         ],
       },
@@ -67,6 +67,7 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
     },
     test: {
       ...resolveReporterConfig({ browserMode: true, cwd }),
+
       name: targetProject,
 
       env: {
@@ -82,7 +83,6 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
 
       testTimeout: isDebug ? 9999999 : 5000,
       inspect: isDebug,
-
       isolate: false,
       poolOptions: {
         threads: {
