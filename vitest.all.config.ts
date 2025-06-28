@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 

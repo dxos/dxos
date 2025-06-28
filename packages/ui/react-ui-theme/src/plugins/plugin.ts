@@ -19,42 +19,15 @@ import { resolveKnownPeers } from './resolveContent';
 import { tailwindConfig, tokenSet } from '../config';
 
 export type ThemePluginOptions = {
-  jit?: boolean;
+  root?: string;
+  content?: string[];
+  jit?: boolean; // TODO(burdon): Not used?
   cssPath?: string;
   srcCssPath?: string;
   virtualFileId?: string;
-  content?: string[];
-  root?: string;
-  verbose?: boolean;
   extensions?: Partial<ThemeConfig>[];
+  verbose?: boolean;
 };
-
-let environment!: string;
-
-/**
- * Configures PostCSS pipeline for theme.css processing.
- * @param environment - The current environment (development/production).
- * @param config - Theme plugin configuration options.
- * @returns Array of PostCSS plugins.
- */
-const createPostCSSPipeline = (environment: string, config: ThemePluginOptions): postcss.Transformer[] => [
-  // Handles @import statements in CSS.
-  postcssImport(),
-  // Processes CSS nesting syntax.
-  nesting,
-  // Processes custom design tokens.
-  chTokens({ config: () => tokenSet }),
-  // Processes Tailwind directives and utilities.
-  tailwindcss(
-    tailwindConfig({
-      env: environment,
-      content: config.content,
-      extensions: config.extensions,
-    }),
-  ),
-  // Adds vendor prefixes.
-  autoprefixer as any,
-];
 
 /**
  * Vite plugin to configure theme.
@@ -95,13 +68,12 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
       }
     },
     handleHotUpdate: async ({ file, server }) => {
-      // NOTE(ZaymonFC): Changes to *any* CSS file triggers this step. We might want to refine this.
-      //   Ignore the output file to prevent infinite loops.
+      // NOTE(ZaymonFC): Changes to *any* CSS file triggers this step.
+      // Ignore the output file to prevent infinite loops.
       if (file.endsWith('.css') && file !== config.cssPath) {
         try {
           // Get reference to the theme virtual module.
           const module = server.moduleGraph.getModuleById(config.cssPath!);
-
           if (module) {
             // Read the source theme file that imports all other CSS files.
             const css = await readFile(config.srcCssPath!, 'utf8');
@@ -125,3 +97,30 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
     },
   };
 };
+
+let environment!: string;
+
+/**
+ * Configures PostCSS pipeline for theme.css processing.
+ * @param environment - The current environment (development/production).
+ * @param config - Theme plugin configuration options.
+ * @returns Array of PostCSS plugins.
+ */
+const createPostCSSPipeline = (environment: string, config: ThemePluginOptions): postcss.Transformer[] => [
+  // Handles @import statements in CSS.
+  postcssImport(),
+  // Processes CSS nesting syntax.
+  nesting,
+  // Processes custom design tokens.
+  chTokens({ config: () => tokenSet }),
+  // Processes Tailwind directives and utilities.
+  tailwindcss(
+    tailwindConfig({
+      env: environment,
+      content: config.content,
+      extensions: config.extensions,
+    }),
+  ),
+  // Adds vendor prefixes.
+  autoprefixer as any,
+];
