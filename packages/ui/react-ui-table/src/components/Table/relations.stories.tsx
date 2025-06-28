@@ -13,6 +13,7 @@ import { type BaseObject, getSchemaTypename, type HasId, toJsonSchema } from '@d
 import { getAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
+import { useClient } from '@dxos/react-client';
 import { live, makeRef } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { DataType, createView, ViewProjection, ViewType } from '@dxos/schema';
@@ -37,21 +38,24 @@ const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema<T>, co
 
   const jsonSchema = useMemo(() => toJsonSchema(schema), [schema]);
   const table = useMemo(() => {
+    if (!space) {
+      return undefined;
+    }
     const typename = getSchemaTypename(schema);
     invariant(typename);
     const name = getAnnotation<string>(SchemaAST.TitleAnnotationId)(schema.ast) ?? typename;
     const view = createView({ name, typename, jsonSchema });
-    return live(TableType, { view: makeRef(view) });
-  }, [schema]);
+    return space.db.add(live(TableType, { view: makeRef(view) }));
+  }, [schema, space, jsonSchema]);
 
   const projection = useMemo(() => {
-    if (!table.view?.target) {
+    if (!table?.view?.target) {
       return undefined;
     }
 
     // TODO(burdon): Just pass in view? Reuse same jsonSchema instance? View determines if mutable, etc.
     return new ViewProjection(jsonSchema, table.view.target);
-  }, [schema, table]);
+  }, [jsonSchema, table]);
 
   const features = useMemo<TableFeatures>(
     () => ({ schemaEditable: false, dataEditable: true, selection: { enabled: false } }),
@@ -82,16 +86,17 @@ const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema<T>, co
 };
 
 const DefaultStory = () => {
+  const client = useClient();
   const { model: orgModel, presentation: orgPresentation } = useTestModel(DataType.Organization, 50);
   const { model: contactModel, presentation: contactPresentation } = useTestModel(DataType.Person, 50);
 
   return (
     <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
       <Table.Root>
-        <Table.Main model={orgModel} presentation={orgPresentation} ignoreAttention />
+        <Table.Main model={orgModel} presentation={orgPresentation} client={client} ignoreAttention />
       </Table.Root>
       <Table.Root>
-        <Table.Main model={contactModel} presentation={contactPresentation} ignoreAttention />
+        <Table.Main model={contactModel} presentation={contactPresentation} client={client} ignoreAttention />
       </Table.Root>
     </div>
   );
