@@ -260,8 +260,8 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
 //
 
 const L0Collection = ({ item, path }: L0ItemProps) => {
-  const navTreeContext = useNavTreeContext();
   useLoadDescendents(item);
+  const navTreeContext = useNavTreeContext();
   const collectionItems = navTreeContext.useItems(item);
   const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
   const { id, testId } = navTreeContext.getProps?.(item, path) ?? {};
