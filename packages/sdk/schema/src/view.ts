@@ -13,6 +13,7 @@ import {
   JsonSchemaType,
   PropertyMetaAnnotationId,
   QueryType,
+  StoredSchema,
   TypedObject,
   toEffectSchema,
   type PropertyMetaAnnotation,
@@ -162,40 +163,22 @@ export const createView = ({ name, typename, jsonSchema, fields: include }: Crea
 
   return live(ViewType, {
     name,
-    query: { typename },
+    query: {
+      typename,
+    },
     fields,
   });
 };
 
-/**
- * Record types define user schema.
- *
- * RecordType => Schema
- * Relation: RecordType => ViewType
- */
-const RecordTypeSchema = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  typename: Schema.String,
-});
+const HasViewSchema = Schema.Struct({});
 
-export const RecordType = RecordTypeSchema.pipe(
-  Type.Obj({
-    typename: 'dxos.org/type/RecordType',
-    version: '0.1.0',
-  }),
-);
-
-export interface RecordType extends Schema.Schema.Type<typeof RecordType> {}
-
-const RecordRelationSchema = Schema.Struct({});
-
-export const RecordRelation = RecordRelationSchema.pipe(
+export const HasView = HasViewSchema.pipe(
   Type.Relation({
-    typename: 'dxos.org/type/RecordRelation',
+    typename: 'dxos.org/type/HasView',
     version: '0.1.0',
-    source: RecordType,
+    source: StoredSchema,
     target: ViewType,
   }),
 );
 
-export interface RecordRelation extends Schema.Schema.Type<typeof RecordRelation> {}
+export interface HasView extends Schema.Schema.Type<typeof HasView> {}
