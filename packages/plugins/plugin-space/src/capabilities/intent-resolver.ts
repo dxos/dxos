@@ -12,7 +12,7 @@ import {
   createIntent,
   createResolver,
 } from '@dxos/app-framework';
-import { Obj, Ref, Relation, type Type } from '@dxos/echo';
+import { Obj, Ref, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -21,6 +21,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { isSpace, getSpace, SpaceState, fullyQualifiedId } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+import { DataType } from '@dxos/schema';
 
 import { SpaceCapabilities } from './capabilities';
 import {
@@ -32,8 +33,9 @@ import {
   type CreateObjectDialogProps,
   type JoinDialogProps,
 } from '../components';
+import { SpaceEvents } from '../events';
 import { SPACE_PLUGIN } from '../meta';
-import { CollectionAction, CollectionType, SpaceAction } from '../types';
+import { CollectionAction, SpaceAction } from '../types';
 import { cloneObject, COMPOSER_SPACE_LOCK, getNestedObjects } from '../util';
 
 // TODO(wittjosiah): Remove.
@@ -73,12 +75,18 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
         }
         await space.waitUntilReady();
-        const collection = Obj.make(CollectionType, { objects: [], views: {} });
-        space.properties[CollectionType.typename] = Ref.make(collection);
+        const collection = Obj.make(DataType.Collection, { objects: [] });
+        space.properties[Type.getTypename(DataType.Collection)] = Ref.make(collection);
 
         if (Migrations.versionProperty) {
           space.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
+
+        await context.activatePromise(SpaceEvents.SpaceCreated);
+        const onSpaceCreatedCallbacks = context.getCapabilities(SpaceCapabilities.OnSpaceCreated);
+        await Promise.all(
+          onSpaceCreatedCallbacks.map((onSpaceCreated) => onSpaceCreated({ space, rootCollection: collection })),
+        );
 
         return {
           data: {
@@ -303,7 +311,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.OpenCreateObject,
-      resolve: ({ target, navigable = true }) => {
+      resolve: ({ target, typename, navigable = true }) => {
         const state = context.getCapability(SpaceCapabilities.State);
 
         return {
@@ -315,8 +323,13 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                 blockAlign: 'start',
                 props: {
                   target,
+                  typename,
                   shouldNavigate: navigable
-                    ? (object: Obj.Any) => !(object instanceof CollectionType) || state.navigableCollections
+                    ? (object: Obj.Any) => {
+                        const isCollection = Obj.instanceOf(DataType.Collection, object);
+                        const isQueryCollection = Obj.instanceOf(DataType.QueryCollection, object);
+                        return (!isCollection && !isQueryCollection) || state.navigableCollections;
+                      }
                     : () => false,
                 } satisfies Partial<CreateObjectDialogProps>,
               },
@@ -363,18 +376,18 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           };
         }
 
-        if (target instanceof CollectionType) {
+        if (Obj.instanceOf(DataType.Collection, target)) {
           target.objects.push(Ref.make(object));
         } else if (isSpace(target) && hidden) {
           space.db.add(object);
         } else if (isSpace(target)) {
-          const collection = space.properties[CollectionType.typename]?.target;
-          if (collection instanceof CollectionType) {
+          const collection = space.properties[Type.getTypename(DataType.Collection)]?.target;
+          if (Obj.instanceOf(DataType.Collection, collection)) {
             collection.objects.push(Ref.make(object));
           } else {
             // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-            const collection = Obj.make(CollectionType, { objects: [Ref.make(object)], views: {} });
-            space.properties[CollectionType.typename] = Ref.make(collection);
+            const collection = Obj.make(DataType.Collection, { objects: [Ref.make(object)] });
+            space.properties[Type.getTypename(DataType.Collection)] = Ref.make(collection);
           }
         }
 
@@ -430,14 +443,15 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         const openObjectIds = new Set<string>(layout.active);
 
         if (!undo) {
-          const parentCollection: CollectionType = target ?? space.properties[CollectionType.typename]?.target;
+          const parentCollection: DataType.Collection =
+            target ?? space.properties[Type.getTypename(DataType.Collection)]?.target;
           const nestedObjectsList = await Promise.all(objects.map((obj) => getNestedObjects(obj, resolve)));
 
           const deletionData = {
             objects,
             parentCollection,
             indices: objects.map((obj) =>
-              parentCollection instanceof CollectionType
+              Obj.instanceOf(DataType.Collection, parentCollection)
                 ? parentCollection.objects.findIndex((object) => object.target === obj)
                 : -1,
             ),
@@ -448,7 +462,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
               .filter((id) => openObjectIds.has(id)),
           } satisfies SpaceAction.DeletionData;
 
-          if (deletionData.parentCollection instanceof CollectionType) {
+          if (Obj.instanceOf(DataType.Collection, deletionData.parentCollection)) {
             [...deletionData.indices]
               .sort((a, b) => b - a)
               .forEach((index: number) => {
@@ -463,7 +477,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           });
           objects.forEach((obj) => space.db.remove(obj));
 
-          const undoMessageKey = objects.some((obj) => obj instanceof CollectionType)
+          const undoMessageKey = objects.some((obj) => Obj.instanceOf(DataType.Collection, obj))
             ? 'collection deleted label'
             : objects.length > 1
               ? 'objects deleted label'
@@ -490,7 +504,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           if (
             deletionData?.objects?.length &&
             deletionData.objects.every(Obj.isObject) &&
-            deletionData.parentCollection instanceof CollectionType
+            Obj.instanceOf(DataType.Collection, deletionData.parentCollection)
           ) {
             // Restore the object to the space.
             const restoredObjects = deletionData.objects.map((obj: Type.Expando) => space.db.add(obj));
@@ -558,7 +572,13 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: CollectionAction.Create,
       resolve: async ({ name }) => ({
-        data: { object: Obj.make(CollectionType, { name, objects: [], views: {} }) },
+        data: { object: Obj.make(DataType.Collection, { name, objects: [] }) },
+      }),
+    }),
+    createResolver({
+      intent: CollectionAction.CreateQueryCollection,
+      resolve: async ({ name, typename }) => ({
+        data: { object: Obj.make(DataType.QueryCollection, { name, query: { typename } }) },
       }),
     }),
   ]);

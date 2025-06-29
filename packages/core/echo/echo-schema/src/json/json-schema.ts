@@ -270,6 +270,9 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
     switch (root.type) {
       case 'string': {
         result = Schema.String;
+        if (root.pattern) {
+          result = result.pipe(Schema.pattern(new RegExp(root.pattern)));
+        }
         break;
       }
       case 'number': {

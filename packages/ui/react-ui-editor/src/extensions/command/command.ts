@@ -2,11 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Extension } from '@codemirror/state';
+import { Prec, type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 
+import { isNonNullable } from '@dxos/util';
+
 import { closeEffect, commandKeyBindings } from './action';
-import { hintViewPlugin, type HintOptions } from './hint';
+import { hint, type HintOptions } from './hint';
 import { commandConfig, commandState, type PopupOptions } from './state';
 
 // TODO(burdon): Create knowledge base for CM notes and ideas.
@@ -18,17 +20,15 @@ export type CommandOptions = Partial<PopupOptions & HintOptions>;
 
 export const command = (options: CommandOptions = {}): Extension => {
   return [
-    keymap.of(commandKeyBindings),
+    Prec.highest(keymap.of(commandKeyBindings)),
     commandConfig.of(options),
     commandState,
-    options.onHint ? hintViewPlugin({ onHint: options.onHint }) : [],
-    EditorView.focusChangeEffect.of((_, focusing) => {
-      return focusing ? closeEffect.of(null) : null;
-    }),
+    options.onHint && hint(options),
+    EditorView.focusChangeEffect.of((_, focusing) => (focusing ? closeEffect.of(null) : null)),
     EditorView.theme({
       '.cm-tooltip': {
         background: 'transparent',
       },
     }),
-  ];
+  ].filter(isNonNullable);
 };

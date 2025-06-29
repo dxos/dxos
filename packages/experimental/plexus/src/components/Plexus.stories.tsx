@@ -116,12 +116,12 @@ const Test = () => {
   const slots = dark
     ? {
         grid: {
-          className: '[&>*]:stroke-slate-700 [&>*]:stroke-[1px] [&>*]:opacity-40',
+          className: '*:stroke-slate-700 *:stroke-[1px] *:opacity-40',
         },
         plexus: {
           thorax: {
             // TODO(burdon): Reconcile classes vs. slots/className.
-            className: '[&>*]:stroke-slate-500',
+            className: '*:stroke-slate-500',
           },
           renderer: {
             labels: {
@@ -165,7 +165,7 @@ const Test = () => {
         <SVG.Root>
           {/* <SVG classNames={slots?.root}> */}
           <SVG.Markers arrowSize={6} />
-          <SVG.Grid /*className={slots?.grid?.className} */ />
+          <SVG.Grid /* className={slots?.grid?.className} */ />
           <SVG.Zoom extent={[1, 4]}>
             <g className={mx('visible', spinning && 'invisible')}>
               <line className='stroke-slate-700 stroke-[3px]' x1={0} y1={0} x2={lineLength} y2={0} />

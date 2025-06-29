@@ -16,7 +16,7 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import { RelationSourceId } from '@dxos/echo-schema';
 import { fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTranslation } from '@dxos/react-ui';
+import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -31,6 +31,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const identity = useIdentity();
   const { t } = useTranslation(THREAD_PLUGIN);
+  const { tx } = useThemeContext();
 
   const { state, getViewState } = useCapability(ThreadCapabilities.MutableState);
   const viewState = getViewState(fullyQualifiedId(subject));
@@ -135,8 +136,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
         orientation='horizontal'
         classNames='contents [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin'
       >
-        {/* TODO(burdon): Should have common container/frags with toolbar. Standardize border-be for all StackItem toolbars. */}
-        <Tabs.Tablist classNames='p-1 gap-1 overflow-y-hidden border-be border-subduedSeparator'>
+        <Tabs.Tablist classNames={tx('toolbar.root', 'toolbar', {})}>
           <Tabs.Tab value='unresolved' classNames='text-sm'>
             {t('show unresolved label')}
           </Tabs.Tab>

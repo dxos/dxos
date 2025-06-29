@@ -136,7 +136,7 @@ export const BlueprintContainer = ({
 
   return (
     <StackItem.Content role={role} toolbar>
-      <Toolbar.Root classNames='border-be border-subduedSeparator'>
+      <Toolbar.Root>
         <Toolbar.Button onClick={handleSave}>{t('button save')}</Toolbar.Button>
         <Toolbar.Button onClick={handleRun}>{t('button run')}</Toolbar.Button>
       </Toolbar.Root>

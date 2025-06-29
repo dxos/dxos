@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
+import { effect, untracked } from '@preact/signals-core';
 
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
 import { type Live, Obj } from '@dxos/echo';
@@ -73,9 +73,7 @@ export default (context: PluginContext) => {
     const removed = previous.filter((id) => !layout.active.includes(id));
     previous = layout.active;
 
-    // TODO(wittjosiah): This is setTimeout because there's a race between the keys be initialized.
-    //   This could be avoided if the location was a path as well and not just an id.
-    setTimeout(() => {
+    const handleUpdate = () => {
       removed.forEach((id) => {
         const keys = Array.from(state.keys()).filter((key) => Path.last(key) === id);
         keys.forEach((key) => {
@@ -89,7 +87,14 @@ export default (context: PluginContext) => {
           setItem(Path.parts(key), 'current', true);
         });
       });
-    });
+    };
+
+    // TODO(wittjosiah): This is setTimeout because there's a race between the keys be initialized.
+    //   Keys are initialized on the first render of an item in the navtree.
+    //   This could be avoided if the location was a path as well and not just an id.
+    const timeout = setTimeout(handleUpdate, 500);
+    untracked(() => handleUpdate());
+    return () => clearTimeout(timeout);
   });
 
   return contributes(NavTreeCapabilities.State, { state, getItem, setItem, isOpen, isCurrent, isAlternateTree }, () =>

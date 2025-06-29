@@ -9,15 +9,14 @@ import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos
 import { Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { type CollectionType } from '@dxos/plugin-space/types';
-import { useClient } from '@dxos/react-client';
 import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
 import { type KanbanType } from '@dxos/react-ui-kanban';
+import { type DataType } from '@dxos/schema';
 
 import { KanbanContainer, KanbanViewEditor } from '../components';
 import { KANBAN_PLUGIN } from '../meta';
-import { isKanban, TypenameAnnotationId, PivotColumnAnnotationId } from '../types';
+import { isKanban, PivotColumnAnnotationId } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -34,52 +33,11 @@ export default () =>
       component: ({ data }) => <KanbanViewEditor kanban={data.subject} />,
     }),
     createSurface({
-      id: `${KANBAN_PLUGIN}/create-initial-schema-form`,
-      role: 'form-input',
-      filter: (
-        data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
-        if (data.prop !== 'typename') {
-          return false;
-        }
-
-        const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, TypenameAnnotationId);
-        return !!annotation;
-      },
-      component: ({ data: { target }, ...inputProps }) => {
-        const client = useClient();
-        const props = inputProps as any as InputProps;
-        const space = isSpace(target) ? target : getSpace(target);
-        if (!space) {
-          return null;
-        }
-
-        const schemaWhitelists = useCapabilities(ClientCapabilities.SchemaWhiteList);
-        const whitelistedTypenames = useMemo(
-          () => new Set(schemaWhitelists.flatMap((typeArray) => typeArray.map((type) => type.typename))),
-          [schemaWhitelists],
-        );
-
-        const fixed = client.graph.schemaRegistry.schemas.filter((schema) =>
-          whitelistedTypenames.has(Type.getTypename(schema)),
-        );
-        const dynamic = space?.db.schemaRegistry.query().runSync();
-        const typenames = Array.from(
-          new Set<string>([
-            ...fixed.map((schema) => Type.getTypename(schema)),
-            ...dynamic.map((schema) => schema.typename),
-          ]),
-        ).sort();
-
-        return <SelectInput {...props} options={typenames.map((typename) => ({ value: typename }))} />;
-      },
-    }),
-    createSurface({
       id: `${KANBAN_PLUGIN}/create-initial-schema-form-[pivot-column]`,
       role: 'form-input',
       filter: (
         data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection | undefined } => {
         const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, PivotColumnAnnotationId);
         return !!annotation;
       },

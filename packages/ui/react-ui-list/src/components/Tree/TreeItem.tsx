@@ -57,7 +57,7 @@ export type TreeItemProps<T extends HasId = any> = {
     menuOpen: boolean;
     setMenuOpen: (open: boolean) => void;
   }>;
-  canDrop?: (source: TreeData, target: TreeData) => boolean;
+  canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean }) => void;
 };
@@ -141,7 +141,7 @@ const RawTreeItem = <T extends HasId = any>({
         },
         canDrop: ({ source }) => {
           const _canDrop = canDrop ?? (() => true);
-          return source.element !== buttonRef.current && _canDrop(source.data as TreeData, data);
+          return source.element !== buttonRef.current && _canDrop({ source: source.data as TreeData, target: data });
         },
         getIsSticky: () => true,
         onDrag: ({ self, source }) => {

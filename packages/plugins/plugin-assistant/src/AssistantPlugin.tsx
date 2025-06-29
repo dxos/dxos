@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Effect } from 'effect';
+
 import {
   Capabilities,
   Events,
@@ -12,10 +14,10 @@ import {
   definePlugin,
 } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/assistant';
-import { Type } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { CollectionAction, defineObjectForm } from '@dxos/plugin-space/types';
 
 import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
 import { AssistantEvents } from './events';
@@ -77,6 +79,25 @@ export const AssistantPlugin = () =>
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
       activate: () => contributes(ClientCapabilities.Schema, [ServiceType, TemplateType, CompanionTo]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/on-space-created`,
+      activatesOn: SpaceEvents.SpaceCreated,
+      activate: (context) => {
+        const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+        return contributes(SpaceCapabilities.OnSpaceCreated, async ({ space, rootCollection }) => {
+          const program = Effect.gen(function* () {
+            const { object: collection } = yield* dispatch(
+              createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(AIChatType) }),
+            );
+            rootCollection.objects.push(Ref.make(collection));
+
+            const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
+            space.db.add(chat);
+          });
+          await Effect.runPromise(program);
+        });
+      },
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
