@@ -1004,35 +1004,36 @@ export const useGhostController = (ghost: GhostRenderer | undefined, config: Par
 
       addEventListener(window, 'mousedown', (e) => {
         const pointer = ghost.addPointer();
-        const posX = scaleByPixelRatio(e.clientX);
-        const posY = scaleByPixelRatio(e.clientY);
-        updatePointerDownData(pointer, -1, posX, posY);
+        const x = scaleByPixelRatio(e.clientX);
+        const y = scaleByPixelRatio(e.clientY);
+        updatePointerDownData(pointer, -1, x, y);
         ghost.splat(pointer);
         playExplosion();
       }),
       addEventListener(window, 'mousemove', (e) => {
         const pointer = ghost.getPointer();
-        const posX = scaleByPixelRatio(e.clientX);
-        const posY = scaleByPixelRatio(e.clientY);
-        updatePointerMoveData(pointer, posX, posY, pointer.color);
+        const x = scaleByPixelRatio(e.clientX);
+        const y = scaleByPixelRatio(e.clientY);
+        updatePointerMoveData(pointer, x, y, pointer.color);
       }),
 
+      // TODO(burdon): Create pointer for each touch.
       addEventListener(window, 'touchstart', (e) => {
         const pointer = ghost.getPointer();
         const touches = e.targetTouches;
         for (let i = 0; i < touches.length; i++) {
-          const posX = scaleByPixelRatio(touches[i].clientX);
-          const posY = scaleByPixelRatio(touches[i].clientY);
-          updatePointerDownData(pointer, touches[i].identifier, posX, posY);
+          const x = scaleByPixelRatio(touches[i].clientX);
+          const y = scaleByPixelRatio(touches[i].clientY);
+          updatePointerDownData(pointer, touches[i].identifier, x, y);
         }
       }),
       addEventListener(window, 'touchmove', (e) => {
         const pointer = ghost.getPointer();
         const touches = e.targetTouches;
         for (let i = 0; i < touches.length; i++) {
-          const posX = scaleByPixelRatio(touches[i].clientX);
-          const posY = scaleByPixelRatio(touches[i].clientY);
-          updatePointerMoveData(pointer, posX, posY, pointer.color);
+          const x = scaleByPixelRatio(touches[i].clientX);
+          const y = scaleByPixelRatio(touches[i].clientY);
+          updatePointerMoveData(pointer, x, y, pointer.color);
         }
       }),
       addEventListener(window, 'touchend', (e) => {
