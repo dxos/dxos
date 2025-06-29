@@ -5,7 +5,7 @@
 import { batch } from '@preact/signals-core';
 
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
-import { type Live, Obj, Relation } from '@dxos/echo';
+import { Obj, Relation } from '@dxos/echo';
 import { RelationSourceId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
@@ -54,7 +54,7 @@ export default (context: PluginContext) =>
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
         const thread = Obj.make(ThreadType, { name, messages: [], status: 'staged' });
-        const anchor: Live<AnchoredTo> = Relation.make(AnchoredTo, {
+        const anchor = Relation.make(AnchoredTo, {
           [Relation.Source]: thread,
           [Relation.Target]: subject,
           anchor: _anchor,
