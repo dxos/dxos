@@ -5,14 +5,14 @@
 import { Schema, String, pipe } from 'effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Obj, Type, Ref, Relation } from '@dxos/echo';
+import { Obj, Type, Ref, Relation, type Live } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { StoredSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { getSchemaProperties } from './properties';
 import { Testing } from './testing';
-import { createView, HasViewSchema } from './view';
+import { createView, HasView } from './view';
 
 describe('View', () => {
   let builder: EchoTestBuilder;
@@ -110,11 +110,12 @@ describe('View', () => {
       fields: ['name', 'email', 'salary'],
     });
 
-    const relation = Relation.make(HasViewSchema, {
+    const relation: Live<HasView> = Relation.make(HasView, {
       [Relation.Source]: schema,
       [Relation.Target]: view,
     });
 
+    // TODO(burdon): Query for StoredObjects and Relations.
     expect(relation).to.exist;
   });
 });
