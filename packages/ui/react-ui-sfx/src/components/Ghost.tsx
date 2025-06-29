@@ -79,6 +79,7 @@ const useGhost = (canvas: HTMLCanvasElement | null, props: Partial<GhostProps>):
 export type GhostRenderer = {
   canvas: HTMLCanvasElement;
   getPointer: () => Pointer;
+  addPointer: () => Pointer;
   start: () => void;
   stop: () => void;
   splat: (pointer: Pointer) => void;
@@ -772,6 +773,7 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
   const updateColors = (dt: number) => {
     colorUpdateTimer += dt * config.COLOR_UPDATE_SPEED;
     if (config.COLOR_UPDATE_SPEED === 0 || colorUpdateTimer >= 1) {
+      log.info('update', { pointers: pointers.length });
       colorUpdateTimer = wrap(colorUpdateTimer, 0, 1);
       pointers.forEach((p) => {
         p.color = generateColor(config.COLOR_MASK);
@@ -925,7 +927,13 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
 
   return {
     canvas,
-    getPointer: () => pointers[0],
+    getPointer: () => pointers.at(-1)!,
+    addPointer: () => {
+      colorUpdateTimer = 1;
+      const pointer = new Pointer();
+      pointers.push(pointer);
+      return pointer;
+    },
     start,
     stop,
     splat: clickSplat,
@@ -992,7 +1000,7 @@ export const useGhostController = (ghost: GhostRenderer | undefined, config: Par
       () => ghost.stop(),
 
       addEventListener(window, 'mousedown', (e) => {
-        const pointer = ghost.getPointer();
+        const pointer = ghost.addPointer();
         const posX = scaleByPixelRatio(e.clientX);
         const posY = scaleByPixelRatio(e.clientY);
         updatePointerDownData(pointer, -1, posX, posY);
