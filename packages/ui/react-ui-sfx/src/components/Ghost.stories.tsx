@@ -58,7 +58,7 @@ export const Trace: Story = {
   },
 };
 
-export const Dragon: Story = {
+export const Fireball: Story = {
   args: {
     DENSITY_DISSIPATION: 1.5,
     VELOCITY_DISSIPATION: 20,

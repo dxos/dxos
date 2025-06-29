@@ -9,6 +9,8 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { addEventListener, combine } from '@dxos/async';
 import { log } from '@dxos/log';
 
+// TODO(burdon): Particle effects.
+
 export type GhostProps = {
   SIM_RESOLUTION: number;
   DYE_RESOLUTION: number;
@@ -88,7 +90,7 @@ export type GhostRenderer = {
 export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): GhostRenderer => {
   const config: GhostProps = Object.assign({}, defaultConfig, _config);
 
-  // TODO(burdon): 1 pointer per ghost.
+  // TODO(burdon): Externalize state.
   const pointers: Pointer[] = [new Pointer()];
 
   const { gl, ext } = getWebGLContext(canvas);
@@ -716,9 +718,6 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
   updateKeywords();
   initFramebuffers();
 
-  let lastUpdateTime = Date.now();
-  let colorUpdateTimer = 1.0;
-
   let running = false;
   const start = () => {
     log('start', { running });
@@ -735,6 +734,10 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
     }
   };
 
+  let lastUpdateTime = Date.now();
+  let colorUpdateTimer = 1.0;
+
+  // Main frame loop.
   const updateFrame = () => {
     const dt = calcDeltaTime();
     if (resizeCanvas()) {
@@ -753,7 +756,7 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
 
   const calcDeltaTime = () => {
     const now = Date.now();
-    let dt = (now - lastUpdateTime) / 1000;
+    let dt = (now - lastUpdateTime) / 1_000;
     dt = Math.min(dt, 0.016666);
     lastUpdateTime = now;
     return dt;
@@ -767,13 +770,13 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
       canvas.height = height;
       return true;
     }
+
     return false;
   };
 
   const updateColors = (dt: number) => {
     colorUpdateTimer += dt * config.COLOR_UPDATE_SPEED;
-    if (config.COLOR_UPDATE_SPEED === 0 || colorUpdateTimer >= 1) {
-      log.info('update', { pointers: pointers.length });
+    if (colorUpdateTimer >= 1) {
       colorUpdateTimer = wrap(colorUpdateTimer, 0, 1);
       pointers.forEach((p) => {
         p.color = generateColor(config.COLOR_MASK);
@@ -1005,6 +1008,7 @@ export const useGhostController = (ghost: GhostRenderer | undefined, config: Par
         const posY = scaleByPixelRatio(e.clientY);
         updatePointerDownData(pointer, -1, posX, posY);
         ghost.splat(pointer);
+        playExplosion();
       }),
       addEventListener(window, 'mousemove', (e) => {
         const pointer = ghost.getPointer();
@@ -1227,4 +1231,26 @@ const getSupportedFormat = (gl: WebGL2RenderingContext, internalFormat: number, 
     internalFormat,
     format,
   };
+};
+
+const playExplosion = () => {
+  const ctx = new window.AudioContext();
+  const noise = ctx.createBufferSource();
+  const buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+
+  // Generate white noise.
+  for (let i = 0; i < data.length; i++) {
+    data[i] = (Math.random() * 5 - 1) * (1 - i / data.length); // Fade out.
+  }
+
+  // Create filter to shape rocket sound.
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(500, ctx.currentTime);
+  filter.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 2);
+
+  noise.buffer = buffer;
+  noise.connect(filter).connect(ctx.destination);
+  noise.start();
 };
