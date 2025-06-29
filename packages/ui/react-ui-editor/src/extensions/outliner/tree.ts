@@ -66,8 +66,8 @@ export class Tree implements Item {
     return this;
   }
 
-  traverse<T = any>(cb: (item: Item, level: number) => T | void): T | undefined;
-  traverse<T = any>(item: Item, cb: (item: Item, level: number) => T | void): T | undefined;
+  traverse<T = any>(cb: (item: Item, level: number) => T | void): T | undefined | void;
+  traverse<T = any>(item: Item, cb: (item: Item, level: number) => T | void): T | undefined | void;
   traverse<T = any>(
     itemOrCb: Item | ((item: Item, level: number) => T | void),
     maybeCb?: (item: Item, level: number) => T | void,
