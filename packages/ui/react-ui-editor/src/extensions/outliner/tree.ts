@@ -148,6 +148,8 @@ export const traverse = <T = any>(root: Item, cb: (item: Item, level: number) =>
         return value;
       }
     }
+
+    return undefined;
   };
 
   return t(root, root.type === 'root' ? -1 : 0);
