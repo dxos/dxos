@@ -5,15 +5,14 @@
 import { Schema, String, pipe } from 'effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Type, Ref, Relation } from '@dxos/echo';
+import { Obj, Type, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { create, getTypename, RelationSourceId, RelationTargetId, StoredSchema, toJsonSchema } from '@dxos/echo-schema';
-import { live } from '@dxos/live-object';
+import { StoredSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { getSchemaProperties } from './properties';
 import { Testing } from './testing';
-import { createView, HasView, type ViewType } from './view';
+import { createView, HasViewSchema } from './view';
 
 describe('View', () => {
   let builder: EchoTestBuilder;
@@ -28,7 +27,7 @@ describe('View', () => {
 
   test('create view from TypedObject', async ({ expect }) => {
     const schema = Testing.Contact;
-    const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: toJsonSchema(schema) });
+    const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: Type.toJsonSchema(schema) });
     expect(view.query.typename).to.eq(schema.typename);
     expect(view.fields.map((f) => f.path)).to.deep.eq([
       'name',
@@ -50,23 +49,26 @@ describe('View', () => {
   });
 
   test('static schema definitions with references', async ({ expect }) => {
-    const organization = live(Testing.Organization, { name: 'DXOS', website: 'https://dxos.org' });
-    const contact = live(Testing.Contact, {
+    const organization = Obj.make(Testing.Organization, { name: 'DXOS', website: 'https://dxos.org' });
+    const contact = Obj.make(Testing.Contact, {
       name: 'Alice',
       email: 'alice@example.com',
       organization: Ref.make(organization),
     });
-    log('schema', { organization: toJsonSchema(Testing.Organization), contact: toJsonSchema(Testing.Contact) });
+    log('schema', {
+      organization: Type.toJsonSchema(Testing.Organization),
+      contact: Type.toJsonSchema(Testing.Contact),
+    });
     log('objects', { organization, contact });
-    expect(getTypename(organization)).to.eq(Testing.Organization.typename);
-    expect(getTypename(contact)).to.eq(Testing.Contact.typename);
+    expect(Obj.getTypename(organization)).to.eq(Testing.Organization.typename);
+    expect(Obj.getTypename(contact)).to.eq(Testing.Contact.typename);
   });
 
   test('maintains field order during initialization', async ({ expect }) => {
-    const schema = create(StoredSchema, {
+    const schema = Obj.make(StoredSchema, {
       typename: 'example.com/type/Contact',
       version: '0.1.0',
-      jsonSchema: toJsonSchema(
+      jsonSchema: Type.toJsonSchema(
         Schema.Struct({
           name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
           email: Schema.optional(Type.Format.Email),
@@ -89,10 +91,10 @@ describe('View', () => {
 
   // TODO(burdon): Should Composer support both immutable types (Organization, Contact) or require that they be cloned and stored as StoredSchema?
   test('Create views', ({ expect }) => {
-    const schema: StoredSchema = create(StoredSchema, {
+    const schema = Obj.make(StoredSchema, {
       typename: 'example.com/type/Contact',
       version: '0.1.0',
-      jsonSchema: toJsonSchema(
+      jsonSchema: Type.toJsonSchema(
         Schema.Struct({
           name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
           email: Schema.optional(Type.Format.Email),
@@ -101,17 +103,16 @@ describe('View', () => {
       ),
     });
 
-    const view: ViewType = createView({
+    const view = createView({
       name: 'Test',
       typename: schema.typename,
       jsonSchema: schema.jsonSchema,
       fields: ['name', 'email', 'salary'],
     });
 
-    // TODO(burdon): Relation.Source doesn't work.
-    const relation = Relation.make(HasView, {
-      [RelationSourceId]: schema,
-      [RelationTargetId]: view,
+    const relation = Relation.make(HasViewSchema, {
+      [Relation.Source]: schema,
+      [Relation.Target]: view,
     });
 
     expect(relation).to.exist;

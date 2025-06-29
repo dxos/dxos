@@ -170,7 +170,7 @@ export const createView = ({ name, typename, jsonSchema, fields: include }: Crea
   });
 };
 
-const HasViewSchema = Schema.Struct({});
+export const HasViewSchema = Schema.Struct({});
 
 export const HasView = HasViewSchema.pipe(
   Type.Relation({
