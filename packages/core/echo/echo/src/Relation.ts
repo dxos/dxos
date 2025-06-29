@@ -16,7 +16,7 @@ export const Source = EchoSchema.RelationSourceId;
 export const Target = EchoSchema.RelationTargetId;
 
 type Obj<T extends EchoSchema.BaseObject, Source, Target> = Omit<
-  NoInfer<EchoSchema.ExcludeId<T>>,
+  EchoSchema.ExcludeId<T>,
   typeof EchoSchema.RelationSourceId | typeof EchoSchema.RelationTargetId
 > & {
   [Source]: Source;
