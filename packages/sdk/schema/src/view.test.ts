@@ -7,8 +7,8 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Type, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { getTypename, toJsonSchema } from '@dxos/echo-schema';
-import { live, createStoredSchema } from '@dxos/live-object';
+import { create, getTypename, StoredSchema, toJsonSchema } from '@dxos/echo-schema';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
 import { getSchemaProperties } from './properties';
@@ -63,19 +63,17 @@ describe('View', () => {
   });
 
   test('maintains field order during initialization', async ({ expect }) => {
-    const schema = createStoredSchema(
-      {
-        typename: 'example.com/type/Contact',
-        version: '0.1.0',
-      },
-      toJsonSchema(
+    const schema = create(StoredSchema, {
+      typename: 'example.com/type/Contact',
+      version: '0.1.0',
+      jsonSchema: toJsonSchema(
         Schema.Struct({
           name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
           email: Schema.optional(Type.Format.Email),
           salary: Schema.optional(Type.Format.Currency({ code: 'usd', decimals: 2 })),
         }),
       ),
-    );
+    });
 
     const view = createView({
       name: 'Test',
@@ -88,4 +86,6 @@ describe('View', () => {
     const fieldOrder = view.fields.map((f) => f.path);
     expect(fieldOrder).to.deep.equal(['name', 'email', 'salary']);
   });
+
+  test('Create views', () => {});
 });

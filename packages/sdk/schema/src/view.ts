@@ -4,16 +4,17 @@
 
 import { Schema, SchemaAST } from 'effect';
 
+import { Type } from '@dxos/echo';
 import { defineObjectMigration } from '@dxos/echo-db';
 import {
+  FieldSortType,
   FormatEnum,
   JsonPath,
   JsonSchemaType,
+  PropertyMetaAnnotationId,
   QueryType,
-  FieldSortType,
   TypedObject,
   toEffectSchema,
-  PropertyMetaAnnotationId,
   type PropertyMetaAnnotation,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
@@ -165,3 +166,36 @@ export const createView = ({ name, typename, jsonSchema, fields: include }: Crea
     fields,
   });
 };
+
+/**
+ * Record types define user schema.
+ *
+ * RecordType => Schema
+ * Relation: RecordType => ViewType
+ */
+const RecordTypeSchema = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  typename: Schema.String,
+});
+
+export const RecordType = RecordTypeSchema.pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/RecordType',
+    version: '0.1.0',
+  }),
+);
+
+export interface RecordType extends Schema.Schema.Type<typeof RecordType> {}
+
+const RecordRelationSchema = Schema.Struct({});
+
+export const RecordRelation = RecordRelationSchema.pipe(
+  Type.Relation({
+    typename: 'dxos.org/type/RecordRelation',
+    version: '0.1.0',
+    source: RecordType,
+    target: ViewType,
+  }),
+);
+
+export interface RecordRelation extends Schema.Schema.Type<typeof RecordRelation> {}
