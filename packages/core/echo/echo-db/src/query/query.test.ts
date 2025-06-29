@@ -508,7 +508,7 @@ describe('Queries', () => {
     });
   });
 
-  describe.skip('text search', () => {
+  describe.skipIf(process.env.CI)('text search', () => {
     beforeEach(async () => {});
 
     test.skipIf(process.env.CI)('vector', async () => {
