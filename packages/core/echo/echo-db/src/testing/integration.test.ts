@@ -28,7 +28,6 @@ import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
 import { live } from '@dxos/live-object';
-import { log } from '@dxos/log';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
@@ -425,7 +424,6 @@ describe('Integration tests', () => {
         const {
           objects: [obj],
         } = await db.query(Filter.ids(relationId)).run();
-        log.info('xxx', { obj });
         expect(getSource(obj).name).toEqual('Bob');
         expect(getTarget(obj).name).toEqual('Alice');
       }
@@ -512,7 +510,6 @@ describe('Integration tests', () => {
       const {
         objects: [obj],
       } = await db.query(Query.select(Filter.typeDXN(typeDXN))).run();
-      log.info('xxx', { typeDXN, obj });
       expect(getSchema(obj)).toBeDefined();
       expect(getSchemaTypename(getSchema(obj)!)).toEqual(Testing.Contact.typename);
     }

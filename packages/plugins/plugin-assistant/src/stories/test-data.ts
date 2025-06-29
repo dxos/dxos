@@ -116,11 +116,11 @@ export const addTestData = async (space: Space): Promise<void> => {
       invariant(targetObject, `Target object not found: ${target}`);
 
       space.db.add(
-        Obj.make(schema, {
-          ...data,
+        Relation.make(schema, {
           // TODO(burdon): Test source/target types match.
           [Relation.Source]: sourceObject,
           [Relation.Target]: targetObject,
+          ...data,
         }),
       );
     }

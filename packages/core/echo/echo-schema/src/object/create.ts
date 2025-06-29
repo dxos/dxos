@@ -55,6 +55,7 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
  * })
  * ```
  */
+// TODO(burdon): Rename make.
 // TODO(burdon): Handle defaults (see Schema.make).
 // TODO(dmaretskyi): Rename to `create` once existing `create` is renamed to `live`.
 export const create = <S extends Schema.Schema.AnyNoContext>(

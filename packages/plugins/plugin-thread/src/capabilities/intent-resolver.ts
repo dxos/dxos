@@ -6,7 +6,7 @@ import { batch } from '@preact/signals-core';
 
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
 import { Obj, Relation } from '@dxos/echo';
-import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
+import { RelationSourceId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
@@ -55,10 +55,11 @@ export default (context: PluginContext) =>
         const subjectId = fullyQualifiedId(subject);
         const thread = Obj.make(ThreadType, { name, messages: [], status: 'staged' });
         const anchor = Relation.make(AnchoredTo, {
-          [RelationSourceId]: thread,
-          [RelationTargetId]: subject,
+          [Relation.Source]: thread,
+          [Relation.Target]: subject,
           anchor: _anchor,
         });
+
         const draft = state.drafts[subjectId];
         if (draft) {
           draft.push(anchor);

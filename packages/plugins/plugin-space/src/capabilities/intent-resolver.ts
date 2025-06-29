@@ -418,7 +418,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       intent: SpaceAction.AddRelation,
       resolve: ({ space, schema, source, target, fields }) => {
         const relation = space.db.add(
-          Obj.make(schema, {
+          Relation.make(schema, {
             [Relation.Source]: source,
             [Relation.Target]: target,
             ...fields,

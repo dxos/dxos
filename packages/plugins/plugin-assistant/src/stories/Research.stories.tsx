@@ -381,9 +381,9 @@ const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
 
   return Relation.make(schema, {
     id,
-    ...props,
     [Relation.Source]: source,
     [Relation.Target]: target,
+    ...props,
   });
 };
 

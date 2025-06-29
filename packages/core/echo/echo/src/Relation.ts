@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
+
 import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import * as LiveObject from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { assumeType } from '@dxos/util';
 
 export type Any = EchoSchema.AnyEchoObject & EchoSchema.RelationSourceTargetRefs;
@@ -13,7 +15,29 @@ export type Any = EchoSchema.AnyEchoObject & EchoSchema.RelationSourceTargetRefs
 export const Source = EchoSchema.RelationSourceId;
 export const Target = EchoSchema.RelationTargetId;
 
-export const make = LiveObject.live;
+type Obj<T extends EchoSchema.BaseObject, Source, Target> = Omit<
+  EchoSchema.ExcludeId<T>,
+  typeof EchoSchema.RelationSourceId | typeof EchoSchema.RelationTargetId
+> & {
+  [Source]: Source;
+  [Target]: Target;
+};
+
+// TODO(burdon): Narrow generics to define type of source and target.
+export const make = <T extends EchoSchema.BaseObject, Source, Target>(
+  schema: Schema.Schema<T, any, never>,
+  { [Source]: source, [Target]: target, ...rest }: Obj<T, Source, Target>,
+  meta?: EchoSchema.ObjectMeta,
+) =>
+  live<T>(
+    schema,
+    {
+      [EchoSchema.RelationSourceId]: source,
+      [EchoSchema.RelationTargetId]: target,
+      ...rest,
+    } as any,
+    meta,
+  );
 
 export const isRelation = (value: unknown): value is Any => {
   if (typeof value !== 'object' || value === null) {

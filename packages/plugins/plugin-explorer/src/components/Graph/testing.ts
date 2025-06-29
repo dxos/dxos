@@ -4,7 +4,6 @@
 
 import { type Space } from '@dxos/client/echo';
 import { Query, Relation, type Obj } from '@dxos/echo';
-import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 import { createObjectFactory, type ValueGenerator, type TypeSpec } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
@@ -46,9 +45,9 @@ export const generate = async (
     if (source.id !== target.id) {
       space.db.add(
         Relation.make(DataType.HasRelationship, {
+          [Relation.Source]: source,
+          [Relation.Target]: target,
           kind: relations.kind,
-          [RelationSourceId]: source,
-          [RelationTargetId]: target,
         }),
       );
     }

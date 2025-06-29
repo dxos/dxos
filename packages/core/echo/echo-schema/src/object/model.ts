@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Schema } from 'effect';
+import { type Schema } from 'effect';
 
-import type { ForeignKey } from '@dxos/echo-protocol';
+import { type ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import type { ObjectMeta } from './meta';
+import { type ObjectMeta } from './meta';
 import { EntityKind } from '../ast';
 
 //

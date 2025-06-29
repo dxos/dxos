@@ -84,15 +84,15 @@ describe('tree (advanced)', () => {
       console.log(listItemToString(item, level));
       count++;
     });
-    expect(count).toBe(9);
+    expect(count).to.eq(9);
   });
 
   test('continguous', ({ expect }) => {
     const tree = state.facet(treeFacet);
     const ranges: Range[] = [];
     tree.traverse((item) => {
-      ranges.push(item.lineRange);
       console.log(listItemToString(item));
+      ranges.push(item.lineRange);
     });
 
     // Check no gaps between ranges.
@@ -101,7 +101,7 @@ describe('tree (advanced)', () => {
     for (let i = 0; i < ranges.length - 1; i++) {
       const current = ranges[i];
       const next = ranges[i + 1];
-      expect(current.to + 1).toBe(next.from);
+      expect(current.to + 1).to.eq(next.from);
     }
   });
 
@@ -111,7 +111,7 @@ describe('tree (advanced)', () => {
     expect(tree.find(state.doc.length)).to.include({ type: 'task' });
 
     expect(tree.find(getPos(1))).to.include({ type: 'task' });
-    expect(tree.find(getPos(1))).toBe(tree.find(getPos(1) + 4));
+    expect(tree.find(getPos(1))).to.eq(tree.find(getPos(1) + 4));
     expect(tree.find(getPos(5))).to.include({ type: 'bullet' });
   });
 
@@ -151,17 +151,17 @@ describe('tree (advanced)', () => {
     const tree = state.facet(treeFacet);
     {
       const item = tree.find(getPos(0))!;
-      expect(tree.lastDescendant(item).index).toBe(item.index);
+      expect(tree.lastDescendant(item).index).to.eq(item.index);
     }
     {
       const item = tree.find(getPos(1))!;
       const last = tree.find(getPos(7))!;
-      expect(tree.lastDescendant(item).index).toBe(last.index);
+      expect(tree.lastDescendant(item).index).to.eq(last.index);
     }
     {
       const item = tree.find(getPos(3))!;
       const last = tree.find(getPos(6))!;
-      expect(tree.lastDescendant(item).index).toBe(last.index);
+      expect(tree.lastDescendant(item).index).to.eq(last.index);
     }
   });
 });

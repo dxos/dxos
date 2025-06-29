@@ -141,7 +141,6 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    // TODO(burdon): Reconcile with createStoredSchema.
     class Organization extends TypedObject({ typename: 'example.com/type/Organization', version: '0.1.0' })({
       name: Schema.String,
     }) {}

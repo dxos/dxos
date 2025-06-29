@@ -13,9 +13,9 @@ import {
   getEntityKind,
   getSchemaTypename,
   getTypeIdentifierAnnotation,
+  EntityKind,
   type TypeAnnotation,
   TypeAnnotationId,
-  EntityKind,
   type TypeMeta,
 } from '../ast';
 import { type HasId, type ToMutable } from '../types';
