@@ -9,6 +9,7 @@ import { Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 import { SerializationModel, DocumentAdapter, type ChunkRenderer } from './model';
+import type { ObjectId } from '@dxos/keys';
 
 const blockToMarkdown: ChunkRenderer<DataType.Message> = (
   message: DataType.Message,
@@ -109,6 +110,8 @@ describe('SerializationModel', () => {
     const adapter = new DocumentAdapter(view);
     expect(adapter.lineCount()).to.eq(0);
 
+    let msgId: ObjectId;
+
     // Append message.
     {
       const message = Obj.make(DataType.Message, {
@@ -122,6 +125,7 @@ describe('SerializationModel', () => {
           },
         ],
       });
+      msgId = message.id;
       model.appendChunk(message);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello world!\n\n');
@@ -157,7 +161,7 @@ describe('SerializationModel', () => {
 
     // Delete block.
     {
-      model.deleteBlock('1');
+      model.deleteBlock(msgId);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Bob\nHello again!\n\n');
     }
