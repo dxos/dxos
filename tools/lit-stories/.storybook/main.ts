@@ -49,7 +49,7 @@ export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConf
         ThemePlugin({
           root: __dirname,
           content: [
-            resolve(packages, 'app/*/src/**', contentFiles),
+            resolve(packages, 'apps/*/src/**', contentFiles),
             resolve(packages, 'experimental/*/src/**', contentFiles),
             resolve(packages, 'plugins/*/src/**', contentFiles),
             resolve(packages, 'sdk/*/src/**', contentFiles),

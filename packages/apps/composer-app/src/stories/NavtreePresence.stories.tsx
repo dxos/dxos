@@ -129,8 +129,8 @@ faker.seed(3);
 //     );
 //   },
 // };
-//
-// // TODO(burdon): Move to react-ui-navtree?
+
+// TODO(burdon): Move to react-ui-navtree?
 export default {
   title: 'apps/composer-app/StorybookNavtreePresence',
   component: () => <span>To do</span>,

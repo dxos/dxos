@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+
 import { type Meta, type StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
@@ -10,7 +11,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { Test, type TestProps } from './Test';
 
 const meta: Meta<TestProps> = {
-  title: 'ui/react-ui-editor/Test',
+  title: 'apps/composer-app/Test',
   component: Test,
   decorators: [withTheme],
 };

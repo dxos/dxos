@@ -18,6 +18,7 @@ export const packages = resolve(__dirname, '../../../packages');
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
+
 const contentFiles = '*.{ts,tsx,js,jsx,css}';
 
 /**
@@ -102,7 +103,7 @@ export const config = (
         ThemePlugin({
           root: __dirname,
           content: [
-            resolve(packages, 'app/*/src/**', contentFiles),
+            resolve(packages, 'apps/*/src/**', contentFiles),
             resolve(packages, 'experimental/*/src/**', contentFiles),
             resolve(packages, 'plugins/*/src/**', contentFiles),
             resolve(packages, 'sdk/*/src/**', contentFiles),
