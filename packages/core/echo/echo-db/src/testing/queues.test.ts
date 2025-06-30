@@ -4,9 +4,9 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj, Relation, Type } from '@dxos/echo';
+import { Obj, Relation } from '@dxos/echo';
 import { Testing } from '@dxos/echo/testing';
-import { getSchema, Ref, RelationSourceDXNId, RelationTargetDXNId } from '@dxos/echo-schema';
+import { getSchema, Ref } from '@dxos/echo-schema';
 import { DXN, SpaceId } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 

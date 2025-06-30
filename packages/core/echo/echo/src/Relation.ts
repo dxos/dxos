@@ -4,6 +4,7 @@
 
 import { type Schema } from 'effect';
 
+import { raise } from '@dxos/debug';
 import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -12,7 +13,6 @@ import { assumeType } from '@dxos/util';
 
 import type * as Obj from './Obj';
 import type * as Type from './Type';
-import { raise } from '@dxos/debug';
 
 // NOTE: Don't export: Relation.Relation and Relation.Any form the public API.
 interface RelationBase<Source, Target>
