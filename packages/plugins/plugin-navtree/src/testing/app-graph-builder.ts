@@ -179,10 +179,10 @@ export const storybookGraphBuilders: BuilderExtensions = [
         pipe(
           get(node),
           Option.flatMap((node) => (node.type === 'space' ? Option.some(node) : Option.none())),
-          Option.map(() => {
+          Option.map((node) => {
             return [
               ...Array.from({ length: 5 }, (_, i) => ({
-                id: `object-${i}`,
+                id: `${node.id}/object-${i}`,
                 type: 'object',
                 properties: {
                   label: `Object ${i}`,
