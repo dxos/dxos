@@ -9,6 +9,7 @@ import { type DXN } from '@dxos/keys';
 
 import type { EchoDatabase } from './database';
 import type { AnyLiveObject } from '../echo-handler';
+import type { Type } from '@dxos/echo';
 
 type DefineObjectMigrationOptions<From extends Schema.Schema.AnyNoContext, To extends Schema.Schema.AnyNoContext> = {
   from: From;
@@ -20,7 +21,7 @@ type DefineObjectMigrationOptions<From extends Schema.Schema.AnyNoContext, To ex
   transform: (
     from: Schema.Schema.Type<From>,
     context: ObjectMigrationContext,
-  ) => Promise<Omit<Schema.Schema.Type<To>, 'id'>>;
+  ) => Promise<Omit<Schema.Schema.Type<To>, 'id' | Type.KindId>>;
 
   /**
    * Callback that is called after the object is migrated. Called for every object that is migrated.

@@ -25,7 +25,7 @@ import { EntityKind, getSchemaDXN, getTypeAnnotation } from '../ast';
 import { defineHiddenProperty } from '../utils';
 
 // Make `id` optional.
-type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;
+type CreateData<T> = T extends { id: string } ? Omit<T, 'id' | typeof EntityKindId> & { id?: string } : T;
 
 /**
  * Creates a new object instance from a schema and data, without signal reactivity.

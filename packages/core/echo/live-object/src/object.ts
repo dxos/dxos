@@ -14,6 +14,7 @@ import {
   type ObjectMeta,
   ObjectMetaSchema,
   EntityKindId,
+  type CreationProps,
 } from '@dxos/echo-schema';
 import { MetaId } from '@dxos/echo-schema';
 
@@ -32,8 +33,16 @@ import { UntypedReactiveHandler } from './untyped-handler';
 // TODO(burdon): Use Schema.make() to handle defaults?
 export const live: {
   <T extends BaseObject>(obj: T): Live<T>;
-  <T extends BaseObject>(schema: Schema.Schema<T, any, never>, obj: NoInfer<ExcludeId<T>>, meta?: ObjectMeta): Live<T>;
-} = <T extends BaseObject>(objOrSchema: Schema.Schema<T, any> | T, obj?: ExcludeId<T>, meta?: ObjectMeta): Live<T> => {
+  <T extends BaseObject>(
+    schema: Schema.Schema<T, any, never>,
+    obj: NoInfer<CreationProps<T>>,
+    meta?: ObjectMeta,
+  ): Live<T>;
+} = <T extends BaseObject>(
+  objOrSchema: Schema.Schema<T, any> | T,
+  obj?: CreationProps<T>,
+  meta?: ObjectMeta,
+): Live<T> => {
   // TODO(dmaretskyi): Remove Expando special case.
   if (obj && (objOrSchema as any) !== Expando) {
     return createReactiveObject<T>({ ...obj } as T, meta, objOrSchema as Schema.Schema<T, any>);

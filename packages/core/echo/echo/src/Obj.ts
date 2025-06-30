@@ -10,13 +10,51 @@ import { type DXN } from '@dxos/keys';
 import * as LiveObject from '@dxos/live-object';
 import { assumeType } from '@dxos/util';
 
+import { live } from '@dxos/live-object';
 import type * as Ref from './Ref';
 import type * as Type from './Type';
+import type * as Relation from './Relation';
 
-export type Obj<T = any> = EchoSchema.AnyEchoObject & T;
-export type Any = EchoSchema.AnyEchoObject;
+// NOTE: Don't export: Obj.Any and Obj.Obj form the public API.
+interface ObjBase extends Type.OfKind<EchoSchema.EntityKind.Object> {
+  readonly id: EchoSchema.ObjectId;
+}
 
-export const make = LiveObject.live;
+/**
+ * Object type with specific properties.
+ */
+export type Obj<Props> = ObjBase & Props;
+
+/**
+ * Base type for all ECHO objects.
+ */
+export interface Any extends ObjBase {}
+
+type MakeProps<T> = {
+  id?: EchoSchema.ObjectId;
+} & Type.Properties<T>;
+
+/**
+ * Creates new object.
+ */
+// TODO(dmaretskyi): Move meta into props.
+export const make = <S extends Type.Obj.Any>(
+  schema: S,
+  props: NoInfer<MakeProps<Schema.Schema.Type<S>>>,
+  meta?: EchoSchema.ObjectMeta,
+): LiveObject.Live<Schema.Schema.Type<S>> => {
+  assertArgument(
+    EchoSchema.getTypeAnnotation(schema)?.kind === EchoSchema.EntityKind.Object,
+    'Expected an object schema',
+  );
+
+  if (props[EchoSchema.MetaId] != null) {
+    meta = props[EchoSchema.MetaId] as any;
+    delete props[EchoSchema.MetaId];
+  }
+
+  return live<Schema.Schema.Type<S>>(schema, props as any, meta);
+};
 
 export const isObject = (obj: unknown): obj is Any => {
   assumeType<EchoSchema.InternalObjectProps>(obj);
@@ -111,7 +149,7 @@ export type JSON = EchoSchema.ObjectJSON;
  *
  * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
  */
-export const toJSON = (obj: Any): JSON => EchoSchema.objectToJSON(obj);
+export const toJSON = (obj: Any | Relation.Any): JSON => EchoSchema.objectToJSON(obj);
 
 /**
  * Creates an object from its json representation, performing schema validation.
@@ -120,4 +158,4 @@ export const toJSON = (obj: Any): JSON => EchoSchema.objectToJSON(obj);
  * The function need to be async to support resolving the schema as well as the relation endpoints.
  */
 export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver }) => Promise<Any> =
-  EchoSchema.objectFromJSON;
+  EchoSchema.objectFromJSON as any;

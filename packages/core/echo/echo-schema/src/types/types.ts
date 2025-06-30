@@ -10,7 +10,7 @@ import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getSchemaDXN } from '../ast';
-import { getType, getTypename, type ObjectMeta } from '../object';
+import { getType, getTypename, type ObjectMeta, EntityKindId } from '../object';
 import { ATTR_META } from '../object/model';
 
 /**
@@ -32,6 +32,8 @@ export type HasId = {
 export type WithId = BaseObject & HasId;
 
 export type ExcludeId<T extends BaseObject> = Omit<T, 'id'>;
+
+export type CreationProps<T extends BaseObject> = Omit<T, 'id' | typeof EntityKindId>;
 
 export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 

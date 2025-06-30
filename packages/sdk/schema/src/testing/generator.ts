@@ -24,6 +24,7 @@ import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
 import { getSchemaProperties, type SchemaProperty } from '../properties';
+import { Obj, type Type } from '@dxos/echo';
 
 /**
  * Decouples from faker.
@@ -62,13 +63,15 @@ export const createObjectFactory =
 /**
  * Set properties based on generator annotation.
  */
-export const createProps = <T extends BaseObject>(
+export const createProps = <S extends Schema.Schema.AnyNoContext>(
   generator: ValueGenerator,
-  schema: Schema.Schema<T>,
+  schema: S,
   force = false,
 ) => {
-  return (data: ExcludeId<T> = {} as ExcludeId<T>): ExcludeId<T> => {
-    return getSchemaProperties<T>(schema.ast).reduce<ExcludeId<T>>((obj, property) => {
+  return (
+    data: Type.Properties<Schema.Schema.Type<S>> = {} as Type.Properties<Schema.Schema.Type<S>>,
+  ): Type.Properties<Schema.Schema.Type<S>> => {
+    return getSchemaProperties<S>(schema.ast).reduce<Type.Properties<Schema.Schema.Type<S>>>((obj, property) => {
       if (obj[property.name] === undefined) {
         obj[property.name] = createValue(generator, schema, property, force);
       }
@@ -150,8 +153,8 @@ export const createReferences = <T extends BaseObject>(schema: Schema.Schema<T>,
   };
 };
 
-export const createReactiveObject = <T extends BaseObject>(type: Schema.Schema<T>) => {
-  return (data: ExcludeId<T>) => live<T>(type, data);
+export const createReactiveObject = <S extends Schema.Schema.AnyNoContext>(type: S) => {
+  return (data: Omit<Schema.Schema.Type<S>, 'id' | Type.KindId>) => Obj.make<S>(type, data);
 };
 
 export const addToDatabase = (db: EchoDatabase) => {
