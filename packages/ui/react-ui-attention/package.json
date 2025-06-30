@@ -50,7 +50,6 @@
     "effect": "3.14.21"
   },
   "devDependencies": {
-    "@dxos/app-graph": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

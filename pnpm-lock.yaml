@@ -10654,6 +10654,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-tabs':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-tabs
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
@@ -12062,9 +12065,6 @@ importers:
         specifier: 3.14.21
         version: 3.14.21
     devDependencies:
-      '@dxos/app-graph':
-        specifier: workspace:*
-        version: link:../../sdk/app-graph
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
