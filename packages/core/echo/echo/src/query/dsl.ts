@@ -10,9 +10,9 @@ import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
-import type { RelationSource, RelationTarget } from '../object';
-import { Ref } from '../ref';
-import { getTypeReference } from '../types';
+import { getTypeReference } from '@dxos/echo-schema';
+import * as Ref from '../Ref';
+import * as Type from '../Type';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
@@ -36,7 +36,7 @@ export interface Query<T> {
    * @param key - Property path inside T that is a reference.
    * @returns Query for the target of the reference.
    */
-  reference<K extends RefPropKey<T>>(key: K): Query<Ref.Target<T[K]>>;
+  reference<K extends RefPropKey<T>>(key: K): Query<T[K] extends Ref.Any ? Ref.Target<T[K]> : never>;
 
   /**
    * Find objects referencing this object.
@@ -77,13 +77,13 @@ export interface Query<T> {
    * For a query for relations, get the source objects.
    * @returns Query for the source objects.
    */
-  source(): Query<RelationSource<T>>;
+  source(): Query<Type.Relation.Source<T>>;
 
   /**
    * For a query for relations, get the target objects.
    * @returns Query for the target objects.
    */
-  target(): Query<RelationTarget<T>>;
+  target(): Query<Type.Relation.Target<T>>;
 
   /**
    * Add options to a query.

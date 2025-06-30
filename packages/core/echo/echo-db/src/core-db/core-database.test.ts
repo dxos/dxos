@@ -7,7 +7,8 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { createIdFromSpaceKey, SpaceDocVersion, type DatabaseDirectory } from '@dxos/echo-protocol';
-import { Expando, Filter, ObjectId, Ref } from '@dxos/echo-schema';
+import { Expando, ObjectId, Ref } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo';
 import { Testing } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';

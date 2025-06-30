@@ -7,7 +7,7 @@ import { Obj, Type, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
-const organizations: DataType.Organization[] = [
+const organizations: (Type.Properties<DataType.Organization> & { id: string })[] = [
   { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' },
   { id: 'socket_supply', name: 'Socket Supply', website: 'https://socketsupply.com' },
   { id: 'ink_and_switch', name: 'Ink & Switch', website: 'https://inkandswitch.com' },
@@ -24,7 +24,7 @@ const organizations: DataType.Organization[] = [
   { id: 'deshaw', name: 'D. E. Shaw & Co.', website: 'https://deshaw.com' },
 ];
 
-const people: DataType.Person[] = [
+const people: (Type.Properties<DataType.Person> & { id: string })[] = [
   { id: 'rich_burdon', fullName: 'Rich Burdon' },
   { id: 'josiah_witt', fullName: 'Josiah Witt' },
   { id: 'dima_dmaretskyi', fullName: 'Dima Maretskyi' },

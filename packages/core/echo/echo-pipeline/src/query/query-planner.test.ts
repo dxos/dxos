@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { type QueryAST } from '@dxos/echo-protocol';
-import { Filter, Query } from '@dxos/echo-schema';
+import { Filter, Query } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 
 import { QueryPlanner } from './query-planner';
