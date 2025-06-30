@@ -4,16 +4,18 @@
 
 import { Schema, SchemaAST } from 'effect';
 
+import { Type } from '@dxos/echo';
 import { defineObjectMigration } from '@dxos/echo-db';
 import {
+  FieldSortType,
   FormatEnum,
   JsonPath,
   JsonSchemaType,
+  PropertyMetaAnnotationId,
   QueryType,
-  FieldSortType,
+  StoredSchema,
   TypedObject,
   toEffectSchema,
-  PropertyMetaAnnotationId,
   type PropertyMetaAnnotation,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
@@ -125,7 +127,6 @@ type CreateViewProps = {
 export const createView = ({ name, typename, jsonSchema, fields: include }: CreateViewProps): Live<ViewType> => {
   const fields: FieldType[] = [];
   if (jsonSchema) {
-    // TODO(burdon): Property order is lost.
     const schema = toEffectSchema(jsonSchema);
     const shouldIncludeId = include?.find((field) => field === 'id') !== undefined;
     const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
@@ -161,7 +162,22 @@ export const createView = ({ name, typename, jsonSchema, fields: include }: Crea
 
   return live(ViewType, {
     name,
-    query: { typename },
+    query: {
+      typename,
+    },
     fields,
   });
 };
+
+export const HasViewSchema = Schema.Struct({});
+
+export const HasView = HasViewSchema.pipe(
+  Type.Relation({
+    typename: 'dxos.org/type/HasView',
+    version: '0.1.0',
+    source: StoredSchema,
+    target: ViewType,
+  }),
+);
+
+export interface HasView extends Schema.Schema.Type<typeof HasView> {}

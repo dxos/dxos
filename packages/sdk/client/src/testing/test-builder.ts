@@ -10,7 +10,8 @@ import { ClientServicesHost, type ServiceContextRuntimeParams } from '@dxos/clie
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { Expando, Filter } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo';
+import { Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';

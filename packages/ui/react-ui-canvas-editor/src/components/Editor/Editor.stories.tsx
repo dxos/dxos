@@ -8,7 +8,8 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Schema } from 'effect';
 import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
-import { getSchemaTypename, getTypename, Filter } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo';
+import { getSchemaTypename, getTypename } from '@dxos/echo-schema';
 import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';

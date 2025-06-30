@@ -78,7 +78,7 @@ export const filterObjectsSync = <T extends Record<string, any>>(objects: T[], m
 };
 
 // TODO(burdon): Use schema?
-export const getStringProperty = (object: Record<string, unknown>, keys: string[]): string | undefined => {
+export const getStringProperty = (object: any, keys: string[]): string | undefined => {
   let label;
   keys.some((key) => {
     const value = object[key];
