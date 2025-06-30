@@ -6,17 +6,10 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
-<<<<<<< HEAD
-import { addEventListener, combine } from '@dxos/async';
-import { log } from '@dxos/log';
-||||||| 476aed6683
-import { addEventListener, type CleanupFn, combine } from '@dxos/async';
-=======
 import { addEventListener, combine } from '@dxos/async';
 import { log } from '@dxos/log';
 
 // TODO(burdon): Particle effects.
->>>>>>> origin/main
 
 export type GhostProps = {
   SIM_RESOLUTION: number;
@@ -96,19 +89,10 @@ export type GhostRenderer = {
 
 export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): GhostRenderer => {
   const config: GhostProps = Object.assign({}, defaultConfig, _config);
-<<<<<<< HEAD
-
-  // TODO(burdon): 1 pointer per ghost.
-  const pointers: Pointer[] = [new Pointer()];
-
-||||||| 476aed6683
-  const pointers: PointerPrototype[] = [new PointerPrototype()];
-=======
 
   // TODO(burdon): Externalize state.
   const pointers: Pointer[] = [new Pointer()];
 
->>>>>>> origin/main
   const { gl, ext } = getWebGLContext(canvas);
   if (!ext.supportLinearFiltering) {
     config.DYE_RESOLUTION = 256;
@@ -733,31 +717,6 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
 
   updateKeywords();
   initFramebuffers();
-<<<<<<< HEAD
-
-  let lastUpdateTime = Date.now();
-  let colorUpdateTimer = 1.0;
-
-  let running = false;
-  const start = () => {
-    log('start', { running });
-    if (!running) {
-      running = true;
-      updateFrame();
-    }
-  };
-
-  const stop = () => {
-    log('stop', { running });
-    if (running) {
-      running = false;
-    }
-  };
-||||||| 476aed6683
-  let lastUpdateTime = Date.now();
-  let colorUpdateTimer = 0.0;
-=======
->>>>>>> origin/main
 
   let running = false;
   const start = () => {
@@ -817,14 +776,7 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
 
   const updateColors = (dt: number) => {
     colorUpdateTimer += dt * config.COLOR_UPDATE_SPEED;
-<<<<<<< HEAD
-    if (config.COLOR_UPDATE_SPEED === 0 || colorUpdateTimer >= 1) {
-      log.info('update', { pointers: pointers.length });
-||||||| 476aed6683
-    if (config.COLOR_UPDATE_SPEED === 0 || colorUpdateTimer >= 1) {
-=======
     if (colorUpdateTimer >= 1) {
->>>>>>> origin/main
       colorUpdateTimer = wrap(colorUpdateTimer, 0, 1);
       pointers.forEach((p) => {
         p.color = generateColor(config.COLOR_MASK);
@@ -1004,114 +956,6 @@ export const useGhostController = (ghost: GhostRenderer | undefined, config: Par
       if (aspectRatio < 1) {
         delta *= aspectRatio;
       }
-<<<<<<< HEAD
-      return delta;
-    };
-
-    const correctDeltaY = (delta: number) => {
-      const aspectRatio = canvas.width / canvas.height;
-      if (aspectRatio > 1) {
-        delta /= aspectRatio;
-      }
-      return delta;
-    };
-
-    const updatePointerDownData = (pointer: Pointer, id: number, posX: number, posY: number) => {
-      pointer.id = id;
-      pointer.down = true;
-      pointer.moved = false;
-      pointer.texcoordX = posX / canvas.width;
-      pointer.texcoordY = 1.0 - posY / canvas.height;
-      pointer.prevTexcoordX = pointer.texcoordX;
-      pointer.prevTexcoordY = pointer.texcoordY;
-      pointer.deltaX = 0;
-      pointer.deltaY = 0;
-      pointer.color = generateColor(config.COLOR_MASK);
-    };
-
-    const updatePointerMoveData = (pointer: Pointer, posX: number, posY: number, color: Color) => {
-      pointer.prevTexcoordX = pointer.texcoordX;
-      pointer.prevTexcoordY = pointer.texcoordY;
-      pointer.texcoordX = posX / canvas.width;
-      pointer.texcoordY = 1.0 - posY / canvas.height;
-      pointer.deltaX = correctDeltaX(pointer.texcoordX - pointer.prevTexcoordX);
-      pointer.deltaY = correctDeltaY(pointer.texcoordY - pointer.prevTexcoordY);
-      pointer.moved = Math.abs(pointer.deltaX) > 0 || Math.abs(pointer.deltaY) > 0;
-      pointer.color = color;
-    };
-
-    const updatePointerUpData = (pointer: Pointer) => {
-      pointer.down = false;
-    };
-
-    //
-    // Event handlers
-    //
-
-    return combine(
-      () => ghost.stop(),
-
-      addEventListener(window, 'mousedown', (e) => {
-        const pointer = ghost.addPointer();
-        const posX = scaleByPixelRatio(e.clientX);
-        const posY = scaleByPixelRatio(e.clientY);
-        updatePointerDownData(pointer, -1, posX, posY);
-        ghost.splat(pointer);
-      }),
-      addEventListener(window, 'mousemove', (e) => {
-        const pointer = ghost.getPointer();
-        const posX = scaleByPixelRatio(e.clientX);
-        const posY = scaleByPixelRatio(e.clientY);
-        updatePointerMoveData(pointer, posX, posY, pointer.color);
-      }),
-
-      addEventListener(window, 'touchstart', (e) => {
-        const pointer = ghost.getPointer();
-        const touches = e.targetTouches;
-        for (let i = 0; i < touches.length; i++) {
-          const posX = scaleByPixelRatio(touches[i].clientX);
-          const posY = scaleByPixelRatio(touches[i].clientY);
-          updatePointerDownData(pointer, touches[i].identifier, posX, posY);
-        }
-      }),
-      addEventListener(window, 'touchmove', (e) => {
-        const pointer = ghost.getPointer();
-        const touches = e.targetTouches;
-        for (let i = 0; i < touches.length; i++) {
-          const posX = scaleByPixelRatio(touches[i].clientX);
-          const posY = scaleByPixelRatio(touches[i].clientY);
-          updatePointerMoveData(pointer, posX, posY, pointer.color);
-        }
-      }),
-      addEventListener(window, 'touchend', (e) => {
-        const pointer = ghost.getPointer();
-        const touches = e.changedTouches;
-        for (let i = 0; i < touches.length; i++) {
-          updatePointerUpData(pointer);
-        }
-      }),
-    );
-  }, [ghost]);
-||||||| 476aed6683
-    }),
-    addEventListener(window, 'touchmove', (e) => {
-      const touches = e.targetTouches;
-      const pointer = pointers[0];
-      for (let i = 0; i < touches.length; i++) {
-        const posX = scaleByPixelRatio(touches[i].clientX);
-        const posY = scaleByPixelRatio(touches[i].clientY);
-        updatePointerMoveData(pointer, posX, posY, pointer.color);
-      }
-    }),
-    addEventListener(window, 'touchend', (e) => {
-      const touches = e.changedTouches;
-      const pointer = pointers[0];
-      for (let i = 0; i < touches.length; i++) {
-        updatePointerUpData(pointer);
-      }
-    }),
-  );
-=======
       return delta;
     };
 
@@ -1201,7 +1045,6 @@ export const useGhostController = (ghost: GhostRenderer | undefined, config: Par
       }),
     );
   }, [ghost]);
->>>>>>> origin/main
 };
 
 //
