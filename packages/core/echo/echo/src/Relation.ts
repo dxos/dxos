@@ -7,15 +7,17 @@ import { type Schema } from 'effect';
 import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { assumeType } from '@dxos/util';
+
+import type * as Obj from './Obj';
 
 export type Any = EchoSchema.AnyEchoObject & EchoSchema.RelationSourceTargetRefs;
 
 export const Source = EchoSchema.RelationSourceId;
 export const Target = EchoSchema.RelationTargetId;
 
-type Obj<T extends EchoSchema.BaseObject, Source, Target> = Omit<
+type Obj<T extends EchoSchema.BaseObject, Source extends Obj.Any, Target extends Obj.Any> = Omit<
   EchoSchema.ExcludeId<T>,
   typeof EchoSchema.RelationSourceId | typeof EchoSchema.RelationTargetId
 > & {
@@ -23,12 +25,12 @@ type Obj<T extends EchoSchema.BaseObject, Source, Target> = Omit<
   [Target]: Target;
 };
 
-// TODO(burdon): Narrow generics to define type of source and target.
-export const make = <T extends EchoSchema.BaseObject, Source, Target>(
+// TODO(burdon): Narrow generics to match type of source and target schemas.
+export const make = <T extends EchoSchema.BaseObject, Source extends Obj.Any, Target extends Obj.Any>(
   schema: Schema.Schema<T, any, never>,
   { [Source]: source, [Target]: target, ...rest }: Obj<T, Source, Target>,
   meta?: EchoSchema.ObjectMeta,
-) =>
+): Live<T> =>
   live<T>(
     schema,
     {

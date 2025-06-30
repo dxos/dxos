@@ -127,7 +127,6 @@ type CreateViewProps = {
 export const createView = ({ name, typename, jsonSchema, fields: include }: CreateViewProps): Live<ViewType> => {
   const fields: FieldType[] = [];
   if (jsonSchema) {
-    // TODO(burdon): Property order is lost.
     const schema = toEffectSchema(jsonSchema);
     const shouldIncludeId = include?.find((field) => field === 'id') !== undefined;
     const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);

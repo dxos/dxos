@@ -10,16 +10,18 @@ import { invariant } from '@dxos/invariant';
 import type * as Keys from '@dxos/keys';
 
 /**
- * ECHO schema.
+ * Base ECHO schema type.
  */
 export type Schema = EchoSchema.EchoSchema;
 
 /**
- * EchoObject schema.
+ * Object schema.
  */
 export const Obj = EchoSchema.EchoObject;
 
-// TODO(buurdon): Move to Obj?
+/**
+ * Object schema type definitions.
+ */
 export namespace Obj {
   /**
    * Type that represents an arbitrary schema type of an object.
@@ -30,11 +32,13 @@ export namespace Obj {
 }
 
 /**
- * EchoRelation schema.
+ * Relation schema.
  */
 export const Relation = EchoSchema.EchoRelation;
 
-// TODO(buurdon): Move to Relation?
+/**
+ * Relation schema type definitions.
+ */
 export namespace Relation {
   /**
    * Type that represents an arbitrary schema type of a relation.
