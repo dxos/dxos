@@ -131,7 +131,7 @@ const meta: Meta<typeof NavTreeContainer> = {
       ],
       capabilities: (context) => [
         contributes(StoryState, Obj.make({ tab: 'space-0' })),
-        contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders),
+        contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders(context)),
         contributes(Capabilities.IntentResolver, [
           createResolver({
             intent: LayoutAction.UpdateLayout,
