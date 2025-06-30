@@ -4,13 +4,10 @@
 
 import React from 'react';
 
-export type TestProps = {
-  label?: string;
-  onClick?: () => void;
-};
+import { IconButton, type IconButtonProps } from '@dxos/react-ui';
 
-export const Test = ({ label, onClick }: TestProps) => (
-  <button onClick={onClick}>
-    {label}
-  </button>
-);
+export type TestProps = IconButtonProps;
+
+export const Test = (props: TestProps) => {
+  return <IconButton {...props} />;
+};

@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-
 import { type Meta, type StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
@@ -14,6 +13,9 @@ const meta: Meta<TestProps> = {
   title: 'apps/composer-app/Test',
   component: Test,
   decorators: [withTheme],
+  parameters: {
+    layout: 'centered',
+  },
 };
 
 export default meta;
@@ -30,7 +32,8 @@ export const Default: Story = {
     await expect(canvas.getByText(args.label)).toBeInTheDocument();
   },
   args: {
-    label: 'Test',
+    icon: 'ph--rocket-launch--regular',
+    label: 'Composer',
     onClick: fn(),
   },
 };
