@@ -18,7 +18,7 @@ import {
 } from '@dxos/ai';
 import { makePushIterable } from '@dxos/async';
 import { Obj, Type } from '@dxos/echo';
-import { ATTR_TYPE, Filter, getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
+import { ATTR_TYPE, getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
 import { AiService, DatabaseService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -61,6 +61,7 @@ import {
   synchronizedComputeFunction,
   ValueBag,
 } from '../types';
+import { Filter } from "@dxos/echo";
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).

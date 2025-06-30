@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { Expando, Filter, Ref, TypedObject } from '@dxos/echo-schema';
+import { Expando, Ref, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { live } from '@dxos/live-object';
@@ -14,6 +14,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { loadObjectReferences } from './load-object';
 import { type AnyLiveObject } from '../echo-handler';
 import { EchoTestBuilder } from '../testing';
+import { Filter } from "@dxos/echo";
 
 // TODO(dmaretskyi): Refactor to test Ref.load() instead.
 describe.skip('loadObjectReferences', () => {

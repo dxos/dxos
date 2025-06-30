@@ -8,7 +8,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Schema } from 'effect';
 import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
-import { getSchemaTypename, getTypename, Filter } from '@dxos/echo-schema';
+import { getSchemaTypename, getTypename } from '@dxos/echo-schema';
 import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
@@ -23,6 +23,7 @@ import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { doLayout } from '../../layout';
 import { useSelection, Container, DragTest } from '../../testing';
 import { type CanvasGraphModel, RectangleShape } from '../../types';
+import { Filter } from "@dxos/echo";
 
 const generator: ValueGenerator = faker as any;
 

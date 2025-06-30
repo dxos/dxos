@@ -10,7 +10,7 @@ import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { getObjectCore } from '@dxos/echo-db';
-import { Expando, Filter, type HasId, Ref } from '@dxos/echo-schema';
+import { Expando, type HasId, Ref } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -28,6 +28,7 @@ import {
   TestBuilder,
   TextV0Type,
 } from '../testing';
+import { Filter } from "@dxos/echo";
 
 describe('Spaces', () => {
   test.skip('creates a default space', async () => {

@@ -28,7 +28,7 @@ import {
   type SpaceState,
   DATA_NAMESPACE,
 } from '@dxos/echo-protocol';
-import { type ObjectId, Ref, type AnyObjectData, type Filter } from '@dxos/echo-schema';
+import { type ObjectId, Ref, type AnyObjectData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -52,6 +52,7 @@ import { getInlineAndLinkChanges } from './util';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../automerge';
 import { type Hypergraph } from '../hypergraph';
 import { normalizeQuery, QueryResult, type QueryFn } from '../query';
+import { Filter } from "@dxos/echo";
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 

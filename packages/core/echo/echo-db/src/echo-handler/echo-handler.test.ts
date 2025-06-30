@@ -8,7 +8,7 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
-import { getSchema, createQueueDXN, Query } from '@dxos/echo-schema';
+import { getSchema, createQueueDXN } from '@dxos/echo-schema';
 import { EchoObject, Expando, TypedObject, foreignKey, getTypeReference, Ref, type Ref$ } from '@dxos/echo-schema';
 import { Testing, prepareAstForCompare } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -25,6 +25,7 @@ import { getDatabaseFromObject } from './util';
 import { DocAccessor } from '../core-db';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
+import { Query } from "@dxos/echo";
 
 registerSignalsRuntime();
 

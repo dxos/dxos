@@ -15,11 +15,9 @@ import {
   getTypeIdentifierAnnotation,
   type AnyEchoObject,
   create,
-  Filter,
   getEntityKind,
   getSchemaDXN,
   ObjectId,
-  Query,
   ReferenceAnnotationId,
   type BaseObject,
   RelationSourceDXNId,
@@ -31,6 +29,8 @@ import { mapAst } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable } from '@dxos/util';
+import { Query } from "@dxos/echo";
+import { Filter } from "@dxos/echo";
 
 // TODO(burdon): Unify with the graph schema.
 export const Subgraph = Schema.Struct({

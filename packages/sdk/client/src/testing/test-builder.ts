@@ -10,7 +10,7 @@ import { ClientServicesHost, type ServiceContextRuntimeParams } from '@dxos/clie
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { Expando, Filter } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -32,6 +32,7 @@ import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/
 import { Client } from '../client';
 import { type EchoDatabase } from '../echo';
 import { ClientServicesProxy, LocalClientServices } from '../services';
+import { Filter } from "@dxos/echo";
 
 export const testConfigWithLocalSignal = new Config({
   version: 1,

@@ -5,14 +5,14 @@
 //
 // Copyright 2025 DXOS.org
 //
-
-import { Filter, Query } from '@dxos/echo-schema';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type QueryResult } from './query-result';
+import { Query } from "@dxos/echo";
+import { Filter } from "@dxos/echo";
 
 export { Filter, Query };
 

@@ -7,9 +7,7 @@ import { Context } from '@dxos/context';
 import { raise, StackTrace } from '@dxos/debug';
 import type { Ref } from '@dxos/echo';
 import {
-  Filter,
   ImmutableSchema,
-  Query,
   RuntimeSchemaRegistry,
   type AnyEchoObject,
   type BaseObject,
@@ -38,6 +36,8 @@ import {
   type QuerySource,
 } from './query';
 import type { Queue, QueueFactory } from './queue';
+import { Query } from "@dxos/echo";
+import { Filter } from "@dxos/echo";
 
 const TRACE_REF_RESOLUTION = false;
 
