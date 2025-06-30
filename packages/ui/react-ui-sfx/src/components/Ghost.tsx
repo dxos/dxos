@@ -4,9 +4,12 @@
 // Based on https://reactbits.dev/animations/splash-cursor
 //
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
-import { addEventListener, type CleanupFn, combine } from '@dxos/async';
+import { addEventListener, combine } from '@dxos/async';
+import { log } from '@dxos/log';
+
+// TODO(burdon): Particle effects.
 
 export type GhostProps = {
   SIM_RESOLUTION: number;
@@ -46,40 +49,50 @@ const defaultConfig: GhostProps = {
 
 export const Ghost = (props: Partial<GhostProps>) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ghost = useGhost(canvasRef.current, props);
+  useGhostController(ghost, props);
+
+  return <canvas ref={canvasRef} className='bs-full is-full' />;
+};
+
+const useGhost = (canvas: HTMLCanvasElement | null, props: Partial<GhostProps>): GhostRenderer | undefined => {
+  const ghost = useMemo(() => {
+    if (!canvas) {
+      return undefined;
+    }
+
+    return createRenderer(canvas, props);
+  }, [canvas, props]);
+
   useEffect(() => {
-    if (!canvasRef.current) {
+    if (!ghost) {
       return;
     }
 
-    const cleanup = render(canvasRef.current, props);
-    return () => cleanup();
-  }, [props]);
+    ghost.start();
+    return () => {
+      ghost.stop();
+    };
+  }, [ghost]);
 
-  return (
-    <div className='fixed top-0 left-0 z-50 pointer-events-none w-full h-full'>
-      <canvas ref={canvasRef} id='fluid' className='w-screen h-screen block'></canvas>
-    </div>
-  );
+  return ghost;
 };
 
-type Color = { r: number; g: number; b: number };
+export type GhostRenderer = {
+  canvas: HTMLCanvasElement;
+  getPointer: () => Pointer;
+  addPointer: () => Pointer;
+  start: () => void;
+  stop: () => void;
+  splat: (pointer: Pointer) => void;
+};
 
-class PointerPrototype {
-  id = -1;
-  texcoordX = 0;
-  texcoordY = 0;
-  prevTexcoordX = 0;
-  prevTexcoordY = 0;
-  deltaX = 0;
-  deltaY = 0;
-  down = false;
-  moved = false;
-  color: Color = { r: 0, g: 0, b: 0 };
-}
-
-const render = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): CleanupFn => {
+export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): GhostRenderer => {
   const config: GhostProps = Object.assign({}, defaultConfig, _config);
-  const pointers: PointerPrototype[] = [new PointerPrototype()];
+
+  // TODO(burdon): Externalize state.
+  const pointers: Pointer[] = [new Pointer()];
+
   const { gl, ext } = getWebGLContext(canvas);
   if (!ext.supportLinearFiltering) {
     config.DYE_RESOLUTION = 256;
@@ -98,10 +111,12 @@ const render = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): Cleanu
     if (!keywords) {
       return source;
     }
+
     let keywordsString = '';
     keywords.forEach((keyword) => {
       keywordsString += '#define ' + keyword + '\n';
     });
+
     return keywordsString + source;
   };
 
@@ -702,24 +717,46 @@ const render = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): Cleanu
 
   updateKeywords();
   initFramebuffers();
-  let lastUpdateTime = Date.now();
-  let colorUpdateTimer = 0.0;
 
+  let running = false;
+  const start = () => {
+    log('start', { running });
+    if (!running) {
+      running = true;
+      updateFrame();
+    }
+  };
+
+  const stop = () => {
+    log('stop', { running });
+    if (running) {
+      running = false;
+    }
+  };
+
+  let lastUpdateTime = Date.now();
+  let colorUpdateTimer = 1.0;
+
+  // Main frame loop.
   const updateFrame = () => {
     const dt = calcDeltaTime();
     if (resizeCanvas()) {
       initFramebuffers();
     }
+
     updateColors(dt);
     applyInputs();
     step(dt);
     render(null);
-    requestAnimationFrame(updateFrame);
+
+    if (running) {
+      requestAnimationFrame(updateFrame);
+    }
   };
 
   const calcDeltaTime = () => {
     const now = Date.now();
-    let dt = (now - lastUpdateTime) / 1000;
+    let dt = (now - lastUpdateTime) / 1_000;
     dt = Math.min(dt, 0.016666);
     lastUpdateTime = now;
     return dt;
@@ -733,12 +770,13 @@ const render = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): Cleanu
       canvas.height = height;
       return true;
     }
+
     return false;
   };
 
   const updateColors = (dt: number) => {
     colorUpdateTimer += dt * config.COLOR_UPDATE_SPEED;
-    if (config.COLOR_UPDATE_SPEED === 0 || colorUpdateTimer >= 1) {
+    if (colorUpdateTimer >= 1) {
       colorUpdateTimer = wrap(colorUpdateTimer, 0, 1);
       pointers.forEach((p) => {
         p.color = generateColor(config.COLOR_MASK);
@@ -846,20 +884,18 @@ const render = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): Cleanu
     blit(target);
   };
 
-  const splatPointer = (pointer: PointerPrototype) => {
+  const splatPointer = (pointer: Pointer) => {
     const dx = pointer.deltaX * config.SPLAT_FORCE;
     const dy = pointer.deltaY * config.SPLAT_FORCE;
     splat(pointer.texcoordX, pointer.texcoordY, dx, dy, pointer.color);
   };
 
-  const clickSplat = (pointer: PointerPrototype) => {
-    const color = generateColor(config.COLOR_MASK);
-    color.r *= 10.0;
-    color.g *= 10.0;
-    color.b *= 10.0;
-    const dx = 10 * (Math.random() - 0.5);
-    const dy = 30 * (Math.random() - 0.5);
-    splat(pointer.texcoordX, pointer.texcoordY, dx, dy, color);
+  const correctRadius = (radius: number) => {
+    const aspectRatio = canvas.width / canvas.height;
+    if (aspectRatio > 1) {
+      radius *= aspectRatio;
+    }
+    return radius;
   };
 
   const splat = (x: number, y: number, dx: number, dy: number, color: { r: number; g: number; b: number }) => {
@@ -882,115 +918,153 @@ const render = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): Cleanu
     }
   };
 
-  const correctRadius = (radius: number) => {
-    const aspectRatio = canvas.width / canvas.height;
-    if (aspectRatio > 1) {
-      radius *= aspectRatio;
+  const clickSplat = (pointer: Pointer) => {
+    const color = generateColor(config.COLOR_MASK);
+    color.r *= 10.0;
+    color.g *= 10.0;
+    color.b *= 10.0;
+    const dx = 10 * (Math.random() - 0.5);
+    const dy = 30 * (Math.random() - 0.5);
+    splat(pointer.texcoordX, pointer.texcoordY, dx, dy, color);
+  };
+
+  return {
+    canvas,
+    getPointer: () => pointers.at(-1)!,
+    addPointer: () => {
+      colorUpdateTimer = 1;
+      const pointer = new Pointer();
+      pointers.push(pointer);
+      return pointer;
+    },
+    start,
+    stop,
+    splat: clickSplat,
+  };
+};
+
+export const useGhostController = (ghost: GhostRenderer | undefined, config: Partial<GhostProps>) => {
+  return useMemo(() => {
+    if (!ghost) {
+      return;
     }
-    return radius;
-  };
 
-  updateFrame();
+    const canvas = ghost.canvas;
 
-  //
-  // Event utils.
-  //
-
-  const correctDeltaX = (delta: number) => {
-    const aspectRatio = canvas.width / canvas.height;
-    if (aspectRatio < 1) {
-      delta *= aspectRatio;
-    }
-    return delta;
-  };
-
-  const correctDeltaY = (delta: number) => {
-    const aspectRatio = canvas.width / canvas.height;
-    if (aspectRatio > 1) {
-      delta /= aspectRatio;
-    }
-    return delta;
-  };
-
-  const updatePointerDownData = (pointer: PointerPrototype, id: number, posX: number, posY: number) => {
-    pointer.id = id;
-    pointer.down = true;
-    pointer.moved = false;
-    pointer.texcoordX = posX / canvas.width;
-    pointer.texcoordY = 1.0 - posY / canvas.height;
-    pointer.prevTexcoordX = pointer.texcoordX;
-    pointer.prevTexcoordY = pointer.texcoordY;
-    pointer.deltaX = 0;
-    pointer.deltaY = 0;
-    pointer.color = generateColor(config.COLOR_MASK);
-  };
-
-  const updatePointerMoveData = (pointer: PointerPrototype, posX: number, posY: number, color: Color) => {
-    pointer.prevTexcoordX = pointer.texcoordX;
-    pointer.prevTexcoordY = pointer.texcoordY;
-    pointer.texcoordX = posX / canvas.width;
-    pointer.texcoordY = 1.0 - posY / canvas.height;
-    pointer.deltaX = correctDeltaX(pointer.texcoordX - pointer.prevTexcoordX);
-    pointer.deltaY = correctDeltaY(pointer.texcoordY - pointer.prevTexcoordY);
-    pointer.moved = Math.abs(pointer.deltaX) > 0 || Math.abs(pointer.deltaY) > 0;
-    pointer.color = color;
-  };
-
-  const updatePointerUpData = (pointer: PointerPrototype) => {
-    pointer.down = false;
-  };
-
-  //
-  // Event handlers
-  //
-
-  return combine(
-    addEventListener(window, 'mousedown', (e) => {
-      const pointer = pointers[0];
-      const posX = scaleByPixelRatio(e.clientX);
-      const posY = scaleByPixelRatio(e.clientY);
-      updatePointerDownData(pointer, -1, posX, posY);
-      clickSplat(pointer);
-    }),
-    addEventListener(window, 'mousemove', (e) => {
-      const pointer = pointers[0];
-      const posX = scaleByPixelRatio(e.clientX);
-      const posY = scaleByPixelRatio(e.clientY);
-      const color = pointer.color;
-      updatePointerMoveData(pointer, posX, posY, color);
-    }),
-
-    addEventListener(window, 'touchstart', (e) => {
-      const touches = e.targetTouches;
-      const pointer = pointers[0];
-      for (let i = 0; i < touches.length; i++) {
-        const posX = scaleByPixelRatio(touches[i].clientX);
-        const posY = scaleByPixelRatio(touches[i].clientY);
-        updatePointerDownData(pointer, touches[i].identifier, posX, posY);
+    const correctDeltaX = (delta: number) => {
+      const aspectRatio = canvas.width / canvas.height;
+      if (aspectRatio < 1) {
+        delta *= aspectRatio;
       }
-    }),
-    addEventListener(window, 'touchmove', (e) => {
-      const touches = e.targetTouches;
-      const pointer = pointers[0];
-      for (let i = 0; i < touches.length; i++) {
-        const posX = scaleByPixelRatio(touches[i].clientX);
-        const posY = scaleByPixelRatio(touches[i].clientY);
-        updatePointerMoveData(pointer, posX, posY, pointer.color);
+      return delta;
+    };
+
+    const correctDeltaY = (delta: number) => {
+      const aspectRatio = canvas.width / canvas.height;
+      if (aspectRatio > 1) {
+        delta /= aspectRatio;
       }
-    }),
-    addEventListener(window, 'touchend', (e) => {
-      const touches = e.changedTouches;
-      const pointer = pointers[0];
-      for (let i = 0; i < touches.length; i++) {
-        updatePointerUpData(pointer);
-      }
-    }),
-  );
+      return delta;
+    };
+
+    const updatePointerDownData = (pointer: Pointer, id: number, posX: number, posY: number) => {
+      pointer.id = id;
+      pointer.down = true;
+      pointer.moved = false;
+      pointer.texcoordX = posX / canvas.width;
+      pointer.texcoordY = 1.0 - posY / canvas.height;
+      pointer.prevTexcoordX = pointer.texcoordX;
+      pointer.prevTexcoordY = pointer.texcoordY;
+      pointer.deltaX = 0;
+      pointer.deltaY = 0;
+      pointer.color = generateColor(config.COLOR_MASK);
+    };
+
+    const updatePointerMoveData = (pointer: Pointer, posX: number, posY: number, color: Color) => {
+      pointer.prevTexcoordX = pointer.texcoordX;
+      pointer.prevTexcoordY = pointer.texcoordY;
+      pointer.texcoordX = posX / canvas.width;
+      pointer.texcoordY = 1.0 - posY / canvas.height;
+      pointer.deltaX = correctDeltaX(pointer.texcoordX - pointer.prevTexcoordX);
+      pointer.deltaY = correctDeltaY(pointer.texcoordY - pointer.prevTexcoordY);
+      pointer.moved = Math.abs(pointer.deltaX) > 0 || Math.abs(pointer.deltaY) > 0;
+      pointer.color = color;
+    };
+
+    const updatePointerUpData = (pointer: Pointer) => {
+      pointer.down = false;
+    };
+
+    //
+    // Event handlers
+    //
+
+    return combine(
+      () => ghost.stop(),
+
+      addEventListener(window, 'mousedown', (e) => {
+        const pointer = ghost.addPointer();
+        const x = scaleByPixelRatio(e.clientX);
+        const y = scaleByPixelRatio(e.clientY);
+        updatePointerDownData(pointer, -1, x, y);
+        ghost.splat(pointer);
+        playExplosion();
+      }),
+      addEventListener(window, 'mousemove', (e) => {
+        const pointer = ghost.getPointer();
+        const x = scaleByPixelRatio(e.clientX);
+        const y = scaleByPixelRatio(e.clientY);
+        updatePointerMoveData(pointer, x, y, pointer.color);
+      }),
+
+      // TODO(burdon): Create pointer for each touch.
+      addEventListener(window, 'touchstart', (e) => {
+        const pointer = ghost.getPointer();
+        const touches = e.targetTouches;
+        for (let i = 0; i < touches.length; i++) {
+          const x = scaleByPixelRatio(touches[i].clientX);
+          const y = scaleByPixelRatio(touches[i].clientY);
+          updatePointerDownData(pointer, touches[i].identifier, x, y);
+        }
+      }),
+      addEventListener(window, 'touchmove', (e) => {
+        const pointer = ghost.getPointer();
+        const touches = e.targetTouches;
+        for (let i = 0; i < touches.length; i++) {
+          const x = scaleByPixelRatio(touches[i].clientX);
+          const y = scaleByPixelRatio(touches[i].clientY);
+          updatePointerMoveData(pointer, x, y, pointer.color);
+        }
+      }),
+      addEventListener(window, 'touchend', (e) => {
+        const pointer = ghost.getPointer();
+        const touches = e.changedTouches;
+        for (let i = 0; i < touches.length; i++) {
+          updatePointerUpData(pointer);
+        }
+      }),
+    );
+  }, [ghost]);
 };
 
 //
 // Utils
 //
+
+export type Color = { r: number; g: number; b: number };
+
+export class Pointer {
+  id = -1;
+  texcoordX = 0;
+  texcoordY = 0;
+  prevTexcoordX = 0;
+  prevTexcoordY = 0;
+  deltaX = 0;
+  deltaY = 0;
+  down = false;
+  moved = false;
+  color: Color = { r: 0, g: 0, b: 0 };
+}
 
 const generateColor = (mask: Color = { r: 0, g: 0, b: 0 }): { r: number; g: number; b: number } => {
   const c = HSVtoRGB(Math.random(), 1, 1);
@@ -1158,4 +1232,26 @@ const getSupportedFormat = (gl: WebGL2RenderingContext, internalFormat: number, 
     internalFormat,
     format,
   };
+};
+
+const playExplosion = () => {
+  const ctx = new window.AudioContext();
+  const noise = ctx.createBufferSource();
+  const buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+
+  // Generate white noise.
+  for (let i = 0; i < data.length; i++) {
+    data[i] = (Math.random() * 5 - 1) * (1 - i / data.length); // Fade out.
+  }
+
+  // Create filter to shape rocket sound.
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(500, ctx.currentTime);
+  filter.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 2);
+
+  noise.buffer = buffer;
+  noise.connect(filter).connect(ctx.destination);
+  noise.start();
 };

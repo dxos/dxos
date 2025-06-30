@@ -11,7 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/testing/index.ts"
         ],
         "injectGlobals": true,
         "platforms": [

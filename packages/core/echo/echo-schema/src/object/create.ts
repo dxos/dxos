@@ -25,7 +25,7 @@ import { EntityKind, getSchemaDXN, getTypeAnnotation } from '../ast';
 import { defineHiddenProperty } from '../utils';
 
 // Make `id` optional.
-type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;
+type CreateData<T> = T extends { id: string } ? Omit<T, 'id' | typeof EntityKindId> & { id?: string } : T;
 
 /**
  * Creates a new object instance from a schema and data, without signal reactivity.
@@ -57,7 +57,7 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
  */
 // TODO(burdon): Rename make.
 // TODO(burdon): Handle defaults (see Schema.make).
-// TODO(dmaretskyi): Rename to `create` once existing `create` is renamed to `live`.
+// TODO(dmaretskyi): Use `Obj.make` and `Relation.make` from '@dxos/echo' instead.
 export const create = <S extends Schema.Schema.AnyNoContext>(
   schema: S,
   data: CreateData<Schema.Schema.Type<S>>,

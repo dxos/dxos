@@ -51,24 +51,22 @@ export type IndexerParams = {
   indexTimeBudget?: number;
 };
 
+// TODO(burdon): Rename package @dxos/indexer?
 @trace.resource()
 export class Indexer extends Resource {
-  private _indexConfig?: IndexConfig;
-
   public readonly updated = new Event<void>();
-
-  private _run!: DeferredTask;
 
   private readonly _db: LevelDB;
   private readonly _metadataStore: IndexMetadataStore;
-
   private readonly _engine: IndexingEngine;
 
   private readonly _indexUpdateBatchSize: number;
   private readonly _indexCooldownTime: number;
   private readonly _indexTimeBudget: number;
 
+  private _indexConfig?: IndexConfig;
   private _lastRunFinishedAt = 0;
+  private _run!: DeferredTask;
 
   constructor({
     db,
@@ -156,7 +154,6 @@ export class Indexer extends Resource {
 
   protected override async _close(ctx: Context): Promise<void> {
     await this._run.join();
-
     await this._engine.close(ctx);
   }
 
@@ -169,6 +166,7 @@ export class Indexer extends Resource {
   @synchronized
   async execQuery(filter: IndexQuery): Promise<FindResult[]> {
     if (this._lifecycleState !== LifecycleState.OPEN || this._indexConfig?.enabled !== true) {
+      // TODO(burdon): Unexpectedly thrown in query.test.ts.
       throw new Error('Indexer is not initialized or not enabled');
     }
 
