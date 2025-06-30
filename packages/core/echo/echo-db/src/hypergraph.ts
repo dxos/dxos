@@ -6,10 +6,9 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { raise, StackTrace } from '@dxos/debug';
 import type { Ref } from '@dxos/echo';
+import { Query, Filter } from '@dxos/echo';
 import {
-  Filter,
   ImmutableSchema,
-  Query,
   RuntimeSchemaRegistry,
   type AnyEchoObject,
   type BaseObject,

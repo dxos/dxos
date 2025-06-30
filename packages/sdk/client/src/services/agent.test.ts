@@ -4,7 +4,7 @@
 
 import { expect, onTestFinished, test } from 'vitest';
 
-import { Filter } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo';
 
 import { fromAgent } from './agent';
 import { Client } from '../client';

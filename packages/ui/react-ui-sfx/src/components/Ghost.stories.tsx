@@ -55,6 +55,7 @@ export const Trace: Story = {
     SPLAT_RADIUS: 0.02,
     CURL: 3,
     COLOR_UPDATE_SPEED: 10,
+<<<<<<< HEAD
   },
 };
 
@@ -74,5 +75,27 @@ export const Atomic: Story = {
     SPLAT_RADIUS: 5,
     CURL: 100,
     COLOR_UPDATE_SPEED: 0.1,
+||||||| 476aed6683
+=======
+  },
+};
+
+export const Fireball: Story = {
+  args: {
+    DENSITY_DISSIPATION: 1.5,
+    VELOCITY_DISSIPATION: 20,
+    CURL: 100,
+    COLOR_UPDATE_SPEED: 0.1,
+  },
+};
+
+export const Atomic: Story = {
+  args: {
+    DENSITY_DISSIPATION: 1.5,
+    VELOCITY_DISSIPATION: 15,
+    SPLAT_RADIUS: 5,
+    CURL: 100,
+    COLOR_UPDATE_SPEED: 0.1,
+>>>>>>> origin/main
   },
 };

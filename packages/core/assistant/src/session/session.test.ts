@@ -8,8 +8,8 @@ import { describe, test } from 'vitest';
 import { EdgeAiServiceClient, ConsolePrinter, createTool, ToolResult } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
-import { Type } from '@dxos/echo';
-import { create, ObjectId } from '@dxos/echo-schema';
+import { Type, Obj } from '@dxos/echo';
+import { ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -156,31 +156,31 @@ describe.skip('AISession with Ollama', () => {
 
 // Travel to rome, florence, livorno, siena, madrid for conferences
 const CALENDAR_EVENTS: CalendarEvent[] = [
-  create(CalendarEventSchema, {
+  Obj.make(CalendarEventSchema, {
     title: 'Exploring Ancient Ruins in Rome',
     startTime: '2024-01-01T10:00:00Z',
     endTime: '2024-01-01T11:00:00Z',
     description: 'Tech conference at the historic Colosseum with networking opportunities',
   }),
-  create(CalendarEventSchema, {
+  Obj.make(CalendarEventSchema, {
     title: 'Renaissance Tech Summit in Florence',
     startTime: '2024-01-01T11:00:00Z',
     endTime: '2024-01-01T12:00:00Z',
     description: 'Discussing AI innovations surrounded by Renaissance art',
   }),
-  create(CalendarEventSchema, {
+  Obj.make(CalendarEventSchema, {
     title: 'Travel to Livorno',
     startTime: '2024-01-01T12:00:00Z',
     endTime: '2024-01-01T13:00:00Z',
     description: 'Travel to Livorno',
   }),
-  create(CalendarEventSchema, {
+  Obj.make(CalendarEventSchema, {
     title: 'Travel to Siena',
     startTime: '2024-01-01T13:00:00Z',
     endTime: '2024-01-01T14:00:00Z',
     description: 'Travel to Siena',
   }),
-  create(CalendarEventSchema, {
+  Obj.make(CalendarEventSchema, {
     title: 'Travel to Madrid',
     startTime: '2024-01-01T14:00:00Z',
     endTime: '2024-01-01T15:00:00Z',
