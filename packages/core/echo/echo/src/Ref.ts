@@ -6,7 +6,7 @@ import * as EchoSchema from '@dxos/echo-schema';
 
 import type * as Obj from './Obj';
 
-export type Ref<T extends Obj.Any> = EchoSchema.Ref<T>;
+export type Ref<T> = EchoSchema.Ref<T>;
 export type Any = EchoSchema.Ref<Obj.Any>;
 
 export const Array = EchoSchema.RefArray;

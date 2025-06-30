@@ -6,6 +6,7 @@ import { Schema, identity, Option, SchemaAST } from 'effect';
 
 import { createTool, ToolResult } from '@dxos/ai';
 import type { Obj, Relation } from '@dxos/echo';
+import { Query, Filter } from '@dxos/echo';
 import { type EchoDatabase, type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
@@ -13,13 +14,10 @@ import {
   getSchemaTypename,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-  type AnyEchoObject,
   create,
-  Filter,
   getEntityKind,
   getSchemaDXN,
   ObjectId,
-  Query,
   ReferenceAnnotationId,
   type BaseObject,
   RelationSourceDXNId,
@@ -325,7 +323,7 @@ export const createGraphWriterTool = ({
   db: EchoDatabase;
   queue?: Queue;
   schema: Schema.Schema.AnyNoContext[];
-  onDone?: (data: AnyEchoObject[]) => Promise<any>;
+  onDone?: (data: Obj.Any[]) => Promise<any>;
 }) => {
   return createTool('graph', {
     name: 'writer',
@@ -333,7 +331,7 @@ export const createGraphWriterTool = ({
     schema: createExtractionSchema(schema),
     execute: async (input) => {
       const data = await sanitizeObjects(schema, input as any, db, queue);
-      return ToolResult.Success(await onDone(data as AnyEchoObject[]));
+      return ToolResult.Success(await onDone(data as Obj.Any[]));
     },
   });
 };
