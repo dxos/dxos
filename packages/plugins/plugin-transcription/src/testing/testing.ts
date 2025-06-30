@@ -11,7 +11,7 @@ import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant
 import { scheduleTaskInterval } from '@dxos/async';
 import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Key, Obj, Ref, Type } from '@dxos/echo';
+import { type Key, Obj, Ref, Type } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { IdentityDid } from '@dxos/keys';

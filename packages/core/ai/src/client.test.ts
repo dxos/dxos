@@ -5,7 +5,8 @@
 import { Schema } from 'effect';
 import { test, describe } from 'vitest';
 
-import { toJsonSchema, create } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
+import { toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -14,7 +15,6 @@ import { EdgeAiServiceClient, MixedStreamParser, OllamaAiServiceClient } from '.
 import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from './testing';
 import { createTool, defineTool, Message, ToolResult } from './tools';
 import { ToolTypes } from './types';
-import { Obj } from '@dxos/echo';
 
 // log.config({ filter: 'debug' });
 

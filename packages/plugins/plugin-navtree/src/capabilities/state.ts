@@ -6,11 +6,11 @@ import { effect, untracked } from '@preact/signals-core';
 
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
 import { type Live } from '@dxos/echo';
+import { live } from '@dxos/live-object';
 import { Path } from '@dxos/react-ui-list';
 
-import { live } from '@dxos/live-object';
-import { NAVTREE_PLUGIN } from '../meta';
 import { NavTreeCapabilities } from './capabilities';
+import { NAVTREE_PLUGIN } from '../meta';
 
 const KEY = `${NAVTREE_PLUGIN}/state/v1`;
 

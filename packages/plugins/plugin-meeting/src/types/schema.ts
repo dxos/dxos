@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { LabelAnnotation, TypedObject } from '@dxos/echo-schema';
+import { LabelAnnotation } from '@dxos/echo-schema';
 import { ThreadType } from '@dxos/plugin-thread/types';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
 import { DataType } from '@dxos/schema';

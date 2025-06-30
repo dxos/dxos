@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { FormatEnum, type JsonSchemaType } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { Filter, useQuery, useSchema, live } from '@dxos/react-client/echo';
+import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';

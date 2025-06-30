@@ -2,14 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { Message } from './message';
 import { type ExecutableTool, ToolResult } from './tool';
 import { type AgentStatus } from '../status-report';
-import { Obj } from '@dxos/echo';
 
 export const isToolUse = (message: Message, { onlyToolNames }: { onlyToolNames?: string[] } = {}) => {
   const block = message.content.at(-1);

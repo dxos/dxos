@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import type { Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 
-import type { Obj, Relation } from '@dxos/echo';
 import { type Client } from '../client';
 import { type Space } from '../echo';
 

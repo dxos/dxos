@@ -7,7 +7,6 @@ import { describe, test } from 'vitest';
 
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
-import { create } from '@dxos/echo-schema';
 
 import { createTestLMStudioClient } from './lmstudio';
 import { createTool, Message } from '../tools';

@@ -6,16 +6,16 @@ import { computed } from '@preact/signals-core';
 import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { Obj, Ref } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { createEchoSchema } from '@dxos/live-object/testing';
-import { live, makeRef } from '@dxos/react-client/echo';
+import { live } from '@dxos/react-client/echo';
 import { createView, ViewProjection } from '@dxos/schema';
 
 import { TableModel, type TableModelProps } from './table-model';
 import { TableType } from '../types';
-import { Obj, Ref } from '@dxos/echo';
 
 // TODO(burdon): Tests are disabled in project.json since they bring in plugin deps.
 //  Restore once factored out into react-ui-table.

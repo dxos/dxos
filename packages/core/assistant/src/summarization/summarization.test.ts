@@ -13,14 +13,12 @@ import {
   type TextContentBlock,
 } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
+import { Obj } from '@dxos/echo';
 import type { EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { create } from '@dxos/echo-schema';
 import { AiService, defineFunction, FunctionExecutor, ServiceContainer } from '@dxos/functions';
-import { live } from '@dxos/live-object';
 import { DataType } from '@dxos/schema';
 import { createTestData } from '@dxos/schema/testing';
-import { Obj } from '@dxos/echo';
 
 const REMOTE_AI = true;
 

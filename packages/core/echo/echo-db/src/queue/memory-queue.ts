@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Obj, type Relation } from '@dxos/echo';
+import { type Obj, type Relation } from '@dxos/echo';
 import { ObjectId, type BaseEchoObject, type HasId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';

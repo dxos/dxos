@@ -5,7 +5,7 @@
 import { CheckCircle, X } from '@phosphor-icons/react';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { RelationSourceId } from '@dxos/echo-schema';
+import { Relation } from '@dxos/echo';
 import { RefArray } from '@dxos/live-object';
 import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -35,7 +35,6 @@ import { useStatus } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
-import { Relation } from '@dxos/echo';
 
 const sizeClass = getSize(4);
 

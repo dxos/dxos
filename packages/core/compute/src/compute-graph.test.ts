@@ -6,12 +6,12 @@ import { type CellValue } from 'hyperformula';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { live, fullyQualifiedId } from '@dxos/client/echo';
+import { fullyQualifiedId } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
 
 import { DetailedCellError } from '#hyperformula';
 import { TestBuilder } from './testing';
-import { Obj } from '@dxos/echo';
 
 describe('ComputeGraph', () => {
   let testBuilder: TestBuilder;

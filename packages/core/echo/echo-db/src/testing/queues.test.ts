@@ -5,8 +5,8 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, Relation } from '@dxos/echo';
-import { create, getSchema, Ref, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo/testing';
+import { getSchema, Ref } from '@dxos/echo-schema';
 import { DXN, SpaceId } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 

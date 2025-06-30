@@ -9,7 +9,6 @@ import {
   defineHiddenProperty,
   getTypeAnnotation,
   type BaseObject,
-  type ExcludeId,
   Expando,
   type ObjectMeta,
   ObjectMetaSchema,

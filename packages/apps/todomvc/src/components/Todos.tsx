@@ -6,7 +6,7 @@ import React, { useRef, useState, type ChangeEvent, type KeyboardEvent } from 'r
 import { generatePath, useOutletContext, useParams } from 'react-router-dom';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { live, SpaceState, type Space } from '@dxos/react-client/echo';
+import { SpaceState, type Space } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
 import { Header } from './Header';

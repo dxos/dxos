@@ -4,9 +4,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import type { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/react-client/echo';
 
-import type { Obj } from '@dxos/echo';
 import { type ChunkRenderer, SerializationModel } from '../model';
 
 /**

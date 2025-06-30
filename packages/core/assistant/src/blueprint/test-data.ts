@@ -3,7 +3,6 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { create } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 
 // TODO(burdon): Convert to queue.

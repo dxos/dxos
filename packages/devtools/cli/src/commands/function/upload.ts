@@ -9,8 +9,9 @@ import path from 'path';
 
 import { asyncTimeout } from '@dxos/async';
 import { type PublicKey, type Client } from '@dxos/client';
-import { type AnyLiveObject, getMeta, live, makeRef } from '@dxos/client/echo';
+import { type AnyLiveObject, getMeta, makeRef } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
+import { Obj } from '@dxos/echo';
 import { FunctionType, ScriptType, makeFunctionUrl, setUserFunctionUrlInMetadata } from '@dxos/functions';
 import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
 import { invariant } from '@dxos/invariant';
@@ -19,7 +20,6 @@ import { DataType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
 import { bundleScript, findFunctionByDeploymentId } from '../../util';
-import { Obj } from '@dxos/echo';
 
 // TODO: move to cli-composer
 

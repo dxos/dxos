@@ -4,12 +4,12 @@
 
 import { Effect, type Schema, SchemaAST } from 'effect';
 
+import { Obj, type Type } from '@dxos/echo';
 import { type EchoDatabase, type AnyLiveObject, Query, Filter } from '@dxos/echo-db';
 import {
   getSchemaReference,
   getTypename,
   type BaseObject,
-  type ExcludeId,
   FormatEnum,
   GeneratorAnnotationId,
   type GeneratorAnnotationValue,
@@ -19,12 +19,11 @@ import {
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { live, type Live } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
 import { getSchemaProperties, type SchemaProperty } from '../properties';
-import { Obj, type Type } from '@dxos/echo';
 
 /**
  * Decouples from faker.

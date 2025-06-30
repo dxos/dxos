@@ -5,9 +5,9 @@
 import { Schema } from 'effect';
 
 // import { ThreadType } from '@dxos/plugin-space/types';
-import { ObjectId, Ref, Expando, EchoObject, LabelAnnotation } from '@dxos/echo-schema';
-import { ViewType } from '@dxos/schema';
 import { Type } from '@dxos/echo';
+import { ObjectId, Ref, Expando, LabelAnnotation } from '@dxos/echo-schema';
+import { ViewType } from '@dxos/schema';
 
 export const TableSchema = Schema.Struct({
   id: ObjectId,

@@ -5,15 +5,15 @@
 import { Schema } from 'effect';
 import { describe, expect, it, beforeEach } from 'vitest';
 
+import { Obj, Ref } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
-import { live, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { createView, ViewProjection } from '@dxos/schema';
 
 import { TableModel, type TableModelProps } from './table-model';
 import { TablePresentation } from './table-presentation';
 import { TableType } from '../types';
-import { Obj, Ref } from '@dxos/echo';
 
 describe('TablePresentation', () => {
   describe('row reactivity', () => {

@@ -6,6 +6,7 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
+import { Query } from '@dxos/echo';
 import { type BaseObject, Expando, getSchema, getTypename, Ref } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -18,7 +19,6 @@ import { range } from '@dxos/util';
 import { clone, getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
-import { Query } from "@dxos/echo";
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 

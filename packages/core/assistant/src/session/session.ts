@@ -22,13 +22,13 @@ import {
 } from '@dxos/ai';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import { Event, synchronized } from '@dxos/async';
+import { Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import { create, type ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { VersionPin } from './version-pin';
-import { Obj } from '@dxos/echo';
 
 /**
  * Contains message history, tools, current context.

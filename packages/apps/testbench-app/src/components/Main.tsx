@@ -8,7 +8,7 @@ import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
 import { Obj, Type } from '@dxos/echo';
-import { live, type Live } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { Query, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';

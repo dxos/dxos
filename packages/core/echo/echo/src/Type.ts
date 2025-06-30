@@ -3,14 +3,15 @@
 //
 
 import { type Schema } from 'effect';
+import type { Simplify } from 'effect/Schema';
 
 import type { EncodedReference } from '@dxos/echo-protocol';
 import * as EchoSchema from '@dxos/echo-schema';
+import type { ToMutable } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import type * as Keys from '@dxos/keys';
+
 import type * as RelationModule from './Relation';
-import type { ToMutable } from '@dxos/echo-schema';
-import type { Simplify } from 'effect/Schema';
 
 export const KindId: unique symbol = EchoSchema.EntityKindId as any;
 export type KindId = typeof KindId;

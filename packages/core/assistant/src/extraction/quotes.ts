@@ -4,12 +4,11 @@
 
 import { Schema } from 'effect';
 
+import { Query, Filter } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Query } from "@dxos/echo";
-import { Filter } from "@dxos/echo";
 
 export const ReferencedQuotes = Schema.Struct({
   references: Schema.Array(

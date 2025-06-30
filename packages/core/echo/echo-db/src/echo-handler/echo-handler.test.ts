@@ -7,6 +7,7 @@ import { Schema } from 'effect';
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Query } from '@dxos/echo';
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
 import { getSchema, createQueueDXN } from '@dxos/echo-schema';
 import { EchoObject, Expando, TypedObject, foreignKey, getTypeReference, Ref, type Ref$ } from '@dxos/echo-schema';
@@ -25,7 +26,6 @@ import { getDatabaseFromObject } from './util';
 import { DocAccessor } from '../core-db';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
-import { Query } from "@dxos/echo";
 
 registerSignalsRuntime();
 

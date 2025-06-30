@@ -19,7 +19,7 @@ import {
   useCapability,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj } from '@dxos/echo';
+import { live } from '@dxos/live-object';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
@@ -35,7 +35,6 @@ import { NavTreePlugin } from '../../NavTreePlugin';
 import { storybookGraphBuilders } from '../../testing';
 import translations from '../../translations';
 import { NavTreeContainer } from '../NavTreeContainer';
-import { live } from '@dxos/live-object';
 
 faker.seed(1234);
 

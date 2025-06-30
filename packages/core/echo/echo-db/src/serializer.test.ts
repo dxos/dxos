@@ -4,6 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Query } from '@dxos/echo';
 import { Expando, getSchema, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
@@ -16,7 +17,6 @@ import { Filter } from './query';
 import { type SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
 import { EchoTestBuilder } from './testing';
-import { Query } from "@dxos/echo";
 
 describe('Serializer', () => {
   let builder: EchoTestBuilder;

@@ -6,7 +6,6 @@ import { batch } from '@preact/signals-core';
 
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
 import { Obj, Relation } from '@dxos/echo';
-import { RelationSourceId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';

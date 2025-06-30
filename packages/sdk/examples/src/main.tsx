@@ -8,8 +8,8 @@ import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { Obj } from '@dxos/echo';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { live } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
@@ -22,7 +22,6 @@ import { DataType } from '@dxos/schema';
 import type { MaybePromise } from '@dxos/util';
 
 import TaskList from './examples/TaskList';
-import { Obj } from '@dxos/echo';
 
 const root = createRoot(document.getElementById('root')!);
 

@@ -9,7 +9,7 @@ import { EdgeAiServiceClient, OllamaAiServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Key, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { MemoryQueue } from '@dxos/echo-db';
 import { createQueueDXN } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';

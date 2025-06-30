@@ -4,11 +4,11 @@
 
 import { Schema } from 'effect';
 
+import { Type, type Ref } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { Type, Ref } from '@dxos/echo';
 import { FunctionTrigger, type FunctionTriggerType } from './types';
 
 export enum InvocationOutcome {

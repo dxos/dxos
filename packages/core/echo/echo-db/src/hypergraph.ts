@@ -6,6 +6,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { raise, StackTrace } from '@dxos/debug';
 import type { Ref } from '@dxos/echo';
+import { Query, Filter } from '@dxos/echo';
 import {
   ImmutableSchema,
   RuntimeSchemaRegistry,
@@ -36,8 +37,6 @@ import {
   type QuerySource,
 } from './query';
 import type { Queue, QueueFactory } from './queue';
-import { Query } from "@dxos/echo";
-import { Filter } from "@dxos/echo";
 
 const TRACE_REF_RESOLUTION = false;
 

@@ -8,11 +8,10 @@ import { describe, test } from 'vitest';
 import { EdgeAiServiceClient, ConsolePrinter, createTool, ToolResult } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
-import { Type } from '@dxos/echo';
-import { create, ObjectId } from '@dxos/echo-schema';
+import { Type, Obj } from '@dxos/echo';
+import { ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Obj } from '@dxos/echo';
 
 import { AISession } from './session';
 

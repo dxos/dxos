@@ -4,10 +4,9 @@
 
 import { Schema } from 'effect';
 
+import type { Obj, Relation } from '@dxos/echo';
 import { EntityKind, TypeAnnotationId, type TypeAnnotation } from '@dxos/echo-schema';
 import { type DXN, type ObjectId } from '@dxos/keys';
-
-import type { Obj, Relation } from '@dxos/echo';
 
 /**
  * Client-side view onto an EDGE queue.

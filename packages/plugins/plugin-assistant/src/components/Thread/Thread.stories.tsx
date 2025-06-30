@@ -10,14 +10,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Message } from '@dxos/ai';
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from './Thread';
 import translations from '../../translations';
-import { Obj } from '@dxos/echo';
 
 faker.seed(1);
 

@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { type EchoSchema, isMutable } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
@@ -22,7 +23,6 @@ import { type TableFeatures } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
-import { Obj } from '@dxos/echo';
 
 type StoryProps = {
   editing: GridEditing;

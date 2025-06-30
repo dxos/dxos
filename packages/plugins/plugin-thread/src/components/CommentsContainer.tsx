@@ -4,7 +4,7 @@
 
 import React, { useEffect } from 'react';
 
-import { RelationSourceId } from '@dxos/echo-schema';
+import { Relation } from '@dxos/echo';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Callout, Icon, Trans, useTranslation } from '@dxos/react-ui';
 import { type AnchoredTo } from '@dxos/schema';
@@ -12,7 +12,6 @@ import { type AnchoredTo } from '@dxos/schema';
 import { CommentContainer, type CommentContainerProps } from './CommentContainer';
 import { THREAD_PLUGIN } from '../meta';
 import { type ThreadType } from '../types';
-import { Relation } from '@dxos/echo';
 
 export type ThreadsContainerProps = Omit<CommentContainerProps, 'anchor' | 'current'> & {
   anchors: AnchoredTo[];

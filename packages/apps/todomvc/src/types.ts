@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { type Space, live } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 
 export const Todo = Schema.Struct({
   title: Schema.String,

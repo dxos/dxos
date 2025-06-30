@@ -10,7 +10,7 @@ import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getSchemaDXN } from '../ast';
-import { getType, getTypename, type ObjectMeta, EntityKindId } from '../object';
+import { getType, getTypename, type ObjectMeta, type EntityKindId } from '../object';
 import { ATTR_META } from '../object/model';
 
 /**

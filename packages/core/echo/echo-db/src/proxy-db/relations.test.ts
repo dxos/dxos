@@ -5,6 +5,7 @@
 import { afterEach } from 'node:test';
 import { beforeEach, describe, expect, test } from 'vitest';
 
+import { Query, Filter } from '@dxos/echo';
 import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { live } from '@dxos/live-object';
@@ -13,8 +14,6 @@ import type { EchoDatabase } from './database';
 import { getSource, getTarget, isRelation } from '../echo-handler';
 import type { Hypergraph } from '../hypergraph';
 import { EchoTestBuilder } from '../testing';
-import { Query } from "@dxos/echo";
-import { Filter } from "@dxos/echo";
 
 describe('Relations', () => {
   let testBuilder: EchoTestBuilder, db: EchoDatabase, graph: Hypergraph;

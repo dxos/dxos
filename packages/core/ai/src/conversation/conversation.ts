@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Obj } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
@@ -10,7 +11,6 @@ import { log } from '@dxos/log';
 import { type AiServiceClient } from '../service';
 import { Message, type ExecutableTool } from '../tools';
 import { type LLMModel, type GenerationStreamEvent } from '../types';
-import { Obj } from '@dxos/echo';
 
 export type CreateLLMConversationParams = {
   model: LLMModel;

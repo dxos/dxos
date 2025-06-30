@@ -7,13 +7,13 @@ import { Schema } from 'effect';
 import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
-import * as LiveObject from '@dxos/live-object';
+import type * as LiveObject from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { assumeType } from '@dxos/util';
 
-import { live } from '@dxos/live-object';
 import type * as Ref from './Ref';
-import type * as Type from './Type';
 import type * as Relation from './Relation';
+import type * as Type from './Type';
 
 // NOTE: Don't export: Obj.Any and Obj.Obj form the public API.
 interface ObjBase extends Type.OfKind<EchoSchema.EntityKind.Object> {

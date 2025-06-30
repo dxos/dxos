@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Obj } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo-schema';
 import { AbstractGraphBuilder, AbstractGraphModel, type Graph, createEdgeId } from '@dxos/graph';
 import { DXN } from '@dxos/keys';
-import { live, makeRef } from '@dxos/live-object';
+import { makeRef } from '@dxos/live-object';
 import { type MakeOptional } from '@dxos/util';
 
 import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
-import { Obj } from '@dxos/echo';
 
 // TODO(burdon): DXN from echo-schema is a different type.
 

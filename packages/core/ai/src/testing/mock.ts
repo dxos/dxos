@@ -4,13 +4,12 @@
 
 import { type Signal, signal } from '@preact/signals-core';
 
-import { ObjectId } from '@dxos/keys';
+import { Obj } from '@dxos/echo';
 
 import { createReplaySSEStream } from './test-stream';
 import { createGenerationStream, type GenerationStream, type AiServiceClient, GenerationStreamImpl } from '../service';
-import { type GenerationStreamEvent, type GenerateRequest, type GenerateResponse } from '../types';
 import { Message } from '../tools';
-import { Obj } from '@dxos/echo';
+import { type GenerationStreamEvent, type GenerateRequest, type GenerateResponse } from '../types';
 
 export type SpyAiServiceMode = 'mock' | 'spy';
 

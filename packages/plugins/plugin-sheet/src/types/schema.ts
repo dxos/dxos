@@ -4,7 +4,6 @@
 
 import { Schema } from 'effect';
 
-import { TypedObject } from '@dxos/echo-schema';
 import { Type } from '@dxos/echo';
 
 export const CellValue = Schema.Struct({

@@ -4,6 +4,7 @@
 
 import { Schema } from 'effect';
 
+import { Obj } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -23,7 +24,6 @@ import {
   ToolResult,
 } from '../tools';
 import { ToolTypes, type GenerateRequest, type GenerateResponse, type GenerationStreamEvent } from '../types';
-import { Obj } from '@dxos/echo';
 
 export type OllamaClientParams = {
   endpoint?: string;

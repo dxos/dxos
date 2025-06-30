@@ -3,10 +3,9 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { ObjectId } from '@dxos/echo-schema';
 
-import { type GenerationStreamEvent } from '../types';
 import { Message } from '../tools';
+import { type GenerationStreamEvent } from '../types';
 
 /**
  * Replay server-side events (SSE) stream.

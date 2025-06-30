@@ -4,13 +4,12 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Query, Filter } from '@dxos/echo';
 import { Expando, Ref } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 
 import { clone } from './clone';
 import { EchoTestBuilder } from '../testing';
-import { Query } from "@dxos/echo";
-import { Filter } from "@dxos/echo";
 
 describe('clone', () => {
   let builder: EchoTestBuilder;

@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { create } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { isNotFalsy, safeParseJson } from '@dxos/util';
@@ -12,7 +12,6 @@ import { type GenerationStream } from './service';
 import { StreamTransform, type StreamBlock } from './transform';
 import { Message, type MessageContentBlock } from '../tools';
 import { type GenerationStreamEvent } from '../types';
-import { Obj } from '@dxos/echo';
 
 /**
  * Parse mixed content of plain text, XML fragments, and JSON blocks.

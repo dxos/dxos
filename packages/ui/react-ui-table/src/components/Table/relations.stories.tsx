@@ -5,16 +5,16 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import { type Schema } from 'effect';
 import { SchemaAST } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
-import { type BaseObject, getSchemaTypename, type HasId, toJsonSchema } from '@dxos/echo-schema';
+import { Obj, type Type } from '@dxos/echo';
+import { getSchemaTypename, toJsonSchema } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { live, makeRef } from '@dxos/react-client/echo';
+import { makeRef } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { DataType, createView, ViewProjection, ViewType } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
@@ -25,7 +25,6 @@ import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
-import { Obj, Type } from '@dxos/echo';
 
 faker.seed(1);
 const generator: ValueGenerator = faker as any;

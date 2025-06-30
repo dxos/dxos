@@ -7,11 +7,12 @@ import { describe, test, expect } from 'vitest';
 
 import { MockAiServiceClient } from '@dxos/ai/testing';
 import { todo } from '@dxos/debug';
+import { Obj } from '@dxos/echo';
 import { ObjectId, type Ref, type RefResolver, setRefResolver } from '@dxos/echo-schema';
 import { AiService, FunctionType, ServiceContainer, setUserFunctionUrlInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { live, getMeta, refFromDXN } from '@dxos/live-object';
+import { getMeta, refFromDXN } from '@dxos/live-object';
 import { LogLevel } from '@dxos/log';
 
 import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
@@ -29,7 +30,6 @@ import {
   ValueBag,
   synchronizedComputeFunction,
 } from '../types';
-import { Obj } from '@dxos/echo';
 
 describe('workflow', () => {
   test('run', async () => {

@@ -4,12 +4,12 @@
 
 import { type Schema } from 'effect';
 
+import type { Type } from '@dxos/echo';
 import { getSchemaDXN } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 
 import type { EchoDatabase } from './database';
 import type { AnyLiveObject } from '../echo-handler';
-import type { Type } from '@dxos/echo';
 
 type DefineObjectMigrationOptions<From extends Schema.Schema.AnyNoContext, To extends Schema.Schema.AnyNoContext> = {
   from: From;

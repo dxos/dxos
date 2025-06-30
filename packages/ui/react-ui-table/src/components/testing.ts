@@ -5,12 +5,12 @@
 import { Schema } from 'effect';
 import { useEffect } from 'react';
 
+import { Obj, Ref } from '@dxos/echo';
 import { FormatEnum, ObjectId, setValue, toJsonSchema, TypedObject, TypeEnum } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { live } from '@dxos/react-client/echo';
 import { createView, type ViewProjection } from '@dxos/schema';
 
-import { Obj, Ref } from '@dxos/echo';
 import { TableType } from '../types';
 
 export const TestSchema = TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({

@@ -15,7 +15,6 @@ import {
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
 import { Key, Obj } from '@dxos/echo';
-import { create } from '@dxos/echo-schema';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';

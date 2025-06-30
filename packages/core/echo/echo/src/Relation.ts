@@ -10,8 +10,8 @@ import { DXN } from '@dxos/keys';
 import { type Live, live } from '@dxos/live-object';
 import { assumeType } from '@dxos/util';
 
-import type * as Type from './Type';
 import type * as Obj from './Obj';
+import type * as Type from './Type';
 
 // NOTE: Don't export: Relation.Relation and Relation.Any form the public API.
 interface RelationBase<Source, Target>

@@ -6,11 +6,10 @@ import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
 import { todo } from '@dxos/debug';
-import { create } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 
 import { createTestOllamaClient } from './ollama';
 import { createTool, Message } from '../tools';
-import { Obj } from '@dxos/echo';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Ollama', () => {
   test('basic', async () => {

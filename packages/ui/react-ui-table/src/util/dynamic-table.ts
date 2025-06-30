@@ -4,9 +4,9 @@
 
 import { type Schema } from 'effect';
 
+import { Obj, Ref } from '@dxos/echo';
 import { getTypename, toJsonSchema } from '@dxos/echo-schema';
 import type { JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
-import { live, makeRef } from '@dxos/live-object';
 import {
   createView,
   getSchemaFromPropertyDefinitions,
@@ -16,7 +16,6 @@ import {
 } from '@dxos/schema';
 
 import { TableType } from '../types';
-import { Obj, Ref } from '@dxos/echo';
 
 // TODO(ZaymonFC): Upstream these extra fields to SchemaPropertyDefinition to enhance schema-tools schema creation.
 type PropertyDisplayProps = {

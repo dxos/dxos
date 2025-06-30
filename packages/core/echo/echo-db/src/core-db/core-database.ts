@@ -19,6 +19,7 @@ import {
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
+import { type Filter } from '@dxos/echo';
 import {
   encodeReference,
   isEncodedReference,
@@ -52,7 +53,6 @@ import { getInlineAndLinkChanges } from './util';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../automerge';
 import { type Hypergraph } from '../hypergraph';
 import { normalizeQuery, QueryResult, type QueryFn } from '../query';
-import { Filter } from "@dxos/echo";
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
