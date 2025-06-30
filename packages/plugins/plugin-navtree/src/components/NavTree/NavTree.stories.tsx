@@ -19,7 +19,7 @@ import {
   useCapability,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj } from '@dxos/echo';
+import { live } from '@dxos/live-object';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
@@ -130,7 +130,7 @@ const meta: Meta<typeof NavTreeContainer> = {
         NavTreePlugin(),
       ],
       capabilities: (context) => [
-        contributes(StoryState, Obj.make({ tab: 'space-0' })),
+        contributes(StoryState, live({ tab: 'space-0' })),
         contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders),
         contributes(Capabilities.IntentResolver, [
           createResolver({

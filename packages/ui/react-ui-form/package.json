@@ -27,6 +27,7 @@
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/effect": "workspace:*",

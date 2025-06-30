@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Filter } from '@dxos/echo';
 import { decodeReference, type EncodedReference, encodeReference, Reference } from '@dxos/echo-protocol';
-import { Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues, isNonNullable, stripUndefined } from '@dxos/util';
 
