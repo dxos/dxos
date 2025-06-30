@@ -12,6 +12,7 @@ import { assumeType } from '@dxos/util';
 
 import type * as Obj from './Obj';
 import type * as Type from './Type';
+import { raise } from '@dxos/debug';
 
 // NOTE: Don't export: Relation.Relation and Relation.Any form the public API.
 interface RelationBase<Source, Target>
@@ -65,6 +66,12 @@ export const make = <S extends Type.Relation.Any>(
     meta = props[EchoSchema.MetaId] as any;
     delete props[EchoSchema.MetaId];
   }
+
+  const sourceDXN = EchoSchema.getObjectDXN(props[Source]) ?? raise(new Error('Unresolved relation source'));
+  const targetDXN = EchoSchema.getObjectDXN(props[Target]) ?? raise(new Error('Unresolved relation target'));
+  (props as any)[EchoSchema.RelationSourceDXNId] = sourceDXN;
+  (props as any)[EchoSchema.RelationTargetDXNId] = targetDXN;
+
   return live<Schema.Schema.Type<S>>(schema, props as any, meta);
 };
 

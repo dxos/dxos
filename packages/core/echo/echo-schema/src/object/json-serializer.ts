@@ -192,7 +192,7 @@ const typedJsonSerializer = function (this: any) {
   }
 
   if (meta) {
-    result[ATTR_META] = structuredClone(meta);
+    result[ATTR_META] = serializeData(meta);
   }
 
   Object.assign(result, serializeData(rest));
