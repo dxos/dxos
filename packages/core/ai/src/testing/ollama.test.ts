@@ -10,13 +10,14 @@ import { create } from '@dxos/echo-schema';
 
 import { createTestOllamaClient } from './ollama';
 import { createTool, Message } from '../tools';
+import { Obj } from '@dxos/echo';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Ollama', () => {
   test('basic', async () => {
     const client = createTestOllamaClient();
 
     const result = await client.execStream({
-      prompt: create(Message, {
+      prompt: Obj.make(Message, {
         role: 'user',
         content: [{ type: 'text', text: 'What is the capital of France?' }],
       }),
@@ -40,7 +41,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Ollama', () => {
     });
 
     const result = await client.execStream({
-      prompt: create(Message, {
+      prompt: Obj.make(Message, {
         role: 'user',
         content: [{ type: 'text', text: 'I want green walls' }],
       }),

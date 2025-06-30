@@ -211,9 +211,17 @@ export const isMutable = EchoSchema.isMutable;
 
 export { SpaceId, ObjectId, DXN } from '@dxos/keys';
 
-export {
-  //
+export interface Expando extends OfKind<EchoSchema.EntityKind.Object> {
+  [key: string]: any;
+}
+
+export const Expando: Schema.Schema<
   Expando,
+  Simplify<ObjJsonProps & { [key: string]: any }>,
+  never
+> = EchoSchema.Expando as any;
+
+export {
   // TODO(burdon): Standardize.
   Format,
   JsonSchemaType as JsonSchema,

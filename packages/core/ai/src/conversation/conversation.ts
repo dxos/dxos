@@ -8,8 +8,9 @@ import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AiServiceClient } from '../service';
-import { type ExecutableTool, type Message } from '../tools';
+import { Message, type ExecutableTool } from '../tools';
 import { type LLMModel, type GenerationStreamEvent } from '../types';
+import { Obj } from '@dxos/echo';
 
 export type CreateLLMConversationParams = {
   model: LLMModel;
@@ -86,7 +87,7 @@ export const runLLM = async ({ aiClient, system, model, history = [], tools, log
       switch (toolResult.kind) {
         case 'error': {
           log.warn('tool error', { message: toolResult.message });
-          const resultMessage: Message = {
+          const resultMessage: Message = Obj.make(Message, {
             id: ObjectId.random(),
             role: 'user',
             content: [
@@ -97,7 +98,7 @@ export const runLLM = async ({ aiClient, system, model, history = [], tools, log
                 isError: true,
               },
             ],
-          };
+          });
           logger?.({ type: 'message', message: resultMessage });
           history.push(resultMessage);
 
@@ -106,7 +107,7 @@ export const runLLM = async ({ aiClient, system, model, history = [], tools, log
 
         case 'success': {
           log('tool success', { result: toolResult.result });
-          const resultMessage: Message = {
+          const resultMessage: Message = Obj.make(Message, {
             id: ObjectId.random(),
             role: 'user',
             content: [
@@ -116,7 +117,7 @@ export const runLLM = async ({ aiClient, system, model, history = [], tools, log
                 content: JSON.stringify(toolResult.result),
               },
             ],
-          };
+          });
           logger?.({ type: 'message', message: resultMessage });
           history.push(resultMessage);
 

@@ -16,6 +16,7 @@ import { DataType, DataTypes } from '@dxos/schema';
 
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { researchFn } from './research';
+import { Obj } from '@dxos/echo';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
@@ -58,7 +59,7 @@ describe.skip('Research', () => {
 
   test('should generate a research report', { timeout: 300_000 }, async () => {
     db.add(
-      live(DataType.Organization, {
+      Obj.make(DataType.Organization, {
         name: 'Notion',
         website: 'https://www.notion.com',
       }),

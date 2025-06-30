@@ -14,6 +14,7 @@ import { EdgeAiServiceClient, MixedStreamParser, OllamaAiServiceClient } from '.
 import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from './testing';
 import { createTool, defineTool, Message, ToolResult } from './tools';
 import { ToolTypes } from './types';
+import { Obj } from '@dxos/echo';
 
 // log.config({ filter: 'debug' });
 
@@ -171,7 +172,7 @@ describe.skip('Ollama Client', () => {
 
     const messages = await parser.parse(
       await client.execStream({
-        prompt: create(Message, {
+        prompt: Obj.make(Message, {
           role: 'user',
           content: [{ type: 'text', text: 'Hello, world!' }],
         }),
@@ -206,7 +207,7 @@ describe.skip('Ollama Client', () => {
 
     const messages = await parser.parse(
       await aiClient.execStream({
-        prompt: create(Message, {
+        prompt: Obj.make(Message, {
           role: 'user',
           content: [{ type: 'text', text: 'What is the encrypted message for "Hello, world!"' }],
         }),
@@ -227,7 +228,7 @@ describe.skip('Ollama Client', () => {
 
     const messages = await parser.parse(
       await client.execStream({
-        prompt: create(Message, {
+        prompt: Obj.make(Message, {
           role: 'user',
           content: [{ type: 'text', text: 'Generate an image of a cat' }],
         }),

@@ -325,7 +325,7 @@ export const createGraphWriterTool = ({
   db: EchoDatabase;
   queue?: Queue;
   schema: Schema.Schema.AnyNoContext[];
-  onDone?: (data: AnyEchoObject[]) => Promise<any>;
+  onDone?: (data: Obj.Any[]) => Promise<any>;
 }) => {
   return createTool('graph', {
     name: 'writer',
@@ -333,7 +333,7 @@ export const createGraphWriterTool = ({
     schema: createExtractionSchema(schema),
     execute: async (input) => {
       const data = await sanitizeObjects(schema, input as any, db, queue);
-      return ToolResult.Success(await onDone(data as AnyEchoObject[]));
+      return ToolResult.Success(await onDone(data as Obj.Any[]));
     },
   });
 };

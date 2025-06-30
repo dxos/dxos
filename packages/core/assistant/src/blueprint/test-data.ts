@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Obj } from '@dxos/echo';
 import { create } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 
 // TODO(burdon): Convert to queue.
 export const TEST_EMAILS: DataType.Message[] = [
-  create(DataType.Message, {
+  Obj.make(DataType.Message, {
     properties: {
       subject: 'Introduction email',
     },
@@ -22,7 +23,7 @@ export const TEST_EMAILS: DataType.Message[] = [
     ],
     created: new Date().toISOString(),
   }),
-  create(DataType.Message, {
+  Obj.make(DataType.Message, {
     properties: {
       subject: 'Question about integration',
     },
@@ -37,7 +38,7 @@ export const TEST_EMAILS: DataType.Message[] = [
     ],
     created: new Date().toISOString(),
   }),
-  create(DataType.Message, {
+  Obj.make(DataType.Message, {
     properties: {
       subject: 'MAKE MONEY FAST!!!',
     },

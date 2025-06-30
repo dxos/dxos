@@ -12,6 +12,7 @@ import { type AnchoredTo } from '@dxos/schema';
 import { CommentContainer, type CommentContainerProps } from './CommentContainer';
 import { THREAD_PLUGIN } from '../meta';
 import { type ThreadType } from '../types';
+import { Relation } from '@dxos/echo';
 
 export type ThreadsContainerProps = Omit<CommentContainerProps, 'anchor' | 'current'> & {
   anchors: AnchoredTo[];
@@ -26,9 +27,9 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
   const { t } = useTranslation(THREAD_PLUGIN);
   // TODO(wittjosiah): There seems to be a race between thread and anchor being deleted.
   const filteredAnchors = showResolvedThreads
-    ? anchors.filter((anchor) => !!anchor[RelationSourceId])
+    ? anchors.filter((anchor) => !!Relation.getSource(anchor))
     : anchors.filter((anchor) => {
-        const thread = anchor[RelationSourceId];
+        const thread = Relation.getSource(anchor);
         return thread && thread.status !== 'resolved';
       });
 
@@ -59,7 +60,7 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
   }
 
   return filteredAnchors.map((anchor) => {
-    const thread = anchor[RelationSourceId] as ThreadType;
+    const thread = Relation.getSource(anchor) as ThreadType;
     const threadId = fullyQualifiedId(thread);
     return <CommentContainer key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
   });

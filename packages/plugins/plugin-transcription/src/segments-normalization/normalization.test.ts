@@ -9,12 +9,12 @@ import { EdgeAiServiceClient, OllamaAiServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Key } from '@dxos/echo';
+import { Key, Obj } from '@dxos/echo';
 import { MemoryQueue } from '@dxos/echo-db';
 import { createQueueDXN } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { type DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { MessageNormalizer } from './message-normalizer';
 import { type MessageWithRangeId, sentenceNormalization } from './normalization';
@@ -49,13 +49,14 @@ const messages: MessageWithRangeId[] = [
 
   // No punctuation.
   'in classical physics objects have well-defined properties such as position speed and momentum',
-].map((string, index) => ({
-  id: Key.ObjectId.random(),
-  created: new Date(Date.now() + 1000 * index).toISOString(),
-  sender,
-  blocks: [{ type: 'transcription', started: new Date(Date.now() + 1000 * index).toISOString(), text: string }],
-  rangeId: [],
-}));
+].map((string, index) =>
+  Obj.make(DataType.Message, {
+    created: new Date(Date.now() + 1000 * index).toISOString(),
+    sender,
+    blocks: [{ type: 'transcription', started: new Date(Date.now() + 1000 * index).toISOString(), text: string }],
+    rangeId: [],
+  } as any),
+);
 
 const REMOTE_AI = true;
 

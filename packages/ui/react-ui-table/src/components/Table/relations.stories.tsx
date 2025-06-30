@@ -25,6 +25,7 @@ import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
+import { Obj, Type } from '@dxos/echo';
 
 faker.seed(1);
 const generator: ValueGenerator = faker as any;
@@ -33,7 +34,7 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Mutable and immutable views.
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
-const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema<T>, count: number) => {
+const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
   const { space } = useClientProvider();
 
   const jsonSchema = useMemo(() => toJsonSchema(schema), [schema]);
@@ -45,7 +46,7 @@ const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema<T>, co
     invariant(typename);
     const name = getAnnotation<string>(SchemaAST.TitleAnnotationId)(schema.ast) ?? typename;
     const view = createView({ name, typename, jsonSchema });
-    return space.db.add(live(TableType, { view: makeRef(view) }));
+    return space.db.add(Obj.make(TableType, { view: makeRef(view) }));
   }, [schema, space, jsonSchema]);
 
   const projection = useMemo(() => {

@@ -35,6 +35,7 @@ import { useStatus } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
+import { Relation } from '@dxos/echo';
 
 const sizeClass = getSize(4);
 
@@ -105,7 +106,7 @@ export const CommentContainer = ({
   const space = getSpace(anchor);
   const members = useMembers(space?.key);
   const detached = !anchor.anchor;
-  const thread = anchor[RelationSourceId] as ThreadType;
+  const thread = Relation.getSource(anchor) as ThreadType;
   const activity = useStatus(space, fullyQualifiedId(thread));
   const { t } = useTranslation(THREAD_PLUGIN);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);

@@ -18,6 +18,7 @@ import { BlueprintMachine } from './machine';
 import { TEST_EMAILS } from './test-data';
 import { createGraphWriterTool, createLocalSearchTool } from '../research';
 import { createExaTool } from '../research/exa';
+import { Obj } from '@dxos/echo';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
 
@@ -108,14 +109,14 @@ describe.skip('Blueprint', () => {
 
     const [org1] = [
       db.add(
-        create(DataType.Organization, {
+        Obj.make(DataType.Organization, {
           name: 'Exa',
           website: 'https://exa.ai',
           description: 'An AI-powered search engine company building search infrastructure for AI agents',
         }),
       ),
       db.add(
-        create(DataType.Organization, {
+        Obj.make(DataType.Organization, {
           name: 'Cresta',
           website: 'https://cresta.ai',
           description: 'A company that builds AI agents',

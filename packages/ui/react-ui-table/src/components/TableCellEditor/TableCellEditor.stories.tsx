@@ -22,6 +22,7 @@ import { type TableFeatures } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
+import { Obj } from '@dxos/echo';
 
 type StoryProps = {
   editing: GridEditing;
@@ -96,7 +97,7 @@ const meta: Meta<StoryProps> = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(live(TableType, {}));
+        const table = space.db.add(Obj.make(TableType, {}));
         const schema = await initializeTable({ client, space, table });
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(

@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { type Message } from '@dxos/ai';
+import { Message } from '@dxos/ai';
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Type } from '@dxos/echo';
@@ -17,6 +17,7 @@ import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from './Thread';
 import translations from '../../translations';
+import { Obj } from '@dxos/echo';
 
 faker.seed(1);
 
@@ -29,12 +30,11 @@ const DefaultStory = ({ messages: _messages, ...props }: ThreadProps) => {
 
   const handleSubmit = useCallback(
     (text: string) => {
-      const request: Message = { id: Type.ObjectId.random(), role: 'user', content: [{ type: 'text', text }] };
-      const response: Message = {
-        id: Type.ObjectId.random(),
+      const request: Message = Obj.make(Message, { role: 'user', content: [{ type: 'text', text }] });
+      const response: Message = Obj.make(Message, {
         role: 'assistant',
         content: [{ type: 'text', disposition: 'cot', pending: true, text: faker.lorem.paragraphs(1) }],
-      };
+      });
       setMessages([...messages, request, response]);
       setProcessing(true);
       setTimeout(() => {
@@ -43,11 +43,10 @@ const DefaultStory = ({ messages: _messages, ...props }: ThreadProps) => {
           ...messages,
           request,
           response,
-          {
-            id: Type.ObjectId.random(),
+          Obj.make(Message, {
             role: 'assistant',
             content: [{ type: 'text', text: faker.lorem.paragraphs(1) }],
-          },
+          }),
         ]);
         setProcessing(false);
       }, 3_000);
@@ -89,8 +88,7 @@ export default meta;
 type Story = StoryObj<ThreadProps>;
 
 const TEST_MESSAGES: Message[] = [
-  {
-    id: Type.ObjectId.random(),
+  Obj.make(Message, {
     role: 'user',
     content: [
       {
@@ -98,9 +96,8 @@ const TEST_MESSAGES: Message[] = [
         text: faker.lorem.sentence(5),
       },
     ],
-  },
-  {
-    id: Type.ObjectId.random(),
+  }),
+  Obj.make(Message, {
     role: 'assistant',
     content: [
       {
@@ -123,9 +120,8 @@ const TEST_MESSAGES: Message[] = [
         input: {},
       },
     ],
-  },
-  {
-    id: Type.ObjectId.random(),
+  }),
+  Obj.make(Message, {
     role: 'user',
     content: [
       {
@@ -134,9 +130,8 @@ const TEST_MESSAGES: Message[] = [
         content: 'This is a tool result.',
       },
     ],
-  },
-  {
-    id: Type.ObjectId.random(),
+  }),
+  Obj.make(Message, {
     role: 'assistant',
     content: [
       {
@@ -146,9 +141,8 @@ const TEST_MESSAGES: Message[] = [
         input: {},
       },
     ],
-  },
-  {
-    id: Type.ObjectId.random(),
+  }),
+  Obj.make(Message, {
     role: 'user',
     content: [
       {
@@ -157,9 +151,8 @@ const TEST_MESSAGES: Message[] = [
         content: 'This is a tool result.',
       },
     ],
-  },
-  {
-    id: Type.ObjectId.random(),
+  }),
+  Obj.make(Message, {
     role: 'assistant',
     content: [
       {
@@ -167,7 +160,7 @@ const TEST_MESSAGES: Message[] = [
         text: faker.lorem.paragraphs(1),
       },
     ],
-  },
+  }),
 ];
 
 export const Default: Story = {

@@ -19,6 +19,7 @@ import { DataType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
 import { bundleScript, findFunctionByDeploymentId } from '../../util';
+import { Obj } from '@dxos/echo';
 
 // TODO: move to cli-composer
 
@@ -140,7 +141,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
     let functionObject = existingObject;
     if (!functionObject) {
       const name = path.basename(this.args.file, path.extname(this.args.file));
-      functionObject = space.db.add(live(FunctionType, { name, version: uploadResult.version }));
+      functionObject = space.db.add(Obj.make(FunctionType, { name, version: uploadResult.version }));
     }
     functionObject.name = this.flags.name ?? functionObject.name;
     functionObject.version = uploadResult.version;
@@ -165,9 +166,9 @@ export default class Upload extends BaseCommand<typeof Upload> {
         this.log(`Updated source of ${script.id}`);
       }
     } else {
-      const sourceObj = space.db.add(live(DataType.Text, { content: scriptFileContent }));
+      const sourceObj = space.db.add(Obj.make(DataType.Text, { content: scriptFileContent }));
       const obj = space.db.add(
-        live(ScriptType, { name: this.flags.name ?? scriptFileName, source: makeRef(sourceObj) }),
+        Obj.make(ScriptType, { name: this.flags.name ?? scriptFileName, source: makeRef(sourceObj) }),
       );
       functionObject.source = makeRef(obj);
       await makeObjectNavigableInComposer(client, space, obj);

@@ -5,11 +5,12 @@
 import { Schema } from 'effect';
 import { useEffect } from 'react';
 
-import { setValue, toJsonSchema, TypeEnum, TypedObject, FormatEnum, ObjectId } from '@dxos/echo-schema';
+import { FormatEnum, ObjectId, setValue, toJsonSchema, TypedObject, TypeEnum } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { live, makeRef } from '@dxos/react-client/echo';
+import { live } from '@dxos/react-client/echo';
 import { createView, type ViewProjection } from '@dxos/schema';
 
+import { Obj, Ref } from '@dxos/echo';
 import { TableType } from '../types';
 
 export const TestSchema = TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
@@ -21,8 +22,8 @@ export const TestSchema = TypedObject({ typename: 'example.com/type/Test', versi
 });
 
 export const createTable = (schema = TestSchema) => {
-  return live(TableType, {
-    view: makeRef(
+  return Obj.make(TableType, {
+    view: Ref.make(
       createView({
         name: 'Test',
         typename: schema.typename,

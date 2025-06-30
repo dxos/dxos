@@ -29,6 +29,7 @@ import {
   ValueBag,
   synchronizedComputeFunction,
 } from '../types';
+import { Obj } from '@dxos/echo';
 
 describe('workflow', () => {
   test('run', async () => {
@@ -138,7 +139,7 @@ describe('workflow', () => {
     const createFunction = () => {
       const functionDxn = DXN.fromLocalObjectId(ObjectId.random());
       const functionRef = refFromDXN(functionDxn);
-      const fnObject = live(FunctionType, { name: 'foo', version: '0.0.1' });
+      const fnObject = Obj.make(FunctionType, { name: 'foo', version: '0.0.1' });
       let resolveCounter = 0;
       const refResolver: RefResolver = {
         resolve: async (dxn) => refResolver.resolveSync(dxn, true),
@@ -187,7 +188,7 @@ describe('workflow', () => {
         { inputId, withOutput: inputId === outputPath },
       );
     }
-    const graph = live(ComputeGraph, { graph: model.graph });
+    const graph = Obj.make(ComputeGraph, { graph: model.graph });
     return { graphDxn, graph, compute };
   };
 
@@ -196,7 +197,7 @@ describe('workflow', () => {
     const model = ComputeGraphModel.create({ id: graphDxn.toString() });
     const transformId = ObjectId.random();
     addTransform(model, { id: transformId, type: subgraphDxn.toString(), subgraph: refFromDXN(subgraphDxn) });
-    const graph = live(ComputeGraph, { graph: model.graph });
+    const graph = Obj.make(ComputeGraph, { graph: model.graph });
     return { graphDxn, graph, compute: [] };
   };
 
@@ -205,7 +206,7 @@ describe('workflow', () => {
     const model = ComputeGraphModel.create({ id: graphDxn.toString() });
     const transformId = ObjectId.random();
     addTransform(model, { id: transformId, type: 'function', function: functionRef ?? undefined });
-    const graph = live(ComputeGraph, { graph: model.graph });
+    const graph = Obj.make(ComputeGraph, { graph: model.graph });
     return { graphDxn, graph, compute: [] };
   };
 

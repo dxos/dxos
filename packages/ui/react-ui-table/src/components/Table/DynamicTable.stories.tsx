@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { FormatEnum, type JsonSchemaType } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -143,7 +144,7 @@ export const WithEchoSchema: StoryObj = {
       onSpaceCreated: async ({ space }) => {
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
-            live(Testing.Contact, {
+            Obj.make(Testing.Contact, {
               name: faker.person.fullName(),
               email: faker.internet.email(),
             }),

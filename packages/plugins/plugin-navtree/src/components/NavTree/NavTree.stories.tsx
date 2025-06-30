@@ -35,6 +35,7 @@ import { NavTreePlugin } from '../../NavTreePlugin';
 import { storybookGraphBuilders } from '../../testing';
 import translations from '../../translations';
 import { NavTreeContainer } from '../NavTreeContainer';
+import { live } from '@dxos/live-object';
 
 faker.seed(1234);
 
@@ -130,7 +131,7 @@ const meta: Meta<typeof NavTreeContainer> = {
         NavTreePlugin(),
       ],
       capabilities: (context) => [
-        contributes(StoryState, Obj.make({ tab: 'space-0' })),
+        contributes(StoryState, live({ tab: 'space-0' })),
         contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders),
         contributes(Capabilities.IntentResolver, [
           createResolver({

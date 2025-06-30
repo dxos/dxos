@@ -11,6 +11,7 @@ import PROMPT from './instructions.tpl?raw';
 import { AISession } from '../../session';
 import { ExtractionInput, ExtractionOutput } from '../extraction';
 import { insertReferences, ReferencedQuotes } from '../quotes';
+import { Obj } from '@dxos/echo';
 
 export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
   description: 'Extract entities from the transcript message and add them to the message.',
@@ -27,7 +28,7 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
       client: ai.client,
       systemPrompt: PROMPT,
       history: [
-        create(Message, {
+        Obj.make(Message, {
           role: 'user',
           content: [
             {

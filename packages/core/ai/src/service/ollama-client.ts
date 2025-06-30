@@ -16,12 +16,14 @@ import {
   createTool,
   type ExecutableTool,
   isToolUse,
+  Message,
   type MessageContentBlock,
   runTools,
   type Tool,
   ToolResult,
 } from '../tools';
 import { ToolTypes, type GenerateRequest, type GenerateResponse, type GenerationStreamEvent } from '../types';
+import { Obj } from '@dxos/echo';
 
 export type OllamaClientParams = {
   endpoint?: string;
@@ -219,11 +221,11 @@ export class OllamaAiServiceClient implements AiServiceClient {
       // Send message_start event with proper message structure.
       yield {
         type: 'message_start',
-        message: {
+        message: Obj.make(Message, {
           id: messageId,
           role: 'assistant',
           content: [],
-        },
+        }),
       } as GenerationStreamEvent;
 
       // Initialize text content block.

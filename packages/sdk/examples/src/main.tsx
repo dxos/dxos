@@ -22,6 +22,7 @@ import { DataType } from '@dxos/schema';
 import type { MaybePromise } from '@dxos/util';
 
 import TaskList from './examples/TaskList';
+import { Obj } from '@dxos/echo';
 
 const root = createRoot(document.getElementById('root')!);
 
@@ -54,8 +55,8 @@ const main = async () => {
     types: [DocumentType, DataType.Text],
     onSpaceCreated: ({ space }) => {
       space.db.add(
-        live(DocumentType, {
-          content: Ref.make(live(DataType.Text, { content: '## Type here...\n\ntry the airplane mode switch.' })),
+        Obj.make(DocumentType, {
+          content: Ref.make(Obj.make(DataType.Text, { content: '## Type here...\n\ntry the airplane mode switch.' })),
         }),
       );
     },

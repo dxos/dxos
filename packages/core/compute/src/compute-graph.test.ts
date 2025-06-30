@@ -11,6 +11,7 @@ import { FunctionType } from '@dxos/functions';
 
 import { DetailedCellError } from '#hyperformula';
 import { TestBuilder } from './testing';
+import { Obj } from '@dxos/echo';
 
 describe('ComputeGraph', () => {
   let testBuilder: TestBuilder;
@@ -30,7 +31,7 @@ describe('ComputeGraph', () => {
     // Create script.
     const trigger = new Trigger();
     graph.update.once(() => trigger.wake());
-    const functionObject = space.db.add(live(FunctionType, { name: 'test', version: '0.0.1', binding: 'TEST' }));
+    const functionObject = space.db.add(Obj.make(FunctionType, { name: 'test', version: '0.0.1', binding: 'TEST' }));
     await trigger.wait();
     const functions = graph.getFunctions({ echo: true });
     expect(functions).to.toHaveLength(1);

@@ -12,6 +12,7 @@ import { type GenerationStream } from './service';
 import { StreamTransform, type StreamBlock } from './transform';
 import { Message, type MessageContentBlock } from '../tools';
 import { type GenerationStreamEvent } from '../types';
+import { Obj } from '@dxos/echo';
 
 /**
  * Parse mixed content of plain text, XML fragments, and JSON blocks.
@@ -94,7 +95,7 @@ export class MixedStreamParser {
             log.warn('unexpected message_start');
           }
 
-          this._message = create(Message, { role: event.message.role, content: [...event.message.content] });
+          this._message = Obj.make(Message, { role: event.message.role, content: [...event.message.content] });
           this.message.emit(this._message);
           break;
         }

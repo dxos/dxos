@@ -6,6 +6,7 @@ import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
 import { todo } from '@dxos/debug';
+import { Obj } from '@dxos/echo';
 import { create } from '@dxos/echo-schema';
 
 import { createTestLMStudioClient } from './lmstudio';
@@ -16,7 +17,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('LM Studio', () => {
     const client = createTestLMStudioClient();
 
     const result = await client.execStream({
-      prompt: create(Message, {
+      prompt: Obj.make(Message, {
         role: 'user',
         content: [{ type: 'text', text: 'What is the capital of France?' }],
       }),
@@ -40,7 +41,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('LM Studio', () => {
     });
 
     const result = await client.execStream({
-      prompt: create(Message, {
+      prompt: Obj.make(Message, {
         role: 'user',
         content: [{ type: 'text', text: 'I want green walls' }],
       }),

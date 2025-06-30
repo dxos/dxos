@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Obj } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo-schema';
 
 import { type GenerationStreamEvent } from '../types';
+import { Message } from '../tools';
 
 /**
  * Replay server-side events (SSE) stream.
@@ -39,11 +41,10 @@ export const createTestSSEStream = (
 
       push({
         type: 'message_start',
-        message: {
-          id: ObjectId.random(),
+        message: Obj.make(Message, {
           role: 'assistant',
           content: [],
-        },
+        }),
       });
 
       for (const block of pars) {

@@ -5,9 +5,10 @@
 import { Schema } from 'effect';
 
 import { Queue } from '@dxos/echo-db';
-import { EchoObject, Expando, ObjectId, Ref } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
+import { Type, Ref } from '@dxos/echo';
 import { FunctionTrigger, type FunctionTriggerType } from './types';
 
 export enum InvocationOutcome {
@@ -52,16 +53,16 @@ export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * Queue  for function/workflow invocation events.
    */
-  invocationTraceQueue: Ref(Queue),
+  invocationTraceQueue: Type.Ref(Queue),
   /**
    * DXN of the invoked function/workflow.
    */
-  invocationTarget: Ref(Expando),
+  invocationTarget: Type.Ref(Type.Expando),
   /**
    * Present for automatic invocations.
    */
-  trigger: Schema.optional(Ref(FunctionTrigger)),
-}).pipe(EchoObject({ typename: 'dxos.org/type/InvocationTraceStart', version: '0.1.0' }));
+  trigger: Schema.optional(Type.Ref(FunctionTrigger)),
+}).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceStart', version: '0.1.0' }));
 
 export type InvocationTraceStartEvent = Schema.Schema.Type<typeof InvocationTraceStartEvent>;
 
@@ -82,7 +83,7 @@ export const InvocationTraceEndEvent = Schema.Struct({
   timestampMs: Schema.Number,
   outcome: Schema.Enums(InvocationOutcome),
   exception: Schema.optional(TraceEventException),
-}).pipe(EchoObject({ typename: 'dxos.org/type/InvocationTraceEnd', version: '0.1.0' }));
+}).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceEnd', version: '0.1.0' }));
 
 export type InvocationTraceEndEvent = Schema.Schema.Type<typeof InvocationTraceEndEvent>;
 
@@ -106,7 +107,7 @@ export const TraceEvent = Schema.Struct({
   ingestionTimestampMs: Schema.Number,
   logs: Schema.Array(TraceEventLog),
   exceptions: Schema.Array(TraceEventException),
-}).pipe(EchoObject({ typename: 'dxos.org/type/TraceEvent', version: '0.1.0' }));
+}).pipe(Type.Obj({ typename: 'dxos.org/type/TraceEvent', version: '0.1.0' }));
 
 export type TraceEvent = Schema.Schema.Type<typeof TraceEvent>;
 
@@ -120,9 +121,9 @@ export type InvocationSpan = {
   outcome: InvocationOutcome;
   input: object;
   durationMs: number;
-  invocationTraceQueue: Ref<Queue>;
-  invocationTarget: Ref<Expando>;
-  trigger?: Ref<FunctionTriggerType>;
+  invocationTraceQueue: Ref.Ref<Queue>;
+  invocationTarget: Ref.Ref<Type.Expando>;
+  trigger?: Ref.Ref<FunctionTriggerType>;
   exception?: TraceEventException;
 };
 

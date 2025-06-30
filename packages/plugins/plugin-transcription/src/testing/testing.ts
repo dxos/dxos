@@ -62,12 +62,11 @@ export class MessageBuilder extends AbstractMessageBuilder {
   }
 
   override async createMessage(numSegments = 1): Promise<DataType.Message> {
-    return {
-      id: Key.ObjectId.random().toString(),
+    return Obj.make(DataType.Message, {
       created: this.next().toISOString(),
       sender: faker.helpers.arrayElement(this.users),
       blocks: Array.from({ length: numSegments }).map(() => this.createBlock()),
-    };
+    });
   }
 
   createBlock(): DataType.MessageBlock.Transcription {

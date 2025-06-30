@@ -72,8 +72,8 @@ export const createProps = <S extends Schema.Schema.AnyNoContext>(
     data: Type.Properties<Schema.Schema.Type<S>> = {} as Type.Properties<Schema.Schema.Type<S>>,
   ): Type.Properties<Schema.Schema.Type<S>> => {
     return getSchemaProperties<S>(schema.ast).reduce<Type.Properties<Schema.Schema.Type<S>>>((obj, property) => {
-      if (obj[property.name] === undefined) {
-        obj[property.name] = createValue(generator, schema, property, force);
+      if ((obj as any)[property.name] === undefined) {
+        (obj as any)[property.name] = createValue(generator, schema, property, force);
       }
 
       return obj;
@@ -154,7 +154,7 @@ export const createReferences = <T extends BaseObject>(schema: Schema.Schema<T>,
 };
 
 export const createReactiveObject = <S extends Schema.Schema.AnyNoContext>(type: S) => {
-  return (data: Omit<Schema.Schema.Type<S>, 'id' | Type.KindId>) => Obj.make<S>(type, data);
+  return (data: Type.Properties<Schema.Schema.Type<S>>) => Obj.make<S>(type, data);
 };
 
 export const addToDatabase = (db: EchoDatabase) => {
@@ -163,12 +163,12 @@ export const addToDatabase = (db: EchoDatabase) => {
 
 export const logObject = (message: string) => (obj: any) => log.info(message, { obj });
 
-export const createObjectArray = <T extends BaseObject>(n: number): ExcludeId<T>[] =>
-  Array.from({ length: n }, () => ({}) as ExcludeId<T>);
+export const createObjectArray = <T extends BaseObject>(n: number): Type.Properties<T>[] =>
+  Array.from({ length: n }, () => ({}) as Type.Properties<T>);
 
 export const createArrayPipeline = <T extends BaseObject>(
   n: number,
-  pipeline: (obj: ExcludeId<T>) => Effect.Effect<Live<T>, never, never>,
+  pipeline: (obj: Type.Properties<T>) => Effect.Effect<Live<T>, never, never>,
 ) => {
   return Effect.forEach(createObjectArray<T>(n), pipeline);
 };
@@ -188,9 +188,9 @@ export const createObjectPipeline = <T extends BaseObject>(
   generator: ValueGenerator,
   type: Schema.Schema<T>,
   { db, force }: CreateOptions,
-): ((obj: ExcludeId<T>) => Effect.Effect<Live<T>, never, never>) => {
+): ((obj: Type.Properties<T>) => Effect.Effect<Live<T>, never, never>) => {
   if (!db) {
-    return (obj: ExcludeId<T>) => {
+    return (obj: Type.Properties<T>) => {
       const pipeline: Effect.Effect<Live<T>> = Effect.gen(function* () {
         const withProps = createProps(generator, type, force)(obj);
         return createReactiveObject(type)(withProps);
@@ -199,7 +199,7 @@ export const createObjectPipeline = <T extends BaseObject>(
       return pipeline;
     };
   } else {
-    return (obj: ExcludeId<T>) => {
+    return (obj: Type.Properties<T>) => {
       const pipeline: Effect.Effect<AnyLiveObject<any>, never, never> = Effect.gen(function* () {
         const withProps = createProps(generator, type, force)(obj);
         const liveObj = createReactiveObject(type)(withProps);
@@ -227,7 +227,7 @@ export const createGenerator = <S extends Schema.Schema.AnyNoContext>(
   const pipeline = createObjectPipeline(generator, type, options);
 
   return {
-    createObject: () => Effect.runSync(pipeline({} as ExcludeId<Schema.Schema.Type<S>>)),
+    createObject: () => Effect.runSync(pipeline({} as Type.Properties<Schema.Schema.Type<S>>)),
     createObjects: (n: number) => Effect.runSync(createArrayPipeline(n, pipeline)),
   };
 };
@@ -245,7 +245,7 @@ export const createAsyncGenerator = <T extends BaseObject>(
   const pipeline = createObjectPipeline(generator, type, options);
 
   return {
-    createObject: () => Effect.runPromise(pipeline({} as ExcludeId<T>)),
+    createObject: () => Effect.runPromise(pipeline({} as Type.Properties<T>)),
     createObjects: (n: number) => Effect.runPromise(createArrayPipeline(n, pipeline)),
   };
 };

@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useMemo, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { type Queue } from '@dxos/react-client/echo';
 
-import { type Chunk, type ChunkRenderer, SerializationModel } from '../model';
+import type { Obj } from '@dxos/echo';
+import { type ChunkRenderer, SerializationModel } from '../model';
 
 /**
  * Model adapter for a queue.
  */
-export const useQueueModelAdapter = <T extends Chunk>(
+export const useQueueModelAdapter = <T extends Obj.Any>(
   renderer: ChunkRenderer<T>,
   queue: Queue<T> | undefined,
   initialChunks: T[] = [],

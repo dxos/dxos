@@ -28,6 +28,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { VersionPin } from './version-pin';
+import { Obj } from '@dxos/echo';
 
 /**
  * Contains message history, tools, current context.
@@ -310,7 +311,7 @@ export class AISession {
       }
     }
 
-    return create(Message, {
+    return Obj.make(Message, {
       role: 'user',
       content: [...prelude, { type: 'text', text: prompt }],
     });

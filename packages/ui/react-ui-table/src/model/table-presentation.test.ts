@@ -13,6 +13,7 @@ import { createView, ViewProjection } from '@dxos/schema';
 import { TableModel, type TableModelProps } from './table-model';
 import { TablePresentation } from './table-presentation';
 import { TableType } from '../types';
+import { Obj, Ref } from '@dxos/echo';
 
 describe('TablePresentation', () => {
   describe('row reactivity', () => {
@@ -98,6 +99,6 @@ const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
   const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
   const projection = new ViewProjection(schema.jsonSchema, view);
-  const table = live(TableType, { view: makeRef(view) });
+  const table = Obj.make(TableType, { view: Ref.make(view) });
   return new TableModel({ id: table.id, view, projection, ...props });
 };

@@ -10,6 +10,7 @@ import { type MakeOptional } from '@dxos/util';
 
 import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
+import { Obj } from '@dxos/echo';
 
 // TODO(burdon): DXN from echo-schema is a different type.
 
@@ -21,7 +22,7 @@ export class ComputeGraphModel extends AbstractGraphModel<
 > {
   static create(graph?: Partial<Graph>): ComputeGraphModel {
     return new ComputeGraphModel(
-      live(ComputeGraph, {
+      Obj.make(ComputeGraph, {
         graph: {
           id: graph?.id ?? ObjectId.random(),
           nodes: graph?.nodes ?? [],
