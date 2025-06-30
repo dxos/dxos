@@ -7,14 +7,17 @@ import React, { memo, useCallback, useEffect, useState } from 'react';
 import { addons } from 'storybook/manager-api';
 
 import { DxThemeEditor as NaturalDxThemeEditor } from '@dxos/lit-theme-editor';
-import '@dxos/lit-theme-editor/dx-theme-editor.pcss';
 import { createComponent } from '@dxos/lit-ui/react';
 import { type ThemeMode, ThemeProvider, Tooltip, Dialog, IconButton } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { PARAM_KEY } from '@dxos/theme-editor-addon';
 
+import '@dxos/lit-theme-editor/dx-theme-editor.pcss';
+
 /**
  * Changes theme based on storybook toolbar toggle.
+ * NOTE: The "dark" class is added to the root element to enable tailwindcss dark mode.
+ * This is either added by the app's HTML or the global storybook decorator.
  */
 export const withTheme: Decorator = (Story, context) => {
   // Prevent re-rendering of the story.
