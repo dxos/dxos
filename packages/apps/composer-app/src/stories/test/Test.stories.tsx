@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxos-theme';
+
 import { type Meta, type StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
@@ -9,6 +11,9 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { Test, type TestProps } from './Test';
 
+/**
+ * Storybook sanity test.
+ */
 const meta: Meta<TestProps> = {
   title: 'apps/composer-app/Test',
   component: Test,
@@ -32,6 +37,7 @@ export const Default: Story = {
     await expect(canvas.getByText(args.label)).toBeInTheDocument();
   },
   args: {
+    variant: 'primary',
     icon: 'ph--rocket-launch--regular',
     label: 'Composer',
     onClick: fn(),

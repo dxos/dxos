@@ -3,13 +3,13 @@
 //
 
 import { type StorybookConfig } from '@storybook/react-vite';
-import ReactPlugin from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react-swc';
 import { resolve } from 'path';
 import { type InlineConfig, mergeConfig } from 'vite';
-import InspectPlugin from 'vite-plugin-inspect';
-import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
-import TurbosnapPlugin from 'vite-plugin-turbosnap';
-import WasmPlugin from 'vite-plugin-wasm';
+import inspect from 'vite-plugin-inspect';
+import topLevelAwait from 'vite-plugin-top-level-await';
+// import turbosnap from 'vite-plugin-turbosnap';
+import wasm from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
@@ -17,25 +17,25 @@ import { IconsPlugin } from '@dxos/vite-plugin-icons';
 export const packages = resolve(__dirname, '../../../packages');
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
-const isTrue = (str?: string) => str === 'true' || str === '1';
-
 const contentFiles = '*.{ts,tsx,js,jsx,css}';
 
+const isTrue = (str?: string) => str === 'true' || str === '1';
+
+type ConfigProps = Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>;
+
 /**
+ * Storybook and Vite configuration.
+ *
  * https://storybook.js.org/docs/configure
  * https://storybook.js.org/docs/api/main-config/main-config
  * https://nx.dev/recipes/storybook/one-storybook-for-all
  */
-export const config = (
-  baseConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
-  turbosnapRootDir?: string,
-): StorybookConfig => ({
+export const config = (baseConfig: ConfigProps): StorybookConfig => ({
   addons: [
     '@dxos/theme-editor-addon',
     '@storybook/addon-links',
     '@storybook/addon-themes',
-    '@storybook/addon-vitest',
-    'storybook-dark-mode',
+    // '@storybook/addon-vitest',
   ],
   framework: {
     name: '@storybook/react-vite',
@@ -54,7 +54,7 @@ export const config = (
    * https://storybook.js.org/docs/api/main-config/main-config-vite-final
    */
   viteFinal: async (config, { configType }) => {
-    if (process.env.DX_DEBUG) {
+    if (isTrue(process.env.DX_DEBUG)) {
       // eslint-disable-next-line no-console
       console.log(JSON.stringify({ config, configType }, null, 2));
     }
@@ -69,36 +69,61 @@ export const config = (
           },
         },
       },
-      // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
       server: {
         headers: {
+          // Prevent caching icon sprite.
           'Cache-Control': 'no-store',
         },
-        hmr: {
-          overlay: false,
-        },
+        // hmr: {
+        // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
+        // overlay: false,
+        // },
       },
       worker: {
         format: 'es',
-        plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
+        plugins: () => [wasm(), topLevelAwait()],
       },
       plugins: [
-        // https://github.com/antfu-collective/vite-plugin-inspect#readme
-        // Open: http://localhost:5173/__inspect
-        isTrue(process.env.DX_INSPECT) && InspectPlugin(),
-        ReactPlugin({
-          tsDecorators: true,
+        //
+        // NOTE: Order matters.
+        //
+
+        // MUST COME FIRST.
+        // https://www.npmjs.com/package/vite-plugin-wasm
+        wasm(),
+        // https://www.npmjs.com/package/vite-plugin-top-level-await
+        topLevelAwait(),
+        // https://www.npmjs.com/package/vite-plugin-turbosnap
+        // turbosnap({
+        //   rootDir: config.root ?? __dirname,
+        // }),
+        // https://www.npmjs.com/package/@vitejs/plugin-react-swc
+        react({
           plugins: [
             // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-            ['@preact-signals/safe-react/swc', { mode: 'all' }],
+            [
+              '@preact-signals/safe-react/swc',
+              {
+                mode: 'all',
+              },
+            ],
           ],
+          tsDecorators: true,
         }),
+        // https://www.npmjs.com/package/vite-plugin-inspect
+        // Open: http://localhost:5173/__inspect
+        isTrue(process.env.DX_INSPECT) && inspect(),
+
+        //
+        // Custom DXOS plugins.
+        //
+
         IconsPlugin({
-          symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           assetPath: (name, variant) =>
             `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
-          spriteFile: 'icons.svg',
           contentPaths: [resolve(packages, '**/src/**', contentFiles)],
+          spriteFile: 'icons.svg',
+          symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
         }),
         ThemePlugin({
           root: __dirname,
@@ -110,9 +135,6 @@ export const config = (
             resolve(packages, 'ui/*/src/**', contentFiles),
           ],
         }),
-        TopLevelAwaitPlugin(),
-        TurbosnapPlugin({ rootDir: turbosnapRootDir ?? config.root ?? __dirname }),
-        WasmPlugin(),
       ],
     } satisfies InlineConfig);
   },

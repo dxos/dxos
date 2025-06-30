@@ -2,30 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Decorator, type Preview } from '@storybook/react';
-import { themes } from 'storybook/theming';
+import { type Preview } from '@storybook/react';
 import React, { memo, useEffect } from 'react';
 
 import { log, LogLevel } from '@dxos/log';
-
-/**
- * Global decorators.
- * https://storybook.js.org/docs/writing-stories/decorators
- */
-export const decorators: Decorator[] = [
-  (Story, context) => {
-    // Prevent re-rendering of the story.
-    const MemoizedStory = memo(Story);
-    const { logLevel } = context.globals;
-    useEffect(() => {
-      log.config({
-        filter: logLevel,
-      });
-    }, [logLevel]);
-
-    return <MemoizedStory />;
-  },
-];
 
 /**
  * Configure Storybook rendering.
@@ -33,11 +13,54 @@ export const decorators: Decorator[] = [
  */
 export const preview: Preview = {
   /**
+   * Global decorators.
+   * https://storybook.js.org/docs/writing-stories/decorators
+   */
+  decorators: [
+    // Theme.
+    (Story, context) => {
+      // Prevent re-rendering of the story.
+      const MemoizedStory = memo(Story);
+
+      // Update root element for tailwindcss.
+      document.documentElement.classList[context.globals.theme === 'dark' ? 'add' : 'remove']('dark');
+
+      return <MemoizedStory />;
+    },
+
+    // Logging.
+    (Story, context) => {
+      // Prevent re-rendering of the story.
+      const MemoizedStory = memo(Story);
+
+      const { logLevel } = context.globals;
+      useEffect(() => {
+        log.config({ filter: logLevel });
+      }, [logLevel]);
+
+      return <MemoizedStory />;
+    },
+  ],
+
+  /**
    * https://storybook.js.org/docs/essentials/toolbars-and-globals
    */
   globalTypes: {
+    // NOTE: The theme is applied in the withTheme decorator in storybook-utils.
+    theme: {
+      name: 'Theme',
+      description: 'Switch between dark and light theme',
+      defaultValue: 'dark',
+      toolbar: {
+        icon: 'sun',
+        items: ['dark', 'light'],
+      },
+    },
+
     logLevel: {
+      name: 'Log level',
       description: 'DX logging level.',
+      defaultValue: 'INFO',
       toolbar: {
         icon: 'alert',
         items: [
@@ -49,10 +72,6 @@ export const preview: Preview = {
         ],
       },
     },
-  },
-
-  initialGlobals: {
-    logLevel: 'INFO',
   },
 
   /**
@@ -74,16 +93,6 @@ export const preview: Preview = {
         color: /(background|color)$/i,
         date: /Date$/,
       },
-    },
-
-    // https://storybook.js.org/addons/storybook-dark-mode
-    darkMode: {
-      classTarget: 'html',
-      stylePreview: true,
-      dark: { ...themes.dark },
-      darkClass: 'dark',
-      light: { ...themes.light },
-      lightClass: 'light',
     },
   },
 };

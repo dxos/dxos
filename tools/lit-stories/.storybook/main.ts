@@ -18,7 +18,9 @@ const contentFiles = '*.{ts,tsx,js,jsx,css}';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 
-export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>): StorybookConfig => ({
+type ConfigProps = Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>;
+
+export const config = (baseConfig: ConfigProps): StorybookConfig => ({
   addons: [
     '@storybook/addon-links',
     '@storybook/addon-themes',
@@ -28,9 +30,11 @@ export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConf
     options: {},
   },
   docs: {
-    autodocs: 'tag',
+    // TODO(burdon): Invalid prop.
+    // autodocs: 'tag',
   },
   staticDirs: [resolve(__dirname, '../static')],
+
   ...baseConfig,
 
   /**

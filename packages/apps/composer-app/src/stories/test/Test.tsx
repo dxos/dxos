@@ -9,5 +9,5 @@ import { IconButton, type IconButtonProps } from '@dxos/react-ui';
 export type TestProps = IconButtonProps;
 
 export const Test = (props: TestProps) => {
-  return <IconButton {...props} />;
+  return <IconButton size={4} {...props} />;
 };
