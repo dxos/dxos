@@ -3,40 +3,42 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { useMemo, useEffect, useCallback, forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useMemo, useEffect, useCallback, useImperativeHandle, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
+  CommandMenu,
+  type CommandMenuGroup,
+  type DNDOptions,
+  type EditorInputMode,
+  type EditorSelectionState,
+  type EditorStateStore,
+  EditorToolbar,
+  type EditorToolbarActionGraphProps,
+  type EditorViewMode,
+  RefPopover,
+  type UseTextEditorProps,
   addLink,
+  createElement,
+  coreSlashCommands,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
   editorGutter,
   editorSlots,
-  EditorToolbar,
+  filterItems,
+  linkSlashCommands,
   processEditorPayload,
-  RefPopover,
   stackItemContentEditorClassNames,
-  type DNDOptions,
-  type EditorInputMode,
-  type EditorSelectionState,
-  type EditorStateStore,
-  type EditorToolbarActionGraphProps,
-  type EditorViewMode,
-  type CommandMenuGroup,
-  type UseTextEditorProps,
   useEditorToolbarState,
   useFormattingState,
-  useCommandMenu,
   useTextEditor,
-  filterItems,
-  coreSlashCommands,
-  CommandMenu,
-  linkSlashCommands,
+  useCommandMenu,
+  type UseCommandMenuOptions,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNotFalsy, isNonNullable } from '@dxos/util';
@@ -64,7 +66,6 @@ export type MarkdownEditorProps = {
 
 /**
  * Base markdown editor component.
- *
  * This component provides all the features of the markdown editor that do no depend on ECHO.
  * This allows it to be used as a common editor for markdown content on arbitrary backends (e.g. files).
  */
@@ -76,7 +77,8 @@ export const MarkdownEditor = ({
 }: MarkdownEditorProps) => {
   const { t } = useTranslation();
   const viewRef = useRef<EditorView>();
-  const getGroups = useCallback(
+
+  const getMenu = useCallback(
     (trigger: string, query?: string) => {
       switch (trigger) {
         case '@':
@@ -90,11 +92,34 @@ export const MarkdownEditor = ({
     },
     [onLinkQuery, slashCommandGroups],
   );
-  const { commandMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useCommandMenu({
-    viewRef,
-    getGroups,
-    trigger: onLinkQuery ? ['/', '@'] : '/',
-  });
+
+  const trigger = onLinkQuery ? ['/', '@'] : ['/'];
+  const options = useMemo<UseCommandMenuOptions>(
+    () => ({
+      viewRef,
+      trigger,
+      placeholder: {
+        delay: 3_000,
+        content: () => {
+          return createElement('div', undefined, [
+            createElement('span', { text: 'Press' }),
+            ...trigger.map((text) =>
+              createElement('span', {
+                className: 'border border-separator rounded-sm mx-1 px-1.5 pt-[1px] pb-[2px]',
+                text,
+              }),
+            ),
+            createElement('span', { text: 'for commands.' }),
+          ]);
+        },
+      },
+      getMenu,
+    }),
+    [trigger, getMenu],
+  );
+
+  const { commandMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useCommandMenu(options);
+
   const extensions = useMemo(() => [_extensions, commandMenu].filter(isNotFalsy), [_extensions, commandMenu]);
 
   return (
@@ -111,13 +136,13 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
       id,
       role = 'article',
       initialValue,
+      customActions,
+      editorStateStore,
       extensions,
       extensionProviders,
       scrollPastEnd,
       toolbar,
-      customActions,
       viewMode,
-      editorStateStore,
       onFileUpload,
       onViewModeChange,
     },

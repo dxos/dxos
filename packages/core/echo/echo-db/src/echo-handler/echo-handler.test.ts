@@ -7,8 +7,9 @@ import { Schema } from 'effect';
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Query } from '@dxos/echo';
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
-import { getSchema, createQueueDXN, Query } from '@dxos/echo-schema';
+import { getSchema, createQueueDXN } from '@dxos/echo-schema';
 import { EchoObject, Expando, TypedObject, foreignKey, getTypeReference, Ref, type Ref$ } from '@dxos/echo-schema';
 import { Testing, prepareAstForCompare } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';

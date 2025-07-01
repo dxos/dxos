@@ -4,6 +4,7 @@
 
 import { Schema } from 'effect';
 
+import { Typename, Version } from '../ast';
 import { JsonSchemaType } from '../json-schema';
 import { EchoObject } from '../object';
 
@@ -11,8 +12,8 @@ import { EchoObject } from '../object';
  * Persistent representation of a schema.
  */
 export const StoredSchema = Schema.Struct({
-  typename: Schema.String,
-  version: Schema.String,
+  typename: Typename,
+  version: Version,
   jsonSchema: JsonSchemaType,
 }).pipe(
   EchoObject({

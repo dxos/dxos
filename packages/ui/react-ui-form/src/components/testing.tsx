@@ -22,3 +22,4 @@ export const TestPanel = ({ classNames, children }: ThemedClassName<PropsWithChi
 
 // Symbol for accessing debug objects in tests.
 export const VIEW_EDITOR_DEBUG_SYMBOL = Symbol('viewEditorDebug');
+export const FIELD_EDITOR_DEBUG_SYMBOL = Symbol('fieldEditorDebug');

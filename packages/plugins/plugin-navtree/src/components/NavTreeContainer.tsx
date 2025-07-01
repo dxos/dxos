@@ -17,12 +17,10 @@ import {
   useLayout,
 } from '@dxos/app-framework';
 import { isAction, isActionLike, ROOT_ID, type Node, type ReadableGraph } from '@dxos/app-graph';
-import { Obj } from '@dxos/echo';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { useConnections } from '@dxos/plugin-graph';
-import { isSpace } from '@dxos/react-client/echo';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { isTreeData, type PropsFromTreeItem, type TreeData } from '@dxos/react-ui-list';
+import { isTreeData, type TreeItemDataProps, type TreeData } from '@dxos/react-ui-list';
 import { mx } from '@dxos/react-ui-theme';
 import { arrayMove, byPosition } from '@dxos/util';
 
@@ -83,7 +81,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
 
   const getProps = useCallback(
-    (node: Node, path: string[]): PropsFromTreeItem => {
+    (node: Node, path: string[]): TreeItemDataProps => {
       const children = getChildren(graph, node, path).filter(getChildrenFilter);
       const parentOf =
         children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
@@ -152,18 +150,8 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [dispatch, layout.active, tab, navigationSidebarState, isLg],
   );
 
-  const canDrop = useCallback((source: TreeData, target: TreeData) => {
-    const sourceNode = source.item as Node;
-    const targetNode = target.item as Node;
-    // TODO(wittjosiah): This shouldn't depend directly on client, there should be a graph-level abstraction.
-    if (isSpace(targetNode.data)) {
-      // TODO(wittjosiah): Find a way to only allow space as source for rearranging.
-      return Obj.isObject(sourceNode.data) || isSpace(sourceNode.data);
-    } else if (Obj.isObject(targetNode.data)) {
-      return Obj.isObject(sourceNode.data);
-    } else {
-      return false;
-    }
+  const canDrop = useCallback(({ source, target }: { source: TreeData; target: TreeData }) => {
+    return target.item.properties.canDrop?.(source) ?? false;
   }, []);
 
   const handleSelect = useCallback(

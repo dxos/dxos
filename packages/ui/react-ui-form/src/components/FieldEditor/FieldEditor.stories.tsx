@@ -15,10 +15,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { FieldEditor, type FieldEditorProps } from './FieldEditor';
 import translations from '../../translations';
-import { TestLayout, TestPanel } from '../testing';
-
-// Symbol for accessing debug objects in tests.
-export const FIELD_EDITOR_DEBUG_SYMBOL = Symbol('fieldEditorDebug');
+import { TestLayout, TestPanel, FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
 
 // Type definition for debug objects exposed to tests.
 export type FieldEditorDebugObjects = {

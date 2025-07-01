@@ -4,10 +4,11 @@
 
 import { type Signal, signal } from '@preact/signals-core';
 
-import { ObjectId } from '@dxos/keys';
+import { Obj } from '@dxos/echo';
 
 import { createReplaySSEStream } from './test-stream';
 import { createGenerationStream, type GenerationStream, type AiServiceClient, GenerationStreamImpl } from '../service';
+import { Message } from '../tools';
 import { type GenerationStreamEvent, type GenerateRequest, type GenerateResponse } from '../types';
 
 export type SpyAiServiceMode = 'mock' | 'spy';
@@ -153,11 +154,10 @@ export class MockAiServiceClient implements AiServiceClient {
 
     yield {
       type: 'message_start',
-      message: {
-        id: ObjectId.random(),
+      message: Obj.make(Message, {
         role: 'assistant',
         content: [],
-      },
+      }),
     };
     yield {
       type: 'content_block_start',

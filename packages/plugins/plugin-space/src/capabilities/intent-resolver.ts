@@ -33,6 +33,7 @@ import {
   type CreateObjectDialogProps,
   type JoinDialogProps,
 } from '../components';
+import { SpaceEvents } from '../events';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionAction, SpaceAction } from '../types';
 import { cloneObject, COMPOSER_SPACE_LOCK, getNestedObjects } from '../util';
@@ -80,6 +81,12 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         if (Migrations.versionProperty) {
           space.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
+
+        await context.activatePromise(SpaceEvents.SpaceCreated);
+        const onSpaceCreatedCallbacks = context.getCapabilities(SpaceCapabilities.OnSpaceCreated);
+        await Promise.all(
+          onSpaceCreatedCallbacks.map((onSpaceCreated) => onSpaceCreated({ space, rootCollection: collection })),
+        );
 
         return {
           data: {
@@ -304,7 +311,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.OpenCreateObject,
-      resolve: ({ target, navigable = true }) => {
+      resolve: ({ target, typename, navigable = true }) => {
         const state = context.getCapability(SpaceCapabilities.State);
 
         return {
@@ -316,8 +323,13 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                 blockAlign: 'start',
                 props: {
                   target,
+                  typename,
                   shouldNavigate: navigable
-                    ? (object: Obj.Any) => !Obj.instanceOf(DataType.Collection, object) || state.navigableCollections
+                    ? (object: Obj.Any) => {
+                        const isCollection = Obj.instanceOf(DataType.Collection, object);
+                        const isQueryCollection = Obj.instanceOf(DataType.QueryCollection, object);
+                        return (!isCollection && !isQueryCollection) || state.navigableCollections;
+                      }
                     : () => false,
                 } satisfies Partial<CreateObjectDialogProps>,
               },
@@ -406,7 +418,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       intent: SpaceAction.AddRelation,
       resolve: ({ space, schema, source, target, fields }) => {
         const relation = space.db.add(
-          Obj.make(schema, {
+          Relation.make(schema, {
             [Relation.Source]: source,
             [Relation.Target]: target,
             ...fields,
@@ -561,6 +573,12 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       intent: CollectionAction.Create,
       resolve: async ({ name }) => ({
         data: { object: Obj.make(DataType.Collection, { name, objects: [] }) },
+      }),
+    }),
+    createResolver({
+      intent: CollectionAction.CreateQueryCollection,
+      resolve: async ({ name, typename }) => ({
+        data: { object: Obj.make(DataType.QueryCollection, { name, query: { typename } }) },
       }),
     }),
   ]);

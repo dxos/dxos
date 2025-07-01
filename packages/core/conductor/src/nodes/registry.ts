@@ -6,7 +6,7 @@ import { Effect, Schema } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
 import { defineTool, Message, type Tool, ToolTypes } from '@dxos/ai';
-import { Filter, getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
+import { getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
 import { DatabaseService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -44,6 +44,7 @@ import {
   ReducerOutput,
   TextToImageOutput,
 } from './types';
+import { Filter } from '@dxos/echo';
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).

@@ -8,6 +8,7 @@ import { DXN } from '@dxos/keys';
 
 export const TYPES = {
   document: DXN.fromTypenameAndVersion('example.org/type/Document', '0.1.0').toString(),
+  collection: DXN.fromTypenameAndVersion('example.org/type/Collection', '0.1.0').toString(),
   org: DXN.fromTypenameAndVersion('example.org/type/Org', '0.1.0').toString(),
   contact: DXN.fromTypenameAndVersion('example.org/type/Contact', '0.1.0').toString(),
   task: DXN.fromTypenameAndVersion('example.org/type/Task', '0.1.0').toString(),
@@ -26,6 +27,20 @@ const createArticle = (title: string, content: string): { id: ObjectId; doc: Obj
       data: {
         title,
         content,
+      },
+    },
+  };
+};
+
+const createCollection = (name: string, objects: ObjectId[]): { id: ObjectId; doc: ObjectStructure } => {
+  return {
+    id: ObjectId.random(),
+    doc: {
+      system: { kind: 'object', type: { '/': TYPES.collection } },
+      meta: { keys: [] },
+      data: {
+        name,
+        objects: objects.map((id) => ({ '/': DXN.fromLocalObjectId(id).toString() })),
       },
     },
   };
@@ -126,6 +141,13 @@ export const ARTICLES = {
   ),
 };
 
+export const COLLECTIONS = {
+  articles: createCollection(
+    'Articles',
+    Object.values(ARTICLES).map(({ id }) => id),
+  ),
+};
+
 export const ORGANIZATIONS = {
   cyberdyne: createOrganization('Cyberdyne Systems', 'https://cyberdyne.com'),
   amco: createOrganization('AMCO', 'https://amco.com'),
@@ -155,6 +177,7 @@ export const WORKS_FOR = {
 
 export const OBJECTS = [
   ...Object.values(ARTICLES),
+  ...Object.values(COLLECTIONS),
   ...Object.values(ORGANIZATIONS),
   ...Object.values(CONTACTS),
   ...Object.values(TASKS),

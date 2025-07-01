@@ -26,19 +26,27 @@ export const interval = (cb: Function, ms: number): CleanupFn => {
   return () => clearInterval(t);
 };
 
+type EventMap<T> = T extends Window
+  ? WindowEventMap
+  : T extends Document
+    ? DocumentEventMap
+    : T extends HTMLElement
+      ? HTMLElementEventMap
+      : Record<string, Event>;
+
 /**
  * Add the event listener and return a cleanup function.
  * Can be used in effect hooks in conjunction with `combine`.
  */
-export const addEventListener = <T extends Event = Event>(
-  el: HTMLElement | Window,
-  event: string,
-  handler: EventListenerOrEventListenerObject | ((event: T) => void),
+export function addEventListener<T extends EventTarget, K extends keyof EventMap<T>>(
+  target: T,
+  type: K,
+  listener: (this: T, ev: EventMap<T>[K]) => any,
   options?: boolean | AddEventListenerOptions,
-): CleanupFn => {
-  el.addEventListener(event, handler as EventListenerOrEventListenerObject, options);
-  return () => el.removeEventListener(event, handler as EventListenerOrEventListenerObject, options);
-};
+): CleanupFn {
+  target.addEventListener(type as string, listener as EventListener, options);
+  return () => target.removeEventListener(type as string, listener as EventListener, options);
+}
 
 export class SubscriptionList {
   private readonly _cleanups: CleanupFn[] = [];
