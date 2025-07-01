@@ -1,4 +1,4 @@
-import { Data, Effect, Schema } from 'effect';
+import { Data, Effect, Schema, Struct } from 'effect';
 
 import { DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerationStreamEvent, Message, Tool } from '@dxos/ai';
 import { Type } from '@dxos/echo';
@@ -187,11 +187,11 @@ export const gptNode = defineComputeNode({
       // TODO(burdon): Parse COT on the server (message ontology).
       return ValueBag.make<GptOutput>({
         tokenStream: eventStream,
-        messages: resultEffect.pipe(Effect.map(({ messages }) => messages)),
-        tokenCount: resultEffect.pipe(Effect.map(({ tokenCount }) => tokenCount)),
-        text: resultEffect.pipe(Effect.map(({ text }) => text)),
-        cot: resultEffect.pipe(Effect.map(({ cot }) => cot)),
-        artifact: resultEffect.pipe(Effect.map(({ artifact }) => artifact)),
+        messages: resultEffect.pipe(Effect.map(Struct.get('messages'))),
+        tokenCount: resultEffect.pipe(Effect.map(Struct.get('tokenCount'))),
+        text: resultEffect.pipe(Effect.map(Struct.get('text'))),
+        cot: resultEffect.pipe(Effect.map(Struct.get('cot'))),
+        artifact: resultEffect.pipe(Effect.map(Struct.get('artifact'))),
       });
     }),
 });
