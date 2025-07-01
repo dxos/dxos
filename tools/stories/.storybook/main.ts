@@ -31,6 +31,12 @@ type ConfigProps = Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>;
  * https://nx.dev/recipes/storybook/one-storybook-for-all
  */
 export const config = (baseConfig: ConfigProps): StorybookConfig => ({
+  framework: {
+    name: '@storybook/react-vite',
+    options: {
+      strictMode: true,
+    },
+  },
   addons: [
     '@dxos/storybook-addon-logger',
     '@dxos/storybook-addon-theme',
@@ -38,19 +44,15 @@ export const config = (baseConfig: ConfigProps): StorybookConfig => ({
     '@storybook/addon-links',
     '@storybook/addon-themes',
     // TODO(burdon): Not working.
-    // '@storybook/addon-vitest',
+    '@storybook/addon-vitest',
   ],
-  framework: {
-    name: '@storybook/react-vite',
-    options: {
-      strictMode: true,
-    },
-  },
+
+  staticDirs: [resolve(__dirname, '../static')],
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
     reactDocgen: false,
+    skipCompiler: true,
   },
-
   ...baseConfig,
 
   /**
@@ -125,11 +127,11 @@ export const config = (baseConfig: ConfigProps): StorybookConfig => ({
         //
 
         IconsPlugin({
+          symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           assetPath: (name, variant) =>
             `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
           contentPaths: [resolve(packages, '**/src/**', contentFiles)],
           spriteFile: 'icons.svg',
-          symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
         }),
 
         ThemePlugin({

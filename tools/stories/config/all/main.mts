@@ -6,6 +6,8 @@ import { join } from 'path';
 
 import { config, packages } from '../../.storybook/main';
 
+const contentFiles = '/**/*.{mdx,stories.jsx,stories.tsx}';
+
 const dirs = [
   '/apps/*/src/**',
   '/devtools/*/src/**',
@@ -16,10 +18,5 @@ const dirs = [
 ];
 
 export default config({
-  stories: dirs.flatMap((dir) => [
-    // Docs.
-    join(packages, dir, '/**/*.mdx'),
-    // Stories.
-    join(packages, dir, '/**/*.stories.{jsx,tsx}'),
-  ]),
+  stories: dirs.map((dir) => join(packages, dir, contentFiles)),
 });
