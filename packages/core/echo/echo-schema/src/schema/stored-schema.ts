@@ -12,6 +12,7 @@ import { EchoObject } from '../object';
  * Persistent representation of a schema.
  */
 export const StoredSchema = Schema.Struct({
+  name: Schema.optional(Schema.String),
   typename: Typename,
   version: Version,
   jsonSchema: JsonSchemaType,

@@ -6,12 +6,12 @@ import { Schema } from 'effect';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
 import { Type, type Obj } from '@dxos/echo';
-import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
-import { type PublicKey } from '@dxos/react-client';
+import { EchoSchema, StoredSchema, TypedObject, type BaseObject } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
-import { DataType, TypenameAnnotationId } from '@dxos/schema';
+import { DataType, HasView, TypenameAnnotationId, ViewType } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -217,6 +217,35 @@ export namespace SpaceAction {
     output: Schema.Boolean,
   }) {}
 
+  export class RegisterSchema extends Schema.TaggedClass<RegisterSchema>()(`${SPACE_ACTION}/register-schema`, {
+    input: Schema.Struct({
+      space: SpaceSchema,
+      name: Schema.optional(Schema.String),
+      // TODO(wittjosiah): Schema for schema?
+      schema: Schema.Any,
+    }),
+    output: Schema.Struct({
+      // TODO(wittjosiah): ObjectId.
+      id: Schema.String,
+      object: StoredSchema,
+      schema: Schema.instanceOf(EchoSchema),
+    }),
+  }) {}
+
+  export class AddView extends Schema.TaggedClass<AddView>()(`${SPACE_ACTION}/add-view`, {
+    input: Schema.Struct({
+      space: SpaceSchema,
+      name: Schema.String,
+      schema: Schema.instanceOf(EchoSchema),
+    }),
+    output: Schema.Struct({
+      // TODO(wittjosiah): ObjectId.
+      id: Schema.String,
+      object: ViewType,
+      relation: HasView,
+    }),
+  }) {}
+
   export class OpenCreateObject extends Schema.TaggedClass<OpenCreateObject>()(`${SPACE_ACTION}/open-create-object`, {
     input: Schema.Struct({
       target: Schema.Union(SpaceSchema, DataType.Collection),
@@ -233,6 +262,7 @@ export namespace SpaceAction {
       hidden: Schema.optional(Schema.Boolean),
     }),
     output: Schema.Struct({
+      // TODO(wittjosiah): ObjectId.
       id: Schema.String,
       subject: Schema.Array(Schema.String),
       object: EchoObjectSchema,
@@ -326,3 +356,13 @@ export namespace CollectionAction {
     },
   ) {}
 }
+
+export const createDefaultSchema = () =>
+  TypedObject({
+    typename: `example.com/type/${PublicKey.random().truncate()}`,
+    version: '0.1.0',
+  })({
+    title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+    status: Schema.optional(Schema.Literal('todo', 'in-progress', 'done')).annotations({ title: 'Status' }),
+    description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
+  });

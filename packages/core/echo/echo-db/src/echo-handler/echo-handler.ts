@@ -758,6 +758,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   };
 
   // TODO(dmaretskyi): Re-use existing json serializer
+  // TODO(wittjosiah): Include relation source and target.
   private _toJSON(target: ProxyTarget): any {
     target[symbolInternals].signal.notifyRead();
     const typeRef = target[symbolInternals].core.getType();

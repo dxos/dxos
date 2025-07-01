@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromObservable, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
-import { DataType } from '@dxos/schema';
+import { DataType, HasView } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities } from './capabilities';
@@ -467,6 +467,48 @@ export default (context: PluginContext) => {
                         resolve,
                         droppable: false, // Cannot rearrange query collections.
                         navigable: state.navigableCollections,
+                      }),
+                    ),
+                  ),
+                )
+                .filter(isNonNullable);
+            }),
+            Option.getOrElse(() => []),
+          ),
+        );
+      },
+    }),
+
+    // Create nodes for schema views.
+    createExtension({
+      id: `${SPACE_PLUGIN}/schema-views`,
+      connector: (node) => {
+        let query: QueryResult<DataType.Projection> | undefined;
+        return Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => {
+              const space = getSpace(node.data);
+              return space && Obj.instanceOf(DataType.StoredSchema, node.data)
+                ? Option.some({ space, schema: node.data })
+                : Option.none();
+            }),
+            Option.map(({ space, schema }) => {
+              if (!query) {
+                query = space.db.query(Query.select(Filter.ids(schema.id)).sourceOf(HasView).target());
+              }
+              const objects = get(rxFromQuery(query));
+              console.log('objects', objects);
+              return objects
+                .map((object) =>
+                  get(
+                    rxFromSignal(() =>
+                      createObjectNode({
+                        object,
+                        space,
+                        resolve,
+                        droppable: false,
+                        navigable: false,
                       }),
                     ),
                   ),

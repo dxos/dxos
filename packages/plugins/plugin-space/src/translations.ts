@@ -3,7 +3,8 @@
 //
 
 import { Type } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
+import { StoredSchema } from '@dxos/echo-schema';
+import { DataType, ViewType } from '@dxos/schema';
 
 import { SPACE_PLUGIN } from './meta';
 
@@ -23,6 +24,20 @@ export default [
         'typename label_one': 'Smart Collection',
         'typename label_other': 'Smart Collections',
         'object name placeholder': 'New smart collection',
+      },
+      [Type.getTypename(StoredSchema)]: {
+        'typename label': 'Record',
+        'typename label_zero': 'Records',
+        'typename label_one': 'Record',
+        'typename label_other': 'Records',
+        'object name placeholder': 'New record type',
+      },
+      [Type.getTypename(ViewType)]: {
+        'typename label': 'View',
+        'typename label_zero': 'Views',
+        'typename label_one': 'View',
+        'typename label_other': 'Views',
+        'object name placeholder': 'New view',
       },
       [SPACE_PLUGIN]: {
         'plugin name': 'Spaces',

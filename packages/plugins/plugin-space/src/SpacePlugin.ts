@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Effect, pipe, Schema } from 'effect';
 
 import {
   Capabilities,
   Events,
   allOf,
+  chain,
   contributes,
   createIntent,
   defineModule,
@@ -16,8 +17,8 @@ import {
 } from '@dxos/app-framework';
 import { Ref, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
-import { ClientEvents } from '@dxos/plugin-client';
-import { DataType } from '@dxos/schema';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { DataType, HasView, ViewTypeToProjection, ViewTypeV1, ViewTypeV1ToV2, ViewTypeV2 } from '@dxos/schema';
 import { osTranslations } from '@dxos/shell/react';
 
 import {
@@ -37,7 +38,7 @@ import {
 import { SpaceEvents } from './events';
 import { meta } from './meta';
 import translations from './translations';
-import { CollectionAction, defineObjectForm } from './types';
+import { CollectionAction, createDefaultSchema, defineObjectForm, SpaceAction } from './types';
 
 export type SpacePluginOptions = {
   /**
@@ -109,6 +110,18 @@ export const SpacePlugin = ({
             icon: 'ph--funnel-simple--regular',
           },
         }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(DataType.StoredSchema),
+          metadata: {
+            icon: 'ph--database--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(DataType.Projection),
+          metadata: {
+            icon: 'ph--table--regular',
+          },
+        }),
       ],
     }),
     defineModule({
@@ -131,13 +144,53 @@ export const SpacePlugin = ({
             getIntent: (props) => createIntent(CollectionAction.CreateQueryCollection, props),
           }),
         ),
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: DataType.StoredSchema,
+            formSchema: Schema.Struct({ name: Schema.String }),
+            getIntent: ({ name }, { space }) =>
+              pipe(
+                createIntent(SpaceAction.RegisterSchema, { space, name, schema: createDefaultSchema() }),
+                chain(SpaceAction.AddView, { space, name: 'Table' }),
+              ),
+          }),
+        ),
       ],
     }),
     defineModule({
-      id: `${meta.id}/module/schema`,
+      id: `${meta.id}/module/schema-defs`,
       activatesOn: ClientEvents.ClientReady,
       activatesBefore: [ClientEvents.SetupSchema],
       activate: SchemaDefs,
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () => contributes(ClientCapabilities.Schema, [DataType.Projection, ViewTypeV1, ViewTypeV2, HasView]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/migration`,
+      activatesOn: ClientEvents.SetupMigration,
+      activate: () => contributes(ClientCapabilities.Migration, [ViewTypeV1ToV2, ViewTypeToProjection]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/on-space-created`,
+      activatesOn: SpaceEvents.SpaceCreated,
+      activate: (context) => {
+        const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+        return contributes(SpaceCapabilities.OnSpaceCreated, async ({ space, rootCollection }) => {
+          const program = Effect.gen(function* () {
+            const { object: collection } = yield* dispatch(
+              createIntent(CollectionAction.CreateQueryCollection, {
+                typename: Type.getTypename(DataType.StoredSchema),
+              }),
+            );
+            rootCollection.objects.push(Ref.make(collection));
+          });
+          await Effect.runPromise(program);
+        });
+      },
     }),
     defineModule({
       id: `${meta.id}/module/react-root`,

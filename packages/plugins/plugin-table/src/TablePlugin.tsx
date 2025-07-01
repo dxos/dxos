@@ -3,12 +3,11 @@
 //
 
 import { createIntent, definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { TableType, translations as tableTranslations } from '@dxos/react-ui-table';
-import { DataType, ViewTypeV1, ViewTypeV2, ViewTypeV1ToV2, ViewTypeToProjection } from '@dxos/schema';
 
 import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -57,16 +56,6 @@ export const TablePlugin = () =>
             getIntent: (props, options) => createIntent(TableAction.Create, { ...props, space: options.space }),
           }),
         ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [DataType.Projection, ViewTypeV1, ViewTypeV2]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/migration`,
-      activatesOn: ClientEvents.SetupMigration,
-      activate: () => contributes(ClientCapabilities.Migration, [ViewTypeV1ToV2, ViewTypeToProjection]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
