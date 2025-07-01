@@ -10,7 +10,7 @@ import { Repo } from '@automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import React, { useEffect, useState } from 'react';
 
-import { Expando } from '@dxos/echo-schema';
+import { Expando, Ref } from '@dxos/echo-schema';
 import { DocAccessor, live, createDocAccessor, useQuery, useSpace, type Space, Query } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { ClientRepeater, type ClientRepeatedComponentProps } from '@dxos/react-client/testing';
@@ -21,6 +21,7 @@ import { editorSlots } from '../../defaults';
 import { useTextEditor } from '../../hooks';
 import translations from '../../translations';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '../factories';
+import { Obj, Ref, Type } from '@dxos/echo';
 
 const initialContent = 'Hello world!';
 
@@ -128,9 +129,9 @@ export const WithEcho = {
         createSpace
         onSpaceCreated={async ({ space }) => {
           space.db.add(
-            live({
+            Obj.make(Type.Expando, {
               type: 'test',
-              content: live(Expando, { content: initialContent }),
+              content: Ref.make(Obj.make(Type.Expando, { content: initialContent })),
             }),
           );
         }}
