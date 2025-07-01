@@ -804,6 +804,7 @@ describe('Query', () => {
       // Wait for all reactive updates to complete.
       log.info('Flushing 2');
       log.break();
+      // TODO(dmaretskyi): Does this ensure queries were re-run?
       await db.flush({ indexes: true, updates: true });
 
       // TODO(ZaymonFC): Remove this comment once the bulk delete bug is resolved.
