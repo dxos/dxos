@@ -10,6 +10,7 @@ import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 /**
  * Make objects created using @dxos/echo-schema `create` reactive.
  */
+// TODO(burdon): Remove.
 export const withSignals: Decorator = (Story) => {
   registerSignalsRuntime();
   return <Story />;

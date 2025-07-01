@@ -33,7 +33,7 @@ type ConfigProps = Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>;
 export const config = (baseConfig: ConfigProps): StorybookConfig => ({
   addons: [
     '@dxos/storybook-addon-logger',
-    '@dxos/storybook-addon-theme-editor',
+    '@dxos/storybook-addon-theme',
     '@storybook/addon-docs',
     '@storybook/addon-links',
     '@storybook/addon-themes',

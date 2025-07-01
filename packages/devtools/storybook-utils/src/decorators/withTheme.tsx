@@ -13,6 +13,7 @@ import { defaultTx } from '@dxos/react-ui-theme';
  * NOTE: The "dark" class is added to the root element to enable tailwindcss dark mode.
  * This is either added by the app's HTML or the global storybook decorator.
  */
+// TODO(burdon): Move to storybook-addon-theme.
 export const withTheme: Decorator = (Story, context) => {
   // Prevent re-rendering of the story.
   const MemoizedStory = memo(Story);

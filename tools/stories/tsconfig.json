@@ -19,7 +19,7 @@
       "path": "../../packages/devtools/storybook-addon-logger"
     },
     {
-      "path": "../../packages/devtools/storybook-addon-theme-editor"
+      "path": "../../packages/devtools/storybook-addon-theme"
     },
     {
       "path": "../../packages/devtools/storybook-utils"

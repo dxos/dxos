@@ -404,7 +404,7 @@
         },
         {
           "type": "json",
-          "path": "packages/devtools/storybook-addon-theme-editor/package.json",
+          "path": "packages/devtools/storybook-addon-theme/package.json",
           "jsonpath": "$.version"
         },
         {

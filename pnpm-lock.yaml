@@ -4741,7 +4741,7 @@ importers:
         specifier: ~18.2.0
         version: 18.2.0(react@18.2.0)
 
-  packages/devtools/storybook-addon-theme-editor:
+  packages/devtools/storybook-addon-theme:
     dependencies:
       '@dxos/lit-theme-editor':
         specifier: workspace:*
@@ -14612,9 +14612,9 @@ importers:
       '@dxos/storybook-addon-logger':
         specifier: workspace:*
         version: link:../../packages/devtools/storybook-addon-logger
-      '@dxos/storybook-addon-theme-editor':
+      '@dxos/storybook-addon-theme':
         specifier: workspace:*
-        version: link:../../packages/devtools/storybook-addon-theme-editor
+        version: link:../../packages/devtools/storybook-addon-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../packages/devtools/storybook-utils

@@ -229,7 +229,7 @@
       "path": "packages/devtools/storybook-addon-logger/tsconfig.json"
     },
     {
-      "path": "packages/devtools/storybook-addon-theme-editor/tsconfig.json"
+      "path": "packages/devtools/storybook-addon-theme/tsconfig.json"
     },
     {
       "path": "packages/devtools/storybook-utils/tsconfig.json"
