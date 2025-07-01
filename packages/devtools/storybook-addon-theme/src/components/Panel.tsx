@@ -7,7 +7,7 @@ import React from 'react';
 import { DxThemeEditor as NaturalDxThemeEditor } from '@dxos/lit-theme-editor';
 import { createComponent } from '@dxos/lit-ui/react';
 
-import '@dxos/lit-theme-editor/dx-theme-editor.pcss';
+// import '@dxos/lit-theme-editor/dx-theme-editor.pcss';
 
 const DxThemeEditor = createComponent({
   tagName: 'dx-theme-editor',

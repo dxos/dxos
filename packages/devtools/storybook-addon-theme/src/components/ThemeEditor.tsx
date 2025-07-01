@@ -8,7 +8,7 @@ import { DxThemeEditor as NaturalDxThemeEditor } from '@dxos/lit-theme-editor';
 import { createComponent } from '@dxos/lit-ui/react';
 import { Dialog } from '@dxos/react-ui';
 
-import '@dxos/lit-theme-editor/dx-theme-editor.pcss';
+// import '@dxos/lit-theme-editor/dx-theme-editor.pcss';
 
 const DxThemeEditor = createComponent({
   tagName: 'dx-theme-editor',

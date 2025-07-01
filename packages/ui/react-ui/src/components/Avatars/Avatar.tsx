@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos/lit-ui/dx-avatar.pcss';
+// import '@dxos/lit-ui/dx-avatar.pcss';
 
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';

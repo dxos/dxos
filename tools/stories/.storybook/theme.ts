@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { create } from '@storybook/theming';
+import { create } from 'storybook/theming';
 
 export const dxosTheme = create({
   base: 'dark',
@@ -17,6 +17,6 @@ export const docsTheme = create({
   brandTitle: 'DXOS',
   brandImage: '/dxos.png',
   colorPrimary: '#1EA7FD',
-  appBg: '#1e1e1e',
   textColor: '#ffffff',
+  appBg: '#1e1e1e',
 });
