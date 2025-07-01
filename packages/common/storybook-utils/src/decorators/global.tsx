@@ -22,7 +22,7 @@ export const withLogger: Decorator = (Story, { globals: { logLevel } }) => {
   return <MemoizedStory />;
 };
 
-export const decorators: Preview['decorators'] = [
+export const decorators: Decorator[] = [
   withLogger,
 ];
 
