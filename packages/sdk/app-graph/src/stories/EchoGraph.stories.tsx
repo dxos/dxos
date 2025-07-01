@@ -35,6 +35,8 @@ import { type ExpandableGraph, ROOT_ID } from '../graph';
 import { GraphBuilder, createExtension, rxFromObservable, rxFromSignal } from '../graph-builder';
 import { type Node } from '../node';
 import { rxFromQuery } from '../testing';
+import { Obj } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 
 const DEFAULT_PERIOD = 500;
 
@@ -159,7 +161,7 @@ const runAction = async (client: Client, action: Action) => {
     }
 
     case Action.ADD_OBJECT:
-      getRandomSpace(client)?.db.add(live({ type: 'test', name: faker.commerce.productName() }));
+      getRandomSpace(client)?.db.add(Obj.make(Type.Expando, { type: 'test', name: faker.commerce.productName() }));
       break;
 
     case Action.REMOVE_OBJECT: {
