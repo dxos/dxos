@@ -14,6 +14,9 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts"
+        ],
+        "platforms": [
+          "browser"
         ]
       }
     },
