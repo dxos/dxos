@@ -4,7 +4,7 @@
 
 import { Context, Layer } from 'effect';
 
-import type { Queue, QueueFactory } from '@dxos/echo-db';
+import type { Queue, QueueAPI, QueueFactory } from '@dxos/echo-db';
 
 export class QueueService extends Context.Tag('QueueService')<
   QueueService,
@@ -12,7 +12,7 @@ export class QueueService extends Context.Tag('QueueService')<
     /**
      * API to access the queues.
      */
-    readonly queues: QueueFactory;
+    readonly queues: QueueAPI;
 
     /**
      * The queue that is used to store the context of the current research.
@@ -22,8 +22,13 @@ export class QueueService extends Context.Tag('QueueService')<
   }
 >() {
   static notAvailable = Layer.succeed(QueueService, {
-    get queues(): QueueFactory {
-      throw new Error('Queues not available');
+    queues: {
+      get(dxn) {
+        throw new Error('Queues not available');
+      },
+      create() {
+        throw new Error('Queues not available');
+      },
     },
     contextQueue: undefined,
   });
