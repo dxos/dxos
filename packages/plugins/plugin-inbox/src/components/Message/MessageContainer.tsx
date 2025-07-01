@@ -68,21 +68,19 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
   }
 
   return (
-    <StackItem.Content classNames='relative'>
-      <div role='none' className='grid grid-rows-[min-content_1fr]'>
-        <ElevationProvider elevation='positioned'>
-          <MenuProvider {...menu} attendableId={fullyQualifiedId(inMailbox)}>
-            <ToolbarMenu />
-          </MenuProvider>
-        </ElevationProvider>
-        <Message
-          space={space}
-          message={message}
-          viewMode={viewMode.value}
-          hasEnrichedContent={hasEnrichedContent}
-          contactDxn={contactDxn.value}
-        />
-      </div>
+    <StackItem.Content classNames='relative' toolbar>
+      <ElevationProvider elevation='positioned'>
+        <MenuProvider {...menu} attendableId={fullyQualifiedId(inMailbox)}>
+          <ToolbarMenu />
+        </MenuProvider>
+      </ElevationProvider>
+      <Message
+        space={space}
+        message={message}
+        viewMode={viewMode.value}
+        hasEnrichedContent={hasEnrichedContent}
+        contactDxn={contactDxn.value}
+      />
     </StackItem.Content>
   );
 };
