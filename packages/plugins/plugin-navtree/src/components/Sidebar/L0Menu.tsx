@@ -311,7 +311,7 @@ export type L0MenuProps = {
   menuActions: MenuItem[];
   topLevelItems: Node<any>[];
   pinnedItems: Node<any>[];
-  userAccountItem: Node<any>;
+  userAccountItem?: Node<any>;
   parent?: Node<any>;
   path: string[];
 };
