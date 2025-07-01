@@ -325,8 +325,8 @@ describe('Query', () => {
 
       const { peer, db } = await builder.createDatabase({ types: [ContactV1, ContactV2] });
 
-      const contactV1 = db.add(live(ContactV1, { firstName: 'John', lastName: 'Doe' }));
-      const contactV2 = db.add(live(ContactV2, { name: 'Brian Smith' }));
+      const contactV1 = db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
+      const contactV2 = db.add(Obj.make(ContactV2, { name: 'Brian Smith' }));
       await db.flush({ indexes: true });
 
       const assertQueries = async (db: EchoDatabase) => {
