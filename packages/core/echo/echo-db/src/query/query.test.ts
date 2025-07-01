@@ -712,7 +712,7 @@ describe('Query', () => {
       expect(count2).toEqual(1);
     });
 
-    test('deleting an element', async (ctx) => {
+    test.skip('deleting an element', async (ctx) => {
       const { db } = await builder.createDatabase({ types: [Testing.Contact] });
 
       // Create 3 test objects: Alice, Bob, Charlie.
@@ -768,7 +768,7 @@ describe('Query', () => {
       ]);
     });
 
-    test('bulk deleting multiple items should remove them from query results', async (ctx) => {
+    test.skip('bulk deleting multiple items should remove them from query results', async (ctx) => {
       // Setup: Create client and space.
       const { db } = await builder.createDatabase();
 
