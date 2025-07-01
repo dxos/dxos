@@ -8,7 +8,7 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import { Schema } from 'effect';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { FormatEnum, isMutable, toJsonSchema, EchoObject, GeneratorAnnotation } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -125,6 +125,7 @@ const useTestTableModel = () => {
     model,
     presentation,
     space,
+    client,
     handleInsertRow,
     handleSaveView,
     handleDeleteRows,
@@ -166,7 +167,7 @@ const StoryViewEditor = () => {
 //
 
 const DefaultStory = () => {
-  const { schema, table, tableRef, model, presentation, handleInsertRow, handleSaveView } = useTestTableModel();
+  const { schema, table, tableRef, model, presentation, client, handleInsertRow, handleSaveView } = useTestTableModel();
 
   if (!schema || !table) {
     return <div />;
@@ -177,7 +178,14 @@ const DefaultStory = () => {
       <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
         <TableToolbar classNames='border-be border-subduedSeparator' onAdd={handleInsertRow} onSave={handleSaveView} />
         <Table.Root>
-          <Table.Main ref={tableRef} model={model} presentation={presentation} schema={schema} ignoreAttention />
+          <Table.Main
+            ref={tableRef}
+            model={model}
+            presentation={presentation}
+            schema={schema}
+            client={client}
+            ignoreAttention
+          />
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
@@ -208,7 +216,7 @@ const meta: Meta<StoryProps> = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(live(TableType, {}));
+        const table = space.db.add(Obj.make(TableType, {}));
         const schema = await initializeTable({ client, space, table, initialRow: false });
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
@@ -237,7 +245,7 @@ export const StaticSchema: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(live(TableType, {}));
+        const table = space.db.add(Obj.make(TableType, {}));
         await initializeTable({ client, space, table, typename: Testing.Organization.typename });
 
         const factory = createObjectFactory(space.db, faker as any);
@@ -279,7 +287,7 @@ export const ArrayOfObjects: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(live(TableType, {}));
+        const table = space.db.add(Obj.make(TableType, {}));
         await initializeTable({ client, space, table, typename: ContactWithArrayOfEmails.typename });
 
         const factory = createObjectFactory(space.db, faker as any);
@@ -332,7 +340,7 @@ export const Tags: Meta<StoryProps> = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const table = space.db.add(live(TableType, {}));
+        const table = space.db.add(Obj.make(TableType, {}));
         await initializeTable({ client, space, table, initialRow: false, typename });
 
         // Populate.

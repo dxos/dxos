@@ -90,7 +90,7 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/metadata`,
       activatesOn: Events.SetupMetadata,
-      activate: () =>
+      activate: () => [
         contributes(Capabilities.Metadata, {
           id: Type.getTypename(DataType.Collection),
           metadata: {
@@ -99,11 +99,22 @@ export const SpacePlugin = ({
             loadReferences: async (collection: DataType.Collection) => await Ref.Array.loadAll(collection.objects),
           },
         }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(DataType.QueryCollection),
+          metadata: {
+            label: (object: DataType.QueryCollection) => [
+              'typename label',
+              { ns: object.query.typename, count: 2, defaultValue: 'New smart collection' },
+            ],
+            icon: 'ph--funnel-simple--regular',
+          },
+        }),
+      ],
     }),
     defineModule({
       id: `${meta.id}/module/object-form`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
+      activate: () => [
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
@@ -112,6 +123,15 @@ export const SpacePlugin = ({
             getIntent: (props) => createIntent(CollectionAction.Create, props),
           }),
         ),
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: DataType.QueryCollection,
+            formSchema: CollectionAction.QueryCollectionForm,
+            getIntent: (props) => createIntent(CollectionAction.CreateQueryCollection, props),
+          }),
+        ),
+      ],
     }),
     defineModule({
       id: `${meta.id}/module/schema`,

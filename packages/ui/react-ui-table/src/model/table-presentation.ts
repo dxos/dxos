@@ -171,7 +171,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
         const targetObj = getValue(obj, field.path)?.target;
         if (targetObj) {
           const dxn = getObjectDXN(targetObj)?.toString();
-          cell.accessoryHtml = `<dx-ref-tag refId=${dxn} class="dx-button block is-6 pli-[3px] plb-[3px] pbe-[2px] min-bs-0 absolute inline-end-1"><dx-icon icon="ph--link-simple--regular"/></dx-ref-tag>`;
+          cell.accessoryHtml = `<dx-ref-tag refId=${dxn} class="dx-button is-6 pli-[3px] pbe-[2px] min-bs-0 absolute inline-end-1"><dx-icon icon="ph--link-simple--regular"/></dx-ref-tag>`;
         }
       }
 

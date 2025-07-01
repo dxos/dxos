@@ -202,7 +202,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     forceUpdate({});
   }, []);
 
-  const handleResearchMore = useCallback((object: Obj.Any, relatedSchema: RelatedSchema) => {
+  const handleResearchMore = useCallback((object: Obj.Any | Relation.Any, relatedSchema: RelatedSchema) => {
     const prompt = `
       Research more about objects related to the object in terms of the by the specific relation schema:
       <object>${JSON.stringify(object, null, 2)}</object>
@@ -294,8 +294,8 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 };
 
 type ResearchPromptsProps = {
-  object: Obj.Any;
-  onResearch: (object: Obj.Any, relatedSchema: RelatedSchema) => void;
+  object: Obj.Any | Relation.Any;
+  onResearch: (object: Obj.Any | Relation.Any, relatedSchema: RelatedSchema) => void;
 };
 
 const ResearchPrompts = ({ object, onResearch }: ResearchPromptsProps) => {
@@ -381,9 +381,9 @@ const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
 
   return Relation.make(schema, {
     id,
-    ...props,
     [Relation.Source]: source,
     [Relation.Target]: target,
+    ...props,
   });
 };
 

@@ -16,24 +16,25 @@ import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { EditorStory, names } from './components';
 import {
+  CommandMenu,
+  type CommandMenuGroup,
+  type CommandMenuItem,
+  RefPopover,
   coreSlashCommands,
   filterItems,
-  RefPopover,
-  type CommandMenuGroup,
-  CommandMenu,
-  type CommandMenuItem,
   insertAtCursor,
   insertAtLineStart,
   linkSlashCommands,
 } from '../components';
 import { useCommandMenu, type UseCommandMenuOptions } from '../extensions';
 import { str } from '../testing';
+import { createElement } from '../util';
 
 const generator: ValueGenerator = faker as any;
 
-type Args = Omit<UseCommandMenuOptions, 'viewRef'> & { text: string };
+type StoryProps = Omit<UseCommandMenuOptions, 'viewRef'> & { text: string };
 
-const Story = ({ text, ...options }: Args) => {
+const DefaultStory = ({ text, ...options }: StoryProps) => {
   const viewRef = useRef<EditorView>();
   const { commandMenu, groupsRef, currentItem, onSelect, ...props } = useCommandMenu({ viewRef, ...options });
 
@@ -62,30 +63,45 @@ const groups: CommandMenuGroup[] = [
   },
 ];
 
-const meta: Meta<Args> = {
+const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-editor/CommandMenu',
   decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: (args) => <Story {...args} />,
-  parameters: { layout: 'fullscreen' },
+  render: (args) => <DefaultStory {...args} />,
+  parameters: {
+    layout: 'fullscreen',
+  },
 };
 
 export default meta;
 
-export const Slash: StoryObj<Args> = {
+type Story = StoryObj<StoryProps>;
+
+// TODO(burdon): Not working.
+export const Slash: Story = {
   args: {
-    trigger: '/',
-    getGroups: (query) =>
-      filterItems(groups, (item) =>
-        query ? (item.label as string).toLowerCase().includes(query.toLowerCase()) : true,
-      ),
     text: str('# Slash', '', names.join(' '), ''),
+    trigger: '/',
+    placeholder: {
+      content: () => {
+        return createElement('div', undefined, [
+          createElement('span', { text: 'Press' }),
+          createElement('span', { className: 'border border-separator rounded-sm mx-1 px-1', text: '/' }),
+          createElement('span', { text: 'for commands' }),
+        ]);
+      },
+    },
+    getMenu: (text) => {
+      return filterItems(groups, (item) =>
+        text ? (item.label as string).toLowerCase().includes(text.toLowerCase()) : true,
+      );
+    },
   },
 };
 
-export const Link: StoryObj<Args> = {
+export const Link: Story = {
   render: (args) => {
     const { space } = useClientProvider();
-    const getGroups = useCallback(
+    const getMenu = useCallback(
       async (trigger: string, query?: string): Promise<CommandMenuGroup[]> => {
         if (trigger === '/') {
           return filterItems(groups, (item) =>
@@ -121,11 +137,11 @@ export const Link: StoryObj<Args> = {
       [space],
     );
 
-    return <Story {...args} getGroups={getGroups} />;
+    return <DefaultStory {...args} getMenu={getMenu} />;
   },
   args: {
-    trigger: ['/', '@'],
     text: str('# Link', '', names.join(' '), ''),
+    trigger: ['/', '@'],
   },
   decorators: [
     withClientProvider({

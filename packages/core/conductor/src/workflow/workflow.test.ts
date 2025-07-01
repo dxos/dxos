@@ -7,11 +7,12 @@ import { describe, test, expect } from 'vitest';
 
 import { MockAiServiceClient } from '@dxos/ai/testing';
 import { todo } from '@dxos/debug';
+import { Obj } from '@dxos/echo';
 import { ObjectId, type Ref, type RefResolver, setRefResolver } from '@dxos/echo-schema';
 import { AiService, FunctionType, ServiceContainer, setUserFunctionUrlInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { live, getMeta, refFromDXN } from '@dxos/live-object';
+import { getMeta, refFromDXN } from '@dxos/live-object';
 import { LogLevel } from '@dxos/log';
 
 import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
@@ -138,7 +139,7 @@ describe('workflow', () => {
     const createFunction = () => {
       const functionDxn = DXN.fromLocalObjectId(ObjectId.random());
       const functionRef = refFromDXN(functionDxn);
-      const fnObject = live(FunctionType, { name: 'foo', version: '0.0.1' });
+      const fnObject = Obj.make(FunctionType, { name: 'foo', version: '0.0.1' });
       let resolveCounter = 0;
       const refResolver: RefResolver = {
         resolve: async (dxn) => refResolver.resolveSync(dxn, true),
@@ -187,7 +188,7 @@ describe('workflow', () => {
         { inputId, withOutput: inputId === outputPath },
       );
     }
-    const graph = live(ComputeGraph, { graph: model.graph });
+    const graph = Obj.make(ComputeGraph, { graph: model.graph });
     return { graphDxn, graph, compute };
   };
 
@@ -196,7 +197,7 @@ describe('workflow', () => {
     const model = ComputeGraphModel.create({ id: graphDxn.toString() });
     const transformId = ObjectId.random();
     addTransform(model, { id: transformId, type: subgraphDxn.toString(), subgraph: refFromDXN(subgraphDxn) });
-    const graph = live(ComputeGraph, { graph: model.graph });
+    const graph = Obj.make(ComputeGraph, { graph: model.graph });
     return { graphDxn, graph, compute: [] };
   };
 
@@ -205,7 +206,7 @@ describe('workflow', () => {
     const model = ComputeGraphModel.create({ id: graphDxn.toString() });
     const transformId = ObjectId.random();
     addTransform(model, { id: transformId, type: 'function', function: functionRef ?? undefined });
-    const graph = live(ComputeGraph, { graph: model.graph });
+    const graph = Obj.make(ComputeGraph, { graph: model.graph });
     return { graphDxn, graph, compute: [] };
   };
 

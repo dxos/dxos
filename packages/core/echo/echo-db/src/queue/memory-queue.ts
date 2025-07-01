@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type BaseEchoObject, ObjectId, type HasId } from '@dxos/echo-schema';
+import { type Obj, type Relation } from '@dxos/echo';
+import { ObjectId, type BaseEchoObject, type HasId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
@@ -20,8 +21,8 @@ export type MemoryQueueOptions<T extends BaseEchoObject = BaseEchoObject> = {
  * In-memory queue.
  * @deprecated Use the actual queue with a mock service.
  */
-export class MemoryQueue<T extends BaseEchoObject = BaseEchoObject> implements Queue<T> {
-  static make<T extends BaseEchoObject = BaseEchoObject>({
+export class MemoryQueue<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any> implements Queue<T> {
+  static make<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>({
     spaceId,
     queueId,
     dxn,

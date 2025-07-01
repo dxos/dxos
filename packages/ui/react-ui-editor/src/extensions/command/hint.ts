@@ -1,5 +1,6 @@
 //
 // Copyright 2024 DXOS.org
+// Based on https://github.com/codemirror/view/blob/main/src/placeholder.ts
 //
 
 import { RangeSetBuilder } from '@codemirror/state';
@@ -10,18 +11,18 @@ import { clientRectsFor, flattenRect } from '../../util';
 
 export type HintOptions = {
   delay?: number;
-  onHint: () => string | undefined;
+  onHint?: () => string | undefined;
 };
 
-export const hintViewPlugin = ({ delay = 3_000, onHint }: HintOptions) =>
-  ViewPlugin.fromClass(
+export const hint = ({ delay = 3_000, onHint }: HintOptions) => {
+  return ViewPlugin.fromClass(
     class {
       decorations = Decoration.none;
-      timeout: number | undefined;
+      timeout: ReturnType<typeof setTimeout> | undefined;
 
       update(update: ViewUpdate) {
         if (this.timeout) {
-          window.clearTimeout(this.timeout);
+          clearTimeout(this.timeout);
           this.timeout = undefined;
         }
 
@@ -32,9 +33,9 @@ export const hintViewPlugin = ({ delay = 3_000, onHint }: HintOptions) =>
           const line = update.view.state.doc.lineAt(selection.from);
           // Only show if blank line.
           if (selection.from === selection.to && line.from === line.to) {
-            // Set timeout to add decoration after delay
-            this.timeout = window.setTimeout(() => {
-              const hint = onHint();
+            // Set timeout to add decoration after delay.
+            this.timeout = setTimeout(() => {
+              const hint = onHint?.();
               if (hint) {
                 const builder = new RangeSetBuilder<Decoration>();
                 builder.add(selection.from, selection.to, Decoration.widget({ widget: new Hint(hint) }));
@@ -50,7 +51,7 @@ export const hintViewPlugin = ({ delay = 3_000, onHint }: HintOptions) =>
 
       destroy() {
         if (this.timeout) {
-          window.clearTimeout(this.timeout);
+          clearTimeout(this.timeout);
         }
       }
     },
@@ -58,6 +59,7 @@ export const hintViewPlugin = ({ delay = 3_000, onHint }: HintOptions) =>
       provide: (plugin) => [EditorView.decorations.of((view) => view.plugin(plugin)?.decorations ?? Decoration.none)],
     },
   );
+};
 
 export class Hint extends WidgetType {
   constructor(readonly content: string | HTMLElement) {

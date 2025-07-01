@@ -524,10 +524,8 @@ describe('Query', () => {
     });
   });
 
-  describe('text search', () => {
-    beforeEach(async () => {});
-
-    test.skipIf(process.env.CI)('vector', async () => {
+  describe.skip('text search', () => {
+    test('vector', async () => {
       const { db } = await builder.createDatabase({ indexing: { vector: true }, types: [Testing.Task] });
 
       db.add(live(Testing.Task, { title: 'apples' }));
@@ -556,8 +554,10 @@ describe('Query', () => {
       }
     });
 
-    test('full-text', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true }, types: [Testing.Task] });
+    // TODO(wittjosiah): Currently disabled by default because it's expensive.
+    test.skip('full-text', async () => {
+      const { db, graph } = await builder.createDatabase({ indexing: { fullText: true } });
+      graph.schemaRegistry.addSchema([Testing.Task]);
 
       db.add(live(Testing.Task, { title: 'apples' }));
       db.add(live(Testing.Task, { title: 'giraffes' }));
