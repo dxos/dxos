@@ -4,7 +4,7 @@
 
 import React, { useEffect } from 'react';
 
-import { RelationSourceId } from '@dxos/echo-schema';
+import { Relation } from '@dxos/echo';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Callout, Icon, Trans, useTranslation } from '@dxos/react-ui';
 import { type AnchoredTo } from '@dxos/schema';
@@ -26,9 +26,9 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
   const { t } = useTranslation(THREAD_PLUGIN);
   // TODO(wittjosiah): There seems to be a race between thread and anchor being deleted.
   const filteredAnchors = showResolvedThreads
-    ? anchors.filter((anchor) => !!anchor[RelationSourceId])
+    ? anchors.filter((anchor) => !!Relation.getSource(anchor))
     : anchors.filter((anchor) => {
-        const thread = anchor[RelationSourceId];
+        const thread = Relation.getSource(anchor);
         return thread && thread.status !== 'resolved';
       });
 
@@ -59,7 +59,7 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
   }
 
   return filteredAnchors.map((anchor) => {
-    const thread = anchor[RelationSourceId] as ThreadType;
+    const thread = Relation.getSource(anchor) as ThreadType;
     const threadId = fullyQualifiedId(thread);
     return <CommentContainer key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
   });

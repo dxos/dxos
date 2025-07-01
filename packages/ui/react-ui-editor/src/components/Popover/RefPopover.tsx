@@ -33,9 +33,11 @@ export const RefPopover = forwardRef<DxRefTag | null, RefPopoverProps>(
     const [rootRef, setRootRef] = useState<HTMLDivElement | null>(null);
 
     useEffect(() => {
-      return rootRef && onActivate
-        ? addEventListener(rootRef, 'dx-ref-tag-activate', onActivate, customEventOptions)
-        : undefined;
+      if (!rootRef || !onActivate) {
+        return;
+      }
+
+      return addEventListener(rootRef, 'dx-ref-tag-activate' as any, onActivate, customEventOptions);
     }, [rootRef, onActivate]);
 
     return (

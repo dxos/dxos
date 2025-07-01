@@ -19,7 +19,7 @@ import {
   useCapability,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj } from '@dxos/echo';
+import { live } from '@dxos/live-object';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
@@ -132,7 +132,7 @@ const meta: Meta<typeof NavTreeContainer> = {
         NavTreePlugin(),
       ],
       capabilities: (context) => [
-        contributes(StoryState, Obj.make({ tab: 'space-0' })),
+        contributes(StoryState, live({ tab: 'space-0' })),
         contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders(context)),
         contributes(Capabilities.IntentResolver, [
           createResolver({
@@ -181,7 +181,7 @@ export const WithClient: Story = {
         StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
       ],
       capabilities: (context) => [
-        contributes(StoryState, Obj.make({ tab: 'space-0' })),
+        contributes(StoryState, live({ tab: 'space-0' })),
         contributes(Capabilities.IntentResolver, [
           createResolver({
             intent: LayoutAction.UpdateLayout,
