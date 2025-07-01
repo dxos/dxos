@@ -100,7 +100,7 @@ export default defineConfig((env) => ({
     // TODO(wittjosiah): Causing issues with bundle.
     env.command === 'serve' &&
       tsconfigPaths({
-        projects: ['../../../tsconfig.paths.json'],
+        projects: ['./tsconfig.paths.json'],
       }),
     ConfigPlugin({
       root: __dirname,
