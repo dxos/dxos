@@ -7,10 +7,10 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
+import { log } from '@dxos/log';
 import { withThemeEditor } from '@dxos/storybook-utils';
 
 import { Test, type TestProps } from './Test';
-import { log } from '@dxos/log';
 
 /**
  * Storybook sanity test.
@@ -60,4 +60,4 @@ export const WithLog: Story = {
       log.info('Hello, world!');
     },
   },
-}
+};

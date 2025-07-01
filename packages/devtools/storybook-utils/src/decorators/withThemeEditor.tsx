@@ -6,7 +6,6 @@ import { type Decorator } from '@storybook/react';
 import React, { memo } from 'react';
 import { useGlobals } from 'storybook/preview-api';
 
-import { mx } from '@dxos/react-ui-theme';
 import { THEME_EDITOR_PARAM_KEY } from '@dxos/storybook-addon-theme';
 
 import { ThemeEditor } from '../components';
@@ -16,12 +15,11 @@ import { ThemeEditor } from '../components';
  */
 // TODO(burdon): Move to storybook-addon-theme (need to fix build issue since the addon package would recursively depend on the theme.)
 export const withThemeEditor: Decorator = (Story, context) => {
-  const { globals: { theme }, parameters: { translations }, viewMode } = context;
-
   // Prevent re-rendering of the story.
   const MemoizedStory = memo(Story);
+
   const [globals] = useGlobals();
-  const isActive = viewMode === 'story' && !!globals[THEME_EDITOR_PARAM_KEY];
+  const isActive = context.viewMode === 'story' && !!globals[THEME_EDITOR_PARAM_KEY];
 
   return (
     <>

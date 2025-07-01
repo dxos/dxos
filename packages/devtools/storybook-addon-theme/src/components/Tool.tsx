@@ -3,9 +3,9 @@
 //
 
 import { ControlsIcon } from '@storybook/icons';
-import React, { FC, memo, useCallback, useEffect } from 'react';
+import React, { type FC, memo, useCallback, useEffect } from 'react';
 import { IconButton } from 'storybook/internal/components';
-import { API, useGlobals } from 'storybook/manager-api';
+import { type API, useGlobals } from 'storybook/manager-api';
 
 import { THEME_EDITOR_ID, THEME_EDITOR_PARAM_KEY, THEME_EDITOR_TOOL_ID } from '../defs';
 

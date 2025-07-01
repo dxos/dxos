@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Preview } from '@storybook/react';
 import { withThemeByClassName } from '@storybook/addon-themes';
+import { type Preview } from '@storybook/react';
 
 import { DocsContainer } from '@dxos/storybook-utils';
 
@@ -16,11 +16,11 @@ import { docsTheme } from './theme';
 export const preview: Preview = {
   decorators: [
     // Does not affect docs.
-    withThemeByClassName({ 
+    withThemeByClassName({
       defaultTheme: 'dark',
-      themes: { 
+      themes: {
         dark: 'dark',
-        light: 'light'
+        light: 'light',
       },
     }),
   ],

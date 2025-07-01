@@ -5,8 +5,8 @@
 import React from 'react';
 import { addons, types } from 'storybook/manager-api';
 
-import { THEME_EDITOR_ID, THEME_EDITOR_TOOL_ID } from './defs';
 import { Tool } from './components';
+import { THEME_EDITOR_ID, THEME_EDITOR_TOOL_ID } from './defs';
 
 addons.register(THEME_EDITOR_ID, (api) => {
   addons.add(THEME_EDITOR_TOOL_ID, {

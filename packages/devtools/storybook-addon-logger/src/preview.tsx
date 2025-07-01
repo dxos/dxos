@@ -20,9 +20,9 @@ const preview: Preview = {
       useEffect(() => {
         log.config({ filter: logLevel });
       }, [logLevel]);
-    
+
       return <MemoizedStory />;
-    }
+    },
   ],
 
   /**
@@ -46,8 +46,8 @@ const preview: Preview = {
           { value: LogLevel.ERROR, title: 'ERROR' },
         ],
       },
-    },  
-  }
+    },
+  },
 };
 
 export default preview;

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-/** 
+/**
  * Reference:
  * https://storybook.js.org/docs/addons/writing-addons#register-the-addon
  * https://github.com/storybookjs/addon-kit/tree/main

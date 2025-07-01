@@ -16,7 +16,6 @@ export default mergeConfig(
     test: {
       environment,
       globals: true,
-      setupFiles: ['./vitest.setup.ts'],
     },
   }),
 );

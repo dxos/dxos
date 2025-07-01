@@ -5,7 +5,5 @@
 import React from 'react';
 
 export const Panel = () => {
-  return (
-    <div>DXOS Theme</div>
-  );
+  return <div>DXOS Theme</div>;
 };

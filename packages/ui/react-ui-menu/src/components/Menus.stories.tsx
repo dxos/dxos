@@ -21,7 +21,7 @@ export default {
   title: 'ui/react-ui-menu/Menus',
   component: ToolbarMenu,
   decorators: [withTheme],
-  parameters: { 
+  parameters: {
     translations,
   },
 };

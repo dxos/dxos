@@ -21,10 +21,7 @@ const isTrue = (str?: string) => str === 'true' || str === '1';
 type ConfigProps = Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>;
 
 export const config = (baseConfig: ConfigProps): StorybookConfig => ({
-  addons: [
-    '@storybook/addon-links',
-    '@storybook/addon-themes',
-  ],
+  addons: ['@storybook/addon-links', '@storybook/addon-themes'],
   framework: {
     name: '@storybook/web-components-vite',
     options: {},

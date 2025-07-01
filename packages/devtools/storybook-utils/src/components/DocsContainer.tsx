@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { PropsWithChildren } from 'react';
-import { DocsContainer as BaseContainer, DocsContainerProps } from '@storybook/blocks';
+import { DocsContainer as BaseContainer, type DocsContainerProps } from '@storybook/blocks';
+import React, { type PropsWithChildren } from 'react';
 
 /**
  * https://storybook.js.org/docs/writing-docs/doc-blocks
@@ -12,6 +12,6 @@ export const DocsContainer = ({ children, context, theme }: PropsWithChildren<Do
   return (
     <BaseContainer context={context} theme={theme}>
       {children}
-    </BaseContainer>  
+    </BaseContainer>
   );
 };

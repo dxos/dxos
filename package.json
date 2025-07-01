@@ -59,6 +59,7 @@
     "@nx/devkit": "21.2.1",
     "@nx/eslint-plugin": "21.2.1",
     "@nx/js": "21.2.1",
+    "@nx/linter": "19.8.4",
     "@nx/playwright": "21.2.1",
     "@nx/storybook": "21.2.1",
     "@nx/vite": "21.2.1",
