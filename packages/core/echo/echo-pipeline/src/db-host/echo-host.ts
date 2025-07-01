@@ -37,6 +37,7 @@ import {
   type PeerIdProvider,
   type RootDocumentSpaceKeyProvider,
 } from '../automerge';
+import { log } from '@dxos/log';
 
 export interface EchoHostIndexingConfig {
   /**
@@ -203,6 +204,10 @@ export class EchoHost extends Resource {
         deriveCollectionIdFromSpaceId(e.spaceId, e.spaceRootId),
         e.documentIds,
       );
+    });
+    this._automergeHost.documentsSaved.on(this._ctx, () => {
+      log.info('Documents saved');
+      this._queryService.invalidateQueries();
     });
   }
 

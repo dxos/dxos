@@ -34,6 +34,7 @@ import { deferAsync } from '@dxos/util';
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
 import { getSource, getTarget } from '../echo-handler/relations';
 import { Filter, Query } from '../query';
+import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 

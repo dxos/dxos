@@ -768,34 +768,42 @@ describe('Query', () => {
       ]);
     });
 
-    test.skip('bulk deleting multiple items should remove them from query results', async (ctx) => {
+    test.only('bulk deleting multiple items should remove them from query results', async (ctx) => {
       // Setup: Create client and space.
       const { db } = await builder.createDatabase();
 
       // Create 10 test objects: 1, 2, 3, ..., 10.
       const objects = Array.from({ length: 10 }, (_, i) => db.add(Obj.make(Expando, { value: i + 1 })));
-      await db.flush({ indexes: true });
+      await db.flush({ indexes: true, updates: true });
+      log.info('Flushing 0');
+      log.break();
 
       // Track all updates to observe the bug.
-      const updates: Set<number>[] = [];
+      const updates: number[][] = [];
       const unsub = db.query(Query.select(Filter.type(Expando))).subscribe(
         (query) => {
-          const values = query.objects.map((obj) => obj.value);
-          updates.push(new Set(values.sort()));
+          const values = [...query.objects.map((obj) => obj.value)].sort((a, b) => a - b);
+          log.info('update', { values: values.toString() });
+          updates.push(values);
         },
         { fire: true },
       );
       ctx.onTestFinished(unsub);
 
       // Wait for initial renders to complete.
+      log.info('Flushing 1');
+      log.break();
       await db.flush({ indexes: true, updates: true });
 
       // THE BUG REPRODUCTION: Delete all items in a loop.
+      log.info('Removing items');
       for (const item of objects) {
         db.remove(item);
       }
 
       // Wait for all reactive updates to complete.
+      log.info('Flushing 2');
+      log.break();
       await db.flush({ indexes: true, updates: true });
 
       // TODO(ZaymonFC): Remove this comment once the bulk delete bug is resolved.
@@ -812,10 +820,10 @@ describe('Query', () => {
        *   3. [1, 4, 10, 5, 2, 9, 3, 8, 6, 7] (NO CHANGE - bulk delete didn't work!)
        */
 
-      // Convert to sets for order-independent comparison.
       expect(updates).toEqual([
-        new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), // All objects loaded.
-        new Set([]), // All items deleted.
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // All objects loaded.
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // Second update for some reason.
+        [], // All items deleted.
       ]);
     });
   });
