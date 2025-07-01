@@ -33,7 +33,6 @@ export type WithLayoutProps = ThemedClassName<ProviderOptions & { Container?: FC
 /**
  * Decorator to layout the story container, adding optional providers.
  */
-// TODO(burdon): Remove? Replace with custom parameters layout.
 export const withLayout = ({
   classNames,
   fullscreen,
