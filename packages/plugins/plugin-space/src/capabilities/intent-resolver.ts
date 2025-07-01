@@ -21,7 +21,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { isSpace, getSpace, SpaceState, fullyQualifiedId } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
-import { DataType } from '@dxos/schema';
+import { createView, DataType, HasView } from '@dxos/schema';
 
 import { SpaceCapabilities } from './capabilities';
 import {
@@ -308,6 +308,56 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           ],
         };
       },
+    }),
+    createResolver({
+      intent: SpaceAction.RegisterSchema,
+      resolve: async ({ space, name, schema: schemaInput }) => {
+        const [schema] = await space.db.schemaRegistry.register([schemaInput]);
+        if (name) {
+          schema.storedSchema.name = name;
+        }
+
+        return {
+          data: {
+            id: schema.id,
+            object: schema.storedSchema,
+            schema,
+          },
+        };
+      },
+    }),
+    // TODO(wittjosiah): What happens to the views when a schema is deleted?
+    createResolver({
+      intent: SpaceAction.AddView,
+      resolve: ({ space, name, schema }) =>
+        Effect.gen(function* () {
+          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+
+          const { object: view } = yield* dispatch(
+            createIntent(SpaceAction.AddObject, {
+              target: space,
+              object: createView({ name, typename: schema.typename, jsonSchema: schema.jsonSchema }),
+              hidden: true,
+            }),
+          );
+
+          const { relation } = yield* dispatch(
+            createIntent(SpaceAction.AddRelation, {
+              space,
+              schema: HasView,
+              source: schema.storedSchema,
+              target: view,
+            }),
+          );
+
+          return {
+            data: {
+              id: view.id,
+              object: view,
+              relation,
+            },
+          };
+        }),
     }),
     createResolver({
       intent: SpaceAction.OpenCreateObject,
