@@ -8,7 +8,7 @@ import { IntentResolver, type LayoutState, State } from './capabilities';
 import { Layout } from './components';
 import { meta } from './meta';
 
-export const StorybookLayoutPlugin = ({ initialState }: { initialState?: LayoutState } = {}) =>
+export const StorybookLayoutPlugin = ({ initialState }: { initialState?: Partial<LayoutState> } = {}) =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/state`,
