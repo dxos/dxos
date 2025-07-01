@@ -1295,6 +1295,9 @@ importers:
 
   packages/common/effect:
     dependencies:
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../context
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
@@ -2623,6 +2626,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../mesh/edge-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions

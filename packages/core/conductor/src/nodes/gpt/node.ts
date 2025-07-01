@@ -1,8 +1,7 @@
-import { Effect, Schema } from 'effect';
+import { Data, Effect, Schema } from 'effect';
 
-import { DEFAULT_EDGE_MODEL, type GenerationStreamEvent, Message, Tool } from '@dxos/ai';
-import { Obj, Type } from '@dxos/echo';
-import { ATTR_TYPE } from '@dxos/echo-schema';
+import { DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerationStreamEvent, Message, Tool } from '@dxos/ai';
+import { Type } from '@dxos/echo';
 import { AiService, QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
 
@@ -12,9 +11,9 @@ import { StreamSchema } from '../../util';
 
 import { Stream } from 'effect';
 
-import { type AiServiceClient, type GenerateRequest, MixedStreamParser } from '@dxos/ai';
-import { makePushIterable } from '@dxos/async';
+import { AISession } from '@dxos/assistant';
 import { Queue } from '@dxos/echo-db';
+import { contextFromScope } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 
 // TODO(dmaretskyi): Use `Schema.declare` to define the schema.
@@ -64,11 +63,34 @@ export const GptInput = Schema.Struct({
 export type GptInput = Schema.Schema.Type<typeof GptInput>;
 
 export const GptOutput = Schema.Struct({
+  /**
+   * Messages emitted by the model.
+   */
   messages: Schema.Array(Message),
+
+  /**
+   * Artifact emitted by the model.
+   */
   artifact: Schema.optional(Schema.Any),
+
+  /**
+   * AI response as text.
+   */
   text: Schema.String,
+
+  /**
+   * Model's reasoning.
+   */
   cot: Schema.optional(Schema.String),
+
+  /**
+   * Stream of tokens emitted by the model.
+   */
   tokenStream: StreamSchema(GptStreamEventSchema),
+
+  /**
+   * Number of tokens emitted by the model.
+   */
   tokenCount: Schema.Number,
 });
 
@@ -88,142 +110,88 @@ export const gptNode = defineComputeNode({
         ? yield* Effect.promise(() => queues.get<Message>(conversation.dxn).queryObjects())
         : history ?? [];
 
-      const promptMessage: Message = Obj.make(Message, {
-        role: 'user',
-        content: [{ type: 'text', text: prompt }],
+      log.info('generating', { systemPrompt, prompt, historyMessages, tools: tools.map((tool) => tool.name) });
+
+      const session = new AISession({
+        operationModel: 'configured',
       });
 
-      const messages: Message[] = [...historyMessages, promptMessage];
-
-      log.info('generating', { systemPrompt, prompt, historyMessages, tools: tools.map((tool) => tool.name) });
-      const generationStream = yield* Effect.promise(() =>
-        generate(aiClient, {
-          model: DEFAULT_EDGE_MODEL,
-          history: messages,
-          systemPrompt,
-          tools: tools as Tool[],
-        }),
-      );
+      const ctx = yield* contextFromScope();
       const logger = yield* EventLogger;
 
-      const stream = Stream.fromAsyncIterable(generationStream, (e) => new Error(String(e))).pipe(
-        Stream.tap((event) => {
-          logger.log({
-            type: 'custom',
-            nodeId: logger.nodeId!,
-            event,
+      session.streamEvent.on(ctx, (event) => {
+        logger.log({
+          type: 'custom',
+          nodeId: logger.nodeId!,
+          event,
+        });
+      });
+
+      const eventStream = Stream.asyncPush<GenerationStreamEvent>((push) =>
+        Effect.gen(function* () {
+          const ctx = yield* contextFromScope();
+          session.streamEvent.on(ctx, (event) => {
+            push.single(event);
           });
-          return Effect.void;
+
+          session.done.on(ctx, () => {
+            push.end();
+          });
         }),
       );
 
-      // Separate tokens into a separate stream.
-      const [resultStream, tokenStream] = yield* Stream.broadcast(stream, 2, { capacity: 'unbounded' });
+      const resultEffect = Effect.gen(function* () {
+        const messages = yield* Effect.promise(() =>
+          session.run({
+            systemPrompt,
+            prompt: prompt,
 
-      const outputMessages = yield* resultStream.pipe(
-        Stream.runDrain,
-        Effect.map(() => generationStream.result),
-        Effect.tap((messages) => {
-          if (conversation) {
-            return Effect.promise(() => queues.get<Message>(conversation.dxn).append([promptMessage, ...messages]));
-          }
-        }),
-        Effect.cached, // Cache the result to avoid re-draining the stream.
-      );
+            history: [...historyMessages],
 
-      const outputWithAPrompt = outputMessages.pipe(
-        Effect.map((messages) =>
-          // TODO(dmaretskyi): Why do we need to prepend the last message
-          [messages.at(-1)!, ...messages].map((msg) => ({
-            [ATTR_TYPE]: Type.getDXN(Message),
-            ...msg,
-          })),
-        ),
-      );
+            tools: tools as ExecutableTool[],
+            artifacts: [],
 
-      const text = outputWithAPrompt.pipe(
-        Effect.map((messages) =>
-          messages
-            .map((message) => message.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])))
-            .join(''),
-        ),
-      );
+            client: aiClient,
+            generationOptions: {
+              model: DEFAULT_EDGE_MODEL,
+            },
+          }),
+        );
+        log.info('messages', { messages });
 
-      const cot = outputWithAPrompt.pipe(
-        Effect.map(
-          (messages) =>
-            messages
-              .at(-1)!
-              .content.filter((block) => block.type === 'text')
-              .find((block) => block.disposition === 'cot')?.text,
-        ),
-      );
-
-      const artifact = Effect.gen(function* () {
-        const textContent = yield* text;
-        const begin = textContent.lastIndexOf('<artifact>');
-        const end = textContent.indexOf('</artifact>');
-        if (begin === -1 || end === -1) {
-          return undefined;
+        if (conversation) {
+          yield* Effect.promise(() => queues.get<Message>(conversation.dxn).append([...messages]));
         }
 
-        const artifactData = textContent.slice(begin + '<artifact>'.length, end).trim();
+        const text = messages
+          .map((message) =>
+            message.role === 'assistant'
+              ? message.content.flatMap((block) => (block.type === 'text' ? [block.text] : []))
+              : [],
+          )
+          .join('\n');
 
-        return artifactData;
+        const cot = messages
+          .map((message) =>
+            message.role === 'assistant'
+              ? message.content.flatMap((block) =>
+                  block.type === 'text' && block.disposition === 'cot' ? [block.text] : [],
+                )
+              : [],
+          )
+          .join('\n');
+
+        return { messages, text, cot, artifact: undefined, tokenCount: 0 };
       });
 
       // TODO(burdon): Parse COT on the server (message ontology).
       return ValueBag.make<GptOutput>({
-        messages: outputWithAPrompt,
-        tokenCount: 0,
-        text,
-        tokenStream,
-        cot,
-        artifact,
+        tokenStream: eventStream,
+        messages: resultEffect.pipe(Effect.map(({ messages }) => messages)),
+        tokenCount: resultEffect.pipe(Effect.map(({ tokenCount }) => tokenCount)),
+        text: resultEffect.pipe(Effect.map(({ text }) => text)),
+        cot: resultEffect.pipe(Effect.map(({ cot }) => cot)),
+        artifact: resultEffect.pipe(Effect.map(({ artifact }) => artifact)),
       });
     }),
 });
-
-const generate = async (
-  ai: AiServiceClient,
-  generationRequest: GenerateRequest,
-  { abort }: { abort?: AbortSignal } = {},
-): Promise<GenerateResult> => {
-  const stream = await ai.execStream(generationRequest);
-  const parser = new MixedStreamParser();
-  const resultIterable = makePushIterable<GenerationStreamEvent>();
-
-  let completed = false;
-  parser.streamEvent.on((event) => {
-    log.info('stream event', { event });
-    resultIterable.next(event);
-  });
-  const messages = await parser.parse(stream);
-  completed = true;
-
-  resultIterable.return(messages);
-
-  abort?.addEventListener('abort', () => {
-    if (!completed) {
-      resultIterable.throw(new Error('Aborted'));
-    }
-  });
-
-  return {
-    [Symbol.asyncIterator]: resultIterable[Symbol.asyncIterator],
-    get result() {
-      if (!completed) {
-        throw new Error('Iterable not completed');
-      }
-
-      return messages;
-    },
-  };
-};
-
-interface GenerateResult extends AsyncIterable<GenerationStreamEvent> {
-  /**
-   * @throws If the iterable is not completed.
-   */
-  get result(): Message[];
-}

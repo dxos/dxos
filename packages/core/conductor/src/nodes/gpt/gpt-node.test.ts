@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { ValueBag } from '../../types';
 import { GptInput, gptNode } from './node';
 
-const ENABLE_LOGGING = false;
+const ENABLE_LOGGING = true;
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
   describe('common', () => {
@@ -26,6 +26,9 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         },
         db,
         queues,
+        logging: {
+          enabled: ENABLE_LOGGING,
+        },
       });
     });
     afterEach(async () => {
@@ -47,6 +50,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         expect(typeof output.text).toBe('string');
         expect(output.text.length).toBeGreaterThan(10);
       }),
+      60_000,
     );
 
     it.effect(
