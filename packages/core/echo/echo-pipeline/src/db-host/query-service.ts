@@ -197,7 +197,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
         }
       }),
     );
-    log.info('Executed queries', { count, duration: performance.now() - begin });
+    log.verbose('executed queries', { count, duration: performance.now() - begin });
   }
 }
 

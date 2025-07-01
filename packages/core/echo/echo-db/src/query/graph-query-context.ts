@@ -101,11 +101,7 @@ export class GraphQueryContext implements QueryContext {
     if (!this._query) {
       return [];
     }
-    return Array.from(this._sources).flatMap((source) => {
-      const results = source.getResults();
-      log.info('getResults', { resolver: Object.getPrototypeOf(source).constructor.name, count: results.length });
-      return results;
-    });
+    return Array.from(this._sources).flatMap((source) => source.getResults());
   }
 
   async run(query: QueryAST.Query, { timeout = 30_000 }: QueryRunOptions = {}): Promise<QueryResultEntry[]> {

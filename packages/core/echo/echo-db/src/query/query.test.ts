@@ -24,7 +24,6 @@ import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
 import type { Hypergraph } from '../hypergraph';
-import { effect } from '@preact/signals-core';
 
 const createTestObject = (idx: number, label?: string) => {
   return live(Expando, { idx, title: `Task ${idx}`, label });
@@ -768,15 +767,13 @@ describe('Query', () => {
       ]);
     });
 
-    test.only('bulk deleting multiple items should remove them from query results', async (ctx) => {
+    test('bulk deleting multiple items should remove them from query results', async (ctx) => {
       // Setup: Create client and space.
       const { db } = await builder.createDatabase();
 
       // Create 10 test objects: 1, 2, 3, ..., 10.
       const objects = Array.from({ length: 10 }, (_, i) => db.add(Obj.make(Expando, { value: i + 1 })));
       await db.flush({ indexes: true, updates: true });
-      log.info('Flushing 0');
-      log.break();
 
       // Track all updates to observe the bug.
       const updates: number[][] = [];
@@ -791,19 +788,14 @@ describe('Query', () => {
       ctx.onTestFinished(unsub);
 
       // Wait for initial renders to complete.
-      log.info('Flushing 1');
-      log.break();
       await db.flush({ indexes: true, updates: true });
 
       // THE BUG REPRODUCTION: Delete all items in a loop.
-      log.info('Removing items');
       for (const item of objects) {
         db.remove(item);
       }
 
       // Wait for all reactive updates to complete.
-      log.info('Flushing 2');
-      log.break();
       // TODO(dmaretskyi): Does this ensure queries were re-run?
       await db.flush({ indexes: true, updates: true });
 

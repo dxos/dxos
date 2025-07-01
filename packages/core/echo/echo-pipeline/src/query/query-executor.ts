@@ -97,7 +97,7 @@ type StepExecutionResult = {
   trace: ExecutionTrace;
 };
 
-const TRACE_QUERY_EXECUTION = true;
+const TRACE_QUERY_EXECUTION = false;
 
 /**
  * Executes query plans against the Indexer and AutomergeHost.

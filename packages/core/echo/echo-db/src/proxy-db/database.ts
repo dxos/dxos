@@ -83,11 +83,13 @@ export interface EchoDatabase {
   /**
    * Adds object to the database.
    */
+  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
   add<T extends AnyEchoObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
 
   /**
    * Removes object from the database.
    */
+  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
   remove<T extends AnyEchoObject>(obj: T): void;
 
   /**
@@ -283,6 +285,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add reactive object.
    */
+  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
   add<T extends BaseObject>(obj: T, opts?: AddOptions): Live<T & HasId> {
     if (!isEchoObject(obj)) {
       const schema = getSchema(obj);

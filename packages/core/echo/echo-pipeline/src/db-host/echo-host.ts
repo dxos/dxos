@@ -206,7 +206,6 @@ export class EchoHost extends Resource {
       );
     });
     this._automergeHost.documentsSaved.on(this._ctx, () => {
-      log.info('Documents saved');
       this._queryService.invalidateQueries();
     });
   }
