@@ -20,7 +20,7 @@ import { isAction, isActionLike, ROOT_ID, type Node, type ReadableGraph } from '
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { useConnections } from '@dxos/plugin-graph';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { isTreeData, type PropsFromTreeItem, type TreeData } from '@dxos/react-ui-list';
+import { isTreeData, type TreeItemDataProps, type TreeData } from '@dxos/react-ui-list';
 import { mx } from '@dxos/react-ui-theme';
 import { arrayMove, byPosition } from '@dxos/util';
 
@@ -81,7 +81,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
 
   const getProps = useCallback(
-    (node: Node, path: string[]): PropsFromTreeItem => {
+    (node: Node, path: string[]): TreeItemDataProps => {
       const children = getChildren(graph, node, path).filter(getChildrenFilter);
       const parentOf =
         children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;

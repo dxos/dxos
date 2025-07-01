@@ -30,6 +30,7 @@ import {
 } from '../util';
 
 export default (context: PluginContext) => {
+  // TODO(wittjosiah): Make reactive.
   const resolve = (typename: string) =>
     context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
@@ -424,6 +425,7 @@ export default (context: PluginContext) => {
       // },
     }),
 
+    // Create nodes for objects in a query collection.
     createExtension({
       id: `${SPACE_PLUGIN}/query-collection-objects`,
       connector: (node) => {
