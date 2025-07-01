@@ -1,12 +1,7 @@
 //
-// Copyright 2024 DXOS.org
-//
-
-//
 // Copyright 2025 DXOS.org
 //
-
-import { Filter, Query } from '@dxos/echo-schema';
+import { Filter, Query } from '@dxos/echo';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';

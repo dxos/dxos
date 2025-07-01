@@ -5,7 +5,7 @@
 import { CheckCircle, X } from '@phosphor-icons/react';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { RelationSourceId } from '@dxos/echo-schema';
+import { Relation } from '@dxos/echo';
 import { RefArray } from '@dxos/live-object';
 import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -105,7 +105,7 @@ export const CommentContainer = ({
   const space = getSpace(anchor);
   const members = useMembers(space?.key);
   const detached = !anchor.anchor;
-  const thread = anchor[RelationSourceId] as ThreadType;
+  const thread = Relation.getSource(anchor) as ThreadType;
   const activity = useStatus(space, fullyQualifiedId(thread));
   const { t } = useTranslation(THREAD_PLUGIN);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);

@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo-schema';
+import { LabelAnnotation } from '@dxos/echo-schema';
 import { ThreadType } from '@dxos/plugin-thread/types';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
 import { DataType } from '@dxos/schema';
@@ -50,9 +50,13 @@ export const MeetingSchema = Schema.Struct({
    * Message thread for the meeting.
    */
   thread: Type.Ref(ThreadType),
-});
+}).pipe(LabelAnnotation.set(['name']));
 
-export class MeetingType extends TypedObject({
-  typename: 'dxos.org/type/Meeting',
-  version: '0.3.0',
-})(MeetingSchema.fields) {}
+export const MeetingType = MeetingSchema.pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Meeting',
+    version: '0.3.0',
+  }),
+);
+
+export interface MeetingType extends Schema.Schema.Type<typeof MeetingType> {}

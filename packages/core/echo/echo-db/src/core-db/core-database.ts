@@ -19,6 +19,7 @@ import {
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
+import { type Filter } from '@dxos/echo';
 import {
   encodeReference,
   isEncodedReference,
@@ -28,7 +29,7 @@ import {
   type SpaceState,
   DATA_NAMESPACE,
 } from '@dxos/echo-protocol';
-import { type ObjectId, Ref, type AnyObjectData, type Filter } from '@dxos/echo-schema';
+import { type ObjectId, Ref, type AnyObjectData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';

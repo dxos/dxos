@@ -17,8 +17,8 @@ import {
   ToolTypes,
 } from '@dxos/ai';
 import { makePushIterable } from '@dxos/async';
-import { Type } from '@dxos/echo';
-import { ATTR_TYPE, Filter, getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
+import { Obj, Type, Filter } from '@dxos/echo';
+import { ATTR_TYPE, getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
 import { AiService, DatabaseService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -391,11 +391,10 @@ export const registry: Record<NodeType, Executable> = {
 
         const messages: Message[] = [
           ...history,
-          {
-            id: ObjectId.random(),
+          Obj.make(Message, {
             role: 'user',
             content: [{ type: 'text', text: prompt }],
-          },
+          }),
         ];
 
         log.info('generating', { systemPrompt, prompt, history, tools: tools.map((tool) => tool.name) });

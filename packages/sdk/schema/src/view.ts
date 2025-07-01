@@ -11,12 +11,12 @@ import {
   FormatEnum,
   JsonPath,
   JsonSchemaType,
+  type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
   QueryType,
   StoredSchema,
   TypedObject,
   toEffectSchema,
-  type PropertyMetaAnnotation,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { live, type Live } from '@dxos/live-object';

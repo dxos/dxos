@@ -10,14 +10,9 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { Filter, Query } from './dsl';
-import { EchoObject, EchoRelation, create } from '../object';
-import { Ref } from '../ref';
-
-// TODO(dmaretskyi): Move those out.
-const Type = {
-  Obj: EchoObject,
-  Relation: EchoRelation,
-};
+import * as Obj from '../Obj';
+import * as Ref from '../Ref';
+import * as Type from '../Type';
 
 //
 // Example schema
@@ -61,7 +56,7 @@ interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
 const Task = Schema.Struct({
   title: Schema.String,
   createdAt: Schema.String,
-  assignee: Schema.optional(Ref(Person)),
+  assignee: Schema.optional(Type.Ref(Person)),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/Task', version: '0.1.0' }));
 interface Task extends Schema.Schema.Type<typeof Task> {}
 
@@ -87,7 +82,7 @@ describe('query api', () => {
   });
 
   test('get all orgs Fred worked for since 2020', () => {
-    const fred = create(Person, { name: 'Fred' });
+    const fred = Obj.make(Person, { name: 'Fred' });
     const OrganizationsFredWorkedForSince2020 = Query.select(Filter.type(Person, { id: fred.id }))
       .sourceOf(WorksFor, { since: Filter.gt('2020') })
       .target();
@@ -101,7 +96,7 @@ describe('query api', () => {
   });
 
   test('get all tasks for Fred', () => {
-    const fred = create(Person, { name: 'Fred' });
+    const fred = Obj.make(Person, { name: 'Fred' });
     const TasksForFred = Query.select(Filter.type(Person, { id: fred.id })).referencedBy(Task, 'assignee');
 
     log('query', { ast: TasksForFred.ast });
@@ -196,7 +191,7 @@ describe('query api', () => {
   });
 
   test('filter by ref', () => {
-    const fred = create(Person, { name: 'Fred' });
+    const fred = Obj.make(Person, { name: 'Fred' });
     const tasksByFred = Filter.type(Task, { assignee: Ref.make(fred) });
     expect(tasksByFred.ast).toEqual({
       props: {
