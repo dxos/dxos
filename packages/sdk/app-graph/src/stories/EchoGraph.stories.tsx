@@ -20,6 +20,7 @@ import {
   type Live,
   Filter,
 } from '@dxos/client/echo';
+import { Obj, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -35,8 +36,6 @@ import { type ExpandableGraph, ROOT_ID } from '../graph';
 import { GraphBuilder, createExtension, rxFromObservable, rxFromSignal } from '../graph-builder';
 import { type Node } from '../node';
 import { rxFromQuery } from '../testing';
-import { Obj } from '@dxos/echo';
-import { Type } from '@dxos/echo';
 
 const DEFAULT_PERIOD = 500;
 
