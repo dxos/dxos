@@ -120,6 +120,10 @@ export class EdgeHttpClient {
     return this._call(path, { ...args, body, method: 'PUT' });
   }
 
+  public async listFunctions(): Promise<any> {
+    return this._call('/functions', { method: 'GET' });
+  }
+
   public async initiateOAuthFlow(
     body: InitiateOAuthFlowRequest,
     args?: EdgeHttpGetArgs,
