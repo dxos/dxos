@@ -100,7 +100,9 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
 
   const gridLayout = useMemo(
     () =>
-      tagFilterVisible.value ? 'grid grid-rows-[min-content_min-content_1fr]' : 'grid grid-rows-[min-content_1fr]',
+      tagFilterVisible.value
+        ? 'grid grid-rows-[var(--toolbar-size)_min-content_1fr]'
+        : 'grid grid-rows-[var(--toolbar-size)_1fr]',
     [tagFilterVisible.value],
   );
 
