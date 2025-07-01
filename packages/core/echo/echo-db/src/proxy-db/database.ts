@@ -15,6 +15,7 @@ import { type Live, getProxyTarget, getType, isLiveObject } from '@dxos/live-obj
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
 import { EchoSchemaRegistry } from './echo-schema-registry';
@@ -143,6 +144,7 @@ export type EchoDatabaseParams = {
  * API for the database.
  * Implements EchoDatabase interface.
  */
+@trace.resource()
 export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   private readonly _schemaRegistry: EchoSchemaRegistry;
   /**
@@ -310,6 +312,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.removeCore(getObjectCore(obj));
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   async flush(opts?: FlushOptions): Promise<void> {
     await this._coreDatabase.flush(opts);
   }

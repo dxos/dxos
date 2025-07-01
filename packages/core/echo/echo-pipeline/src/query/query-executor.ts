@@ -13,6 +13,7 @@ import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
+import { trace } from '@dxos/tracing';
 import { getDeep, isNonNullable } from '@dxos/util';
 
 import type { QueryPlan } from './plan';
@@ -109,6 +110,7 @@ const TRACE_QUERY_EXECUTION = false;
  * - Tracking execution performance metrics
  * - Handling different types of query operations (select, filter, traverse, etc.)
  */
+@trace.resource()
 export class QueryExecutor extends Resource {
   private readonly _indexer: Indexer;
   private readonly _automergeHost: AutomergeHost;
@@ -169,6 +171,7 @@ export class QueryExecutor extends Resource {
     );
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   async execQuery(): Promise<QueryExecutionResult> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 

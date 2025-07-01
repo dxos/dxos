@@ -26,6 +26,7 @@ import { trace } from '@dxos/tracing';
 import type { SpaceStateManager } from './space-state-manager';
 import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
+import { TimedTaskScheduler } from '../scheduler';
 
 export type QueryServiceParams = {
   indexer: Indexer;
@@ -44,10 +45,17 @@ type ActiveQuery = {
 
 export class QueryServiceImpl extends Resource implements QueryService {
   private readonly _queries = new Set<ActiveQuery>();
+  private readonly _scheduler = new TimedTaskScheduler({
+    budget: 500,
+    budgetPeriod: 1000,
+    cooldown: 500,
+    maxParallelTasks: 10,
+    saveHistoryFor: 30_000,
+  });
 
   private readonly _updateQueries = new DeferredTask(this._ctx, async () => {
-    await Promise.all(
-      Array.from(this._queries).map(async (query) => {
+    const tasks = Array.from(this._queries).map((query) => {
+      return async () => {
         try {
           const { changed } = await query.executor.execQuery();
           if (changed) {
@@ -56,8 +64,15 @@ export class QueryServiceImpl extends Resource implements QueryService {
         } catch (err) {
           log.catch(err);
         }
-      }),
-    );
+      };
+    });
+
+    try {
+      // Wait for all tasks to complete.
+      await Promise.all(tasks.map((task) => this._scheduler.schedule(task)));
+    } catch (err) {
+      log.catch(err);
+    }
   });
 
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
@@ -81,10 +96,11 @@ export class QueryServiceImpl extends Resource implements QueryService {
 
   override async _open(): Promise<void> {
     this._params.indexer.updated.on(this._ctx, () => this._updateQueries.schedule());
+    await this._scheduler.open(this._ctx);
   }
 
   override async _close(): Promise<void> {
-    await Promise.all(Array.from(this._queries).map((query) => query.close()));
+    await this._scheduler.close(this._ctx);
   }
 
   async setConfig(config: IndexConfig): Promise<void> {
@@ -112,24 +128,23 @@ export class QueryServiceImpl extends Resource implements QueryService {
         },
         close: async () => {
           close();
-          await queryEntry.executor.close();
           this._queries.delete(queryEntry);
+          await queryEntry.executor.close();
         },
       };
-      this._queries.add(queryEntry);
-
       queueMicrotask(async () => {
-        await queryEntry.executor.open();
-
         try {
-          await queryEntry.executor.execQuery();
-          // Always send first result set.
-          queryEntry.sendResults(queryEntry.executor.getResults());
-        } catch (error: any) {
-          close(error);
+          await queryEntry.executor.open();
+          await this._scheduler.schedule(async () => {
+            await queryEntry.executor.execQuery();
+            queryEntry.sendResults(queryEntry.executor.getResults());
+          });
+          this._queries.add(queryEntry);
+          this._updateQueries.schedule();
+        } catch (err) {
+          close(err as Error);
         }
       });
-
       return queryEntry.close;
     });
   }
