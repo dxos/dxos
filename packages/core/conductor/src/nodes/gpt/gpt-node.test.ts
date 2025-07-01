@@ -81,70 +81,43 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
     60_000,
   );
 
-  test(
+  it.scoped(
     'gpt with image gen',
-    { timeout: 60_000 },
-    testEffect((ctx) =>
-      Effect.gen(function* () {
-        if (!(yield* Effect.promise(() => OllamaAiServiceClient.isRunning()))) {
-          ctx!.skip();
-          return;
-        }
+    Effect.fn(function* (ctx) {
+      if (!(yield* Effect.promise(() => OllamaAiServiceClient.isRunning()))) {
+        ctx!.skip();
+        return;
+      }
 
-        const input: GptInput = {
-          prompt: 'A beautiful sunset over a calm ocean',
-          tools: [
-            defineTool('testing', {
-              name: 'text-to-image',
-              type: ToolTypes.TextToImage,
-              options: {
-                model: '@testing/kitten-in-bubble',
-              },
-            }),
-          ],
-        };
-        const output = yield* gptNode.exec!(ValueBag.make(input)).pipe(
-          Effect.flatMap(ValueBag.unwrap),
-          Effect.provide(
-            createTestServices({
-              ai: {
-                provider: 'ollama',
-              },
-              logging: {
-                enabled: ENABLE_LOGGING,
-              },
-            }).createLayer(),
-          ),
-        );
-        log.info('output', { output });
-        log.info('artifact', { artifact: output.artifact });
-        expect(output.artifact).toBeDefined();
-      }).pipe(Effect.scoped),
-    ),
+      const input: GptInput = {
+        prompt: 'A beautiful sunset over a calm ocean',
+        tools: [
+          defineTool('testing', {
+            name: 'text-to-image',
+            type: ToolTypes.TextToImage,
+            options: {
+              model: '@testing/kitten-in-bubble',
+            },
+          }),
+        ],
+      };
+      const output = yield* gptNode.exec!(ValueBag.make(input)).pipe(
+        Effect.flatMap(ValueBag.unwrap),
+        Effect.provide(
+          createTestServices({
+            ai: {
+              provider: 'ollama',
+            },
+            logging: {
+              enabled: ENABLE_LOGGING,
+            },
+          }).createLayer(),
+        ),
+      );
+      log.info('output', { output });
+      log.info('artifact', { artifact: output.artifact });
+      expect(output.artifact).toBeDefined();
+    }),
+    60_000,
   );
 });
-
-// TODO(dmaretskyi): Bump vitest and @effect/vitest and remove this.
-const testEffect =
-  <E, A>(effect: (ctx?: TaskContext) => Effect.Effect<A, E>) =>
-  (ctx?: TaskContext) =>
-    Effect.gen(function* () {
-      const exitFiber = yield* Effect.fork(Effect.exit(effect(ctx)));
-
-      ctx?.onTestFinished(() => Fiber.interrupt(exitFiber).pipe(Effect.asVoid, Effect.runPromise));
-
-      const exit = yield* Fiber.join(exitFiber);
-      if (Exit.isSuccess(exit)) {
-        return () => exit.value;
-      } else {
-        const errors = Cause.prettyErrors(exit.cause);
-        for (let i = 1; i < errors.length; i++) {
-          yield* Effect.logError(errors[i]);
-        }
-        return () => {
-          throw errors[0];
-        };
-      }
-    })
-      .pipe(Effect.runPromise)
-      .then((fn) => fn());

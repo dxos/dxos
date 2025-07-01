@@ -105,8 +105,8 @@ importers:
         specifier: workspace:*
         version: link:packages/common/typings
       '@effect/vitest':
-        specifier: ~0.17.3
-        version: 0.17.8(effect@3.14.21)(vitest@3.2.0)
+        specifier: ~0.21.4
+        version: 0.21.4(effect@3.14.21)(vitest@3.2.0)
       '@mdx-js/react':
         specifier: ^2.1.3
         version: 2.1.5(react@18.2.0)
@@ -17021,11 +17021,11 @@ packages:
       '@effect/platform': ^0.85.2
       effect: ^3.16.8
 
-  '@effect/vitest@0.17.8':
-    resolution: {integrity: sha512-FPI+mgiCzR950y1nnOEB2FPPY3LnCSwqg+RZ8EyWSzqb1IU1iDmVGxfxgtK3MM9obubXcVk5e1hBz0+/485olQ==}
+  '@effect/vitest@0.21.4':
+    resolution: {integrity: sha512-Ulww8gN4DKmtU1E9UXPZxcXvWmWmuK9tqgN85NfmjiR11HuwF1v1SE9iTSTgOzrPaZm90wk07AJEHhgW5Ua43g==}
     peerDependencies:
-      effect: ^3.12.12
-      vitest: ^2.0.5
+      effect: ^3.14.21
+      vitest: ^3.0.0
 
   '@emnapi/core@1.2.0':
     resolution: {integrity: sha512-E7Vgw78I93we4ZWdYCb4DGAwRROGkMIXk7/y87UmANR+J6qsWusmC3gLt0H+O0KOt5e6O38U8oJamgbudrES/w==}
@@ -39551,7 +39551,7 @@ snapshots:
       effect: 3.14.21
       uuid: 11.1.0
 
-  '@effect/vitest@0.17.8(effect@3.14.21)(vitest@3.2.0)':
+  '@effect/vitest@0.21.4(effect@3.14.21)(vitest@3.2.0)':
     dependencies:
       effect: 3.14.21
       vitest: 3.2.0(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.0)(@vitest/ui@3.2.0)(happy-dom@13.3.4)(jsdom@26.1.0)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
