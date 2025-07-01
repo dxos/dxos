@@ -3,8 +3,7 @@
 //
 
 import type { Space } from '@dxos/client-protocol';
-import { create, type BaseEchoObject, Ref } from '@dxos/echo-schema';
-import { live } from '@dxos/live-object';
+import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 
 import { Testing } from './types';
@@ -13,7 +12,7 @@ import { DataType } from '../common';
 faker.seed(1);
 
 /**
- * Helper to create dates in reverse chronological order
+ * Helper to Obj.make dates in reverse chronological order
  */
 const getDate = (daysAgo: number): string => {
   const date = new Date();
@@ -24,7 +23,7 @@ const getDate = (daysAgo: number): string => {
 // TODO(burdon): Replace with standard data generator pattern from dxos/schema.
 
 const createDocument = (name: string, content: string): Testing.DocumentType => {
-  return live(Testing.DocumentType, {
+  return Obj.make(Testing.DocumentType, {
     name,
     content,
   });
@@ -33,7 +32,7 @@ const createDocument = (name: string, content: string): Testing.DocumentType => 
 const createOrganization = (
   props: Pick<DataType.Organization, 'name' | 'website'> & Partial<Omit<DataType.Organization, 'name' | 'website'>>,
 ): DataType.Organization => {
-  return live(DataType.Organization, {
+  return Obj.make(DataType.Organization, {
     description: faker.lorem.paragraph(),
     image: faker.image.url(),
     ...props,
@@ -47,8 +46,8 @@ const createContact = ({
 }: { email: string; organization?: DataType.Organization } & Partial<
   Omit<DataType.Person, 'organization'>
 >): DataType.Person => {
-  // TODO(dmaretskyi): `create` with nested refs throws an error when added to db.
-  return live(DataType.Person, {
+  // TODO(dmaretskyi): `Obj.make` with nested refs throws an error when added to db.
+  return Obj.make(DataType.Person, {
     organization: organization ? Ref.make(organization) : undefined,
     emails: [{ value: email }],
     ...props,
@@ -56,7 +55,7 @@ const createContact = ({
 };
 
 const createTranscriptMessage = (sender: DataType.Person, blocks: string[]) => {
-  return create(DataType.Message, {
+  return Obj.make(DataType.Message, {
     sender: {
       name: sender.fullName,
     },
@@ -218,7 +217,7 @@ export const createTestData = () => {
     ]),
     createTranscriptMessage(contacts.john, [
       "I had lunch with Alex yesterday. He's running the numbers, but his initial reaction was positive. The 35% premium over our last funding round is attractive.",
-      "Let's shift gears to the Product Roadmap for 2023-2024. Sarah, can you give us an update on the Q3 deliverables?",
+      "Let's shift gears to the Product Roadmap for 2023-2024. Sarah, can you give us an update on the Q3 deObj.makerables?",
     ]),
     createTranscriptMessage(contacts.sarah, [
       'Sure. The core platform v5.0 is on track for release next month. The redesigned UI has tested well with focus groups, and performance improvements are exceeding our 50% faster loading target.',
@@ -264,7 +263,7 @@ export const createTestData = () => {
 
   const emails: DataType.Message[] = [
     // Recent emails.
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -276,7 +275,7 @@ export const createTestData = () => {
       properties: { subject: 'Q3 Financial Review' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -288,7 +287,7 @@ export const createTestData = () => {
       properties: { subject: 'Board Feedback and Next Steps' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -300,7 +299,7 @@ export const createTestData = () => {
       properties: { subject: 'New Feature Ready for Testing' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -312,7 +311,7 @@ export const createTestData = () => {
       properties: { subject: 'URGENT: Bitcoin Wallet Verification Required' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -324,7 +323,7 @@ export const createTestData = () => {
       properties: { subject: 'Potential Strategic Partnership' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -336,7 +335,7 @@ export const createTestData = () => {
       properties: { subject: 'New Hires Starting Next Week' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -348,7 +347,7 @@ export const createTestData = () => {
       properties: { subject: 'Security Incident Report' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -360,7 +359,7 @@ export const createTestData = () => {
       properties: { subject: 'Acquisition Target Concerns' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -372,7 +371,7 @@ export const createTestData = () => {
       properties: { subject: 'Quarterly Tax Filings' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -384,7 +383,7 @@ export const createTestData = () => {
       properties: { subject: 'Speaking Opportunity: International Tech Summit' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -396,7 +395,7 @@ export const createTestData = () => {
       properties: { subject: 'MANDATORY: Security Update Required' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -408,7 +407,7 @@ export const createTestData = () => {
       properties: { subject: 'Q2 Customer Satisfaction Results' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -420,7 +419,7 @@ export const createTestData = () => {
       properties: { subject: 'Annual Company Retreat Planning' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -432,7 +431,7 @@ export const createTestData = () => {
       properties: { subject: 'Competitor Price Change - Strategic Response Needed' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -444,7 +443,7 @@ export const createTestData = () => {
       properties: { subject: 'Privacy Policy Update - Final Review' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -456,7 +455,7 @@ export const createTestData = () => {
       properties: { subject: 'Series C Funding Update - Oversubscribed' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -468,7 +467,7 @@ export const createTestData = () => {
       properties: { subject: 'Product Roadmap Finalized' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -480,7 +479,7 @@ export const createTestData = () => {
       properties: { subject: 'CONFIDENTIAL: Acquisition Offer Received' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -492,7 +491,7 @@ export const createTestData = () => {
       properties: { subject: 'Annual Audit Preparation' },
     }),
 
-    create(DataType.Message, {
+    Obj.make(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -536,14 +535,14 @@ export const seedTestData = async (space: Space) => {
   }
 
   // for (const document of TestData.documents) {
-  //   const obj = space.db.add(live(Document, document));
+  //   const obj = space.db.add(Obj.make(Document, document));
   //   const dxn = Ref.make(obj).dxn.toString();
   //   document.dxn = dxn;
   // }
 
   const { organizations, contacts, transcriptMessages, emails } = createTestData();
 
-  const objects: BaseEchoObject[] = [
+  const objects: Obj.Any[] = [
     // ...Object.values(documents),
     ...Object.values(contacts),
     ...Object.values(organizations),

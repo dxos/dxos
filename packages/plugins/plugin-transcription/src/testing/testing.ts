@@ -11,7 +11,7 @@ import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant
 import { scheduleTaskInterval } from '@dxos/async';
 import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Key, Obj, Ref, Type } from '@dxos/echo';
+import { type Key, Obj, Ref, Type } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { IdentityDid } from '@dxos/keys';
@@ -62,12 +62,11 @@ export class MessageBuilder extends AbstractMessageBuilder {
   }
 
   override async createMessage(numSegments = 1): Promise<DataType.Message> {
-    return {
-      id: Key.ObjectId.random().toString(),
+    return Obj.make(DataType.Message, {
       created: this.next().toISOString(),
       sender: faker.helpers.arrayElement(this.users),
       blocks: Array.from({ length: numSegments }).map(() => this.createBlock()),
-    };
+    });
   }
 
   createBlock(): DataType.MessageBlock.Transcription {

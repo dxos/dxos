@@ -6,7 +6,8 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
-import { type BaseObject, Expando, getSchema, getTypename, Query, Ref } from '@dxos/echo-schema';
+import { Query } from '@dxos/echo';
+import { type BaseObject, Expando, getSchema, getTypename, Ref } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';

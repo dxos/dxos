@@ -12,8 +12,7 @@ import {
   useIntentDispatcher,
   Capabilities,
 } from '@dxos/app-framework';
-import { Filter, Obj, Query } from '@dxos/echo';
-import { RelationSourceId } from '@dxos/echo-schema';
+import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -54,7 +53,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const objectsAnchoredTo = useQuery(space, Query.select(Filter.ids(subject.id)).targetOf(AnchoredTo));
   const anchors = objectsAnchoredTo
     .toSorted((a, b) => sort?.(a, b) ?? 0)
-    .filter((anchor) => Obj.instanceOf(ThreadType, anchor[RelationSourceId]))
+    .filter((anchor) => Obj.instanceOf(ThreadType, Relation.getSource(anchor)))
     .concat(drafts ?? []);
 
   const attended = useAttended();
@@ -62,7 +61,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
 
   const handleAttend = useCallback(
     (anchor: AnchoredTo) => {
-      const thread = anchor[RelationSourceId] as ThreadType;
+      const thread = Relation.getSource(anchor) as ThreadType;
       const threadId = fullyQualifiedId(thread);
 
       if (state.current !== threadId) {
@@ -92,7 +91,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
         createIntent(ThreadAction.AddMessage, { anchor, subject, sender: { identityDid: identity?.did }, text }),
       );
 
-      const thread = anchor[RelationSourceId] as ThreadType;
+      const thread = Relation.getSource(anchor) as ThreadType;
       state.current = fullyQualifiedId(thread);
     },
     [dispatch, identity, subject],
@@ -100,7 +99,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
 
   const handleResolve = useCallback(
     (anchor: AnchoredTo) =>
-      dispatch(createIntent(ThreadAction.ToggleResolved, { thread: anchor[RelationSourceId] as ThreadType })),
+      dispatch(createIntent(ThreadAction.ToggleResolved, { thread: Relation.getSource(anchor) as ThreadType })),
     [dispatch],
   );
 
