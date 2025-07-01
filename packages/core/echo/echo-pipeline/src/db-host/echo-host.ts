@@ -37,7 +37,6 @@ import {
   type PeerIdProvider,
   type RootDocumentSpaceKeyProvider,
 } from '../automerge';
-import { log } from '@dxos/log';
 
 export interface EchoHostIndexingConfig {
   /**

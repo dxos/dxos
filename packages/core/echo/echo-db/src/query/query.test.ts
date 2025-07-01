@@ -4,26 +4,25 @@
 
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { Schema } from 'effect';
-import { afterEach, beforeEach, describe, expect, onTestFinished, test, type TestContext } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { Obj, Type } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
-import { Expando, RelationSourceId, RelationTargetId, TypedObject, Ref, EchoObject } from '@dxos/echo-schema';
-import { Testing, type updateCounter } from '@dxos/echo-schema/testing';
+import { Expando, RelationSourceId, RelationTargetId, Ref } from '@dxos/echo-schema';
+import { Testing } from '@dxos/echo-schema/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { live, getMeta, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { Filter, Query } from './api';
 import { getObjectCore } from '../echo-handler';
+import type { Hypergraph } from '../hypergraph';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
-import type { Hypergraph } from '../hypergraph';
 
 const createTestObject = (idx: number, label?: string) => {
   return live(Expando, { idx, title: `Task ${idx}`, label });
