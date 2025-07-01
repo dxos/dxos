@@ -16,7 +16,9 @@
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@dxos/theme-editor-addon": "workspace:*",
+    "@dxos/storybook-addon-logger": "workspace:*",
+    "@dxos/storybook-addon-theme-editor": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
     "@storybook/addon-docs": "^9.0.14",
     "@storybook/addon-links": "^9.0.14",

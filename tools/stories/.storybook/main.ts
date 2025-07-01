@@ -32,10 +32,12 @@ type ConfigProps = Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>;
  */
 export const config = (baseConfig: ConfigProps): StorybookConfig => ({
   addons: [
-    '@dxos/theme-editor-addon',
+    '@dxos/storybook-addon-logger',
+    '@dxos/storybook-addon-theme-editor',
     '@storybook/addon-docs',
     '@storybook/addon-links',
     '@storybook/addon-themes',
+    // TODO(burdon): Not working.
     // '@storybook/addon-vitest',
   ],
   framework: {

@@ -10,6 +10,7 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Test, type TestProps } from './Test';
+import { log } from '@dxos/log';
 
 /**
  * Storybook sanity test.
@@ -50,3 +51,13 @@ export const Default: Story = {
     },
   },
 };
+
+export const WithLog: Story = {
+  args: {
+    icon: 'ph--rocket-launch--regular',
+    label: 'Test',
+    onClick: () => {
+      log.info('Hello, world!');
+    },
+  },
+}

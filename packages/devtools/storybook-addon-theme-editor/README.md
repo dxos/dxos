@@ -1,6 +1,6 @@
-# @dxos/theme-editor-addon
+# @dxos/storybook-addon-theme-editor
 
-Utilities for DXOS UI Storybooks.
+Storybook Addon for the DXOS Theme Editor
 
 ## Contributions
 

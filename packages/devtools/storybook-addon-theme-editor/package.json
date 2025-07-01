@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/theme-editor-addon",
+  "name": "@dxos/storybook-addon-theme-editor",
   "version": "0.8.2",
-  "description": "Utilities for editing the DXOS UI theme in Storybook.",
+  "description": "Storybook addon for the DXOS Theme Editor.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -16,14 +16,10 @@
     "./manager": {
       "types": "./dist/types/src/manager.d.ts",
       "default": "./dist/lib/browser/manager.mjs"
-    }
-  },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "theme-editor-addon": [
-        "./dist/types/src/theme-editor-addon.d.ts"
-      ]
+    },
+    "./preview": {
+      "types": "./dist/types/src/preview.d.ts",
+      "default": "./dist/lib/browser/preview.mjs"
     }
   },
   "files": [
@@ -31,6 +27,8 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/lit-theme-editor": "workspace:*",
+    "@dxos/lit-ui": "workspace:*",
     "@storybook/icons": "^1.4.0",
     "storybook": "^9.0.14"
   },
@@ -40,7 +38,8 @@
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react-dom": "~18.2.0",
+    "storybook": "^8.3.6"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

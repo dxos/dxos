@@ -5,7 +5,7 @@
 import { type Preview } from '@storybook/react';
 import { withThemeByClassName } from '@storybook/addon-themes';
 
-import { DocsContainer, decorators, globalTypes } from '@dxos/storybook-utils';
+import { DocsContainer } from '@dxos/storybook-utils';
 
 import { docsTheme } from './theme';
 
@@ -15,7 +15,6 @@ import { docsTheme } from './theme';
  */
 export const preview: Preview = {
   decorators: [
-    ...decorators,
     // Does not affect docs.
     withThemeByClassName({ 
       defaultTheme: 'dark',
@@ -25,7 +24,6 @@ export const preview: Preview = {
       },
     }),
   ],
-  globalTypes,
 
   /**
    * Referenced when story is previewed in browser.

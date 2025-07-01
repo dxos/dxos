@@ -25,10 +25,7 @@
   ],
   "dependencies": {
     "@dxos/echo-signals": "workspace:*",
-    "@dxos/lit-theme-editor": "workspace:*",
-    "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/theme-editor-addon": "workspace:*",
     "@storybook/blocks": "^8.6.14",
     "lodash.defaultsdeep": "^4.6.1",
     "storybook": "^9.0.14"
