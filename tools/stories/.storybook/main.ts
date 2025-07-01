@@ -100,6 +100,7 @@ export const config = (baseConfig: ConfigProps): StorybookConfig => ({
 
         // https://www.npmjs.com/package/@vitejs/plugin-react-swc
         react({
+          tsDecorators: true,
           plugins: [
             // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
             [
@@ -109,7 +110,6 @@ export const config = (baseConfig: ConfigProps): StorybookConfig => ({
               },
             ],
           ],
-          tsDecorators: true,
         }),
 
         // turbosnap({
@@ -131,6 +131,7 @@ export const config = (baseConfig: ConfigProps): StorybookConfig => ({
           spriteFile: 'icons.svg',
           symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
         }),
+
         ThemePlugin({
           root: __dirname,
           content: [

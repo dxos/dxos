@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { withTheme, withThemeEditor } from '@dxos/storybook-utils';
+import { withThemeEditor } from '@dxos/storybook-utils';
 
 import { Test, type TestProps } from './Test';
 import { log } from '@dxos/log';
@@ -18,10 +18,10 @@ import { log } from '@dxos/log';
 const meta: Meta<TestProps> = {
   title: 'apps/composer-app/Test',
   component: Test,
-  decorators: [withTheme, withThemeEditor],
-  parameters: {
-    layout: 'centered',
-  },
+  decorators: [withThemeEditor],
+  // parameters: {
+  //   layout: 'centered',
+  // },
 };
 
 export default meta;
