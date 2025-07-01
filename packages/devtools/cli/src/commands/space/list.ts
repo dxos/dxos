@@ -9,7 +9,7 @@ import { mapSpaces, printSpaces, TABLE_FLAGS } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
-import { Filter } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo';
 
 import { BaseCommand } from '../../base';
 

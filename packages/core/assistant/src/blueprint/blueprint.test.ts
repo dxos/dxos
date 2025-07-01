@@ -8,8 +8,8 @@ import { describe, test } from 'vitest';
 import { EdgeAiServiceClient, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { ArtifactId } from '@dxos/artifact';
+import { Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { create } from '@dxos/echo-schema';
 import { DataType, DataTypes } from '@dxos/schema';
 
 import { BlueprintBuilder } from './blueprint';
@@ -108,14 +108,14 @@ describe.skip('Blueprint', () => {
 
     const [org1] = [
       db.add(
-        create(DataType.Organization, {
+        Obj.make(DataType.Organization, {
           name: 'Exa',
           website: 'https://exa.ai',
           description: 'An AI-powered search engine company building search infrastructure for AI agents',
         }),
       ),
       db.add(
-        create(DataType.Organization, {
+        Obj.make(DataType.Organization, {
           name: 'Cresta',
           website: 'https://cresta.ai',
           description: 'A company that builds AI agents',

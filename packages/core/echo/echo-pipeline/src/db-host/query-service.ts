@@ -172,10 +172,9 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
       if (visited.has(handle.documentId) || !handle.isReady()) {
         return;
       }
+
       const doc = handle.doc()!;
-
       const spaceKey = DatabaseDirectory.getSpaceKey(doc) ?? undefined;
-
       if (doc.objects) {
         yield Object.entries(doc.objects as { [key: string]: any }).map(([objectId, object]) => {
           return {

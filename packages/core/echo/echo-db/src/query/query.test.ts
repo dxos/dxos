@@ -508,10 +508,11 @@ describe('Queries', () => {
     });
   });
 
-  describe.skip('text search', () => {
+  // TODO(burdon): Flakey.
+  describe.skipIf(process.env.CI || true)('text search', () => {
     beforeEach(async () => {});
 
-    test.skipIf(process.env.CI)('vector', async () => {
+    test('vector', async () => {
       const { db, graph } = await builder.createDatabase({ indexing: { vector: true } });
       graph.schemaRegistry.addSchema([Testing.Task]);
 
@@ -542,7 +543,7 @@ describe('Queries', () => {
     });
 
     // TODO(wittjosiah): Currently disabled by default because it's expensive.
-    test.skip('full-text', async () => {
+    test('full-text', async () => {
       const { db, graph } = await builder.createDatabase({ indexing: { fullText: true } });
       graph.schemaRegistry.addSchema([Testing.Task]);
 

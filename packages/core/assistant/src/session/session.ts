@@ -22,6 +22,7 @@ import {
 } from '@dxos/ai';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import { Event, synchronized } from '@dxos/async';
+import { Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import { create, type ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -310,7 +311,7 @@ export class AISession {
       }
     }
 
-    return create(Message, {
+    return Obj.make(Message, {
       role: 'user',
       content: [...prelude, { type: 'text', text: prompt }],
     });

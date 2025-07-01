@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
+import { Type, type Obj } from '@dxos/echo';
 import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
@@ -81,7 +81,7 @@ export type SpaceSettingsProps = Schema.Schema.Type<typeof SpaceSettingsSchema>;
 
 export type SerializerMap = Record<string, TypedObjectSerializer>;
 
-export interface TypedObjectSerializer<T extends Type.Expando = Type.Expando> {
+export interface TypedObjectSerializer<T extends Obj.Any = Type.Expando> {
   serialize(params: { object: T }): Promise<string>;
 
   /**
