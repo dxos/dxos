@@ -7790,6 +7790,12 @@ importers:
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/plugin-storybook-layout':
         specifier: workspace:*
         version: link:../plugin-storybook-layout
@@ -10639,6 +10645,12 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-list
+      '@dxos/react-ui-tabs':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-tabs
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
@@ -12053,9 +12065,6 @@ importers:
         specifier: 3.14.21
         version: 3.14.21
     devDependencies:
-      '@dxos/app-graph':
-        specifier: workspace:*
-        version: link:../../sdk/app-graph
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -13365,9 +13374,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-ui-attention':
-        specifier: workspace:*
-        version: link:../react-ui-attention
       '@dxos/react-ui-text-tooltip':
         specifier: workspace:*
         version: link:../react-ui-text-tooltip
