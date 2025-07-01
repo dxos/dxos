@@ -7802,6 +7802,12 @@ importers:
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/plugin-storybook-layout':
         specifier: workspace:*
         version: link:../plugin-storybook-layout

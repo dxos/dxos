@@ -96,6 +96,9 @@
       "path": "../plugin-attention"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-deck"
     },
     {
@@ -103,6 +106,9 @@
     },
     {
       "path": "../plugin-observability"
+    },
+    {
+      "path": "../plugin-space"
     },
     {
       "path": "../plugin-storybook-layout"
