@@ -14566,9 +14566,15 @@ importers:
       '@dxos/vite-plugin-icons':
         specifier: workspace:*
         version: link:../vite-plugin-icons
+      '@storybook/addon-docs':
+        specifier: ^9.0.14
+        version: 9.0.14(@types/react@18.2.79)(storybook@9.0.14(@testing-library/dom@10.4.0)(prettier@3.2.4))(webpack-sources@3.2.3)
       '@storybook/addon-links':
         specifier: ^9.0.14
         version: 9.0.14(react@18.2.0)(storybook@9.0.14(@testing-library/dom@10.4.0)(prettier@3.2.4))
+      '@storybook/addon-themes':
+        specifier: ^9.0.14
+        version: 9.0.14(storybook@9.0.14(@testing-library/dom@10.4.0)(prettier@3.2.4))
       '@storybook/addon-vitest':
         specifier: ^9.0.14
         version: 9.0.14(@vitest/browser@3.2.4(playwright@1.46.1)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3)))(@vitest/runner@3.2.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.14(@testing-library/dom@10.4.0)(prettier@3.2.4))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.0(vitest@3.2.4))(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2))
@@ -14603,8 +14609,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
       chromatic:
-        specifier: ^10.1.0
-        version: 10.1.0
+        specifier: ^13.0.1
+        version: 13.0.1
       lodash.flatten:
         specifier: ^4.4.0
         version: 4.4.0
@@ -18412,6 +18418,12 @@ packages:
     peerDependencies:
       react: ~18.2.0
 
+  '@mdx-js/react@3.1.0':
+    resolution: {integrity: sha512-QjHtSaoameoalGnKDT3FoIl4+9RwyTmo9ZJGBdLOks/YOiWHoRDI3PUwEzOE7kEmGcV3AFcp9K6dYu9rEuKLAQ==}
+    peerDependencies:
+      '@types/react': ~18.2.0
+      react: ~18.2.0
+
   '@mediapipe/tasks-vision@0.10.8':
     resolution: {integrity: sha512-Rp7ll8BHrKB3wXaRFKhrltwZl1CiXGdibPxuWXvqGnKTnv8fqa/nvftYNuSbf+pbJWKYCXdBtYTITdAUTGGh0Q==}
 
@@ -21494,6 +21506,11 @@ packages:
     peerDependencies:
       react: ~18.2.0
 
+  '@storybook/addon-docs@9.0.14':
+    resolution: {integrity: sha512-vjWH2FamLzoPZXitecbhRSUvQDj27q/dDaCKXSwCIwEVziIQrqHBGDmuJPCWoroCkKxLo8s8gwMi6wk5Minaqg==}
+    peerDependencies:
+      storybook: ^9.0.14
+
   '@storybook/addon-links@9.0.14':
     resolution: {integrity: sha512-qzlRT+GRInP3H0bfvTVgdxWqbbSNLyBln9RNm1t5H3DsHc4NFyYdpPXXUapyFrWW7O0ByWMWO94RG0T+qG5R3g==}
     peerDependencies:
@@ -24359,9 +24376,17 @@ packages:
     resolution: {integrity: sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==}
     engines: {node: '>=18'}
 
-  chromatic@10.1.0:
-    resolution: {integrity: sha512-S+ztO8f1k/LckuzJKCqaTs6AfUQ0eLNT9kEoyCUwX7gkJnveQo5JStCfY55v30zogjRkHJpwqzEfSXl6AwO2tQ==}
+  chromatic@13.0.1:
+    resolution: {integrity: sha512-vX0Rs/pAeFAnGuQiVrA4h0XD36MYbTUp9Mlm1jFqXo3Cejd2BdBY1CA+vd6CkeO5CRSc6TRWmCz0zQAsE1q3Hw==}
     hasBin: true
+    peerDependencies:
+      '@chromatic-com/cypress': ^0.*.* || ^1.0.0
+      '@chromatic-com/playwright': ^0.*.* || ^1.0.0
+    peerDependenciesMeta:
+      '@chromatic-com/cypress':
+        optional: true
+      '@chromatic-com/playwright':
+        optional: true
 
   chrome-launcher@0.15.2:
     resolution: {integrity: sha512-zdLEwNo3aUVzIhKhTtXfxhdvZhUghrnmkvcAq2NoDd+LeOHKf03H5jwZ8T/STsAlzyALkBVK552iaG1fGf1xVQ==}
@@ -39697,6 +39722,12 @@ snapshots:
       '@types/react': 18.2.79
       react: 18.2.0
 
+  '@mdx-js/react@3.1.0(@types/react@18.2.79)(react@18.2.0)':
+    dependencies:
+      '@types/mdx': 2.0.13
+      '@types/react': 18.2.79
+      react: 18.2.0
+
   '@mediapipe/tasks-vision@0.10.8': {}
 
   '@microsoft/tsdoc@0.14.2': {}
@@ -43571,6 +43602,20 @@ snapshots:
     dependencies:
       react: 18.2.0
 
+  '@storybook/addon-docs@9.0.14(@types/react@18.2.79)(storybook@9.0.14(@testing-library/dom@10.4.0)(prettier@3.2.4))(webpack-sources@3.2.3)':
+    dependencies:
+      '@mdx-js/react': 3.1.0(@types/react@18.2.79)(react@18.2.0)
+      '@storybook/csf-plugin': 9.0.14(storybook@9.0.14(@testing-library/dom@10.4.0)(prettier@3.2.4))(webpack-sources@3.2.3)
+      '@storybook/icons': 1.4.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@storybook/react-dom-shim': 9.0.14(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.14(@testing-library/dom@10.4.0)(prettier@3.2.4))
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      storybook: 9.0.14(@testing-library/dom@10.4.0)(prettier@3.2.4)
+      ts-dedent: 2.2.0
+    transitivePeerDependencies:
+      - '@types/react'
+      - webpack-sources
+
   '@storybook/addon-links@9.0.14(react@18.2.0)(storybook@9.0.14(@testing-library/dom@10.4.0)(prettier@3.2.4))':
     dependencies:
       '@storybook/global': 5.0.0
@@ -47114,7 +47159,7 @@ snapshots:
 
   chownr@3.0.0: {}
 
-  chromatic@10.1.0: {}
+  chromatic@13.0.1: {}
 
   chrome-launcher@0.15.2:
     dependencies:

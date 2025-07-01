@@ -6,13 +6,20 @@ import { join } from 'path';
 
 import { config, packages } from '../../.storybook/main';
 
+const dirs = [
+  '/apps/*/src/**',
+  '/devtools/*/src/**',
+  '/experimental/*/src/**',
+  '/plugins/*/src/**',
+  '/sdk/*/src/**',
+  '/ui/*/src/**',
+];
+
 export default config({
-  stories: [
-    join(packages, '/apps/*/src/**/*.stories.{mdx,tsx}'),
-    join(packages, '/devtools/*/src/**/*.stories.{mdx,tsx}'),
-    join(packages, '/experimental/*/src/**/*.stories.{mdx,tsx}'),
-    join(packages, '/plugins/*/src/**/*.stories.{mdx,tsx}'),
-    join(packages, '/sdk/*/src/**/*.stories.{mdx,tsx}'),
-    join(packages, '/ui/*/src/**/*.stories.{mdx,tsx}'),
-  ],
+  stories: dirs.flatMap((dir) => [
+    // Docs.
+    join(packages, dir, '/**/*.mdx'),
+    // Stories.
+    join(packages, dir, '/**/*.stories.{jsx,tsx}'),
+  ]),
 });

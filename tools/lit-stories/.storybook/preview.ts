@@ -19,17 +19,22 @@ export const preview: Preview = {
    * https://storybook.js.org/docs/writing-stories/parameters#global-parameters
    */
   parameters: {
-    // Disables Chromatic's snapshotting on a global level.
-    chromatic: {
-      disableSnapshot: true,
+    actions: {
+      argTypesRegex: '^on.*',
     },
-
+    backgrounds: {
+      options: {},
+    },
     controls: {
-      // https://storybook.js.org/docs/essentials/controls#custom-control-type-matchers
       matchers: {
         color: /(background|color)$/i,
         date: /Date$/,
       },
+    },
+
+    // Disables Chromatic's snapshotting on a global level.
+    chromatic: {
+      disableSnapshot: true,
     },
   },
 };

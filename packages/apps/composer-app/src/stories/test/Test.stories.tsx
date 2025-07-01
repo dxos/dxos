@@ -42,4 +42,11 @@ export const Default: Story = {
     label: 'Composer',
     onClick: fn(),
   },
+  parameters: {
+    docs: {
+      description: {
+        component: 'A basic button component.',
+      },
+    },
+  },
 };
