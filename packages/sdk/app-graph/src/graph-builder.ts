@@ -310,9 +310,7 @@ export class GraphBuilder {
         previous = ids;
 
         log('update', { id, relation, ids, removed });
-        // TODO(wittjosiah): Remove `requestAnimationFrame` once we have a better solution.
-        //  This is a workaround to avoid a race condition where the graph is updated during React render.
-        requestAnimationFrame(() => {
+        const update = () => {
           Rx.batch(() => {
             this._graph.removeEdges(
               removed.map((target) => ({ source: id, target })),
@@ -330,7 +328,15 @@ export class GraphBuilder {
               nodes.map(({ id }) => id),
             );
           });
-        });
+        };
+
+        // TODO(wittjosiah): Remove `requestAnimationFrame` once we have a better solution.
+        //  This is a workaround to avoid a race condition where the graph is updated during React render.
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(update);
+        } else {
+          update();
+        }
       },
       { immediate: true },
     );
