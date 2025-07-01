@@ -2,15 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
+import { DataType } from '@dxos/schema';
+
 import { SPACE_PLUGIN } from './meta';
-import { CollectionType } from './types';
 
 export default [
   {
     'en-US': {
-      [CollectionType.typename]: {
+      [Type.getTypename(DataType.Collection)]: {
         'typename label': 'Collection',
+        'typename label_zero': 'Collections',
+        'typename label_one': 'Collection',
+        'typename label_other': 'Collections',
         'object name placeholder': 'New collection',
+      },
+      [Type.getTypename(DataType.QueryCollection)]: {
+        'typename label': 'Smart Collection',
+        'typename label_zero': 'Smart Collections',
+        'typename label_one': 'Smart Collection',
+        'typename label_other': 'Smart Collections',
+        'object name placeholder': 'New smart collection',
       },
       [SPACE_PLUGIN]: {
         'plugin name': 'Spaces',
@@ -27,7 +39,7 @@ export default [
         'rename space label': 'Rename space',
         'active space label': 'Active space:',
         'space name label': 'Space name',
-        'object name label': 'Object name',
+        'object name label': 'Item name',
         'close space label': 'Close space',
         'open space label': 'Open space',
         'export data label': 'Export data',
@@ -42,6 +54,9 @@ export default [
         'object placeholder': 'Type a title here…',
         'personal space label': 'Personal Space',
         'spaces label': 'Spaces',
+        'space settings label': 'Spaces',
+        'space settings description':
+          'Each space has its own settings you can configure, where you can adjust its properties, membership, integrations, and other items specific to that space.',
         'show hidden spaces label': 'Show archived spaces',
         'save files to directory label': 'Save files to disk',
         'select path label': 'Select path',
@@ -55,17 +70,18 @@ export default [
         'objects deleted label': 'Items deleted',
         'go to object label': 'Open item',
         'found object label': 'Ready.',
-        'found object description': 'The requested object is now available.',
+        'found object description': 'The requested item is now available.',
         'waiting for object label': 'Loading…',
-        'waiting for object description': 'The requested object is still being synchronized.',
+        'waiting for object description': 'The requested item is still being synchronized.',
         'object not found label': 'Nothing found.',
         'object not found description':
-          'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
-        'missing object message': 'Object not available.',
+          'The requested item has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
+        'missing object message': 'Item not available.',
         'missing object description':
-          'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
+          'The requested item has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
         'create object in space label': 'Add to space',
         'create object in collection label': 'Add to collection',
+        'create object in smart collection label': 'Add to smart collection',
         'space members label': 'Space members',
         'active space members heading': 'Online ({{count}})',
         'inactive space members heading': 'Offline ({{count}})',
@@ -83,10 +99,10 @@ export default [
         'location label': 'Located in',
         'space limit label': 'Space Limit Reached',
         'space limit description':
-          'This space has reached the maximum number of objects for the beta. This limit includes deleted objects currently, but those can be permanently removed with the cleanup action.',
+          'This space has reached the maximum number of items for the beta. This limit includes deleted items currently, but those can be permanently removed with the cleanup action.',
         'space limit close label': 'Close',
         'remove deleted objects label': 'Cleanup',
-        'remove deleted objects alt': 'Permanently remove deleted objects to free up space.',
+        'remove deleted objects alt': 'Permanently remove deleted items to free up space.',
         'copy link label': 'Copy link',
         'default on space create label': 'On space create',
         'sync status title': 'Sync status',
@@ -103,11 +119,11 @@ export default [
         'remote synced label': 'Synced with peers',
         'syncing label': 'Space syncing',
         'show all label': 'Show all',
-        'no sync status label': 'No space with missing objects.',
+        'no sync status label': 'No space with missing items.',
         'create space dialog title': 'Create Space',
-        'create object dialog title': 'Create Object',
+        'create object dialog title': 'Create {{object}}',
         'space input placeholder': 'Select space',
-        'schema input placeholder': 'Select object type',
+        'schema input placeholder': 'Select item type',
         'creating object type label': 'Type',
         'creating in space label': 'Location',
         'creating in collection label': 'In Collection',
@@ -116,7 +132,7 @@ export default [
         'advanced settings label': 'Advanced',
         'foreign keys': 'Foreign Keys',
         'add key': 'Add Key',
-        'open space settings label': 'Open',
+        'open space settings label': 'Open settings',
 
         'members panel label': 'Members',
         'members verbose label': 'Manage space members',

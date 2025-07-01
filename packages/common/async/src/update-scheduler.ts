@@ -53,14 +53,15 @@ export class UpdateScheduler {
         const delay = this._lastUpdateTime + TIME_PERIOD / this._params.maxFrequency - now;
         if (delay > 0) {
           await new Promise<void>((resolve) => {
-            const clearContext = this._ctx.onDispose(() => {
-              clearTimeout(timeoutId);
-              resolve();
-            });
             const timeoutId = setTimeout(() => {
               clearContext();
               resolve();
             }, delay);
+
+            const clearContext = this._ctx.onDispose(() => {
+              clearTimeout(timeoutId);
+              resolve();
+            });
           });
         }
       }

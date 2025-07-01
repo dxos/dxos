@@ -71,7 +71,7 @@ export default [
 
         // System schema message.
         'system schema title': 'System Schema',
-        'system schema description': 'This schema is managed by the system and cannot be modified.',
+        'system schema description': 'This is a system schema and cannot be modified.',
       },
     },
   },

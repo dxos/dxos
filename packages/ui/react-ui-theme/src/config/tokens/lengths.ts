@@ -37,18 +37,24 @@ export const lengthsFacet = {
       trimXs: { root: ['lacuna', 3] },
       trimSm: { root: ['lacuna', 6] },
       trimMd: { root: ['lacuna', 9] },
+      trimLg: { root: ['lacuna', 12] },
     },
   },
 
   alias: {
     namespace: 'dx-',
-    conditions: { root: [':root'] },
+    conditions: {
+      fine: [':root, .density-fine, [data-density="fine"]'],
+      coarse: ['.density-coarse, [data-density="coarse"]'],
+      flush: ['.density-flush, [data-density="flush"]'],
+    },
     aliases: {
-      noLine: { root: ['focusOffset'] },
-      hairLine: { root: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap'] },
-      thickLine: { root: ['focusLine'] },
-      trimSm: { root: ['card-spacing-inline', 'card-spacing-block'] },
-      trimXs: { root: ['card-spacing-chrome'] },
+      noLine: { fine: ['focusOffset'] },
+      hairLine: { fine: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap'] },
+      thickLine: { fine: ['focusLine'] },
+      trimXs: { fine: ['cardSpacingChrome', 'labelSpacingBlock'] },
+      trimSm: { fine: ['cardSpacingInline', 'cardSpacingBlock', 'inputSpacingBlock'] },
+      trimMd: { coarse: ['cardSpacingInline', 'cardSpacingBlock'] },
     },
   },
 } satisfies Facet;

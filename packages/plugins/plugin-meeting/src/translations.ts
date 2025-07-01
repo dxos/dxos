@@ -2,14 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
+
 import { MEETING_PLUGIN } from './meta';
 import { MeetingType } from './types';
 
 export default [
   {
     'en-US': {
-      [MeetingType.typename]: {
-        'typename label': 'Meeting',
+      [Type.getTypename(MeetingType)]: {
+        'typename label': 'Meetings',
+        'typename label_zero': 'Meetings',
+        'typename label_one': 'Meeting',
+        'typename label_other': 'Meetings',
         'object name placeholder': 'New meeting',
       },
       [MEETING_PLUGIN]: {

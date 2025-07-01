@@ -2,17 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type BlueprintLogger, type BlueprintEvent, type Blueprint } from '@dxos/assistant';
-import { getSpace, Ref, type Space, type Queue } from '@dxos/client/echo';
-import { DXN, Key } from '@dxos/echo';
-import { create } from '@dxos/echo-schema';
+import { type Blueprint, type BlueprintEvent, type BlueprintLogger } from '@dxos/assistant';
+import { getSpace, Ref, type Queue, type Space } from '@dxos/client/echo';
+import { DXN, Key, Obj } from '@dxos/echo';
 import {
-  InvocationTraceStartEvent,
-  InvocationTraceEventType,
-  type InvocationTraceEvent,
-  InvocationTraceEndEvent,
   InvocationOutcome,
+  InvocationTraceEndEvent,
+  InvocationTraceEventType,
+  InvocationTraceStartEvent,
   TraceEvent,
+  type InvocationTraceEvent,
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { QueueSubspaceTags } from '@dxos/keys';
@@ -36,8 +35,8 @@ export class QueueLogger implements BlueprintLogger {
   log(event: BlueprintEvent) {
     switch (event.type) {
       case 'begin':
-        this._invocationTraceQueue.append([
-          create(InvocationTraceStartEvent, {
+        void this._invocationTraceQueue.append([
+          Obj.make(InvocationTraceStartEvent, {
             type: InvocationTraceEventType.START,
             invocationId: event.invocationId,
             timestampMs: Date.now(),
@@ -48,8 +47,8 @@ export class QueueLogger implements BlueprintLogger {
         ]);
         break;
       case 'end':
-        this._invocationTraceQueue.append([
-          create(InvocationTraceEndEvent, {
+        void this._invocationTraceQueue.append([
+          Obj.make(InvocationTraceEndEvent, {
             type: InvocationTraceEventType.END,
             invocationId: event.invocationId,
             timestampMs: Date.now(),
@@ -59,8 +58,8 @@ export class QueueLogger implements BlueprintLogger {
         break;
       case 'step-start':
       case 'step-complete':
-        this._getTraceEventQueue(event.invocationId).append([
-          create(TraceEvent, {
+        void this._getTraceEventQueue(event.invocationId).append([
+          Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
             ingestionTimestampMs: Date.now(),
@@ -77,8 +76,8 @@ export class QueueLogger implements BlueprintLogger {
         ]);
         break;
       case 'message':
-        this._getTraceEventQueue(event.invocationId).append([
-          create(TraceEvent, {
+        void this._getTraceEventQueue(event.invocationId).append([
+          Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
             ingestionTimestampMs: Date.now(),
@@ -95,8 +94,8 @@ export class QueueLogger implements BlueprintLogger {
         ]);
         break;
       case 'block':
-        this._getTraceEventQueue(event.invocationId).append([
-          create(TraceEvent, {
+        void this._getTraceEventQueue(event.invocationId).append([
+          Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
             ingestionTimestampMs: Date.now(),

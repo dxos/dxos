@@ -7,12 +7,12 @@ import type { Simplify } from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
+import { getTypeReference } from '@dxos/echo-schema';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
-import type { RelationSource, RelationTarget } from '../object';
-import { Ref } from '../ref';
-import { getTypeReference } from '../types';
+import * as Ref from '../Ref';
+import type * as Type from '../Type';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
@@ -36,7 +36,7 @@ export interface Query<T> {
    * @param key - Property path inside T that is a reference.
    * @returns Query for the target of the reference.
    */
-  reference<K extends RefPropKey<T>>(key: K): Query<Ref.Target<T[K]>>;
+  reference<K extends RefPropKey<T>>(key: K): Query<T[K] extends Ref.Any ? Ref.Target<T[K]> : never>;
 
   /**
    * Find objects referencing this object.
@@ -77,13 +77,13 @@ export interface Query<T> {
    * For a query for relations, get the source objects.
    * @returns Query for the source objects.
    */
-  source(): Query<RelationSource<T>>;
+  source(): Query<Type.Relation.Source<T>>;
 
   /**
    * For a query for relations, get the target objects.
    * @returns Query for the target objects.
    */
-  target(): Query<RelationTarget<T>>;
+  target(): Query<Type.Relation.Target<T>>;
 
   /**
    * Add options to a query.
@@ -121,6 +121,14 @@ interface QueryAPI {
    */
   // TODO(dmaretskyi): Rename to `combine` or `union`.
   all<T>(...queries: Query<T>[]): Query<T>;
+
+  /**
+   * Subtract one query from another.
+   * @param source - Query to subtract from.
+   * @param exclude - Query to subtract.
+   * @returns Query for the results of the source query minus the results of the exclude query.
+   */
+  without<T>(source: Query<T>, exclude: Query<T>): Query<T>;
 }
 
 export declare namespace Query {
@@ -543,6 +551,14 @@ class QueryClass implements Query<any> {
     return new QueryClass({
       type: 'union',
       queries: queries.map((q) => q.ast),
+    });
+  }
+
+  static without<T>(source: Query<T>, exclude: Query<T>): Query<T> {
+    return new QueryClass({
+      type: 'set-difference',
+      source: source.ast,
+      exclude: exclude.ast,
     });
   }
 

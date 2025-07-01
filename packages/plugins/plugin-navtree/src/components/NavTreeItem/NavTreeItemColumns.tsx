@@ -27,7 +27,7 @@ export const NavTreeItemColumns = memo(({ path, item, open, density = 'fine' }: 
 
   const actions = (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : _actions)
     .flatMap((action) => (isAction(action) ? [action] : []))
-    .filter((action) => !action.properties?.hidden);
+    .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition));
 
   const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${item.id}` ? Popover.Anchor : Fragment;
 

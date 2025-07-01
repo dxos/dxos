@@ -4,6 +4,7 @@
 
 import { Schema } from 'effect';
 
+import { Obj } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -16,6 +17,7 @@ import {
   createTool,
   type ExecutableTool,
   isToolUse,
+  Message,
   type MessageContentBlock,
   runTools,
   type Tool,
@@ -219,11 +221,11 @@ export class OllamaAiServiceClient implements AiServiceClient {
       // Send message_start event with proper message structure.
       yield {
         type: 'message_start',
-        message: {
+        message: Obj.make(Message, {
           id: messageId,
           role: 'assistant',
           content: [],
-        },
+        }),
       } as GenerationStreamEvent;
 
       // Initialize text content block.

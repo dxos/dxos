@@ -14,9 +14,10 @@ import {
   definePlugin,
   oneOf,
 } from '@dxos/app-framework';
-import { Ref } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
+import { DataType } from '@dxos/schema';
 import { osTranslations } from '@dxos/shell/react';
 
 import {
@@ -36,7 +37,7 @@ import {
 import { SpaceEvents } from './events';
 import { meta } from './meta';
 import translations from './translations';
-import { CollectionAction, CollectionType, defineObjectForm } from './types';
+import { CollectionAction, defineObjectForm } from './types';
 
 export type SpacePluginOptions = {
   /**
@@ -89,29 +90,48 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/metadata`,
       activatesOn: Events.SetupMetadata,
-      activate: () =>
+      activate: () => [
         contributes(Capabilities.Metadata, {
-          id: CollectionType.typename,
+          id: Type.getTypename(DataType.Collection),
           metadata: {
             icon: 'ph--cards-three--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (collection: CollectionType) =>
-              await Ref.Array.loadAll([...collection.objects, ...Object.values(collection.views)]),
+            loadReferences: async (collection: DataType.Collection) => await Ref.Array.loadAll(collection.objects),
           },
         }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(DataType.QueryCollection),
+          metadata: {
+            label: (object: DataType.QueryCollection) => [
+              'typename label',
+              { ns: object.query.typename, count: 2, defaultValue: 'New smart collection' },
+            ],
+            icon: 'ph--funnel-simple--regular',
+          },
+        }),
+      ],
     }),
     defineModule({
       id: `${meta.id}/module/object-form`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
+      activate: () => [
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: CollectionType,
+            objectSchema: DataType.Collection,
             formSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
             getIntent: (props) => createIntent(CollectionAction.Create, props),
           }),
         ),
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: DataType.QueryCollection,
+            formSchema: CollectionAction.QueryCollectionForm,
+            getIntent: (props) => createIntent(CollectionAction.CreateQueryCollection, props),
+          }),
+        ),
+      ],
     }),
     defineModule({
       id: `${meta.id}/module/schema`,

@@ -66,7 +66,7 @@ const DebugStory = <T extends BaseObject>({ schema, values: initialValues, ...pr
 
 const meta: Meta<StoryProps<any>> = {
   title: 'ui/react-ui-form/Form',
-  component: Form,
+  component: Form<any>,
   render: DebugStory,
   decorators: [withLayout({ fullscreen: true }), withTheme],
   parameters: {
@@ -100,7 +100,7 @@ export const Default: Story<TestType> = {
   },
 };
 
-export const Organization: Story<Testing.Organization> = {
+export const Organization: Story<Schema.Schema.Type<typeof Testing.OrganizationSchema>> = {
   args: {
     schema: Testing.OrganizationSchema,
     values: {
@@ -111,7 +111,7 @@ export const Organization: Story<Testing.Organization> = {
   },
 };
 
-export const OrganizationAutoSave: Story<Testing.Organization> = {
+export const OrganizationAutoSave: Story<Schema.Schema.Type<typeof Testing.OrganizationSchema>> = {
   args: {
     schema: Testing.OrganizationSchema,
     values: {

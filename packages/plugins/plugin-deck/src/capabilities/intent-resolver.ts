@@ -229,7 +229,7 @@ export default (context: PluginContext) =>
         } else {
           const [item] = graph
             .getConnections(subject)
-            .filter((node) => !isActionLike(node) && node.properties.disposition !== 'hidden');
+            .filter((node) => !isActionLike(node) && !node.properties.disposition);
           if (item) {
             return {
               intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] })],

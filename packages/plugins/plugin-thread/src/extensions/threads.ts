@@ -7,8 +7,7 @@ import { EditorView } from '@codemirror/view';
 import { computed, effect } from '@preact/signals-core';
 
 import { createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { Filter, Obj, Query } from '@dxos/echo';
-import { RelationSourceId } from '@dxos/echo-schema';
+import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { type DocumentType } from '@dxos/plugin-markdown/types';
 import { getSpace, getTextInRange, createDocAccessor, fullyQualifiedId, getSource } from '@dxos/react-client/echo';
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
@@ -41,7 +40,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Promi
   const anchors = computed(() =>
     query.objects
       .filter((anchor) => {
-        const thread = anchor[RelationSourceId];
+        const thread = Relation.getSource(anchor);
         return Obj.instanceOf(ThreadType, thread) && thread.status !== 'resolved';
       })
       .concat(state.drafts[fullyQualifiedId(doc)] ?? []),
@@ -61,7 +60,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Promi
             // Only update if the name has changed, otherwise this will cause an infinite loop.
             // Skip if the name is empty; this means comment text was deleted, but thread name should remain.
             const name = getName(doc, anchor.anchor);
-            const thread = anchor[RelationSourceId] as ThreadType;
+            const thread = Relation.getSource(anchor) as ThreadType;
             if (name && name !== thread.name) {
               thread.name = name;
             }
@@ -76,7 +75,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Promi
       () =>
         anchors.value
           .filter((anchor) => anchor.anchor)
-          .map((anchor) => ({ id: fullyQualifiedId(anchor[RelationSourceId]), cursor: anchor.anchor })),
+          .map((anchor) => ({ id: fullyQualifiedId(Relation.getSource(anchor)), cursor: anchor.anchor })),
     ),
 
     comments({
@@ -102,7 +101,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Promi
       onUpdate: ({ id, cursor }) => {
         const draft = state.drafts[fullyQualifiedId(doc)]?.find((thread) => fullyQualifiedId(thread) === id);
         if (draft) {
-          const thread = draft[RelationSourceId] as ThreadType;
+          const thread = Relation.getSource(draft) as ThreadType;
           thread.name = getName(doc, cursor);
           draft.anchor = cursor;
         }

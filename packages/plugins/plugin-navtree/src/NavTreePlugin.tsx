@@ -55,12 +55,18 @@ export const NavTreePlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/expose`,
-      activatesOn: allOf(Events.DispatcherReady, Events.LayoutReady, NavTreeEvents.StateReady),
+      activatesOn: allOf(Events.DispatcherReady, Events.AppGraphReady, Events.LayoutReady, NavTreeEvents.StateReady),
       activate: async (context) => {
         const layout = context.getCapability(Capabilities.Layout);
         const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+        const { graph } = context.getCapability(Capabilities.AppGraph);
         if (dispatch && layout.active.length === 1) {
-          await dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: layout.active[0] }));
+          // TODO(wittjosiah): This should really be fired once the navtree renders for the first time.
+          //   That is the point at which the graph is expanded and the path should be available.
+          void graph
+            .waitForPath({ target: layout.active[0] }, { timeout: 30_000 })
+            .then(() => dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: layout.active[0] })))
+            .catch(() => {});
         }
 
         return [];
