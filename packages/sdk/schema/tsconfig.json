@@ -54,7 +54,16 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
       "path": "../client-protocol"
+    },
+    {
+      "path": "../react-client"
     }
   ]
 }

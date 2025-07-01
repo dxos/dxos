@@ -5,21 +5,22 @@
 import { inspect } from 'node:util';
 import { beforeAll, describe, test } from 'vitest';
 
-import { AIServiceEdgeClient, OllamaClient, structuredOutputParser } from '@dxos/ai';
+import { EdgeAiServiceClient, OllamaAiServiceClient, structuredOutputParser } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
+import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { getSchemaDXN } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
-import { live } from '@dxos/live-object';
 import { DataType, DataTypes } from '@dxos/schema';
 
-import { createExtractionSchema, getSanitizedSchemaName, researchFn } from './research';
+import { createExtractionSchema, getSanitizedSchemaName } from './graph';
+import { researchFn } from './research';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
 
-describe('Research', () => {
+describe.skip('Research', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let executor: FunctionExecutor;
@@ -27,21 +28,22 @@ describe('Research', () => {
   beforeAll(async () => {
     // TODO(dmaretskyi): Helper to scaffold this from a config.
     builder = await new EchoTestBuilder().open();
-    const { db: db1 } = await builder.createDatabase({ indexing: { vector: true } });
-    db = db1;
+
+    db = (await builder.createDatabase({ indexing: { vector: true } })).db;
     db.graph.schemaRegistry.addSchema(DataTypes);
+
     executor = new FunctionExecutor(
       new ServiceContainer().setServices({
         ai: {
           client: REMOTE_AI
-            ? new AIServiceEdgeClient({
+            ? new EdgeAiServiceClient({
                 endpoint: AI_SERVICE_ENDPOINT.REMOTE,
                 defaultGenerationOptions: {
                   // model: '@anthropic/claude-sonnet-4-20250514',
                   model: '@anthropic/claude-3-5-sonnet-20241022',
                 },
               })
-            : new OllamaClient({
+            : new OllamaAiServiceClient({
                 overrides: {
                   model: 'llama3.1:8b',
                 },
@@ -54,9 +56,9 @@ describe('Research', () => {
     );
   });
 
-  test.skip('should generate a research report', { timeout: 1000_000 }, async () => {
+  test('should generate a research report', { timeout: 300_000 }, async () => {
     db.add(
-      live(DataType.Organization, {
+      Obj.make(DataType.Organization, {
         name: 'Notion',
         website: 'https://www.notion.com',
       }),

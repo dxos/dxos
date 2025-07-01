@@ -222,7 +222,7 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
     this.restart();
   }
 
-  override onUpdate(graph?: Graph) {
+  override onUpdate(graph?: Graph): void {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this._simulation.stop();
     this.mergeData(graph);
@@ -283,7 +283,7 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
   /**
    * Update all forces.
    */
-  private updateForces(forces: ForceOptions) {
+  private updateForces(forces: ForceOptions): void {
     log('updateForces', { forces });
 
     // https://github.com/d3/d3-force#simulation_force

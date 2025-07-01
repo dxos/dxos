@@ -21,7 +21,7 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
   protected _open = false;
   protected _running = false;
 
-  toJSON() {
+  toJSON(): { open: boolean; running: boolean } {
     return {
       open: this.isOpen,
       running: this.isRunning,
@@ -36,7 +36,7 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
     return this._running;
   }
 
-  async open() {
+  async open(): Promise<void> {
     if (!this._open) {
       log('opening...');
       await this._onOpen();
@@ -47,7 +47,7 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
     }
   }
 
-  async close() {
+  async close(): Promise<void> {
     if (this._open) {
       log('closing...');
       await this.stop();
@@ -58,14 +58,14 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
     }
   }
 
-  async start() {
+  async start(): Promise<void> {
     invariant(this._open);
     if (!this._running) {
       this._running = true;
     }
   }
 
-  async stop() {
+  async stop(): Promise<void> {
     invariant(this._open);
     if (this._running) {
       this._running = false;

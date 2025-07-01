@@ -5,11 +5,11 @@
 import { Chess } from 'chess.js';
 import { pipe, Schema } from 'effect';
 
-import { defineTool, ToolResult } from '@dxos/ai';
+import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { createArtifactElement, VersionPin } from '@dxos/assistant';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
@@ -36,7 +36,7 @@ export default () => {
    `,
     schema: ChessType,
     tools: [
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'create',
         description: 'Create a new chess game. Returns the artifact definition for the game.',
         caption: 'Creating chess game...',
@@ -60,7 +60,7 @@ export default () => {
           ]);
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'list',
         description: 'Query all active chess games.',
         caption: 'Getting games...',
@@ -69,10 +69,11 @@ export default () => {
           invariant(extensions?.space, 'No space');
           const { objects: games } = await extensions.space.db.query(Filter.type(ChessType)).run();
           invariant(games.length > 0, 'No chess games found');
+
           return ToolResult.Success(games);
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'inspect',
         description: 'Get the current state of the chess game.',
         caption: 'Inspecting game...',
@@ -82,12 +83,12 @@ export default () => {
           const game = await extensions.space.db
             .query(Filter.ids(ArtifactId.toDXN(id, extensions.space.id).toString()))
             .first();
-          invariant(isInstanceOf(ChessType, game));
+          invariant(Obj.instanceOf(ChessType, game));
 
           return ToolResult.Success(game.fen);
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'move',
         description: 'Make a move in the chess game.',
         caption: 'Making chess move...',
@@ -103,7 +104,7 @@ export default () => {
           const game = await extensions.space.db
             .query(Filter.ids(ArtifactId.toDXN(id, extensions.space.id).toString()))
             .first();
-          invariant(isInstanceOf(ChessType, game));
+          invariant(Obj.instanceOf(ChessType, game));
 
           const board = new Chess(game.fen);
           try {

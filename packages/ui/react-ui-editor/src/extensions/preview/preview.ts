@@ -16,8 +16,6 @@ import {
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
-import { type RenderCallback } from '../../types';
-
 export type PreviewLinkRef = {
   suggest?: boolean;
   block?: boolean;
@@ -31,32 +29,13 @@ export type PreviewLinkTarget = {
   object?: any;
 };
 
-export type PreviewAction =
-  | {
-      type: 'insert';
-      link: PreviewLinkRef;
-      target: PreviewLinkTarget;
-    }
-  | {
-      type: 'delete';
-      link: PreviewLinkRef;
-    };
-
+// TODO(wittjosiah): Remove.
 // TODO(burdon): Handle error.
 export type PreviewLookup = (link: PreviewLinkRef) => Promise<PreviewLinkTarget | null | undefined>;
 
-export type PreviewActionHandler = (action: PreviewAction) => void;
-
-export type PreviewRenderProps = {
-  readonly: boolean;
-  link: PreviewLinkRef;
-  onAction: PreviewActionHandler;
-  onLookup?: PreviewLookup;
-};
-
 export type PreviewOptions = {
-  renderBlock?: RenderCallback<PreviewRenderProps>;
-  onLookup?: PreviewLookup;
+  addBlockContainer?: (link: PreviewLinkRef, el: HTMLElement) => void;
+  removeBlockContainer?: (link: PreviewLinkRef) => void;
 };
 
 /**
@@ -74,17 +53,6 @@ export const preview = (options: PreviewOptions = {}): Extension => {
         EditorView.atomicRanges.of((view) => view.state.field(field)),
       ],
     }),
-
-    EditorView.theme({
-      '.cm-preview-block': {
-        marginLeft: '-1rem',
-        marginRight: '-1rem',
-        padding: '1rem',
-        borderRadius: '0.5rem',
-        background: 'var(--dx-modalSurface)',
-        border: '1px solid var(--dx-separator)',
-      },
-    }),
   ];
 };
 
@@ -95,7 +63,7 @@ export const preview = (options: PreviewOptions = {}): Extension => {
  * ![Label][dxn:echo:123]    Block reference
  * ![Label][?dxn:echo:123]   Suggestion
  */
-const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef | undefined => {
+export const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef | undefined => {
   const mark = node.getChild('LinkMark');
   const label = node.getChild('LinkLabel');
   if (mark && label) {
@@ -144,7 +112,7 @@ const buildDecorations = (state: EditorState, options: PreviewOptions) => {
         //
         case 'Image': {
           const link = getLinkRef(state, node.node);
-          if (options.renderBlock && link) {
+          if (options.addBlockContainer && options.removeBlockContainer && link) {
             builder.add(
               node.from,
               node.to,
@@ -180,11 +148,11 @@ class PreviewInlineWidget extends WidgetType {
   //   return false;
   // }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return this._link.ref === other._link.ref && this._link.label === other._link.label;
   }
 
-  override toDOM(view: EditorView) {
+  override toDOM(view: EditorView): HTMLElement {
     const root = document.createElement('dx-ref-tag');
     root.textContent = this._link.label;
     root.setAttribute('refId', this._link.ref);
@@ -208,64 +176,18 @@ class PreviewBlockWidget extends WidgetType {
   //   return true;
   // }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return this._link.ref === other._link.ref;
   }
 
-  override toDOM(view: EditorView) {
+  override toDOM(view: EditorView): HTMLDivElement {
     const root = document.createElement('div');
-    root.classList.add('cm-preview-block');
-
-    // TODO(burdon): Inject handler.
-    const handleAction: PreviewActionHandler = (action) => {
-      const pos = view.posAtDOM(root);
-      const node = syntaxTree(view.state).resolve(pos + 1).node.parent;
-      if (!node) {
-        return;
-      }
-
-      const link = getLinkRef(view.state, node);
-      if (link?.ref !== action.link.ref) {
-        return;
-      }
-
-      switch (action.type) {
-        // TODO(burdon): Should we dispatch to the view or mutate the document? (i.e., handle externally?)
-        // Insert ref text.
-        case 'insert': {
-          view.dispatch({
-            changes: {
-              from: node.from,
-              to: node.to,
-              insert: action.target.text,
-            },
-          });
-          break;
-        }
-        // Remove ref.
-        case 'delete': {
-          view.dispatch({
-            changes: {
-              from: node.from,
-              to: node.to,
-            },
-          });
-          break;
-        }
-      }
-    };
-
-    this._options.renderBlock!(
-      root,
-      {
-        readonly: view.state.readOnly,
-        link: this._link,
-        onAction: handleAction,
-        onLookup: this._options.onLookup,
-      },
-      view,
-    );
-
+    root.classList.add('cm-preview-block', 'density-coarse');
+    this._options.addBlockContainer?.(this._link, root);
     return root;
+  }
+
+  override destroy() {
+    this._options.removeBlockContainer?.(this._link);
   }
 }

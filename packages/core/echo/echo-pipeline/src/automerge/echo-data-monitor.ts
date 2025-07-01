@@ -35,7 +35,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
 
   constructor(private readonly _params: EchoDataMonitorOptions = { timeSeriesLength: 30 }) {}
 
-  public tick(timeMs: number) {
+  public tick(timeMs: number): void {
     this._advanceTimeWindow(timeMs - this._lastTick);
     this._lastTick = timeMs;
   }
@@ -100,7 +100,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     return this._computeMessageHistogram('peerId');
   }
 
-  private _advanceTimeWindow(millisPassed: number) {
+  private _advanceTimeWindow(millisPassed: number): void {
     const oldMetrics = Object.freeze(this._activeCounters);
     this._activeCounters = createLocalCounters();
     this._lastCompleteCounters = oldMetrics;
@@ -115,7 +115,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     }
   }
 
-  private _addToTimeSeries<T extends object>(values: T, timeSeries: TimeSeries<T>) {
+  private _addToTimeSeries<T extends object>(values: T, timeSeries: TimeSeries<T>): void {
     for (const [key, value] of Object.entries(values)) {
       const values: (typeof value)[] = (timeSeries as any)[key];
       values.push(value);
@@ -125,7 +125,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     }
   }
 
-  private _reportPerSecondRate(metrics: LocalCounters) {
+  private _reportPerSecondRate(metrics: LocalCounters): void {
     const toReport: [string, number, SlidingWindowSummary][] = [
       ['storage.load', metrics.storage.loadedChunks, this._storageAverages.loadsPerSecond],
       ['storage.store', metrics.storage.storedChunks, this._storageAverages.storesPerSecond],
@@ -144,17 +144,17 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     this._replicationAverages.sendsFailedPerSecond.record(metrics.replication.failed);
   }
 
-  public recordPeerConnected(peerId: string) {
+  public recordPeerConnected(peerId: string): void {
     this._activeCounters.byPeerId[peerId] = createMessageCounter();
     this._connectionsCount++;
   }
 
-  public recordPeerDisconnected(peerId: string) {
+  public recordPeerDisconnected(peerId: string): void {
     this._connectionsCount--;
     delete this._activeCounters.byPeerId[peerId];
   }
 
-  public recordBytesStored(count: number) {
+  public recordBytesStored(count: number): void {
     this._activeCounters.storage.storedChunks++;
     this._activeCounters.storage.storedBytes += count;
     this._storageAverages.storedChunkSize.record(count);
@@ -169,14 +169,14 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     this._storageAverages.storeDuration.record(durationMs);
   }
 
-  public recordBytesLoaded(count: number) {
+  public recordBytesLoaded(count: number): void {
     this._activeCounters.storage.loadedChunks++;
     this._activeCounters.storage.loadedBytes += count;
     this._storageAverages.loadedChunkSize.record(count);
     trace.metrics.distribution('dxos.echo.storage.bytes-loaded', count, { unit: 'bytes' });
   }
 
-  public recordMessageSent(message: Message, duration: number) {
+  public recordMessageSent(message: Message, duration: number): void {
     let metricsGroupName;
     const bytes = getByteCount(message);
     const tags = { type: message.type };
@@ -197,7 +197,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     this._lastSentMessages.push({ type: message.type, peerId: message.targetId });
   }
 
-  public recordMessageReceived(message: Message) {
+  public recordMessageReceived(message: Message): void {
     const bytes = getByteCount(message);
     const tags = { type: message.type };
     if (isAutomergeProtocolMessage(message)) {
@@ -213,7 +213,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     this._lastReceivedMessages.push({ type: message.type, peerId: message.senderId });
   }
 
-  public recordMessageSendingFailed(message: Message) {
+  public recordMessageSendingFailed(message: Message): void {
     const tags = { type: message.type, success: false };
     if (isAutomergeProtocolMessage(message)) {
       this._activeCounters.replication.failed++;
@@ -225,7 +225,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     messageCounts.failed++;
   }
 
-  private _getStatsForType(message: Message) {
+  private _getStatsForType(message: Message): { messageCounts: MessageCounts; messageSize: SlidingWindowSummary } {
     const messageSize = (this._sizeByMessage[message.type] ??= createSlidingWindow());
     const messageCounts = (this._activeCounters.byType[message.type] ??= createMessageCounter());
     return { messageCounts, messageSize };
@@ -304,6 +304,7 @@ type StorageAverages = {
   storeDuration: SlidingWindowSummary;
 };
 
+// TODO(burdon): Standardize: `sent`/`recv`.
 type NetworkAverages = {
   receivedMessageSize: SlidingWindowSummary;
   receivedPerSecond: SlidingWindowSummary;

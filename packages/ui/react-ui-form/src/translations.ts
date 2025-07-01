@@ -35,6 +35,7 @@ export default [
         'format date-time': 'DateTime',
         'format did': 'DID',
         'format duration': 'Duration',
+        'format dxn': 'DXN',
         'format email': 'Email',
         'format formula': 'Formula',
         'format hostname': 'Hostname',
@@ -47,24 +48,30 @@ export default [
         'format regex': 'RegExp',
         'format string': 'String',
         'format single-select': 'Select',
+        'format multi-select': 'Multi-select',
         'format text': 'Long text',
         'format time': 'Time',
         'format timestamp': 'Timestamp',
         'format user': 'User',
         'format number': 'Number',
         'format uri': 'URI',
+        'format url': 'URL',
         'format uuid': 'UUID',
 
-        // Placeholders
+        // Placeholders.
         'placeholder latitude': 'Latitude',
         'placeholder longitude': 'Longitude',
 
-        // SelectOptionsInput
+        // SelectOptionsInput.
         'select option label': 'Label',
         'select option label placeholder': 'Option label',
         'select option color': 'Color',
         'select option delete': 'Delete',
         'select option add': 'Add option',
+
+        // System schema message.
+        'system schema title': 'System Schema',
+        'system schema description': 'This is a system schema and cannot be modified.',
       },
     },
   },

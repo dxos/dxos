@@ -3,8 +3,8 @@
 //
 
 import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { live } from '@dxos/live-object';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { initializeTable, TableType } from '@dxos/react-ui-table';
@@ -19,7 +19,7 @@ export default (context: PluginContext) =>
       intent: TableAction.Create,
       resolve: async ({ space, name, typename }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const table = live(TableType, { name, threads: [] });
+        const table = Obj.make(TableType, { name, threads: [] });
         await initializeTable({ client, space, table, typename });
         return { data: { object: table } };
       },
@@ -32,7 +32,7 @@ export default (context: PluginContext) =>
         invariant(table.view?.target);
         const schema = space.db.schemaRegistry.getSchema(table.view.target.query.typename!);
         invariant(schema);
-        space.db.add(live(schema, data));
+        space.db.add(Obj.make(schema, data));
       },
     }),
     createResolver({

@@ -4,8 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { Filter, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { Filter, Query } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 
 import { QueryPlanner } from './query-planner';
@@ -377,6 +377,115 @@ describe('QueryPlanner', () => {
                 ],
               },
             ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('get all people not in orgs', () => {
+    const query = Query.without(
+      Query.select(Filter.type(TestSchema.Person)),
+      Query.select(Filter.type(TestSchema.Person)).sourceOf(TestSchema.WorksFor).source(),
+    );
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SetDifferenceStep",
+            "exclude": {
+              "steps": [
+                {
+                  "_tag": "SelectStep",
+                  "selector": {
+                    "_tag": "TypeSelector",
+                    "inverted": false,
+                    "typename": [
+                      "dxn:type:dxos.org/type/Person:0.1.0",
+                    ],
+                  },
+                  "spaces": [
+                    "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+                  ],
+                },
+                {
+                  "_tag": "FilterDeletedStep",
+                  "mode": "only-non-deleted",
+                },
+                {
+                  "_tag": "FilterStep",
+                  "filter": {
+                    "id": undefined,
+                    "props": {},
+                    "type": "object",
+                    "typename": null,
+                  },
+                },
+                {
+                  "_tag": "TraverseStep",
+                  "traversal": {
+                    "_tag": "RelationTraversal",
+                    "direction": "source-to-relation",
+                  },
+                },
+                {
+                  "_tag": "FilterDeletedStep",
+                  "mode": "only-non-deleted",
+                },
+                {
+                  "_tag": "FilterStep",
+                  "filter": {
+                    "id": undefined,
+                    "props": {},
+                    "type": "object",
+                    "typename": "dxn:type:dxos.org/type/WorksFor:0.1.0",
+                  },
+                },
+                {
+                  "_tag": "TraverseStep",
+                  "traversal": {
+                    "_tag": "RelationTraversal",
+                    "direction": "relation-to-source",
+                  },
+                },
+                {
+                  "_tag": "FilterDeletedStep",
+                  "mode": "only-non-deleted",
+                },
+              ],
+            },
+            "source": {
+              "steps": [
+                {
+                  "_tag": "SelectStep",
+                  "selector": {
+                    "_tag": "TypeSelector",
+                    "inverted": false,
+                    "typename": [
+                      "dxn:type:dxos.org/type/Person:0.1.0",
+                    ],
+                  },
+                  "spaces": [
+                    "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+                  ],
+                },
+                {
+                  "_tag": "FilterDeletedStep",
+                  "mode": "only-non-deleted",
+                },
+                {
+                  "_tag": "FilterStep",
+                  "filter": {
+                    "id": undefined,
+                    "props": {},
+                    "type": "object",
+                    "typename": null,
+                  },
+                },
+              ],
+            },
           },
         ],
       }

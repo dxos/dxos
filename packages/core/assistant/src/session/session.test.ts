@@ -5,11 +5,11 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { AIServiceEdgeClient, ConsolePrinter, defineTool, ToolResult } from '@dxos/ai';
+import { EdgeAiServiceClient, ConsolePrinter, createTool, ToolResult } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
-import { Type } from '@dxos/echo';
-import { create, ObjectId } from '@dxos/echo-schema';
+import { Type, Obj } from '@dxos/echo';
+import { ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -33,8 +33,8 @@ type CalendarEvent = Schema.Schema.Type<typeof CalendarEventSchema>;
 // TODO(burdon): Flaky.
 describe.skip('AISession with Ollama', () => {
   test('create calendar itinerary', { timeout: 60_000 }, async () => {
-    const aiClient = new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
-    // const aiClient = new OllamaClient({
+    const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
+    // const aiClient = new OllamaAiServiceClient({
     //   overrides: { model: 'llama3.1:8b' },
     // });
     const session = new AISession({ operationModel: 'configured' });
@@ -48,7 +48,7 @@ describe.skip('AISession with Ollama', () => {
       instructions: 'Use this to create and query calendar events.',
       schema: CalendarEventSchema,
       tools: [
-        defineTool('calendar', {
+        createTool('calendar', {
           name: 'query',
           description: 'Query the calendar for events',
           schema: Schema.Struct({}),
@@ -65,7 +65,7 @@ describe.skip('AISession with Ollama', () => {
       instructions: 'Use this to create and manage tables. Each table has a unique id.',
       schema: Schema.Struct({}),
       tools: [
-        defineTool('table', {
+        createTool('table', {
           name: 'create',
           description: 'Create a table',
           schema: Schema.Struct({
@@ -89,7 +89,7 @@ describe.skip('AISession with Ollama', () => {
         'Use this to create and manage maps. Maps source data from tables. Table id is required to create a map.',
       schema: Schema.Struct({}),
       tools: [
-        defineTool('map', {
+        createTool('map', {
           name: 'create',
           description: 'Create a map',
           schema: Schema.Struct({
@@ -156,31 +156,31 @@ describe.skip('AISession with Ollama', () => {
 
 // Travel to rome, florence, livorno, siena, madrid for conferences
 const CALENDAR_EVENTS: CalendarEvent[] = [
-  create(CalendarEventSchema, {
+  Obj.make(CalendarEventSchema, {
     title: 'Exploring Ancient Ruins in Rome',
     startTime: '2024-01-01T10:00:00Z',
     endTime: '2024-01-01T11:00:00Z',
     description: 'Tech conference at the historic Colosseum with networking opportunities',
   }),
-  create(CalendarEventSchema, {
+  Obj.make(CalendarEventSchema, {
     title: 'Renaissance Tech Summit in Florence',
     startTime: '2024-01-01T11:00:00Z',
     endTime: '2024-01-01T12:00:00Z',
     description: 'Discussing AI innovations surrounded by Renaissance art',
   }),
-  create(CalendarEventSchema, {
+  Obj.make(CalendarEventSchema, {
     title: 'Travel to Livorno',
     startTime: '2024-01-01T12:00:00Z',
     endTime: '2024-01-01T13:00:00Z',
     description: 'Travel to Livorno',
   }),
-  create(CalendarEventSchema, {
+  Obj.make(CalendarEventSchema, {
     title: 'Travel to Siena',
     startTime: '2024-01-01T13:00:00Z',
     endTime: '2024-01-01T14:00:00Z',
     description: 'Travel to Siena',
   }),
-  create(CalendarEventSchema, {
+  Obj.make(CalendarEventSchema, {
     title: 'Travel to Madrid',
     startTime: '2024-01-01T14:00:00Z',
     endTime: '2024-01-01T15:00:00Z',

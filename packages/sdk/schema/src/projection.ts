@@ -220,7 +220,7 @@ export class ViewProjection {
    * @param projection The field and props to update
    * @param index Optional index for inserting new fields. Ignored when updating existing fields.
    */
-  setFieldProjection({ field, props }: Partial<FieldProjection>, index?: number) {
+  setFieldProjection({ field, props }: Partial<FieldProjection>, index?: number): void {
     log('setFieldProjection', { field, props, index });
 
     untracked(() => {
@@ -289,6 +289,22 @@ export class ViewProjection {
         this._schema.properties[property] = { type, format, ...jsonProperty, ...rest };
         if (isRename) {
           delete this._schema.properties[sourcePropertyName!];
+
+          // Update propertyOrder array if it exists
+          if (this._schema.propertyOrder) {
+            const orderIndex = this._schema.propertyOrder.indexOf(sourcePropertyName!);
+            if (orderIndex !== -1) {
+              this._schema.propertyOrder[orderIndex] = property;
+            }
+          }
+
+          // Update required array if it exists
+          if (this._schema.required) {
+            const requiredIndex = this._schema.required.indexOf(sourcePropertyName!);
+            if (requiredIndex !== -1) {
+              this._schema.required[requiredIndex] = property;
+            }
+          }
         }
       }
     });

@@ -4,14 +4,14 @@
 
 import { type Schema } from 'effect';
 
-import { AIServiceEdgeClient, type AIServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
+import { type AiServiceClient } from '@dxos/ai';
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
-import { Filter, getSchemaTypename, Query, type BaseEchoObject } from '@dxos/echo-schema';
+import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { AssistantCapabilities } from '@dxos/plugin-assistant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
@@ -33,16 +33,11 @@ type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 export default (context: PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const client = context.getCapability(ClientCapabilities.Client);
+  const aiClient = context.getCapability(AssistantCapabilities.AiClient);
   const state = context.getCapability(MeetingCapabilities.State);
   const settings = context
     .getCapability(Capabilities.SettingsStore)
     .getStore<MeetingSettingsProps>(MEETING_PLUGIN)!.value;
-
-  // TODO(dmaretskyi): Request via capability.
-  const aiClient: AIServiceClient | undefined = new AIServiceEdgeClient({
-    // TODO(burdon): Get from config.
-    endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-  });
 
   return contributes(ThreadCapabilities.CallExtension, {
     onJoin: async ({ channel }: { channel?: ChannelType }) => {
@@ -54,7 +49,7 @@ export default (context: PluginContext) => {
       let messageEnricher;
       if (aiClient && settings.entityExtraction) {
         messageEnricher = createEntityExtractionEnricher({
-          aiClient,
+          aiClient: aiClient.value,
           // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities?
           //  This forced me to add a dependency on markdown plugin.
           //  This will be replaced with a vector search index anyway, so its not a big deal.
@@ -74,7 +69,7 @@ export default (context: PluginContext) => {
       state.activeMeeting = undefined;
     },
     onCallStateUpdated: async (callState: CallState) => {
-      const typename = getSchemaTypename(MeetingType);
+      const typename = Type.getTypename(MeetingType);
       const activity = typename ? callState.activities?.[typename] : undefined;
       if (!activity?.payload) {
         return;
@@ -91,7 +86,7 @@ export default (context: PluginContext) => {
 };
 
 type EntityExtractionEnricherFactoryOptions = {
-  aiClient: AIServiceClient;
+  aiClient: AiServiceClient;
   contextTypes: Schema.Schema.AnyNoContext[];
   space: Space;
 };
@@ -101,7 +96,7 @@ const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: Entit
 
   return async (message: DataType.Message) => {
     const { objects } = await space.db
-      .query(Query.select(Filter.or(...contextTypes.map((s) => Filter.type(s as Schema.Schema<BaseEchoObject>)))))
+      .query(Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as Schema.Schema<Obj.Any>)))))
       .run();
 
     log.info('context', { objects });
@@ -122,10 +117,10 @@ const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: Entit
 };
 
 // TODO(dmaretskyi): Use Type.Any
-const processContextObject = async (object: BaseEchoObject): Promise<any> => {
+const processContextObject = async (object: Obj.Any): Promise<any> => {
   // TODO(dmaretskyi): Documents need special processing is the content is behind a ref.
   // TODO(dmaretskyi): Think about a way to handle this serialization with a decorator.
-  // if (isInstanceOf(DocumentType, object)) {
+  // if (Obj.instanceOf(DocumentType, object)) {
   //   return {
   //     ...object,
   //     content: await object.content.load(),

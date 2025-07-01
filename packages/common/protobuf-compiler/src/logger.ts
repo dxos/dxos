@@ -21,7 +21,7 @@ export class Logger {
     protoFilePaths: string[],
     baseDirPath: string | undefined,
     outDirPath: string
-  ) {
+  ): void {
     if (this._options?.verbose) {
       console.log(chalk`Output: {bold ${outDirPath}}`);
       console.log(chalk`Sources:`);
@@ -36,7 +36,7 @@ export class Logger {
   logParsedSubstitutions(
     substitutionsModule: ModuleSpecifier,
     substitutions: SubstitutionsMap
-  ) {
+  ): void {
     console.log('Processing substitutions...');
     if (this._options?.verbose) {
       console.log(chalk`Definitions: {bold ${substitutionsModule.resolve()}}`);

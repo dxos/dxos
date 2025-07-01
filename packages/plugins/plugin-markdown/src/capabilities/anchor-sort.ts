@@ -3,14 +3,14 @@
 //
 
 import { Capabilities, contributes } from '@dxos/app-framework';
-import { getSchemaTypename } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 import { createDocAccessor, getRangeFromCursor, getTarget } from '@dxos/react-client/echo';
 
 import { DocumentType } from '../types';
 
 export default () =>
   contributes(Capabilities.AnchorSort, {
-    key: getSchemaTypename(DocumentType)!,
+    key: Type.getTypename(DocumentType)!,
     sort: (anchorA, anchorB) => {
       const doc = getTarget(anchorA) as DocumentType;
       const accessor = doc.content.target ? createDocAccessor(doc.content.target, ['content']) : undefined;

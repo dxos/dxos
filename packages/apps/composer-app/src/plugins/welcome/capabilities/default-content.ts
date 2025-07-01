@@ -9,10 +9,10 @@ import { SPACES } from '@dxos/plugin-space';
 import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from '../../../constants';
 
 export default async (context: PluginContext) => {
-  const { fullyQualifiedId, live, Ref } = await import('@dxos/react-client/echo');
+  const { Obj, Ref, Type } = await import('@dxos/echo');
+  const { fullyQualifiedId } = await import('@dxos/react-client/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
   const { DocumentType } = await import('@dxos/plugin-markdown/types');
-  const { CollectionType } = await import('@dxos/plugin-space/types');
   const { DataType } = await import('@dxos/schema');
 
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
@@ -20,16 +20,16 @@ export default async (context: PluginContext) => {
   const client = context.getCapability(ClientCapabilities.Client);
   const defaultSpace = client.spaces.default;
 
-  const readme = live(DocumentType, {
+  const readme = Obj.make(DocumentType, {
     name: INITIAL_DOC_TITLE,
     content: Ref.make(
-      live(DataType.Text, {
+      Obj.make(DataType.Text, {
         content: INITIAL_CONTENT.join('\n\n'),
       }),
     ),
   });
 
-  const defaultSpaceCollection = defaultSpace.properties[CollectionType.typename].target;
+  const defaultSpaceCollection = defaultSpace.properties[Type.getTypename(DataType.Collection)].target;
   defaultSpaceCollection?.objects.push(Ref.make(readme));
 
   // Ensure the default content is in the graph and connected.

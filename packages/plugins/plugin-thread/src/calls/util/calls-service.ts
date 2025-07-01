@@ -101,7 +101,7 @@ export class CallsServicePeer extends Resource {
     return { sessionId, peerConnection };
   }
 
-  private async _stopSession(session: Session) {
+  private async _stopSession(session: Session): Promise<void> {
     session.peerConnection.close();
   }
 
@@ -143,13 +143,13 @@ export class CallsServicePeer extends Resource {
     return peerConnection;
   }
 
-  private async _initiateCallSession() {
+  private async _initiateCallSession(): Promise<string> {
     log('creating new session');
     const { sessionId } = await this._fetch<SessionResponse>('/sessions/new?SESSION', { method: 'POST' });
     return sessionId;
   }
 
-  private async _fetch<T extends ErrorResponse>(relativePath: string, requestInit?: RequestInit) {
+  private async _fetch<T extends ErrorResponse>(relativePath: string, requestInit?: RequestInit): Promise<T> {
     this.history.push({
       type: 'request',
       time: new Date().toISOString(),
@@ -438,7 +438,7 @@ export class CallsServicePeer extends Resource {
     });
   }
 
-  async _closeTrackInBulk(peerConnection: RTCPeerConnection, mid: string, sessionId: string) {
+  async _closeTrackInBulk(peerConnection: RTCPeerConnection, mid: string, sessionId: string): Promise<void> {
     const transceiver = peerConnection.getTransceivers().find((t) => t.mid === mid);
 
     if (peerConnection.connectionState !== 'connected' || transceiver === undefined) {

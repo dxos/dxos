@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Schema } from 'effect';
 import defaulstDeep from 'lodash.defaultsdeep';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -15,10 +16,13 @@ import { MapPlugin } from '@dxos/plugin-map';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
+import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { Config } from '@dxos/react-client';
 import { DataTypes } from '@dxos/schema';
 
-export const testPlugins = (config?: ConfigProto) => [
+type TestPluginsOptions = { config?: ConfigProto; types?: Schema.Schema.AnyNoContext[]; indexConfig?: IndexConfig };
+
+export const testPlugins = ({ config, types = DataTypes, indexConfig }: TestPluginsOptions = {}) => [
   ClientPlugin({
     config: new Config(
       defaulstDeep({}, config, {
@@ -31,10 +35,15 @@ export const testPlugins = (config?: ConfigProto) => [
         },
       }),
     ),
-    types: DataTypes,
+    types,
     onClientInitialized: async (_, client) => {
       if (!client.halo.identity.get()) {
         await client.halo.createIdentity();
+      }
+
+      if (indexConfig) {
+        // TODO(burdon): Rename services.services?
+        await client.services.services.QueryService!.setConfig(indexConfig);
       }
     },
   }),

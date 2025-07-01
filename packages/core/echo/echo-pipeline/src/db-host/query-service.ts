@@ -79,11 +79,11 @@ export class QueryServiceImpl extends Resource implements QueryService {
     });
   }
 
-  override async _open() {
+  override async _open(): Promise<void> {
     this._params.indexer.updated.on(this._ctx, () => this._updateQueries.schedule());
   }
 
-  override async _close() {
+  override async _close(): Promise<void> {
     await Promise.all(Array.from(this._queries).map((query) => query.close()));
   }
 
@@ -137,8 +137,8 @@ export class QueryServiceImpl extends Resource implements QueryService {
   /**
    * Re-index all loaded documents.
    */
-  async reindex() {
-    log.info('Reindexing all documents...');
+  async reindex(): Promise<void> {
+    log('Reindexing all documents...');
     const iterator = createDocumentsIterator(this._params.automergeHost);
     const ids: IdToHeads = new Map();
     for await (const documents of iterator()) {
@@ -146,11 +146,11 @@ export class QueryServiceImpl extends Resource implements QueryService {
         ids.set(id, heads);
       }
       if (ids.size % 100 === 0) {
-        log.info('Collected documents...', { count: ids.size });
+        log('Collected documents...', { count: ids.size });
       }
     }
 
-    log.info('Marking all documents as dirty...', { count: ids.size });
+    log('Marking all documents as dirty...', { count: ids.size });
     await this._params.indexer.reindex(ids);
   }
 }
@@ -172,10 +172,9 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
       if (visited.has(handle.documentId) || !handle.isReady()) {
         return;
       }
+
       const doc = handle.doc()!;
-
       const spaceKey = DatabaseDirectory.getSpaceKey(doc) ?? undefined;
-
       if (doc.objects) {
         yield Object.entries(doc.objects as { [key: string]: any }).map(([objectId, object]) => {
           return {

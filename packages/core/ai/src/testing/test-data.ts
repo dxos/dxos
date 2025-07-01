@@ -17,6 +17,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 
+import { Contact, Organization, Project, Task } from './test-schema';
 import {
   formatInferredRelationshipLabel,
   formatNodeLabel,
@@ -24,7 +25,6 @@ import {
   type Node,
   type Relationship,
 } from '../cypher';
-import { Contact, Organization, Project, Task } from '../testing';
 
 export const seedTestData = (db: EchoDatabase) => {
   const contactRich = db.add(
@@ -272,15 +272,15 @@ export class MockDataSource implements DataSource {
   nodes: Node[] = [];
   relationships: Relationship[] = [];
 
-  async getNodes({ label }: { label?: string }) {
+  async getNodes({ label }: { label?: string }): Promise<Node[]> {
     return this.nodes.filter((node) => !label || node.label === label);
   }
 
-  async getRelationships({ label }: { label?: string }) {
+  async getRelationships({ label }: { label?: string }): Promise<Relationship[]> {
     return this.relationships.filter((relationship) => !label || relationship.label === label);
   }
 
-  add<S extends Schema.Schema.All>(schema: S, data: Schema.Schema.Type<S>) {
+  add<S extends Schema.Schema.All>(schema: S, data: Schema.Schema.Type<S>): Schema.Schema.Type<S> {
     invariant(typeof data.id === 'string', 'Data must have an id');
     const jsonSchema = toJsonSchema(schema);
     if (!this.schema[jsonSchema.$id!]) {
@@ -302,7 +302,7 @@ export class MockDataSource implements DataSource {
     return data;
   }
 
-  computeGraph() {
+  computeGraph(): void {
     this.nodes = [];
     this.relationships = [];
 

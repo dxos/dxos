@@ -38,7 +38,7 @@ export class UpdateScheduler {
     });
   }
 
-  trigger() {
+  trigger(): void {
     if (this._scheduled) {
       return;
     }
@@ -53,14 +53,15 @@ export class UpdateScheduler {
         const delay = this._lastUpdateTime + TIME_PERIOD / this._params.maxFrequency - now;
         if (delay > 0) {
           await new Promise<void>((resolve) => {
-            const clearContext = this._ctx.onDispose(() => {
-              clearTimeout(timeoutId);
-              resolve();
-            });
             const timeoutId = setTimeout(() => {
               clearContext();
               resolve();
             }, delay);
+
+            const clearContext = this._ctx.onDispose(() => {
+              clearTimeout(timeoutId);
+              resolve();
+            });
           });
         }
       }
@@ -87,7 +88,7 @@ export class UpdateScheduler {
     this._scheduled = true;
   }
 
-  forceTrigger() {
+  forceTrigger(): void {
     scheduleMicroTask(this._ctx, async () => {
       this._callback().catch((err) => this._ctx.raise(err));
     });
@@ -97,14 +98,14 @@ export class UpdateScheduler {
    * Waits for the current task to finish if it is running.
    * Does not schedule a new task.
    */
-  async join() {
+  async join(): Promise<void> {
     await this._promise;
   }
 
   /**
    * Force schedule the task to run and wait for it to finish.
    */
-  async runBlocking() {
+  async runBlocking(): Promise<void> {
     // The previous task might still be running, so we need to wait for it to finish.
     await this._promise; // Can't be rejected.
     this._promise = this._callback();

@@ -110,11 +110,11 @@ export class PipelineState {
     return Array.from(this._feeds.values());
   }
 
-  async waitUntilTimeframe(target: Timeframe) {
+  async waitUntilTimeframe(target: Timeframe): Promise<void> {
     await this._timeframeClock.waitUntilReached(target);
   }
 
-  setTargetTimeframe(target: Timeframe) {
+  setTargetTimeframe(target: Timeframe): void {
     this._targetTimeframe = target;
   }
 
@@ -129,7 +129,7 @@ export class PipelineState {
     ctx = new Context(),
     timeout,
     breakOnStall = true,
-  }: WaitUntilReachedTargetParams = {}) {
+  }: WaitUntilReachedTargetParams = {}): Promise<void> {
     log('waitUntilReachedTargetTimeframe', {
       timeout,
       current: this.timeframe,
@@ -244,7 +244,7 @@ export class Pipeline implements PipelineAccessor {
     return this._writer;
   }
 
-  hasFeed(feedKey: PublicKey) {
+  hasFeed(feedKey: PublicKey): boolean {
     return this._feeds.has(feedKey);
   }
 
@@ -254,7 +254,7 @@ export class Pipeline implements PipelineAccessor {
 
   // NOTE: This cannot be synchronized with `stop` because stop waits for the mutation processing to complete,
   // which might be opening feeds during the mutation processing, which w
-  async addFeed(feed: FeedWrapper<FeedMessage>) {
+  async addFeed(feed: FeedWrapper<FeedMessage>): Promise<void> {
     this._feeds.set(feed.key, feed);
 
     if (this._feedSetIterator) {
@@ -266,7 +266,7 @@ export class Pipeline implements PipelineAccessor {
     }
   }
 
-  setWriteFeed(feed: FeedWrapper<FeedMessage>) {
+  setWriteFeed(feed: FeedWrapper<FeedMessage>): void {
     invariant(!this._writer, 'Writer already set.');
     invariant(feed.properties.writable, 'Feed must be writable.');
 
@@ -280,7 +280,7 @@ export class Pipeline implements PipelineAccessor {
   }
 
   @synchronized
-  async start() {
+  async start(): Promise<void> {
     invariant(!this._isStarted, 'Pipeline is already started.');
     log('starting...');
     await this._initIterator();
@@ -296,7 +296,7 @@ export class Pipeline implements PipelineAccessor {
   }
 
   @synchronized
-  async stop() {
+  async stop(): Promise<void> {
     log('stopping...');
     this._isStopping = true;
     for (const [feed, handle] of this._downloads.entries()) {
@@ -318,7 +318,7 @@ export class Pipeline implements PipelineAccessor {
    *  The pipeline will start processing messages AFTER this timeframe.
    */
   @synchronized
-  async setCursor(timeframe: Timeframe) {
+  async setCursor(timeframe: Timeframe): Promise<void> {
     invariant(!this._isStarted || this._isPaused, 'Invalid state.');
 
     this._state._startTimeframe = timeframe;
@@ -336,7 +336,7 @@ export class Pipeline implements PipelineAccessor {
    * Calling pause while processing will cause a deadlock.
    */
   @synchronized
-  async pause() {
+  async pause(): Promise<void> {
     if (this._isPaused) {
       return;
     }
@@ -347,7 +347,7 @@ export class Pipeline implements PipelineAccessor {
   }
 
   @synchronized
-  async unpause() {
+  async unpause(): Promise<void> {
     invariant(this._isPaused, 'Pipeline is not paused.');
 
     this._pauseTrigger.wake();
@@ -396,7 +396,7 @@ export class Pipeline implements PipelineAccessor {
     this._isBeingConsumed = false;
   }
 
-  private _setFeedDownloadState(feed: FeedWrapper<FeedMessage>) {
+  private _setFeedDownloadState(feed: FeedWrapper<FeedMessage>): void {
     let handle = this._downloads.get(feed); // TODO(burdon): Always undefined?
     if (handle) {
       feed.undownload(handle);
@@ -409,14 +409,14 @@ export class Pipeline implements PipelineAccessor {
       if (err) {
         // log.warn(err); // TODO(burdon): Feed is closed/Download was cancelled.
       } else {
-        log.info('downloaded', { data }); // TODO(burdon): Never called.
+        log('downloaded', { data }); // TODO(burdon): Never called.
       }
     });
 
     this._downloads.set(feed, handle);
   }
 
-  private async _initIterator() {
+  private async _initIterator(): Promise<void> {
     this._feedSetIterator = new FeedSetIterator<FeedMessage>(createMessageSelector(this._timeframeClock), {
       start: startAfter(this._timeframeClock.timeframe),
       stallTimeout: 1000,

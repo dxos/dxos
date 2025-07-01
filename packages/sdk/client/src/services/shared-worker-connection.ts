@@ -39,7 +39,7 @@ export class SharedWorkerConnection {
     this._systemPort = systemPort;
   }
 
-  async open(params: { origin: string; observabilityGroup?: string; signalTelemetryEnabled?: boolean }) {
+  async open(params: { origin: string; observabilityGroup?: string; signalTelemetryEnabled?: boolean }): Promise<void> {
     const { RtcTransportService } = await import('@dxos/network-manager');
 
     this._config = await getAsyncProviderValue(this._configProvider);
@@ -83,7 +83,7 @@ export class SharedWorkerConnection {
     }
   }
 
-  async close() {
+  async close(): Promise<void> {
     this._release.wake();
     try {
       await this._systemRpc.rpc.WorkerService.stop();
@@ -93,7 +93,7 @@ export class SharedWorkerConnection {
     await this._systemRpc.close();
   }
 
-  private _lockKey(origin: string) {
+  private _lockKey(origin: string): string {
     return `${origin}-${this._id}`;
   }
 }

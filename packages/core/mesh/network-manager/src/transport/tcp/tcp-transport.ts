@@ -35,7 +35,7 @@ export class TcpTransport implements Transport {
     return this._connected && !this._closed;
   }
 
-  async open() {
+  async open(): Promise<this> {
     log('opening');
 
     // Initiator will send a signal, the receiver will receive the unique ID and connect the streams.
@@ -75,7 +75,7 @@ export class TcpTransport implements Transport {
     return this;
   }
 
-  async close() {
+  async close(): Promise<this> {
     log('closing');
     this._socket?.destroy();
     this._server?.close();
@@ -83,7 +83,7 @@ export class TcpTransport implements Transport {
     return this;
   }
 
-  async onSignal({ payload }: Signal) {
+  async onSignal({ payload }: Signal): Promise<void> {
     log('received signal', { payload });
     if (this.options.initiator || this._connected) {
       return;
@@ -113,7 +113,7 @@ export class TcpTransport implements Transport {
     };
   }
 
-  private _handleSocket(socket: Socket) {
+  private _handleSocket(socket: Socket): void {
     log('handling socket', { remotePort: socket.remotePort, localPort: socket.localPort });
     this._socket = socket;
 

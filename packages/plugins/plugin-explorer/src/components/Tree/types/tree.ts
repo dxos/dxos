@@ -4,25 +4,23 @@
 
 import { Schema } from 'effect';
 
-import { Type } from '@dxos/echo';
-import { ObjectId, Ref, Expando } from '@dxos/echo-schema';
+import { Key, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { live } from '@dxos/live-object';
 
 // TODO(burdon): Reconcile with @dxos/graph (i.e., common types).
 
 export const TreeNodeType = Schema.Struct({
-  id: ObjectId,
-  children: Schema.mutable(Schema.Array(ObjectId)),
+  id: Key.ObjectId,
+  children: Schema.mutable(Schema.Array(Key.ObjectId)),
   data: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any })),
-  ref: Schema.optional(Ref(Expando)), // TODO(burdon): Generic type?
+  ref: Schema.optional(Type.Ref(Type.Expando)),
 }).pipe(Schema.mutable);
 
 export interface TreeNodeType extends Schema.Schema.Type<typeof TreeNodeType> {}
 
 export const TreeType = Schema.Struct({
-  root: ObjectId,
-  nodes: Schema.mutable(Schema.Record({ key: ObjectId, value: TreeNodeType })),
+  root: Key.ObjectId,
+  nodes: Schema.mutable(Schema.Record({ key: Key.ObjectId, value: TreeNodeType })),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Tree',
@@ -37,8 +35,8 @@ export interface TreeType extends Schema.Schema.Type<typeof TreeType> {}
  */
 export class Tree {
   static create = (): TreeType => {
-    const id = ObjectId.random();
-    return live(TreeType, {
+    const id = Key.ObjectId.random();
+    return Obj.make(TreeType, {
       root: id,
       nodes: {
         [id]: {
@@ -78,7 +76,7 @@ export class Tree {
    */
   tranverse<T>(
     callback: (node: TreeNodeType, depth: number) => T | void,
-    root: ObjectId = this._tree.root,
+    root: Key.ObjectId = this._tree.root,
     depth = 0,
   ): T | void {
     const node = this._tree.nodes[root];
@@ -95,7 +93,7 @@ export class Tree {
     }
   }
 
-  getNode(id: ObjectId): TreeNodeType {
+  getNode(id: Key.ObjectId): TreeNodeType {
     const node = this._tree.nodes[id];
     invariant(node);
     return node;
@@ -183,7 +181,7 @@ export class Tree {
   /**
    * Clear tree.
    */
-  clear() {
+  clear(): void {
     const root = this._tree.nodes[this._tree.root];
     root.children.length = 0;
     this._tree.nodes = {
@@ -196,7 +194,7 @@ export class Tree {
    */
   addNode(parent: TreeNodeType, node?: TreeNodeType, index?: number): TreeNodeType {
     if (!node) {
-      const id = ObjectId.random();
+      const id = Key.ObjectId.random();
       node = { id, children: [], data: { text: '' } }; // TODO(burdon): Generic.
     }
 
@@ -208,7 +206,7 @@ export class Tree {
   /**
    * Delete node.
    */
-  deleteNode(parent: TreeNodeType, id: ObjectId): TreeNodeType | undefined {
+  deleteNode(parent: TreeNodeType, id: Key.ObjectId): TreeNodeType | undefined {
     const node = this._tree.nodes[id];
     if (!node) {
       return undefined;
@@ -242,7 +240,7 @@ export class Tree {
   /**
    * Indent node.
    */
-  indentNode(node: TreeNodeType) {
+  indentNode(node: TreeNodeType): void {
     const parent = this.getParent(node);
     if (!parent) {
       return;
@@ -261,7 +259,7 @@ export class Tree {
   /**
    * Unindent node.
    */
-  unindentNode(node: TreeNodeType) {
+  unindentNode(node: TreeNodeType): void {
     const parent = this.getParent(node);
     if (!parent) {
       return;

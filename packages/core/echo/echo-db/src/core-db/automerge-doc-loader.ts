@@ -8,14 +8,14 @@ import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@auto
 import { Event } from '@dxos/async';
 import { cancelWithContext, type Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
-import { type SpaceState, type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
-import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { type SpaceState, DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
+import { assertState, invariant } from '@dxos/invariant';
+import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
-import { type RepoProxy, type DocHandleProxy } from '../client';
+import { type RepoProxy, type DocHandleProxy } from '../automerge';
 
 type SpaceDocumentLinks = DatabaseDirectory['links'];
 
@@ -30,6 +30,7 @@ export interface AutomergeDocumentLoader {
    */
   getLinkedDocHandles(): DocHandleProxy<DatabaseDirectory>[];
 
+  objectPresent(id: ObjectId): boolean;
   loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void>;
   loadObjectDocument(objectId: string | string[]): void;
   getObjectDocumentId(objectId: string): string | undefined;
@@ -111,7 +112,15 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     this._spaceRootDocHandle = existingDocHandle;
   }
 
-  public loadObjectDocument(objectIdOrMany: string | string[]) {
+  objectPresent(id: ObjectId): boolean {
+    assertState(this._spaceRootDocHandle, 'Database was not initialized with root object.');
+    return (
+      DatabaseDirectory.getInlineObject(this._spaceRootDocHandle.doc(), id) != null ||
+      DatabaseDirectory.getLink(this._spaceRootDocHandle.doc(), id) != null
+    );
+  }
+
+  public loadObjectDocument(objectIdOrMany: string | string[]): void {
     const objectIds = Array.isArray(objectIdOrMany) ? objectIdOrMany : [objectIdOrMany];
     let hasUrlsToLoad = false;
     const urlsToLoad: DatabaseDirectory['links'] = {};
@@ -145,7 +154,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return documentUrl && interpretAsDocumentId(documentUrl.toString() as AutomergeUrl);
   }
 
-  public onObjectLinksUpdated(links: SpaceDocumentLinks) {
+  public onObjectLinksUpdated(links: SpaceDocumentLinks): void {
     if (!links) {
       return;
     }
@@ -175,7 +184,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return spaceDocHandle;
   }
 
-  public onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string) {
+  public onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void {
     this._objectDocumentHandles.set(objectId, handle);
   }
 
@@ -192,7 +201,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return (spaceRootDoc.links ?? {})[objectId]?.toString() as AutomergeUrl;
   }
 
-  private _loadLinkedObjects(links: SpaceDocumentLinks) {
+  private _loadLinkedObjects(links: SpaceDocumentLinks): void {
     if (!links) {
       return;
     }
@@ -218,7 +227,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     }
   }
 
-  private async _initDocHandle(ctx: Context, url: string) {
+  private async _initDocHandle(ctx: Context, url: string): Promise<DocHandleProxy<DatabaseDirectory>> {
     const docHandle = this._repo.find<DatabaseDirectory>(url as DocumentId);
     await warnAfterTimeout(5_000, 'Automerge root doc load timeout (CoreDatabase)', async () => {
       await cancelWithContext(ctx, docHandle.whenReady()); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
@@ -227,14 +236,14 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return docHandle;
   }
 
-  private _initDocAccess(handle: DocHandleProxy<DatabaseDirectory>) {
+  private _initDocAccess(handle: DocHandleProxy<DatabaseDirectory>): void {
     handle.change((newDoc: DatabaseDirectory) => {
       newDoc.access ??= { spaceKey: this._spaceKey.toHex() };
       newDoc.access.spaceKey = this._spaceKey.toHex();
     });
   }
 
-  private async _loadHandleForObject(handle: DocHandleProxy<DatabaseDirectory>, objectId: string) {
+  private async _loadHandleForObject(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): Promise<void> {
     try {
       if (this._currentlyLoadingObjects.has({ url: handle.url, objectId })) {
         log.warn('document is already loading', { objectId });

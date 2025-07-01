@@ -2,34 +2,26 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FetchHttpClient } from '@effect/platform';
-import { type Context, Effect, Either, Exit, Layer, Scope } from 'effect';
+import { type Context, Effect, Either, Exit, Scope } from 'effect';
 
 import { type ImageContentBlock } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
 import {
-  isNotExecuted,
-  makeValueBag,
   type ComputeEdge,
   type ComputeEvent,
   type ComputeGraphModel,
   type ComputeMeta,
   type ComputeNode,
-  type ComputeRequirements,
-  EventLogger,
+  type EventLogger,
   type GptInput,
   type GptOutput,
-  GptService,
-  GraphExecutor,
-  MockGpt,
-  QueueService,
-  SpaceService,
-  type ValueBag,
   type GraphDiagnostic,
-  FunctionCallService,
+  GraphExecutor,
+  isNotExecuted,
+  ValueBag,
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
-import type { EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
+import type { ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 
@@ -70,13 +62,6 @@ export type RuntimeValue =
       error: string;
     };
 
-export type Services = {
-  gpt: Context.Tag.Service<GptService>;
-  edgeClient?: EdgeClient;
-  edgeHttpClient?: EdgeHttpClient;
-  spaceService?: Context.Tag.Service<SpaceService>;
-};
-
 type ComputeOutputEvent = {
   nodeId: string;
   property: string;
@@ -88,10 +73,12 @@ type ComputeOutputEvent = {
  */
 const AUTO_TRIGGER_NODES = ['chat', 'switch', 'constant'];
 
-export const createComputeGraphController = (graph: CanvasGraphModel<ComputeShape>, services?: Partial<Services>) => {
+export const createComputeGraphController = (
+  graph: CanvasGraphModel<ComputeShape>,
+  serviceContainer: ServiceContainer,
+) => {
   const computeGraph = createComputeGraph(graph);
-  const controller = new ComputeGraphController(computeGraph);
-  controller.setServices(services ?? {});
+  const controller = new ComputeGraphController(serviceContainer, computeGraph);
   return { controller, graph };
 };
 
@@ -104,8 +91,6 @@ export class ComputeGraphController extends Resource {
   });
 
   private _diagnostics: GraphDiagnostic[] = [];
-
-  private _services: Partial<Services> = {};
 
   /**
    * Canvas force-sets outputs of those nodes.
@@ -128,6 +113,7 @@ export class ComputeGraphController extends Resource {
   public readonly events = new Event<ComputeEvent>();
 
   constructor(
+    private readonly _serviceContainer: ServiceContainer,
     /** Persistent compute graph. */
     private readonly _graph: ComputeGraphModel,
   ) {
@@ -143,11 +129,6 @@ export class ComputeGraphController extends Resource {
       },
       forcedOutputs: this._forcedOutputs,
     };
-  }
-
-  setServices(services: Partial<Services>) {
-    log.info('setServices', { services });
-    Object.assign(this._services, services);
   }
 
   get graph() {
@@ -187,11 +168,11 @@ export class ComputeGraphController extends Resource {
     );
   }
 
-  addNode(node: ComputeNode) {
+  addNode(node: ComputeNode): void {
     this._graph.addNode(node);
   }
 
-  addEdge(edge: ComputeEdge) {
+  addEdge(edge: ComputeEdge): void {
     this._graph.addEdge(edge);
   }
 
@@ -199,15 +180,15 @@ export class ComputeGraphController extends Resource {
     return this._graph.getNode(nodeId);
   }
 
-  getInputs(nodeId: string) {
+  getInputs(nodeId: string): Record<string, RuntimeValue> {
     return this._runtimeStateInputs[nodeId] ?? {};
   }
 
-  getOutputs(nodeId: string) {
+  getOutputs(nodeId: string): Record<string, RuntimeValue> {
     return this._runtimeStateOutputs[nodeId] ?? {};
   }
 
-  setOutput(nodeId: string, property: string, value: any) {
+  setOutput(nodeId: string, property: string, value: any): void {
     this._forcedOutputs[nodeId] ??= {};
     this._forcedOutputs[nodeId][property] = value;
 
@@ -232,15 +213,15 @@ export class ComputeGraphController extends Resource {
     this._diagnostics = executor.getDiagnostics();
   }
 
-  async evalNode(nodeId: string) {
+  async evalNode(nodeId: string): Promise<void> {
     const executor = this._executor.clone();
     await executor.load(this._graph);
 
     for (const [nodeId, outputs] of Object.entries(this._forcedOutputs)) {
-      executor.setOutputs(nodeId, Effect.succeed(makeValueBag(outputs)));
+      executor.setOutputs(nodeId, Effect.succeed(ValueBag.make(outputs)));
     }
 
-    const services = this._createServiceLayer();
+    const serviceLayer = this._serviceContainer.createLayer();
     await Effect.runPromise(
       Effect.gen(this, function* () {
         const scope = yield* Scope.make();
@@ -254,7 +235,7 @@ export class ComputeGraphController extends Resource {
           Scope.extend(scope),
 
           Effect.flatMap(computeValueBag),
-          Effect.provide(services),
+          Effect.provide(serviceLayer),
           Effect.withSpan('test'),
           Effect.tap((values) => {
             for (const [key, value] of Object.entries(values)) {
@@ -281,14 +262,14 @@ export class ComputeGraphController extends Resource {
    * @param startFromNode - Node to start from, otherwise all {@link AUTO_TRIGGER_NODES} are executed.
    */
   @synchronized
-  async exec(startFromNode?: string) {
+  async exec(startFromNode?: string): Promise<void> {
     this._runtimeStateInputs = {};
     this._runtimeStateOutputs = {};
     const executor = this._executor.clone();
     await executor.load(this._graph);
 
     for (const [nodeId, outputs] of Object.entries(this._forcedOutputs)) {
-      executor.setOutputs(nodeId, Effect.succeed(makeValueBag(outputs)));
+      executor.setOutputs(nodeId, Effect.succeed(ValueBag.make(outputs)));
     }
 
     // TODO(dmaretskyi): Stop hardcoding.
@@ -298,7 +279,6 @@ export class ComputeGraphController extends Resource {
         : this._graph.nodes.filter((node) => node.type != null && AUTO_TRIGGER_NODES.includes(node.type));
     const allAffectedNodes = [...new Set(triggerNodes.flatMap((node) => executor.getAllDependantNodes(node.id)))];
 
-    const services = this._createServiceLayer();
     await Effect.runPromise(
       Effect.gen(this, function* () {
         const scope = yield* Scope.make();
@@ -315,7 +295,7 @@ export class ComputeGraphController extends Resource {
             Effect.withSpan('runGraph'),
             Scope.extend(scope),
             Effect.flatMap(computeValueBag),
-            Effect.provide(services),
+            Effect.provide(this._serviceContainer.createLayer()),
             Effect.withSpan('test'),
             Effect.tap((values) => {
               for (const [key, value] of Object.entries(values)) {
@@ -342,27 +322,6 @@ export class ComputeGraphController extends Resource {
     this.update.emit();
   }
 
-  private _createServiceLayer(): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> {
-    const services = { ...DEFAULT_SERVICES, ...this._services };
-    const logLayer = Layer.succeed(EventLogger, this._createLogger());
-    const gptLayer = Layer.succeed(GptService, services.gpt!);
-    const queueLayer =
-      services.edgeHttpClient != null ? QueueService.fromClient(services.edgeHttpClient) : QueueService.notAvailable;
-
-    const spaceLayer =
-      services.spaceService != null ? Layer.succeed(SpaceService, services.spaceService) : SpaceService.empty;
-
-    const functionCallServiceLayer =
-      services.edgeHttpClient != null && services.spaceService != null
-        ? Layer.succeed(
-            FunctionCallService,
-            FunctionCallService.fromClient(services.edgeHttpClient.baseUrl, services.spaceService.spaceId),
-          )
-        : Layer.succeed(FunctionCallService, FunctionCallService.mock());
-
-    return Layer.mergeAll(logLayer, gptLayer, queueLayer, spaceLayer, functionCallServiceLayer, FetchHttpClient.layer);
-  }
-
   private _createLogger(): Context.Tag.Service<EventLogger> {
     return {
       log: (event) => {
@@ -372,7 +331,7 @@ export class ComputeGraphController extends Resource {
     };
   }
 
-  private _handleEvent(event: ComputeEvent) {
+  private _handleEvent(event: ComputeEvent): void {
     log('handleEvent', { event });
     switch (event.type) {
       case 'compute-input': {
@@ -388,12 +347,12 @@ export class ComputeGraphController extends Resource {
     this.events.emit(event);
   }
 
-  private _onInputComputed(nodeId: string, property: string, value: RuntimeValue) {
+  private _onInputComputed(nodeId: string, property: string, value: RuntimeValue): void {
     this._runtimeStateInputs[nodeId] ??= {};
     this._runtimeStateInputs[nodeId][property] = value;
   }
 
-  private _onOutputComputed(nodeId: string, property: string, value: RuntimeValue) {
+  private _onOutputComputed(nodeId: string, property: string, value: RuntimeValue): void {
     this._runtimeStateOutputs[nodeId] ??= {};
     this._runtimeStateOutputs[nodeId][property] = value;
 
@@ -401,10 +360,6 @@ export class ComputeGraphController extends Resource {
     this.output.emit({ nodeId, property, value });
   }
 }
-
-const DEFAULT_SERVICES: Services = {
-  gpt: new MockGpt(),
-};
 
 /**
  * Waits for all effects in the bag to complete and returns the `RuntimeValue` for each property.

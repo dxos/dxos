@@ -6,7 +6,7 @@ import { type Registry } from '@effect-rx/rx-react';
 import { type Schema } from 'effect';
 import { type FC, type PropsWithChildren } from 'react';
 
-import { type Tool } from '@dxos/ai';
+import { type ExecutableTool } from '@dxos/ai';
 import { type GraphBuilder, type BuilderExtensions } from '@dxos/app-graph';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import { type Space } from '@dxos/client-protocol';
@@ -17,7 +17,7 @@ import { type FileInfo } from './file';
 import { type NodeSerializer } from './graph';
 import { type SurfaceDefinition } from './surface';
 import { type Resource } from './translations';
-import { defineCapability, type PluginManager } from '../core';
+import { type PluginManager, defineCapability } from '../core';
 import { type AnyIntentResolver, type IntentContext } from '../plugin-intent';
 
 export namespace Capabilities {
@@ -87,8 +87,8 @@ export namespace Capabilities {
   // export type Settings = Parameters<RootSettingsStore['createStore']>[0];
   // export type Settings<T extends SettingsValue = SettingsValue> = SettingsProps<T>;
   export type Settings = {
-    schema: Schema.Schema.All;
     prefix: string;
+    schema: Schema.Schema.All;
     value?: Record<string, any>;
   };
   export const Settings = defineCapability<Settings>('dxos.org/app-framework/capability/settings');
@@ -96,7 +96,7 @@ export namespace Capabilities {
   export type Metadata = Readonly<{ id: string; metadata: Record<string, any> }>;
   export const Metadata = defineCapability<Metadata>('dxos.org/app-framework/capability/metadata');
 
-  export const Tools = defineCapability<Tool[]>('dxos.org/app-framework/capability/tools');
+  export const Tools = defineCapability<ExecutableTool[]>('dxos.org/app-framework/capability/tools');
   export const ArtifactDefinition = defineCapability<ArtifactDefinition>(
     'dxos.org/app-framework/capability/artifact-definition',
   );

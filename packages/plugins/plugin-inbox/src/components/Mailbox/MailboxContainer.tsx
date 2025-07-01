@@ -9,7 +9,6 @@ import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ElevationProvider, Icon } from '@dxos/react-ui';
-import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TagPicker } from '@dxos/react-ui-tag-picker';
@@ -106,51 +105,41 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   );
 
   return (
-    <StackItem.Content classNames='relative'>
-      <div role='none' className={gridLayout}>
-        <div role='none' className={stackItemContentToolbarClassNames('section')}>
-          <ElevationProvider elevation='positioned'>
-            <MenuProvider {...menu} attendableId={id}>
-              <ToolbarMenu />
-            </MenuProvider>
-          </ElevationProvider>
-        </div>
+    <StackItem.Content classNames={['relative', gridLayout]} layoutManaged toolbar>
+      <ElevationProvider elevation='positioned'>
+        <MenuProvider {...menu} attendableId={id}>
+          <ToolbarMenu />
+        </MenuProvider>
+      </ElevationProvider>
 
-        {tagFilterVisible.value && (
-          <div role='none' className='pli-1 pbs-[1px] border-be bs-8 flex items-center border-separator'>
-            <Icon
-              role='presentation'
-              icon='ph--tag--bold'
-              classNames='mr-1 opacity-30'
-              aria-label='tags icon'
-              size={4}
-            />
-            <TagPicker
-              ref={tagPickerFocusRef}
-              items={tagPickerCurrentItems}
-              onUpdate={onTagPickerUpdate}
-              onSearch={(text, ids) =>
-                model.availableTags
-                  .filter((tag) => tag.label.toLowerCase().includes(text.toLowerCase()))
-                  .filter((tag) => !ids.includes(tag.label))
-                  .map((tag) => ({ id: tag.label, label: tag.label, hue: tag.hue as any }))
-              }
-            />
-          </div>
-        )}
-
-        {model.messages && model.messages.length > 0 ? (
-          <Mailbox
-            messages={model.messages}
-            id={id}
-            name={mailbox.name}
-            onAction={handleAction}
-            currentMessageId={currentMessageId}
+      {tagFilterVisible.value && (
+        <div role='none' className='pli-1 pbs-[1px] border-be bs-8 flex items-center border-separator'>
+          <Icon role='presentation' icon='ph--tag--bold' classNames='mr-1 opacity-30' aria-label='tags icon' size={4} />
+          <TagPicker
+            ref={tagPickerFocusRef}
+            items={tagPickerCurrentItems}
+            onUpdate={onTagPickerUpdate}
+            onSearch={(text, ids) =>
+              model.availableTags
+                .filter((tag) => tag.label.toLowerCase().includes(text.toLowerCase()))
+                .filter((tag) => !ids.includes(tag.label))
+                .map((tag) => ({ id: tag.label, label: tag.label, hue: tag.hue as any }))
+            }
           />
-        ) : (
-          <EmptyMailboxContent mailbox={mailbox} />
-        )}
-      </div>
+        </div>
+      )}
+
+      {model.messages && model.messages.length > 0 ? (
+        <Mailbox
+          messages={model.messages}
+          id={id}
+          name={mailbox.name}
+          onAction={handleAction}
+          currentMessageId={currentMessageId}
+        />
+      ) : (
+        <EmptyMailboxContent mailbox={mailbox} />
+      )}
     </StackItem.Content>
   );
 };

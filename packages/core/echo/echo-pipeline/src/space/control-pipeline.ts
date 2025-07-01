@@ -112,13 +112,13 @@ export class ControlPipeline {
     return this._pipeline;
   }
 
-  async setWriteFeed(feed: FeedWrapper<FeedMessage>) {
+  async setWriteFeed(feed: FeedWrapper<FeedMessage>): Promise<void> {
     await this._pipeline.addFeed(feed);
     this._pipeline.setWriteFeed(feed);
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async start() {
+  async start(): Promise<void> {
     const snapshot = this._metadata.getSpaceControlPipelineSnapshot(this._spaceKey);
     log('load snapshot', { key: this._spaceKey, present: !!snapshot, tf: snapshot?.timeframe });
     if (USE_SNAPSHOTS && snapshot) {
@@ -134,7 +134,7 @@ export class ControlPipeline {
     log('started');
   }
 
-  private async _processSnapshot(snapshot: ControlPipelineSnapshot) {
+  private async _processSnapshot(snapshot: ControlPipelineSnapshot): Promise<void> {
     await this._pipeline.setCursor(snapshot.timeframe);
 
     for (const message of snapshot.messages ?? []) {
@@ -149,7 +149,7 @@ export class ControlPipeline {
     }
   }
 
-  private async _saveSnapshot() {
+  private async _saveSnapshot(): Promise<void> {
     await this._pipeline.pause();
     const snapshot: ControlPipelineSnapshot = {
       timeframe: this._pipeline.state.timeframe,
@@ -165,7 +165,7 @@ export class ControlPipeline {
   }
 
   @trace.span()
-  private async _consumePipeline(ctx: Context) {
+  private async _consumePipeline(ctx: Context): Promise<void> {
     for await (const msg of this._pipeline.consume()) {
       const span = this._usage.beginRecording();
       this._mutations.inc();
@@ -200,7 +200,7 @@ export class ControlPipeline {
     }
   }
 
-  private async _noteTargetStateIfNeeded(timeframe: Timeframe) {
+  private async _noteTargetStateIfNeeded(timeframe: Timeframe): Promise<void> {
     // TODO(dmaretskyi): Replace this with a proper debounce/throttle.
 
     if (Date.now() - this._lastTimeframeSaveTime > TIMEFRAME_SAVE_DEBOUNCE_INTERVAL) {
@@ -210,7 +210,7 @@ export class ControlPipeline {
     }
   }
 
-  async stop() {
+  async stop(): Promise<void> {
     log('stopping...');
     await this._ctx.dispose();
     await this._pipeline.stop();
@@ -218,7 +218,7 @@ export class ControlPipeline {
     log('stopped');
   }
 
-  private async _saveTargetTimeframe(timeframe: Timeframe) {
+  private async _saveTargetTimeframe(timeframe: Timeframe): Promise<void> {
     try {
       const newTimeframe = Timeframe.merge(this._targetTimeframe ?? new Timeframe(), timeframe);
       await this._metadata.setSpaceControlLatestTimeframe(this._spaceKey, newTimeframe);

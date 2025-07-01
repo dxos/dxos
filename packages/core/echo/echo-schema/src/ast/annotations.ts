@@ -2,16 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { flow, pipe, Option, Schema, SchemaAST } from 'effect';
+import { flow, Option, pipe, Schema, SchemaAST } from 'effect';
 
-import { getField, type JsonPath } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
 import { createAnnotationHelper } from './annotation-helper';
 import { EntityKind } from './entity-kind';
-import { getSchema } from './schema';
 
 /**
  * ECHO identifier (for a stored schema).
@@ -77,14 +75,13 @@ export const getTypeAnnotation = (schema: Schema.Schema.All): TypeAnnotation | u
 export const getEntityKind = (schema: Schema.Schema.All): EntityKind | undefined => getTypeAnnotation(schema)?.kind;
 
 /**
- * @deprecated Use {@link getTypeAnnotation} instead.
+ * @deprecated Use {@link Type.getTypename} instead.
  * @returns Schema typename (without dxn: prefix or version number).
  */
-// TODO(burdon): Rename getTypename. (dmaretskyi): Would conflict with the `getTypename` getter for objects.
 export const getSchemaTypename = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.typename;
 
 /**
- * @deprecated Use {@link getTypeAnnotation} instead.
+ * @deprecated Use {@link Type.getVersion} instead.
  * @returns Schema version in semver format.
  */
 export const getSchemaVersion = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.version;
@@ -149,49 +146,6 @@ export const LabelAnnotationId = Symbol.for('@dxos/schema/annotation/Label');
 export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationId);
 
 /**
- * Returns the label for a given object based on {@link LabelAnnotationId}.
- */
-export const getLabelForObject = (obj: unknown | undefined): string | undefined => {
-  const schema = getSchema(obj);
-  if (schema) {
-    return getLabel(schema, obj);
-  }
-};
-
-/**
- * Returns the label for a given object based on {@link LabelAnnotationId}.
- */
-// TODO(burdon): Convert to JsonPath?
-export const getLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.Schema.Type<S>): string | undefined => {
-  let annotation = schema.ast.annotations[LabelAnnotationId];
-  if (!annotation) {
-    return undefined;
-  }
-  if (!Array.isArray(annotation)) {
-    annotation = [annotation];
-  }
-
-  for (const accessor of annotation as string[]) {
-    assertArgument(typeof accessor === 'string', 'Label annotation must be a string or an array of strings');
-    const value = getField(object, accessor as JsonPath);
-    switch (typeof value) {
-      case 'string':
-      case 'number':
-      case 'boolean':
-      case 'bigint':
-      case 'symbol':
-        return value.toString();
-      case 'undefined':
-      case 'object':
-      case 'function':
-        continue;
-    }
-  }
-
-  return undefined;
-};
-
-/**
  * Default field to be used on referenced schema to lookup the value.
  */
 export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/FieldLookup');
@@ -205,3 +159,27 @@ export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generat
 export type GeneratorAnnotationValue = string | [string, number];
 
 export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationValue>(GeneratorAnnotationId);
+
+/**
+ * @returns DXN of the schema.
+ *
+ * For non-stored schema returns `dxn:type:`.
+ * For stored schema returns `dxn:echo:`.
+ * @deprecated Use `Type.getDXN`.
+ */
+export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
+  assertArgument(Schema.isSchema(schema), 'invalid schema');
+
+  const id = getTypeIdentifierAnnotation(schema);
+  if (id) {
+    return DXN.parse(id);
+  }
+
+  // TODO(dmaretskyi): Add support for dynamic schema.
+  const objectAnnotation = getTypeAnnotation(schema);
+  if (!objectAnnotation) {
+    return undefined;
+  }
+
+  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
+};

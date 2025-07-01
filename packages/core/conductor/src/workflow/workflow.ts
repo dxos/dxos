@@ -14,12 +14,15 @@ import {
   type ComputeGraphModel,
   type ComputeNode,
   type Executable,
-  makeValueBag,
+  ValueBag,
   NotExecuted,
-  type ValueBag,
 } from '../types';
 import { pickProperty } from '../util';
 
+/**
+ * Compute graph executor.
+ */
+// TODO(burdon): Rename.
 export class Workflow {
   constructor(
     private readonly _dxn: DXN,
@@ -68,7 +71,7 @@ export class Workflow {
 
       const outputNodeId = this._graph.nodes.find((node) => node.type === NODE_OUTPUT)?.id;
       const outputNodeIndex = allAffectedNodes.findIndex((nodeId) => nodeId === outputNodeId);
-      return outputNodeIndex >= 0 ? results[outputNodeIndex] : makeValueBag({});
+      return outputNodeIndex >= 0 ? results[outputNodeIndex] : ValueBag.make({});
     })
       .pipe(createDefectLogger())
       .pipe(Effect.withSpan('workflow', { attributes: { workflowDxn: this._dxn } }));
@@ -127,11 +130,11 @@ export class Workflow {
     });
   }
 
-  asGraph() {
+  asGraph(): ComputeGraphModel {
     return this._graph;
   }
 
-  private _requireResolved(nodeId: string) {
+  private _requireResolved(nodeId: string): Executable<Schema.Schema.AnyNoContext, Schema.Schema.AnyNoContext> {
     const resolved = this._resolvedNodeById.get(nodeId);
     if (!resolved) {
       throw new Error(`Node ${nodeId} was not resolved in ${this._dxn.toString()}.`);

@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Obj } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo-schema';
 import { AbstractGraphBuilder, AbstractGraphModel, type Graph, createEdgeId } from '@dxos/graph';
 import { DXN } from '@dxos/keys';
-import { live, makeRef } from '@dxos/live-object';
+import { makeRef } from '@dxos/live-object';
 import { type MakeOptional } from '@dxos/util';
 
 import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph';
@@ -21,7 +22,7 @@ export class ComputeGraphModel extends AbstractGraphModel<
 > {
   static create(graph?: Partial<Graph>): ComputeGraphModel {
     return new ComputeGraphModel(
-      live(ComputeGraph, {
+      Obj.make(ComputeGraph, {
         graph: {
           id: graph?.id ?? ObjectId.random(),
           nodes: graph?.nodes ?? [],
@@ -46,7 +47,7 @@ export class ComputeGraphModel extends AbstractGraphModel<
     return new ComputeGraphBuilder(this);
   }
 
-  override copy(graph?: Partial<Graph>) {
+  override copy(graph?: Partial<Graph>): ComputeGraphModel {
     return ComputeGraphModel.create(graph);
   }
 

@@ -14,7 +14,7 @@ import {
   createSurface,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { Filter, fullyQualifiedId, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 import { DataType } from '@dxos/schema';
@@ -30,15 +30,15 @@ export default () =>
       id: `${INBOX_PLUGIN}/mailbox`,
       role: 'article',
       filter: (data): data is { subject: MailboxType; variant: undefined } =>
-        isInstanceOf(MailboxType, data.subject) && !data.variant,
+        Obj.instanceOf(MailboxType, data.subject) && !data.variant,
       component: ({ data }) => <MailboxContainer mailbox={data.subject} />,
     }),
     createSurface({
       id: `${INBOX_PLUGIN}/message`,
       role: 'article',
       filter: (data): data is { companionTo: MailboxType; subject: DataType.Message | 'message' } =>
-        isInstanceOf(MailboxType, data.companionTo) &&
-        (data.subject === 'message' || isInstanceOf(DataType.Message, data.subject)),
+        Obj.instanceOf(MailboxType, data.companionTo) &&
+        (data.subject === 'message' || Obj.instanceOf(DataType.Message, data.subject)),
       component: ({ data: { companionTo, subject: message } }) => {
         const space = getSpace(companionTo);
         return (
@@ -53,13 +53,13 @@ export default () =>
     createSurface({
       id: `${INBOX_PLUGIN}/calendar`,
       role: 'article',
-      filter: (data): data is { subject: CalendarType } => isInstanceOf(CalendarType, data.subject),
+      filter: (data): data is { subject: CalendarType } => Obj.instanceOf(CalendarType, data.subject),
       component: ({ data }) => <EventsContainer calendar={data.subject} />,
     }),
     createSurface({
       id: `${INBOX_PLUGIN}/mailbox/companion/settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: MailboxType } => isInstanceOf(MailboxType, data.subject),
+      filter: (data): data is { subject: MailboxType } => Obj.instanceOf(MailboxType, data.subject),
       component: ({ data }) => <MailboxObjectSettings object={data.subject} />,
     }),
 
@@ -67,13 +67,13 @@ export default () =>
     createSurface({
       id: `${INBOX_PLUGIN}/contact-related`,
       role: 'related',
-      filter: (data): data is { subject: DataType.Person } => isInstanceOf(DataType.Person, data.subject),
+      filter: (data): data is { subject: DataType.Person } => Obj.instanceOf(DataType.Person, data.subject),
       component: ({ data: { subject: contact } }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = useSpace();
         const [mailbox] = useQuery(space, Filter.type(MailboxType));
         const queue = useQueue<DataType.Message>(mailbox?.queue.dxn);
-        const messages = queue?.items ?? [];
+        const messages = queue?.objects ?? [];
         const related = messages
           .filter(
             (message) =>
@@ -113,7 +113,7 @@ export default () =>
     createSurface({
       id: `${INBOX_PLUGIN}/organization-related`,
       role: 'related',
-      filter: (data): data is { subject: DataType.Organization } => isInstanceOf(DataType.Organization, data.subject),
+      filter: (data): data is { subject: DataType.Organization } => Obj.instanceOf(DataType.Organization, data.subject),
       component: ({ data: { subject: organization } }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = getSpace(organization);

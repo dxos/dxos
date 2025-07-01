@@ -65,7 +65,7 @@ export class TreeProjector<N> extends Projector<GraphModel, GraphLayout<N>, Tree
     return this._layout;
   }
 
-  override onUpdate(data?: GraphModel, selected?: string) {
+  override onUpdate(data?: GraphModel, selected?: string): { graph: { nodes: never[]; edges: never[]; }; } | undefined {
     if (!selected) {
       return {
         graph: {

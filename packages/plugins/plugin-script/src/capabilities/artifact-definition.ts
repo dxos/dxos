@@ -4,14 +4,15 @@
 
 import { Schema } from 'effect';
 
-import { defineTool, ToolResult } from '@dxos/ai';
+import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, live, makeRef, type Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -141,7 +142,7 @@ export default () => {
   `,
     schema: ScriptType,
     tools: [
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'create',
         description: 'Create a new script. Returns the artifact definition for the script',
         caption: 'Creating script...',
@@ -154,10 +155,10 @@ export default () => {
         execute: async ({ name, code }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           invariant(extensions?.dispatch, 'No intent dispatcher');
-          const script = live(ScriptType, {
+          const script = Obj.make(ScriptType, {
             name,
-            source: makeRef(
-              live(DataType.Text, {
+            source: Ref.make(
+              Obj.make(DataType.Text, {
                 content: code,
               }),
             ),
@@ -174,7 +175,7 @@ export default () => {
           return ToolResult.Success(createArtifactElement(script.id));
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'inspect',
         description: 'Inspect a script. Returns the artifact definition for the script',
         caption: 'Inspecting script...',
@@ -193,7 +194,7 @@ export default () => {
           });
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'update',
         description: 'Update a script. Returns the artifact definition for the script',
         caption: 'Updating script...',

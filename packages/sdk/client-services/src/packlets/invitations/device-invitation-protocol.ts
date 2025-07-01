@@ -66,7 +66,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  checkInvitation(invitation: Partial<Invitation>) {
+  checkInvitation(invitation: Partial<Invitation>): AlreadyJoinedError | undefined {
     try {
       const identity = this._getIdentity();
       if (identity) {

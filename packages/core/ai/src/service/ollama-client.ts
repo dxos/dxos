@@ -4,15 +4,25 @@
 
 import { Schema } from 'effect';
 
+import { Obj } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { MessageCollector, emitMessageAsEvents } from './message-collector';
-import { type AIServiceClient, type GenerationStream } from './service';
+import { type AiServiceClient, type GenerationStream } from './service';
 import { GenerationStreamImpl } from './stream';
 import { DEFAULT_OLLAMA_ENDPOINT } from '../defs';
-import { defineTool, isToolUse, type MessageContentBlock, runTools, type Tool, ToolResult } from '../tools';
+import {
+  createTool,
+  type ExecutableTool,
+  isToolUse,
+  Message,
+  type MessageContentBlock,
+  runTools,
+  type Tool,
+  ToolResult,
+} from '../tools';
 import { ToolTypes, type GenerateRequest, type GenerateResponse, type GenerationStreamEvent } from '../types';
 
 export type OllamaClientParams = {
@@ -21,7 +31,7 @@ export type OllamaClientParams = {
   /**
    * Tools that are executed within the client.
    */
-  tools?: Tool[];
+  tools?: ExecutableTool[];
 
   /**
    * Override generation parameters.
@@ -39,7 +49,7 @@ export type OllamaClientParams = {
   maxToolInvocations?: number;
 };
 
-export class OllamaClient implements AIServiceClient {
+export class OllamaAiServiceClient implements AiServiceClient {
   /**
    * Check if Ollama server is running and accessible.
    * @returns Promise that resolves to true if Ollama is running, false otherwise.
@@ -61,7 +71,7 @@ export class OllamaClient implements AIServiceClient {
   }
 
   private readonly _endpoint: string;
-  private readonly _tools: Tool[];
+  private readonly _tools: ExecutableTool[];
   private readonly _modelOverride?: string;
   private readonly _temperatureOverride?: number;
   private readonly _maxToolInvocations: number;
@@ -74,7 +84,7 @@ export class OllamaClient implements AIServiceClient {
     this._maxToolInvocations = maxToolInvocations ?? 3;
   }
 
-  private _getEmbededTools(clientTools: Tool[]) {
+  private _getEmbededTools(clientTools: Tool[]): ExecutableTool[] {
     return [
       ...this._tools,
       ...clientTools
@@ -211,11 +221,11 @@ export class OllamaClient implements AIServiceClient {
       // Send message_start event with proper message structure.
       yield {
         type: 'message_start',
-        message: {
+        message: Obj.make(Message, {
           id: messageId,
           role: 'assistant',
           content: [],
-        },
+        }),
       } as GenerationStreamEvent;
 
       // Initialize text content block.
@@ -312,7 +322,7 @@ export class OllamaClient implements AIServiceClient {
     try {
       return new GenerationStreamImpl(
         controller,
-        async function* (this: OllamaClient) {
+        async function* (this: OllamaAiServiceClient) {
           const collector = new MessageCollector();
 
           // Loop while running tools.
@@ -384,8 +394,8 @@ const sanitizeToolArguments = (args: any) => {
 
 const SAMPLE_IMAGE_URL = 'https://images.nightcafe.studio/jobs/BNmcRhHCM1JRKoUtqSei/BNmcRhHCM1JRKoUtqSei--1--5b9rv.jpg';
 
-const WELL_KNOWN_TOOLS: Record<string, Tool> = {
-  [ToolTypes.TextToImage]: defineTool('system', {
+const WELL_KNOWN_TOOLS: Record<string, ExecutableTool> = {
+  [ToolTypes.TextToImage]: createTool('system', {
     name: 'text-to-image',
     description: 'Generate an image from a text prompt',
     schema: Schema.Struct({
@@ -393,7 +403,6 @@ const WELL_KNOWN_TOOLS: Record<string, Tool> = {
     }),
     execute: async ({ prompt }) => {
       const image = await fetch(SAMPLE_IMAGE_URL).then(async (res) => Buffer.from(await res.arrayBuffer()));
-
       const imageBase64 = image.toString('base64');
       const id = ObjectId.random();
 

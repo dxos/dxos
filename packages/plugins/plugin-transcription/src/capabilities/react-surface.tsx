@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 
 import { TranscriptionContainer } from '../components';
 import { meta } from '../meta';
@@ -16,7 +16,7 @@ export default () =>
     createSurface({
       id: `${meta.id}/article/transcript`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: TranscriptType } => isInstanceOf(TranscriptType, data.subject),
+      filter: (data): data is { subject: TranscriptType } => Obj.instanceOf(TranscriptType, data.subject),
       component: ({ data, role }) => <TranscriptionContainer transcript={data.subject} role={role} />,
     }),
   ]);

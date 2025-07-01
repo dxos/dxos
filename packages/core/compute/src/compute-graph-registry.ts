@@ -81,7 +81,7 @@ export class ComputeGraphRegistry extends Resource {
     return graph;
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     for (const graph of this._graphs.values()) {
       await graph.close();
     }

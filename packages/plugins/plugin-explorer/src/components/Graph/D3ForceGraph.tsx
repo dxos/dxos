@@ -4,9 +4,18 @@
 
 import React, { type FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { type GraphController, GraphForceProjector, type GraphProps, SVG, type SVGContext } from '@dxos/react-ui-graph';
+import {
+  type GraphController,
+  GraphForceProjector,
+  type GraphLayoutNode,
+  type GraphProps,
+  SVG,
+  type SVGContext,
+} from '@dxos/react-ui-graph';
+import { getHashColor } from '@dxos/react-ui-theme';
 import { type SpaceGraphNode, type SpaceGraphModel, type SpaceGraphEdge } from '@dxos/schema';
 
 import '@dxos/react-ui-graph/styles/graph.css';
@@ -22,26 +31,24 @@ export type D3ForceGraphProps = ThemedClassName<
 
 export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selection: _selection, grid, ...props }) => {
   const context = useRef<SVGContext>(null);
-  const projector = useMemo<GraphForceProjector | undefined>(
-    () =>
-      context.current
-        ? new GraphForceProjector(context.current, {
-            attributes: {
-              linkForce: (edge) => {
-                // TODO(burdon): Check type (currently assumes Employee property).
-                // Edge shouldn't contribute to force if it's not active.
-                return edge.data?.object?.active !== false;
-              },
-            },
-            forces: {
-              point: {
-                strength: 0.01,
-              },
-            },
-          })
-        : undefined,
-    [context.current],
-  );
+  const projector = useMemo<GraphForceProjector | undefined>(() => {
+    if (context.current) {
+      return new GraphForceProjector(context.current, {
+        attributes: {
+          linkForce: (edge) => {
+            // TODO(burdon): Check type (currently assumes Employee property).
+            // Edge shouldn't contribute to force if it's not active.
+            return edge.data?.object?.active !== false;
+          },
+        },
+        forces: {
+          point: {
+            strength: 0.01,
+          },
+        },
+      });
+    }
+  }, [context.current]);
 
   const graph = useRef<GraphController>(null);
   const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
@@ -74,11 +81,17 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
             },
           }}
           attributes={{
-            node: (node) => ({
-              classes: {
-                'dx-selected': selection.contains(node.id),
-              },
-            }),
+            node: (node: GraphLayoutNode<SpaceGraphNode>) => {
+              const obj = node.data?.data.object;
+              return {
+                data: {
+                  color: getHashColor(obj && Obj.getTypename(obj))?.color,
+                },
+                classes: {
+                  'dx-selected': selection.contains(node.id),
+                },
+              };
+            },
           }}
           onSelect={handleSelect}
         />

@@ -4,11 +4,11 @@
 
 import { pipe, Schema } from 'effect';
 
-import { defineTool, ToolResult } from '@dxos/ai';
+import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { invariant, assertArgument } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
@@ -35,7 +35,7 @@ export default () => {
     `,
     schema: DocumentType,
     tools: [
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'create',
         description: 'Create a new markdown document',
         caption: 'Creating document...',
@@ -68,7 +68,7 @@ export default () => {
           return ToolResult.Success(createArtifactElement(data.id));
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'list',
         description: 'List all markdown documents in the current space.',
         caption: 'Listing markdown documents...',
@@ -78,7 +78,7 @@ export default () => {
           const space = extensions.space;
           const { objects: documents } = await space.db.query(Filter.type(DocumentType)).run();
           const documentInfo = documents.map((doc) => {
-            invariant(isInstanceOf(DocumentType, doc));
+            invariant(Obj.instanceOf(DocumentType, doc));
             return {
               id: fullyQualifiedId(doc),
               name: doc.name || doc.fallbackName || 'Unnamed Document',
@@ -89,7 +89,7 @@ export default () => {
           return ToolResult.Success(documentInfo);
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'inspect',
         description: 'Read the content of a markdown document.',
         caption: 'Inspecting markdown document...',
@@ -99,7 +99,7 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const document = await extensions.space.db.query(Filter.ids(ArtifactId.toDXN(id).toString())).first();
-          assertArgument(isInstanceOf(DocumentType, document), 'Invalid type');
+          assertArgument(Obj.instanceOf(DocumentType, document), 'Invalid type');
 
           const { content } = await document.content?.load();
           return ToolResult.Success({

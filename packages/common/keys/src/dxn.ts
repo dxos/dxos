@@ -5,10 +5,11 @@
 import { Schema } from 'effect';
 import type { inspect, InspectOptionsStylized } from 'node:util';
 
-import { inspectCustom } from '@dxos/debug';
+import { devtoolsFormatter, type DevtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
-import type { SpaceId } from './space-id';
+import { ObjectId } from './object-id';
+import { SpaceId } from './space-id';
 
 /**
  * Tags for ECHO DXNs that should resolve the object ID in the local space.
@@ -22,6 +23,8 @@ export const QueueSubspaceTags = Object.freeze({
   DATA: 'data',
   TRACE: 'trace',
 });
+
+export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubspaceTags];
 
 /**
  * DXN unambiguously names a resource like an ECHO object, schema definition, plugin, etc.
@@ -52,6 +55,10 @@ export class DXN {
     }),
   );
 
+  static hash(dxn: DXN): string {
+    return dxn.toString();
+  }
+
   /**
    * Kind constants.
    */
@@ -78,12 +85,16 @@ export class DXN {
     QUEUE: 'queue',
   });
 
-  static equals(a: DXN, b: DXN) {
+  get kind() {
+    return this.#kind;
+  }
+
+  static equals(a: DXN, b: DXN): boolean {
     return a.kind === b.kind && a.parts.length === b.parts.length && a.parts.every((part, i) => part === b.parts[i]);
   }
 
   // TODO(burdon): Rename isValid.
-  static isDXNString(dxn: string) {
+  static isDXNString(dxn: string): boolean {
     return dxn.startsWith('dxn:');
   }
 
@@ -116,7 +127,7 @@ export class DXN {
   /**
    * @example `dxn:type:example.com/type/Contact`
    */
-  static fromTypename(typename: string) {
+  static fromTypename(typename: string): DXN {
     return new DXN(DXN.kind.TYPE, [typename]);
   }
 
@@ -124,15 +135,23 @@ export class DXN {
    * @example `dxn:type:example.com/type/Contact:0.1.0`
    */
   // TODO(dmaretskyi): Consider using @ as the version separator.
-  static fromTypenameAndVersion(typename: string, version: string) {
+  static fromTypenameAndVersion(typename: string, version: string): DXN {
     return new DXN(DXN.kind.TYPE, [typename, version]);
   }
 
   /**
    * @example `dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6`
    */
-  static fromLocalObjectId(id: string) {
+  static fromLocalObjectId(id: string): DXN {
     return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, id]);
+  }
+
+  static fromQueue(subspaceTag: QueueSubspaceTag, spaceId: SpaceId, queueId: ObjectId, objectId?: ObjectId) {
+    invariant(SpaceId.isValid(spaceId));
+    invariant(ObjectId.isValid(queueId));
+    invariant(!objectId || ObjectId.isValid(objectId));
+
+    return new DXN(DXN.kind.QUEUE, [subspaceTag, spaceId, queueId, ...(objectId ? [objectId] : [])]);
   }
 
   #kind: string;
@@ -160,10 +179,6 @@ export class DXN {
     this.#parts = parts;
   }
 
-  get kind() {
-    return this.#kind;
-  }
-
   get parts() {
     return this.#parts;
   }
@@ -174,11 +189,11 @@ export class DXN {
     return this.#parts[0];
   }
 
-  hasTypenameOf(typename: string) {
+  hasTypenameOf(typename: string): boolean {
     return this.#kind === DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
   }
 
-  isLocalObjectId() {
+  isLocalObjectId(): boolean {
     return this.#kind === DXN.kind.ECHO && this.#parts[0] === LOCAL_SPACE_TAG && this.#parts.length === 2;
   }
 
@@ -231,7 +246,7 @@ export class DXN {
   /**
    * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
    */
-  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect) {
+  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect): string {
     const printControlCode = (code: number) => {
       return `\x1b[${code}m`;
     };
@@ -239,6 +254,14 @@ export class DXN {
     return (
       printControlCode(inspectFn.colors.blueBright![0]) + this.toString() + printControlCode(inspectFn.colors.reset![0])
     );
+  }
+
+  get [devtoolsFormatter](): DevtoolsFormatter {
+    return {
+      header: () => {
+        return ['span', { style: 'font-weight: bold;' }, this.toString()];
+      },
+    };
   }
 }
 

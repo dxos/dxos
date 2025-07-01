@@ -73,6 +73,9 @@ export const PluginItem = ({
       <div />
       {(description || tags) && (
         <div id={descriptionId} className='col-span-2 flex flex-col w-full justify-between gap-2 pb-2'>
+          <div className='grow'>
+            <p className={mx(descriptionText, 'line-clamp-3 min-w-0 pie-2')}>{description}</p>
+          </div>
           {tags && tags.length > 0 && (
             <div>
               {tags.map((tag) => (
@@ -82,9 +85,6 @@ export const PluginItem = ({
               ))}
             </div>
           )}
-          <div className='grow'>
-            <p className={mx(descriptionText, 'line-clamp-3 min-w-0 pie-2')}>{description}</p>
-          </div>
         </div>
       )}
 
@@ -106,7 +106,7 @@ export const PluginItem = ({
           <IconButton
             aria-describedby={descriptionId}
             classNames='text-sm text-description cursor-pointer'
-            icon='ph--faders--regular'
+            icon='ph--gear--regular'
             label={t('settings label')}
             iconOnly
             size={4}

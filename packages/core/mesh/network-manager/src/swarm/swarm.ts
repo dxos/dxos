@@ -128,7 +128,7 @@ export class Swarm {
     return this._topic;
   }
 
-  async open() {
+  async open(): Promise<void> {
     invariant(!this._listeningHandle);
     this._listeningHandle = await this._messenger.listen({
       peer: this._ownPeer,
@@ -142,7 +142,7 @@ export class Swarm {
     });
   }
 
-  async destroy() {
+  async destroy(): Promise<void> {
     log('destroying...');
     await this._listeningHandle?.unsubscribe();
     this._listeningHandle = undefined;
@@ -153,7 +153,7 @@ export class Swarm {
     log('destroyed');
   }
 
-  async setTopology(topology: Topology) {
+  async setTopology(topology: Topology): Promise<void> {
     invariant(!this._ctx.disposed, 'Swarm is offline');
     if (topology === this._topology) {
       return;
@@ -228,7 +228,7 @@ export class Swarm {
     return answer;
   }
 
-  private _getOfferSenderPeer(senderInfo: PeerInfo) {
+  private _getOfferSenderPeer(senderInfo: PeerInfo): Peer {
     const peer = this._getOrCreatePeer(senderInfo);
 
     // Handle fast peer reconnect (eg. tab reload)
@@ -261,14 +261,14 @@ export class Swarm {
 
   // For debug purposes
   @synchronized
-  async goOffline() {
+  async goOffline(): Promise<void> {
     await this._ctx.dispose();
     await Promise.all([...this._peers.keys()].map((peerId) => this._destroyPeer(peerId, 'goOffline')));
   }
 
   // For debug purposes
   @synchronized
-  async goOnline() {
+  async goOnline(): Promise<void> {
     this._ctx = new Context();
   }
 
@@ -328,7 +328,7 @@ export class Swarm {
     return peer;
   }
 
-  private async _destroyPeer(peerInfo: PeerInfo, reason?: string) {
+  private async _destroyPeer(peerInfo: PeerInfo, reason?: string): Promise<void> {
     log('destroy peer', { peerKey: peerInfo.peerKey, reason });
     const peer = this._peers.get(peerInfo);
     invariant(peer);
@@ -379,7 +379,7 @@ export class Swarm {
   /**
    * Creates a connection then sends message over signal network.
    */
-  private async _initiateConnection(remotePeer: PeerInfo) {
+  private async _initiateConnection(remotePeer: PeerInfo): Promise<void> {
     const ctx = this._ctx; // Copy to avoid getting reset while sleeping.
 
     // It is likely that the other peer will also try to connect to us at the same time.
@@ -408,7 +408,7 @@ export class Swarm {
     log('initiated', { remotePeer });
   }
 
-  private async _closeConnection(peerInfo: PeerInfo) {
+  private async _closeConnection(peerInfo: PeerInfo): Promise<void> {
     const peer = this._peers.get(peerInfo);
     if (!peer) {
       return;
@@ -417,7 +417,7 @@ export class Swarm {
     await peer.closeConnection();
   }
 
-  private _isConnectionEstablishmentInProgress(peer: Peer) {
+  private _isConnectionEstablishmentInProgress(peer: Peer): boolean {
     if (!peer.connection) {
       return true;
     }

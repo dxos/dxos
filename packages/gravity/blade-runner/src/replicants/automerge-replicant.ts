@@ -45,7 +45,7 @@ export class AutomergeReplicant {
   constructor(private readonly env: ReplicantEnv) {}
 
   @trace.span()
-  async openRepo({ storageAdaptor }: { storageAdaptor: StorageAdaptorKind }) {
+  async openRepo({ storageAdaptor }: { storageAdaptor: StorageAdaptorKind }): Promise<void> {
     await this._repoCtx.dispose();
     this._repoCtx = new Context();
     const storage = await this._createStorage(this._repoCtx, storageAdaptor);
@@ -54,7 +54,7 @@ export class AutomergeReplicant {
   }
 
   @trace.span()
-  async closeRepo() {
+  async closeRepo(): Promise<void> {
     await this._repoCtx.dispose();
     this._repoCtx = new Context();
     this._repo = undefined;
@@ -131,7 +131,10 @@ export class AutomergeReplicant {
     };
   }
 
-  private async _createStorage(ctx: Context, kind: StorageAdaptorKind) {
+  private async _createStorage(
+    ctx: Context,
+    kind: StorageAdaptorKind,
+  ): Promise<IndexedDBStorageAdapter | LevelDBStorageAdapter> {
     switch (kind) {
       case 'idb':
         return new IndexedDBStorageAdapter();

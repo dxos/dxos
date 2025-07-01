@@ -58,6 +58,9 @@
       "path": "../../protocols"
     },
     {
+      "path": "../echo"
+    },
+    {
       "path": "../echo-pipeline"
     },
     {

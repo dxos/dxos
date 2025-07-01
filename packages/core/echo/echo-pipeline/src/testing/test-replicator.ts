@@ -55,7 +55,7 @@ export class TestReplicationNetwork extends Resource {
   }
 
   @synchronized
-  private async _connectReplicator(replicator: TestReplicator) {
+  private async _connectReplicator(replicator: TestReplicator): Promise<void> {
     for (const otherReplicator of this._replicators.values()) {
       if (otherReplicator === replicator || !otherReplicator.connected) {
         continue;
@@ -70,7 +70,7 @@ export class TestReplicationNetwork extends Resource {
     }
   }
 
-  private async _disconnectReplicator(replicator: TestReplicator) {
+  private async _disconnectReplicator(replicator: TestReplicator): Promise<void> {
     for (const connection of replicator.connections) {
       await replicator.context!.onConnectionClosed(connection);
       await connection.otherSide!.owningReplicator!.removeConnection(connection.otherSide!);
@@ -83,7 +83,7 @@ export class TestReplicationNetwork extends Resource {
     const forward = new TransformStream({
       transform: async (message, controller) => {
         if (LOG) {
-          log.info('replicate', { from: peer1, to: peer2, message });
+          log('replicate', { from: peer1, to: peer2, message });
         }
 
         if (this._latency !== undefined) {
@@ -96,7 +96,7 @@ export class TestReplicationNetwork extends Resource {
     const backwards = new TransformStream({
       transform: async (message, controller) => {
         if (LOG) {
-          log.info('replicate', { from: peer2, to: peer1, message });
+          log('replicate', { from: peer2, to: peer1, message });
         }
 
         if (this._latency !== undefined) {

@@ -42,7 +42,7 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
           doc = A.view(doc, heads);
           const end = Date.now();
           if (end - begin > LOG_VIEW_OPERATION_THRESHOLD) {
-            log.info('Checking out document version is taking too long', {
+            log('Checking out document version is taking too long', {
               duration: end - begin,
               requestedHeads: heads,
               originalHeads: currentHeads,

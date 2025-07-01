@@ -40,7 +40,7 @@ export class CredentialRetrieverExtension extends RpcExtension<
     return {};
   }
 
-  override async onOpen(context: ExtensionContext) {
+  override async onOpen(context: ExtensionContext): Promise<void> {
     await super.onOpen(context);
     scheduleTask(this._ctx, async () => {
       try {
@@ -52,7 +52,7 @@ export class CredentialRetrieverExtension extends RpcExtension<
     });
   }
 
-  override async onClose() {
+  override async onClose(): Promise<void> {
     await this._ctx.dispose();
   }
 

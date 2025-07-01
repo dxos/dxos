@@ -4,12 +4,15 @@
 
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
-import { live } from '@dxos/live-object';
+import { Obj, Type } from '@dxos/echo';
+import { DataType } from '@dxos/schema';
 
 import { SPACE_PLUGIN } from '../meta';
 import translations from '../translations';
-import { CollectionType, SpaceAction, SPACE_TYPE } from '../types';
+import { SPACE_TYPE, SpaceAction } from '../types';
 import { SPACES } from '../util';
+
+const COLLECTION_TYPE = Type.getTypename(DataType.Collection);
 
 // https://stackoverflow.com/a/19016910
 const DIRECTORY_TYPE = 'text/directory';
@@ -43,18 +46,18 @@ export default (context: PluginContext) =>
       },
     },
     {
-      inputType: CollectionType.typename,
+      inputType: COLLECTION_TYPE,
       outputType: DIRECTORY_TYPE,
       serialize: (node) => ({
-        name: node.data.name ?? translations[0]['en-US'][CollectionType.typename]['object name placeholder'],
-        data: node.data.name ?? translations[0]['en-US'][CollectionType.typename]['object name placeholder'],
+        name: node.data.name ?? translations[0]['en-US'][COLLECTION_TYPE]['object name placeholder'],
+        data: node.data.name ?? translations[0]['en-US'][COLLECTION_TYPE]['object name placeholder'],
         type: DIRECTORY_TYPE,
       }),
       deserialize: async (data, ancestors) => {
         const space = ancestors.find(isSpace);
         const collection =
-          ancestors.findLast((ancestor) => ancestor instanceof CollectionType) ??
-          space?.properties[CollectionType.typename]?.target;
+          ancestors.findLast((ancestor) => Obj.instanceOf(DataType.Collection, ancestor)) ??
+          space?.properties[COLLECTION_TYPE]?.target;
         if (!space || !collection) {
           return;
         }
@@ -63,7 +66,7 @@ export default (context: PluginContext) =>
         const result = await dispatch(
           createIntent(SpaceAction.AddObject, {
             target: collection,
-            object: live(CollectionType, { name: data.name, objects: [], views: {} }),
+            object: Obj.make(DataType.Collection, { name: data.name, objects: [] }),
           }),
         );
 

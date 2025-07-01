@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { batch } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 
 import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
-import { getSource, getTarget, isRelation, type AnyLiveRelation, type AnyLiveObject } from '@dxos/echo-db';
-import { Filter, getSchema, getSchemaDXN, type EchoSchema, getLabel, Query } from '@dxos/echo-schema';
-import { Ref } from '@dxos/echo-schema';
+import { Relation, Obj, Type, Filter, Query, Ref } from '@dxos/echo';
+import { type Queue } from '@dxos/echo-db';
 import { type GraphEdge, AbstractGraphBuilder, type Graph, ReactiveGraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -23,7 +22,7 @@ import { visitValues } from '@dxos/util';
 
 export type SpaceGraphNode = GraphNode.Required<{
   label: string;
-  object?: AnyLiveObject<any>;
+  object?: Obj.Any;
 }>;
 
 // TODO(burdon): Differentiate between refs and relations.
@@ -35,8 +34,8 @@ const defaultFilter: Filter<any> = Filter.everything();
 
 export type SpaceGraphModelOptions = {
   showSchema?: boolean;
-  onCreateNode?: (node: SpaceGraphNode, object: AnyLiveObject<any>) => void;
-  onCreateEdge?: (edge: SpaceGraphEdge, relation: AnyLiveRelation<any>) => void;
+  onCreateNode?: (node: SpaceGraphNode, object: Obj.Any) => void;
+  onCreateEdge?: (edge: SpaceGraphEdge, relation: Relation.Any) => void;
 };
 
 /**
@@ -47,20 +46,24 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   private _filter?: Filter.Any;
 
   private _space?: Space;
-  private _schema?: EchoSchema[];
+  private _queue?: Queue;
+  private _schema?: Type.Schema[];
+  private _objects?: (Obj.Any | Relation.Any)[];
+  private _queueItems?: (Obj.Any | Relation.Any)[];
   private _schemaSubscription?: CleanupFn;
-  private _objects?: AnyLiveObject<any>[];
-  private _objectsSubscription?: CleanupFn;
+  private _objectSubscription?: CleanupFn;
+  private _queueSubscription?: CleanupFn;
+  private _timeout?: NodeJS.Timeout;
 
   override get builder() {
     return new SpaceGraphBuilder(this);
   }
 
-  override copy(graph?: Partial<Graph>) {
+  override copy(graph?: Partial<Graph>): SpaceGraphModel {
     return new SpaceGraphModel(graph);
   }
 
-  get objects(): AnyLiveObject<any>[] {
+  get objects(): (Obj.Any | Relation.Any)[] {
     return this._objects ?? [];
   }
 
@@ -86,17 +89,18 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     return this;
   }
 
-  async open(space: Space, selected?: string): Promise<this> {
+  async open(space: Space, queue?: Queue): Promise<this> {
     log('open');
     if (this.isOpen()) {
       await this.close();
     }
 
     this._space = space;
+    this._queue = queue;
     const schemaaQuery = space.db.schemaRegistry.query({});
     const schemas = await schemaaQuery.run();
 
-    const onSchemaUpdate = ({ results }: { results: EchoSchema[] }) => (this._schema = results);
+    const onSchemaUpdate = ({ results }: { results: Type.Schema[] }) => (this._schema = results);
     this._schemaSubscription = schemaaQuery.subscribe(onSchemaUpdate);
     onSchemaUpdate({ results: schemas });
     this._subscribe();
@@ -108,13 +112,12 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     log('close');
     this._schemaSubscription?.();
     this._schemaSubscription = undefined;
-    this._objectsSubscription?.();
-    this._objectsSubscription = undefined;
+    this._objectSubscription?.();
+    this._objectSubscription = undefined;
     this._space = undefined;
+
     return this;
   }
-
-  private _timeout?: NodeJS.Timeout;
 
   /**
    * Batch updates into same execution frame.
@@ -124,27 +127,48 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     this._timeout = setTimeout(() => {
       if (this.isOpen()) {
         batch(() => {
-          this._update();
+          try {
+            this._update();
+          } catch (error) {
+            log.catch(error);
+          }
         });
       }
-    }, 0);
+    });
   }
 
   private _subscribe() {
-    this._objectsSubscription?.();
+    this._objectSubscription?.();
+    this._queueSubscription?.();
 
     invariant(this._space);
-    this._objectsSubscription = this._space.db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
+    this._objectSubscription = this._space.db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
       ({ objects }) => {
+        log('update', { objects: objects.length });
         this._objects = [...objects];
         this.invalidate();
       },
       { fire: true },
     );
+
+    if (this._queue) {
+      this._queueSubscription = effect(() => {
+        const items = this._queue?.objects;
+        if (items) {
+          this._queueItems = [...items];
+        }
+        this.invalidate();
+      });
+    }
   }
 
   private _update() {
-    log('update', { nodes: this._graph.nodes.length, edges: this._graph.edges.length });
+    log('update', {
+      nodes: this._graph.nodes.length,
+      edges: this._graph.edges.length,
+      objects: this._objects?.length,
+      queueItems: this._queueItems?.length,
+    });
 
     // TOOD(burdon): Merge edges also?
     const currentNodes: SpaceGraphNode[] = [...this._graph.nodes] as SpaceGraphNode[];
@@ -152,57 +176,52 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     // TOOD(burdon): Causes D3 graph to reset since live? Batch preact changes?
     this.clear();
 
-    const addSchema = (typename: string) => {
-      if (!this._options?.showSchema) {
-        return;
-      }
+    // Schema nodes.
+    if (this._options?.showSchema) {
+      const schemas = [
+        // Database Schema.
+        ...(this._schema ?? []),
+        // Runtime schema.
+        ...(this._space?.db.graph.schemaRegistry.schemas ?? []),
+      ];
 
-      if (typename) {
-        let node = currentNodes.find((node) => node.id === typename);
-        if (!node) {
-          node = {
-            id: typename,
-            type: 'schema',
-            data: {
-              label: typename,
-            },
-          };
+      schemas.forEach((schema) => {
+        const typename = Type.getDXN(schema)?.typename;
+        if (typename) {
+          let node = currentNodes.find((node) => node.id === typename);
+          if (!node) {
+            node = {
+              id: typename,
+              type: 'schema',
+              data: {
+                label: typename,
+              },
+            };
+          }
+
+          this._graph.nodes.push(node);
         }
+      });
+    }
 
-        this._graph.nodes.push(node);
-      }
-    };
+    // Database Objects and Relations.
+    const objects = [
+      // ECHO Graph.
+      ...(this._objects ?? []),
+      // ECHO Queue.
+      ...(this._queueItems ?? []),
+    ];
 
-    // Runtime schema.
-    this._space?.db.graph.schemaRegistry.schemas.forEach((schema) => {
-      const typename = getSchemaDXN(schema)?.typename;
-      if (typename) {
-        addSchema(typename);
-      }
-    });
+    objects.forEach((object) => {
+      const schema = Obj.getSchema(object);
 
-    // Database Schema.
-    this._schema?.forEach((schema) => {
-      const typename = getSchemaDXN(schema)?.typename;
-      if (typename) {
-        addSchema(typename);
-      }
-    });
-
-    // Database Objects.
-    this._objects?.forEach((object) => {
-      const schema = getSchema(object);
-      if (!schema) {
-        return;
-      }
-
-      // Relation.
-      if (isRelation(object) as boolean) {
+      // Relations.
+      if (Relation.isRelation(object)) {
         const edge = this.addEdge({
           id: object.id,
           type: 'relation',
-          source: getSource(object).id,
-          target: getTarget(object).id,
+          source: Relation.getSourceDXN(object).asEchoDXN()!.echoId,
+          target: Relation.getTargetDXN(object).asEchoDXN()!.echoId,
           data: {
             object,
           },
@@ -210,8 +229,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
         this._options?.onCreateEdge?.(edge, object);
       } else {
-        // Object.
-        const typename = getSchemaDXN(schema)?.typename;
+        const typename = Obj.getTypename(object);
         if (typename) {
           let node: SpaceGraphNode | undefined = currentNodes.find((node) => node.id === object.id);
           if (!node) {
@@ -220,7 +238,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
               type: 'object',
               data: {
                 object,
-                label: getLabel(schema, object) ?? object.id,
+                label: (schema && Obj.getLabel(object)) ?? object.id,
               },
             };
 
@@ -252,7 +270,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
           // Link ot refs.
           const refs = getOutgoingReferences(object);
           for (const ref of refs) {
-            if (!ref.target) {
+            if (!Obj.isObject(ref.target)) {
               continue;
             }
 
@@ -272,8 +290,8 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   }
 }
 
-const getOutgoingReferences = (object: AnyLiveObject): Ref<any>[] => {
-  const refs: Ref<any>[] = [];
+const getOutgoingReferences = (object: Obj.Any): Ref.Any[] => {
+  const refs: Ref.Any[] = [];
   const go = (value: unknown) => {
     if (Ref.isRef(value)) {
       refs.push(value);

@@ -5,19 +5,19 @@
 import { Schema } from 'effect';
 import { useEffect, useMemo, useState } from 'react';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { EdgeAiServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Type } from '@dxos/echo';
-import { create, createQueueDxn, ObjectId } from '@dxos/echo-schema';
+import { type Key, Obj, Ref, Type } from '@dxos/echo';
+import { createQueueDXN } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
+import { useQueue, type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
 
@@ -62,20 +62,19 @@ export class MessageBuilder extends AbstractMessageBuilder {
   }
 
   override async createMessage(numSegments = 1): Promise<DataType.Message> {
-    return {
-      id: ObjectId.random().toString(),
+    return Obj.make(DataType.Message, {
       created: this.next().toISOString(),
       sender: faker.helpers.arrayElement(this.users),
       blocks: Array.from({ length: numSegments }).map(() => this.createBlock()),
-    };
+    });
   }
 
   createBlock(): DataType.MessageBlock.Transcription {
     let text = faker.lorem.paragraph();
     if (this._space) {
       const label = faker.commerce.productName();
-      const obj = this._space.db.add(live(TestItem, { title: label, description: faker.lorem.paragraph() }));
-      const dxn = makeRef(obj).dxn.toString();
+      const obj = this._space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));
+      const dxn = Ref.make(obj).dxn.toString();
       const words = text.split(' ');
       words.splice(Math.floor(Math.random() * words.length), 0, `[${label}][${dxn}]`);
       text = words.join(' ');
@@ -88,7 +87,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
     };
   }
 
-  next() {
+  next(): Date {
     this.start = new Date(this.start.getTime() + Math.random() * 10_000);
     return this.start;
   }
@@ -96,17 +95,17 @@ export class MessageBuilder extends AbstractMessageBuilder {
 
 // TODO(burdon): Reconcile with BlockBuilder.
 class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
-  aiService = new AIServiceEdgeClient({
+  AiService = new EdgeAiServiceClient({
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
   });
 
-  executor = new FunctionExecutor(new ServiceContainer().setServices({ ai: { client: this.aiService } }));
+  executor = new FunctionExecutor(new ServiceContainer().setServices({ ai: { client: this.AiService } }));
 
   space: Space | undefined;
   currentMessage: number = 0;
   transcriptMessages: DataType.Message[] = [];
 
-  async connect(space: Space) {
+  async connect(space: Space): Promise<void> {
     this.space = space;
     const { transcriptMessages } = await seedTestData(space);
     this.transcriptMessages = transcriptMessages;
@@ -140,7 +139,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
 
 type UseTestTranscriptionQueue = (
   space: Space | undefined,
-  queueId?: ObjectId,
+  queueId?: Key.ObjectId,
   running?: boolean,
   interval?: number,
 ) => Queue<DataType.Message> | undefined;
@@ -150,11 +149,12 @@ type UseTestTranscriptionQueue = (
  */
 export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
   space: Space | undefined,
-  queueId?: ObjectId,
+  queueId?: Key.ObjectId,
   running = true,
   interval = 1_000,
 ) => {
-  const queueDxn = useMemo(() => (space ? createQueueDxn(space.id, queueId) : undefined), [space, queueId]);
+  // TODO(dmaretskyi): Use space.queues.create() instead.
+  const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
   const queue = useQueue<DataType.Message>(queueDxn);
   const builder = useMemo(() => new MessageBuilder(space), [space]);
 
@@ -164,8 +164,8 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
     }
 
     const i = setInterval(() => {
-      void builder.createMessage(Math.ceil(Math.random() * 3)).then((message) => {
-        queue.append([create(DataType.Message, message)]);
+      void builder.createMessage(Math.ceil(Math.random() * 3)).then(async (message) => {
+        await queue.append([Obj.make(DataType.Message, message)]);
       });
     }, interval);
     return () => clearInterval(i);
@@ -180,11 +180,12 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
 // TODO(burdon): Reconcile with useTestTranscriptionQueue.
 export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscriptionQueue = (
   space: Space | undefined,
-  queueId?: ObjectId,
+  queueId?: Key.ObjectId,
   running = true,
   interval = 1_000,
 ) => {
-  const queueDxn = useMemo(() => (space ? createQueueDxn(space.id, queueId) : undefined), [space, queueId]);
+  // TODO(dmaretskyi): Use space.queues.create() instead.
+  const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
   const queue = useQueue<DataType.Message>(queueDxn);
   const [builder] = useState(() => new EntityExtractionMessageBuilder());
 
@@ -202,7 +203,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
       ctx,
       async () => {
         const message = await builder.createMessage();
-        queue.append([create(DataType.Message, message)]);
+        void queue.append([Obj.make(DataType.Message, message)]);
       },
       interval,
     );

@@ -4,8 +4,8 @@
 
 import { Event, type CleanupFn } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
-import type { QueryAST } from '@dxos/echo-protocol';
-import { type BaseObject } from '@dxos/echo-schema';
+import { type QueryAST } from '@dxos/echo-protocol';
+import { type AnyEchoObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -17,9 +17,9 @@ import { type Query } from './api';
 import { prohibitSignalActions } from '../guarded-scope';
 
 // TODO(burdon): Multi-sort option.
-export type Sort<T extends BaseObject> = (a: T, b: T) => -1 | 0 | 1;
+export type Sort<T extends AnyEchoObject> = (a: T, b: T) => -1 | 0 | 1;
 
-export type QueryResultEntry<T extends BaseObject = any> = {
+export type QueryResultEntry<T extends AnyEchoObject = AnyEchoObject> = {
   id: string;
 
   spaceId: SpaceId;
@@ -56,12 +56,12 @@ export type QueryResultEntry<T extends BaseObject = any> = {
   };
 };
 
-export type OneShotQueryResult<T extends BaseObject = any> = {
+export type OneShotQueryResult<T extends AnyEchoObject = AnyEchoObject> = {
   results: QueryResultEntry<T>[];
   objects: T[];
 };
 
-export interface QueryContext<T extends BaseObject = any> {
+export interface QueryContext<T extends AnyEchoObject = AnyEchoObject> {
   getResults(): QueryResultEntry<T>[];
 
   // TODO(dmaretskyi): Update info?
@@ -70,7 +70,7 @@ export interface QueryContext<T extends BaseObject = any> {
   /**
    * One-shot query.
    */
-  run(query: QueryAST.Query, opts?: QueryRunOptions): Promise<QueryResultEntry[]>;
+  run(query: QueryAST.Query, opts?: QueryRunOptions): Promise<QueryResultEntry<T>[]>;
 
   /**
    * Set the filter and trigger continuous updates.
@@ -108,7 +108,7 @@ export type QueryRunOptions = {
 /**
  * Predicate based query.
  */
-export class QueryResult<T extends BaseObject = any> {
+export class QueryResult<T extends AnyEchoObject = AnyEchoObject> {
   private readonly _query: Query<T>;
   private readonly _signal = compositeRuntime.createSignal();
   private readonly _event = new Event<QueryResult<T>>();
@@ -169,9 +169,8 @@ export class QueryResult<T extends BaseObject = any> {
    * Does not subscribe to updates.
    */
   async run(timeout: { timeout?: number } = { timeout: 30_000 }): Promise<OneShotQueryResult<T>> {
-    const filteredResults = await this._queryContext.run(this._query.ast, {
-      timeout: timeout.timeout,
-    });
+    const filteredResults = await this._queryContext.run(this._query.ast, { timeout: timeout.timeout });
+
     return {
       results: filteredResults,
       objects: this._uniqueObjects(filteredResults),
@@ -183,6 +182,7 @@ export class QueryResult<T extends BaseObject = any> {
     if (objects.length === 0) {
       throw new Error('No objects found');
     }
+
     return objects[0];
   }
 
@@ -229,7 +229,7 @@ export class QueryResult<T extends BaseObject = any> {
     return unsubscribe;
   }
 
-  private _ensureCachePresent() {
+  private _ensureCachePresent(): void {
     if (!this._resultCache) {
       prohibitSignalActions(() => {
         // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
@@ -283,7 +283,7 @@ export class QueryResult<T extends BaseObject = any> {
       });
   }
 
-  private _handleQueryLifecycle() {
+  private _handleQueryLifecycle(): void {
     if (this._subscribers === 0 && this._isActive) {
       log('stop query', { filter: this._query.ast });
       this._stop();
@@ -293,19 +293,19 @@ export class QueryResult<T extends BaseObject = any> {
     }
   }
 
-  private _start() {
+  private _start(): void {
     this._isActive = true;
     this._queryContext.start();
     this._diagnostic.isActive = true;
   }
 
-  private _stop() {
+  private _stop(): void {
     this._queryContext.stop();
     this._isActive = false;
     this._diagnostic.isActive = false;
   }
 
-  private _checkQueryIsRunning() {
+  private _checkQueryIsRunning(): void {
     if (!this._isActive) {
       throw new Error(
         'Query must have at least 1 subscriber for `.objects` and `.results` to be used. Use query.run() for single-use result retrieval.',

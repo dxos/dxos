@@ -5,10 +5,15 @@
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
-import { SKETCH_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type SketchSettingsProps, SketchSettingsSchema } from '../types';
 
 export default () => {
   const settings = live<SketchSettingsProps>({});
-  return contributes(Capabilities.Settings, { schema: SketchSettingsSchema, prefix: SKETCH_PLUGIN, value: settings });
+
+  return contributes(Capabilities.Settings, {
+    prefix: meta.id,
+    schema: SketchSettingsSchema,
+    value: settings,
+  });
 };

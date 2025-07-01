@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 
 import { AbstractBaseCommand } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
-import { ECHO_ATTR_META, ECHO_ATTR_TYPE, getTypeAnnotation, type ObjectMeta } from '@dxos/echo-schema';
+import { ATTR_META, ATTR_TYPE, getTypeAnnotation, type ObjectMeta } from '@dxos/echo-schema';
 import { FUNCTION_TYPES } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
@@ -25,14 +25,14 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
     return this._schemaMap;
   }
 
-  protected override async onClientInit(client: Client) {
+  protected override async onClientInit(client: Client): Promise<void> {
     this._schemaMap = await this.addTypes(client);
   }
 
   /**
    * build typename
    */
-  protected async addTypes(client: Client) {
+  protected async addTypes(client: Client): Promise<Map<string, Schema.Schema.AnyNoContext>> {
     const schemaMap = new Map<string, Schema.Schema.AnyNoContext>();
     // TODO(burdon): Enable dynamic import? (e.g., from npm.)
     // const types = await import('@braneframe/types');
@@ -73,13 +73,13 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
     if (Array.isArray(data)) {
       return data.map((item) => this.parseObject(schemaMap, item));
     } else if (typeof data === 'object') {
-      const typename = data[ECHO_ATTR_TYPE];
+      const typename = data[ATTR_TYPE];
       if (typename) {
         const type = schemaMap.get(typename);
         invariant(type, `Schema not found: ${typename}`);
         let meta: ObjectMeta | undefined;
         const object = Object.entries(data).reduce<Record<string, any>>((object, [key, value]) => {
-          if (key === ECHO_ATTR_META) {
+          if (key === ATTR_META) {
             meta = value as ObjectMeta;
           } else {
             object[key] = this.parseObject(schemaMap, value);

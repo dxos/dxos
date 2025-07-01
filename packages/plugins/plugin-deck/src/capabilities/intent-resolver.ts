@@ -15,7 +15,7 @@ import {
   createIntent,
   chain,
 } from '@dxos/app-framework';
-import { getTypename } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -229,7 +229,7 @@ export default (context: PluginContext) =>
         } else {
           const [item] = graph
             .getConnections(subject)
-            .filter((node) => !isActionLike(node) && node.properties.disposition !== 'hidden');
+            .filter((node) => !isActionLike(node) && !node.properties.disposition);
           if (item) {
             return {
               intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] })],
@@ -301,7 +301,7 @@ export default (context: PluginContext) =>
                   onNone: () => undefined,
                   onSome: (node) => {
                     const active = node.data;
-                    return isLiveObject(active) ? getTypename(active) : undefined;
+                    return isLiveObject(active) ? Obj.getTypename(active) : undefined;
                   },
                 });
                 return createIntent(ObservabilityAction.SendEvent, {

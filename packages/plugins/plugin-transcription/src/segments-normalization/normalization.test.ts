@@ -5,15 +5,16 @@
 import { effect } from '@preact/signals-core';
 import { describe, test } from 'vitest';
 
-import { AIServiceEdgeClient, OllamaClient } from '@dxos/ai';
+import { EdgeAiServiceClient, OllamaAiServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { Obj } from '@dxos/echo';
 import { MemoryQueue } from '@dxos/echo-db';
-import { createQueueDxn, ObjectId } from '@dxos/echo-schema';
+import { createQueueDXN } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { type DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { MessageNormalizer } from './message-normalizer';
 import { type MessageWithRangeId, sentenceNormalization } from './normalization';
@@ -48,13 +49,14 @@ const messages: MessageWithRangeId[] = [
 
   // No punctuation.
   'in classical physics objects have well-defined properties such as position speed and momentum',
-].map((string, index) => ({
-  id: ObjectId.random(),
-  created: new Date(Date.now() + 1000 * index).toISOString(),
-  sender,
-  blocks: [{ type: 'transcription', started: new Date(Date.now() + 1000 * index).toISOString(), text: string }],
-  rangeId: [],
-}));
+].map((string, index) =>
+  Obj.make(DataType.Message, {
+    created: new Date(Date.now() + 1000 * index).toISOString(),
+    sender,
+    blocks: [{ type: 'transcription', started: new Date(Date.now() + 1000 * index).toISOString(), text: string }],
+    rangeId: [],
+  } as any),
+);
 
 const REMOTE_AI = true;
 
@@ -64,13 +66,13 @@ describe.skip('SentenceNormalization', () => {
       new ServiceContainer().setServices({
         ai: {
           client: REMOTE_AI
-            ? new AIServiceEdgeClient({
+            ? new EdgeAiServiceClient({
                 endpoint: AI_SERVICE_ENDPOINT.REMOTE,
                 defaultGenerationOptions: {
                   model: '@anthropic/claude-3-5-sonnet-20241022',
                 },
               })
-            : new OllamaClient({
+            : new OllamaAiServiceClient({
                 overrides: {
                   model: 'llama3.1:8b',
                 },
@@ -107,7 +109,8 @@ describe.skip('SentenceNormalization', () => {
 
   test.only('queue', { timeout: 120_000 }, async () => {
     // Create queue.
-    const queue = new MemoryQueue<DataType.Message>(createQueueDxn());
+    // TODO(dmaretskyi): Use space.queues.create() instead.
+    const queue = new MemoryQueue<DataType.Message>(createQueueDXN());
     const ctx = new Context();
     let idx = 0;
     scheduleTaskInterval(
@@ -134,7 +137,7 @@ describe.skip('SentenceNormalization', () => {
     await normalizer.open();
     effect(() => {
       log.info('normalizer');
-      log.info(JSON.stringify(queue.items, null, 2));
+      log.info(JSON.stringify(queue.objects, null, 2));
     });
 
     await new Promise(() => {});

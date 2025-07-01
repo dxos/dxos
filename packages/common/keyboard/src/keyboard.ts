@@ -40,16 +40,16 @@ class KeyboardContext {
     return Array.from(this._keyMap.values());
   }
 
-  get(binding: string) {
+  get(binding: string): KeyBinding | undefined {
     return this._keyMap.get(binding);
   }
 
-  bind(config: KeyBinding) {
+  bind(config: KeyBinding): void {
     config.shortcut = parseShortcut(config.shortcut);
     this._keyMap.set(config.shortcut, config);
   }
 
-  unbind(binding: string) {
+  unbind(binding: string): void {
     this._keyMap.delete(binding);
   }
 }
@@ -68,22 +68,22 @@ export class Keyboard {
   private readonly _keyHandler = this.handleKeyDown.bind(this);
   private _path = ROOT;
 
-  initialize() {
+  initialize(): void {
     document.addEventListener('keydown', this._keyHandler);
   }
 
-  destroy() {
+  destroy(): void {
     document.removeEventListener('keydown', this._keyHandler);
   }
 
   bind = this._root.bind.bind(this._root);
   unbind = this._root.unbind.bind(this._root);
 
-  setCurrentContext(path = ROOT) {
+  setCurrentContext(path = ROOT): void {
     this._path = path;
   }
 
-  getCurrentContext() {
+  getCurrentContext(): string {
     return this._path;
   }
 
@@ -99,7 +99,7 @@ export class Keyboard {
     return context;
   }
 
-  getBindings() {
+  getBindings(): KeyBinding[] {
     const bindings = new Map<string, KeyBinding>();
     for (let i = 0; i < this._contexts.length; ++i) {
       const path = this._contexts[i];
@@ -113,7 +113,7 @@ export class Keyboard {
     return Array.from(bindings.values());
   }
 
-  handleKeyDown(event: KeyboardEvent) {
+  handleKeyDown(event: KeyboardEvent): void {
     const { altKey, ctrlKey, metaKey, shiftKey, key } = event;
 
     if (key !== 'Alt' && key !== 'Control' && key !== 'Meta' && key !== 'Shift') {

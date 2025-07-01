@@ -6,9 +6,8 @@ import { type Decorator } from '@storybook/react';
 import React, { useEffect, useMemo } from 'react';
 
 import { raise } from '@dxos/debug';
-import { log } from '@dxos/log';
 
-import { createApp, type CreateAppOptions } from '../App';
+import { useApp, type CreateAppOptions } from '../App';
 import { Capabilities, Events } from '../common';
 import {
   contributes,
@@ -38,7 +37,7 @@ export const setupPluginManager = ({
 }: CreateAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
   const pluginManager = new PluginManager({
     pluginLoader: () => raise(new Error('Not implemented')),
-    plugins: [StoryPlugin(), ...plugins],
+    plugins: [storyPlugin(), ...plugins],
     core: [STORY_PLUGIN, ...core],
     ...options,
   });
@@ -71,7 +70,6 @@ export const withPluginManager = (options: WithPluginManagerOptions = {}): Decor
 
     // Set-up root capability.
     useEffect(() => {
-      log('setup capabilities...');
       const capability = contributes(Capabilities.ReactRoot, {
         id: context.id,
         root: () => <Story />,
@@ -83,24 +81,21 @@ export const withPluginManager = (options: WithPluginManagerOptions = {}): Decor
       });
 
       return () => {
-        log('removing capability...');
         pluginManager.context.removeCapability(capability.interface, capability.implementation);
       };
     }, [pluginManager, context]);
 
     // Fire events.
     useEffect(() => {
-      log('firing events...');
-      options.fireEvents?.forEach((event) => {
-        void pluginManager.activate(event);
+      const timeout = setTimeout(async () => {
+        await Promise.all(options.fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
       });
+
+      return () => clearTimeout(timeout);
     }, [pluginManager]);
 
     // Create app.
-    const App = useMemo(() => {
-      log('creating app...');
-      return createApp({ pluginManager });
-    }, [pluginManager]);
+    const App = useApp({ pluginManager });
 
     return <App />;
   };
@@ -109,7 +104,7 @@ export const withPluginManager = (options: WithPluginManagerOptions = {}): Decor
 // No-op plugin to ensure there exists at least one plugin for the startup event.
 // This is necessary because `createApp` expects the startup event to complete before the app is ready.
 const STORY_PLUGIN = 'dxos.org/app-framework/story';
-const StoryPlugin = () =>
+const storyPlugin = () =>
   definePlugin({ id: STORY_PLUGIN, name: 'Story' }, [
     defineModule({ id: STORY_PLUGIN, activatesOn: Events.Startup, activate: () => [] }),
   ]);

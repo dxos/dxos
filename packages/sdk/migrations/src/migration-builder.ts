@@ -2,24 +2,42 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Doc, next as am } from '@automerge/automerge';
+import { next as am, type Doc } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import { type Schema } from 'effect';
 
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
-import { ObjectCore, migrateDocument, type RepoProxy, type DocHandleProxy } from '@dxos/echo-db';
+import { ObjectCore, migrateDocument, type DocHandleProxy, type RepoProxy } from '@dxos/echo-db';
 import {
+  Reference,
   SpaceDocVersion,
   encodeReference,
-  type ObjectStructure,
   type DatabaseDirectory,
-  Reference,
+  type ObjectStructure,
 } from '@dxos/echo-protocol';
 import { requireTypeReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
+/*
+
+Considering a better API for this:
+
+```ts
+const migration = space.db.beginMigration(); // all actions are not visible to queries and are only applied once you call `apply`
+
+migration.applyObjectMigration(defineMigration(From, To, { ... }));
+
+migration.delete(id);
+migration.add(obj);
+
+await migration.apply(); // Will create new epoch.
+```
+
+*/
+
+// TODO(dmaretskyi): We no longer need to hook into ECHO internals, with the changes to echo APIs.
 export class MigrationBuilder {
   private readonly _repo: RepoProxy;
   private readonly _rootDoc: Doc<DatabaseDirectory>;
@@ -54,7 +72,7 @@ export class MigrationBuilder {
   async migrateObject(
     id: string,
     migrate: (objectStructure: ObjectStructure) => MaybePromise<{ schema: Schema.Schema.AnyNoContext; props: any }>,
-  ) {
+  ): Promise<void> {
     const objectStructure = await this.findObject(id);
     if (!objectStructure) {
       return;
@@ -88,7 +106,7 @@ export class MigrationBuilder {
     this._addHandleToFlushList(newHandle);
   }
 
-  async addObject(schema: Schema.Schema.AnyNoContext, props: any) {
+  async addObject(schema: Schema.Schema.AnyNoContext, props: any): Promise<string> {
     const core = this._createObject({ schema, props });
     return core.id;
   }
@@ -97,11 +115,11 @@ export class MigrationBuilder {
     return encodeReference(Reference.localObjectReference(id));
   }
 
-  deleteObject(id: string) {
+  deleteObject(id: string): void {
     this._deleteObjects.push(id);
   }
 
-  changeProperties(changeFn: (properties: ObjectStructure) => void) {
+  changeProperties(changeFn: (properties: ObjectStructure) => void): void {
     if (!this._newRoot) {
       this._buildNewRoot();
     }
@@ -117,7 +135,7 @@ export class MigrationBuilder {
   /**
    * @internal
    */
-  async _commit() {
+  async _commit(): Promise<void> {
     if (!this._newRoot) {
       this._buildNewRoot();
     }
@@ -143,7 +161,7 @@ export class MigrationBuilder {
     return docHandle;
   }
 
-  private _buildNewRoot() {
+  private _buildNewRoot(): void {
     const links = { ...(this._rootDoc.links ?? {}) };
     for (const id of this._deleteObjects) {
       delete links[id];
@@ -164,7 +182,15 @@ export class MigrationBuilder {
     this._addHandleToFlushList(this._newRoot);
   }
 
-  private _createObject({ id, schema, props }: { id?: string; schema: Schema.Schema.AnyNoContext; props: any }) {
+  private _createObject({
+    id,
+    schema,
+    props,
+  }: {
+    id?: string;
+    schema: Schema.Schema.AnyNoContext;
+    props: any;
+  }): ObjectCore {
     const core = new ObjectCore();
     if (id) {
       core.id = id;
@@ -187,7 +213,7 @@ export class MigrationBuilder {
     return core;
   }
 
-  private _addHandleToFlushList(handle: DocHandleProxy<any>) {
+  private _addHandleToFlushList(handle: DocHandleProxy<any>): void {
     this._flushIds.push(handle.documentId);
   }
 }

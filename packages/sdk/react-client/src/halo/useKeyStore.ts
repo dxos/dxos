@@ -15,7 +15,7 @@ export class KeyStore {
   }
 
   // TODO(burdon): Create subkeys.
-  initialize() {
+  initialize(): this {
     this._defaultKeys.forEach((key) => {
       const value = localStorage.getItem(key);
       this.setKey(key, value ?? '');
@@ -24,11 +24,11 @@ export class KeyStore {
     return this;
   }
 
-  getKey(key: string) {
+  getKey(key: string): void {
     localStorage.getItem(key);
   }
 
-  setKey(key: string, value: string) {
+  setKey(key: string, value: string): void {
     localStorage.setItem(key, '');
     this._keyMap.set(key, value);
   }

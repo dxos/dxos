@@ -14,9 +14,7 @@ type Config = {
 };
 
 const Container = ({ children, elevation, surface }: PropsWithChildren<{ elevation: Elevation; surface?: string }>) => (
-  <div className={mx('p-4 mlb-4 rounded-md border border-separator', surface, surfaceShadow({ elevation }))}>
-    {children}
-  </div>
+  <div className={mx('rounded-md border border-separator', surface, surfaceShadow({ elevation }))}>{children}</div>
 );
 
 const Panel = ({
@@ -25,7 +23,7 @@ const Panel = ({
   densities,
   className,
 }: { Story: ComponentType } & Config & { className?: string }) => (
-  <div className={mx('flex flex-col h-full p-4', className)}>
+  <div className={mx('flex flex-col h-full p-4 gap-4', className)}>
     {elevations?.map(({ elevation, surface }) =>
       densities?.map((density) => (
         <Container key={`${elevation}--${density}`} surface={surface} elevation={elevation}>

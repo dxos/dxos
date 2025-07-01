@@ -42,7 +42,7 @@ export class ProjectGraph {
     return this._rootDir;
   }
 
-  async init() {
+  async init(): Promise<void> {
     // TODO(dmaretskyi): Async.
     const projects: Project[] = JSON.parse(execSync('pnpm ls -r --depth -1 --json').toString());
     this.projects = projects.filter(
@@ -60,15 +60,15 @@ export class ProjectGraph {
     );
   }
 
-  hasPackage(name: string) {
+  hasPackage(name: string): boolean {
     return this.projects.some((project) => project.name === name);
   }
 
-  getProject(name: string) {
+  getProject(name: string): Project | undefined {
     return this.projects.find((project) => project.name === name);
   }
 
-  getManifest(name: string) {
+  getManifest(name: string): PackageJson | undefined {
     return this.manifests.find((manifest) => manifest.name === name);
   }
 
@@ -85,7 +85,7 @@ export class ProjectGraph {
       .map(([name]) => name);
   }
 
-  getTransitiveWorkspaceDeps(roots: string[]) {
+  getTransitiveWorkspaceDeps(roots: string[]): string[] {
     // Start with the root dependencies
     const allDeps = new Set<string>(roots);
 

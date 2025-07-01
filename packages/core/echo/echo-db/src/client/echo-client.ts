@@ -12,12 +12,14 @@ import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
+import { QueueFactory, type QueueService } from '../queue';
 
 export type EchoClientParams = {};
 
 export type ConnectToServiceParams = {
   dataService: DataService;
   queryService: QueryService;
+  queueService?: QueueService;
 };
 
 export type ConstructDatabaseParams = {
@@ -56,6 +58,8 @@ export class EchoClient extends Resource {
 
   private _dataService: DataService | undefined = undefined;
   private _queryService: QueryService | undefined = undefined;
+  private _queuesService: QueueService | undefined = undefined;
+
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
   constructor(_: EchoClientParams = {}) {
@@ -75,13 +79,14 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService }: ConnectToServiceParams) {
+  connectToService({ dataService, queryService, queueService }: ConnectToServiceParams): void {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
+    this._queuesService = queueService;
   }
 
-  disconnectFromService() {
+  disconnectFromService(): void {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = undefined;
     this._queryService = undefined;
@@ -104,7 +109,7 @@ export class EchoClient extends Resource {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
     }
     for (const db of this._databases.values()) {
-      this._graph._unregister(db.spaceId);
+      this._graph._unregisterDatabase(db.spaceId);
       await db.close();
     }
     this._databases.clear();
@@ -117,7 +122,7 @@ export class EchoClient extends Resource {
     reactiveSchemaQuery,
     preloadSchemaOnOpen,
     spaceKey,
-  }: ConstructDatabaseParams) {
+  }: ConstructDatabaseParams): EchoDatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new EchoDatabaseImpl({
@@ -129,9 +134,18 @@ export class EchoClient extends Resource {
       preloadSchemaOnOpen,
       spaceKey,
     });
-    this._graph._register(spaceId, spaceKey, db, owningObject);
+    this._graph._registerDatabase(spaceId, db, owningObject);
     this._databases.set(spaceId, db);
     return db;
+  }
+
+  constructQueueFactory(spaceId: SpaceId): QueueFactory {
+    const queueFactory = new QueueFactory(spaceId, this._graph);
+    this._graph._registerQueueFactory(spaceId, queueFactory);
+    if (this._queuesService) {
+      queueFactory.setService(this._queuesService);
+    }
+    return queueFactory;
   }
 
   private async _loadObjectFromDocument({ spaceId, objectId, documentId }: LoadObjectParams) {

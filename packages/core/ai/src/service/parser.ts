@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { create } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { isNotFalsy, safeParseJson } from '@dxos/util';
@@ -39,7 +39,7 @@ export class MixedStreamParser {
    */
   private _message?: Message | undefined;
 
-  private _emitBlock(contentBlock: MessageContentBlock, streamBlock?: StreamBlock) {
+  private _emitBlock(contentBlock: MessageContentBlock, streamBlock?: StreamBlock): void {
     const messageBlock = streamBlock ? mergeMessageBlock(contentBlock, streamBlock) : contentBlock;
     if (messageBlock) {
       if (messageBlock.type === 'text' && messageBlock.text.length === 0) {
@@ -52,7 +52,7 @@ export class MixedStreamParser {
     }
   }
 
-  private _emitUpdate(contentBlock: MessageContentBlock, streamBlock: StreamBlock) {
+  private _emitUpdate(contentBlock: MessageContentBlock, streamBlock: StreamBlock): void {
     const messageBlock = mergeMessageBlock(contentBlock, streamBlock);
     if (messageBlock) {
       messageBlock.pending = true;
@@ -94,7 +94,7 @@ export class MixedStreamParser {
             log.warn('unexpected message_start');
           }
 
-          this._message = create(Message, { role: event.message.role, content: [...event.message.content] });
+          this._message = Obj.make(Message, { role: event.message.role, content: [...event.message.content] });
           this.message.emit(this._message);
           break;
         }

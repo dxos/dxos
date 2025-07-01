@@ -72,11 +72,11 @@ export class MediaManager extends Resource {
   /**
    * @internal
    */
-  _getState() {
+  _getState(): MediaState {
     return this._state;
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     this._blackCanvasStreamTrack = await createBlackCanvasStreamTrack({
       ctx: this._ctx,
       width: VIDEO_WIDTH,
@@ -97,7 +97,7 @@ export class MediaManager extends Resource {
     });
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     void this._speakingMonitor?.close();
     this._state.videoTrack && this._state.videoStream?.removeTrack(this._state.videoTrack);
     this._state.audioTrack?.stop();
@@ -108,14 +108,14 @@ export class MediaManager extends Resource {
   }
 
   @synchronized
-  async join(serviceConfig: CallsServiceConfig) {
+  async join(serviceConfig: CallsServiceConfig): Promise<void> {
     this._state.peer = new CallsServicePeer(serviceConfig);
     await this._state.peer!.open();
     this._pushTracksTask!.schedule();
   }
 
   @synchronized
-  async leave() {
+  async leave(): Promise<void> {
     await Promise.all(Object.values(this._state.pulledAudioTracks).map(({ ctx }) => ctx.dispose()));
     await Promise.all(Object.values(this._state.pulledVideoStreams).map(({ ctx }) => ctx.dispose()));
     this._trackToReconcile = [];
@@ -128,7 +128,7 @@ export class MediaManager extends Resource {
     this._state.pulledVideoStreams = {};
   }
 
-  async turnVideoOn() {
+  async turnVideoOn(): Promise<void> {
     this._state.videoStream!.removeTrack(this._state.videoTrack!);
     this._state.videoTrack = await getUserMediaTrack('videoinput', { width: VIDEO_WIDTH, height: VIDEO_HEIGHT });
     this._state.videoStream!.addTrack(this._state.videoTrack);
@@ -137,7 +137,7 @@ export class MediaManager extends Resource {
     this._pushTracksTask!.schedule();
   }
 
-  async turnVideoOff() {
+  async turnVideoOff(): Promise<void> {
     if (this._state.videoTrack !== this._blackCanvasStreamTrack) {
       this._state.videoStream!.removeTrack(this._state.videoTrack!);
       this._state.videoTrack?.stop();
@@ -151,7 +151,7 @@ export class MediaManager extends Resource {
   }
 
   // TODO(mykola): Change to `setAudioEnabled(enabled: boolean)`.
-  async turnAudioOn() {
+  async turnAudioOn(): Promise<void> {
     void this._speakingMonitor?.close();
     this._state.audioEnabled = true;
     this._state.audioTrack = await getUserMediaTrack('audioinput', {
@@ -167,7 +167,7 @@ export class MediaManager extends Resource {
     void this._speakingMonitor.open();
   }
 
-  async turnAudioOff() {
+  async turnAudioOff(): Promise<void> {
     void this._speakingMonitor?.close();
     this._speakingMonitor = undefined;
     if (this._state.audioTrack !== this._inaudibleAudioStreamTrack) {
@@ -179,7 +179,7 @@ export class MediaManager extends Resource {
     this._pushTracksTask!.schedule();
   }
 
-  async turnScreenshareOn() {
+  async turnScreenshareOn(): Promise<void> {
     const ms = await getScreenshare({ contentHint: 'text' });
     this._state.screenshareVideoStream = ms;
     this._state.screenshareTrack = ms.getVideoTracks()[0];
@@ -188,7 +188,7 @@ export class MediaManager extends Resource {
     this._pushTracksTask!.schedule();
   }
 
-  async turnScreenshareOff() {
+  async turnScreenshareOff(): Promise<void> {
     this._state.screenshareEnabled = false;
     this._state.screenshareTrack?.stop();
     this._state.screenshareTrack = undefined;
@@ -199,7 +199,7 @@ export class MediaManager extends Resource {
   /**
    * @internal
    */
-  _schedulePullTracks(tracks?: EncodedTrackName[]) {
+  _schedulePullTracks(tracks?: EncodedTrackName[]): void {
     if (
       !tracks ||
       (this._trackToReconcile.every((name) => tracks.includes(name)) && this._trackToReconcile.length === tracks.length)
@@ -211,7 +211,7 @@ export class MediaManager extends Resource {
     this._pullTracksTask!.schedule();
   }
 
-  private async _reconcilePulledMedia() {
+  private async _reconcilePulledMedia(): Promise<void> {
     log('reconciling tracks');
     // TODO(mykola): Currently cloudflare fails if you try to pull track immediately after pushing it.
     // Add retry logic, remove sleep.
@@ -253,7 +253,7 @@ export class MediaManager extends Resource {
     this.stateUpdated.emit(this._state);
   }
 
-  private async _pushTracks() {
+  private async _pushTracks(): Promise<void> {
     if (!this._state.peer?.isOpen) {
       return;
     }
@@ -286,7 +286,7 @@ export class MediaManager extends Resource {
     this.stateUpdated.emit(this._state);
   }
 
-  private async _pullTrack(name: EncodedTrackName) {
+  private async _pullTrack(name: EncodedTrackName): Promise<void> {
     const ctx = this._ctx.derive();
     try {
       const trackData = TrackNameCodec.decode(name);
@@ -316,10 +316,10 @@ export class MediaManager extends Resource {
           throw new Error(`Invalid track kind: ${track?.kind}`);
       }
     } catch (err) {
-      log.warn('failed to pull track', { err, name });
+      log.verbose('failed to pull track', { err, name });
       void ctx.dispose();
       await cancelWithContext(this._ctx, sleep(RETRY_INTERVAL));
-      log.warn('retrying pull track', { name });
+      log.verbose('retrying pull track', { name });
       this._pullTracksTask!.schedule();
     }
   }
@@ -328,7 +328,7 @@ export class MediaManager extends Resource {
     track?: MediaStreamTrack,
     previousTrack?: TrackObject,
     encodings?: RTCRtpEncodingParameters[],
-  ) {
+  ): Promise<TrackObject | undefined> {
     if (!track && !previousTrack) {
       return;
     }

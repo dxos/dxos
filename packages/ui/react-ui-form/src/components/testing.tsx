@@ -5,16 +5,21 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-stack';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
-
-export const TestPanel = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <div className={mx('w-full max-w-[30rem] border border-separator p-2 rounded', classNames)}>{children}</div>
-);
+import { mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 export const TestLayout = ({ classNames, json, children }: ThemedClassName<PropsWithChildren<{ json?: any }>>) => (
-  <div className='w-full h-full grid grid-cols-[1fr_1fr]'>
-    <div className={mx('m-2 justify-center overflow-y-auto', classNames)}>{children}</div>
-    <JsonFilter data={json} classNames='w-full text-xs' />
+  <div className='w-full h-full grid grid-cols-[1fr_1fr] gap-2 overflow-hidden'>
+    <div className={mx('p-4 justify-center overflow-y-auto', classNames)}>{children}</div>
+    <JsonFilter data={json} classNames='w-full text-xs' testId='debug' />
   </div>
 );
+
+export const TestPanel = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
+  <Card.Content classNames={[textBlockWidth, classNames]}>{children}</Card.Content>
+);
+
+// Symbol for accessing debug objects in tests.
+export const VIEW_EDITOR_DEBUG_SYMBOL = Symbol('viewEditorDebug');
+export const FIELD_EDITOR_DEBUG_SYMBOL = Symbol('fieldEditorDebug');

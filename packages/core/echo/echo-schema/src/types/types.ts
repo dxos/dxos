@@ -6,21 +6,18 @@ import { SchemaAST, Schema } from 'effect';
 
 import { Reference } from '@dxos/echo-protocol';
 import { splitJsonPath, type JsonPath } from '@dxos/effect';
-import { DXN, ObjectId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
-import { getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../ast';
-import { getTypename, type ObjectMeta } from '../object';
-
-// TODO(burdon): Use consistently (with serialization utils).
-export const ECHO_ATTR_META = '@meta';
+import { getSchemaDXN } from '../ast';
+import { getType, getTypename, type ObjectMeta, type EntityKindId } from '../object';
+import { ATTR_META } from '../object/model';
 
 /**
  * Base type for all data objects (reactive, ECHO, and other raw objects).
  * NOTE: This describes the base type for all database objects.
  * It is stricter than `T extends {}` or `T extends object`.
  */
-// TODO(burdon): Consider moving to lower-level base type lib.
 // TODO(dmaretskyi): Rename AnyProperties.
 export type BaseObject = Record<string, any>;
 
@@ -36,9 +33,11 @@ export type WithId = BaseObject & HasId;
 
 export type ExcludeId<T extends BaseObject> = Omit<T, 'id'>;
 
+export type CreationProps<T extends BaseObject> = Omit<T, 'id' | typeof EntityKindId>;
+
 export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 
-export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
+export type WithMeta = { [ATTR_META]?: ObjectMeta };
 
 /**
  * The raw object should not include the ECHO id, but may include metadata.
@@ -92,8 +91,8 @@ export type ObjectData<S> = Schema.Schema.Encoded<S> & CommonObjectData;
  * @deprecated Bad API.
  */
 export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMeta } => {
-  const meta = object[ECHO_ATTR_META];
-  delete object[ECHO_ATTR_META];
+  const meta = object[ATTR_META];
+  delete object[ATTR_META];
   return { meta, object };
 };
 
@@ -115,35 +114,26 @@ export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): 
 };
 
 /**
- * Returns a typename of a schema.
- */
-export const getTypenameOrThrow = (schema: Schema.Schema.AnyNoContext): string => requireTypeReference(schema).objectId;
-
-/**
  * Returns a reference that will be used to point to a schema.
+ * @deprecated Use {@link getSchemaDXN} instead.
  */
-// TODO(dmaretskyi): Unify with `getSchemaDXN`.
 export const getTypeReference = (schema: Schema.Schema.All | undefined): Reference | undefined => {
   if (!schema) {
     return undefined;
   }
 
-  const echoId = getTypeIdentifierAnnotation(schema);
-  if (echoId) {
-    return Reference.fromDXN(DXN.parse(echoId));
-  }
-
-  const annotation = getTypeAnnotation(schema);
-  if (annotation == null) {
+  const schemaDXN = getSchemaDXN(schema);
+  if (!schemaDXN) {
     return undefined;
   }
-
-  return Reference.fromDXN(DXN.fromTypenameAndVersion(annotation.typename, annotation.version));
+  return Reference.fromDXN(schemaDXN);
 };
 
 /**
  * Returns a reference that will be used to point to a schema.
  * @throws If it is not possible to reference this schema.
+ *
+ * @deprecated Use {@link getSchemaDXN} instead.
  */
 export const requireTypeReference = (schema: Schema.Schema.AnyNoContext): Reference => {
   const typeReference = getTypeReference(schema);
@@ -156,6 +146,15 @@ export const requireTypeReference = (schema: Schema.Schema.AnyNoContext): Refere
 };
 
 // TODO(burdon): Can we use `Schema.is`?
+/**
+ * Checks if the object is an instance of the schema.
+ * Only typename is compared, the schema version is ignored.
+ *
+ * The following cases are considered to mean that the object is an instance of the schema:
+ *  - Object was created with this exact schema.
+ *  - Object was created with a different version of this schema.
+ *  - Object was created with a different schema (maybe dynamic) that has the same typename.
+ */
 export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
   schema: Schema,
   object: any,
@@ -169,21 +168,22 @@ export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
     throw new Error('Schema must have an object annotation.');
   }
 
+  const type = getType(object);
+  if (type && DXN.equals(type, schemaDXN)) {
+    return true;
+  }
+
   const typename = getTypename(object);
   if (!typename) {
     return false;
   }
 
-  if (typename.startsWith('dxn:')) {
-    return schemaDXN.toString() === typename;
-  } else {
-    const typeDXN = schemaDXN.asTypeDXN();
-    if (!typeDXN) {
-      return false;
-    }
-
-    return typeDXN.type === typename;
+  const typeDXN = schemaDXN.asTypeDXN();
+  if (!typeDXN) {
+    return false;
   }
+
+  return typeDXN.type === typename;
 };
 
 /**
@@ -192,25 +192,6 @@ export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
  * The object can be used with {@link isInstanceOf} to check if it is an instance of a schema.
  */
 export type HasTypename = {};
-
-/**
- * Returns a DXN for an object or schema.
- */
-export const getDXN = (object: any): DXN | undefined => {
-  if (Schema.isSchema(object)) {
-    return getSchemaDXN(object as any);
-  }
-
-  if (typeof object !== 'object' || object == null) {
-    throw new TypeError('Object is not an object.');
-  }
-
-  if (!ObjectId.isValid(object.id)) {
-    throw new TypeError('Object id is not valid.');
-  }
-
-  return DXN.fromLocalObjectId(object.id);
-};
 
 /**
  * Canonical type for all ECHO objects.

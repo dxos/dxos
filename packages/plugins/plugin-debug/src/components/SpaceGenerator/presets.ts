@@ -5,12 +5,9 @@
 import { Schema, SchemaAST } from 'effect';
 
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { Ref } from '@dxos/echo';
-import { ObjectId, toJsonSchema } from '@dxos/echo-schema';
+import { DXN, Key, Obj, Ref, Type } from '@dxos/echo';
 import { FunctionTrigger, TriggerKind, EmailTriggerOutput, type TriggerType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
-import { live, makeRef } from '@dxos/live-object';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import {
   type ComputeShape,
@@ -51,7 +48,7 @@ export enum PresetName {
   KANBAN_QUEUE = 'kanban-queue',
 }
 
-export const presets = {
+export const generator = () => ({
   schemas: [CanvasBoardType, FunctionTrigger],
   types: Object.values(PresetName).map((name) => ({ typename: name })),
   items: [
@@ -184,7 +181,7 @@ export const presets = {
           const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
           invariant(templateComputeNode, 'Template compute node was not created.');
           templateComputeNode.value = templateContent.join('\n');
-          templateComputeNode.inputSchema = toJsonSchema(EmailTriggerOutput);
+          templateComputeNode.inputSchema = Type.toJsonSchema(EmailTriggerOutput);
 
           attachTrigger(functionTrigger, computeModel);
 
@@ -308,7 +305,7 @@ export const presets = {
           invariant(templateComputeNode, 'Template compute node was not created.');
           templateComputeNode.value = templateContent.join('\n');
           const extendedSchema = Schema.extend(EmailTriggerOutput, Schema.Struct({ text: Schema.String }));
-          templateComputeNode.inputSchema = toJsonSchema(extendedSchema);
+          templateComputeNode.inputSchema = Type.toJsonSchema(extendedSchema);
 
           attachTrigger(functionTrigger, computeModel);
 
@@ -370,7 +367,7 @@ export const presets = {
             );
             const queueId = canvasModel.createNode(
               createConstant({
-                value: new DXN(DXN.kind.QUEUE, ['data', space.id, ObjectId.random()]).toString(),
+                value: new DXN(DXN.kind.QUEUE, ['data', space.id, Key.ObjectId.random()]).toString(),
                 ...position({ x: -10, y: 5 }),
               }),
             );
@@ -447,7 +444,7 @@ export const presets = {
       },
     ],
   ] as [PresetName, ObjectGenerator<any>][],
-};
+});
 
 const createQueueSinkPreset = <SpecType extends TriggerKind>(
   space: Space,
@@ -503,8 +500,7 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
   const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
   invariant(templateComputeNode, 'Template compute node was not created.');
   templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "@{{changeId}}"', '}'].join('\n');
-  templateComputeNode.inputSchema = toJsonSchema(Schema.Struct({ type: Schema.String, changeId: Schema.String }));
-
+  templateComputeNode.inputSchema = Type.toJsonSchema(Schema.Struct({ type: Schema.String, changeId: Schema.String }));
   attachTrigger(functionTrigger, computeModel);
 
   return { canvasModel, computeModel };
@@ -512,9 +508,9 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
 
 const addToSpace = (name: string, space: Space, canvas: CanvasGraphModel, compute: ComputeGraphModel) => {
   return space.db.add(
-    live(CanvasBoardType, {
+    Obj.make(CanvasBoardType, {
       name,
-      computeGraph: makeRef(compute.root),
+      computeGraph: Ref.make(compute.root),
       layout: canvas.graph,
     }),
   );
@@ -527,7 +523,7 @@ const setupQueue = (
 ) => {
   const queueId = canvasModel.createNode(
     createConstant({
-      value: new DXN(DXN.kind.QUEUE, ['data', space.id, ObjectId.random()]).toString(),
+      value: new DXN(DXN.kind.QUEUE, ['data', space.id, Key.ObjectId.random()]).toString(),
       ...(args?.idPosition ? rawPosition(args.idPosition) : position({ x: -18, y: 5, width: 8, height: 6 })),
     }),
   );

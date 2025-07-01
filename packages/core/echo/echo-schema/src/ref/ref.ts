@@ -9,7 +9,7 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
-import { getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId } from '../ast';
+import { getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId } from '../ast';
 import { type JsonSchemaType } from '../json-schema';
 import type { BaseObject, WithId } from '../types';
 
@@ -287,6 +287,9 @@ export interface RefResolver {
    * Resolver ref asynchronously.
    */
   resolve(dxn: DXN): Promise<BaseObject | undefined>;
+
+  // TODO(dmaretskyi): Combine with `resolve`.
+  resolveSchema(dxn: DXN): Promise<Schema.Schema.AnyNoContext | undefined>;
 }
 
 export class RefImpl<T> implements Ref<T> {
@@ -356,7 +359,7 @@ export class RefImpl<T> implements Ref<T> {
    * Do not inline the target object in the reference.
    * Makes .target unavailable unless the reference is connected to a database context.
    */
-  noInline() {
+  noInline(): this {
     this.#target = undefined;
     return this;
   }
@@ -374,11 +377,11 @@ export class RefImpl<T> implements Ref<T> {
    * When a reference has a saved target (i.e. the target or object holding the reference is not in the database),
    * the target is included in the serialized object.
    */
-  toJSON() {
+  toJSON(): EncodedReference {
     return this.encode();
   }
 
-  toString() {
+  toString(): string {
     if (this.#target) {
       return `Ref(${this.#target.toString()})`;
     }
@@ -392,7 +395,7 @@ export class RefImpl<T> implements Ref<T> {
    * Internal method to set the resolver.
    * @internal
    */
-  _setResolver(resolver: RefResolver) {
+  _setResolver(resolver: RefResolver): void {
     this.#resolver = resolver;
   }
 
@@ -401,7 +404,7 @@ export class RefImpl<T> implements Ref<T> {
    * Not the same as `target` which is resolved from the resolver.
    * @internal
    */
-  _getSavedTarget() {
+  _getSavedTarget(): T | undefined {
     return this.#target;
   }
 }
@@ -426,3 +429,54 @@ export const getRefSavedTarget = (ref: Ref<any>): BaseObject | undefined => {
 const refVariance: Ref<any>[typeof RefTypeId] = {
   _T: null as any,
 };
+
+export const refFromEncodedReference = (encodedReference: EncodedReference, resolver?: RefResolver): Ref<any> => {
+  const dxn = DXN.parse(encodedReference['/']);
+  const ref = new RefImpl(dxn);
+
+  // TODO(dmaretskyi): Handle inline target in the encoded reference.
+
+  if (resolver) {
+    setRefResolver(ref, resolver);
+  }
+  return ref;
+};
+
+export class StaticRefResolver implements RefResolver {
+  public objects = new Map<ObjectId, BaseObject>();
+  public schemas = new Map<DXN.String, Schema.Schema.AnyNoContext>();
+
+  addObject(obj: BaseObject): this {
+    this.objects.set(obj.id, obj);
+    return this;
+  }
+
+  addSchema(schema: Schema.Schema.AnyNoContext): this {
+    const dxn = getSchemaDXN(schema);
+    invariant(dxn, 'Schema has no DXN');
+    this.schemas.set(dxn.toString(), schema);
+    return this;
+  }
+
+  resolveSync(dxn: DXN, _load: boolean, _onLoad?: () => void): BaseObject | undefined {
+    const id = dxn?.asEchoDXN()?.echoId;
+    if (id == null) {
+      return undefined;
+    }
+
+    return this.objects.get(id);
+  }
+
+  async resolve(dxn: DXN): Promise<BaseObject | undefined> {
+    const id = dxn?.asEchoDXN()?.echoId;
+    if (id == null) {
+      return undefined;
+    }
+
+    return this.objects.get(id);
+  }
+
+  async resolveSchema(dxn: DXN): Promise<Schema.Schema.AnyNoContext | undefined> {
+    return this.schemas.get(dxn.toString());
+  }
+}

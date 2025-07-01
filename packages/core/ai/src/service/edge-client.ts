@@ -5,22 +5,22 @@
 import { assertArgument, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import type { AIServiceClient, GenerationStream } from './service';
+import type { AiServiceClient, GenerationStream } from './service';
 import { createGenerationStream } from './stream';
 import { type GenerateRequest, type GenerateResponse, type LLMModel } from '../types';
 
-export type AIServiceEdgeClientOptions = {
+export type AiServiceEdgeClientOptions = {
   endpoint: string;
   defaultGenerationOptions?: {
     model?: LLMModel;
   };
 };
 
-export class AIServiceEdgeClient implements AIServiceClient {
+export class EdgeAiServiceClient implements AiServiceClient {
   private readonly _endpoint: string;
-  private readonly _defaultGenerationOptions: AIServiceEdgeClientOptions['defaultGenerationOptions'];
+  private readonly _defaultGenerationOptions: AiServiceEdgeClientOptions['defaultGenerationOptions'];
 
-  constructor({ endpoint, defaultGenerationOptions }: AIServiceEdgeClientOptions) {
+  constructor({ endpoint, defaultGenerationOptions }: AiServiceEdgeClientOptions) {
     invariant(endpoint, 'endpoint is required');
     this._endpoint = endpoint;
     this._defaultGenerationOptions = defaultGenerationOptions;
@@ -48,10 +48,10 @@ export class AIServiceEdgeClient implements AIServiceClient {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        // TODO(dmaretskyi): Errors if tools are not provided.
-        tools: request.tools ?? [],
         ...request,
         model: request.model ?? this._defaultGenerationOptions?.model,
+        // TODO(dmaretskyi): Errors if tools are not provided.
+        tools: request.tools ?? [],
       }),
     });
 

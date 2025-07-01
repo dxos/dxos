@@ -7,8 +7,8 @@ import React, { type ComponentPropsWithoutRef, type PropsWithChildren } from 're
 import {
   Button,
   type ButtonProps,
-  type Label,
   Input,
+  type Label,
   type ThemedClassName,
   toLocalizedString,
   useTranslation,
@@ -21,7 +21,7 @@ export type ControlPageProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 export const ControlPage = ({ children, classNames, ...props }: ControlPageProps) => {
   return (
-    <div role='none' className={mx('pli-2', classNames)} {...props}>
+    <div role='none' className={mx('pli-cardSpacingInline', classNames)} {...props}>
       {children}
     </div>
   );
@@ -45,9 +45,11 @@ export const ControlSectionHeading = ({ title, description }: Omit<ControlSectio
   const { t } = useTranslation(translationKey);
   return (
     <>
-      <h2 className='pli-4 container-max-width text-xl mbs-6 mbe-4'>{toLocalizedString(title, t)}</h2>
+      <h2 className='pli-trimMd container-max-width text-xl mbs-trimLg mbe-trimMd'>{toLocalizedString(title, t)}</h2>
       {description && (
-        <p className='pli-4 mlb-4 container-max-width text-description'>{toLocalizedString(description, t)}</p>
+        <p className='pli-trimMd mlb-trimMd container-max-width text-description'>
+          {toLocalizedString(description, t)}
+        </p>
       )}
     </>
   );
@@ -62,7 +64,7 @@ export type ControlGroupProps = ThemedClassName<PropsWithChildren<{}>>;
 export const ControlGroup = ({ children, classNames }: ControlGroupProps) => (
   <div
     role='none'
-    className={mx('group container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-4', classNames)}
+    className={mx('group container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-trimMd', classNames)}
   >
     {children}
   </div>
@@ -71,7 +73,7 @@ export const ControlGroup = ({ children, classNames }: ControlGroupProps) => (
 export const ControlFrame = ({ children }: ControlGroupProps) => (
   <div
     role='none'
-    className='p-4 border border-separator rounded-lg container-max-width grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-2 md:gap-8'
+    className='p-trimMd container-max-width grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-trimSm md:gap-trimMd border border-separator rounded-md'
   >
     {children}
   </div>
@@ -83,10 +85,10 @@ export type ControlItemProps = PropsWithChildren<{
 }>;
 
 export const controlItemClasses =
-  'p-4 border border-separator rounded-lg container-max-width grid md:col-span-2 grid-cols-subgrid items-center';
+  'pli-trimMd plb-trimMd container-max-width grid md:col-span-2 grid-cols-subgrid items-center gap-trimSm border border-separator rounded-md *:first:!mbs-0 *:last:!mbe-0';
 
-const controlItemTitleClasses = 'text-lg font-normal mbe-2';
-const controlItemDescriptionClasses = 'text-base mlb-2 md:mbe-0 text-description';
+const controlItemTitleClasses = 'text-lg font-normal';
+const controlItemDescriptionClasses = 'text-base mlb-trimSm md:mbe-0 text-description';
 
 export const ControlItem = ({ title, description, children }: ControlItemProps) => {
   const { t } = useTranslation(translationKey);
@@ -130,7 +132,7 @@ export const ControlFrameItem = ({ title, description, children }: ControlItemPr
   return (
     <div role='group' className='min-is-0'>
       <h3 className='text-lg mbe-2'>{toLocalizedString(title, t)}</h3>
-      {description && <p className='mlb-2 md:mbe-0 text-description'>{toLocalizedString(description, t)}</p>}
+      {description && <p className='mlb-trimSm md:mbe-0 text-description'>{toLocalizedString(description, t)}</p>}
       {children}
     </div>
   );

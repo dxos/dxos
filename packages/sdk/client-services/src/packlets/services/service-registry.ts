@@ -22,15 +22,15 @@ export class ServiceRegistry<Services> {
     return this._handlers;
   }
 
-  setServices(services: Partial<Services>) {
+  setServices(services: Partial<Services>): void {
     this._handlers = services;
   }
 
-  addService(name: keyof Services, service: Services[keyof Services]) {
+  addService(name: keyof Services, service: Services[keyof Services]): void {
     this._handlers[name] = service;
   }
 
-  removeService(name: keyof Services) {
+  removeService(name: keyof Services): void {
     delete this._handlers[name];
   }
 }

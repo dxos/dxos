@@ -12,16 +12,25 @@ export type MessageStyleProps = {
   elevation?: Elevation;
 };
 
-export const messageRoot: ComponentFunction<MessageStyleProps> = ({ valence, elevation }, ...etc) =>
-  mx('p-3 max-is-full overflow-auto rounded-md', messageValence(valence), ...etc);
+export const messageRoot: ComponentFunction<MessageStyleProps> = ({ valence }, etc) => {
+  return mx('p-trimMd rounded-md is-full', messageValence(valence), etc);
+};
 
-export const messageTitle: ComponentFunction<MessageStyleProps> = (_props, ...etc) =>
-  mx('mb-2 text-baseText font-medium', ...etc);
+export const messageTitle: ComponentFunction<MessageStyleProps> = (_, etc) => {
+  return mx('mbe-trimSm last:mbe-0 font-medium flex items-center gap-trimXs', etc);
+};
 
-export const messageBody: ComponentFunction<MessageStyleProps> = (_props, ...etc) => mx(...etc);
+export const messageIcon: ComponentFunction<MessageStyleProps> = (_, etc) => {
+  return mx(etc);
+};
+
+export const messageContent: ComponentFunction<MessageStyleProps> = (_, etc) => {
+  return mx('first:font-medium', etc);
+};
 
 export const messageTheme: Theme<MessageStyleProps> = {
   root: messageRoot,
+  content: messageContent,
+  icon: messageIcon,
   title: messageTitle,
-  body: messageBody,
 };

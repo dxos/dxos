@@ -90,7 +90,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    *
    * @param data param that will be passed to all listeners.
    */
-  emit(data: T) {
+  emit(data: T): void {
     for (const listener of this._listeners) {
       listener.trigger(data);
 
@@ -108,7 +108,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    *
    * @param data param that will be passed to all listeners.
    */
-  async emitAsync(data: T) {
+  async emitAsync(data: T): Promise<void> {
     for (const listener of this._listeners) {
       await listener.triggerAsync(data);
 
@@ -149,7 +149,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    *
    * @param callback
    */
-  off(callback: (data: T) => void) {
+  off(callback: (data: T) => void): void {
     for (const listener of this._listeners) {
       if (listener.derefCallback() === callback) {
         this._removeListener(listener);
@@ -228,7 +228,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   /**
    * Returns the number of persistent listeners.
    */
-  listenerCount() {
+  listenerCount(): number {
     return this._listeners.size;
   }
 
@@ -271,7 +271,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * the event is emitted after `timeout / 8` ms.
    */
   // TODO(burdon): Factor out generic function.
-  debounce(timeout = 0) {
+  debounce(timeout = 0): Event<void> {
     let firing: NodeJS.Timeout | undefined;
     let lastFired: number | undefined;
 
@@ -315,13 +315,13 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   /**
    * Overridden to not return implementation details.
    */
-  toJSON() {
+  toJSON(): { listenerCount: number } {
     return {
       listenerCount: this.listenerCount(),
     };
   }
 
-  private _addListener(listener: EventListener<T>) {
+  private _addListener(listener: EventListener<T>): void {
     this._listeners.add(listener);
 
     if (this.listenerCount() === 1) {
@@ -332,7 +332,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   /**
    * @internal
    */
-  _removeListener(listener: EventListener<T>) {
+  _removeListener(listener: EventListener<T>): void {
     this._listeners.delete(listener);
     listener.remove();
 
@@ -341,13 +341,13 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     }
   }
 
-  private _runEffects() {
+  private _runEffects(): void {
     for (const handle of this._effects) {
       handle.cleanup = handle.effect();
     }
   }
 
-  private _cleanupEffects() {
+  private _cleanupEffects(): void {
     for (const handle of this._effects) {
       // eslint-disable-next-line no-unused-expressions
       handle.cleanup?.();
@@ -458,7 +458,7 @@ class EventListener<T> {
     return this.weak ? (this.callback as WeakRef<EventCallback<T>>).deref() : (this.callback as EventCallback<T>);
   }
 
-  trigger(data: T) {
+  trigger(data: T): void {
     let result!: MaybePromise<void>;
     try {
       const callback = this.derefCallback();
@@ -474,7 +474,7 @@ class EventListener<T> {
     }
   }
 
-  async triggerAsync(data: T) {
+  async triggerAsync(data: T): Promise<void> {
     try {
       const callback = this.derefCallback();
       await callback?.(data);
@@ -483,7 +483,7 @@ class EventListener<T> {
     }
   }
 
-  remove() {
+  remove(): void {
     this._clearDispose?.();
     weakListeners().registry?.unregister(this);
   }

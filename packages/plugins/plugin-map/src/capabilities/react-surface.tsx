@@ -6,25 +6,26 @@ import { type Schema } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
-import { FormatEnum, isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
+import { FormatEnum } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
-import { type CollectionType } from '@dxos/plugin-space/types';
 import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
+import { type DataType } from '@dxos/schema';
 
 import { MapCapabilities } from './capabilities';
 import { MapContainer, MapControl } from '../components';
 import { MapViewEditor } from '../components/MapViewEditor';
 import { MAP_PLUGIN } from '../meta';
-import { TypenameAnnotationId, MapType, LocationAnnotationId } from '../types';
+import { MapType, LocationAnnotationId } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${MAP_PLUGIN}/map`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: MapType } => isInstanceOf(MapType, data.subject),
+      filter: (data): data is { subject: MapType } => Obj.instanceOf(MapType, data.subject),
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
         const [lng = 0, lat = 0] = data.subject?.coordinates ?? [];
@@ -51,7 +52,7 @@ export default () =>
     createSurface({
       id: 'plugin-map',
       role: 'canvas-node',
-      filter: (data) => isInstanceOf(MapType, data),
+      filter: (data) => Obj.instanceOf(MapType, data),
       component: ({ data }) => {
         const [lng = 0, lat = 0] = data?.coordinates ?? [];
         return <MapControl center={{ lat, lng }} zoom={14} />;
@@ -60,35 +61,15 @@ export default () =>
     createSurface({
       id: `${MAP_PLUGIN}/object-settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: MapType } => isInstanceOf(MapType, data.subject),
+      filter: (data): data is { subject: MapType } => Obj.instanceOf(MapType, data.subject),
       component: ({ data }) => <MapViewEditor map={data.subject} />,
-    }),
-    createSurface({
-      id: `${MAP_PLUGIN}/create-initial-schema-form-[schema]`,
-      role: 'form-input',
-      filter: (
-        data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
-        const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, TypenameAnnotationId);
-        return !!annotation;
-      },
-      component: ({ data: { target }, ...inputProps }) => {
-        const props = inputProps as any as InputProps;
-        const space = isSpace(target) ? target : getSpace(target);
-        if (!space) {
-          return null;
-        }
-
-        const schemata = space?.db.schemaRegistry.query().runSync();
-        return <SelectInput {...props} options={schemata.map((schema) => ({ value: schema.typename }))} />;
-      },
     }),
     createSurface({
       id: `${MAP_PLUGIN}/create-initial-schema-form-[property-of-interest]`,
       role: 'form-input',
       filter: (
         data,
-      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection | undefined } => {
         const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, LocationAnnotationId);
         return !!annotation;
       },

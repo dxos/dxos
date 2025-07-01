@@ -73,7 +73,7 @@ export class DataServiceImpl implements DataService {
     });
   }
 
-  async updateSubscription(request: UpdateSubscriptionRequest) {
+  async updateSubscription(request: UpdateSubscriptionRequest): Promise<void> {
     const synchronizer = this._subscriptions.get(request.subscriptionId);
     invariant(synchronizer, 'Subscription not found');
 
@@ -92,7 +92,7 @@ export class DataServiceImpl implements DataService {
     const synchronizer = this._subscriptions.get(request.subscriptionId);
     invariant(synchronizer, 'Subscription not found');
 
-    synchronizer.update(request.updates);
+    await synchronizer.update(request.updates);
   }
 
   async flush(request: FlushRequest): Promise<void> {
@@ -123,7 +123,7 @@ export class DataServiceImpl implements DataService {
     await this._automergeHost.reIndexHeads((request.documentIds ?? []) as DocumentId[]);
   }
 
-  async updateIndexes() {
+  async updateIndexes(): Promise<void> {
     await this._updateIndexes();
   }
 

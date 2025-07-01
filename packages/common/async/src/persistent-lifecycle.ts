@@ -64,7 +64,7 @@ export class PersistentLifecycle<T> extends Resource {
   }
 
   @synchronized
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     this._restartTask = new DeferredTask(this._ctx, async () => {
       try {
         await this._restart();
@@ -73,6 +73,7 @@ export class PersistentLifecycle<T> extends Resource {
         this._restartTask?.schedule();
       }
     });
+
     this._currentState = await this._start().catch((err) => {
       log.warn('Start failed', { err });
       this._restartTask?.schedule();
@@ -80,13 +81,13 @@ export class PersistentLifecycle<T> extends Resource {
     });
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     await this._restartTask?.join();
     await this._stopCurrentState();
     this._restartTask = undefined;
   }
 
-  private async _restart() {
+  private async _restart(): Promise<void> {
     log(`restarting in ${this._restartAfter}ms`, { state: this._lifecycleState });
     await this._stopCurrentState();
     if (this._lifecycleState !== LifecycleState.OPEN) {
@@ -104,7 +105,7 @@ export class PersistentLifecycle<T> extends Resource {
     await this._onRestart?.();
   }
 
-  private async _stopCurrentState() {
+  private async _stopCurrentState(): Promise<void> {
     if (this._currentState) {
       try {
         await this._stop(this._currentState);
@@ -119,7 +120,7 @@ export class PersistentLifecycle<T> extends Resource {
    * Scheduling restart should be done from outside.
    */
   @synchronized
-  async scheduleRestart() {
+  async scheduleRestart(): Promise<void> {
     if (this._lifecycleState !== LifecycleState.OPEN) {
       return;
     }

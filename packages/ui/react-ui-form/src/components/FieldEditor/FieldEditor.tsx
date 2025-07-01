@@ -29,12 +29,20 @@ export type FieldEditorProps = {
   registry?: SchemaRegistry;
   onSave: () => void;
   onCancel?: () => void;
-};
+} & Pick<FormProps<any>, 'outerSpacing'>;
 
 /**
  * Displays a Form representing the metadata for a given `Field` and `View`.
  */
-export const FieldEditor = ({ view, projection, field, registry, onSave, onCancel }: FieldEditorProps) => {
+export const FieldEditor = ({
+  view,
+  projection,
+  field,
+  registry,
+  onSave,
+  onCancel,
+  outerSpacing,
+}: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
@@ -79,6 +87,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
         }
         return { fieldSchema };
       });
+
       setReferenceSchema((prev) => {
         if (_props.referenceSchema !== prev?.typename) {
           const newSchema = schemas.find((schema) => schema.typename === _props.referenceSchema);
@@ -188,6 +197,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
       onSave={handleSave}
       onCancel={handleCancel}
       Custom={custom}
+      outerSpacing={outerSpacing}
     />
   );
 };

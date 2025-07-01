@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useMemo, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
+import type { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/react-client/echo';
 
-import { type Chunk, type ChunkRenderer, SerializationModel } from '../model';
+import { type ChunkRenderer, SerializationModel } from '../model';
 
 /**
  * Model adapter for a queue.
  */
-export const useQueueModelAdapter = <T extends Chunk>(
+export const useQueueModelAdapter = <T extends Obj.Any>(
   renderer: ChunkRenderer<T>,
   queue: Queue<T> | undefined,
   initialChunks: T[] = [],
@@ -26,7 +27,7 @@ export const useQueueModelAdapter = <T extends Chunk>(
     }
 
     const update = () => {
-      for (const block of queue?.items ?? []) {
+      for (const block of queue?.objects ?? []) {
         model.appendChunk(block);
       }
 
@@ -51,13 +52,15 @@ export const useQueueModelAdapter = <T extends Chunk>(
 
   // TODO(burdon): Can we listen for queue events?
   useEffect(() => {
-    if (!loaded || !queue || model.chunks.length === queue.items.length) {
+    if (!loaded || !queue || model.chunks.length === queue.objects.length) {
       return;
     }
 
-    const chunk = queue.items[queue.items.length - 1];
-    model.appendChunk(chunk);
-  }, [model, loaded, queue?.items.length]);
+    const chunk = queue.objects.at(-1);
+    if (chunk) {
+      model.appendChunk(chunk);
+    }
+  }, [model, loaded, queue?.objects.length]);
 
   return model;
 };

@@ -4,7 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type JsonPath, RefImpl, toEffectSchema } from '@dxos/echo-schema';
+import { Ref, Type } from '@dxos/echo';
+import { type JsonPath } from '@dxos/echo-schema';
 import { type FunctionType } from '@dxos/functions';
 import { useOnTransition } from '@dxos/react-ui';
 import { Form, type FormInputStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
@@ -25,13 +26,13 @@ export const FunctionInputEditor = ({
 }: FunctionInputEditorProps) => {
   const selectedFunctionValue = useFormValues(['function' as JsonPath]);
   const selectedFunctionId = useMemo(() => {
-    if (selectedFunctionValue instanceof RefImpl) {
+    if (Ref.isRef(selectedFunctionValue)) {
       return selectedFunctionValue.dxn.toString().split('dxn:echo:@:').at(1);
     }
   }, [selectedFunctionValue]);
 
   const selectedFunction = useMemo(
-    () => functions.find((f) => f.id === selectedFunctionId),
+    () => functions.find((fn) => fn.id === selectedFunctionId),
     [functions, selectedFunctionId],
   );
 
@@ -44,7 +45,7 @@ export const FunctionInputEditor = ({
   );
 
   const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
-  const effectSchema = useMemo(() => (inputSchema ? toEffectSchema(inputSchema) : undefined), [inputSchema]);
+  const effectSchema = useMemo(() => (inputSchema ? Type.toEffectSchema(inputSchema) : undefined), [inputSchema]);
   const propertyCount = inputSchema?.properties ? Object.keys(inputSchema.properties).length : 0;
 
   const values = useMemo(() => getValue() ?? {}, [getValue]);
@@ -68,9 +69,9 @@ export const FunctionInputEditor = ({
       <Form
         schema={effectSchema}
         values={values}
-        classNames='p-0'
         onValuesChanged={handleValuesChanged}
         onQueryRefOptions={onQueryRefOptions}
+        outerSpacing={false}
       />
     </>
   );

@@ -37,6 +37,7 @@ import {
   EditorView,
   documentId,
   Cursor,
+  type PreviewOptions,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
@@ -56,6 +57,7 @@ type ExtensionsOptions = {
   selectionManager?: SelectionManager;
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
+  previewOptions?: PreviewOptions;
 };
 
 // TODO(burdon): Merge with createBaseExtensions below.
@@ -67,6 +69,7 @@ export const useExtensions = ({
   selectionManager,
   viewMode,
   editorStateStore,
+  previewOptions,
 }: ExtensionsOptions): Extension[] => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const identity = useIdentity();
@@ -85,6 +88,7 @@ export const useExtensions = ({
         settings,
         selectionManager,
         viewMode,
+        previewOptions,
         dispatch,
         // query,
       }),
@@ -94,6 +98,7 @@ export const useExtensions = ({
       text,
       viewMode,
       dispatch,
+      previewOptions,
       settings,
       settings.editorInputMode,
       settings.folding,
@@ -109,12 +114,12 @@ export const useExtensions = ({
   //
   // External extensions from other plugins.
   //
-  const pluginExtensions = useMemo<Extension[] | undefined>(() => {
+  const pluginExtensions = useMemo<Extension[]>(() => {
     if (!document) {
       return [];
     }
 
-    extensionProviders.flat().reduce((acc: Extension[], provider) => {
+    return extensionProviders.flat().reduce((acc: Extension[], provider) => {
       const extension = typeof provider === 'function' ? provider({ document }) : provider;
       if (extension) {
         acc.push(extension);
@@ -169,6 +174,7 @@ const createBaseExtensions = ({
   selectionManager,
   query,
   viewMode,
+  previewOptions,
 }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     selectionManager && selectionChange(selectionManager),
@@ -203,7 +209,7 @@ const createBaseExtensions = ({
               : undefined,
         }),
         linkTooltip(renderLinkTooltip),
-        preview(),
+        preview(previewOptions),
       ],
     );
   }

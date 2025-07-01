@@ -30,7 +30,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { useListContext } from './ListRoot';
 
-export type ListItemRecord = {};
+export type ListItemRecord = any;
 
 export type ItemDragState =
   | {
@@ -82,7 +82,7 @@ export type ListItemProps<T extends ListItemRecord> = ThemedClassName<
  * Draggable list item.
  */
 export const ListItem = <T extends ListItemRecord>({ children, classNames, item, ...props }: ListItemProps<T>) => {
-  const { isItem, dragPreview, setState: setRootState } = useListContext(LIST_ITEM_NAME);
+  const { isItem, readonly, dragPreview, setState: setRootState } = useListContext(LIST_ITEM_NAME);
   const ref = useRef<HTMLDivElement | null>(null);
   const dragHandleRef = useRef<HTMLElement | null>(null);
   const [state, setState] = useState<ItemDragState>(idle);
@@ -96,7 +96,8 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
       draggable({
         element,
         dragHandle: dragHandleRef.current!,
-        getInitialData: () => item,
+        canDrag: () => !readonly,
+        getInitialData: () => item as any,
         onGenerateDragPreview: dragPreview
           ? ({ nativeSetDragImage, source }) => {
               const rect = source.element.getBoundingClientRect();
@@ -104,10 +105,7 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
                 nativeSetDragImage,
                 getOffset: ({ container }) => {
                   const { height } = container.getBoundingClientRect();
-                  return {
-                    x: 20,
-                    y: height / 2,
-                  };
+                  return { x: 20, y: height / 2 };
                 },
                 render: ({ container }) => {
                   container.style.width = rect.width + 'px';
@@ -137,7 +135,7 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
           return (source.element !== element && isItem?.(source.data)) ?? false;
         },
         getData: ({ input }) => {
-          return attachClosestEdge(item, { element, input, allowedEdges: ['top', 'bottom'] });
+          return attachClosestEdge(item as any, { element, input, allowedEdges: ['top', 'bottom'] });
         },
         getIsSticky: () => true,
         onDragEnter: ({ self }) => {
@@ -228,9 +226,9 @@ export const ListItemButton = ({
   return <IconButton disabled={isDisabled} classNames={[classNames, autoHide && disabled && 'hidden']} {...props} />;
 };
 
-export const ListItemDragHandle = () => {
+export const ListItemDragHandle = ({ disabled }: Pick<IconButtonProps, 'disabled'>) => {
   const { dragHandleRef } = useListItemContext('DRAG_HANDLE');
-  return <IconButton ref={dragHandleRef as any} icon='ph--dots-six-vertical--regular' />;
+  return <IconButton ref={dragHandleRef as any} icon='ph--dots-six-vertical--regular' disabled={disabled} />;
 };
 
 export const ListItemDragPreview = <T extends ListItemRecord>({

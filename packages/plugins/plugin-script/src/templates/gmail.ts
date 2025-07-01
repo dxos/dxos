@@ -10,11 +10,11 @@ import {
   HttpClientRequest,
   FetchHttpClient,
   // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21';
+} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21&bundle=false';
 // @ts-ignore
-import { format, subDays } from 'https://esm.sh/date-fns@3.3.1';
+import { format, subDays } from 'https://esm.sh/date-fns@3.3.1?bundle=false';
 // @ts-ignore
-import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.14.21';
+import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.14.21?bundle=false';
 
 export default defineFunction({
   inputSchema: S.Struct({
@@ -136,7 +136,9 @@ const getUrl = (userId: string, messageId?: string, params?: Record<string, any>
   const api = new URL(
     [`https://gmail.googleapis.com/gmail/v1/users/${userId}/messages`, messageId].filter(Boolean).join('/'),
   );
-  Object.entries(params ?? {}).forEach(([key, value]) => api.searchParams.set(key, value));
+  Object.entries(params ?? {})
+    .filter(([_, value]) => value != null)
+    .forEach(([key, value]) => api.searchParams.set(key, value));
   return api.toString();
 };
 
@@ -245,7 +247,7 @@ const MessageType = S.Struct({
 }).pipe(
   EchoObject({
     typename: 'dxos.org/type/Message',
-    version: '0.1.0',
+    version: '0.2.0',
   }),
 );
 type MessageType = S.Schema.Type<typeof MessageType>;

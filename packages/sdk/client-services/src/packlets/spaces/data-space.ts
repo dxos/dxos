@@ -229,13 +229,13 @@ export class DataSpace {
   }
 
   @synchronized
-  async open() {
+  async open(): Promise<void> {
     if (this._state === SpaceState.SPACE_CLOSED) {
       await this._open();
     }
   }
 
-  private async _open() {
+  private async _open(): Promise<void> {
     await this._presence.open();
     await this._gossip.open();
     await this._notarizationPlugin.open();
@@ -262,11 +262,11 @@ export class DataSpace {
   }
 
   @synchronized
-  async close() {
+  async close(): Promise<void> {
     await this._close();
   }
 
-  private async _close() {
+  private async _close(): Promise<void> {
     await this._callbacks.beforeClose?.();
 
     await this.preClose.callSerial();
@@ -294,18 +294,18 @@ export class DataSpace {
     await this._gossip.close();
   }
 
-  async postMessage(channel: string, message: any) {
+  async postMessage(channel: string, message: any): Promise<void> {
     return this._gossip.postMessage(channel, message);
   }
 
-  listen(channel: string, callback: (message: GossipMessage) => void) {
+  listen(channel: string, callback: (message: GossipMessage) => void): { unsubscribe: () => void } {
     return this._gossip.listen(channel, callback);
   }
 
   /**
    * Initialize the data pipeline in a separate task.
    */
-  initializeDataPipelineAsync() {
+  initializeDataPipelineAsync(): void {
     scheduleTask(this._ctx, async () => {
       try {
         this.metrics.pipelineInitBegin = new Date();
@@ -328,7 +328,7 @@ export class DataSpace {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async initializeDataPipeline() {
+  async initializeDataPipeline(): Promise<void> {
     if (this._state !== SpaceState.SPACE_CONTROL_ONLY) {
       throw new SystemError('Invalid operation');
     }
@@ -365,7 +365,7 @@ export class DataSpace {
     }
   }
 
-  private async _enterReadyState() {
+  private async _enterReadyState(): Promise<void> {
     await this._callbacks.beforeReady?.();
 
     this._state = SpaceState.SPACE_READY;
@@ -376,7 +376,7 @@ export class DataSpace {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _initializeAndReadControlPipeline() {
+  private async _initializeAndReadControlPipeline(): Promise<void> {
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
       ctx: this._ctx,
       timeout: 10_000,
@@ -402,7 +402,7 @@ export class DataSpace {
   }
 
   @timed(10_000)
-  private async _createWritableFeeds() {
+  private async _createWritableFeeds(): Promise<void> {
     const credentials: Credential[] = [];
     if (!this.inner.controlFeedKey) {
       const controlFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
@@ -459,7 +459,7 @@ export class DataSpace {
     }
   }
 
-  private _onNewAutomergeRoot(rootUrl: string) {
+  private _onNewAutomergeRoot(rootUrl: string): void {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
 
     let handle: DocHandle<DatabaseDirectory>;
@@ -513,7 +513,7 @@ export class DataSpace {
   }
 
   // TODO(dmaretskyi): Use profile from signing context.
-  async updateOwnProfile(profile: ProfileDocument) {
+  async updateOwnProfile(profile: ProfileDocument): Promise<void> {
     const credential = await this._signingContext.credentialSigner.createCredential({
       subject: this._signingContext.identityKey,
       assertion: {
@@ -568,7 +568,7 @@ export class DataSpace {
   }
 
   @synchronized
-  async activate() {
+  async activate(): Promise<void> {
     if (![SpaceState.SPACE_CLOSED, SpaceState.SPACE_INACTIVE].includes(this._state)) {
       return;
     }
@@ -579,7 +579,7 @@ export class DataSpace {
   }
 
   @synchronized
-  async deactivate() {
+  async deactivate(): Promise<void> {
     if (this._state === SpaceState.SPACE_INACTIVE) {
       return;
     }
