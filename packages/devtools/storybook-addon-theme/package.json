@@ -27,8 +27,6 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/lit-theme-editor": "workspace:*",
-    "@dxos/lit-ui": "workspace:*",
     "@storybook/icons": "^1.4.0",
     "storybook": "^9.0.14"
   },

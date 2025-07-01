@@ -12,12 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../ui/lit-theme-editor"
-    },
-    {
-      "path": "../../ui/lit-ui"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {

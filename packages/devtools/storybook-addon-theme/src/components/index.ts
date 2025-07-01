@@ -3,5 +3,4 @@
 //
 
 export * from './Panel';
-export * from './ThemeEditor';
 export * from './Tool';

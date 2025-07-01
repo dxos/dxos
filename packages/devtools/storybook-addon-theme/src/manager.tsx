@@ -16,7 +16,7 @@ addons.register(THEME_EDITOR_ID, (api) => {
     render: () => <Tool api={api} />,
   });
 
-  // TODO(burdon): Can panels edit the preview theme?
+  // TODO(burdon): Eventually create storybook panel to edit theme.
   // addons.add(THEME_EDITOR_PANEL_ID, {
   //   type: types.PANEL,
   //   title: 'Theme Editor',

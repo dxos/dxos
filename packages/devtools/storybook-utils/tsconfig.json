@@ -18,10 +18,19 @@
       "path": "../../core/echo/echo-signals"
     },
     {
+      "path": "../../ui/lit-theme-editor"
+    },
+    {
+      "path": "../../ui/lit-ui"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../storybook-addon-theme"
     }
   ]
 }

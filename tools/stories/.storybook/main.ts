@@ -94,12 +94,10 @@ export const config = (baseConfig: ConfigProps): StorybookConfig => ({
         // MUST COME FIRST.
         // https://www.npmjs.com/package/vite-plugin-wasm
         wasm(),
+
         // https://www.npmjs.com/package/vite-plugin-top-level-await
         topLevelAwait(),
-        // https://www.npmjs.com/package/vite-plugin-turbosnap
-        // turbosnap({
-        //   rootDir: config.root ?? __dirname,
-        // }),
+
         // https://www.npmjs.com/package/@vitejs/plugin-react-swc
         react({
           plugins: [
@@ -113,6 +111,11 @@ export const config = (baseConfig: ConfigProps): StorybookConfig => ({
           ],
           tsDecorators: true,
         }),
+
+        // turbosnap({
+        //   rootDir: config.root ?? __dirname,
+        // }),
+
         // https://www.npmjs.com/package/vite-plugin-inspect
         // Open: http://localhost:5173/__inspect
         isTrue(process.env.DX_INSPECT) && inspect(),
@@ -132,6 +135,7 @@ export const config = (baseConfig: ConfigProps): StorybookConfig => ({
           root: __dirname,
           content: [
             resolve(packages, 'apps/*/src/**', contentFiles),
+            resolve(packages, 'devtools/*/src/**', contentFiles),
             resolve(packages, 'experimental/*/src/**', contentFiles),
             resolve(packages, 'plugins/*/src/**', contentFiles),
             resolve(packages, 'sdk/*/src/**', contentFiles),

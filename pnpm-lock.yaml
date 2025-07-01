@@ -4743,12 +4743,6 @@ importers:
 
   packages/devtools/storybook-addon-theme:
     dependencies:
-      '@dxos/lit-theme-editor':
-        specifier: workspace:*
-        version: link:../../ui/lit-theme-editor
-      '@dxos/lit-ui':
-        specifier: workspace:*
-        version: link:../../ui/lit-ui
       '@storybook/icons':
         specifier: ^1.4.0
         version: 1.4.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -4780,9 +4774,18 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
+      '@dxos/lit-theme-editor':
+        specifier: workspace:*
+        version: link:../../ui/lit-theme-editor
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../../ui/lit-ui
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/storybook-addon-theme':
+        specifier: workspace:*
+        version: link:../storybook-addon-theme
       '@storybook/blocks':
         specifier: ^8.6.14
         version: 8.6.14(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.14(@testing-library/dom@10.4.0)(prettier@3.2.4))

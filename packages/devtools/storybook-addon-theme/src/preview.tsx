@@ -9,20 +9,20 @@ import { useGlobals } from 'storybook/preview-api';
 import { type ThemeMode, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
-import { ThemeEditor } from './components';
 import { THEME_EDITOR_PARAM_KEY } from './defs';
 
 const preview: Preview = {
   decorators: [
     (Story, { globals: { theme }, parameters: { translations } }) => {
       const MemoizedStory = memo(Story);
+      // TODO(burdon): Build issue if add theme editor dependency in this addon.
       const [globals] = useGlobals();
       const isActive = !!globals[THEME_EDITOR_PARAM_KEY];
       return (
         <ThemeProvider tx={defaultTx} themeMode={theme as ThemeMode} resourceExtensions={translations} noCache>
+          {/* TODO(burdon): Add other default providers? */}
           <Tooltip.Provider>
             <MemoizedStory />
-            {isActive && <ThemeEditor />}
           </Tooltip.Provider>
         </ThemeProvider>
       );
