@@ -24,6 +24,7 @@ export interface GenerateExecutorOptions {
 
 // TODO(dmaretskyi): Workaround for a) NX running executors directy from source in v21; and b) transpiling them with "module": "commonjs", which turns `await import` into a `require`.
 // NOTE: Changing local tsconfig had no effect.
+// eslint-disable-next-line no-new-func
 const asyncImport = new Function('path', 'return import(path)');
 
 export default async (options: GenerateExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
