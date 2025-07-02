@@ -48,9 +48,7 @@ if (isTrue(process.env.DX_DEBUG)) {
  * https://storybook.js.org/docs/api/main-config/main-config
  * https://nx.dev/recipes/storybook/one-storybook-for-all
  */
-export const config = (
-  { stories: baseStories  , ...baseConfig }: Partial<StorybookConfig> = {},
-): StorybookConfig => ({
+export const config = ({ stories: baseStories, ...baseConfig }: Partial<StorybookConfig> = {}): StorybookConfig => ({
   framework: '@storybook/react-vite',
   stories: baseStories ?? stories,
   addons: [
@@ -139,7 +137,8 @@ export const config = (
         //
 
         IconsPlugin({
-          assetPath: (name, variant) => `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+          assetPath: (name, variant) =>
+            `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
           contentPaths: content,
           spriteFile: 'icons.svg',
           symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
