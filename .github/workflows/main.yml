@@ -14,13 +14,21 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    container: mcr.microsoft.com/playwright:v1.43.1-jammy
     env:
       CI: true
       NODE_VERSION: 20.19.0
       VERBOSE: ${{ inputs.verbose }}
 
     steps:
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .circleci
+          file: .circleci/Dockerfile
+          push: false
+          load: true
+          tags: dxos-ci:latest
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -31,16 +39,19 @@ jobs:
         with:
           run_install: false
 
-      - name: Install build tools
+      - name: Run in Docker container
         run: |
-          apt-get update && apt-get install -y build-essential python3 pkg-config libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
-
-      - name: Install dependencies
-        run: |
-          # Install all dependencies with workspace flag
-          pnpm install --frozen-lockfile -w
-          # Install specific dependencies needed for NX
-          pnpm add -w nx@latest lines-and-columns@latest
+          docker run --rm dxos-ci:latest bash -c '
+            # Install dependencies
+            pnpm install --frozen-lockfile -w
+            # Install specific dependencies needed for NX
+            pnpm add -w nx@latest lines-and-columns@latest
+            # Checkout code
+            git clone https://github.com/dxos/dxos.git /dxos
+            cd /dxos
+            # Run NX build
+            pnpm nx run-many --target=build --all --parallel ${VERBOSE:+--verbose}
+          '
 
       - name: Cache selective dependencies
         uses: actions/cache@v4
