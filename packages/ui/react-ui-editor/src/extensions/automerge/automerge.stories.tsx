@@ -10,8 +10,9 @@ import { Repo } from '@automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import React, { useEffect, useState } from 'react';
 
+import { Obj, Ref, Type } from '@dxos/echo';
 import { Expando, Ref } from '@dxos/echo-schema';
-import { DocAccessor, live, createDocAccessor, useQuery, useSpace, type Space, Query } from '@dxos/react-client/echo';
+import { DocAccessor, createDocAccessor, useQuery, useSpace, type Space, Query } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { ClientRepeater, type ClientRepeatedComponentProps } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
@@ -21,7 +22,6 @@ import { editorSlots } from '../../defaults';
 import { useTextEditor } from '../../hooks';
 import translations from '../../translations';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '../factories';
-import { Obj, Ref, Type } from '@dxos/echo';
 
 const initialContent = 'Hello world!';
 
