@@ -22,10 +22,13 @@ export interface GenerateExecutorOptions {
   compress: boolean;
 }
 
+// TODO(dmaretskyi): Workaround for a) NX running executors directy from source in v21; and b) transpiling them with "module": "commonjs", which turns `await import` into a `require`.
+// NOTE: Changing local tsconfig had no effect.
+const asyncImport = new Function('path', 'return import(path)');
+
 export default async (options: GenerateExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
-  const { ModuleSpecifier, parseAndGenerateSchema, preconfigureProtobufjs, registerResolver } = await import(
-    '@dxos/protobuf-compiler'
-  );
+  const { ModuleSpecifier, parseAndGenerateSchema, preconfigureProtobufjs, registerResolver } =
+    await asyncImport('@dxos/protobuf-compiler');
 
   console.info('Executing protobuf generator...');
   if (context.isVerbose) {
