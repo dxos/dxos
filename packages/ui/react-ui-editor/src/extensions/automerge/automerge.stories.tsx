@@ -11,7 +11,6 @@ import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-networ
 import React, { useEffect, useState } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { Expando, Ref } from '@dxos/echo-schema';
 import { DocAccessor, createDocAccessor, useQuery, useSpace, type Space, Query } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { ClientRepeater, type ClientRepeatedComponentProps } from '@dxos/react-client/testing';
@@ -101,7 +100,7 @@ const EchoStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
   const identity = useIdentity();
   const space = useSpace(spaceKey);
   const [source, setSource] = useState<DocAccessor>();
-  const objects = useQuery(space, Query.type(Expando, { type: 'test' }));
+  const objects = useQuery(space, Query.type(Type.Expando, { type: 'test' }));
 
   useEffect(() => {
     if (!source && objects.length) {
