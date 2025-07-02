@@ -103,7 +103,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
         refresh({});
       },
     });
-  }, [handleOpenChange, getMenu, serializedTrigger]); // NOTE: `placeholder` object would trigger re-render.
+  }, [handleOpenChange, getMenu, serializedTrigger, placeholder]);
 
   return {
     commandMenu: _commandMenu,
