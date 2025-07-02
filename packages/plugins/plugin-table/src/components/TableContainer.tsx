@@ -49,12 +49,8 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
   const addRow = useAddRow({ space, schema });
 
   const handleInsertRow = useCallback(() => {
-    if (model) {
-      model.insertRow();
-    } else {
-      addRow();
-    }
-  }, [model, addRow]);
+    model?.insertRow();
+  }, [model]);
 
   const handleDeleteRows = useCallback(
     (_row: number, objects: any[]) => {
