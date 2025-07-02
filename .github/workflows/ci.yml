@@ -40,6 +40,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
 
+      - name: Install PNPM
+        run: npm install -g pnpm
+
       - name: Install dependencies
         run: |
           pnpm set verify-store-integrity false
@@ -104,6 +107,9 @@ jobs:
           node-version: '18.20.1'
           cache: 'pnpm'
 
+      - name: Install PNPM
+        run: npm install -g pnpm
+
       - name: Install dependencies
         run: |
           pnpm install
@@ -153,6 +159,9 @@ jobs:
         with:
           node-version: '18.20.1'
           cache: 'pnpm'
+
+      - name: Install PNPM
+        run: npm install -g pnpm
 
       - name: Install dependencies
         run: pnpm install
