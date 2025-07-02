@@ -17,6 +17,7 @@ import { IconsPlugin } from '@dxos/vite-plugin-icons';
 const baseDir = resolve(__dirname, '../');
 const rootDir = resolve(baseDir, '../../');
 const staticDir = resolve(baseDir, './static');
+const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
 export const packages = resolve(rootDir, 'packages');
 
 const contentFiles = '*.{ts,tsx,js,jsx,css}';
@@ -50,7 +51,10 @@ export const config = (
     '@storybook/addon-docs',
     '@storybook/addon-links',
     '@storybook/addon-themes',
-    '@storybook/addon-vitest',
+    // TODO(burdon): Throws errors.
+    // TypeError: No existing state found for follower with id: 'storybook/test'
+    // TypeError: Cannot send event before store is ready. You can get the current status with store.status
+    // '@storybook/addon-vitest',
   ],
   staticDirs: [staticDir],
   typescript: {
@@ -84,10 +88,10 @@ export const config = (
           // Prevent caching icon sprite.
           'Cache-Control': 'no-store',
         },
-        // hmr: {
-        // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
-        // overlay: false,
-        // },
+        hmr: {
+          // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
+          overlay: false,
+        },
       },
       worker: {
         format: 'es',
@@ -127,9 +131,8 @@ export const config = (
         //
 
         IconsPlugin({
+          assetPath: (name, variant) => `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
           symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
-          assetPath: (name, variant) =>
-            `${resolve(rootDir, 'node_modules/@phosphor-icons/core/assets')}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
           contentPaths: content,
           spriteFile: 'icons.svg',
         }),
