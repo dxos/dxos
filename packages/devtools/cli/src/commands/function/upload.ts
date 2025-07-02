@@ -20,6 +20,7 @@ import { DataType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
 import { bundleScript, findFunctionByDeploymentId } from '../../util';
+import { log } from '@dxos/log';
 
 // TODO: move to cli-composer
 
@@ -64,7 +65,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
 
         const existingFunctionObject = await this._loadFunctionObject(space);
 
-        const uploadResult = await this._upload(client, space.key, existingFunctionObject, bundledScript);
+        const uploadResult = await this._upload(client, identity.identityKey, existingFunctionObject, bundledScript);
 
         const functionObject = this._updateFunctionObject(space, existingFunctionObject, uploadResult);
 

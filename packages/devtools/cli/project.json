@@ -24,6 +24,12 @@
         "outputPath": "{projectRoot}/dist"
       }
     },
+    "dev": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "bin"
+      }
+    },
     "lint": {},
     "pack": {},
     "test": {}
