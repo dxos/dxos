@@ -11,22 +11,107 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: ['18.20.1', '20.12.1', '21.7.2']
+        node-version: 
+          - 18.20.1
+          - 20.12.1
+          - 21.7.2
     env:
       DX_ENVIRONMENT: ci
+      NODE_VERSION: ${{ matrix.node-version }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check if PR is a draft
-        if: github.event_name == 'pull_request'
-        run: |
-          if [ "${{ github.event.pull_request.draft }}" = "true" ]; then
-            echo "Skipping build for draft PR."
-            exit 1
-          fi
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          architecture: arm64
 
-      - name: Cache pnpm store
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+        shell: bash
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+          run_install: false
+
+      - name: Configure PNPM
+        run: |
+          echo "PNPM_HOME=${HOME}/.local/share/pnpm" >> $GITHUB_ENV
+          echo "${HOME}/.local/share/pnpm" >> $GITHUB_PATH
+          echo "${HOME}/.local/share/pnpm/bin" >> $GITHUB_PATH
+
+      - name: Cache PNPM store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store/v3
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}-${{ matrix.node-version }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-${{ matrix.node-version }}-
+
+      - name: Install PNPM globally
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: |
+          echo "PNPM_HOME=${HOME}/.local/share/pnpm" >> $GITHUB_ENV
+          echo "${HOME}/.local/share/pnpm" >> $GITHUB_PATH
+          echo "${HOME}/.local/share/pnpm/bin" >> $GITHUB_PATH
+          pnpm set verify-store-integrity false
+          pnpm config set network-timeout 300000
+          pnpm install --prefer-offline
+          pnpm install-playwright
+
+      - name: Set NX shas
+        run: nx/set-shas
+
+      - name: Run affected lint
+        run: pnpm nx affected --base=${{ github.event.pull_request.base.sha }} --head=${{ github.event.pull_request.head.sha }} --target=lint
+
+      - name: Run affected build
+        run: pnpm nx affected --base=${{ github.event.pull_request.base.sha }} --head=${{ github.event.pull_request.head.sha }} --target=build
+
+      - name: Run affected tests
+        run: |
+          export VITEST_XML_REPORT=true
+          export VITEST_ENV=node
+          pnpm nx affected --base=${{ github.event.pull_request.base.sha }} --head=${{ github.event.pull_request.head.sha }} --target=test
+
+      - name: Run full tests on main branch
+        if: github.ref == 'refs/heads/main'
+        run: |
+          pnpm nx run-many --target=lint
+          pnpm nx run-many --target=build
+          VITEST_XML_REPORT=true pnpm nx run-many --target=test --skip-nx-cache
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results
+
+      - name: Install system dependencies
+        run: |
+          sudo apk add --no-cache build-base cairo-dev pango-dev jpeg-dev giflib-dev librsvg-dev
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+          run_install: false
+
+      - name: Configure PNPM
+        run: |
+          echo "PNPM_HOME=${HOME}/.local/share/pnpm" >> $GITHUB_ENV
+          echo "${HOME}/.local/share/pnpm" >> $GITHUB_PATH
+          echo "${HOME}/.local/share/pnpm/bin" >> $GITHUB_PATH
+
+      - name: Cache PNPM store
         uses: actions/cache@v4
         with:
           path: ~/.local/share/pnpm/store/v3
@@ -34,23 +119,40 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+      - name: Install PNPM globally
+        run: npm install -g pnpm
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v2
+      - name: Configure environment
+        run: |
+          echo "export PNPM_HOME=${HOME}/.local/share/pnpm" >> $HOME/.profile
+          echo "export PATH=${PATH}:${HOME}/.local/share/pnpm" >> $HOME/.profile
+          source $HOME/.profile
+
+      - name: Configure PNPM
+        run: |
+          pnpm config set unsafe-perm true
+          pnpm config set ignore-scripts false
+          pnpm config set network-timeout 300000
+
+      - name: Cache PNPM store (after install)
+        uses: actions/cache@v4
         with:
-          version: latest
-          run_install: true
+          path: ~/.local/share/pnpm/store/v3
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}-after-install
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
         run: |
+          export PNPM_HOME=${HOME}/.local/share/pnpm
+          export PATH=${PATH}:${HOME}/.local/share/pnpm
+          echo "PNPM_HOME=${HOME}/.local/share/pnpm" >> $GITHUB_ENV
+          echo "${HOME}/.local/share/pnpm" >> $GITHUB_PATH
           pnpm set verify-store-integrity false
+          pnpm config set network-timeout 300000
           pnpm install --prefer-offline
           pnpm install-playwright
+        shell: sh
 
       - name: Set NX shas
         run: nx/set-shas
@@ -96,25 +198,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache pnpm store
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.20.1'
+          cache: 'pnpm'
+          architecture: arm64
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+          run_install: false
+
+      - name: Configure PNPM
+        run: |
+          echo "PNPM_HOME=${HOME}/.local/share/pnpm" >> $GITHUB_ENV
+          echo "${HOME}/.local/share/pnpm" >> $GITHUB_PATH
+          echo "${HOME}/.local/share/pnpm/bin" >> $GITHUB_PATH
+
+      - name: Cache PNPM store
         uses: actions/cache@v4
         with:
           path: ~/.local/share/pnpm/store/v3
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18.20.1'
-          cache: 'pnpm'
-
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v2
-        with:
-          version: latest
-          run_install: true
 
       - name: Install dependencies
         run: |
@@ -152,25 +261,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache pnpm store
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.20.1'
+          cache: 'pnpm'
+          architecture: arm64
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+          run_install: false
+
+      - name: Configure PNPM
+        run: |
+          echo "PNPM_HOME=${HOME}/.local/share/pnpm" >> $GITHUB_ENV
+          echo "${HOME}/.local/share/pnpm" >> $GITHUB_PATH
+          echo "${HOME}/.local/share/pnpm/bin" >> $GITHUB_PATH
+
+      - name: Cache PNPM store
         uses: actions/cache@v4
         with:
           path: ~/.local/share/pnpm/store/v3
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18.20.1'
-          cache: 'pnpm'
-
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v2
-        with:
-          version: latest
-          run_install: true
 
       - name: Install dependencies
         run: pnpm install
