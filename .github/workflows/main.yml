@@ -16,7 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     container: mcr.microsoft.com/playwright:v1.43.1-jammy
     env:
+      CI: true
       NODE_VERSION: 20.19.0
+      VERBOSE: ${{ inputs.verbose }}
 
     steps:
       - uses: actions/checkout@v4
@@ -31,21 +33,13 @@ jobs:
 
       - name: Install build tools
         run: |
-          apt-get update && apt-get install -y build-essential python3
+          apt-get update && apt-get install -y build-essential python3 pkg-config libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
 
       - name: Install dependencies
         run: |
           pnpm install --frozen-lockfile
-          # Remove unnecessary files to reduce cache size
-          find node_modules -type d -name '__tests__' -exec rm -rf {} +
-          find node_modules -type d -name 'test' -exec rm -rf {} +
-          find node_modules -type d -name 'tests' -exec rm -rf {} +
-          find node_modules -type d -name 'example' -exec rm -rf {} +
-          find node_modules -type d -name 'examples' -exec rm -rf {} +
-          find node_modules -type d -name 'docs' -exec rm -rf {} +
-          find node_modules -type d -name 'doc' -exec rm -rf {} +
-          find node_modules -type d -name 'benchmark' -exec rm -rf {} +
-          find node_modules -type d -name 'build' -exec rm -rf {} +
+          # Install specific dependencies needed for NX
+          pnpm install nx@latest lines-and-columns@latest
 
       - name: Cache selective dependencies
         uses: actions/cache@v4
@@ -66,9 +60,6 @@ jobs:
       - name: Build with NX
         run: |
           pnpm nx build --all --parallel ${VERBOSE:+--verbose}
-        env:
-          CI: true
-          VERBOSE: ${{ inputs.verbose }}
 
       - name: Cache build artifacts
         uses: actions/cache@v4
@@ -85,16 +76,10 @@ jobs:
       - name: Lint with NX
         run: |
           pnpm nx lint --all --parallel ${VERBOSE:+--verbose}
-        env:
-          CI: true
-          VERBOSE: ${{ inputs.verbose }}
 
       - name: Test with NX
         run: |
           pnpm nx test --all --parallel ${VERBOSE:+--verbose}
-        env:
-          CI: true
-          VERBOSE: ${{ inputs.verbose }}
 
       - name: Cache test results
         uses: actions/cache@v4
