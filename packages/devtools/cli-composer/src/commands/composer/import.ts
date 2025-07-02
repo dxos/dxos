@@ -53,7 +53,8 @@ export default class Import extends BaseCommand<typeof Import> {
           if (this.flags['dry-run']) {
             this.log(JSON.stringify(obj, undefined, 2));
           } else {
-            space.db.add(obj);
+            // TODO(dmaretskyi): Fix types.
+            space.db.add(obj as any);
           }
         });
         updated.forEach((obj) => {

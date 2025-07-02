@@ -20,6 +20,7 @@ import {
   type Live,
   Filter,
 } from '@dxos/client/echo';
+import { Obj, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -159,7 +160,7 @@ const runAction = async (client: Client, action: Action) => {
     }
 
     case Action.ADD_OBJECT:
-      getRandomSpace(client)?.db.add(live({ type: 'test', name: faker.commerce.productName() }));
+      getRandomSpace(client)?.db.add(Obj.make(Type.Expando, { type: 'test', name: faker.commerce.productName() }));
       break;
 
     case Action.REMOVE_OBJECT: {
