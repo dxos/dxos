@@ -13,10 +13,11 @@ import wasm from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
-import { satisfies } from 'storybook/internal/common';
 
-export const packages = resolve(__dirname, '../../../packages');
-const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
+const baseDir = resolve(__dirname, '../');
+const rootDir = resolve(baseDir, '../../');
+const staticDir = resolve(baseDir, './static');
+export const packages = resolve(rootDir, 'packages');
 
 const contentFiles = '*.{ts,tsx,js,jsx,css}';
 const content = [
@@ -39,9 +40,10 @@ type ConfigProps = Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>;
  * https://storybook.js.org/docs/api/main-config/main-config
  * https://nx.dev/recipes/storybook/one-storybook-for-all
  */
-const config: StorybookConfig = {
+export const config = (
+  baseConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
+): StorybookConfig => ({
   framework: '@storybook/react-vite',
-  stories: ['../src/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
   addons: [
     '@dxos/storybook-addon-logger',
     '@dxos/storybook-addon-theme',
@@ -50,12 +52,13 @@ const config: StorybookConfig = {
     '@storybook/addon-themes',
     '@storybook/addon-vitest',
   ],
-  staticDirs: [resolve(__dirname, '../static')],
+  staticDirs: [staticDir],
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
     reactDocgen: false,
     // skipCompiler: true,
   },
+  ...baseConfig,
 
   /**
    * https://storybook.js.org/docs/api/main-config/main-config-vite-final
@@ -67,7 +70,7 @@ const config: StorybookConfig = {
     }
 
     return mergeConfig(config, {
-      publicDir: resolve(__dirname, '../static'),
+      publicDir: staticDir,
       build: {
         assetsInlineLimit: 0,
         rollupOptions: {
@@ -126,7 +129,7 @@ const config: StorybookConfig = {
         IconsPlugin({
           symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           assetPath: (name, variant) =>
-            `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+            `${resolve(rootDir, 'node_modules/@phosphor-icons/core/assets')}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
           contentPaths: content,
           spriteFile: 'icons.svg',
         }),
@@ -138,6 +141,6 @@ const config: StorybookConfig = {
       ],
     }) as InlineConfig;
   },
-} as const satisfies StorybookConfig;
+});
 
 export default config;

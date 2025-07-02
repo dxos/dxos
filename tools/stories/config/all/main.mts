@@ -7,8 +7,7 @@ import { join } from 'path';
 import { config, packages } from '../../.storybook/main';
 
 const contentFiles = '/**/*.{mdx,stories.jsx,stories.tsx}';
-
-const dirs = [
+const stories = [
   '/apps/*/src/**',
   '/devtools/*/src/**',
   '/experimental/*/src/**',
@@ -18,5 +17,5 @@ const dirs = [
 ];
 
 export default config({
-  stories: dirs.map((dir) => join(packages, dir, contentFiles)),
+  stories: stories.map((dir) => join(packages, dir, contentFiles)),
 });
