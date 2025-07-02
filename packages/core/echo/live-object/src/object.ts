@@ -9,15 +9,15 @@ import {
   defineHiddenProperty,
   getTypeAnnotation,
   type BaseObject,
+  type CreationProps,
+  EntityKindId,
   Expando,
   type ObjectMeta,
   ObjectMetaSchema,
-  EntityKindId,
-  type CreationProps,
 } from '@dxos/echo-schema';
 import { MetaId } from '@dxos/echo-schema';
 
-import type { Live } from './live';
+import { type Live } from './live';
 import { createProxy, isValidProxyTarget } from './proxy';
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
@@ -37,7 +37,11 @@ export const live: {
     obj: NoInfer<CreationProps<T>>,
     meta?: ObjectMeta,
   ): Live<T>;
-} = <T extends BaseObject>(objOrSchema: Schema.Schema<T, any> | T, obj?: CreationProps<T>, meta?: ObjectMeta): Live<T> => {
+} = <T extends BaseObject>(
+  objOrSchema: Schema.Schema<T, any> | T,
+  obj?: CreationProps<T>,
+  meta?: ObjectMeta,
+): Live<T> => {
   // TODO(dmaretskyi): Remove Expando special case.
   if (obj && (objOrSchema as any) !== Expando) {
     return createReactiveObject<T>({ ...obj } as T, meta, objOrSchema as Schema.Schema<T, any>);

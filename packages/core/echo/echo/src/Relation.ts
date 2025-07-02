@@ -12,8 +12,6 @@ import { type Live, live } from '@dxos/live-object';
 import { assumeType } from '@dxos/util';
 
 import type * as Obj from './Obj';
-
-import type * as Obj from './Obj';
 import type * as Type from './Type';
 
 // NOTE: Don't export: Relation.Relation and Relation.Any form the public API.
@@ -23,40 +21,11 @@ interface RelationBase<Source, Target>
   readonly id: EchoSchema.ObjectId;
 }
 
-<<<<<<< HEAD
-type Obj<T extends EchoSchema.BaseObject, Source extends Obj.Any, Target extends Obj.Any> = Omit<
-  EchoSchema.ExcludeId<T>,
-  typeof EchoSchema.RelationSourceId | typeof EchoSchema.RelationTargetId
-> & {
-  [Source]: Source;
-  [Target]: Target;
-};
-||||||| merged common ancestors
-type Obj<T extends EchoSchema.BaseObject, Source, Target> = Omit<
-  EchoSchema.ExcludeId<T>,
-  typeof EchoSchema.RelationSourceId | typeof EchoSchema.RelationTargetId
-> & {
-  [Source]: Source;
-  [Target]: Target;
-};
-=======
 /**
  * Relation type with specific properties.
  */
 export type Relation<Source extends Obj.Any, Target extends Obj.Any, Props> = RelationBase<Source, Target> & Props;
->>>>>>> c2a16303509fc07dc87f25bfffb9252578ca7a4b
 
-<<<<<<< HEAD
-// TODO(burdon): Narrow generics to match type of source and target schemas.
-export const make = <T extends EchoSchema.BaseObject, Source extends Obj.Any, Target extends Obj.Any>(
-  schema: Schema.Schema<T, any, never>,
-  { [Source]: source, [Target]: target, ...rest }: Obj<T, Source, Target>,
-||||||| merged common ancestors
-// TODO(burdon): Narrow generics to define type of source and target.
-export const make = <T extends EchoSchema.BaseObject, Source, Target>(
-  schema: Schema.Schema<T, any, never>,
-  { [Source]: source, [Target]: target, ...rest }: Obj<T, Source, Target>,
-=======
 /**
  * Base type for all ECHO relations.
  */
@@ -86,34 +55,11 @@ type MakeProps<T extends Any> = {
 export const make = <S extends Type.Relation.Any>(
   schema: S,
   props: NoInfer<MakeProps<Schema.Schema.Type<S>>>,
->>>>>>> c2a16303509fc07dc87f25bfffb9252578ca7a4b
   meta?: EchoSchema.ObjectMeta,
-<<<<<<< HEAD
-): Live<T> =>
-  live<T>(
-    schema,
-    {
-      [EchoSchema.RelationSourceId]: source,
-      [EchoSchema.RelationTargetId]: target,
-      ...rest,
-    } as any,
-    meta,
-||||||| merged common ancestors
-) =>
-  live<T>(
-    schema,
-    {
-      [EchoSchema.RelationSourceId]: source,
-      [EchoSchema.RelationTargetId]: target,
-      ...rest,
-    } as any,
-    meta,
-=======
 ): Live<Schema.Schema.Type<S> & Type.OfKind<EchoSchema.EntityKind.Relation>> => {
   assertArgument(
     EchoSchema.getTypeAnnotation(schema)?.kind === EchoSchema.EntityKind.Relation,
     'Expected a relation schema',
->>>>>>> c2a16303509fc07dc87f25bfffb9252578ca7a4b
   );
 
   if (props[EchoSchema.MetaId] != null) {
