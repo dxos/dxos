@@ -4,7 +4,7 @@
 
 import { type StorybookConfig } from '@storybook/react-vite';
 import react from '@vitejs/plugin-react-swc';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
 import { type InlineConfig, mergeConfig } from 'vite';
 import inspect from 'vite-plugin-inspect';
 import topLevelAwait from 'vite-plugin-top-level-await';
@@ -14,25 +14,32 @@ import wasm from 'vite-plugin-wasm';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
+const isTrue = (str?: string) => str === 'true' || str === '1';
+
 const baseDir = resolve(__dirname, '../');
 const rootDir = resolve(baseDir, '../../');
 const staticDir = resolve(baseDir, './static');
 const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
-export const packages = resolve(rootDir, 'packages');
 
-const contentFiles = '*.{ts,tsx,js,jsx,css}';
-const content = [
-  resolve(packages, 'apps/*/src/**', contentFiles),
-  resolve(packages, 'devtools/*/src/**', contentFiles),
-  resolve(packages, 'experimental/*/src/**', contentFiles),
-  resolve(packages, 'plugins/*/src/**', contentFiles),
-  resolve(packages, 'sdk/*/src/**', contentFiles),
-  resolve(packages, 'ui/*/src/**', contentFiles),
+export const packages = resolve(rootDir, 'packages');
+export const storyFiles = '*.{mdx,stories.tsx}';
+export const contentFiles = '*.{ts,tsx,js,jsx,css}';
+export const modules = [
+  'apps/*/src/**',
+  'devtools/*/src/**',
+  'experimental/*/src/**',
+  'plugins/*/src/**',
+  'sdk/*/src/**',
+  'ui/*/src/**',
 ];
 
-const isTrue = (str?: string) => str === 'true' || str === '1';
+export const stories = modules.map((dir) => join(packages, dir, storyFiles));
+export const content = modules.map((dir) => join(packages, dir, contentFiles));
 
-type ConfigProps = Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>;
+if (isTrue(process.env.DX_DEBUG)) {
+  // eslint-disable-next-line no-console
+  console.log(JSON.stringify({ stories, content }, null, 2));
+}
 
 /**
  * Storybook and Vite configuration.
@@ -42,9 +49,10 @@ type ConfigProps = Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>;
  * https://nx.dev/recipes/storybook/one-storybook-for-all
  */
 export const config = (
-  baseConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
+  { stories: baseStories  , ...baseConfig }: Partial<StorybookConfig> = {},
 ): StorybookConfig => ({
   framework: '@storybook/react-vite',
+  stories: baseStories ?? stories,
   addons: [
     '@dxos/storybook-addon-logger',
     '@dxos/storybook-addon-theme',
@@ -132,9 +140,9 @@ export const config = (
 
         IconsPlugin({
           assetPath: (name, variant) => `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
-          symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           contentPaths: content,
           spriteFile: 'icons.svg',
+          symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
         }),
 
         ThemePlugin({
