@@ -19,7 +19,7 @@ const preview: Preview = {
       const [globals] = useGlobals();
       const isActive = !!globals[THEME_EDITOR_PARAM_KEY];
       log('theme-editor', { isActive });
-      // TODO(burdon): Add other default providers?
+      // TODO(burdon): Add other default providers here?
       return (
         <ThemeProvider tx={defaultTx} themeMode={theme as ThemeMode} resourceExtensions={translations} noCache>
           <Tooltip.Provider>
