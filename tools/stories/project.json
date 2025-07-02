@@ -96,6 +96,40 @@
         "configDir": "{projectRoot}/config/examples",
         "outputDir": "{projectRoot}/out/examples"
       }
+    },
+    "test": {
+      "options": {
+        "browsers": [
+          "chromium"
+        ],
+        "ci": true,
+        "coverage": true,
+        "coverageProvider": "v8",
+        "environment": "jsdom",
+        "globals": true,
+        "headless": true,
+        "include": [
+          "**/*.test.{js,jsx,ts,tsx}"
+        ],
+        "passWithNoTests": true,
+        "reporter": [
+          "default",
+          "html"
+        ],
+        "viteConfig": {
+          "plugins": [
+            {
+              "config": {
+                "ci": true,
+                "configDir": ".storybook",
+                "headless": true
+              },
+              "name": "storybook-test"
+            }
+          ]
+        },
+        "watch": false
+      }
     }
   },
   "implicitDependencies": [

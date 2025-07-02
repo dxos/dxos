@@ -13,6 +13,7 @@ import wasm from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { satisfies } from 'storybook/internal/common';
 
 export const packages = resolve(__dirname, '../../../packages');
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
@@ -30,38 +31,33 @@ type ConfigProps = Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>;
  * https://storybook.js.org/docs/api/main-config/main-config
  * https://nx.dev/recipes/storybook/one-storybook-for-all
  */
-export const config = (baseConfig: ConfigProps): StorybookConfig => ({
-  framework: {
-    name: '@storybook/react-vite',
-    options: {
-      strictMode: true,
-    },
-  },
+const config: StorybookConfig = {
+  framework: '@storybook/react-vite',
+  stories: [
+    '../src/**/*.stories.@(js|jsx|ts|tsx|mdx)',
+  ],
   addons: [
     '@dxos/storybook-addon-logger',
     '@dxos/storybook-addon-theme',
     '@storybook/addon-docs',
     '@storybook/addon-links',
     '@storybook/addon-themes',
-    // TODO(burdon): Not working.
     '@storybook/addon-vitest',
   ],
-
   staticDirs: [resolve(__dirname, '../static')],
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
     reactDocgen: false,
-    skipCompiler: true,
+    // skipCompiler: true,
   },
-  ...baseConfig,
 
   /**
    * https://storybook.js.org/docs/api/main-config/main-config-vite-final
    */
-  viteFinal: async (config, { configType }) => {
+  viteFinal: async (config: InlineConfig, options: { configType?: string }) => {
     if (isTrue(process.env.DX_DEBUG)) {
       // eslint-disable-next-line no-console
-      console.log(JSON.stringify({ config, configType }, null, 2));
+      console.log(JSON.stringify({ config, options }, null, 2));
     }
 
     return mergeConfig(config, {
@@ -93,7 +89,6 @@ export const config = (baseConfig: ConfigProps): StorybookConfig => ({
         // NOTE: Order matters.
         //
 
-        // MUST COME FIRST.
         // https://www.npmjs.com/package/vite-plugin-wasm
         wasm(),
 
@@ -105,12 +100,15 @@ export const config = (baseConfig: ConfigProps): StorybookConfig => ({
           tsDecorators: true,
           plugins: [
             // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-            [
-              '@preact-signals/safe-react/swc',
-              {
-                mode: 'all',
-              },
-            ],
+            // TODO(burdon): Add support for signals.
+            // {
+            //   name: 'signals',
+            //   visitor: {
+            //     Program(path) {
+            //       path.scope.crawl();
+            //     },
+            //   },
+            // },
           ],
         }),
 
@@ -144,10 +142,41 @@ export const config = (baseConfig: ConfigProps): StorybookConfig => ({
             resolve(packages, 'sdk/*/src/**', contentFiles),
             resolve(packages, 'ui/*/src/**', contentFiles),
           ],
-        }),
+        })
       ],
-    } satisfies InlineConfig);
+    }) as InlineConfig;
   },
-});
+} as const satisfies StorybookConfig;
+
+export const viteFinal = (config: InlineConfig, options: { configType?: string }) => {
+  return mergeConfig(config, {
+    plugins: [
+      react(),
+      inspect(),
+      topLevelAwait(),
+      // turbosnap(),
+      wasm(),
+      IconsPlugin({
+        assetPath: (name, variant) =>
+          `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+        symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+        spriteFile: 'icons.svg',
+        contentPaths: [resolve(packages, '**/src/**', contentFiles)],
+      }),
+
+      ThemePlugin({
+        root: __dirname,
+        content: [
+          resolve(packages, 'apps/*/src/**', contentFiles),
+          resolve(packages, 'devtools/*/src/**', contentFiles),
+          resolve(packages, 'experimental/*/src/**', contentFiles),
+          resolve(packages, 'plugins/*/src/**', contentFiles),
+          resolve(packages, 'sdk/*/src/**', contentFiles),
+          resolve(packages, 'ui/*/src/**', contentFiles),
+        ],
+      }),
+    ],
+  } satisfies InlineConfig);
+};
 
 export default config;
