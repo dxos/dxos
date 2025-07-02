@@ -1,0 +1,162 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ['18.20.1', '20.12.1', '21.7.2']
+    env:
+      DX_ENVIRONMENT: ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check if PR is a draft
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ "${{ github.event.pull_request.draft }}" = "true" ]; then
+            echo "Skipping build for draft PR."
+            exit 1
+          fi
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store/v3
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: |
+          pnpm set verify-store-integrity false
+          pnpm install --prefer-offline
+          pnpm install-playwright
+
+      - name: Set NX shas
+        run: nx/set-shas
+
+      - name: Check dependencies
+        run: pnpm check-dependencies
+
+      - name: Check cycles
+        run: node ./scripts/check-cycles.mjs
+
+      - name: Run affected lint
+        run: pnpm nx affected --base=${{ github.event.pull_request.base.sha }} --head=${{ github.event.pull_request.head.sha }} --target=lint
+
+      - name: Run affected build
+        run: pnpm nx affected --base=${{ github.event.pull_request.base.sha }} --head=${{ github.event.pull_request.head.sha }} --target=build
+
+      - name: Run affected tests
+        run: |
+          export VITEST_XML_REPORT=true
+          export VITEST_ENV=node
+          pnpm nx affected --base=${{ github.event.pull_request.base.sha }} --head=${{ github.event.pull_request.head.sha }} --target=test
+
+      - name: Run full tests on main branch
+        if: github.ref == 'refs/heads/main'
+        run: |
+          pnpm nx run-many --target=lint
+          pnpm nx run-many --target=build
+          VITEST_XML_REPORT=true pnpm nx run-many --target=test --skip-nx-cache
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: test-results
+
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      DX_ENVIRONMENT: ci
+      DX_PWA: false
+      NODE_OPTIONS: --max-old-space-size=12288
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store/v3
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.20.1'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: |
+          pnpm install
+          pnpm install-playwright
+
+      - name: Set NX shas
+        run: nx/set-shas
+
+      - name: Build affected bundles
+        run: pnpm nx affected --base=${{ github.event.pull_request.base.sha }} --head=${{ github.event.pull_request.head.sha }} --target=bundle --parallel=1
+
+      - name: Run e2e tests
+        run: |
+          pnpm nx affected --base=${{ github.event.pull_request.base.sha }} --head=${{ github.event.pull_request.head.sha }} --target=e2e --browser=all --parallel=1
+        timeout-minutes: 30
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: test-results
+
+      - name: Upload playwright artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-artifacts
+          path: dist/.playwright
+
+  flaky:
+    runs-on: ubuntu-latest
+    env:
+      DX_ENVIRONMENT: ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store/v3
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.20.1'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run flaky tests
+        run: ./scripts/run-flaky-tests.sh
+        timeout-minutes: 30
