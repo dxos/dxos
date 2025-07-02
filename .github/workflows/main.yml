@@ -60,7 +60,10 @@ jobs:
 
       - name: Build with NX
         run: |
-          pnpm nx build --all --parallel ${VERBOSE:+--verbose}
+          pnpm nx run-many --target=build --all --parallel ${VERBOSE:+--verbose}
+        env:
+          CI: true
+          VERBOSE: ${{ inputs.verbose }}
 
       - name: Cache build artifacts
         uses: actions/cache@v4
