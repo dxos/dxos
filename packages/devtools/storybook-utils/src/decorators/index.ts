@@ -4,4 +4,3 @@
 
 export * from './withLayout';
 export * from './withTheme';
-export * from './withThemeEditor';
