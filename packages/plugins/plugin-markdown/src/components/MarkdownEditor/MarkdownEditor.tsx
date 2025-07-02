@@ -93,9 +93,9 @@ export const MarkdownEditor = ({
     [onLinkQuery, slashCommandGroups],
   );
 
-  const trigger = onLinkQuery ? ['/', '@'] : ['/'];
-  const options = useMemo<UseCommandMenuOptions>(
-    () => ({
+  const options = useMemo<UseCommandMenuOptions>(() => {
+    const trigger = onLinkQuery ? ['/', '@'] : ['/'];
+    return {
       viewRef,
       trigger,
       placeholder: {
@@ -114,9 +114,8 @@ export const MarkdownEditor = ({
         },
       },
       getMenu,
-    }),
-    [trigger, getMenu],
-  );
+    };
+  }, [getMenu]);
 
   const { commandMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useCommandMenu(options);
 
