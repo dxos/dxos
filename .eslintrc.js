@@ -25,7 +25,7 @@ module.exports = {
     'vite.config.ts',
     'vitest.config.ts',
     'vitest.shared.ts',
-    'playwright.config.cts',
+    'playwright.config.ts',
 
     // Dependencies
     'node_modules',
