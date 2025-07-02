@@ -40,8 +40,11 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
 
-      - name: Install PNPM
-        run: npm install -g pnpm
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+          run_install: true
 
       - name: Install dependencies
         run: |
@@ -107,8 +110,11 @@ jobs:
           node-version: '18.20.1'
           cache: 'pnpm'
 
-      - name: Install PNPM
-        run: npm install -g pnpm
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+          run_install: true
 
       - name: Install dependencies
         run: |
@@ -160,8 +166,11 @@ jobs:
           node-version: '18.20.1'
           cache: 'pnpm'
 
-      - name: Install PNPM
-        run: npm install -g pnpm
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+          run_install: true
 
       - name: Install dependencies
         run: pnpm install
