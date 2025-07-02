@@ -105,6 +105,11 @@ export class AutomergeHost extends Resource {
 
   public readonly collectionStateUpdated = new Event<{ collectionId: CollectionId }>();
 
+  /**
+   * Fired after a batch of documents was saved to disk.
+   */
+  public readonly documentsSaved = new Event();
+
   constructor({
     db,
     indexMetadataStore,
@@ -378,6 +383,7 @@ export class AutomergeHost extends Resource {
       const heads = getHeads(document);
       this._onHeadsChanged(documentId, heads);
     }
+    this.documentsSaved.emit();
   }
 
   @trace.info({ depth: null })

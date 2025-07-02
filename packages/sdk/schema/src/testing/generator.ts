@@ -157,7 +157,8 @@ export const createReactiveObject = <S extends Schema.Schema.AnyNoContext>(type:
 };
 
 export const addToDatabase = (db: EchoDatabase) => {
-  return <T extends BaseObject>(obj: Live<T>): AnyLiveObject<T> => db.add(obj);
+  // TODO(dmaretskyi): Fix DB types.
+  return <T extends BaseObject>(obj: Live<T>): AnyLiveObject<T> => db.add(obj as any) as any;
 };
 
 export const logObject = (message: string) => (obj: any) => log.info(message, { obj });
