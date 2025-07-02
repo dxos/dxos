@@ -58,6 +58,9 @@ export class TablePresentation<T extends TableRow = TableRow> {
       case 'fixedStartEnd':
         cells = this.getNewColumnCell();
         break;
+      case 'frozenRowsEnd':
+        cells = this.getDraftRowCells(range);
+        break;
       default:
         cells = {};
     }
@@ -71,11 +74,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     return cells;
   }
 
-  private getMainGridCells(range: DxGridPlaneRange): DxGridPlaneCells {
-    const cells: DxGridPlaneCells = {};
-    const fields = this.model.view?.fields ?? [];
-
-    const addCell = (obj: T, field: FieldType, colIndex: number, displayIndex: number): void => {
+  private addDataCell(cells: DxGridPlaneCells, obj: T, field: FieldType, colIndex: number, displayIndex: number): void {
       const { props } = this.model.projection.getFieldProjection(field.id);
 
       const cell: DxGridCellValue = {
@@ -219,7 +218,11 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
       const idx = toPlaneCellIndex({ col: colIndex, row: displayIndex });
       cells[idx] = cell;
-    };
+  }
+
+  private getMainGridCells(range: DxGridPlaneRange): DxGridPlaneCells {
+    const cells: DxGridPlaneCells = {};
+    const fields = this.model.view?.fields ?? [];
 
     for (let row = range.start.row; row <= range.end.row && row < this.model.getRowCount(); row++) {
       for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
@@ -228,7 +231,26 @@ export class TablePresentation<T extends TableRow = TableRow> {
           continue;
         }
 
-        addCell(this.model.rows.value[row], field, col, row);
+        this.addDataCell(cells, this.model.rows.value[row], field, col, row);
+      }
+    }
+
+    return cells;
+  }
+
+  private getDraftRowCells(range: DxGridPlaneRange): DxGridPlaneCells {
+    const cells: DxGridPlaneCells = {};
+    const fields = this.model.view?.fields ?? [];
+    const draftRows = this.model.draftRows.value;
+
+    for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
+      for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
+        const field = fields[col];
+        if (!field) {
+          continue;
+        }
+
+        this.addDataCell(cells, draftRows[row].data, field, col, row);
       }
     }
 
