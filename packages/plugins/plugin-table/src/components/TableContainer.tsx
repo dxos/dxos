@@ -21,6 +21,7 @@ import {
   TableToolbar,
   type TableType,
   useTableModel,
+  useAddRow,
 } from '@dxos/react-ui-table';
 import { ViewProjection } from '@dxos/schema';
 
@@ -45,11 +46,15 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
     });
   }, [graph]);
 
+  const addRow = useAddRow({ space, schema });
+
   const handleInsertRow = useCallback(() => {
-    if (schema && space) {
-      space.db.add(Obj.make(schema, {}));
+    if (model) {
+      model.insertRow();
+    } else {
+      addRow();
     }
-  }, [space, schema]);
+  }, [model, addRow]);
 
   const handleDeleteRows = useCallback(
     (_row: number, objects: any[]) => {
@@ -88,7 +93,7 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
     projection,
     features,
     rows: filteredObjects,
-    onInsertRow: handleInsertRow,
+    onInsertRow: addRow,
     onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),

@@ -25,7 +25,7 @@ import {
   type DxGridPlanePosition,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import { type ViewType, type ViewProjection, type PropertyType, validateSchema } from '@dxos/schema';
+import { type ViewType, type ViewProjection, type PropertyType, validateSchema, type ValidationError } from '@dxos/schema';
 
 import { type SelectionMode, SelectionModel } from './selection-model';
 import { TableSorting } from './table-sorting';
@@ -34,6 +34,12 @@ import { extractTagIds } from '../util/tag';
 
 // TODO(ZaymonFC): Use a common type?
 export type ValidationResult = { valid: true } | { valid: false; error: string };
+
+export type DraftRow<T extends TableRow = TableRow> = {
+  data: T;
+  valid: boolean;
+  validationErrors: ValidationError[];
+};
 
 // TODO(burdon): Use schema types.
 export type TableRow = Record<JsonProp, any> & { id: string };
@@ -93,6 +99,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   private readonly _features: TableFeatures;
 
   private readonly _rows = signal<T[]>([]);
+  private readonly _draftRows = signal<DraftRow<T>[]>([]);
   private readonly _sorting: TableSorting<T>;
 
   private _pinnedRows: NonNullable<TableModelProps<T>['pinnedRows']>;
@@ -278,12 +285,52 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public getRowCount = (): number => this._rows.value.length;
 
+  public getDraftRowCount = (): number => this._draftRows.value.length;
+
+  public get draftRows(): ReadonlySignal<DraftRow<T>[]> {
+    return this._draftRows;
+  }
+
   public getColumnCount = (): number => this._view?.fields.length ?? 0;
 
   public insertRow = (rowIndex?: number): void => {
     const row = rowIndex !== undefined ? this._sorting.getDataIndex(rowIndex) : this._rows.value.length;
-    this._onInsertRow?.(row);
+    const result = this._onInsertRow?.(row);
+    if (result === false) {
+      console.log('Row creation failed, creating draft instead');
+      this.createDraftRow();
+    }
   };
+
+  private createDraftRow(): void {
+    if (!this._view) {
+      console.log('No view available for draft row creation');
+      return;
+    }
+
+    const draftData = {} as T;
+    const schema = this._view.schema;
+    
+    if (schema) {
+      const validationErrors = validateSchema(schema, draftData) || [];
+      const draftRow: DraftRow<T> = {
+        data: draftData,
+        valid: validationErrors.length === 0,
+        validationErrors,
+      };
+      
+      console.log('Creating draft row:', {
+        draftData,
+        valid: draftRow.valid,
+        validationErrors: draftRow.validationErrors,
+        totalDraftRows: this._draftRows.value.length + 1
+      });
+      
+      this._draftRows.value = [...this._draftRows.value, draftRow];
+    } else {
+      console.log('No schema available for draft row validation');
+    }
+  }
 
   public deleteRow = (rowIndex: number): void => {
     const row = this._sorting.getDataIndex(rowIndex);
