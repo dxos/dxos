@@ -97,6 +97,12 @@ export const GptOutput = Schema.Struct({
    * Number of tokens emitted by the model.
    */
   tokenCount: Schema.Number,
+
+  /**
+   * Conversation queue containing the history and model's response.
+   * Present if the conversation was passed as an input.
+   */
+  conversation: Schema.optional(Type.Ref(Queue)),
 });
 
 export type GptOutput = Schema.Schema.Type<typeof GptOutput>;
@@ -112,7 +118,10 @@ export const gptNode = defineComputeNode({
       assertArgument(history === undefined || conversation === undefined, 'Cannot use both history and conversation');
 
       const historyMessages = conversation
-        ? yield* Effect.promise(() => queues.get<Message>(conversation.dxn).queryObjects())
+        ? yield* Effect.tryPromise({
+            try: () => queues.get<Message>(conversation.dxn).queryObjects(),
+            catch: (e) => e as Error,
+          })
         : history ?? [];
 
       log.info('generating', { systemPrompt, prompt, historyMessages, tools: tools.map((tool) => tool.name) });
@@ -145,7 +154,7 @@ export const gptNode = defineComputeNode({
         }),
       );
 
-      const fullPrompt = context != null ? `<context>\n${context}\n</context>\n\n${prompt}` : prompt;
+      const fullPrompt = context != null ? `<context>\n${JSON.stringify(context)}\n</context>\n\n${prompt}` : prompt;
 
       const resultEffect = Effect.gen(function* () {
         const messages = yield* Effect.promise(() =>
@@ -199,6 +208,7 @@ export const gptNode = defineComputeNode({
         text: resultEffect.pipe(Effect.map(Struct.get('text'))),
         cot: resultEffect.pipe(Effect.map(Struct.get('cot'))),
         artifact: resultEffect.pipe(Effect.map(Struct.get('artifact'))),
+        conversation: resultEffect.pipe(Effect.andThen(() => Effect.succeed(conversation))),
       });
     }),
 });

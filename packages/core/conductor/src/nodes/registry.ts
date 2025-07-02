@@ -44,7 +44,8 @@ import {
   ReducerOutput,
   TextToImageOutput,
 } from './types';
-import { Filter } from '@dxos/echo';
+import { Filter, Ref, Type } from '@dxos/echo';
+import { Queue } from '@dxos/echo-db';
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).
@@ -72,6 +73,7 @@ export type NodeType =
   | 'or'
   | 'queue'
   | 'rng'
+  | 'make-queue'
   | 'reducer'
   | 'scope'
   | 'surface'
@@ -92,6 +94,30 @@ export const isFalsy = (value: any) =>
 export const isTruthy = (value: any) => !isFalsy(value);
 
 // TODO(dmaretskyi): Separate into definition and implementation.
+/*
+
+const gpt = Executable.define({
+  name: 'gpt',
+  input: Schema.Struct({
+    prompt: Schema.String,
+  }),
+  output: Schema.Struct({
+    text: Schema.String,
+  }),
+})
+
+// All inputs & outputs are computed at the same time.
+const gptImpl1 = Executable.implementSynchronized(gpt, Effect.fnUntraced(function* ({ prompt }) {
+  ...
+}));
+
+
+// Inputs and outputs are computed independently.
+cosnt gptImpl2 = Executable.implementIndependent(gpt, Effect.fnUntraced(function* (valueBag) {
+  ...
+})
+*/
+
 export const registry: Record<NodeType, Executable> = {
   //
   // System
@@ -131,6 +157,21 @@ export const registry: Record<NodeType, Executable> = {
     input: VoidInput,
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Number }),
     exec: () => Effect.succeed(ValueBag.make({ [DEFAULT_OUTPUT]: Math.random() })),
+  }),
+
+  // Creates a new queue.
+  ['make-queue' as const]: defineComputeNode({
+    input: Schema.Struct({}),
+    output: Schema.Struct({ [DEFAULT_OUTPUT]: Type.Ref(Queue) }),
+    exec: synchronizedComputeFunction(
+      Effect.fnUntraced(function* () {
+        const { queues } = yield* QueueService;
+        const queue = queues.create();
+        return {
+          [DEFAULT_OUTPUT]: Ref.fromDXN(queue.dxn),
+        };
+      }),
+    ),
   }),
 
   //

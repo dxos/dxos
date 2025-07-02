@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Schema } from 'effect';
+import { Effect, pipe, Schema } from 'effect';
 import { inspect } from 'node:util';
 import { beforeAll, describe, test } from 'vitest';
 
@@ -25,6 +25,7 @@ import {
   type GptOutput,
   ValueBag,
   computeGraphToGraphViz,
+  DEFAULT_INPUT,
 } from '@dxos/conductor';
 import { TestRuntime } from '@dxos/conductor/testing';
 import { Obj } from '@dxos/echo';
@@ -142,6 +143,20 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
   test('blueprint (compiled)', { timeout: 120_000 }, async () => {
     const graph = await compileBlueprint(BLUEPRINT);
     console.log(computeGraphToGraphViz(graph));
+    const runtime = new TestRuntime(serviceContainer);
+    runtime.registerGraph('dxn:compute:test', new ComputeGraphModel(graph));
+
+    const org = Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' });
+    const { text } = await pipe(
+      { [DEFAULT_INPUT]: org },
+      ValueBag.make,
+      (input) => runtime.runGraph<GptOutput>('dxn:compute:test', input),
+      Effect.flatMap(ValueBag.unwrap),
+      Effect.scoped,
+      Effect.runPromise,
+    );
+
+    console.log(text);
   });
 
   test('conversation', { timeout: 120_000 }, async () => {

@@ -24,8 +24,7 @@ export const compileBlueprint = async (blueprint: Blueprint): Promise<ComputeGra
 
   const conversation = model.createNode({
     id: 'conversation-queue',
-    type: 'constant',
-    value: '**conversation queue**',
+    type: 'make-queue',
   });
 
   const nodes: ComputeNode[] = [];
