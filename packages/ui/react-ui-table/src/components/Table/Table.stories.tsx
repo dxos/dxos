@@ -72,7 +72,7 @@ const useTestTableModel = () => {
     tableRef.current?.update?.();
   }, []);
 
-  const handleInsertRow = useAddRow({ space, schema });
+  const addRow = useAddRow({ space, schema });
 
   const handleDeleteRows = useCallback(
     (_: number, objects: any[]) => {
@@ -97,12 +97,16 @@ const useTestTableModel = () => {
     projection,
     features,
     rows: filteredObjects,
-    onInsertRow: handleInsertRow,
+    onInsertRow: addRow,
     onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: handleCellUpdate,
     onRowOrderChange: handleRowOrderChange,
   });
+
+  const handleInsertRow = useCallback(() => {
+    model?.insertRow();
+  }, [model]);
 
   const handleSaveView = useCallback(() => {
     model?.saveView();
