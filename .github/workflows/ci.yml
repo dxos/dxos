@@ -18,11 +18,13 @@ jobs:
     env:
       DX_ENVIRONMENT: ci
       NODE_VERSION: ${{ matrix.node-version }}
+      PNPM_HOME: /home/runner/.local/share/pnpm
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -42,30 +44,27 @@ jobs:
 
       - name: Configure PNPM
         run: |
-          echo "PNPM_HOME=${HOME}/.local/share/pnpm" >> $GITHUB_ENV
-          echo "${HOME}/.local/share/pnpm" >> $GITHUB_PATH
-          echo "${HOME}/.local/share/pnpm/bin" >> $GITHUB_PATH
+          echo "PNPM_HOME=/home/runner/.local/share/pnpm" >> $GITHUB_ENV
+          echo "/home/runner/.local/share/pnpm" >> $GITHUB_PATH
+          echo "/home/runner/.local/share/pnpm/bin" >> $GITHUB_PATH
 
       - name: Cache PNPM store
         uses: actions/cache@v4
         with:
-          path: ~/.local/share/pnpm/store/v3
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}-${{ matrix.node-version }}
+          path: /home/runner/.local/share/pnpm/store/v3
+          key: ubuntu-pnpm-store-18.20.1
           restore-keys: |
-            ${{ runner.os }}-pnpm-store-${{ matrix.node-version }}-
-
-      - name: Install PNPM globally
-        run: npm install -g pnpm
+            ubuntu-pnpm-store-18.20.1-
 
       - name: Install dependencies
         run: |
-          echo "PNPM_HOME=${HOME}/.local/share/pnpm" >> $GITHUB_ENV
-          echo "${HOME}/.local/share/pnpm" >> $GITHUB_PATH
-          echo "${HOME}/.local/share/pnpm/bin" >> $GITHUB_PATH
           pnpm set verify-store-integrity false
           pnpm config set network-timeout 300000
           pnpm install --prefer-offline
           pnpm install-playwright
+        env:
+          PNPM_HOME: /home/runner/.local/share/pnpm
+          PATH: ${{ env.PATH }}:/home/runner/.local/share/pnpm
 
       - name: Set NX shas
         run: nx/set-shas
