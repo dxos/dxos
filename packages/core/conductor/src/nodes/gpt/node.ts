@@ -38,6 +38,11 @@ export const GptInput = Schema.Struct({
   prompt: Schema.String,
 
   /**
+   * Additional context to pass before the user prompt.
+   */
+  context: Schema.optional(Schema.Any),
+
+  /**
    * Model to use.
    */
   model: Schema.optional(Schema.String),
@@ -101,7 +106,7 @@ export const gptNode = defineComputeNode({
   output: GptOutput,
   exec: (input) =>
     Effect.gen(function* () {
-      const { systemPrompt, prompt, history, conversation, tools = [] } = yield* ValueBag.unwrap(input);
+      const { systemPrompt, prompt, context, history, conversation, tools = [] } = yield* ValueBag.unwrap(input);
       const { client: aiClient } = yield* AiService;
       const { queues } = yield* QueueService;
       assertArgument(history === undefined || conversation === undefined, 'Cannot use both history and conversation');
@@ -140,11 +145,13 @@ export const gptNode = defineComputeNode({
         }),
       );
 
+      const fullPrompt = context != null ? `<context>\n${context}\n</context>\n\n${prompt}` : prompt;
+
       const resultEffect = Effect.gen(function* () {
         const messages = yield* Effect.promise(() =>
           session.run({
             systemPrompt,
-            prompt: prompt,
+            prompt: fullPrompt,
 
             history: [...historyMessages],
 
