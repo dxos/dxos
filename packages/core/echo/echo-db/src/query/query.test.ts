@@ -552,8 +552,7 @@ describe('Query', () => {
       }
     });
 
-    // TODO(wittjosiah): Currently disabled by default because it's expensive.
-    test.skip('full-text', async () => {
+    test('full-text', async () => {
       const { db, graph } = await builder.createDatabase({ indexing: { fullText: true } });
       graph.schemaRegistry.addSchema([Testing.Task]);
 
@@ -710,6 +709,7 @@ describe('Query', () => {
       expect(count2).toEqual(1);
     });
 
+    // TODO(dmaretskyi): Fix this test.
     test.skip('deleting an element', async (ctx) => {
       const { db } = await builder.createDatabase({ types: [Testing.Contact] });
 
@@ -797,20 +797,6 @@ describe('Query', () => {
       // Wait for all reactive updates to complete.
       // TODO(dmaretskyi): Does this ensure queries were re-run?
       await db.flush({ indexes: true, updates: true });
-
-      // TODO(ZaymonFC): Remove this comment once the bulk delete bug is resolved.
-      /*
-       * NOTE(ZaymonFC):
-       *   Expected: 3 renders
-       *   1. [] (empty)
-       *   2. [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] (all loaded, order doesn't matter)
-       *   3. [] (all deleted)
-       *
-       *   Actual: 3 renders
-       *   1. [] (empty)
-       *   2. [1, 4, 10, 5, 2, 9, 3, 8, 6, 7] (loaded)
-       *   3. [1, 4, 10, 5, 2, 9, 3, 8, 6, 7] (NO CHANGE - bulk delete didn't work!)
-       */
 
       expect(updates).toEqual([
         [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // All objects loaded.

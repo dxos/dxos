@@ -11,6 +11,7 @@ import { useQuery } from './useQuery';
 import { createClient, createClientContextProvider } from '../testing/util';
 
 describe('useQuery', () => {
+  // TODO(dmaretskyi): Fix this test.
   test.skip('deleting an element should result in correct render sequence', async () => {
     // Setup: Create client and space.
     const { client, space } = await createClient({ createIdentity: true, createSpace: true });
@@ -112,20 +113,6 @@ describe('useQuery', () => {
 
     // Wait for all reactive updates to complete.
     await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // TODO(ZaymonFC): Remove this comment once the bulk delete bug is resolved.
-    /*
-     * NOTE(ZaymonFC):
-     *   Expected: 3 renders
-     *   1. [] (empty)
-     *   2. [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] (all loaded, order doesn't matter)
-     *   3. [] (all deleted)
-     *
-     *   Actual: 3 renders
-     *   1. [] (empty)
-     *   2. [1, 4, 10, 5, 2, 9, 3, 8, 6, 7] (loaded)
-     *   3. [1, 4, 10, 5, 2, 9, 3, 8, 6, 7] (NO CHANGE - bulk delete didn't work!)
-     */
 
     // Convert to sets for order-independent comparison.
     const renderSets = allRenders.map((render) => new Set(render));
