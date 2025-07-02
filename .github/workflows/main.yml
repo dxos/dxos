@@ -37,9 +37,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pnpm install --frozen-lockfile
+          # Install all dependencies with workspace flag
+          pnpm install --frozen-lockfile -w
           # Install specific dependencies needed for NX
-          pnpm install nx@latest lines-and-columns@latest
+          pnpm add -w nx@latest lines-and-columns@latest
 
       - name: Cache selective dependencies
         uses: actions/cache@v4
