@@ -4,6 +4,8 @@
 
 import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-core';
 
+import { ObjectId } from '@dxos/keys';
+
 import { type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Ref } from '@dxos/echo';
@@ -15,6 +17,7 @@ import {
   type JsonProp,
   getSnapshot,
   getSchema,
+  toEffectSchema,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject } from '@dxos/live-object';
@@ -25,7 +28,13 @@ import {
   type DxGridPlanePosition,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import { type ViewType, type ViewProjection, type PropertyType, validateSchema, type ValidationError } from '@dxos/schema';
+import {
+  type ViewType,
+  type ViewProjection,
+  type PropertyType,
+  validateSchema,
+  type ValidationError,
+} from '@dxos/schema';
 
 import { type SelectionMode, SelectionModel } from './selection-model';
 import { TableSorting } from './table-sorting';
@@ -70,7 +79,7 @@ export type TableModelProps<T extends TableRow = TableRow> = {
   sorting?: FieldSortType[];
   pinnedRows?: { top: number[]; bottom: number[] };
   rowActions?: TableRowAction[];
-  onInsertRow?: (index?: number) => void;
+  onInsertRow?: (index?: number) => boolean;
   onDeleteRows?: (index: number, obj: T[]) => void;
   onDeleteColumn?: (fieldId: string) => void;
   onCellUpdate?: (cell: DxGridPosition) => void;
@@ -89,7 +98,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     end: { row: 0, col: 0 },
   });
 
-  private readonly _onInsertRow?: TableModelProps<T>['onInsertRow'];
+  private readonly _onInsertRow?: (index?: number) => boolean;
   private readonly _onDeleteRows?: TableModelProps<T>['onDeleteRows'];
   private readonly _onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
   private readonly _onCellUpdate?: TableModelProps<T>['onCellUpdate'];
@@ -297,39 +306,34 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     const row = rowIndex !== undefined ? this._sorting.getDataIndex(rowIndex) : this._rows.value.length;
     const result = this._onInsertRow?.(row);
     if (result === false) {
-      console.log('Row creation failed, creating draft instead');
       this.createDraftRow();
     }
   };
 
   private createDraftRow(): void {
     if (!this._view) {
-      console.log('No view available for draft row creation');
       return;
     }
 
-    const draftData = {} as T;
-    const schema = this._view.schema;
-    
-    if (schema) {
-      const validationErrors = validateSchema(schema, draftData) || [];
-      const draftRow: DraftRow<T> = {
-        data: draftData,
-        valid: validationErrors.length === 0,
-        validationErrors,
-      };
-      
-      console.log('Creating draft row:', {
-        draftData,
-        valid: draftRow.valid,
-        validationErrors: draftRow.validationErrors,
-        totalDraftRows: this._draftRows.value.length + 1
-      });
-      
-      this._draftRows.value = [...this._draftRows.value, draftRow];
-    } else {
-      console.log('No schema available for draft row validation');
-    }
+    const draftData = { id: ObjectId.random() } as T;
+
+    const schema = toEffectSchema(this._projection.schema);
+    const validationErrors = validateSchema(schema, draftData) || [];
+
+    const draftRow: DraftRow<T> = {
+      data: draftData,
+      valid: validationErrors.length === 0,
+      validationErrors,
+    };
+
+    console.log('Creating draft row:', {
+      draftData,
+      valid: draftRow.valid,
+      validationErrors: draftRow.validationErrors,
+      totalDraftRows: this._draftRows.value.length + 1,
+    });
+
+    this._draftRows.value = [...this._draftRows.value, draftRow];
   }
 
   public deleteRow = (rowIndex: number): void => {
