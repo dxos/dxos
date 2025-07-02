@@ -8,7 +8,7 @@ import { resolve } from 'path';
 import { type InlineConfig, mergeConfig } from 'vite';
 import inspect from 'vite-plugin-inspect';
 import topLevelAwait from 'vite-plugin-top-level-await';
-// import turbosnap from 'vite-plugin-turbosnap';
+import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
@@ -19,6 +19,14 @@ export const packages = resolve(__dirname, '../../../packages');
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
 const contentFiles = '*.{ts,tsx,js,jsx,css}';
+const content = [
+  resolve(packages, 'apps/*/src/**', contentFiles),
+  resolve(packages, 'devtools/*/src/**', contentFiles),
+  resolve(packages, 'experimental/*/src/**', contentFiles),
+  resolve(packages, 'plugins/*/src/**', contentFiles),
+  resolve(packages, 'sdk/*/src/**', contentFiles),
+  resolve(packages, 'ui/*/src/**', contentFiles),
+];
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 
@@ -33,9 +41,7 @@ type ConfigProps = Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>;
  */
 const config: StorybookConfig = {
   framework: '@storybook/react-vite',
-  stories: [
-    '../src/**/*.stories.@(js|jsx|ts|tsx|mdx)',
-  ],
+  stories: ['../src/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
   addons: [
     '@dxos/storybook-addon-logger',
     '@dxos/storybook-addon-theme',
@@ -100,21 +106,14 @@ const config: StorybookConfig = {
           tsDecorators: true,
           plugins: [
             // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-            // TODO(burdon): Add support for signals.
-            // {
-            //   name: 'signals',
-            //   visitor: {
-            //     Program(path) {
-            //       path.scope.crawl();
-            //     },
-            //   },
-            // },
+            ['@preact-signals/safe-react/swc', { mode: 'all' }],
           ],
         }),
 
-        // turbosnap({
-        //   rootDir: config.root ?? __dirname,
-        // }),
+        // https://www.npmjs.com/package/vite-plugin-turbosnap
+        turbosnap({
+          rootDir: config.root ?? __dirname,
+        }),
 
         // https://www.npmjs.com/package/vite-plugin-inspect
         // Open: http://localhost:5173/__inspect
@@ -128,55 +127,17 @@ const config: StorybookConfig = {
           symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           assetPath: (name, variant) =>
             `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
-          contentPaths: [resolve(packages, '**/src/**', contentFiles)],
+          contentPaths: content,
           spriteFile: 'icons.svg',
         }),
 
         ThemePlugin({
           root: __dirname,
-          content: [
-            resolve(packages, 'apps/*/src/**', contentFiles),
-            resolve(packages, 'devtools/*/src/**', contentFiles),
-            resolve(packages, 'experimental/*/src/**', contentFiles),
-            resolve(packages, 'plugins/*/src/**', contentFiles),
-            resolve(packages, 'sdk/*/src/**', contentFiles),
-            resolve(packages, 'ui/*/src/**', contentFiles),
-          ],
-        })
+          content,
+        }),
       ],
     }) as InlineConfig;
   },
 } as const satisfies StorybookConfig;
-
-export const viteFinal = (config: InlineConfig, options: { configType?: string }) => {
-  return mergeConfig(config, {
-    plugins: [
-      react(),
-      inspect(),
-      topLevelAwait(),
-      // turbosnap(),
-      wasm(),
-      IconsPlugin({
-        assetPath: (name, variant) =>
-          `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
-        symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
-        spriteFile: 'icons.svg',
-        contentPaths: [resolve(packages, '**/src/**', contentFiles)],
-      }),
-
-      ThemePlugin({
-        root: __dirname,
-        content: [
-          resolve(packages, 'apps/*/src/**', contentFiles),
-          resolve(packages, 'devtools/*/src/**', contentFiles),
-          resolve(packages, 'experimental/*/src/**', contentFiles),
-          resolve(packages, 'plugins/*/src/**', contentFiles),
-          resolve(packages, 'sdk/*/src/**', contentFiles),
-          resolve(packages, 'ui/*/src/**', contentFiles),
-        ],
-      }),
-    ],
-  } satisfies InlineConfig);
-};
 
 export default config;
