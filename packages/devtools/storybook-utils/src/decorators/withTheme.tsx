@@ -13,7 +13,7 @@ import { ThemeEditor } from '../components';
 /**
  * Show theme editor.
  */
-// TODO(burdon): Ideally move to storybook-addon-theme, but build issue since the addon package would recursively depend on the theme?
+// TODO(burdon): Ideally move to storybook-addon-theme, but this has a build issue since the addon would depend on the vite theme plugin.
 export const withTheme: Decorator = (Story, context) => {
   // Prevent re-rendering of the story.
   const MemoizedStory = memo(Story);
