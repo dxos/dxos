@@ -100,54 +100,48 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
 
   const gridLayout = useMemo(
     () =>
-      tagFilterVisible.value ? 'grid grid-rows-[min-content_min-content_1fr]' : 'grid grid-rows-[min-content_1fr]',
+      tagFilterVisible.value
+        ? 'grid grid-rows-[var(--toolbar-size)_min-content_1fr]'
+        : 'grid grid-rows-[var(--toolbar-size)_1fr]',
     [tagFilterVisible.value],
   );
 
   return (
-    <StackItem.Content classNames='relative' toolbar>
-      <div role='none' className={gridLayout}>
-        <ElevationProvider elevation='positioned'>
-          <MenuProvider {...menu} attendableId={id}>
-            <ToolbarMenu />
-          </MenuProvider>
-        </ElevationProvider>
+    <StackItem.Content classNames={['relative', gridLayout]} layoutManaged toolbar>
+      <ElevationProvider elevation='positioned'>
+        <MenuProvider {...menu} attendableId={id}>
+          <ToolbarMenu />
+        </MenuProvider>
+      </ElevationProvider>
 
-        {tagFilterVisible.value && (
-          <div role='none' className='pli-1 pbs-[1px] border-be bs-8 flex items-center border-separator'>
-            <Icon
-              role='presentation'
-              icon='ph--tag--bold'
-              classNames='mr-1 opacity-30'
-              aria-label='tags icon'
-              size={4}
-            />
-            <TagPicker
-              ref={tagPickerFocusRef}
-              items={tagPickerCurrentItems}
-              onUpdate={onTagPickerUpdate}
-              onSearch={(text, ids) =>
-                model.availableTags
-                  .filter((tag) => tag.label.toLowerCase().includes(text.toLowerCase()))
-                  .filter((tag) => !ids.includes(tag.label))
-                  .map((tag) => ({ id: tag.label, label: tag.label, hue: tag.hue as any }))
-              }
-            />
-          </div>
-        )}
-
-        {model.messages && model.messages.length > 0 ? (
-          <Mailbox
-            messages={model.messages}
-            id={id}
-            name={mailbox.name}
-            onAction={handleAction}
-            currentMessageId={currentMessageId}
+      {tagFilterVisible.value && (
+        <div role='none' className='pli-1 pbs-[1px] border-be bs-8 flex items-center border-separator'>
+          <Icon role='presentation' icon='ph--tag--bold' classNames='mr-1 opacity-30' aria-label='tags icon' size={4} />
+          <TagPicker
+            ref={tagPickerFocusRef}
+            items={tagPickerCurrentItems}
+            onUpdate={onTagPickerUpdate}
+            onSearch={(text, ids) =>
+              model.availableTags
+                .filter((tag) => tag.label.toLowerCase().includes(text.toLowerCase()))
+                .filter((tag) => !ids.includes(tag.label))
+                .map((tag) => ({ id: tag.label, label: tag.label, hue: tag.hue as any }))
+            }
           />
-        ) : (
-          <EmptyMailboxContent mailbox={mailbox} />
-        )}
-      </div>
+        </div>
+      )}
+
+      {model.messages && model.messages.length > 0 ? (
+        <Mailbox
+          messages={model.messages}
+          id={id}
+          name={mailbox.name}
+          onAction={handleAction}
+          currentMessageId={currentMessageId}
+        />
+      ) : (
+        <EmptyMailboxContent mailbox={mailbox} />
+      )}
     </StackItem.Content>
   );
 };

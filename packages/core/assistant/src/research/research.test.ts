@@ -7,11 +7,11 @@ import { beforeAll, describe, test } from 'vitest';
 
 import { EdgeAiServiceClient, OllamaAiServiceClient, structuredOutputParser } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
+import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { getSchemaDXN } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
-import { live } from '@dxos/live-object';
 import { DataType, DataTypes } from '@dxos/schema';
 
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
@@ -58,7 +58,7 @@ describe.skip('Research', () => {
 
   test('should generate a research report', { timeout: 300_000 }, async () => {
     db.add(
-      live(DataType.Organization, {
+      Obj.make(DataType.Organization, {
         name: 'Notion',
         website: 'https://www.notion.com',
       }),

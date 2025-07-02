@@ -3,7 +3,7 @@
 //
 
 import { Resource } from '@dxos/context';
-import type { BaseEchoObject } from '@dxos/echo-schema';
+import type { Obj, Relation } from '@dxos/echo';
 import { assertState } from '@dxos/invariant';
 import { DXN, ObjectId, QueueSubspaceTags, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
 
@@ -13,12 +13,14 @@ import type { Queue } from './types';
 import { type Hypergraph } from '../hypergraph';
 
 export interface QueueAPI {
-  get<T extends BaseEchoObject = BaseEchoObject>(dxn: DXN): Queue<T>;
-  create<T extends BaseEchoObject = BaseEchoObject>(options?: { subspaceTag?: QueueSubspaceTag }): Queue<T>;
+  get<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(dxn: DXN): Queue<T>;
+  create<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(options?: {
+    subspaceTag?: QueueSubspaceTag;
+  }): Queue<T>;
 }
 
 export class QueueFactory extends Resource implements QueueAPI {
-  private readonly _queues = new Map<DXN.String, Queue<BaseEchoObject>>();
+  private readonly _queues = new Map<DXN.String, Queue<Obj.Any | Relation.Any>>();
   private _service?: QueueService = undefined;
 
   constructor(
@@ -32,7 +34,7 @@ export class QueueFactory extends Resource implements QueueAPI {
     this._service = service;
   }
 
-  get<T extends BaseEchoObject = BaseEchoObject>(dxn: DXN): Queue<T> {
+  get<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(dxn: DXN): Queue<T> {
     assertState(this._service, 'Service not set');
 
     const stringDxn = dxn.toString();
@@ -50,7 +52,7 @@ export class QueueFactory extends Resource implements QueueAPI {
     return newQueue as Queue<T>;
   }
 
-  create<T extends BaseEchoObject = BaseEchoObject>({
+  create<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>({
     subspaceTag = QueueSubspaceTags.DATA,
   }: { subspaceTag?: QueueSubspaceTag } = {}): Queue<T> {
     const dxn = DXN.fromQueue(subspaceTag, this._spaceId, ObjectId.random());

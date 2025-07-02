@@ -5,15 +5,14 @@
 import React, { useCallback, useMemo } from 'react';
 
 import {
-  createIntent,
+  Capabilities,
   LayoutAction,
+  createIntent,
   useCapability,
   useCapabilities,
   useIntentDispatcher,
-  Capabilities,
 } from '@dxos/app-framework';
-import { Filter, Obj, Query } from '@dxos/echo';
-import { RelationSourceId } from '@dxos/echo-schema';
+import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -32,9 +31,11 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const identity = useIdentity();
   const { t } = useTranslation(THREAD_PLUGIN);
   const { tx } = useThemeContext();
+  const subjectId = fullyQualifiedId(subject);
 
   const { state, getViewState } = useCapability(ThreadCapabilities.MutableState);
-  const viewState = getViewState(fullyQualifiedId(subject));
+  const drafts = state.drafts[subjectId];
+  const viewState = useMemo(() => getViewState(subjectId), [getViewState, subjectId]);
   const { showResolvedThreads } = viewState;
   const onChangeViewState = useCallback(
     (nextValue: string) => {
@@ -42,7 +43,6 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
     },
     [viewState],
   );
-  const drafts = state.drafts[fullyQualifiedId(subject)];
 
   const anchorSorts = useCapabilities(Capabilities.AnchorSort);
   const sort = useMemo(
@@ -54,15 +54,14 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const objectsAnchoredTo = useQuery(space, Query.select(Filter.ids(subject.id)).targetOf(AnchoredTo));
   const anchors = objectsAnchoredTo
     .toSorted((a, b) => sort?.(a, b) ?? 0)
-    .filter((anchor) => Obj.instanceOf(ThreadType, anchor[RelationSourceId]))
+    .filter((anchor) => Obj.instanceOf(ThreadType, Relation.getSource(anchor)))
     .concat(drafts ?? []);
 
   const attended = useAttended();
-  const qualifiedSubjectId = fullyQualifiedId(subject);
 
   const handleAttend = useCallback(
     (anchor: AnchoredTo) => {
-      const thread = anchor[RelationSourceId] as ThreadType;
+      const thread = Relation.getSource(anchor) as ThreadType;
       const threadId = fullyQualifiedId(thread);
 
       if (state.current !== threadId) {
@@ -92,7 +91,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
         createIntent(ThreadAction.AddMessage, { anchor, subject, sender: { identityDid: identity?.did }, text }),
       );
 
-      const thread = anchor[RelationSourceId] as ThreadType;
+      const thread = Relation.getSource(anchor) as ThreadType;
       state.current = fullyQualifiedId(thread);
     },
     [dispatch, identity, subject],
@@ -100,7 +99,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
 
   const handleResolve = useCallback(
     (anchor: AnchoredTo) =>
-      dispatch(createIntent(ThreadAction.ToggleResolved, { thread: anchor[RelationSourceId] as ThreadType })),
+      dispatch(createIntent(ThreadAction.ToggleResolved, { thread: Relation.getSource(anchor) as ThreadType })),
     [dispatch],
   );
 
@@ -118,7 +117,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const comments = (
     <CommentsContainer
       anchors={anchors}
-      currentId={attended.includes(qualifiedSubjectId) ? state.current : undefined}
+      currentId={attended.includes(subjectId) ? state.current : undefined}
       showResolvedThreads={showResolvedThreads}
       onAttend={handleAttend}
       onComment={handleComment}
@@ -132,9 +131,9 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
     <StackItem.Content toolbar>
       <Tabs.Root
         value={showResolvedThreads ? 'all' : 'unresolved'}
-        onValueChange={onChangeViewState}
         orientation='horizontal'
         classNames='contents [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin'
+        onValueChange={onChangeViewState}
       >
         <Tabs.Tablist classNames={tx('toolbar.root', 'toolbar', {})}>
           <Tabs.Tab value='unresolved' classNames='text-sm'>

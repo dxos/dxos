@@ -5,16 +5,16 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import { type Schema } from 'effect';
 import { SchemaAST } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
-import { type BaseObject, getSchemaTypename, type HasId, toJsonSchema } from '@dxos/echo-schema';
+import { Obj, type Type } from '@dxos/echo';
+import { getSchemaTypename, toJsonSchema } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { live, makeRef } from '@dxos/react-client/echo';
+import { makeRef } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { DataType, createView, ViewProjection, ViewType } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
@@ -33,7 +33,7 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Mutable and immutable views.
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
-const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema<T>, count: number) => {
+const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
   const { space } = useClientProvider();
 
   const jsonSchema = useMemo(() => toJsonSchema(schema), [schema]);
@@ -45,7 +45,7 @@ const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema<T>, co
     invariant(typename);
     const name = getAnnotation<string>(SchemaAST.TitleAnnotationId)(schema.ast) ?? typename;
     const view = createView({ name, typename, jsonSchema });
-    return space.db.add(live(TableType, { view: makeRef(view) }));
+    return space.db.add(Obj.make(TableType, { view: makeRef(view) }));
   }, [schema, space, jsonSchema]);
 
   const projection = useMemo(() => {

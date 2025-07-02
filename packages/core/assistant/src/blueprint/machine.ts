@@ -14,8 +14,7 @@ import {
   type ToolRegistry,
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
-import { Key } from '@dxos/echo';
-import { create } from '@dxos/echo-schema';
+import { Key, Obj } from '@dxos/echo';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
@@ -173,7 +172,7 @@ export class BlueprintMachine {
 
     const inputMessages = options.input
       ? [
-          create(Message, {
+          Obj.make(Message, {
             role: 'user',
             content: [taggedDataBlock('input', options.input)],
           }),

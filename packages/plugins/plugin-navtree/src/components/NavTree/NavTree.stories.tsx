@@ -19,9 +19,11 @@ import {
   useCapability,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj } from '@dxos/echo';
+import { live } from '@dxos/live-object';
 import { AttentionPlugin } from '@dxos/plugin-attention';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
@@ -130,8 +132,8 @@ const meta: Meta<typeof NavTreeContainer> = {
         NavTreePlugin(),
       ],
       capabilities: (context) => [
-        contributes(StoryState, Obj.make({ tab: 'space-0' })),
-        contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders),
+        contributes(StoryState, live({ tab: 'space-0' })),
+        contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders(context)),
         contributes(Capabilities.IntentResolver, [
           createResolver({
             intent: LayoutAction.UpdateLayout,
@@ -157,3 +159,42 @@ export default meta;
 type Story = StoryObj<typeof NavTreeContainer>;
 
 export const Default: Story = {};
+
+// TODO(wittjosiah): Deduplicate plugins/capabilities with default story.
+export const WithClient: Story = {
+  decorators: [
+    withPluginManager({
+      plugins: [
+        ThemePlugin({ tx: defaultTx }),
+        GraphPlugin(),
+        IntentPlugin(),
+        SettingsPlugin(),
+        AttentionPlugin(),
+        NavTreePlugin(),
+        ClientPlugin({
+          onClientInitialized: async (_, client) => {
+            await client.halo.createIdentity();
+          },
+        }),
+        SpacePlugin(),
+        // Needs to be last so that the dialog and popovers have access to all contexts.
+        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
+      ],
+      capabilities: (context) => [
+        contributes(StoryState, live({ tab: 'space-0' })),
+        contributes(Capabilities.IntentResolver, [
+          createResolver({
+            intent: LayoutAction.UpdateLayout,
+            filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
+              Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
+            resolve: ({ subject }) => {
+              const state = context.getCapability(StoryState);
+              state.tab = subject;
+            },
+          }),
+        ]),
+      ],
+    }),
+    withLayout({ fullscreen: true }),
+  ],
+};

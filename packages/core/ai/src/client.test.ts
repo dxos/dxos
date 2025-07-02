@@ -5,7 +5,8 @@
 import { Schema } from 'effect';
 import { test, describe } from 'vitest';
 
-import { toJsonSchema, create } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
+import { toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -171,7 +172,7 @@ describe.skip('Ollama Client', () => {
 
     const messages = await parser.parse(
       await client.execStream({
-        prompt: create(Message, {
+        prompt: Obj.make(Message, {
           role: 'user',
           content: [{ type: 'text', text: 'Hello, world!' }],
         }),
@@ -206,7 +207,7 @@ describe.skip('Ollama Client', () => {
 
     const messages = await parser.parse(
       await aiClient.execStream({
-        prompt: create(Message, {
+        prompt: Obj.make(Message, {
           role: 'user',
           content: [{ type: 'text', text: 'What is the encrypted message for "Hello, world!"' }],
         }),
@@ -227,7 +228,7 @@ describe.skip('Ollama Client', () => {
 
     const messages = await parser.parse(
       await client.execStream({
-        prompt: create(Message, {
+        prompt: Obj.make(Message, {
           role: 'user',
           content: [{ type: 'text', text: 'Generate an image of a cat' }],
         }),
