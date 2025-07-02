@@ -1,0 +1,16 @@
+{
+  "ref": "refs/heads/main",
+  "repository": {
+    "full_name": "dxos/dxos",
+    "name": "dxos"
+  },
+  "pull_request": {
+    "draft": false,
+    "base": {
+      "sha": "main-sha"
+    },
+    "head": {
+      "sha": "pr-sha"
+    }
+  }
+}
