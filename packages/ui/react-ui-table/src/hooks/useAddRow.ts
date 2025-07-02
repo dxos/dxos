@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import { useCallback } from 'react';
 
 import { type Space } from '@dxos/client/echo';
@@ -9,7 +10,7 @@ import { Obj } from '@dxos/echo';
 
 export type UseAddRowParams = {
   space?: Space;
-  schema?: any;
+  schema?: Schema.Schema.AnyNoContext;
 };
 
 /**
@@ -23,7 +24,6 @@ export const useAddRow = ({ space, schema }: UseAddRowParams) => {
         space.db.add(Obj.make(schema, {}));
         return true;
       } catch (error) {
-        console.log('Failed to create object:', error);
         return false;
       }
     }
