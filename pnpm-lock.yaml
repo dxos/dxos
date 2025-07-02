@@ -8265,6 +8265,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -10629,6 +10632,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -11511,6 +11517,9 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
       '@types/jsonpath':
         specifier: ^0.2.4
         version: 0.2.4

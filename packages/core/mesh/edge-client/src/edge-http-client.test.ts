@@ -12,6 +12,7 @@ import { afterEach, describe, it } from 'vitest';
 import { log } from '@dxos/log';
 
 import { EdgeHttpClient } from './edge-http-client';
+import { createEphemeralEdgeIdentity } from './auth';
 
 type RetryOptions = {
   timeout: Duration.Duration;
@@ -65,6 +66,17 @@ describe.skipIf(process.env.CI)('EdgeHttpClient', () => {
   afterEach(() => {
     server?.close();
     server = undefined;
+  });
+
+  it.only('should get status', async ({ expect }) => {
+    const identity = await createEphemeralEdgeIdentity();
+    const url = 'http://localhost:8787';
+    const edgeHttp = new EdgeHttpClient(url);
+    edgeHttp.setIdentity(identity);
+
+    const result = await edgeHttp.getStatus();
+    log.info('result', { result });
+    expect(result).toBeDefined();
   });
 
   // TODO(burdon): Auth headers.
