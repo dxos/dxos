@@ -32,11 +32,18 @@ export const compileBlueprint = async (blueprint: Blueprint): Promise<ComputeGra
   for (let i = 0; i < blueprint.steps.length; i++) {
     const node = model.createNode({ id: stepNodeId(i), type: 'gpt' });
     nodes.push(node);
-
     model.builder.createEdge({ node: systemPrompt }, { node, property: 'systemPrompt' });
+
+    const instructions = model.createNode({
+      id: `step-instructions-${i}`,
+      type: 'constant',
+      value: blueprint.steps[i].instructions,
+    });
+    model.builder.createEdge({ node: instructions }, { node, property: 'prompt' });
+
     if (i === 0) {
       // Link to input node.
-      model.builder.createEdge({ node: inputNode, property: 'input' }, { node, property: 'prompt' });
+      model.builder.createEdge({ node: inputNode, property: 'input' }, { node, property: 'context' });
       model.builder.createEdge({ node: conversation }, { node, property: 'conversation' });
     } else {
       // Link to previous step.
