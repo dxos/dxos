@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { batch } from '@preact/signals-core';
-
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
+import { sleep } from '@dxos/async';
 import { Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
@@ -112,7 +111,7 @@ export default (context: PluginContext) =>
     }),
     createResolver({
       intent: ThreadAction.Delete,
-      resolve: ({ subject, anchor, thread: _thread }, undo) => {
+      resolve: async ({ subject, anchor, thread: _thread }, undo) => {
         const thread = _thread ?? (Relation.getSource(anchor) as ThreadType);
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
@@ -132,10 +131,10 @@ export default (context: PluginContext) =>
         }
 
         if (!undo) {
-          batch(() => {
-            space.db.remove(thread);
-            space.db.remove(anchor);
-          });
+          // TODO(wittjosiah): Without sleep, rendering crashes at `Relation.setSource(anchor)`.
+          space.db.remove(anchor);
+          await sleep(100);
+          space.db.remove(thread);
 
           return {
             undoable: {
@@ -153,10 +152,10 @@ export default (context: PluginContext) =>
             ],
           };
         } else {
-          batch(() => {
-            space.db.add(thread);
-            space.db.add(anchor);
-          });
+          // TODO(wittjosiah): Without sleep, rendering crashes at `Relation.setSource(anchor)`.
+          space.db.add(thread);
+          await sleep(100);
+          space.db.add(anchor);
 
           return {
             intents: [
