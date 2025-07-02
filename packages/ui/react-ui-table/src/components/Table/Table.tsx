@@ -99,10 +99,11 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
       return {
         frozenRowsStart: 1,
+        frozenRowsEnd: model?.draftRows.value.length ?? 0,
         frozenColsStart: model?.features.selection.enabled ? 1 : 0,
         frozenColsEnd: noActionColumn ? 0 : 1,
       };
-    }, [model]);
+    }, [model, model?.draftRows.value.length]);
 
     const getCells = useCallback<NonNullable<GridContentProps['getCells']>>(
       (range: DxGridPlaneRange, plane: DxGridPlane) => presentation?.getCells(range, plane) ?? {},
@@ -364,6 +365,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           onQuery={handleQuery}
         />
         <Grid.Content
+          key={`${model?.getRowCount()}-${model?.draftRows.value.length}`}
           className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
           frozen={frozen}
           // getCells={getCells}

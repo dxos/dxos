@@ -305,7 +305,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   public insertRow = (rowIndex?: number): void => {
     const row = rowIndex !== undefined ? this._sorting.getDataIndex(rowIndex) : this._rows.value.length;
     const result = this._onInsertRow?.(row);
-    if (result === false) {
+    if (result === false && this._draftRows.value.length === 0) {
       this.createDraftRow();
     }
   };
@@ -315,7 +315,11 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return;
     }
 
-    const draftData = { id: ObjectId.random() } as T;
+    const draftRowIndex = this._draftRows.value.length;
+    const draftData = { 
+      id: ObjectId.random(),
+      description: `debug ${draftRowIndex + 1}`
+    } as T;
 
     const schema = toEffectSchema(this._projection.schema);
     const validationErrors = validateSchema(schema, draftData) || [];
@@ -334,6 +338,27 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     });
 
     this._draftRows.value = [...this._draftRows.value, draftRow];
+  }
+
+  private validateDraftRow(draftRowIndex: number): void {
+    if (draftRowIndex < 0 || draftRowIndex >= this._draftRows.value.length) {
+      return;
+    }
+
+    const draftRow = this._draftRows.value[draftRowIndex];
+    const schema = toEffectSchema(this._projection.schema);
+    const validationErrors = validateSchema(schema, draftRow.data) || [];
+    
+    // Update the draft row validation status
+    const updatedDraftRow = {
+      ...draftRow,
+      valid: validationErrors.length === 0,
+      validationErrors,
+    };
+
+    const newDraftRows = [...this._draftRows.value];
+    newDraftRows[draftRowIndex] = updatedDraftRow;
+    this._draftRows.value = newDraftRows;
   }
 
   public deleteRow = (rowIndex: number): void => {
@@ -364,15 +389,29 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     }
   };
 
-  public getCellData = ({ col, row }: DxGridPlanePosition): any => {
+  public getCellData = (cell: DxGridPosition): any => {
+    const { col, row, plane } = cell;
     const fields = this._view?.fields ?? [];
     if (col < 0 || col >= fields.length) {
       return undefined;
     }
 
     const field = fields[col];
-    const dataIndex = this._sorting.getDataIndex(row);
-    const value = getValue(this._rows.value[dataIndex], field.path);
+    let value: any;
+
+    if (plane === 'frozenRowsEnd') {
+      // Get data from draft row
+      if (row >= 0 && row < this._draftRows.value.length) {
+        value = getValue(this._draftRows.value[row].data, field.path);
+      } else {
+        return undefined;
+      }
+    } else {
+      // Get data from regular row
+      const dataIndex = this._sorting.getDataIndex(row);
+      value = getValue(this._rows.value[dataIndex], field.path);
+    }
+
     if (value == null) {
       return '';
     }
@@ -393,8 +432,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     }
   };
 
-  public validateCellData = async ({ col, row }: DxGridPlanePosition, value: any): Promise<ValidationResult> => {
-    const rowIdx = this._sorting.getDataIndex(row);
+  public validateCellData = async ({ col, row, plane }: DxGridPosition, value: any): Promise<ValidationResult> => {
     const fields = this._view?.fields ?? [];
     if (col < 0 || col >= fields.length) {
       return { valid: false, error: 'Invalid column index' };
@@ -402,32 +440,53 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
     const field = fields[col];
     const { props } = this._projection.getFieldProjection(field.id);
-
-    const currentRow = this._rows.value[rowIdx];
-    invariant(currentRow, 'Invalid row index');
-
-    // Get a snapshot of the current object.
-    const snapshot = getSnapshot(currentRow);
     const transformedValue = editorTextToCellValue(props, value);
 
-    // Set the proposed value.
-    setValue(snapshot, field.path, transformedValue);
+    if (plane === 'frozenRowsEnd') {
+      // Validate draft row data
+      if (row >= 0 && row < this._draftRows.value.length) {
+        const draftRow = this._draftRows.value[row];
+        const snapshot = { ...draftRow.data };
+        setValue(snapshot, field.path, transformedValue);
 
-    const schema = getSchema(currentRow);
-    invariant(schema);
+        const schema = toEffectSchema(this._projection.schema);
+        const validationResult = validateSchema(schema, snapshot);
+        if (validationResult && validationResult.length > 0) {
+          const error = validationResult.find(err => err.path === field.path);
+          if (error) {
+            return { valid: false, error: error.message };
+          }
+        }
+        return { valid: true };
+      } else {
+        return { valid: false, error: 'Invalid draft row index' };
+      }
+    } else {
+      // Validate regular row data
+      const rowIdx = this._sorting.getDataIndex(row);
+      const currentRow = this._rows.value[rowIdx];
+      invariant(currentRow, 'Invalid row index');
 
-    const validationResult = validateSchema(schema, snapshot);
-    if (validationResult && validationResult.length > 0) {
-      const error = validationResult[0];
-      invariant(error.path === field.path);
-      return { valid: false, error: error.message };
+      // Get a snapshot of the current object.
+      const snapshot = getSnapshot(currentRow);
+      setValue(snapshot, field.path, transformedValue);
+
+      const schema = getSchema(currentRow);
+      invariant(schema);
+
+      const validationResult = validateSchema(schema, snapshot);
+      if (validationResult && validationResult.length > 0) {
+        const error = validationResult[0];
+        invariant(error.path === field.path);
+        return { valid: false, error: error.message };
+      }
+
+      return { valid: true };
     }
-
-    return { valid: true };
   };
 
-  public setCellData = ({ col, row }: DxGridPlanePosition, value: any): void => {
-    const rowIdx = this._sorting.getDataIndex(row);
+  public setCellData = (cell: DxGridPosition, value: any): void => {
+    const { col, row, plane } = cell;
     const fields = this._view?.fields ?? [];
     if (col < 0 || col >= fields.length) {
       return;
@@ -439,12 +498,21 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
     // Special handling for Ref format to preserve existing behavior
     if (props.format === FormatEnum.Ref && !isLiveObject(value)) {
-      // TODO(ZaymonFC): This get's called an additional time by the cell editor onBlur, but with the cell editors
-      //   plain string value. Maybe onBlur should be called with the actual value?
       return;
     }
 
-    setValue(this._rows.value[rowIdx], field.path, transformedValue);
+    if (plane === 'frozenRowsEnd') {
+      // Update draft row data
+      if (row >= 0 && row < this._draftRows.value.length) {
+        setValue(this._draftRows.value[row].data, field.path, transformedValue);
+        // Re-validate the draft row after the update
+        this.validateDraftRow(row);
+      }
+    } else {
+      // Update regular row data
+      const rowIdx = this._sorting.getDataIndex(row);
+      setValue(this._rows.value[rowIdx], field.path, transformedValue);
+    }
   };
 
   /**
