@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import pkgUp from 'pkg-up';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { setDeep } from '@dxos/util';
 
@@ -34,10 +35,7 @@ export const definitions = ({
 
   return Object.entries(KEYS_TO_FILE).reduce(
     (prev, [key, value]) => {
-      if (!key) {
-        return prev;
-      }
-
+      invariant(key);
       let content = {};
       try {
         content = yaml.load(readFileSync(value, 'utf-8')) as any;

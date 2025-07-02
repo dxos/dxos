@@ -8,7 +8,7 @@ import { baseConfig } from '../../../vitest.shared';
 
 // TODO(wittjosiah): Factor out to shared config as an option.
 const env = (process.env.VITEST_ENV ?? 'node').toLowerCase();
-const environment = env === 'node' ? 'happy-dom' : 'jsdom';
+const environment = env === 'node' ? 'happy-dom' : undefined;
 
 export default mergeConfig(
   baseConfig({ cwd: __dirname }),
