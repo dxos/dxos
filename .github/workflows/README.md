@@ -15,6 +15,8 @@
 ```bash
 brew install docker --cask
 brew install act
-
-act -j check -e .github/workflows/testing/test-push-event.json --container-architecture linux/arm64 -v
 ```
+
+## Resources
+
+- https://nx.dev/ci/intro/tutorials/github-actions
