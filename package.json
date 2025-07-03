@@ -17,7 +17,7 @@
     "check-dependencies": "syncpack list-mismatches --filter '!ink'",
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
-    "postinstall": "tsx tools/executors/toolbox/src/main.ts",
+    "postinstall": "[ \"$CI\" != \"true\" ] && tsx tools/executors/toolbox/src/main.ts || true",
     "install-playwright": "playwright install",
     "lint": "nx run-many --target=lint --fix",
     "lint:changed": "nx run-many --target=lint --projects=$(pnpm run -w --silent changed-packages) --fix",
