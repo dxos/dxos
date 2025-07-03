@@ -3,15 +3,13 @@
 //
 
 import { Effect } from 'effect';
-
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { CollectionAction, defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
-import { AnchoredTo, DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import {
   AppGraphBuilder,
