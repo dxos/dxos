@@ -127,7 +127,14 @@ jobs:
           result: ${{ job.status }}
 
   e2e:
-    if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
+    if: >-
+      ${{
+        startsWith(github.ref, 'refs/heads/main') ||
+        startsWith(github.ref, 'refs/heads/rc-') ||
+        startsWith(github.ref, 'refs/heads/hotfix-') ||
+        startsWith(github.ref, 'refs/heads/release-please-') ||
+        inputs.e2e
+      }}
     runs-on:
       group: ubuntu-large
     container:
