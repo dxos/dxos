@@ -1,6 +1,8 @@
 ARG NODE_VERSION=20.12.1
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
 
-FROM node:${NODE_VERSION}
+FROM --platform=$TARGETPLATFORM node:${NODE_VERSION}
 
 RUN apt-get update \
   # Install native dependencies.
