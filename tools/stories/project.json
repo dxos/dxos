@@ -38,12 +38,6 @@
         "{workspaceRoot}/tools/stories/static"
       ]
     },
-    "test": {
-      "executor": "@nx/vite:test",
-      "options": {
-        // "config": "{projectRoot}/vite.config.ts"
-      }
-    },
     "storybook": {
       "configurations": {
         "ci": {
@@ -102,7 +96,8 @@
         "configDir": "{projectRoot}/config/examples",
         "outputDir": "{projectRoot}/out/examples"
       }
-    }
+    },
+    "test": {}
   },
   "implicitDependencies": [
     "app-graph",

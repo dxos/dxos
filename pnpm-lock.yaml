@@ -4728,7 +4728,7 @@ importers:
         specifier: workspace:*
         version: link:../../common/log
       storybook:
-        specifier: ^9.0.14
+        specifier: ^9.0.15
         version: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
     devDependencies:
       '@types/react':
@@ -4765,7 +4765,7 @@ importers:
         specifier: ^4.6.1
         version: 4.6.1
       storybook:
-        specifier: ^9.0.14
+        specifier: ^9.0.15
         version: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
     devDependencies:
       '@dxos/react-ui':
@@ -14459,7 +14459,7 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0
       storybook:
-        specifier: ^9.0.14
+        specifier: ^9.0.15
         version: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
       vite:
         specifier: 5.4.7
@@ -20696,7 +20696,6 @@ packages:
 
   '@socketsupply/socket@0.5.4':
     resolution: {integrity: sha512-8sDIEL5cyFI4jlpZYUL4JqSgkj1XjUlbi9kA16/5DfzAYefQx38QXQaI0Hj7G1T3WwPnKN8f9xLvESMHikysrA==}
-    cpu: [arm64, x64]
     os: [linux, darwin, win32]
     hasBin: true
 
