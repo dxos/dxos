@@ -105,7 +105,6 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      # TODO(wittjosiah): Coverage is causing CI failures.
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=test
@@ -142,7 +141,7 @@ jobs:
     env:
       DX_ENVIRONMENT: ci
       DX_PWA: false
-      NODE_OPTIONS: --max-old-space-size=8192
+      NODE_OPTIONS: --max-old-space-size=12288
     steps:
       - name: Checkout
         uses: actions/checkout@v4
