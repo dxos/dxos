@@ -152,4 +152,4 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
   },
 });
 
-export default config;
+export default config();
