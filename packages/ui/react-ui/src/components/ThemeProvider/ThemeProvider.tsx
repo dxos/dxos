@@ -13,7 +13,7 @@ import { hasIosKeyboard } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
 
-export type ThemeMode = 'light' | 'dark';
+export type ThemeMode = 'dark' | 'light';
 
 export type ThemeContextValue = {
   tx: ThemeFunction<any>;
@@ -54,7 +54,6 @@ export const ThemeProvider = ({
   }, []);
 
   const safeAreaPadding = useSafeArea();
-
   const contextValue = useMemo(
     () => ({ tx, themeMode, hasIosKeyboard: hasIosKeyboard(), safeAreaPadding, ...rest }),
     [tx, themeMode, safeAreaPadding, rest],

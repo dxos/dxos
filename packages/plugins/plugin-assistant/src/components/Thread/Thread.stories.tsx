@@ -13,7 +13,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from './Thread';
 import translations from '../../translations';
@@ -71,7 +71,6 @@ const meta: Meta<ThreadProps> = {
   render: DefaultStory,
   component: Thread,
   decorators: [
-    withSignals,
     withClientProvider({ createIdentity: true, createSpace: true }),
     withPluginManager({ plugins: [IntentPlugin()] }),
     withTheme,

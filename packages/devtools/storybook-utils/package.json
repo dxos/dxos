@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/theme-editor-addon",
-  "version": "0.8.2",
-  "description": "Utilities for editing the DXOS UI theme in Storybook.",
+  "name": "@dxos/storybook-utils",
+  "version": "0.8.3",
+  "description": "Utilities for DXOS UI Storybooks.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -11,39 +11,35 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/browser/index.mjs"
-    },
-    "./manager": {
-      "types": "./dist/types/src/manager.d.ts",
-      "default": "./dist/lib/browser/manager.mjs"
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {
-      "theme-editor-addon": [
-        "./dist/types/src/theme-editor-addon.d.ts"
-      ]
-    }
+    "*": {}
   },
   "files": [
     "dist",
     "src"
   ],
   "dependencies": {
-    "@storybook/icons": "^1.4.0",
-    "@storybook/manager-api": "^8.3.6",
-    "@storybook/preview-api": "^8.3.6",
-    "storybook": "^8.3.6"
+    "@dxos/echo-signals": "workspace:*",
+    "@dxos/lit-theme-editor": "workspace:*",
+    "@dxos/lit-ui": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@storybook/blocks": "^8.6.14",
+    "lodash.defaultsdeep": "^4.6.1",
+    "storybook": "^9.0.14"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
-    "react-dom": "~18.2.0",
-    "storybook": "^8.3.6"
+    "react-dom": "~18.2.0"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

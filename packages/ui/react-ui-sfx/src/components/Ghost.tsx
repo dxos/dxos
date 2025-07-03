@@ -4,7 +4,7 @@
 // Based on https://reactbits.dev/animations/splash-cursor
 //
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -48,11 +48,11 @@ const defaultConfig: GhostProps = {
 };
 
 export const Ghost = (props: Partial<GhostProps>) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const ghost = useGhost(canvasRef.current, props);
+  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  const ghost = useGhost(canvas, props);
   useGhostController(ghost, props);
 
-  return <canvas ref={canvasRef} className='bs-full is-full' />;
+  return <canvas ref={setCanvas} className='bs-full is-full' />;
 };
 
 const useGhost = (canvas: HTMLCanvasElement | null, props: Partial<GhostProps>): GhostRenderer | undefined => {

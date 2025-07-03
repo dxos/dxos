@@ -1,6 +1,6 @@
 {
   "name": "@dxos/merkle-search-tree",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Merkle-Search Tree implementation and sync protocol.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
