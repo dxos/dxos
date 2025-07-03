@@ -61,6 +61,9 @@ jobs:
           fetch-depth: 0
           lfs: true
 
+      - name: Mark working directory as safe
+        run: git config --global --add safe.directory "$(pwd)"
+
       - name: Extract branch
         id: extract_branch
         uses: ./.github/actions/branch
@@ -112,6 +115,9 @@ jobs:
           fetch-depth: 0
           lfs: true
 
+      - name: Mark working directory as safe
+        run: git config --global --add safe.directory "$(pwd)"
+
       - name: Extract branch
         id: extract_branch
         uses: ./.github/actions/branch
@@ -150,6 +156,9 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+
+      - name: Mark working directory as safe
+        run: git config --global --add safe.directory "$(pwd)"
 
       - name: Extract branch
         id: extract_branch
@@ -190,6 +199,9 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+
+      - name: Mark working directory as safe
+        run: git config --global --add safe.directory "$(pwd)"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
