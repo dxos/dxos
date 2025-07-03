@@ -382,11 +382,11 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     }
 
     console.log('commitDraftRow: Attempting to commit valid draft row', { data: draftRow.data });
-    
+
     // Attempt to commit via callback
     const success = this._onInsertRow?.(draftRow.data);
     console.log('commitDraftRow: onInsertRow result', success);
-    
+
     if (success) {
       // Remove the draft row since it's now persisted
       const newDraftRows = this._draftRows.value.filter((_, index) => index !== draftRowIndex);
