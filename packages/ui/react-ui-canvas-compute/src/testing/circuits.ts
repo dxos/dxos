@@ -4,11 +4,12 @@
 
 import { createSystemPrompt } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
+import type { ServiceContainer } from '@dxos/functions';
 import { DXN, SpaceId } from '@dxos/keys';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
-import { pointMultiply, pointsToRect, rectToPoints, createNote, CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
+import { CanvasGraphModel, createNote, pointMultiply, pointsToRect, rectToPoints } from '@dxos/react-ui-canvas-editor';
 
-import { ComputeGraphController, type Services } from '../graph';
+import { ComputeGraphController } from '../graph';
 import { createComputeGraph } from '../hooks';
 import {
   type ComputeShape,
@@ -30,20 +31,19 @@ import {
   createQueue,
   createRandom,
   createScope,
-  createSwitch,
   createSurface,
-  createTextToImage,
-  createText,
+  createSwitch,
   createTemplate,
+  createText,
+  createTextToImage,
 } from '../shapes';
 
 export const createComputeGraphController = (
-  graph = CanvasGraphModel.create<ComputeShape>(),
-  services?: Partial<Services>,
+  graph: CanvasGraphModel<ComputeShape>,
+  serviceContainer: ServiceContainer,
 ) => {
   const computeGraph = createComputeGraph(graph);
-  const controller = new ComputeGraphController(computeGraph);
-  controller.setServices(services ?? {});
+  const controller = new ComputeGraphController(serviceContainer, computeGraph);
   return { controller, graph };
 };
 

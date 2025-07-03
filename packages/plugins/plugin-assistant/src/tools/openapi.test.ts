@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { EdgeAiServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 
@@ -73,10 +73,8 @@ describe.skip('openapi', () => {
   describe.skip('AI uses tools', () => {
     test('amadeus flight availabilities', { timeout: 60_000 }, async () => {
       const tools = await createToolsFromApi(FLIGHT_SEARCH_API, { authorization: AMADEUS_AUTH });
-      const client = new AIServiceEdgeClient({
-        endpoint: AI_SERVICE_ENDPOINT.LOCAL,
-      });
-      const processor = new ChatProcessor(client, tools);
+      const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL });
+      const processor = new ChatProcessor(aiClient, tools);
       const reply = await processor.request(
         `What is the cheapest flight from New York to Paris? going on ${new Date().toISOString()} and returning after a week. 1 adult traveler`,
       );
@@ -87,10 +85,8 @@ describe.skip('openapi', () => {
     // TODO(dmaretskyi): Doesn't work.
     test('amadeus hotel name autocomplete', { timeout: 60_000 }, async () => {
       const tools = await createToolsFromApi(HOTEL_NAME_AUTOCOMPLETE_API, { authorization: AMADEUS_AUTH });
-      const client = new AIServiceEdgeClient({
-        endpoint: AI_SERVICE_ENDPOINT.LOCAL,
-      });
-      const processor = new ChatProcessor(client, tools);
+      const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL });
+      const processor = new ChatProcessor(aiClient, tools);
       const reply = await processor.request('Find me the William Wale in Brooklyn New York');
 
       log.info('reply', { reply });
@@ -101,10 +97,8 @@ describe.skip('openapi', () => {
         authorization: VISUAL_CROSSING_CREDENTIALS,
         instructions: WEATHER_INSTRUCTIONS,
       });
-      const client = new AIServiceEdgeClient({
-        endpoint: AI_SERVICE_ENDPOINT.LOCAL,
-      });
-      const processor = new ChatProcessor(client, tools);
+      const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL });
+      const processor = new ChatProcessor(aiClient, tools);
       const reply = await processor.request(
         `Today's date is ${new Date().toISOString().split('T')[0]}. Give me weather forecast for Warsaw for next 5 days.`,
       );

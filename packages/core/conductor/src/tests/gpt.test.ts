@@ -6,14 +6,20 @@ import { it } from '@effect/vitest';
 import { Cause, Chunk, Console, Effect, Exit, Fiber, Option, Scope, Stream } from 'effect';
 import { describe, expect, test, type TaskContext } from 'vitest';
 
-import { AIServiceEdgeClient, defineTool, OllamaClient, ToolTypes, type GenerationStreamEvent } from '@dxos/ai';
+import {
+  EdgeAiServiceClient,
+  defineTool,
+  OllamaAiServiceClient,
+  ToolTypes,
+  type GenerationStreamEvent,
+} from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from '@dxos/ai/testing';
+import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT, registry, type GptInput } from '../nodes';
-import { EdgeGpt } from '../services';
-import { TestRuntime, testServices } from '../testing';
-import { ComputeGraphModel, makeValueBag, unwrapValueBag, type ValueEffect } from '../types';
+import { TestRuntime } from '../testing';
+import { ComputeGraphModel, ValueBag, type ValueEffect } from '../types';
 
 const ENABLE_LOGGING = true;
 const SKIP_AI_SERVICE_TESTS = true;
@@ -21,25 +27,25 @@ const SKIP_AI_SERVICE_TESTS = true;
 describe.skip('GPT pipelines', () => {
   it.effect('text output', ({ expect }) =>
     Effect.gen(function* () {
-      const runtime = new TestRuntime();
+      const runtime = new TestRuntime(createTestServices({ enableLogging: ENABLE_LOGGING }));
       runtime.registerGraph('dxn:compute:gpt1', gpt1());
 
       yield* Effect.gen(function* () {
         const scope = yield* Scope.make();
         const computeResult = yield* runtime
-          .runGraph('dxn:compute:gpt1', makeValueBag({ prompt: 'What is the meaning of life?' }))
+          .runGraph('dxn:compute:gpt1', ValueBag.make({ prompt: 'What is the meaning of life?' }))
           .pipe(Scope.extend(scope), Effect.withSpan('runGraph'));
 
         const text: string = yield* computeResult.values.text;
         expect(text).toEqual('This is a mock response that simulates a GPT-like output.');
 
         yield* Scope.close(scope, Exit.void).pipe(Effect.withSpan('closeScope'));
-      }).pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.withSpan('test'));
+      }).pipe(Effect.withSpan('test'));
     }),
   );
 
   test('stream output', { timeout: 1000 }, async ({ expect }) => {
-    const runtime = new TestRuntime();
+    const runtime = new TestRuntime(createTestServices({ enableLogging: ENABLE_LOGGING }));
     runtime.registerGraph('dxn:compute:gpt2', gpt2());
 
     await Effect.runPromise(
@@ -48,11 +54,11 @@ describe.skip('GPT pipelines', () => {
         const output = yield* runtime
           .runGraph(
             'dxn:compute:gpt2',
-            makeValueBag({
+            ValueBag.make({
               prompt: 'What is the meaning of life?',
             }),
           )
-          .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Scope.extend(scope));
+          .pipe(Scope.extend(scope));
 
         // log.info('text in test', { text: getDebugName(text) });
         const logger = Effect.runPromise(output.values.text).then((token) => {
@@ -102,7 +108,12 @@ describe.skip('GPT pipelines', () => {
   });
 
   test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt output only', async ({ expect }) => {
-    const runtime = new TestRuntime();
+    const runtime = new TestRuntime(
+      createTestServices({
+        enableLogging: ENABLE_LOGGING,
+        ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
+      }),
+    );
     runtime.registerGraph('dxn:compute:gpt1', gpt1());
 
     await Effect.runPromise(
@@ -111,19 +122,11 @@ describe.skip('GPT pipelines', () => {
         const computeResult = yield* runtime
           .runGraph(
             'dxn:compute:gpt1',
-            makeValueBag({
+            ValueBag.make({
               prompt: 'What is the meaning of life?',
             }),
           )
-          .pipe(
-            Effect.provide(
-              testServices({
-                enableLogging: ENABLE_LOGGING,
-                gpt: new EdgeGpt(new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL })),
-              }),
-            ),
-            Scope.extend(scope),
-          );
+          .pipe(Scope.extend(scope));
 
         const text: ValueEffect<string> = computeResult.values.text;
         const llmTextOutput = yield* text;
@@ -135,7 +138,12 @@ describe.skip('GPT pipelines', () => {
   });
 
   test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt stream', async ({ expect }) => {
-    const runtime = new TestRuntime();
+    const runtime = new TestRuntime(
+      createTestServices({
+        enableLogging: ENABLE_LOGGING,
+        ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
+      }),
+    );
     runtime.registerGraph('dxn:compute:gpt2', gpt2());
 
     await Effect.runPromise(
@@ -147,20 +155,11 @@ describe.skip('GPT pipelines', () => {
         }: { tokenStream: Stream.Stream<GenerationStreamEvent>; text: Effect.Effect<string> } = yield* runtime
           .runGraph(
             'dxn:compute:gpt2',
-            makeValueBag({
+            ValueBag.make({
               prompt: 'What is the meaning of life?',
             }),
           )
-          .pipe(
-            Effect.flatMap(unwrapValueBag),
-            Effect.provide(
-              testServices({
-                enableLogging: ENABLE_LOGGING,
-                gpt: new EdgeGpt(new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL })),
-              }),
-            ),
-            Scope.extend(scope),
-          );
+          .pipe(Effect.flatMap(ValueBag.unwrap), Scope.extend(scope));
 
         // log.info('text in test', { text: getDebugName(text) });
 
@@ -189,7 +188,7 @@ describe.skip('GPT pipelines', () => {
 
   it.effect('gpt simple', (ctx) =>
     Effect.gen(function* () {
-      if (!(yield* Effect.promise(() => OllamaClient.isRunning()))) {
+      if (!(yield* Effect.promise(() => OllamaAiServiceClient.isRunning()))) {
         ctx!.skip();
         return;
       }
@@ -197,13 +196,13 @@ describe.skip('GPT pipelines', () => {
       const input: GptInput = {
         prompt: 'What is the meaning of life? Answer in 10 words or less.',
       };
-      const output = yield* registry.gpt.exec!(makeValueBag(input)).pipe(
-        Effect.flatMap(unwrapValueBag),
+      const output = yield* registry.gpt.exec!(ValueBag.make(input)).pipe(
+        Effect.flatMap(ValueBag.unwrap),
         Effect.provide(
-          testServices({
+          createTestServices({
             enableLogging: ENABLE_LOGGING,
-            gpt: new EdgeGpt(new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL })),
-          }),
+            ai: new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL }),
+          }).createLayer(),
         ),
       );
       log.info('output', { output });
@@ -217,7 +216,7 @@ describe.skip('GPT pipelines', () => {
     { timeout: 60_000 },
     testEffect((ctx) =>
       Effect.gen(function* () {
-        if (!(yield* Effect.promise(() => OllamaClient.isRunning()))) {
+        if (!(yield* Effect.promise(() => OllamaAiServiceClient.isRunning()))) {
           ctx!.skip();
           return;
         }
@@ -234,13 +233,13 @@ describe.skip('GPT pipelines', () => {
             }),
           ],
         };
-        const output = yield* registry.gpt.exec!(makeValueBag(input)).pipe(
-          Effect.flatMap(unwrapValueBag),
+        const output = yield* registry.gpt.exec!(ValueBag.make(input)).pipe(
+          Effect.flatMap(ValueBag.unwrap),
           Effect.provide(
-            testServices({
+            createTestServices({
               enableLogging: ENABLE_LOGGING,
-              gpt: new EdgeGpt(createTestOllamaClient()),
-            }),
+              ai: createTestOllamaClient(),
+            }).createLayer(),
           ),
         );
         log.info('output', { output });

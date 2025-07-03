@@ -310,23 +310,33 @@ export class GraphBuilder {
         previous = ids;
 
         log('update', { id, relation, ids, removed });
-        Rx.batch(() => {
-          this._graph.removeEdges(
-            removed.map((target) => ({ source: id, target })),
-            true,
-          );
-          this._graph.addNodes(nodes);
-          this._graph.addEdges(
-            nodes.map((node) =>
-              relation === 'outbound' ? { source: id, target: node.id } : { source: node.id, target: id },
-            ),
-          );
-          this._graph.sortEdges(
-            id,
-            relation,
-            nodes.map(({ id }) => id),
-          );
-        });
+        const update = () => {
+          Rx.batch(() => {
+            this._graph.removeEdges(
+              removed.map((target) => ({ source: id, target })),
+              true,
+            );
+            this._graph.addNodes(nodes);
+            this._graph.addEdges(
+              nodes.map((node) =>
+                relation === 'outbound' ? { source: id, target: node.id } : { source: node.id, target: id },
+              ),
+            );
+            this._graph.sortEdges(
+              id,
+              relation,
+              nodes.map(({ id }) => id),
+            );
+          });
+        };
+
+        // TODO(wittjosiah): Remove `requestAnimationFrame` once we have a better solution.
+        //  This is a workaround to avoid a race condition where the graph is updated during React render.
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(update);
+        } else {
+          update();
+        }
       },
       { immediate: true },
     );

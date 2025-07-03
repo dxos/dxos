@@ -2,13 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ChatText } from '@phosphor-icons/react';
 import React, { useEffect } from 'react';
 
-import { RelationSourceId } from '@dxos/echo-schema';
+import { Relation } from '@dxos/echo';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { useTranslation, Trans } from '@dxos/react-ui';
-import { descriptionMessage, mx } from '@dxos/react-ui-theme';
+import { Callout, Icon, Trans, useTranslation } from '@dxos/react-ui';
 import { type AnchoredTo } from '@dxos/schema';
 
 import { CommentContainer, type CommentContainerProps } from './CommentContainer';
@@ -28,9 +26,9 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
   const { t } = useTranslation(THREAD_PLUGIN);
   // TODO(wittjosiah): There seems to be a race between thread and anchor being deleted.
   const filteredAnchors = showResolvedThreads
-    ? anchors.filter((anchor) => !!anchor[RelationSourceId])
+    ? anchors.filter((anchor) => !!Relation.getSource(anchor))
     : anchors.filter((anchor) => {
-        const thread = anchor[RelationSourceId];
+        const thread = Relation.getSource(anchor);
         return thread && thread.status !== 'resolved';
       });
 
@@ -40,30 +38,29 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
     }
   }, [currentId]);
 
-  return (
-    <>
-      {filteredAnchors.length > 0 ? (
-        filteredAnchors.map((anchor) => {
-          const thread = anchor[RelationSourceId] as ThreadType;
-          const threadId = fullyQualifiedId(thread);
-          return <CommentContainer key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
-        })
-      ) : (
-        <div role='alert' className={mx(descriptionMessage, 'place-self-center rounded-lg text-center m-4')}>
-          <h2 className='mbe-2 font-medium text-baseText'>{t('no comments title')}</h2>
-          <p>
+  if (filteredAnchors.length === 0) {
+    return (
+      <div role='none' className='plb-cardSpacingBlock pli-cardSpacingInline'>
+        <Callout.Root>
+          <Callout.Title>
             <Trans
               {...{
                 t,
                 i18nKey: 'no comments message',
                 components: {
-                  commentIcon: <ChatText className='inline-block' />,
+                  commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='inline-block' />,
                 },
               }}
             />
-          </p>
-        </div>
-      )}
-    </>
-  );
+          </Callout.Title>
+        </Callout.Root>
+      </div>
+    );
+  }
+
+  return filteredAnchors.map((anchor) => {
+    const thread = Relation.getSource(anchor) as ThreadType;
+    const threadId = fullyQualifiedId(thread);
+    return <CommentContainer key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
+  });
 };

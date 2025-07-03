@@ -3,9 +3,9 @@
 //
 
 import { format } from 'date-fns/format';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { makeRef, RefArray } from '@dxos/live-object';
+import { Ref } from '@dxos/echo';
 import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -48,7 +48,7 @@ export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
     }
 
     const entry = createJournalEntry();
-    journal.entries.push(makeRef(entry));
+    journal.entries.push(Ref.make(entry));
     setShowAddEntry(false);
   }, [journal, date]);
 
@@ -59,7 +59,7 @@ export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
           <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
         </div>
       )}
-      {RefArray.targets(journal?.entries ?? [])
+      {Ref.Array.targets(journal?.entries ?? [])
         .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0))
         .map((entry, i) => (
           <JournalEntry key={entry.id} entry={entry} classNames='p-2' {...props} autoFocus={i === 0} />
@@ -67,6 +67,8 @@ export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
     </div>
   );
 };
+
+const RECENT = 7 * 24 * 60 * 60 * 1_000;
 
 type JournalEntryProps = ThemedClassName<
   {
@@ -78,7 +80,9 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
   const date = parseDateString(entry.date);
   const isToday = getDateString() === entry.date;
+  const isRecent = useMemo(() => Date.now() - new Date(entry.date).getTime() < RECENT, [entry.date]);
   const outlinerRef = useRef<OutlinerController>(null);
+  const [focused, setFocused] = useState(false);
 
   const handleFocus = useCallback(() => {
     outlinerRef.current?.focus();
@@ -89,14 +93,21 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
   }
 
   return (
-    <div className={mx('flex flex-col', classNames)}>
+    <div
+      className={mx('group flex flex-col', classNames)}
+      onFocusCapture={() => setFocused(true)}
+      onBlurCapture={() => setFocused(false)}
+      // TODO(burdon): Experiment with `peer-focus-within` Tailwind selector.
+      {...{ 'data-has-focus': focused ? true : undefined }}
+    >
       <div className='flex items-center gap-2 bg-transparent'>
         <IconButton
           label={format(date, 'MMM d, yyyy')}
-          icon={isToday ? 'ph--calendar-dot--regular' : 'ph--calendar-blank--regular'}
+          size={5}
+          icon={isToday ? 'ph--calendar-check--regular' : 'ph--calendar-blank--regular'}
           onClick={handleFocus}
         />
-        <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>
+        {isRecent && <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>}
         {isToday && <div className='text-xs'>{t('today label')}</div>}
       </div>
       <Outliner

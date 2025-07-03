@@ -56,7 +56,7 @@ export const initializeTable = async ({
 
     return schema;
   } else {
-    const [schema] = await space.db.schemaRegistry.register([ContactSchema]);
+    const [schema] = await space.db.schemaRegistry.register([createContactSchema()]);
     const fields = ContactFields;
 
     table.view = Ref.make(
@@ -79,15 +79,16 @@ export const initializeTable = async ({
   }
 };
 
-const ContactSchema = TypedObject({
-  typename: `example.com/type/${PublicKey.random().truncate()}`,
-  version: '0.1.0',
-})({
-  name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
-  active: Schema.optional(Schema.Boolean),
-  email: Schema.optional(Format.Email),
-  salary: Schema.optional(Format.Currency()).annotations({ title: 'Salary' }),
-});
+const createContactSchema = () =>
+  TypedObject({
+    typename: `example.com/type/${PublicKey.random().truncate()}`,
+    version: '0.1.0',
+  })({
+    name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
+    active: Schema.optional(Schema.Boolean).annotations({ title: 'Active' }),
+    email: Schema.optional(Format.Email),
+    salary: Schema.optional(Format.Currency()).annotations({ title: 'Salary' }),
+  });
 
 const ContactFields = ['name', 'email', 'salary', 'active'];
 

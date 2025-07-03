@@ -5,16 +5,16 @@
 import { type IconProps } from '@phosphor-icons/react';
 import { type FC } from 'react';
 
-import { type CollectionType } from '@dxos/plugin-space/types';
-import { type AnyLiveObject } from '@dxos/react-client/echo';
+import { type Obj } from '@dxos/echo';
 import { type Label } from '@dxos/react-ui';
 import { type StackItemSize } from '@dxos/react-ui-stack';
+import { type DataType } from '@dxos/schema';
 
 export type AddSectionPosition = 'before' | 'after' | 'beforeAll' | 'afterAll';
 
 export type CollapsedSections = Record<string, boolean>;
 
-export type CollectionItem = CollectionType['objects'][number];
+export type CollectionItem = DataType.Collection['objects'][number];
 
 export type StackSectionView = {
   title?: string;
@@ -40,7 +40,7 @@ export type StackSectionMetadata = {
 
 export type StackSectionItem = {
   id: string;
-  object: AnyLiveObject<any>;
+  object: Obj.Any;
   view: StackSectionView;
   metadata: StackSectionMetadata;
 };

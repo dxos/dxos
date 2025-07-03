@@ -65,29 +65,31 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
 
   return (
     <div role='none' className={mx(controlItemClasses)}>
-      <List.Root<FunctionType> items={functions} isItem={Schema.is(FunctionType)} getId={(func) => func.id}>
-        {({ items }) => (
-          <div role='list' className='flex flex-col w-full'>
-            {items?.map((func) => (
-              <List.Item<FunctionType>
-                key={func.id}
-                item={func}
-                classNames={mx(grid, ghostHover, 'items-center', 'pli-2', 'min-bs-[3rem]')}
-              >
-                <div className='flex flex-col truncate'>
-                  <List.ItemTitle classNames='truncate'>{func.name}</List.ItemTitle>
-                  {getScriptName(func) && (
-                    <div className='text-xs text-description truncate'>{getScriptName(func)}</div>
+      {functions.length > 0 && (
+        <List.Root<FunctionType> items={functions} isItem={Schema.is(FunctionType)} getId={(func) => func.id}>
+          {({ items }) => (
+            <div role='list' className='flex flex-col w-full'>
+              {items?.map((func) => (
+                <List.Item<FunctionType>
+                  key={func.id}
+                  item={func}
+                  classNames={mx(grid, ghostHover, 'items-center', 'pli-2', 'min-bs-[3rem]')}
+                >
+                  <div className='flex flex-col truncate'>
+                    <List.ItemTitle classNames='truncate'>{func.name}</List.ItemTitle>
+                    {getScriptName(func) && (
+                      <div className='text-xs text-description truncate'>{getScriptName(func)}</div>
+                    )}
+                  </div>
+                  {functionToScriptMap[func.id] && (
+                    <Button onClick={() => handleGoToScript(func)}>{t('go to function source button label')}</Button>
                   )}
-                </div>
-                {functionToScriptMap[func.id] && (
-                  <Button onClick={() => handleGoToScript(func)}>{t('go to function source button label')}</Button>
-                )}
-              </List.Item>
-            ))}
-          </div>
-        )}
-      </List.Root>
+                </List.Item>
+              ))}
+            </div>
+          )}
+        </List.Root>
+      )}
 
       {functions.length === 0 && <div className='text-center plb-4 text-gray-500'>{t('no functions found')}</div>}
     </div>

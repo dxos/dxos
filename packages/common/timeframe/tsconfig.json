@@ -4,5 +4,21 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../debug"
+    },
+    {
+      "path": "../keys"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../node-std"
+    },
+    {
+      "path": "../util"
+    }
+  ]
 }

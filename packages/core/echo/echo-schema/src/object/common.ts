@@ -5,7 +5,6 @@
 import { Schema } from 'effect';
 
 import { getTypename } from './typename';
-import { schemaVariance } from '../ast';
 import { type BaseObject } from '../types';
 
 // TODO(dmaretskyi): Rename to represent commonality between objects and relations (e.g. `entity`).
@@ -67,4 +66,10 @@ export const makeTypedEntityClass = (
       throw new Error('Use live(Typename, { ...fields }) to instantiate an object.');
     }
   } as any;
+};
+
+const schemaVariance = {
+  _A: (_: any) => _,
+  _I: (_: any) => _,
+  _R: (_: never) => _,
 };

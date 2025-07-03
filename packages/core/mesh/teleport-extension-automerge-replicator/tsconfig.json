@@ -13,5 +13,30 @@
     "src",
     "test"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/node-std"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../rpc"
+    },
+    {
+      "path": "../teleport"
+    }
+  ]
 }

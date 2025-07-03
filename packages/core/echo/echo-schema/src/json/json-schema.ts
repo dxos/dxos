@@ -9,7 +9,7 @@ import { raise } from '@dxos/debug';
 import { mapAst } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
-import { clearUndefined, orderKeys } from '@dxos/util';
+import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
@@ -34,7 +34,7 @@ import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '..
  * Create object jsonSchema.
  */
 export const createJsonSchema = (schema: Schema.Struct<any> = Schema.Struct({})): JsonSchemaType => {
-  const jsonSchema = toJsonSchema(schema);
+  const jsonSchema = _toJsonSchema(schema);
 
   // TODO(dmaretskyi): Fix those in the serializer.
   jsonSchema.type = 'object';
@@ -76,11 +76,37 @@ export const toPropType = (type?: PropType): string => {
 
 const JSON_SCHEMA_URL = 'http://json-schema.org/draft-07/schema#';
 
+export type JsonSchemaOptions = {
+  strict?: boolean;
+};
+
 /**
  * Convert effect schema to JSON Schema.
  * @param schema
  */
-export const toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
+export const toJsonSchema = (schema: Schema.Schema.All, options: JsonSchemaOptions = {}): JsonSchemaType => {
+  let jsonSchema = _toJsonSchema(schema);
+  if (options.strict) {
+    // TOOD(burdon): Workaround to ensure JSON schema is valid (for agv parsing).
+    jsonSchema = removeProperties(jsonSchema, (key, value) => {
+      if (key === '$id' && value === '/schemas/any') {
+        return true;
+      }
+      if (key === '$ref' && value === '#/$defs/dependency') {
+        return true;
+      }
+      if (key === '$ref' && value === '#/$defs/jsonSchema') {
+        return true;
+      }
+
+      return false;
+    });
+  }
+
+  return jsonSchema;
+};
+
+const _toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
   invariant(schema);
   const withRefinements = withEchoRefinements(schema.ast, '#');
   let jsonSchema = JSONSchema.fromAST(withRefinements, {
@@ -90,8 +116,7 @@ export const toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
   jsonSchema.$schema = JSON_SCHEMA_URL;
 
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
-    // Put id first.
-    jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']);
+    jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']); // Put id first.
   }
 
   const echoIdentifier = getTypeIdentifierAnnotation(schema);
@@ -120,7 +145,7 @@ export const toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
   }
 
   // Fix field order.
-  // TODO(dmaretskyi): Makes sure undefined is not left on optional fields for the resulting object .
+  // TODO(dmaretskyi): Makes sure undefined is not left on optional fields for the resulting object.
   // TODO(dmaretskyi): `orderFields` util.
   jsonSchema = orderKeys(jsonSchema, [
     '$schema',
@@ -137,7 +162,7 @@ export const toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
 
     'properties',
     'required',
-    'propertyOrder',
+    'propertyOrder', // Custom.
     'items',
     'additionalProperties',
 
@@ -169,7 +194,7 @@ const withEchoRefinements = (
         },
       });
     } else {
-      const jsonSchema = toJsonSchema(Schema.make(suspendedAst));
+      const jsonSchema = _toJsonSchema(Schema.make(suspendedAst));
       recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache), {
         [SchemaAST.JSONSchemaAnnotationId]: jsonSchema,
       });
@@ -195,7 +220,7 @@ const withEchoRefinements = (
     );
   }
 
-  const annotationFields = annotationsToJsonSchemaFields(ast.annotations);
+  const annotationFields = annotations_toJsonSchemaFields(ast.annotations);
   if (Object.keys(annotationFields).length === 0) {
     return recursiveResult;
   } else {
@@ -245,6 +270,9 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
     switch (root.type) {
       case 'string': {
         result = Schema.String;
+        if (root.pattern) {
+          result = result.pipe(Schema.pattern(new RegExp(root.pattern)));
+        }
         break;
       }
       case 'number': {
@@ -385,7 +413,7 @@ const refToEffectSchema = (root: any): Schema.Schema.AnyNoContext => {
 // Annotations
 //
 
-const annotationsToJsonSchemaFields = (annotations: SchemaAST.Annotations): Record<symbol, any> => {
+const annotations_toJsonSchemaFields = (annotations: SchemaAST.Annotations): Record<symbol, any> => {
   const schemaFields: Record<string, any> = {};
 
   const echoAnnotations: JsonSchemaEchoAnnotations = {};

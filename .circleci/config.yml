@@ -116,6 +116,20 @@ jobs:
     # https://support.circleci.com/hc/en-us/articles/360056323651-How-to-optimize-the-restore-cache-step-for-Node-projects
     steps:
       - checkout
+      - run:
+          name: Check if PR is a draft
+          command: |
+            if [ -n "$CIRCLE_PULL_REQUEST" ]; then
+              PR_NUMBER=$(echo $CIRCLE_PULL_REQUEST | sed 's#.*/pull/##')
+              IS_DRAFT=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+                "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls/$PR_NUMBER" \
+                | jq .draft)
+
+              if [ "$IS_DRAFT" = "true" ]; then
+                echo "Skipping build for draft PR."
+                circleci-agent step halt
+              fi
+            fi
       - *cache_restore
       - run: pnpm set verify-store-integrity false
       - run: pnpm install --prefer-offline
@@ -123,6 +137,7 @@ jobs:
       - *cache_save
       - nx/set-shas
       - run: pnpm check-dependencies
+      - run: node ./scripts/check-cycles.mjs
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
       - vitest-affected:

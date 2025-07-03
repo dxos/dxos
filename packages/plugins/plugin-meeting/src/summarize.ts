@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DEFAULT_EDGE_MODEL, type AIServiceClient, Message, MixedStreamParser } from '@dxos/ai';
-import { create, getSchemaTypename } from '@dxos/echo-schema';
+import { DEFAULT_EDGE_MODEL, type AiServiceClient, Message, MixedStreamParser } from '@dxos/ai';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
@@ -13,13 +13,13 @@ import { type MeetingType } from './types';
 // TODO(wittjosiah): Also include content of object which are linked to the meeting.
 export const getMeetingContent = async (meeting: MeetingType, resolve: (typename: string) => Record<string, any>) => {
   const notes = await meeting.notes.load();
-  const { getTextContent } = resolve(getSchemaTypename(TranscriptType)!);
+  const { getTextContent } = resolve(Type.getTypename(TranscriptType)!);
   const transcript = await meeting.transcript.load();
   const content = `${await getTextContent(transcript)}\n\n${notes.content}`;
   return content;
 };
 
-export const summarizeTranscript = async (ai: AIServiceClient, content: string): Promise<string> => {
+export const summarizeTranscript = async (ai: AiServiceClient, content: string): Promise<string> => {
   log.info('summarizing meeting', { contentLength: content.length });
 
   const parser = new MixedStreamParser();
@@ -27,7 +27,7 @@ export const summarizeTranscript = async (ai: AIServiceClient, content: string):
     await ai.execStream({
       model: DEFAULT_EDGE_MODEL,
       systemPrompt: SUMMARIZE_PROMPT,
-      history: [create(Message, { role: 'user', content: [{ type: 'text', text: content }] })],
+      history: [Obj.make(Message, { role: 'user', content: [{ type: 'text', text: content }] })],
     }),
   );
 

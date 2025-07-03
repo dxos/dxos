@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DropdownMenu } from '@dxos/react-ui';
+import { Popover } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
 import { type FieldType } from '@dxos/schema';
 
@@ -56,11 +56,11 @@ export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsPro
   }
 
   return (
-    <DropdownMenu.Root modal={false} open={state?.type === 'columnSettings'}>
-      <DropdownMenu.VirtualTrigger virtualRef={modals.trigger} />
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content classNames='md:is-64'>
-          <DropdownMenu.Viewport>
+    <Popover.Root modal={false} open={state?.type === 'columnSettings'}>
+      <Popover.VirtualTrigger virtualRef={modals.trigger} />
+      <Popover.Portal>
+        <Popover.Content classNames='md:is-64'>
+          <Popover.Viewport>
             <FieldEditor
               view={model.view!}
               projection={model.projection}
@@ -69,10 +69,10 @@ export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsPro
               onSave={handleSave}
               onCancel={handleCancel}
             />
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+          </Popover.Viewport>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 };

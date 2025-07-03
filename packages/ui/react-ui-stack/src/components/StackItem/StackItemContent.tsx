@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithoutRef, forwardRef, useMemo } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useStack } from '../StackContext';
+import { useStack, useStackItem } from '../StackContext';
 
 export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   /**
@@ -22,6 +22,11 @@ export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'di
   statusbar?: boolean;
 
   /**
+   * Whether the consumer intends to do something custom and typical affordances should not apply
+   */
+  layoutManaged?: boolean;
+
+  /**
    * Whether to set a certain aspect ratio on the content, including the toolbar and statusbar. This is provided for
    * convenience and consistency; it can instead be specified by the `classNames` or `style` props as needed.
    */
@@ -33,9 +38,22 @@ export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'di
  * The `toolbar` flag must be provided since this component provides for the layout of content with the toolbar.
  */
 export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps>(
-  ({ children, toolbar, statusbar, classNames, size = 'intrinsic', ...props }, forwardedRef) => {
+  ({ children, toolbar, statusbar, layoutManaged, classNames, size = 'intrinsic', ...props }, forwardedRef) => {
     const { size: stackItemSize } = useStack();
-
+    const { role } = useStackItem();
+    const style = useMemo(
+      () =>
+        layoutManaged
+          ? {}
+          : {
+              gridTemplateRows: [
+                ...(toolbar ? [role === 'section' ? 'calc(var(--toolbar-size) - 1px)' : 'var(--toolbar-size)'] : []),
+                '1fr',
+                ...(statusbar ? ['var(--statusbar-size)'] : []),
+              ].join(' '),
+            },
+      [toolbar, statusbar, layoutManaged],
+    );
     return (
       <div
         role='none'
@@ -44,15 +62,13 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
           'group grid grid-cols-[100%]',
           stackItemSize === 'contain' && 'min-bs-0 overflow-hidden',
           size === 'video' ? 'aspect-video' : size === 'square' && 'aspect-square',
+          toolbar && '[&_.dx-toolbar]:relative [&_.dx-toolbar]:border-be [&_.dx-toolbar]:border-subduedSeparator',
+          role === 'section' &&
+            toolbar &&
+            '[&_.dx-toolbar]:sticky [&_.dx-toolbar]:z-[1] [&_.dx-toolbar]:block-start-0 [&_.dx-toolbar]:-mbe-px [&_.dx-toolbar]:min-is-0',
           classNames,
         )}
-        style={{
-          gridTemplateRows: [
-            ...(toolbar ? ['var(--rail-action)'] : []),
-            '1fr',
-            ...(statusbar ? ['var(--statusbar-size)'] : []),
-          ].join(' '),
-        }}
+        style={style}
         data-popover-collision-boundary={true}
         ref={forwardedRef}
       >

@@ -18,14 +18,13 @@ import {
   type CustomInspectFunction,
 } from '@dxos/debug';
 import {
+  Filter,
+  type QueueFactory,
+  type AnyLiveObject,
   type CoreDatabase,
   type EchoClient,
   type EchoDatabase,
   type EchoDatabaseImpl,
-  type QueuesService,
-  type AnyLiveObject,
-  Filter,
-  QueueFactory,
 } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -109,7 +108,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
-  private readonly _queues = new QueueFactory(this.id);
+  private readonly _queues!: QueueFactory;
 
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
@@ -119,7 +118,6 @@ export class SpaceProxy implements Space, CustomInspectable {
     private _clientServices: ClientServicesProvider,
     private _data: SpaceData,
     echoClient: EchoClient,
-    queuesService: QueuesService,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
@@ -133,6 +131,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     );
 
     this._db = echoClient.constructDatabase({ spaceId: this.id, spaceKey: this.key, owningObject: this });
+    this._queues = echoClient.constructQueueFactory(this.id);
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -155,7 +154,6 @@ export class SpaceProxy implements Space, CustomInspectable {
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
-    this._queues.setService(queuesService);
   }
 
   toJSON() {

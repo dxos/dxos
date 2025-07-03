@@ -4,5 +4,63 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/graph"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../ui/react-ui-kanban"
+    },
+    {
+      "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../ai"
+    },
+    {
+      "path": "../artifact"
+    },
+    {
+      "path": "../assistant"
+    },
+    {
+      "path": "../echo/echo"
+    },
+    {
+      "path": "../echo/echo-db"
+    },
+    {
+      "path": "../echo/echo-schema"
+    },
+    {
+      "path": "../echo/live-object"
+    },
+    {
+      "path": "../functions"
+    },
+    {
+      "path": "../mesh/edge-client"
+    },
+    {
+      "path": "../protocols"
+    }
+  ]
 }

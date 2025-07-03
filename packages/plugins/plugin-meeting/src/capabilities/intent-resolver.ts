@@ -4,12 +4,10 @@
 
 import { Effect } from 'effect';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { EdgeAiServiceClient } from '@dxos/ai';
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
-import { Ref, Type } from '@dxos/echo';
-import { getSchemaTypename } from '@dxos/echo-schema';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { live } from '@dxos/live-object';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadAction } from '@dxos/plugin-thread/types';
@@ -34,13 +32,13 @@ export default (context: PluginContext) =>
             createIntent(TranscriptionAction.Create, { spaceId: space.id }),
           );
           const { object: thread } = yield* dispatch(createIntent(ThreadAction.CreateChannelThread, { channel }));
-          const meeting = live(MeetingType, {
+          const meeting = Obj.make(MeetingType, {
             name,
             created: new Date().toISOString(),
             participants: [],
             transcript: Ref.make(transcript),
-            notes: Ref.make(live(DataType.Text, { content: '' })),
-            summary: Ref.make(live(DataType.Text, { content: '' })),
+            notes: Ref.make(Obj.make(DataType.Text, { content: '' })),
+            summary: Ref.make(Obj.make(DataType.Text, { content: '' })),
             thread: Ref.make(thread),
           });
 
@@ -53,7 +51,7 @@ export default (context: PluginContext) =>
         const callManager = context.getCapability(ThreadCapabilities.CallManager);
         const state = context.getCapability(MeetingCapabilities.State);
         state.activeMeeting = object;
-        callManager.setActivity(getSchemaTypename(MeetingType)!, { meetingId: fullyQualifiedId(object) });
+        callManager.setActivity(Type.getTypename(MeetingType)!, { meetingId: fullyQualifiedId(object) });
         return { data: { object } };
       },
     }),
@@ -69,9 +67,10 @@ export default (context: PluginContext) =>
         state.activeMeeting = meeting;
 
         const enabled = !!transcriptionEnabled;
-        if (transcriptDxn) {
+        if (space && transcriptDxn) {
           // NOTE: Must set queue before enabling transcription.
-          state.transcriptionManager?.setQueue(Type.DXN.parse(transcriptDxn));
+          const queue = space.queues.get<DataType.Message>(Type.DXN.parse(transcriptDxn));
+          state.transcriptionManager?.setQueue(queue);
         }
         await state.transcriptionManager?.setEnabled(enabled);
       },
@@ -83,7 +82,7 @@ export default (context: PluginContext) =>
         const endpoint = client.config.values.runtime?.services?.ai?.server;
         invariant(endpoint, 'AI service not configured.');
         // TODO(wittjosiah): Use capability (but note that this creates a dependency on the assistant plugin being available for summarization to work).
-        const ai = new AIServiceEdgeClient({ endpoint });
+        const ai = new EdgeAiServiceClient({ endpoint });
         const resolve = (typename: string) =>
           context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 

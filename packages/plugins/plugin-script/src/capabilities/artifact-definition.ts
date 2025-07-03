@@ -8,10 +8,11 @@ import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, live, makeRef, type Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -154,10 +155,10 @@ export default () => {
         execute: async ({ name, code }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           invariant(extensions?.dispatch, 'No intent dispatcher');
-          const script = live(ScriptType, {
+          const script = Obj.make(ScriptType, {
             name,
-            source: makeRef(
-              live(DataType.Text, {
+            source: Ref.make(
+              Obj.make(DataType.Text, {
                 content: code,
               }),
             ),

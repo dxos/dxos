@@ -6,10 +6,9 @@ import { useComputed, useSignal } from '@preact/signals-react';
 import React, { useMemo, useCallback, useEffect } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { getDXN } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { fullyQualifiedId, type Space, Filter, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
-import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
@@ -43,7 +42,9 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
   const hasEmail = useComputed(() => !!message?.sender.email);
   const contacts = useQuery(space, Filter.type(DataType.Person));
   const existingContact = useSignal<DataType.Person | undefined>(undefined);
-  const contactDxn = useComputed(() => (existingContact.value ? getDXN(existingContact.value)?.toString() : undefined));
+  const contactDxn = useComputed(() =>
+    existingContact.value ? Obj.getDXN(existingContact.value)?.toString() : undefined,
+  );
 
   useEffect(() => {
     existingContact.value = contacts.find((contact) =>
@@ -67,23 +68,19 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
   }
 
   return (
-    <StackItem.Content classNames='relative'>
-      <div role='none' className='grid grid-rows-[min-content_1fr]'>
-        <div role='none' className={stackItemContentToolbarClassNames('section')}>
-          <ElevationProvider elevation='positioned'>
-            <MenuProvider {...menu} attendableId={fullyQualifiedId(inMailbox)}>
-              <ToolbarMenu />
-            </MenuProvider>
-          </ElevationProvider>
-        </div>
-        <Message
-          space={space}
-          message={message}
-          viewMode={viewMode.value}
-          hasEnrichedContent={hasEnrichedContent}
-          contactDxn={contactDxn.value}
-        />
-      </div>
+    <StackItem.Content classNames='relative' toolbar>
+      <ElevationProvider elevation='positioned'>
+        <MenuProvider {...menu} attendableId={fullyQualifiedId(inMailbox)}>
+          <ToolbarMenu />
+        </MenuProvider>
+      </ElevationProvider>
+      <Message
+        space={space}
+        message={message}
+        viewMode={viewMode.value}
+        hasEnrichedContent={hasEnrichedContent}
+        contactDxn={contactDxn.value}
+      />
     </StackItem.Content>
   );
 };

@@ -59,7 +59,7 @@ describe('Echo reactive proxy', () => {
           db.graph.schemaRegistry.addSchema([testSchema]);
         }
 
-        return db.add(object) as Testing.TestSchema;
+        return db.add(object as any) as Testing.TestSchema;
       },
     };
   });

@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AnyLiveObject, live, type Space } from '@dxos/client/echo';
-import { Query, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
+import { type Space } from '@dxos/client/echo';
+import { Query, Relation, type Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 import { createObjectFactory, type ValueGenerator, type TypeSpec } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
-const getObject = (objects: AnyLiveObject[]) => objects[Math.floor(Math.random() * objects.length)];
+const getObject = (objects: Obj.Any[]) => objects[Math.floor(Math.random() * objects.length)];
 
 const defaultTypes: TypeSpec[] = [
   { type: DataType.Organization, count: 5 },
@@ -24,7 +24,7 @@ export type GenerateOptions = {
   };
 };
 
-const defaultRelations: GenerateOptions['relations'] = { count: 10, kind: 'friend' };
+const defaultRelations: GenerateOptions['relations'] = { kind: 'friend', count: 10 };
 
 /**
  * @deprecated Use @dxos/schema.
@@ -42,16 +42,14 @@ export const generate = async (
   for (const _ of range(relations.count)) {
     const source = getObject(contacts);
     const target = getObject(contacts);
-    if (source.id === target.id) {
-      continue;
+    if (source.id !== target.id) {
+      space.db.add(
+        Relation.make(DataType.HasRelationship, {
+          [Relation.Source]: source,
+          [Relation.Target]: target,
+          kind: relations.kind,
+        }),
+      );
     }
-
-    space.db.add(
-      live(DataType.HasRelationship, {
-        kind: relations.kind,
-        [RelationSourceId]: source,
-        [RelationTargetId]: target,
-      }),
-    );
   }
 };

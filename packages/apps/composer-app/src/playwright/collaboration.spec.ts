@@ -17,7 +17,7 @@ const perfomInvitation = async (host: AppManager, guest: AppManager) => {
   await guest.joinSpace();
   await guest.shell.acceptSpaceInvitation(invitationCode);
   await guest.shell.authenticate(authCode);
-  await host.navigateToObject();
+  await host.navigateToObject(2);
 };
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
@@ -50,6 +50,7 @@ test.describe('Collaboration tests', () => {
   test('guest joins host’s space', async () => {
     // Host creates a space and adds a markdown object
     await host.createSpace();
+    await host.createObject({ type: 'Document', nth: 0 });
 
     {
       // Focus new editor before space invitation.
@@ -65,13 +66,16 @@ test.describe('Collaboration tests', () => {
     // Guest waits for the space to be ready and confirms it has the markdown object.
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(1);
+    await expect(guest.getObjectLinks()).toHaveCount(3);
+    // TODO(wittjosiah): Sometimes navigation fails without a delay.
+    await sleep(1_000);
+    await guest.navigateToObject(2);
 
     {
       // Update to use plank locator
       const plank = guest.deck.plank();
       const guestMarkdownDoc = Markdown.getMarkdownTextboxWithLocator(plank.locator);
-      await expect(guestMarkdownDoc).toHaveText('Hello from the host', { timeout: 10_000 });
+      await expect(guestMarkdownDoc).toHaveText('Hello from the host', { timeout: 15_000 });
 
       // Verify URLs and object links match between host and guest.
       expect(host.page.url()).toEqual(guest.page.url());
@@ -80,6 +84,7 @@ test.describe('Collaboration tests', () => {
 
   test('host and guest can see each others’ cursors when same document is in focus', async () => {
     await host.createSpace();
+    await host.createObject({ type: 'Document', nth: 0 });
 
     // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();
@@ -92,7 +97,10 @@ test.describe('Collaboration tests', () => {
 
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(1);
+    await expect(guest.getObjectLinks()).toHaveCount(3);
+    // TODO(wittjosiah): Sometimes navigation fails without a delay.
+    await sleep(1_000);
+    await guest.navigateToObject(2);
 
     // Find the plank in the guest.
     const guestPlank = guest.deck.plank();
@@ -120,6 +128,7 @@ test.describe('Collaboration tests', () => {
 
   test('host and guest can see each others’ changes in same document', async () => {
     await host.createSpace();
+    await host.createObject({ type: 'Document', nth: 0 });
 
     // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();
@@ -141,7 +150,10 @@ test.describe('Collaboration tests', () => {
     // Guest waits for the space to be ready and confirms it has the markdown object
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(1);
+    await expect(guest.getObjectLinks()).toHaveCount(3);
+    // TODO(wittjosiah): Sometimes navigation fails without a delay.
+    await sleep(1_000);
+    await guest.navigateToObject(2);
 
     // Get guest's markdown planks and find the locator for the shared document
     const guestPlank = guest.deck.plank();
@@ -186,6 +198,7 @@ test.describe('Collaboration tests', () => {
     test.setTimeout(90_000);
 
     await host.createSpace();
+    await host.createObject({ type: 'Document', nth: 0 });
 
     // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();
@@ -197,7 +210,10 @@ test.describe('Collaboration tests', () => {
     await perfomInvitation(host, guest);
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(1);
+    await expect(guest.getObjectLinks()).toHaveCount(3);
+    // TODO(wittjosiah): Sometimes navigation fails without a delay.
+    await sleep(1_000);
+    await guest.navigateToObject(2);
 
     const guestPlank = guest.deck.plank();
     const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guestPlank.locator);

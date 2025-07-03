@@ -7,8 +7,9 @@ import { Schema } from 'effect';
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Obj, Query } from '@dxos/echo';
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
-import { getSchema, createQueueDxn, Query } from '@dxos/echo-schema';
+import { getSchema, createQueueDXN } from '@dxos/echo-schema';
 import { EchoObject, Expando, TypedObject, foreignKey, getTypeReference, Ref, type Ref$ } from '@dxos/echo-schema';
 import { Testing, prepareAstForCompare } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -18,10 +19,11 @@ import { getMeta, live, getType, isDeleted } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
-import { type AnyLiveObject, createObject, isEchoObject } from './create';
+import { createDocAccessor } from './doc-accessor';
+import { type AnyLiveObject, createObject, isEchoObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
-import { createDocAccessor, DocAccessor } from '../core-db';
+import { DocAccessor } from '../core-db';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
@@ -195,7 +197,7 @@ describe('Reactive Object with ECHO database', () => {
   test('proxies are initialized when a plain object is inserted into the database', async () => {
     const { db } = await builder.createDatabase();
 
-    const obj = db.add({ string: 'foo' });
+    const obj = db.add(Obj.make(Expando, { string: 'foo' }));
     expect(obj.id).to.be.a('string');
     expect(obj.string).to.eq('foo');
     expect(getSchema(obj)).to.eq(undefined);
@@ -622,7 +624,7 @@ describe('Reactive Object with ECHO database', () => {
       let id: string;
       {
         const db = await peer.openDatabase(spaceKey, root.url);
-        const obj = db.add({ string: 'foo' });
+        const obj = db.add(Obj.make(Expando, { string: 'foo' }));
         id = obj.id;
         getMeta(obj).keys.push(metaKey);
         await db.flush();
@@ -640,8 +642,8 @@ describe('Reactive Object with ECHO database', () => {
     test('json serialization with references', async () => {
       const { db } = await builder.createDatabase();
 
-      const org = db.add({ name: 'DXOS' });
-      const employee = db.add({ name: 'John', worksAt: Ref.make(org) });
+      const org = db.add(Obj.make(Expando, { name: 'DXOS' }));
+      const employee = db.add(Obj.make(Expando, { name: 'John', worksAt: Ref.make(org) }));
 
       const employeeJson = JSON.parse(JSON.stringify(employee));
       expect(employeeJson).to.deep.eq({
@@ -760,7 +762,7 @@ describe('Reactive Object with ECHO database', () => {
 
   test('able to create queue references', async () => {
     const { db } = await builder.createDatabase();
-    const dxn = createQueueDxn(SpaceId.random());
+    const dxn = createQueueDXN(SpaceId.random());
     const obj = live({ queue: Ref.fromDXN(dxn) });
     const dbObj = db.add(obj);
     expect(dbObj.queue.dxn.toString()).to.eq(dxn.toString());

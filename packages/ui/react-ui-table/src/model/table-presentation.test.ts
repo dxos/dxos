@@ -5,8 +5,9 @@
 import { Schema } from 'effect';
 import { describe, expect, it, beforeEach } from 'vitest';
 
+import { Obj, Ref } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
-import { live, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { createView, ViewProjection } from '@dxos/schema';
 
@@ -98,6 +99,6 @@ const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
   const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
   const projection = new ViewProjection(schema.jsonSchema, view);
-  const table = live(TableType, { view: makeRef(view) });
+  const table = Obj.make(TableType, { view: Ref.make(view) });
   return new TableModel({ id: table.id, view, projection, ...props });
 };

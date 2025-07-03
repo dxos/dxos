@@ -71,9 +71,11 @@ export const CreateRefPanel = ({ model, modals, __gridScope }: GridScopedProps<C
       <Popover.VirtualTrigger virtualRef={modals.trigger} />
       <Popover.Portal>
         <Popover.Content classNames='md:is-64' data-grid={gridId}>
-          {state?.type === 'createRefPanel' && schema && (
-            <Form schema={schema} values={state.initialValues ?? {}} onSave={handleSave} onCancel={handleCancel} />
-          )}
+          <Popover.Viewport>
+            {state?.type === 'createRefPanel' && schema && (
+              <Form schema={schema} values={state.initialValues ?? {}} onSave={handleSave} onCancel={handleCancel} />
+            )}
+          </Popover.Viewport>
           <Popover.Arrow />
         </Popover.Content>
       </Popover.Portal>

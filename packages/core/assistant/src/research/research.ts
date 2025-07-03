@@ -41,7 +41,7 @@ export const researchFn = defineFunction({
     const ai = context.getService(AiService);
     const credentials = context.getService(CredentialsService);
     const { db } = context.getService(DatabaseService);
-    // const queues = context.getService(QueuesService);
+    // const queues = context.getService(QueueService);
     const tracing = context.getService(TracingService);
 
     tracing.write(create(AgentStatusReport, { message: 'Researching...' }));
@@ -60,7 +60,7 @@ export const researchFn = defineFunction({
     });
     session.streamEvent.on((event) => log('stream', { event }));
 
-    const graphWriteTool = createGraphWriterTool({ db, schemaTypes: DataTypes });
+    const graphWriteTool = createGraphWriterTool({ db, schema: DataTypes });
     log.info('graphWriteTool', { schema: graphWriteTool.parameters });
 
     // TODO(dmaretskyi): Consider adding this pattern as the "Graph" output mode for the session.
