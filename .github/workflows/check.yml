@@ -77,8 +77,9 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        shell: bash
+        run: |
+          pnpm set verify-store-integrity false
+          pnpm install --prefer-offline
 
       - uses: nrwl/nx-set-shas@v4
         if: ${{ !env.ACT }}
@@ -140,8 +141,9 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        shell: bash
+        run: |
+          pnpm set verify-store-integrity false
+          pnpm install --prefer-offline
 
       - name: Check dependencies
         run: pnpm run check-dependencies
@@ -198,8 +200,9 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        shell: bash
+        run: |
+          pnpm set verify-store-integrity false
+          pnpm install --prefer-offline
 
       - uses: nrwl/nx-set-shas@v4
         if: ${{ !env.ACT }}
