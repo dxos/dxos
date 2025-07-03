@@ -49,9 +49,9 @@ jobs:
         run: |
           docker buildx create --use
           if [[ "${NODE_VERSION}" = "${DEFAULT_NODE_VERSION}" ]]; then
-            docker buildx build --push --build-arg NODE_VERSION=${NODE_VERSION} -t ${IMAGE_NAME}:${NODE_VERSION}${IMAGE_TAG_SUFFIX} -t ${IMAGE_NAME}:latest .github
+            docker buildx build --push --platform linux/amd64,linux/arm64 --build-arg NODE_VERSION=${NODE_VERSION} -t ${IMAGE_NAME}:${NODE_VERSION}${IMAGE_TAG_SUFFIX} -t ${IMAGE_NAME}:latest .github
           else
-            docker buildx build --push --build-arg NODE_VERSION=${NODE_VERSION} -t ${IMAGE_NAME}:${NODE_VERSION}${IMAGE_TAG_SUFFIX} .github
+            docker buildx build --push --platform linux/amd64,linux/arm64 --build-arg NODE_VERSION=${NODE_VERSION} -t ${IMAGE_NAME}:${NODE_VERSION}${IMAGE_TAG_SUFFIX} .github
           fi
         env:
           NODE_VERSION: ${{ matrix.node_version }}
