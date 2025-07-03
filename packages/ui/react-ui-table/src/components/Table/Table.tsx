@@ -365,7 +365,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           onQuery={handleQuery}
         />
         <Grid.Content
-          key={`${model?.getRowCount()}-${model?.draftRows.value.length}`}
           className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
           frozen={frozen}
           // getCells={getCells}
