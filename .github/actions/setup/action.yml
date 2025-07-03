@@ -5,7 +5,7 @@ runs:
   using: 'composite'
   steps:
     - name: Mark working directory as safe
-        run: git config --global --add safe.directory "$(pwd)"
+      run: git config --global --add safe.directory "$(pwd)"
 
     - name: Cache pnpm store
       uses: actions/cache@v4
