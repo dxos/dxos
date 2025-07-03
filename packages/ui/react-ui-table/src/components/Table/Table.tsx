@@ -243,7 +243,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
         // TODO(burdon): Insert row only if bottom row isn't completely blank already.
         if (model && cell.row === model.getRowCount() - 1) {
-          model.insertRow(cell.row);
+          model.insertRow();
           if (dxGrid) {
             requestAnimationFrame(() => {
               dxGrid?.scrollToRow(cell.row + 1);
