@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-canvas-compute",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "A compute graph extension for the canvas editor component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
