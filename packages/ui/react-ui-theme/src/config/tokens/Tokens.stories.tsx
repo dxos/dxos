@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 import { auditFacet, type HelicalArcSeries, type TokenAudit, parseAlphaLuminosity } from '@ch-ui/tokens';
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { tokenSet } from './index';

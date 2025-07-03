@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { plot, sphere, geo, graticule, dot } from '@observablehq/plot';
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import { geoCircle } from 'd3';
 import React, { useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';

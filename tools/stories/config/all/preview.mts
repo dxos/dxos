@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Preview } from '@storybook/react';
+import { type Preview } from '@storybook/react-vite';
 
 import { preview } from '../../.storybook/preview';
 

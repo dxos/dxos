@@ -2,25 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
+import { type Size } from '@dxos/react-ui-types';
 
 import { useClipboard } from './ClipboardProvider';
 import { Button, type ButtonProps, IconButton } from '../Buttons';
-import { Icon } from '../Icon';
+import { Icon, IconProps } from '../Icon';
 import { useTranslation } from '../ThemeProvider';
 import { type TooltipScopedProps, useTooltipContext } from '../Tooltip';
 
-export type CopyButtonProps = ButtonProps & {
+export type CopyButtonProps = ButtonProps & Pick<IconProps, 'size'> & {
   value: string;
-  iconProps?: IconProps;
 };
 
 const inactiveLabelStyles = 'invisible bs-px -mbe-px overflow-hidden';
 
-export const CopyButton = ({ value, classNames, iconProps, ...props }: CopyButtonProps) => {
+export const CopyButton = ({  classNames, value, size = 5, ...props }: CopyButtonProps) => {
   const { t } = useTranslation('os');
   const { textValue, setTextValue } = useClipboard();
   const isCopied = textValue === value;
@@ -33,12 +32,11 @@ export const CopyButton = ({ value, classNames, iconProps, ...props }: CopyButto
     >
       <div role='none' className={mx('flex gap-1 items-center', isCopied && inactiveLabelStyles)}>
         <span className='pli-1'>{t('copy label')}</span>
-        {/* TODO(wittjosiah): Why do these need as any? */}
-        <Icon icon='ph--copy--regular' size={5 as any} {...iconProps} />
+        <Icon icon='ph--copy--regular' size={size} />
       </div>
       <div role='none' className={mx('flex gap-1 items-center', !isCopied && inactiveLabelStyles)}>
         <span className='pli-1'>{t('copy success label')}</span>
-        <Icon icon='ph--check--regular' size={5 as any} {...iconProps} />
+        <Icon icon='ph--check--regular' size={size} />
       </div>
     </Button>
   );
@@ -52,7 +50,7 @@ export const CopyButtonIconOnly = ({
   __scopeTooltip,
   value,
   classNames,
-  iconProps,
+  size,
   variant,
   ...props
 }: TooltipScopedProps<CopyButtonIconOnlyProps>) => {
@@ -66,7 +64,7 @@ export const CopyButtonIconOnly = ({
       iconOnly
       label={label!}
       icon='ph--copy--regular'
-      size={5}
+      size={size}
       variant={variant}
       classNames={['inline-flex flex-col justify-center', classNames]}
       onClick={() => setTextValue(value).then(onOpen)}

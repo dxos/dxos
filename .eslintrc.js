@@ -8,6 +8,7 @@ require('@rushstack/eslint-patch/modern-module-resolution');
 
 module.exports = {
   root: true,
+
   ignorePatterns: [
     // Build Artifacts
     'dist',
@@ -38,6 +39,7 @@ module.exports = {
     'docs/content/**/*',
     '**/typedoc/assets/**/*',
   ],
+
   overrides: [
     {
       extends: ['plugin:@dxos/recommended'],
@@ -65,4 +67,6 @@ module.exports = {
       },
     },
   ],
+
+  extends: ['plugin:storybook/recommended']
 };
