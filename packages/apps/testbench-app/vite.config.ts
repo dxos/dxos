@@ -77,6 +77,7 @@ export default defineConfig(
             projects: ['../../../tsconfig.paths.json'],
           }),
         ConfigPlugin({
+          root: __dirname,
           env: ['DX_VAULT', 'BASELIME_API_KEY'],
         }),
         ThemePlugin({

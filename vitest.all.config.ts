@@ -1,6 +1,10 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
-
+ 
 //
 // Config for the vitest vscode extension.
 //

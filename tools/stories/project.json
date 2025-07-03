@@ -53,6 +53,19 @@
         "configDir": "{projectRoot}/config/all"
       }
     },
+    "storybook-docs": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "{projectRoot}/config/all",
+        "docsMode": true,
+        "port": 4400
+      }
+    },
     "storybook-e2e": {
       "configurations": {
         "ci": {

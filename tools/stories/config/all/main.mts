@@ -2,17 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { join } from 'path';
+import { config } from '../../.storybook/main';
 
-import { config, packages } from '../../.storybook/main';
-
-export default config({
-  stories: [
-    join(packages, '/apps/*/src/**/*.stories.{mdx,tsx}'),
-    join(packages, '/devtools/*/src/**/*.stories.{mdx,tsx}'),
-    join(packages, '/experimental/*/src/**/*.stories.{mdx,tsx}'),
-    join(packages, '/plugins/*/src/**/*.stories.{mdx,tsx}'),
-    join(packages, '/sdk/*/src/**/*.stories.{mdx,tsx}'),
-    join(packages, '/ui/*/src/**/*.stories.{mdx,tsx}'),
-  ],
-});
+export default config();

@@ -125,3 +125,5 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
     },
   };
 };
+
+ThemePlugin.foo = 'bar';

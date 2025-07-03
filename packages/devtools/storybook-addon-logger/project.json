@@ -1,8 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "storybook-utils",
+  "name": "storybook-addon-logger",
   "tags": [
     "scope:common",
+    "scope:devtools",
     "scope:ui"
   ],
   "sourceRoot": "{projectRoot}/src",
@@ -12,7 +13,11 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/preview.tsx"
+        ],
+        "platforms": [
+          "browser"
         ]
       }
     },
