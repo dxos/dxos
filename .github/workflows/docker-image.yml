@@ -8,16 +8,24 @@ on:
   push:
     branches:
       - main
+      - gh-docker
+      - burdon/gh-actions
     paths:
-      - .circleci/Dockerfile
+      - .github/Dockerfile
+      # TODO(nf): shouldn't be needed, but it seems to be?
+      - .github/workflows/docker-image.yml
   workflow_dispatch:
 
 env:
   IMAGE_NAME: ghcr.io/dxos/ci-node
   DEFAULT_NODE_VERSION: 20.19.0
+  IMAGE_TAG_SUFFIX: ''
 
 jobs:
   publish:
+    strategy:
+      matrix:
+        node_version: ['20.12.1']
     runs-on: ubuntu-latest
 
     steps:
@@ -34,15 +42,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set suffix if on branch
+        run: |
+          if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
+            BRANCH=${GITHUB_REF#refs/heads/}
+            echo "IMAGE_TAG_SUFFIX=-${BRANCH//\//-}" >> $GITHUB_ENV
+          fi
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .circleci
-          file: .circleci/Dockerfile
+          context: .github
+          file: .github/Dockerfile
           push: true
           tags: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ env.DEFAULT_NODE_VERSION }}
-            ${{ env.IMAGE_NAME }}:node-${{ env.DEFAULT_NODE_VERSION }}
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
-          cache-to: type=inline
+            ${{ env.IMAGE_NAME }}:${{ env.NODE_VERSION }}${{ env.IMAGE_TAG_SUFFIX }}
+            ${{ env.NODE_VERSION == env.DEFAULT_NODE_VERSION && format('{0}:latest', env.IMAGE_NAME) || '' }}
+        env:
+          NODE_VERSION: ${{ matrix.node_version }}
