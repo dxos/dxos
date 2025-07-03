@@ -1,6 +1,6 @@
 {
   "extends": "nx/presets/npm.json",
-  "affected": { "defaultBase": "main" },
+  "affected": { "defaultBase": "main", "defaultHead": "HEAD" },
   "parallel": 6,
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],

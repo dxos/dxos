@@ -1,8 +1,7 @@
 name: Check
 
 on:
-  # TODO(wittjosiah): Flaky.
-  # push:
+  push:
 
   # schedule:
   #   - cron: '0 4 * * 1-5'
@@ -68,6 +67,15 @@ jobs:
         id: extract_branch
         uses: ./.github/actions/branch
 
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: |
+            .pnpm-store
+          key: ${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
         shell: bash
@@ -122,6 +130,15 @@ jobs:
         id: extract_branch
         uses: ./.github/actions/branch
 
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: |
+            .pnpm-store
+          key: ${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
         shell: bash
@@ -130,11 +147,11 @@ jobs:
         if: ${{ !env.ACT }}
 
       - name: Check Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && !env.ACT }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: pnpm exec nx affected -t lint build
 
       - name: Check All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' || env.ACT }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: pnpm exec nx run-many -t lint build
 
   e2e:
@@ -164,6 +181,15 @@ jobs:
         id: extract_branch
         uses: ./.github/actions/branch
 
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: |
+            .pnpm-store
+          key: ${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
         shell: bash
@@ -172,11 +198,11 @@ jobs:
         if: ${{ !env.ACT }}
 
       - name: Test Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && !env.ACT }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: pnpm exec nx affected -t e2e --browser=all --parallel=1
 
       - name: Test All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' || env.ACT }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: pnpm exec nx run-many -t e2e --browser=all --parallel=1
 
       - name: Send test report
@@ -202,6 +228,15 @@ jobs:
 
       - name: Mark working directory as safe
         run: git config --global --add safe.directory "$(pwd)"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: |
+            .pnpm-store
+          key: ${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

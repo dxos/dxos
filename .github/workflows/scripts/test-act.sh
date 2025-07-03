@@ -11,4 +11,5 @@ JOB=${2:-ci}
 # Run act with the correct architecture.
 act \
   --job "$JOB" \
-  --workflows ".github/workflows/$WORKFLOW"
+  --workflows ".github/workflows/$WORKFLOW" \
+  --eventpath=.github/workflows/testing/test-push-event.json
