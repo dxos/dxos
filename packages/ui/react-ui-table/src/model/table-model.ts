@@ -19,7 +19,7 @@ import {
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { isLiveObject, makeRef } from '@dxos/live-object';
+import { isLiveObject } from '@dxos/live-object';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
@@ -283,8 +283,9 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._ctx.onDispose(rowEffectManager);
 
     const draftRowsWatcher = effect(() => {
-      const draftRows = touch(this._draftRows.value);
+      touch(this._draftRows.value);
       // TODO(ZaymonFC): Remove debug logging when implementation is complete
+      // const draftRows = this._draftRows.value;
       // console.log('Draft rows changed:', {
       //   count: draftRows.length,
       //   rows: draftRows.map((row, index) => ({
