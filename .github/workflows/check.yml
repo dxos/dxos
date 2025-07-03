@@ -111,7 +111,7 @@ jobs:
         run: pnpm exec nx run-many --targets=test
 
       - uses: codecov/codecov-action@v4
-        if: ${{ matrix.node-version == '20.12.1' }}
+        if: ${{ matrix.node-version == '20.12.1' && secrets.CODECOV_TOKEN }}
         with:
           directory: ./coverage
           fail_ci_if_error: true
