@@ -85,6 +85,8 @@ const prettyErrorStack = (error: any, appendStacks: string[] = []): void => {
  * The error will have stack frames of where the effect was run (if stack trace limit allows).
  * Removes effect runtime internal stack frames.
  *
+ * To be used in place of `Effect.runPromise`.
+ *
  * @throws AggregateError if there are multiple errors.
  */
 export const runAndForwardErrors = async <A, E>(
