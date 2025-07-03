@@ -96,39 +96,6 @@
         "configDir": "{projectRoot}/config/examples",
         "outputDir": "{projectRoot}/out/examples"
       }
-    },
-    "test": {
-      "executor": "@nx/vite:test",
-      "options": {
-        "browsers": [
-          "chromium"
-        ],
-        "ci": true,
-        "command": "storybook test --url http://localhost:4400",
-        "coverage": true,
-        "coverageProvider": "v8",
-        "environment": "jsdom",
-        "globals": true,
-        "headless": true,
-        "passWithNoTests": true,
-        "reporter": [
-          "default",
-          "html"
-        ],
-        "viteConfig": {
-          "plugins": [
-            {
-              "config": {
-                "ci": true,
-                "configDir": "config/all",
-                "headless": true
-              },
-              "name": "storybook-test"
-            }
-          ]
-        },
-        "watch": false
-      }
     }
   },
   "implicitDependencies": [
