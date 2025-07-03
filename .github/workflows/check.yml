@@ -40,7 +40,7 @@ jobs:
   test:
     strategy:
       matrix:
-        node-version: ['20.12.1']
+        node-version: ['20.12.1-burdon-gh-actions']
     runs-on:
       group: ubuntu-large
     container:
@@ -136,7 +136,7 @@ jobs:
     runs-on:
       group: ubuntu-large
     container:
-      image: ghcr.io/dxos/gh-actions:20.12.1
+      image: ghcr.io/dxos/gh-actions:20.12.1-burdon-gh-actions
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -180,7 +180,7 @@ jobs:
   check-cycles:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/dxos/gh-actions:20.12.1
+      image: ghcr.io/dxos/gh-actions:20.12.1-burdon-gh-actions
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
