@@ -282,6 +282,20 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return () => rowEffects.forEach((cleanup) => cleanup());
     });
     this._ctx.onDispose(rowEffectManager);
+
+    const draftRowsWatcher = effect(() => {
+      const draftRows = touch(this._draftRows.value);
+      console.log('Draft rows changed:', {
+        count: draftRows.length,
+        rows: draftRows.map((row, index) => ({
+          index,
+          valid: row.valid,
+          validationErrors: row.validationErrors.map((err) => ({ path: err.path, message: err.message })),
+          data: row.data,
+        })),
+      });
+    });
+    this._ctx.onDispose(draftRowsWatcher);
   }
 
   //
@@ -316,26 +330,18 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     }
 
     const draftRowIndex = this._draftRows.value.length;
-    const draftData = { 
+    const draftData = {
       id: ObjectId.random(),
-      description: `debug ${draftRowIndex + 1}`
-    } as T;
+      description: `debug ${draftRowIndex + 1}`, // TODO(ZaymonFC): Remove this when implementation is finished.
+    } as any as T;
 
-    const schema = toEffectSchema(this._projection.schema);
-    const validationErrors = validateSchema(schema, draftData) || [];
+    const validationErrors = this.validateDraftRowData(draftData);
 
     const draftRow: DraftRow<T> = {
       data: draftData,
       valid: validationErrors.length === 0,
       validationErrors,
     };
-
-    console.log('Creating draft row:', {
-      draftData,
-      valid: draftRow.valid,
-      validationErrors: draftRow.validationErrors,
-      totalDraftRows: this._draftRows.value.length + 1,
-    });
 
     this._draftRows.value = [...this._draftRows.value, draftRow];
   }
@@ -346,10 +352,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     }
 
     const draftRow = this._draftRows.value[draftRowIndex];
-    const schema = toEffectSchema(this._projection.schema);
-    const validationErrors = validateSchema(schema, draftRow.data) || [];
-    
-    // Update the draft row validation status
+    const validationErrors = this.validateDraftRowData(draftRow.data);
+
     const updatedDraftRow = {
       ...draftRow,
       valid: validationErrors.length === 0,
@@ -359,6 +363,11 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     const newDraftRows = [...this._draftRows.value];
     newDraftRows[draftRowIndex] = updatedDraftRow;
     this._draftRows.value = newDraftRows;
+  }
+
+  private validateDraftRowData(data: T): ValidationError[] {
+    const schema = toEffectSchema(this._projection.schema);
+    return validateSchema(schema, data) || [];
   }
 
   public deleteRow = (rowIndex: number): void => {
@@ -442,32 +451,31 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     const { props } = this._projection.getFieldProjection(field.id);
     const transformedValue = editorTextToCellValue(props, value);
 
-    if (plane === 'frozenRowsEnd') {
-      // Validate draft row data
-      if (row >= 0 && row < this._draftRows.value.length) {
-        const draftRow = this._draftRows.value[row];
-        const snapshot = { ...draftRow.data };
-        setValue(snapshot, field.path, transformedValue);
+    const isDraftRow = plane === 'frozenRowsEnd';
 
-        const schema = toEffectSchema(this._projection.schema);
-        const validationResult = validateSchema(schema, snapshot);
-        if (validationResult && validationResult.length > 0) {
-          const error = validationResult.find(err => err.path === field.path);
-          if (error) {
-            return { valid: false, error: error.message };
-          }
-        }
-        return { valid: true };
-      } else {
+    if (isDraftRow) {
+      const isInvalidDraftRowIndex = row < 0 || row >= this._draftRows.value.length;
+      if (isInvalidDraftRowIndex) {
         return { valid: false, error: 'Invalid draft row index' };
       }
+
+      const draftRow = this._draftRows.value[row];
+      const snapshot = { ...draftRow.data };
+      setValue(snapshot, field.path, transformedValue);
+
+      const validationErrors = this.validateDraftRowData(snapshot);
+      if (validationErrors.length > 0) {
+        const error = validationErrors.find((err) => err.path === field.path);
+        if (error) {
+          return { valid: false, error: error.message };
+        }
+      }
+      return { valid: true };
     } else {
-      // Validate regular row data
       const rowIdx = this._sorting.getDataIndex(row);
       const currentRow = this._rows.value[rowIdx];
       invariant(currentRow, 'Invalid row index');
 
-      // Get a snapshot of the current object.
       const snapshot = getSnapshot(currentRow);
       setValue(snapshot, field.path, transformedValue);
 
