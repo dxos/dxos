@@ -1,6 +1,6 @@
 {
   "name": "@dxos/conductor",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Compute graph implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

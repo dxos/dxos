@@ -1,6 +1,6 @@
 {
   "name": "@dxos/lit-theme-editor",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "A component for editing the user tokens layer of dxos-theme.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
