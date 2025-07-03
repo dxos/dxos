@@ -61,11 +61,11 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
       await peerConnection.setLocalDescription(offer);
 
       // Send offer to backend and get answer
-      const aiServiceUrl = new URL(
+      const AiServiceUrl = new URL(
         '/rtc-connect',
         config.values.runtime?.services?.ai?.server ?? DEFAULT_AI_SERVICE_URL,
       );
-      const response = await fetch(aiServiceUrl, {
+      const response = await fetch(AiServiceUrl, {
         method: 'POST',
         body: offer.sdp,
         headers: {

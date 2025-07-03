@@ -87,7 +87,9 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
       <Popover.VirtualTrigger virtualRef={cellRef} />
       <Popover.Content tabIndex={-1} classNames='popover-card-width'>
         <Popover.Arrow />
-        <Form values={formValues} schema={narrowedSchema as any} onSave={handleSave} />
+        <Popover.Viewport>
+          <Form values={formValues} schema={narrowedSchema as any} onSave={handleSave} />
+        </Popover.Viewport>
       </Popover.Content>
     </Popover.Root>
   );

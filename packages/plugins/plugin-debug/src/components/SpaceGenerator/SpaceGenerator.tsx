@@ -6,8 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
-import { Filter, toEffectSchema } from '@dxos/echo-schema';
-import { live, type Live } from '@dxos/live-object';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { SheetType } from '@dxos/plugin-sheet/types';
@@ -23,11 +22,11 @@ import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
 import { createGenerator, staticGenerators, type ObjectGenerator } from './ObjectGenerator';
 import { SchemaTable } from './SchemaTable';
-import { presets } from './presets';
+import { generator } from './presets';
 
 export type SpaceGeneratorProps = {
   space: Space;
-  onCreateObjects?: (objects: Live<any>[]) => void;
+  onCreateObjects?: (objects: Obj.Any[]) => void;
 };
 
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
@@ -37,6 +36,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   const mutableTypes = [DataType.Organization, DataType.Project, DataType.Person, DataType.Message];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
+  const presets = useMemo(() => generator(), []);
 
   // Create type generators.
   const typeMap = useMemo(() => {
@@ -105,13 +105,13 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
       try {
         const content = await file.text();
         const data = JSON.parse(content);
-        const schemas = await space.db.schemaRegistry.register(data.schemas.map(toEffectSchema));
+        const schemas = await space.db.schemaRegistry.register(data.schemas.map(Type.toEffectSchema));
         // TODO(wittjosiah): If the schema is already registered this should skip.
         await Promise.all(
           schemas.map(async (schema) => {
             const parts = schema.typename.split('/');
             const name = parts[parts.length - 1];
-            const table = live(TableType, { name, threads: [] });
+            const table = Obj.make(TableType, { name, threads: [] });
             await initializeTable({ client, space, table, typename: schema.typename });
             await dispatch(createIntent(SpaceAction.AddObject, { target: space, object: table }));
             return table;
@@ -125,7 +125,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
               log.warn('Missing schema for object', { id, typename });
               return;
             }
-            const object = live(schema, fields);
+            const object = Obj.make(schema, fields);
             space.db.add(object);
             return object;
           }),
@@ -139,8 +139,8 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   }, []);
 
   return (
-    <div role='none' className='flex flex-col divide-y divide-separator overflow-y-auto'>
-      <Toolbar.Root classNames='p-1'>
+    <div role='none' className='flex flex-col grow overflow-hidden'>
+      <Toolbar.Root classNames='border-be border-subduedSeparator'>
         <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
         <IconButton
           icon='ph--file-arrow-up--regular'
@@ -149,28 +149,31 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
           onClick={handleLoadTables}
         />
         <Toolbar.Separator variant='gap' />
-        <div className='flex'>
-          <Input.Root>
-            <Input.TextInput
-              type='number'
-              min={1}
-              max={100}
-              placeholder={'Count'}
-              classNames='w-[80px]'
-              value={count}
-              onChange={(ev) => setCount(parseInt(ev.target.value))}
-            />
-          </Input.Root>
-        </div>
+        <Input.Root>
+          <Input.TextInput
+            type='number'
+            min={1}
+            max={100}
+            placeholder={'Count'}
+            classNames='!w-[4rem] !text-right'
+            size={8}
+            value={count}
+            onChange={(ev) => setCount(parseInt(ev.target.value))}
+          />
+        </Input.Root>
       </Toolbar.Root>
 
-      <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
-      <SchemaTable types={mutableTypes} objects={info.objects} label='Mutable Types' onClick={handleCreateData} />
-      <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
+      <div className='flex flex-col overflow-y-auto divide-y divide-separator'>
+        <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
+        <SchemaTable types={mutableTypes} objects={info.objects} label='Mutable Types' onClick={handleCreateData} />
+        <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
 
-      <SyntaxHighlighter classNames='flex text-xs' language='json'>
-        {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
-      </SyntaxHighlighter>
+        <div>
+          <SyntaxHighlighter classNames='flex text-xs' language='json'>
+            {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
+          </SyntaxHighlighter>
+        </div>
+      </div>
     </div>
   );
 };

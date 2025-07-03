@@ -15,13 +15,13 @@ export type TokenManagerProps = {
 };
 
 export const TokenManager = ({ tokens, onDelete }: TokenManagerProps) => {
-  return (
+  return tokens.length > 0 ? (
     <List classNames='space-y-2'>
       {tokens.map((token) => (
         <TokenItem key={token.id} token={token} onDelete={onDelete} />
       ))}
     </List>
-  );
+  ) : null;
 };
 
 type TokenItemProps = {

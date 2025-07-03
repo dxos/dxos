@@ -7,8 +7,9 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React from 'react';
 
+import { Obj } from '@dxos/echo';
 import { FunctionType, FunctionTrigger } from '@dxos/functions';
-import { live, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -38,7 +39,7 @@ const meta: Meta = {
       types: [FunctionType, FunctionTrigger],
       onSpaceCreated: ({ space }) => {
         for (const fn of functions) {
-          space.db.add(live(FunctionType, fn));
+          space.db.add(Obj.make(FunctionType, fn));
         }
       },
     }),

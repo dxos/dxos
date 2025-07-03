@@ -3,7 +3,7 @@
 //
 
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
-import { live, makeRef } from '@dxos/live-object';
+import { Obj, Ref } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 import { OutlinerAction, JournalType, createJournalEntry, createOutline } from '../types';
@@ -14,9 +14,9 @@ export default () =>
       intent: OutlinerAction.CreateJournal,
       resolve: ({ name }) => ({
         data: {
-          object: live(JournalType, {
+          object: Obj.make(JournalType, {
             name,
-            entries: [makeRef(createJournalEntry())],
+            entries: [Ref.make(createJournalEntry())],
           }),
         },
       }),
@@ -34,7 +34,7 @@ export default () =>
       resolve: ({ text }) => {
         return {
           data: {
-            object: live(DataType.Task, { text }),
+            object: Obj.make(DataType.Task, { text }),
           },
         };
       },

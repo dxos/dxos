@@ -4,9 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { Type, Ref } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
-import { live } from '@dxos/live-object';
 import { DataType } from '@dxos/schema';
 
 export const DocumentSchema = Schema.Struct({
@@ -25,7 +24,7 @@ export type DocumentType = Schema.Schema.Type<typeof DocumentType>;
 
 // TODO(burdon): Replace when defaults are supported.
 export const createDocument = ({ name, content }: { name: string; content: string }) =>
-  live(DocumentType, { name, content: Ref.make(live(DataType.Text, { content })) });
+  Obj.make(DocumentType, { name, content: Ref.make(Obj.make(DataType.Text, { content })) });
 
 /**
  * Checks if an object conforms to the interface needed to render an editor.

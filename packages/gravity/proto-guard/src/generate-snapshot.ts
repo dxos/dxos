@@ -81,11 +81,12 @@ const main = async () => {
     await space.waitUntilReady();
 
     space.db.add(
+      // TODO(dmaretskyi): Change to Obj.make.
       live({
         value: 100,
         string: 'hello world!',
         array: ['one', 'two', 'three'],
-      }),
+      }) as any,
     );
     await space.db.flush();
 

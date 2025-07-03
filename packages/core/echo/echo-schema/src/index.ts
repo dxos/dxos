@@ -17,11 +17,5 @@ export * from './query';
 export * from './types';
 export * from './utils';
 export * from './ref';
-
-// TODO(burdon): Fix.
-// TODO(dmaretskyi): Omitting barrel export in the mutable directory due to circular deps.
-export * from './schema/echo-schema';
-export * from './schema/manipulation';
-export * from './schema/runtime-schema-registry';
-export * from './schema/snapshot';
-export * from './schema/stored-schema';
+export * from './projection';
+export * from './schema';

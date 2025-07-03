@@ -13,7 +13,7 @@ export type TooltipStyleProps = Partial<{
 
 export const tooltipContent: ComponentFunction<TooltipStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'inline-flex items-center rounded-md plb-1 pli-2 max-is-64 bg-inverseSurface text-inverseSurfaceText',
+    'inline-flex items-center rounded-sm plb-1 pli-2 max-is-64 bg-inverseSurface text-inverseSurfaceText',
     popperMotion,
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'tooltip' }),

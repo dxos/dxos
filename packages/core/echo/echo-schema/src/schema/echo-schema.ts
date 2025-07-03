@@ -16,7 +16,7 @@ import {
 } from './manipulation';
 import { getSnapshot } from './snapshot';
 import { StoredSchema } from './stored-schema';
-import { getTypeAnnotation, schemaVariance, SchemaMetaSymbol, type SchemaMeta, type TypeAnnotation } from '../ast';
+import { getTypeAnnotation, SchemaMetaSymbol, type SchemaMeta, type TypeAnnotation } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
 import { type JsonSchemaType } from '../json-schema';
 import { type TypedObject, type TypedObjectPrototype } from '../object';
@@ -145,18 +145,15 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
   } as any;
 };
 
-/**
- * @param schema @deprecated
- */
-// TODO(burdon): Remove once we've stabilized the schema API.
-export const assertEchoSchema = (schema: Schema.Schema.AnyNoContext): EchoSchema => {
-  invariant(schema instanceof EchoSchema, 'Schema is not an EchoSchema');
-  return schema;
+export const isMutable = (schema: Schema.Schema.AnyNoContext): schema is EchoSchema => {
+  return schema instanceof EchoSchema;
 };
 
-// TODO(burdon): Resolve (add annotation?)
-export const isMutable = (schema: Schema.Schema.AnyNoContext): boolean => {
-  return schema instanceof EchoSchema;
+// NOTE: Keep in this file.
+const schemaVariance = {
+  _A: (_: any) => _,
+  _I: (_: any) => _,
+  _R: (_: never) => _,
 };
 
 /**

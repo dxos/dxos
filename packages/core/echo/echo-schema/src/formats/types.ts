@@ -7,15 +7,7 @@ import { Option, SchemaAST, type JSONSchema, pipe } from 'effect';
 import { createAnnotationHelper } from '../ast';
 import { type JsonSchemaType } from '../json-schema';
 
-export enum TypeEnum {
-  Object = 'object',
-  Array = 'array',
-  String = 'string',
-  Number = 'number',
-  Boolean = 'boolean',
-  Ref = 'ref',
-}
-
+// TODO(burdon): Rename PropertyType.
 export type ScalarType =
   | JSONSchema.JsonSchema7Object
   | JSONSchema.JsonSchema7String
@@ -23,9 +15,20 @@ export type ScalarType =
   | JSONSchema.JsonSchema7Boolean
   | JSONSchema.JsonSchema7Ref;
 
-// TODO(burdon): Ref.
+// TODO(burdon): Rename ValueType and change to disciminated union.
+// export type ValueType = 'array' | 'object' | 'string' | 'number' | 'boolean' | 'ref';
+export enum TypeEnum {
+  Array = 'array', // TODO(burdon): Remove?
+  Object = 'object',
+  String = 'string',
+  Number = 'number',
+  Boolean = 'boolean',
+  Ref = 'ref',
+}
+
+// TODO(burdon): Ref?
 export const getTypeEnum = (property: JsonSchemaType): TypeEnum | undefined => {
-  switch ((property as any).type) {
+  switch (property.type) {
     case 'array':
       return TypeEnum.Array;
     case 'object':
@@ -52,7 +55,7 @@ export const FormatAnnotation = createAnnotationHelper<FormatEnum>(FormatAnnotat
 export const getFormatAnnotation = (node: SchemaAST.AST): FormatEnum | undefined =>
   pipe(SchemaAST.getAnnotation<FormatEnum>(FormatAnnotationId)(node), Option.getOrUndefined);
 
-// TODO(burdon): Rename to Format and change enum to string literals (remove need to import).
+// TODO(burdon): Rename to FormatType and change to discriminated union.
 export enum FormatEnum {
   None = 'none',
   String = 'string',

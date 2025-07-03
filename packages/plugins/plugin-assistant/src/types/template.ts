@@ -4,7 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { TypedObject } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { LabelAnnotation } from '@dxos/echo-schema';
 
 // TODO(burdon): Change to Schema.Literal (and discriminated union).
 export enum TemplateInputType {
@@ -49,10 +50,17 @@ export const TemplateKindSchema = Schema.Union(
 );
 
 export type TemplateKindType = Schema.Schema.Type<typeof TemplateKindSchema>;
-export class TemplateType extends TypedObject({ typename: 'dxos.org/type/Template', version: '0.1.0' })({
+export const TemplateType = Schema.Struct({
   name: Schema.optional(Schema.String),
   kind: Schema.mutable(TemplateKindSchema),
   source: Schema.String,
   inputs: Schema.optional(Schema.mutable(Schema.Array(TemplateInputSchema))),
   command: Schema.optional(Schema.String),
-}) {}
+}).pipe(
+  LabelAnnotation.set(['name']),
+  Type.Obj({
+    typename: 'dxos.org/type/Template',
+    version: '0.1.0',
+  }),
+);
+export interface TemplateType extends Schema.Schema.Type<typeof TemplateType> {}

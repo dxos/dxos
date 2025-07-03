@@ -3,11 +3,11 @@
 //
 
 import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { DropdownMenu, Icon, useTranslation, IconButton } from '@dxos/react-ui';
-import { useAttendableAttributes } from '@dxos/react-ui-attention';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx, getSize, textBlockWidth } from '@dxos/react-ui-theme';
 
@@ -29,14 +29,15 @@ export const StackSection = ({
   const { t } = useTranslation(STACK_PLUGIN);
   const { onNavigate, onAdd, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
-  const attendableAttrs = useAttendableAttributes(id);
+  const attentionAttrs = useAttentionAttributes(id);
+  const stackItem = useMemo(() => ({ id }), [id]);
 
   return (
     <CollapsiblePrimitive.Root asChild open={!view.collapsed} onOpenChange={(nextOpen) => onCollapse?.(id, !nextOpen)}>
-      <StackItem.Root item={{ id }} role='section' {...attendableAttrs} classNames='border-be border-separator'>
-        <StackItem.Heading classNames='attention-surface border-ie !border-separator'>
+      <StackItem.Root item={stackItem} role='section' {...attentionAttrs}>
+        <StackItem.Heading classNames='attention-surface'>
           <span className='sr-only'>{view.title}</span>
-          <div role='none' className='sticky -block-start-px bg-[--sticky-bg] p-1 is-full'>
+          <StackItem.HeadingStickyContent>
             <DropdownMenu.Root
               {...{
                 open: optionsMenuOpen,
@@ -102,7 +103,7 @@ export const StackSection = ({
                 classNames={sectionActionDimensions}
               />
             )}
-          </div>
+          </StackItem.HeadingStickyContent>
         </StackItem.Heading>
         <CollapsiblePrimitive.Content>
           <Surface role='section' data={{ subject: object }} limit={1} placeholder={<></>} />

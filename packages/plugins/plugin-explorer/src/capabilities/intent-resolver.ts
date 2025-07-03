@@ -3,7 +3,7 @@
 //
 
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import { Obj } from '@dxos/echo';
 
 import { ExplorerAction, ViewType } from '../types';
 
@@ -13,7 +13,7 @@ export default () =>
     createResolver({
       intent: ExplorerAction.Create,
       resolve: ({ name }) => ({
-        data: { object: live(ViewType, { name, type: '' }) },
+        data: { object: Obj.make(ViewType, { name, type: '' }) },
       }),
     }),
   );

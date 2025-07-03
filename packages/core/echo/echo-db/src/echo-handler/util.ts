@@ -7,7 +7,7 @@ import { type BaseObject, type ForeignKey } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getMeta, getProxyTarget, type Live } from '@dxos/live-object';
 
-import { isEchoObject, type AnyLiveObject } from './create';
+import { isEchoObject, type AnyLiveObject } from './echo-handler';
 import { symbolInternals, type ProxyTarget } from './echo-proxy-target';
 import { type EchoDatabase } from '../proxy-db';
 
@@ -21,6 +21,9 @@ export const getDatabaseFromObject = (obj: Live<any>): EchoDatabase | undefined 
   return target[symbolInternals].database;
 };
 
+/**
+ * @deprecated
+ */
 export const getReferenceWithSpaceKey = (obj: AnyLiveObject<any>): Reference | undefined => {
   invariant(obj);
   const db = getDatabaseFromObject(obj);

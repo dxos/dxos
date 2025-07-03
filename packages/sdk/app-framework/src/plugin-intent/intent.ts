@@ -141,7 +141,13 @@ export const Label = Schema.Union(
   Schema.mutable(
     Schema.Tuple(
       Schema.String,
-      Schema.mutable(Schema.Struct({ ns: Schema.String, count: Schema.optional(Schema.Number) })),
+      Schema.mutable(
+        Schema.Struct({
+          ns: Schema.String,
+          count: Schema.optional(Schema.Number),
+          defaultValue: Schema.optional(Schema.String),
+        }),
+      ),
     ),
   ),
 );

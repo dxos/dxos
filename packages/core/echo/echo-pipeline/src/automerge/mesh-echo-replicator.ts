@@ -125,6 +125,7 @@ export class MeshEchoReplicator implements EchoReplicator {
               documentId: params.documentId,
               acceptDocument: remoteDocumentExists,
             });
+
             // If a document is not present locally return true if another peer claims to have it.
             // Simply returning true will add the peer to "generous peers list" for this document which will
             // start replication of the document after we receive, even if the peer is not in the corresponding space.

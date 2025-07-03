@@ -122,3 +122,36 @@ export type Tool = Schema.Schema.Type<typeof Tool>;
 export interface ExecutableTool extends Tool {
   execute: (params: unknown, context: ToolExecutionContext) => Promise<ToolResult>;
 }
+
+/**
+ * Registry of executable tools.
+ */
+// TODO(burdon): Tool resolution is duplicated in the session and ollama-client.
+export class ToolRegistry {
+  private readonly _tools = new Map<string, ExecutableTool>();
+
+  constructor(tools: ExecutableTool[]) {
+    for (const tool of tools) {
+      this.register(tool);
+    }
+  }
+
+  toJSON() {
+    return {
+      tools: Array.from(this._tools.values()).map((tool) => ({
+        name: tool.name,
+        namespace: tool.namespace,
+        type: tool.type,
+      })),
+    };
+  }
+
+  register(tool: ExecutableTool): this {
+    this._tools.set(tool.id, tool);
+    return this;
+  }
+
+  get(id: string) {
+    return this._tools.get(id);
+  }
+}

@@ -121,7 +121,7 @@ export const ResetDialog = ({
                 <Message.Root
                   key={error.message}
                   valence='error'
-                  className='mlb-4 overflow-auto max-bs-72 relative'
+                  classNames='mlb-4 overflow-auto max-bs-72 relative'
                   data-testid='resetDialog.stackTrace'
                 >
                   <pre className='text-xs whitespace-pre-line'>{error.stack}</pre>
@@ -161,7 +161,10 @@ export const ResetDialog = ({
                 </Popover.Trigger>
                 <Popover.Portal>
                   <Popover.Content>
-                    <FeedbackForm onSave={handleSaveFeedback} />
+                    <Popover.Viewport>
+                      <FeedbackForm onSave={handleSaveFeedback} />
+                    </Popover.Viewport>
+                    <Popover.Arrow />
                   </Popover.Content>
                 </Popover.Portal>
               </Popover.Root>

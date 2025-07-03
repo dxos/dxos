@@ -2,52 +2,50 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 
+import { Type } from '@dxos/echo';
 import { getTypeAnnotation, type TypeAnnotation } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { type SpaceId, type Space } from '@dxos/react-client/echo';
-import { Icon, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { mx } from '@dxos/react-ui-theme';
+import { cardDialogOverflow, cardDialogPaddedOverflow, cardDialogSearchListRoot } from '@dxos/react-ui-stack';
+import { type DataType } from '@dxos/schema';
 import { isNonNullable, type MaybePromise } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '../../hooks';
 import { SPACE_PLUGIN } from '../../meta';
-import { type ObjectForm, type CollectionType } from '../../types';
+import { type ObjectForm } from '../../types';
 import { getSpaceDisplayName } from '../../util';
 
-export type CreateObjectPanelProps = ThemedClassName<{
+export type CreateObjectPanelProps = {
   forms: ObjectForm[];
   spaces: Space[];
   typename?: string;
-  target?: Space | CollectionType;
+  target?: Space | DataType.Collection;
   name?: string;
   defaultSpaceId?: SpaceId;
   resolve?: (typename: string) => Record<string, any>;
-  onCreateObject?: (params: {
-    form: ObjectForm;
-    target: Space | CollectionType;
-    data?: Record<string, any>;
-  }) => MaybePromise<void>;
-}>;
+  onTargetChange?: (target: Space) => void;
+  onTypenameChange?: (typename: string) => void;
+  onCreateObject?: (params: { form: ObjectForm; data?: Record<string, any> }) => MaybePromise<void>;
+};
 
 export const CreateObjectPanel = ({
-  classNames,
   forms,
   spaces,
-  typename: initialTypename,
-  target: initialTarget,
+  typename,
+  target,
   name: initialName,
   defaultSpaceId,
   resolve,
+  onTargetChange,
+  onTypenameChange,
   onCreateObject,
 }: CreateObjectPanelProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
-  const [typename, setTypename] = useState<string | undefined>(initialTypename);
-  const [target, setTarget] = useState<Space | CollectionType | undefined>(initialTarget);
-  const form = forms.find((form) => getTypeAnnotation(form.objectSchema)?.typename === typename);
+  const form = forms.find((form) => Type.getTypename(form.objectSchema) === typename);
   const options: TypeAnnotation[] = forms
     .map((form) => getTypeAnnotation(form.objectSchema))
     .filter(isNonNullable)
@@ -59,67 +57,63 @@ export const CreateObjectPanel = ({
 
   const handleCreateObject = useCallback(
     async (props: Record<string, any>) => {
-      if (!form || !target) {
+      if (!form) {
         return;
       }
-      await onCreateObject?.({ form, target, data: props });
+      await onCreateObject?.({ form, data: props });
     },
-    [onCreateObject, form, target],
+    [onCreateObject, form],
   );
 
   const handleSetTypename = useCallback(
     async (typename: string) => {
-      invariant(target, 'target is required');
       const form = forms.find((form) => getTypeAnnotation(form.objectSchema)?.typename === typename);
       if (form && !form.formSchema) {
-        await onCreateObject?.({ form, target });
+        await onCreateObject?.({ form });
       } else {
-        setTypename(typename);
+        onTypenameChange?.(typename);
       }
     },
-    [forms, onCreateObject, target],
+    [forms, onCreateObject],
   );
 
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
   // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
-  return (
-    <div role='form' className={mx('flex flex-col gap-2', classNames)}>
-      {!form ? (
-        <SelectSchema options={options} resolve={resolve} onChange={handleSetTypename} />
-      ) : !target ? (
-        <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={setTarget} />
-      ) : form.formSchema ? (
-        <Form
-          classNames='!p-0'
-          autoFocus
-          values={{ name: initialName }}
-          schema={form.formSchema}
-          testId='create-object-form'
-          onSave={handleCreateObject}
-          lookupComponent={inputSurfaceLookup}
-        />
-      ) : undefined}
+  return !form ? (
+    <SelectSchema options={options} resolve={resolve} onChange={handleSetTypename} />
+  ) : !target ? (
+    <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />
+  ) : form.formSchema ? (
+    <div role='none' className={cardDialogOverflow}>
+      <Form
+        autoFocus
+        values={{ name: initialName }}
+        schema={form.formSchema}
+        testId='create-object-form'
+        onSave={handleCreateObject}
+        lookupComponent={inputSurfaceLookup}
+        outerSpacing='blockStart-0'
+      />
     </div>
-  );
+  ) : null;
 };
 
 const SelectSpace = ({
   spaces,
   defaultSpaceId,
   onChange,
-}: { onChange: (space: Space) => void } & Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'>) => {
+}: { onChange?: (space: Space) => void } & Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'>) => {
   const { t } = useTranslation(SPACE_PLUGIN);
 
   return (
-    <SearchList.Root label={t('space input label')} classNames='flex flex-col grow overflow-hidden'>
+    <SearchList.Root label={t('space input label')} classNames={cardDialogSearchListRoot}>
       <SearchList.Input
         autoFocus
         data-testid='create-object-form.space-input'
         placeholder={t('space input placeholder')}
-        classNames='px-1 my-2'
       />
-      <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
+      <SearchList.Content classNames={[cardDialogOverflow, 'plb-cardSpacingBlock']}>
         {spaces
           .sort((a, b) => {
             const aName = toLocalizedString(getSpaceDisplayName(a, { personal: a.id === defaultSpaceId }), t);
@@ -130,7 +124,7 @@ const SelectSpace = ({
             <SearchList.Item
               key={space.id}
               value={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
-              onSelect={() => onChange(space)}
+              onSelect={() => onChange?.(space)}
               classNames='flex items-center gap-2'
             >
               <span className='grow truncate'>
@@ -154,14 +148,13 @@ const SelectSchema = ({
   const { t } = useTranslation(SPACE_PLUGIN);
 
   return (
-    <SearchList.Root label={t('schema input label')} classNames='flex flex-col grow overflow-hidden'>
+    <SearchList.Root label={t('schema input label')} classNames={cardDialogSearchListRoot}>
       <SearchList.Input
         autoFocus
         data-testid='create-object-form.schema-input'
         placeholder={t('schema input placeholder')}
-        classNames='px-1 my-2'
       />
-      <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
+      <SearchList.Content classNames={cardDialogPaddedOverflow}>
         {options.map((option) => (
           <SearchList.Item
             key={option.typename}

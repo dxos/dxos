@@ -4,14 +4,13 @@
 
 import { Schema } from 'effect';
 
+import { Queue } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
-import { Expando, Ref } from '@dxos/echo-schema';
 
 export const AIChatType = Schema.Struct({
   id: Type.ObjectId,
   name: Schema.optional(Schema.String),
-  // TODO(wittjosiah): Should be a ref to a Queue.
-  queue: Ref(Expando),
+  queue: Type.Ref(Queue),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/AIChat',
@@ -27,7 +26,7 @@ export const CompanionTo = Schema.Struct({
     typename: 'dxos.org/relation/CompanionTo',
     version: '0.1.0',
     source: AIChatType,
-    target: Expando,
+    target: Type.Expando,
   }),
 );
 export interface CompanionTo extends Schema.Schema.Type<typeof CompanionTo> {}

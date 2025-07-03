@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 
 import { Config } from '@dxos/client';
 import { Filter } from '@dxos/client/echo';
-import { create } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -49,7 +49,7 @@ const DefaultStory = () => {
   const handleCreate = async () => {
     await test('create', async () => {
       invariant(space);
-      space.db.add(create(DataType.Organization, { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' }));
+      space.db.add(Obj.make(DataType.Organization, { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' }));
     });
   };
 
