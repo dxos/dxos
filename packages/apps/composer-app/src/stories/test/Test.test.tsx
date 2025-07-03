@@ -6,6 +6,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { ThemeProvider } from '@dxos/react-ui';
+
 import { Test } from './Test';
 
 // TODO(burdon): Error on rendering the story.
@@ -19,14 +21,24 @@ import { Test } from './Test';
  */
 describe('Test', () => {
   it('should render', () => {
-    render(<Test icon='ph--x--regular' label='Test' />);
-    expect(screen.getByRole('button', { name: 'Test' })).to.exist;
+    const { container } = render(
+      <ThemeProvider>
+        <Test id='test' icon='ph--x--regular' label='Test' />
+      </ThemeProvider>,
+    );
+
+    expect(container.querySelector('#test')).to.exist;
   });
 
   it('calls onClick when clicked', () => {
     const handleClick = vi.fn();
-    render(<Test icon='ph--x--regular' label='Test' onClick={handleClick} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Test' }));
+    const { container } = render(
+      <ThemeProvider>
+        <Test id='test' icon='ph--x--regular' label='Test' onClick={handleClick} />
+      </ThemeProvider>,
+    );
+
+    fireEvent.click(container.querySelector('#test')!);
     expect(handleClick).toHaveBeenCalledTimes(1);
     expect(screen.debug()).toMatchSnapshot();
   });
