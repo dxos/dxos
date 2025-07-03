@@ -97,13 +97,7 @@
       "path": "packages/common/random-access-storage/tsconfig.json"
     },
     {
-      "path": "packages/common/storybook-utils/tsconfig.json"
-    },
-    {
       "path": "packages/common/test-utils/tsconfig.json"
-    },
-    {
-      "path": "packages/common/theme-editor-addon/tsconfig.json"
     },
     {
       "path": "packages/common/timeframe/tsconfig.json"
@@ -230,6 +224,12 @@
     },
     {
       "path": "packages/devtools/devtools-extension/tsconfig.json"
+    },
+    {
+      "path": "packages/devtools/storybook-addon-logger/tsconfig.json"
+    },
+    {
+      "path": "packages/devtools/storybook-utils/tsconfig.json"
     },
     {
       "path": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"

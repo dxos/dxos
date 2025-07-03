@@ -9,14 +9,14 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme, withSignals } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ScrollContainer, type ScrollController } from './ScrollContainer';
 
 const meta: Meta<typeof ScrollContainer> = {
   title: 'ui/react-ui-components/ScrollContainer',
   component: ScrollContainer,
-  decorators: [withSignals, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
   render: (args) => {
     const [lines, setLines] = useState<string[]>([]);
     const [running, setRunning] = useState(true);

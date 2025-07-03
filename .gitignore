@@ -2,6 +2,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+debug-storybook.log
 .log*
 debug-storybook.log
 
@@ -172,3 +173,6 @@ typedoc
 
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
+
+vite.config.*.timestamp*
+vitest.config.*.timestamp*
