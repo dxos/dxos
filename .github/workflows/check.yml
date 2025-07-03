@@ -60,11 +60,11 @@ jobs:
 
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected -t lint build
+        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=lint,build
 
       - name: Check All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many -t lint build
+        run: pnpm exec nx run-many --targets=lint,build
 
       - name: Check for import cycles
         if: always()
@@ -104,11 +104,11 @@ jobs:
       # TODO(wittjosiah): Coverage is causing CI failures.
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected -t test
+        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=test
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many -t test
+        run: pnpm exec nx run-many --targets=test
 
       - uses: codecov/codecov-action@v4
         if: ${{ matrix.node-version == '20.12.1' }}
@@ -160,13 +160,21 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - name: Bundle Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=bundle --parallel=1
+
+      - name: Bundle All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        run: pnpm exec nx run-many --targets=bundle --parallel=1
+
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected -t e2e --browser=all --parallel=1
+        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=e2e --browser=all --parallel=1
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many -t e2e --browser=all --parallel=1
+        run: pnpm exec nx run-many --targets=e2e --browser=all --parallel=1
 
       - name: Send test report
         if: ${{ (success() || failure()) && github.event_name == 'schedule' }}
