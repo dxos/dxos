@@ -1,8 +1,8 @@
 import { Data, Effect, Schema, Struct } from 'effect';
 
-import { DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerationStreamEvent, Message, Tool } from '@dxos/ai';
+import { DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerationStreamEvent, Message, Tool, ToolId } from '@dxos/ai';
 import { Type } from '@dxos/echo';
-import { AiService, QueueService } from '@dxos/functions';
+import { AiService, QueueService, ToolResolverService } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { EventLogger } from '../../services';
@@ -62,7 +62,7 @@ export const GptInput = Schema.Struct({
   /**
    * Tools to use.
    */
-  tools: Schema.optional(Schema.Array(Tool)),
+  tools: Schema.optional(Schema.Array(ToolId)),
 });
 
 export type GptInput = Schema.Schema.Type<typeof GptInput>;
@@ -115,7 +115,10 @@ export const gptNode = defineComputeNode({
       const { systemPrompt, prompt, context, history, conversation, tools = [] } = yield* ValueBag.unwrap(input);
       const { client: aiClient } = yield* AiService;
       const { queues } = yield* QueueService;
+      const { toolResolver } = yield* ToolResolverService;
       assertArgument(history === undefined || conversation === undefined, 'Cannot use both history and conversation');
+
+      const resolvedTools = yield* Effect.all(tools.map((tool) => Effect.promise(() => toolResolver.resolve(tool))));
 
       const historyMessages = conversation
         ? yield* Effect.tryPromise({
@@ -124,7 +127,7 @@ export const gptNode = defineComputeNode({
           })
         : history ?? [];
 
-      log.info('generating', { systemPrompt, prompt, historyMessages, tools: tools.map((tool) => tool.name) });
+      log.info('generating', { systemPrompt, prompt, historyMessages, tools: resolvedTools.map((tool) => tool.name) });
 
       const session = new AISession({
         operationModel: 'configured',
@@ -164,7 +167,7 @@ export const gptNode = defineComputeNode({
 
             history: [...historyMessages],
 
-            tools: tools as ExecutableTool[],
+            tools: resolvedTools,
             artifacts: [],
 
             client: aiClient,

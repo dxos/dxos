@@ -123,8 +123,15 @@ export interface ExecutableTool extends Tool {
   execute: (params: unknown, context: ToolExecutionContext) => Promise<ToolResult>;
 }
 
+export const ToolId = Schema.String.annotations({
+  identifier: 'ToolId',
+  name: 'ToolId',
+  description: 'Unique identifier for a tool.',
+});
+export type ToolId = Schema.Schema.Type<typeof ToolId>;
+
 export interface ToolResolver {
-  resolve: (id: string) => Promise<ExecutableTool>;
+  resolve: (id: ToolId) => Promise<ExecutableTool>;
 }
 
 /**
@@ -155,7 +162,7 @@ export class ToolRegistry implements ToolResolver {
     return this;
   }
 
-  async resolve(id: string): Promise<ExecutableTool> {
+  async resolve(id: ToolId): Promise<ExecutableTool> {
     const executable = this._tools.get(id);
     if (!executable) {
       throw new Error(`Tool not found: ${id}`);

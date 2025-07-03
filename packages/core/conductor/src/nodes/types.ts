@@ -34,7 +34,6 @@ export const QueueOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Messag
 export const FunctionInput = Schema.Struct({ [DEFAULT_INPUT]: Schema.Any });
 export type FunctionInput = Schema.Schema.Type<typeof FunctionInput>;
 
-
 //
 // Data
 //
@@ -82,4 +81,5 @@ export type ReducerOutput = Schema.Schema.Type<typeof ReducerOutput>;
 // GPT Tools
 //
 
+// TODO(dmaretskyi): Update.
 export const TextToImageOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Tool) });

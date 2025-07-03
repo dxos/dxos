@@ -23,14 +23,39 @@ export type Topology = {
   diagnostics: GraphDiagnostic[];
 };
 
+export enum InputKind {
+  /**
+   * This input must be bound to 0-1 outputs.
+   * The value is passed as is.
+   */
+  Scalar = 'scalar',
+
+  /**
+   * This can be bound to 0-n outputs which are collected into an array.
+   */
+  Array = 'array',
+}
+
 type TopologyNodeInput = {
   name: string;
   schema: Schema.Schema.AnyNoContext;
-  sourceNodeId?: string;
-  sourceNodeOutput?: string;
+
+  /**
+   * Defines the kind of input.
+   */
+  kind: InputKind;
+
+  /**
+   * Nodes that this input is bound to.
+   * Should be 0-1 if this node is input is not a multiple input  .
+   */
+  sources: TopologyNodeConnector[];
 };
 
-type TopologyNodeOutputBinding = {
+/**
+ * Specific connector on the topology graph: nodeId + property.
+ */
+type TopologyNodeConnector = {
   nodeId: string;
   property: string;
 };
@@ -41,7 +66,7 @@ type TopologyNodeOutput = {
   /**
    * Nodes that this output is bound to.
    */
-  boundTo: TopologyNodeOutputBinding[];
+  boundTo: TopologyNodeConnector[];
 };
 
 export type TopologyNode = {
@@ -123,8 +148,8 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
       targetNode.inputs.push({
         name: edge.input,
         schema: pickProperty(targetNode.meta.input, edge.input),
-        sourceNodeId: sourceNode.id,
-        sourceNodeOutput: edge.output,
+        kind: InputKind.Scalar,
+        sources: [{ nodeId: sourceNode.id, property: edge.output }],
       });
     }
 

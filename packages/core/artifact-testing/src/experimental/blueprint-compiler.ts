@@ -40,6 +40,11 @@ export const compileBlueprint = async (blueprint: Blueprint): Promise<ComputeGra
     });
     model.builder.createEdge({ node: instructions }, { node, property: 'prompt' });
 
+    for (const tool of blueprint.steps[i]?.tools ?? []) {
+      const toolNode = model.createNode({ id: `tool-${i}-${tool}`, type: 'constant', value: tool });
+      model.builder.createEdge({ node: toolNode }, { node, property: 'tools' });
+    }
+
     if (i === 0) {
       // Link to input node.
       model.builder.createEdge({ node: inputNode, property: 'input' }, { node, property: 'context' });

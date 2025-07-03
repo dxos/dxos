@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, pipe, Schema } from 'effect';
+import { Cause, Effect, Exit, pipe, Schema } from 'effect';
 import { inspect } from 'node:util';
 import { beforeAll, describe, test } from 'vitest';
 
@@ -31,11 +31,18 @@ import { TestRuntime } from '@dxos/conductor/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { AiService, FunctionExecutor, type ServiceContainer, TracingService } from '@dxos/functions';
+import {
+  AiService,
+  FunctionExecutor,
+  type ServiceContainer,
+  ToolResolverService,
+  TracingService,
+} from '@dxos/functions';
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DataType, DataTypes } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
+import { runAndForwardErrors } from '@dxos/effect';
 
 import { compileBlueprint } from './blueprint-compiler';
 
@@ -82,6 +89,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
       tracing: {
         service: TracingService.console,
       },
+      toolResolver: ToolResolverService.make(new ToolRegistry([printerTool, calculatorTool])),
     });
   });
 
@@ -131,7 +139,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     const org = db.add(Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }));
     await db.flush({ indexes: true });
 
-    const machine = new BlueprintMachine(tools, BLUEPRINT);
+    const machine = new BlueprintMachine(tools, RESEARCH_BLUEPRINT);
     const { client } = serviceContainer.getService(AiService);
     setConsolePrinter(machine, true);
     console.log(client);
@@ -141,7 +149,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
   });
 
   test('blueprint (compiled)', { timeout: 120_000 }, async () => {
-    const graph = await compileBlueprint(BLUEPRINT);
+    const graph = await compileBlueprint(CALCULATOR_BLUEPRINT);
     console.log(computeGraphToGraphViz(graph));
     const runtime = new TestRuntime(serviceContainer);
     runtime.registerGraph('dxn:compute:test', new ComputeGraphModel(graph));
@@ -153,7 +161,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
       (input) => runtime.runGraph<GptOutput>('dxn:compute:test', input),
       Effect.flatMap(ValueBag.unwrap),
       Effect.scoped,
-      Effect.runPromise,
+      runAndForwardErrors,
     );
 
     console.log(text);
@@ -203,7 +211,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
   });
 });
 
-const BLUEPRINT = BlueprintParser.create().parse({
+const RESEARCH_BLUEPRINT = BlueprintParser.create().parse({
   steps: [
     {
       instructions: 'Research information and entities related to the selected objects.',
@@ -219,4 +227,53 @@ const BLUEPRINT = BlueprintParser.create().parse({
       tools: ['search/local_search', 'graph/writer'],
     },
   ],
+});
+
+const CALCULATOR_BLUEPRINT = BlueprintParser.create().parse({
+  steps: [
+    {
+      instructions: 'Use the calculator tool to calculate the expression provided.',
+      tools: ['test/calculator'],
+    },
+    {
+      instructions: 'Use the printer tool to print the result.',
+      tools: ['test/printer'],
+    },
+  ],
+});
+
+const calculatorTool = createTool('test', {
+  name: 'calculator',
+  description: 'Can calculate the result of an expression.',
+  schema: Schema.Struct({
+    a: Schema.Number.annotations({ description: 'The first number.' }),
+    b: Schema.Number.annotations({ description: 'The second number.' }),
+    op: Schema.Literal('+', '-', '*', '/').annotations({ description: 'The operation to perform.' }),
+  }),
+  execute: async (params) => {
+    switch (params.op) {
+      case '+':
+        return ToolResult.Success({ result: params.a + params.b });
+      case '-':
+        return ToolResult.Success({ result: params.a - params.b });
+      case '*':
+        return ToolResult.Success({ result: params.a * params.b });
+      case '/':
+        return ToolResult.Success({ result: params.a / params.b });
+      default:
+        return ToolResult.Error('Invalid operation.');
+    }
+  },
+});
+
+const printerTool = createTool('test', {
+  name: 'printer',
+  description: 'Can print the result of an expression.',
+  schema: Schema.Struct({
+    data: Schema.String.annotations({ description: 'The data to print.' }),
+  }),
+  execute: async (params) => {
+    console.log(params.data);
+    return ToolResult.Success('Data printed.');
+  },
 });

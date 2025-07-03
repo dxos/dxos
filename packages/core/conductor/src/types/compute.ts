@@ -19,13 +19,14 @@ export const NotExecuted: NotExecuted = { kind: 'not-executed' };
 
 export const isNotExecuted = (value: any): value is NotExecuted => value.kind === 'not-executed';
 
+// TODO(dmaretskyi): Type this better.
 export type ConductorError = Error | NotExecuted;
 
 //
 // Values
 //
 
-export type ValueRecord = Record<string, any>;
+export type ValueRecord = Record<string, unknown>;
 
 /**
  * For individual values passed through the compute function.
@@ -58,6 +59,10 @@ export const ValueBag = Object.freeze({
     values: mapValues(values as any, (value) => (Effect.isEffect(value) ? value : Effect.succeed(value))) as any,
   }),
 
+  get: <T extends ValueRecord>(bag: ValueBag<T>, key: keyof T): ValueEffect<T[typeof key]> => {
+    return bag.values[key];
+  },
+
   /**
    * Unwraps the bag into a single effect.
    */
@@ -71,6 +76,16 @@ export const ValueBag = Object.freeze({
         eff.pipe(Effect.map((value) => [key, value] as const)),
       ),
     ).pipe(Effect.map((entries) => Object.fromEntries(entries) as T));
+  },
+
+  /**
+   * Map over the value effects in the bag.
+   */
+  map: (
+    bag: ValueBag<Record<string, unknown>>,
+    fn: (value: ValueEffect<unknown>, key: string) => ValueEffect<unknown>,
+  ): ValueBag<Record<string, unknown>> => {
+    return ValueBag.make(mapValues(bag.values, (value, key) => fn(value, key)));
   },
 });
 
