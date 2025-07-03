@@ -1,0 +1,3 @@
+--eventpath=.github/workflows/testing/test-push-event.json
+--secret-file=.github/workflows/env/.secrets
+--container-architecture=linux/amd64
