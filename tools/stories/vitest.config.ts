@@ -2,42 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineConfig } from 'vitest/config';
-import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import react from '@vitejs/plugin-react-swc';
+import { defineConfig, mergeConfig } from 'vitest/config';
 
-const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+import { baseConfig } from '../../vitest.shared';
 
-/** 
- * Storybook Vitest configuration
- * https://vitest.dev/config
- */
-export default defineConfig({
-  plugins: [
-    react(), 
-    storybookTest({
-      configDir: path.join(dirname, '.storybook'),
-      storybookScript: 'pnpm -w nx storybook stories --ci',
-    }),
-  ],
-  test: {
-    browser: {
-      headless: true,
-      instances: [{ 
-        browser: 'chromium',
-      }],
-      provider: 'playwright',
-    },
-    coverage: {
-      reporter: ['text', 'html'],
-      provider: 'v8',
-    },
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: [
-      './.storybook/vitest.setup.ts',
-    ],
-  },
-});
+export default mergeConfig(
+  baseConfig({ cwd: __dirname }),
+  defineConfig({
+    test: {
+      setupFiles: [
+        './.storybook/vitest.setup.ts',
+      ],
+    }
+  })
+);

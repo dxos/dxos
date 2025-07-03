@@ -40,7 +40,9 @@
     },
     "test": {
       "executor": "@nx/vite:test",
-      "options": {}
+      "options": {
+        // "config": "{projectRoot}/vite.config.ts"
+      }
     },
     "storybook": {
       "configurations": {

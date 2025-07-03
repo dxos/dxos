@@ -2,18 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineConfig } from 'vitest/config';
+import { defineConfig, mergeConfig } from 'vitest/config';
 
-export default defineConfig({
-  test: {
-    browser: {
-      provider: 'playwright',
-      enabled: true,
-      instances: [
-        { 
-          browser: 'chromium',
-        },
-      ],
-    },
-  },
-});
+import { baseConfig } from '../../../vitest.shared';
+
+export default mergeConfig(
+  baseConfig({ cwd: __dirname }),
+  defineConfig({})
+);
