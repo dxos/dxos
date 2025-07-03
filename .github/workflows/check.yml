@@ -143,6 +143,9 @@ jobs:
         run: pnpm install --frozen-lockfile
         shell: bash
 
+      - name: Check dependencies
+        run: pnpm run check-dependencies
+
       - uses: nrwl/nx-set-shas@v4
         if: ${{ !env.ACT }}
 
@@ -153,6 +156,10 @@ jobs:
       - name: Check All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: pnpm exec nx run-many -t lint build
+
+      - name: Check for import cycles
+        if: always()
+        run: pnpm run check-cycles
 
   e2e:
     if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
@@ -211,36 +218,3 @@ jobs:
         with:
           name: ${{ github.job }}
           result: ${{ job.status }}
-
-  check-cycles:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/dxos/gh-actions:20.12.1-burdon-gh-actions
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          lfs: true
-
-      - name: Mark working directory as safe
-        run: git config --global --add safe.directory "$(pwd)"
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: |
-            .pnpm-store
-          key: ${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        shell: bash
-
-      - name: Check for import cycles
-        run: pnpm run check-cycles
