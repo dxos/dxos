@@ -119,12 +119,12 @@
         "viteConfig": {
           "plugins": [
             {
+              "name": "storybook-test",
               "config": {
                 "ci": true,
-                "configDir": ".storybook",
+                "configDir": "config/all",
                 "headless": true
-              },
-              "name": "storybook-test"
+              }
             }
           ]
         },

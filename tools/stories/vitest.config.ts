@@ -14,10 +14,13 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
  * Storybook Vitest configuration
  */
 export default defineConfig({
-  plugins: [react(), storybookTest({
-    configDir: path.join(dirname, '.storybook'),
-    storybookScript: 'pnpm -w nx storybook stories --ci',
-  })],
+  plugins: [
+    react(), 
+    storybookTest({
+      configDir: path.join(dirname, 'config/all'),
+      storybookScript: 'pnpm -w nx storybook stories --ci',
+    }),
+  ],
   test: {
     globals: true,
     coverage: {
@@ -30,7 +33,9 @@ export default defineConfig({
     browser: {
       provider: 'playwright',
       headless: true,
-      instances: [{ browser: 'chromium' }],
+      instances: [{ 
+        browser: 'chromium',
+      }],
     }
   },
 });

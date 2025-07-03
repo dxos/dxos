@@ -8,5 +8,9 @@ import { baseConfig } from '../../../vitest.shared';
 
 export default mergeConfig(
   baseConfig({ cwd: __dirname }),
-  defineConfig({ test: { environment: 'jsdom' } }),
+  defineConfig({
+    test: {
+      environment: 'jsdom',
+    },
+  }),
 );
