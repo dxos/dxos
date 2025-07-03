@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { addons } from '@storybook/manager-api';
-import { create } from '@storybook/theming';
+import { addons } from 'storybook/manager-api';
+
+import { dxosTheme } from './theme';
 
 /**
  * Referenced when story is previewed in browser.
@@ -12,11 +13,5 @@ import { create } from '@storybook/theming';
  */
 addons.setConfig({
   enableShortcuts: true,
-  theme: create({
-    base: 'dark',
-    brandTitle: 'DXOS',
-    brandImage: '/dxos.png',
-    brandTarget: '_blank',
-    brandUrl: 'https://github.com/dxos',
-  }),
+  theme: dxosTheme,
 });

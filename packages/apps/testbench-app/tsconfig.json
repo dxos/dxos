@@ -33,9 +33,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/test-utils"
     },
     {
@@ -61,6 +58,9 @@
     },
     {
       "path": "../../devtools/devtools"
+    },
+    {
+      "path": "../../devtools/storybook-utils"
     },
     {
       "path": "../../sdk/config"

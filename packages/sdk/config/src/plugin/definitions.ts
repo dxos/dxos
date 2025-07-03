@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import pkgUp from 'pkg-up';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { setDeep } from '@dxos/util';
 
@@ -28,15 +29,14 @@ export const definitions = ({
     __CONFIG_DEFAULTS__: configPath?.length ? configPath : resolve(CWD, 'dx.yml'),
     __CONFIG_ENVS__: envPath?.length ? envPath : resolve(CWD, 'dx-env.yml'),
   } as { [key: string]: string };
-
   if (mode !== 'production') {
     KEYS_TO_FILE.__CONFIG_LOCAL__ = devPath ?? resolve(CWD, 'dx-local.yml');
   }
 
   return Object.entries(KEYS_TO_FILE).reduce(
     (prev, [key, value]) => {
+      invariant(key);
       let content = {};
-
       try {
         content = yaml.load(readFileSync(value, 'utf-8')) as any;
 
@@ -85,10 +85,10 @@ export const definitions = ({
       };
     },
     {
-      __DXOS_CONFIG__: { dynamic: mode === 'production', publicUrl },
       __CONFIG_DEFAULTS__: {},
       __CONFIG_ENVS__: {},
       __CONFIG_LOCAL__: {},
+      __DXOS_CONFIG__: { dynamic: mode === 'production', publicUrl },
     },
   );
 };

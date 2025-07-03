@@ -1,8 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "theme-editor-addon",
+  "name": "storybook-utils",
   "tags": [
     "scope:common",
+    "scope:devtools",
     "scope:ui"
   ],
   "sourceRoot": "{projectRoot}/src",
@@ -12,11 +13,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/manager.tsx"
-        ],
-        "platforms": [
-          "browser"
+          "{projectRoot}/src/index.ts"
         ]
       }
     },

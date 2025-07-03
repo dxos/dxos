@@ -20,7 +20,7 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 export default defineConfig({
   ...
   plugins: [
-    ConfigPlugin(),
+    ConfigPlugin({ root: __dirname }),
     ...
   ]
 });
@@ -35,7 +35,7 @@ import { ConfigPlugin } from '@dxos/config/rollup-plugin';
 export default {
   ...
   plugins: [
-    ConfigPlugin(),
+    ConfigPlugin({ root: __dirname }),
     ...
   ]
 };
@@ -51,7 +51,7 @@ await build({
   ...
   bundle: true,
   plugins: [
-    ConfigPlugin(),
+    ConfigPlugin({ root: __dirname }),
     ...
   ]
 })
@@ -67,7 +67,7 @@ import { ConfigPlugin } from '@dxos/config/webpack-plugin';
 module.exports = {
   ...
   plugins: [
-    new ConfigPlugin(),
+    ConfigPlugin({ root: __dirname }),
     ...
   ]
 };
@@ -154,6 +154,7 @@ export default defineConfig({
   ...
   plugins: [
     ConfigPlugin({
+      root: __dirname,
       env: ['MY_ENV_VAR']
     }),
     ...

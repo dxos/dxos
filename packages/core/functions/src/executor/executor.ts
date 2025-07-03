@@ -37,7 +37,6 @@ export class FunctionExecutor {
     // Assert output matches schema
     const assertOutput = fnDef.outputSchema?.pipe(Schema.asserts);
     (assertOutput as any)(result);
-
     if (Effect.isEffect(result)) {
       return Effect.runPromise(result as any);
     }

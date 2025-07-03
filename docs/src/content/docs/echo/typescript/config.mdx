@@ -24,11 +24,12 @@ import createWithEnvs from './snippets/create-with-envs.ts?raw';
     export default defineConfig({
       ...
       plugins: [
-        ConfigPlugin(),
+        ConfigPlugin({ root: __dirname }),
         ...
       ]
     });
     ```
+
   </TabItem>
   <TabItem label="rollup">
     ```js
@@ -38,11 +39,12 @@ import createWithEnvs from './snippets/create-with-envs.ts?raw';
     export default {
       ...
       plugins: [
-        ConfigPlugin(),
+        ConfigPlugin({ root: __dirname }),
         ...
       ]
     };
     ```
+
   </TabItem>
   <TabItem label="esbuild">
     ```ts
@@ -53,11 +55,12 @@ import createWithEnvs from './snippets/create-with-envs.ts?raw';
       ...
       bundle: true,
       plugins: [
-        ConfigPlugin(),
+        ConfigPlugin({ root: __dirname }),
         ...
       ]
     })
     ```
+
   </TabItem>
 </Tabs>
 
@@ -67,10 +70,11 @@ This allows config to be defined using one or more of the follow functions:
 
 Any config included in the `dx.yml` file will be returned by `Defaults`.
 
-<Code code={createWithDefaults.slice(34)} lang="ts" />
+<Code code={createWithDefaults.slice(34)} lang='ts' />
 
-<Aside type="note">
-In a Node environment, `Defaults` loads from a `config/default.yml` file in your project.
+<Aside type='note'>
+  In a Node environment, `Defaults` loads from a `config/default.yml` file in
+  your project.
 </Aside>
 
 ### Local development configuration
@@ -78,17 +82,15 @@ In a Node environment, `Defaults` loads from a `config/default.yml` file in your
 Often it is convenient to have different configuration presets for local development.
 For this purpose there is `Local` which will return any config included in the `dx-local.yml` file.
 
-<Code code={createWithLocal.slice(34)} lang="ts" />
+<Code code={createWithLocal.slice(34)} lang='ts' />
 
-<Aside type="note">
-In a Node environment, `Local` is a no-op.
-</Aside>
+<Aside type='note'>In a Node environment, `Local` is a no-op.</Aside>
 
 ### App configuration with environment variables
 
 The config plugin provides an easy way to map environment variables to config values using the `dx-env.yml` file.
 
-<Code code={createWithEnvs.slice(34)} lang="ts" />
+<Code code={createWithEnvs.slice(34)} lang='ts' />
 
 This file takes the following format:
 
@@ -119,6 +121,7 @@ export default defineConfig({
   ...
   plugins: [
     ConfigPlugin({
+      root: __dirname,
       env: ['MY_ENV_VAR']
     }),
     ...

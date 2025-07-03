@@ -23,7 +23,7 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../devtools/storybook-utils"
     },
     {
       "path": "../../sdk/app-framework"

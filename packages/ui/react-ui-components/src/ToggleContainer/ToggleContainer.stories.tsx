@@ -11,7 +11,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { faker } from '@dxos/random';
 import { Icon, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme, withSignals } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ToggleContainer, type ToggleContainerProps } from './ToggleContainer';
 import { MarkdownViewer } from '../MarkdownViewer';
@@ -89,7 +89,7 @@ const meta: Meta<typeof ToggleContainer> = {
   title: 'ui/react-ui-components/ToggleContainer',
   component: ToggleContainer,
   render: DefaultStory,
-  decorators: [withSignals, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center bg-baseSurface' })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center bg-baseSurface' })],
 };
 
 export default meta;

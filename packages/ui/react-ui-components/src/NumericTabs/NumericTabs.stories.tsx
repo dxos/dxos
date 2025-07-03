@@ -8,7 +8,7 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { withLayout, withTheme, withSignals } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { NumericTabs } from './NumericTabs';
 import { ToggleContainer } from '../ToggleContainer';
@@ -21,7 +21,7 @@ const content = Array.from({ length: 15 }, (_, i) => ({
 const meta: Meta<typeof NumericTabs> = {
   title: 'ui/react-ui-components/NumericTabs',
   component: NumericTabs,
-  decorators: [withSignals, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
 };
 
 export default meta;
