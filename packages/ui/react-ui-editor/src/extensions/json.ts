@@ -16,7 +16,8 @@ export type JsonExtensionsOptions = {
 export const createJsonExtensions = ({ schema }: JsonExtensionsOptions = {}): Extension => {
   let lintSource: LintSource = jsonParseLinter();
   if (schema) {
-    const ajv = new Ajv({ allErrors: false });
+    // NOTE: Relaxing strict mode to allow additional custom schema properties.
+    const ajv = new Ajv({ allErrors: false, strict: false });
     const validate = ajv.compile(schema);
     lintSource = schemaLinter(validate);
   }

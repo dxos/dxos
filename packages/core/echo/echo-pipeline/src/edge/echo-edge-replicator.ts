@@ -58,9 +58,8 @@ export class EchoEdgeReplicator implements EchoReplicator {
   }
 
   async connect(context: EchoReplicatorContext): Promise<void> {
-    log.info('connecting...', { peerId: context.peerId, connectedSpaces: this._connectedSpaces.size });
+    log('connecting...', { peerId: context.peerId, connectedSpaces: this._connectedSpaces.size });
     this._context = context;
-
     this._ctx = Context.default();
     this._ctx.onDispose(
       this._edgeConnection.onReconnected(() => {
@@ -146,7 +145,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
         const restartDelay =
           Math.min(MAX_RESTART_DELAY, INITIAL_RESTART_DELAY * reconnects) + Math.random() * RESTART_DELAY_JITTER;
 
-        log.info('connection restart scheduled', { spaceId, reconnects, restartDelay });
+        log('connection restart scheduled', { spaceId, reconnects, restartDelay });
 
         restartScheduled = true;
         scheduleTask(

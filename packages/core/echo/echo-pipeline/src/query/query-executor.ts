@@ -97,6 +97,8 @@ type StepExecutionResult = {
   trace: ExecutionTrace;
 };
 
+const TRACE_QUERY_EXECUTION = false;
+
 /**
  * Executes query plans against the Indexer and AutomergeHost.
  *
@@ -169,9 +171,9 @@ export class QueryExecutor extends Resource {
 
   async execQuery(): Promise<QueryExecutionResult> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const prevResultSet = this._lastResultSet;
 
-    const { workingSet, trace } = await this._execPlan(this._plan, this._lastResultSet);
+    const prevResultSet = this._lastResultSet;
+    const { workingSet, trace } = await this._execPlan(this._plan, []);
     this._lastResultSet = workingSet;
     trace.name = 'Root';
     trace.details = JSON.stringify({ id: this._id });
@@ -186,12 +188,10 @@ export class QueryExecutor extends Resource {
           workingSet[index].documentId !== item.documentId,
       );
 
-    // log.info('Query execution result', {
-    //   changed,
-    //   trace: ExecutionTrace.format(trace),
-    // });
-    // eslint-disable-next-line no-console
-    // console.log(ExecutionTrace.format(trace));
+    if (TRACE_QUERY_EXECUTION) {
+      // eslint-disable-next-line no-console
+      console.log(ExecutionTrace.format(trace));
+    }
 
     return {
       changed,
@@ -200,6 +200,7 @@ export class QueryExecutor extends Resource {
 
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const trace = ExecutionTrace.makeEmpty();
+    const begin = performance.now();
     for (const step of plan.steps) {
       if (this._ctx.disposed) {
         throw new ContextDisposedError();
@@ -209,6 +210,8 @@ export class QueryExecutor extends Resource {
       workingSet = result.workingSet;
       trace.children.push(result.trace);
     }
+    trace.objectCount = workingSet.length;
+    trace.executionTime = performance.now() - begin;
     return { workingSet, trace };
   }
 
@@ -235,6 +238,9 @@ export class QueryExecutor extends Resource {
         break;
       case 'UnionStep':
         ({ workingSet: newWorkingSet, trace } = await this._execUnionStep(step, workingSet));
+        break;
+      case 'SetDifferenceStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execSetDifferenceStep(step, workingSet));
         break;
       case 'TraverseStep':
         ({ workingSet: newWorkingSet, trace } = await this._execTraverseStep(step, workingSet));
@@ -376,6 +382,10 @@ export class QueryExecutor extends Resource {
     step: QueryPlan.FilterDeletedStep,
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
+    if (workingSet.length === 6) {
+      log.info('FilterDeletedStep', { step, workingSet });
+    }
+
     const expected = step.mode === 'only-deleted';
     const result = workingSet.filter((item) => ObjectStructure.isDeleted(item.doc) === expected);
     return {
@@ -406,21 +416,22 @@ export class QueryExecutor extends Resource {
             const property = EscapedPropPath.unescape(step.traversal.property);
 
             const refs = workingSet
-              .map((item) => {
+              .flatMap((item) => {
                 const ref = getDeep(item.doc.data, property);
-                if (!isEncodedReference(ref)) {
-                  return null;
-                }
-
-                try {
-                  return {
-                    ref: DXN.parse(ref['/']),
-                    spaceId: item.spaceId,
-                  };
-                } catch {
-                  log.warn('Invalid reference', { ref: ref['/'] });
-                  return null;
-                }
+                const refs = Array.isArray(ref) ? ref : [ref];
+                return refs.map((ref) => {
+                  try {
+                    return isEncodedReference(ref)
+                      ? {
+                          ref: DXN.parse(ref['/']),
+                          spaceId: item.spaceId,
+                        }
+                      : null;
+                  } catch {
+                    log.warn('Invalid reference', { ref: ref['/'] });
+                    return null;
+                  }
+                });
               })
               .filter(isNonNullable);
 
@@ -553,6 +564,28 @@ export class QueryExecutor extends Resource {
 
     return {
       workingSet: [...results.values()],
+      trace,
+    };
+  }
+
+  private async _execSetDifferenceStep(
+    step: QueryPlan.SetDifferenceStep,
+    workingSet: QueryItem[],
+  ): Promise<StepExecutionResult> {
+    const trace: ExecutionTrace = {
+      ...ExecutionTrace.makeEmpty(),
+      name: 'SetDifference',
+    };
+
+    const sourceResult = await this._execPlan(step.source, [...workingSet]);
+    const excludeResult = await this._execPlan(step.exclude, [...workingSet]);
+    trace.children.push(sourceResult.trace, excludeResult.trace);
+
+    return {
+      workingSet: sourceResult.workingSet.filter((item) => {
+        const index = excludeResult.workingSet.findIndex((i) => i.objectId === item.objectId);
+        return index === -1;
+      }),
       trace,
     };
   }

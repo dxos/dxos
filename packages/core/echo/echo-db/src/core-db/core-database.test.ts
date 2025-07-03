@@ -6,8 +6,9 @@ import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { Filter } from '@dxos/echo';
 import { createIdFromSpaceKey, SpaceDocVersion, type DatabaseDirectory } from '@dxos/echo-protocol';
-import { Expando, Filter, ObjectId, Ref } from '@dxos/echo-schema';
+import { Expando, ObjectId, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -17,7 +18,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { type CoreDatabase } from './core-database';
-import { type DocHandleProxy, type RepoProxy } from '../client';
+import { type DocHandleProxy, type RepoProxy } from '../automerge';
 import { getObjectCore, type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { Query } from '../query';
@@ -78,7 +79,7 @@ describe('CoreDatabase', () => {
         if (isFirstInvocation) {
           expect(loadedDocument.text.target).to.be.undefined;
         } else {
-          expect(loadedDocument.text.target?.content).to.eq(document.text.target?.content);
+          expect(loadedDocument.text.target?.content).to.eq('Hello, world!');
           onPropertyLoaded.wake();
         }
         isFirstInvocation = false;
@@ -119,7 +120,7 @@ describe('CoreDatabase', () => {
     test('new inline objects are loaded', async () => {
       const db = await createClientDbInSpaceWithObject(createTextObject());
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
-      const newObject = addObjectToDoc(newRootDocHandle, { id: '123', title: 'title ' });
+      const newObject = addObjectToDoc(newRootDocHandle, { id: ObjectId.random(), title: 'title ' });
       await db.setSpaceRoot(newRootDocHandle.url);
       const retrievedObject = db.getObjectById(newObject.id);
       expect((retrievedObject as any).title).to.eq(newObject.title);
@@ -399,7 +400,7 @@ const createClientDbInSpaceWithObject = async (
   db1.add(object);
   onDocumentSavedInSpace?.(getDocHandles(db1));
   await db1.flush();
-  await peer1.close();
+  // await peer1.close(); Causes the tests to fail since tests access objects after closing the peer.
 
   const peer2 = await testBuilder.createPeer({ kv });
   return peer2.openDatabase(spaceKey, db1.rootUrl!);

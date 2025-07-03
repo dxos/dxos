@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import React, { useCallback } from 'react';
 
 import { rangeToA1Notation } from '@dxos/compute';
-import { useTranslation } from '@dxos/react-ui';
+import { Callout, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover } from '@dxos/react-ui-theme';
 
@@ -31,24 +31,30 @@ export const RangeList = ({ sheet }: RangeListProps) => {
   );
   return (
     <>
-      <h2 className='p-2 text-sm font-semibold'>{t('range list heading')}</h2>
-      <List.Root<Range> items={sheet.ranges} isItem={Schema.is(Range)}>
-        {({ items: ranges }) =>
-          ranges.map((range, i) => (
-            <List.Item key={i} item={range} classNames={['p-2', ghostHover]}>
-              <List.ItemDragHandle />
-              <List.ItemTitle onClick={() => handleSelectRange(range)}>
-                {t('range title', {
-                  position: rangeToA1Notation(rangeFromIndex(sheet, range.range)),
-                  key: t(`range key ${range.key} label`),
-                  value: t(`range value ${range.value} label`),
-                })}
-              </List.ItemTitle>
-              <List.ItemDeleteButton onClick={() => handleDeleteRange(range)} />
-            </List.Item>
-          ))
-        }
-      </List.Root>
+      <h2 className='mbs-cardSpacingBlock mbe-labelSpacingBlock text-sm font-semibold'>{t('range list heading')}</h2>
+      {sheet.ranges.length < 1 ? (
+        <Callout.Root>
+          <Callout.Title>{t('no ranges message')}</Callout.Title>
+        </Callout.Root>
+      ) : (
+        <List.Root<Range> items={sheet.ranges} isItem={Schema.is(Range)}>
+          {({ items: ranges }) =>
+            ranges.map((range, i) => (
+              <List.Item key={i} item={range} classNames={['p-2', ghostHover]}>
+                <List.ItemDragHandle />
+                <List.ItemTitle onClick={() => handleSelectRange(range)}>
+                  {t('range title', {
+                    position: rangeToA1Notation(rangeFromIndex(sheet, range.range)),
+                    key: t(`range key ${range.key} label`),
+                    value: t(`range value ${range.value} label`),
+                  })}
+                </List.ItemTitle>
+                <List.ItemDeleteButton onClick={() => handleDeleteRange(range)} />
+              </List.Item>
+            ))
+          }
+        </List.Root>
+      )}
     </>
   );
 };

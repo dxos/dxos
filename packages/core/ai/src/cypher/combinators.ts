@@ -24,9 +24,9 @@ import type {
 import { Parjser, parjs, parjsCombinators } from './parjs';
 
 // Helper parsers
-const ws = parjs.whitespace(); // Parses whitespace
+const ws = parjs.whitespace(); // Parses whitespace.
 
-const nothing = parjs.string('').pipe(parjsCombinators.map(() => null)); // Parses nothing
+const nothing = parjs.string('').pipe(parjsCombinators.map(() => null)); // Parses nothing.
 
 const optional = <T>(parser: Parjser<T>) =>
   parser.pipe(
@@ -34,20 +34,20 @@ const optional = <T>(parser: Parjser<T>) =>
     parjsCombinators.or(nothing),
   ); // Makes a parser optional
 
-const keyword = (word: string) => parjs.string(word).pipe(parjsCombinators.map(() => word)); // Parses specific keywords
+const keyword = (word: string) => parjs.string(word).pipe(parjsCombinators.map(() => word)); // Parses specific keywords.
 
 // Identifiers (node labels, relationship types, variables, etc.)
 export const identifier = parjs.regexp(/[a-zA-Z_][a-zA-Z0-9_]*/).pipe(
-  parjsCombinators.map((match): Identifier => ({ astKind: 'Identifier', name: match[0] })), // Extract the matched string
+  parjsCombinators.map((match): Identifier => ({ astKind: 'Identifier', name: match[0] })), // Extract the matched string.
 );
 
-// Literals (numbers and strings)
-const numberLiteral = parjs.regexp(/-?\d+(\.\d+)?/).pipe(parjsCombinators.map(Number)); // Numbers
+// Literals (numbers and strings).
+const numberLiteral = parjs.regexp(/-?\d+(\.\d+)?/).pipe(parjsCombinators.map(Number)); // Numbers.
 const stringLiteral = parjs.regexp(/"([^"]*)"|'([^']*)'/).pipe(
-  parjsCombinators.map((match): StringLiteral => ({ astKind: 'StringLiteral', value: match[1] || match[2] })), // Extract content without quotes
+  parjsCombinators.map((match): StringLiteral => ({ astKind: 'StringLiteral', value: match[1] || match[2] })), // Extract content without quotes.
 );
 
-// Node pattern (e.g., "(n:Person {name: 'John'})"
+// Node pattern (e.g., "(n:Person {name: 'Alice'})"
 const variableTag = identifier.pipe(parjsCombinators.map((variable) => variable)).expects('variable tag');
 export const label = identifier.pipe(parjsCombinators.map((name) => name));
 export const property = identifier.pipe(

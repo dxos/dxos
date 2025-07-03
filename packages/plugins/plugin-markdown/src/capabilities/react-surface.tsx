@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { createSurface, contributes, Capabilities, useCapability } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
@@ -22,7 +22,7 @@ export default () =>
       id: `${MARKDOWN_PLUGIN}/document`,
       role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { subject: DocumentType; variant: undefined } =>
-        isInstanceOf(DocumentType, data.subject) && !data.variant,
+        Obj.instanceOf(DocumentType, data.subject) && !data.variant,
       component: ({ data, role }) => {
         const selectionManager = useCapability(AttentionCapabilities.Selection);
         const settingsStore = useCapability(Capabilities.SettingsStore);
@@ -49,7 +49,7 @@ export default () =>
       id: `${MARKDOWN_PLUGIN}/text`,
       role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { id: string; subject: DataType.Text } =>
-        typeof data.id === 'string' && isInstanceOf(DataType.Text, data.subject),
+        typeof data.id === 'string' && Obj.instanceOf(DataType.Text, data.subject),
       component: ({ data, role }) => {
         const selectionManager = useCapability(AttentionCapabilities.Selection);
         const settingsStore = useCapability(Capabilities.SettingsStore);
@@ -105,9 +105,9 @@ export default () =>
     }),
     createSurface({
       id: `${MARKDOWN_PLUGIN}/preview`,
-      role: 'popover',
+      role: ['popover', 'card--kanban', 'card--document', 'card'],
       filter: (data): data is { subject: DocumentType | DataType.Text } =>
-        isInstanceOf(DocumentType, data.subject) || isInstanceOf(DataType.Text, data.subject),
+        Obj.instanceOf(DocumentType, data.subject) || Obj.instanceOf(DataType.Text, data.subject),
       component: ({ data, role }) => <MarkdownPreview {...data} role={role} />,
     }),
   ]);

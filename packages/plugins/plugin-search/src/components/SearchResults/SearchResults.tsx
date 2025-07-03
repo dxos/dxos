@@ -4,8 +4,8 @@
 
 import React, { type FC, forwardRef } from 'react';
 
-import { Card } from '@dxos/react-ui-card';
-import { ghostHover, mx } from '@dxos/react-ui-theme';
+import { Card } from '@dxos/react-ui-stack';
+import { ghostHover } from '@dxos/react-ui-theme';
 
 import { SEARCH_RESULT } from '../../meta';
 import { type SearchResult } from '../../types';
@@ -42,30 +42,21 @@ export type SearchItemProps = SearchResult & { selected: boolean } & Pick<Search
 export const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>((item, forwardRef) => {
   const { id, objectType, label, snippet, match, selected, onSelect } = item;
 
-  // TODO(burdon): Convert react-ui-card to use react-ui-icon.
-  // TODO(burdon): Get icon from plugin registry based on object type.
-  const Icon = undefined;
-
   return (
-    <Card.Root
-      ref={forwardRef}
-      classNames={mx('mx-2 mt-2 cursor-pointer', selected && '!bg-activeSurface', ghostHover)}
-      onClick={() => onSelect?.(id)}
-    >
-      {objectType && (
-        <>
-          <div className='text-xs text-neutral-400 ml-4'>{objectType}</div>
-        </>
-      )}
-      <Card.Header>
-        <Card.Title title={label ?? 'Untitled'} />
-        {Icon && <Card.Endcap Icon={Icon} />}
-      </Card.Header>
-      {snippet && (
-        <Card.Body gutter>
-          <Snippet text={snippet} match={match} />
-        </Card.Body>
-      )}
+    <Card.Root>
+      <Card.Content
+        ref={forwardRef}
+        classNames={['mx-2 mt-2 cursor-pointer', selected && '!bg-activeSurface', ghostHover]}
+        onClick={() => onSelect?.(id)}
+      >
+        {objectType && (
+          <>
+            <div className='text-xs text-neutral-400 ml-4'>{objectType}</div>
+          </>
+        )}
+        <Card.Heading>{label ?? 'Untitled'}</Card.Heading>
+        {snippet && <Snippet text={snippet} match={match} />}
+      </Card.Content>
     </Card.Root>
   );
 });

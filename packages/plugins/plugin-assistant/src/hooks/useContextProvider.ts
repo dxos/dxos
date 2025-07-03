@@ -2,14 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Schema } from 'effect';
 import { useMemo } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
-import { Filter, type Space } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
-import { type BaseEchoObject, getDXN, getLabel } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
+import { type Space } from '@dxos/client/echo';
+import { Filter, Obj, type Type } from '@dxos/echo';
 
 export type ContextProvider = {
   query: (params: { query: string }) => Promise<Array<{ uri: string; label: string }>>;
@@ -30,29 +27,28 @@ export const useContextProvider = (space?: Space): ContextProvider | undefined =
       query: async ({ query }) => {
         const artifactSchemas = artifactDefinitions.map((artifact) => artifact.schema);
         const { objects } = await space.db
-          .query(Filter.or(...artifactSchemas.map((schema) => Filter.type(schema as Schema.Schema<BaseEchoObject>))))
+          .query(Filter.or(...artifactSchemas.map((schema) => Filter.type(schema as Type.Schema))))
           .run();
+
         return (
           objects
-            .map((object) => {
-              log.info('object', { object, label: getLabel(Obj.getSchema(object)!, object) });
-              return object;
-            })
-            .filter((object) => stringMatch(query, getLabel(Obj.getSchema(object)!, object) ?? ''))
+            // TODO(burdon): Remove cast ??? (+ two instances below).
+            // .map((object) => {
+            //   log.info('object', { object, label: Obj.getLabel(object as any) });
+            //   return object;
+            // })
+            .filter((object) => stringMatch(query, Obj.getLabel(object as any) ?? ''))
             // TODO(dmaretskyi): `Type.getDXN` (at the point of writing) didn't work here as it was schema-only.
-            .filter((object) => !!getDXN(object))
+            .filter((object) => !!Obj.getDXN(object as Obj.Any))
             .map((object) => ({
-              uri: getDXN(object as any)!.toString(),
-              label: getLabel(Obj.getSchema(object)!, object) ?? '',
+              uri: Obj.getDXN(object as any)!.toString(),
+              label: Obj.getLabel(object as any) ?? '',
             }))
         );
       },
       resolveMetadata: async ({ uri }) => {
         const object = await space.db.query(Filter.ids(uri)).first();
-        return {
-          uri,
-          label: getLabel(Obj.getSchema(object)!, object) ?? '',
-        };
+        return { uri, label: Obj.getLabel(object) ?? '' };
       },
     };
   }, [space, artifactDefinitions]);

@@ -13,9 +13,9 @@ import {
   getEntityKind,
   getSchemaTypename,
   getTypeIdentifierAnnotation,
+  EntityKind,
   type TypeAnnotation,
   TypeAnnotationId,
-  EntityKind,
   type TypeMeta,
 } from '../ast';
 import { type HasId, type ToMutable } from '../types';
@@ -47,7 +47,10 @@ export const EchoObject: {
   };
 };
 
-type EchoRelationOptions<TSource extends Schema.Schema.AnyNoContext, TTarget extends Schema.Schema.AnyNoContext> = {
+export type EchoRelationOptions<
+  TSource extends Schema.Schema.AnyNoContext,
+  TTarget extends Schema.Schema.AnyNoContext,
+> = {
   typename: string;
   version: string;
   source: TSource;

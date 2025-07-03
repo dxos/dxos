@@ -4,9 +4,9 @@
 
 import React, { useState, useMemo, useCallback, type FC } from 'react';
 
-import { decodeReference } from '@dxos/echo-protocol';
+import { type Obj } from '@dxos/echo';
 import { FormatEnum } from '@dxos/echo-schema';
-import { type InvocationSpan, type ScriptType } from '@dxos/functions';
+import { type InvocationSpan } from '@dxos/functions';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -25,7 +25,7 @@ import { DataSpaceSelector } from '../../../containers';
 export type InvocationTraceContainerProps = {
   space?: Space;
   showSpaceSelector?: boolean;
-  script?: ScriptType;
+  target?: Obj.Any;
   detailAxis?: 'block' | 'inline';
 };
 
@@ -33,10 +33,10 @@ export const InvocationTraceContainer = ({
   space,
   detailAxis = 'inline',
   showSpaceSelector = false,
-  script,
+  target,
 }: InvocationTraceContainerProps) => {
   const resolver = useScriptNameResolver({ space });
-  const invocationSpans = useInvocationSpans({ space, script });
+  const invocationSpans = useInvocationSpans({ space, target });
 
   const [selectedId, setSelectedId] = useState<string>();
   const selectedInvocation = useMemo(() => {
@@ -49,7 +49,7 @@ export const InvocationTraceContainer = ({
 
   const properties: TablePropertyDefinition[] = useMemo(() => {
     function* generateProperties() {
-      if (script === undefined) {
+      if (target === undefined) {
         yield { name: 'target', title: 'Target', format: FormatEnum.String, size: 200 };
       }
 
@@ -93,12 +93,12 @@ export const InvocationTraceContainer = ({
     }
 
     return [...generateProperties()];
-  }, [script]);
+  }, [target]);
 
   const rows = useMemo(() => {
     return invocationSpans.map((invocation) => {
       const status = invocation.outcome;
-      const targetDxn = decodeReference(invocation.invocationTarget).dxn;
+      const targetDxn = invocation.invocationTarget.dxn;
 
       // TODO(burdon): Use InvocationTraceStartEvent.
       return {
@@ -107,7 +107,7 @@ export const InvocationTraceContainer = ({
         time: new Date(invocation.timestampMs),
         status,
         duration: formatDuration(invocation.durationMs),
-        queue: decodeReference(invocation.invocationTraceQueue).dxn?.toString() ?? 'unknown',
+        queue: invocation.invocationTraceQueue.dxn?.toString() ?? 'unknown',
         _original: invocation,
       };
     });
@@ -139,7 +139,7 @@ export const InvocationTraceContainer = ({
     <PanelContainer
       toolbar={
         showSpaceSelector && (
-          <Toolbar.Root classNames='border-be border-separator'>
+          <Toolbar.Root classNames='border-be border-subduedSeparator'>
             <DataSpaceSelector />
           </Toolbar.Root>
         )

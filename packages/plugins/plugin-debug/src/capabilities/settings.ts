@@ -3,13 +3,17 @@
 //
 
 import { Capabilities, contributes } from '@dxos/app-framework';
-import { live } from '@dxos/react-client/echo';
+import { live } from '@dxos/live-object';
 
-import { DEBUG_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type DebugSettingsProps, DebugSettingsSchema } from '../types';
 
 export default () => {
   const settings = live<DebugSettingsProps>({});
 
-  return contributes(Capabilities.Settings, { schema: DebugSettingsSchema, prefix: DEBUG_PLUGIN, value: settings });
+  return contributes(Capabilities.Settings, {
+    prefix: meta.id,
+    schema: DebugSettingsSchema,
+    value: settings,
+  });
 };

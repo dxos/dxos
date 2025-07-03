@@ -10,7 +10,7 @@ import {
   runTools,
   type AgentStatus,
   structuredOutputParser,
-  type AIServiceClient,
+  type AiServiceClient,
   type GenerationStream,
   type GenerateRequest,
   Message,
@@ -22,6 +22,7 @@ import {
 } from '@dxos/ai';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import { Event, synchronized } from '@dxos/async';
+import { Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import { create, type ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -57,7 +58,7 @@ export type ArtifactDiffResolver = (artifacts: { id: ObjectId; lastVersion: Obje
 >;
 
 export type SessionRunOptions = {
-  client: AIServiceClient;
+  client: AiServiceClient;
 
   artifacts: ArtifactDefinition[];
 
@@ -310,7 +311,7 @@ export class AISession {
       }
     }
 
-    return create(Message, {
+    return Obj.make(Message, {
       role: 'user',
       content: [...prelude, { type: 'text', text: prompt }],
     });

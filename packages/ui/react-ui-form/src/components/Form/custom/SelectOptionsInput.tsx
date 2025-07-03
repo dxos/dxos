@@ -112,9 +112,7 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
 
   return (
     <Input.Root validationValence={status}>
-      <InputHeader error={error}>
-        <Input.Label>{label}</Input.Label>
-      </InputHeader>
+      <InputHeader error={error} label={label} />
       <div role='none'>
         {options && (
           <List.Root items={options} isItem={(item) => true} onMove={handleMove}>

@@ -83,7 +83,7 @@ export class TestReplicationNetwork extends Resource {
     const forward = new TransformStream({
       transform: async (message, controller) => {
         if (LOG) {
-          log.info('replicate', { from: peer1, to: peer2, message });
+          log('replicate', { from: peer1, to: peer2, message });
         }
 
         if (this._latency !== undefined) {
@@ -96,7 +96,7 @@ export class TestReplicationNetwork extends Resource {
     const backwards = new TransformStream({
       transform: async (message, controller) => {
         if (LOG) {
-          log.info('replicate', { from: peer2, to: peer1, message });
+          log('replicate', { from: peer2, to: peer1, message });
         }
 
         if (this._latency !== undefined) {

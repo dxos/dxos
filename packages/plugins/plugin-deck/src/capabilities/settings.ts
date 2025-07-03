@@ -5,7 +5,7 @@
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
-import { DECK_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { DeckSettingsSchema, type DeckSettingsProps } from '../types';
 
 export default () => {
@@ -19,8 +19,8 @@ export default () => {
   });
 
   return contributes(Capabilities.Settings, {
+    prefix: meta.id,
     schema: DeckSettingsSchema,
-    prefix: DECK_PLUGIN,
     value: settings,
   });
 };

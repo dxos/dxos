@@ -4,14 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { EdgeAiServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 import { createTestData } from '@dxos/schema/testing';
 
 import { processEmail } from './email-processor';
 
-const aiService = new AIServiceEdgeClient({
+const aiClient = new EdgeAiServiceClient({
   endpoint: AI_SERVICE_ENDPOINT.REMOTE,
 });
 
@@ -21,7 +21,7 @@ describe.skip('Email Processing', () => {
     for (const email of emails) {
       const result = await processEmail({
         email,
-        aiService,
+        aiClient,
         context: {
           labels,
           contacts: Object.values(contacts),

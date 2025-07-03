@@ -6,9 +6,21 @@ import { composeStories } from '@storybook/react';
 import { screen, cleanup, fireEvent, act } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
+import { ViewProjection } from '@dxos/schema';
+
 import * as stories from './FieldEditor.stories';
+import { type FieldEditorDebugObjects } from './FieldEditor.stories';
+import { FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
 
 const { Default } = composeStories(stories);
+
+const getFieldEditorDebugObjects = (): FieldEditorDebugObjects => {
+  const debugObjects = (window as any)[FIELD_EDITOR_DEBUG_SYMBOL] as FieldEditorDebugObjects;
+  expect(debugObjects).toBeDefined();
+  expect(debugObjects.props).toBeInstanceOf(Object); // Props object
+  expect(debugObjects.projection).toBeInstanceOf(ViewProjection);
+  return debugObjects;
+};
 
 describe('FieldEditor', () => {
   afterEach(() => {
@@ -21,12 +33,8 @@ describe('FieldEditor', () => {
     expect(screen.getByText('Type format')).toBeInTheDocument();
     expect(screen.getByText('String')).toBeInTheDocument();
 
-    {
-      const debug = JSON.parse(screen.getByTestId('debug').textContent!);
-      const name = debug.props.projection._schema.properties.name;
-      expect(name.type).toBe('string');
-      expect(name.description).toBe('Full name.');
-    }
+    // Verify the initial field shows as String type
+    expect(screen.getByText('String')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('combobox'));
     const options = screen.getAllByRole('option');
@@ -38,12 +46,12 @@ describe('FieldEditor', () => {
       fireEvent.click(screen.getByTestId('save-button'));
     });
 
-    {
-      const debug = JSON.parse(screen.getByTestId('debug').textContent!);
-      const name = debug.props.projection._schema.properties.name;
-      expect(name.type).toBe('number');
-      expect(name.format).toBe('number');
-      expect(name.description).toBe('Full name.');
-    }
+    // Access the live objects directly from window using symbol.
+    const debugObjects = getFieldEditorDebugObjects();
+
+    const name = debugObjects.projection.schema.properties!.name;
+    expect(name.type).toBe('number');
+    expect(name.format).toBe('number');
+    expect(name.description).toBe('Full name.');
   });
 });

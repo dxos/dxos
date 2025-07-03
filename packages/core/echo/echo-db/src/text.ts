@@ -9,8 +9,8 @@ import { invariant } from '@dxos/invariant';
 import { isLiveObject } from '@dxos/live-object';
 import { get } from '@dxos/util';
 
-import { type KeyPath, type DocAccessor, isValidKeyPath, createDocAccessor } from './core-db';
-import { type AnyLiveObject } from './echo-handler';
+import { type KeyPath, type DocAccessor, isValidKeyPath } from './core-db';
+import { type AnyLiveObject, createDocAccessor } from './echo-handler';
 
 // TODO(burdon): Handle assoc to associate with a previous character.
 export const toCursor = (accessor: DocAccessor, pos: number, assoc = 0): A.Cursor => {

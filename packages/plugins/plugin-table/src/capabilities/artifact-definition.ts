@@ -8,10 +8,10 @@ import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { live, fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
+import { fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 
 import { meta } from '../meta';
@@ -125,7 +125,7 @@ export default () => {
           const space = extensions.space;
           const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
           const table = tables.find((table) => fullyQualifiedId(table) === id);
-          invariant(isInstanceOf(TableType, table));
+          invariant(Obj.instanceOf(TableType, table));
 
           const view = await table.view?.load();
           invariant(view);
@@ -151,7 +151,7 @@ export default () => {
           const space = extensions.space;
           const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
           const table = tables.find((table) => fullyQualifiedId(table) === id);
-          invariant(isInstanceOf(TableType, table));
+          invariant(Obj.instanceOf(TableType, table));
 
           const view = await table.view?.load();
           invariant(view);
@@ -182,7 +182,7 @@ export default () => {
           const space = extensions.space;
           const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
           const table = tables.find((table) => fullyQualifiedId(table) === id);
-          invariant(isInstanceOf(TableType, table));
+          invariant(Obj.instanceOf(TableType, table));
 
           const view = await table.view?.load();
           invariant(view);
@@ -194,7 +194,7 @@ export default () => {
 
           // Validate all rows.
           // TODO(ZaymonFC): There should be a nicer way to do this!
-          const validationResults = data.map((row) => Schema.validateEither(schema)(live(schema, row)));
+          const validationResults = data.map((row) => Schema.validateEither(schema)(Obj.make(schema, row)));
           const validationError = validationResults.find((res) => res._tag === 'Left');
           if (validationError) {
             return ToolResult.Error(`Validation failed: ${validationError.left.message}`);

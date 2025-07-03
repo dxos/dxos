@@ -5,5 +5,8 @@
 import { DXN, ObjectId, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 
 // TODO(burdon): Move to @dxos/keys once ObjectId is moved there.
-export const createQueueDxn = (spaceId = SpaceId.random(), queueId = ObjectId.random()) =>
+/**
+ * @deprecated Use `db.queues.create()`
+ */
+export const createQueueDXN = (spaceId = SpaceId.random(), queueId = ObjectId.random()) =>
   new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, queueId]);

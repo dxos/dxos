@@ -12,8 +12,9 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
+import { Obj } from '@dxos/echo';
 import { ClientProvider, useShell } from '@dxos/react-client';
-import { live, useSpace, useQuery, Filter, Query } from '@dxos/react-client/echo';
+import { useSpace, useQuery, Filter, Query } from '@dxos/react-client/echo';
 
 import { TaskList } from './TaskList';
 import { getConfig } from './config';
@@ -38,7 +39,7 @@ export const TaskListContainer = () => {
         // void shell.shareSpace({ spaceKey: space?.key, invitationUrl: (invitationCode) => `/space/${space.key}?spaceInvitationCode=${invitationCode}` });
       }}
       onTaskCreate={(newTaskTitle) => {
-        const task = live(Task, { title: newTaskTitle, completed: false });
+        const task = Obj.make(Task, { title: newTaskTitle, completed: false });
         space?.db.add(task);
       }}
       onTaskRemove={(task) => {

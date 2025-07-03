@@ -23,7 +23,7 @@ const meta: Meta<typeof StackItem.Root> = {
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <StackItem.SigilButton>
-                <Icon icon={'ph--dots-three--regular'} size={5} />
+                <Icon icon='ph--dots-three--regular' size={5} />
               </StackItem.SigilButton>
             </DropdownMenu.Trigger>
           </DropdownMenu.Root>

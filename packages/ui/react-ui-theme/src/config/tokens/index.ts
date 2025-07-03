@@ -50,6 +50,11 @@ const adapterConfig: TailwindAdapterConfig = {
     disposition: 'extend',
     tokenization: 'omit-series',
   },
+  spacing: {
+    facet: 'lengths',
+    disposition: 'extend',
+    tokenization: 'keep-series',
+  },
 };
 
 export const userDefaultTokenSet = {

@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Effect } from 'effect';
+
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
-import { type AnyLiveObject, RefArray } from '@dxos/react-client/echo';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { CollectionAction, defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { AnchoredTo, DataType } from '@dxos/schema';
 
@@ -69,7 +71,7 @@ export const ThreadPlugin = () =>
           id: ThreadType.typename,
           metadata: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (thread: ThreadType) => await RefArray.loadAll(thread.messages ?? []),
+            loadReferences: async (thread: ThreadType) => await Ref.Array.loadAll(thread.messages ?? []),
           },
         }),
         contributes(Capabilities.Metadata, {
@@ -82,10 +84,10 @@ export const ThreadPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: THREAD_ITEM,
           metadata: {
-            parse: (item: AnyLiveObject<any>, type: string) => {
+            parse: (item: ThreadType, type: string) => {
               switch (type) {
                 case 'node':
-                  return { id: item.id, label: item.title, data: item };
+                  return { id: item.id, label: item.name, data: item };
                 case 'object':
                   return item;
                 case 'view-object':
@@ -118,6 +120,27 @@ export const ThreadPlugin = () =>
       id: `${meta.id}/module/migration`,
       activatesOn: ClientEvents.SetupMigration,
       activate: () => contributes(ClientCapabilities.Migration, [DataType.MessageV1ToV2]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/on-space-created`,
+      activatesOn: SpaceEvents.SpaceCreated,
+      activate: (context) => {
+        const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+        return contributes(SpaceCapabilities.OnSpaceCreated, async ({ space, rootCollection }) => {
+          const program = Effect.gen(function* () {
+            const { object: collection } = yield* dispatch(
+              createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(ChannelType) }),
+            );
+            rootCollection.objects.push(Ref.make(collection));
+
+            const { object: channel } = yield* dispatch(
+              createIntent(ThreadAction.CreateChannel, { name: 'General', spaceId: space.id }),
+            );
+            space.db.add(channel);
+          });
+          await Effect.runPromise(program);
+        });
+      },
     }),
     defineModule({
       id: `${meta.id}/module/markdown`,

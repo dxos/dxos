@@ -6,35 +6,36 @@ import { Effect } from 'effect';
 
 import {
   Capabilities,
+  LayoutAction,
+  type PluginContext,
   contributes,
   createIntent,
   createResolver,
-  LayoutAction,
-  type PluginContext,
 } from '@dxos/app-framework';
-import { type Expando, getTypename, type HasId, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
+import { Obj, Ref, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { live, makeRef, type Live } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { isSpace, getSpace, SpaceState, fullyQualifiedId, isEchoObject } from '@dxos/react-client/echo';
+import { isSpace, getSpace, SpaceState, fullyQualifiedId } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+import { DataType } from '@dxos/schema';
 
 import { SpaceCapabilities } from './capabilities';
 import {
+  CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
   JOIN_DIALOG,
-  type JoinDialogProps,
-  POPOVER_RENAME_SPACE,
-  CREATE_OBJECT_DIALOG,
-  type CreateObjectDialogProps,
   POPOVER_RENAME_OBJECT,
+  POPOVER_RENAME_SPACE,
+  type CreateObjectDialogProps,
+  type JoinDialogProps,
 } from '../components';
+import { SpaceEvents } from '../events';
 import { SPACE_PLUGIN } from '../meta';
-import { CollectionAction, CollectionType, SpaceAction } from '../types';
+import { CollectionAction, SpaceAction } from '../types';
 import { cloneObject, COMPOSER_SPACE_LOCK, getNestedObjects } from '../util';
 
 // TODO(wittjosiah): Remove.
@@ -74,12 +75,18 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
         }
         await space.waitUntilReady();
-        const collection = live(CollectionType, { objects: [], views: {} });
-        space.properties[CollectionType.typename] = makeRef(collection);
+        const collection = Obj.make(DataType.Collection, { objects: [] });
+        space.properties[Type.getTypename(DataType.Collection)] = Ref.make(collection);
 
         if (Migrations.versionProperty) {
           space.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
+
+        await context.activatePromise(SpaceEvents.SpaceCreated);
+        const onSpaceCreatedCallbacks = context.getCapabilities(SpaceCapabilities.OnSpaceCreated);
+        await Promise.all(
+          onSpaceCreatedCallbacks.map((onSpaceCreated) => onSpaceCreated({ space, rootCollection: collection })),
+        );
 
         return {
           data: {
@@ -304,7 +311,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.OpenCreateObject,
-      resolve: ({ target, navigable = true }) => {
+      resolve: ({ target, typename, navigable = true }) => {
         const state = context.getCapability(SpaceCapabilities.State);
 
         return {
@@ -316,8 +323,13 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                 blockAlign: 'start',
                 props: {
                   target,
+                  typename,
                   shouldNavigate: navigable
-                    ? (object: Live<any>) => !(object instanceof CollectionType) || state.navigableCollections
+                    ? (object: Obj.Any) => {
+                        const isCollection = Obj.instanceOf(DataType.Collection, object);
+                        const isQueryCollection = Obj.instanceOf(DataType.QueryCollection, object);
+                        return (!isCollection && !isQueryCollection) || state.navigableCollections;
+                      }
                     : () => false,
                 } satisfies Partial<CreateObjectDialogProps>,
               },
@@ -364,18 +376,18 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           };
         }
 
-        if (target instanceof CollectionType) {
-          target.objects.push(makeRef(object as HasId));
+        if (Obj.instanceOf(DataType.Collection, target)) {
+          target.objects.push(Ref.make(object));
         } else if (isSpace(target) && hidden) {
           space.db.add(object);
         } else if (isSpace(target)) {
-          const collection = space.properties[CollectionType.typename]?.target;
-          if (collection instanceof CollectionType) {
-            collection.objects.push(makeRef(object as HasId));
+          const collection = space.properties[Type.getTypename(DataType.Collection)]?.target;
+          if (Obj.instanceOf(DataType.Collection, collection)) {
+            collection.objects.push(Ref.make(object));
           } else {
             // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-            const collection = live(CollectionType, { objects: [makeRef(object as HasId)], views: {} });
-            space.properties[CollectionType.typename] = makeRef(collection);
+            const collection = Obj.make(DataType.Collection, { objects: [Ref.make(object)] });
+            space.properties[Type.getTypename(DataType.Collection)] = Ref.make(collection);
           }
         }
 
@@ -383,7 +395,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           data: {
             id: fullyQualifiedId(object),
             subject: [fullyQualifiedId(object)],
-            object: object as HasId,
+            object,
           },
           intents: [
             ...(observability
@@ -393,7 +405,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                     properties: {
                       spaceId: space.id,
                       objectId: object.id,
-                      typename: getTypename(object),
+                      typename: Obj.getTypename(object),
                     },
                   }),
                 ]
@@ -405,8 +417,14 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: SpaceAction.AddRelation,
       resolve: ({ space, schema, source, target, fields }) => {
-        const relation = live(schema, { [RelationSourceId]: source, [RelationTargetId]: target, ...fields });
-        space.db.add(relation);
+        const relation = space.db.add(
+          Relation.make(schema, {
+            [Relation.Source]: source,
+            [Relation.Target]: target,
+            ...fields,
+          }),
+        );
+
         return {
           data: {
             relation,
@@ -421,18 +439,19 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         // All objects must be a member of the same space.
         const space = getSpace(objects[0]);
-        invariant(space && objects.every((obj) => isEchoObject(obj) && getSpace(obj) === space));
+        invariant(space && objects.every((obj) => Obj.isObject(obj) && getSpace(obj) === space));
         const openObjectIds = new Set<string>(layout.active);
 
         if (!undo) {
-          const parentCollection: CollectionType = target ?? space.properties[CollectionType.typename]?.target;
+          const parentCollection: DataType.Collection =
+            target ?? space.properties[Type.getTypename(DataType.Collection)]?.target;
           const nestedObjectsList = await Promise.all(objects.map((obj) => getNestedObjects(obj, resolve)));
 
           const deletionData = {
             objects,
             parentCollection,
             indices: objects.map((obj) =>
-              parentCollection instanceof CollectionType
+              Obj.instanceOf(DataType.Collection, parentCollection)
                 ? parentCollection.objects.findIndex((object) => object.target === obj)
                 : -1,
             ),
@@ -443,7 +462,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
               .filter((id) => openObjectIds.has(id)),
           } satisfies SpaceAction.DeletionData;
 
-          if (deletionData.parentCollection instanceof CollectionType) {
+          if (Obj.instanceOf(DataType.Collection, deletionData.parentCollection)) {
             [...deletionData.indices]
               .sort((a, b) => b - a)
               .forEach((index: number) => {
@@ -458,7 +477,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           });
           objects.forEach((obj) => space.db.remove(obj));
 
-          const undoMessageKey = objects.some((obj) => obj instanceof CollectionType)
+          const undoMessageKey = objects.some((obj) => Obj.instanceOf(DataType.Collection, obj))
             ? 'collection deleted label'
             : objects.length > 1
               ? 'objects deleted label'
@@ -484,20 +503,20 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         } else {
           if (
             deletionData?.objects?.length &&
-            deletionData.objects.every(isEchoObject) &&
-            deletionData.parentCollection instanceof CollectionType
+            deletionData.objects.every(Obj.isObject) &&
+            Obj.instanceOf(DataType.Collection, deletionData.parentCollection)
           ) {
             // Restore the object to the space.
-            const restoredObjects = deletionData.objects.map((obj: Expando) => space.db.add(obj));
+            const restoredObjects = deletionData.objects.map((obj: Type.Expando) => space.db.add(obj));
 
             // Restore nested objects to the space.
-            deletionData.nestedObjectsList.flat().forEach((obj: Expando) => {
+            deletionData.nestedObjectsList.flat().forEach((obj: Type.Expando) => {
               space.db.add(obj);
             });
 
             deletionData.indices.forEach((index: number, i: number) => {
               if (index !== -1) {
-                deletionData.parentCollection.objects.splice(index, 0, makeRef(restoredObjects[i] as Expando));
+                deletionData.parentCollection.objects.splice(index, 0, Ref.make(restoredObjects[i] as Type.Expando));
               }
             });
 
@@ -553,7 +572,13 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: CollectionAction.Create,
       resolve: async ({ name }) => ({
-        data: { object: live(CollectionType, { name, objects: [], views: {} }) },
+        data: { object: Obj.make(DataType.Collection, { name, objects: [] }) },
+      }),
+    }),
+    createResolver({
+      intent: CollectionAction.CreateQueryCollection,
+      resolve: async ({ name, typename }) => ({
+        data: { object: Obj.make(DataType.QueryCollection, { name, query: { typename } }) },
       }),
     }),
   ]);

@@ -3,12 +3,23 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-import { Capabilities, useAppGraph, useCapabilities } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
-import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { Capabilities, Surface, useAppGraph, useCapabilities, usePluginManager } from '@dxos/app-framework';
+import { DXN, Filter, Obj, Query } from '@dxos/echo';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { fullyQualifiedId, getSpace, useQuery, useSpace } from '@dxos/react-client/echo';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
+import {
+  type CommandMenuGroup,
+  type CommandMenuItem,
+  insertAtCursor,
+  insertAtLineStart,
+  type PreviewLinkRef,
+  type PreviewOptions,
+} from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
@@ -26,7 +37,6 @@ export type MarkdownContainerProps = Pick<
   selectionManager?: SelectionManager;
 };
 
-// TODO(burdon): Factor out difference for ECHO and non-ECHO objects; i.e., single component.
 const MarkdownContainer = ({
   id,
   role,
@@ -37,58 +47,145 @@ const MarkdownContainer = ({
   editorStateStore,
   onViewModeChange,
 }: MarkdownContainerProps) => {
+  const { t } = useTranslation();
   const scrollPastEnd = role === 'article';
-  const doc = isInstanceOf(DocumentType, object) ? object : undefined;
-  const text = isInstanceOf(DataType.Text, object) ? object : undefined;
-  const extensions = useExtensions({ document: doc, text, id, settings, selectionManager, viewMode, editorStateStore });
+  const doc = Obj.instanceOf(DocumentType, object) ? object : undefined;
+  const text = Obj.instanceOf(DataType.Text, object) ? object : undefined;
+  const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
+  const previewOptions = useMemo(
+    (): PreviewOptions => ({
+      addBlockContainer: (link, el) => {
+        setPreviewBlocks((prev) => [...prev, { link, el }]);
+      },
+      removeBlockContainer: (link) => {
+        setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== link.ref));
+      },
+    }),
+    [],
+  );
+  const extensions = useExtensions({
+    document: doc,
+    text,
+    id,
+    settings,
+    selectionManager,
+    viewMode,
+    editorStateStore,
+    previewOptions,
+  });
 
-  if (doc) {
-    return (
-      <DocumentEditor
-        id={fullyQualifiedId(object)}
-        role={role}
-        document={doc}
-        extensions={extensions}
-        viewMode={viewMode}
-        settings={settings}
-        scrollPastEnd={scrollPastEnd}
-        onViewModeChange={onViewModeChange}
-      />
-    );
-  } else if (text) {
-    return (
-      <MarkdownEditor
-        id={id}
-        role={role}
-        initialValue={text.content}
-        extensions={extensions}
-        viewMode={viewMode}
-        toolbar={settings.toolbar}
-        inputMode={settings.editorInputMode}
-        scrollPastEnd={scrollPastEnd}
-        onViewModeChange={onViewModeChange}
-      />
-    );
-  } else {
+  // TODO(wittjosiah): Factor out.
+  const manager = usePluginManager();
+  const resolve = useCallback(
+    (typename: string) =>
+      manager.context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
+    [manager],
+  );
+  const space = getSpace(object);
+  const objectForms = useCapabilities(SpaceCapabilities.ObjectForm);
+  const filter = useMemo(() => Filter.or(...objectForms.map((form) => Filter.type(form.objectSchema))), [objectForms]);
+  const onLinkQuery = useCallback(
+    async (query?: string): Promise<CommandMenuGroup[]> => {
+      const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : query?.toLowerCase() ?? '';
+      const results = await space?.db.query(Query.select(filter)).run();
+      // TODO(wittjosiah): Use `Obj.Any` type.
+      const getLabel = (object: any) => {
+        const type = Obj.getTypename(object)!;
+        const metadata = resolve(type);
+        return (
+          metadata.label?.(object) || object.name || ['object name placeholder', { ns: type, default: 'New object' }]
+        );
+      };
+      const items =
+        results?.objects
+          .filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
+          // TODO(wittjosiah): Remove `any` type.
+          .map((object: any): CommandMenuItem => {
+            const metadata = resolve(Obj.getTypename(object)!);
+            const label = toLocalizedString(getLabel(object), t);
+            return {
+              id: object.id,
+              label,
+              icon: metadata.icon,
+              onSelect: (view, head) => {
+                const link = `[${label}][${Obj.getDXN(object)}]`;
+                if (query?.startsWith('@')) {
+                  insertAtLineStart(view, head, `!${link}\n`);
+                } else {
+                  insertAtCursor(view, head, `${link} `);
+                }
+              },
+            };
+          }) ?? [];
+      return [{ id: 'echo', items }];
+    },
+    [filter, resolve, space],
+  );
+
+  const editor = doc ? (
+    <DocumentEditor
+      id={fullyQualifiedId(object)}
+      role={role}
+      document={doc}
+      extensions={extensions}
+      viewMode={viewMode}
+      settings={settings}
+      scrollPastEnd={scrollPastEnd}
+      onViewModeChange={onViewModeChange}
+      onLinkQuery={space ? onLinkQuery : undefined}
+    />
+  ) : text ? (
+    <MarkdownEditor
+      id={id}
+      role={role}
+      initialValue={text.content}
+      extensions={extensions}
+      viewMode={viewMode}
+      toolbar={settings.toolbar}
+      inputMode={settings.editorInputMode}
+      scrollPastEnd={scrollPastEnd}
+      onViewModeChange={onViewModeChange}
+      onLinkQuery={space ? onLinkQuery : undefined}
+    />
+  ) : (
     // TODO(burdon): Normalize with above.
-    return (
-      <MarkdownEditor
-        id={id}
-        role={role}
-        initialValue={object.text}
-        extensions={extensions}
-        viewMode={viewMode}
-        toolbar={settings.toolbar}
-        inputMode={settings.editorInputMode}
-        scrollPastEnd={scrollPastEnd}
-        onViewModeChange={onViewModeChange}
-      />
-    );
-  }
+    <MarkdownEditor
+      id={id}
+      role={role}
+      initialValue={object.text}
+      extensions={extensions}
+      viewMode={viewMode}
+      toolbar={settings.toolbar}
+      inputMode={settings.editorInputMode}
+      scrollPastEnd={scrollPastEnd}
+      onViewModeChange={onViewModeChange}
+      onLinkQuery={space ? onLinkQuery : undefined}
+    />
+  );
+
+  return (
+    <>
+      {editor}
+      {previewBlocks.map(({ link, el }) => (
+        <PreviewBlock key={link.ref} link={link} el={el} />
+      ))}
+    </>
+  );
+};
+
+// TODO(wittjosiah): This shouldn't be "card" but "block".
+//   It's not a preview card but an interactive embedded object.
+const PreviewBlock = ({ link, el }: { link: PreviewLinkRef; el: HTMLElement }) => {
+  const echoDXN = useMemo(() => DXN.parse(link.ref).asEchoDXN(), [link.ref]);
+  const space = useSpace(echoDXN?.spaceId);
+  const [subject] = useQuery(space, Query.select(Filter.ids(echoDXN?.echoId ?? '')));
+  const data = useMemo(() => ({ subject }), [subject]);
+
+  return createPortal(<Surface role='card--document' data={data} limit={1} />, el);
 };
 
 type DocumentEditorProps = Omit<MarkdownContainerProps, 'object' | 'extensionProviders' | 'editorStateStore'> &
-  Pick<MarkdownEditorProps, 'id' | 'scrollPastEnd' | 'extensions'> & {
+  Pick<MarkdownEditorProps, 'id' | 'scrollPastEnd' | 'extensions' | 'onLinkQuery'> & {
     document: DocumentType;
   };
 

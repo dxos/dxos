@@ -5,8 +5,8 @@
 import { Schema } from 'effect';
 
 import { type NodeArg } from '@dxos/app-graph';
+import { type Live, Obj, Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
-import { live, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
@@ -32,7 +32,7 @@ const createFactory = ({ createSchema, createData }: ObjectDataGenerator) => {
   const schema = createSchema?.();
   return {
     schema,
-    createObject: () => (schema ? live(schema, createData()) : live(createData())),
+    createObject: () => (schema ? Obj.make(schema, createData()) : Obj.make(Type.Expando, createData())),
   };
 };
 
@@ -58,7 +58,10 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
 
   project: {
     createSchema: () =>
-      class ProjectType extends TypedObject({ typename: 'example.com/type/Project', version: '0.1.0' })({
+      class ProjectType extends TypedObject({
+        typename: 'example.com/type/Project',
+        version: '0.1.0',
+      })({
         title: Schema.String,
         repo: Schema.String,
         status: Schema.String,

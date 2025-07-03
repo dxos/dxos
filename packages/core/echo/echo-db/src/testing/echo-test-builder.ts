@@ -20,6 +20,7 @@ import { EchoClient } from '../client';
 import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Filter, Query } from '../query';
+import { MockQueueService } from '../queue';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
@@ -57,9 +58,6 @@ export class EchoTestBuilder extends Resource {
   async createDatabase(options: PeerOptions = {}) {
     const peer = await this.createPeer(options);
     const db = await peer.createDatabase(PublicKey.random());
-    if (options.types) {
-      db.graph.schemaRegistry.addSchema(options.types);
-    }
     return {
       peer,
       host: peer.host,
@@ -73,16 +71,19 @@ export class EchoTestBuilder extends Resource {
 export class EchoTestPeer extends Resource {
   private readonly _kv: LevelDB;
   private readonly _indexing: Partial<EchoHostIndexingConfig>;
+  private readonly _types: Schema.Schema.AnyNoContext[];
   private readonly _clients = new Set<EchoClient>();
+  private _queuesService = new MockQueueService();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
 
-  constructor({ kv = createTestLevel(), indexing = {} }: PeerOptions) {
+  constructor({ kv = createTestLevel(), indexing = {}, types }: PeerOptions) {
     super();
     this._kv = kv;
     this._indexing = indexing;
+    this._types = types ?? [];
     this._initEcho();
   }
 
@@ -91,6 +92,7 @@ export class EchoTestPeer extends Resource {
     this._clients.delete(this._echoClient);
     this._echoClient = new EchoClient();
     this._clients.add(this._echoClient);
+    this._echoClient.graph.schemaRegistry.addSchema(this._types);
   }
 
   get client() {
@@ -107,6 +109,7 @@ export class EchoTestPeer extends Resource {
     this._echoClient.connectToService({
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
+      queueService: this._queuesService,
     });
     await this._echoHost.open(ctx);
     await this._echoClient.open(ctx);
@@ -133,6 +136,7 @@ export class EchoTestPeer extends Resource {
 
   async createClient(): Promise<EchoClient> {
     const client = new EchoClient();
+    client.graph.schemaRegistry.addSchema(this._types);
     this._clients.add(client);
     client.connectToService({
       dataService: this._echoHost.dataService,
@@ -195,7 +199,7 @@ export const createDataAssertion = ({
 
   return {
     seed: async (db: EchoDatabase) => {
-      seedObjects = range(numObjects).map((idx) => db.add({ type: 'task', title: 'A', idx }));
+      seedObjects = range(numObjects).map((idx) => db.add({ type: 'task', title: 'A', idx } as any));
       await db.flush();
     },
     waitForReplication: (db: EchoDatabase) => {
