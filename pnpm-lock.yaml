@@ -4744,37 +4744,6 @@ importers:
         specifier: ~18.2.0
         version: 18.2.0(react@18.2.0)
 
-  packages/devtools/storybook-addon-theme:
-    dependencies:
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@storybook/icons':
-        specifier: ^1.4.0
-        version: 1.4.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      storybook:
-        specifier: ^9.0.14
-        version: 9.0.14(@testing-library/dom@10.4.0)(prettier@3.2.4)
-    devDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
-      '@types/react':
-        specifier: ~18.2.0
-        version: 18.2.79
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-
   packages/devtools/storybook-utils:
     dependencies:
       '@dxos/echo-signals':
