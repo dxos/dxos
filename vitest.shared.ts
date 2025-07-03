@@ -106,6 +106,7 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
   const packageDir = packageJson!.split('/').slice(0, -1).join('/');
   const packageDirRelative = relative(__dirname, packageDir);
   const coverageDir = join(__dirname, 'coverage', packageDirRelative);
+  const coverageEnabled = Boolean(process.env.VITEST_COVERAGE);
 
   if (shouldCreateXmlReport) {
     return {
@@ -115,6 +116,7 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
       //    however nx outputs config also needs to be aware of this.
       outputFile: join(__dirname, 'test-results', packageDirRelative, 'results.xml'),
       coverage: {
+        enabled: coverageEnabled,
         reportsDirectory: coverageDir,
       },
     };
@@ -124,6 +126,7 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
     passWithNoTests: true,
     reporters: ['verbose'],
     coverage: {
+      enabled: coverageEnabled,
       reportsDirectory: coverageDir,
     },
   };

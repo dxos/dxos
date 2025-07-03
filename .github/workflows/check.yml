@@ -81,6 +81,10 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
+    env:
+      VITEST_ENV: 'node'
+      VITEST_COVERAGE: 'true'
+      VITEST_XML_REPORT: 'true'
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -127,14 +131,7 @@ jobs:
           result: ${{ job.status }}
 
   e2e:
-    if: >-
-      ${{
-        startsWith(github.ref, 'refs/heads/main') ||
-        startsWith(github.ref, 'refs/heads/rc-') ||
-        startsWith(github.ref, 'refs/heads/hotfix-') ||
-        startsWith(github.ref, 'refs/heads/release-please-') ||
-        inputs.e2e
-      }}
+    if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
     runs-on:
       group: ubuntu-large
     container:
