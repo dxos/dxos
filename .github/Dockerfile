@@ -4,7 +4,7 @@ FROM node:${NODE_VERSION}
 
 RUN apt-get update \
   # Install native dependencies.
-  && apt-get install -y libxtst-dev libpng++-dev libenchant-2-2 \
+  && apt-get install -y libxtst-dev libpng++-dev libenchant-2-2 git-lfs \
   # Install playwright native dependencies.
   # NOTE: Keep playwright version in sync with the one in package.json.
   # https://playwright.dev/docs/docker#build-your-own-image
