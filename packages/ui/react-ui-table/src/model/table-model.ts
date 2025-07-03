@@ -281,6 +281,13 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return () => rowEffects.forEach((cleanup) => cleanup());
     });
     this._ctx.onDispose(rowEffectManager);
+
+    const draftRowsWatcher = effect(() => {
+      touch(this._draftRows.value);
+      // Notify grid that draft rows have changed
+      this._onRowOrderChange?.();
+    });
+    this._ctx.onDispose(draftRowsWatcher);
   }
 
   //
