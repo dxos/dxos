@@ -29,7 +29,6 @@ export const config = (baseConfig: ConfigProps): StorybookConfig => ({
     options: {},
   },
   addons: [
-    '@dxos/storybook-addon-logger',
     '@storybook/addon-docs',
     '@storybook/addon-links',
     '@storybook/addon-themes',
