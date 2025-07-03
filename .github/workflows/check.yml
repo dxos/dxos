@@ -41,7 +41,13 @@ jobs:
     strategy:
       matrix:
         node-version: ['20.12.1']
-    runs-on: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
+    runs-on:
+      group: ubuntu-large
+    container:
+      image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -92,7 +98,13 @@ jobs:
           result: ${{ job.status }}
 
   check:
-    runs-on: ghcr.io/dxos/gh-actions:20.12.1
+    runs-on:
+      group: ubuntu-large
+    container:
+      image: ghcr.io/dxos/gh-actions:20.12.1-burdon-gh-actions
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -120,8 +132,14 @@ jobs:
         run: pnpm exec nx run-many -t lint build
 
   e2e:
-    runs-on: ghcr.io/dxos/gh-actions:20.12.1
     if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
+    runs-on:
+      group: ubuntu-large
+    container:
+      image: ghcr.io/dxos/gh-actions:20.12.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
     env:
       DX_ENVIRONMENT: ci
       DX_PWA: false
@@ -160,7 +178,12 @@ jobs:
           result: ${{ job.status }}
 
   check-cycles:
-    runs-on: ghcr.io/dxos/gh-actions:20.12.1
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/dxos/gh-actions:20.12.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

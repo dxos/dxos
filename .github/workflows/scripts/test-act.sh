@@ -14,5 +14,4 @@ act \
   --workflows ".github/workflows/$WORKFLOW" \
   --eventpath ".github/workflows/testing/test-push-event.json" \
   --secret-file .github/workflows/env/.secrets \
-  --container-architecture linux/amd64 \
-  -P ghcr.io/dxos/gh-actions:20.12.1=ghcr.io/dxos/gh-actions:latest
+  --container-architecture linux/amd64
