@@ -53,7 +53,6 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
   stories: baseStories ?? stories,
   addons: [
     '@dxos/storybook-addon-logger',
-    '@dxos/storybook-addon-theme',
     '@storybook/addon-docs',
     '@storybook/addon-links',
     '@storybook/addon-themes',

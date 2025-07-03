@@ -28,9 +28,6 @@
     },
     {
       "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../storybook-addon-theme"
     }
   ]
 }
