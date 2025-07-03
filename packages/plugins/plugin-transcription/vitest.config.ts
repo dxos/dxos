@@ -6,12 +6,15 @@ import { defineConfig, mergeConfig } from 'vitest/config';
 
 import { baseConfig } from '../../../vitest.shared';
 
-export default mergeConfig(baseConfig(), defineConfig({
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    coverage: {
-      reporter: ['text', 'html'],
+export default mergeConfig(
+  baseConfig({ cwd: __dirname }), 
+  defineConfig({
+    test: {
+      environment: 'jsdom',
+      globals: true,
+      coverage: {
+        reporter: ['text', 'html'],
+      },
     },
-  }
-}));
+  }),
+);
