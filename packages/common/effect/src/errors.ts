@@ -79,6 +79,14 @@ const prettyErrorStack = (error: any, appendStacks: string[] = []): void => {
   });
 };
 
+/**
+ * Runs the embedded effect asynchronously and throws any failures and defects as errors.
+ * Inserts effect spans as stack frames.
+ * The error will have stack frames of where the effect was run (if stack trace limit allows).
+ * Removes effect runtime internal stack frames.
+ *
+ * @throws AggregateError if there are multiple errors.
+ */
 export const runAndForwardErrors = async <A, E>(
   effect: Effect.Effect<A, E, never>,
   options?: { signal?: AbortSignal },
