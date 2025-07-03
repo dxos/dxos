@@ -1,4 +1,4 @@
-name: Build and Publish Docker Image
+name: Build and Push Docker Image
 
 permissions:
   contents: read
@@ -9,10 +9,8 @@ on:
     branches:
       - main
       - gh-docker
-      - burdon/gh-actions
     paths:
       - .github/Dockerfile
-      # TODO(nf): shouldn't be needed, but it seems to be?
       - .github/workflows/docker-image.yml
   workflow_dispatch:
 
@@ -22,7 +20,7 @@ env:
   IMAGE_TAG_SUFFIX: ''
 
 jobs:
-  publish:
+  build-and-push:
     strategy:
       matrix:
         node_version: ['20.12.1', '22', '24']
