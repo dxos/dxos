@@ -178,4 +178,13 @@ describe('AST', () => {
       );
     }
   });
+
+  test('Schema.pluck', ({ expect }) => {
+    const TestSchema = Schema.Struct({
+      name: Schema.String,
+    });
+
+    expect(TestSchema.pipe(Schema.pluck('name'), Schema.typeSchema).ast).toEqual(SchemaAST.stringKeyword);
+    expect(() =>TestSchema.pipe(Schema.pluck('missing' as any), Schema.typeSchema)).to.throw();
+  });
 });
