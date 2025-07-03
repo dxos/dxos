@@ -4,8 +4,6 @@
 
 import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-core';
 
-import { ObjectId } from '@dxos/keys';
-
 import { type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Ref } from '@dxos/echo';
@@ -20,7 +18,8 @@ import {
   toEffectSchema,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { isLiveObject } from '@dxos/live-object';
+import { ObjectId } from '@dxos/keys';
+import { isLiveObject, makeRef } from '@dxos/live-object';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
@@ -285,15 +284,16 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
     const draftRowsWatcher = effect(() => {
       const draftRows = touch(this._draftRows.value);
-      console.log('Draft rows changed:', {
-        count: draftRows.length,
-        rows: draftRows.map((row, index) => ({
-          index,
-          valid: row.valid,
-          validationErrors: row.validationErrors.map((err) => ({ path: err.path, message: err.message })),
-          data: row.data,
-        })),
-      });
+      // TODO(ZaymonFC): Remove debug logging when implementation is complete
+      // console.log('Draft rows changed:', {
+      //   count: draftRows.length,
+      //   rows: draftRows.map((row, index) => ({
+      //     index,
+      //     valid: row.valid,
+      //     validationErrors: row.validationErrors.map((err) => ({ path: err.path, message: err.message })),
+      //     data: row.data,
+      //   })),
+      // });
     });
     this._ctx.onDispose(draftRowsWatcher);
   }
