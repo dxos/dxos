@@ -387,7 +387,11 @@ export class GraphExecutor {
         // TODO(dmaretskyi): Figure out schema validation on value bags.
         invariant(ValueBag.isValueBag(inputValues), 'Input must be a value bag');
         let outputBag = yield* nodeSpec.exec(inputValues, node.graphNode).pipe(
-          Effect.mapError((cause) => new ComputeNodeError('Compute node failed', { cause, context: { nodeId } })),
+          Effect.mapError((cause) =>
+            ComputeNodeError.is(cause) || ValueValidationError.is(cause)
+              ? cause
+              : new ComputeNodeError('Compute node failed', { cause, context: { nodeId } }),
+          ),
           Effect.withSpan('call-node'),
           Effect.provideService(EventLogger, {
             log: logger.log,

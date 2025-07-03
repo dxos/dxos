@@ -144,8 +144,8 @@ export const gptNode = defineComputeNode({
         });
       });
 
-      const eventStream = Stream.asyncPush<GenerationStreamEvent>((push) =>
-        Effect.gen(function* () {
+      const eventStream = Stream.asyncPush<GenerationStreamEvent>(
+        Effect.fnUntraced(function* (push) {
           const ctx = yield* contextFromScope();
           session.streamEvent.on(ctx, (event) => {
             push.single(event);
