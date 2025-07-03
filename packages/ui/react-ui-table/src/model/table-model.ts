@@ -78,7 +78,7 @@ export type TableModelProps<T extends TableRow = TableRow> = {
   sorting?: FieldSortType[];
   pinnedRows?: { top: number[]; bottom: number[] };
   rowActions?: TableRowAction[];
-  onInsertRow?: (index?: number) => boolean;
+  onInsertRow?: (data?: any) => boolean;
   onDeleteRows?: (index: number, obj: T[]) => void;
   onDeleteColumn?: (fieldId: string) => void;
   onCellUpdate?: (cell: DxGridPosition) => void;
@@ -97,7 +97,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     end: { row: 0, col: 0 },
   });
 
-  private readonly _onInsertRow?: (index?: number) => boolean;
+  private readonly _onInsertRow?: (data?: any) => boolean;
   private readonly _onDeleteRows?: TableModelProps<T>['onDeleteRows'];
   private readonly _onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
   private readonly _onCellUpdate?: TableModelProps<T>['onCellUpdate'];
@@ -283,18 +283,17 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._ctx.onDispose(rowEffectManager);
 
     const draftRowsWatcher = effect(() => {
-      touch(this._draftRows.value);
+      const draftRows = touch(this._draftRows.value);
       // TODO(ZaymonFC): Remove debug logging when implementation is complete
-      // const draftRows = this._draftRows.value;
-      // console.log('Draft rows changed:', {
-      //   count: draftRows.length,
-      //   rows: draftRows.map((row, index) => ({
-      //     index,
-      //     valid: row.valid,
-      //     validationErrors: row.validationErrors.map((err) => ({ path: err.path, message: err.message })),
-      //     data: row.data,
-      //   })),
-      // });
+      console.log('Draft rows changed:', {
+        count: draftRows.length,
+        rows: draftRows.map((row, index) => ({
+          index,
+          valid: row.valid,
+          validationErrors: row.validationErrors.map((err) => ({ path: err.path, message: err.message })),
+          data: row.data,
+        })),
+      });
     });
     this._ctx.onDispose(draftRowsWatcher);
   }
@@ -317,9 +316,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public getColumnCount = (): number => this._view?.fields.length ?? 0;
 
-  public insertRow = (rowIndex?: number): void => {
-    const row = rowIndex !== undefined ? this._sorting.getDataIndex(rowIndex) : this._rows.value.length;
-    const result = this._onInsertRow?.(row);
+  public insertRow = (): void => {
+    const result = this._onInsertRow?.();
     if (result === false && this._draftRows.value.length === 0) {
       this.createDraftRow();
     }
@@ -370,6 +368,34 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     const schema = toEffectSchema(this._projection.schema);
     return validateSchema(schema, data) || [];
   }
+
+  public commitDraftRow = (draftRowIndex: number): boolean => {
+    if (draftRowIndex < 0 || draftRowIndex >= this._draftRows.value.length) {
+      console.log('commitDraftRow: Invalid draft row index', draftRowIndex);
+      return false;
+    }
+
+    const draftRow = this._draftRows.value[draftRowIndex];
+    if (!draftRow.valid) {
+      console.log('commitDraftRow: Draft row is invalid', { draftRow, validationErrors: draftRow.validationErrors });
+      return false; // Cannot commit invalid draft row
+    }
+
+    console.log('commitDraftRow: Attempting to commit valid draft row', { data: draftRow.data });
+    
+    // Attempt to commit via callback
+    const success = this._onInsertRow?.(draftRow.data);
+    console.log('commitDraftRow: onInsertRow result', success);
+    
+    if (success) {
+      // Remove the draft row since it's now persisted
+      const newDraftRows = this._draftRows.value.filter((_, index) => index !== draftRowIndex);
+      this._draftRows.value = newDraftRows;
+      console.log('commitDraftRow: Draft row successfully committed and removed');
+    }
+
+    return success ?? false;
+  };
 
   public deleteRow = (rowIndex: number): void => {
     const row = this._sorting.getDataIndex(rowIndex);
@@ -586,6 +612,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   //
   // View operations
   //
+
   public saveView(): void {
     this._sorting.save();
   }
