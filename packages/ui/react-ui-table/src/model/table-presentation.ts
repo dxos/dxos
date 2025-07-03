@@ -131,6 +131,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       cell.className = mx(classes.flat());
     }
 
+    // Arrays.
     if (props.type === TypeEnum.Array) {
       const targetArray = getValue(obj, field.path);
       if (targetArray && Array.isArray(targetArray)) {
@@ -172,6 +173,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       }
     }
 
+    // References.
     if (props.format === FormatEnum.Ref && props.referenceSchema) {
       const targetObj = getValue(obj, field.path)?.target;
       if (targetObj) {
@@ -180,6 +182,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       }
     }
 
+    // Booleans.
     if (props.format === FormatEnum.Boolean) {
       const value = getValue(obj, field.path);
       cell.accessoryHtml = tableControls.switch.render({
@@ -190,6 +193,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       cell.readonly = 'no-text-select';
     }
 
+    // Single-Selects.
     if (props.format === FormatEnum.SingleSelect) {
       const value = getValue(obj, field.path);
       const options = this.model.projection.getFieldProjection(field.id).props.options;
@@ -201,6 +205,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       }
     }
 
+    // Multi-Selects.
     if (props.format === FormatEnum.MultiSelect) {
       const values = getValue(obj, field.path) as string[] | undefined;
       const options = this.model.projection.getFieldProjection(field.id).props.options;
