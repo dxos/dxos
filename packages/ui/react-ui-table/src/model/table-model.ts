@@ -281,21 +281,6 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return () => rowEffects.forEach((cleanup) => cleanup());
     });
     this._ctx.onDispose(rowEffectManager);
-
-    const draftRowsWatcher = effect(() => {
-      const draftRows = touch(this._draftRows.value);
-      // TODO(ZaymonFC): Remove debug logging when implementation is complete
-      console.log('Draft rows changed:', {
-        count: draftRows.length,
-        rows: draftRows.map((row, index) => ({
-          index,
-          valid: row.valid,
-          validationErrors: row.validationErrors.map((err) => ({ path: err.path, message: err.message })),
-          data: row.data,
-        })),
-      });
-    });
-    this._ctx.onDispose(draftRowsWatcher);
   }
 
   //
@@ -371,27 +356,19 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public commitDraftRow = (draftRowIndex: number): boolean => {
     if (draftRowIndex < 0 || draftRowIndex >= this._draftRows.value.length) {
-      console.log('commitDraftRow: Invalid draft row index', draftRowIndex);
       return false;
     }
 
     const draftRow = this._draftRows.value[draftRowIndex];
     if (!draftRow.valid) {
-      console.log('commitDraftRow: Draft row is invalid', { draftRow, validationErrors: draftRow.validationErrors });
-      return false; // Cannot commit invalid draft row
+      return false;
     }
 
-    console.log('commitDraftRow: Attempting to commit valid draft row', { data: draftRow.data });
-
-    // Attempt to commit via callback
     const success = this._onInsertRow?.(draftRow.data);
-    console.log('commitDraftRow: onInsertRow result', success);
 
     if (success) {
-      // Remove the draft row since it's now persisted
       const newDraftRows = this._draftRows.value.filter((_, index) => index !== draftRowIndex);
       this._draftRows.value = newDraftRows;
-      console.log('commitDraftRow: Draft row successfully committed and removed');
     }
 
     return success ?? false;
