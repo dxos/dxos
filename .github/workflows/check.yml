@@ -84,6 +84,12 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
         if: ${{ !env.ACT }}
 
+      - name: Configure nx for Act
+        if: ${{ env.ACT }}
+        run: |
+          echo "NX_BASE=main" >> $GITHUB_ENV
+          echo "NX_HEAD=HEAD" >> $GITHUB_ENV
+
       # TODO(wittjosiah): Coverage is causing CI failures.
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
@@ -151,6 +157,12 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
         if: ${{ !env.ACT }}
 
+      - name: Configure nx for Act
+        if: ${{ env.ACT }}
+        run: |
+          echo "NX_BASE=main" >> $GITHUB_ENV
+          echo "NX_HEAD=HEAD" >> $GITHUB_ENV
+
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: pnpm exec nx affected -t lint build
@@ -206,6 +218,12 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
         if: ${{ !env.ACT }}
+
+      - name: Configure nx for Act
+        if: ${{ env.ACT }}
+        run: |
+          echo "NX_BASE=main" >> $GITHUB_ENV
+          echo "NX_HEAD=HEAD" >> $GITHUB_ENV
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
