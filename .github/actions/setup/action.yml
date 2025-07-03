@@ -4,8 +4,10 @@ description: Setup the environment for the other workflows
 runs:
   using: 'composite'
   steps:
+    # TODO(wittjosiah): This shouldn't be needed.
     - name: Mark working directory as safe
       run: git config --global --add safe.directory "$(pwd)"
+      shell: bash
 
     - name: Cache pnpm store
       uses: actions/cache@v4
@@ -20,6 +22,7 @@ runs:
       run: |
         pnpm set verify-store-integrity false
         pnpm install --prefer-offline
+      shell: bash
 
     - uses: nrwl/nx-set-shas@v4
       if: ${{ !env.ACT }}
@@ -29,3 +32,4 @@ runs:
       run: |
         echo "NX_BASE=main" >> $GITHUB_ENV
         echo "NX_HEAD=HEAD" >> $GITHUB_ENV
+      shell: bash
