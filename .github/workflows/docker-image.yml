@@ -25,7 +25,7 @@ jobs:
   publish:
     strategy:
       matrix:
-        node_version: ['20.12.1']
+        node_version: ['20.12.1', '22', '24']
     runs-on: ubuntu-latest
 
     steps:
@@ -55,9 +55,6 @@ jobs:
           context: .github
           file: .github/Dockerfile
           push: true
-          # TODO(wittjosiah): Only tag latest for the default node version.
+          # TODO(wittjosiah): Tag latest for the default node version.
           tags: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ env.NODE_VERSION }}${{ env.IMAGE_TAG_SUFFIX }}
-        env:
-          NODE_VERSION: ${{ matrix.node_version }}
+            ${{ env.IMAGE_NAME }}:${{ matrix.node_version }}${{ env.IMAGE_TAG_SUFFIX }}
