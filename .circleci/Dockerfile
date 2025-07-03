@@ -1,16 +1,19 @@
-FROM mcr.microsoft.com/playwright:v1.43.1-jammy
+FROM cimg/base:2022.04
 
-ENV NODE_VERSION 20.19.0
+ENV NODE_VERSION 20.12.1
+# https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md#global-npm-dependencies
+ENV NPM_CONFIG_PREFIX=/home/circleci/.npm-global
+ENV PATH=$PATH:/home/circleci/.npm-global/bin
 
 RUN mkdir -p ${NPM_CONFIG_PREFIX}/{bin,lib}
 
-# Node
 RUN curl -L -o node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" && \
   sudo tar -xJf node.tar.xz -C /usr/local --strip-components=1 && \
   rm node.tar.xz && \
   sudo ln -s /usr/local/bin/node /usr/local/bin/nodejs
 
-# Deps
-RUN sudo apt-get update
-RUN sudo apt-get install -y libxtst-dev libpng++-dev libenchant-2-2 lsof rsync
-RUN sudo apt-get install -y pnpm
+# NOTE: Keep playwright version in sync with the one in package.json
+RUN sudo apt-get update \
+  && sudo apt-get install -y libxtst-dev libpng++-dev libenchant-2-2 lsof rsync \
+  && npx playwright@1.46.0 install-deps \ 
+  && npm install -g pnpm@9.11.0
