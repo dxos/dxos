@@ -26,13 +26,12 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
-    plugins: () => [
-      TopLevelAwaitPlugin(),
-      WasmPlugin(),
-    ],
+    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
-    ConfigPlugin(),
+    ConfigPlugin({
+      root: __dirname,
+    }),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
     ReactPlugin({

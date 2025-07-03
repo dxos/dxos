@@ -41,10 +41,7 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
-    plugins: () => [
-      TopLevelAwaitPlugin(),
-      WasmPlugin(),
-    ],
+    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
     {
@@ -52,10 +49,13 @@ export default defineConfig({
       config: () => ({
         define: {
           'process.env.PACKAGE_VERSION': `'${PACKAGE_VERSION}'`,
-        }
-      })
+        },
+      }),
     },
-    ConfigPlugin({ env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'PACKAGE_VERSION'] }),
+    ConfigPlugin({
+      root: __dirname,
+      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'PACKAGE_VERSION'],
+    }),
     ThemePlugin({
       root: __dirname,
       content: [

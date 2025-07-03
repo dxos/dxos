@@ -53,7 +53,10 @@ export default defineConfig({
     plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
-    ConfigPlugin({ env: ['DX_VAULT'] }),
+    ConfigPlugin({
+      root: __dirname,
+      env: ['DX_VAULT'],
+    }),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
     ReactPlugin({

@@ -1,13 +1,20 @@
 {
   "extends": "nx/presets/npm.json",
-  "affected": { "defaultBase": "main" },
+  "affected": {
+    "defaultBase": "main"
+  },
   "parallel": 6,
+  "tui": {
+    "enabled": false
+  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "sharedGlobals": [
       "{workspaceRoot}/tsconfig.json",
       "{workspaceRoot}/.eslintrc*.js",
-      { "runtime": "node --version" }
+      {
+        "runtime": "node --version"
+      }
     ],
     "production": [
       "default",
@@ -38,21 +45,51 @@
       "inputs": [
         "production",
         "^production",
-        { "env": "CONFIG_DYNAMIC" },
-        { "env": "DX_ENVIRONMENT" },
-        { "env": "DX_LABS" },
-        { "env": "DX_IPDATA_API_KEY" },
-        { "env": "DX_SENTRY_DESTINATION" },
-        { "env": "DX_TELEMETRY_API_KEY" },
-        { "env": "DX_HOST" },
-        { "env": "DX_PWA" },
-        { "env": "NODE_ENV" },
-        { "env": "NODE_OPTIONS" },
-        { "env": "REMOTE_SOURCE" },
-        { "env": "DX_HUB_URL" },
-        { "env": "LOG_FILTER" },
-        { "env": "LOG_PREFIX" },
-        { "env": "SENTRY_RELEASE_AUTH_TOKEN" }
+        {
+          "env": "CONFIG_DYNAMIC"
+        },
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "DX_LABS"
+        },
+        {
+          "env": "DX_IPDATA_API_KEY"
+        },
+        {
+          "env": "DX_SENTRY_DESTINATION"
+        },
+        {
+          "env": "DX_TELEMETRY_API_KEY"
+        },
+        {
+          "env": "DX_HOST"
+        },
+        {
+          "env": "DX_PWA"
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "NODE_OPTIONS"
+        },
+        {
+          "env": "REMOTE_SOURCE"
+        },
+        {
+          "env": "DX_HUB_URL"
+        },
+        {
+          "env": "LOG_FILTER"
+        },
+        {
+          "env": "LOG_PREFIX"
+        },
+        {
+          "env": "SENTRY_RELEASE_AUTH_TOKEN"
+        }
       ]
     },
     "compile": {
@@ -60,26 +97,59 @@
       "dependsOn": ["^compile", "prebuild"],
       "executor": "@dxos/esbuild:build",
       "inputs": ["production", "^production"],
-      "options": { "outputPath": "{projectRoot}/dist/lib" },
+      "options": {
+        "outputPath": "{projectRoot}/dist/lib"
+      },
       "outputs": ["{options.outputPath}"]
     },
     "e2e": {
       "cache": true,
       "dependsOn": ["prebuild", "^compile"],
       "executor": "@nx/playwright:playwright",
-      "inputs": ["default", "^production", { "env": "CI" }, { "env": "LOG_LEVEL" }, { "env": "LOG_PROCESSOR" }],
-      "options": { "config": "{projectRoot}/src/playwright/playwright.config.cts" }
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "env": "CI"
+        },
+        {
+          "env": "LOG_LEVEL"
+        },
+        {
+          "env": "LOG_PROCESSOR"
+        }
+      ],
+      "options": {
+        "config": "{projectRoot}/src/playwright/playwright.config.cts"
+      }
     },
     "lint": {
       "cache": true,
       "executor": "@nx/linter:eslint",
       "inputs": ["default"],
-      "options": { "format": "unix", "lintFilePatterns": ["{projectRoot}/**/*.{ts,tsx,js,jsx}"], "quiet": true }
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": ["{projectRoot}/**/*.{ts,tsx,js,jsx}"],
+        "quiet": true
+      }
     },
-    "prebuild": { "cache": true, "dependsOn": ["^compile"], "inputs": ["production", "^production"] },
-    "prerelease": { "cache": true, "dependsOn": ["^build"], "inputs": ["default", "^production"] },
-    "preview": { "inputs": ["production", "^production"] },
-    "serve": { "dependsOn": ["^compile", "prebuild"], "inputs": ["production", "^production"] },
+    "prebuild": {
+      "cache": true,
+      "dependsOn": ["^compile"],
+      "inputs": ["production", "^production"]
+    },
+    "prerelease": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["default", "^production"]
+    },
+    "preview": {
+      "inputs": ["production", "^production"]
+    },
+    "serve": {
+      "dependsOn": ["^compile", "prebuild"],
+      "inputs": ["production", "^production"]
+    },
     "test": {
       "cache": true,
       "dependsOn": ["prebuild", "^compile"],
@@ -88,16 +158,30 @@
         "default",
         "^production",
         "{workspaceRoot}/vitest.shared.ts",
-        { "env": "VITEST_ENV" },
-        { "env": "VITEST_DEBUG" },
-        { "env": "VITEST_XML_REPORT" },
-        { "env": "EDGE_ENDPOINT" }
+        {
+          "env": "VITEST_ENV"
+        },
+        {
+          "env": "VITEST_DEBUG"
+        },
+        {
+          "env": "VITEST_XML_REPORT"
+        },
+        {
+          "env": "EDGE_ENDPOINT"
+        }
       ],
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}", "{workspaceRoot}/test-results/{projectRoot}"]
     },
-    "compile-lib": { "cache": true },
-    "compile-node": { "cache": true },
-    "storybook-build": { "cache": true },
+    "compile-lib": {
+      "cache": true
+    },
+    "compile-node": {
+      "cache": true
+    },
+    "storybook-build": {
+      "cache": true
+    },
     "pack": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
@@ -111,17 +195,13 @@
     },
     "typedoc": {
       "cache": true,
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "executor": "nx:run-script",
       "inputs": ["production"],
       "options": {
         "script": "typedoc"
       },
-      "outputs": [
-        "{projectRoot}/typedoc"
-      ]
+      "outputs": ["{projectRoot}/typedoc"]
     }
   },
   "nxCloudId": "62ed1bb8236992263d3c673b"

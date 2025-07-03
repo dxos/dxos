@@ -6,6 +6,7 @@ import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 
 export { type Meta } from '@storybook/react';
 
+export * from './components';
 export * from './decorators';
 export * from './util';
 

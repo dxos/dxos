@@ -209,8 +209,16 @@ type StoryProps = { rows?: number };
 const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
-  parameters: { translations, controls: { disable: true } },
+  parameters: {
+    translations,
+    layout: 'fullscreen',
+    controls: {
+      disable: true,
+    },
+  },
   decorators: [
+    withTheme,
+    withLayout({ fullscreen: true }),
     withClientProvider({
       types: [TableType, ViewType],
       createIdentity: true,
@@ -227,8 +235,6 @@ const meta: Meta<StoryProps> = {
         });
       },
     }),
-    withLayout({ fullscreen: true }),
-    withTheme,
   ],
 };
 
