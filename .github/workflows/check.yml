@@ -44,6 +44,7 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -81,6 +82,7 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
     env:
       VITEST_ENV: 'node'
       VITEST_COVERAGE: 'true'
@@ -138,6 +140,7 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 45
     env:
       DX_ENVIRONMENT: ci
       DX_PWA: false
