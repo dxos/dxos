@@ -28,11 +28,7 @@ export const config = (baseConfig: ConfigProps): StorybookConfig => ({
     name: '@storybook/web-components-vite',
     options: {},
   },
-  addons: [
-    '@storybook/addon-docs',
-    '@storybook/addon-links',
-    '@storybook/addon-themes',
-  ],
+  addons: ['@storybook/addon-docs', '@storybook/addon-links', '@storybook/addon-themes'],
 
   staticDirs: [resolve(__dirname, '../static')],
   ...baseConfig,
