@@ -23,7 +23,7 @@ concurrency:
 
 # https://nx.dev/ci/intro/tutorials/github-actions
 jobs:
-  test:
+  edge-test:
     runs-on: ubuntu-latest
     steps:
       - name: Setup tmate session
