@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useControls } from 'leva';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect } from 'react';

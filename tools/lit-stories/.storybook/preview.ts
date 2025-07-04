@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
+import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/web-components';
 
 /**
@@ -11,10 +10,26 @@ import { type Preview } from '@storybook/web-components';
  * https://storybook.js.org/docs/configure#configure-story-rendering
  */
 export const preview: Preview = {
-  // https://storybook.js.org/docs/writing-stories/parameters#global-parameters
+  decorators: [
+    // Does not affect docs.
+    withThemeByClassName({
+      defaultTheme: 'dark',
+      themes: {
+        dark: 'dark',
+        light: 'light',
+      },
+    }),
+  ],
+  /**
+   * Referenced when story is previewed in browser.
+   * https://storybook.js.org/docs/writing-stories/parameters#global-parameters
+   */
   parameters: {
     actions: {
-      argTypesRegex: '^on[A-Z].*',
+      argTypesRegex: '^on.*',
+    },
+    backgrounds: {
+      options: {},
     },
     controls: {
       matchers: {
@@ -22,9 +37,12 @@ export const preview: Preview = {
         date: /Date$/,
       },
     },
+
     // Disables Chromatic's snapshotting on a global level.
     chromatic: {
       disableSnapshot: true,
     },
   },
 };
+
+export default preview;

@@ -3,13 +3,13 @@
   <component name="NxAngularConfigService" workspaceLocation="file://$PROJECT_DIR$/nx.json">
     <projects>
       <project name="agent" file="file://$PROJECT_DIR$/packages/core/agent/project.json" />
+      <project name="ai" file="file://$PROJECT_DIR$/packages/core/ai/project.json" />
       <project name="app-framework" file="file://$PROJECT_DIR$/packages/sdk/app-framework/project.json" />
       <project name="app-graph" file="file://$PROJECT_DIR$/packages/sdk/app-graph/project.json" />
-      <project name="artifact" file="file://$PROJECT_DIR$/packages/experimental/artifact/project.json" />
-      <project name="artifact-testing" file="file://$PROJECT_DIR$/packages/experimental/artifact-testing/project.json" />
-      <project name="assistant" file="file://$PROJECT_DIR$/packages/experimental/assistant/project.json" />
+      <project name="artifact" file="file://$PROJECT_DIR$/packages/core/artifact/project.json" />
+      <project name="artifact-testing" file="file://$PROJECT_DIR$/packages/core/artifact-testing/project.json" />
+      <project name="assistant" file="file://$PROJECT_DIR$/packages/core/assistant/project.json" />
       <project name="async" file="file://$PROJECT_DIR$/packages/common/async/project.json" />
-      <project name="automerge" file="file://$PROJECT_DIR$/packages/core/echo/automerge/project.json" />
       <project name="beast" file="file://$PROJECT_DIR$/tools/beast/project.json" />
       <project name="blade-runner" file="file://$PROJECT_DIR$/packages/gravity/blade-runner/project.json" />
       <project name="brand" file="file://$PROJECT_DIR$/packages/ui/brand/project.json" />
@@ -57,7 +57,6 @@
       <project name="examples" file="file://$PROJECT_DIR$/packages/sdk/examples/project.json" />
       <project name="feed-store" file="file://$PROJECT_DIR$/packages/common/feed-store/project.json" />
       <project name="functions" file="file://$PROJECT_DIR$/packages/core/functions/project.json" />
-      <project name="gem-spore" file="file://$PROJECT_DIR$/packages/ui/react-ui-graph/project.json" />
       <project name="graph" file="file://$PROJECT_DIR$/packages/common/graph/project.json" />
       <project name="hypercore" file="file://$PROJECT_DIR$/packages/common/hypercore/project.json" />
       <project name="indexing" file="file://$PROJECT_DIR$/packages/core/echo/indexing/project.json" />
@@ -69,6 +68,7 @@
       <project name="kv-store" file="file://$PROJECT_DIR$/packages/common/kv-store/project.json" />
       <project name="lit-grid" file="file://$PROJECT_DIR$/packages/ui/lit-grid/project.json" />
       <project name="lit-stories" file="file://$PROJECT_DIR$/tools/lit-stories/project.json" />
+      <project name="lit-theme-editor" file="file://$PROJECT_DIR$/packages/ui/lit-theme-editor/project.json" />
       <project name="lit-ui" file="file://$PROJECT_DIR$/packages/ui/lit-ui/project.json" />
       <project name="live-object" file="file://$PROJECT_DIR$/packages/core/echo/live-object/project.json" />
       <project name="local-storage" file="file://$PROJECT_DIR$/packages/common/local-storage/project.json" />
@@ -148,13 +148,13 @@
       <project name="react-ui-canvas" file="file://$PROJECT_DIR$/packages/ui/react-ui-canvas/project.json" />
       <project name="react-ui-canvas-compute" file="file://$PROJECT_DIR$/packages/ui/react-ui-canvas-compute/project.json" />
       <project name="react-ui-canvas-editor" file="file://$PROJECT_DIR$/packages/ui/react-ui-canvas-editor/project.json" />
-      <project name="react-ui-card" file="file://$PROJECT_DIR$/packages/ui/react-ui-card/project.json" />
       <project name="react-ui-components" file="file://$PROJECT_DIR$/packages/ui/react-ui-components/project.json" />
       <project name="react-ui-dnd" file="file://$PROJECT_DIR$/packages/ui/react-ui-dnd/project.json" />
       <project name="react-ui-editor" file="file://$PROJECT_DIR$/packages/ui/react-ui-editor/project.json" />
       <project name="react-ui-form" file="file://$PROJECT_DIR$/packages/ui/react-ui-form/project.json" />
       <project name="react-ui-gameboard" file="file://$PROJECT_DIR$/packages/ui/react-ui-gameboard/project.json" />
       <project name="react-ui-geo" file="file://$PROJECT_DIR$/packages/ui/react-ui-geo/project.json" />
+      <project name="react-ui-graph" file="file://$PROJECT_DIR$/packages/ui/react-ui-graph/project.json" />
       <project name="react-ui-grid" file="file://$PROJECT_DIR$/packages/ui/react-ui-grid/project.json" />
       <project name="react-ui-kanban" file="file://$PROJECT_DIR$/packages/ui/react-ui-kanban/project.json" />
       <project name="react-ui-list" file="file://$PROJECT_DIR$/packages/ui/react-ui-list/project.json" />
@@ -191,6 +191,7 @@
       <project name="teleport-extension-replicator" file="file://$PROJECT_DIR$/packages/core/mesh/teleport-extension-replicator/project.json" />
       <project name="test-utils" file="file://$PROJECT_DIR$/packages/common/test-utils/project.json" />
       <project name="testbench-app" file="file://$PROJECT_DIR$/packages/apps/testbench-app/project.json" />
+      <project name="theme-editor-addon" file="file://$PROJECT_DIR$/packages/common/theme-editor-addon/project.json" />
       <project name="timeframe" file="file://$PROJECT_DIR$/packages/common/timeframe/project.json" />
       <project name="todomvc" file="file://$PROJECT_DIR$/packages/apps/todomvc/project.json" />
       <project name="toolbox" file="file://$PROJECT_DIR$/tools/executors/toolbox/project.json" />

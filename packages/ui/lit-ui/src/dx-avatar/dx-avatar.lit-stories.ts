@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import './dx-avatar.ts';
+import '@dxos-theme';
+
 import './dx-avatar.pcss';
 import { html } from 'lit';
 
@@ -14,7 +15,5 @@ export default {
 };
 
 export const Basic = (props: DxAvatarProps) => {
-  return html`<div class="dark" style="position:fixed;inset:0;">
-    <dx-avatar></dx-avatar>
-  </div>`;
+  return html`<dx-avatar hue="teal" fallback="Composer user" icon="/icons.svg#ph--basketball--regular"></dx-avatar>`;
 };

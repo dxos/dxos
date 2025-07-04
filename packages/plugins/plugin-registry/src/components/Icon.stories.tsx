@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { IconBase, type IconWeight, GithubLogo, type IconProps } from '@phosphor-icons/react';
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { forwardRef, type SVGProps, type ReactElement } from 'react';
 
 import { getSize, mx } from '@dxos/react-ui-theme';

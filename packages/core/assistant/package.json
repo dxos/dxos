@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Natural language interface to DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

@@ -35,7 +35,7 @@ const createNodeConfig = (cwd: string) =>
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui
     // http://localhost:51204/__inspect/#/
-    plugins: [process.env.VITE_INSPECT && Inspect()],
+    plugins: [process.env.VITE_INSPECT ? Inspect() : undefined],
   });
 
 type BrowserOptions = {
@@ -57,7 +57,7 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
       esbuildOptions: {
         plugins: [
           FixGracefulFsPlugin(),
-          // TODO(wittjosiah): Compute nodeStd from package.json.
+          // TODO(wittjosiah): Compute nodeStd from package.json
           ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
         ],
       },
@@ -67,6 +67,7 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
     },
     test: {
       ...resolveReporterConfig({ browserMode: true, cwd }),
+
       name: targetProject,
 
       env: {
@@ -82,7 +83,6 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
 
       testTimeout: isDebug ? 9999999 : 5000,
       inspect: isDebug,
-
       isolate: false,
       poolOptions: {
         threads: {
@@ -131,16 +131,19 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
 
 export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
 
-export const baseConfig = (options: ConfigOptions = {}): ViteConfig => {
+export const baseConfig = (options: ConfigOptions): ViteConfig => {
   switch (environment) {
-    case 'chromium':
+    case 'chromium': {
       return createBrowserConfig({ browserName: environment, ...options });
+    }
     case 'node':
-    default:
+    default: {
       if (environment.length > 0 && environment !== 'node') {
         console.log("Unrecognized VITEST_ENV value, falling back to 'node': " + environment);
       }
+
       return createNodeConfig(options.cwd);
+    }
   }
 };
 
