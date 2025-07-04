@@ -174,7 +174,7 @@
       ],
       "outputs": [
         "{workspaceRoot}/coverage/{projectRoot}", 
-        "{workspaceRoot}/test-results/{projectRoot}",
+        "{workspaceRoot}/test-results/{projectRoot}"
       ]
     },
     "compile-lib": {

@@ -9,11 +9,11 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { Obj, Type } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
-import { Expando, RelationSourceId, RelationTargetId, Ref } from '@dxos/echo-schema';
+import { Expando, RelationSourceId, RelationTargetId, Ref, getMeta } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live, getMeta, type Live } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { range } from '@dxos/util';

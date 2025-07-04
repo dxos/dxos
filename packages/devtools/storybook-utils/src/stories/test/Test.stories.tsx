@@ -16,7 +16,7 @@ import { Test, type TestProps } from './Test';
  * Storybook sanity test.
  */
 const meta: Meta<TestProps> = {
-  title: 'apps/composer-app/Test',
+  title: 'devtools/storybook-utils/Test',
   component: Test,
   decorators: [withTheme],
   // parameters: {

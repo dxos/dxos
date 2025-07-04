@@ -19,24 +19,31 @@ import { ATTR_META } from '../object/model';
  * It is stricter than `T extends {}` or `T extends object`.
  */
 // TODO(dmaretskyi): Rename AnyProperties.
+// TODO(dmaretskyi): Prefer `Record<string, unknown>` over `any`.
 export type BaseObject = Record<string, any>;
 
 /**
  * Marker interface for object with an `id`.
  */
-export type HasId = {
+export interface HasId {
   readonly id: string;
-};
+}
 
 // TODO(burdon): Reconcile with AnyLiveObject. This type is used in some places (e.g. Ref) to mean LiveObject? Do we need branded types?
+// TODO(dmaretskyi): Remove -- this type effectively disables type safety due to `any`.
 export type WithId = BaseObject & HasId;
 
 export type ExcludeId<T extends BaseObject> = Omit<T, 'id'>;
 
+/**
+ * Properties that are required for object creation.
+ */
+// TODO(dmaretskyi): Rename `MakeProps`?
 export type CreationProps<T extends BaseObject> = Omit<T, 'id' | typeof EntityKindId>;
 
 export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 
+// TODO(dmaretskyi): Remove. This should be using the symbol type.
 export type WithMeta = { [ATTR_META]?: ObjectMeta };
 
 /**
@@ -47,40 +54,6 @@ export const RawObject = <S extends Schema.Schema.AnyNoContext>(
 ): Schema.Schema<ExcludeId<Schema.Schema.Type<S>> & WithMeta, Schema.Schema.Encoded<S>> => {
   return Schema.make(SchemaAST.omit(schema.ast, ['id']));
 };
-
-//
-// Data
-//
-
-/**
- * @deprecated No longer used.
- */
-export interface CommonObjectData {
-  id: string;
-  // TODO(dmaretskyi): Document cases when this can be null.
-  // TODO(dmaretskyi): Convert to @typename and @meta.
-  __typename: string | null;
-  __meta: ObjectMeta;
-}
-
-/**
- * @deprecated No longer used.
- */
-export interface AnyObjectData extends CommonObjectData {
-  /**
-   * Fields of the object.
-   */
-  [key: string]: any;
-}
-
-/**
- * Object data type in JSON-encodable format.
- * References are encoded in the IPLD format.
- * `__typename` is the string DXN of the object type.
- * Meta is added under `__meta` key.
- * @deprecated No longer used.
- */
-export type ObjectData<S> = Schema.Schema.Encoded<S> & CommonObjectData;
 
 //
 // Utils

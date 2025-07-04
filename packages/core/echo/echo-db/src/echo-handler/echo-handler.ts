@@ -40,6 +40,7 @@ import {
   RelationTargetDXNId,
   RelationSourceDXNId,
   assertObjectModelShape,
+  getMeta,
 } from '@dxos/echo-schema';
 import { invariant, assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -52,7 +53,7 @@ import {
   type ReactiveHandler,
   symbolIsProxy,
 } from '@dxos/live-object';
-import { getMeta, getProxySlot } from '@dxos/live-object';
+import { getProxySlot } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 

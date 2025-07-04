@@ -7,7 +7,6 @@ import React from 'react';
 
 import { createDocAccessor } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
-import { getMeta } from '@dxos/live-object';
 import { Button, Input, useThemeContext } from '@dxos/react-ui';
 import {
   automerge,
@@ -126,7 +125,7 @@ const Editor = ({ object, prop }: { object: Obj.Any; prop: string }) => {
 
 // TODO(burdon): Add metadata.
 export const DebugItem = ({ object, onDelete }: Pick<ItemProps<Obj.Any>, 'object' | 'onDelete'>) => {
-  const meta = getMeta(object);
+  const meta = Obj.getMeta(object);
   const deleted = JSON.stringify(object).indexOf('@deleted') !== -1; // TODO(burdon): [API] Missing API.
   return (
     <div className='flex w-full px-1.5 py-1 text-sm font-thin font-mono'>

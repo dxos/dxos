@@ -4,7 +4,7 @@
 
 import { type MulticastObservable, type CleanupFn } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
-import { type QueueFactory, type CoreDatabase, type EchoDatabase, type AnyLiveObject } from '@dxos/echo-db';
+import { type QueueFactory, type EchoDatabase, type AnyLiveObject } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
   type Contact,
@@ -71,13 +71,6 @@ export interface Space {
    * Access to queues.
    */
   get queues(): QueueFactory;
-
-  /**
-   * Echo database CRUD API.
-   * @deprecated Use the database api with the `plain` format.
-   */
-  // TODO(burdon): Remove.
-  get crud(): CoreDatabase;
 
   get isOpen(): boolean;
 

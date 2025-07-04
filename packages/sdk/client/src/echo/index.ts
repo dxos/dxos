@@ -17,7 +17,7 @@ export {
   RefArray,
   type TypedObject,
 } from '@dxos/echo-schema';
-export { type Live, live, isLiveObject, makeRef, refFromDXN } from '@dxos/live-object';
+export { type Live, live, isLiveObject } from '@dxos/live-object';
 export {
   DocAccessor,
   type EchoDatabase,
@@ -30,7 +30,6 @@ export {
   Queue,
   type QueryResult,
   type AnyLiveObject,
-  ResultFormat,
   type Selection,
   type SubscriptionHandle,
   createDocAccessor,
