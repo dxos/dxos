@@ -25,7 +25,7 @@ module.exports = {
     'webpack.config.js',
     'vite.config.ts',
     'vitest.config.ts',
-    'vitest.shared.ts',
+    'vitest.base.config.ts',
     'playwright.config.cts',
 
     // Dependencies
