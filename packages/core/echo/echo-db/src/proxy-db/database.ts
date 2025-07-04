@@ -37,6 +37,7 @@ import {
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { Filter, type QueryFn, type QueryOptions, Query } from '../query';
+import type { SaveStateChangedEvent } from '../automerge';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -101,6 +102,11 @@ export interface EchoDatabase {
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
 
   /**
+   * Get notification about the data being saved to disk.
+   */
+  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
+  /**
    * @deprecated
    */
   readonly pendingBatch: ReadOnlyEvent<unknown>;
@@ -163,6 +169,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   readonly _rootProxies = new Map<ObjectCore, AnyLiveObject<any>>();
 
+  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
   constructor(params: EchoDatabaseParams) {
     super();
 
@@ -178,6 +186,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       reactiveQuery: params.reactiveSchemaQuery,
       preloadSchemaOnOpen: params.preloadSchemaOnOpen,
     });
+
+    this.saveStateChanged = this._coreDatabase.saveStateChanged;
   }
 
   [inspect.custom]() {
