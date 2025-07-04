@@ -89,7 +89,7 @@ jobs:
     env:
       VITEST_ENV: 'node'
       VITEST_COVERAGE: 'true'
-      VITEST_XML_REPORT: 'true'
+      VITEST_JSON_REPORT: 'true'
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -117,6 +117,13 @@ jobs:
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: pnpm exec nx run-many --targets=test
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-report
+          path: test-results
+          retention-days: 7
 
       - uses: codecov/codecov-action@v4
         if: ${{ matrix.node-version == '20.12.1' }}
@@ -178,7 +185,7 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: pnpm exec nx run-many --targets=e2e --browser=all --parallel=1
 
-      - name: Upload Artifact
+      - name: Upload Traces
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report

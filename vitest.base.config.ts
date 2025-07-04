@@ -17,6 +17,7 @@ const targetProject = String(process.env.NX_TASK_TARGET_PROJECT);
 const isDebug = !!process.env.VITEST_DEBUG;
 const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
+const jsonReport = Boolean(process.env.VITEST_JSON_REPORT);
 
 type BrowserOptions = {
   cwd: string;
@@ -140,6 +141,18 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
       // TODO(wittjosiah): Browser mode will overwrite this, should be separate directories
       //    however nx outputs config also needs to be aware of this.
       outputFile: join(__dirname, 'test-results', packageDirRelative, 'results.xml'),
+      coverage: {
+        enabled: coverageEnabled,
+        reportsDirectory,
+      },
+    };
+  }
+
+  if (jsonReport) {
+    return {
+      passWithNoTests: true,
+      reporters: ['json', 'verbose'],
+      outputFile: join(__dirname, 'test-results', packageDirRelative, 'results.json'),
       coverage: {
         enabled: coverageEnabled,
         reportsDirectory,
