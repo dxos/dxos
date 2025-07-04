@@ -7,6 +7,7 @@ import { Effect } from 'effect';
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { CollectionAction, defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -24,7 +25,6 @@ import {
 import { meta, THREAD_ITEM } from './meta';
 import translations from './translations';
 import { ChannelType, ThreadAction, ThreadType } from './types';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
