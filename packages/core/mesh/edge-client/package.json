@@ -1,6 +1,6 @@
 {
   "name": "@dxos/edge-client",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "EDGE Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -51,11 +51,15 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/platform": "^0.87.0",
     "isomorphic-ws": "^5.0.0",
     "ws": "^8.14.2"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*"
+  },
+  "peerDependencies": {
+    "effect": "^3.13.3"
   },
   "publishConfig": {
     "access": "public"

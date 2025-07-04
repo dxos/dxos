@@ -92,7 +92,7 @@ export const commandMenu = (options: CommandMenuOptions) => {
           // Insert and select the trigger.
           view.dispatch({
             changes: { from: selection.head, insert: trigger },
-            selection: { anchor: selection.head, head: selection.head + 1 },
+            selection: { anchor: selection.head + 1, head: selection.head + 1 },
             effects: commandRangeEffect.of({ trigger, range: { from: selection.head, to: selection.head + 1 } }),
           });
 
@@ -164,7 +164,7 @@ export const commandMenu = (options: CommandMenuOptions) => {
       update.view.dispatch({ effects: commandRangeEffect.of(nextRange ? { trigger, range: nextRange } : null) });
     }
 
-    // TODO(burdon): Should delete if user presses escape.
+    // TODO(burdon): Should delete if user presses escape? How else to insert the trigger character?
     if (shouldRemove) {
       options.onClose?.();
     }

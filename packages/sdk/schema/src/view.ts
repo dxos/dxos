@@ -11,12 +11,12 @@ import {
   FormatEnum,
   JsonPath,
   JsonSchemaType,
+  type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
   QueryType,
   StoredSchema,
   TypedObject,
   toEffectSchema,
-  type PropertyMetaAnnotation,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { live, type Live } from '@dxos/live-object';
@@ -37,6 +37,8 @@ export const FieldSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
+
+const KeyValueProps = Schema.Record({ key: Schema.String, value: Schema.Any });
 
 /**
  * Views are generated or user-defined projections of a schema's properties.
@@ -81,7 +83,7 @@ export class ViewType extends TypedObject({
   /**
    * Additional metadata for the view.
    */
-  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.mutable)),
+  metadata: Schema.optional(KeyValueProps.pipe(Schema.mutable)),
 
   // TODO(burdon): Readonly flag?
   // TODO(burdon): Add array of sort orders (which might be tuples).
@@ -102,14 +104,19 @@ export class ViewTypeV1 extends TypedObject({
   }).pipe(Schema.mutable),
   schema: Schema.optional(JsonSchemaType),
   fields: Schema.mutable(Schema.Array(FieldSchema)),
-  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.mutable)),
+  metadata: Schema.optional(KeyValueProps.pipe(Schema.mutable)),
 }) {}
 
 export const ViewTypeV1ToV2 = defineObjectMigration({
   from: ViewTypeV1,
   to: ViewType,
   transform: async (from) => {
-    return { ...from, query: { typename: from.query.type } };
+    return {
+      ...from,
+      query: {
+        typename: from.query.type,
+      },
+    };
   },
   onMigration: async () => {},
 });

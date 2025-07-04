@@ -12,6 +12,12 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/graph"
     },
     {

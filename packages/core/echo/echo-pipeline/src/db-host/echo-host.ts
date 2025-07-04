@@ -204,6 +204,9 @@ export class EchoHost extends Resource {
         e.documentIds,
       );
     });
+    this._automergeHost.documentsSaved.on(this._ctx, () => {
+      this._queryService.invalidateQueries();
+    });
   }
 
   protected override async _close(ctx: Context): Promise<void> {

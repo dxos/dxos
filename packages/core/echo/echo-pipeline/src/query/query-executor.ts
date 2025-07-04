@@ -173,7 +173,7 @@ export class QueryExecutor extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     const prevResultSet = this._lastResultSet;
-    const { workingSet, trace } = await this._execPlan(this._plan, this._lastResultSet);
+    const { workingSet, trace } = await this._execPlan(this._plan, []);
     this._lastResultSet = workingSet;
     trace.name = 'Root';
     trace.details = JSON.stringify({ id: this._id });
@@ -200,6 +200,7 @@ export class QueryExecutor extends Resource {
 
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const trace = ExecutionTrace.makeEmpty();
+    const begin = performance.now();
     for (const step of plan.steps) {
       if (this._ctx.disposed) {
         throw new ContextDisposedError();
@@ -209,6 +210,8 @@ export class QueryExecutor extends Resource {
       workingSet = result.workingSet;
       trace.children.push(result.trace);
     }
+    trace.objectCount = workingSet.length;
+    trace.executionTime = performance.now() - begin;
     return { workingSet, trace };
   }
 
@@ -379,6 +382,10 @@ export class QueryExecutor extends Resource {
     step: QueryPlan.FilterDeletedStep,
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
+    if (workingSet.length === 6) {
+      log.info('FilterDeletedStep', { step, workingSet });
+    }
+
     const expected = step.mode === 'only-deleted';
     const result = workingSet.filter((item) => ObjectStructure.isDeleted(item.doc) === expected);
     return {

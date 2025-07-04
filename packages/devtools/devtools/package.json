@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

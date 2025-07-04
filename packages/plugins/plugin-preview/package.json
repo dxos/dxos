@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-preview",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Preview plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -46,6 +46,7 @@
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "effect": "3.14.21",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",

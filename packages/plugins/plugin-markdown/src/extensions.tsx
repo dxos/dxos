@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type ViewUpdate } from '@codemirror/view';
 import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -12,6 +13,7 @@ import {
   useCapabilities,
   useIntentDispatcher,
 } from '@dxos/app-framework';
+import { debounceAndThrottle } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { createDocAccessor, fullyQualifiedId, getSpace, type QueryResult } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -249,20 +251,22 @@ const createBaseExtensions = ({
 };
 
 export const selectionChange = (selectionManager: SelectionManager) => {
-  return EditorView.updateListener.of((update) => {
-    if (update.selectionSet) {
-      const id = update.state.facet(documentId);
-      const cursorConverter = update.state.facet(Cursor.converter);
-      const selection = update.state.selection;
-      const ranges = selection.ranges
-        .map((range) => ({
-          from: cursorConverter.toCursor(range.from),
-          to: cursorConverter.toCursor(range.to),
-        }))
-        .filter(({ from, to }) => to > from);
-      selectionManager.updateMultiRange(id, ranges);
-    }
-  });
+  return EditorView.updateListener.of(
+    debounceAndThrottle((update: ViewUpdate) => {
+      if (update.selectionSet) {
+        const id = update.state.facet(documentId);
+        const cursorConverter = update.state.facet(Cursor.converter);
+        const selection = update.state.selection;
+        const ranges = selection.ranges
+          .map((range) => ({
+            from: cursorConverter.toCursor(range.from),
+            to: cursorConverter.toCursor(range.to),
+          }))
+          .filter(({ from, to }) => to > from);
+        selectionManager.updateMultiRange(id, ranges);
+      }
+    }, 100),
+  );
 };
 
 // TODO(burdon): Factor out styles.

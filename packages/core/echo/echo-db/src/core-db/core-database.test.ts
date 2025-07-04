@@ -8,12 +8,12 @@ import { describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { Filter } from '@dxos/echo';
 import { createIdFromSpaceKey, SpaceDocVersion, type DatabaseDirectory } from '@dxos/echo-protocol';
-import { Expando, ObjectId, Ref } from '@dxos/echo-schema';
+import { Expando, getType, ObjectId, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live, getType } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 

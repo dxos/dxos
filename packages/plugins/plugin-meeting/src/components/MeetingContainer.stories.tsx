@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Capabilities, createResolver, contributes, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';

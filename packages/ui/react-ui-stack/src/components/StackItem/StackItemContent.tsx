@@ -22,6 +22,11 @@ export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'di
   statusbar?: boolean;
 
   /**
+   * Whether the consumer intends to do something custom and typical affordances should not apply
+   */
+  layoutManaged?: boolean;
+
+  /**
    * Whether to set a certain aspect ratio on the content, including the toolbar and statusbar. This is provided for
    * convenience and consistency; it can instead be specified by the `classNames` or `style` props as needed.
    */
@@ -33,18 +38,21 @@ export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'di
  * The `toolbar` flag must be provided since this component provides for the layout of content with the toolbar.
  */
 export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps>(
-  ({ children, toolbar, statusbar, classNames, size = 'intrinsic', ...props }, forwardedRef) => {
+  ({ children, toolbar, statusbar, layoutManaged, classNames, size = 'intrinsic', ...props }, forwardedRef) => {
     const { size: stackItemSize } = useStack();
     const { role } = useStackItem();
     const style = useMemo(
-      () => ({
-        gridTemplateRows: [
-          ...(toolbar ? [role === 'section' ? 'calc(var(--rail-action) - 1px)' : 'var(--rail-action)'] : []),
-          '1fr',
-          ...(statusbar ? ['var(--statusbar-size)'] : []),
-        ].join(' '),
-      }),
-      [toolbar, statusbar],
+      () =>
+        layoutManaged
+          ? {}
+          : {
+              gridTemplateRows: [
+                ...(toolbar ? [role === 'section' ? 'calc(var(--toolbar-size) - 1px)' : 'var(--toolbar-size)'] : []),
+                '1fr',
+                ...(statusbar ? ['var(--statusbar-size)'] : []),
+              ].join(' '),
+            },
+      [toolbar, statusbar, layoutManaged],
     );
     return (
       <div

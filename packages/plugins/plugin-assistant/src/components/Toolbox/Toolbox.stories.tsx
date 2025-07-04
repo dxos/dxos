@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin, Capabilities, useCapabilities, SettingsPlugin } from '@dxos/app-framework';
@@ -15,7 +15,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
-import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Toolbox, type ToolboxProps } from './Toolbox';
 import translations from '../../translations';
@@ -36,7 +36,6 @@ const meta: Meta<typeof Toolbox> = {
   component: Toolbox,
   render: DefaultStory,
   decorators: [
-    withSignals,
     withPluginManager({
       plugins: [
         ClientPlugin({

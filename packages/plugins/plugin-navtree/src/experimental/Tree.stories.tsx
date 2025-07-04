@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { House, List, Planet, PlusCircle, Sailboat } from '@phosphor-icons/react';
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';

@@ -61,9 +61,10 @@ export class EchoTestBuilder extends Resource {
     return {
       peer,
       host: peer.host,
-      db,
+
       graph: db.graph,
-      crud: db.coreDatabase,
+      db,
+      queues: peer.client.constructQueueFactory(db.spaceId),
     };
   }
 }
@@ -199,7 +200,7 @@ export const createDataAssertion = ({
 
   return {
     seed: async (db: EchoDatabase) => {
-      seedObjects = range(numObjects).map((idx) => db.add({ type: 'task', title: 'A', idx }));
+      seedObjects = range(numObjects).map((idx) => db.add({ type: 'task', title: 'A', idx } as any));
       await db.flush();
     },
     waitForReplication: (db: EchoDatabase) => {

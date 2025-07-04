@@ -4,17 +4,16 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import { SchemaAST } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
-import { Obj, type Type } from '@dxos/echo';
+import { Obj, Ref, type Type } from '@dxos/echo';
 import { getSchemaTypename, toJsonSchema } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { makeRef } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { DataType, createView, ViewProjection, ViewType } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
@@ -45,7 +44,7 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
     invariant(typename);
     const name = getAnnotation<string>(SchemaAST.TitleAnnotationId)(schema.ast) ?? typename;
     const view = createView({ name, typename, jsonSchema });
-    return space.db.add(Obj.make(TableType, { view: makeRef(view) }));
+    return space.db.add(Obj.make(TableType, { view: Ref.make(view) }));
   }, [schema, space, jsonSchema]);
 
   const projection = useMemo(() => {

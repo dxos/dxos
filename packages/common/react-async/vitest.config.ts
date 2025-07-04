@@ -4,7 +4,7 @@
 
 import { defineConfig, mergeConfig } from 'vitest/config';
 
-import { baseConfig } from '../../../vitest.shared';
+import { baseConfig } from '../../../vitest.base.config';
 
 // TODO(wittjosiah): Factor out to shared config as an option.
 const specifiedEnv = (process.env.VITEST_ENV ?? 'node').toLowerCase();
