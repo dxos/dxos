@@ -58,6 +58,9 @@
   "devDependencies": {
     "@dxos/test-utils": "workspace:*"
   },
+  "peerDependencies": {
+    "effect": "^3.13.3"
+  },
   "publishConfig": {
     "access": "public"
   }

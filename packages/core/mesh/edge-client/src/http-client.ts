@@ -17,6 +17,15 @@ export type RetryOptions = {
   retryBaseDelay: Duration.Duration;
 };
 
+// Layer pattern.
+export class HttpConfig extends Context.Tag('HttpConfig')<HttpConfig, RetryOptions>() {
+  static default = Layer.succeed(HttpConfig, {
+    timeout: Duration.millis(1_000),
+    retryTimes: 3,
+    retryBaseDelay: Duration.millis(1_000),
+  });
+}
+
 // HOC pattern.
 export const withRetry = (
   effect: Effect.Effect<HttpClientResponse, HttpClientError, HttpClient.HttpClient>,
@@ -39,20 +48,20 @@ export const withRetry = (
   );
 };
 
-export const withLogging = <A extends HttpClientResponse, E, R>(effect: Effect.Effect<A, E, R>) =>
-  effect.pipe(Effect.tap((res) => log.info('response', { status: res.status })));
-
-// Layer pattern.
-export class HttpConfig extends Context.Tag('HttpConfig')<HttpConfig, RetryOptions>() {
-  static default = Layer.succeed(HttpConfig, {
-    timeout: Duration.millis(1_000),
-    retryTimes: 3,
-    retryBaseDelay: Duration.millis(1_000),
-  });
-}
-
 export const withRetryConfig = (effect: Effect.Effect<HttpClientResponse, HttpClientError, HttpClient.HttpClient>) =>
   Effect.gen(function* () {
     const config = yield* HttpConfig;
     return yield* withRetry(effect, config);
   });
+
+export const withLogging = <A extends HttpClientResponse, E, R>(effect: Effect.Effect<A, E, R>) =>
+  effect.pipe(Effect.tap((res) => log.info('response', { status: res.status })));
+
+/**
+ *
+ */
+// TODO(burdon): Document.
+export const encodeAuthHeader = (challenge: Uint8Array) => {
+  const encodedChallenge = Buffer.from(challenge).toString('base64');
+  return `VerifiablePresentation pb;base64,${encodedChallenge}`;
+};

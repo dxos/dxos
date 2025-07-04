@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { FetchHttpClient, HttpClient } from '@effect/platform';
+import { Effect, pipe } from 'effect';
+
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -33,6 +36,7 @@ import {
 import { createUrl } from '@dxos/util';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
+import { encodeAuthHeader, HttpConfig, withLogging, withRetryConfig } from './http-client';
 import { getEdgeUrlWithProtocol } from './utils';
 
 // TODO(burdon): Move to protocols.
@@ -273,19 +277,30 @@ export class EdgeHttpClient {
   // Internal
   //
 
+  private async _fetch<T>(url: URL, args: EdgeHttpRequestArgs): Promise<T> {
+    return pipe(
+      HttpClient.get(url),
+      withLogging,
+      withRetryConfig,
+      Effect.provide(FetchHttpClient.layer),
+      Effect.provide(HttpConfig.default),
+      Effect.withSpan('EdgeHttpClient'),
+      Effect.runPromise,
+    ) as T;
+  }
+
   // TODO(burdon): Refactor with effect (see edge-http-client.test.ts).
   private async _call<T>(url: URL, args: EdgeHttpRequestArgs): Promise<T> {
-    const requestContext = args.context ?? new Context();
     const shouldRetry = createRetryHandler(args);
-    log('call', { url, request: args.body });
+    const requestContext = args.context ?? new Context();
+    log.info('fetch', { url, request: args.body });
 
     let handledAuth = false;
-    let authHeader = this._authHeader;
     while (true) {
       let processingError: EdgeCallFailedError;
       let retryAfterHeaderValue: number = Number.NaN;
       try {
-        const request = createRequest(args, authHeader);
+        const request = createRequest(args, this._authHeader);
         const response = await fetch(url, request);
         retryAfterHeaderValue = Number(response.headers.get('Retry-After'));
         if (response.ok) {
@@ -301,7 +316,7 @@ export class EdgeHttpClient {
             processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
           }
         } else if (response.status === 401 && !handledAuth) {
-          authHeader = await this._handleUnauthorized(response);
+          this._authHeader = await this._handleUnauthorized(response);
           handledAuth = true;
           continue;
         } else {
@@ -321,16 +336,26 @@ export class EdgeHttpClient {
 
   private async _handleUnauthorized(response: Response): Promise<string> {
     if (!this._edgeIdentity) {
-      log.warn('edge unauthorized response received before identity was set');
+      log.warn('unauthorized response received before identity was set');
       throw EdgeCallFailedError.fromHttpFailure(response);
     }
+
     const challenge = await handleAuthChallenge(response, this._edgeIdentity);
-    this._authHeader = encodeAuthHeader(challenge);
-    log('auth header updated');
-    return this._authHeader;
+    return encodeAuthHeader(challenge);
   }
 }
 
+const createRequest = ({ method, body }: EdgeHttpRequestArgs, authHeader: string | undefined): RequestInit => {
+  return {
+    method,
+    body: body && JSON.stringify(body),
+    headers: authHeader ? { Authorization: authHeader } : undefined,
+  };
+};
+
+/**
+ * @deprecated
+ */
 const createRetryHandler = ({ retry }: EdgeHttpRequestArgs) => {
   if (!retry || retry.count < 1) {
     return async () => false;
@@ -354,17 +379,4 @@ const createRetryHandler = ({ retry }: EdgeHttpRequestArgs) => {
 
     return true;
   };
-};
-
-const createRequest = ({ method, body }: EdgeHttpRequestArgs, authHeader: string | undefined): RequestInit => {
-  return {
-    method,
-    body: body && JSON.stringify(body),
-    headers: authHeader ? { Authorization: authHeader } : undefined,
-  };
-};
-
-const encodeAuthHeader = (challenge: Uint8Array) => {
-  const encodedChallenge = Buffer.from(challenge).toString('base64');
-  return `VerifiablePresentation pb;base64,${encodedChallenge}`;
 };
