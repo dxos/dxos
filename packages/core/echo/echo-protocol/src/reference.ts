@@ -168,7 +168,7 @@ export const isEncodedReference = (value: any): value is EncodedReference =>
   typeof value === 'object' && value !== null && Object.keys(value).length === 1 && typeof value['/'] === 'string';
 
 export const EncodedReference = Object.freeze({
-  isEncodedReference: isEncodedReference,
+  isEncodedReference,
   getReferenceString: (value: EncodedReference): string => {
     assertArgument(isEncodedReference(value), 'invalid reference');
     return value['/'];

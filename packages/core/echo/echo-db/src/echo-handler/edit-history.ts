@@ -4,14 +4,14 @@
 
 import { next as am, type Doc, type Heads, type State } from '@automerge/automerge';
 
-import { ATTR_META, ATTR_TYPE } from '@dxos/echo-schema';
-import { assertArgument } from '@dxos/invariant';
-
 import type { Obj } from '@dxos/echo';
 import { ObjectStructure } from '@dxos/echo-protocol';
+import { ATTR_META, ATTR_TYPE } from '@dxos/echo-schema';
+import { assertArgument } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
-import { ObjectCore } from '../core-db';
+
 import { getObjectCore, isEchoObject } from './echo-handler';
+import { ObjectCore } from '../core-db';
 
 /**
  * Returns the edit history of an ECHO object.

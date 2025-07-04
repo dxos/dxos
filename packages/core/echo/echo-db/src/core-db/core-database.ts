@@ -21,7 +21,6 @@ import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import {
   encodeReference,
-  isEncodedReference,
   Reference,
   type DatabaseDirectory,
   type ObjectStructure,
@@ -30,15 +29,13 @@ import {
 import { Ref, type ObjectId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
+import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { chunkArray, deepMapValues, defaultMap } from '@dxos/util';
 
-import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../automerge';
-import { type Hypergraph } from '../hypergraph';
 import {
   AutomergeDocumentLoaderImpl,
   type AutomergeDocumentLoader,
@@ -47,6 +44,8 @@ import {
 } from './automerge-doc-loader';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
+import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../automerge';
+import { type Hypergraph } from '../hypergraph';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -987,14 +986,3 @@ export type FlushOptions = {
 const RPC_TIMEOUT = 20_000;
 
 const DISABLE_THROTTLING = true;
-
-const sanitizeTypename = (typename: string): DXN => {
-  if (typename.startsWith('dxn:')) {
-    return DXN.parse(typename);
-  } else {
-    if (typename.includes(':')) {
-      throw new Error(`Invalid typename: ${typename}`);
-    }
-    return new DXN(DXN.kind.TYPE, [typename]);
-  }
-};

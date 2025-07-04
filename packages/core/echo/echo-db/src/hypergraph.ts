@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { raise, StackTrace } from '@dxos/debug';
+import { StackTrace } from '@dxos/debug';
 import type { Ref } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import {
@@ -33,7 +33,7 @@ import {
   type QueryContext,
   type QueryFn,
   type QueryOptions,
-  type QuerySource
+  type QuerySource,
 } from './query';
 import type { Queue, QueueFactory } from './queue';
 
