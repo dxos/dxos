@@ -4,11 +4,10 @@
 
 import { Schema } from 'effect';
 
-import { type GenerationStreamEvent, Message, Tool } from '@dxos/ai';
+import { Message, Tool } from '@dxos/ai';
 import { ObjectId } from '@dxos/echo-schema';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../types';
-import { StreamSchema } from '../util';
 
 // TODO(burdon): Split up node defs and move types to separate lib package?
 
@@ -33,12 +32,6 @@ export const QueueOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Messag
 
 export const FunctionInput = Schema.Struct({ [DEFAULT_INPUT]: Schema.Any });
 export type FunctionInput = Schema.Schema.Type<typeof FunctionInput>;
-
-export const TemplateInput = Schema.Record({ key: Schema.String, value: Schema.Any });
-export type TemplateInput = Schema.Schema.Type<typeof TemplateInput>;
-
-export const TemplateOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Any });
-export type TemplateOutput = Schema.Schema.Type<typeof TemplateOutput>;
 
 //
 // Data
@@ -84,41 +77,8 @@ export const ReducerOutput = Schema.mutable(Schema.Struct({ [DEFAULT_OUTPUT]: Sc
 export type ReducerOutput = Schema.Schema.Type<typeof ReducerOutput>;
 
 //
-// GPT
-//
-
-const GptStreamEventSchema = Schema.Any as Schema.Schema<GenerationStreamEvent>;
-
-export const GptMessage = Schema.Struct({
-  role: Schema.Union(Schema.Literal('system'), Schema.Literal('user')),
-  message: Schema.String,
-});
-
-export type GptMessage = Schema.Schema.Type<typeof GptMessage>;
-
-export const GptInput = Schema.Struct({
-  systemPrompt: Schema.optional(Schema.String),
-  prompt: Schema.String,
-  model: Schema.optional(Schema.String),
-  tools: Schema.optional(Schema.Array(Tool)),
-  history: Schema.optional(Schema.Array(Message)),
-});
-
-export type GptInput = Schema.Schema.Type<typeof GptInput>;
-
-export const GptOutput = Schema.Struct({
-  messages: Schema.Array(Message),
-  artifact: Schema.optional(Schema.Any),
-  text: Schema.String,
-  cot: Schema.optional(Schema.String),
-  tokenStream: StreamSchema(GptStreamEventSchema),
-  tokenCount: Schema.Number,
-});
-
-export type GptOutput = Schema.Schema.Type<typeof GptOutput>;
-
-//
 // GPT Tools
 //
 
+// TODO(dmaretskyi): Update.
 export const TextToImageOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Tool) });

@@ -4,12 +4,13 @@
 
 import { Schema } from 'effect';
 
+import { ToolId } from '@dxos/ai';
 import { Key, Obj, Type } from '@dxos/echo';
 
 export const BlueprintStep = Schema.Struct({
   id: Key.ObjectId,
   instructions: Schema.String,
-  tools: Schema.optional(Schema.Array(Schema.String)),
+  tools: Schema.optional(Schema.Array(ToolId)),
 });
 export interface BlueprintStep extends Schema.Schema.Type<typeof BlueprintStep> {}
 
