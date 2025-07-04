@@ -30,7 +30,6 @@ export {
   Queue,
   type QueryResult,
   type AnyLiveObject,
-  ResultFormat,
   type Selection,
   type SubscriptionHandle,
   createDocAccessor,

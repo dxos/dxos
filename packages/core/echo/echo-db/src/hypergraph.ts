@@ -455,11 +455,6 @@ export class Hypergraph {
 
     return context;
   }
-
-  private _createPlainObjectQueryContext(spaceId: SpaceId): QueryContext {
-    const space = this._databases.get(spaceId) ?? raise(new Error(`Space not found: ${spaceId}`));
-    return space._coreDatabase._createQueryContext();
-  }
 }
 
 export interface QuerySourceProvider {

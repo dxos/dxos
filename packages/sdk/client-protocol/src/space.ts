@@ -72,13 +72,6 @@ export interface Space {
    */
   get queues(): QueueFactory;
 
-  /**
-   * Echo database CRUD API.
-   * @deprecated Use the database api with the `plain` format.
-   */
-  // TODO(burdon): Remove.
-  get crud(): CoreDatabase;
-
   get isOpen(): boolean;
 
   /**

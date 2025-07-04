@@ -26,7 +26,6 @@ import {
   type ObjectCore,
   type ObjectPlacement,
 } from '../core-db';
-import type { InsertBatch, InsertData, UpdateOperation } from '../core-db/crud-api';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -56,7 +55,7 @@ export type AddOptions = {
 };
 
 /**
- *
+ * Database API.
  */
 export interface EchoDatabase {
   get graph(): Hypergraph;
@@ -93,10 +92,10 @@ export interface EchoDatabase {
 
   /**
    * Update objects.
-   * @deprecated Use `add` instead.
+   * @deprecated Directly mutate the object.
    */
   // TODO(burdon): Remove.
-  update(filter: Filter.Any, operation: UpdateOperation): Promise<void>;
+  update(filter: Filter.Any, operation: unknown): Promise<void>;
 
   /**
    * Insert new objects.
@@ -104,8 +103,7 @@ export interface EchoDatabase {
    */
   // TODO(burdon): Remove.
   // TODO(dmaretskyi): Support meta.
-  insert(data: InsertData): Promise<AnyObjectData>;
-  insert(data: InsertBatch): Promise<AnyObjectData[]>;
+  insert(data: unknown): Promise<unknown>;
 
   /**
    * Run migrations.
