@@ -48,10 +48,6 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
 
   const addRow = useAddRow({ space, schema });
 
-  const handleInsertRow = useCallback(() => {
-    model?.insertRow();
-  }, [model]);
-
   const handleDeleteRows = useCallback(
     (_row: number, objects: any[]) => {
       void dispatch(createIntent(SpaceAction.RemoveObjects, { objects }));
@@ -95,6 +91,10 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
     onRowOrderChange: () => tableRef.current?.update?.(),
   });
+
+  const handleInsertRow = useCallback(() => {
+    model?.insertRow();
+  }, [model]);
 
   const handleSave = useCallback(() => {
     model?.saveView();
