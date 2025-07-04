@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import '../styles.css';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ReactFlow } from '@xyflow/react';
 import React from 'react';
 

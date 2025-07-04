@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 
 import { TestObjectGenerator } from '@dxos/echo-generator';
 import { faker } from '@dxos/random';

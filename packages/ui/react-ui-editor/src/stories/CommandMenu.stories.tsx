@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type EditorView } from '@codemirror/view';
-import { type StoryObj } from '@storybook/react';
+import { type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef } from 'react';
 
 import { Obj, Query } from '@dxos/echo';

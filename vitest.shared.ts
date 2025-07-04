@@ -133,14 +133,17 @@ export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
 
 export const baseConfig = (options: ConfigOptions): ViteConfig => {
   switch (environment) {
-    case 'chromium':
+    case 'chromium': {
       return createBrowserConfig({ browserName: environment, ...options });
+    }
     case 'node':
-    default:
+    default: {
       if (environment.length > 0 && environment !== 'node') {
         console.log("Unrecognized VITEST_ENV value, falling back to 'node': " + environment);
       }
+
       return createNodeConfig(options.cwd);
+    }
   }
 };
 
