@@ -184,7 +184,10 @@ export class BlueprintMachine {
     });
 
     // TODO(wittjosiah): Warn if tool is not found.
-    const tools = nextStep.tools?.map((tool) => this.registry.get(tool)).filter(isNonNullable) ?? [];
+    const tools = (await Promise.all((nextStep.tools ?? []).map((tool) => this.registry.resolve(tool)))).filter(
+      isNonNullable,
+    );
+
     const messages = await session.run({
       systemPrompt: SYSTEM_PROMPT,
       history: [...state.history, ...inputMessages],

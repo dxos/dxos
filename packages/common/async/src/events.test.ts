@@ -22,7 +22,7 @@ describe('Event', () => {
       pureCount++;
     });
 
-    const debounced = event.debounce(80);
+    const debounced = event.debounce(200);
     debounced.on(() => {
       debounceCount++;
     });

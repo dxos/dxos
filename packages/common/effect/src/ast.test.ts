@@ -18,6 +18,7 @@ import {
   isOption,
   isSimpleType,
   visit,
+  isArrayType,
 } from './ast';
 import { type JsonPath, type JsonProp } from './jsonPath';
 
@@ -177,5 +178,21 @@ describe('AST', () => {
         }).ast.toJSON(),
       );
     }
+  });
+
+  test('Schema.pluck', ({ expect }) => {
+    const TestSchema = Schema.Struct({
+      name: Schema.String,
+    });
+
+    expect(TestSchema.pipe(Schema.pluck('name'), Schema.typeSchema).ast).toEqual(SchemaAST.stringKeyword);
+    expect(() => TestSchema.pipe(Schema.pluck('missing' as any), Schema.typeSchema)).to.throw();
+  });
+
+  test('isArray', ({ expect }) => {
+    expect(isArrayType(Schema.String.ast)).to.be.false;
+    expect(isArrayType(Schema.Array(Schema.String).ast)).to.be.true;
+    expect(isArrayType(findProperty(Schema.Struct({ a: Schema.Array(Schema.String) }), 'a' as JsonPath)!)).to.be.true;
+    expect(isArrayType(Schema.Union(Schema.String, Schema.Array(Schema.String)).ast)).to.be.false;
   });
 });

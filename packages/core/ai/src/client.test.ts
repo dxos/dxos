@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 
 import { DEFAULT_EDGE_MODEL } from './defs';
 import { EdgeAiServiceClient, MixedStreamParser, OllamaAiServiceClient } from './service';
-import { AI_SERVICE_ENDPOINT, createTestOllamaClient } from './testing';
+import { AI_SERVICE_ENDPOINT, createTestAiServiceClient } from './testing';
 import { createTool, defineTool, Message, ToolResult } from './tools';
 import { ToolTypes } from './types';
 
@@ -167,7 +167,7 @@ describe.skip('Ollama Client', () => {
       ctx.skip();
     }
 
-    const client = createTestOllamaClient();
+    const client = createTestAiServiceClient();
     const parser = new MixedStreamParser();
 
     const messages = await parser.parse(
@@ -188,7 +188,7 @@ describe.skip('Ollama Client', () => {
       ctx.skip();
     }
 
-    const aiClient = createTestOllamaClient({
+    const aiClient = createTestAiServiceClient({
       tools: [
         createTool('test', {
           name: 'encrypt',
@@ -223,7 +223,7 @@ describe.skip('Ollama Client', () => {
       ctx.skip();
     }
 
-    const client = createTestOllamaClient();
+    const client = createTestAiServiceClient();
     const parser = new MixedStreamParser();
 
     const messages = await parser.parse(
