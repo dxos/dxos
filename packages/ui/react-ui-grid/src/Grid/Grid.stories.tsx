@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type MouseEvent, type MutableRefObject, useCallback, useRef, useState } from 'react';
 
 import { defaultRowSize } from '@dxos/lit-grid';

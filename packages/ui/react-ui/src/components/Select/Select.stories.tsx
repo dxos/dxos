@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj } from '@storybook/react';
+import { type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type Decorator, type StoryFn } from '@storybook/react';
+import { type Meta, type Decorator, type StoryFn } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';

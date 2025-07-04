@@ -8,41 +8,27 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig, searchForWorkspaceRoot, type Plugin } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import wasm from 'vite-plugin-wasm';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import { mergeConfig } from 'vitest/config';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
-import { baseConfig } from '../../../vitest.shared';
 import { APP_KEY } from './src/constants';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 
 const rootDir = resolve(__dirname, '../../..');
-// const rootDir = searchForWorkspaceRoot(process.cwd());
 const baseDir = join(rootDir, '/packages/apps/composer-app');
 
 const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 const dxosIcons = join(rootDir, '/packages/ui/brand/assets/icons');
-
-const { test } = mergeConfig(
-  baseConfig({
-    cwd: __dirname,
-  }),
-  defineConfig({ 
-    test: { 
-      environment: 'jsdom',
-    },
-  }),
-);
 
 /**
  * https://vitejs.dev/config
@@ -99,7 +85,6 @@ export default defineConfig((env) => ({
       ],
     },
   },
-  test,
   resolve: {
     alias: {
       'node-fetch': 'isomorphic-fetch',
@@ -350,7 +335,7 @@ function chunkFileNames(chunkInfo: any) {
   return 'assets/[name]-[hash].js';
 }
 
-function importMapPlugin(options: { modules: string[] }) {
+function importMapPlugin(options: { modules: string[] }): Plugin[] {
   const chunkRefIds: Record<string, string> = {};
   let imports: Record<string, string> = {};
 
@@ -396,5 +381,5 @@ function importMapPlugin(options: { modules: string[] }) {
         };
       },
     },
-  ] satisfies Plugin[];
+  ];
 }

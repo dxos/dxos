@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
