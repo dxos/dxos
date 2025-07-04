@@ -10,13 +10,11 @@ export default mergeConfig(
   baseConfig({ cwd: __dirname }),
   defineConfig({
     test: {
-      test: {
-        globals: true,
-        environment: 'jsdom',
-        setupFiles: [
-          // './src/stories/test/vitest.setup.ts',
-        ],
-      },
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: [
+        // './src/stories/test/vitest.setup.ts',
+      ],
     },
   }),
 );
