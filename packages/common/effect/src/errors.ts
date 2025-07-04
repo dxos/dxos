@@ -1,4 +1,8 @@
-import { Cause, Chunk, Data, Effect, Exit, GlobalValue, Option } from 'effect';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Cause, Chunk, Effect, Exit, GlobalValue, Option } from 'effect';
 import type { AnySpan, Span } from 'effect/Tracer';
 
 const spanSymbol = Symbol.for('effect/SpanAnnotation');

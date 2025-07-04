@@ -21,8 +21,8 @@ import {
   ServiceContainer,
   type ServiceCredential,
   type TracingService,
+  type ToolResolverService,
 } from '../services';
-import { ToolResolverService } from '../services';
 
 // TODO(burdon): Factor out.
 export type OneOf<T> = {

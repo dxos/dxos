@@ -4,12 +4,12 @@
 
 import { type Schema, SchemaAST } from 'effect';
 
+import { isArrayType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type ComputeGraphModel, type ComputeNode, type ComputeMeta } from '../types';
 import { pickProperty } from '../util';
-import { isArrayType } from '@dxos/effect';
 
 /**
  * Structure derived from the compute graph.
@@ -183,7 +183,7 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
         edgeId: edge.id,
         nodeId: targetNode.id,
         property: input.name,
-        message: `input is scalar but has multiple sources`,
+        message: 'input is scalar but has multiple sources',
       });
     }
     input.sources.push({ nodeId: sourceNode.id, property: edge.output });

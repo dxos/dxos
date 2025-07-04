@@ -24,6 +24,7 @@ import {
   type Topology,
   type TopologyNode,
 } from './topology';
+import { ComputeNodeError, ValueValidationError } from '../errors';
 import { createDefectLogger, EventLogger } from '../services';
 import {
   type ComputeEffect,
@@ -36,8 +37,6 @@ import {
   NotExecuted,
   ValueBag,
 } from '../types';
-import { BaseError, type BaseErrorOptions } from '@dxos/errors';
-import { ComputeNodeError, ValueValidationError } from '../errors';
 
 export type ValidateParams = {
   graph: ComputeGraphModel;
@@ -274,14 +273,15 @@ export class GraphExecutor {
 
       let value: unknown;
       switch (input.kind) {
-        case InputKind.Scalar:
+        case InputKind.Scalar: {
           invariant(input.sources.length === 1, 'Scalar input must be bound to a single output');
           const sourceNode =
             this._topology!.nodes.find((node) => node.id === input.sources[0].nodeId) ?? failedInvariant();
           value = yield* this.computeOutput(sourceNode.id, input.sources[0].property);
           invariant(!Effect.isEffect(value));
           break;
-        case InputKind.Array:
+        }
+        case InputKind.Array: {
           const values: unknown[] = yield* Effect.forEach(
             input.sources,
             Effect.fnUntraced(
@@ -295,6 +295,7 @@ export class GraphExecutor {
           );
           value = values.flat();
           break;
+        }
       }
 
       // Assert that the value matches the schema.

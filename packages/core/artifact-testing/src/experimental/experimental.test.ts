@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Cause, Effect, Exit, pipe, Schema } from 'effect';
+import { Effect, pipe, Schema } from 'effect';
 import { inspect } from 'node:util';
 import { beforeAll, describe, test } from 'vitest';
 
@@ -31,6 +31,7 @@ import { TestRuntime } from '@dxos/conductor/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { runAndForwardErrors } from '@dxos/effect';
 import {
   AiService,
   FunctionExecutor,
@@ -42,7 +43,6 @@ import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DataType, DataTypes } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
-import { runAndForwardErrors } from '@dxos/effect';
 
 import { compileBlueprint } from './blueprint-compiler';
 

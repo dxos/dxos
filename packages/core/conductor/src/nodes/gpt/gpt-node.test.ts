@@ -1,16 +1,20 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { afterEach, beforeEach, describe, expect, it } from '@effect/vitest';
 import { Effect } from 'effect';
 
 import { defineTool, Message, OllamaAiServiceClient, ToolTypes } from '@dxos/ai';
-
 import { Obj, Ref } from '@dxos/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import type { ServiceContainer } from '@dxos/functions';
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
+
+import { type GptInput, gptNode } from './node';
 import { ValueBag } from '../../types';
-import { GptInput, gptNode } from './node';
 
 const ENABLE_LOGGING = true;
 

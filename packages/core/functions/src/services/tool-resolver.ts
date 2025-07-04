@@ -1,4 +1,8 @@
-import { Context, Layer } from 'effect';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Context } from 'effect';
 
 import { type ToolResolver } from '@dxos/ai';
 

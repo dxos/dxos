@@ -4,8 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { Key, Obj, Type } from '@dxos/echo';
 import { ToolId } from '@dxos/ai';
+import { Key, Obj, Type } from '@dxos/echo';
 
 export const BlueprintStep = Schema.Struct({
   id: Key.ObjectId,

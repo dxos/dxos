@@ -4,11 +4,10 @@
 
 import { Schema } from 'effect';
 
-import { type GenerationStreamEvent, Message, Tool } from '@dxos/ai';
+import { Message, Tool } from '@dxos/ai';
 import { ObjectId } from '@dxos/echo-schema';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../types';
-import { StreamSchema } from '../util';
 
 // TODO(burdon): Split up node defs and move types to separate lib package?
 

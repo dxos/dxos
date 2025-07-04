@@ -1,20 +1,21 @@
-import { Data, Effect, Schema, Struct } from 'effect';
+//
+// Copyright 2025 DXOS.org
+//
 
-import { DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerationStreamEvent, Message, Tool, ToolId } from '@dxos/ai';
+import { Effect, Schema, Struct, Stream } from 'effect';
+
+import { DEFAULT_EDGE_MODEL, type GenerationStreamEvent, Message, ToolId } from '@dxos/ai';
+import { AISession } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
+import { Queue } from '@dxos/echo-db';
+import { contextFromScope } from '@dxos/effect';
 import { AiService, QueueService, ToolResolverService } from '@dxos/functions';
+import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { EventLogger } from '../../services';
 import { defineComputeNode, ValueBag } from '../../types';
 import { StreamSchema } from '../../util';
-
-import { Stream } from 'effect';
-
-import { AISession } from '@dxos/assistant';
-import { Queue } from '@dxos/echo-db';
-import { contextFromScope } from '@dxos/effect';
-import { assertArgument } from '@dxos/invariant';
 
 // TODO(dmaretskyi): Use `Schema.declare` to define the schema.
 const GptStreamEventSchema = Schema.Any as Schema.Schema<GenerationStreamEvent>;

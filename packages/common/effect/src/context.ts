@@ -1,5 +1,10 @@
-import { Context } from '@dxos/context';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Effect, type Scope } from 'effect';
+
+import { Context } from '@dxos/context';
 
 // TODO(dmaretskyi): Error handling.
 export const contextFromScope = (): Effect.Effect<Context, never, Scope.Scope> =>
