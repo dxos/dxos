@@ -4,20 +4,19 @@
 
 import { Effect, Schema } from 'effect';
 
-import { type Ref } from '@dxos/echo-schema';
+import { Obj, type Ref } from '@dxos/echo';
 import { getUserFunctionUrlInMetadata, type FunctionType } from '@dxos/functions';
-import { getMeta } from '@dxos/live-object';
 
 import { FunctionCallService } from '../services';
 import { type ComputeRequirements } from '../types';
 
-export const resolveFunctionPath = async (fnRef?: Ref<FunctionType>): Promise<{ path: string }> => {
+export const resolveFunctionPath = async (fnRef?: Ref.Ref<FunctionType>): Promise<{ path: string }> => {
   const fn = await fnRef?.load();
   if (!fn) {
     throw new Error(`Function loading failed: ${fnRef?.dxn.toString()}`);
   }
 
-  const path = getUserFunctionUrlInMetadata(getMeta(fn));
+  const path = getUserFunctionUrlInMetadata(Obj.getMeta(fn));
   if (!path) {
     throw new Error(`Function not resolved: ${fnRef?.dxn.toString()}`);
   }

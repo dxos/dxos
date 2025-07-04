@@ -6,6 +6,7 @@ import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-c
 
 import { type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
+import { Ref } from '@dxos/echo';
 import {
   type FieldSortType,
   FormatEnum,
@@ -16,7 +17,7 @@ import {
   getSchema,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { isLiveObject, makeRef } from '@dxos/live-object';
+import { isLiveObject } from '@dxos/live-object';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
@@ -466,7 +467,7 @@ const editorTextToCellValue = (props: PropertyType, value: any): any => {
   switch (props.format) {
     case FormatEnum.Ref: {
       if (isLiveObject(value)) {
-        return makeRef(value);
+        return Ref.make(value);
       } else {
         return value;
       }

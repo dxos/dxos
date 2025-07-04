@@ -21,28 +21,6 @@ export interface QueryFn {
 }
 
 /**
- * Defines the result format of the query.
- */
-export enum ResultFormat {
-  /**
-   * Plain javascript objects.
-   * No live updates.
-   */
-  Plain = 'plain',
-
-  /**
-   * Live objects that update automatically with mutations in the database.
-   * Support signal notifications.
-   */
-  Live = 'live',
-
-  /**
-   * Direct access to the automerge document.
-   */
-  AutomergeDocAccessor = 'automergeDocAccessor',
-}
-
-/**
  * @deprecated Use `Query.options` instead.
  */
 export type QueryOptions = {
@@ -77,11 +55,6 @@ export type QueryOptions = {
    * Return only the first `limit` results.
    */
   limit?: number;
-
-  /**
-   * @deprecated Stick to live format.
-   */
-  format?: ResultFormat;
 
   /**
    * @deprecated Use `spaceIds` instead.

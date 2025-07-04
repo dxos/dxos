@@ -5,10 +5,17 @@
 import type { State as AmState } from '@automerge/automerge';
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { type DXN } from '@dxos/echo';
 import { checkoutVersion, Filter, getEditHistory, Query, type AnyLiveObject } from '@dxos/echo-db';
-import { FormatEnum, getObjectDXN, getSchema, getSchemaVersion, getTypename } from '@dxos/echo-schema';
-import { type DXN } from '@dxos/keys';
-import { getType, isDeleted } from '@dxos/live-object';
+import {
+  FormatEnum,
+  getObjectDXN,
+  getSchema,
+  getSchemaVersion,
+  getType,
+  getTypename,
+  isDeleted,
+} from '@dxos/echo-schema';
 import { useQuery, type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
