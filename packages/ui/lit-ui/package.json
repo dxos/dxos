@@ -38,6 +38,7 @@
   ],
   "dependencies": {
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@lit/react": "^1.0.5",
     "lit": "^3.2.0"
   },
