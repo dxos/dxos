@@ -91,6 +91,8 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     const { t } = useTranslation(translationKey);
     const modals = useMemo(() => new ModalController(), []);
 
+    const draftRowCount = model?.getDraftRowCount() ?? 0;
+
     const frozen = useMemo(() => {
       const noActionColumn =
         model?.features.dataEditable === false &&
@@ -99,11 +101,11 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
       return {
         frozenRowsStart: 1,
-        frozenRowsEnd: model?.draftRows.value.length ?? 0,
+        frozenRowsEnd: draftRowCount,
         frozenColsStart: model?.features.selection.enabled ? 1 : 0,
         frozenColsEnd: noActionColumn ? 0 : 1,
       };
-    }, [model, model?.draftRows.value.length]);
+    }, [model, draftRowCount]);
 
     const getCells = useCallback<NonNullable<GridContentProps['getCells']>>(
       (range: DxGridPlaneRange, plane: DxGridPlane) => presentation?.getCells(range, plane) ?? {},
@@ -367,7 +369,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(
         <Grid.Content
           className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
           frozen={frozen}
-          // getCells={getCells}
           columns={model.columnMeta.value}
           limitRows={model.getRowCount() ?? 0}
           limitColumns={model.view?.fields?.length ?? 0}
