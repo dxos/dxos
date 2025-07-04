@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import './mailbox.css';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { IntentPlugin, Surface, SettingsPlugin, useCapability } from '@dxos/app-framework';

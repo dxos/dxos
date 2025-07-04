@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { Circle } from '@phosphor-icons/react';
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';

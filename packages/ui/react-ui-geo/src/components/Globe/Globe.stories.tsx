@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import { type FeatureCollection, type Geometry, type Position } from 'geojson';
 import { Leva } from 'leva';
 import React, { useMemo, useRef, useState } from 'react';

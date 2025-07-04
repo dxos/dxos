@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 
 import { Slide } from './Slide';
 import { createSlide } from '../../testing';

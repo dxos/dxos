@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { computed, type ReadonlySignal, signal } from '@preact/signals-core';
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
