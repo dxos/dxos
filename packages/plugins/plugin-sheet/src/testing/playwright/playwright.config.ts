@@ -8,13 +8,11 @@ import { defineConfig } from '@playwright/test';
 import { e2ePreset } from '@dxos/test-utils/playwright';
 
 export default defineConfig({
-  ...nxE2EPreset(__filename, { testDir: __dirname }),
-  ...e2ePreset(__dirname),
-  timeout: 30_000,
+  ...nxE2EPreset(import.meta.filename, { testDir: import.meta.dirname }),
+  ...e2ePreset(import.meta.dirname),
   webServer: {
-    command: 'pnpm -w nx preview composer-app',
-    port: 4200,
+    command: 'pnpm -w nx storybook stories',
+    port: 9009,
     reuseExistingServer: !process.env.CI,
-    timeout: 300_000,
   },
 });

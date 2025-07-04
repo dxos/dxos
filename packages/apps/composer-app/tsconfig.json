@@ -18,7 +18,7 @@
   "exclude": [
     "demos/*",
     "src/functions/*",
-    "src/playwright/playwright.config.cts",
+    "src/playwright/playwright.config.ts",
     "vite.config.ts"
   ],
   "include": [

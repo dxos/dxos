@@ -29,7 +29,7 @@
         "^compile"
       ],
       "options": {
-        "config": "{projectRoot}/src/testing/playwright/playwright.config.cts"
+        "config": "{projectRoot}/src/testing/playwright/playwright.config.ts"
       }
     },
     "lint": {
