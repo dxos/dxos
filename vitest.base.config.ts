@@ -17,6 +17,7 @@ const targetProject = String(process.env.NX_TASK_TARGET_PROJECT);
 const isDebug = !!process.env.VITEST_DEBUG;
 const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
+const jsonReport = Boolean(process.env.VITEST_JSON_REPORT);
 
 type BrowserOptions = {
   cwd: string;
@@ -131,6 +132,7 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
   const packageDir = packageJson!.split('/').slice(0, -1).join('/');
   const packageDirRelative = relative(__dirname, packageDir);
   const reportsDirectory = join(__dirname, 'coverage', packageDirRelative);
+  const coverageEnabled = Boolean(process.env.VITEST_COVERAGE);
 
   if (xmlReport) {
     return {
@@ -140,6 +142,19 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
       //    however nx outputs config also needs to be aware of this.
       outputFile: join(__dirname, 'test-results', packageDirRelative, 'results.xml'),
       coverage: {
+        enabled: coverageEnabled,
+        reportsDirectory,
+      },
+    };
+  }
+
+  if (jsonReport) {
+    return {
+      passWithNoTests: true,
+      reporters: ['json', 'verbose'],
+      outputFile: join(__dirname, 'test-results', packageDirRelative, 'results.json'),
+      coverage: {
+        enabled: coverageEnabled,
         reportsDirectory,
       },
     };
@@ -149,6 +164,7 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
     passWithNoTests: true,
     reporters: ['verbose'],
     coverage: {
+      enabled: coverageEnabled,
       reportsDirectory,
     },
   };

@@ -4,7 +4,7 @@
 
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { crx as ChromeExtensionPlugin } from '@crxjs/vite-plugin';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
@@ -18,13 +18,14 @@ import { IconsPlugin } from '@dxos/vite-plugin-icons';
 import packageJson from './package.json';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
-const rootDir = resolve(__dirname, '../../..');
+const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 
 /**
  * https://vitejs.dev/config
  */
 export default defineConfig({
+  root: __dirname,
   build: {
     rollupOptions: {
       // https://crxjs.dev/vite-plugin/concepts/pages

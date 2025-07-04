@@ -18,13 +18,13 @@ on:
 env:
   IMAGE_NAME: ghcr.io/dxos/circleci-node
   DEFAULT_NODE_VERSION: 20.12.1
-  IMAGE_TAG_SUFFIX: ""
+  IMAGE_TAG_SUFFIX: ''
 
 jobs:
   build_and_publish_matrix:
     strategy:
       matrix:
-        node_version: [ "18.20.1", "20.12.1", "21.7.2" ]
+        node_version: ['18.20.1', '20.12.1', '21.7.2']
     runs-on: ubuntu-latest
 
     steps:
@@ -43,6 +43,7 @@ jobs:
             BRANCH=${GITHUB_REF#refs/heads/}
             echo "IMAGE_TAG_SUFFIX=-${BRANCH//\//-}" >> $GITHUB_ENV
           fi
+
       - name: Build and push Docker image
         run: |
           docker buildx create --use
