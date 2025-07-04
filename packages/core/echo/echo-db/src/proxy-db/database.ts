@@ -4,8 +4,8 @@
 
 import { inspect } from 'node:util';
 
-import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
-import { LifecycleState, Resource } from '@dxos/context';
+import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
+import { LifecycleState, Resource, type Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { assertObjectModelShape, type AnyEchoObject, type BaseObject, type HasId } from '@dxos/echo-schema';
 import { getSchema, getType } from '@dxos/echo-schema';
@@ -14,7 +14,7 @@ import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live, getProxyTarget, isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
 import { EchoSchemaRegistry } from './echo-schema-registry';
@@ -91,6 +91,26 @@ export interface EchoDatabase {
   flush(opts?: FlushOptions): Promise<void>;
 
   /**
+   * Run migrations.
+   */
+  runMigrations(migrations: ObjectMigration[]): Promise<void>;
+
+  /**
+   * Get notification about the sync progress with other peers.
+   */
+  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
+
+  /**
+   * @deprecated
+   */
+  readonly pendingBatch: ReadOnlyEvent<unknown>;
+
+  /**
+   * @deprecated
+   */
+  readonly coreDatabase: CoreDatabase;
+
+  /**
    * Update objects.
    * @deprecated Directly mutate the object.
    */
@@ -104,21 +124,6 @@ export interface EchoDatabase {
   // TODO(burdon): Remove.
   // TODO(dmaretskyi): Support meta.
   insert(data: unknown): Promise<unknown>;
-
-  /**
-   * Run migrations.
-   */
-  runMigrations(migrations: ObjectMigration[]): Promise<void>;
-
-  /**
-   * @deprecated
-   */
-  readonly pendingBatch: ReadOnlyEvent<unknown>;
-
-  /**
-   * @deprecated
-   */
-  readonly coreDatabase: CoreDatabase;
 }
 
 export type EchoDatabaseParams = {
@@ -337,6 +342,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       }
     }
     await this.flush();
+  }
+
+  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
+    return this._coreDatabase.subscribeToSyncState(ctx, callback);
   }
 
   /**
