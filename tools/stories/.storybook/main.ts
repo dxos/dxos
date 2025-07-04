@@ -65,6 +65,7 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
     // skipCompiler: true,
   },
   ...baseConfig,
+  logLevel: 'verbose',
 
   /**
    * https://storybook.js.org/docs/api/main-config/main-config-vite-final

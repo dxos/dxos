@@ -11,7 +11,8 @@
   "scripts": {
     "chromatic": "chromatic --project-token=\"chpt_8565ce3985dc41b\" --storybook-build-dir ./out/stories",
     "storybook:build": "nx run stories:bundle",
-    "storybook:docs": "storybook dev --docs"
+    "storybook:docs": "storybook dev --docs",
+    "storybook:test": "test-storybook --url http://127.0.0.1:9009"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",

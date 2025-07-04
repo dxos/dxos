@@ -2,7 +2,16 @@
 
 Storybook config package for the DXOS monorepo.
 
-## Issues
+## Testing
 
-- Storybook 8.2.1 throws the following error when running `pnpm nx storybook stories`:
-  - `NX   Invariant failed: Expected package.json#version to be defined in the "undefined" package}`
+To run the storybook:
+
+```bash
+pnpm -w nx storybook stories
+```
+
+To run vitest against the stories run the following (with the storybook dev server running):
+
+```bash
+pnpm test-storybook --url http://127.0.0.1:9009 -- --watch
+```
