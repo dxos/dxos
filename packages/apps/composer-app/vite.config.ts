@@ -8,7 +8,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, searchForWorkspaceRoot, type Plugin } from 'vite';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import wasm from 'vite-plugin-wasm';
@@ -24,9 +24,7 @@ import { APP_KEY } from './src/constants';
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 
-const rootDir = resolve(__dirname, '../../..');
-const baseDir = join(rootDir, '/packages/apps/composer-app');
-
+const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 const dxosIcons = join(rootDir, '/packages/ui/brand/assets/icons');
 
@@ -34,7 +32,7 @@ const dxosIcons = join(rootDir, '/packages/ui/brand/assets/icons');
  * https://vitejs.dev/config
  */
 export default defineConfig((env) => ({
-  root: baseDir,
+  root: __dirname,
   server: {
     host: true,
     https:
