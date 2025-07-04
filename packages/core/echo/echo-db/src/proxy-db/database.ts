@@ -19,6 +19,7 @@ import { defaultMap } from '@dxos/util';
 
 import { EchoSchemaRegistry } from './echo-schema-registry';
 import type { ObjectMigration } from './object-migration';
+import type { SaveStateChangedEvent } from '../automerge';
 import {
   CoreDatabase,
   type FlushOptions,
@@ -37,7 +38,6 @@ import {
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { Filter, type QueryFn, type QueryOptions, Query } from '../query';
-import type { SaveStateChangedEvent } from '../automerge';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;

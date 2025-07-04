@@ -29,7 +29,7 @@ import {
 import { Ref, type ObjectId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
