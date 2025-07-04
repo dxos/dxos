@@ -9,6 +9,14 @@ import { baseConfig } from '../vitest.base.config';
 export default mergeConfig(
   baseConfig({ cwd: __dirname }),
   defineConfig({
-    test: {},
+    test: {
+      test: {
+        globals: true,
+        environment: 'jsdom',
+        setupFiles: [
+          // './src/stories/test/vitest.setup.ts',
+        ],
+      },
+    },
   }),
 );
