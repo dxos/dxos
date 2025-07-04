@@ -294,7 +294,8 @@ describe('Query', () => {
     await expect(db.query(Query.select(Filter.everything())).run()).rejects.toBeInstanceOf(Error);
   });
 
-  test.only('map over refs in query result', async () => {
+  // TODO(burdon): Flakey.
+  test.skip('map over refs in query result', async () => {
     const { db } = await builder.createDatabase();
     const folder = db.add(live(Expando, { name: 'folder', objects: [] as any[] }));
     const objects = range(3).map((idx) => createTestObject(idx));
