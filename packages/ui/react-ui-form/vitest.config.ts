@@ -7,7 +7,7 @@ import { defineConfig, mergeConfig } from 'vitest/config';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
-import { baseConfig } from '../../../vitest.shared';
+import { baseConfig } from '../../../vitest.base.config';
 
 export default mergeConfig(
   baseConfig({ cwd: __dirname }),
