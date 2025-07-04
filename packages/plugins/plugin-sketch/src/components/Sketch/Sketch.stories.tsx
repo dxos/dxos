@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import { type SerializedStore } from '@tldraw/store';
 import { type TLRecord } from '@tldraw/tldraw';
 import React, { useState } from 'react';

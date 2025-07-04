@@ -7,6 +7,7 @@ import { customElement, state, property } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { makeId } from '@dxos/react-hooks';
+import { getFirstTwoRenderableChars } from '@dxos/util';
 
 import { type Size } from '../defs';
 
@@ -46,7 +47,7 @@ export class DxAvatar extends LitElement {
   }
 
   @property({ type: String })
-  fallback: string = 'never';
+  fallback: string = '🫥';
 
   @property({ type: String })
   imgSrc: string | undefined = undefined;
@@ -185,7 +186,7 @@ export class DxAvatar extends LitElement {
                 font-size=${this.size === 'px' ? '200%' : this.size * fontScale}
                 mask=${`url(#${this.maskId})`}
               >
-                ${this.fallback}
+                ${getFirstTwoRenderableChars(this.fallback)}
               </text>`
         }
         ${

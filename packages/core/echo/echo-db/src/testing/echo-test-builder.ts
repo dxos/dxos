@@ -203,7 +203,7 @@ export const createDataAssertion = ({
 
   return {
     seed: async (db: EchoDatabase) => {
-      seedObjects = range(numObjects).map((idx) => db.add({ type: 'task', title: 'A', idx }));
+      seedObjects = range(numObjects).map((idx) => db.add({ type: 'task', title: 'A', idx } as any));
       await db.flush();
     },
     waitForReplication: (db: EchoDatabase) => {

@@ -61,9 +61,14 @@ export const SpaceInvitation = {
 };
 
 export default {
-  title: 'apps/plugin-welcome/Welcome',
+  title: 'apps/composer-app/Welcome',
   component: Welcome,
   render: Container,
   decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false }, translations },
+  parameters: {
+    chromatic: {
+      disableSnapshot: false,
+    },
+    translations,
+  },
 };

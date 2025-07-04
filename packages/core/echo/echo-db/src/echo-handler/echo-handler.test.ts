@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Query } from '@dxos/echo';
+import { Obj, Query } from '@dxos/echo';
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
 import { getSchema, createQueueDXN } from '@dxos/echo-schema';
 import { EchoObject, Expando, TypedObject, foreignKey, getTypeReference, Ref, type Ref$ } from '@dxos/echo-schema';
@@ -197,7 +197,7 @@ describe('Reactive Object with ECHO database', () => {
   test('proxies are initialized when a plain object is inserted into the database', async () => {
     const { db } = await builder.createDatabase();
 
-    const obj = db.add({ string: 'foo' });
+    const obj = db.add(Obj.make(Expando, { string: 'foo' }));
     expect(obj.id).to.be.a('string');
     expect(obj.string).to.eq('foo');
     expect(getSchema(obj)).to.eq(undefined);
@@ -624,7 +624,7 @@ describe('Reactive Object with ECHO database', () => {
       let id: string;
       {
         const db = await peer.openDatabase(spaceKey, root.url);
-        const obj = db.add({ string: 'foo' });
+        const obj = db.add(Obj.make(Expando, { string: 'foo' }));
         id = obj.id;
         getMeta(obj).keys.push(metaKey);
         await db.flush();
@@ -642,8 +642,8 @@ describe('Reactive Object with ECHO database', () => {
     test('json serialization with references', async () => {
       const { db } = await builder.createDatabase();
 
-      const org = db.add({ name: 'DXOS' });
-      const employee = db.add({ name: 'John', worksAt: Ref.make(org) });
+      const org = db.add(Obj.make(Expando, { name: 'DXOS' }));
+      const employee = db.add(Obj.make(Expando, { name: 'John', worksAt: Ref.make(org) }));
 
       const employeeJson = JSON.parse(JSON.stringify(employee));
       expect(employeeJson).to.deep.eq({

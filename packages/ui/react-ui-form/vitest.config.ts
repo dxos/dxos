@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { resolve } from 'node:path';
 import { defineConfig, mergeConfig } from 'vitest/config';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
-import { baseConfig } from '../../../vitest.shared';
-import { resolve } from 'node:path';
+import { baseConfig } from '../../../vitest.base.config';
 
 export default mergeConfig(
   baseConfig({ cwd: __dirname }),

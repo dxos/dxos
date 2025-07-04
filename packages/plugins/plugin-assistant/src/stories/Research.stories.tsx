@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { Rx } from '@effect-rx/rx-react';
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Option, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
