@@ -23,7 +23,7 @@ export class ProfileStateMachine implements CredentialProcessor {
 
   constructor(private readonly _params: ProfileStateMachineParams) {}
 
-  async processCredential(credential: Credential) {
+  async processCredential(credential: Credential): Promise<void> {
     const assertion = getCredentialAssertion(credential);
     switch (assertion['@type']) {
       case 'dxos.halo.credentials.IdentityProfile': {

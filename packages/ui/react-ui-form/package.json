@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-form",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "Data components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,6 +27,7 @@
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -38,6 +39,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-tag-picker": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/schema": "workspace:*",

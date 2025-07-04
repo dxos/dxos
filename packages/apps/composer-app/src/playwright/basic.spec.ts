@@ -39,11 +39,12 @@ test.describe('Basic tests', () => {
 
   test('create document', async () => {
     await host.createSpace();
+    await host.createObject({ type: 'Document', nth: 0 });
 
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    await expect(host.getObjectLinks()).toHaveCount(1);
+    await expect(host.getObjectLinks()).toHaveCount(3);
     await expect(textBox).toBeEditable();
   });
 

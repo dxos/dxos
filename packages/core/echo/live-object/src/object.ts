@@ -9,14 +9,15 @@ import {
   defineHiddenProperty,
   getTypeAnnotation,
   type BaseObject,
-  type ExcludeId,
+  type CreationProps,
+  EntityKindId,
   Expando,
   type ObjectMeta,
   ObjectMetaSchema,
 } from '@dxos/echo-schema';
-import { symbolMeta } from '@dxos/echo-schema';
+import { MetaId } from '@dxos/echo-schema';
 
-import type { Live } from './live';
+import { type Live } from './live';
 import { createProxy, isValidProxyTarget } from './proxy';
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
@@ -28,15 +29,20 @@ import { UntypedReactiveHandler } from './untyped-handler';
 // TODO(dmaretskyi): Deep mutability.
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 // TODO(dmaretskyi): Could mutate original object making it unusable.
+// TODO(burdon): Use Schema.make() to handle defaults?
 export const live: {
   <T extends BaseObject>(obj: T): Live<T>;
-  <T extends BaseObject>(schema: Schema.Schema<T, any, never>, obj: NoInfer<ExcludeId<T>>, meta?: ObjectMeta): Live<T>;
+  <T extends BaseObject>(
+    schema: Schema.Schema<T, any, never>,
+    obj: NoInfer<CreationProps<T>>,
+    meta?: ObjectMeta,
+  ): Live<T>;
 } = <T extends BaseObject>(
   objOrSchema: Schema.Schema<T, any> | T,
-  // TODO(burdon): Handle defaults.
-  obj?: ExcludeId<T>,
+  obj?: CreationProps<T>,
   meta?: ObjectMeta,
 ): Live<T> => {
+  // TODO(dmaretskyi): Remove Expando special case.
   if (obj && (objOrSchema as any) !== Expando) {
     return createReactiveObject<T>({ ...obj } as T, meta, objOrSchema as Schema.Schema<T, any>);
   } else if (obj && (objOrSchema as any) === Expando) {
@@ -57,9 +63,13 @@ const createReactiveObject = <T extends BaseObject>(
   }
 
   if (schema) {
-    const shouldGenerateId = options?.expando || getTypeAnnotation(schema);
+    const annotation = getTypeAnnotation(schema);
+    const shouldGenerateId = options?.expando || !!annotation;
     if (shouldGenerateId) {
       setIdOnTarget(obj);
+    }
+    if (annotation) {
+      defineHiddenProperty(obj, EntityKindId, annotation.kind);
     }
     initMeta(obj, meta);
     prepareTypedTarget(obj, schema);
@@ -91,7 +101,8 @@ const setIdOnTarget = (target: any) => {
 /**
  * Set metadata on object.
  */
+// TODO(dmaretskyi): Move to echo-schema.
 const initMeta = <T>(obj: T, meta: ObjectMeta = { keys: [] }) => {
   prepareTypedTarget(meta, ObjectMetaSchema);
-  defineHiddenProperty(obj, symbolMeta, createProxy(meta, TypedReactiveHandler.instance as any));
+  defineHiddenProperty(obj, MetaId, createProxy(meta, TypedReactiveHandler.instance as any));
 };

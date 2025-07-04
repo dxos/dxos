@@ -58,7 +58,7 @@ export class RootSettingsStore implements SettingsStoreFactory {
     });
   }
 
-  removeStore(prefix: string) {
+  removeStore(prefix: string): void {
     untracked(() => {
       const store = this._stores[prefix];
       if (store) {
@@ -68,7 +68,7 @@ export class RootSettingsStore implements SettingsStoreFactory {
     });
   }
 
-  destroy() {
+  destroy(): void {
     return untracked(() => {
       for (const [key, store] of Object.entries(this._stores)) {
         store.close();
@@ -77,7 +77,7 @@ export class RootSettingsStore implements SettingsStoreFactory {
     });
   }
 
-  reset() {
+  reset(): void {
     return untracked(() => {
       for (const store of Object.values(this._stores)) {
         store.reset();
@@ -113,23 +113,23 @@ export class SettingsStore<T extends SettingsValue> {
     return this._value;
   }
 
-  getKey(path: Path) {
+  getKey(path: Path): string {
     return [this._prefix, ...path.map((p) => (typeof p === 'string' ? hyphenize(p) : String(p)))].join('/');
   }
 
-  open() {
+  open(): void {
     // TODO(burdon): Import from '@dxos/signals' (rename echo-signals).
     this._unsubscribe = effect(() => {
       this.save();
     });
   }
 
-  close() {
+  close(): void {
     this._unsubscribe?.();
     this._unsubscribe = undefined;
   }
 
-  reset() {
+  reset(): void {
     this.close();
 
     for (const prop of Object.keys(this._value)) {
@@ -151,7 +151,7 @@ export class SettingsStore<T extends SettingsValue> {
     this.open();
   }
 
-  load() {
+  load(): false | undefined {
     this.close();
 
     for (const prop of SchemaAST.getPropertySignatures(this._schema.ast)) {
@@ -194,7 +194,7 @@ export class SettingsStore<T extends SettingsValue> {
     this.open();
   }
 
-  save() {
+  save(): false | undefined {
     for (const prop of SchemaAST.getPropertySignatures(this._schema.ast)) {
       const node = findNode(
         prop.type,

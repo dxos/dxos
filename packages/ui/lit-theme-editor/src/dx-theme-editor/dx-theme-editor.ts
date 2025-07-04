@@ -24,7 +24,7 @@ export class DxThemeEditor extends LitElement {
   @state()
   private currentTokenSet: TokenSet = restore();
 
-  private handleTabClick(tab: Tab) {
+  private handleTabClick(tab: Tab): void {
     this.activeTab = tab;
   }
 
@@ -33,12 +33,12 @@ export class DxThemeEditor extends LitElement {
     this.requestUpdate();
   };
 
-  override connectedCallback() {
+  override connectedCallback(): void {
     super.connectedCallback();
     window.addEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
   }
 
-  override disconnectedCallback() {
+  override disconnectedCallback(): void {
     super.disconnectedCallback();
     window.removeEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
   }
@@ -152,7 +152,7 @@ export class DxThemeEditor extends LitElement {
     `;
   }
 
-  override createRenderRoot() {
+  override createRenderRoot(): this {
     return this;
   }
 }

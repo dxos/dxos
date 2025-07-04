@@ -20,7 +20,7 @@ export default {
 };
 
 const Cell: FC<{ children: ReactNode; dark?: boolean }> = ({ children, dark }) => (
-  <div className={mx('flex p-4 justify-center rounded-lg', dark ? 'bg-zinc-800 fill-zinc-50' : 'bg-white')}>
+  <div className={mx('flex p-4 justify-center rounded-md', dark ? 'bg-zinc-800 fill-zinc-50' : 'bg-white')}>
     {children}
   </div>
 );

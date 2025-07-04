@@ -4,16 +4,16 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useCallback, useState } from 'react';
 
 import { ContactType } from '@dxos/client/testing';
-import { type BaseObject, Expando, Format, getDXN, Ref, type TypeAnnotation } from '@dxos/echo-schema';
+import { type BaseObject, Expando, Format, getObjectDXN, Ref, type TypeAnnotation } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 import { withSurfaceVariantsLayout } from '@dxos/react-ui/testing';
 import { Testing } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SelectInput } from './Defaults';
 import { Form, type FormProps } from './Form';
@@ -66,9 +66,9 @@ const DebugStory = <T extends BaseObject>({ schema, values: initialValues, ...pr
 
 const meta: Meta<StoryProps<any>> = {
   title: 'ui/react-ui-form/Form',
-  component: Form,
+  component: Form<any>,
   render: DebugStory,
-  decorators: [withTheme],
+  decorators: [withLayout({ fullscreen: true }), withTheme],
   parameters: {
     translations,
   },
@@ -100,7 +100,7 @@ export const Default: Story<TestType> = {
   },
 };
 
-export const Organization: Story<Testing.Organization> = {
+export const Organization: Story<Schema.Schema.Type<typeof Testing.OrganizationSchema>> = {
   args: {
     schema: Testing.OrganizationSchema,
     values: {
@@ -111,7 +111,7 @@ export const Organization: Story<Testing.Organization> = {
   },
 };
 
-export const OrganizationAutoSave: Story<Testing.Organization> = {
+export const OrganizationAutoSave: Story<Schema.Schema.Type<typeof Testing.OrganizationSchema>> = {
   args: {
     schema: Testing.OrganizationSchema,
     values: {
@@ -232,8 +232,8 @@ const RefStory = ({ values: initialValues, readonly }: FormProps<any>) => {
     switch (typeInfo.typename) {
       case ContactType.typename:
         return [
-          { dxn: getDXN(contact1)!, label: 'John Coltraine' },
-          { dxn: getDXN(contact2)!, label: 'Erykah Badu' },
+          { dxn: getObjectDXN(contact1)!, label: 'John Coltraine' },
+          { dxn: getObjectDXN(contact2)!, label: 'Erykah Badu' },
         ];
       default:
         return [];

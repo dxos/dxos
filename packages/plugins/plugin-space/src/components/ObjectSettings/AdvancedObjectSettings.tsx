@@ -4,8 +4,8 @@
 
 import React, { useCallback, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { ForeignKey } from '@dxos/echo-schema';
-import { getMeta, type AnyLiveObject } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -18,13 +18,13 @@ const initialValues = {
 };
 
 export type AdvancedObjectSettingsProps = {
-  object: AnyLiveObject<any>;
+  object: Obj.Any;
 };
 
 export const AdvancedObjectSettings = ({ object }: AdvancedObjectSettingsProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const [adding, setAdding] = useState(false);
-  const keys = getMeta(object).keys;
+  const { keys } = Obj.getMeta(object);
 
   const handleNew = useCallback(() => setAdding(true), []);
   const handleCancel = useCallback(() => setAdding(false), []);
@@ -66,7 +66,15 @@ export const AdvancedObjectSettings = ({ object }: AdvancedObjectSettingsProps) 
         {!adding && <ForeignKeys keys={keys} onDelete={handleDelete} />}
       </div>
 
-      {adding && <Form schema={ForeignKey} values={initialValues} onSave={handleSave} onCancel={handleCancel} />}
+      {adding && (
+        <Form
+          outerSpacing={false}
+          schema={ForeignKey}
+          values={initialValues}
+          onSave={handleSave}
+          onCancel={handleCancel}
+        />
+      )}
     </>
   );
 };

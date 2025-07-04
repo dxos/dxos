@@ -29,19 +29,19 @@ export class Printer {
     this.offset = params.start;
   }
 
-  async start() {
+  async start(): Promise<void> {
     invariant(this.state === FileState.INIT);
     await this._readToEnd();
   }
 
-  private async _readToEnd() {
+  private async _readToEnd(): Promise<void> {
     this.state = FileState.READING;
     const stream = this.params.file.createReadStream({ start: this.offset, end: Infinity });
     stream.on('data', this._handleData.bind(this));
     stream.on('end', this._handleEnd.bind(this));
   }
 
-  private async _handleData(data: Buffer) {
+  private async _handleData(data: Buffer): Promise<void> {
     if (this.state !== FileState.READING) {
       return;
     }
@@ -49,7 +49,7 @@ export class Printer {
     this.offset += data.length;
   }
 
-  private async _handleEnd() {
+  private async _handleEnd(): Promise<void> {
     this.state = FileState.REACHED_END;
 
     if (this._finished()) {
@@ -66,11 +66,11 @@ export class Printer {
     );
   }
 
-  private _finished() {
+  private _finished(): boolean {
     return this.state === FileState.DONE || this.waited > this.params.timeout;
   }
 
-  async close() {
+  async close(): Promise<void> {
     this.state = FileState.DONE;
     void this._ctx.dispose();
     this.stream?.destroy();

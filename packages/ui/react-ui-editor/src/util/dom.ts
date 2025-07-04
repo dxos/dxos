@@ -34,3 +34,23 @@ export const clientRectsFor = (dom: Node) => {
     return [] as any as DOMRectList;
   }
 };
+
+export type ElementOptions = {
+  className?: string;
+  text?: string;
+};
+
+export const createElement = (tag: string, options?: ElementOptions, children?: HTMLElement[]): HTMLElement => {
+  const el = document.createElement(tag);
+  if (options?.className) {
+    el.className = options.className;
+  }
+  if (options?.text) {
+    el.textContent = options.text;
+  }
+  if (children) {
+    el.append(...(Array.isArray(children) ? children : [children]));
+  }
+
+  return el;
+};

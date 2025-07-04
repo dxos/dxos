@@ -8,25 +8,40 @@ import type { Message, MessageContentBlock } from '../tools';
 
 type Mode = 'text' | 'json';
 
+// TODO(burdon): Provide structured logger.
+export type Logger = (...data: any[]) => void;
+
+export type ConsolePrinterOptions = {
+  logger?: Logger;
+  mode?: Mode;
+};
+
 export class ConsolePrinter {
+  logger: Logger;
   mode: Mode;
-  constructor({ mode = 'text' }: { mode?: Mode } = {}) {
+
+  // eslint-disable-next-line no-console
+  constructor({ logger = console.log, mode = 'text' }: ConsolePrinterOptions = {}) {
+    this.logger = logger;
     this.mode = mode;
+  }
+
+  private log(...data: any[]) {
+    this.logger(...data);
   }
 
   printMessage = (message: Message) => {
     switch (this.mode) {
       case 'text': {
-        // eslint-disable-next-line no-console
-        console.log(`${message.role.toUpperCase()}\n`);
+        this.log(`${message.role.toUpperCase()}\n`);
         for (const content of message.content) {
           this.printContentBlock(content);
         }
         break;
       }
+
       case 'json': {
-        // eslint-disable-next-line no-console
-        console.log(JSON.stringify(message, null, 2));
+        this.log(JSON.stringify(message, null, 2));
         break;
       }
     }
@@ -37,12 +52,10 @@ export class ConsolePrinter {
       case 'text': {
         switch (content.type) {
           case 'text':
-            // eslint-disable-next-line no-console
-            console.log(`${content.disposition ? `[${content.disposition}] ` : ''}${content.text}`);
+            this.log(`${content.disposition ? `[${content.disposition}] ` : ''}${content.text}`);
             break;
           case 'tool_use':
-            // eslint-disable-next-line no-console
-            console.log(`⚙️ [Tool Use] ${content.name} ${inspect(content.input, { depth: null, colors: true })}`);
+            this.log(`⚙️ [Tool Use] ${content.name} ${inspect(content.input, { depth: null, colors: true })}`);
             break;
           case 'tool_result': {
             let data: any;
@@ -51,16 +64,15 @@ export class ConsolePrinter {
             } catch {
               data = content.content;
             }
-            // eslint-disable-next-line no-console
-            console.log(`⚙️ [Tool Result] ${content.toolUseId} ${inspect(data, { depth: null, colors: true })}`);
+            this.log(`⚙️ [Tool Result] ${content.toolUseId} ${inspect(data, { depth: null, colors: true })}`);
             break;
           }
         }
         break;
       }
+
       case 'json': {
-        // eslint-disable-next-line no-console
-        console.log(JSON.stringify(content, null, 2));
+        this.log(JSON.stringify(content, null, 2));
         break;
       }
     }

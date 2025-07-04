@@ -49,14 +49,14 @@ export class MessageNormalizer extends Resource {
     this._cursor = startingCursor;
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     this._normalizationTask = new DeferredTask(this._ctx, () => this._processMessages());
     const unsubscribe = effect(() => {
       if (this._lifecycleState !== LifecycleState.OPEN) {
         return;
       }
 
-      this._messagesToProcess = this._queue.items.filter((message) => {
+      this._messagesToProcess = this._queue.objects.filter((message) => {
         const actorId = getActorId(message.sender);
         return actorId === this._cursor.actorId && message.created >= this._cursor.timestamp;
       });
@@ -67,7 +67,7 @@ export class MessageNormalizer extends Resource {
   }
 
   // Need to unpack strings from blocks from messages run them through the function and then pack them back into blocks into messages.
-  private async _processMessages() {
+  private async _processMessages(): Promise<void> {
     const messages = this._messagesToProcess;
     this._messagesToProcess = [];
     if (
@@ -99,10 +99,10 @@ export class MessageNormalizer extends Resource {
     }
   }
 
-  private _writeMessages(messages: MessageWithRangeId[]) {
+  private _writeMessages(messages: MessageWithRangeId[]): void {
     log.info('writing messages', { messages });
     const lastMessage = messages[messages.length - 1];
     this._cursor.timestamp = lastMessage.created;
-    this._queue.append(messages);
+    void this._queue.append(messages);
   }
 }

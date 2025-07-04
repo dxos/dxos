@@ -16,12 +16,14 @@ import { type StackItemRearrangeHandler, type StackItemData, type Orientation } 
 export const useStackDropForElements = ({
   id,
   element,
+  scrollElement = element,
   selfDroppable,
   orientation,
   onRearrange,
 }: {
   id?: string;
   element: HTMLDivElement | null;
+  scrollElement?: HTMLDivElement | null;
   selfDroppable: boolean;
   orientation: Orientation;
   onRearrange?: StackItemRearrangeHandler;
@@ -64,9 +66,9 @@ export const useStackDropForElements = ({
           }
         },
       }),
-      autoScrollForElements({ element, getAllowedAxis: () => orientation }),
+      autoScrollForElements({ element: scrollElement as Element, getAllowedAxis: () => orientation }),
     );
-  }, [element, selfDroppable, orientation, id, onRearrange]);
+  }, [element, scrollElement, selfDroppable, orientation, id, onRearrange]);
 
   return { dropping };
 };

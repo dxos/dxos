@@ -3,7 +3,7 @@
 //
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -23,8 +23,8 @@ export const createThreadPlugins = async () => [
     },
     onSpacesReady: async (_, client) => {
       await client.spaces.default.waitUntilReady();
-      const thread = live(ThreadType, { messages: [] });
-      client.spaces.default.db.add(live(ChannelType, { defaultThread: Ref.make(thread), threads: [] }));
+      const thread = Obj.make(ThreadType, { messages: [] });
+      client.spaces.default.db.add(Obj.make(ChannelType, { defaultThread: Ref.make(thread), threads: [] }));
     },
     config: new Config({
       runtime: {

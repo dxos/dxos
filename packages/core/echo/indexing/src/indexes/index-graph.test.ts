@@ -95,6 +95,18 @@ const assertInitialStateQueries = async (index: IndexGraph) => {
     const result = await index.find({
       graph: {
         kind: 'inbound-reference',
+        anchors: [TestData.ARTICLES.marineLife.id],
+        property: 'objects',
+      },
+      typenames: [],
+    });
+    assertResult(result, [TestData.COLLECTIONS.articles.id]);
+  }
+
+  {
+    const result = await index.find({
+      graph: {
+        kind: 'inbound-reference',
         anchors: [TestData.CONTACTS.john.id],
         property: 'assignedTo',
       },

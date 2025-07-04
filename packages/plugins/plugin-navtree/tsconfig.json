@@ -39,9 +39,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -58,6 +55,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../devtools/storybook-utils"
     },
     {
       "path": "../../sdk/app-framework"
@@ -96,6 +96,9 @@
       "path": "../plugin-attention"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-deck"
     },
     {
@@ -103,6 +106,9 @@
     },
     {
       "path": "../plugin-observability"
+    },
+    {
+      "path": "../plugin-space"
     },
     {
       "path": "../plugin-storybook-layout"

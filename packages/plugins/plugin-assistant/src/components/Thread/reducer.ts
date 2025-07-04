@@ -27,8 +27,8 @@ export const messageReducer: Reducer<{ messages: Message[]; current?: Message },
             id: [message.id, i].join('_'),
             role: message.role,
             content: [block],
-          };
-          messages.push(current);
+          } as any;
+          messages.push(current as any);
         }
         break;
       }
@@ -40,7 +40,7 @@ export const messageReducer: Reducer<{ messages: Message[]; current?: Message },
           id: [message.id, i].join('_'),
           role: message.role,
           content: [block],
-        });
+        } as any);
         break;
       }
     }

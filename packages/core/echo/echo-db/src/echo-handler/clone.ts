@@ -3,10 +3,9 @@
 //
 
 import { type BaseObject, ObjectId } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
-import { assertParameter } from '@dxos/protocols';
+import { invariant, assertArgument } from '@dxos/invariant';
 
-import { type AnyLiveObject, initEchoReactiveObjectRootProxy, isEchoObject } from './create';
+import { type AnyLiveObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { symbolInternals } from './echo-proxy-target';
 import { ObjectCore } from '../core-db';
@@ -37,10 +36,8 @@ export const clone = <T extends BaseObject>(
   obj: AnyLiveObject<T>,
   { retainId = true, additional = [] }: CloneOptions = {},
 ): T => {
-  assertParameter('obj', isEchoObject(obj), 'AnyLiveObject');
-  if (retainId === false && additional.length > 0) {
-    throw new Error('Updating ids is not supported when cloning with nested objects.');
-  }
+  assertArgument(isEchoObject(obj), 'expect obj to be an EchoObject');
+  assertArgument(retainId === true || additional.length === 0, 'retainId must be true when additional is not empty');
 
   const clone = cloneInner(obj, retainId ? obj.id : ObjectId.random());
   const clones: AnyLiveObject<any>[] = [clone];

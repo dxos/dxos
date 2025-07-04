@@ -2,14 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
+
 import { SKETCH_PLUGIN } from './meta';
 import { DiagramType } from './types';
 
 export default [
   {
     'en-US': {
-      [DiagramType.typename]: {
+      [Type.getTypename(DiagramType)]: {
         'typename label': 'Sketch',
+        'typename label_zero': 'Sketches',
+        'typename label_one': 'Sketch',
+        'typename label_other': 'Sketches',
         'object name placeholder': 'New sketch',
       },
       [SKETCH_PLUGIN]: {

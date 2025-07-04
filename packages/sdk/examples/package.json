@@ -1,6 +1,6 @@
 {
   "name": "@dxos/examples",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "private": true,
   "description": "Example stories used by the docs.",
   "homepage": "https://dxos.org",
@@ -10,6 +10,7 @@
   "sideEffects": true,
   "type": "module",
   "dependencies": {
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/live-object": "workspace:*",

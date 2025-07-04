@@ -28,12 +28,12 @@ export class SlidingWindowSummary {
     }
   }
 
-  public record(value: number) {
+  public record(value: number): void {
     const evicted = this._buffer.push(value);
     this._sum += value - (evicted ?? 0);
   }
 
-  public average() {
+  public average(): number {
     return this._buffer.elementCount === 0 ? 0 : this._withPrecision(this._sum / this._buffer.elementCount);
   }
 
@@ -58,7 +58,7 @@ export class SlidingWindowSummary {
     return { mean, median, p90, stdDev, histogram };
   }
 
-  private _withPrecision(value: number) {
+  private _withPrecision(value: number): number {
     if (this._precision == null) {
       return value;
     }

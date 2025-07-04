@@ -80,7 +80,7 @@ export class WorkerRuntime {
     return this._clientServices;
   }
 
-  async start() {
+  async start(): Promise<void> {
     log('starting...');
     try {
       this._broadcastChannel = new BroadcastChannel(this._channel);
@@ -120,7 +120,7 @@ export class WorkerRuntime {
     }
   }
 
-  async stop() {
+  async stop(): Promise<void> {
     // Release the lock to notify remote clients that the worker is terminating.
     this._releaseLock();
     this._broadcastChannel?.close();
@@ -132,7 +132,7 @@ export class WorkerRuntime {
   /**
    * Create a new session.
    */
-  async createSession({ appPort, systemPort, shellPort }: CreateSessionParams) {
+  async createSession({ appPort, systemPort, shellPort }: CreateSessionParams): Promise<void> {
     const session = new WorkerSession({
       serviceHost: this._clientServices,
       appPort,
@@ -171,7 +171,7 @@ export class WorkerRuntime {
   /**
    * Selects one of the existing session for WebRTC networking.
    */
-  private _reconnectWebrtc() {
+  private _reconnectWebrtc(): void {
     log('reconnecting webrtc...');
     // Check if current session is already closed.
     if (this._sessionForNetworking) {

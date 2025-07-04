@@ -72,29 +72,29 @@ export class OtelMetrics {
     TRACE_PROCESSOR.remoteMetrics.registerProcessor(metrics);
   }
 
-  gauge(name: string, value: number, tags?: any) {
+  gauge(name: string, value: number, tags?: any): void {
     const gauge = this._meter.createGauge(name);
     log('otel gauge', { name, value, tags: { ...this.options.getTags(), ...tags } });
     gauge.record(value, { ...this.options.getTags(), ...tags });
   }
 
-  increment(name: string, value?: number, tags?: any) {
+  increment(name: string, value?: number, tags?: any): void {
     const counter = this._meter.createCounter(name);
     log('otel counter', { name, value, tags: { ...this.options.getTags(), ...tags } });
     counter.add(value ?? 1, { ...this.options.getTags(), ...tags });
   }
 
-  distribution(name: string, value: number, tags?: any) {
+  distribution(name: string, value: number, tags?: any): void {
     const distribution = this._meter.createHistogram(name);
     log('otel distribution', { name, value, tags: { ...this.options.getTags(), ...tags } });
     distribution.record(value, { ...this.options.getTags(), ...tags });
   }
 
-  flush() {
+  flush(): Promise<void> {
     return this._meterProvider.forceFlush();
   }
 
-  close() {
+  close(): Promise<void> {
     return this._meterProvider.shutdown();
   }
 }

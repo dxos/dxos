@@ -77,7 +77,7 @@ export class Protocol {
       payload?: buf.MessageInitShape<Desc>;
       serviceId?: string;
     },
-  ) {
+  ): Message {
     return buf.create(MessageSchema, {
       timestamp: new Date().toISOString(),
       source,

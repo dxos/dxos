@@ -6,7 +6,7 @@ import { next as Automerge } from '@automerge/automerge';
 
 import type { Live } from '@dxos/live-object';
 
-import { createDocAccessor } from '../core-db';
+import { createDocAccessor } from './doc-accessor';
 
 export type ObjectVersion = {
   heads: string[];

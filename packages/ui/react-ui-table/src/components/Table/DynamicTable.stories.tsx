@@ -4,13 +4,14 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { FormatEnum, type JsonSchemaType } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { Filter, useQuery, useSchema, live } from '@dxos/react-client/echo';
+import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
@@ -143,7 +144,7 @@ export const WithEchoSchema: StoryObj = {
       onSpaceCreated: async ({ space }) => {
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
-            live(Testing.Contact, {
+            Obj.make(Testing.Contact, {
               name: faker.person.fullName(),
               email: faker.internet.email(),
             }),

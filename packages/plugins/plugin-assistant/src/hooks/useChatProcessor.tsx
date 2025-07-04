@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL, type Tool } from '@dxos/ai';
+import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL, type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { type AssociatedArtifact, createSystemPrompt } from '@dxos/artifact';
 import { FunctionType } from '@dxos/functions';
@@ -44,7 +44,7 @@ export const useChatProcessor = ({
 
   // Services.
   const services = useQuery(space, Filter.type(ServiceType));
-  const [serviceTools, setServiceTools] = useState<Tool[]>([]);
+  const [serviceTools, setServiceTools] = useState<ExecutableTool[]>([]);
   useEffect(() => {
     log('creating service tools...');
     queueMicrotask(async () => {
@@ -59,7 +59,7 @@ export const useChatProcessor = ({
   const chatId = useMemo(() => (chat ? fullyQualifiedId(chat) : undefined), [chat]);
   const [tools, extensions] = useMemo(() => {
     log('creating tools...');
-    const tools = [
+    const tools: ExecutableTool[] = [
       ...globalTools.flat(),
       ...serviceTools,
       ...functions

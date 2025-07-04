@@ -5,37 +5,13 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
+import { type JsonSchemaType } from '@dxos/echo-schema';
 
-import type { Message } from './message';
-import { ToolResult, type Tool, type ToolExecutionContext } from './tools';
+import { type Message } from './message';
+import { type Tool, ToolResult, type ToolExecutionContext, type ExecutableTool } from './tool';
 
-export type DefineToolParams<Params extends Schema.Schema.AnyNoContext> = {
-  /**
-   * The name of the tool (may include hyphens but not underscores).
-   */
-  name: string;
-  caption?: string;
-  description: string;
-  schema: Params;
-  execute: (params: Schema.Schema.Type<Params>, context: ToolExecutionContext) => Promise<ToolResult>;
-};
-
-export const defineTool = <Params extends Schema.Schema.AnyNoContext>(
-  namespace: string,
-  { name, caption, description, schema, execute }: DefineToolParams<Params>,
-): Tool => {
-  return {
-    name: [namespace, name].join('/').replace(/[^\w-]/g, '_'),
-    namespace,
-    function: name,
-    caption,
-    description,
-    parameters: toFunctionParameterSchema(Type.toJsonSchema(schema)),
-    execute: (params: any, context?: any) => {
-      const sanitized = Schema.decodeSync(schema)(params);
-      return execute(sanitized, context ?? {});
-    },
-  };
+const createToolName = (name: string) => {
+  return name.replace(/[^\w-]/g, '_');
 };
 
 export const parseToolName = (name: string) => {
@@ -43,18 +19,91 @@ export const parseToolName = (name: string) => {
 };
 
 /**
+ * Creates a well-formed tool definition.
+ */
+export const defineTool = (namespace: string, { name, ...props }: Omit<Tool, 'id' | 'namespace'>): Tool => {
+  const id = [namespace, name].join('/');
+  return {
+    id,
+    name: createToolName(id),
+    namespace,
+    function: name,
+    ...props,
+  };
+};
+
+type BaseProps = Omit<Tool, 'id' | 'namespace' | 'parameters'>;
+
+interface CreateToolParams<Params extends Schema.Schema.AnyNoContext> extends BaseProps {
+  schema: Params;
+  execute: (params: Schema.Schema.Type<Params>, context: ToolExecutionContext) => Promise<ToolResult>;
+}
+
+interface CreateRawToolParams extends BaseProps {
+  parameters: JsonSchemaType;
+  execute: (params: any, context: ToolExecutionContext) => Promise<ToolResult>;
+}
+
+/**
+ * Creates a runnable tool definition.
+ */
+// TODO(burdon): Use @effect/ai AiTool.
+export const createTool = <Params extends Schema.Schema.AnyNoContext>(
+  namespace: string,
+  { name, schema, execute, ...props }: CreateToolParams<Params>,
+): ExecutableTool => {
+  return createRawTool(namespace, {
+    name,
+    parameters: toFunctionParameterSchema(Type.toJsonSchema(schema)),
+    execute: (params: any, context?: any) => {
+      const sanitized = Schema.decodeSync(schema)(params);
+      return execute(sanitized, context ?? {});
+    },
+    ...props,
+  });
+};
+
+export const createRawTool = (
+  namespace: string,
+  { name, parameters, execute, ...props }: CreateRawToolParams,
+): ExecutableTool => {
+  const tool = defineTool(namespace, { name, ...props });
+  return {
+    ...tool,
+    parameters,
+    execute,
+  };
+};
+
+/**
  * Adapts schemas to be able to pass to AI providers.
  */
-export const toFunctionParameterSchema = (jsonSchema: Type.JsonSchema) => {
+export const toFunctionParameterSchema = (jsonSchema: Type.JsonSchema): Type.JsonSchema => {
+  const go = (jsonSchema: Type.JsonSchema) => {
+    delete jsonSchema.propertyOrder;
+    delete jsonSchema.annotations;
+    if (jsonSchema.properties) {
+      for (const key in jsonSchema.properties) {
+        go(jsonSchema.properties![key]);
+      }
+    }
+
+    if (jsonSchema.items) {
+      if (Array.isArray(jsonSchema.items)) {
+        for (const item of jsonSchema.items) {
+          go(item);
+        }
+      } else {
+        go(jsonSchema.items as Type.JsonSchema);
+      }
+    }
+  };
+
   delete jsonSchema.anyOf;
   delete jsonSchema.$id;
   jsonSchema.type = 'object';
   jsonSchema.properties ??= {};
-  for (const key in jsonSchema.properties) {
-    if (typeof jsonSchema.properties![key].description !== 'string') {
-      throw new Error(`Property missing description: ${key}`);
-    }
-  }
+  go(jsonSchema);
 
   return jsonSchema;
 };
@@ -66,7 +115,7 @@ export const toFunctionParameterSchema = (jsonSchema: Type.JsonSchema) => {
  *
  * ```ts
  * const outputParser = structuredOutputParser(Schema.Struct({ ... }))
- * const messages = await aiService.exec({
+ * const messages = await AiService.exec({
  *   ...
  *   tools: [outputParser.tool],
  * })
@@ -74,7 +123,7 @@ export const toFunctionParameterSchema = (jsonSchema: Type.JsonSchema) => {
  * ```
  */
 export const structuredOutputParser = <TSchema extends Schema.Schema.AnyNoContext>(schema: TSchema) => {
-  const tool = defineTool('system', {
+  const tool = createTool('system', {
     name: 'submit_result',
     description: 'You must call this tool with the result of your work.',
     schema,

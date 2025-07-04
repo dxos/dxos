@@ -106,7 +106,7 @@ export class Keyring implements Signer {
   }
 
   @synchronized
-  private async _setKey(keyPair: CryptoKeyPair) {
+  private async _setKey(keyPair: CryptoKeyPair): Promise<void> {
     const publicKey = await keyPairToPublicKey(keyPair);
     this._keyCache.set(publicKey, keyPair);
 

@@ -27,7 +27,7 @@ export class NetworkServiceImpl implements NetworkService {
     private readonly edgeConnection?: EdgeConnection,
   ) {}
 
-  queryStatus() {
+  queryStatus(): Stream<NetworkStatus> {
     return new Stream<NetworkStatus>(({ ctx, next }) => {
       const update = () => {
         next({
@@ -43,7 +43,7 @@ export class NetworkServiceImpl implements NetworkService {
     });
   }
 
-  async updateConfig(request: UpdateConfigRequest) {
+  async updateConfig(request: UpdateConfigRequest): Promise<void> {
     await this.networkManager.setConnectionState(request.swarm);
   }
 

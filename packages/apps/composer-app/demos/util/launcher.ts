@@ -12,7 +12,7 @@ import { type Bounds } from './grid';
  */
 export class Launcher {
   // https://peter.sh/experiments/chromium-command-line-switches
-  static createPositionalArgs(bounds: Bounds) {
+  static createPositionalArgs(bounds: Bounds): string[] {
     return [`--window-position=${bounds.x},${bounds.y}`, `--window-size=${bounds.width},${bounds.height}`];
   }
 
@@ -26,7 +26,7 @@ export class Launcher {
     private readonly _launchOptions = {},
   ) {}
 
-  toString() {
+  toString(): string {
     return `Launcher(${this._baseUrl})`;
   }
 
@@ -46,7 +46,7 @@ export class Launcher {
     return this._baseUrl + '/' + path;
   }
 
-  async open() {
+  async open(): Promise<void> {
     // https://playwright.dev/docs/api/class-browsertype#browser-type-launch
     this._browser = await this._type.launch(this._launchOptions);
     this._context = await this._browser.newContext({ viewport: null });
@@ -54,7 +54,7 @@ export class Launcher {
     this._page = await this._context.newPage();
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this._browser?.close();
   }
 }

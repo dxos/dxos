@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-inbox",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "DXOS Email inbox plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -42,6 +42,7 @@
     "@dxos/artifact": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",

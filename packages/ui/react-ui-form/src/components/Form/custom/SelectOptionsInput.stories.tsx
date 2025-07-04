@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useState } from 'react';
 
@@ -47,13 +47,15 @@ const DefaultStory = () => {
 const meta: Meta = {
   title: 'ui/react-ui-form/SelectOptionsInput',
   component: SelectOptionInput,
-  decorators: [withTheme, withLayout()],
-  parameters: { translations },
+  render: DefaultStory,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    translations,
+  },
 };
 
 export default meta;
+
 type Story = StoryObj;
 
-export const Default: Story = {
-  render: DefaultStory,
-};
+export const Default: Story = {};

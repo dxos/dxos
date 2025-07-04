@@ -76,7 +76,7 @@ export class PublisherRpcPeer {
     return this._rpc.rpc.Publisher;
   }
 
-  async close() {
+  async close(): Promise<void> {
     try {
       await this._rpc.close();
     } finally {

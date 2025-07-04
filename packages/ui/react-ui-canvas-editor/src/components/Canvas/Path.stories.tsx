@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { Canvas, type CanvasController, Grid, useCanvasContext, useWheel } from '@dxos/react-ui-canvas';
@@ -66,6 +66,9 @@ const meta: Meta = {
   title: 'ui/react-ui-canvas-editor/Rope',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    controls: { disable: true },
+  },
 };
 
 export default meta;

@@ -9,7 +9,7 @@ import { mapSpaces, printSpaces, TABLE_FLAGS } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
-import { Filter } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo';
 
 import { BaseCommand } from '../../base';
 
@@ -51,7 +51,7 @@ export default class List extends BaseCommand<typeof List> {
     });
   }
 
-  async _startLiveUpdate(client: Client) {
+  async _startLiveUpdate(client: Client): Promise<void> {
     const ctx = new Context();
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
     ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));

@@ -106,7 +106,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     }
   }
 
-  setActiveEdgePollingEnabled(enabled: boolean) {
+  setActiveEdgePollingEnabled(enabled: boolean): void {
     const client = this._edgeClient;
     invariant(client);
     this._activeEdgePollingEnabled = enabled;
@@ -123,7 +123,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     return !!this._writer;
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     if (this._edgeClient) {
       if (this._activeEdgePollingEnabled) {
         this._startPeriodicEdgePolling(this._edgeClient);
@@ -134,7 +134,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     }
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     this._stopPeriodicEdgePolling();
     await this._ctx.dispose();
   }
@@ -149,7 +149,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     retryTimeout = DEFAULT_RETRY_TIMEOUT,
     successDelay = DEFAULT_SUCCESS_DELAY,
     edgeRetryJitter,
-  }: NotarizeParams) {
+  }: NotarizeParams): Promise<void> {
     log('notarize', { credentials });
     invariant(
       credentials.every((credential) => credential.id),
@@ -194,7 +194,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     ctx: Context,
     credentials: Credential[],
     { retryTimeout, successDelay }: NotarizationTimeouts,
-  ) {
+  ): void {
     const peersTried = new Set<NotarizationTeleportExtension>();
 
     // Repeatable task that tries to notarize credentials with one of the available peers.
@@ -238,7 +238,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     client: EdgeHttpClient,
     credentials: Credential[],
     timeouts: NotarizationTimeouts & { jitter?: number },
-  ) {
+  ): void {
     const encodedCredentials = credentials.map((credential) => {
       const binary = credentialCodec.encode(credential);
       return Buffer.from(binary).toString('base64');
@@ -261,7 +261,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
   /**
    * Called with credentials arriving from the control pipeline.
    */
-  async processCredential(credential: Credential) {
+  async processCredential(credential: Credential): Promise<void> {
     if (!credential.id) {
       return;
     }
@@ -270,7 +270,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     this._processCredentialsTriggers.delete(credential.id);
   }
 
-  setWriter(writer: FeedWriter<Credential>) {
+  setWriter(writer: FeedWriter<Credential>): void {
     invariant(!this._writer, 'Writer already set.');
     this._writer = writer;
     if (this._edgeClient && this.isOpen) {
@@ -278,7 +278,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     }
   }
 
-  private _startPeriodicEdgePolling(client: EdgeHttpClient) {
+  private _startPeriodicEdgePolling(client: EdgeHttpClient): void {
     this._activeEdgePollingIntervalHandle = setInterval(() => {
       if (this._writer) {
         this._notarizePendingEdgeCredentials(client, this._writer);
@@ -286,7 +286,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     }, this._activeEdgePollingInterval);
   }
 
-  private _stopPeriodicEdgePolling() {
+  private _stopPeriodicEdgePolling(): void {
     if (this._activeEdgePollingIntervalHandle) {
       clearInterval(this._activeEdgePollingIntervalHandle);
       this._activeEdgePollingIntervalHandle = undefined;
@@ -299,7 +299,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
    * this method will fix it on the next space open.
    * Given how rarely this happens there's no need to poll the endpoint.
    */
-  private _notarizePendingEdgeCredentials(client: EdgeHttpClient, writer: FeedWriter<Credential>) {
+  private _notarizePendingEdgeCredentials(client: EdgeHttpClient, writer: FeedWriter<Credential>): void {
     scheduleMicroTask(this._ctx, async () => {
       try {
         const response = await client.getCredentialsForNotarization(this._spaceId, {
@@ -328,7 +328,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     });
   }
 
-  private async _waitUntilProcessed(id: PublicKey) {
+  private async _waitUntilProcessed(id: PublicKey): Promise<void> {
     if (this._processedCredentials.has(id)) {
       return;
     }
@@ -338,14 +338,14 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
   /**
    * Requests from other peers to notarize credentials.
    */
-  private async _onNotarize(request: NotarizeRequest) {
+  private async _onNotarize(request: NotarizeRequest): Promise<void> {
     if (!this._writer) {
       throw new Error(WRITER_NOT_SET_ERROR_CODE);
     }
     await this._notarizeCredentials(this._writer, request.credentials ?? []);
   }
 
-  private async _notarizeCredentials(writer: FeedWriter<Credential>, credentials: Credential[]) {
+  private async _notarizeCredentials(writer: FeedWriter<Credential>, credentials: Credential[]): Promise<void> {
     for (const credential of credentials) {
       invariant(credential.id, 'Credential must have an id');
       if (this._processedCredentials.has(credential.id)) {
@@ -359,7 +359,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     }
   }
 
-  createExtension() {
+  createExtension(): NotarizationTeleportExtension {
     const extension = new NotarizationTeleportExtension({
       onOpen: async () => {
         log('extension opened', { peer: extension.localPeerId });
@@ -375,7 +375,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     return extension;
   }
 
-  private _scheduleTimeout(ctx: Context, errors: Trigger, timeout: number) {
+  private _scheduleTimeout(ctx: Context, errors: Trigger, timeout: number): void {
     scheduleTask(
       ctx,
       () => {
@@ -427,12 +427,12 @@ export class NotarizationTeleportExtension extends RpcExtension<Services, Servic
     };
   }
 
-  override async onOpen(ctx: ExtensionContext) {
+  override async onOpen(ctx: ExtensionContext): Promise<void> {
     await super.onOpen(ctx);
     await this._params.onOpen();
   }
 
-  override async onClose(err?: Error | undefined) {
+  override async onClose(err?: Error | undefined): Promise<void> {
     await this._params.onClose();
     await super.onClose(err);
   }

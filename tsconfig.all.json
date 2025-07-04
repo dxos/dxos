@@ -97,13 +97,7 @@
       "path": "packages/common/random-access-storage/tsconfig.json"
     },
     {
-      "path": "packages/common/storybook-utils/tsconfig.json"
-    },
-    {
       "path": "packages/common/test-utils/tsconfig.json"
-    },
-    {
-      "path": "packages/common/theme-editor-addon/tsconfig.json"
     },
     {
       "path": "packages/common/timeframe/tsconfig.json"
@@ -232,6 +226,12 @@
       "path": "packages/devtools/devtools-extension/tsconfig.json"
     },
     {
+      "path": "packages/devtools/storybook-addon-logger/tsconfig.json"
+    },
+    {
+      "path": "packages/devtools/storybook-utils/tsconfig.json"
+    },
+    {
       "path": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
     },
     {
@@ -329,9 +329,6 @@
     },
     {
       "path": "packages/plugins/plugin-outliner/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-outliner-deprecated/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-presenter/tsconfig.json"
@@ -470,9 +467,6 @@
     },
     {
       "path": "packages/ui/react-ui-canvas-editor/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-card/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-components/tsconfig.json"

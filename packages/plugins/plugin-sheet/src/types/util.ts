@@ -11,8 +11,8 @@ import {
   type CompleteCellRange,
 } from '@dxos/compute';
 import { randomBytes } from '@dxos/crypto';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { live } from '@dxos/live-object';
 
 import { type CreateSheetOptions, type SheetSize, SheetType } from '../types';
 
@@ -68,7 +68,7 @@ export const initialize = (
 };
 
 export const createSheet = ({ name, cells, ...size }: CreateSheetOptions = {}): SheetType => {
-  const sheet = live(SheetType, {
+  const sheet = Obj.make(SheetType, {
     name,
     cells: {},
     rows: [],

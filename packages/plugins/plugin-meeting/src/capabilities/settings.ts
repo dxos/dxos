@@ -5,16 +5,17 @@
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
-import { MEETING_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { MeetingSettingsSchema } from '../types';
 
 export default () => {
-  // TODO(wittjosiah): `live` currently doesn't handle schema default values.
-  const settings = live(MeetingSettingsSchema, { entityExtraction: true });
+  const settings = live(MeetingSettingsSchema, {
+    entityExtraction: true,
+  });
 
   return contributes(Capabilities.Settings, {
+    prefix: meta.id,
     schema: MeetingSettingsSchema,
-    prefix: MEETING_PLUGIN,
     value: settings,
   });
 };

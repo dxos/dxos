@@ -4,11 +4,11 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Client } from '@dxos/client';
-import { createDocAccessor, type AnyLiveObject } from '@dxos/client/echo';
+import { createDocAccessor } from '@dxos/client/echo';
 import { defaultFunctions } from '@dxos/compute';
 import { getRegisteredFunctionNames } from '@dxos/compute/testing';
 import { automerge } from '@dxos/react-ui-editor';
@@ -32,7 +32,7 @@ const Story = ({ value, ...props }: StoryProps) => {
 
 const AutomergeStory = ({ value, ...props }: StoryProps) => {
   const cell = 'A1';
-  const [object, setObject] = useState<AnyLiveObject<SheetType>>();
+  const [object, setObject] = useState<SheetType>();
   useEffect(() => {
     setTimeout(async () => {
       const client = new Client({ types: [SheetType] });

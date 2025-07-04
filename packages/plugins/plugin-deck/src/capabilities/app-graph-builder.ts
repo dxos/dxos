@@ -120,7 +120,7 @@ export default (context: PluginContext) =>
                   ],
                   icon: 'ph--sidebar--regular',
                   keyBinding: {
-                    macos: 'meta+b',
+                    macos: "meta+'",
                   },
                   disposition: 'pin-end',
                   position: 'hoist',

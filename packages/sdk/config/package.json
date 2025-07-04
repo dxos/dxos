@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "Config utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -62,6 +62,7 @@
     "test-build": "node ./src/testing/build.js"
   },
   "dependencies": {
+    "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",

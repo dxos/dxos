@@ -4,7 +4,7 @@
 
 import { type Completion } from '@codemirror/autocomplete';
 import { type Schema } from 'effect/Schema';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -27,6 +27,7 @@ import {
 import { tagPickerExtension, createLinks } from '@dxos/react-ui-tag-picker';
 import { type FieldProjection } from '@dxos/schema';
 
+import { CellValidationMessage } from './CellValidationMessage';
 import { FormCellEditor } from './FormCellEditor';
 import { completion } from './extension';
 import { type TableModel, type ModalController } from '../../model';
@@ -102,6 +103,7 @@ export const TableCellEditor = ({
   const { id: gridId, editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
   const suppressNextBlur = useRef(false);
   const { themeMode } = useThemeContext();
+  const [_validationError, setValidationError] = useState<string | null>(null);
 
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
@@ -116,51 +118,76 @@ export const TableCellEditor = ({
   }, [model, editing]);
 
   const handleEnter = useCallback(
-    (value: any) => {
+    async (value: any) => {
       if (!model || !editing) {
         return;
       }
 
       const cell = parseCellIndex(editing.index);
-      model.setCellData(cell, value);
-      onEnter?.(cell);
-      onFocus?.();
-      setEditing(null);
+
+      // Validate the value
+      const result = await model.validateCellData(cell, value);
+
+      if (result.valid) {
+        setValidationError(null);
+        model.setCellData(cell, value);
+        onEnter?.(cell);
+        onFocus?.();
+        setEditing(null);
+      } else {
+        setValidationError(result.error);
+        // Editor stays open on validation failure
+      }
     },
     [model, editing, onEnter, onFocus, setEditing],
   );
 
   const handleBlur = useCallback<EditorBlurHandler>(
-    (value) => {
+    async (value) => {
       if (!model || !editing) {
         return;
       }
       if (suppressNextBlur.current) {
         suppressNextBlur.current = false;
-        return;
       }
 
-      const cell = parseCellIndex(editing.index);
-      if (value !== undefined) {
-        model.setCellData(cell, value);
-      }
+      // Don't save on blur - let handleClose handle validation and saving
     },
     [model, editing],
   );
 
   const handleClose = useCallback<EditorKeyOrBlurHandler>(
-    (value, event) => {
+    async (value, event) => {
       if (!model || !editing || !fieldProjection) {
         return;
       }
 
       const cell = parseCellIndex(editing.index);
-      onEnter?.(cell);
-      if (event && onFocus) {
-        onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
+
+      if (value !== undefined) {
+        // Pre-commit validation check.
+        const result = await model.validateCellData(cell, value);
+
+        if (result.valid) {
+          setValidationError(null);
+          model.setCellData(cell, value);
+          setEditing(null);
+          onEnter?.(cell);
+          if (event && onFocus) {
+            onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
+          }
+        } else {
+          setValidationError(result.error);
+        }
+      } else {
+        setValidationError(null);
+        setEditing(null);
+        if (event && onFocus) {
+          onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
+        }
       }
     },
-    [model, editing, onFocus, onEnter, fieldProjection],
+    [model, editing, onFocus, onEnter, fieldProjection, setEditing],
   );
 
   const extension = useMemo(() => {
@@ -209,9 +236,9 @@ export const TableCellEditor = ({
                 return;
               }
               if (mode === 'single-select') {
-                handleEnter(ids[0]);
+                void handleEnter(ids[0]);
               } else {
-                handleEnter(ids);
+                void handleEnter(ids);
               }
             }
           },
@@ -238,12 +265,12 @@ export const TableCellEditor = ({
                           [field.referencePath!]: data.text,
                         },
                         (data) => {
-                          handleEnter(data);
+                          void handleEnter(data);
                         },
                       );
                     }
                   } else {
-                    handleEnter(data);
+                    void handleEnter(data);
                   }
                 }
               },
@@ -312,7 +339,12 @@ export const TableCellEditor = ({
     }
   }, [model, editing]);
 
-  return <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} />;
+  return (
+    <>
+      <CellValidationMessage validationError={_validationError} __gridScope={__gridScope} />
+      <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} />
+    </>
+  );
 };
 
 const determineNavigationAxis = ({ key }: EditorKeyEvent): 'col' | 'row' | undefined => {

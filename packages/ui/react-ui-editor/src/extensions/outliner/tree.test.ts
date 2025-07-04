@@ -4,7 +4,7 @@
 
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
-import { describe, test } from 'vitest';
+import { beforeEach, describe, test } from 'vitest';
 
 import { outlinerTree, treeFacet, listItemToString, type Item } from './tree';
 import { str } from '../../testing';
@@ -71,7 +71,11 @@ describe('tree (boundary conditions)', () => {
 });
 
 describe('tree (advanced)', () => {
-  const state = EditorState.create({ doc: str(...lines), extensions });
+  let state: EditorState;
+
+  beforeEach(() => {
+    state = EditorState.create({ doc: str(...lines), extensions });
+  });
 
   test('traverse', ({ expect }) => {
     const tree = state.facet(treeFacet);
@@ -80,15 +84,15 @@ describe('tree (advanced)', () => {
       console.log(listItemToString(item, level));
       count++;
     });
-    expect(count).toBe(9);
+    expect(count).to.eq(9);
   });
 
   test('continguous', ({ expect }) => {
     const tree = state.facet(treeFacet);
     const ranges: Range[] = [];
     tree.traverse((item) => {
-      ranges.push(item.lineRange);
       console.log(listItemToString(item));
+      ranges.push(item.lineRange);
     });
 
     // Check no gaps between ranges.
@@ -97,18 +101,17 @@ describe('tree (advanced)', () => {
     for (let i = 0; i < ranges.length - 1; i++) {
       const current = ranges[i];
       const next = ranges[i + 1];
-      expect(current.to + 1).toBe(next.from);
+      expect(current.to + 1).to.eq(next.from);
     }
   });
 
   test('find', ({ expect }) => {
     const tree = state.facet(treeFacet);
-
     expect(tree.find(0)).to.include({ type: 'task' });
     expect(tree.find(state.doc.length)).to.include({ type: 'task' });
 
     expect(tree.find(getPos(1))).to.include({ type: 'task' });
-    expect(tree.find(getPos(1))).toBe(tree.find(getPos(1) + 4));
+    expect(tree.find(getPos(1))).to.eq(tree.find(getPos(1) + 4));
     expect(tree.find(getPos(5))).to.include({ type: 'bullet' });
   });
 
@@ -148,17 +151,17 @@ describe('tree (advanced)', () => {
     const tree = state.facet(treeFacet);
     {
       const item = tree.find(getPos(0))!;
-      expect(tree.lastDescendant(item).index).toBe(item.index);
+      expect(tree.lastDescendant(item).index).to.eq(item.index);
     }
     {
       const item = tree.find(getPos(1))!;
       const last = tree.find(getPos(7))!;
-      expect(tree.lastDescendant(item).index).toBe(last.index);
+      expect(tree.lastDescendant(item).index).to.eq(last.index);
     }
     {
       const item = tree.find(getPos(3))!;
       const last = tree.find(getPos(6))!;
-      expect(tree.lastDescendant(item).index).toBe(last.index);
+      expect(tree.lastDescendant(item).index).to.eq(last.index);
     }
   });
 });

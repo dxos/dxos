@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-token-manager",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "Composer plugin for managing access tokens to remote systems.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

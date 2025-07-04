@@ -133,7 +133,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec> {
   private async generatePNG(
     muxerStats: Map<string, SerializedLogEntry<TeleportStatsLog>[]>,
     testStats: Map<string, SerializedLogEntry<TestStatsLog>[]>,
-  ) {
+  ): Promise<void> {
     let colorIdx = 0;
     showPNG(
       await renderPNG({

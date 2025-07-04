@@ -46,7 +46,7 @@ export class MeshEchoReplicator implements EchoReplicator {
     this._context = context;
   }
 
-  async disconnect() {
+  async disconnect(): Promise<void> {
     for (const connection of this._connections) {
       if (connection.isEnabled) {
         this._context?.onConnectionClosed(connection);
@@ -125,6 +125,7 @@ export class MeshEchoReplicator implements EchoReplicator {
               documentId: params.documentId,
               acceptDocument: remoteDocumentExists,
             });
+
             // If a document is not present locally return true if another peer claims to have it.
             // Simply returning true will add the peer to "generous peers list" for this document which will
             // start replication of the document after we receive, even if the peer is not in the corresponding space.
@@ -180,7 +181,7 @@ export class MeshEchoReplicator implements EchoReplicator {
     return connection.replicatorExtension;
   }
 
-  async authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
+  async authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey): Promise<void> {
     log('authorizeDevice', { spaceKey, deviceKey });
     const spaceId = await createIdFromSpaceKey(spaceKey);
     defaultMap(this._authorizedDevices, spaceId, () => new ComplexSet(PublicKey.hash)).add(deviceKey);

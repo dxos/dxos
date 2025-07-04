@@ -2,18 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
+
 import { OUTLINER_PLUGIN } from './meta';
 import { JournalType, OutlineType } from './types';
 
 export default [
   {
     'en-US': {
-      [JournalType.typename]: {
+      [Type.getTypename(JournalType)]: {
         'typename label': 'Journal',
+        'typename label_zero': 'Journals',
+        'typename label_one': 'Journal',
+        'typename label_other': 'Journals',
         'object name placeholder': 'New journal',
       },
-      [OutlineType.typename]: {
+      [Type.getTypename(OutlineType)]: {
         'typename label': 'Outline',
+        'typename label_zero': 'Outlines',
+        'typename label_one': 'Outline',
+        'typename label_other': 'Outlines',
         'object name placeholder': 'New outline',
       },
       [OUTLINER_PLUGIN]: {

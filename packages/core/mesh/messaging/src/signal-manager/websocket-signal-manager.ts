@@ -74,7 +74,7 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
     this._failedServersBitfield = BitField.zeros(this._hosts.length);
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     log('open signal manager', { hosts: this._hosts });
     log.trace('dxos.mesh.websocket-signal-manager.open', trace.begin({ id: this._instanceId }));
 
@@ -83,11 +83,11 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
     log.trace('dxos.mesh.websocket-signal-manager.open', trace.end({ id: this._instanceId }));
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     await safeAwaitAll(this._servers.values(), (server) => server.close());
   }
 
-  async restartServer(serverName: string) {
+  async restartServer(serverName: string): Promise<void> {
     log('restarting server', { serverName });
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
@@ -104,14 +104,14 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
   }
 
   @synchronized
-  async join({ topic, peer }: JoinRequest) {
+  async join({ topic, peer }: JoinRequest): Promise<void> {
     log('join', { topic, peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
     await this._forEachServer((server) => server.join({ topic, peer }));
   }
 
   @synchronized
-  async leave({ topic, peer }: LeaveRequest) {
+  async leave({ topic, peer }: LeaveRequest): Promise<void> {
     log('leaving', { topic, peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
     await this._forEachServer((server) => server.leave({ topic, peer }));
@@ -145,7 +145,7 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
   }
 
   @synchronized
-  async checkServerFailure(serverName: string, index: number) {
+  async checkServerFailure(serverName: string, index: number): Promise<void> {
     const failureCount = this.failureCount.get(serverName!) ?? 0;
     const isRestartRequired = failureCount > MAX_SERVER_FAILURES;
     this._monitor.recordServerFailure({ serverName, willRestart: isRestartRequired });
@@ -162,7 +162,7 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
     this.failureCount.set(serverName!, (this.failureCount.get(serverName!) ?? 0) + 1);
   }
 
-  private _clearServerFailedFlag(serverName: string, index: number) {
+  private _clearServerFailedFlag(serverName: string, index: number): void {
     if (BitField.get(this._failedServersBitfield, index)) {
       log.info('server connection restored', { serverName });
       BitField.set(this._failedServersBitfield, index, false);
@@ -170,14 +170,14 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
     }
   }
 
-  async subscribeMessages(peer: PeerInfo) {
+  async subscribeMessages(peer: PeerInfo): Promise<void> {
     log('subscribed for message stream', { peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     await this._forEachServer(async (server) => server.subscribeMessages(peer));
   }
 
-  async unsubscribeMessages(peer: PeerInfo) {
+  async unsubscribeMessages(peer: PeerInfo): Promise<void> {
     log('subscribed for message stream', { peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
 

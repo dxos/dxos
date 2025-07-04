@@ -45,28 +45,28 @@ export class TimeframeClock {
     return this._pendingTimeframe;
   }
 
-  setTimeframe(timeframe: Timeframe) {
+  setTimeframe(timeframe: Timeframe): void {
     this._timeframe = timeframe;
     this._pendingTimeframe = timeframe;
     this.update.emit(this._timeframe);
   }
 
-  updatePendingTimeframe(key: PublicKey, seq: number) {
+  updatePendingTimeframe(key: PublicKey, seq: number): void {
     this._pendingTimeframe = Timeframe.merge(this._pendingTimeframe, new Timeframe([[key, seq]]));
   }
 
-  updateTimeframe() {
+  updateTimeframe(): void {
     this._timeframe = this._pendingTimeframe;
     this.update.emit(this._timeframe);
   }
 
-  hasGaps(timeframe: Timeframe) {
+  hasGaps(timeframe: Timeframe): boolean {
     const gaps = Timeframe.dependencies(timeframe, this._timeframe);
     return !gaps.isEmpty();
   }
 
   @timed(5_000)
-  async waitUntilReached(target: Timeframe) {
+  async waitUntilReached(target: Timeframe): Promise<void> {
     log('waitUntilReached', { target, current: this._timeframe });
     await this.update.waitForCondition(() => {
       log('check if reached', {

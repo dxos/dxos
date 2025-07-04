@@ -88,7 +88,7 @@ export class TestBuilder {
     return peer;
   }
 
-  async destroy() {
+  async destroy(): Promise<void> {
     await this._ctx.dispose();
   }
 }
@@ -216,7 +216,7 @@ export class TestPeer {
     ));
   }
 
-  async createIdentity() {
+  async createIdentity(): Promise<void> {
     this._props.signingContext ??= await createSigningContext(this.keyring);
     this.networkManager.setPeerInfo({
       identityKey: this._props.signingContext.identityKey.toHex(),
@@ -224,7 +224,7 @@ export class TestPeer {
     });
   }
 
-  async destroy() {
+  async destroy(): Promise<void> {
     await this.level.close();
     await this.storage.reset();
   }

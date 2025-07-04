@@ -43,6 +43,13 @@ export type EchoNetworkAdapterParams = {
   monitor?: NetworkDataMonitor;
 };
 
+type ConnectionEntry = {
+  isOpen: boolean;
+  connection: ReplicatorConnection;
+  reader: ReadableStreamDefaultReader<AutomergeProtocolMessage>;
+  writer: WritableStreamDefaultWriter<AutomergeProtocolMessage>;
+};
+
 /**
  * Manages a set of {@link EchoReplicator} instances.
  */
@@ -83,7 +90,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   @synchronized
-  async open() {
+  async open(): Promise<void> {
     if (this._lifecycleState === LifecycleState.OPEN) {
       return;
     }
@@ -92,7 +99,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   @synchronized
-  async close() {
+  async close(): Promise<this | undefined> {
     if (this._lifecycleState === LifecycleState.CLOSED) {
       return this;
     }
@@ -106,12 +113,19 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._lifecycleState = LifecycleState.CLOSED;
   }
 
-  async whenConnected() {
+  async whenConnected(): Promise<void> {
     await this._connected.wait({ timeout: 10_000 });
   }
 
+  public onConnectionAuthScopeChanged(peer: PeerId): void {
+    const entry = this._connections.get(peer);
+    if (entry) {
+      this._onConnectionAuthScopeChanged(entry.connection);
+    }
+  }
+
   @synchronized
-  async addReplicator(replicator: EchoReplicator) {
+  async addReplicator(replicator: EchoReplicator): Promise<void> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(this.peerId);
     invariant(!this._replicators.has(replicator));
@@ -132,7 +146,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   @synchronized
-  async removeReplicator(replicator: EchoReplicator) {
+  async removeReplicator(replicator: EchoReplicator): Promise<void> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(this._replicators.has(replicator));
     await replicator.disconnect();
@@ -178,28 +192,6 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._send(message);
   }
 
-  private _send(message: Message) {
-    const connectionEntry = this._connections.get(message.targetId);
-    if (!connectionEntry) {
-      throw new Error('Connection not found.');
-    }
-
-    const writeStart = Date.now();
-    // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
-    connectionEntry.writer
-      .write(message as AutomergeProtocolMessage)
-      .then(() => {
-        const durationMs = Date.now() - writeStart;
-        this._params.monitor?.recordMessageSent(message, durationMs);
-      })
-      .catch((err) => {
-        if (connectionEntry.isOpen) {
-          log.catch(err);
-        }
-        this._params.monitor?.recordMessageSendingFailed(message);
-      });
-  }
-
   // TODO(dmaretskyi): Remove.
   getPeersInterestedInCollection(collectionId: string): PeerId[] {
     return Array.from(this._connections.values())
@@ -211,19 +203,46 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       .filter(isNonNullable);
   }
 
-  private _onConnectionOpen(connection: ReplicatorConnection) {
-    log('Connection opened', { peerId: connection.peerId });
+  private _send(message: Message): void {
+    const connectionEntry = this._connections.get(message.targetId);
+    if (!connectionEntry) {
+      throw new Error('Connection not found.');
+    }
+
+    // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
+    const start = Date.now();
+    connectionEntry.writer
+      .write(message as AutomergeProtocolMessage)
+      .then(() => {
+        this._params.monitor?.recordMessageSent(message, Date.now() - start);
+      })
+      .catch((err) => {
+        if (connectionEntry.isOpen) {
+          log.catch(err);
+        }
+
+        this._params.monitor?.recordMessageSendingFailed(message);
+      });
+  }
+
+  private _onConnectionOpen(connection: ReplicatorConnection): void {
+    log('connection opened', { peerId: connection.peerId });
     invariant(!this._connections.has(connection.peerId as PeerId));
-    const reader = connection.readable.getReader();
-    const writer = connection.writable.getWriter();
-    const connectionEntry: ConnectionEntry = { connection, reader, writer, isOpen: true };
+    const connectionEntry: ConnectionEntry = {
+      isOpen: true,
+      connection,
+      reader: connection.readable.getReader(),
+      writer: connection.writable.getWriter(),
+    };
+
     this._connections.set(connection.peerId as PeerId, connectionEntry);
 
+    // Read inbound messages.
     queueMicrotask(async () => {
       try {
         while (true) {
           // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
-          const { done, value } = await reader.read();
+          const { done, value } = await connectionEntry.reader.read();
           if (done) {
             break;
           }
@@ -242,7 +261,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._params.monitor?.recordPeerConnected(connection.peerId);
   }
 
-  private _onMessage(message: Message) {
+  private _onMessage(message: Message): void {
     if (isCollectionQueryMessage(message)) {
       this._params.onCollectionStateQueried(message.collectionId, message.senderId);
     } else if (isCollectionStateMessage(message)) {
@@ -253,27 +272,8 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._params.monitor?.recordMessageReceived(message);
   }
 
-  public onConnectionAuthScopeChanged(peer: PeerId) {
-    const entry = this._connections.get(peer);
-    if (entry) {
-      this._onConnectionAuthScopeChanged(entry.connection);
-    }
-  }
-
-  /**
-   * Trigger doc-synchronizer shared documents set recalculation. Happens on peer-candidate.
-   * TODO(y): replace with a proper API call when sharePolicy update becomes supported by automerge-repo
-   */
-  private _onConnectionAuthScopeChanged(connection: ReplicatorConnection) {
-    log('Connection auth scope changed', { peerId: connection.peerId });
-    const entry = this._connections.get(connection.peerId as PeerId);
-    invariant(entry);
-    this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
-    this._emitPeerCandidate(connection);
-  }
-
-  private _onConnectionClosed(connection: ReplicatorConnection) {
-    log('Connection closed', { peerId: connection.peerId });
+  private _onConnectionClosed(connection: ReplicatorConnection): void {
+    log('connection closed', { peerId: connection.peerId });
     const entry = this._connections.get(connection.peerId as PeerId);
     invariant(entry);
 
@@ -281,26 +281,31 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
     this._params.monitor?.recordPeerDisconnected(connection.peerId);
 
-    void entry.reader.cancel().catch((err) => log.catch(err));
     void entry.writer.abort().catch((err) => log.catch(err));
+    void entry.reader.cancel().catch((err) => log.catch(err));
 
     this._connections.delete(connection.peerId as PeerId);
   }
 
-  private _emitPeerCandidate(connection: ReplicatorConnection) {
+  /**
+   * Trigger doc-synchronizer shared documents set recalculation. Happens on peer-candidate.
+   * TODO(y): replace with a proper API call when sharePolicy update becomes supported by automerge-repo
+   */
+  private _onConnectionAuthScopeChanged(connection: ReplicatorConnection): void {
+    log('Connection auth scope changed', { peerId: connection.peerId });
+    const entry = this._connections.get(connection.peerId as PeerId);
+    invariant(entry);
+    this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
+    this._emitPeerCandidate(connection);
+  }
+
+  private _emitPeerCandidate(connection: ReplicatorConnection): void {
     this.emit('peer-candidate', {
       peerId: connection.peerId as PeerId,
       peerMetadata: createEchoPeerMetadata(),
     });
   }
 }
-
-type ConnectionEntry = {
-  connection: ReplicatorConnection;
-  reader: ReadableStreamDefaultReader<AutomergeProtocolMessage>;
-  writer: WritableStreamDefaultWriter<AutomergeProtocolMessage>;
-  isOpen: boolean;
-};
 
 export const createEchoPeerMetadata = (): PeerMetadata =>
   ({

@@ -16,7 +16,7 @@ import {
 } from './manipulation';
 import { getSnapshot } from './snapshot';
 import { StoredSchema } from './stored-schema';
-import { getTypeAnnotation, schemaVariance, SchemaMetaSymbol, type SchemaMeta, type TypeAnnotation } from '../ast';
+import { getTypeAnnotation, SchemaMetaSymbol, type SchemaMeta, type TypeAnnotation } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
 import { type JsonSchemaType } from '../json-schema';
 import { type TypedObject, type TypedObjectPrototype } from '../object';
@@ -145,18 +145,15 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
   } as any;
 };
 
-/**
- * @param schema @deprecated
- */
-// TODO(burdon): Remove once we've stabilized the schema API.
-export const assertEchoSchema = (schema: Schema.Schema.AnyNoContext): EchoSchema => {
-  invariant(schema instanceof EchoSchema, 'Schema is not an EchoSchema');
-  return schema;
+export const isMutable = (schema: Schema.Schema.AnyNoContext): schema is EchoSchema => {
+  return schema instanceof EchoSchema;
 };
 
-// TODO(burdon): Resolve (add annotation?)
-export const isMutable = (schema: Schema.Schema.AnyNoContext): boolean => {
-  return schema instanceof EchoSchema;
+// NOTE: Keep in this file.
+const schemaVariance = {
+  _A: (_: any) => _,
+  _I: (_: any) => _,
+  _R: (_: never) => _,
 };
 
 /**
@@ -299,7 +296,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   /**
    * @throws Error if the schema is readonly.
    */
-  public updateTypename(typename: string) {
+  public updateTypename(typename: string): void {
     const updated = setTypenameInSchema(this._getSchema(), typename);
     this._storedSchema.typename = typename;
     this._storedSchema.jsonSchema = toJsonSchema(updated);
@@ -308,7 +305,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   /**
    * @throws Error if the schema is readonly.
    */
-  public addFields(fields: Schema.Struct.Fields) {
+  public addFields(fields: Schema.Struct.Fields): void {
     const extended = addFieldsToSchema(this._getSchema(), fields);
     this._storedSchema.jsonSchema = toJsonSchema(extended);
   }
@@ -316,7 +313,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   /**
    * @throws Error if the schema is readonly.
    */
-  public updateFields(fields: Schema.Struct.Fields) {
+  public updateFields(fields: Schema.Struct.Fields): void {
     const updated = updateFieldsInSchema(this._getSchema(), fields);
     this._storedSchema.jsonSchema = toJsonSchema(updated);
   }
@@ -324,7 +321,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   /**
    * @throws Error if the schema is readonly.
    */
-  public updateFieldPropertyName({ before, after }: { before: PropertyKey; after: PropertyKey }) {
+  public updateFieldPropertyName({ before, after }: { before: PropertyKey; after: PropertyKey }): void {
     const renamed = updateFieldNameInSchema(this._getSchema(), { before, after });
     this._storedSchema.jsonSchema = toJsonSchema(renamed);
   }
@@ -332,7 +329,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   /**
    * @throws Error if the schema is readonly.
    */
-  public removeFields(fieldNames: string[]) {
+  public removeFields(fieldNames: string[]): void {
     const removed = removeFieldsFromSchema(this._getSchema(), fieldNames);
     this._storedSchema.jsonSchema = toJsonSchema(removed);
   }
@@ -344,21 +341,21 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   /**
    * Called by EchoSchemaRegistry on update.
    */
-  _invalidate() {
+  _invalidate(): void {
     this._isDirty = true;
   }
 
   /**
    * Rebuilds this schema if it is dirty.
    */
-  _rebuild() {
+  _rebuild(): void {
     if (this._isDirty || this._schema == null) {
       this._schema = toEffectSchema(getSnapshot(this._storedSchema.jsonSchema));
       this._isDirty = false;
     }
   }
 
-  private _getSchema() {
+  private _getSchema(): Schema.Schema.AnyNoContext {
     this._rebuild();
     return this._schema!;
   }

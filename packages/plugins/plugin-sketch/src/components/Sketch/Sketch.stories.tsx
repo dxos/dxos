@@ -4,13 +4,12 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import { type SerializedStore } from '@tldraw/store';
 import { type TLRecord } from '@tldraw/tldraw';
 import React, { useState } from 'react';
 
-import { createObject } from '@dxos/echo-db';
-import { live, makeRef } from '@dxos/live-object';
+import { Obj, Ref } from '@dxos/echo';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -21,11 +20,9 @@ import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '../../types';
 
 const createSketch = (content: SerializedStore<TLRecord> = {}): DiagramType => {
   // TODO(burdon): Remove dependency on echo-db.
-  return createObject(
-    live(DiagramType, {
-      canvas: makeRef(live(CanvasType, { schema: TLDRAW_SCHEMA, content })),
-    }),
-  );
+  return Obj.make(DiagramType, {
+    canvas: Ref.make(Obj.make(CanvasType, { schema: TLDRAW_SCHEMA, content })),
+  });
 };
 
 const DefaultStory = () => {

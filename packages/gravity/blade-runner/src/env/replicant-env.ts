@@ -67,7 +67,7 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
     }
   }
 
-  setReplicant(replicant: any) {
+  setReplicant(replicant: any): void {
     this._replicantRpcServer = new ReplicantRpcServer({
       handler: replicant,
       port: createRedisRpcPort({
@@ -79,7 +79,7 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
     });
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     // Send tracing data to the scheduler process.
     registerPerfettoTracer();
     const tracingStream = createRedisWritableStream({
@@ -98,7 +98,7 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
     await this._replicantRpcServer.open();
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     await this._replicantRpcServer.close();
 
     this._redis.disconnect();
@@ -107,7 +107,7 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
     this._rpcResponses.disconnect();
   }
 
-  async syncBarrier(key: string, amount: number) {
+  async syncBarrier(key: string, amount: number): Promise<void> {
     const syncKey = `${this.params.testId}:${key}`;
     await this._barrier(syncKey, amount);
   }
@@ -130,7 +130,7 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
     return result;
   }
 
-  private async _barrier(syncKey: string, count: number) {
+  private async _barrier(syncKey: string, count: number): Promise<void> {
     const done = new Trigger();
     const listener: Callback<unknown> = async (error, result) => {
       const value = await this._redis.get(syncKey);

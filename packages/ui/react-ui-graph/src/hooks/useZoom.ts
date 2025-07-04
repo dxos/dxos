@@ -18,7 +18,7 @@ export type ZoomOptions = {
 
 const defaultZoomOptions: ZoomOptions = {
   enabled: true,
-  extent: [1 / 2, 2],
+  extent: [1 / 4, 4],
   onDblClick: (zoom: ZoomHandler) => zoom.reset(),
 };
 
@@ -53,13 +53,13 @@ export class ZoomHandler {
     return this._zoom;
   }
 
-  init() {
+  init(): this {
     this.setEnabled(this._enabled);
     this.reset(0);
     return this;
   }
 
-  setEnabled(enable: boolean) {
+  setEnabled(enable: boolean): this {
     if (enable) {
       select(this._context.svg)
         .call(this._zoom as any)
@@ -81,7 +81,7 @@ export class ZoomHandler {
     return this;
   }
 
-  reset(duration = 500) {
+  reset(duration = 500): this {
     // TODO(burdon): Scale to midpoint in extent.
     const scale = 1; // this._options.extent?.[0] ?? 1;
     const transform = zoomIdentity.scale(scale);

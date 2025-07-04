@@ -5,7 +5,7 @@
 import { type EdgeErrorData, type EdgeHttpFailure } from './edge';
 
 export class EdgeCallFailedError extends Error {
-  public static fromProcessingFailureCause(cause: Error) {
+  public static fromProcessingFailureCause(cause: Error): EdgeCallFailedError {
     return new EdgeCallFailedError({
       reason: 'Error processing request.',
       isRetryable: true,
@@ -13,7 +13,7 @@ export class EdgeCallFailedError extends Error {
     });
   }
 
-  public static fromHttpFailure(response: Response) {
+  public static fromHttpFailure(response: Response): EdgeCallFailedError {
     return new EdgeCallFailedError({
       reason: `HTTP code ${response.status}: ${response.statusText}.`,
       isRetryable: isRetryableCode(response.status),
@@ -21,7 +21,7 @@ export class EdgeCallFailedError extends Error {
     });
   }
 
-  public static fromUnsuccessfulResponse(response: Response, body: EdgeHttpFailure) {
+  public static fromUnsuccessfulResponse(response: Response, body: EdgeHttpFailure): EdgeCallFailedError {
     return new EdgeCallFailedError({
       reason: body.reason,
       errorData: body.errorData,

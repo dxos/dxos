@@ -21,9 +21,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -33,7 +30,7 @@
       "path": "../../core/echo/live-object"
     },
     {
-      "path": "../../sdk/app-graph"
+      "path": "../../devtools/storybook-utils"
     },
     {
       "path": "../react-ui"

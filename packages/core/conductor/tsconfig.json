@@ -12,6 +12,12 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/graph"
     },
     {
@@ -40,6 +46,9 @@
     },
     {
       "path": "../assistant"
+    },
+    {
+      "path": "../echo/echo"
     },
     {
       "path": "../echo/echo-db"

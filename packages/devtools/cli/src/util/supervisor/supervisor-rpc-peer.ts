@@ -77,7 +77,7 @@ export class SupervisorRpcPeer {
     return this._rpc.rpc.Supervisor;
   }
 
-  async close() {
+  async close(): Promise<void> {
     try {
       await this._rpc.close();
     } finally {

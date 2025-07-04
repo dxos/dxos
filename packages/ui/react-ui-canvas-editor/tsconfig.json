@@ -27,19 +27,22 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/conductor"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../devtools/storybook-utils"
     },
     {
       "path": "../../sdk/react-client"

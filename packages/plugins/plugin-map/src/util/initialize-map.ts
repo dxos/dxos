@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FormatEnum, type GeoPoint } from '@dxos/echo-schema';
+import { Obj, Ref, type Type } from '@dxos/echo';
+import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type Space, live, makeRef } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { createView } from '@dxos/schema';
 
 import { MapType } from '../types';
@@ -13,7 +14,7 @@ import { setLocationProperty } from '../util';
 type InitializeMapProps = {
   space: Space;
   name?: string;
-  coordinates?: GeoPoint;
+  coordinates?: Type.Format.GeoPoint;
   initialSchema?: string;
   locationProperty?: string;
 };
@@ -25,7 +26,7 @@ export const initializeMap = async ({
   initialSchema,
   locationProperty,
 }: InitializeMapProps): Promise<{ map: MapType }> => {
-  const map = live(MapType, { name });
+  const map = Obj.make(MapType, { name });
   if (coordinates) {
     map.coordinates = coordinates;
   }
@@ -62,7 +63,7 @@ export const initializeMap = async ({
   }
 
   space.db.add(view);
-  map.view = makeRef(view);
+  map.view = Ref.make(view);
   space.db.add(map);
 
   return { map };

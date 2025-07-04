@@ -4,11 +4,11 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { withLayout, withTheme, withSignals } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { NumericTabs } from './NumericTabs';
 import { ToggleContainer } from '../ToggleContainer';
@@ -21,7 +21,7 @@ const content = Array.from({ length: 15 }, (_, i) => ({
 const meta: Meta<typeof NumericTabs> = {
   title: 'ui/react-ui-components/NumericTabs',
   component: NumericTabs,
-  decorators: [withSignals, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
 };
 
 export default meta;
@@ -36,7 +36,7 @@ export const Default: Story = {
         <ToggleContainer
           open
           title={content[selected].title}
-          classNames='p-1 rounded-lg bg-baseSurface border border-neutral-500'
+          classNames='p-1 rounded-md bg-baseSurface border border-neutral-500'
         >
           <div className='flex w-full overflow-hidden'>
             <NumericTabs length={content.length} selected={selected} onSelect={setSelected} />

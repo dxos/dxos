@@ -36,6 +36,10 @@ export const prepareAstForCompare = (obj: SchemaAST.AST): any =>
       return null;
     }
 
+    if (value instanceof RegExp) {
+      return value;
+    }
+
     // Convert symbols to strings.
     if (typeof value === 'object') {
       const clone = { ...value };

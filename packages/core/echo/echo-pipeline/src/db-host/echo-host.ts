@@ -204,6 +204,9 @@ export class EchoHost extends Resource {
         e.documentIds,
       );
     });
+    this._automergeHost.documentsSaved.on(this._ctx, () => {
+      this._queryService.invalidateQueries();
+    });
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -216,14 +219,14 @@ export class EchoHost extends Resource {
   /**
    * Flush all pending writes to the underlying storage.
    */
-  async flush() {
+  async flush(): Promise<void> {
     await this._automergeHost.repo.flush();
   }
 
   /**
    * Perform any pending index updates.
    */
-  async updateIndexes() {
+  async updateIndexes(): Promise<void> {
     await this._indexer.updateIndexes();
   }
 

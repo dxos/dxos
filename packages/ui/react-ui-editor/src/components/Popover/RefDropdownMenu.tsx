@@ -51,9 +51,11 @@ const RefDropdownMenuProvider = ({ children, onLookup }: RefDropdownMenuProvider
   );
 
   useEffect(() => {
-    return rootRef
-      ? addEventListener(rootRef, 'dx-ref-tag-activate', handleDxRefTagActivate, customEventOptions)
-      : undefined;
+    if (!rootRef) {
+      return;
+    }
+
+    return addEventListener(rootRef, 'dx-ref-tag-activate' as any, handleDxRefTagActivate, customEventOptions);
   }, [rootRef]);
 
   return (

@@ -5,7 +5,7 @@
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type SpaceSettingsProps, SpaceSettingsSchema } from '../types';
 
 export default () => {
@@ -13,5 +13,9 @@ export default () => {
     showHidden: false,
   });
 
-  return contributes(Capabilities.Settings, { schema: SpaceSettingsSchema, prefix: SPACE_PLUGIN, value: settings });
+  return contributes(Capabilities.Settings, {
+    prefix: meta.id,
+    schema: SpaceSettingsSchema,
+    value: settings,
+  });
 };

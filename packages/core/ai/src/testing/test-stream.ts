@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ObjectId } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 
+import { Message } from '../tools';
 import { type GenerationStreamEvent } from '../types';
 
 /**
@@ -39,11 +40,10 @@ export const createTestSSEStream = (
 
       push({
         type: 'message_start',
-        message: {
-          id: ObjectId.random(),
+        message: Obj.make(Message, {
           role: 'assistant',
           content: [],
-        },
+        }),
       });
 
       for (const block of pars) {

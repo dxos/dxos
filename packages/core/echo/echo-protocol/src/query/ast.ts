@@ -19,7 +19,7 @@ const TypenameSpecifier = Schema.Union(DXN.Schema, Schema.Null).annotations({
  *
  * Clauses are combined using logical AND.
  */
-
+// TODO(burdon): Filter object vs. relation.
 const FilterObject_ = Schema.Struct({
   type: Schema.Literal('object'),
 
@@ -35,6 +35,7 @@ const FilterObject_ = Schema.Struct({
     key: Schema.String.annotations({ description: 'Property name' }),
     value: Schema.suspend(() => Filter),
   }),
+
   /**
    * Objects that have any of the given foreign keys.
    */
@@ -194,6 +195,17 @@ export interface QueryUnionClause extends Schema.Schema.Type<typeof QueryUnionCl
 export const QueryUnionClause: Schema.Schema<QueryUnionClause> = QueryUnionClause_;
 
 /**
+ * Set difference of two queries.
+ */
+const QuerySetDifferenceClause_ = Schema.Struct({
+  type: Schema.Literal('set-difference'),
+  source: Schema.suspend(() => Query),
+  exclude: Schema.suspend(() => Query),
+});
+export interface QuerySetDifferenceClause extends Schema.Schema.Type<typeof QuerySetDifferenceClause_> {}
+export const QuerySetDifferenceClause: Schema.Schema<QuerySetDifferenceClause> = QuerySetDifferenceClause_;
+
+/**
  * Add options to a query.
  */
 const QueryOptionsClause_ = Schema.Struct({
@@ -212,6 +224,7 @@ const Query_ = Schema.Union(
   QueryRelationClause,
   QueryRelationTraversalClause,
   QueryUnionClause,
+  QuerySetDifferenceClause,
   QueryOptionsClause,
 );
 
@@ -246,6 +259,10 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
       break;
     case 'union':
       query.queries.forEach((q) => visit(q, visitor));
+      break;
+    case 'set-difference':
+      visit(query.source, visitor);
+      visit(query.exclude, visitor);
       break;
   }
 };

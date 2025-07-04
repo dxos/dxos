@@ -49,6 +49,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../echo/echo"
+    },
+    {
       "path": "../echo/echo-db"
     },
     {

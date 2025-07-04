@@ -22,16 +22,22 @@ import {
 import { Link, type LinkProps } from '../Link';
 import { Separator, type SeparatorProps } from '../Separator';
 
-type ToolbarRootProps = ThemedClassName<ToolbarPrimitive.ToolbarProps>;
+type ToolbarRootProps = ThemedClassName<ToolbarPrimitive.ToolbarProps> & { layoutManaged?: boolean };
 
-const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(({ classNames, children, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <ToolbarPrimitive.Root {...props} className={tx('toolbar.root', 'toolbar', {}, classNames)} ref={forwardedRef}>
-      {children}
-    </ToolbarPrimitive.Root>
-  );
-});
+const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
+  ({ classNames, children, layoutManaged, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <ToolbarPrimitive.Root
+        {...props}
+        className={tx('toolbar.root', 'toolbar', { layoutManaged }, classNames)}
+        ref={forwardedRef}
+      >
+        {children}
+      </ToolbarPrimitive.Root>
+    );
+  },
+);
 
 type ToolbarButtonProps = ButtonProps;
 

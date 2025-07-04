@@ -16,7 +16,7 @@ const EchoMetadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
  * Use this only for testing purposes.
  */
 export const changeStorageVersionInMetadata = async (storage: Storage, version: number) => {
-  log.info('Changing storage version in metadata. USE ONLY FOR TESTING.');
+  log('Changing storage version in metadata. USE ONLY FOR TESTING.');
   const metadata = new MetadataStore(storage.createDirectory('metadata'));
   await metadata.load();
   const echoMetadata = metadata.metadata;

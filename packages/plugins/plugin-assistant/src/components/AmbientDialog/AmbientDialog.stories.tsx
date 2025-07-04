@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -52,6 +52,7 @@ const meta: Meta<typeof AmbientDialog> = {
     );
   },
   decorators: [
+    // TODO(burdon): Replace with ClientPlugin.
     withClientProvider({
       config: new Config({
         runtime: {

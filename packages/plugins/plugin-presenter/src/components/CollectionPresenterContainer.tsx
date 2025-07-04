@@ -5,14 +5,14 @@
 import React, { type FC, useContext, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { type CollectionType } from '@dxos/plugin-space/types';
 import { StackItem } from '@dxos/react-ui-stack';
+import { type DataType } from '@dxos/schema';
 
 import { Layout, PageNumber, Pager } from './Presenter';
 import { PresenterContext } from '../types';
 import { useExitPresenter } from '../useExitPresenter';
 
-const CollectionPresenterContainer: FC<{ collection: CollectionType }> = ({ collection }) => {
+const CollectionPresenterContainer: FC<{ collection: DataType.Collection }> = ({ collection }) => {
   const [slide, setSlide] = useState(0);
 
   const { running } = useContext(PresenterContext);

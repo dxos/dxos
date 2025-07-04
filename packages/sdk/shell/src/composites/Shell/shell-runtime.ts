@@ -64,7 +64,7 @@ export class ShellRuntimeImpl implements ShellRuntime {
     return this._spaceInvitationParam;
   }
 
-  setLayout({ layout, invitationCode, spaceKey, spaceId }: LayoutRequest) {
+  setLayout({ layout, invitationCode, spaceKey, spaceId }: LayoutRequest): void {
     this._layout = layout;
     this._invitationCode = invitationCode;
     this._spaceKey = spaceKey;
@@ -72,20 +72,20 @@ export class ShellRuntimeImpl implements ShellRuntime {
     this.layoutUpdate.emit({ layout, invitationCode, spaceKey, spaceId });
   }
 
-  setInvitationUrl({ invitationUrl, deviceInvitationParam, spaceInvitationParam }: InvitationUrlRequest) {
+  setInvitationUrl({ invitationUrl, deviceInvitationParam, spaceInvitationParam }: InvitationUrlRequest): void {
     this._invitationUrl = invitationUrl;
     this._deviceInvitationParam = deviceInvitationParam;
     this._spaceInvitationParam = spaceInvitationParam;
     this.invitationUrlUpdate.emit({ invitationUrl, deviceInvitationParam, spaceInvitationParam });
   }
 
-  async setAppContext(context: AppContextRequest) {
+  async setAppContext(context: AppContextRequest): Promise<void> {
     invariant(this._appRpc, 'runtime not open');
 
     await this._appRpc.rpc.AppService.setContext(context);
   }
 
-  async open() {
+  async open(): Promise<void> {
     this._appRpc = createProtoRpcPeer({
       requested: appServiceBundle,
       exposed: shellServiceBundle,
@@ -112,7 +112,7 @@ export class ShellRuntimeImpl implements ShellRuntime {
     await this._appRpc.open();
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this._appRpc?.close();
     this._appRpc = undefined;
   }

@@ -24,22 +24,22 @@ export class SignalClientMonitor {
    */
   private _lastStateChange = new Date();
 
-  public getRecordedTimestamps() {
+  public getRecordedTimestamps(): { connectionStarted: Date; lastStateChange: Date } {
     return {
       connectionStarted: this._connectionStarted,
       lastStateChange: this._lastStateChange,
     };
   }
 
-  public recordStateChangeTime() {
+  public recordStateChangeTime(): void {
     this._lastStateChange = new Date();
   }
 
-  public recordConnectionStartTime() {
+  public recordConnectionStartTime(): void {
     this._connectionStarted = new Date();
   }
 
-  public recordReconnect(params: { success: boolean }) {
+  public recordReconnect(params: { success: boolean }): void {
     this._performance.reconnectCounter++;
     trace.metrics.increment('dxos.mesh.signal.signal-client.reconnect', 1, {
       tags: {
@@ -48,15 +48,15 @@ export class SignalClientMonitor {
     });
   }
 
-  public recordJoin() {
+  public recordJoin(): void {
     this._performance.joinCounter++;
   }
 
-  public recordLeave() {
+  public recordLeave(): void {
     this._performance.leaveCounter++;
   }
 
-  public recordMessageReceived(message: Message) {
+  public recordMessageReceived(message: Message): void {
     this._performance.receivedMessages++;
     trace.metrics.increment('dxos.mesh.signal.signal-client.received-total', 1, {
       tags: createIdentityTags(message),
@@ -66,7 +66,7 @@ export class SignalClientMonitor {
     });
   }
 
-  public async recordMessageSending(message: Message, sendMessage: () => Promise<void>) {
+  public async recordMessageSending(message: Message, sendMessage: () => Promise<void>): Promise<void> {
     this._performance.sentMessages++;
     const tags = createIdentityTags(message);
     let success = true;
@@ -84,11 +84,11 @@ export class SignalClientMonitor {
     });
   }
 
-  public recordStreamCloseErrors(count: number) {
+  public recordStreamCloseErrors(count: number): void {
     trace.metrics.increment('dxos.mesh.signal.signal-client.stream-close-errors', count);
   }
 
-  public recordReconciliation(params: { success: boolean }) {
+  public recordReconciliation(params: { success: boolean }): void {
     trace.metrics.increment('dxos.mesh.signal.signal-client.reconciliation', 1, {
       tags: {
         success: params.success,

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Icon, DropdownMenu } from '@dxos/react-ui';
@@ -23,7 +23,7 @@ const meta: Meta<typeof StackItem.Root> = {
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <StackItem.SigilButton>
-                <Icon icon={'ph--dots-three--regular'} size={5} />
+                <Icon icon='ph--dots-three--regular' size={5} />
               </StackItem.SigilButton>
             </DropdownMenu.Trigger>
           </DropdownMenu.Root>

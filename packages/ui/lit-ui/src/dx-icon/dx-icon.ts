@@ -27,7 +27,7 @@ export class DxIcon extends LitElement {
     return svg`<svg class="dx-icon" data-size=${this.size}><use href=${href} /></svg>`;
   }
 
-  override createRenderRoot() {
+  override createRenderRoot(): this {
     return this;
   }
 }

@@ -168,14 +168,14 @@ class TestClass {
   constructor(private events: string[]) {}
 
   @synchronized
-  async foo() {
+  async foo(): Promise<void> {
     this.events.push('foo start');
     await sleep(10);
     this.events.push('foo end');
   }
 
   @synchronized
-  async bar() {
+  async bar(): Promise<void> {
     this.events.push('bar start');
     await sleep(30);
     this.events.push('bar end');

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-syntax-highlighter",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "A syntax highlighter wrapper.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

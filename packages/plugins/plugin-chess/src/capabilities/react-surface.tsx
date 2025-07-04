@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 
 import { ChessContainer } from '../components';
 import { ChessComponent } from '../components/ChessComponent';
@@ -23,7 +23,7 @@ export default () =>
     createSurface({
       id: 'plugin-chess',
       role: 'canvas-node',
-      filter: (data): data is any => isInstanceOf(ChessType, data),
+      filter: Obj.instanceOf(ChessType),
       component: ({ data }) => <ChessComponent game={data} />,
     }),
   ]);

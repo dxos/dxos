@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo-schema';
+import { Format, GeneratorAnnotation, LabelAnnotation, PropertyMeta } from '@dxos/echo-schema';
 
 import { Organization } from './organization';
 import { PostalAddress } from './postal-address';
@@ -27,7 +27,9 @@ const PersonSchema = Schema.Struct({
   // TODO(wittjosiah): Format.URL. Support ref?
   image: Schema.optional(Schema.String.annotations({ title: 'Image' })),
   // TODO(burdon): Use reference links.
-  organization: Schema.optional(Type.Ref(Organization).annotations({ title: 'Organization' })),
+  organization: Schema.optional(
+    Type.Ref(Organization).pipe(PropertyMeta('referenceProperty', 'name')).annotations({ title: 'Organization' }),
+  ),
   jobTitle: Schema.optional(Schema.String.annotations({ title: 'Job Title' })),
   department: Schema.optional(Schema.String.annotations({ title: 'Department' })),
   notes: Schema.optional(Schema.String.annotations({ title: 'Notes' })),

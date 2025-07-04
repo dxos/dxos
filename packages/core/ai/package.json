@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ai",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "AI utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,6 +16,10 @@
     "#parjs/combinators": {
       "browser": "./vendor/parjs-combinators-browser.mjs",
       "default": "./vendor/parjs-combinators-default.mjs"
+    },
+    "#parsimmon": {
+      "browser": "./vendor/parsimmon-browser.mjs",
+      "default": "./vendor/parsimmon-default.mjs"
     }
   },
   "exports": {

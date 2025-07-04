@@ -36,9 +36,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -54,10 +51,16 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../devtools/storybook-utils"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../ui/react-ui"

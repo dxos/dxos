@@ -96,7 +96,7 @@ class ProxyHandlerSlot<T extends BaseObject> implements ProxyHandler<T> {
   }
 
   // TODO(burdon): Requires comment.
-  setHandler(handler: ReactiveHandler<T>) {
+  setHandler(handler: ReactiveHandler<T>): void {
     this._handler = handler;
   }
 

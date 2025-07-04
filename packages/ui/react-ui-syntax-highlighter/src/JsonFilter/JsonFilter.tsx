@@ -11,17 +11,17 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { SyntaxHighlighter } from '../SyntaxHighlighter';
 
-export type JsonProps = ThemedClassName<{ data?: any }>;
+export type JsonProps = ThemedClassName<{ data?: any; testId?: string }>;
 
-export const Json = ({ data, classNames }: JsonProps) => {
+export const Json = ({ data, classNames, testId }: JsonProps) => {
   return (
-    <SyntaxHighlighter language='json' classNames={classNames}>
+    <SyntaxHighlighter language='json' classNames={classNames} data-testid={testId}>
       {JSON.stringify(data, null, 2)}
     </SyntaxHighlighter>
   );
 };
 
-export const JsonFilter = ({ data: initialData, classNames }: JsonProps) => {
+export const JsonFilter = ({ data: initialData, classNames, testId }: JsonProps) => {
   const [data, setData] = useState(initialData);
   const [text, setText] = useState('');
   const [error, setError] = useState<Error | null>(null);
@@ -50,7 +50,7 @@ export const JsonFilter = ({ data: initialData, classNames }: JsonProps) => {
           placeholder='JSONPath (e.g., $.graph.nodes)'
         />
       </Input.Root>
-      <SyntaxHighlighter language='json' classNames={mx('grow overflow-y-auto', classNames)}>
+      <SyntaxHighlighter language='json' classNames={mx('grow overflow-y-auto', classNames)} data-testid={testId}>
         {JSON.stringify(data, null, 2)}
       </SyntaxHighlighter>
     </div>

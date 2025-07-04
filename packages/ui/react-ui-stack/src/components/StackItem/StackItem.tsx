@@ -20,6 +20,7 @@ import React, {
   type ComponentPropsWithRef,
   useCallback,
   type ReactNode,
+  useMemo,
 } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -34,6 +35,7 @@ import {
   StackItemHeadingLabel,
   type StackItemHeadingProps,
   type StackItemHeadingLabelProps,
+  StackItemHeadingStickyContent,
 } from './StackItemHeading';
 import { StackItemResizeHandle, type StackItemResizeHandleProps } from './StackItemResizeHandle';
 import {
@@ -214,8 +216,13 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
       return true;
     };
 
+    const stackItemContextValue = useMemo(
+      () => ({ selfDragHandleRef, size, setSize, state: dragState, setState: setDragState, role }),
+      [selfDragHandleRef, size, setSize, dragState, setDragState, role],
+    );
+
     return (
-      <StackItemContext.Provider value={{ selfDragHandleRef, size, setSize, state: dragState, setState: setDragState }}>
+      <StackItemContext.Provider value={stackItemContextValue}>
         <Root
           {...props}
           tabIndex={0}
@@ -229,6 +236,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
                 : 'dx-focus-ring-group-y',
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
+            role === 'section' && orientation !== 'horizontal' && 'border-be border-subduedSeparator',
             classNames,
           )}
           data-dx-stack-item
@@ -266,6 +274,7 @@ export const StackItem = {
   Content: StackItemContent,
   Heading: StackItemHeading,
   HeadingLabel: StackItemHeadingLabel,
+  HeadingStickyContent: StackItemHeadingStickyContent,
   ResizeHandle: StackItemResizeHandle,
   DragHandle: StackItemDragHandle,
   Sigil: StackItemSigil,

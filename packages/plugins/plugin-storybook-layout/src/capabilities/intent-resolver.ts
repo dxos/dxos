@@ -40,6 +40,22 @@ export default (context: PluginContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateDialog.fields.input)`
+      //  but the filter is not being applied correctly.
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateDialog.fields.input> =>
+        Schema.is(LayoutAction.UpdateDialog.fields.input)(data),
+      resolve: ({ subject, options }) => {
+        const layout = context.getCapability(LayoutState);
+        layout.dialogOpen = options.state ?? Boolean(subject);
+        layout.dialogType = options.type ?? 'default';
+        layout.dialogBlockAlign = options.blockAlign ?? 'center';
+        layout.dialogOverlayClasses = options.overlayClasses;
+        layout.dialogOverlayStyle = options.overlayStyle;
+        layout.dialogContent = subject ? { component: subject, props: options.props } : null;
+      },
+    }),
+    createResolver({
+      intent: LayoutAction.UpdateLayout,
       // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdatePopover.fields.input)`
       //  but the filter is not being applied correctly.
       filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdatePopover.fields.input> =>

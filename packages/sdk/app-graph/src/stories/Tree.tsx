@@ -8,7 +8,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Copied form devtools.
 
-export const Tree: FC<{ data?: object }> = ({ data }) => {
+export const JsonTree: FC<{ data?: object }> = ({ data }) => {
   return (
     <div className='flex overflow-auto ml-2 border-l-4 border-blue-500'>
       <Node data={data} root />

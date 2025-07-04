@@ -150,7 +150,7 @@ export class PluginContext {
     module: string;
     interface: InterfaceDef<T>;
     implementation: T;
-  }) {
+  }): void {
     const current = this._registry.get(this._capabilityImpls(interfaceDef.identifier));
     const capability = new CapabilityImpl(moduleId, implementation);
     if (current.includes(capability)) {
@@ -168,7 +168,7 @@ export class PluginContext {
   /**
    * @internal
    */
-  removeCapability<T>(interfaceDef: InterfaceDef<T>, implementation: T) {
+  removeCapability<T>(interfaceDef: InterfaceDef<T>, implementation: T): void {
     const current = this._registry.get(this._capabilityImpls(interfaceDef.identifier));
     if (current.length === 0) {
       return;

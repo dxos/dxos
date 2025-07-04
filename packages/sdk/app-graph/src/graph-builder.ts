@@ -199,7 +199,7 @@ export class GraphBuilder {
     });
   }
 
-  static from(pickle?: string, registry?: Registry.Registry) {
+  static from(pickle?: string, registry?: Registry.Registry): GraphBuilder {
     if (!pickle) {
       return new GraphBuilder({ registry });
     }
@@ -236,7 +236,7 @@ export class GraphBuilder {
     //   This seems like a good place to start.
     { registry = Registry.make(), source = ROOT_ID, relation = 'outbound', visitor }: GraphBuilderTraverseOptions,
     path: string[] = [],
-  ) {
+  ): Promise<void> {
     // Break cycles.
     if (path.includes(source)) {
       return;
@@ -274,7 +274,7 @@ export class GraphBuilder {
     }
   }
 
-  destroy() {
+  destroy(): void {
     this._connectorSubscriptions.forEach((unsubscribe) => unsubscribe());
     this._connectorSubscriptions.clear();
   }
@@ -297,7 +297,7 @@ export class GraphBuilder {
     }).pipe(Rx.withLabel(`graph-builder:connectors:${key}`));
   });
 
-  private _onExpand(id: string, relation: Relation) {
+  private _onExpand(id: string, relation: Relation): void {
     log('onExpand', { id, relation, registry: getDebugName(this._registry) });
     const connectors = this._connectors(`${id}+${relation}`);
 
@@ -310,23 +310,33 @@ export class GraphBuilder {
         previous = ids;
 
         log('update', { id, relation, ids, removed });
-        Rx.batch(() => {
-          this._graph.removeEdges(
-            removed.map((target) => ({ source: id, target })),
-            true,
-          );
-          this._graph.addNodes(nodes);
-          this._graph.addEdges(
-            nodes.map((node) =>
-              relation === 'outbound' ? { source: id, target: node.id } : { source: node.id, target: id },
-            ),
-          );
-          this._graph.sortEdges(
-            id,
-            relation,
-            nodes.map(({ id }) => id),
-          );
-        });
+        const update = () => {
+          Rx.batch(() => {
+            this._graph.removeEdges(
+              removed.map((target) => ({ source: id, target })),
+              true,
+            );
+            this._graph.addNodes(nodes);
+            this._graph.addEdges(
+              nodes.map((node) =>
+                relation === 'outbound' ? { source: id, target: node.id } : { source: node.id, target: id },
+              ),
+            );
+            this._graph.sortEdges(
+              id,
+              relation,
+              nodes.map(({ id }) => id),
+            );
+          });
+        };
+
+        // TODO(wittjosiah): Remove `requestAnimationFrame` once we have a better solution.
+        //  This is a workaround to avoid a race condition where the graph is updated during React render.
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(update);
+        } else {
+          update();
+        }
       },
       { immediate: true },
     );
@@ -339,7 +349,7 @@ export class GraphBuilder {
   //   log('onInitialize', { id });
   // }
 
-  private _onRemoveNode(id: string) {
+  private _onRemoveNode(id: string): void {
     this._connectorSubscriptions.get(id)?.();
     this._connectorSubscriptions.delete(id);
   }

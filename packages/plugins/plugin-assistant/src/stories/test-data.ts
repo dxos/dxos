@@ -3,11 +3,11 @@
 //
 
 import { type Live, type Space } from '@dxos/client/echo';
-import { create, getSchemaTypename, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
+import { Obj, Type, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
-const organizations: DataType.Organization[] = [
+const organizations: (Type.Properties<DataType.Organization> & { id: string })[] = [
   { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' },
   { id: 'socket_supply', name: 'Socket Supply', website: 'https://socketsupply.com' },
   { id: 'ink_and_switch', name: 'Ink & Switch', website: 'https://inkandswitch.com' },
@@ -24,7 +24,7 @@ const organizations: DataType.Organization[] = [
   { id: 'deshaw', name: 'D. E. Shaw & Co.', website: 'https://deshaw.com' },
 ];
 
-const people: DataType.Person[] = [
+const people: (Type.Properties<DataType.Person> & { id: string })[] = [
   { id: 'rich_burdon', fullName: 'Rich Burdon' },
   { id: 'josiah_witt', fullName: 'Josiah Witt' },
   { id: 'dima_dmaretskyi', fullName: 'Dima Maretskyi' },
@@ -41,8 +41,8 @@ const people: DataType.Person[] = [
 ];
 
 const testObjects: Record<string, any[]> = {
-  [getSchemaTypename(DataType.Organization)!]: organizations,
-  [getSchemaTypename(DataType.Person)!]: people,
+  [Type.getTypename(DataType.Organization)!]: organizations,
+  [Type.getTypename(DataType.Person)!]: people,
 };
 
 const testRelationships: Record<
@@ -52,7 +52,7 @@ const testRelationships: Record<
     target: string;
   } & Record<string, any>)[]
 > = {
-  [getSchemaTypename(DataType.Employer)!]: [
+  [Type.getTypename(DataType.Employer)!]: [
     // @eslint-disable-next-line
     { source: 'rich_burdon', target: 'dxos' },
     { source: 'rich_burdon', target: 'google', active: false }, // TODO(burdon): Should not contribute to force.
@@ -75,7 +75,7 @@ const testRelationships: Record<
   ],
 
   // TODO(burdon): Limit graph view to selected relationship types.
-  [getSchemaTypename(DataType.HasConnection)!]: [
+  [Type.getTypename(DataType.HasConnection)!]: [
     //
     { kind: 'partner', source: 'dxos', target: 'ink_and_switch' },
     { kind: 'partner', source: 'dxos', target: 'effectful' },
@@ -93,14 +93,14 @@ const testRelationships: Record<
   ],
 };
 
-export const addTestData = (space: Space): void => {
+export const addTestData = async (space: Space): Promise<void> => {
   const objectMap = new Map<string, Live<any>>();
 
   for (const [typename, objects] of Object.entries(testObjects)) {
     const schema = space.db.graph.schemaRegistry.getSchema(typename);
     invariant(schema, `Schema not found: ${typename}`);
     for (const { id, ...data } of objects) {
-      const object = space.db.add(create(schema, data));
+      const object = space.db.add(Obj.make(schema, data));
       objectMap.set(id, object);
     }
   }
@@ -116,11 +116,11 @@ export const addTestData = (space: Space): void => {
       invariant(targetObject, `Target object not found: ${target}`);
 
       space.db.add(
-        create(schema, {
-          ...data,
+        Relation.make(schema, {
           // TODO(burdon): Test source/target types match.
-          [RelationSourceId]: sourceObject,
-          [RelationTargetId]: targetObject,
+          [Relation.Source]: sourceObject,
+          [Relation.Target]: targetObject,
+          ...data,
         }),
       );
     }

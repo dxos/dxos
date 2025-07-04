@@ -2,68 +2,75 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Tool } from '@dxos/ai';
-import { assertState } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { Schema } from 'effect';
 
-export type Blueprint = {
-  steps: BlueprintStep[];
-};
+import { ToolId } from '@dxos/ai';
+import { Key, Obj, Type } from '@dxos/echo';
 
-export const Blueprint = Object.freeze({
-  make: (steps: string[]): Blueprint => {
-    return {
-      steps: steps.map(
-        (step, index): BlueprintStep => ({
-          id: ObjectId.random(),
-          instructions: step,
-          tools: [],
-        }),
-      ),
-    };
-  },
+export const BlueprintStep = Schema.Struct({
+  id: Key.ObjectId,
+  instructions: Schema.String,
+  tools: Schema.optional(Schema.Array(ToolId)),
 });
+export interface BlueprintStep extends Schema.Schema.Type<typeof BlueprintStep> {}
 
-export type BlueprintStep = {
-  id: ObjectId;
-  instructions: string;
-  tools: Tool[];
-};
+export const BlueprintDefinition = Schema.Struct({
+  steps: Schema.Array(BlueprintStep.pipe(Schema.omit('id'))),
+});
+export interface BlueprintDefinition extends Schema.Schema.Type<typeof BlueprintDefinition> {}
 
+export const Blueprint = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  steps: Schema.Array(BlueprintStep),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Blueprint',
+    version: '0.1.0',
+  }),
+);
+export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
+
+/**
+ * Blueprint builder API.
+ */
 export namespace BlueprintBuilder {
-  interface Begin {
-    step(instructions: string): Step;
-  }
-  interface Step {
-    step(instructions: string): Step;
-    withTool(tool: Tool): Step;
-    end(): Blueprint;
-  }
+  export const create = () => new Builder();
 
-  export const begin = (): Begin => new Builder();
-
-  class Builder implements Begin, Step {
+  class Builder {
     private readonly _steps: BlueprintStep[] = [];
 
-    step(instructions: string): Step {
+    step(instructions: string, options?: { tools?: string[] }): Builder {
       this._steps.push({
-        id: ObjectId.random(),
+        id: Key.ObjectId.random(),
         instructions,
-        tools: [],
+        tools: options?.tools ?? [],
       });
+
       return this;
     }
 
-    withTool(tool: Tool): Step {
-      assertState(this._steps.length > 0, 'Must have at least one step');
-      this._steps.at(-1)!.tools.push(tool);
-      return this;
+    build(): Blueprint {
+      return Obj.make(Blueprint, { steps: this._steps });
     }
+  }
+}
 
-    end(): Blueprint {
-      return {
-        steps: this._steps,
-      };
+/**
+ * Blueprint parser API.
+ */
+export namespace BlueprintParser {
+  export const create = () => new Parser();
+
+  class Parser {
+    parse({ steps }: BlueprintDefinition): Blueprint {
+      const builder = BlueprintBuilder.create();
+      for (const step of steps) {
+        builder.step(step.instructions, {
+          tools: (step.tools ?? []) as string[],
+        });
+      }
+
+      return builder.build();
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-observability",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "DXOS app framework plugin for hooking up app observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

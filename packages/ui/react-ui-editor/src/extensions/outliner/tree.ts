@@ -69,8 +69,8 @@ export class Tree implements Item {
   traverse<T = any>(cb: (item: Item, level: number) => T | void): T | undefined;
   traverse<T = any>(item: Item, cb: (item: Item, level: number) => T | void): T | undefined;
   traverse<T = any>(
-    itemOrCb: Item | ((item: Item, level: number) => T | void),
-    maybeCb?: (item: Item, level: number) => T | void,
+    itemOrCb: Item | ((item: Item, level: number) => T | undefined | void),
+    maybeCb?: (item: Item, level: number) => T | undefined | void,
   ): T | undefined {
     if (typeof itemOrCb === 'function') {
       return traverse<T>(this, itemOrCb);
@@ -83,7 +83,7 @@ export class Tree implements Item {
    * Return the closest item.
    */
   find(pos: number): Item | undefined {
-    return this.traverse((item) => (item.lineRange.from <= pos && item.lineRange.to >= pos ? item : undefined));
+    return this.traverse<Item>((item) => (item.lineRange.from <= pos && item.lineRange.to >= pos ? item : undefined));
   }
 
   /**
@@ -148,6 +148,8 @@ export const traverse = <T = any>(root: Item, cb: (item: Item, level: number) =>
         return value;
       }
     }
+
+    return undefined;
   };
 
   return t(root, root.type === 'root' ? -1 : 0);

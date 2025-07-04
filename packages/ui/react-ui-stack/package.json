@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-stack",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "A stack component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -51,6 +51,7 @@
     "@radix-ui/react-compose-refs": "1.1.1",
     "@radix-ui/react-context": "1.1.1",
     "@radix-ui/react-menu": "2.1.6",
+    "@radix-ui/react-primitive": "2.0.2",
     "@radix-ui/react-slot": "1.1.2",
     "@radix-ui/react-use-controllable-state": "1.1.0",
     "react-resize-detector": "^11.0.1"
@@ -61,7 +62,6 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",

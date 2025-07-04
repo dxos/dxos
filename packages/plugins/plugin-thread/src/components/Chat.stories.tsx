@@ -4,15 +4,15 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { Capabilities, contributes, createSurface, IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { makeRef } from '@dxos/live-object';
+import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { live, type Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Thread } from '@dxos/react-ui-thread';
@@ -36,8 +36,8 @@ const Story = () => {
       setTimeout(async () => {
         const space = await client.spaces.create();
         const channel = space.db.add(
-          live(ChannelType, {
-            defaultThread: makeRef(live(ThreadType, { messages: [], status: 'active' })),
+          Obj.make(ChannelType, {
+            defaultThread: Ref.make(Obj.make(ThreadType, { messages: [], status: 'active' })),
             threads: [],
           }),
         );

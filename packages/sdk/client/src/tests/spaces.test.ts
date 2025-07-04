@@ -9,8 +9,9 @@ import { type Space } from '@dxos/client-protocol';
 import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
+import { Filter } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
-import { Expando, Filter, type HasId, Ref } from '@dxos/echo-schema';
+import { Expando, type HasId, Ref } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -35,7 +36,7 @@ describe('Spaces', () => {
 
     await expect.poll(() => client.spaces.get()).toBeDefined();
     const space = client.spaces.default;
-    await testSpaceAutomerge(space.db);
+    await testSpaceAutomerge(expect, space.db);
 
     expect(space.members.get()).to.be.length(1);
   });
@@ -45,7 +46,7 @@ describe('Spaces', () => {
 
     // TODO(burdon): Extend basic queries.
     const space = await client.spaces.create();
-    await testSpaceAutomerge(space.db);
+    await testSpaceAutomerge(expect, space.db);
 
     expect(SpaceId.isValid(space.id)).to.be.true;
     expect(space.members.get()).to.be.length(1);
@@ -75,7 +76,7 @@ describe('Spaces', () => {
 
     // TODO(burdon): Extend basic queries.
     const space = await client.spaces.create();
-    await testSpaceAutomerge(space.db);
+    await testSpaceAutomerge(expect, space.db);
 
     expect(space.members.get()).to.be.length(1);
   });
@@ -87,7 +88,7 @@ describe('Spaces', () => {
     {
       await client.spaces.waitUntilReady();
       const space = client.spaces.default;
-      ({ objectId } = await testSpaceAutomerge(space.db));
+      ({ objectId } = await testSpaceAutomerge(expect, space.db));
       expect(space.members.get()).to.be.length(1);
       await space.db.flush();
     }

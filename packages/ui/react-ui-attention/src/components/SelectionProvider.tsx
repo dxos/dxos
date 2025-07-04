@@ -8,7 +8,13 @@ import React, { useCallback, useMemo, type PropsWithChildren } from 'react';
 
 import { useDefaultValue } from '@dxos/react-ui';
 
-import { defaultSelection, SelectionManager, type Selection, type SelectionMode } from '../selection';
+import {
+  defaultSelection,
+  SelectionManager,
+  type SelectionResult,
+  type Selection,
+  type SelectionMode,
+} from '../selection';
 
 const SELECTION_NAME = 'Selection';
 
@@ -32,18 +38,21 @@ export const SelectionProvider = ({
   return <SelectionContextProvider selection={selection}>{children}</SelectionContextProvider>;
 };
 
+/**
+ * Get the selection contexts.
+ */
+export const useSelectionManager = () => {
+  const { selection } = useSelectionContext(SELECTION_NAME);
+  return selection;
+};
+
+/**
+ * Get the selected objects for a given context.
+ */
 export const useSelected = <T extends SelectionMode>(
   contextId?: string,
   mode: T = 'multi' as T,
-): T extends 'single'
-  ? string | undefined
-  : T extends 'multi'
-    ? string[]
-    : T extends 'range'
-      ? { from: string; to: string } | undefined
-      : T extends 'multi-range'
-        ? { from: string; to: string }[]
-        : never => {
+): SelectionResult<T> => {
   const { selection } = useSelectionContext(SELECTION_NAME);
   if (contextId) {
     return selection.getSelected(contextId, mode);

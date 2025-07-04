@@ -54,7 +54,19 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../devtools/storybook-utils"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
       "path": "../client-protocol"
+    },
+    {
+      "path": "../react-client"
     }
   ]
 }

@@ -4,11 +4,12 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
+import { Obj } from '@dxos/echo';
 import { FunctionType, FunctionTrigger } from '@dxos/functions';
-import { live, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -21,7 +22,7 @@ const DefaultStory = () => {
   const space = spaces[1];
 
   return (
-    <div role='none' className='w-96'>
+    <div className='w-96'>
       <AutomationPanel space={space} />
     </div>
   );
@@ -38,14 +39,15 @@ const meta: Meta = {
       types: [FunctionType, FunctionTrigger],
       onSpaceCreated: ({ space }) => {
         for (const fn of functions) {
-          space.db.add(live(FunctionType, fn));
+          space.db.add(Obj.make(FunctionType, fn));
         }
       },
     }),
-    withLayout({ fullscreen: true, classNames: 'flex juastify-center m-2' }),
+    withLayout(),
     withTheme,
   ],
   parameters: {
+    layout: 'centered',
     translations,
   },
 };

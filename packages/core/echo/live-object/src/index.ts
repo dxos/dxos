@@ -9,7 +9,6 @@ import * as EchoSchemaModule from '@dxos/echo-schema';
 export * from './proxy';
 export * from './snapshot';
 export * from './object';
-export * from './schema';
 export * from './live';
 
 /**

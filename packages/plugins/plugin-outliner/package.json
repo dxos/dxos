@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-outliner",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "Tree plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -50,6 +50,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",

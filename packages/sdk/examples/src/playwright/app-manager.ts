@@ -12,7 +12,7 @@ export class AppManager {
 
   constructor(private readonly _browser: Browser) {}
 
-  async init() {
+  async init(): Promise<void> {
     if (this._initialized) {
       return;
     }
@@ -36,11 +36,11 @@ export class AppManager {
 
   // Actions
 
-  async toggleAirplaneMode() {
+  async toggleAirplaneMode(): Promise<void> {
     await this.page.getByTestId('airplane-mode').click();
   }
 
-  async toggleBatching() {
+  async toggleBatching(): Promise<void> {
     await this.page.getByTestId('batching').click();
   }
 }

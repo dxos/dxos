@@ -9,6 +9,6 @@ export class DiscordPlugin extends Plugin {
 
   // TODO(burdon): Spawn Discord bot via CLI.
   // TODO(burdon): Set-up INTERACTIONS ENDPOINT URL to access post requests.
-  override async onOpen() {}
-  override async onClose() {}
+  override async onOpen(): Promise<void> {}
+  override async onClose(): Promise<void> {}
 }

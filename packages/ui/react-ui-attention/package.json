@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-attention",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "Signifier components and providers for attention system.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -50,7 +50,6 @@
     "effect": "3.14.21"
   },
   "devDependencies": {
-    "@dxos/app-graph": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

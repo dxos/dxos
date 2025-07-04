@@ -2,21 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Effect } from 'effect';
+
 import {
-  allOf,
   Capabilities,
+  Events,
+  allOf,
   contributes,
   createIntent,
   defineModule,
   definePlugin,
-  Events,
 } from '@dxos/app-framework';
-import { getSchemaTypename } from '@dxos/echo-schema';
+import { Blueprint } from '@dxos/assistant';
+import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { CollectionAction, defineObjectForm } from '@dxos/plugin-space/types';
 
 import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
+import { AssistantEvents } from './events';
 import { meta } from './meta';
 import translations from './translations';
 import { AssistantAction, AIChatType, ServiceType, TemplateType, CompanionTo } from './types';
@@ -38,13 +42,13 @@ export const AssistantPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: TemplateType.typename,
+          id: Type.getTypename(Blueprint),
           metadata: {
-            icon: 'ph--code-block--regular',
+            icon: 'ph--blueprint--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: getSchemaTypename(AIChatType)!,
+          id: Type.getTypename(AIChatType),
           metadata: {
             icon: 'ph--atom--regular',
           },
@@ -65,9 +69,8 @@ export const AssistantPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: TemplateType,
-            hidden: true,
-            getIntent: () => createIntent(AssistantAction.CreateTemplate),
+            objectSchema: Blueprint,
+            getIntent: () => createIntent(AssistantAction.CreateBlueprint),
           }),
         ),
       ],
@@ -76,6 +79,25 @@ export const AssistantPlugin = () =>
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
       activate: () => contributes(ClientCapabilities.Schema, [ServiceType, TemplateType, CompanionTo]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/on-space-created`,
+      activatesOn: SpaceEvents.SpaceCreated,
+      activate: (context) => {
+        const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+        return contributes(SpaceCapabilities.OnSpaceCreated, async ({ space, rootCollection }) => {
+          const program = Effect.gen(function* () {
+            const { object: collection } = yield* dispatch(
+              createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(AIChatType) }),
+            );
+            rootCollection.objects.push(Ref.make(collection));
+
+            const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
+            space.db.add(chat);
+          });
+          await Effect.runPromise(program);
+        });
+      },
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
@@ -97,6 +119,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/ai-client`,
       activatesOn: allOf(ClientEvents.ClientReady, Events.SettingsReady),
+      activatesAfter: [AssistantEvents.AiClientReady],
       activate: AiClient,
     }),
   ]);

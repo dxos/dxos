@@ -193,11 +193,11 @@ class TimestampMarker extends GutterMarker {
     super();
   }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return other._timestamp === this._timestamp;
   }
 
-  override toDOM(view: EditorView) {
+  override toDOM(view: EditorView): HTMLDivElement {
     const el = document.createElement('div');
     el.className = 'text-sm text-subdued hover:bg-hoverSurface cursor-pointer';
     el.textContent = formatTimestamp(this._timestamp, this._started);

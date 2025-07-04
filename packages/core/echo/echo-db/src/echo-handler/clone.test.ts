@@ -4,7 +4,8 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Expando, Filter, Query, Ref } from '@dxos/echo-schema';
+import { Query, Filter } from '@dxos/echo';
+import { Expando, Ref } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 
 import { clone } from './clone';

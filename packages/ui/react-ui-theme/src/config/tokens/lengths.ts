@@ -17,6 +17,13 @@ export const lengthsFacet = {
           slope: 1,
         },
       },
+      lacuna: {
+        root: {
+          unit: 'rem',
+          initial: 0,
+          slope: 0.125,
+        },
+      },
     },
   } satisfies LinearPhysicalLayer,
 
@@ -27,16 +34,28 @@ export const lengthsFacet = {
       noLine: { root: ['line', 0] },
       hairLine: { root: ['line', 1] },
       thickLine: { root: ['line', 2] },
+      // TODO(burdon): Can/should these be hyphenated?
+      trimXs: { root: ['lacuna', 3] },
+      trimSm: { root: ['lacuna', 6] },
+      trimMd: { root: ['lacuna', 9] },
+      trimLg: { root: ['lacuna', 12] },
     },
   },
 
   alias: {
     namespace: 'dx-',
-    conditions: { root: [':root'] },
+    conditions: {
+      fine: [':root, .density-fine, [data-density="fine"]'],
+      coarse: ['.density-coarse, [data-density="coarse"]'],
+      flush: ['.density-flush, [data-density="flush"]'],
+    },
     aliases: {
-      noLine: { root: ['focusOffset'] },
-      hairLine: { root: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap'] },
-      thickLine: { root: ['focusLine'] },
+      noLine: { fine: ['focusOffset'] },
+      hairLine: { fine: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap'] },
+      thickLine: { fine: ['focusLine'] },
+      trimXs: { fine: ['cardSpacingChrome', 'labelSpacingBlock'] },
+      trimSm: { fine: ['cardSpacingInline', 'cardSpacingBlock', 'inputSpacingBlock'] },
+      trimMd: { coarse: ['cardSpacingInline', 'cardSpacingBlock'] },
     },
   },
 } satisfies Facet;

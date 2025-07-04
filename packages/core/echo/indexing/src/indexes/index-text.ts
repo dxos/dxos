@@ -44,7 +44,7 @@ export class IndexText extends Resource implements Index {
 
   private _orama?: OramaSchemaType = undefined;
 
-  override async _open() {
+  override async _open(): Promise<void> {
     this._orama = await Orama.create({
       schema: {
         chunks: 'string[]',
@@ -69,7 +69,7 @@ export class IndexText extends Resource implements Index {
     return true;
   }
 
-  async remove(id: ObjectPointerEncoded) {
+  async remove(id: ObjectPointerEncoded): Promise<void> {
     invariant(this._orama, 'Index is not initialized');
     await Orama.remove(this._orama, id);
   }

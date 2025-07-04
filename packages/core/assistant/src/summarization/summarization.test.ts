@@ -5,13 +5,18 @@
 import { pipe, Schema } from 'effect';
 import { beforeAll, describe, test } from 'vitest';
 
-import { AIServiceEdgeClient, Message, MixedStreamParser, OllamaClient, type TextContentBlock } from '@dxos/ai';
+import {
+  EdgeAiServiceClient,
+  Message,
+  MixedStreamParser,
+  OllamaAiServiceClient,
+  type TextContentBlock,
+} from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
+import { Obj } from '@dxos/echo';
 import type { EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { create } from '@dxos/echo-schema';
 import { AiService, defineFunction, FunctionExecutor, ServiceContainer } from '@dxos/functions';
-import { live } from '@dxos/live-object';
 import { DataType } from '@dxos/schema';
 import { createTestData } from '@dxos/schema/testing';
 
@@ -47,7 +52,7 @@ const summarizationFn = defineFunction({
         The Transcript Summarizer outputs only the summary text.
       `,
         history: [
-          create(Message, {
+          Obj.make(Message, {
             role: 'user',
             content: [
               {
@@ -75,7 +80,7 @@ const summarizationFn = defineFunction({
         ],
       }),
     );
-    return create(DataType.Text, {
+    return Obj.make(DataType.Text, {
       content: pipe(result[0]?.content[0], (c) => (c?.type === 'text' ? c.text : '')),
     });
   },
@@ -112,7 +117,7 @@ const refinementFn = defineFunction({
         The Transcript Summary Refiner outputs only the summary text.
       `,
         history: [
-          create(Message, {
+          Obj.make(Message, {
             role: 'user',
             content: summaries.map(
               (summary) =>
@@ -130,7 +135,7 @@ const refinementFn = defineFunction({
       }),
     );
     return {
-      summary: create(DataType.Text, {
+      summary: Obj.make(DataType.Text, {
         content: pipe(result[0]?.content[0], (c) => (c?.type === 'text' ? c.text : '')),
       }),
     };
@@ -151,14 +156,14 @@ describe.skip('Summarization', () => {
       new ServiceContainer().setServices({
         ai: {
           client: REMOTE_AI
-            ? new AIServiceEdgeClient({
+            ? new EdgeAiServiceClient({
                 endpoint: AI_SERVICE_ENDPOINT.REMOTE,
                 defaultGenerationOptions: {
                   // model: '@anthropic/claude-sonnet-4-20250514',
                   model: '@anthropic/claude-3-5-sonnet-20241022',
                 },
               })
-            : new OllamaClient({
+            : new OllamaAiServiceClient({
                 overrides: {
                   model: 'llama3.1:8b',
                 },
@@ -174,7 +179,7 @@ describe.skip('Summarization', () => {
   test('keeps transcript outline', { timeout: 1000_000 }, async () => {
     const { transcriptMessages } = createTestData();
 
-    const summary = live(DataType.Text, {
+    const summary = Obj.make(DataType.Text, {
       content: '',
     });
 
@@ -187,7 +192,7 @@ describe.skip('Summarization', () => {
         transcript: blocks,
       });
       summary.content = result.content;
-      summaries.push(live(DataType.Text, { content: result.content }));
+      summaries.push(Obj.make(DataType.Text, { content: result.content }));
 
       console.log(blocks.at(-1));
       console.log();
@@ -202,7 +207,7 @@ describe.skip('Summarization', () => {
           summaries: history,
         });
         summary.content = result.summary.content;
-        summaries.push(live(DataType.Text, { content: result.summary.content }));
+        summaries.push(Obj.make(DataType.Text, { content: result.summary.content }));
 
         console.log('REFINED');
         console.log();

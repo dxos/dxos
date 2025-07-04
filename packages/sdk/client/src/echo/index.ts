@@ -6,7 +6,7 @@ export { SpaceId } from '@dxos/keys';
 export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
 export {
   compareForeignKeys,
-  createQueueDxn,
+  createQueueDXN,
   getMeta,
   getSchema,
   getType,
@@ -27,7 +27,7 @@ export {
   type IDocHandle,
   ObjectVersion,
   type ObjectMigration,
-  type Queue,
+  Queue,
   type QueryResult,
   type AnyLiveObject,
   ResultFormat,

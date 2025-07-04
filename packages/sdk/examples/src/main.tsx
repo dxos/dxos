@@ -8,8 +8,8 @@ import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { Obj } from '@dxos/echo';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { live } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
@@ -54,8 +54,8 @@ const main = async () => {
     types: [DocumentType, DataType.Text],
     onSpaceCreated: ({ space }) => {
       space.db.add(
-        live(DocumentType, {
-          content: Ref.make(live(DataType.Text, { content: '## Type here...\n\ntry the airplane mode switch.' })),
+        Obj.make(DocumentType, {
+          content: Ref.make(Obj.make(DataType.Text, { content: '## Type here...\n\ntry the airplane mode switch.' })),
         }),
       );
     },

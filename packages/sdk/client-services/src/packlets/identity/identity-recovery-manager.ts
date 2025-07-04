@@ -32,7 +32,9 @@ export class EdgeIdentityRecoveryManager {
     private readonly _acceptRecoveredIdentity: (params: JoinIdentityParams) => Promise<Identity>,
   ) {}
 
-  public async createRecoveryCredential({ data }: CreateRecoveryCredentialRequest) {
+  public async createRecoveryCredential({
+    data,
+  }: CreateRecoveryCredentialRequest): Promise<{ recoveryCode: string | undefined }> {
     const identity = this._identityProvider();
     invariant(identity);
 
@@ -102,7 +104,7 @@ export class EdgeIdentityRecoveryManager {
     signature,
     clientDataJson,
     authenticatorData,
-  }: RecoverIdentityRequest.ExternalSignature) {
+  }: RecoverIdentityRequest.ExternalSignature): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const request: EdgeRecoverIdentityRequest = {
@@ -135,7 +137,7 @@ export class EdgeIdentityRecoveryManager {
   /**
    * Recovery identity using an opaque token sent to the user's email.
    */
-  public async recoverIdentityWithToken({ token }: { token: string }) {
+  public async recoverIdentityWithToken({ token }: { token: string }): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const deviceKey = await this._keyring.createKey();
@@ -159,7 +161,7 @@ export class EdgeIdentityRecoveryManager {
     });
   }
 
-  public async recoverIdentity({ recoveryCode }: { recoveryCode: string }) {
+  public async recoverIdentity({ recoveryCode }: { recoveryCode: string }): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const recoveryKeypair = keyPairFromSeedPhrase(recoveryCode);

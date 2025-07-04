@@ -36,7 +36,7 @@ export class PackageDependencyBuilder {
   /**
    * Create docs page.
    */
-  createDocs(project: Project, docsDir: string, baseUrl: string) {
+  createDocs(project: Project, docsDir: string, baseUrl: string): void {
     const baseDir = path.join(this._workspace.baseDir, project.subDir, docsDir);
     if (!fs.existsSync(baseDir)) {
       fs.mkdirSync(baseDir, { recursive: true });
@@ -76,7 +76,7 @@ export class PackageDependencyBuilder {
   /**
    * Generate class diagram.
    */
-  private generateClassDiagrams(project: Project) {
+  private generateClassDiagrams(project: Project): string[] | undefined {
     return project.package.beast?.classDiagrams?.map((config) => {
       const { root, dependencies, glob = 'src/**/*.ts' } = config;
       const sources = [join(this._workspace.baseDir, project.subDir, glob)];
@@ -103,7 +103,7 @@ export class PackageDependencyBuilder {
   /**
    * Create table.
    */
-  private generateDependenciesTable(project: Project, docsDir: string) {
+  private generateDependenciesTable(project: Project, docsDir: string): string {
     const dir = project.subDir;
     const createLink = (p: Project) => {
       const name = p.package.name;
@@ -133,7 +133,7 @@ export class PackageDependencyBuilder {
    * https://mermaid.live
    * https://mermaid-js.github.io/mermaid/#/README
    */
-  generatePackageGraph(project: Project, docsDir: string, baseUrl: string) {
+  generatePackageGraph(project: Project, docsDir: string, baseUrl: string): string {
     const safeName = (name: string) => name.replace(/@/g, '');
 
     const flowchart = new Flowchart({

@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { KanbanType } from '@dxos/react-ui-kanban';
-import { FieldSchema } from '@dxos/schema';
+import { FieldSchema, TypenameAnnotationId } from '@dxos/schema';
 
 import { KANBAN_PLUGIN } from './meta';
 
@@ -19,15 +19,14 @@ import { KANBAN_PLUGIN } from './meta';
  * by the model (e.g., a query of items based on metadata within a column object).
  */
 
-// TODO(burdon): Move to FormatEnum or SDK.
-export const TypenameAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/Typename');
+// TODO(wittjosiah): Factor out?
 export const PivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/PivotColumn');
 
 export const CreateKanbanSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   typename: Schema.optional(
     Schema.String.annotations({
-      [TypenameAnnotationId]: true,
+      [TypenameAnnotationId]: ['limited-static', 'dynamic'],
       title: 'Select card schema (leave empty to start fresh)',
     }),
   ),

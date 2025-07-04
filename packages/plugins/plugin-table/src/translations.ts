@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { TableType } from '@dxos/react-ui-table';
 
 import { TABLE_PLUGIN } from './meta';
@@ -9,8 +10,11 @@ import { TABLE_PLUGIN } from './meta';
 export default [
   {
     'en-US': {
-      [TableType.typename]: {
+      [Type.getTypename(TableType)]: {
         'typename label': 'Table',
+        'typename label_zero': 'Tables',
+        'typename label_one': 'Table',
+        'typename label_other': 'Tables',
         'object name placeholder': 'New table',
       },
       [TABLE_PLUGIN]: {

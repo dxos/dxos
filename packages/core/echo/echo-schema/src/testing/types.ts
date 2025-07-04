@@ -206,4 +206,5 @@ export namespace Testing {
       target: Contact,
     }),
   );
+  export interface HasManager extends Schema.Schema.Type<typeof HasManager> {}
 }

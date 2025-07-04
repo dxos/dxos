@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { create } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 
 import {
   type ApiAuthorization,
@@ -54,7 +54,7 @@ const VISUAL_CROSSING_CREDENTIALS: ApiAuthorization = {
 //  - e.g., https://github.com/konfig-sdks/openapi-examples/blob/main/xkcd/openapi.yaml
 
 const TEST_SERVICES: ServiceType[] = [
-  create(ServiceType, {
+  Obj.make(ServiceType, {
     serviceId: 'amadeus.com/service/FlightSearch',
     name: 'Amadeus Flight Search',
     description: 'Search for local and international flights.',
@@ -68,7 +68,7 @@ const TEST_SERVICES: ServiceType[] = [
     ],
   }),
 
-  create(ServiceType, {
+  Obj.make(ServiceType, {
     serviceId: 'amadeus.com/service/HotelSearch',
     name: 'Amadeus Hotel Search',
     description: 'Search for local and international hotels.',
@@ -82,7 +82,7 @@ const TEST_SERVICES: ServiceType[] = [
     ],
   }),
 
-  create(ServiceType, {
+  Obj.make(ServiceType, {
     serviceId: 'visualcrossing.com/service/Weather',
     name: 'Visual Crossing Weather',
     description: 'Search for global weather forecasts.',
@@ -97,7 +97,7 @@ const TEST_SERVICES: ServiceType[] = [
   }),
 
   // TODO(burdon): Needs auth.
-  create(ServiceType, {
+  Obj.make(ServiceType, {
     serviceId: 'abstractapi.com/service/GeoLocation',
     name: 'Abstract GeoLocation',
     description: 'Get the location of any IP address.',
@@ -115,7 +115,7 @@ const TEST_SERVICES: ServiceType[] = [
   //
 
   ...Array.from({ length: 20 }, (_, i) =>
-    create(ServiceType, {
+    Obj.make(ServiceType, {
       serviceId: `example.com/service/test-${i}`,
       name: `Test ${i}`,
       description: `Test ${i}`,

@@ -14,7 +14,7 @@ export class DumbReplicant {
   }
 
   @trace.span()
-  async doSomethingFunny() {
+  async doSomethingFunny(): Promise<string> {
     log.trace('DumbReplicant trying to do back-flip');
     return 'DumbReplicant did a back-flip';
   }

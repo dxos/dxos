@@ -453,7 +453,7 @@ export class InvitationsHandler {
     setState: (newState: Invitation.State) => void,
     authenticated: Trigger<string>,
     options: { timeout: number },
-  ) {
+  ): Promise<void> {
     for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
       log('guest waiting for authentication code...');
       setState(Invitation.State.READY_FOR_AUTHENTICATION);
@@ -482,7 +482,7 @@ export class InvitationsHandler {
     setState: (newState: Invitation.State) => void,
     invitation: Invitation,
     introductionResponse: IntroductionResponse,
-  ) {
+  ): Promise<void> {
     if (invitation.guestKeypair?.privateKey == null) {
       throw new Error('keypair missing in the invitation');
     }

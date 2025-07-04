@@ -3,14 +3,14 @@
 //
 
 import { debounce } from '@dxos/async';
+import { Obj, Ref } from '@dxos/echo';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
-import { live, createObject, isEchoObject, loadObjectReferences, Ref } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { DocumentType, type MarkdownProperties } from './types';
 
 export const isMarkdownProperties = (data: unknown): data is MarkdownProperties =>
-  (isEchoObject(data) as boolean)
+  (Obj.isObject(data) as boolean)
     ? true
     : data && typeof data === 'object'
       ? 'title' in data && typeof data.title === 'string'
@@ -35,14 +35,12 @@ export const setFallbackName = debounce((doc: DocumentType, content: string) => 
 
 export const serializer: TypedObjectSerializer<DocumentType> = {
   serialize: async ({ object }): Promise<string> => {
-    const content = await loadObjectReferences(object, (doc) => doc.content);
-    return JSON.stringify({ name: object.name, fallbackName: object.fallbackName, content: content.target?.content });
+    const { content } = await object.content.load();
+    return JSON.stringify({ name: object.name, fallbackName: object.fallbackName, content });
   },
 
   deserialize: async ({ content: serialized }) => {
     const { name, fallbackName, content } = JSON.parse(serialized);
-    return createObject(
-      live(DocumentType, { name, fallbackName, content: Ref.make(live(DataType.Text, { content })) }),
-    );
+    return Obj.make(DocumentType, { name, fallbackName, content: Ref.make(Obj.make(DataType.Text, { content })) });
   },
 };

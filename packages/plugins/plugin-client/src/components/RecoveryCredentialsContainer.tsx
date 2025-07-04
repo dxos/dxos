@@ -50,12 +50,9 @@ export const RecoveryCredentialsContainer = () => {
         </ControlSection>
         <ControlSection title={t('credentials list label')}>
           {recoveryCredentials.length < 1 ? (
-            <Message.Root valence='error' className='container-max-width'>
-              <Message.Title>
-                <Icon icon='ph--shield-warning--duotone' size={5} classNames='inline-block align-top mbs-px mie-1' />
-                {t('no credentials title')}
-              </Message.Title>
-              <Message.Body>{t('no credentials message')}</Message.Body>
+            <Message.Root valence='error' classNames='container-max-width'>
+              <Message.Title icon='ph--shield-warning--duotone'>{t('no credentials title')}</Message.Title>
+              <Message.Content>{t('no credentials message')}</Message.Content>
             </Message.Root>
           ) : (
             <List classNames='container-max-width pli-2'>

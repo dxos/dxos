@@ -64,7 +64,7 @@ export class QueryTestPlan implements TestPlan<QueryTestSpec, QueryTestResult> {
     };
   }
 
-  async run(env: SchedulerEnv, params: TestParams<QueryTestSpec>) {
+  async run(env: SchedulerEnv, params: TestParams<QueryTestSpec>): Promise<QueryTestResult> {
     const results = {} as QueryTestResult;
     // TODO(mykola): Maybe factor out?
     const userDataDir = `/tmp/echo-replicant-${PublicKey.random().toHex()}`;

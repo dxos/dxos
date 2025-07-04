@@ -25,12 +25,12 @@ export class Callback<T extends (...args: any[]) => any> {
     return this._callback?.(...args);
   }
 
-  public set(callback: T) {
+  public set(callback: T): void {
     invariant(!this._callback, 'Callback already set');
     this._callback = callback;
   }
 
-  public isSet() {
+  public isSet(): boolean {
     return !!this._callback;
   }
 }

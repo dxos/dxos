@@ -33,9 +33,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -60,6 +57,9 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../devtools/storybook-utils"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -72,10 +72,10 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-card"
+      "path": "../../ui/react-ui-searchlist"
     },
     {
-      "path": "../../ui/react-ui-searchlist"
+      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-theme"

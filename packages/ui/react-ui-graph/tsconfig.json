@@ -30,13 +30,16 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../core/echo/echo-signals"
     },
     {
+      "path": "../../devtools/storybook-utils"
+    },
+    {
       "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-stack"
     },
     {
       "path": "../react-ui-syntax-highlighter"

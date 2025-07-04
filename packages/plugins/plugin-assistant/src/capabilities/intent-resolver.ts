@@ -3,10 +3,10 @@
 //
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { createQueueDxn } from '@dxos/echo-schema';
-import { live, refFromDXN } from '@dxos/live-object';
+import { Blueprint } from '@dxos/assistant';
+import { Key, Obj, Ref } from '@dxos/echo';
 
-import { AssistantAction, AIChatType, TemplateType } from '../types';
+import { AssistantAction, AIChatType } from '../types';
 
 export default () => [
   contributes(
@@ -15,9 +15,9 @@ export default () => [
       intent: AssistantAction.CreateChat,
       resolve: ({ space, name }) => ({
         data: {
-          object: live(AIChatType, {
+          object: Obj.make(AIChatType, {
             name,
-            queue: refFromDXN(createQueueDxn(space.id)),
+            queue: Ref.fromDXN(space.queues.create().dxn),
           }),
         },
       }),
@@ -26,10 +26,18 @@ export default () => [
   contributes(
     Capabilities.IntentResolver,
     createResolver({
-      intent: AssistantAction.CreateTemplate,
+      intent: AssistantAction.CreateBlueprint,
       resolve: ({ name }) => ({
         data: {
-          object: live(TemplateType, { name, kind: { include: 'manual' }, source: '{{! Template }}' }),
+          object: Obj.make(Blueprint, {
+            name,
+            steps: [
+              {
+                id: Key.ObjectId.random(),
+                instructions: 'You are a helpful assistant.',
+              },
+            ],
+          }),
         },
       }),
     }),

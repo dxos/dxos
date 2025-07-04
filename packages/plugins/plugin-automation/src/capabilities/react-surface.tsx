@@ -5,12 +5,11 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, useLayout } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
 import { getSpace, parseId, useSpace } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
 
-import { AutomationContainer, AutomationPanel, FunctionsContainer } from '../components';
+import { AutomationContainer, FunctionsContainer } from '../components';
 import { meta } from '../meta';
 
 export default () =>
@@ -49,13 +48,9 @@ export default () =>
       id: `${meta.id}/companion/automation`,
       role: 'article',
       filter: (data): data is { companionTo: ScriptType; subject: 'automation' } =>
-        isInstanceOf(ScriptType, data.companionTo) && data.subject === 'automation',
+        Obj.instanceOf(ScriptType, data.companionTo) && data.subject === 'automation',
       component: ({ data, role }) => {
-        return (
-          <StackItem.Content role={role}>
-            <AutomationPanel space={getSpace(data.companionTo)!} object={data.companionTo} />
-          </StackItem.Content>
-        );
+        return <AutomationContainer space={getSpace(data.companionTo)!} object={data.companionTo} />;
       },
     }),
   ]);

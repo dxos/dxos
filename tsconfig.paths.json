@@ -4,9 +4,6 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@dxos/storybook-utils": [
-        "packages/common/storybook-utils/src/index.ts"
-      ],
       "@dxos/artifact-testing": [
         "packages/core/artifact-testing/src/index.ts"
       ],
@@ -33,6 +30,9 @@
       ],
       "@dxos/functions": [
         "packages/core/functions/src/index.ts"
+      ],
+      "@dxos/functions/testing": [
+        "packages/core/functions/src/testing/index.ts"
       ],
       "@dxos/devtools": [
         "packages/devtools/devtools/src/index.ts"
@@ -156,12 +156,6 @@
       ],
       "@dxos/plugin-outliner/types": [
         "packages/plugins/plugin-outliner/src/types/index.ts"
-      ],
-      "@dxos/plugin-outliner-deprecated": [
-        "packages/plugins/plugin-outliner-deprecated/src/index.ts"
-      ],
-      "@dxos/plugin-outliner-deprecated/types": [
-        "packages/plugins/plugin-outliner-deprecated/src/types/index.ts"
       ],
       "@dxos/plugin-presenter": [
         "packages/plugins/plugin-presenter/src/index.ts"
@@ -312,9 +306,6 @@
       ],
       "@dxos/react-ui-canvas-editor/testing": [
         "packages/ui/react-ui-canvas-editor/src/testing/index.ts"
-      ],
-      "@dxos/react-ui-card": [
-        "packages/ui/react-ui-card/src/index.ts"
       ],
       "@dxos/react-ui-components": [
         "packages/ui/react-ui-components/src/index.ts"

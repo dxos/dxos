@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
-import { assertEchoSchema, FormatEnum, isMutable } from '@dxos/echo-schema';
+import { EchoSchema, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -32,12 +32,14 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   const handleUpdateTypename = useCallback(
     (newTypename: string) => {
       invariant(schema);
+      invariant(Type.isMutable(schema));
+
       const matchingViews = views.filter((view) => view.query.typename === currentTypename);
       for (const view of matchingViews) {
         view.query.typename = newTypename;
       }
 
-      assertEchoSchema(schema).updateTypename(newTypename);
+      schema.updateTypename(newTypename);
     },
     [views, schema],
   );
@@ -51,17 +53,17 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   const projection = useMemo(() => {
     if (kanban?.cardView?.target && schema) {
-      const jsonSchema = Type.toJsonSchema(schema);
+      const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
       return new ViewProjection(jsonSchema, kanban.cardView.target);
     }
-  }, [kanban?.cardView?.target, schema, JSON.stringify(schema ? Type.toJsonSchema(schema) : {})]);
+  }, [kanban?.cardView?.target, JSON.stringify(schema)]);
 
   const fieldProjections = projection?.getFieldProjections() || [];
   const selectFields = fieldProjections
     .filter((field) => field.props.format === FormatEnum.SingleSelect)
     .map(({ field }) => ({ value: field.id, label: field.path }));
 
-  const onSave = useCallback(
+  const handleSave = useCallback(
     (values: Partial<{ columnFieldId: string }>) => {
       kanban.columnFieldId = values.columnFieldId;
     },
@@ -80,13 +82,22 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   return (
     <>
-      <Form schema={KanbanSettingsSchema} values={initialValues} onSave={onSave} autoSave Custom={custom} />
+      <Form
+        Custom={custom}
+        schema={KanbanSettingsSchema}
+        values={initialValues}
+        onSave={handleSave}
+        autoSave
+        outerSpacing={false}
+        classNames='pbs-inputSpacingBlock'
+      />
       <ViewEditor
         registry={space.db.schemaRegistry}
         schema={schema}
         view={kanban.cardView.target}
-        onTypenameChanged={isMutable(schema) ? handleUpdateTypename : undefined}
-        onDelete={isMutable(schema) ? handleDelete : undefined}
+        onTypenameChanged={Type.isMutable(schema) ? handleUpdateTypename : undefined}
+        onDelete={Type.isMutable(schema) ? handleDelete : undefined}
+        outerSpacing={false}
       />
     </>
   );

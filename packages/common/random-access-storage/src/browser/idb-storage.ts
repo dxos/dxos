@@ -38,12 +38,12 @@ export class IDbStorage extends AbstractStorage {
     return database.create;
   }
 
-  override async close() {
+  override async close(): Promise<void> {
     await this._closeFilesInPath('');
     // TODO(dmaretskyi): Set a flag to make the current instance unusable.
   }
 
-  override async reset() {
+  override async reset(): Promise<void> {
     // We don't delete the database, just erase the data.
     // Deleting that database causes IDB errors which I have no idea how to fix.
     await this._closeFilesInPath('');
@@ -51,7 +51,7 @@ export class IDbStorage extends AbstractStorage {
     // TODO(dmaretskyi): Set a flag to make the current instance unusable.
   }
 
-  protected override async _destroy() {
+  protected override async _destroy(): Promise<void> {
     throw new Error('Unreachable');
   }
 

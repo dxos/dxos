@@ -29,8 +29,8 @@ const getPos = (line: number) => {
 
 const extensions = [createMarkdownExtensions(), outlinerTree()];
 
-// Flaky
-describe.skip('outliner', () => {
+// TODO(burdon): Flaky.
+describe.runIf(!process.env.CI)('outliner', () => {
   const state = EditorState.create({ doc: str(...lines), extensions });
 
   test('sanity', ({ expect }) => {

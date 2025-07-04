@@ -8,11 +8,12 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
+import { getSchema } from './accessors';
 import { create } from './create';
-import { serializeStatic } from './json-serializer';
-import { RelationSourceId, RelationTargetId } from './relation';
-import { getTypename } from './typename';
-import { getSchema, getSchemaDXN } from '../ast';
+import { objectToJSON } from './json-serializer';
+import { RelationSourceId, RelationTargetId } from './model';
+import { getType } from './typename';
+import { getSchemaDXN } from '../ast';
 import { Testing } from '../testing';
 import { isInstanceOf } from '../types';
 
@@ -40,7 +41,7 @@ describe('create (static version)', () => {
     expect(contact.name).toBe('Bot');
     expect(contact.email).toBe('bot@example.com');
     expect((contact as any)['@type']).toBeUndefined();
-    expect(getTypename(contact)).toBe(getSchemaDXN(Testing.Contact)!.toString());
+    expect(getType(contact)?.toString()).toBe(getSchemaDXN(Testing.Contact)!.toString());
     expect(isInstanceOf(Testing.Contact, contact)).toBe(true);
   });
 
@@ -54,10 +55,13 @@ describe('create (static version)', () => {
     expect(json).toEqual({
       id: contact.id,
       '@type': DXN.fromTypenameAndVersion(Testing.Contact.typename, Testing.Contact.version).toString(),
+      '@meta': {
+        keys: [],
+      },
       name: 'Bot',
       email: 'bot@example.com',
     });
-    expect(serializeStatic(contact)).toStrictEqual(json);
+    expect(objectToJSON(contact)).toStrictEqual(json);
   });
 
   test('JSON encoding with relation', () => {
@@ -80,6 +84,9 @@ describe('create (static version)', () => {
       '@type': DXN.fromTypenameAndVersion(Testing.HasManager.typename, Testing.HasManager.version).toString(),
       '@relationSource': DXN.fromLocalObjectId(contactA.id).toString(),
       '@relationTarget': DXN.fromLocalObjectId(contactB.id).toString(),
+      '@meta': {
+        keys: [],
+      },
     });
   });
 

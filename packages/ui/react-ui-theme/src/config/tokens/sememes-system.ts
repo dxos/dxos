@@ -91,7 +91,7 @@ export const systemSememes = {
   //
   baseSurface: elevationCadence(0),
   groupSurface: elevationCadence(1),
-  modalSurface: elevationCadence(2),
+  modalSurface: elevationCadence(2, 1.7),
 
   //
   // Contrast cadence tokens
@@ -113,7 +113,7 @@ export const systemSememes = {
   separatorGroup: contrastCadence(3, 2.5),
   separatorModal: contrastCadence(3, 3),
 
-  subduedSeparator: contrastCadence(1, 1),
+  subduedSeparator: contrastCadence(3, 1),
 
   unAccent: {
     light: ['neutral', 400],

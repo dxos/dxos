@@ -103,11 +103,11 @@ class TraceInjector extends Visitor {
     return { line, column, filename: this.filename };
   }
 
-  override visitTsType(n: TsType) {
+  override visitTsType(n: TsType): TsType {
     return n;
   }
 
-  override visitProgram(node: Program) {
+  override visitProgram(node: Program): Program {
     this.spanOffset = this.code.indexOf('import');
     if (this.spanOffset === -1) {
       this.spanOffset = 0;

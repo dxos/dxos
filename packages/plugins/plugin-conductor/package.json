@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-conductor",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "Composer plugin for conductor.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

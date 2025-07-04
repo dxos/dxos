@@ -4,18 +4,19 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 
-import { live, Filter, useQuery, useSpace } from '@dxos/react-client/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Dialog } from '@dxos/react-ui';
+import { DataType } from '@dxos/schema';
 import { osTranslations } from '@dxos/shell/react';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { CreateObjectDialog, type CreateObjectDialogProps } from './CreateObjectDialog';
 import translations from '../../translations';
-import { CollectionType } from '../../types';
 
 const Story = (args: CreateObjectDialogProps) => {
   return (
@@ -33,7 +34,7 @@ const meta: Meta<typeof CreateObjectDialog> = {
   component: CreateObjectDialog,
   render: Story,
   decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true, types: [CollectionType] }),
+    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Collection] }),
     withTheme,
     withLayout(),
   ],
@@ -48,7 +49,7 @@ export default meta;
 export const Default: StoryObj<typeof CreateObjectDialog> = {};
 
 export const Typename: StoryObj<typeof CreateObjectDialog> = {
-  args: { typename: CollectionType.typename },
+  args: { typename: Type.getTypename(DataType.Collection) },
 };
 
 export const TargetSpace: StoryObj<typeof CreateObjectDialog> = {
@@ -66,11 +67,11 @@ export const TargetSpace: StoryObj<typeof CreateObjectDialog> = {
 export const TargetCollection: StoryObj<typeof CreateObjectDialog> = {
   render: (args) => {
     const space = useSpace();
-    const [collection] = useQuery(space, Filter.type(CollectionType));
+    const [collection] = useQuery(space, Filter.type(DataType.Collection));
 
     useEffect(() => {
       if (space) {
-        space.db.add(live(CollectionType, { name: 'My Collection', objects: [], views: {} }));
+        space.db.add(Obj.make(DataType.Collection, { name: 'My Collection', objects: [] }));
       }
     }, [space]);
 

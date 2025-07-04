@@ -18,6 +18,9 @@ export type GraphData = {
   links: GraphLink[];
 };
 
+/**
+ * Map common graph to force-graph format.
+ */
 export class GraphAdapter implements GraphData {
   private readonly _nodes: GraphNode[] = [];
   private readonly _links: GraphLink[] = [];

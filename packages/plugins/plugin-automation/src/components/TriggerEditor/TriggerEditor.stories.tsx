@@ -4,11 +4,11 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { FunctionType, FunctionTrigger, TriggerKind } from '@dxos/functions';
-import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ContactType, withClientProvider } from '@dxos/react-client/testing';
@@ -27,7 +27,7 @@ const DefaultStory = () => {
       return;
     }
 
-    const trigger = space.db.add(live(FunctionTrigger, { spec: { kind: TriggerKind.Timer, cron: '' } }));
+    const trigger = space.db.add(Obj.make(FunctionTrigger, { spec: { kind: TriggerKind.Timer, cron: '' } }));
     setTrigger(trigger);
   }, [space]);
 
@@ -53,11 +53,11 @@ const meta: Meta = {
       types: [FunctionType, FunctionTrigger, ContactType],
       onSpaceCreated: ({ space }) => {
         for (const fn of functions) {
-          space.db.add(live(FunctionType, fn));
+          space.db.add(Obj.make(FunctionType, fn));
         }
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            live(ContactType, {
+            Obj.make(ContactType, {
               name: faker.person.fullName(),
               identifiers: [],
             }),

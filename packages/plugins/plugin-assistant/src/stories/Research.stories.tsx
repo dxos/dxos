@@ -5,51 +5,35 @@
 import '@dxos-theme';
 
 import { Rx } from '@effect-rx/rx-react';
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Option, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AgentStatusReport, AIServiceEdgeClient, defineTool, Message, ToolResult, type Tool } from '@dxos/ai';
-import { EXA_API_KEY, SpyAIService } from '@dxos/ai/testing';
+import { AgentStatusReport, EdgeAiServiceClient, createTool, type ExecutableTool, Message, ToolResult } from '@dxos/ai';
+import { EXA_API_KEY, SpyAiService } from '@dxos/ai/testing';
 import { Capabilities, contributes, createSurface, Events, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { findRelatedSchema, researchFn, type RelatedSchema } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
-import { Type, type Obj } from '@dxos/echo';
-import {
-  ATTR_RELATION_SOURCE,
-  ATTR_RELATION_TARGET,
-  create,
-  createQueueDxn,
-  Filter,
-  getSchema,
-  getSchemaDXN,
-  getSchemaTypename,
-  getTypename,
-  isInstanceOf,
-  RelationSourceId,
-  RelationTargetId,
-  toJsonSchema,
-  type BaseEchoObject,
-  type BaseObject,
-} from '@dxos/echo-schema';
+import { Type, Filter, Obj, Relation } from '@dxos/echo';
+import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { useClient } from '@dxos/react-client';
-import { getSpace, live, useQuery, useQueue, type EchoDatabase, type Live } from '@dxos/react-client/echo';
+import { getSpace, useQuery, useQueue, type EchoDatabase, type Live } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncState } from '@dxos/react-ui';
 import {
   createMenuAction,
   createMenuItemGroup,
-  MenuProvider,
-  ToolbarMenu,
+  rxFromSignal,
   useMenuActions,
   type ActionGraphProps,
+  MenuProvider,
+  ToolbarMenu,
   type ToolbarMenuActionGroupProperties,
-  rxFromSignal,
 } from '@dxos/react-ui-menu';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -75,11 +59,10 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const [, forceUpdate] = useState({});
 
   const client = useClient();
-  // TODO(burdon): Hook.
-  const [aiClient] = useState(
+  const aiClient = useMemo(
     () =>
-      new SpyAIService(
-        new AIServiceEdgeClient({
+      new SpyAiService(
+        new EdgeAiServiceClient({
           endpoint: endpoints.ai,
           defaultGenerationOptions: {
             // model: '@anthropic/claude-sonnet-4-20250514',
@@ -87,6 +70,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
           },
         }),
       ),
+    [],
   );
 
   const space = client.spaces.default;
@@ -96,7 +80,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const menuProps = useMenuActions(actionCreator);
 
   // Queue.
-  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
+  const [queueDxn, setQueueDxn] = useState<string>(() => space.queues.create().dxn.toString());
   const queue = useQueue<Message>(Type.DXN.tryParse(queueDxn));
 
   // Function executor.
@@ -124,7 +108,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     [aiClient, space, queue],
   );
 
-  const tools = useMemo<Tool[]>(() => [createResearchTool(serviceContainer, 'research', researchFn)], []);
+  const tools = useMemo<ExecutableTool[]>(() => [createResearchTool(serviceContainer, 'research', researchFn)], []);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
@@ -148,9 +132,9 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [aiClient, tools, space, dispatch]);
 
   useEffect(() => {
-    if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
-      queue.append([
-        create(Message, {
+    if (queue?.objects.length === 0 && !queue.isLoading && prompts.length > 0) {
+      void queue.append([
+        Obj.make(Message, {
           role: 'assistant',
           content: prompts.map(
             (prompt) =>
@@ -163,12 +147,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         }),
       ]);
     }
-  }, [queueDxn, prompts, queue?.items.length, queue?.isLoading]);
+  }, [queueDxn, prompts, queue?.objects.length, queue?.isLoading]);
 
   // State.
   const objects = useQuery(space, Filter.or(...DataTypes.map((type) => Filter.type(type))));
   const messages = [
-    ...(queue?.items.filter((item) => isInstanceOf(Message, item)) ?? []),
+    ...(queue?.objects.filter((item) => Obj.instanceOf(Message, item)) ?? []),
     ...(processor?.messages.value ?? []),
   ];
 
@@ -185,9 +169,9 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
           invariant(queue);
           await processor.request(message, {
-            history: queue.items,
+            history: queue.objects,
             onComplete: (messages) => {
-              queue.append(messages);
+              void queue.append(messages);
             },
           });
         });
@@ -212,20 +196,20 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   );
 
   // TODO(dmaretskyi): Pull in relations automatically.
-  const handleAddToGraph = useCallback(async (object: BaseEchoObject) => {
+  const handleAddToGraph = useCallback(async (object: Obj.Any) => {
     space.db.add(instantiate(space.db, object));
     await space.db.flush({ indexes: true });
     forceUpdate({});
   }, []);
 
-  const handleResearchMore = useCallback((object: BaseObject, relatedSchema: RelatedSchema) => {
+  const handleResearchMore = useCallback((object: Obj.Any | Relation.Any, relatedSchema: RelatedSchema) => {
     const prompt = `
       Research more about objects related to the object in terms of the by the specific relation schema:
       <object>${JSON.stringify(object, null, 2)}</object>
       <schema>
         <description>${SchemaAST.getDescriptionAnnotation(relatedSchema.schema.ast).pipe(Option.getOrElse(() => ''))}</description>
         <json>
-          ${JSON.stringify(toJsonSchema(relatedSchema.schema), null, 2)}
+          ${JSON.stringify(Type.toJsonSchema(relatedSchema.schema), null, 2)}
         </json>
       </schema>
     `;
@@ -256,7 +240,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
               iconOnly
               label='Clear history'
               icon='ph--trash--regular'
-              onClick={() => setQueueDxn(createQueueDxn().toString())}
+              onClick={() => setQueueDxn(space.queues.create().dxn.toString())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor?.cancel()} />
           </Input.Root>
@@ -310,24 +294,24 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 };
 
 type ResearchPromptsProps = {
-  object: BaseEchoObject;
-  onResearch: (object: BaseObject, relatedSchema: RelatedSchema) => void;
+  object: Obj.Any | Relation.Any;
+  onResearch: (object: Obj.Any | Relation.Any, relatedSchema: RelatedSchema) => void;
 };
 
 const ResearchPrompts = ({ object, onResearch }: ResearchPromptsProps) => {
   const [relatedSchemas = []] = useAsyncState(
-    async () => findRelatedSchema(getSpace(object)!.db, getSchema(object)!),
+    async () => findRelatedSchema(getSpace(object)!.db, Obj.getSchema(object)!),
     [object],
   );
   return (
     <div>
       {relatedSchemas.map((schema) => (
         <button
-          key={getSchemaDXN(schema.schema)?.toString()}
+          key={Type.getDXN(schema.schema)?.toString()}
           onClick={() => onResearch(object, schema)}
           className='border border-separator rounded px-2 py-1 m-1'
         >
-          Research more of {getSchemaTypename(schema.schema)}
+          Research more of {Type.getTypename(schema.schema)}
         </button>
       ))}
     </div>
@@ -335,8 +319,7 @@ const ResearchPrompts = ({ object, onResearch }: ResearchPromptsProps) => {
 };
 
 const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn: typeof researchFn) => {
-  return defineTool('example', {
-    // TODO(dmaretskyi): Include name in definition
+  return createTool('example', {
     name,
     description: fn.description ?? raise(new Error('No description')),
     schema: fn.inputSchema,
@@ -345,17 +328,17 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
         serviceContainer.clone().setServices({
           tracing: {
             write: (event) => {
-              if (isInstanceOf(AgentStatusReport, event)) {
+              if (Obj.instanceOf(AgentStatusReport, event)) {
                 log.info('[too] report status', { status: event });
-                reportStatus(event);
+                reportStatus?.(event);
               }
             },
           },
         }),
       );
 
-      reportStatus(
-        create(AgentStatusReport, {
+      reportStatus?.(
+        Obj.make(AgentStatusReport, {
           message: 'Researching...',
         }),
       );
@@ -365,7 +348,7 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
       const { result } = await executor.invoke(fn, input);
       return ToolResult.Success(
         'Research completed. The results are placed in the conversation and already presented to the user. No need to present them again.',
-        result.objects.map((obj) => ({
+        result.objects.map((obj: any) => ({
           type: 'json',
           json: JSON.stringify(obj),
           disposition: 'graph',
@@ -385,7 +368,7 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
 // TODO(dmaretskyi): Move into core.
 const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
   const schema =
-    db.graph.schemaRegistry.getSchemaByDXN(Type.DXN.parse(getTypename(object as any)!)) ??
+    db.graph.schemaRegistry.getSchemaByDXN(Type.DXN.parse(Obj.getTypename(object as any)!)) ??
     raise(new Error('Schema not found'));
 
   let { id, [ATTR_RELATION_SOURCE]: source, [ATTR_RELATION_TARGET]: target, ...props } = object as any;
@@ -396,15 +379,15 @@ const instantiate = (db: EchoDatabase, object: unknown): Live<any> => {
     target = db.getObjectById(Type.DXN.parse(target).asEchoDXN()!.echoId) ?? raise(new Error('Target not found'));
   }
 
-  return live(schema, {
+  return Relation.make(schema, {
     id,
+    [Relation.Source]: source,
+    [Relation.Target]: target,
     ...props,
-    [RelationSourceId]: source,
-    [RelationTargetId]: target,
   });
 };
 
-const createToolbar = (aiClient: SpyAIService) =>
+const createToolbar = (aiClient: SpyAiService) =>
   Rx.make((get) => {
     const result: ActionGraphProps = { nodes: [], edges: [] };
     const save = createMenuAction('save', () => aiClient.saveEvents(), {
@@ -448,12 +431,14 @@ const meta: Meta<typeof DefaultStory> = {
   decorators: [
     withPluginManager({
       plugins: testPlugins({
-        runtime: {
-          client: {
-            storage: {
-              persistent: true,
+        config: {
+          runtime: {
+            client: {
+              storage: {
+                persistent: true,
+              },
+              enableVectorIndexing: true,
             },
-            enableVectorIndexing: true,
           },
         },
       }),
@@ -477,6 +462,7 @@ const meta: Meta<typeof DefaultStory> = {
   ],
   parameters: {
     translations,
+    controls: { disable: true },
   },
 };
 

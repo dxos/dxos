@@ -41,7 +41,7 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   return (
     <StackItem.Content>
       <div role='none' className='overflow-auto p-8 grid place-items-center'>
-        <p role='alert' className={mx(descriptionMessage, 'break-words rounded-lg p-8')}>
+        <p role='alert' className={mx(descriptionMessage, 'break-words rounded-md p-8')}>
           {t('missing file permissions')}
           {action && node && (
             <Button onClick={() => action.data({ node })}>{toLocalizedString(action.properties.label, t)}</Button>

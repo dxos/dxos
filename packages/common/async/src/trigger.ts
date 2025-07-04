@@ -77,7 +77,7 @@ export class Trigger<T = void> {
    * Wake blocked callers (if any).
    * NOOP if the trigger is already resolved.
    */
-  wake(value: T) {
+  wake(value: T): this {
     if (this._state !== TriggerState.WAITING) {
       return this;
     }
@@ -93,7 +93,7 @@ export class Trigger<T = void> {
   /**
    * Reset promise (new waiters will wait).
    */
-  reset() {
+  reset(): this {
     this._state = TriggerState.WAITING;
     this._promise = new Promise<T>((resolve, reject) => {
       this._resolve = resolve;
@@ -108,7 +108,7 @@ export class Trigger<T = void> {
    * Throw error to blocked callers (if any).
    * NOOP if the trigger is already resolved.
    */
-  throw(error: Error) {
+  throw(error: Error): this {
     if (this._state !== TriggerState.WAITING) {
       return this;
     }

@@ -14,6 +14,7 @@ type ListContext<T extends ListItemRecord> = {
   // TODO(burdon): Rename drag state.
   state: ItemDragState & { item?: T };
   setState: (state: ItemDragState & { item?: T }) => void;
+  readonly?: boolean;
   dragPreview?: boolean;
   isItem?: (item: any) => boolean;
   getId?: (item: T) => string; // TODO(burdon): Require if T doesn't conform to type.
@@ -34,7 +35,7 @@ export type ListRootProps<T extends ListItemRecord> = {
   children?: (props: ListRendererProps<T>) => ReactNode;
   items?: T[];
   onMove?: (fromIndex: number, toIndex: number) => void;
-} & Pick<ListContext<T>, 'isItem' | 'getId' | 'dragPreview'>;
+} & Pick<ListContext<T>, 'isItem' | 'getId' | 'readonly' | 'dragPreview'>;
 
 export const ListRoot = <T extends ListItemRecord>({
   children,
@@ -77,7 +78,6 @@ export const ListRoot = <T extends ListItemRecord>({
 
         const sourceData = source.data;
         const targetData = target.data;
-
         if (!isItem?.(sourceData) || !isItem?.(targetData)) {
           return;
         }

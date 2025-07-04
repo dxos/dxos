@@ -56,12 +56,21 @@ svg {
         }
       }
 
-      g[data-color="1"].dx-node { circle { @apply fill-blue-300   dark:fill-blue-500;   } }
-      g[data-color="2"].dx-node { circle { @apply fill-green-300  dark:fill-green-500   } }
-      g[data-color="3"].dx-node { circle { @apply fill-violet-300 dark:fill-violet-500; } }
-      g[data-color="4"].dx-node { circle { @apply fill-orange-300 dark:fill-orange-500; } }
-      g[data-color="5"].dx-node { circle { @apply fill-pink-300   dark:fill-pink-500;   } }
-      g[data-color="6"].dx-node { circle { @apply fill-indigo-300 dark:fill-indigo-500; } }
+      g[data-color="orange" ].dx-node { circle { @apply fill-orange-300 dark:fill-orange-500   } }
+      g[data-color="amber"  ].dx-node { circle { @apply fill-amber-300 dark:fill-amber-500     } }
+      g[data-color="yellow" ].dx-node { circle { @apply fill-yellow-300 dark:fill-yellow-500   } }
+      g[data-color="lime"   ].dx-node { circle { @apply fill-lime-300 dark:fill-lime-500       } }
+      g[data-color="green"  ].dx-node { circle { @apply fill-green-300 dark:fill-green-500     } }
+      g[data-color="emerald"].dx-node { circle { @apply fill-emerald-300 dark:fill-emerald-500 } }
+      g[data-color="teal"   ].dx-node { circle { @apply fill-teal-300 dark:fill-teal-500       } }
+      g[data-color="cyan"   ].dx-node { circle { @apply fill-cyan-300 dark:fill-cyan-500       } }
+      g[data-color="sky"    ].dx-node { circle { @apply fill-sky-300 dark:fill-sky-500         } }
+      g[data-color="indigo" ].dx-node { circle { @apply fill-indigo-300 dark:fill-indigo-500   } }
+      g[data-color="violet" ].dx-node { circle { @apply fill-violet-300 dark:fill-violet-500   } }
+      g[data-color="purple" ].dx-node { circle { @apply fill-purple-300 dark:fill-purple-500   } }
+      g[data-color="fuchsia"].dx-node { circle { @apply fill-fuchsia-300 dark:fill-fuchsia-500 } }
+      g[data-color="rose"   ].dx-node { circle { @apply fill-rose-300 dark:fill-rose-500       } }
+      g[data-color="pink"   ].dx-node { circle { @apply fill-pink-300 dark:fill-pink-500       } }
 
       g.dx-dragging,
       g.dx-highlight {
@@ -99,12 +108,21 @@ svg {
         }
       }
 
-      g[data-color="1"].dx-edge { path { @apply stroke-blue-300   dark:stroke-blue-500;   } }
-      g[data-color="2"].dx-edge { path { @apply stroke-green-300  dark:stroke-green-500   } }
-      g[data-color="3"].dx-edge { path { @apply stroke-violet-300 dark:stroke-violet-500; } }
-      g[data-color="4"].dx-edge { path { @apply stroke-orange-300 dark:stroke-orange-500; } }
-      g[data-color="5"].dx-edge { path { @apply stroke-pink-300   dark:stroke-pink-500;   } }
-      g[data-color="6"].dx-edge { path { @apply stroke-indigo-300 dark:stroke-indigo-500; } }
+      g[data-color="orange" ].dx-edge { path { @apply stroke-orange-300  dark:stroke-orange-500  } }
+      g[data-color="amber"  ].dx-edge { path { @apply stroke-amber-300   dark:stroke-amber-500   } }
+      g[data-color="yellow" ].dx-edge { path { @apply stroke-yellow-300  dark:stroke-yellow-500  } }
+      g[data-color="lime"   ].dx-edge { path { @apply stroke-lime-300    dark:stroke-lime-500    } }
+      g[data-color="green"  ].dx-edge { path { @apply stroke-green-300   dark:stroke-green-500   } }
+      g[data-color="emerald"].dx-edge { path { @apply stroke-emerald-300 dark:stroke-emerald-500 } }
+      g[data-color="teal"   ].dx-edge { path { @apply stroke-teal-300    dark:stroke-teal-500    } }
+      g[data-color="cyan"   ].dx-edge { path { @apply stroke-cyan-300    dark:stroke-cyan-500    } }
+      g[data-color="sky"    ].dx-edge { path { @apply stroke-sky-300     dark:stroke-sky-500     } }
+      g[data-color="indigo" ].dx-edge { path { @apply stroke-indigo-300  dark:stroke-indigo-500  } }
+      g[data-color="violet" ].dx-edge { path { @apply stroke-violet-300  dark:stroke-violet-500  } }
+      g[data-color="purple" ].dx-edge { path { @apply stroke-purple-300  dark:stroke-purple-500  } }
+      g[data-color="fuchsia"].dx-edge { path { @apply stroke-fuchsia-300 dark:stroke-fuchsia-500 } }
+      g[data-color="rose"   ].dx-edge { path { @apply stroke-rose-300    dark:stroke-rose-500    } }
+      g[data-color="pink"   ].dx-edge { path { @apply stroke-pink-300    dark:stroke-pink-500    } }
     }
 
     .dx-linker {

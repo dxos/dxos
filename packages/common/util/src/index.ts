@@ -4,6 +4,7 @@
 
 export * from './array-to-hex';
 export * from './array';
+export * from './assume';
 export * from './binder';
 export * from './bitfield';
 export * from './callback-collection';
@@ -51,4 +52,5 @@ export * from './tracer';
 export * from './tree';
 export * from './types';
 export * from './uint8array';
+export * from './url';
 export * from './weak';

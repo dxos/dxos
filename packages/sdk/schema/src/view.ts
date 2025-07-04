@@ -4,14 +4,17 @@
 
 import { Schema, SchemaAST } from 'effect';
 
+import { Type } from '@dxos/echo';
 import { defineObjectMigration } from '@dxos/echo-db';
 import {
-  FieldLookupAnnotationId,
+  FieldSortType,
   FormatEnum,
   JsonPath,
   JsonSchemaType,
+  type PropertyMetaAnnotation,
+  PropertyMetaAnnotationId,
   QueryType,
-  FieldSortType,
+  StoredSchema,
   TypedObject,
   toEffectSchema,
 } from '@dxos/echo-schema';
@@ -34,6 +37,8 @@ export const FieldSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
+
+const KeyValueProps = Schema.Record({ key: Schema.String, value: Schema.Any });
 
 /**
  * Views are generated or user-defined projections of a schema's properties.
@@ -78,7 +83,7 @@ export class ViewType extends TypedObject({
   /**
    * Additional metadata for the view.
    */
-  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.mutable)),
+  metadata: Schema.optional(KeyValueProps.pipe(Schema.mutable)),
 
   // TODO(burdon): Readonly flag?
   // TODO(burdon): Add array of sort orders (which might be tuples).
@@ -99,14 +104,19 @@ export class ViewTypeV1 extends TypedObject({
   }).pipe(Schema.mutable),
   schema: Schema.optional(JsonSchemaType),
   fields: Schema.mutable(Schema.Array(FieldSchema)),
-  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.mutable)),
+  metadata: Schema.optional(KeyValueProps.pipe(Schema.mutable)),
 }) {}
 
 export const ViewTypeV1ToV2 = defineObjectMigration({
   from: ViewTypeV1,
   to: ViewType,
   transform: async (from) => {
-    return { ...from, query: { typename: from.query.type } };
+    return {
+      ...from,
+      query: {
+        typename: from.query.type,
+      },
+    };
   },
   onMigration: async () => {},
 });
@@ -124,7 +134,6 @@ type CreateViewProps = {
 export const createView = ({ name, typename, jsonSchema, fields: include }: CreateViewProps): Live<ViewType> => {
   const fields: FieldType[] = [];
   if (jsonSchema) {
-    // TODO(burdon): Property order is lost.
     const schema = toEffectSchema(jsonSchema);
     const shouldIncludeId = include?.find((field) => field === 'id') !== undefined;
     const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
@@ -135,7 +144,8 @@ export const createView = ({ name, typename, jsonSchema, fields: include }: Crea
 
       const referencePath =
         property.format === FormatEnum.Ref
-          ? findAnnotation<JsonPath>(property.ast, FieldLookupAnnotationId)
+          ? (findAnnotation<PropertyMetaAnnotation>(property.ast, PropertyMetaAnnotationId)
+              ?.referenceProperty as JsonPath)
           : undefined;
 
       fields.push(
@@ -159,7 +169,22 @@ export const createView = ({ name, typename, jsonSchema, fields: include }: Crea
 
   return live(ViewType, {
     name,
-    query: { typename },
+    query: {
+      typename,
+    },
     fields,
   });
 };
+
+export const HasViewSchema = Schema.Struct({});
+
+export const HasView = HasViewSchema.pipe(
+  Type.Relation({
+    typename: 'dxos.org/type/HasView',
+    version: '0.1.0',
+    source: StoredSchema,
+    target: ViewType,
+  }),
+);
+
+export interface HasView extends Schema.Schema.Type<typeof HasView> {}

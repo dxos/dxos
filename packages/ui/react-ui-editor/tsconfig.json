@@ -39,10 +39,10 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../common/util"
     },
     {
-      "path": "../../common/util"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-schema"
@@ -57,6 +57,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../devtools/storybook-utils"
+    },
+    {
       "path": "../../sdk/app-graph"
     },
     {
@@ -64,6 +67,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../lit-ui"
@@ -75,7 +81,13 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-attention"
+    },
+    {
       "path": "../react-ui-menu"
+    },
+    {
+      "path": "../react-ui-stack"
     },
     {
       "path": "../react-ui-syntax-highlighter"

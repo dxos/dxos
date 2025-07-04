@@ -6,7 +6,7 @@
 
 @layer dx-components {
   .dx-tag {
-    @apply inline-block text-xs font-semibold pli-2 rounded cursor-default truncate;
+    @apply inline-block text-xs font-semibold mli-0.5 pli-1 rounded-sm cursor-default truncate;
     padding-block: var(--dx-tag-padding-block);
     user-select: none;
   }

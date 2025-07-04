@@ -3,7 +3,7 @@
 //
 
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
-import { live, makeRef } from '@dxos/live-object';
+import { Obj, Ref } from '@dxos/echo';
 
 import { CanvasType, DiagramType, SketchAction, TLDRAW_SCHEMA } from '../types';
 
@@ -14,9 +14,9 @@ export default () =>
       intent: SketchAction.Create,
       resolve: ({ name, schema = TLDRAW_SCHEMA, content = {} }) => ({
         data: {
-          object: live(DiagramType, {
+          object: Obj.make(DiagramType, {
             name,
-            canvas: makeRef(live(CanvasType, { schema, content })),
+            canvas: Ref.make(Obj.make(CanvasType, { schema, content })),
           }),
         },
       }),

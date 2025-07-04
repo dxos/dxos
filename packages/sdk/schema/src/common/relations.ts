@@ -17,8 +17,8 @@ export const Employer = Schema.Struct({
   id: Type.ObjectId,
   role: Schema.String,
   active: Schema.optional(Schema.Boolean),
-  startDate: Schema.optional(Schema.Date),
-  endDate: Schema.optional(Schema.Date),
+  startDate: Schema.optional(Schema.String),
+  endDate: Schema.optional(Schema.String),
 })
   .pipe(
     Type.Relation({
@@ -95,7 +95,7 @@ export const AnchoredTo = Schema.Struct({
   Type.Relation({
     typename: 'dxos.org/relation/AnchoredTo',
     version: '0.1.0',
-    source: Type.Expando,
+    source: Type.Expando, // TODO(burdon): Any???
     target: Type.Expando,
   }),
 );

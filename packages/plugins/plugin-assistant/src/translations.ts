@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getSchemaTypename } from '@dxos/echo-schema';
+import { Blueprint } from '@dxos/assistant';
+import { Type } from '@dxos/echo';
 
 import { ASSISTANT_PLUGIN } from './meta';
 import { AIChatType, TemplateType } from './types';
@@ -10,12 +11,25 @@ import { AIChatType, TemplateType } from './types';
 export default [
   {
     'en-US': {
-      [getSchemaTypename(AIChatType)!]: {
+      [Type.getTypename(AIChatType)]: {
         'typename label': 'Assistant',
-        'object name placeholder': 'AI Chat',
+        'typename label_zero': 'Assistants',
+        'typename label_one': 'Assistant',
+        'typename label_other': 'Assistants',
+        'object name placeholder': 'New assistant',
       },
-      [TemplateType.typename]: {
+      [Type.getTypename(Blueprint)]: {
+        'typename label': 'Blueprint',
+        'typename label_zero': 'Blueprints',
+        'typename label_one': 'Blueprint',
+        'typename label_other': 'Blueprints',
+        'object name placeholder': 'New blueprint',
+      },
+      [Type.getTypename(TemplateType)]: {
         'typename label': 'Template',
+        'typename label_zero': 'Templates',
+        'typename label_one': 'Template',
+        'typename label_other': 'Templates',
         'object name placeholder': 'New template',
       },
       [ASSISTANT_PLUGIN]: {
@@ -36,12 +50,17 @@ export default [
         'select preset template placeholder': 'Select preset',
         'service registry label': 'Service Registry',
 
+        'blueprint logs label': 'Logs',
+
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
 
         'search input placeholder': 'Search...',
         'chat input placeholder': 'Ask a question...',
         'chat stop': 'Cancel request.',
+
+        'button save': 'Save',
+        'button run': 'Run',
 
         'prompt placeholder': 'Ask a question...',
         'microphone button': 'Click to speak',

@@ -23,13 +23,13 @@ export const SyncStatus = ({ classNames, state, summary, debug }: SyncStatusProp
 
   // TODO(burdon): Normalize to max document count?
   return (
-    <div className={mx('flex flex-col w-full gap-3 text-xs', classNames)}>
-      <div className='flex flex-col gap-2'>
+    <div className={mx('flex flex-col w-full gap-2 text-xs', classNames)}>
+      {debug && <SyntaxHighlighter language='json'>{JSON.stringify(summary, null, 2)}</SyntaxHighlighter>}
+      <div className='flex flex-col mbe-2'>
         {entries.map(([spaceId, state]) => (
           <SpaceRowContainer key={spaceId} spaceId={spaceId as SpaceId} state={state} />
         ))}
       </div>
-      {debug && <SyntaxHighlighter language='json'>{JSON.stringify(summary, null, 2)}</SyntaxHighlighter>}
     </div>
   );
 };

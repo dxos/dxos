@@ -34,7 +34,7 @@ export class EpochMonitorPlugin extends Plugin {
   /**
    * Monitor spaces for which the agent is the leader.
    */
-  override async onOpen() {
+  override async onOpen(): Promise<void> {
     this.config.config = { ...DEFAULT_OPTIONS, ...this.config.config };
 
     const monitors = new ComplexMap<PublicKey, SpaceMonitor>(PublicKey.hash);
@@ -82,7 +82,7 @@ class SpaceMonitor {
     private readonly _options: Required<EpochMonitorConfig>,
   ) {}
 
-  async open() {
+  async open(): Promise<void> {
     await this._space.waitUntilReady();
 
     // Monitor spaces owned by this agent.
@@ -147,7 +147,7 @@ class SpaceMonitor {
     this._ctx.onDispose(() => sub.unsubscribe());
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this._ctx.dispose();
     clearTimeout(this._maxTimeoutTask!);
     this._maxTimeoutTask = undefined;
@@ -155,7 +155,7 @@ class SpaceMonitor {
     this._epochCreationTask = undefined;
   }
 
-  private async _createEpoch() {
+  private async _createEpoch(): Promise<void> {
     if (this._creatingEpoch) {
       return;
     }

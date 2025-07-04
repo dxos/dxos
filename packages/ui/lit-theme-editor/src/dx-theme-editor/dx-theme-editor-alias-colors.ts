@@ -70,7 +70,7 @@ export class DxThemeEditorAliasColors extends LitElement {
     return Array.from(aliasMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  private updateAliasToken(oldName: string, newName: string, rootToken?: string, attentionToken?: string) {
+  private updateAliasToken(oldName: string, newName: string, rootToken?: string, attentionToken?: string): void {
     if (!this.tokenSet.colors?.alias?.aliases) {
       return;
     }
@@ -123,7 +123,7 @@ export class DxThemeEditorAliasColors extends LitElement {
     this.debouncedSaveAndRender();
   }
 
-  private removeAliasToken(aliasName: string) {
+  private removeAliasToken(aliasName: string): void {
     if (!this.tokenSet.colors?.alias?.aliases) {
       return;
     }
@@ -155,7 +155,7 @@ export class DxThemeEditorAliasColors extends LitElement {
     this.debouncedSaveAndRender();
   }
 
-  private addAliasToken() {
+  private addAliasToken(): void {
     if (!this.tokenSet.colors?.semantic?.sememes || !this.tokenSet.colors?.alias?.aliases) {
       return;
     }
@@ -195,7 +195,7 @@ export class DxThemeEditorAliasColors extends LitElement {
     this.debouncedSaveAndRender();
   }
 
-  private handleSearchChange(e: Event) {
+  private handleSearchChange(e: Event): void {
     this.searchTerm = (e.target as HTMLInputElement).value;
   }
 
@@ -226,13 +226,13 @@ export class DxThemeEditorAliasColors extends LitElement {
     `;
   }
 
-  override connectedCallback() {
+  override connectedCallback(): void {
     super.connectedCallback();
     saveAndRender(this.tokenSet);
     window.addEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
   }
 
-  override disconnectedCallback() {
+  override disconnectedCallback(): void {
     super.disconnectedCallback();
     window.removeEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
   }
@@ -299,7 +299,7 @@ export class DxThemeEditorAliasColors extends LitElement {
     `;
   }
 
-  override createRenderRoot() {
+  override createRenderRoot(): this {
     return this;
   }
 }

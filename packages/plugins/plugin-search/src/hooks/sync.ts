@@ -4,7 +4,7 @@
 
 import { type Schema, SchemaAST } from 'effect';
 
-import { getSchema } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 import { type SearchResult } from '../types';
@@ -58,7 +58,7 @@ export const filterObjectsSync = <T extends Record<string, any>>(objects: T[], m
 
         results.push({
           id: object.id,
-          type: getIcon(getSchema(object)),
+          type: getIcon(Obj.getSchema(object)),
           label,
           match,
           // TODO(burdon): Truncate.
@@ -78,7 +78,7 @@ export const filterObjectsSync = <T extends Record<string, any>>(objects: T[], m
 };
 
 // TODO(burdon): Use schema?
-export const getStringProperty = (object: Record<string, unknown>, keys: string[]): string | undefined => {
+export const getStringProperty = (object: any, keys: string[]): string | undefined => {
   let label;
   keys.some((key) => {
     const value = object[key];

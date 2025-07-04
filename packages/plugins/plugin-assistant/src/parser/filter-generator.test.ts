@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Filter } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo';
 
 import { createFilter } from './filter-generator';
 import { QueryParser } from './query-parser';

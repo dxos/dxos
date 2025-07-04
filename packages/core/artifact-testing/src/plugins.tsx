@@ -7,7 +7,6 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
-import { isImage } from '@dxos/conductor';
 import { Type, type Obj } from '@dxos/echo';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
@@ -34,6 +33,9 @@ declare global {
     artifacts?: ArtifactsContext;
   }
 }
+
+// TODO(dmaretskyi): Removed images from conductor GPT implementation.
+const isImage = (data: any): data is any => false;
 
 export const capabilities: AnyCapability[] = [
   //

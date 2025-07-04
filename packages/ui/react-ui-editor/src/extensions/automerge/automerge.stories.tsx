@@ -10,8 +10,8 @@ import { Repo } from '@automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import React, { useEffect, useState } from 'react';
 
-import { Expando } from '@dxos/echo-schema';
-import { DocAccessor, live, createDocAccessor, useQuery, useSpace, type Space, Query } from '@dxos/react-client/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
+import { DocAccessor, createDocAccessor, useQuery, useSpace, type Space, Query } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { ClientRepeater, type ClientRepeatedComponentProps } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
@@ -100,7 +100,7 @@ const EchoStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
   const identity = useIdentity();
   const space = useSpace(spaceKey);
   const [source, setSource] = useState<DocAccessor>();
-  const objects = useQuery(space, Query.type(Expando, { type: 'test' }));
+  const objects = useQuery(space, Query.type(Type.Expando, { type: 'test' }));
 
   useEffect(() => {
     if (!source && objects.length) {
@@ -128,9 +128,9 @@ export const WithEcho = {
         createSpace
         onSpaceCreated={async ({ space }) => {
           space.db.add(
-            live({
+            Obj.make(Type.Expando, {
               type: 'test',
-              content: live(Expando, { content: initialContent }),
+              content: Ref.make(Obj.make(Type.Expando, { content: initialContent })),
             }),
           );
         }}

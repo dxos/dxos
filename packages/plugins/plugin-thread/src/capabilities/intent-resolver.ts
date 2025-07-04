@@ -2,15 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { batch } from '@preact/signals-core';
-
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
-import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
+import { sleep } from '@dxos/async';
+import { Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { live, fullyQualifiedId, getSpace, Ref } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, Ref } from '@dxos/react-client/echo';
 import { AnchoredTo, DataType } from '@dxos/schema';
 
 import { ThreadCapabilities } from './capabilities';
@@ -23,9 +22,9 @@ export default (context: PluginContext) =>
       intent: ThreadAction.CreateChannel,
       resolve: ({ name }) => ({
         data: {
-          object: live(ChannelType, {
+          object: Obj.make(ChannelType, {
             name,
-            defaultThread: Ref.make(live(ThreadType, { messages: [], status: 'active' })),
+            defaultThread: Ref.make(Obj.make(ThreadType, { messages: [], status: 'active' })),
             threads: [],
           }),
         },
@@ -34,7 +33,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: ThreadAction.CreateChannelThread,
       resolve: ({ channel }) => {
-        const thread = live(ThreadType, { messages: [], status: 'active' });
+        const thread = Obj.make(ThreadType, { messages: [], status: 'active' });
         channel.threads.push(Ref.make(thread));
         return {
           data: {
@@ -52,12 +51,13 @@ export default (context: PluginContext) =>
 
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
-        const thread = live(ThreadType, { name, messages: [], status: 'staged' });
-        const anchor = live(AnchoredTo, {
-          [RelationSourceId]: thread,
-          [RelationTargetId]: subject,
+        const thread = Obj.make(ThreadType, { name, messages: [], status: 'staged' });
+        const anchor = Relation.make(AnchoredTo, {
+          [Relation.Source]: thread,
+          [Relation.Target]: subject,
           anchor: _anchor,
         });
+
         const draft = state.drafts[subjectId];
         if (draft) {
           draft.push(anchor);
@@ -111,13 +111,13 @@ export default (context: PluginContext) =>
     }),
     createResolver({
       intent: ThreadAction.Delete,
-      resolve: ({ subject, anchor, thread: _thread }, undo) => {
-        const thread = _thread ?? (anchor[RelationSourceId] as ThreadType);
+      resolve: async ({ subject, anchor, thread: _thread }, undo) => {
+        const thread = _thread ?? (Relation.getSource(anchor) as ThreadType);
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
         const draft = state.drafts[subjectId];
         if (draft) {
-          // Check if we're deleting a draft; if so, remove it.
+          // Check if we're deleting a draft; if so, remo ve it.
           const index = draft.findIndex((a) => a.id === anchor.id);
           if (index !== -1) {
             draft.splice(index, 1);
@@ -131,10 +131,10 @@ export default (context: PluginContext) =>
         }
 
         if (!undo) {
-          batch(() => {
-            space.db.remove(thread);
-            space.db.remove(anchor);
-          });
+          // TODO(wittjosiah): Without sleep, rendering crashes at `Relation.setSource(anchor)`.
+          space.db.remove(anchor);
+          await sleep(100);
+          space.db.remove(thread);
 
           return {
             undoable: {
@@ -152,10 +152,10 @@ export default (context: PluginContext) =>
             ],
           };
         } else {
-          batch(() => {
-            space.db.add(thread);
-            space.db.add(anchor);
-          });
+          // TODO(wittjosiah): Without sleep, rendering crashes at `Relation.setSource(anchor)`.
+          space.db.add(thread);
+          await sleep(100);
+          space.db.add(anchor);
 
           return {
             intents: [
@@ -174,19 +174,19 @@ export default (context: PluginContext) =>
     createResolver({
       intent: ThreadAction.AddMessage,
       resolve: ({ anchor, subject, sender, text }) => {
-        const thread = anchor[RelationSourceId] as ThreadType;
+        const thread = Relation.getSource(anchor) as ThreadType;
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
         const space = getSpace(subject);
         invariant(space, 'Space not found');
         const intents = [];
 
-        const message = live(DataType.Message, {
+        const message = Obj.make(DataType.Message, {
           sender,
           created: new Date().toISOString(),
           blocks: [{ type: 'text', text }],
           // TODO(wittjosiah): Context based on attention.
-          // context: context ? makeRef(context) : undefined,
+          // context: context ? Ref.make(context) : undefined,
         });
         thread.messages.push(Ref.make(message));
 
@@ -236,7 +236,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: ThreadAction.DeleteMessage,
       resolve: ({ subject, anchor, messageId, message, messageIndex }, undo) => {
-        const thread = anchor[RelationSourceId] as ThreadType;
+        const thread = Relation.getSource(anchor) as ThreadType;
         const space = getSpace(subject);
         invariant(space, 'Space not found');
 

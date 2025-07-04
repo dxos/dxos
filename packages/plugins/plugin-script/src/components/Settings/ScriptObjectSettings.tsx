@@ -75,7 +75,7 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
 
   // TODO(burdon): Use form.
   return (
-    <div role='form' className='flex flex-col p-2 gap-2'>
+    <div role='form' className='flex flex-col gap-2 mlb-cardSpacingBlock'>
       <h2>{t('remote function settings heading')}</h2>
       <Input.Root>
         <div role='none' className='flex flex-col gap-1'>
@@ -178,7 +178,7 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   }, [object, githubToken]);
 
   return (
-    <div className='flex flex-col p-2 gap-4'>
+    <div className='flex flex-col gap-4 mlb-cardSpacingBlock'>
       <div>
         <h2>{t('script publish settings label')}</h2>
         <p className='text-description text-sm'>{t('script publish settings description')}</p>

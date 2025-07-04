@@ -3,10 +3,10 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, StateField } from '@codemirror/state';
+import { type EditorState, type Extension, StateField } from '@codemirror/state';
 import { type TreeCursor } from '@lezer/common';
 
-export const debugTree = (cb: (tree: DebugNode) => void) =>
+export const debugTree = (cb: (tree: DebugNode) => void): Extension =>
   StateField.define({
     create: (state) => cb(convertTreeToJson(state)),
     update: (value, tr) => cb(convertTreeToJson(tr.state)),

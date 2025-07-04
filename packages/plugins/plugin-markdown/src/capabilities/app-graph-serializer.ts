@@ -5,8 +5,10 @@
 import { pipe } from 'effect';
 
 import { contributes, Capabilities, type PluginContext, chain, createIntent } from '@dxos/app-framework';
-import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
+import { Obj, Type } from '@dxos/echo';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
+import { DataType } from '@dxos/schema';
 
 import translations from '../translations';
 import { MarkdownAction, DocumentType } from '../types';
@@ -30,8 +32,8 @@ export default (context: PluginContext) =>
       deserialize: async (data, ancestors) => {
         const space = ancestors.find(isSpace);
         const target =
-          ancestors.findLast((ancestor) => ancestor instanceof CollectionType) ??
-          space?.properties[CollectionType.typename]?.target;
+          ancestors.findLast((ancestor) => Obj.instanceOf(DataType.Collection, ancestor)) ??
+          space?.properties[Type.getTypename(DataType.Collection)]?.target;
         if (!space || !target) {
           return;
         }

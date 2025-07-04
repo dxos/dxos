@@ -17,18 +17,39 @@ describe('graph builder', () => {
     g2.builder
       .call((builder) => {
         builder.createEdge(
-          { node: builder.model.createNode({ id: 'a' }), property: 'result' },
-          { node: builder.model.createNode({ id: 'b' }), property: 'value' },
+          {
+            node: builder.model.createNode({ id: 'a' }),
+            property: 'result',
+          },
+          {
+            node: builder.model.createNode({ id: 'b' }),
+            property: 'value',
+          },
         );
       })
       .call((builder) => {
         builder.model.createEdge(
-          { node: 'b', property: 'result' },
-          { node: builder.model.createNode({ id: 'c' }), property: 'value' },
+          {
+            node: 'b',
+            property: 'result',
+          },
+          {
+            node: builder.model.createNode({ id: 'c' }),
+            property: 'value',
+          },
         );
       })
       .call((builder) => {
-        builder.model.createEdge({ node: 'c', property: 'result' }, { node: g1.root, property: 'value' });
+        builder.model.createEdge(
+          {
+            node: 'c',
+            property: 'result',
+          },
+          {
+            node: g1.root,
+            property: 'value',
+          },
+        );
       });
 
     expect(g2.nodes).to.have.length(4);

@@ -196,7 +196,7 @@ export class ComputeGraph extends Resource {
    * Map from binding to fully qualified ECHO ID (to store).
    * E.g., HELLO() => spaceId:objectId()
    */
-  mapFunctionBindingToId(formula: string) {
+  mapFunctionBindingToId(formula: string): string {
     return formula.replace(/(\w+)\((.*)\)/g, (match, binding, args) => {
       if (binding === EDGE_FUNCTION_NAME || defaultFunctions.find((fn) => fn.name === binding)) {
         return match;
@@ -216,7 +216,7 @@ export class ComputeGraph extends Resource {
    * Map from fully qualified ECHO ID to binding (from store).
    * E.g., spaceId:objectId() => HELLO()
    */
-  mapFunctionBindingFromId(formula: string) {
+  mapFunctionBindingFromId(formula: string): string | undefined {
     const binding = formula.replace(/(\w+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {
       const id = `${spaceId}:${objectId}`;
       if (id.length !== FQ_ID_LENGTH) {
@@ -238,7 +238,7 @@ export class ComputeGraph extends Resource {
     }
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     if (this._space) {
       // Subscribe to remote function definitions.
       const query = this._space.db.query(Filter.type(FunctionType));
@@ -251,7 +251,7 @@ export class ComputeGraph extends Resource {
     }
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     for (const node of this._nodes.values()) {
       await node.close();
     }

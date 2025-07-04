@@ -30,15 +30,15 @@ dark.hljs.background = '';
  */
 export const SyntaxHighlighter = ({
   classNames,
-  fallback = zeroWidthSpace,
   children,
+  fallback = zeroWidthSpace,
   ...props
 }: SyntaxHighlighterProps) => {
   const { themeMode } = useThemeContext();
 
   return (
     <NativeSyntaxHighlighter
-      className={mx('w-full p-0 bg-inputSurface', classNames)}
+      className={mx('w-full p-0 bg-baseSurface font-thin overflow-auto scrollbar-thin', classNames)}
       style={themeMode === 'dark' ? dark : light}
       {...props}
     >

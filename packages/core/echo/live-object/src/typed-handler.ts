@@ -6,17 +6,7 @@ import { SchemaAST, Schema } from 'effect';
 import { type InspectOptionsStylized } from 'node:util';
 
 import { inspectCustom } from '@dxos/debug';
-import { type Reference } from '@dxos/echo-protocol';
-import {
-  defineHiddenProperty,
-  DeletedSymbol,
-  getTypeReference,
-  SchemaMetaSymbol,
-  SchemaValidator,
-  symbolSchema,
-  TYPENAME_SYMBOL,
-  TypeSymbol,
-} from '@dxos/echo-schema';
+import { defineHiddenProperty, DeletedId, getSchemaDXN, SchemaId, SchemaValidator, TypeId } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
@@ -36,12 +26,12 @@ type ProxyTarget = {
   /**
    * Typename or type DXN.
    */
-  [TYPENAME_SYMBOL]: string;
+  [TypeId]: string;
 
   /**
    * Schema for the root.
    */
-  [symbolSchema]: Schema.Schema.AnyNoContext;
+  [SchemaId]: Schema.Schema.AnyNoContext;
 
   /**
    * For get and set operations on value properties.
@@ -67,14 +57,14 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   init(target: ProxyTarget): void {
     invariant(typeof target === 'object' && target !== null);
-    invariant(symbolSchema in target, 'Schema is not defined for the target');
+    invariant(SchemaId in target, 'Schema is not defined for the target');
 
     if (!(symbolSignal in target)) {
       defineHiddenProperty(target, symbolSignal, compositeRuntime.createSignal());
       defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
     }
 
-    defineHiddenProperty(target, DeletedSymbol, false);
+    defineHiddenProperty(target, DeletedId, false);
 
     for (const key of Object.getOwnPropertyNames(target)) {
       const descriptor = Object.getOwnPropertyDescriptor(target, key)!;
@@ -99,21 +89,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       case objectData: {
         target[symbolSignal].notifyRead();
         return toJSON(target);
-      }
-      case TYPENAME_SYMBOL: {
-        if ((target as any)[TYPENAME_SYMBOL] !== undefined) {
-          return (target as any)[TYPENAME_SYMBOL];
-        }
-
-        const schema = this.getSchema(target);
-        // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
-        if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
-          return (schema as any)[SchemaMetaSymbol].typename;
-        }
-        return this.getTypeReference(target)?.objectId;
-      }
-      case TypeSymbol: {
-        return this.getTypeReference(target)?.toDXN();
       }
     }
 
@@ -168,14 +143,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return result;
   }
 
-  getSchema(target: any) {
-    return target[symbolSchema];
-  }
-
-  getTypeReference(target: any): Reference | undefined {
-    return getTypeReference(target[symbolSchema]);
-  }
-
   private _validateValue(target: any, prop: string | symbol, value: any) {
     const schema = SchemaValidator.getTargetPropertySchema(target, prop);
     const _ = Schema.asserts(schema)(value);
@@ -193,7 +160,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     _: number,
     options: InspectOptionsStylized,
     inspectFn: (value: any, options?: InspectOptionsStylized) => string,
-  ) {
+  ): string {
     return `Typed ${inspectFn(this, {
       ...options,
       compact: true,
@@ -211,7 +178,12 @@ const toJSON = (target: ProxyTarget): any => {
  * Recursively set AST on all potential proxy targets.
  */
 const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext) => {
-  defineHiddenProperty(obj, symbolSchema, schema);
+  const schemaType = getSchemaDXN(schema);
+  if (schemaType != null) {
+    defineHiddenProperty(obj, TypeId, schemaType);
+  }
+
+  defineHiddenProperty(obj, SchemaId, schema);
   for (const key in obj) {
     if (isValidProxyTarget(obj[key])) {
       const elementSchema = SchemaValidator.getTargetPropertySchema(obj, key);

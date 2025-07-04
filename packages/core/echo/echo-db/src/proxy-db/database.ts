@@ -7,7 +7,13 @@ import { inspect } from 'node:util';
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
+import {
+  assertObjectModelShape,
+  type AnyEchoObject,
+  type AnyObjectData,
+  type BaseObject,
+  type HasId,
+} from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -58,8 +64,6 @@ export type AddOptions = {
 /**
  *
  */
-// TODO(burdon): Document.
-// TODO(burdon): Rename DatabaseProxy.
 export interface EchoDatabase {
   get graph(): Hypergraph;
   get schemaRegistry(): EchoSchemaRegistry;
@@ -77,31 +81,37 @@ export interface EchoDatabase {
   query: QueryFn;
 
   /**
-   * Update objects.
-   */
-  update(filter: Filter.Any, operation: UpdateOperation): Promise<void>;
-
-  /**
-   * Insert new objects.
-   */
-  // TODO(dmaretskyi): Support meta.
-  insert(data: InsertData): Promise<AnyObjectData>;
-  insert(data: InsertBatch): Promise<AnyObjectData[]>;
-
-  /**
    * Adds object to the database.
    */
-  add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): AnyLiveObject<T>;
+  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
+  add<T extends AnyEchoObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
 
   /**
    * Removes object from the database.
    */
-  remove<T extends BaseObject>(obj: T): void;
+  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
+  remove<T extends AnyEchoObject>(obj: T): void;
 
   /**
    * Wait for all pending changes to be saved to disk.
    */
   flush(opts?: FlushOptions): Promise<void>;
+
+  /**
+   * Update objects.
+   * @deprecated Use `add` instead.
+   */
+  // TODO(burdon): Remove.
+  update(filter: Filter.Any, operation: UpdateOperation): Promise<void>;
+
+  /**
+   * Insert new objects.
+   * @deprecated Use `add` instead.
+   */
+  // TODO(burdon): Remove.
+  // TODO(dmaretskyi): Support meta.
+  insert(data: InsertData): Promise<AnyObjectData>;
+  insert(data: InsertBatch): Promise<AnyObjectData[]>;
 
   /**
    * Run migrations.
@@ -220,7 +230,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   @synchronized
-  async setSpaceRoot(rootUrl: string) {
+  async setSpaceRoot(rootUrl: string): Promise<void> {
     log('setSpaceRoot', { rootUrl });
     const firstTime = this._rootUrl === undefined;
     this._rootUrl = rootUrl;
@@ -261,7 +271,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Update objects.
    */
-  async update(filter: Filter.Any, operation: UpdateOperation) {
+  async update(filter: Filter.Any, operation: UpdateOperation): Promise<void> {
     await this._coreDatabase.update(filter, operation);
   }
 
@@ -275,7 +285,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add reactive object.
    */
-  add<T extends BaseObject>(obj: T, opts?: AddOptions): AnyLiveObject<T> {
+  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
+  add<T extends BaseObject>(obj: T, opts?: AddOptions): Live<T & HasId> {
     if (!isEchoObject(obj)) {
       const schema = getSchema(obj);
       if (schema != null) {
@@ -286,6 +297,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
       obj = createObject(obj);
     }
+    assertObjectModelShape(obj);
 
     // TODO(burdon): Check if already added to db?
     invariant(isEchoObject(obj));

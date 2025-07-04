@@ -15,13 +15,3 @@ export const FIELD_PATH_ANNOTATION = 'path';
  */
 // TODO(burdon): Field, vs. path vs. property.
 export const FieldPath = (path: string) => PropertyMeta(FIELD_PATH_ANNOTATION, path);
-
-/**
- * @internal
- * Internal Effect-schema implementation detail.
- */
-export const schemaVariance = {
-  _A: (_: any) => _,
-  _I: (_: any) => _,
-  _R: (_: never) => _,
-};

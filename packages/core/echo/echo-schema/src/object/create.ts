@@ -4,16 +4,28 @@
 
 import { type Schema } from 'effect';
 
-import { failedInvariant } from '@dxos/invariant';
+import { raise } from '@dxos/debug';
+import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 
+import { getObjectDXN, setSchema } from './accessors';
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
+import {
+  assertObjectModelShape,
+  EntityKindId,
+  MetaId,
+  RelationSourceDXNId,
+  RelationSourceId,
+  RelationTargetDXNId,
+  RelationTargetId,
+} from './model';
 import { setTypename } from './typename';
-import { getSchemaDXN, getTypeAnnotation, setSchema } from '../ast';
+import { EntityKind, getSchemaDXN, getTypeAnnotation } from '../ast';
+import { defineHiddenProperty } from '../utils';
 
 // Make `id` optional.
-type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;
+type CreateData<T> = T extends { id: string } ? Omit<T, 'id' | typeof EntityKindId> & { id?: string } : T;
 
 /**
  * Creates a new object instance from a schema and data, without signal reactivity.
@@ -43,8 +55,9 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
  * })
  * ```
  */
+// TODO(burdon): Rename make.
 // TODO(burdon): Handle defaults (see Schema.make).
-// TODO(dmaretskyi): Rename to `create` once existing `create` is renamed to `live`.
+// TODO(dmaretskyi): Use `Obj.make` and `Relation.make` from '@dxos/echo' instead.
 export const create = <S extends Schema.Schema.AnyNoContext>(
   schema: S,
   data: CreateData<Schema.Schema.Type<S>>,
@@ -53,14 +66,29 @@ export const create = <S extends Schema.Schema.AnyNoContext>(
   if (!annotation) {
     throw new Error('Schema is not an object schema');
   }
-  if ('@type' in data) {
-    throw new TypeError('@type is not allowed');
-  }
+  assertArgument(!('@type' in data), '@type is not allowed');
+  assertArgument(!(RelationSourceDXNId in data), 'Relation source DXN is not allowed in the constructor');
+  assertArgument(!(RelationTargetDXNId in data), 'Relation target DXN is not allowed in the constructor');
+  assertArgument(
+    RelationSourceId in data === RelationTargetId in data,
+    'Relation source and target must be provided together',
+  );
 
   const obj = { ...data, id: data.id ?? ObjectId.random() };
-  setTypename(obj, getSchemaDXN(schema)?.toString() ?? failedInvariant('Missing schema DXN'));
+  const kind = RelationSourceId in data ? EntityKind.Relation : EntityKind.Object;
+  defineHiddenProperty(obj, EntityKindId, kind);
+  setTypename(obj, getSchemaDXN(schema) ?? failedInvariant('Missing schema DXN'));
   setSchema(obj, schema);
   attachTypedJsonSerializer(obj);
   attachedTypedObjectInspector(obj);
+  defineHiddenProperty(obj, MetaId, { keys: [] });
+  if (kind === EntityKind.Relation) {
+    const sourceDXN = getObjectDXN(data[RelationSourceId]) ?? raise(new Error('Unresolved relation source'));
+    const targetDXN = getObjectDXN(data[RelationTargetId]) ?? raise(new Error('Unresolved relation target'));
+    defineHiddenProperty(obj, RelationSourceDXNId, sourceDXN);
+    defineHiddenProperty(obj, RelationTargetDXNId, targetDXN);
+  }
+
+  assertObjectModelShape(obj);
   return obj;
 };

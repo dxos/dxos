@@ -87,7 +87,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     this._wsDxrpcUrl = new URL(this.DXRPC_PATH, this._config.baseUrl.replace('http', 'ws')).href;
   }
 
-  init(authToken?: any) {
+  init(authToken?: any): boolean {
     if (!this._checkAuthorization(authToken)) {
       return false;
     }
@@ -105,7 +105,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
    * The AgentHostingProvider will also validate the auth token/credential on its own.
    */
 
-  _checkAuthorization(authToken?: any) {
+  _checkAuthorization(authToken?: any): boolean {
     const validCookie = this._checkAuthCookie(authToken);
     if (validCookie) {
       log('beta JWT found');
@@ -122,7 +122,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     return false;
   }
 
-  _checkAuthCookie(authToken: any) {
+  _checkAuthCookie(authToken: any): boolean {
     const cookies = Object.fromEntries(
       document.cookie.split('; ').map((v) => v.split(/=(.*)/s).map(decodeURIComponent)),
     );
@@ -141,7 +141,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   }
 
   // TODO(nf): use asymmetric key to verify token?
-  _decodeComposerBetaJwt() {
+  _decodeComposerBetaJwt(): ComposerBetaJwt {
     const decoded: ComposerBetaJwt = jwtDecode(this._getComposerBetaCookie());
     return decoded;
   }
@@ -186,7 +186,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   }
 
   @synchronized
-  async _ensureAuthenticated() {
+  async _ensureAuthenticated(): Promise<void> {
     if (this._validAuthToken()) {
       return;
     }
@@ -203,7 +203,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     await this._agentManagerAuth(authDeviceCreds[0], agentBetaCredential);
   }
 
-  async _openRpc() {
+  async _openRpc(): Promise<void> {
     if (this._rpcState === 'connected') {
       return;
     }
@@ -235,7 +235,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   }
 
   // Authenticate to the agentmanager service using dxrpc and obtain a JWT token for subsequent HTTP requests.
-  async _agentManagerAuth(authDeviceCreds: Credential, agentAuthzCredential?: Credential) {
+  async _agentManagerAuth(authDeviceCreds: Credential, agentAuthzCredential?: Credential): Promise<void> {
     await this._openRpc();
     invariant(this._rpc, 'RPC not initialized');
     const { result, nonce, agentmanagerKey, initAuthResponseReason } =
@@ -296,7 +296,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     return decoded;
   }
 
-  public async _queryCredentials(type?: string, predicate?: (value: Credential) => boolean) {
+  public async _queryCredentials(type?: string, predicate?: (value: Credential) => boolean): Promise<Credential[]> {
     // assumes all credentials are already loaded. should client.spaces.waitUntilReady()?
     const haloCredentials = this._halo.credentials.get();
 
@@ -382,7 +382,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     }
   }
 
-  public async destroyAgent(agentID: string) {
+  public async destroyAgent(agentID: string): Promise<boolean> {
     await this._ensureAuthenticated();
     const res = await fetch(
       new URL('agent/' + agentID, this._config.baseUrl),

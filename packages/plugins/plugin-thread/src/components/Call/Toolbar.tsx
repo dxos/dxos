@@ -16,7 +16,7 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { hoverableHidden, mx } from '@dxos/react-ui-theme';
+import { groupHoverControlItemWithTransition, mx } from '@dxos/react-ui-theme';
 
 import { ThreadCapabilities } from '../../capabilities';
 import { THREAD_PLUGIN } from '../../meta';
@@ -55,8 +55,8 @@ export const Toolbar = ({
 
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
-    <div className={mx('z-20 flex justify-center m-8', autoHideControls && hoverableHidden)}>
-      <NativeToolbar.Root classNames={['p-2 bg-modalSurface rounded-lg shadow-lg', classNames]}>
+    <div className={mx('z-20 flex justify-center m-8', autoHideControls && groupHoverControlItemWithTransition)}>
+      <NativeToolbar.Root classNames={['p-2 bg-modalSurface rounded-md shadow-md', classNames]}>
         <ToggleButton
           active={call.media.audioEnabled}
           state={{

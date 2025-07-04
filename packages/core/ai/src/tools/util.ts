@@ -2,23 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { Message } from './message';
-import { type Tool, ToolResult } from './tools';
-import type { AgentStatus } from '../status-report';
+import { type ExecutableTool, ToolResult } from './tool';
+import { type AgentStatus } from '../status-report';
 
 export const isToolUse = (message: Message, { onlyToolNames }: { onlyToolNames?: string[] } = {}) => {
   const block = message.content.at(-1);
-  invariant(block);
-  return block.type === 'tool_use' && (!onlyToolNames || onlyToolNames.includes(block.name));
+  return block && block.type === 'tool_use' && (!onlyToolNames || onlyToolNames.includes(block.name));
 };
 
 export type RunToolsOptions = {
   message: Message;
-  tools: Tool[];
+  tools: ExecutableTool[];
   extensions?: ToolContextExtensions;
   reportStatus: (status: AgentStatus) => void;
 };
@@ -44,7 +43,7 @@ export const runTools = async ({
   const toolCall = toolCalls[0];
   const tool = tools.find((tool) => tool.name === toolCall.name);
   if (!tool) {
-    const resultMessage = create(Message, {
+    const resultMessage = Obj.make(Message, {
       role: 'user',
       content: [
         {
@@ -75,7 +74,7 @@ export const runTools = async ({
   switch (toolResult.kind) {
     case 'error': {
       log('tool error', { message: toolResult.message });
-      const resultMessage = create(Message, {
+      const resultMessage = Obj.make(Message, {
         role: 'user',
         content: [
           {
@@ -96,7 +95,7 @@ export const runTools = async ({
 
     case 'success': {
       log('tool success', { result: toolResult.result });
-      const resultMessage = create(Message, {
+      const resultMessage = Obj.make(Message, {
         role: 'user',
         content: [
           {

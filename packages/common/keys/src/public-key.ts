@@ -90,7 +90,7 @@ export class PublicKey implements Equatable {
   /**
    * Creates new instance of PublicKey from hex string.
    */
-  static fromHex(hex: string) {
+  static fromHex(hex: string): PublicKey {
     if (hex.startsWith('0x')) {
       hex = hex.slice(2);
     }
@@ -139,7 +139,7 @@ export class PublicKey implements Equatable {
   /**
    * Tests two keys for equality.
    */
-  static equals(left: PublicKeyLike, right: PublicKeyLike) {
+  static equals(left: PublicKeyLike, right: PublicKeyLike): boolean {
     return PublicKey.from(left).equals(right);
   }
 
@@ -196,7 +196,7 @@ export class PublicKey implements Equatable {
     return this.toHex();
   }
 
-  toJSON() {
+  toJSON(): string {
     return this.toHex();
   }
 
@@ -216,7 +216,7 @@ export class PublicKey implements Equatable {
     return 'B' + base32Encode(this._value, 'RFC4648');
   }
 
-  truncate(length = undefined) {
+  truncate(length = undefined): string {
     return truncateKey(this, length);
   }
 
@@ -228,14 +228,14 @@ export class PublicKey implements Equatable {
     return this._value;
   }
 
-  getInsecureHash(modulo: number) {
+  getInsecureHash(modulo: number): number {
     return Math.abs(this._value.reduce((acc, val) => (acc ^ val) | 0, 0)) % modulo;
   }
 
   /**
    * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
    */
-  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect) {
+  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect): string {
     if (!options.colors || typeof process.stdout.hasColors !== 'function' || !process.stdout.hasColors()) {
       return `<PublicKey ${this.truncate()}>`;
     }
@@ -302,7 +302,7 @@ export class PublicKey implements Equatable {
   /**
    * Test this key for equality with some other key.
    */
-  equals(other: PublicKeyLike) {
+  equals(other: PublicKeyLike): boolean {
     const otherConverted = PublicKey.from(other);
     if (this._value.length !== otherConverted._value.length) {
       return false;
@@ -316,7 +316,7 @@ export class PublicKey implements Equatable {
     return equal;
   }
 
-  [equalsSymbol](other: any) {
+  [equalsSymbol](other: any): boolean {
     if (!PublicKey.isPublicKey(other)) {
       return false;
     }

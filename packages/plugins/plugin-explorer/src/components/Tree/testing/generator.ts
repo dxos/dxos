@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ObjectId } from '@dxos/echo-schema';
+import { Key } from '@dxos/echo';
 import { range } from '@dxos/util';
 
 import { Tree, type TreeNodeType } from '../types';
@@ -21,7 +21,7 @@ export const createTree = (spec: NumberOrNumberArray[] = [], createText?: () => 
   const createNodes = (parent: TreeNodeType, spec: NumberOrNumberArray = 0): TreeNodeType[] => {
     const count = Array.isArray(spec) ? random(spec[0], spec[1]) : spec;
     return range(count, (i) => ({
-      id: ObjectId.random(),
+      id: Key.ObjectId.random(),
       children: [],
       data: {
         text: createText?.() ?? [parent.data.text, i + 1].join('.'),

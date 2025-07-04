@@ -52,7 +52,7 @@ export class IndexVector extends Resource implements Index {
 
   private _orama?: OramaInstanceType = undefined;
 
-  override async _open() {
+  override async _open(): Promise<void> {
     await this._extractor.open();
 
     this._orama = await Orama.create({
@@ -90,7 +90,7 @@ export class IndexVector extends Resource implements Index {
     return true; // TODO(dmaretskyi): This re-runs all queries even if nothing changed.
   }
 
-  async remove(id: ObjectPointerEncoded) {
+  async remove(id: ObjectPointerEncoded): Promise<void> {
     invariant(this._orama, 'Index is not initialized');
     await Orama.remove(this._orama, id);
   }

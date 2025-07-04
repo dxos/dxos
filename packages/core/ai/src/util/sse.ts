@@ -122,7 +122,7 @@ class SSEDecoder {
     this.chunks = [];
   }
 
-  decode(line: string) {
+  decode(line: string): ServerSentEvent | null {
     if (line.endsWith('\r')) {
       line = line.substring(0, line.length - 1);
     }

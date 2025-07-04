@@ -4,26 +4,51 @@
 
 import { Schema } from 'effect';
 
-import { type BaseEchoObject, EntityKind, TypeAnnotationId, type TypeAnnotation } from '@dxos/echo-schema';
-import { type DXN } from '@dxos/keys';
+import type { Obj, Relation } from '@dxos/echo';
+import { EntityKind, TypeAnnotationId, type TypeAnnotation } from '@dxos/echo-schema';
+import { type DXN, type ObjectId } from '@dxos/keys';
 
 /**
  * Client-side view onto an EDGE queue.
  */
-export type Queue<T extends BaseEchoObject = BaseEchoObject> = {
-  dxn: DXN;
-  items: T[]; // TODO(burdon): Make readonly.
-  isLoading: boolean;
-  error: Error | null;
-  append(items: T[]): void;
-  delete(ids: string[]): void;
+export interface Queue<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any> {
+  readonly dxn: DXN;
+  readonly isLoading: boolean;
+  readonly error: Error | null;
+
+  // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
+  readonly objects: T[];
+
+  toJSON(): any;
+
+  /**
+   * Appends objects to the queue.
+   */
+  append(objects: T[]): Promise<void>;
+
+  /**
+   * Deletes objects from the queue.
+   */
+  delete(ids: string[]): Promise<void>;
+
+  /**
+   * Query all objects in the queue.
+   */
+  // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
+  queryObjects(): Promise<T[]>;
+
+  /**
+   * Queries objects by id.
+   */
+  // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
+  getObjectsById(ids: ObjectId[]): Promise<(T | null)[]>;
 
   /**
    * Refreshes the queue from the server.
    */
   // TODO(dmaretskyi): Remove.
   refresh(): Promise<void>;
-};
+}
 
 // TODO(dmaretskyi): Implement.
 const isQueue = (value: unknown): value is Queue => {

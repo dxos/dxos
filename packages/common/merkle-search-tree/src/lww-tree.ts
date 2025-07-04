@@ -39,7 +39,7 @@ export class LWWTree<T> {
     return data?.value;
   }
 
-  async setBatch(pairs: [Key, T][]) {
+  async setBatch(pairs: [Key, T][]): Promise<void> {
     const prevDataBatch = await Promise.all(pairs.map(([key]) => this.#getData(key)));
     const updates = pairs.map(([key, value], i) => {
       const prevData = prevDataBatch[i];
@@ -53,7 +53,7 @@ export class LWWTree<T> {
     this.#currentRoot = await this.#forest.setBatch(this.#currentRoot, updates);
   }
 
-  async set(key: Key, value: T) {
+  async set(key: Key, value: T): Promise<void> {
     await this.setBatch([[key, value]]);
   }
 

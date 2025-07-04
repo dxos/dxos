@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { assertEchoSchema, isMutable } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -27,14 +27,16 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
   const currentTypename = useMemo(() => table?.view?.target?.query?.typename, [table?.view?.target?.query?.typename]);
 
   const handleUpdateTypename = useCallback(
-    (newTypename: string) => {
+    (typename: string) => {
       invariant(schema);
+      invariant(Type.isMutable(schema));
+
       const matchingViews = views.filter((view) => view.query.typename === currentTypename);
       for (const view of matchingViews) {
-        view.query.typename = newTypename;
+        view.query.typename = typename;
       }
 
-      assertEchoSchema(schema).updateTypename(newTypename);
+      schema.updateTypename(typename);
     },
     [views, schema],
   );
@@ -55,8 +57,8 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
       registry={space.db.schemaRegistry}
       schema={schema}
       view={table.view.target!}
-      onTypenameChanged={isMutable(schema) ? undefined : handleUpdateTypename}
-      onDelete={isMutable(schema) ? undefined : handleDelete}
+      onTypenameChanged={Type.isMutable(schema) ? undefined : handleUpdateTypename}
+      onDelete={Type.isMutable(schema) ? handleDelete : undefined}
     />
   );
 };

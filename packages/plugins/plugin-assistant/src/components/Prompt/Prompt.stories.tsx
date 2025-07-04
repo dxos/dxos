@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -69,6 +69,7 @@ const meta: Meta<typeof Prompt> = {
   parameters: {
     layout: 'centered',
     translations,
+    controls: { disable: true },
   },
 };
 

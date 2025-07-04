@@ -203,7 +203,7 @@ export class ClientServicesHost {
    * Config can also be provided in the constructor.
    * Can only be called once.
    */
-  initialize({ config, ...options }: InitializeOptions) {
+  initialize({ config, ...options }: InitializeOptions): void {
     invariant(!this._open, 'service host is open');
     log('initializing...');
 
@@ -219,10 +219,10 @@ export class ClientServicesHost {
       log.warn('running signaling without telemetry metadata.');
     }
 
-    const edgeEndpoint = config?.get('runtime.services.edge.url');
-    if (edgeEndpoint) {
-      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: edgeEndpoint });
-      this._edgeHttpClient = new EdgeHttpClient(edgeEndpoint);
+    const endpoint = config?.get('runtime.services.edge.url');
+    if (endpoint) {
+      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint });
+      this._edgeHttpClient = new EdgeHttpClient(endpoint);
     }
 
     const {
@@ -256,7 +256,7 @@ export class ClientServicesHost {
 
   @synchronized
   @Trace.span()
-  async open(ctx: Context) {
+  async open(ctx: Context): Promise<void> {
     if (this._open) {
       return;
     }
@@ -377,7 +377,7 @@ export class ClientServicesHost {
 
   @synchronized
   @Trace.span()
-  async close() {
+  async close(): Promise<void> {
     if (!this._open) {
       return;
     }
@@ -395,7 +395,7 @@ export class ClientServicesHost {
     log('closed', { deviceKey });
   }
 
-  async reset() {
+  async reset(): Promise<void> {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.client-services-host.reset', trace.begin({ id: traceId }));
 

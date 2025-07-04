@@ -4,17 +4,26 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 
+import { StackItem } from '@dxos/react-ui-stack';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ControlSection, type ControlSectionProps } from './ControlSection';
+import { ControlPage, ControlSection, type ControlSectionProps } from './ControlSection';
 import translations from '../../translations';
 
 const meta: Meta<ControlSectionProps> = {
   title: 'ui/react-ui-form/ControlSection',
   component: ControlSection,
-  decorators: [withLayout(), withTheme],
+  render: (args) => (
+    <StackItem.Content classNames='w-[40rem]'>
+      <ControlPage>
+        <ControlSection {...args} />
+      </ControlPage>
+    </StackItem.Content>
+  ),
+  decorators: [withLayout({ fullscreen: true, classNames: 'justify-center' }), withTheme],
   parameters: {
     translations,
   },
@@ -25,5 +34,8 @@ export default meta;
 type Story = StoryObj<ControlSectionProps>;
 
 export const Default: Story = {
-  args: {},
+  args: {
+    title: 'Control Section',
+    description: 'This is a control section',
+  },
 };

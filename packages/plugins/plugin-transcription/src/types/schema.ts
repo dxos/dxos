@@ -4,7 +4,9 @@
 
 import { Schema } from 'effect';
 
-import { Expando, Ref, TypedObject } from '@dxos/echo-schema';
+import { Queue } from '@dxos/client/echo';
+import { Type } from '@dxos/echo';
+import { TypedObject } from '@dxos/echo-schema';
 
 /**
  * Root transcript object created when the user starts a transcription.
@@ -18,8 +20,7 @@ export const TranscriptSchema = Schema.Struct({
   /**
    * Queue containing TranscriptBlock objects.
    */
-  // TODO(wittjosiah): Should be a ref to a queue.
-  queue: Ref(Expando),
+  queue: Type.Ref(Queue),
 });
 
 export class TranscriptType extends TypedObject({

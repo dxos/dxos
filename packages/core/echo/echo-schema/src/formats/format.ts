@@ -48,4 +48,5 @@ export namespace Format {
 
   // Objects
   export const GeoPoint = ObjectUtil.GeoPoint;
+  export type GeoPoint = ObjectUtil.GeoPoint;
 }

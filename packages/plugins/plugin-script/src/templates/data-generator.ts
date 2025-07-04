@@ -5,7 +5,7 @@
 // @ts-ignore
 import { defineFunction, S, create, Expando } from 'dxos:functions';
 // @ts-ignore
-import { randText } from 'https://esm.sh/@ngneat/falso@7.1.1';
+import { randText } from 'https://esm.sh/@ngneat/falso@7.1.1?bundle=false';
 
 export default defineFunction({
   inputSchema: S.Struct({

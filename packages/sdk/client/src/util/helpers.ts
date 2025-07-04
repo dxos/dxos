@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type BaseEchoObject } from '@dxos/echo-schema';
+import type { Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 
@@ -11,7 +11,8 @@ import { type Space } from '../echo';
 
 // TODO(burdon): Type check?
 // TOOD(burdon): Move to client class?
-export const resolveRef = async <T extends BaseEchoObject = BaseEchoObject>(
+// TODO(dmaretskyi): Align with `graph.createRefResolver` API.
+export const resolveRef = async <T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(
   client: Client,
   dxn: DXN,
   defaultSpace?: Space,
@@ -32,7 +33,7 @@ export const resolveRef = async <T extends BaseEchoObject = BaseEchoObject>(
     invariant(objectId, 'objectId missing');
     const queue = client.spaces.get(spaceId)?.queues.get<T>(dxn);
     invariant(queue, 'queue missing');
-    return queue.items.find((item) => item.id === objectId);
+    return queue.objects.find((object) => object.id === objectId);
   }
 
   return undefined;

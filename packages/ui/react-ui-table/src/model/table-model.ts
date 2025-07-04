@@ -6,7 +6,15 @@ import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-c
 
 import { type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { type FieldSortType, FormatEnum, getValue, setValue, type JsonProp } from '@dxos/echo-schema';
+import {
+  type FieldSortType,
+  FormatEnum,
+  getValue,
+  setValue,
+  type JsonProp,
+  getSnapshot,
+  getSchema,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject, makeRef } from '@dxos/live-object';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
@@ -16,12 +24,15 @@ import {
   type DxGridPlanePosition,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import { type ViewType, type ViewProjection } from '@dxos/schema';
+import { type ViewType, type ViewProjection, type PropertyType, validateSchema } from '@dxos/schema';
 
 import { type SelectionMode, SelectionModel } from './selection-model';
 import { TableSorting } from './table-sorting';
 import { touch } from '../util';
 import { extractTagIds } from '../util/tag';
+
+// TODO(ZaymonFC): Use a common type?
+export type ValidationResult = { valid: true } | { valid: false; error: string };
 
 // TODO(burdon): Use schema types.
 export type TableRow = Record<JsonProp, any> & { id: string };
@@ -202,7 +213,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   // Initialisation
   //
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     this.initializeColumnMeta();
     this.initializeEffects();
     this._selection = new SelectionModel(this._sorting.sortedRows, this._features.selection.mode ?? 'multiple', () =>
@@ -330,6 +341,39 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     }
   };
 
+  public validateCellData = async ({ col, row }: DxGridPlanePosition, value: any): Promise<ValidationResult> => {
+    const rowIdx = this._sorting.getDataIndex(row);
+    const fields = this._view?.fields ?? [];
+    if (col < 0 || col >= fields.length) {
+      return { valid: false, error: 'Invalid column index' };
+    }
+
+    const field = fields[col];
+    const { props } = this._projection.getFieldProjection(field.id);
+
+    const currentRow = this._rows.value[rowIdx];
+    invariant(currentRow, 'Invalid row index');
+
+    // Get a snapshot of the current object.
+    const snapshot = getSnapshot(currentRow);
+    const transformedValue = editorTextToCellValue(props, value);
+
+    // Set the proposed value.
+    setValue(snapshot, field.path, transformedValue);
+
+    const schema = getSchema(currentRow);
+    invariant(schema);
+
+    const validationResult = validateSchema(schema, snapshot);
+    if (validationResult && validationResult.length > 0) {
+      const error = validationResult[0];
+      invariant(error.path === field.path);
+      return { valid: false, error: error.message };
+    }
+
+    return { valid: true };
+  };
+
   public setCellData = ({ col, row }: DxGridPlanePosition, value: any): void => {
     const rowIdx = this._sorting.getDataIndex(row);
     const fields = this._view?.fields ?? [];
@@ -339,45 +383,16 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
     const field = fields[col];
     const { props } = this._projection.getFieldProjection(field.id);
-    switch (props.format) {
-      case FormatEnum.Ref: {
-        // TODO(ZaymonFC): This get's called an additional time by the cell editor onBlur, but with the cell editors
-        //   plain string value. Maybe onBlur should be called with the actual value?
-        if (isLiveObject(value)) {
-          setValue(this._rows.value[rowIdx], field.path, makeRef(value));
-        }
-        break;
-      }
+    const transformedValue = editorTextToCellValue(props, value);
 
-      case FormatEnum.SingleSelect: {
-        const ids = extractTagIds(value);
-        if (ids && ids.length > 0) {
-          setValue(this._rows.value[rowIdx], field.path, ids[0]);
-        }
-        break;
-      }
-
-      case FormatEnum.MultiSelect: {
-        const ids = extractTagIds(value);
-        if (ids) {
-          setValue(this._rows.value[rowIdx], field.path, ids);
-        }
-        break;
-      }
-
-      default: {
-        setValue(
-          this._rows.value[rowIdx],
-          field.path,
-          parseValue({
-            type: props.type,
-            format: props.format,
-            value,
-          }),
-        );
-        break;
-      }
+    // Special handling for Ref format to preserve existing behavior
+    if (props.format === FormatEnum.Ref && !isLiveObject(value)) {
+      // TODO(ZaymonFC): This get's called an additional time by the cell editor onBlur, but with the cell editors
+      //   plain string value. Maybe onBlur should be called with the actual value?
+      return;
     }
+
+    setValue(this._rows.value[rowIdx], field.path, transformedValue);
   };
 
   /**
@@ -446,3 +461,37 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._sorting.save();
   }
 }
+
+const editorTextToCellValue = (props: PropertyType, value: any): any => {
+  switch (props.format) {
+    case FormatEnum.Ref: {
+      if (isLiveObject(value)) {
+        return makeRef(value);
+      } else {
+        return value;
+      }
+    }
+
+    case FormatEnum.SingleSelect: {
+      const ids = extractTagIds(value);
+      if (ids && ids.length > 0) {
+        return ids[0];
+      } else {
+        return value;
+      }
+    }
+
+    case FormatEnum.MultiSelect: {
+      const ids = extractTagIds(value);
+      return ids || value;
+    }
+
+    default: {
+      return parseValue({
+        type: props.type,
+        format: props.format,
+        value,
+      });
+    }
+  }
+};

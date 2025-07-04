@@ -6,7 +6,10 @@ import { Schema } from 'effect';
 
 import { TypedObject } from '@dxos/echo-schema';
 
-export class FileType extends TypedObject({ typename: 'dxos.org/type/File', version: '0.1.0' })({
+export class FileType extends TypedObject({
+  typename: 'dxos.org/type/File',
+  version: '0.1.0',
+})({
   name: Schema.optional(Schema.String),
   type: Schema.String,
   cid: Schema.String,

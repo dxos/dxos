@@ -39,7 +39,6 @@ export class WorkflowLoader {
 
   public async load(graphDxn: DXN): Promise<Workflow> {
     const graph = new ComputeGraphModel(await this._graphLoader(graphDxn));
-
     this._validateWorkflowInOut(graph);
 
     const { resolver, resolvedNodes } = this._createComputeResolver();
@@ -142,7 +141,7 @@ export class WorkflowLoader {
     return result;
   }
 
-  private _validateWorkflowInOut(graph: ComputeGraphModel) {
+  private _validateWorkflowInOut(graph: ComputeGraphModel): void {
     const inputNodes = graph.nodes.filter((node) => node.type === NODE_INPUT);
     invariant(inputNodes.length > 0, 'Workflow must have at least one input node.');
     const outputNodes = graph.nodes.filter((node) => node.type === NODE_OUTPUT);

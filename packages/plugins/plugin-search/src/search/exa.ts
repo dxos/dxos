@@ -6,15 +6,16 @@ import { Option, Schema, SchemaAST } from 'effect';
 import Exa from 'exa-js';
 
 import {
-  defineTool,
-  type AIServiceClient,
+  type AiServiceClient,
   type GenerateRequest,
   Message,
   MixedStreamParser,
   type TextContentBlock,
+  createTool,
 } from '@dxos/ai';
+import { Key, Obj, Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import { create, getTypeAnnotation, ObjectId, ReferenceAnnotationId } from '@dxos/echo-schema';
+import { ReferenceAnnotationId } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -28,7 +29,7 @@ export type SearchOptions<Schema extends Schema.Schema.AnyNoContext> = {
 
   schema: Schema[];
 
-  aiService: AIServiceClient;
+  AiService: AiServiceClient;
   exaApiKey: string;
 
   liveCrawl?: boolean;
@@ -49,7 +50,7 @@ export const search = async <Schema extends Schema.Schema.AnyNoContext>(
 
   let contextSearchTerms: readonly string[] = [];
   if (options.context) {
-    contextSearchTerms = await getSearchTerms(options.aiService, options.context);
+    contextSearchTerms = await getSearchTerms(options.AiService, options.context);
     log.info('context search terms', { additionalSearchTerms: contextSearchTerms });
   }
 
@@ -80,11 +81,11 @@ export const search = async <Schema extends Schema.Schema.AnyNoContext>(
     systemPrompt += `\n<search_context>${options.context}</search_context>`;
   }
 
-  const result = await getStructuredOutput(options.aiService, {
+  const result = await getStructuredOutput(options.AiService, {
     model: '@anthropic/claude-3-5-haiku-20241022',
     systemPrompt,
     history: [
-      create(Message, {
+      Obj.make(Message, {
         role: 'user',
 
         content: context.results.map(
@@ -101,7 +102,7 @@ export const search = async <Schema extends Schema.Schema.AnyNoContext>(
         mappedSchema.map((schema, index) => [
           `objects_${index}`,
           Schema.Array(schema).annotations({
-            description: `The objects to answer the query of type ${getTypeAnnotation(schema)?.typename ?? SchemaAST.getIdentifierAnnotation(schema.ast).pipe(Option.getOrNull)}`,
+            description: `The objects to answer the query of type ${Type.getTypename(schema) ?? SchemaAST.getIdentifierAnnotation(schema.ast).pipe(Option.getOrNull)}`,
           }),
         ]),
       ),
@@ -156,17 +157,17 @@ const DATA_EXTRACTION_INSTRUCTIONS = `
  * Runs the LLM to produce a structured output matching a schema
  */
 const getStructuredOutput = async <S extends Schema.Schema.AnyNoContext>(
-  aiService: AIServiceClient,
+  AiService: AiServiceClient,
   request: Omit<GenerateRequest, 'tools'> & { schema: S },
 ): Promise<Schema.Schema.Type<S>> => {
   const result = await new MixedStreamParser().parse(
-    await aiService.execStream({
+    await AiService.execStream({
       ...request,
       systemPrompt:
         request.systemPrompt +
         '\nDo not output anything other then the tool call. Call the submit_result tool with the result.',
       tools: [
-        defineTool('submit_result', {
+        createTool('submit_result', {
           name: 'submit_result',
           description: 'Submit the result',
           schema: request.schema,
@@ -178,8 +179,8 @@ const getStructuredOutput = async <S extends Schema.Schema.AnyNoContext>(
   return result[0].content.find((c) => c.type === 'tool_use')?.input as any;
 };
 
-const getSearchTerms = async (aiService: AIServiceClient, context: string) => {
-  const { terms } = await getStructuredOutput(aiService, {
+const getSearchTerms = async (AiService: AiServiceClient, context: string) => {
+  const { terms } = await getStructuredOutput(AiService, {
     model: '@anthropic/claude-3-5-haiku-20241022',
     systemPrompt: `
       You are a search term extraction agent.
@@ -188,7 +189,7 @@ const getSearchTerms = async (aiService: AIServiceClient, context: string) => {
       Prefer own names of people, companies, and projects, technologies, and other entities.
     `,
     history: [
-      create(Message, {
+      Obj.make(Message, {
         role: 'user',
         content: [
           {
@@ -213,7 +214,7 @@ const sanitizeObjects = (entries: { data: any; schema: Schema.Schema.AnyNoContex
 
   return entries
     .map((entry) => {
-      idMap.set(entry.data.id, ObjectId.random());
+      idMap.set(entry.data.id, Key.ObjectId.random());
       entry.data.id = idMap.get(entry.data.id);
       return entry;
     })
@@ -233,7 +234,7 @@ const sanitizeObjects = (entries: { data: any; schema: Schema.Schema.AnyNoContex
         return recurse(value);
       });
 
-      return create(entry.schema, data);
+      return Obj.make(entry.schema, data);
     });
 };
 
@@ -243,7 +244,8 @@ const SoftRef = Schema.Struct({
   description: 'Reference to another object.',
 });
 
-const mapSchemaRefs = (schema: Schema.Schema.AnyNoContext) => {
+// TODO(burdon): Move to @dxos/echo.
+const mapSchemaRefs = (schema: Schema.Schema.AnyNoContext): Schema.Schema.AnyNoContext => {
   const go = (ast: SchemaAST.AST): SchemaAST.AST => {
     if (SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome)) {
       return SoftRef.ast;

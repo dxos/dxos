@@ -4,9 +4,9 @@
 
 import { type Schema } from 'effect';
 
+import { Obj, Ref } from '@dxos/echo';
 import { getTypename, toJsonSchema } from '@dxos/echo-schema';
 import type { JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
-import { live, makeRef } from '@dxos/live-object';
 import {
   createView,
   getSchemaFromPropertyDefinitions,
@@ -69,7 +69,7 @@ export const makeDynamicTable = ({
     ...(properties && { fields: properties.map((property) => property.name) }),
   });
 
-  const table = live(TableType, { name: 'dynamic-table', view: makeRef(view) });
+  const table = Obj.make(TableType, { name: 'dynamic-table', view: Ref.make(view) });
   const projection = new ViewProjection(jsonSchema, view);
   if (properties && view.fields) {
     setProperties(view, projection, properties);

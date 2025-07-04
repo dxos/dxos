@@ -47,6 +47,9 @@
       "path": "../ai"
     },
     {
+      "path": "../echo/echo"
+    },
+    {
       "path": "../echo/echo-db"
     },
     {

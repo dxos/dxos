@@ -53,7 +53,7 @@ const CONTEXT_FLAG_LEAK_DETECTED: ContextFlags = 1 << 1;
  */
 @safeInstanceof('Context')
 export class Context {
-  static default() {
+  static default(): Context {
     return new Context();
   }
 
@@ -258,7 +258,7 @@ export class Context {
   [Symbol.toStringTag] = 'Context';
   [inspect.custom] = () => this.toString();
 
-  toString() {
+  toString(): string {
     return `Context(${this.#isDisposed ? 'disposed' : 'active'})`;
   }
 

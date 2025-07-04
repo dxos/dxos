@@ -13,17 +13,21 @@ export const ThreadStatus = Schema.Union(
   Schema.Literal('resolved'),
 );
 
-export const ThreadType = Schema.Struct({
+const _ThreadType = Schema.Struct({
   name: Schema.optional(Schema.String),
   status: Schema.optional(ThreadStatus),
   messages: Schema.mutable(Schema.Array(Type.Ref(DataType.Message))),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/Thread', version: '0.1.0' }));
-export type ThreadType = Schema.Schema.Type<typeof ThreadType>;
+export interface ThreadType extends Schema.Schema.Type<typeof _ThreadType> {}
+export const ThreadType: Type.obj<Schema.Schema<ThreadType, Schema.Schema.Encoded<typeof _ThreadType>, never>> =
+  _ThreadType;
 
-export const ChannelType = Schema.Struct({
+const _ChannelType = Schema.Struct({
   name: Schema.optional(Schema.String),
   defaultThread: Type.Ref(ThreadType),
   // TODO(wittjosiah): Should be an "ordered collection".
   threads: Schema.mutable(Schema.Array(Type.Ref(ThreadType))),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/Channel', version: '0.1.0' }));
-export type ChannelType = Schema.Schema.Type<typeof ChannelType>;
+export interface ChannelType extends Schema.Schema.Type<typeof _ChannelType> {}
+export const ChannelType: Type.obj<Schema.Schema<ChannelType, Schema.Schema.Encoded<typeof _ChannelType>, never>> =
+  _ChannelType;

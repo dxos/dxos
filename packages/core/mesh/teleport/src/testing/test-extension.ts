@@ -30,7 +30,7 @@ export class TestExtension implements TeleportExtension {
     return this.extensionContext?.remotePeerId;
   }
 
-  async onOpen(context: ExtensionContext) {
+  async onOpen(context: ExtensionContext): Promise<void> {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
     this.extensionContext = context;
     this._rpc = createProtoRpcPeer<{ TestService: TestService }, { TestService: TestService }>({
@@ -64,21 +64,21 @@ export class TestExtension implements TeleportExtension {
     this.open.wake();
   }
 
-  async onClose(err?: Error) {
+  async onClose(err?: Error): Promise<void> {
     log('onClose', { err });
     await this.callbacks.onClose?.();
     this.closed.wake();
     await this._rpc?.close();
   }
 
-  async onAbort(err?: Error) {
+  async onAbort(err?: Error): Promise<void> {
     log('onAbort', { err });
     await this.callbacks.onAbort?.();
     this.aborted.wake();
     await this._rpc?.abort();
   }
 
-  async test(message = 'test') {
+  async test(message = 'test'): Promise<void> {
     await this.open.wait({ timeout: 2000 });
     const res = await asyncTimeout(this._rpc.rpc.TestService.testCall({ data: message }), 1500);
     invariant(res.data === message);
@@ -87,7 +87,7 @@ export class TestExtension implements TeleportExtension {
   /**
    * Force-close the connection.
    */
-  async closeConnection(err?: Error) {
+  async closeConnection(err?: Error): Promise<void> {
     this.extensionContext?.close(err);
   }
 }

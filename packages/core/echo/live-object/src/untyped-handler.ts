@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { defineHiddenProperty, DeletedSymbol, getTypename, TYPENAME_SYMBOL } from '@dxos/echo-schema';
+import { defineHiddenProperty, DeletedId, getTypename, TypeId } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
@@ -46,7 +46,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
     }
 
-    defineHiddenProperty(target, DeletedSymbol, false);
+    defineHiddenProperty(target, DeletedId, false);
 
     for (const key of Object.getOwnPropertyNames(target)) {
       const descriptor = Object.getOwnPropertyDescriptor(target, key)!;
@@ -77,7 +77,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return toJSON(target);
     }
 
-    if (prop === TYPENAME_SYMBOL) {
+    if (prop === TypeId) {
       return undefined;
     }
 
@@ -119,14 +119,6 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const result = Reflect.defineProperty(target, property, attributes);
     target[symbolPropertySignal].notifyWrite();
     return result;
-  }
-
-  getSchema() {
-    return undefined;
-  }
-
-  getTypeReference() {
-    return undefined;
   }
 }
 

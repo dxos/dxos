@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 
 import { AgentStatusReport } from '../status-report';
 
@@ -177,8 +177,8 @@ export const Message = MessageSchema.pipe(
 );
 export type Message = Schema.Schema.Type<typeof Message>;
 
-export const createUserMessage = (spaceId: Type.SpaceId, threadId: Type.ObjectId, text: string): Message => ({
-  id: Type.ObjectId.random(),
-  role: 'user',
-  content: [{ type: 'text', text }],
-});
+export const createUserMessage = (spaceId: Type.SpaceId, threadId: Type.ObjectId, text: string): Message =>
+  Obj.make(Message, {
+    role: 'user',
+    content: [{ type: 'text', text }],
+  });

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/test-utils",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "Test utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -45,7 +45,7 @@
     "pkg-up": "^3.1.0"
   },
   "peerDependencies": {
-    "vitest": "^3.0.8"
+    "vitest": "^3.2.4"
   },
   "publishConfig": {
     "access": "public"

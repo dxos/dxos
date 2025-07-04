@@ -10,6 +10,12 @@ import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { useActions } from '@dxos/plugin-graph';
 import { Button, Dialog, Icon, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
+import {
+  cardDialogContent,
+  cardDialogHeader,
+  cardDialogPaddedOverflow,
+  cardDialogSearchListRoot,
+} from '@dxos/react-ui-stack';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
@@ -56,13 +62,13 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
   const actions = isActionGroup(group) ? groupActions : allActions;
 
   return (
-    <Dialog.Content classNames={['md:max-is-[30rem] overflow-hidden mbs-12']}>
-      <Dialog.Title>{t('commands dialog title', { ns: NAVTREE_PLUGIN })}</Dialog.Title>
+    <Dialog.Content classNames={cardDialogContent}>
+      <Dialog.Title classNames={cardDialogHeader}>{t('commands dialog title', { ns: NAVTREE_PLUGIN })}</Dialog.Title>
 
       {/* TODO(burdon): BUG: Overscrolls container. */}
-      <SearchList.Root label={t('command list input placeholder')} classNames='flex flex-col grow overflow-hidden my-2'>
-        <SearchList.Input placeholder={t('command list input placeholder')} classNames='px-1 my-2' />
-        <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
+      <SearchList.Root label={t('command list input placeholder')} classNames={cardDialogSearchListRoot}>
+        <SearchList.Input placeholder={t('command list input placeholder')} />
+        <SearchList.Content classNames={cardDialogPaddedOverflow}>
           {actions?.map((action) => {
             const label = toLocalizedString(action.properties.label, t);
             const shortcut =
@@ -102,11 +108,11 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
         </SearchList.Content>
       </SearchList.Root>
 
-      <Dialog.Close asChild>
-        <Button variant='primary' classNames='mbs-2'>
-          {t('close label', { ns: 'os' })}
-        </Button>
-      </Dialog.Close>
+      <div role='none' className='pli-cardSpacingInline pbe-cardSpacingBlock'>
+        <Dialog.Close asChild>
+          <Button classNames='is-full'>{t('close label', { ns: 'os' })}</Button>
+        </Dialog.Close>
+      </div>
     </Dialog.Content>
   );
 };

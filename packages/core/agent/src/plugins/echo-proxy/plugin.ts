@@ -20,7 +20,7 @@ const DEFAULT_OPTIONS: Required<Config> & { '@type': string } = {
 export class EchoProxyPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/echo-proxy';
 
-  override async onOpen() {
+  override async onOpen(): Promise<void> {
     this.config.config = { ...DEFAULT_OPTIONS, ...this.config.config };
     log('starting proxy...', { ports: this.config.config.port });
     await this.context.client.initialize();

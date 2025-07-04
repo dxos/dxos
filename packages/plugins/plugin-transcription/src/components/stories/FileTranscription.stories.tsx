@@ -4,17 +4,18 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { EdgeAiServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { Obj } from '@dxos/echo';
 import { MemoryQueue } from '@dxos/echo-db';
-import { create, createQueueDxn } from '@dxos/echo-schema';
+import { createQueueDXN } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -80,13 +81,14 @@ const AudioFile = ({
   }, [audio, running]);
 
   // Transcriber.
-  const queueDxn = useMemo(() => createQueueDxn(), []);
+  // TODO(dmaretskyi): Use space.queues.create() instead.
+  const queueDxn = useMemo(() => createQueueDXN(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
 
   const model = useQueueModelAdapter(renderMarkdown([]), queue);
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
-      const message = create(DataType.Message, { sender: actor, created: new Date().toISOString(), blocks });
+      const message = Obj.make(DataType.Message, { sender: actor, created: new Date().toISOString(), blocks });
       void queue?.append([message]);
     },
     [queue],
@@ -107,7 +109,7 @@ const AudioFile = ({
     const executor = new FunctionExecutor(
       new ServiceContainer().setServices({
         ai: {
-          client: new AIServiceEdgeClient({
+          client: new EdgeAiServiceClient({
             endpoint: AI_SERVICE_ENDPOINT.REMOTE,
             defaultGenerationOptions: {
               model: '@anthropic/claude-3-5-sonnet-20241022',

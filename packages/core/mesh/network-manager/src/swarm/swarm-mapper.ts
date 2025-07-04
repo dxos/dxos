@@ -67,7 +67,7 @@ export class SwarmMapper {
     this._update();
   }
 
-  private _update() {
+  private _update(): void {
     log('updating swarm');
 
     this._peers.clear();
@@ -118,7 +118,7 @@ export class SwarmMapper {
   }
 
   // TODO(burdon): Async open/close.
-  destroy() {
+  destroy(): void {
     Array.from(this._connectionSubscriptions.values()).forEach((cb) => cb());
     this._connectionSubscriptions.clear();
     this._subscriptions.clear();

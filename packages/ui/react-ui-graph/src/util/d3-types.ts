@@ -20,4 +20,7 @@ export type D3Selection<
 > = Selection<GElement, Datum, PElement, PDatum>;
 
 // d3.select<E, T>().call(callable: D3Callable<E, T>)
-export type D3Callable = (selection: D3Selection, ...args: any[]) => void;
+export type D3Callable<GElement extends BaseType = any, Datum = any, PElement extends BaseType = any, PDatum = any> = (
+  selection: D3Selection<GElement, Datum, PElement, PDatum>,
+  ...args: any[]
+) => void;

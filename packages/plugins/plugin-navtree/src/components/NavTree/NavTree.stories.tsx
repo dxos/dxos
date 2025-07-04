@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React from 'react';
 
@@ -21,12 +21,14 @@ import {
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { live } from '@dxos/live-object';
 import { AttentionPlugin } from '@dxos/plugin-attention';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
-import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
+import { useAttentionAttributes, useAttention } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
@@ -65,7 +67,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
 };
 
 const StoryPlank = ({ attendableId }: { attendableId: string }) => {
-  const attentionAttrs = useAttendableAttributes(attendableId);
+  const attentionAttrs = useAttentionAttributes(attendableId);
 
   return (
     <StackItem.Root
@@ -76,7 +78,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
     >
       <StoryPlankHeading attendableId={attendableId} />
       <StackItem.Content toolbar>
-        <Toolbar.Root classNames='border-b border-separator'>
+        <Toolbar.Root classNames='border-b border-subduedSeparator'>
           <Toolbar.Button>Test</Toolbar.Button>
         </Toolbar.Root>
 
@@ -131,7 +133,7 @@ const meta: Meta<typeof NavTreeContainer> = {
       ],
       capabilities: (context) => [
         contributes(StoryState, live({ tab: 'space-0' })),
-        contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders),
+        contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders(context)),
         contributes(Capabilities.IntentResolver, [
           createResolver({
             intent: LayoutAction.UpdateLayout,
@@ -157,3 +159,42 @@ export default meta;
 type Story = StoryObj<typeof NavTreeContainer>;
 
 export const Default: Story = {};
+
+// TODO(wittjosiah): Deduplicate plugins/capabilities with default story.
+export const WithClient: Story = {
+  decorators: [
+    withPluginManager({
+      plugins: [
+        ThemePlugin({ tx: defaultTx }),
+        GraphPlugin(),
+        IntentPlugin(),
+        SettingsPlugin(),
+        AttentionPlugin(),
+        NavTreePlugin(),
+        ClientPlugin({
+          onClientInitialized: async (_, client) => {
+            await client.halo.createIdentity();
+          },
+        }),
+        SpacePlugin(),
+        // Needs to be last so that the dialog and popovers have access to all contexts.
+        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
+      ],
+      capabilities: (context) => [
+        contributes(StoryState, live({ tab: 'space-0' })),
+        contributes(Capabilities.IntentResolver, [
+          createResolver({
+            intent: LayoutAction.UpdateLayout,
+            filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
+              Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
+            resolve: ({ subject }) => {
+              const state = context.getCapability(StoryState);
+              state.tab = subject;
+            },
+          }),
+        ]),
+      ],
+    }),
+    withLayout({ fullscreen: true }),
+  ],
+};

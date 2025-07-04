@@ -10,7 +10,7 @@ type CredentialQuery = {
 
 // TODO(dmaretskyi): Unify with other apis.
 // packages/sdk/schema/src/common/access-token.ts
-type ServiceCredential = {
+export type ServiceCredential = {
   service: string;
 
   // TODO(dmaretskyi): Build out.

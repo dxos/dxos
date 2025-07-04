@@ -8,6 +8,7 @@ import { ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
+import { MetaId } from './model';
 import type { BaseObject } from '../types';
 
 //
@@ -25,13 +26,6 @@ export const foreignKey = (source: string, id: string): ForeignKey => ({ source,
 export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
 
 /**
- * Symbol to access meta on an object.
- * Must return {@link ObjectMeta} for this object.
- * Only callable on the object root.
- */
-export const symbolMeta = Symbol.for('@dxos/schema/ObjectMeta');
-
-/**
  * Get metadata from object.
  * Only callable on the object root.
  * @deprecated Use {@link getMeta}.
@@ -46,7 +40,7 @@ export const getObjectMeta = (object: any): ObjectMeta => {
  * Only callable on the object root.
  */
 export const getMeta = (obj: BaseObject): ObjectMeta => {
-  const metadata = (obj as any)[symbolMeta];
+  const metadata = (obj as any)[MetaId];
   invariant(metadata, 'ObjectMeta not found.');
   return metadata;
 };

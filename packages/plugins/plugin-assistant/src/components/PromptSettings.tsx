@@ -48,7 +48,7 @@ export const PromptSettings = ({ template }: { template: TemplateType }) => {
   );
 
   return (
-    <div className='p-2 flex flex-col gap-4'>
+    <div className='flex flex-col gap-4'>
       <h2>{t('prompt rules label')}</h2>
       <Toolbar.Root>
         <Select.Root value={template.kind.include} onValueChange={handleKindChange}>

@@ -37,7 +37,7 @@ export class Directory {
     this._onFlush = onFlush;
   }
 
-  toString() {
+  toString(): string {
     return `Directory(${JSON.stringify({ type: this.type, path: this.path })})`;
   }
 
@@ -68,14 +68,14 @@ export class Directory {
     return this._getOrCreateFile(this.path, filename, opts);
   }
 
-  async flush() {
+  async flush(): Promise<void> {
     await this._onFlush?.();
   }
 
   /**
    * Close and delete all files in the directory and all its sub-directories.
    */
-  async delete() {
+  async delete(): Promise<void> {
     await this._remove();
   }
 }

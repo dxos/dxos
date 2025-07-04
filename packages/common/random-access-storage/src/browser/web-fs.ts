@@ -65,7 +65,7 @@ export class WebFS implements Storage {
   }
 
   @synchronized
-  private async _initialize() {
+  private async _initialize(): Promise<FileSystemDirectoryHandle> {
     if (this._root) {
       return this._root;
     }
@@ -74,7 +74,7 @@ export class WebFS implements Storage {
     return this._root;
   }
 
-  createDirectory(sub = '') {
+  createDirectory(sub = ''): Directory {
     return new Directory({
       type: this.type,
       path: getFullPath(this.path, sub),
@@ -98,7 +98,7 @@ export class WebFS implements Storage {
     return file;
   }
 
-  private _createFile(fullName: string) {
+  private _createFile(fullName: string): WebFile {
     return new WebFile({
       fileName: fullName,
       file: this._initialize().then((root) => root.getFileHandle(fullName, { create: true })),
@@ -119,7 +119,7 @@ export class WebFS implements Storage {
     );
   }
 
-  async reset() {
+  async reset(): Promise<void> {
     await this._initialize();
     for await (const filename of await (this._root as any).keys()) {
       await this._root!.removeEntry(filename, { recursive: true }).catch((err: any) =>
@@ -130,7 +130,7 @@ export class WebFS implements Storage {
     this._root = undefined;
   }
 
-  async close() {
+  async close(): Promise<void> {
     await Promise.all(
       Array.from(this._files.values()).map((file) => {
         return file.close().catch((e) => log.warn('failed to close a file', { file: file.fileName, e }));
@@ -138,7 +138,7 @@ export class WebFS implements Storage {
     );
   }
 
-  private _getFullFilename(path: string, filename?: string) {
+  private _getFullFilename(path: string, filename?: string): string {
     // Replace slashes with underscores. Because we can't have slashes in filenames in Browser File Handle API.
     if (filename) {
       return getFullPath(path, filename).replace(/\//g, '_');
@@ -277,18 +277,18 @@ export class WebFile extends EventEmitter implements File {
     truncate: callbackify(this.truncate?.bind(this)),
   } as any as RandomAccessStorage;
 
-  private async _loadBuffer() {
+  private async _loadBuffer(): Promise<void> {
     const fileHandle = await this._fileHandle;
     const file = await fileHandle.getFile();
     this._buffer = new Uint8Array(await file.arrayBuffer());
   }
 
-  private async _loadBufferGuarded() {
+  private async _loadBufferGuarded(): Promise<void> {
     await (this._loadBufferPromise ??= this._loadBuffer());
   }
 
   // Do not call directly, use _flushLater or _flushNow.
-  private async _flushCache(sequence: number) {
+  private async _flushCache(sequence: number): Promise<void> {
     if (this.destroyed || sequence < this._flushSequence) {
       return;
     }
@@ -305,7 +305,7 @@ export class WebFile extends EventEmitter implements File {
     await writable.close();
   }
 
-  private _flushLater() {
+  private _flushLater(): void {
     if (this._flushScheduled) {
       return;
     }
@@ -321,13 +321,13 @@ export class WebFile extends EventEmitter implements File {
     this._flushScheduled = true;
   }
 
-  private async _flushNow() {
+  private async _flushNow(): Promise<void> {
     await this._flushPromise;
     this._flushPromise = this._flushCache(this._flushSequence).catch((err) => log.warn(err));
     await this._flushPromise;
   }
 
-  async read(offset: number, size: number) {
+  async read(offset: number, size: number): Promise<Buffer> {
     this.assertNotDestroyed('Read');
 
     this._operations.inc();
@@ -347,7 +347,7 @@ export class WebFile extends EventEmitter implements File {
     return Buffer.from(this._buffer.slice(offset, offset + size));
   }
 
-  async write(offset: number, data: Buffer) {
+  async write(offset: number, data: Buffer): Promise<void> {
     this.assertNotDestroyed('Write');
 
     this._operations.inc();
@@ -372,7 +372,7 @@ export class WebFile extends EventEmitter implements File {
     this._flushLater();
   }
 
-  async del(offset: number, size: number) {
+  async del(offset: number, size: number): Promise<void> {
     this.assertNotDestroyed('Del');
 
     this._operations.inc();
@@ -397,7 +397,7 @@ export class WebFile extends EventEmitter implements File {
     this._flushLater();
   }
 
-  async stat() {
+  async stat(): Promise<{ size: number }> {
     this.assertNotDestroyed('Truncate');
 
     this._operations.inc();
@@ -413,7 +413,7 @@ export class WebFile extends EventEmitter implements File {
     };
   }
 
-  async truncate(offset: number) {
+  async truncate(offset: number): Promise<void> {
     this.assertNotDestroyed('Truncate');
 
     this._operations.inc();
@@ -428,7 +428,7 @@ export class WebFile extends EventEmitter implements File {
     this._flushLater();
   }
 
-  async flush() {
+  async flush(): Promise<void> {
     this.assertNotDestroyed('Flush');
 
     await this._flushNow();
@@ -445,7 +445,7 @@ export class WebFile extends EventEmitter implements File {
   }
 
   @synchronized
-  async destroy() {
+  async destroy(): Promise<void> {
     if (!this.destroyed) {
       // We need to flush the buffer before destroying a file so that the call to a storage API
       // finds an entry for deletion
@@ -455,7 +455,7 @@ export class WebFile extends EventEmitter implements File {
     }
   }
 
-  private assertNotDestroyed(operation: string) {
+  private assertNotDestroyed(operation: string): void {
     if (this.destroyed) {
       throw new Error(`${operation} on a destroyed or closed file`);
     }

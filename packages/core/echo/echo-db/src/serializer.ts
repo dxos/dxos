@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Filter } from '@dxos/echo';
 import { decodeReference, type EncodedReference, encodeReference, Reference } from '@dxos/echo-protocol';
-import { Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues, isNonNullable, stripUndefined } from '@dxos/util';
 
@@ -52,7 +52,7 @@ export class Serializer {
     return data;
   }
 
-  async import(database: EchoDatabase, data: SerializedSpace, opts?: ImportOptions) {
+  async import(database: EchoDatabase, data: SerializedSpace, opts?: ImportOptions): Promise<void> {
     invariant(data.version === Serializer.version, `Invalid version: ${data.version}`);
 
     const { objects } = data;
@@ -85,7 +85,7 @@ export class Serializer {
     });
   }
 
-  private _importObject(database: EchoDatabase, object: SerializedObject) {
+  private _importObject(database: EchoDatabase, object: SerializedObject): void {
     const { '@id': id, '@type': type, '@deleted': deleted, '@meta': meta, ...data } = object;
     const dataProperties = Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')));
     const decodedData = deepMapValues(dataProperties, (value, recurse) => {

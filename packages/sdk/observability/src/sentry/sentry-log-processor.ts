@@ -72,7 +72,7 @@ export class SentryLogProcessor {
     });
   };
 
-  public addLogBreadcrumbsTo(event: Event) {
+  public addLogBreadcrumbsTo(event: Event): void {
     event.breadcrumbs ??= [];
     for (const breadcrumb of this._breadcrumbs) {
       event.breadcrumbs.push(breadcrumb);

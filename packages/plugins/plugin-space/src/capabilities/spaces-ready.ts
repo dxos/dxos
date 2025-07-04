@@ -4,18 +4,17 @@
 
 import { Option } from 'effect';
 
-import { contributes, createIntent, type PluginContext, Capabilities, LayoutAction } from '@dxos/app-framework';
+import { contributes, createIntent, Capabilities, LayoutAction, type PluginContext } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
-import { Expando } from '@dxos/echo-schema';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { scheduledEffect } from '@dxos/echo-signals/core';
-import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
-import { Filter, FQ_ID_LENGTH, parseFullyQualifiedId, SpaceState } from '@dxos/react-client/echo';
+import { FQ_ID_LENGTH, parseFullyQualifiedId, SpaceState } from '@dxos/react-client/echo';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
 import { SpaceCapabilities } from './capabilities';
@@ -32,7 +31,7 @@ export default async (context: PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const { graph } = context.getCapability(Capabilities.AppGraph);
   const layout = context.getCapability(Capabilities.Layout);
-  const deck = context.getCapability(DeckCapabilities.DeckState);
+  const deck = context.getCapabilities(DeckCapabilities.DeckState)[0];
   const attention = context.getCapability(AttentionCapabilities.Attention);
   const state = context.getCapability(SpaceCapabilities.MutableState);
   const client = context.getCapability(ClientCapabilities.Client);
@@ -40,7 +39,7 @@ export default async (context: PluginContext) => {
   const defaultSpace = client.spaces.default;
   await defaultSpace.waitUntilReady();
 
-  if (deck.activeDeck === 'default') {
+  if (deck?.activeDeck === 'default') {
     await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: defaultSpace.id }));
   }
 
@@ -51,11 +50,11 @@ export default async (context: PluginContext) => {
 
   const {
     objects: [spacesOrder],
-  } = await defaultSpace.db.query(Filter.type(Expando, { key: SHARED })).run();
+  } = await defaultSpace.db.query(Filter.type(Type.Expando, { key: SHARED })).run();
   if (!spacesOrder) {
     // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
     //  Instead, we store order as an array of space ids.
-    defaultSpace.db.add(live({ key: SHARED, order: [] }));
+    defaultSpace.db.add(Obj.make(Type.Expando, { key: SHARED, order: [] }));
   }
 
   // Await missing objects.

@@ -4,7 +4,7 @@
 
 import { describe, test, beforeAll } from 'vitest';
 
-import { AIServiceEdgeClient } from '@dxos/ai';
+import { EdgeAiServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -21,7 +21,7 @@ describe.skip('LLM EntityExtraction', () => {
     executor = new FunctionExecutor(
       new ServiceContainer().setServices({
         ai: {
-          client: new AIServiceEdgeClient({
+          client: new EdgeAiServiceClient({
             endpoint: AI_SERVICE_ENDPOINT.REMOTE,
             defaultGenerationOptions: {
               // model: '@anthropic/claude-sonnet-4-20250514',

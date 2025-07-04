@@ -24,20 +24,20 @@ export class Timeframe implements Equatable {
     }
   }
 
-  toJSON() {
+  toJSON(): Record<string, number> {
     return this.frames().reduce((frames: Record<string, number>, [key, seq]) => {
       frames[key.truncate()] = seq;
       return frames;
     }, {});
   }
 
-  toString() {
+  toString(): string {
     return `(${this.frames()
       .map(([key, seq]) => `${key.truncate()}[${seq}]`)
       .join(', ')})`;
   }
 
-  equals(object: Timeframe) {
+  equals(object: Timeframe): boolean {
     return this.size() === object.size() && this.frames().every(([key, seq]) => object.get(key) === seq);
   }
 
@@ -47,7 +47,7 @@ export class Timeframe implements Equatable {
   }
 
   // TODO(burdon): Rename setFrame.
-  set(key: PublicKey, seq: number) {
+  set(key: PublicKey, seq: number): void {
     const hex = key.toHex();
     this._frames.set(hex, { key, seq });
   }
@@ -58,12 +58,12 @@ export class Timeframe implements Equatable {
   }
 
   // TODO(burdon): Change to getter.
-  size() {
+  size(): number {
     return this._frames.size;
   }
 
   // TODO(burdon): Change to getter (empty).
-  isEmpty() {
+  isEmpty(): boolean {
     return this.size() === 0;
   }
 
@@ -89,7 +89,7 @@ export class Timeframe implements Equatable {
   /**
    * Returns a total amount of messages that are present in this timeframe but are missing in `base`.
    */
-  newMessages(base: Timeframe) {
+  newMessages(base: Timeframe): number {
     return Array.from(this._frames.entries()).reduce(
       (result, [hex, { seq }]) => result + Math.max(seq - (base._frames.get(hex)?.seq ?? -1), 0),
       0,
@@ -99,11 +99,11 @@ export class Timeframe implements Equatable {
   /**
    * Used by NodeJS to get textual representation of this object in `console.log`.
    */
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return `Timeframe${this.toString()}`;
   }
 
-  [equalsSymbol](other: any) {
+  [equalsSymbol](other: any): boolean {
     if (!(other instanceof Timeframe)) {
       return false;
     }

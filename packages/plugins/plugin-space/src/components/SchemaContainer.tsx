@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { type EchoSchema } from '@dxos/echo-schema';
+import { type Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { controlItemClasses, ControlPage, ControlSection } from '@dxos/react-ui-form';
@@ -21,8 +21,8 @@ type SchemaPanelProps = { space: Space };
 /**
  * Subscribe to and retrieve all schemas from a space's schema registry.
  */
-export const useQuerySpaceSchemas = (space: Space): EchoSchema[] => {
-  const [schemas, setSchemas] = useState<EchoSchema[]>([]);
+export const useQuerySpaceSchemas = (space: Space): Type.Schema[] => {
+  const [schemas, setSchemas] = useState<Type.Schema[]>([]);
 
   useEffect(() => {
     const query = space.db.schemaRegistry.query();

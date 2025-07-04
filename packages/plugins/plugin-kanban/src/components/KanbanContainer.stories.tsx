@@ -3,13 +3,12 @@
 //
 
 import '@dxos-theme';
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Type } from '@dxos/echo';
-import { assertEchoSchema } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -19,7 +18,7 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { Filter, useSpaces, useQuery, useSchema, live } from '@dxos/react-client/echo';
+import { Filter, useSpaces, useQuery, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban, KanbanType, useKanbanModel } from '@dxos/react-ui-kanban';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -83,7 +82,7 @@ const StorybookKanban = () => {
     (columnValue: string | undefined) => {
       const path = model?.columnFieldPath;
       if (space && schema && path) {
-        const card = live(schema, {
+        const card = Obj.make(schema, {
           ...rollOrg(),
           [path]: columnValue,
         });
@@ -100,8 +99,10 @@ const StorybookKanban = () => {
   const handleTypenameChanged = useCallback(
     (typename: string) => {
       invariant(schema);
+      invariant(Type.isMutable(schema));
       invariant(kanban?.cardView?.target);
-      assertEchoSchema(schema).updateTypename(typename);
+
+      schema.updateTypename(typename);
       kanban.cardView.target.query.typename = typename;
     },
     [kanban?.cardView?.target, schema],
@@ -169,7 +170,7 @@ const meta: Meta<StoryProps> = {
             if (schema) {
               // TODO(burdon): Replace with sdk/schema/testing.
               Array.from({ length: 80 }).map(() => {
-                return space.db.add(live(schema, rollOrg()));
+                return space.db.add(Obj.make(schema, rollOrg()));
               });
             }
           },

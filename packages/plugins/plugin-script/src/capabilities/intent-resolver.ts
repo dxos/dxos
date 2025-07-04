@@ -6,8 +6,8 @@ import { Octokit } from '@octokit/core';
 import { Predicate } from 'effect';
 
 import { contributes, Capabilities, createResolver, createIntent, LayoutAction } from '@dxos/app-framework';
+import { Obj, Ref } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
-import { live, makeRef } from '@dxos/live-object';
 import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
 import { DataType } from '@dxos/schema';
 
@@ -47,9 +47,9 @@ export default () =>
 
         return {
           data: {
-            object: live(ScriptType, {
+            object: Obj.make(ScriptType, {
               name,
-              source: makeRef(live(DataType.Text, { content })),
+              source: Ref.make(Obj.make(DataType.Text, { content })),
             }),
           },
         };

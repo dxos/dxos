@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 import { defineObjectMigration } from '@dxos/echo-db';
-import { Expando, GeneratorAnnotation, ObjectId, Ref, TypedObject } from '@dxos/echo-schema';
+import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo-schema';
 
 import { Actor } from './actor';
 
@@ -84,7 +84,7 @@ export const ReferenceContentBlock = Schema.extend(
   AbstractContentBlock,
   Schema.Struct({
     type: Schema.Literal('reference'),
-    reference: Ref(Expando),
+    reference: Type.Ref(Type.Expando),
   }),
 ).pipe(Schema.mutable);
 

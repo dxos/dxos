@@ -25,12 +25,12 @@ export class TLDrawStoreAdapter extends AbstractAutomergeStoreAdapter<TLRecord> 
     return this._store;
   }
 
-  override getElements() {
+  override getElements(): TLRecord[] {
     invariant(this._store);
     return this._store.allRecords();
   }
 
-  protected override onUpdate({ added = [], updated = [], deleted = [] }: Batch<TLRecord>) {
+  protected override onUpdate({ added = [], updated = [], deleted = [] }: Batch<TLRecord>): void {
     // Replace the store records with the automerge doc records.
     transact(() => {
       invariant(this._store);
@@ -40,7 +40,7 @@ export class TLDrawStoreAdapter extends AbstractAutomergeStoreAdapter<TLRecord> 
     });
   }
 
-  protected override onOpen(ctx: Context) {
+  protected override onOpen(ctx: Context): void {
     this._store = createTLStore({ shapeUtils: defaultShapeUtils });
 
     // List for changes to the store.
@@ -61,11 +61,11 @@ export class TLDrawStoreAdapter extends AbstractAutomergeStoreAdapter<TLRecord> 
     ctx.onDispose(() => subscription());
   }
 
-  protected override onClose() {
+  protected override onClose(): void {
     this._store = undefined;
   }
 
-  save() {
+  save(): void {
     this.updateDatabase(this._modified.batch());
     this._modified.clear();
   }

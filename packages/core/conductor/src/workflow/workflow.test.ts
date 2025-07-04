@@ -2,28 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FetchHttpClient } from '@effect/platform';
-import { type Context, Effect, Layer, type Scope } from 'effect';
+import { type Context, Effect, type Layer, type Scope } from 'effect';
 import { describe, test, expect } from 'vitest';
 
+import { MockAiServiceClient } from '@dxos/ai/testing';
+import { todo } from '@dxos/debug';
+import { Obj } from '@dxos/echo';
 import { ObjectId, type Ref, type RefResolver, setRefResolver } from '@dxos/echo-schema';
-import { FunctionType, setUserFunctionUrlInMetadata } from '@dxos/functions';
+import { AiService, FunctionType, ServiceContainer, setUserFunctionUrlInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { live, getMeta, refFromDXN } from '@dxos/live-object';
+import { getMeta, refFromDXN } from '@dxos/live-object';
 import { LogLevel } from '@dxos/log';
 
 import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import {
-  createDxosEventLogger,
-  EventLogger,
-  FunctionCallService,
-  QueueService,
-  SpaceService,
-  GptService,
-  MockGpt,
-} from '../services';
+import { createEventLogger, type FunctionCallService } from '../services';
 import {
   AnyInput,
   AnyOutput,
@@ -33,9 +27,8 @@ import {
   type ComputeNode,
   type ComputeRequirements,
   type Executable,
-  makeValueBag,
+  ValueBag,
   synchronizedComputeFunction,
-  unwrapValueBag,
 } from '../types';
 
 describe('workflow', () => {
@@ -146,7 +139,7 @@ describe('workflow', () => {
     const createFunction = () => {
       const functionDxn = DXN.fromLocalObjectId(ObjectId.random());
       const functionRef = refFromDXN(functionDxn);
-      const fnObject = live(FunctionType, { name: 'foo', version: '0.0.1' });
+      const fnObject = Obj.make(FunctionType, { name: 'foo', version: '0.0.1' });
       let resolveCounter = 0;
       const refResolver: RefResolver = {
         resolve: async (dxn) => refResolver.resolveSync(dxn, true),
@@ -154,6 +147,7 @@ describe('workflow', () => {
           resolveCounter++;
           return fnObject;
         },
+        resolveSchema: () => todo(),
       };
       setRefResolver(functionRef, refResolver);
       return { fnObject, functionRef, resolveCount: () => resolveCounter };
@@ -164,14 +158,14 @@ describe('workflow', () => {
     return Effect.runPromise(
       effect.pipe(
         Effect.withSpan('runTestWorkflow'),
-        Effect.flatMap(unwrapValueBag),
+        Effect.flatMap(ValueBag.unwrap),
         Effect.provide(services),
         Effect.scoped,
       ),
     ).then((r) => r.result);
   };
 
-  const makeInput = (input: any) => makeValueBag({ input });
+  const makeInput = (input: any) => ValueBag.make({ input });
 
   const createSimpleTransformGraph = (transform: Transform): TestWorkflowGraph => {
     return createGraphFromTransformMap('I', { I: transform });
@@ -194,7 +188,7 @@ describe('workflow', () => {
         { inputId, withOutput: inputId === outputPath },
       );
     }
-    const graph = live(ComputeGraph, { graph: model.graph });
+    const graph = Obj.make(ComputeGraph, { graph: model.graph });
     return { graphDxn, graph, compute };
   };
 
@@ -203,7 +197,7 @@ describe('workflow', () => {
     const model = ComputeGraphModel.create({ id: graphDxn.toString() });
     const transformId = ObjectId.random();
     addTransform(model, { id: transformId, type: subgraphDxn.toString(), subgraph: refFromDXN(subgraphDxn) });
-    const graph = live(ComputeGraph, { graph: model.graph });
+    const graph = Obj.make(ComputeGraph, { graph: model.graph });
     return { graphDxn, graph, compute: [] };
   };
 
@@ -212,7 +206,7 @@ describe('workflow', () => {
     const model = ComputeGraphModel.create({ id: graphDxn.toString() });
     const transformId = ObjectId.random();
     addTransform(model, { id: transformId, type: 'function', function: functionRef ?? undefined });
-    const graph = live(ComputeGraph, { graph: model.graph });
+    const graph = Obj.make(ComputeGraph, { graph: model.graph });
     return { graphDxn, graph, compute: [] };
   };
 
@@ -254,12 +248,13 @@ describe('workflow', () => {
 const createTestExecutionContext = (mocks?: {
   functions?: Context.Tag.Service<FunctionCallService>;
 }): TestEffectLayers => {
-  const logLayer = Layer.succeed(EventLogger, createDxosEventLogger(LogLevel.INFO));
-  const gptLayer = Layer.succeed(GptService, new MockGpt());
-  const spaceService = SpaceService.empty;
-  const queueService = QueueService.notAvailable;
-  const functionCallService = Layer.succeed(FunctionCallService, mocks?.functions ?? FunctionCallService.mock());
-  return Layer.mergeAll(logLayer, gptLayer, spaceService, queueService, FetchHttpClient.layer, functionCallService);
+  return new ServiceContainer()
+    .setServices({
+      eventLogger: createEventLogger(LogLevel.INFO),
+      functionCallService: mocks?.functions,
+      ai: AiService.make(new MockAiServiceClient()),
+    })
+    .createLayer();
 };
 
 type TestEffectLayers = Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>>;

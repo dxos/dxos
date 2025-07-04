@@ -3,7 +3,13 @@
 //
 
 import { useFocusableGroup } from '@fluentui/react-tabster';
-import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, forwardRef } from 'react';
+import { Slot } from '@radix-ui/react-slot';
+import React, {
+  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
+  forwardRef,
+  type PropsWithChildren,
+} from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { useAttention, type AttendableId, type Related } from '@dxos/react-ui-attention';
@@ -11,24 +17,47 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { useStack } from '../StackContext';
 
-export type StackItemHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+export type StackItemHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
+  asChild?: boolean;
+  separateOnScroll?: boolean;
+};
 
-export const StackItemHeading = ({ children, classNames, ...props }: StackItemHeadingProps) => {
+export const StackItemHeading = ({
+  children,
+  classNames,
+  asChild,
+  separateOnScroll,
+  ...props
+}: StackItemHeadingProps) => {
   const { orientation } = useStack();
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
 
+  const Root = asChild ? Slot : 'div';
+
   return (
-    <div
+    <Root
       role='heading'
       {...props}
       tabIndex={0}
       {...focusableGroupAttrs}
       className={mx(
         'flex items-center dx-focus-ring-inset-over-all relative !border-is-0 bg-headerSurface',
+        separateOnScroll
+          ? 'border-transparent [[data-scroll-separator="true"]_&]:border-subduedSeparator'
+          : 'border-subduedSeparator',
         orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size] flex-col',
+        orientation === 'horizontal' ? 'border-be' : 'border-ie',
         classNames,
       )}
     >
+      {children}
+    </Root>
+  );
+};
+
+export const StackItemHeadingStickyContent = ({ children }: PropsWithChildren<{}>) => {
+  return (
+    <div role='none' className='sticky block-start-0 bg-[--sticky-bg] p-1 is-full'>
       {children}
     </div>
   );

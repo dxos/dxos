@@ -1,6 +1,6 @@
 {
   "name": "@dxos/schema",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "Common data types and utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -54,6 +54,10 @@
   },
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@types/jsonpath": "^0.2.4",
     "fast-check": "^3.19.0",
     "vite": "5.4.7"

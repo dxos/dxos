@@ -184,17 +184,7 @@
         },
         {
           "type": "json",
-          "path": "packages/common/storybook-utils/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/test-utils/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/common/theme-editor-addon/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -409,6 +399,16 @@
         },
         {
           "type": "json",
+          "path": "packages/devtools/storybook-addon-logger/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/storybook-utils/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/e2e/rpc-tunnel-e2e/package.json",
           "jsonpath": "$.version"
         },
@@ -580,11 +580,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-outliner/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-outliner-deprecated/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -815,11 +810,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-canvas-editor/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-ui-card/package.json",
           "jsonpath": "$.version"
         },
         {

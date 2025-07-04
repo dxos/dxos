@@ -15,14 +15,14 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Button, useThemeContext } from '@dxos/react-ui';
 import {
-  automerge,
   type Comment,
-  comments,
   type CommentsOptions,
+  type Range,
+  automerge,
+  comments,
   createBasicExtensions,
   createThemeExtensions,
   listener,
-  type Range,
   scrollThreadIntoView,
   useComments,
   useTextEditor,

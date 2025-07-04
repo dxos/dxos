@@ -50,7 +50,7 @@ const useAttended = () => {
  * Computes HTML element attributes to apply so the attention system can detect changes
  * @param attendableId
  */
-const useAttendableAttributes = (attendableId?: string) => {
+const useAttentionAttributes = (attendableId?: string) => {
   const { hasAttention } = useAttention(attendableId);
   return useMemo(() => {
     const attributes: Record<string, string | undefined> = { [ATTENABLE_ATTRIBUTE]: attendableId };
@@ -167,12 +167,12 @@ export type AttendableContainerProps = ThemedClassName<
  */
 const AttendableContainer = forwardRef<HTMLDivElement, AttendableContainerProps>(
   ({ id, classNames, children, asChild, ...props }, forwardedRef) => {
-    const attendableAttrs = useAttendableAttributes(id);
+    const attentionAttrs = useAttentionAttributes(id);
     const Root = asChild ? Slot : Primitive.div;
     return (
       <Root
         role='none'
-        {...attendableAttrs}
+        {...attentionAttrs}
         {...props}
         className={mx('attention-surface', props.tabIndex === 0 && 'dx-focus-ring-inset-over-all', classNames)}
         ref={forwardedRef}
@@ -190,7 +190,7 @@ export {
   useAttentionContext,
   useAttention,
   useAttended,
-  useAttendableAttributes,
+  useAttentionAttributes,
   useAttentionPath,
   ATTENTION_NAME,
   ATTENABLE_ATTRIBUTE,

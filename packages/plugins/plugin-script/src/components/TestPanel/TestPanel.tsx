@@ -225,7 +225,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
 
 const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
   const { type, text, data, error } = message;
-  const wrapper = 'p-1 px-2 rounded-lg bg-hoverSurface overflow-auto';
+  const wrapper = 'p-1 px-2 rounded-md bg-hoverSurface overflow-auto';
   return (
     <div className={mx('flex', type === 'request' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames)}>
       {error && <div className={mx(wrapper, 'whitespace-pre', errorText)}>{String(error)}</div>}

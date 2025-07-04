@@ -4,19 +4,19 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button } from '@dxos/react-ui';
-import { withLayout, withTheme, withSignals } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { StatusRoll, sizes } from './StatusRoll';
 
 const meta: Meta<typeof StatusRoll> = {
   title: 'ui/react-ui-components/StatusRoll',
   component: StatusRoll,
-  decorators: [withSignals, withTheme, withLayout()],
+  decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',
   },

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { Sine } from './Sine';
 
@@ -22,13 +22,13 @@ type Story = StoryObj<typeof Sine>;
 
 export const Default: Story = {
   args: {
-    classNames: 'w-[20rem] h-[10rem] _outline outline-primary-500 rounded-lg',
+    classNames: 'w-[20rem] h-[10rem] _outline outline-primary-500 rounded-md',
   },
 };
 
 export const Mini: Story = {
   args: {
-    classNames: 'w-[4rem] h-[4rem] border border-neutral-500 rounded-lg',
+    classNames: 'w-[4rem] h-[4rem] border border-neutral-500 rounded-md',
   },
 };
 

@@ -15,7 +15,7 @@ export class ExtensionManager {
 
   constructor(private readonly _browserName: string) {}
 
-  async init() {
+  async init(): Promise<void> {
     if (this._initialized) {
       return;
     }

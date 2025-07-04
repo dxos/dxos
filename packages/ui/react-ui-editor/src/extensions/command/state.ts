@@ -17,7 +17,7 @@ export type PopupOptions = {
 };
 
 type CommandState = {
-  tooltip?: Tooltip | null;
+  tooltip?: Tooltip;
 };
 
 export const commandState = StateField.define<CommandState>({
@@ -38,7 +38,6 @@ export const commandState = StateField.define<CommandState>({
           strictSide: true,
           create: (view: EditorView) => {
             const root = document.createElement('div');
-
             const tooltipView: TooltipView = {
               dom: root,
               mount: (view: EditorView) => {

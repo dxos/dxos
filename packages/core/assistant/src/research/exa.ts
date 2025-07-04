@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import Exa from 'exa-js';
 
-import { defineTool, ToolResult } from '@dxos/ai';
+import { createTool, ToolResult } from '@dxos/ai';
 import { log } from '@dxos/log';
 
 import { SEARCH_RESULTS } from '../testing';
@@ -17,7 +17,7 @@ type CreateExaToolOptions = {
 export const createExaTool = ({ apiKey }: CreateExaToolOptions) => {
   const exa = new Exa(apiKey);
 
-  return defineTool('search', {
+  return createTool('search', {
     name: 'web_search',
     description: 'Search the web for information',
     schema: Schema.Struct({
@@ -40,7 +40,7 @@ export const createExaTool = ({ apiKey }: CreateExaToolOptions) => {
 };
 
 export const createMockExaTool = () => {
-  return defineTool('search', {
+  return createTool('search', {
     name: 'web_search',
     description: 'Search the web for information',
     schema: Schema.Struct({

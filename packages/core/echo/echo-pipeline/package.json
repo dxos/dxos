@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-pipeline",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,8 +40,8 @@
     "src"
   ],
   "dependencies": {
-    "@automerge/automerge": "3.0.0-beta.0",
-    "@automerge/automerge-repo": "2.0.0",
+    "@automerge/automerge": "3.0.0-beta.4",
+    "@automerge/automerge-repo": "2.0.1",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",

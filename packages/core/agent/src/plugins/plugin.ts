@@ -57,7 +57,7 @@ export abstract class Plugin {
     this._config = config;
   }
 
-  async open() {
+  async open(): Promise<void> {
     // Currently not re-entrant.
     invariant(!this._ctx.disposed, `Plugin closed: ${this.id}`);
 
@@ -72,7 +72,7 @@ export abstract class Plugin {
     log.info('opened', { id: this.id });
   }
 
-  async close() {
+  async close(): Promise<void> {
     invariant(!this._ctx.disposed, `Plugin closed: ${this.id}`);
     log.info('closing...', { id: this.id });
     await this.onClose();

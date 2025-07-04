@@ -40,9 +40,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/timeframe"
     },
     {
@@ -52,7 +49,13 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
       "path": "../../core/conductor"
+    },
+    {
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-db"
@@ -122,6 +125,9 @@
     },
     {
       "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../storybook-utils"
     }
   ]
 }

@@ -4,5 +4,5 @@
 
 export * from './define';
 export * from './message';
-export * from './tools';
+export * from './tool';
 export * from './util';

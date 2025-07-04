@@ -36,7 +36,7 @@ export class AppManager {
     this._inIframe = inIframe;
   }
 
-  async init() {
+  async init(): Promise<void> {
     if (this._initialized) {
       return;
     }
@@ -52,7 +52,7 @@ export class AppManager {
     this.deck = new DeckManager(this.page);
   }
 
-  async closePage() {
+  async closePage(): Promise<void> {
     if (this.page !== undefined) {
       await this.page.close();
     }
@@ -75,7 +75,7 @@ export class AppManager {
     await this.page.keyboard.press(`${modifier}+KeyV`);
   }
 
-  isAuthenticated({ timeout = 5_000 } = {}) {
+  isAuthenticated({ timeout = 5_000 } = {}): Promise<boolean> {
     return this.page
       .getByTestId('treeView.userAccount')
       .waitFor({ timeout })
@@ -83,13 +83,13 @@ export class AppManager {
       .catch(() => false);
   }
 
-  async openUserAccount() {
+  async openUserAccount(): Promise<void> {
     const platform = os.platform();
     const shortcut = platform === 'darwin' ? 'Meta+Shift+.' : platform === 'win32' ? 'Alt+Shift+.' : 'Alt+Shift+>';
     await this.page.keyboard.press(shortcut);
   }
 
-  async openUserDevices() {
+  async openUserDevices(): Promise<void> {
     await this.openUserAccount();
     await this.page.getByTestId('clientPlugin.devices').click();
   }
@@ -105,19 +105,19 @@ export class AppManager {
     return await this._authCode.wait();
   }
 
-  async resetDevice(confirmInput = 'RESET') {
+  async resetDevice(confirmInput = 'RESET'): Promise<void> {
     await this.page.getByTestId('devicesContainer.reset').click();
     await this.page.getByTestId('reset-storage.reset-identity-input').fill(confirmInput);
     await this.page.getByTestId('reset-storage.reset-identity-confirm').click();
   }
 
-  async joinNewIdentity(confirmInput = 'RESET') {
+  async joinNewIdentity(confirmInput = 'RESET'): Promise<void> {
     await this.page.getByTestId('devicesContainer.joinExisting').click();
     await this.page.getByTestId('join-new-identity.reset-identity-input').fill(confirmInput);
     await this.page.getByTestId('join-new-identity.reset-identity-confirm').click();
   }
 
-  async shareSpace() {
+  async shareSpace(): Promise<void> {
     const shortcut = isMac ? 'Meta+.' : 'Alt+.';
     await this.page.keyboard.press(shortcut);
   }
@@ -131,7 +131,7 @@ export class AppManager {
     return await this._invitationCode.wait();
   }
 
-  async confirmRecoveryCode() {
+  async confirmRecoveryCode(): Promise<void> {
     await this.page.getByTestId('recoveryCode.confirm').click();
     await this.page.getByTestId('recoveryCode.continue').click();
   }
@@ -140,11 +140,11 @@ export class AppManager {
   // Toasts
   //
 
-  async toastAction(nth = 0) {
+  async toastAction(nth = 0): Promise<void> {
     await this.page.getByTestId('toast.action').nth(nth).click();
   }
 
-  async closeToast(nth = 0) {
+  async closeToast(nth = 0): Promise<void> {
     await this.page.getByTestId('toast.close').nth(nth).click();
   }
 
@@ -152,31 +152,28 @@ export class AppManager {
   // Spaces
   //
 
-  async createSpace({ type = 'Document', timeout = 10_000 }: { type?: string; timeout?: number } = {}) {
+  async createSpace({ timeout = 10_000 }: { timeout?: number } = {}): Promise<void> {
     await this.page.getByTestId('spacePlugin.addSpace').click();
     await this.page.getByTestId('spacePlugin.createSpace').click();
     await this.page.getByTestId('create-space-form').getByTestId('save-button').click({ delay: 100 });
 
-    await this.page.getByTestId('create-object-form.schema-input').fill(type);
-    await this.page.keyboard.press('Enter');
-
     await this.waitForSpaceReady(timeout);
   }
 
-  async joinSpace() {
+  async joinSpace(): Promise<void> {
     await this.page.getByTestId('spacePlugin.addSpace').click();
     await this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
-  async waitForSpaceReady(timeout = 30_000) {
+  async waitForSpaceReady(timeout = 30_000): Promise<void> {
     await this.page.getByTestId('treeView.alternateTreeButton').waitFor({ timeout });
   }
 
-  getSpacePresenceMembers() {
+  getSpacePresenceMembers(): Locator {
     return this.page.getByTestId('spacePlugin.presence.member');
   }
 
-  async toggleSpaceCollapsed(nth = 0, nextState?: boolean) {
+  async toggleSpaceCollapsed(nth = 0, nextState?: boolean): Promise<void> {
     const toggle = this.page.getByTestId('spacePlugin.space').nth(nth);
 
     if (typeof nextState !== 'undefined') {
@@ -189,11 +186,11 @@ export class AppManager {
     }
   }
 
-  toggleCollectionCollapsed(nth = 0) {
+  toggleCollectionCollapsed(nth = 0): Promise<void> {
     return this.page.getByTestId('spacePlugin.object').nth(nth).getByRole('button').first().click();
   }
 
-  async createObject({ type, name, nth = 0 }: { type: string; name?: string; nth?: number }) {
+  async createObject({ type, name, nth = 0 }: { type: string; name?: string; nth?: number }): Promise<void> {
     const object = this.page.getByTestId('spacePlugin.createObject');
     await object.nth(nth).click();
 
@@ -211,11 +208,11 @@ export class AppManager {
     await objectForm.getByTestId('save-button').click();
   }
 
-  async navigateToObject(nth = 0) {
+  async navigateToObject(nth = 0): Promise<void> {
     await this.page.getByTestId('spacePlugin.object').nth(nth).click();
   }
 
-  async renameObject(newName: string, nth = 0) {
+  async renameObject(newName: string, nth = 0): Promise<void> {
     await this.page
       .getByTestId('spacePlugin.object')
       .nth(nth)
@@ -231,7 +228,7 @@ export class AppManager {
     await this.page.mouse.move(0, 0, { steps: 4 });
   }
 
-  async deleteObject(nth = 0) {
+  async deleteObject(nth = 0): Promise<void> {
     await this.page
       .getByTestId('spacePlugin.object')
       .nth(nth)
@@ -240,28 +237,27 @@ export class AppManager {
       .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
-    await this.page.pause();
     await this.page.getByTestId('spacePlugin.deleteObject').last().focus();
     await this.page.keyboard.press('Enter');
   }
 
-  getObject(nth = 0) {
+  getObject(nth = 0): Locator {
     return this.page.getByTestId('spacePlugin.object').nth(nth);
   }
 
-  getObjectByName(name: string) {
+  getObjectByName(name: string): Locator {
     return this.page.getByTestId('spacePlugin.object').filter({ has: this.page.locator(`span:has-text("${name}")`) });
   }
 
-  getSpaceItems() {
+  getSpaceItems(): Locator {
     return this.page.getByTestId('spacePlugin.space');
   }
 
-  getObjectLinks() {
+  getObjectLinks(): Locator {
     return this.page.getByTestId('spacePlugin.object');
   }
 
-  async dragTo(active: Locator, over: Locator, offset: { x: number; y: number } = { x: 0, y: 0 }) {
+  async dragTo(active: Locator, over: Locator, offset: { x: number; y: number } = { x: 0, y: 0 }): Promise<void> {
     const box = await over.boundingBox();
     if (box) {
       await active.hover();
@@ -278,29 +274,29 @@ export class AppManager {
   // Plugins
   //
 
-  async openSettings() {
+  async openSettings(): Promise<void> {
     await this.page.getByTestId('treeView.appSettings').click();
   }
 
-  async openPluginRegistry() {
+  async openPluginRegistry(): Promise<void> {
     await this.page.getByTestId('treeView.pluginRegistry').click();
   }
 
-  async openRegistryCategory(category: string) {
+  async openRegistryCategory(category: string): Promise<void> {
     await this.page.getByTestId(`pluginRegistry.${category}`).click();
   }
 
-  getPluginToggle(plugin: string) {
+  getPluginToggle(plugin: string): Locator {
     return this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]');
   }
 
-  async enablePlugin(plugin: string) {
+  async enablePlugin(plugin: string): Promise<void> {
     await this.getPluginToggle(plugin).click();
     await this.page.goto(INITIAL_URL);
     await this.page.getByTestId('treeView.userAccount').waitFor();
   }
 
-  async changeStorageVersionInMetadata(version: number) {
+  async changeStorageVersionInMetadata(version: number): Promise<void> {
     await this.page.evaluate(
       ({ version }) => {
         (window as any).composer.changeStorageVersionInMetadata(version);
@@ -315,12 +311,12 @@ export class AppManager {
   // Error Boundary
   //
 
-  async reset() {
+  async reset(): Promise<void> {
     await this.page.getByTestId('resetDialog.reset').click();
     await this.page.getByTestId('resetDialog.confirmReset').click();
   }
 
-  private async _onConsoleMessage(message: ConsoleMessage) {
+  private async _onConsoleMessage(message: ConsoleMessage): Promise<void> {
     try {
       const text = message.text();
       const json = JSON.parse(text.slice(text.indexOf('{')));

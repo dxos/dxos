@@ -123,7 +123,7 @@ export class WebSocketMuxer {
     return message;
   }
 
-  public destroy() {
+  public destroy(): void {
     if (this._sendTimeout) {
       clearTimeout(this._sendTimeout);
       this._sendTimeout = undefined;
@@ -136,7 +136,7 @@ export class WebSocketMuxer {
     this._outMessageChannelByService.clear();
   }
 
-  private _sendChunkedMessages() {
+  private _sendChunkedMessages(): void {
     if (this._sendTimeout) {
       return;
     }

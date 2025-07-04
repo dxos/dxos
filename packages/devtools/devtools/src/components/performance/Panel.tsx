@@ -38,7 +38,7 @@ export const Panel = ({
   return (
     <div className={mx('flex flex-col', styles.bgPanel)}>
       <div
-        className='flex items-center justify-between px-3 text-sm text-fine cursor-pointer'
+        className='flex items-center justify-between px-2 text-sm text-fine cursor-pointer'
         onClick={() => onToggle?.(id, !open)}
       >
         <div className='flex items-center gap-2 py-1'>

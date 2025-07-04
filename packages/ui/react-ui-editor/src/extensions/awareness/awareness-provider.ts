@@ -53,7 +53,7 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
     this._info = params.info;
   }
 
-  open() {
+  open(): void {
     this._ctx = new Context();
     this._postTask = new DeferredTask(this._ctx, async () => {
       if (this._localState) {
@@ -92,7 +92,7 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
       });
   }
 
-  close() {
+  close(): void {
     void this._ctx?.dispose();
     this._ctx = undefined;
     this._postTask = undefined;
@@ -113,12 +113,12 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
     this._postTask.schedule();
   }
 
-  private _handleQueryMessage() {
+  private _handleQueryMessage(): void {
     invariant(this._postTask);
     this._postTask.schedule();
   }
 
-  private _handlePostMessage(message: ProtocolMessage) {
+  private _handlePostMessage(message: ProtocolMessage): void {
     invariant(message.kind === 'post');
     // TODO(wittjosiah): Is it helpful or confusing to show cursors for self on other devices?
     this._remoteStates.set(message.state.peerId, message.state);

@@ -15,7 +15,7 @@ export class MapCounter extends BaseCounter {
     this.units = units;
   }
 
-  inc(key: string, by = 1) {
+  inc(key: string, by = 1): void {
     const prev = this.values.get(key) ?? 0;
     this.values.set(key, prev + by);
   }

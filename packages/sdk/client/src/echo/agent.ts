@@ -31,11 +31,11 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
    */
   constructor(private readonly _space: Space) {}
 
-  async open() {
+  async open(): Promise<void> {
     this._unsubscribe = this._space.listen(QUERY_CHANNEL, (message) => this._handleMessage(message));
   }
 
-  async close() {
+  async close(): Promise<void> {
     this._unsubscribe?.();
     this._responsePromises.forEach((promise) => promise.reject(ERR_CLOSING));
     this._responsePromises.clear();
@@ -43,7 +43,7 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
 
   // TODO(burdon): Make async?
   // TODO(burdon): Define return type.
-  private _sendRequest(query: QueryAST.Query) {
+  private _sendRequest(query: QueryAST.Query): { response: Promise<QueryResponse>; cancelRequest: () => void } {
     const request: QueryRequest = {
       queryId: PublicKey.random().toHex(),
       query: JSON.stringify(query),
@@ -72,7 +72,7 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
     };
   }
 
-  private _handleMessage(message: GossipMessage) {
+  private _handleMessage(message: GossipMessage): void {
     if (message.payload['@type'] !== 'dxos.agent.query.QueryResponse') {
       return;
     }

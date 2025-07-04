@@ -163,7 +163,7 @@ export class Connection {
   /**
    * Create an underlying transport and prepares it for the connection.
    */
-  async openConnection() {
+  async openConnection(): Promise<void> {
     invariant(this._state === ConnectionState.INITIAL, 'Invalid state.');
     log.trace('dxos.mesh.connection.open-connection', trace.begin({ id: this._instanceId }));
     log.trace('dxos.mesh.connection.open', {
@@ -261,7 +261,7 @@ export class Connection {
   @synchronized
   // TODO(nf): make the caller responsible for recording the reason and determining flow control.
   // TODO(nf): make abort cancel an existing close in progress.
-  async abort(err?: Error) {
+  async abort(err?: Error): Promise<void> {
     log('abort', { err });
     if (this._state === ConnectionState.CLOSED || this._state === ConnectionState.ABORTED) {
       log(`abort ignored: already ${this._state}`, this.closeReason);
@@ -301,7 +301,7 @@ export class Connection {
   }
 
   @synchronized
-  async close({ error, reason }: { error?: Error; reason?: string } = {}) {
+  async close({ error, reason }: { error?: Error; reason?: string } = {}): Promise<void> {
     log('close', { error });
     if (!this.closeReason) {
       this.closeReason = reason ?? error?.message;
@@ -347,24 +347,24 @@ export class Connection {
     this._callbacks?.onClosed?.(error);
   }
 
-  private async _closeProtocol(options?: { abort: boolean }) {
+  private async _closeProtocol(options?: { abort: boolean }): Promise<void> {
     log('closing protocol', options);
     await Promise.race([options?.abort ? this._protocol.abort() : this._protocol.close(), this._protocolClosed.wait()]);
     log('protocol closed', options);
   }
 
-  private async _closeTransport() {
+  private async _closeTransport(): Promise<void> {
     log('closing transport');
     await Promise.race([this._transport?.close(), this._transportClosed.wait()]);
     log('transport closed');
   }
 
-  private _sendSignal(signal: Signal) {
+  private _sendSignal(signal: Signal): void {
     this._outgoingSignalBuffer.push(signal);
     this._signalSendTask.schedule();
   }
 
-  private async _flushSignalBuffer() {
+  private async _flushSignalBuffer(): Promise<void> {
     if (this._outgoingSignalBuffer.length === 0) {
       return;
     }
@@ -404,7 +404,7 @@ export class Connection {
   /**
    * Receive a signal from the remote peer.
    */
-  async signal(msg: SignalMessage) {
+  async signal(msg: SignalMessage): Promise<void> {
     invariant(msg.sessionId);
     if (!msg.sessionId.equals(this.sessionId)) {
       log('dropping signal for incorrect session id');
@@ -431,7 +431,7 @@ export class Connection {
     }
   }
 
-  initiate() {
+  initiate(): void {
     this._changeState(ConnectionState.INITIAL);
   }
 
@@ -442,7 +442,7 @@ export class Connection {
     this.stateChanged.emit(state);
   }
 
-  private async _emitTransportStats() {
+  private async _emitTransportStats(): Promise<void> {
     const stats = await this.transport?.getStats();
     if (stats) {
       this.transportStats.emit(stats);

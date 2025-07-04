@@ -30,9 +30,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
@@ -42,10 +39,16 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../devtools/storybook-utils"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../ui/react-ui"
@@ -70,9 +73,6 @@
     },
     {
       "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-space"
     },
     {
       "path": "../plugin-stack"

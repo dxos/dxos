@@ -4,8 +4,9 @@
 
 import { Schema } from 'effect';
 
-import { DEFAULT_EDGE_MODEL } from '@dxos/ai';
+import { DEFAULT_EDGE_MODEL, Message } from '@dxos/ai';
 import { AISession } from '@dxos/assistant';
+import { Obj } from '@dxos/echo';
 import { AiService, defineFunction } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -29,12 +30,14 @@ export const NormalizationInput = Schema.Struct({
     description: 'Messages to normalize into sentences.',
   }),
 });
+export interface NormalizationInput extends Schema.Schema.Type<typeof NormalizationInput> {}
 
 export const NormalizationOutput = Schema.Struct({
   sentences: Schema.Array(MessageWithRangeId.pipe(Schema.mutable)).pipe(Schema.mutable).annotations({
     description: 'The sentences of the transcript.',
   }),
 });
+export interface NormalizationOutput extends Schema.Schema.Type<typeof NormalizationOutput> {}
 
 const prompt = `
 You are observing a real-time transcript of a single person speaking.
@@ -70,7 +73,7 @@ The transcription is delivered in chunks of 10 seconds or less. As a result, ind
   - Do not add or remove any words or phrases.
 `;
 
-export const sentenceNormalization = defineFunction({
+export const sentenceNormalization = defineFunction<NormalizationInput, NormalizationOutput>({
   description: 'Post process of transcription for sentence normalization',
   inputSchema: NormalizationInput,
   outputSchema: NormalizationOutput,
@@ -85,11 +88,10 @@ export const sentenceNormalization = defineFunction({
       tools: [],
       artifacts: [],
       history: [
-        {
-          id: ObjectId.random(),
+        Obj.make(Message, {
           role: 'user',
-          content: messages.map((message) => ({ type: 'text', text: JSON.stringify(message) })),
-        },
+          content: messages.map((message) => ({ type: 'text', text: JSON.stringify(message) }) as const),
+        }),
       ],
       prompt,
     });

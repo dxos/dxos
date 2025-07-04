@@ -83,7 +83,7 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
   // TODO(wittjosiah): More than one trigger may be desired, particularly for subscription.
   //   Distinguish between configuring existing triggers and adding new ones.
   return (
-    <div className='p-2 flex flex-col gap-4'>
+    <div className='flex flex-col gap-4'>
       <h2>{t('mailbox sync label')}</h2>
       <div className='p-1 flex flex-row gap-1'>
         <Button onClick={handleConfigureSync}>{t('mailbox object settings configure sync button label')}</Button>

@@ -5,16 +5,19 @@
 import '@dxos-theme';
 
 import { effect } from '@preact/signals-core';
-import { type StoryObj } from '@storybook/react';
+import { type StoryObj } from '@storybook/react-vite';
+import { select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-stack';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
+import { getHashColor, mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
+import { Pulsar } from '../../fx';
 import {
   GraphForceProjector,
   type GraphForceProjectorOptions,
@@ -176,6 +179,26 @@ const DefaultStory = ({
     });
   }, []);
 
+  const active = useMemo(() => new SelectionModel(), []);
+  const handlePing = useCallback(() => {
+    for (const id of active.selected.value) {
+      const node = graphRef.current?.findNode(id);
+      if (node) {
+        Pulsar.remove(select(node));
+      }
+    }
+
+    active.clear();
+    for (const id of selection.selected.value) {
+      const node = graphRef.current?.findNode(id);
+      if (node) {
+        active.add(id);
+        const r = parseFloat(select(node).select('circle').attr('r') ?? '8');
+        Pulsar.create(select(node), r);
+      }
+    }
+  }, [selection, active]);
+
   return (
     <Popover.Root open={!!popover} onOpenChange={(state) => !state && setPopover(undefined)}>
       <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
@@ -193,7 +216,7 @@ const DefaultStory = ({
               attributes={{
                 node: (node: GraphLayoutNode<TestNode>) => ({
                   data: {
-                    color: node.data.type ?? node.type,
+                    color: getHashColor(node.data?.type ?? node.type)?.color,
                   },
                   classes: {
                     'dx-selected': selection.contains(node.id),
@@ -201,7 +224,7 @@ const DefaultStory = ({
                 }),
                 edge: (edge: GraphLayoutEdge<TestNode>) => ({
                   data: {
-                    color: edge.type,
+                    color: getHashColor(edge.data?.type ?? edge.type)?.color,
                   },
                 }),
               }}
@@ -224,13 +247,22 @@ const DefaultStory = ({
             onClear={handleClear}
             onAdd={handleAdd}
             onDelete={handleDelete}
+            onPing={handlePing}
           />
         )}
       </div>
 
       <Popover.VirtualTrigger virtualRef={popoverAnchorRef} />
-      <Popover.Content classNames='popover-card-width' onOpenAutoFocus={(event) => event.preventDefault()}>
-        <SyntaxHighlighter classNames='text-sm' language='json' code={JSON.stringify(popover, null, 2)} />
+      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+        <Popover.Viewport>
+          <Card.Container role='popover'>
+            <SyntaxHighlighter
+              classNames='bg-transparent text-xs !mlb-cardSpacingBlock !pli-cardSpacingInline !overflow-visible'
+              language='json'
+              code={JSON.stringify(popover, null, 2)}
+            />
+          </Card.Container>
+        </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
     </Popover.Root>
@@ -248,6 +280,7 @@ const Debug = ({
   onClear,
   onAdd,
   onDelete,
+  onPing,
 }: {
   model?: GraphModel;
   selection: SelectionModel;
@@ -259,6 +292,7 @@ const Debug = ({
   onClear: () => void;
   onAdd: () => void;
   onDelete: () => void;
+  onPing: () => void;
 }) => {
   const [data, setData] = useState({});
   useEffect(() => {
@@ -281,6 +315,7 @@ const Debug = ({
         <IconButton onClick={onClear} size={5} label='Clear' icon='ph--trash--regular' iconOnly />
         <IconButton onClick={onAdd} size={5} label='Add' icon='ph--plus--regular' iconOnly />
         <IconButton onClick={onDelete} size={5} label='Delete' icon='ph--x--regular' iconOnly />
+        <IconButton onClick={onPing} size={5} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
       </Toolbar.Root>
       <JsonFilter data={data} classNames='text-sm' />
     </div>
@@ -291,6 +326,9 @@ const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-graph/Graph',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    controls: { disable: true },
+  },
 };
 
 export default meta;
@@ -299,18 +337,19 @@ type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
+    graph: () => convertTreeToGraph(createTree({ depth: 3 })),
     debug: true,
     grid: {
       axis: true,
     },
     drag: true,
     arrows: true,
-    graph: () => convertTreeToGraph(createTree({ depth: 3 })),
   },
 };
 
 export const Projector: Story = {
   args: {
+    graph: () => convertTreeToGraph(createTree({ depth: 4 })),
     debug: true,
     drag: true,
     arrows: true,
@@ -319,12 +358,12 @@ export const Projector: Story = {
     projectorOptions: {
       duration: 500,
     },
-    graph: () => convertTreeToGraph(createTree({ depth: 4 })),
   },
 };
 
 export const Force: Story = {
   args: {
+    graph: () => convertTreeToGraph(createTree({ depth: 5 })),
     debug: true,
     drag: true,
     projectorOptions: {
@@ -352,12 +391,12 @@ export const Force: Story = {
         },
       },
     },
-    graph: () => convertTreeToGraph(createTree({ depth: 5 })),
   },
 };
 
 export const Select: Story = {
   args: {
+    graph: () => createGraph(100, 30, ['type-1', 'type-2', 'type-3', 'type-4', 'type-5', 'type-6']),
     debug: false,
     drag: true,
     grid: true,
@@ -373,12 +412,12 @@ export const Select: Story = {
         },
       },
     },
-    graph: () => createGraph(100, 30, ['1', '2', '3', '4', '5', '6']),
   },
 };
 
 export const WithSubgraphs: Story = {
   args: {
+    graph: () => createGraph(50, 30),
     debug: true,
     drag: true,
     subgraphs: true,
@@ -390,12 +429,12 @@ export const WithSubgraphs: Story = {
         },
       },
     },
-    graph: () => createGraph(50, 30),
   },
 };
 
 export const WithPopover: Story = {
   args: {
+    graph: () => createGraph(30, 10),
     debug: false,
     drag: true,
     inspect: true,
@@ -407,7 +446,6 @@ export const WithPopover: Story = {
         point: true,
       },
     },
-    graph: () => createGraph(30, 10),
   },
 };
 

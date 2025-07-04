@@ -6,8 +6,9 @@ import { Schema } from 'effect';
 import jsonpointer from 'jsonpointer';
 import { type OpenAPIV2, type OpenAPIV3_1 } from 'openapi-types';
 
-import { ToolResult, type Tool } from '@dxos/ai';
-import { JsonSchemaType, normalizeSchema, toEffectSchema } from '@dxos/echo-schema';
+import { type ExecutableTool, ToolResult, createRawTool } from '@dxos/ai';
+import { Type } from '@dxos/echo';
+import { normalizeSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
@@ -19,7 +20,7 @@ export type CreateToolsFromApiOptions = {
   instructions?: string;
 };
 
-export const createToolsFromService = async (service: ServiceType): Promise<Tool[]> => {
+export const createToolsFromService = async (service: ServiceType): Promise<ExecutableTool[]> => {
   invariant(service.interfaces?.length === 1 && service.interfaces[0].kind === 'api');
   const iface = service.interfaces[0];
   invariant(iface.schemaUrl);
@@ -27,18 +28,20 @@ export const createToolsFromService = async (service: ServiceType): Promise<Tool
   return createToolsFromApi(iface.schemaUrl, { authorization: iface.authorization });
 };
 
-export const createToolsFromApi = async (url: string, options?: CreateToolsFromApiOptions): Promise<Tool[]> => {
+export const createToolsFromApi = async (
+  url: string,
+  options?: CreateToolsFromApiOptions,
+): Promise<ExecutableTool[]> => {
   const res = await fetch(url);
   const spec = (await res.json()) as OpenAPIV2.Document;
   log('spec', { spec });
 
-  const tools: Tool[] = [];
+  const tools: ExecutableTool[] = [];
   for (const [path, pathItem] of Object.entries(spec.paths)) {
     if (typeof pathItem !== 'object') {
       continue;
     }
 
-    // TODO(burdon): ???
     const { ...methods } = pathItem;
     for (const [method, m] of Object.entries(methods)) {
       const methodItem: OpenAPIV2.OperationObject = m as OpenAPIV2.OperationObject;
@@ -50,7 +53,7 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
           return resolved;
         }) ?? [];
 
-      const inputSchema: JsonSchemaType = {
+      const inputSchema: Type.JsonSchema = {
         type: 'object',
         properties: {},
       };
@@ -83,7 +86,7 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
       }
 
       log('inputSchema', { inputSchema });
-      Schema.validateSync(JsonSchemaType)(inputSchema);
+      Schema.validateSync(Type.JsonSchema)(inputSchema);
 
       const description = methodItem.description ?? methodItem.summary;
       if (!description) {
@@ -99,15 +102,18 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
         authorization: options?.authorization,
       };
 
-      tools.push({
-        name: getToolName(path, method, methodItem),
-        description: options?.instructions ? `${options.instructions}\n\n${description}` : description,
-        parameters: inputSchema,
-        execute: async (input) => {
-          const response = await callApiEndpoint(endpoint, input);
-          return ToolResult.Success(response);
-        },
-      });
+      tools.push(
+        // TODO(burdon): Namespace?
+        createRawTool('openapi', {
+          name: getToolName(path, method, methodItem),
+          description: options?.instructions ? `${options.instructions}\n\n${description}` : description,
+          parameters: inputSchema,
+          execute: async (input) => {
+            const response = await callApiEndpoint(endpoint, input);
+            return ToolResult.Success(response);
+          },
+        }),
+      );
     }
   }
 
@@ -200,7 +206,7 @@ const callApiEndpoint = async (endpoint: EndpointDescriptor, input: any) => {
         const value = input[parameter.name];
 
         // Client-side validation
-        const effectSchema = toEffectSchema(parameter.schema);
+        const effectSchema = Type.toEffectSchema(parameter.schema);
         Schema.validateSync(effectSchema)(value);
 
         if (body) {

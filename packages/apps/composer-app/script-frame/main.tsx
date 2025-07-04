@@ -33,7 +33,6 @@ const main = async () => {
   }));
 
   const code = new URLSearchParams(window.location.hash.slice(1)).get('code');
-
   if (!code) {
     throw new Error('No code provided.');
   }

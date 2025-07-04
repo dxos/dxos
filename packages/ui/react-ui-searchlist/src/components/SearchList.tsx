@@ -66,10 +66,7 @@ type SearchListInputProps = Omit<TextInputProps, 'value' | 'defaultValue' | 'onC
   Pick<CommandInputPrimitiveProps, 'value' | 'onValueChange' | 'defaultValue'>;
 
 const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
-  (
-    { children, classNames, density: propsDensity, elevation: propsElevation, variant = 'subdued', ...props },
-    forwardedRef,
-  ) => {
+  ({ children, classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
     // CHORE(thure): Keep this in-sync with `TextInput`, or submit a PR for `cmdk` to support `asChild` so we don’t have to.
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
@@ -88,6 +85,7 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
             density,
             elevation,
           },
+          'mbe-cardSpacingBlock',
           classNames,
         )}
         {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}

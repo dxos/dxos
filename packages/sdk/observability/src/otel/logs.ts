@@ -73,11 +73,11 @@ export class OtelLogs {
     });
   };
 
-  flush() {
+  flush(): Promise<void> {
     return this._loggerProvider.forceFlush();
   }
 
-  close() {
+  close(): Promise<void> {
     return this._loggerProvider.shutdown();
   }
 }

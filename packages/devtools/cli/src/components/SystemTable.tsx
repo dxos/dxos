@@ -34,13 +34,7 @@ export const SystemTable: FC<{ interval?: number }> = ({ interval = 1_000 }) => 
     return () => clearInterval(timer);
   }, [interval]);
 
-  enum Unit {
-    K = 1024,
-    ms = 1_000,
-    μs = 1_000_000,
-  }
-
-  const size = (n: number, unit = Unit.K, len = 10) =>
+  const size = (n: number, unit = 1_000, len = 10) =>
     Math.round(n / unit)
       .toLocaleString()
       .padStart(len, ' ');

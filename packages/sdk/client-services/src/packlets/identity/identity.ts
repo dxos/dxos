@@ -116,7 +116,7 @@ export class Identity {
   }
 
   @trace.span()
-  async open(ctx: Context) {
+  async open(ctx: Context): Promise<void> {
     await this._presence?.open();
     await this.space.spaceState.addCredentialProcessor(this._deviceStateMachine);
     await this.space.spaceState.addCredentialProcessor(this._profileStateMachine);
@@ -127,13 +127,13 @@ export class Identity {
     await this.space.open(ctx);
   }
 
-  public async joinNetwork() {
+  public async joinNetwork(): Promise<void> {
     await this.space.startProtocol();
     await this._edgeFeedReplicator?.open();
   }
 
   @trace.span()
-  async close(ctx: Context) {
+  async close(ctx: Context): Promise<void> {
     await this._presence?.close();
     await this.authVerifier.close();
     await this.space.spaceState.removeCredentialProcessor(this._defaultSpaceStateMachine);
@@ -149,7 +149,7 @@ export class Identity {
     await this.space.close();
   }
 
-  async ready() {
+  async ready(): Promise<void> {
     await this._deviceStateMachine.deviceChainReady.wait();
 
     await this.controlPipeline.state.waitUntilReachedTargetTimeframe({ timeout: LOAD_CONTROL_FEEDS_TIMEOUT });
@@ -210,7 +210,7 @@ export class Identity {
     return createCredentialSignerWithKey(this._signer, this.deviceKey);
   }
 
-  async updateDefaultSpace(spaceId: SpaceId) {
+  async updateDefaultSpace(spaceId: SpaceId): Promise<void> {
     const credential = await this.getDeviceCredentialSigner().createCredential({
       subject: this.identityKey,
       assertion: { '@type': 'dxos.halo.credentials.DefaultSpace', spaceId },

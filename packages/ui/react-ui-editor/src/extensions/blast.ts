@@ -137,7 +137,7 @@ class Blaster {
     return this._node;
   }
 
-  initialize() {
+  initialize(): void {
     // console.log('initialize');
     invariant(!this._canvas && !this._ctx);
 
@@ -156,7 +156,7 @@ class Blaster {
     this.resize();
   }
 
-  destroy() {
+  destroy(): void {
     this.stop();
     // console.log('destroy');
     if (this._canvas) {
@@ -166,7 +166,7 @@ class Blaster {
     }
   }
 
-  resize() {
+  resize(): void {
     if (this._node.parentElement && this._canvas) {
       const { offsetLeft: x, offsetTop: y, offsetWidth: width, offsetHeight: height } = this._node.parentElement;
       this._canvas.style.top = `${y}px`;
@@ -176,20 +176,20 @@ class Blaster {
     }
   }
 
-  start() {
+  start(): void {
     // console.log('start');
     invariant(this._canvas && this._ctx);
     this._running = true;
     this.loop();
   }
 
-  stop() {
+  stop(): void {
     // console.log('stop');
     this._running = false;
     this._node.style.transform = 'translate(0px, 0px)';
   }
 
-  loop() {
+  loop(): void {
     if (!this._running || !this._canvas || !this._ctx) {
       return;
     }
@@ -231,7 +231,7 @@ class Blaster {
     }
   }, 100);
 
-  drawParticles() {
+  drawParticles(): void {
     for (let i = this._particles.length; i--; i > 0) {
       const particle = this._particles[i];
       if (!particle) {
@@ -283,7 +283,7 @@ class Effect1 extends Effect {
     };
   }
 
-  update(ctx: CanvasRenderingContext2D, particle: Particle) {
+  update(ctx: CanvasRenderingContext2D, particle: Particle): void {
     particle.vy += this._options.particleGravity;
     particle.x += particle.vx;
     particle.y += particle.vy;
@@ -314,7 +314,7 @@ class Effect2 extends Effect {
     };
   }
 
-  update(ctx: CanvasRenderingContext2D, particle: Particle) {
+  update(ctx: CanvasRenderingContext2D, particle: Particle): void {
     particle.vy += this._options.particleGravity;
     particle.x += particle.vx;
     particle.y += particle.vy;

@@ -265,7 +265,7 @@ export class PluginManager {
     return untracked(() => Effect.runPromise(this._reset(event)));
   }
 
-  private _addPlugin(plugin: Plugin) {
+  private _addPlugin(plugin: Plugin): void {
     untracked(() => {
       log('add plugin', { id: plugin.meta.id });
       if (!this._state.plugins.includes(plugin)) {
@@ -274,7 +274,7 @@ export class PluginManager {
     });
   }
 
-  private _removePlugin(id: string) {
+  private _removePlugin(id: string): void {
     untracked(() => {
       log('remove plugin', { id });
       const pluginIndex = this._state.plugins.findIndex((plugin) => plugin.meta.id === id);
@@ -284,7 +284,7 @@ export class PluginManager {
     });
   }
 
-  private _addModule(module: PluginModule) {
+  private _addModule(module: PluginModule): void {
     untracked(() => {
       log('add module', { id: module.id });
       if (!this._state.modules.includes(module)) {
@@ -293,7 +293,7 @@ export class PluginManager {
     });
   }
 
-  private _removeModule(id: string) {
+  private _removeModule(id: string): void {
     untracked(() => {
       log('remove module', { id });
       const moduleIndex = this._state.modules.findIndex((module) => module.id === id);
@@ -303,27 +303,27 @@ export class PluginManager {
     });
   }
 
-  private _getPlugin(id: string) {
+  private _getPlugin(id: string): Plugin | undefined {
     return this._state.plugins.find((plugin) => plugin.meta.id === id);
   }
 
-  private _getActiveModules() {
+  private _getActiveModules(): PluginModule[] {
     return this._state.modules.filter((module) => this._state.active.includes(module.id));
   }
 
-  private _getInactiveModules() {
+  private _getInactiveModules(): PluginModule[] {
     return this._state.modules.filter((module) => !this._state.active.includes(module.id));
   }
 
-  private _getActiveModulesByEvent(key: string) {
+  private _getActiveModulesByEvent(key: string): PluginModule[] {
     return this._getActiveModules().filter((module) => getEvents(module.activatesOn).map(eventKey).includes(key));
   }
 
-  private _getInactiveModulesByEvent(key: string) {
+  private _getInactiveModulesByEvent(key: string): PluginModule[] {
     return this._getInactiveModules().filter((module) => getEvents(module.activatesOn).map(eventKey).includes(key));
   }
 
-  private _setPendingResetByModule(module: PluginModule) {
+  private _setPendingResetByModule(module: PluginModule): void {
     return untracked(() => {
       const activationEvents = getEvents(module.activatesOn)
         .map(eventKey)

@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
-import { isInstanceOf, type Ref } from '@dxos/echo-schema';
+import { Obj, type Ref } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
-import { getSpace, isEchoObject } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 
 import { ThreadCapabilities } from './capabilities';
 import {
@@ -26,14 +26,14 @@ export default () =>
     createSurface({
       id: `${THREAD_PLUGIN}/channel`,
       role: 'article',
-      filter: (data): data is { subject: ChannelType } => isInstanceOf(ChannelType, data.subject),
+      filter: (data): data is { subject: ChannelType } => Obj.instanceOf(ChannelType, data.subject),
       component: ({ data: { subject: channel }, role }) => <ChannelContainer channel={channel} role={role} />,
     }),
     createSurface({
       id: `${THREAD_PLUGIN}/chat-companion`,
       role: 'article',
       filter: (data): data is { companionTo: ChannelType; subject: 'chat' } =>
-        isInstanceOf(ChannelType, data.companionTo) && data.subject === 'chat',
+        Obj.instanceOf(ChannelType, data.companionTo) && data.subject === 'chat',
       component: ({ data: { companionTo: channel } }) => {
         const space = getSpace(channel);
         const thread = channel.defaultThread.target;
@@ -47,7 +47,7 @@ export default () =>
     createSurface({
       id: `${THREAD_PLUGIN}/thread`,
       role: 'article',
-      filter: (data): data is { subject: ThreadType } => isInstanceOf(ThreadType, data.subject),
+      filter: (data): data is { subject: ThreadType } => Obj.instanceOf(ThreadType, data.subject),
       component: ({ data: { subject: thread } }) => {
         const space = getSpace(thread);
         if (!space || !thread) {
@@ -60,8 +60,8 @@ export default () =>
     createSurface({
       id: `${THREAD_PLUGIN}/comments`,
       role: 'article',
-      filter: (data): data is { companionTo: { threads: Ref<ThreadType>[] } } =>
-        data.subject === 'comments' && isEchoObject(data.companionTo),
+      filter: (data): data is { companionTo: { threads: Ref.Ref<ThreadType>[] } } =>
+        data.subject === 'comments' && Obj.isObject(data.companionTo),
       // TODO(wittjosiah): This isn't scrolling properly in a plank.
       component: ({ data }) => <ThreadComplementary subject={data.companionTo} />,
     }),

@@ -6,10 +6,8 @@ import { signal } from '@preact/signals-core';
 
 import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { QueueImpl, type Queue } from '@dxos/echo-db';
-import { create } from '@dxos/echo-schema';
-import { type DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { Obj } from '@dxos/echo';
+import { type Queue } from '@dxos/echo-db';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { DataType } from '@dxos/schema';
 
@@ -62,35 +60,24 @@ export class TranscriptionManager extends Resource {
     this._messageEnricher = options.messageEnricher;
   }
 
-  protected override async _open() {
-    await this._toggleTranscriber();
-  }
-
-  protected override async _close() {
-    void this._transcriber?.close();
-  }
-
   /** @reactive */
   get enabled() {
     return this._enabled.value;
   }
 
-  setQueue(queueDxn: DXN): TranscriptionManager {
-    if (this._queue?.dxn.toString() !== queueDxn.toString()) {
-      log.info('setQueue', { queueDxn: queueDxn.toString() });
-      this._queue = new QueueImpl<DataType.Message>(this._edgeClient, queueDxn);
-    }
+  setQueue(queue: Queue<DataType.Message>): this {
+    this._queue = queue;
     return this;
   }
 
-  setIdentityDid(did: string): TranscriptionManager {
+  setIdentityDid(did: string): this {
     if (this._identityDid !== did) {
       this._identityDid = did;
     }
     return this;
   }
 
-  setRecording(recording?: boolean): TranscriptionManager {
+  setRecording(recording?: boolean): this {
     if (!this.isOpen || !this._enabled.value) {
       return this;
     }
@@ -108,7 +95,7 @@ export class TranscriptionManager extends Resource {
    * @param enabled - Whether to enable transcription.
    */
   @synchronized
-  async setEnabled(enabled?: boolean) {
+  async setEnabled(enabled?: boolean): Promise<void> {
     if (this._enabled.value === enabled) {
       return;
     }
@@ -119,7 +106,7 @@ export class TranscriptionManager extends Resource {
   }
 
   @synchronized
-  async setAudioTrack(track?: MediaStreamTrack) {
+  async setAudioTrack(track?: MediaStreamTrack): Promise<void> {
     if (this._audioStreamTrack === track) {
       return;
     }
@@ -128,32 +115,40 @@ export class TranscriptionManager extends Resource {
     this.isOpen && (await this._toggleTranscriber());
   }
 
+  protected override async _open(): Promise<void> {
+    await this._toggleTranscriber();
+  }
+
+  protected override async _close(): Promise<void> {
+    void this._transcriber?.close();
+  }
+
   // TODO(burdon): Change this to setEnables (explicit), not toggle.
-  private async _toggleTranscriber() {
+  private async _toggleTranscriber(): Promise<void> {
     await this._maybeReinitTranscriber();
 
     // Open or close transcriber if transcription is enabled or disabled.
     if (this._enabled.value) {
       await this._transcriber?.open();
       // TODO(burdon): Started and stopped blocks appear twice.
-      const block = create(DataType.Message, {
+      const block = Obj.make(DataType.Message, {
         created: new Date().toISOString(),
         blocks: [{ type: 'transcription', text: 'Started', started: new Date().toISOString() }],
         sender: { role: 'assistant' },
       });
-      this._queue?.append([block]);
+      await this._queue?.append([block]);
     } else {
       await this._transcriber?.close();
-      const block = create(DataType.Message, {
+      const block = Obj.make(DataType.Message, {
         created: new Date().toISOString(),
         blocks: [{ type: 'transcription', text: 'Stopped', started: new Date().toISOString() }],
         sender: { role: 'assistant' },
       });
-      this._queue?.append([block]);
+      await this._queue?.append([block]);
     }
   }
 
-  private async _maybeReinitTranscriber() {
+  private async _maybeReinitTranscriber(): Promise<void> {
     if (!this._audioStreamTrack || !this._enabled.value) {
       return;
     }
@@ -180,12 +175,12 @@ export class TranscriptionManager extends Resource {
     }
   }
 
-  private async _onSegments(segments: DataType.MessageBlock.Transcription[]) {
+  private async _onSegments(segments: DataType.MessageBlock.Transcription[]): Promise<void> {
     if (!this.isOpen || !this._queue) {
       return;
     }
 
-    let block = create(DataType.Message, {
+    let block = Obj.make(DataType.Message, {
       created: new Date().toISOString(),
       blocks: segments,
       sender: { identityDid: this._identityDid },
@@ -195,6 +190,6 @@ export class TranscriptionManager extends Resource {
       block = await this._messageEnricher(block);
     }
 
-    this._queue.append([block]);
+    await this._queue.append([block]);
   }
 }

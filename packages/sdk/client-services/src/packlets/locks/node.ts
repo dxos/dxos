@@ -28,7 +28,7 @@ export class Lock implements ResourceLock {
     return this._lockPath;
   }
 
-  async acquire() {
+  async acquire(): Promise<void> {
     log('acquiring lock...');
     this._fileHandle = await LockFile.acquire(this._lockPath);
 
@@ -37,7 +37,7 @@ export class Lock implements ResourceLock {
     log('acquired lock');
   }
 
-  async release() {
+  async release(): Promise<void> {
     await this._onRelease?.();
     invariant(this._fileHandle, 'Lock is not acquired');
     await LockFile.release(this._fileHandle);

@@ -6,9 +6,8 @@ import React, { useCallback, type FC, useEffect } from 'react';
 
 import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type AssociatedArtifact } from '@dxos/artifact';
+import { DXN, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
-import { refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -40,17 +39,17 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
   const messageQueue = useMessageQueue(chat);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   // TODO(thure): This will be referentially new on every render, is it causing overreactivity?
-  const messages = [...(messageQueue?.items ?? []), ...processor.messages.value];
+  const messages = [...(messageQueue?.objects ?? []), ...processor.messages.value];
 
   // Post last message to document.
   useEffect(() => {
-    if (!processor.streaming.value && messageQueue?.items) {
-      const message = messageQueue.items[messageQueue.items.length - 1];
+    if (!processor.streaming.value && messageQueue?.objects) {
+      const message = messageQueue.objects[messageQueue.objects.length - 1];
       if (space && chat && message && dispatch && associatedArtifact) {
         void dispatch(
           createIntent(CollaborationActions.InsertContent, {
             target: associatedArtifact,
-            object: refFromDXN(new DXN(DXN.kind.QUEUE, [...chat.queue.dxn.parts, message.id])),
+            object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...chat.queue.dxn.parts, message.id])),
             label: 'View proposal',
           }),
         );
@@ -70,9 +69,9 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
 
       invariant(messageQueue);
       void processor.request(text, {
-        history: messageQueue.items,
+        history: messageQueue.objects,
         onComplete: (messages) => {
-          messageQueue.append(messages);
+          void messageQueue.append(messages);
         },
       });
 

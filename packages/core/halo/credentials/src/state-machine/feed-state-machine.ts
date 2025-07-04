@@ -42,7 +42,7 @@ export class FeedStateMachine {
    * and the issuer has been authorized to issue credentials of this type.
    * @param fromFeed Key of the feed where this credential is recorded.
    */
-  async process(credential: Credential, fromFeed: PublicKey) {
+  async process(credential: Credential, fromFeed: PublicKey): Promise<void> {
     const assertion = getCredentialAssertion(credential);
     invariant(assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed');
     invariant(assertion.spaceKey.equals(this._spaceKey));

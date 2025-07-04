@@ -176,7 +176,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
     return Date.now() - this._startTime.getTime();
   }
 
-  done() {
+  done(): void {
     this.log('ok');
   }
 
@@ -258,7 +258,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
 
   private async _initObservability(
     logCb: (input: string) => void = (input: string) => process.stderr.write(chalk`{bold {magenta ${input} }}`),
-  ) {
+  ): Promise<void> {
     const observabilityState = await getObservabilityState(DX_DATA);
     const { mode, installationId, group } = observabilityState;
     if (mode === 'disabled') {
@@ -300,7 +300,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
    * Load or create config file from defaults.
    * @private
    */
-  private async _loadConfigFromFile(...additionalConfig: ConfigProto[]) {
+  private async _loadConfigFromFile(...additionalConfig: ConfigProto[]): Promise<void> {
     const { config: configFile } = this.flags;
     const configExists = await exists(configFile);
     if (!configExists) {
@@ -335,7 +335,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
    * Use this method for user-facing messages.
    * Use @dxos/logger for internal messages.
    */
-  override log(message: string, ...args: any[]) {
+  override log(message: string, ...args: any[]): void {
     super.log(message, ...args);
   }
 
@@ -343,7 +343,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
    * Use this method for user-facing warnings.
    * Use @dxos/logger for internal messages.
    */
-  override warn(err: string | Error) {
+  override warn(err: string | Error): string | Error {
     const message = typeof err === 'string' ? err : err.message;
     super.logToStderr(chalk`{red Warning}: ${message}`);
     // NOTE: Default method displays stack trace.
@@ -384,7 +384,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
   /**
    * Called after each command run.
    */
-  override async finally() {
+  override async finally(): Promise<void> {
     const endTime = new Date();
     // TODO(nf): Move to observability.
     const installationId = this._observability?.getTag('installationId');
@@ -419,7 +419,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
     stopFailsafe.unref();
   }
 
-  async maybeStartDaemon() {
+  async maybeStartDaemon(): Promise<void> {
     if (this.flags.agent) {
       await this.execWithDaemon(async (daemon) => {
         const running = await daemon.isRunning(this.flags.profile);
@@ -434,7 +434,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
   /**
    * Lazily create the client.
    */
-  async getClient() {
+  async getClient(): Promise<Client> {
     invariant(this._clientConfig);
     if (!this._client) {
       try {
@@ -607,7 +607,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
   /**
    * Hook for client initialization.
    */
-  protected async onClientInit(client: Client) {}
+  protected async onClientInit(client: Client): Promise<void> {}
 
   /**
    * Convenience function to wrap starting the agent.

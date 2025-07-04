@@ -5,16 +5,17 @@
 import { Schema } from 'effect';
 import React, { useState } from 'react';
 
+import { Filter, Obj } from '@dxos/echo';
 import {
   FunctionType,
   FunctionTrigger,
   FunctionTriggerSchema,
-  TriggerKind,
   type FunctionTriggerType,
   ScriptType,
+  TriggerKind,
 } from '@dxos/functions';
 import { type Client, useClient } from '@dxos/react-client';
-import { live, Filter, useQuery, type Space, type Live, getSpace } from '@dxos/react-client/echo';
+import { useQuery, type Space, getSpace } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, Separator, useTranslation } from '@dxos/react-ui';
 import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
@@ -27,7 +28,7 @@ const grid = 'grid grid-cols-[40px_1fr_32px] min-bs-[2.5rem]';
 
 export type AutomationPanelProps = {
   space: Space;
-  object?: Live<any>;
+  object?: Obj.Any;
   initialTrigger?: FunctionTriggerType;
   onDone?: () => void;
 };
@@ -50,7 +51,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   };
 
   const handleAdd = () => {
-    setTrigger(live(FunctionTriggerSchema, {}));
+    setTrigger(Obj.make(FunctionTriggerSchema, {}));
     setSelected(undefined);
   };
 
@@ -64,7 +65,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
     if (selected) {
       Object.assign(selected, trigger);
     } else {
-      space.db.add(live(FunctionTrigger, trigger));
+      space.db.add(Obj.make(FunctionTrigger, trigger));
     }
 
     setTrigger(undefined);
@@ -77,60 +78,62 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
     onDone?.();
   };
 
+  if (trigger) {
+    return (
+      <ControlItem title={t('trigger editor title')}>
+        <TriggerEditor space={space} trigger={trigger} onSave={handleSave} onCancel={handleCancel} />
+      </ControlItem>
+    );
+  }
+
   return (
-    <div className='flex flex-col w-full'>
-      {trigger ? (
-        <ControlItem title={t('trigger editor title')}>
-          <TriggerEditor space={space} trigger={trigger} onSave={handleSave} onCancel={handleCancel} />
-        </ControlItem>
-      ) : (
-        <div role='none' className={controlItemClasses}>
-          <List.Root<FunctionTrigger> items={triggers} isItem={Schema.is(FunctionTrigger)} getId={(field) => field.id}>
-            {({ items: triggers }) => (
-              <div role='list' className='flex flex-col w-full'>
-                {triggers?.map((trigger) => {
-                  const copyAction = getCopyAction(client, trigger);
-                  return (
-                    <List.Item<FunctionTrigger>
-                      key={trigger.id}
-                      item={trigger}
-                      classNames={mx(grid, ghostHover, 'items-center', 'px-2')}
-                    >
-                      <Input.Root>
-                        <Input.Switch
-                          checked={trigger.enabled}
-                          onCheckedChange={(checked) => (trigger.enabled = checked)}
+    <div className={controlItemClasses}>
+      {triggers.length > 0 && (
+        <List.Root<FunctionTrigger> items={triggers} isItem={Schema.is(FunctionTrigger)} getId={(field) => field.id}>
+          {({ items: triggers }) => (
+            <div role='list' className='flex flex-col w-full'>
+              {triggers?.map((trigger) => {
+                const copyAction = getCopyAction(client, trigger);
+                return (
+                  <List.Item<FunctionTrigger>
+                    key={trigger.id}
+                    item={trigger}
+                    classNames={mx(grid, ghostHover, 'items-center', 'px-2')}
+                  >
+                    <Input.Root>
+                      <Input.Switch
+                        checked={trigger.enabled}
+                        onCheckedChange={(checked) => (trigger.enabled = checked)}
+                      />
+                    </Input.Root>
+
+                    <div className={'flex'}>
+                      <List.ItemTitle
+                        classNames='px-1 cursor-pointer w-0 shrink truncate'
+                        onClick={() => handleSelect(trigger)}
+                      >
+                        {getFunctionName(scripts, functions, trigger) ?? '∅'}
+                      </List.ItemTitle>
+
+                      {/* TODO: a better way to expose copy action */}
+                      {copyAction && (
+                        <Clipboard.IconButton
+                          label={t(copyAction.translationKey)}
+                          value={copyAction.contentProvider()}
                         />
-                      </Input.Root>
+                      )}
+                    </div>
 
-                      <div className={'flex'}>
-                        <List.ItemTitle
-                          classNames='px-1 cursor-pointer w-0 shrink truncate'
-                          onClick={() => handleSelect(trigger)}
-                        >
-                          {getFunctionName(scripts, functions, trigger) ?? '∅'}
-                        </List.ItemTitle>
-
-                        {/* TODO: a better way to expose copy action */}
-                        {copyAction && (
-                          <Clipboard.IconButton
-                            label={t(copyAction.translationKey)}
-                            value={copyAction.contentProvider()}
-                          />
-                        )}
-                      </div>
-
-                      <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
-                    </List.Item>
-                  );
-                })}
-              </div>
-            )}
-          </List.Root>
-          {triggers.length > 0 && <Separator classNames='mlb-4' />}
-          <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
-        </div>
+                    <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
+                  </List.Item>
+                );
+              })}
+            </div>
+          )}
+        </List.Root>
       )}
+      {triggers.length > 0 && <Separator classNames='mlb-4' />}
+      <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
     </div>
   );
 };

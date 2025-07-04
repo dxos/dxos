@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState, useCallback } from 'react';
 
 import { faker } from '@dxos/random';

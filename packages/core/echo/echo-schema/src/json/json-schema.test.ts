@@ -357,6 +357,23 @@ describe('effect-to-json', () => {
     `);
   });
 
+  test('email schema', () => {
+    const schema = Email;
+    const jsonSchema = toJsonSchema(schema);
+    expect(jsonSchema).toMatchInlineSnapshot(`
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "description": "Email address",
+        "format": "email",
+        "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+        "title": "Email",
+        "type": "string",
+      }
+    `);
+    const effectSchema = toEffectSchema(jsonSchema);
+    expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(schema.ast));
+  });
+
   const expectReferenceAnnotation = (object: JsonSchemaType) => {
     expect(object.reference).to.deep.eq({
       schema: {

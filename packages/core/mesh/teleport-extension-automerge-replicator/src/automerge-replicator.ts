@@ -115,14 +115,14 @@ export class AutomergeReplicator implements TeleportExtension {
     await this._destroy(err);
   }
 
-  private async _destroy(err?: Error) {
+  private async _destroy(err?: Error): Promise<void> {
     this._destroyed = true;
     this._rpc = undefined;
     this._extensionContext = undefined;
     await this._callbacks.onClose?.(err);
   }
 
-  async sendSyncMessage(message: SyncMessage) {
+  async sendSyncMessage(message: SyncMessage): Promise<void> {
     invariant(!this._destroyed);
     await this._opened.wait();
     invariant(this._rpc, 'RPC not initialized');

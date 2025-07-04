@@ -2,14 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
+
 import { MARKDOWN_PLUGIN } from './meta';
 import { DocumentType } from './types';
 
 export default [
   {
     'en-US': {
-      [DocumentType.typename]: {
+      [Type.getTypename(DocumentType)]: {
         'typename label': 'Document',
+        'typename label_zero': 'Documents',
+        'typename label_one': 'Document',
+        'typename label_other': 'Documents',
         'object name placeholder': 'New document',
       },
       [MARKDOWN_PLUGIN]: {

@@ -75,7 +75,7 @@
   .dx-main-sidebar {
     @apply fixed overscroll-contain overflow-x-hidden overflow-y-auto;
     @apply duration-200 ease-in-out-symmetric;
-    @apply border-landmarkLine border-subduedSeparator rounded-lg;
+    @apply border-landmarkLine border-subduedSeparator rounded-md;
     @apply sidebar-surface backdrop-blur-md dark:backdrop-blur-lg;
 
     transition-property: inset-inline-start, inset-inline-end, inline-size;

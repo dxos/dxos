@@ -5,7 +5,8 @@
 import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { FormatEnum, toJsonSchema, type EchoSchema } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { FormatEnum } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
@@ -27,7 +28,7 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
   const currentCoordinateProperty = useMemo(() => getLocationProperty(map?.view?.target), [map?.view?.target]);
   const currentSchema = useSchema(client, space, currentTypename);
 
-  const [allSchemata, setAllSchemata] = useState<EchoSchema[]>([]);
+  const [allSchemata, setAllSchemata] = useState<Type.Schema[]>([]);
 
   useEffect(() => {
     if (!space) {
@@ -51,7 +52,7 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
     }));
   }, [allSchemata]);
 
-  const jsonSchema = useMemo(() => (currentSchema ? toJsonSchema(currentSchema) : {}), [currentSchema]);
+  const jsonSchema = useMemo(() => (currentSchema ? Type.toJsonSchema(currentSchema) : {}), [currentSchema]);
   const locationFields = useMemo(() => {
     if (!jsonSchema?.properties) {
       return [];
@@ -93,5 +94,15 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
     return null;
   }
 
-  return <Form schema={MapSettingsSchema} values={initialValues} onSave={onSave} autoSave Custom={custom} />;
+  return (
+    <Form
+      schema={MapSettingsSchema}
+      values={initialValues}
+      onSave={onSave}
+      autoSave
+      Custom={custom}
+      outerSpacing='blockStart-0'
+      classNames='pbs-inputSpacingBlock'
+    />
+  );
 };

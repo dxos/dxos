@@ -60,7 +60,7 @@ export class Shell {
     invitationUrl: string;
     deviceInvitationParam: string;
     spaceInvitationParam: string;
-  }) {
+  }): Promise<void> {
     await this._shellManager.setInvitationUrl(request);
   }
 

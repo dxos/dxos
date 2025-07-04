@@ -4,8 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { Ref, Type } from '@dxos/echo';
-import { type Space, live } from '@dxos/react-client/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
+import { type Space } from '@dxos/react-client/echo';
 
 export const Todo = Schema.Struct({
   title: Schema.String,
@@ -29,7 +29,7 @@ export const TodoList = Schema.Struct({
 export type TodoList = Schema.Schema.Type<typeof TodoList>;
 
 export const createTodoList = (space: Space) => {
-  const list = space.db.add(live(TodoList, { todos: [] }));
+  const list = space.db.add(Obj.make(TodoList, { todos: [] }));
   space.properties[Type.getTypename(TodoList)] = Ref.make(list);
   return list;
 };

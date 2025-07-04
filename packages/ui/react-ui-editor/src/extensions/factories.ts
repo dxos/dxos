@@ -34,6 +34,7 @@ import { hexToHue, isNotFalsy } from '@dxos/util';
 import { automerge } from './automerge';
 import { SpaceAwarenessProvider, awareness } from './awareness';
 import { focus } from './focus';
+import { editorGutter, editorMonospace } from '../defaults';
 import { type ThemeStyles, defaultTheme } from '../styles';
 
 //
@@ -60,7 +61,9 @@ export type BasicExtensionsOptions = {
   indentWithTab?: boolean;
   keymap?: null | 'default' | 'standard';
   lineNumbers?: boolean;
+  /** If false then do not set a max-width or side margin on the editor. */
   lineWrapping?: boolean;
+  monospace?: boolean;
   placeholder?: string;
   /** If true user cannot edit the text, but they can still select and copy it. */
   readOnly?: boolean;
@@ -106,8 +109,9 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.focus && focus,
     props.highlightActiveLine && highlightActiveLine(),
     props.history && history(),
-    props.lineNumbers && lineNumbers(),
+    props.lineNumbers && [lineNumbers(), editorGutter],
     props.lineWrapping && EditorView.lineWrapping,
+    props.monospace && editorMonospace,
     props.placeholder && placeholder(props.placeholder),
     props.readOnly !== undefined && EditorState.readOnly.of(props.readOnly),
     props.scrollPastEnd && scrollPastEnd(),

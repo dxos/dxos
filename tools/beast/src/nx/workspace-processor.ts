@@ -55,7 +55,7 @@ export class WorkspaceProcessor {
     return this._projectsByPackage.get(packageName);
   }
 
-  init() {
+  init(): this {
     // Parse Nx workspace.
     const { projects } = this.readJson<WorkspaceJson>('workspace.json');
 

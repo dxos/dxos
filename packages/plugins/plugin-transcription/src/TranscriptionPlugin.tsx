@@ -3,8 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
-import { QueueImpl } from '@dxos/echo-db';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
@@ -32,13 +31,12 @@ export const TranscriptionPlugin = () =>
             icon: 'ph--subtitles--regular',
             // TODO(wittjosiah): Factor out. Artifact? Separate capability?
             getTextContent: async (transcript: TranscriptType) => {
-              const client = context.getCapability(ClientCapabilities.Client);
               const space = getSpace(transcript);
               const members = space?.members.get().map((member) => member.identity) ?? [];
-              const queue = new QueueImpl(client.edge, transcript.queue.dxn);
-              await queue.refresh();
-              const content = queue.items
-                .filter((message) => isInstanceOf(DataType.Message, message))
+              const queue = space?.queues.get<DataType.Message>(transcript.queue.dxn);
+              await queue?.refresh();
+              const content = queue?.objects
+                .filter((message) => Obj.instanceOf(DataType.Message, message))
                 .flatMap((message, index) => renderMarkdown(members)(message, index))
                 .join('\n\n');
               return content;

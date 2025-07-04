@@ -10,6 +10,7 @@ import React, {
   useMemo,
   type FocusEvent,
   type PropsWithChildren,
+  useCallback,
 } from 'react';
 
 import { raise } from '@dxos/debug';
@@ -67,12 +68,8 @@ export const FormProvider = ({
 >) => {
   const form = useForm(formOptions);
 
-  useEffect(() => {
-    if (!formRef?.current) {
-      return;
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
       const keyIsEnter = event.key === 'Enter';
       const modifierUsed = event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
       const inputIsTextarea = (event.target as HTMLElement).tagName.toLowerCase() === 'textarea';
@@ -94,7 +91,14 @@ export const FormProvider = ({
           (event.target as HTMLElement).blur();
         }
       }
-    };
+    },
+    [form, autoSave],
+  );
+
+  useEffect(() => {
+    if (!formRef?.current) {
+      return;
+    }
 
     const formElement = formRef.current;
 

@@ -23,7 +23,7 @@ export class Compiler {
 
   constructor(private readonly _options: ts.CompilerOptions = defaultOptions) {}
 
-  async initialize() {
+  async initialize(): Promise<void> {
     if (this._env) {
       return;
     }
@@ -40,12 +40,12 @@ export class Compiler {
     return this._env;
   }
 
-  setFile(fileName: string, content: string) {
+  setFile(fileName: string, content: string): void {
     invariant(this._fsMap, 'File system map not initialized.');
     this.environment.createFile(fileName, content);
   }
 
-  compile(fileName: string) {
+  compile(fileName: string): ts.EmitOutput {
     return this.environment.languageService.getEmitOutput(fileName);
   }
 }

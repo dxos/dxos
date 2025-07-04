@@ -37,12 +37,12 @@ export class Spy {
     return `${this.id.toHex().slice(0, 4)}[${this.size}]`;
   }
 
-  humanize(key: PublicKey) {
+  humanize(key: PublicKey): string {
     invariant(key);
     return humanize(key);
   }
 
-  enable(enable = true) {
+  enable(enable = true): this {
     this._enabled = enable;
     return this;
   }
@@ -50,7 +50,7 @@ export class Spy {
   /**
    * Bind the object instance to the key.
    */
-  bind(key: PublicKey | string, object: any, label?: string) {
+  bind(key: PublicKey | string, object: any, label?: string): this {
     const keyString = typeof key === 'string' ? key : humanize(key);
     let bindings = this._bindings.get(keyString);
     if (!bindings) {
@@ -69,7 +69,7 @@ export class Spy {
   /**
    * Log the message with the given key or bound object.
    */
-  async log(key: any, data: any, tmp?: string) {
+  async log(key: any, data: any, tmp?: string): Promise<this> {
     invariant(key);
     if (this._enabled) {
       let keyValue: string;
@@ -93,7 +93,7 @@ export class Spy {
     return this;
   }
 
-  async mark(label: string) {
+  async mark(label: string): Promise<this> {
     if (this._enabled) {
       await this._post({ cmd: Command.MARK, label: label.replace(/\W+/g, '-') });
     }
@@ -104,7 +104,7 @@ export class Spy {
   /**
    * Clear the log.
    */
-  async clear() {
+  async clear(): Promise<this> {
     this._bindings.clear();
     if (this._enabled) {
       await this._post({ cmd: Command.CLEAR });
@@ -113,7 +113,7 @@ export class Spy {
     return this;
   }
 
-  async _post(data: any) {
+  async _post(data: any): Promise<void> {
     const { hostname, port, path } = this._config;
     const url = urlJoin(`http://${hostname}:${port}`, path);
 

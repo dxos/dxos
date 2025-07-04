@@ -43,7 +43,7 @@ export class RtcTransportService implements BridgeService {
     private readonly _transportFactory: TransportFactory = createRtcTransportFactory(webrtcConfig, iceProvider),
   ) {}
 
-  public hasOpenTransports() {
+  public hasOpenTransports(): boolean {
     return this._openTransports.size > 0;
   }
 
@@ -151,7 +151,7 @@ export class RtcTransportService implements BridgeService {
     }
   }
 
-  async close({ proxyId }: CloseRequest) {
+  async close({ proxyId }: CloseRequest): Promise<void> {
     const transport = this._openTransports.get(proxyId);
     if (!transport) {
       return;
@@ -161,7 +161,7 @@ export class RtcTransportService implements BridgeService {
     await this._safeCloseTransport(transport);
   }
 
-  private async _safeCloseTransport(transport: TransportState) {
+  private async _safeCloseTransport(transport: TransportState): Promise<void> {
     if (this._openTransports.get(transport.proxyId) === transport) {
       this._openTransports.delete(transport.proxyId);
     }

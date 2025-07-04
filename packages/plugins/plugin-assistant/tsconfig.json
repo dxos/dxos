@@ -48,9 +48,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -96,6 +93,12 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../devtools/devtools"
+    },
+    {
+      "path": "../../devtools/storybook-utils"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -115,6 +118,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-canvas-compute"

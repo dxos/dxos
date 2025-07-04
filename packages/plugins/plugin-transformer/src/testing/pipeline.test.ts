@@ -9,21 +9,21 @@ import { log } from '@dxos/log';
 
 import { NodeRagPipeline } from './node-pipeline';
 
-describe('transformers', () => {
-  test.skip('tokenizer', async () => {
+describe.skip('transformers', () => {
+  test('tokenizer', async () => {
     const tokenizer = await AutoTokenizer.from_pretrained('Xenova/bert-base-uncased');
     const tokens = await tokenizer('I love transformers!');
     log.info('tokens', { tokens });
   });
 
-  test.skip('sentiment', async ({ expect }) => {
+  test('sentiment', async ({ expect }) => {
     const sentiment = await pipeline('sentiment-analysis');
     const result = await sentiment('I love transformers!');
     expect(result[0]).to.include({ label: 'POSITIVE' });
     log.info('result', { result });
   }, 30_000);
 
-  test.skip('run embeddings', async ({ expect }) => {
+  test('run embeddings', async ({ expect }) => {
     const content = [
       'create map of london',
       'create function to generate the fibonacci sequence',
@@ -35,7 +35,7 @@ describe('transformers', () => {
     log.info('output', { output });
   });
 
-  test.skip('generation', async ({ expect }) => {
+  test('generation', async ({ expect }) => {
     const generator = await pipeline('text-generation', 'Xenova/gpt2');
     const output = await generator('create');
     log.info('output', { output });
@@ -52,7 +52,7 @@ describe('transformers', () => {
  * 2. Ensure WebGPU is available
  * 3. Consider using a test framework that supports browser environments (like Playwright or Cypress)
  */
-describe('rag pipeline', () => {
+describe.skip('rag pipeline', () => {
   const knowledgeBase = [
     //
     'create a new table.',
@@ -61,7 +61,7 @@ describe('rag pipeline', () => {
     'create a function to generate the fibonacci sequence.',
   ];
 
-  test.skip('prediction pipeline', async ({ expect }) => {
+  test('prediction pipeline', async ({ expect }) => {
     const pipeline = new NodeRagPipeline();
     const result = await pipeline.generateCompletions('create a function', knowledgeBase);
 

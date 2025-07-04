@@ -4,18 +4,12 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import {
-  assertEchoSchema,
-  FormatEnum,
-  isMutable,
-  toJsonSchema,
-  EchoObject,
-  GeneratorAnnotation,
-} from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
+import { FormatEnum, isMutable, toJsonSchema, EchoObject, GeneratorAnnotation } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
@@ -131,6 +125,7 @@ const useTestTableModel = () => {
     model,
     presentation,
     space,
+    client,
     handleInsertRow,
     handleSaveView,
     handleDeleteRows,
@@ -144,8 +139,9 @@ const StoryViewEditor = () => {
   const handleTypenameChanged = useCallback(
     (typename: string) => {
       invariant(schema);
+      invariant(Type.isMutable(schema));
+      schema.updateTypename(typename);
       invariant(table?.view?.target);
-      assertEchoSchema(schema).updateTypename(typename);
       table.view.target.query.typename = typename;
     },
     [schema, table?.view?.target],
@@ -171,7 +167,7 @@ const StoryViewEditor = () => {
 //
 
 const DefaultStory = () => {
-  const { schema, table, tableRef, model, presentation, handleInsertRow, handleSaveView } = useTestTableModel();
+  const { schema, table, tableRef, model, presentation, client, handleInsertRow, handleSaveView } = useTestTableModel();
 
   if (!schema || !table) {
     return <div />;
@@ -180,9 +176,16 @@ const DefaultStory = () => {
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
       <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
-        <TableToolbar classNames='border-be border-separator' onAdd={handleInsertRow} onSave={handleSaveView} />
+        <TableToolbar classNames='border-be border-subduedSeparator' onAdd={handleInsertRow} onSave={handleSaveView} />
         <Table.Root>
-          <Table.Main ref={tableRef} model={model} presentation={presentation} schema={schema} ignoreAttention />
+          <Table.Main
+            ref={tableRef}
+            model={model}
+            presentation={presentation}
+            schema={schema}
+            client={client}
+            ignoreAttention
+          />
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
@@ -206,14 +209,22 @@ type StoryProps = { rows?: number };
 const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
-  parameters: { translations },
+  parameters: {
+    translations,
+    layout: 'fullscreen',
+    controls: {
+      disable: true,
+    },
+  },
   decorators: [
+    withTheme,
+    withLayout({ fullscreen: true }),
     withClientProvider({
       types: [TableType, ViewType],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(live(TableType, {}));
+        const table = space.db.add(Obj.make(TableType, {}));
         const schema = await initializeTable({ client, space, table, initialRow: false });
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
@@ -224,8 +235,6 @@ const meta: Meta<StoryProps> = {
         });
       },
     }),
-    withLayout({ fullscreen: true }),
-    withTheme,
   ],
 };
 
@@ -242,7 +251,7 @@ export const StaticSchema: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(live(TableType, {}));
+        const table = space.db.add(Obj.make(TableType, {}));
         await initializeTable({ client, space, table, typename: Testing.Organization.typename });
 
         const factory = createObjectFactory(space.db, faker as any);
@@ -284,7 +293,7 @@ export const ArrayOfObjects: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(live(TableType, {}));
+        const table = space.db.add(Obj.make(TableType, {}));
         await initializeTable({ client, space, table, typename: ContactWithArrayOfEmails.typename });
 
         const factory = createObjectFactory(space.db, faker as any);
@@ -337,7 +346,7 @@ export const Tags: Meta<StoryProps> = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const table = space.db.add(live(TableType, {}));
+        const table = space.db.add(Obj.make(TableType, {}));
         await initializeTable({ client, space, table, initialRow: false, typename });
 
         // Populate.

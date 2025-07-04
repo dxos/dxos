@@ -2,14 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
+
 import { THREAD_PLUGIN } from './meta';
 import { ChannelType } from './types';
 
 export default [
   {
     'en-US': {
-      [ChannelType.typename]: {
+      [Type.getTypename(ChannelType)]: {
         'typename label': 'Channel',
+        'typename label_zero': 'Channels',
+        'typename label_one': 'Channel',
+        'typename label_other': 'Channels',
         'object name placeholder': 'New channel',
       },
       [THREAD_PLUGIN]: {
@@ -39,7 +44,7 @@ export default [
         'open comments panel label': 'Show Comments',
         'comments label': 'Comments',
         'show all label': 'All comments',
-        'show unresolved label': 'Unresolved only',
+        'show unresolved label': 'Unresolved comments',
 
         'channel companion label': 'Channel',
         'call panel label': 'Active Call',

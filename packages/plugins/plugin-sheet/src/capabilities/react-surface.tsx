@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { SheetCapabilities } from './capabilities';
@@ -19,7 +19,7 @@ export default () =>
       id: `${SHEET_PLUGIN}/sheet`,
       role: ['article', 'section'],
       filter: (data): data is { subject: SheetType } =>
-        isInstanceOf(SheetType, data.subject) && !!getSpace(data.subject),
+        Obj.instanceOf(SheetType, data.subject) && !!getSpace(data.subject),
       component: ({ data, role }) => {
         const computeGraphRegistry = useCapability(SheetCapabilities.ComputeGraphRegistry);
 
@@ -33,7 +33,7 @@ export default () =>
     createSurface({
       id: `${SHEET_PLUGIN}/object-settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: SheetType } => isInstanceOf(SheetType, data.subject),
+      filter: (data): data is { subject: SheetType } => Obj.instanceOf(SheetType, data.subject),
       component: ({ data }) => <RangeList sheet={data.subject} />,
     }),
   ]);

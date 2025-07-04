@@ -101,7 +101,7 @@ export class Framer {
     return this._writable;
   }
 
-  private _processResponseQueue() {
+  private _processResponseQueue(): void {
     const responseQueue = this._sendCallbacks;
     this._sendCallbacks = [];
     this._writable = true;
@@ -112,7 +112,7 @@ export class Framer {
   /**
    * Attempts to pop frames from the buffer and call the message callback.
    */
-  private _popFrames() {
+  private _popFrames(): void {
     let offset = 0;
     while (offset < this._buffer!.length) {
       const frame = decodeFrame(this._buffer!, offset);
@@ -134,7 +134,7 @@ export class Framer {
     }
   }
 
-  destroy() {
+  destroy(): void {
     // TODO(dmaretskyi): Call stream.end() instead?
     if (this._stream.readableLength > 0) {
       log('framer destroyed while there are still read bytes in the buffer.');

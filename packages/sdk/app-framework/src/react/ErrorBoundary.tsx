@@ -21,7 +21,7 @@ export class ErrorBoundary extends Component<Props, State> {
     this.state = { error: undefined };
   }
 
-  static getDerivedStateFromError(error: Error) {
+  static getDerivedStateFromError(error: Error): { error: Error } {
     return { error };
   }
 
@@ -31,7 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }
   }
 
-  override render() {
+  override render(): string | number | boolean | React.JSX.Element | Iterable<React.ReactNode> | null | undefined {
     if (this.state.error) {
       return <this.props.fallback data={this.props.data} error={this.state.error} reset={this.resetError} />;
     }
@@ -39,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 
-  private resetError() {
+  private resetError(): void {
     this.setState({ error: undefined });
   }
 }

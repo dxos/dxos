@@ -56,6 +56,8 @@ export class QueryPlanner {
         return this._generateReferenceTraversalClause(query, context);
       case 'union':
         return this._generateUnionClause(query, context);
+      case 'set-difference':
+        return this._generateSetDifferenceClause(query, context);
       default:
         throw new QueryError(`Unsupported query type: ${(query as any).type}`, {
           context: { query: context.originalQuery },
@@ -238,6 +240,19 @@ export class QueryPlanner {
       {
         _tag: 'UnionStep',
         plans: query.queries.map((query) => this._generate(query, context)),
+      },
+    ]);
+  }
+
+  private _generateSetDifferenceClause(
+    query: QueryAST.QuerySetDifferenceClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      {
+        _tag: 'SetDifferenceStep',
+        source: this._generate(query.source, context),
+        exclude: this._generate(query.exclude, context),
       },
     ]);
   }

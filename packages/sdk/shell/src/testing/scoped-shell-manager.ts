@@ -9,11 +9,11 @@ type Scope = Locator | FrameLocator | Page;
 export class ScopedShellManager {
   page!: Page;
 
-  authenticatorIsVisible(type: 'device' | 'space', scope?: Scope) {
+  authenticatorIsVisible(type: 'device' | 'space', scope?: Scope): Promise<boolean> {
     return (scope || this.page).getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).isVisible();
   }
 
-  async invitationFailed(scope?: Scope, timeout = 3000) {
+  async invitationFailed(scope?: Scope, timeout = 3000): Promise<boolean> {
     const peer = scope || this.page;
     try {
       await peer.locator('[data-testid=invitation-rescuer-reset]:not([disabled])').waitFor({ timeout });
@@ -23,16 +23,16 @@ export class ScopedShellManager {
     }
   }
 
-  async inputInvitation(type: 'device' | 'space', invitation: string, scope?: Scope) {
+  async inputInvitation(type: 'device' | 'space', invitation: string, scope?: Scope): Promise<void> {
     await (scope || this.page).getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input`).fill(invitation);
     await this.page.keyboard.press('Enter');
   }
 
-  async invitationInputContinue(type: 'device' | 'space', scope?: Scope) {
+  async invitationInputContinue(type: 'device' | 'space', scope?: Scope): Promise<void> {
     await (scope || this.page).getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input-continue`).click();
   }
 
-  async cancelInvitation(type: 'device' | 'space', kind: 'host' | 'guest', scope?: Scope) {
+  async cancelInvitation(type: 'device' | 'space', kind: 'host' | 'guest', scope?: Scope): Promise<void> {
     if (kind === 'guest') {
       await (scope || this.page)
         .getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-cancel`)
@@ -42,7 +42,7 @@ export class ScopedShellManager {
     }
   }
 
-  async readyToAuthenticate(type: 'device' | 'space', scope?: Scope, timeout = 3000) {
+  async readyToAuthenticate(type: 'device' | 'space', scope?: Scope, timeout = 3000): Promise<boolean> {
     const peer = scope || this.page;
     try {
       await peer
@@ -54,24 +54,24 @@ export class ScopedShellManager {
     }
   }
 
-  async authenticateInvitation(type: 'device' | 'space', authCode: string, scope?: Scope) {
+  async authenticateInvitation(type: 'device' | 'space', authCode: string, scope?: Scope): Promise<void> {
     const peer = scope || this.page;
     // TODO(wittjosiah): Update ids.
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).fill(authCode);
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();
   }
 
-  async clearAuthCode(type: 'device' | 'space', scope?: Scope) {
+  async clearAuthCode(type: 'device' | 'space', scope?: Scope): Promise<void> {
     const peer = scope || this.page;
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).fill('');
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).focus();
   }
 
-  async resetInvitation(scope?: Scope) {
+  async resetInvitation(scope?: Scope): Promise<void> {
     await (scope || this.page).getByTestId('invitation-rescuer-reset').click();
   }
 
-  async doneInvitation(type: 'device' | 'space', scope?: Scope) {
+  async doneInvitation(type: 'device' | 'space', scope?: Scope): Promise<void> {
     await (scope || this.page)
       .getByTestId(type === 'device' ? 'halo-invitation-accepted-done' : 'space-invitation-accepted-done')
       .click();

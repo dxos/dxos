@@ -5,14 +5,15 @@
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
-import { EXCALIDRAW_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type SketchSettingsProps, SketchSettingsSchema } from '../types';
 
 export default () => {
   const settings = live<SketchSettingsProps>({});
+
   return contributes(Capabilities.Settings, {
+    prefix: meta.id,
     schema: SketchSettingsSchema,
-    prefix: EXCALIDRAW_PLUGIN,
     value: settings,
   });
 };

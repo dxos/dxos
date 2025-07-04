@@ -64,7 +64,7 @@ export class Messenger {
     this.open();
   }
 
-  open() {
+  open(): void {
     if (!this._closed) {
       return;
     }
@@ -93,7 +93,7 @@ export class Messenger {
     log.trace('dxos.mesh.messenger.open', trace.end({ id: traceId }));
   }
 
-  async close() {
+  async close(): Promise<void> {
     if (this._closed) {
       return;
     }
@@ -236,7 +236,7 @@ export class Messenger {
     }
   }
 
-  private async _handleReliablePayload({ author, recipient, payload }: Message) {
+  private async _handleReliablePayload({ author, recipient, payload }: Message): Promise<void> {
     invariant(payload.type_url === 'dxos.mesh.messaging.ReliablePayload');
     const reliablePayload: ReliablePayload = ReliablePayload.decode(payload.value, { preserveAny: true });
 
@@ -267,7 +267,7 @@ export class Messenger {
     });
   }
 
-  private async _handleAcknowledgement({ payload }: { payload: Any }) {
+  private async _handleAcknowledgement({ payload }: { payload: Any }): Promise<void> {
     invariant(payload.type_url === 'dxos.mesh.messaging.Acknowledgement');
     this._onAckCallbacks.get(Acknowledgement.decode(payload.value).messageId)?.();
   }
@@ -317,7 +317,7 @@ export class Messenger {
     }
   }
 
-  private _performGc() {
+  private _performGc(): void {
     const start = performance.now();
 
     for (const key of this._toClear.keys()) {

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type BaseEchoObject, ObjectId, type HasId } from '@dxos/echo-schema';
+import { type Obj, type Relation } from '@dxos/echo';
+import { ObjectId, type BaseEchoObject, type HasId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
@@ -13,18 +14,19 @@ export type MemoryQueueOptions<T extends BaseEchoObject = BaseEchoObject> = {
   spaceId?: SpaceId;
   queueId?: string;
   dxn?: DXN;
-  items?: T[];
+  objects?: T[];
 };
 
 /**
  * In-memory queue.
+ * @deprecated Use the actual queue with a mock service.
  */
-export class MemoryQueue<T extends BaseEchoObject = BaseEchoObject> implements Queue<T> {
-  static make<T extends BaseEchoObject = BaseEchoObject>({
+export class MemoryQueue<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any> implements Queue<T> {
+  static make<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>({
     spaceId,
     queueId,
     dxn,
-    items,
+    objects,
   }: MemoryQueueOptions<T>): MemoryQueue<T> {
     if (!dxn) {
       dxn = new DXN(DXN.kind.QUEUE, [spaceId ?? SpaceId.random(), queueId ?? ObjectId.random()]);
@@ -33,25 +35,28 @@ export class MemoryQueue<T extends BaseEchoObject = BaseEchoObject> implements Q
     }
 
     const queue = new MemoryQueue<T>(dxn);
-    if (items) {
-      void queue.append(items);
+    if (objects?.length) {
+      void queue.append(objects);
     }
+
     return queue;
   }
 
   private readonly _signal = compositeRuntime.createSignal();
 
-  private _items: T[] = [];
+  private _objects: T[] = [];
 
   constructor(private readonly _dxn: DXN) {}
 
-  get dxn() {
-    return this._dxn;
+  toJSON() {
+    return {
+      dxn: this._dxn.toString(),
+      objects: this._objects.length,
+    };
   }
 
-  get items(): T[] {
-    this._signal.notifyRead();
-    return [...this._items];
+  get dxn() {
+    return this._dxn;
   }
 
   get isLoading(): boolean {
@@ -62,17 +67,30 @@ export class MemoryQueue<T extends BaseEchoObject = BaseEchoObject> implements Q
     return null;
   }
 
+  get objects(): T[] {
+    this._signal.notifyRead();
+    return [...this._objects];
+  }
+
   /**
    * Insert into queue with optimistic update.
    */
-  async append(items: T[]): Promise<void> {
-    this._items = [...this._items, ...items];
+  async append(objects: T[]): Promise<void> {
+    this._objects = [...this._objects, ...objects];
     this._signal.notifyWrite();
   }
 
-  delete(ids: ObjectId[]): void {
+  async queryObjects(): Promise<T[]> {
+    return this._objects;
+  }
+
+  async getObjectsById(ids: ObjectId[]): Promise<(T | null)[]> {
+    return ids.map((id) => this._objects.find((object) => (object as HasId).id === id) ?? null);
+  }
+
+  async delete(ids: ObjectId[]): Promise<void> {
     // TODO(dmaretskyi): Restrict types.
-    this._items = this._items.filter((item) => !ids.includes((item as HasId).id));
+    this._objects = this._objects.filter((object) => !ids.includes((object as HasId).id));
     this._signal.notifyWrite();
   }
 

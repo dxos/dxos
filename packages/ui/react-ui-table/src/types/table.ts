@@ -5,7 +5,8 @@
 import { Schema } from 'effect';
 
 // import { ThreadType } from '@dxos/plugin-space/types';
-import { ObjectId, Ref, Expando, EchoObject, LabelAnnotation } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { ObjectId, Ref, Expando, LabelAnnotation } from '@dxos/echo-schema';
 import { ViewType } from '@dxos/schema';
 
 export const TableSchema = Schema.Struct({
@@ -18,7 +19,7 @@ export const TableSchema = Schema.Struct({
 
 // TODO(burdon): Move out of react-ui-xxx.
 export const TableType = TableSchema.pipe(
-  EchoObject({
+  Type.Obj({
     typename: 'dxos.org/type/Table',
     version: '0.1.0',
   }),

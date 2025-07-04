@@ -4,9 +4,10 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type OAuthFlowResult } from '@dxos/protocols';
-import { live, type Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { useEdgeClient } from '@dxos/react-edge-client';
 import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
@@ -57,7 +58,7 @@ export const NewTokenSelector = ({ space, onCustomToken, onAddAccessToken }: New
       return;
     }
 
-    const token = live(DataType.AccessToken, {
+    const token = Obj.make(DataType.AccessToken, {
       source: preset.source,
       note: preset.note,
       token: '',

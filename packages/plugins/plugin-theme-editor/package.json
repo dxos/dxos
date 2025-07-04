@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-theme-editor",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "DXOS theme editor plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

@@ -56,7 +56,7 @@ export class DiagnosticsChannel {
     }
   }
 
-  destroy() {
+  destroy(): void {
     void this._ctx.dispose();
     this._serveChannel?.close();
     this._clientChannel?.close();
@@ -67,14 +67,14 @@ export class DiagnosticsChannel {
    * This method allows the process to exit.
    * Noop in the browser.
    */
-  unref() {
+  unref(): void {
     if (this._serveChannel && typeof (this._serveChannel as any).unref === 'function') {
       (this._serveChannel as any).unref();
       (this._clientChannel as any).unref();
     }
   }
 
-  serve(manager: DiagnosticsManager) {
+  serve(manager: DiagnosticsManager): void {
     invariant(this._serveChannel);
     const listener = async (event: MessageEvent) => {
       switch (event.data.type) {

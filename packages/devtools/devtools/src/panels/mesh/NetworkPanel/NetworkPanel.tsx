@@ -23,11 +23,11 @@ export type NetworkGraphNode = {
 
 // TODO(burdon): Update to use new GraphModel.
 class NetworkGraphModel extends GraphModel {
-  setData(graph: Graph) {
+  setData(graph: Graph): void {
     // this._graph = graph;
   }
 
-  setFromMemberList(members: SpaceMember[]) {
+  setFromMemberList(members: SpaceMember[]): void {
     // const nodes = new Map<string, NetworkGraphNode>();
     // const edges: GraphEdge[] = [];
     // for (const member of members) {

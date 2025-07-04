@@ -26,11 +26,7 @@ export const TextInput = ({
     <p>{getValue() ?? ''}</p>
   ) : (
     <Input.Root validationValence={status}>
-      {!inputOnly && (
-        <InputHeader error={error}>
-          <Input.Label>{label}</Input.Label>
-        </InputHeader>
-      )}
+      {!inputOnly && <InputHeader error={error} label={label} />}
       {disabled ? (
         <p>{getValue() ?? ''}</p>
       ) : (
@@ -64,11 +60,7 @@ export const NumberInput = ({
     <p>{getValue() ?? ''}</p>
   ) : (
     <Input.Root validationValence={status}>
-      {!inputOnly && (
-        <InputHeader error={error}>
-          <Input.Label>{label}</Input.Label>
-        </InputHeader>
-      )}
+      {!inputOnly && <InputHeader error={error} label={label} />}
       {disabled ? (
         <p>{getValue() ?? ''}</p>
       ) : (
@@ -93,11 +85,7 @@ export const BooleanInput = ({ type, label, inputOnly, getStatus, getValue, onVa
 
   return (
     <Input.Root validationValence={status}>
-      {!inputOnly && (
-        <InputHeader error={error}>
-          <Input.Label>{label}</Input.Label>
-        </InputHeader>
-      )}
+      {!inputOnly && <InputHeader error={error} label={label} />}
       {disabled ? (
         <p>{t(checked ? 'boolean input true value' : 'boolean input false value')}</p>
       ) : (
@@ -130,11 +118,7 @@ export const SelectInput = ({
 
   return disabled && !value ? null : (
     <Input.Root validationValence={status}>
-      {!inputOnly && (
-        <InputHeader error={error}>
-          <Input.Label>{label}</Input.Label>
-        </InputHeader>
-      )}
+      {!inputOnly && <InputHeader error={error} label={label} />}
       {disabled ? (
         <p>{options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}</p>
       ) : (
@@ -197,11 +181,7 @@ export const MarkdownInput = ({
 
   return (
     <Input.Root validationValence={status}>
-      {!inputOnly && (
-        <InputHeader error={error}>
-          <Input.Label>{label}</Input.Label>
-        </InputHeader>
-      )}
+      {!inputOnly && <InputHeader error={error} label={label} />}
       {disabled ? (
         <p>{getValue() ?? ''}</p>
       ) : (

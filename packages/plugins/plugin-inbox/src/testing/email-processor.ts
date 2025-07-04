@@ -4,16 +4,21 @@
 
 import { Schema } from 'effect';
 
-import { defineTool, Message, type AIServiceClient, MixedStreamParser } from '@dxos/ai';
+import { Message, type AiServiceClient, MixedStreamParser, createTool } from '@dxos/ai';
 import { raise } from '@dxos/debug';
-import { create } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { failedInvariant } from '@dxos/invariant';
 import { type DataType } from '@dxos/schema';
 import { type Testing } from '@dxos/schema/testing';
 
+type ProcessEmailResult = {
+  labels: string[];
+  summary: string;
+};
+
 type ProcessEmailParams = {
   email: DataType.Message;
-  aiService: AIServiceClient;
+  aiClient: AiServiceClient;
   context: {
     labels: Testing.Label[];
     documents?: Testing.DocumentType[];
@@ -21,12 +26,7 @@ type ProcessEmailParams = {
   };
 };
 
-type ProcessEmailResult = {
-  labels: string[];
-  summary: string;
-};
-
-export const processEmail = async (params: ProcessEmailParams): Promise<ProcessEmailResult> => {
+export const processEmail = async ({ aiClient, email, context }: ProcessEmailParams): Promise<ProcessEmailResult> => {
   const systemPrompt = `
   You are a helpful assistant that processes emails.
   You are given a set of labels and you need to choose one, multiple, or none to apply to the email.
@@ -46,34 +46,33 @@ export const processEmail = async (params: ProcessEmailParams): Promise<ProcessE
    - Example: [Earnings Report][01JT0JP9AX0XKGZX4MV4B69VT6]
 
   Labels available:
-   ${JSON.stringify(params.context.labels)}
+   ${JSON.stringify(context.labels)}
 
   Context:
-
-  ${JSON.stringify([...(params.context.contacts ?? []), ...(params.context.documents ?? [])])}
+  ${JSON.stringify([...(context.contacts ?? []), ...(context.documents ?? [])])}
 `;
 
   const messages = await new MixedStreamParser().parse(
-    await params.aiService.execStream({
+    await aiClient.execStream({
       model: '@anthropic/claude-3-5-sonnet-20241022',
       systemPrompt,
       history: [
-        create(Message, {
+        Obj.make(Message, {
           role: 'user',
           content: [
             {
               type: 'text',
               text: JSON.stringify({
-                sender: params.email.sender,
-                subject: params.email.properties?.subject,
-                body: params.email.blocks.find((block) => block.type === 'text')?.text,
+                sender: email.sender,
+                subject: email.properties?.subject,
+                body: email.blocks.find((block) => block.type === 'text')?.text,
               }),
             },
           ],
         }),
       ],
       tools: [
-        defineTool('test', {
+        createTool('test', {
           name: 'submit_result',
           description: 'Submit the result',
           schema: Schema.Struct({

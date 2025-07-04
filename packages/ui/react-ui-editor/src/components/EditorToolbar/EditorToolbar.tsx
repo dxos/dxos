@@ -8,7 +8,6 @@ import React, { memo, useMemo } from 'react';
 import { rxFromSignal, type NodeArg } from '@dxos/app-graph';
 import { ElevationProvider } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
-import { textBlockWidth } from '@dxos/react-ui-theme';
 
 import { createBlocks } from './blocks';
 import { createFormatting } from './formatting';
@@ -18,7 +17,6 @@ import { createLists } from './lists';
 import { createSearch } from './search';
 import { type EditorToolbarActionGraphProps, type EditorToolbarFeatureFlags, type EditorToolbarProps } from './util';
 import { createViewMode } from './view-mode';
-import { stackItemContentToolbarClassNames } from '../../defaults';
 
 const createToolbar = ({
   getView,
@@ -117,12 +115,10 @@ const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
 export const EditorToolbar = memo(({ classNames, attendableId, role, ...props }: EditorToolbarProps) => {
   const menuProps = useEditorToolbarActionGraph(props);
   return (
-    <div role='none' className={stackItemContentToolbarClassNames(role)}>
-      <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-        <MenuProvider {...menuProps} attendableId={attendableId}>
-          <ToolbarMenu classNames={[textBlockWidth, classNames]} />
-        </MenuProvider>
-      </ElevationProvider>
-    </div>
+    <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
+      <MenuProvider {...menuProps} attendableId={attendableId}>
+        <ToolbarMenu classNames={classNames} textBlockWidth />
+      </MenuProvider>
+    </ElevationProvider>
   );
 });

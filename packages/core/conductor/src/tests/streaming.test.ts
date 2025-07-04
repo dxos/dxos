@@ -5,40 +5,32 @@
 import { Effect, Stream, Schema } from 'effect';
 import { describe, test } from 'vitest';
 
+import { createTestServices } from '@dxos/functions/testing';
+
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { TestRuntime, testServices } from '../testing';
-import {
-  ComputeGraphModel,
-  defineComputeNode,
-  makeValueBag,
-  synchronizedComputeFunction,
-  unwrapValueBag,
-} from '../types';
+import { TestRuntime } from '../testing';
+import { ComputeGraphModel, defineComputeNode, ValueBag, synchronizedComputeFunction } from '../types';
 import { StreamSchema } from '../util';
 
 const ENABLE_LOGGING = false;
 
 describe('Streaming pipelines', () => {
   test('synchronous stream sum pipeline', async ({ expect }) => {
-    const runtime = new TestRuntime();
+    const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }));
     runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
     runtime.registerGraph('dxn:compute:stream-sum', streamSum());
 
     const { result } = await Effect.runPromise(
       runtime
-        .runGraph('dxn:compute:stream-sum', makeValueBag({ stream: Effect.succeed(Stream.range(1, 10)) }))
-        .pipe(
-          Effect.flatMap(unwrapValueBag),
-          Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
-          Effect.scoped,
-        ),
+        .runGraph('dxn:compute:stream-sum', ValueBag.make({ stream: Effect.succeed(Stream.range(1, 10)) }))
+        .pipe(Effect.flatMap(ValueBag.unwrap), Effect.scoped),
     );
 
     expect(result).toEqual(55);
   });
 
   test('asynchronous stream sum pipeline', async ({ expect }) => {
-    const runtime = new TestRuntime();
+    const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }));
     runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
     runtime.registerGraph('dxn:compute:stream-sum', streamSum());
 
@@ -48,12 +40,8 @@ describe('Streaming pipelines', () => {
 
     const { result } = await Effect.runPromise(
       runtime
-        .runGraph('dxn:compute:stream-sum', makeValueBag({ stream: Effect.succeed(delayedStream) }))
-        .pipe(
-          Effect.flatMap(unwrapValueBag),
-          Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
-          Effect.scoped,
-        ),
+        .runGraph('dxn:compute:stream-sum', ValueBag.make({ stream: Effect.succeed(delayedStream) }))
+        .pipe(Effect.flatMap(ValueBag.unwrap), Effect.scoped),
     );
 
     expect(result).toEqual(55);

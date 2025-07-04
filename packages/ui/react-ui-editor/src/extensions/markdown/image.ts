@@ -99,11 +99,11 @@ class ImageWidget extends WidgetType {
     super();
   }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return this._url === other._url;
   }
 
-  override toDOM(view: EditorView) {
+  override toDOM(view: EditorView): HTMLImageElement {
     const img = document.createElement('img');
     img.setAttribute('src', this._url);
     img.setAttribute('class', 'cm-image');

@@ -4,9 +4,10 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { type EchoSchema, isMutable } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
@@ -96,7 +97,7 @@ const meta: Meta<StoryProps> = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(live(TableType, {}));
+        const table = space.db.add(Obj.make(TableType, {}));
         const schema = await initializeTable({ client, space, table });
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(

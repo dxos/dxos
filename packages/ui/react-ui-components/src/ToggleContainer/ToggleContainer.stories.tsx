@@ -5,13 +5,13 @@
 import '@dxos-theme';
 
 import { computed, type ReadonlySignal, signal } from '@preact/signals-core';
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Icon, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme, withSignals } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ToggleContainer, type ToggleContainerProps } from './ToggleContainer';
 import { MarkdownViewer } from '../MarkdownViewer';
@@ -24,7 +24,7 @@ class Generator {
   readonly count = computed(() => this._lines.value.length);
   readonly text: ReadonlySignal<string[]> = computed(() => [...this._lines.value, this._current.value]);
 
-  start() {
+  start(): void {
     this.stop();
     this._running = setInterval(() => {
       if (this._current.value.length > 0) {
@@ -38,7 +38,7 @@ class Generator {
     }, 100);
   }
 
-  stop() {
+  stop(): void {
     if (this._running) {
       clearInterval(this._running);
       this._running = undefined;
@@ -89,7 +89,7 @@ const meta: Meta<typeof ToggleContainer> = {
   title: 'ui/react-ui-components/ToggleContainer',
   component: ToggleContainer,
   render: DefaultStory,
-  decorators: [withSignals, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center bg-baseSurface' })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center bg-baseSurface' })],
 };
 
 export default meta;

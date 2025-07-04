@@ -220,6 +220,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
             elevation,
             validationValence,
           },
+          '-mbe-labelSpacingBlock',
           classNames,
         )}
         {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}

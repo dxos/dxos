@@ -54,7 +54,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
     return Object.entries(this.tokenSet.colors.semantic.sememes);
   }
 
-  private updateSemanticToken(tokenName: string, condition: 'light' | 'dark', property: 0 | 1, value: any) {
+  private updateSemanticToken(tokenName: string, condition: 'light' | 'dark', property: 0 | 1, value: any): void {
     if (!this.tokenSet.colors?.semantic?.sememes?.[tokenName]?.[condition]) {
       return;
     }
@@ -72,7 +72,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
     this.debouncedSaveAndRender();
   }
 
-  private handleTokenNameChange(tokenName: string, newName: string) {
+  private handleTokenNameChange(tokenName: string, newName: string): void {
     if (!this.tokenSet.colors?.semantic?.sememes?.[tokenName]) {
       return;
     }
@@ -96,17 +96,17 @@ export class DxThemeEditorSemanticColors extends LitElement {
     this.debouncedSaveAndRender();
   }
 
-  private handleSeriesChange(tokenName: string, condition: 'light' | 'dark', value: string) {
+  private handleSeriesChange(tokenName: string, condition: 'light' | 'dark', value: string): void {
     this.updateSemanticToken(tokenName, condition, 0, value);
   }
 
-  private handleBothSeriesChange(tokenName: string, value: string) {
+  private handleBothSeriesChange(tokenName: string, value: string): void {
     // Update both light and dark series values
     this.updateSemanticToken(tokenName, 'light', 0, value);
     this.updateSemanticToken(tokenName, 'dark', 0, value);
   }
 
-  private handleLuminosityChange(tokenName: string, condition: 'light' | 'dark', value: number) {
+  private handleLuminosityChange(tokenName: string, condition: 'light' | 'dark', value: number): void {
     // Get the current value to preserve alpha if it exists
     const currentValue = this.tokenSet.colors?.semantic?.sememes?.[tokenName]?.[condition]?.[1];
     if (!isAlphaLuminosity(currentValue)) {
@@ -123,7 +123,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
     this.updateSemanticToken(tokenName, condition, 1, newValue);
   }
 
-  private handleAlphaChange(tokenName: string, value: number) {
+  private handleAlphaChange(tokenName: string, value: number): void {
     // Update both light and dark conditions
     ['light', 'dark'].forEach((condition) => {
       const currentValue = this.tokenSet.colors?.semantic?.sememes?.[tokenName]?.[condition as 'light' | 'dark']?.[1];
@@ -142,7 +142,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
     });
   }
 
-  private addSemanticToken() {
+  private addSemanticToken(): void {
     if (!this.tokenSet.colors?.semantic?.sememes) {
       return;
     }
@@ -166,7 +166,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
     this.debouncedSaveAndRender();
   }
 
-  private removeSemanticToken(tokenName: string) {
+  private removeSemanticToken(tokenName: string): void {
     if (!this.tokenSet.colors?.semantic?.sememes?.[tokenName]) {
       return;
     }
@@ -202,7 +202,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
     return aliasTokens;
   }
 
-  private addAliasToken(tokenName: string) {
+  private addAliasToken(tokenName: string): void {
     if (!this.tokenSet.colors?.alias?.aliases) {
       return;
     }
@@ -233,7 +233,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
     this.debouncedSaveAndRender();
   }
 
-  private removeAliasToken(tokenName: string, condition: string, aliasName: string) {
+  private removeAliasToken(tokenName: string, condition: string, aliasName: string): void {
     if (!this.tokenSet.colors?.alias?.aliases?.[tokenName]?.[condition]) {
       return;
     }
@@ -273,7 +273,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
     oldName: string,
     newCondition: string,
     newName: string,
-  ) {
+  ): void {
     if (!this.tokenSet.colors?.alias?.aliases?.[tokenName]?.[oldCondition]) {
       return;
     }
@@ -513,18 +513,18 @@ export class DxThemeEditorSemanticColors extends LitElement {
     `;
   }
 
-  override connectedCallback() {
+  override connectedCallback(): void {
     super.connectedCallback();
     saveAndRender(this.tokenSet);
     window.addEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
   }
 
-  override disconnectedCallback() {
+  override disconnectedCallback(): void {
     super.disconnectedCallback();
     window.removeEventListener(tokenSetUpdateEvent, this.handleTokenSetUpdate);
   }
 
-  private handleSearchChange(e: Event) {
+  private handleSearchChange(e: Event): void {
     this.searchTerm = (e.target as HTMLInputElement).value;
   }
 
@@ -552,7 +552,7 @@ export class DxThemeEditorSemanticColors extends LitElement {
     `;
   }
 
-  override createRenderRoot() {
+  override createRenderRoot(): this {
     return this;
   }
 }

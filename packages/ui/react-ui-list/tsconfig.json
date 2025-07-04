@@ -24,9 +24,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -36,10 +33,10 @@
       "path": "../../core/echo/live-object"
     },
     {
-      "path": "../react-ui"
+      "path": "../../devtools/storybook-utils"
     },
     {
-      "path": "../react-ui-attention"
+      "path": "../react-ui"
     },
     {
       "path": "../react-ui-text-tooltip"

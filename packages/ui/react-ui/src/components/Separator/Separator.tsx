@@ -10,16 +10,16 @@ import React, { forwardRef } from 'react';
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
-type SeparatorProps = ThemedClassName<SeparatorPrimitiveProps>;
+type SeparatorProps = ThemedClassName<SeparatorPrimitiveProps> & { subdued?: boolean };
 
 const Separator = forwardRef<HTMLDivElement, SeparatorProps>(
-  ({ classNames, orientation = 'horizontal', ...props }, forwardedRef) => {
+  ({ classNames, orientation = 'horizontal', subdued, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <SeparatorPrimitive
         orientation={orientation}
         {...props}
-        className={tx('separator.root', 'separator', { orientation }, classNames)}
+        className={tx('separator.root', 'separator', { orientation, subdued }, classNames)}
         ref={forwardedRef}
       />
     );

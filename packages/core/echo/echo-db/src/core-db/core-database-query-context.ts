@@ -9,7 +9,7 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { filterMatchObject } from '@dxos/echo-pipeline/filter';
 import { isEncodedReference, type DatabaseDirectory, type QueryAST } from '@dxos/echo-protocol';
-import { type AnyObjectData } from '@dxos/echo-schema';
+import { type AnyEchoObject, type AnyObjectData } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -22,7 +22,7 @@ import { isNonNullable } from '@dxos/util';
 
 import type { CoreDatabase } from './core-database';
 import type { ObjectCore } from './object-core';
-import { isTrivialSelectionQuery, type QueryContext, type QueryJoinSpec, type QueryResultEntry } from '../query';
+import { isSimpleSelectionQuery, type QueryContext, type QueryJoinSpec, type QueryResultEntry } from '../query';
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
@@ -58,7 +58,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
     const start = Date.now();
 
     // Special case for object id filter.
-    const trivial = isTrivialSelectionQuery(query);
+    const trivial = isSimpleSelectionQuery(query);
     if (!trivial) {
       return [];
     }
@@ -153,7 +153,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
         id: result.id,
         spaceId: result.spaceId as SpaceId,
         spaceKey: PublicKey.ZERO,
-        object,
+        object: object as unknown as AnyEchoObject, // TODO(burdon): ???
         match: { rank: result.rank },
         resolution: { source: 'remote', time: Date.now() - queryStartTimestamp },
       } satisfies QueryResultEntry;

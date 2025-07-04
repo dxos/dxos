@@ -45,7 +45,7 @@ export class OtelTraces {
     this._tracer = trace.getTracer('dxos-observability', this.options.serviceVersion);
   }
 
-  public start() {
+  public start(): void {
     log('trace processor registered');
     TRACE_PROCESSOR.remoteTracing.registerProcessor({
       startSpan: (options: StartSpanOptions) => {

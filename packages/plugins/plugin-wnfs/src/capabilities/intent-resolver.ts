@@ -3,7 +3,7 @@
 //
 
 import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
-import { live } from '@dxos/react-client/echo';
+import { Obj } from '@dxos/echo';
 
 import { WnfsCapabilities } from './capabilities';
 import { upload } from '../helpers';
@@ -17,7 +17,7 @@ export default (context: PluginContext) =>
       intent: WnfsAction.Create,
       resolve: ({ name, type, cid }) => ({
         data: {
-          object: live(FileType, { name, type, cid }),
+          object: Obj.make(FileType, { name, type, cid }),
         },
       }),
     }),

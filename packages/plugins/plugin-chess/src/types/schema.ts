@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { TypedObject } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 
 export const MoveSchema = Schema.mutable(
   Schema.partial(
@@ -16,15 +16,19 @@ export const MoveSchema = Schema.mutable(
   ),
 );
 
-export class ChessType extends TypedObject({ typename: 'dxos.org/type/Chess', version: '0.1.0' })(
-  {
-    name: Schema.optional(Schema.String),
-    playerWhite: Schema.String,
-    playerBlack: Schema.String,
-    moves: Schema.mutable(Schema.Array(Schema.String)),
-    // TODO(wittjosiah): Remove. Redundant with moves.
-    pgn: Schema.String,
-    fen: Schema.String,
-  },
-  { partial: true },
-) {}
+export const ChessType = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  playerWhite: Schema.String,
+  playerBlack: Schema.String,
+  moves: Schema.mutable(Schema.Array(Schema.String)),
+  // TODO(wittjosiah): Remove. Redundant with moves.
+  pgn: Schema.String,
+  fen: Schema.String,
+}).pipe(
+  Schema.partial,
+  Type.Obj({
+    typename: 'dxos.org/type/Chess',
+    version: '0.1.0',
+  }),
+);
+export interface ChessType extends Schema.Schema.Type<typeof ChessType> {}

@@ -28,11 +28,11 @@ export abstract class AbstractStorage implements Storage {
   // TODO(burdon): Make required.
   constructor(public readonly path: string) {}
 
-  [inspect.custom]() {
+  [inspect.custom](): string {
     return inspectObject(this);
   }
 
-  toJSON() {
+  toJSON(): { type: StorageType; path: string } {
     return { type: this.type, path: this.path };
   }
 
@@ -55,7 +55,7 @@ export abstract class AbstractStorage implements Storage {
   /**
    * Delete all files.
    */
-  async reset() {
+  async reset(): Promise<void> {
     try {
       log.info('Erasing all data...');
       await this._closeFilesInPath('');
@@ -135,7 +135,7 @@ export abstract class AbstractStorage implements Storage {
     );
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this._closeFilesInPath('');
   }
 

@@ -151,7 +151,7 @@ export class GridController {
     return this._visible;
   }
 
-  draw() {
+  draw(): void {
     if (!this._context.size) {
       return;
     }
@@ -174,7 +174,7 @@ export class GridController {
     }
   }
 
-  setVisible(visible: boolean) {
+  setVisible(visible: boolean): this {
     this._visible = visible;
     this.draw();
     return this;

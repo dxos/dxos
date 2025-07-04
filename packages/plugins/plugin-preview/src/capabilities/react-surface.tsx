@@ -13,17 +13,18 @@ import {
   createSurface,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { Filter, fullyQualifiedId, getSchema, getSpace, isEchoObject, type AnyLiveObject } from '@dxos/client/echo';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { fullyQualifiedId, getSchema, getSpace } from '@dxos/client/echo';
+import { Obj, Filter } from '@dxos/echo';
+import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import { Card } from '@dxos/react-ui-stack';
 import { TableType } from '@dxos/react-ui-table';
-import { descriptionMessage } from '@dxos/react-ui-theme';
+import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
 import { PREVIEW_PLUGIN } from '../meta';
-import { kanbanCardWithoutPoster } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -31,9 +32,9 @@ export default () =>
     // Specific schema types.
     //
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover`,
-      role: ['popover', 'card--kanban', 'card'],
-      filter: (data): data is { subject: DataType.Person } => isInstanceOf(DataType.Person, data.subject),
+      id: `${PREVIEW_PLUGIN}/schema-popover--contact`,
+      role: ['popover', 'card--kanban', 'card--document', 'card'],
+      filter: (data): data is { subject: DataType.Person } => Obj.instanceOf(DataType.Person, data.subject),
       component: ({ data, role }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const handleOrgClick = useCallback(
@@ -65,26 +66,26 @@ export default () =>
           [dispatch],
         );
         return (
-          <ContactCard subject={data.subject} onOrgClick={handleOrgClick} role={role}>
+          <ContactCard role={role} subject={data.subject} onOrgClick={handleOrgClick}>
             {role === 'popover' && <Surface role='related' data={data} />}
           </ContactCard>
         );
       },
     }),
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover`,
-      role: ['popover', 'card--kanban', 'card'],
-      filter: (data): data is { subject: DataType.Organization } => isInstanceOf(DataType.Organization, data.subject),
+      id: `${PREVIEW_PLUGIN}/schema-popover--organization`,
+      role: ['popover', 'card--kanban', 'card--document', 'card'],
+      filter: (data): data is { subject: DataType.Organization } => Obj.instanceOf(DataType.Organization, data.subject),
       component: ({ data, role }) => (
-        <OrganizationCard subject={data.subject} role={role}>
+        <OrganizationCard role={role} subject={data.subject}>
           {role === 'popover' && <Surface role='related' data={data} />}
         </OrganizationCard>
       ),
     }),
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover`,
-      role: ['popover', 'card--kanban', 'card'],
-      filter: (data): data is { subject: DataType.Project } => isInstanceOf(DataType.Project, data.subject),
+      id: `${PREVIEW_PLUGIN}/schema-popover--project`,
+      role: ['popover', 'card--kanban', 'card--document', 'card'],
+      filter: (data): data is { subject: DataType.Project } => Obj.instanceOf(DataType.Project, data.subject),
       component: ({ data, role }) => <ProjectCard subject={data.subject} role={role} />,
     }),
 
@@ -93,23 +94,36 @@ export default () =>
     //
     createSurface({
       id: `${PREVIEW_PLUGIN}/fallback-popover`,
-      role: ['popover', 'card--kanban', 'card'],
+      role: ['popover', 'card--kanban', 'card--document', 'card'],
       position: 'fallback',
-      filter: (data): data is { subject: AnyLiveObject<any> } => isEchoObject(data.subject),
+      filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
       component: ({ data, role }) => {
         const schema = getSchema(data.subject);
         const { t } = useTranslation(PREVIEW_PLUGIN);
         if (!schema) {
-          return <p className={descriptionMessage}>{t('unable to create preview message')}</p>;
+          // TODO(burdon): Use Alert.
+          return <p className={mx(descriptionMessage)}>{t('unable to create preview message')}</p>;
         }
 
+        const handleSave = useCallback((values: any, { changed }: { changed: Record<string, boolean> }) => {
+          const changedPaths = Object.keys(changed).filter((path) => changed[path]);
+          for (const path of changedPaths) {
+            const value = values[path];
+            setValue(data.subject, path as JsonPath, value);
+          }
+        }, []);
+
         return (
-          <Form
-            schema={schema}
-            values={data.subject}
-            readonly={role === 'popover'}
-            {...(role === 'card--kanban' && { classNames: kanbanCardWithoutPoster })}
-          />
+          <Card.Container role={role}>
+            <Form
+              schema={schema}
+              values={data.subject}
+              readonly={role === 'popover'}
+              onSave={handleSave}
+              autoSave
+              {...(role === 'card--kanban' && { outerSpacing: 'blockStart-0' })}
+            />
+          </Card.Container>
         );
       },
     }),

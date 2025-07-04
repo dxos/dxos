@@ -45,7 +45,7 @@ export class TestBuilder {
     return Promise.all(Array.from({ length: count }, () => this.createPeer()));
   }
 
-  async close() {
+  async close(): Promise<void> {
     await Promise.all(this._peers.map((peer) => peer.close()));
   }
 }

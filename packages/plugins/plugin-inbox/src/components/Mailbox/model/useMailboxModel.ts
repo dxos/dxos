@@ -20,7 +20,7 @@ import { MessageState } from '../../../types';
 export const useMailboxModel = (queueDxn: DXN, sortDirection: SortDirection = 'desc'): MailboxModel => {
   const model = useMemo(() => new MailboxModel([], sortDirection), [sortDirection]);
   const queue = useQueue<DataType.Message>(queueDxn);
-  const items = useMemo(() => queue?.items ?? [], [queue?.items]);
+  const items = useMemo(() => queue?.objects ?? [], [queue?.objects]);
 
   const messages = useMemo(
     () =>

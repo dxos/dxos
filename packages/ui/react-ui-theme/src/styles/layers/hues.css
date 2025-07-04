@@ -84,6 +84,10 @@
     @apply text-roseText;
   }
 
+  /*
+   * System colors.
+   */
+
   .dx-text-hue[data-hue='info'],
   .dx-text-hue--info {
     @apply text-cyanText;

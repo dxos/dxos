@@ -3,26 +3,27 @@
 //
 
 import { type Schema } from 'effect';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { Capabilities, contributes, createSurface, Surface, useCapability, useLayout } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import {
+  Capabilities,
+  contributes,
+  createSurface,
+  Surface,
+  useCapabilities,
+  useCapability,
+  useLayout,
+} from '@dxos/app-framework';
+import { Obj, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
-import {
-  getSpace,
-  isEchoObject,
-  isLiveObject,
-  isSpace,
-  parseId,
-  SpaceState,
-  useSpace,
-  type AnyLiveObject,
-  type Space,
-} from '@dxos/react-client/echo';
-import { Input } from '@dxos/react-ui';
-import { type InputProps } from '@dxos/react-ui-form';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { useClient } from '@dxos/react-client';
+import { getSpace, isLiveObject, isSpace, parseId, SpaceState, useSpace, type Space } from '@dxos/react-client/echo';
+import { Input, useTranslation } from '@dxos/react-ui';
+import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
+import { DataType, type TypenameAnnotation, TypenameAnnotationId } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { SpaceCapabilities } from './capabilities';
@@ -52,11 +53,13 @@ import {
   type CreateObjectDialogProps,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
-import { CollectionType, HueAnnotationId, IconAnnotationId, type SpaceSettingsProps } from '../types';
+import { HueAnnotationId, IconAnnotationId, type SpaceSettingsProps } from '../types';
 
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
 };
+
+const OMIT = [Type.getTypename(DataType.Collection), Type.getTypename(DataType.QueryCollection)];
 
 export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
   contributes(Capabilities.ReactSurface, [
@@ -68,7 +71,10 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         isSpace(data.subject) && data.subject.state.get() === SpaceState.SPACE_READY,
       component: ({ data, role, ...rest }) => (
         <Surface
-          data={{ id: data.subject.id, subject: data.subject.properties[CollectionType.typename]?.target }}
+          data={{
+            id: data.subject.id,
+            subject: data.subject.properties[Type.getTypename(DataType.Collection)]?.target,
+          }}
           role={role}
           {...rest}
         />
@@ -78,7 +84,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: `${SPACE_PLUGIN}/collection-fallback`,
       role: 'article',
       position: 'fallback',
-      filter: (data): data is { subject: CollectionType } => isInstanceOf(CollectionType, data.subject),
+      filter: (data): data is { subject: DataType.Collection } => Obj.instanceOf(DataType.Collection, data.subject),
       component: ({ data }) => <CollectionMain collection={data.subject} />,
     }),
     createSurface({
@@ -91,8 +97,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/companion/object-settings`,
       role: 'article',
-      filter: (data): data is { companionTo: AnyLiveObject<any> } =>
-        isEchoObject(data.companionTo) && data.subject === 'settings',
+      filter: (data): data is { companionTo: Obj.Any } => Obj.isObject(data.companionTo) && data.subject === 'settings',
       component: ({ data, role }) => <ObjectSettingsContainer object={data.companionTo} role={role} />,
     }),
     createSurface({
@@ -198,6 +203,78 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       },
     }),
     createSurface({
+      id: `${SPACE_PLUGIN}/typename-form-input`,
+      role: 'form-input',
+      filter: (
+        data,
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | DataType.Collection | undefined } => {
+        if (data.prop !== 'typename') {
+          return false;
+        }
+
+        const annotation = findAnnotation((data.schema as Schema.Schema.All).ast, TypenameAnnotationId);
+        return !!annotation;
+      },
+      component: ({ data: { schema, target }, ...inputProps }) => {
+        const { t } = useTranslation();
+        const client = useClient();
+        const props = inputProps as any as InputProps;
+        const space = isSpace(target) ? target : getSpace(target);
+        if (!space) {
+          return null;
+        }
+
+        const annotation = findAnnotation<TypenameAnnotation[]>(schema.ast, TypenameAnnotationId)!;
+
+        const schemaWhitelists = useCapabilities(ClientCapabilities.SchemaWhiteList);
+        const whitelistedTypenames = useMemo(
+          () => new Set(schemaWhitelists.flatMap((typeArray) => typeArray.map((type) => type.typename))),
+          [schemaWhitelists],
+        );
+
+        const objectForms = useCapabilities(SpaceCapabilities.ObjectForm);
+        const objectFormTypenames = useMemo(
+          () =>
+            new Set(
+              objectForms
+                .map((form) => Type.getTypename(form.objectSchema))
+                // TODO(wittjosiah): Remove.
+                .filter((typename) => !OMIT.includes(typename)),
+            ),
+          [objectForms],
+        );
+
+        const fixed = client.graph.schemaRegistry.schemas.filter((schema) => {
+          const limitedStatic =
+            annotation.includes('limited-static') && whitelistedTypenames.has(Type.getTypename(schema));
+          const objectForm = annotation.includes('object-form') && objectFormTypenames.has(Type.getTypename(schema));
+          return annotation.includes('static') || limitedStatic || objectForm;
+        });
+        const dynamic = space?.db.schemaRegistry.query().runSync();
+        const typenames = Array.from(
+          new Set<string>([
+            ...(annotation.includes('limited-static') ||
+            annotation.includes('static') ||
+            annotation.includes('object-form')
+              ? fixed.map((schema) => Type.getTypename(schema))
+              : []),
+            ...(annotation.includes('dynamic') ? dynamic.map((schema) => schema.typename) : []),
+          ]),
+        ).sort();
+
+        const options = useMemo(
+          () =>
+            typenames.map((typename) => ({
+              value: typename,
+              label: t('typename label', { ns: typename, defaultValue: typename }),
+            })),
+          [t, typenames],
+        );
+
+        return <SelectInput {...props} options={options} />;
+      },
+    }),
+    createSurface({
       id: POPOVER_RENAME_SPACE,
       role: 'popover',
       filter: (data): data is { props: Space } => data.component === POPOVER_RENAME_SPACE && isSpace(data.props),
@@ -206,21 +283,21 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: POPOVER_RENAME_OBJECT,
       role: 'popover',
-      filter: (data): data is { props: AnyLiveObject<any> } =>
+      filter: (data): data is { props: Obj.Any } =>
         data.component === POPOVER_RENAME_OBJECT && isLiveObject(data.props),
       component: ({ data }) => <PopoverRenameObject object={data.props} />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/menu-footer`,
       role: 'menu-footer',
-      filter: (data): data is { subject: AnyLiveObject<any> } => isEchoObject(data.subject),
+      filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
       component: ({ data }) => <MenuFooter object={data.subject} />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/navtree-presence`,
       role: 'navtree-item-end',
-      filter: (data): data is { id: string; subject: AnyLiveObject<any>; open?: boolean } =>
-        typeof data.id === 'string' && isEchoObject(data.subject),
+      filter: (data): data is { id: string; subject: Obj.Any; open?: boolean } =>
+        typeof data.id === 'string' && Obj.isObject(data.subject),
       component: ({ data }) => {
         // TODO(wittjosiah): Doesn't need to be mutable but readonly type messes with ComplexMap.
         const state = useCapability(SpaceCapabilities.MutableState);
@@ -246,13 +323,12 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: `${SPACE_PLUGIN}/navbar-presence`,
       role: 'navbar-end',
       position: 'hoist',
-      filter: (data): data is { subject: Space | AnyLiveObject<any> } =>
-        isSpace(data.subject) || isEchoObject(data.subject),
+      filter: (data): data is { subject: Space | Obj.Any } => isSpace(data.subject) || Obj.isObject(data.subject),
       component: ({ data }) => {
         const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
         const object = isSpace(data.subject)
           ? data.subject.state.get() === SpaceState.SPACE_READY
-            ? (space?.properties[CollectionType.typename]?.target as CollectionType)
+            ? (space?.properties[Type.getTypename(DataType.Collection)]?.target as DataType.Collection)
             : undefined
           : data.subject;
 
@@ -262,7 +338,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/collection-section`,
       role: 'section',
-      filter: (data): data is { subject: CollectionType } => isInstanceOf(CollectionType, data.subject),
+      filter: (data): data is { subject: DataType.Collection } => Obj.instanceOf(DataType.Collection, data.subject),
       component: ({ data }) => <CollectionSection collection={data.subject} />,
     }),
     createSurface({

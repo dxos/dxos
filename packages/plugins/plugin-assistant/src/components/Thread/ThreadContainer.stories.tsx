@@ -4,10 +4,10 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AIServiceEdgeClient, Message } from '@dxos/ai';
+import { EdgeAiServiceClient, Message } from '@dxos/ai';
 import {
   Capabilities,
   Events,
@@ -19,8 +19,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { Type, type Obj } from '@dxos/echo';
-import { createQueueDxn, create, Query, Filter } from '@dxos/echo-schema';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
@@ -58,7 +57,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const tools = useCapabilities(Capabilities.Tools);
 
-  const [aiClient] = useState(() => new AIServiceEdgeClient({ endpoint: endpoints.ai }));
+  const aiClient = useMemo(() => new EdgeAiServiceClient({ endpoint: endpoints.ai }), []);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // TODO(burdon): Replace with useChatProcessor.
@@ -81,19 +80,19 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [aiClient, tools, space, dispatch, artifactDefinitions]);
 
   // Queue.
-  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
+  const [queueDxn, setQueueDxn] = useState<string>(() => space.queues.create().dxn.toString());
   const queue = useQueue<Message>(Type.DXN.tryParse(queueDxn));
 
   useEffect(() => {
     if (space) {
-      setQueueDxn(createQueueDxn(space.id).toString());
+      setQueueDxn(space.queues.create().dxn.toString());
     }
   }, [space]);
 
   useEffect(() => {
-    if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
-      queue.append([
-        create(Message, {
+    if (queue?.objects.length === 0 && !queue.isLoading && prompts.length > 0) {
+      void queue.append([
+        Obj.make(Message, {
           role: 'assistant',
           content: prompts.map(
             (prompt) =>
@@ -106,7 +105,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         }),
       ]);
     }
-  }, [queueDxn, prompts, queue?.items.length, queue?.isLoading]);
+  }, [queueDxn, prompts, queue?.objects.length, queue?.isLoading]);
 
   // State.
   const query = useMemo(
@@ -114,7 +113,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     [artifactDefinitions],
   );
   const artifactItems = useQuery(space, query);
-  const messages = [...(queue?.items ?? []), ...(processor?.messages.value ?? [])];
+  const messages = [...(queue?.objects ?? []), ...(processor?.messages.value ?? [])];
 
   const handleSubmit = useCallback(
     (message: string) => {
@@ -128,9 +127,9 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
         }
 
         await processor.request(message, {
-          history: queue.items,
+          history: queue.objects,
           onComplete: (messages) => {
-            queue.append(messages);
+            void queue.append(messages);
           },
         });
       });
@@ -174,7 +173,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
               iconOnly
               label='Clear history'
               icon='ph--trash--regular'
-              onClick={() => setQueueDxn(createQueueDxn(space.id).toString())}
+              onClick={() => setQueueDxn(space.queues.create().dxn.toString())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor?.cancel()} />
           </Input.Root>
@@ -262,7 +261,7 @@ export const WithInitialItems: Story = {
   args: {
     debug: true,
     items: [
-      create(ChessType, {
+      Obj.make(ChessType, {
         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
       }),
     ],
@@ -275,7 +274,7 @@ const Fallback = ({ error }: { error?: Error }) => {
     <div role='none' className='overflow-auto p-8 attention-surface grid place-items-center'>
       <p
         role='alert'
-        className={mx(descriptionMessage, 'break-words rounded-lg p-8', errorString.length < 256 && 'text-lg')}
+        className={mx(descriptionMessage, 'break-words rounded-md p-8', errorString.length < 256 && 'text-lg')}
       >
         {error ? errorString : 'error'}
       </p>

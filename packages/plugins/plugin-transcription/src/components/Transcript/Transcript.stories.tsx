@@ -4,12 +4,12 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { ObjectId } from '@dxos/echo-schema';
+import { Key } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -135,7 +135,7 @@ const QueueStory = ({
   queueId,
   onReset,
   ...props
-}: StoryProps & { queueId: ObjectId; onReset: () => void }) => {
+}: StoryProps & { queueId: Key.ObjectId; onReset: () => void }) => {
   const [running, setRunning] = useState(true);
   const space = useSpace();
   const members = useMembers(space?.key).map((member) => member.identity);
@@ -169,10 +169,10 @@ const EntityExtractionQueueStory = () => {
  * Wrapper remounts on refresh to reload queue.
  */
 const QueueStoryWrapper = () => {
-  const [queueId] = useState(ObjectId.random());
-  const [key, setKey] = useState(ObjectId.random().toString());
+  const [queueId] = useState(Key.ObjectId.random());
+  const [key, setKey] = useState(Key.ObjectId.random().toString());
   const handleReset = () => {
-    setKey(ObjectId.random().toString());
+    setKey(Key.ObjectId.random().toString());
   };
 
   return <QueueStory key={key} queueId={queueId} onReset={handleReset} />;

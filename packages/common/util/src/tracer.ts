@@ -32,7 +32,7 @@ export class Tracer {
     return this._recording;
   }
 
-  keys() {
+  keys(): string[] {
     return Array.from(this._events.keys());
   }
 
@@ -45,21 +45,21 @@ export class Tracer {
     return events;
   }
 
-  clear() {
+  clear(): void {
     this._events.clear();
   }
 
-  start() {
+  start(): this {
     this._recording = true;
     return this;
   }
 
-  stop() {
+  stop(): this {
     this._recording = false;
     return this;
   }
 
-  emit(id: string, value?: any) {
+  emit(id: string, value?: any): void {
     this._post(this._createEvent(id, value));
   }
 
@@ -84,7 +84,7 @@ export class Tracer {
     return event;
   }
 
-  private _post(event: Event) {
+  private _post(event: Event): void {
     if (this._recording) {
       defaultMap(this._events, event.id, []).push(event);
     }

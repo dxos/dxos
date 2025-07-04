@@ -15,7 +15,7 @@ export class UnaryCounter extends BaseCounter {
     this.units = units;
   }
 
-  inc(by = 1) {
+  inc(by = 1): void {
     this.value += by;
   }
 

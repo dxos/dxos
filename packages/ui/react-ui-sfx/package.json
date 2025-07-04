@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-sfx",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "Special effects.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,10 +40,12 @@
     "glslify": "^7.1.1",
     "leva": "^0.9.35",
     "motion": "^12.0.6",
+    "ogl": "^1.0.11",
     "react-resize-detector": "^11.0.1",
     "three": "0.165.0"
   },
   "devDependencies": {
+    "@dxos/brand": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

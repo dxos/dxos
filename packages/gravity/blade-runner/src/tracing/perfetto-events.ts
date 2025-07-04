@@ -87,7 +87,7 @@ export class PerfettoEvents {
    * Set field that would be applied to all events.
    * It is not required to call this method.
    */
-  public setDefaultFields(fields: Partial<Fields>) {
+  public setDefaultFields(fields: Partial<Fields>): void {
     this._fields = fields;
 
     if (!this._fields.cat) {
@@ -105,23 +105,23 @@ export class PerfettoEvents {
     return this._stream;
   }
 
-  public begin(fields: Fields) {
+  public begin(fields: Fields): void {
     return this._event({ fields, ph: 'B', tid: defaultMap(this._nameVsTid, fields.name, () => this._currentTid++) });
   }
 
-  public end(fields: Fields) {
+  public end(fields: Fields): void {
     return this._event({ fields, ph: 'E', tid: defaultMap(this._nameVsTid, fields.name, () => this._currentTid++) });
   }
 
-  public completeEvent(fields: Fields & { dur: number }) {
+  public completeEvent(fields: Fields & { dur: number }): void {
     return this._event({ fields, ph: 'X' });
   }
 
-  public instantEvent(fields: Fields) {
+  public instantEvent(fields: Fields): void {
     return this._event({ fields, ph: 'I' });
   }
 
-  private _event({ fields, ph, tid }: { fields: Fields; ph: EventPhase; tid?: number }) {
+  private _event({ fields, ph, tid }: { fields: Fields; ph: EventPhase; tid?: number }): void {
     this._pushEvent({
       ts: Date.now(),
       pid: this._pid,
@@ -133,11 +133,11 @@ export class PerfettoEvents {
     });
   }
 
-  private _pushEvent(event: Event) {
+  private _pushEvent(event: Event): void {
     this._controller!.enqueue(JSON.stringify(event));
   }
 
-  public destroy() {
+  public destroy(): void {
     try {
       this._controller!.close();
     } catch (err) {

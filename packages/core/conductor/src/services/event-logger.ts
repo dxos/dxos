@@ -62,7 +62,7 @@ export const createDefectLogger = <A, E, R>(): ((self: Effect.Effect<A, E, R>) =
     }),
   );
 
-export const createDxosEventLogger = (level: LogLevel, message: string = 'event'): Context.Tag.Service<EventLogger> => {
+export const createEventLogger = (level: LogLevel, message: string = 'event'): Context.Tag.Service<EventLogger> => {
   const logFunction = (
     {
       [LogLevel.WARN]: log.warn,

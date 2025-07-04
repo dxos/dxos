@@ -7,6 +7,7 @@ import { customElement, state, property } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { makeId } from '@dxos/react-hooks';
+import { getFirstTwoRenderableChars } from '@dxos/util';
 
 import { type Size } from '../defs';
 
@@ -46,7 +47,7 @@ export class DxAvatar extends LitElement {
   }
 
   @property({ type: String })
-  fallback: string = 'never';
+  fallback: string = '🫥';
 
   @property({ type: String })
   imgSrc: string | undefined = undefined;
@@ -84,23 +85,23 @@ export class DxAvatar extends LitElement {
   @state()
   loadingStaus: ImageLoadingStatus = 'idle';
 
-  override connectedCallback() {
+  override connectedCallback(): void {
     super.connectedCallback();
     this.role = 'img';
     this.loadingStaus = this.imgSrc ? 'loading' : 'idle';
   }
 
-  override willUpdate(changedProperties: Map<string, any>) {
+  override willUpdate(changedProperties: Map<string, any>): void {
     if (changedProperties.has('imgSrc')) {
       this.loadingStaus = changedProperties.get('imgSrc') ? 'loading' : 'idle';
     }
   }
 
-  private handleLoad() {
+  private handleLoad(): void {
     this.loadingStaus = 'loaded';
   }
 
-  private handleError() {
+  private handleError(): void {
     this.loadingStaus = 'error';
   }
 
@@ -185,7 +186,7 @@ export class DxAvatar extends LitElement {
                 font-size=${this.size === 'px' ? '200%' : this.size * fontScale}
                 mask=${`url(#${this.maskId})`}
               >
-                ${this.fallback}
+                ${getFirstTwoRenderableChars(this.fallback)}
               </text>`
         }
         ${
@@ -205,7 +206,7 @@ export class DxAvatar extends LitElement {
     /></span>`;
   }
 
-  override createRenderRoot() {
+  override createRenderRoot(): this {
     return this;
   }
 }

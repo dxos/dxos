@@ -12,7 +12,6 @@ import { type SyncMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/autom
 import {
   type AutomergeReplicator,
   type AutomergeReplicatorCallbacks,
-  type AutomergeReplicatorFactory,
 } from '@dxos/teleport-extension-automerge-replicator';
 
 import { EchoNetworkAdapter } from './echo-network-adapter';
@@ -22,6 +21,7 @@ const PEER_ID = 'peerA' as PeerId;
 const ANOTHER_PEER_ID = 'peerB' as PeerId;
 const PAYLOAD = new Uint8Array([42]);
 
+// TODO(burdon): Temp.
 describe('EchoNetworkAdapter', () => {
   test('peer-candidate emitted when replication starts', async () => {
     const controller = createReplicatorController();
@@ -56,10 +56,10 @@ describe('EchoNetworkAdapter', () => {
   });
 
   test('peer disconnects when message sending fails', async () => {
-    let errored = false;
+    let errors = 0;
     const controller = createReplicatorController(async () => {
-      errored = true;
-      throw new Error();
+      // NOTE: Error is caught in AM stack.
+      throw new Error('Testing', { cause: { errors: ++errors } });
     });
     const adapter = await createConnectedAdapter(controller.replicator);
     await controller.connectPeer(ANOTHER_PEER_ID);
@@ -68,7 +68,7 @@ describe('EchoNetworkAdapter', () => {
     adapter.send(newSyncMessage(PEER_ID, ANOTHER_PEER_ID, PAYLOAD));
     const disconnectedPeer = await onDisconnected.wait();
     expect(disconnectedPeer.peerId).to.eq(ANOTHER_PEER_ID);
-    expect(errored).to.be.true;
+    expect(errors).to.eq(1);
   });
 
   test('peer disconnected when replicator is removed', async () => {
@@ -123,11 +123,10 @@ describe('EchoNetworkAdapter', () => {
       replicator,
       connectPeer: async (peerId: string) => {
         let callbacks: AutomergeReplicatorCallbacks | undefined;
-        const extensionFactory: AutomergeReplicatorFactory = (params) => {
+        replicator.createExtension((params) => {
           callbacks = params[1];
           return { sendSyncMessage } as AutomergeReplicator;
-        };
-        replicator.createExtension(extensionFactory);
+        });
         invariant(callbacks);
         await callbacks.onStartReplication!({ id: peerId }, PublicKey.random());
         return callbacks;

@@ -24,16 +24,7 @@ import React, {
 
 import { type Node } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
-import {
-  Icon,
-  IconButton,
-  ListItem,
-  ScrollArea,
-  Tooltip,
-  toLocalizedString,
-  useMediaQuery,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Icon, ListItem, ScrollArea, Tooltip, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { MenuProvider, DropdownMenu, type MenuItem } from '@dxos/react-ui-menu';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -100,6 +91,11 @@ const l0Breakpoints: Record<string, string> = {
   lg: 'hidden lg:grid',
 };
 
+const l0ItemRoot =
+  'group/l0item flex w-full justify-center items-center relative data[type!="collection"]:cursor-pointer app-no-drag dx-focus-ring-group';
+
+const l0ItemContent = 'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm';
+
 const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
   ({ item, parent, path, children }, forwardedRef) => {
     const { getProps } = useNavTreeContext();
@@ -125,10 +121,7 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
         <Root
           {...(rootProps as any)}
           data-type={type}
-          className={mx(
-            'group/l0item flex w-full justify-center items-center relative data[type!="collection"]:cursor-pointer app-no-drag dx-focus-ring-group',
-            l0Breakpoints[item.properties.l0Breakpoint],
-          )}
+          className={mx(l0ItemRoot, l0Breakpoints[item.properties.l0Breakpoint])}
           ref={forwardedRef}
         >
           {children}
@@ -138,7 +131,7 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
   },
 );
 
-const L0Avator = ({ item }: Pick<L0ItemProps, 'item'>) => {
+const L0Avatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const type = l0ItemType(item);
   const hue = item.properties.hue ?? null;
@@ -161,10 +154,8 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const itemElement = useRef<HTMLElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
-  const type = l0ItemType(item);
   const localizedString = toLocalizedString(item.properties.label, t);
   const hue = item.properties.hue ?? null;
-  const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
 
   useLayoutEffect(() => {
     // NOTE(thure): This is copied from StackItem, perhaps this should be DRYed out.
@@ -227,28 +218,41 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       <div
         role='none'
         data-frame={true}
-        className={mx(
-          'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded',
-          // TODO(burdon): Create reusable button/component and/or create var for size.
-          pinned
-            ? 'bg-transparent w-[50px] p-2 group-hover/l0item:bg-activeSurface'
-            : 'bg-activeSurface w-[50px] h-[50px]',
-        )}
         {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
+        className={mx(
+          l0ItemContent,
+          pinned
+            ? 'p-2 group-hover/l0item:bg-activeSurface'
+            : 'is-[--l0-avatar-size] bs-[--l0-avatar-size] bg-activeSurface',
+        )}
       >
-        {(item.properties.icon && <Icon icon={item.properties.icon} size={pinned ? 5 : 6} {...hueFgStyle} />) ||
-          (type === 'tab' && item.properties.disposition !== 'pin-end' && <L0Avator item={item} />)}
+        <ItemAvatar item={item} />
       </div>
       <div
         role='none'
-        className='hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
+        className='hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-2 is-1 bg-accentSurface rounded-ie'
       />
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
-      {onRearrange && closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
+      {closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
   );
+};
+
+const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
+  const type = l0ItemType(item);
+  if (item.properties.icon) {
+    const hue = item.properties.hue ?? null;
+    const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
+    return <Icon icon={item.properties.icon} size={5} {...hueFgStyle} />;
+  }
+
+  if (type === 'tab' && item.properties.disposition !== 'pin-end') {
+    return <L0Avatar item={item} />;
+  }
+
+  return null;
 };
 
 //
@@ -261,6 +265,7 @@ const L0Collection = ({ item, path }: L0ItemProps) => {
   const collectionItems = navTreeContext.useItems(item);
   const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
   const { id, testId } = navTreeContext.getProps?.(item, path) ?? {};
+
   const handleRearrange = useCallback<StackItemRearrangeHandler<L0ItemData>>(
     (source, target, closestEdge) => {
       invariant(item.properties.onRearrangeChildren);
@@ -306,7 +311,7 @@ export type L0MenuProps = {
   menuActions: MenuItem[];
   topLevelItems: Node<any>[];
   pinnedItems: Node<any>[];
-  userAccountItem: Node<any>;
+  userAccountItem?: Node<any>;
   parent?: Node<any>;
   path: string[];
 };
@@ -317,37 +322,40 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
   return (
     <Tabs.Tablist
       classNames={[
-        'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg',
-        'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] gap-1 contain-layout',
+        'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is',
+        'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] contain-layout',
         '!is-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
       ]}
     >
-      <div role='none' className='flex justify-center p-1'>
-        <MenuProvider>
-          <DropdownMenu.Root group={parent} items={menuActions}>
-            <DropdownMenu.Trigger asChild>
-              {/* TODO(wittjosiah): Use L0Item trigger. */}
-              {/* TODO(burdon): Replace with Sigil. */}
-              <IconButton
-                iconOnly
-                icon='ph--dots-three--regular'
-                size={5}
-                label={t('app menu label')}
-                tooltipSide='right'
-                classNames='w-[50px] _bg-primary-500'
-                data-testid='spacePlugin.addSpace'
-              />
+      {/* TODO(wittjosiah): Use L0Item trigger. */}
+      <MenuProvider>
+        <DropdownMenu.Root group={parent} items={menuActions}>
+          <Tooltip.Trigger content={t('app menu label')} side='right' asChild>
+            <DropdownMenu.Trigger
+              data-testid='spacePlugin.addSpace'
+              className={mx(l0ItemRoot, 'grid place-items-center')}
+            >
+              <div
+                role='none'
+                className={mx(
+                  l0ItemContent,
+                  'is-[--rail-action] bs-[--rail-action] group-hover/l0item:bg-hoverSurface',
+                )}
+              >
+                <Icon icon='ph--list--regular' size={5} />
+              </div>
             </DropdownMenu.Trigger>
-          </DropdownMenu.Root>
-        </MenuProvider>
-      </div>
+          </Tooltip.Trigger>
+        </DropdownMenu.Root>
+      </MenuProvider>
 
+      {/* Space list. */}
       <ScrollArea.Root>
         <ScrollArea.Viewport>
           <div
             role='none'
             className={mx([
-              'flex flex-col gap-2 pbs-1',
+              'flex flex-col gap-1 pbs-1',
               '[body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]',
               '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
             ])}
@@ -366,6 +374,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
         </ScrollArea.Viewport>
       </ScrollArea.Root>
 
+      {/* Actions. */}
       <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>
         {pinnedItems
           .filter((item) => l0ItemType(item) !== 'collection')
@@ -382,7 +391,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
               hue={userAccountItem.properties.hue}
               emoji={userAccountItem.properties.emoji}
               status={userAccountItem.properties.status}
-              size={11}
+              size={10}
             />
           </L0ItemRoot>
         </div>

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/functions",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "Functions API and runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,6 +23,11 @@
       "types": "./dist/types/src/edge/index.d.ts",
       "browser": "./dist/lib/browser/edge/index.mjs",
       "node": "./dist/lib/node-esm/edge/index.mjs"
+    },
+    "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -50,6 +55,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/crypto": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",

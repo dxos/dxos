@@ -36,7 +36,7 @@ const Unicode = {
 //
 
 class HorizontalRuleWidget extends WidgetType {
-  override toDOM() {
+  override toDOM(): HTMLSpanElement {
     const el = document.createElement('span');
     el.className = 'cm-hr';
     return el;
@@ -51,12 +51,12 @@ class LinkButton extends WidgetType {
     super();
   }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return this.url === other.url;
   }
 
   // TODO(burdon): Create icon and link directly without react?
-  override toDOM(view: EditorView) {
+  override toDOM(view: EditorView): HTMLSpanElement {
     const el = document.createElement('span');
     this.render(el, { url: this.url }, view);
     return el;
@@ -68,11 +68,11 @@ class CheckboxWidget extends WidgetType {
     super();
   }
 
-  override eq(other: this) {
+  override eq(other: this): boolean {
     return this._checked === other._checked;
   }
 
-  override toDOM(view: EditorView) {
+  override toDOM(view: EditorView): HTMLSpanElement {
     const input = document.createElement('input');
     input.className = 'cm-task-checkbox dx-checkbox';
     input.type = 'checkbox';
@@ -105,7 +105,7 @@ class CheckboxWidget extends WidgetType {
     return span;
   }
 
-  override ignoreEvent() {
+  override ignoreEvent(): boolean {
     return false;
   }
 }
@@ -118,7 +118,7 @@ class TextWidget extends WidgetType {
     super();
   }
 
-  override toDOM() {
+  override toDOM(): HTMLSpanElement {
     const el = document.createElement('span');
     if (this.className) {
       el.className = this.className;

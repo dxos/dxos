@@ -4,12 +4,12 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { live } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
@@ -32,7 +32,7 @@ const DefaultStory = () => {
   useEffect(() => {
     const space = client.spaces.default;
     void generate(space, generator);
-    const view = space.db.add(live(ViewType, { name: '', type: '' }));
+    const view = space.db.add(Obj.make(ViewType, { name: '', type: '' }));
     setSpace(space);
     setView(view);
   }, []);

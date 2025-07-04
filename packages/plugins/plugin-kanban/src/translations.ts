@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { KanbanType } from '@dxos/react-ui-kanban';
 
 import { KANBAN_PLUGIN } from './meta';
@@ -9,8 +10,11 @@ import { KANBAN_PLUGIN } from './meta';
 export default [
   {
     'en-US': {
-      [KanbanType.typename]: {
+      [Type.getTypename(KanbanType)]: {
         'typename label': 'Kanban',
+        'typename label_zero': 'Kanbans',
+        'typename label_one': 'Kanban',
+        'typename label_other': 'Kanbans',
         'object name placeholder': 'New kanban',
       },
       [KANBAN_PLUGIN]: {

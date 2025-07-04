@@ -6,11 +6,11 @@ import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
-import { getTypename, isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
-import { fullyQualifiedId, isEchoObject } from '@dxos/react-client/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { ThreadCapabilities } from './capabilities';
 import { meta, THREAD_PLUGIN } from '../meta';
@@ -63,7 +63,7 @@ export default (context: PluginContext) => {
         return Rx.make((get) => {
           return pipe(
             get(node),
-            Option.flatMap((node) => (isInstanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
             Option.map((channel) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
               const joined = get(
@@ -99,10 +99,10 @@ export default (context: PluginContext) => {
           pipe(
             get(node),
             Option.flatMap((node) => {
-              if (!isEchoObject(node.data) || isInstanceOf(ChannelType, node.data)) {
+              if (!Obj.isObject(node.data) || Obj.instanceOf(ChannelType, node.data)) {
                 return Option.none();
               }
-              const metadata = resolve(getTypename(node.data)!);
+              const metadata = resolve(Obj.getTypename(node.data)!);
               return typeof metadata.comments === 'string' ? Option.some(node) : Option.none();
             }),
             Option.map((node) => [
@@ -129,10 +129,10 @@ export default (context: PluginContext) => {
           pipe(
             get(node),
             Option.flatMap((node) => {
-              if (!isEchoObject(node.data) || isInstanceOf(ChannelType, node.data)) {
+              if (!Obj.isObject(node.data) || Obj.instanceOf(ChannelType, node.data)) {
                 return Option.none();
               }
-              const metadata = resolve(getTypename(node.data)!);
+              const metadata = resolve(Obj.getTypename(node.data)!);
               return typeof metadata.comments === 'string' ? Option.some(node.data) : Option.none();
             }),
             Option.map((object) => {
@@ -140,7 +140,7 @@ export default (context: PluginContext) => {
               const toolbar = get(context.capabilities(ThreadCapabilities.State))[0]?.state.toolbar ?? {};
               const disabled = get(
                 rxFromSignal(() => {
-                  const metadata = resolve(getTypename(object)!);
+                  const metadata = resolve(Obj.getTypename(object)!);
                   const selection = selectionManager.getSelection(fullyQualifiedId(object), metadata.selectionMode);
                   const anchor = getAnchor(selection);
                   const invalidSelection = !anchor;
@@ -154,7 +154,7 @@ export default (context: PluginContext) => {
                   id: `${fullyQualifiedId(object)}/comment`,
                   data: () => {
                     const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-                    const metadata = resolve(getTypename(object)!);
+                    const metadata = resolve(Obj.getTypename(object)!);
                     const selection = selectionManager.getSelection(fullyQualifiedId(object));
                     // TODO(wittjosiah): Use presence of selection to determine if the comment should be anchored.
                     // Requires all components which support selection (e.g. table/kanban) to support anchored comments.

@@ -4,10 +4,10 @@
 
 import { next as am, type Doc, type Heads, type State } from '@automerge/automerge';
 
-import { ECHO_ATTR_META, ECHO_ATTR_TYPE, type BaseObject } from '@dxos/echo-schema';
-import { assertParameter } from '@dxos/protocols';
+import { ATTR_META, ATTR_TYPE, type BaseObject } from '@dxos/echo-schema';
+import { assertArgument } from '@dxos/invariant';
 
-import { isEchoObject, type AnyLiveObject } from './create';
+import { isEchoObject, type AnyLiveObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { ObjectCore } from '../core-db';
 
@@ -16,7 +16,7 @@ import { ObjectCore } from '../core-db';
  * NOTE: This is the history of the automerge document containing the echo object.
  */
 export const getEditHistory = (object: AnyLiveObject<any>): State<any>[] => {
-  assertParameter('object', isEchoObject(object), 'ECHO object stored in the database');
+  assertArgument(isEchoObject(object), 'expected ECHO object stored in the database');
 
   const objectCore = getObjectCore(object);
   const doc = objectCore.getDoc();
@@ -29,8 +29,8 @@ export const getEditHistory = (object: AnyLiveObject<any>): State<any>[] => {
  */
 // TODO(dmaretskyi): Returning T is actually wrong since the object is actually in JSON format -- we should unify data formats.
 export const checkoutVersion = <T extends BaseObject>(object: AnyLiveObject<T>, version: Heads): T => {
-  assertParameter('object', isEchoObject(object), 'ECHO object stored in the database');
-  assertParameter('version', Array.isArray(version), 'automerge heads array');
+  assertArgument(isEchoObject(object), 'expected ECHO object stored in the database');
+  assertArgument(Array.isArray(version), 'expected automerge heads array');
 
   const objectCore = getObjectCore(object);
   const doc = objectCore.getDoc();
@@ -46,8 +46,8 @@ export const checkoutVersion = <T extends BaseObject>(object: AnyLiveObject<T>, 
   const { id, __typename, __meta, ...data } = versionCore.toPlainObject();
   return {
     id,
-    [ECHO_ATTR_TYPE]: __typename,
-    [ECHO_ATTR_META]: __meta,
+    [ATTR_TYPE]: __typename,
+    [ATTR_META]: __meta,
     ...data,
   } as any;
 };

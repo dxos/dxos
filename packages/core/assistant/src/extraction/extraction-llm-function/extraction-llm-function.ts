@@ -3,6 +3,7 @@
 //
 
 import { Message } from '@dxos/ai';
+import { Obj } from '@dxos/echo';
 import { create } from '@dxos/echo-schema';
 import { AiService, defineFunction, type FunctionDefinition } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
@@ -27,7 +28,7 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
       client: ai.client,
       systemPrompt: PROMPT,
       history: [
-        create(Message, {
+        Obj.make(Message, {
           role: 'user',
           content: [
             {

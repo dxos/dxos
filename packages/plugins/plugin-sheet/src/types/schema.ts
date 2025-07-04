@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { TypedObject } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 
 export const CellValue = Schema.Struct({
   // TODO(burdon): How to store dates (datetime, date, time), percentages, etc.
@@ -31,7 +31,7 @@ export const RowColumnMeta = Schema.Struct({
 
 // TODO(burdon): Reconcile col/column (across packages).
 // TODO(burdon): Index to all updates when rows/columns are inserted/deleted.
-export class SheetType extends TypedObject({ typename: 'dxos.org/type/Sheet', version: '0.1.0' })({
+export const SheetType = Schema.Struct({
   name: Schema.optional(Schema.String),
 
   // Sparse map of cells referenced by index.
@@ -51,4 +51,10 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/Sheet', ve
 
   // Cell formatting referenced by indexed range.
   ranges: Schema.mutable(Schema.Array(Range)),
-}) {}
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Sheet',
+    version: '0.1.0',
+  }),
+);
+export interface SheetType extends Schema.Schema.Type<typeof SheetType> {}

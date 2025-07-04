@@ -42,11 +42,11 @@ export class EmbeddingExtractor extends Resource {
     this._options = { ...DEFAULT_OPTIONS, ...options };
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     this._extractor = await pipeline('feature-extraction', this._options.model);
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     await this._extractor?.dispose();
   }
 

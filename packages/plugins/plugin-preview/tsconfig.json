@@ -39,6 +39,9 @@
       "path": "../../core/echo/echo-schema"
     },
     {
+      "path": "../../devtools/storybook-utils"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -61,6 +64,9 @@
     },
     {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-table"

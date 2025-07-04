@@ -5,23 +5,22 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { raise, StackTrace } from '@dxos/debug';
-import { Reference } from '@dxos/echo-protocol';
+import type { Ref } from '@dxos/echo';
+import { Query, Filter } from '@dxos/echo';
 import {
-  Filter,
   ImmutableSchema,
-  Query,
   RuntimeSchemaRegistry,
+  type AnyEchoObject,
   type BaseObject,
   type BaseSchema,
   type ObjectId,
-  type RefResolver,
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { invariant } from '@dxos/invariant';
-import { DXN, PublicKey, type SpaceId } from '@dxos/keys';
+import { failedInvariant, invariant } from '@dxos/invariant';
+import { DXN, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, entry } from '@dxos/util';
+import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
 import { type AnyLiveObject } from './echo-handler';
@@ -37,18 +36,48 @@ import {
   type QueryOptions,
   type QuerySource,
 } from './query';
+import type { Queue, QueueFactory } from './queue';
+
+const TRACE_REF_RESOLUTION = false;
+
+/**
+ * Resolution context.
+ * Affects how non-absolute DXNs are resolved.
+ */
+export interface RefResolutionContext {
+  /**
+   * Space that the resolution is happening from.
+   */
+  space?: SpaceId;
+
+  /**
+   * Queue that the resolution is happening from.
+   * This queue will be searched first, and then the space it belongs to.
+   */
+  queue?: DXN;
+}
+
+export interface RefResolverOptions {
+  /**
+   * Resolution context.
+   * Affects how non-absolute DXNs are resolved.
+   */
+  context?: RefResolutionContext;
+
+  /**
+   * Middleware to change the resolved object before returning it.
+   * @deprecated On track to be removed.
+   */
+  middleware?: (obj: BaseObject) => BaseObject;
+}
 
 /**
  * Manages cross-space database interactions.
  */
 export class Hypergraph {
-  /**
-   * Used for References resolution.
-   * @deprecated use SpaceId.
-   * TODO(mykola): Delete on References migration.
-   */
-  private readonly _spaceKeyToId = new ComplexMap<PublicKey, SpaceId>(PublicKey.hash);
   private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
+  private readonly _queueFactories = new Map<SpaceId, QueueFactory>();
+
   // TODO(burdon): Comment/rename?
   private readonly _owningObjects = new Map<SpaceId, unknown>();
   private readonly _schemaRegistry = new RuntimeSchemaRegistry();
@@ -83,14 +112,12 @@ export class Hypergraph {
    * @param owningObject Database owner, usually a space.
    */
   // TODO(burdon): When is the owner not a space?
-  _register(
+  _registerDatabase(
     spaceId: SpaceId,
     /** @deprecated Use spaceId */
-    spaceKey: PublicKey,
     database: EchoDatabaseImpl,
     owningObject?: unknown,
-  ) {
-    this._spaceKeyToId.set(spaceKey, spaceId);
+  ): void {
     this._databases.set(spaceId, database);
     this._owningObjects.set(spaceId, owningObject);
     database.coreDatabase._updateEvent.on(this._onUpdate.bind(this));
@@ -112,9 +139,26 @@ export class Hypergraph {
     }
   }
 
-  _unregister(spaceId: SpaceId) {
+  /**
+   * @internal
+   */
+  _unregisterDatabase(spaceId: SpaceId): void {
     // TODO(dmaretskyi): Remove db from query contexts.
     this._databases.delete(spaceId);
+  }
+
+  /**
+   * @internal
+   */
+  _registerQueueFactory(spaceId: SpaceId, factory: QueueFactory): void {
+    this._queueFactories.set(spaceId, factory);
+  }
+
+  /**
+   * @internal
+   */
+  _unregisterQueueFactory(spaceId: SpaceId): void {
+    this._queueFactories.delete(spaceId);
   }
 
   _getOwningObject(spaceId: SpaceId): unknown | undefined {
@@ -164,17 +208,24 @@ export class Hypergraph {
    * @param middleware Called with the loaded object. The caller may change the object.
    * @returns Result of `onLoad`.
    */
-  getRefResolver(hostDb: EchoDatabase, middleware: (obj: BaseObject) => BaseObject = (obj) => obj): RefResolver {
-    // TODO(dmaretskyi): Cache per hostDb.
+  // TODO(dmaretskyi): Restructure API: Remove middleware, move `hostDb` into context option. Make accessible on Database objects.
+  createRefResolver({ context = {}, middleware = (obj) => obj }: RefResolverOptions): Ref.Resolver {
+    // TODO(dmaretskyi): Rewrite resolution algorithm with tracks for absolute and relative DXNs.
+
     return {
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (dxn, load, onLoad) => {
-        if (dxn.kind !== DXN.kind.ECHO) {
-          throw new Error('Unsupported DXN kind');
+        // TODO(dmaretskyi): Add queue objects.
+        if (dxn.kind === DXN.kind.QUEUE && dxn.asQueueDXN()?.objectId === undefined) {
+          const { spaceId, subspaceTag, queueId } = dxn.asQueueDXN()!;
+          return this._resolveQueueSync(spaceId, subspaceTag as QueueSubspaceTag, queueId);
         }
 
-        const ref = Reference.fromDXN(dxn);
-        const res = this._lookupRef(hostDb, ref, onLoad ?? (() => {}));
+        if (dxn.kind !== DXN.kind.ECHO) {
+          return undefined; // Unsupported DXN kind.
+        }
+
+        const res = this._resolveSync(dxn, context, onLoad);
 
         if (res) {
           return middleware(res);
@@ -183,69 +234,73 @@ export class Hypergraph {
         }
       },
       resolve: async (dxn) => {
-        if (dxn.kind !== DXN.kind.ECHO) {
-          throw new Error('Unsupported DXN kind');
-        }
-
-        if (!dxn.isLocalObjectId()) {
-          throw new Error('Cross-space references are not supported');
-        }
-        const {
-          objects: [obj],
-        } = await hostDb.query(Filter.ids(dxn.parts[1])).run();
+        const obj = await this._resolveAsync(dxn, context);
         if (obj) {
           return middleware(obj);
         } else {
           return undefined;
         }
       },
-    };
+
+      resolveSchema: async (dxn) => {
+        const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
+        let status: string = '';
+        try {
+          switch (dxn.kind) {
+            case DXN.kind.TYPE: {
+              const schema = this.schemaRegistry.getSchemaByDXN(dxn);
+              status = schema != null ? 'resolved' : 'missing';
+              return schema;
+            }
+            case DXN.kind.ECHO: {
+              status = 'error';
+              throw new Error('Not implemented: Resolving schema stored in the database');
+            }
+            default: {
+              status = 'unknown dxn';
+              return undefined;
+            }
+          }
+        } finally {
+          if (TRACE_REF_RESOLUTION) {
+            log.info('resolveSchema', { dxn: dxn.toString(), status, time: performance.now() - beginTime });
+          }
+        }
+      },
+    } satisfies Ref.Resolver;
   }
 
   /**
-   * @internal
    * @param db
    * @param ref
    * @param onResolve will be weakly referenced.
    */
-  _lookupRef(
-    db: EchoDatabase,
-    ref: Reference,
-    onResolve: (obj: AnyLiveObject<any>) => void,
+  private _resolveSync(
+    dxn: DXN,
+    context: RefResolutionContext,
+    onResolve?: (obj: AnyLiveObject<any>) => void,
   ): AnyLiveObject<any> | undefined {
-    let spaceId: SpaceId | undefined, objectId: ObjectId | undefined;
-
-    if (ref.dxn && ref.dxn.asEchoDXN()) {
-      const dxnData = ref.dxn.asEchoDXN()!;
-      spaceId = dxnData.spaceId;
-      objectId = dxnData.echoId;
-    } else {
-      // TODO(dmaretskyi): Legacy resoltion -- remove.
-      objectId = ref.objectId;
-      const spaceKey = ref.host ? PublicKey.from(ref.host) : db?.spaceKey;
-      const mappedSpaceId = this._spaceKeyToId.get(spaceKey);
-      invariant(mappedSpaceId, 'No spaceId for spaceKey.');
-      spaceId = mappedSpaceId;
+    if (!dxn.asEchoDXN()) {
+      throw new Error('Unsupported DXN kind');
     }
+    const dxnData = dxn.asEchoDXN()!;
+    const spaceId = dxnData.spaceId ?? context.space;
+    const objectId = dxnData.echoId;
 
     if (spaceId === undefined) {
-      const local = db.getObjectById(objectId);
-      if (local) {
-        return local;
-      }
-    } else {
-      const remoteDb = this._databases.get(spaceId);
-      if (remoteDb) {
-        // Resolve remote reference.
-        const remote = remoteDb.getObjectById(objectId);
-        if (remote) {
-          return remote;
-        }
+      throw new Error('Unable to determine space to resolve the reference from');
+    }
+
+    const db = this._databases.get(spaceId);
+    if (db) {
+      // Resolve remote reference.
+      const obj = db.getObjectById(objectId);
+      if (obj) {
+        return obj;
       }
     }
 
-    // Assume local database.
-    spaceId ??= db.spaceId;
+    // TODO(dmaretskyi): Consider throwing if space not found.
 
     if (!OBJECT_DIAGNOSTICS.has(objectId)) {
       OBJECT_DIAGNOSTICS.set(objectId, {
@@ -257,14 +312,116 @@ export class Hypergraph {
     }
 
     log('trap', { spaceId, objectId });
-    entry(this._resolveEvents, spaceId)
-      .orInsert(new Map())
-      .deep(objectId)
-      .orInsert(new Event())
-      .value.on(new Context(), onResolve);
+    if (onResolve) {
+      entry(this._resolveEvents, spaceId)
+        .orInsert(new Map())
+        .deep(objectId)
+        .orInsert(new Event())
+        .value.on(new Context(), onResolve);
+    }
   }
 
-  registerQuerySourceProvider(provider: QuerySourceProvider) {
+  private async _resolveAsync(dxn: DXN, context: RefResolutionContext): Promise<AnyEchoObject | Queue | undefined> {
+    const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
+    let status: string = '';
+    try {
+      switch (dxn.kind) {
+        case DXN.kind.ECHO: {
+          if (!dxn.isLocalObjectId()) {
+            status = 'error';
+            throw new Error('Cross-space references are not supported');
+          }
+          const { echoId } = dxn.asEchoDXN() ?? failedInvariant();
+
+          if (context.queue) {
+            const { subspaceTag, spaceId, queueId } = context.queue.asQueueDXN() ?? failedInvariant();
+            const obj = await this._resolveQueueObjectAsync(spaceId, subspaceTag as QueueSubspaceTag, queueId, echoId);
+            if (obj) {
+              status = 'resolved';
+              return obj;
+            }
+          }
+
+          if (!context.space) {
+            status = 'error';
+            throw new Error('Resolving context-free references is not supported');
+          }
+
+          const obj = await this._resolveDatabaseObjectAsync(context.space, echoId);
+          if (obj) {
+            status = 'resolved';
+            return obj;
+          }
+
+          status = 'missing';
+          return undefined;
+        }
+        case DXN.kind.QUEUE: {
+          const { subspaceTag, spaceId, queueId, objectId } = dxn.asQueueDXN() ?? failedInvariant();
+          if (!objectId) {
+            status = 'error';
+            return this._resolveQueueSync(spaceId, subspaceTag as QueueSubspaceTag, queueId);
+          }
+
+          const obj = await this._resolveQueueObjectAsync(spaceId, subspaceTag as QueueSubspaceTag, queueId, objectId);
+          if (obj) {
+            status = 'resolved';
+            return obj;
+          }
+
+          status = 'missing queue';
+          return undefined;
+        }
+        default: {
+          status = 'error';
+          throw new Error(`Unsupported DXN kind: ${dxn.kind}`);
+        }
+      }
+    } finally {
+      if (TRACE_REF_RESOLUTION) {
+        log.info('resolve', { dxn: dxn.toString(), status, time: performance.now() - beginTime });
+      }
+    }
+  }
+
+  private async _resolveDatabaseObjectAsync(spaceId: SpaceId, objectId: ObjectId): Promise<AnyEchoObject | undefined> {
+    const db = this._databases.get(spaceId);
+    if (!db) {
+      return undefined;
+    }
+    const {
+      objects: [obj],
+    } = await db.query(Filter.ids(objectId)).run();
+    return obj;
+  }
+
+  private _resolveQueueSync(spaceId: SpaceId, subspaceTag: QueueSubspaceTag, queueId: ObjectId): Queue | undefined {
+    const queueFactory = this._queueFactories.get(spaceId);
+    if (!queueFactory) {
+      return undefined;
+    }
+    return queueFactory.get(DXN.fromQueue(subspaceTag, spaceId, queueId));
+  }
+
+  private async _resolveQueueObjectAsync(
+    spaceId: SpaceId,
+    subspaceTag: QueueSubspaceTag,
+    queueId: ObjectId,
+    objectId: ObjectId,
+  ): Promise<AnyEchoObject | undefined> {
+    const queueFactory = this._queueFactories.get(spaceId);
+    if (!queueFactory) {
+      return undefined;
+    }
+    const queue = queueFactory.get(DXN.fromQueue(subspaceTag, spaceId, queueId));
+    if (!queue) {
+      return undefined;
+    }
+    const [obj] = await queue.getObjectsById([objectId]);
+    return obj ?? undefined;
+  }
+
+  registerQuerySourceProvider(provider: QuerySourceProvider): void {
     this._querySourceProviders.push(provider);
     for (const context of this._queryContexts.values()) {
       context.addQuerySource(provider.create());
@@ -274,14 +431,14 @@ export class Hypergraph {
   /**
    * Does not remove the provider from active query contexts.
    */
-  unregisterQuerySourceProvider(provider: QuerySourceProvider) {
+  unregisterQuerySourceProvider(provider: QuerySourceProvider): void {
     const index = this._querySourceProviders.indexOf(provider);
     if (index !== -1) {
       this._querySourceProviders.splice(index, 1);
     }
   }
 
-  private _onUpdate(updateEvent: ItemsUpdatedEvent) {
+  private _onUpdate(updateEvent: ItemsUpdatedEvent): void {
     const listenerMap = this._resolveEvents.get(updateEvent.spaceId);
     if (listenerMap) {
       compositeRuntime.batch(() => {

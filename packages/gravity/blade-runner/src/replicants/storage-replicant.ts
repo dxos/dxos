@@ -113,7 +113,7 @@ export class StorageReplicant {
     return results;
   }
 
-  private async _createStorage(kind: AdaptorKind) {
+  private async _createStorage(kind: AdaptorKind): Promise<IndexedDBStorageAdapter | LevelDBStorageAdapter> {
     switch (kind) {
       case 'idb':
         return new IndexedDBStorageAdapter();

@@ -4,11 +4,11 @@
 
 import { Schema, pipe } from 'effect';
 
-import { defineTool, ToolResult } from '@dxos/ai';
+import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
@@ -39,7 +39,7 @@ export default () => {
     `,
     schema: KanbanType,
     tools: [
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'create',
         description: `
             Create a new kanban board using an existing schema.
@@ -80,7 +80,7 @@ export default () => {
           return ToolResult.Success(createArtifactElement(data.id));
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'list',
         description: 'List all kanban boards in the current space.',
         caption: 'Listing kanban boards...',
@@ -103,7 +103,7 @@ export default () => {
           return ToolResult.Success(boardInfo);
         },
       }),
-      defineTool(meta.id, {
+      createTool(meta.id, {
         name: 'inspect',
         description: 'Get details about a specific kanban board.',
         caption: 'Inspecting kanban board...',
@@ -113,7 +113,7 @@ export default () => {
           const space = extensions.space;
           const { objects: boards } = await space.db.query(Filter.type(KanbanType)).run();
           const board = boards.find((board: KanbanType) => fullyQualifiedId(board) === id);
-          invariant(isInstanceOf(KanbanType, board));
+          invariant(Obj.instanceOf(KanbanType, board));
 
           const view = await board.cardView?.load();
           invariant(view);

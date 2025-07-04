@@ -35,7 +35,7 @@ export class ComputeNode extends Resource {
     return this._graph;
   }
 
-  clear() {
+  clear(): void {
     this._graph.hf.clearSheet(this.sheetId);
   }
 
@@ -48,13 +48,13 @@ export class ComputeNode extends Resource {
     return value;
   }
 
-  setValue(cell: CellAddress, value: CellScalarValue) {
+  setValue(cell: CellAddress, value: CellScalarValue): void {
     const mappedValue = isFormula(value) ? this._graph.mapFormulaToNative(value) : value;
     this._graph.hf.setCellContents({ sheet: this.sheetId, row: cell.row, col: cell.col }, [[mappedValue]]);
   }
 
   // TODO(burdon): Load data into sheet.
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     // const unsubscribe = this._graph.update.on(this.update.emit);
     // this._ctx.onDispose(unsubscribe);
   }

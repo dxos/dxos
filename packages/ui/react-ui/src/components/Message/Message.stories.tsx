@@ -4,12 +4,11 @@
 
 import '@dxos-theme';
 
-import { Info } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type MessageValence } from '@dxos/react-ui-types';
 
-import { Message } from './Message';
+import { Callout } from './Message';
 import { withTheme } from '../../testing';
 
 type StoryProps = {
@@ -19,25 +18,29 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ valence, title, body }: StoryProps) => (
-  <Message.Root valence={valence}>
-    <Message.Title>
-      <Info className='inline w-5 h-5 mb-1' weight='duotone' /> {title}
-    </Message.Title>
-    <Message.Body>{body}</Message.Body>
-  </Message.Root>
+  <Callout.Root valence={valence}>
+    {title && <Callout.Title>{title}</Callout.Title>}
+    {body && <Callout.Content>{body}</Callout.Content>}
+  </Callout.Root>
 );
 
 export default {
-  title: 'ui/react-ui-core/Message',
-  component: Message,
+  title: 'ui/react-ui-core/Callout',
+  component: Callout,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
+  argTypes: {
+    valence: {
+      control: 'select',
+      options: ['success', 'info', 'warning', 'error', 'neutral'],
+    },
+  },
 };
 
 export const Default = {
   args: {
-    valence: 'error',
+    valence: 'neutral',
     title: 'Alert title',
     body: 'Alert content',
   },

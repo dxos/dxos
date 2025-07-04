@@ -22,7 +22,7 @@ import {
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { useNode, type Node } from '@dxos/plugin-graph';
-import { ATTENDABLE_PATH_SEPARATOR, useAttendableAttributes } from '@dxos/react-ui-attention';
+import { ATTENDABLE_PATH_SEPARATOR, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
 
@@ -142,7 +142,7 @@ const PlankComponent = memo(
     const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
     const canResize = layoutMode === 'deck';
 
-    const attendableAttrs = useAttendableAttributes(primary?.id ?? id);
+    const attentionAttrs = useAttentionAttributes(primary?.id ?? id);
     const index = active ? active.findIndex((entryId) => entryId === id) : 0;
     const length = active?.length ?? 1;
     const canIncrementStart = active && index !== undefined && index > 0 && length !== undefined && length > 1;
@@ -203,7 +203,7 @@ const PlankComponent = memo(
 
     const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
     const className = mx(
-      'attention-surface relative dx-focus-ring-inset-over-all',
+      'attention-surface relative dx-focus-ring-inset-over-all density-coarse',
       isSolo && mainIntrinsicSize,
       isSolo && railGridHorizontal,
       isSolo && 'absolute inset-0',
@@ -228,7 +228,7 @@ const PlankComponent = memo(
               order,
               role: 'article',
             })}
-        {...(isAttendable ? attendableAttrs : {})}
+        {...(isAttendable ? attentionAttrs : {})}
         onKeyDown={handleKeyDown}
       >
         {node ? (

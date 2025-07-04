@@ -14,3 +14,6 @@ export * from './typed-object';
 export * from './typed-relation';
 export * from './typename';
 export * from './deleted';
+export * from './model';
+export * from './accessors';
+export * from './schema-validator';

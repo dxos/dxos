@@ -8,6 +8,15 @@ import { live } from '@dxos/live-object';
 export type LayoutState = {
   sidebarState?: 'expanded' | 'collapsed' | 'closed';
   complementarySidebarState?: 'expanded' | 'collapsed' | 'closed';
+
+  dialogOpen: boolean;
+  dialogType?: 'default' | 'alert';
+  dialogBlockAlign?: 'start' | 'center' | 'end';
+  dialogOverlayClasses?: string;
+  dialogOverlayStyle?: Record<string, any>;
+  /** Data to be passed to the dialog Surface. */
+  dialogContent?: any;
+
   popoverContent?: any;
   popoverOpen?: boolean;
   popoverSide?: 'top' | 'right' | 'bottom' | 'left';
@@ -20,17 +29,18 @@ export const LayoutState = defineCapability<LayoutState>('dxos.org/plugin/storyb
 const defaultState: LayoutState = {
   sidebarState: 'closed',
   complementarySidebarState: 'closed',
+  dialogOpen: false,
 };
 
-export default ({ initialState = defaultState }: { initialState?: LayoutState }) => {
-  const state = live<LayoutState>(initialState);
+export default ({ initialState }: { initialState?: Partial<LayoutState> }) => {
+  const state = live<LayoutState>({ ...defaultState, ...initialState });
 
   const layout = live<Capabilities.Layout>({
     get mode() {
       return 'storybook';
     },
     get dialogOpen() {
-      return false;
+      return state.dialogOpen;
     },
     get sidebarOpen() {
       return state.sidebarState === 'expanded';

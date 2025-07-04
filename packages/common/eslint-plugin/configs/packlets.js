@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+// TODO(burdon): Obsolete?
+
 module.exports = {
   // Packlets linting requires a package-specific tsconfig file and so cannot live in the root config.
   // Packages which need to use packlets can setup a local lint config within the package.

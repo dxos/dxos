@@ -5,14 +5,14 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { type AnyLiveObject } from '@dxos/react-client/echo';
+import { type Obj } from '@dxos/echo';
 import { Clipboard } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { BaseObjectSettings } from './BaseObjectSettings';
 
 export type ObjectSettingsContainerProps = {
-  object: AnyLiveObject<any>;
+  object: Obj.Any;
   role: string;
 };
 
@@ -21,8 +21,8 @@ export const ObjectSettingsContainer = ({ object, role }: ObjectSettingsContaine
 
   return (
     <Clipboard.Provider>
-      <StackItem.Content toolbar={false} role={role}>
-        <div className='flex flex-col overflow-y-auto divide-y divide-separator'>
+      <StackItem.Content toolbar={false}>
+        <div role='none' className='overflow-y-auto pli-cardSpacingInline plb-cardSpacingBlock'>
           <BaseObjectSettings object={object}>
             <Surface role='base-object-settings' data={data} />
           </BaseObjectSettings>

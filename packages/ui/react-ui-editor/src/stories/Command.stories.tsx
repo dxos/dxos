@@ -10,7 +10,7 @@ import { Button, Icon, Input, DropdownMenu } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { EditorStory } from './util';
+import { EditorStory } from './components';
 import { RefDropdownMenu } from '../components';
 import { editorWidth } from '../defaults';
 import { command, type Action, floatingMenu } from '../extensions';
@@ -75,7 +75,7 @@ const meta: Meta<typeof EditorStory> = {
           floatingMenu(),
           command({
             renderDialog: createRenderer(CommandDialog),
-            onHint: () => 'Press / for commands.',
+            onHint: () => "Press '/' for commands",
           }),
         ]}
       />

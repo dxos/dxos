@@ -94,7 +94,12 @@ export const PlankHeading = memo(
       } else if (variant) {
         return [];
       } else {
-        return [actions, graph.getActions(node.id)].filter((a) => a.length > 0);
+        return [
+          actions,
+          graph
+            .getActions(node.id)
+            .filter((a) => ['list-item', 'list-item-primary', 'heading-list-item'].includes(a.properties.disposition)),
+        ].filter((a) => a.length > 0);
       }
     }, [actions, node, variant, graph]);
 
@@ -150,20 +155,21 @@ export const PlankHeading = memo(
     return (
       <StackItem.Heading
         classNames={[
-          'plb-1 border-be border-subduedSeparator items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 contain-layout',
+          'plb-1 items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 contain-layout',
           part === 'solo' ? soloInlinePadding : 'pli-1',
           ...(layoutMode === 'solo--fullscreen'
             ? [
                 hoverableControls,
                 hoverableFocusedWithinControls,
-                '[&>*]:transition-opacity [&>*]:opacity-[--controls-opacity] bg-transparent border-transparent transition-[background-color,border-color] hover-hover:hover:bg-headerSurface focus-within:bg-headerSurface hover-hover:hover:border-subduedSeparator focus-within:border-subduedSeparator',
+                '*:transition-opacity *:opacity-[--controls-opacity] bg-transparent border-transparent transition-[background-color,border-color] hover-hover:hover:bg-headerSurface focus-within:bg-headerSurface hover-hover:hover:border-subduedSeparator focus-within:border-subduedSeparator',
               ]
             : []),
         ]}
         data-plank-heading
       >
-        {companions && isCompanionNode /* TODO(thure): This is a tablist, it should be implemented as such. */ ? (
-          <div role='none' className='flex-1 min-is-0 overflow-x-auto scrollbar-thin flex gap-1'>
+        {companions && isCompanionNode ? (
+          /* TODO(thure): IMPORTANT: This is a tablist; it should be implemented as such. */
+          <div role='none' className='flex-1 min-is-0 overflow-x-auto scrollbar-none flex gap-1'>
             {companions.map(({ id, properties: { icon, label } }) => (
               <IconButton
                 key={id}
@@ -172,7 +178,7 @@ export const PlankHeading = memo(
                 iconOnly={companions.length > MAX_COMPANIONS && node?.id !== id}
                 label={toLocalizedString(label, t)}
                 size={5}
-                variant={node?.id === id ? 'primary' : 'default'}
+                variant={node?.id === id ? 'primary' : 'ghost'}
                 onClick={handleTabClick}
               />
             ))}

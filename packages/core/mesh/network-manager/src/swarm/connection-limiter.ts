@@ -60,7 +60,7 @@ export class ConnectionLimiter {
   /**
    * Rejects promise returned by `connecting` method.
    */
-  doneConnecting(sessionId: PublicKey) {
+  doneConnecting(sessionId: PublicKey): void {
     log('done', { sessionId });
     if (!this._waitingPromises.has(sessionId)) {
       return;

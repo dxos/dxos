@@ -28,7 +28,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
     }
   }
 
-  identify(options: IdentifyParams) {
+  identify(options: IdentifyParams): void {
     try {
       (window as any).analytics?.identify(options.userId, options.traits);
     } catch (err) {
@@ -36,7 +36,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
     }
   }
 
-  page(options: PageOptions) {
+  page(options: PageOptions): void {
     try {
       const props = this.createPageProps(options);
       (window as any).analytics?.page(props.category, props.name, props.properties);
@@ -45,7 +45,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
     }
   }
 
-  track(options: TrackOptions) {
+  track(options: TrackOptions): void {
     try {
       const props = this.createTrackProps(options);
       (window as any).analytics?.track(props.event, props.properties);
@@ -54,7 +54,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
     }
   }
 
-  async flush() {
+  async flush(): Promise<void> {
     try {
       await (window as any).analytics?.flush((err: any) => {
         captureException(err);
@@ -64,5 +64,5 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
     }
   }
 
-  async close() {}
+  async close(): Promise<void> {}
 }

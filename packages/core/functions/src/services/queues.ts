@@ -2,15 +2,41 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context } from 'effect';
+import { Context, Layer } from 'effect';
 
-import type { Queue, QueueFactory } from '@dxos/echo-db';
+import type { Queue, QueueAPI, QueueFactory } from '@dxos/echo-db';
 
-export class QueuesService extends Context.Tag('QueuesService')<
-  QueuesService,
+export class QueueService extends Context.Tag('QueueService')<
+  QueueService,
   {
-    readonly contextQueue: Queue | undefined;
+    /**
+     * API to access the queues.
+     */
+    readonly queues: QueueAPI;
 
-    readonly queues: QueueFactory;
+    /**
+     * The queue that is used to store the context of the current research.
+     */
+    // TODO(dmaretskyi): Is this really part of the queue service?
+    readonly contextQueue: Queue | undefined;
   }
->() {}
+>() {
+  static notAvailable = Layer.succeed(QueueService, {
+    queues: {
+      get(dxn) {
+        throw new Error('Queues not available');
+      },
+      create() {
+        throw new Error('Queues not available');
+      },
+    },
+    contextQueue: undefined,
+  });
+
+  static make = (queues: QueueFactory, contextQueue: Queue | undefined): Context.Tag.Service<QueueService> => {
+    return {
+      queues,
+      contextQueue,
+    };
+  };
+}

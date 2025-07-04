@@ -9,14 +9,14 @@ import React from 'react';
 
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, text } from './util';
+import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, text } from './components';
 import { decorateMarkdown, image, linkTooltip, table } from '../extensions';
 import { str } from '../testing';
 
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/Markdown',
+  component: EditorStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: EditorStory,
   parameters: { layout: 'fullscreen' },
 };
 

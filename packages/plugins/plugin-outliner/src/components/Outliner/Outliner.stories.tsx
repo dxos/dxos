@@ -4,10 +4,11 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { live, useSpace } from '@dxos/react-client/echo';
+import { Obj } from '@dxos/echo';
+import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
@@ -44,6 +45,6 @@ type Story = StoryObj<typeof Outliner>;
 
 export const Default: Story = {
   args: {
-    text: live(DataType.Text, { content: '- [x] Initial content' }),
+    text: Obj.make(DataType.Text, { content: '- [x] Initial content' }),
   },
 };

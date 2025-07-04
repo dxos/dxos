@@ -5,7 +5,7 @@
 import { Chess } from 'chess.js';
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import { Obj } from '@dxos/echo';
 
 import { ChessAction, ChessType } from '../types';
 
@@ -18,7 +18,7 @@ export default () =>
         const pgn = fen ? new Chess(fen).pgn() : undefined;
         return {
           data: {
-            object: live(ChessType, { name, fen, pgn }),
+            object: Obj.make(ChessType, { name, fen, pgn }),
           },
         };
       },

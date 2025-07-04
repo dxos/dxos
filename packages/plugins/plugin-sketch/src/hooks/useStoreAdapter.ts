@@ -6,14 +6,14 @@ import { useEffect, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type AnyLiveObject, createDocAccessor } from '@dxos/react-client/echo';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { setDeep } from '@dxos/util';
 
 import { TLDrawStoreAdapter } from './adapter';
 import { type DiagramType, TLDRAW_SCHEMA } from '../types';
 import { getDeep } from '../util';
 
-export const useStoreAdapter = (object?: AnyLiveObject<DiagramType>) => {
+export const useStoreAdapter = (object?: DiagramType) => {
   const [adapter] = useState(new TLDrawStoreAdapter());
   const [_, forceUpdate] = useState({});
   useEffect(() => {

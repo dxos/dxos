@@ -41,7 +41,7 @@ export class Modified<Element extends BaseElement> {
     };
   }
 
-  clear() {
+  clear(): void {
     this.added.clear();
     this.updated.clear();
     this.deleted.clear();
@@ -70,7 +70,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
   /**
    * @param accessor Accessor for element map.
    */
-  async open(accessor: DocAccessor<any>) {
+  async open(accessor: DocAccessor<any>): Promise<void> {
     invariant(accessor.path.length);
     if (this.isOpen) {
       await this.close();
@@ -180,7 +180,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     log('open');
   }
 
-  async close() {
+  async close(): Promise<void> {
     if (!this.isOpen) {
       return;
     }
@@ -196,7 +196,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
   /**
    * Update the database.
    */
-  protected updateDatabase(batch: Batch<Element>) {
+  protected updateDatabase(batch: Batch<Element>): void {
     invariant(this.isOpen);
     if (this.readonly) {
       log.warn('Attempting to update read-only store.');
@@ -232,6 +232,6 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
    */
   protected abstract onUpdate(batch: Batch<Element>): void;
 
-  protected onOpen(ctx: Context) {}
-  protected onClose() {}
+  protected onOpen(ctx: Context): void {}
+  protected onClose(): void {}
 }

@@ -23,7 +23,7 @@ export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProp
         label={t('save files to directory label')}
         secondary={
           <Message.Root valence='warning'>
-            <Message.Body>{t('save files to directory description')}</Message.Body>
+            <Message.Content>{t('save files to directory description')}</Message.Content>
           </Message.Root>
         }
       >

@@ -33,7 +33,7 @@ export class Lock implements ResourceLock {
     return this._lockKey;
   }
 
-  async acquire() {
+  async acquire(): Promise<void> {
     this._broadcastChannel.postMessage({
       message: Message.ACQUIRING,
     });
@@ -49,17 +49,17 @@ export class Lock implements ResourceLock {
     }
   }
 
-  async release() {
+  async release(): Promise<void> {
     this._releaseTrigger.wake();
   }
 
-  private _onMessage(event: MessageEvent<any>) {
+  private _onMessage(event: MessageEvent<any>): void {
     if (event.data.message === Message.ACQUIRING) {
       this._releaseTrigger.wake();
     }
   }
 
-  private async _requestLock(steal = false) {
+  private async _requestLock(steal = false): Promise<void> {
     log('requesting lock...', { steal });
     const acquired = new Trigger();
 

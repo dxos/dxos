@@ -5,7 +5,7 @@
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
-import { FILES_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { FilesSettingsSchema, type FilesSettingsProps } from '../types';
 
 export default async () => {
@@ -14,5 +14,9 @@ export default async () => {
     autoExportInterval: 30_000,
   });
 
-  return contributes(Capabilities.Settings, { schema: FilesSettingsSchema, prefix: FILES_PLUGIN, value: settings });
+  return contributes(Capabilities.Settings, {
+    prefix: meta.id,
+    schema: FilesSettingsSchema,
+    value: settings,
+  });
 };

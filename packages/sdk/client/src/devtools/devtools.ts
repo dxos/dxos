@@ -74,14 +74,12 @@ export type MountOptions = {
 
 export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
   let server: RpcPeer;
-
   let diagnostics: DiagnosticMetadata[] = [];
 
   const hook: DevtoolsHook = {
     // To debug client from console using 'window.__DXOS__.client'.
     client,
     host,
-
     tracing: TRACE_PROCESSOR,
 
     openClientRpcServer: async () => {

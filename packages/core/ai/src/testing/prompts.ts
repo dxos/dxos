@@ -8,11 +8,11 @@ import { toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { executeQuery, formatJsonSchemaForLLM, type DataSource } from '../cypher';
-import { defineTool, ToolResult } from '../tools';
+import { createTool, ToolResult } from '../tools';
 import { trim } from '../util';
 
 export const createCypherTool = (dataSource: DataSource, schemaTypes: Schema.Schema.Any[] = []) =>
-  defineTool('dxos.org/echo', {
+  createTool('dxos.org/echo', {
     name: 'query',
     description:
       'Query the ECHO graph database in cypher query language. Returns data from the database.' +

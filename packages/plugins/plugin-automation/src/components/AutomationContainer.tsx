@@ -4,15 +4,14 @@
 
 import React from 'react';
 
-import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ControlSection, ControlPage } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { AutomationPanel } from './AutomationPanel';
+import { AutomationPanel, type AutomationPanelProps } from './AutomationPanel';
 import { AUTOMATION_PLUGIN } from '../meta';
 
-export const AutomationContainer = ({ space }: { space: Space }) => {
+export const AutomationContainer = (props: AutomationPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   return (
     <StackItem.Content classNames='block overflow-y-auto'>
@@ -21,7 +20,7 @@ export const AutomationContainer = ({ space }: { space: Space }) => {
           title={t('automation verbose label', { ns: AUTOMATION_PLUGIN })}
           description={t('automation description', { ns: AUTOMATION_PLUGIN })}
         >
-          <AutomationPanel space={space} />
+          <AutomationPanel {...props} />
         </ControlSection>
       </ControlPage>
     </StackItem.Content>

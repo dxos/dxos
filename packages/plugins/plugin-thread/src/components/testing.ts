@@ -2,20 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Obj, Ref } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
-import { live, makeRef } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type Identity } from '@dxos/react-client/halo';
 import { DataType } from '@dxos/schema';
 
 import { ThreadType } from '../types';
 
-export const createCommentThread = (identity: Identity) => {
-  return live(ThreadType, {
+export const createCommentThread = (identity: Identity): ThreadType => {
+  return Obj.make(ThreadType, {
     messages: faker.helpers.multiple(
       () =>
-        makeRef(
-          live(DataType.Message, {
+        Ref.make(
+          Obj.make(DataType.Message, {
             sender: {
               identityDid: faker.datatype.boolean() ? identity.did : IdentityDid.random(),
             },

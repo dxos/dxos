@@ -113,7 +113,7 @@ export class TraceProcessor {
     this.diagnosticsChannel.unref();
   }
 
-  setInstanceTag(tag: string) {
+  setInstanceTag(tag: string): void {
     this._instanceTag = tag;
     this.diagnostics.setInstanceTag(tag);
   }
@@ -122,7 +122,7 @@ export class TraceProcessor {
    * @internal
    */
   // TODO(burdon): Comment.
-  createTraceResource(params: TraceResourceConstructorParams) {
+  createTraceResource(params: TraceResourceConstructorParams): void {
     const id = this.resources.size;
 
     // Init metrics counters.
@@ -154,7 +154,7 @@ export class TraceProcessor {
     this._markResourceDirty(id);
   }
 
-  createTraceSender() {
+  createTraceSender(): TraceSender {
     return new TraceSender(this);
   }
 
@@ -165,7 +165,7 @@ export class TraceProcessor {
   }
 
   // TODO(burdon): Not implemented.
-  addLink(parent: any, child: any, opts: AddLinkOptions) {}
+  addLink(parent: any, child: any, opts: AddLinkOptions): void {}
 
   //
   // Getters
@@ -236,7 +236,7 @@ export class TraceProcessor {
     return [...this.resources.values()].filter((res) => res.annotation === annotation);
   }
 
-  refresh() {
+  refresh(): void {
     for (const resource of this.resources.values()) {
       const instance = resource.instance.deref();
       if (!instance) {
@@ -278,7 +278,7 @@ export class TraceProcessor {
   /**
    * @internal
    */
-  _flushSpan(runtimeSpan: TracingSpan) {
+  _flushSpan(runtimeSpan: TracingSpan): void {
     const span = runtimeSpan.serialize();
     this.spans.set(span.id, span);
     this.spanIdList.push(span.id);
@@ -289,19 +289,19 @@ export class TraceProcessor {
     this.remoteTracing.flushSpan(runtimeSpan);
   }
 
-  private _markResourceDirty(id: number) {
+  private _markResourceDirty(id: number): void {
     for (const subscription of this.subscriptions) {
       subscription.dirtyResources.add(id);
     }
   }
 
-  private _markSpanDirty(id: number) {
+  private _markSpanDirty(id: number): void {
     for (const subscription of this.subscriptions) {
       subscription.dirtySpans.add(id);
     }
   }
 
-  private _clearResources() {
+  private _clearResources(): void {
     // TODO(dmaretskyi): Use FinalizationRegistry to delete finalized resources first.
     while (this.resourceIdList.length > MAX_RESOURCE_RECORDS) {
       const id = this.resourceIdList.shift()!;
@@ -309,14 +309,14 @@ export class TraceProcessor {
     }
   }
 
-  private _clearSpans() {
+  private _clearSpans(): void {
     while (this.spanIdList.length > MAX_SPAN_RECORDS) {
       const id = this.spanIdList.shift()!;
       this.spans.delete(id);
     }
   }
 
-  private _pushLog(log: LogEntry) {
+  private _pushLog(log: LogEntry): void {
     this.logs.push(log);
     if (this.logs.length > MAX_LOG_RECORDS) {
       this.logs.shift();
@@ -413,7 +413,7 @@ export class TracingSpan {
     return this._ctx;
   }
 
-  markSuccess() {
+  markSuccess(): void {
     this.endTs = performance.now();
     this._traceProcessor._flushSpan(this);
 
@@ -422,7 +422,7 @@ export class TracingSpan {
     }
   }
 
-  markError(err: unknown) {
+  markError(err: unknown): void {
     this.endTs = performance.now();
     this.error = serializeError(err);
     this._traceProcessor._flushSpan(this);
@@ -444,7 +444,7 @@ export class TracingSpan {
     };
   }
 
-  private _markInBrowserTimeline() {
+  private _markInBrowserTimeline(): void {
     if (typeof globalThis?.performance?.measure === 'function') {
       performance.measure(this.name, { start: this.startTs, end: this.endTs! });
     }

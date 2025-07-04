@@ -19,12 +19,12 @@ export class StackTrace {
    * @param skipFrames Number of frames to skip. By default, the first frame would be the invocation of the StackTrace constructor.
    * @returns
    */
-  getStack(skipFrames = 0) {
+  getStack(skipFrames = 0): string {
     const stack = this._stack.stack!.split('\n');
     return stack.slice(skipFrames + 2).join('\n');
   }
 
-  getStackArray(skipFrames = 0) {
+  getStackArray(skipFrames = 0): string[] {
     const stack = this._stack.stack!.split('\n');
     return stack.slice(skipFrames + 2);
   }

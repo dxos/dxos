@@ -7,7 +7,7 @@ import React, { type ComponentPropsWithoutRef } from 'react';
 
 import { useStackItem } from '../StackContext';
 
-export type StackItemDragHandleProps = ComponentPropsWithoutRef<'button'> & { asChild: boolean };
+export type StackItemDragHandleProps = ComponentPropsWithoutRef<'button'> & { asChild?: boolean };
 
 export const StackItemDragHandle = ({ asChild, children }: StackItemDragHandleProps) => {
   const { selfDragHandleRef } = useStackItem();

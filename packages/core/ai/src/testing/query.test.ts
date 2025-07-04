@@ -4,7 +4,7 @@
 
 import { test } from 'vitest';
 
-import { DEFAULT_EDGE_MODEL, AIServiceEdgeClient } from '@dxos/ai';
+import { DEFAULT_EDGE_MODEL, EdgeAiServiceClient } from '@dxos/ai';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
@@ -19,7 +19,7 @@ import { AI_SERVICE_ENDPOINT } from '../testing';
 import { createUserMessage } from '../tools';
 import { createLogger } from '../util';
 
-const client = new AIServiceEdgeClient({
+const aiClient = new EdgeAiServiceClient({
   endpoint: AI_SERVICE_ENDPOINT.LOCAL,
 });
 
@@ -33,6 +33,7 @@ test.skip('cypher query', async () => {
   const threadId = ObjectId.random();
 
   const result = await runLLM({
+    aiClient,
     model: DEFAULT_EDGE_MODEL,
     tools: [cypherTool],
     spaceId,
@@ -45,7 +46,6 @@ test.skip('cypher query', async () => {
         'Query the database and give me all employees from DXOS organization that work on Composer and what their tasks are.',
       ),
     ],
-    client,
     logger: createLogger({ stream: false }),
   });
 
@@ -69,12 +69,12 @@ test.skip('query ECHO', async () => {
   const threadId = ObjectId.random();
 
   const result = await runLLM({
+    aiClient,
     model: DEFAULT_EDGE_MODEL,
     tools: [cypherTool],
     spaceId,
     threadId,
     system: createSystemPrompt(schemaTypes),
-    client,
     history: [
       createUserMessage(
         spaceId,

@@ -15,7 +15,7 @@ export class SelectionModel {
 
   constructor(private readonly _singleSelect: boolean = false) {}
 
-  toJSON() {
+  toJSON(): { selected: string[] } {
     return {
       selected: Array.from(this._selected.value.values()),
     };
@@ -29,33 +29,33 @@ export class SelectionModel {
     return this._selectedIds;
   }
 
-  contains(id: string) {
+  contains(id: string): boolean {
     return this._selected.value.has(id);
   }
 
-  clear() {
+  clear(): void {
     this._selected.value = new Set();
   }
 
-  add(id: string) {
+  add(id: string): void {
     invariant(id);
     this._selected.value = new Set<string>(
       this._singleSelect ? [id] : [...Array.from(this._selected.value.values()), id],
     );
   }
 
-  remove(id: string) {
+  remove(id: string): void {
     invariant(id);
     this._selected.value = new Set<string>(Array.from(this._selected.value.values()).filter((_id) => _id !== id));
   }
 
   // TODO(burdon): Handle single select.
 
-  setSelected(ids: string[], shift = false) {
+  setSelected(ids: string[], shift = false): void {
     this._selected.value = new Set([...(shift ? Array.from(this._selected.value.values()) : []), ...ids]);
   }
 
-  toggleSelected(ids: string[], shift = false) {
+  toggleSelected(ids: string[], shift = false): void {
     const set = new Set<string>(shift ? Array.from(this._selected.value.values()) : undefined);
     ids.forEach((id) => {
       if (this._selected.value.has(id)) {

@@ -39,7 +39,7 @@ export const SpaceList = ({ current }: { current?: Space }) => {
         <button onClick={() => current && client.shell.shareSpace({ spaceId: current.id })} data-testid='share-button'>
           ↸
         </button>
-        <button id='' onClick={handleJoin} data-testid='join-button'>
+        <button onClick={handleJoin} data-testid='join-button'>
           ⇲
         </button>
       </div>

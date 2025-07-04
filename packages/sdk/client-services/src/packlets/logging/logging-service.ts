@@ -32,11 +32,11 @@ export class LoggingServiceImpl implements LoggingService {
   private readonly _started = Date.now();
   private readonly _sessionId = PublicKey.random().toHex();
 
-  async open() {
+  async open(): Promise<void> {
     log.runtimeConfig.processors.push(this._logProcessor);
   }
 
-  async close() {
+  async close(): Promise<void> {
     const index = log.runtimeConfig.processors.findIndex((processor) => processor === this._logProcessor);
     log.runtimeConfig.processors.splice(index, 1);
   }

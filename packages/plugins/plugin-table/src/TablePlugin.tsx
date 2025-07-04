@@ -3,7 +3,6 @@
 //
 
 import { createIntent, definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -32,8 +31,7 @@ export const TablePlugin = () =>
         contributes(Capabilities.Metadata, {
           id: TableType.typename,
           metadata: {
-            // TODO(dmaretskyi): Use `getLabel` from `echo-schema`.
-            label: (object: any) => (isInstanceOf(TableType, object) ? object.name : undefined),
+            label: (object: TableType) => object.name,
             icon: 'ph--table--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (table: TableType) => [], // loadObjectReferences(table, (table) => [table.schema]),

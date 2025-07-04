@@ -4,7 +4,6 @@
 
 import React, { type ComponentType, type FC, type JSX, useMemo } from 'react';
 
-import { decodeReference } from '@dxos/echo-protocol';
 import { type TraceEvent, type InvocationSpan } from '@dxos/functions';
 import { useQueue } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -17,7 +16,7 @@ type RawDataPanelProps = {
 
 export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ classNames, span }) => {
   const traceQueueDxn = useMemo(() => {
-    return span.invocationTraceQueue ? decodeReference(span.invocationTraceQueue).dxn : undefined;
+    return span.invocationTraceQueue ? span.invocationTraceQueue.dxn : undefined;
   }, [span.invocationTraceQueue]);
 
   const eventQueue = useQueue<TraceEvent>(traceQueueDxn);
@@ -25,9 +24,9 @@ export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ className
   const combinedData = useMemo(() => {
     return {
       span,
-      traceEvents: eventQueue?.items ?? [],
+      traceEvents: eventQueue?.objects ?? [],
     };
-  }, [span, eventQueue?.items]);
+  }, [span, eventQueue?.objects]);
 
   const rowRenderer = ({
     rows,

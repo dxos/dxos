@@ -34,7 +34,7 @@ export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySet
         label={t('observability enabled label')}
         secondary={
           <Message.Root valence='info'>
-            <Message.Body>{t('observability description')}</Message.Body>
+            <Message.Content>{t('observability description')}</Message.Content>
           </Message.Root>
         }
       >

@@ -48,7 +48,7 @@ export class EdgeWsConnection extends Resource {
     };
   }
 
-  public send(message: Message) {
+  public send(message: Message): void {
     invariant(this._ws);
     invariant(this._wsMuxer);
     log('sending...', { peerKey: this._identity.peerKey, payload: protocol.getPayloadType(message) });
@@ -68,7 +68,7 @@ export class EdgeWsConnection extends Resource {
     }
   }
 
-  protected override async _open() {
+  protected override async _open(): Promise<void> {
     const baseProtocols = [...Object.values(EdgeWebsocketProtocol)];
     this._ws = new WebSocket(
       this._connectionInfo.url.toString(),
@@ -131,7 +131,7 @@ export class EdgeWsConnection extends Resource {
     };
   }
 
-  protected override async _close() {
+  protected override async _close(): Promise<void> {
     void this._inactivityTimeoutCtx?.dispose().catch(() => {});
 
     try {
@@ -147,7 +147,7 @@ export class EdgeWsConnection extends Resource {
     }
   }
 
-  private _scheduleHeartbeats() {
+  private _scheduleHeartbeats(): void {
     invariant(this._ws);
     scheduleTaskInterval(
       this._ctx,
@@ -162,7 +162,7 @@ export class EdgeWsConnection extends Resource {
     this._rescheduleHeartbeatTimeout();
   }
 
-  private _rescheduleHeartbeatTimeout() {
+  private _rescheduleHeartbeatTimeout(): void {
     if (!this.isOpen) {
       return;
     }

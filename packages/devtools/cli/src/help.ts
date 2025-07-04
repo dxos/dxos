@@ -15,7 +15,7 @@ export const BANNER =
   '_/\\/\\/\\/\\/\\____/\\/\\____/\\/\\____/\\/\\/\\/\\____/\\/\\/\\/\\/\\___\n';
 
 export default class CustomHelp extends Help {
-  override async showHelp(args: string[]) {
+  override async showHelp(args: string[]): Promise<void> {
     if (!args.length) {
       console.log(BANNER);
     }

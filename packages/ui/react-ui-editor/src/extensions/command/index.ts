@@ -4,5 +4,7 @@
 
 export * from './action';
 export * from './command';
-export * from './menu';
+export * from './command-menu';
+export * from './floating-menu';
+export * from './useCommandMenu';
 export * from './typeahead';

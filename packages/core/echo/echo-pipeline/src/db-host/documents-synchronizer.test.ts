@@ -23,7 +23,7 @@ describe('DocumentsSynchronizer', () => {
     });
     await openAndClose(synchronizer);
 
-    synchronizer.update([
+    await synchronizer.update([
       {
         documentId: parseAutomergeUrl(generateAutomergeUrl()).documentId,
         mutation: A.save(A.from({ text: 'hello' })),

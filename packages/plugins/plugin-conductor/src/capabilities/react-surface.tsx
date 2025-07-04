@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
 import { CanvasContainer } from '../components';
@@ -17,7 +17,7 @@ export default () =>
     createSurface({
       id: CONDUCTOR_PLUGIN,
       role: ['article', 'section'],
-      filter: (data): data is { subject: CanvasBoardType } => isInstanceOf(CanvasBoardType, data.subject),
+      filter: (data): data is { subject: CanvasBoardType } => Obj.instanceOf(CanvasBoardType, data.subject),
       component: ({ data, role }) => <CanvasContainer canvas={data.subject} role={role} />,
     }),
   );

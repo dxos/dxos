@@ -5,10 +5,10 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { DocumentType } from '@dxos/plugin-markdown/types';
-import { CollectionType } from '@dxos/plugin-space/types';
+import { DataType } from '@dxos/schema';
 
 import {
   MarkdownSlide,
@@ -26,21 +26,21 @@ export default () =>
       role: 'article',
       position: 'hoist',
       filter: (data): data is { subject: DocumentType; variant: 'presenter' } =>
-        isInstanceOf(DocumentType, data.subject) && data.variant === 'presenter',
+        Obj.instanceOf(DocumentType, data.subject) && data.variant === 'presenter',
       component: ({ data }) => <DocumentPresenterContainer document={data.subject} />,
     }),
     createSurface({
       id: `${PRESENTER_PLUGIN}/collection`,
       role: 'article',
       position: 'hoist',
-      filter: (data): data is { subject: CollectionType; variant: 'presenter' } =>
-        isInstanceOf(CollectionType, data.subject) && data.variant === 'presenter',
+      filter: (data): data is { subject: DataType.Collection; variant: 'presenter' } =>
+        Obj.instanceOf(DataType.Collection, data.subject) && data.variant === 'presenter',
       component: ({ data }) => <CollectionPresenterContainer collection={data.subject} />,
     }),
     createSurface({
       id: `${PRESENTER_PLUGIN}/slide`,
       role: 'slide',
-      filter: (data): data is { subject: DocumentType } => isInstanceOf(DocumentType, data.subject),
+      filter: (data): data is { subject: DocumentType } => Obj.instanceOf(DocumentType, data.subject),
       component: ({ data }) => <MarkdownSlide document={data.subject} />,
     }),
     createSurface({

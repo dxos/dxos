@@ -16,7 +16,7 @@ export class TestStream extends Duplex {
     stream1: TestStream,
     stream2: TestStream,
     { timeout = 200 }: { timeout?: number } = {},
-  ) {
+  ): Promise<void> {
     stream1.push('ping');
     stream2.push('pong');
 
@@ -39,7 +39,7 @@ export class TestStream extends Duplex {
     // noop
   }
 
-  assertReceivedAsync(data: Buffer | string, { timeout = 200 }: { timeout?: number } = {}) {
+  assertReceivedAsync(data: Buffer | string, { timeout = 200 }: { timeout?: number } = {}): Promise<void> {
     const dataBuffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
     return asyncTimeout(
       this._onWrite.waitForCondition(() => this._received.equals(dataBuffer)),

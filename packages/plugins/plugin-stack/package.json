@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-stack",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "DXOS Surface plugin for Stack entities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -49,6 +49,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "^9.24.2",
     "@preact-signals/safe-react": "^0.9.0",

@@ -75,7 +75,7 @@ export class AttentionManager {
    *
    * @internal
    */
-  update(nextKey: string[]) {
+  update(nextKey: string[]): void {
     const currentKey = untracked(() => this.current);
     const currentRelatedTo = currentKey[0];
     const nextRelatedTo = nextKey[0];
@@ -105,7 +105,7 @@ export class AttentionManager {
     this._set(nextKey, { hasAttention: true });
   }
 
-  private _set(key: string[], attention: Partial<Attention>) {
+  private _set(key: string[], attention: Partial<Attention>): void {
     const object = this.get(key);
     object.hasAttention = attention.hasAttention ?? false;
     object.isAncestor = attention.isAncestor ?? false;

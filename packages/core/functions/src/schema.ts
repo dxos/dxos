@@ -4,7 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { EchoObject, JsonSchemaType, LabelAnnotation, Ref, TypedObject } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { JsonSchemaType, LabelAnnotation, Ref } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 
 /**
@@ -18,22 +19,19 @@ export const ScriptType = Schema.Struct({
   changed: Schema.optional(Schema.Boolean),
   source: Ref(DataType.Text),
 }).pipe(
-  EchoObject({
+  Type.Obj({
     typename: 'dxos.org/type/Script',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
 );
 
-export type ScriptType = Schema.Schema.Type<typeof ScriptType>;
+export interface ScriptType extends Schema.Schema.Type<typeof ScriptType> {}
 
 /**
  * Function deployment.
  */
-export class FunctionType extends TypedObject({
-  typename: 'dxos.org/type/Function',
-  version: '0.1.0',
-})({
+export const FunctionType = Schema.Struct({
   // TODO(burdon): Rename to id/uri?
   name: Schema.NonEmptyString,
   version: Schema.String,
@@ -49,4 +47,11 @@ export class FunctionType extends TypedObject({
 
   // Local binding to a function name.
   binding: Schema.optional(Schema.String),
-}) {}
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Function',
+    version: '0.1.0',
+  }),
+  LabelAnnotation.set(['name']),
+);
+export interface FunctionType extends Schema.Schema.Type<typeof FunctionType> {}

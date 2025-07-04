@@ -12,7 +12,7 @@ export class ErrorStream {
 
   private _unhandledErrors = 0;
 
-  assertNoUnhandledErrors() {
+  assertNoUnhandledErrors(): void {
     if (this._unhandledErrors > 0) {
       throw new Error(
         `Assertion failed: expected no unhandled errors to be thrown, but ${this._unhandledErrors} were thrown.`,
@@ -20,7 +20,7 @@ export class ErrorStream {
     }
   }
 
-  raise(error: Error) {
+  raise(error: Error): void {
     if (this._handler) {
       this._handler(error);
     } else {
@@ -28,15 +28,15 @@ export class ErrorStream {
     }
   }
 
-  handle(handler: ErrorHandlerCallback) {
+  handle(handler: ErrorHandlerCallback): void {
     this._handler = handler;
   }
 
-  pipeTo(receiver: ErrorStream) {
+  pipeTo(receiver: ErrorStream): void {
     this.handle((error) => receiver.raise(error));
   }
 
-  private _unhandledError(error: Error) {
+  private _unhandledError(error: Error): void {
     this._unhandledErrors++;
 
     setTimeout(() => {

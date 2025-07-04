@@ -7,6 +7,7 @@ import React, { type Dispatch, type SetStateAction, useCallback, useMemo, useSta
 import { QR } from 'react-qr-rounded';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { fullyQualifiedId, useSpaceInvitations, type Space } from '@dxos/react-client/echo';
@@ -15,6 +16,7 @@ import { Button, Clipboard, Icon, Input, useId, useTranslation } from '@dxos/rea
 import { ControlPage, ControlSection, ControlFrame, ControlFrameItem, ControlItemInput } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { getSize, mx } from '@dxos/react-ui-theme';
+import { DataType } from '@dxos/schema';
 import {
   type ActionMenuItem,
   AuthCode,
@@ -28,7 +30,7 @@ import {
 import { hexToEmoji } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
-import { CollectionType, SpaceAction } from '../types';
+import { SpaceAction } from '../types';
 import { COMPOSER_SPACE_LOCK } from '../util';
 
 // TODO(wittjosiah): Copied from Shell.
@@ -65,7 +67,7 @@ export const MembersContainer = ({
   };
 
   // TODO(wittjosiah): Track which was the most recently viewed object.
-  const target = space.properties[CollectionType.typename]?.target?.objects[0]?.target;
+  const target = space.properties[Type.getTypename(DataType.Collection)]?.target?.objects[0]?.target;
 
   const locked = space.properties[COMPOSER_SPACE_LOCK];
   const handleChangeLocked = useCallback(() => {

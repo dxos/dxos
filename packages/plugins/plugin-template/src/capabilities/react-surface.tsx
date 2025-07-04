@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { type AnyLiveObject } from '@dxos/react-client/echo';
+import { type Obj } from '@dxos/echo';
 
 import { TemplateContainer } from '../components';
 import { TEMPLATE_PLUGIN } from '../meta';
@@ -17,7 +17,7 @@ export default () =>
     createSurface({
       id: TEMPLATE_PLUGIN,
       role: 'article',
-      filter: (data): data is { subject: AnyLiveObject<any> } => isObject(data.subject),
+      filter: (data): data is { subject: Obj.Any } => isObject(data.subject),
       component: ({ data, role }) => <TemplateContainer role={role} object={data.subject} />,
     }),
   );
