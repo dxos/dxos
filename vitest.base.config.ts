@@ -48,6 +48,11 @@ const createNodeConfig = (cwd: string) =>
     esbuild: {
       target: 'es2020',
     },
+    server: {
+      fs: {
+        allow: [new URL('./vitest', import.meta.url).pathname],
+      },
+    },
     test: {
       ...resolveReporterConfig({ browserMode: false, cwd }),
       environment: 'node',
@@ -57,6 +62,7 @@ const createNodeConfig = (cwd: string) =>
         '!**/src/**/*.browser.test.{ts,tsx}',
         '!**/test/**/*.browser.test.{ts,tsx}',
       ],
+      setupFiles: [new URL('./vitest/setup.ts', import.meta.url).pathname],
     },
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui

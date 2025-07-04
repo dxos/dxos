@@ -42,6 +42,8 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
