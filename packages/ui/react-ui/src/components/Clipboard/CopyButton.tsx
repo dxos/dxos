@@ -5,21 +5,21 @@
 import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
-import { type Size } from '@dxos/react-ui-types';
 
 import { useClipboard } from './ClipboardProvider';
 import { Button, type ButtonProps, IconButton } from '../Buttons';
-import { Icon, IconProps } from '../Icon';
+import { Icon, type IconProps } from '../Icon';
 import { useTranslation } from '../ThemeProvider';
 import { type TooltipScopedProps, useTooltipContext } from '../Tooltip';
 
-export type CopyButtonProps = ButtonProps & Pick<IconProps, 'size'> & {
-  value: string;
-};
+export type CopyButtonProps = ButtonProps &
+  Pick<IconProps, 'size'> & {
+    value: string;
+  };
 
 const inactiveLabelStyles = 'invisible bs-px -mbe-px overflow-hidden';
 
-export const CopyButton = ({  classNames, value, size = 5, ...props }: CopyButtonProps) => {
+export const CopyButton = ({ classNames, value, size = 5, ...props }: CopyButtonProps) => {
   const { t } = useTranslation('os');
   const { textValue, setTextValue } = useClipboard();
   const isCopied = textValue === value;

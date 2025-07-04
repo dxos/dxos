@@ -3,6 +3,7 @@
 //
 
 import { Effect } from 'effect';
+
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';

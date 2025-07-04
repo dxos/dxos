@@ -40,35 +40,17 @@ module.exports = {
     '**/typedoc/assets/**/*',
   ],
 
+  rules: {
+    // Suspected bug mistakes all `play` functions for storybook.play.
+    'storybook/context-in-play-function': 'off',
+  },
+
   overrides: [
     {
       extends: ['plugin:@dxos/recommended'],
       files: '**/*.{ts,mts,tsx,js,jsx}',
-      parserOptions: {
-        project: './tsconfig.json',
-        tsconfigRootDir: __dirname,
-        sourceType: 'module',
-        ecmaVersion: 2023,
-        extraFileExtensions: ['.ts', '.tsx'],
-        tsconfigRootDir: __dirname,
-        createDefaultProgram: true,
-      },
       rules: {
         camelcase: 'off',
-        '@typescript-eslint/no-unused-imports': ['error', {
-          ignoreExports: true,
-          unusedIgnoreConfig: {
-            vars: ['ignore'],
-            varsIgnorePattern: '^_',
-            args: ['ignore'],
-            argsIgnorePattern: '^_',
-          },
-        }],
-        '@typescript-eslint/no-unused-vars': ['error', {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          ignoreRestSiblings: true,
-        }],
       },
     },
     {
