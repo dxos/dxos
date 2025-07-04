@@ -56,7 +56,7 @@ jobs:
         uses: ./.github/actions/branch
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.github/actions/setup-buildjet
 
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
