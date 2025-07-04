@@ -8283,6 +8283,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
       react:
         specifier: ~18.2.0
         version: 18.2.0
