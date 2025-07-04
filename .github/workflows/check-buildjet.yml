@@ -1,0 +1,197 @@
+name: Check
+
+on:
+  push:
+
+  schedule:
+    - cron: '0 4 * * 1-5'
+
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+
+      e2e:
+        type: boolean
+        description: 'Run the e2e tests'
+        required: false
+        default: false
+
+# Needed for nx-set-shas when run on the main branch
+permissions:
+  actions: read
+  contents: read
+
+env:
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
+
+# https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# https://nx.dev/ci/intro/tutorials/github-actions
+jobs:
+  check:
+    runs-on: buildjet-8vcpu-ubuntu-2204
+    container:
+      image: ghcr.io/dxos/gh-actions:20.12.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Check Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=lint,build
+
+      - name: Check All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        run: pnpm exec nx run-many --targets=lint,build
+
+      - name: Check for import cycles
+        if: always()
+        run: pnpm run check-cycles
+
+  test:
+    strategy:
+      matrix:
+        # TODO(wittjosiah): Test across all LTS versions of node.
+        #  Currently fails on 22 and 24.
+        # node-version: ['20.12.1', '22', '24']
+        node-version: ['20.12.1']
+    runs-on: buildjet-8vcpu-ubuntu-2204
+    container:
+      image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    env:
+      VITEST_ENV: 'node'
+      VITEST_COVERAGE: 'true'
+      VITEST_JSON_REPORT: 'true'
+    steps:
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        with:
+          detached: true
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Test Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=test
+
+      - name: Test All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        run: pnpm exec nx run-many --targets=test
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-report
+          path: test-results
+          retention-days: 7
+
+      - uses: codecov/codecov-action@v4
+        if: ${{ matrix.node-version == '20.12.1' }}
+        with:
+          directory: ./coverage
+          fail_ci_if_error: false
+          handle_no_reports_found: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+
+      - name: Send test report
+        if: ${{ (success() || failure()) && github.event_name == 'schedule' }}
+        uses: ./.github/actions/test-report
+        with:
+          name: '${{ github.job }}-${{ matrix.node-version }}'
+          result: ${{ job.status }}
+
+  e2e:
+    if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
+    runs-on: buildjet-8vcpu-ubuntu-2204
+    container:
+      image: ghcr.io/dxos/gh-actions:20.12.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 60
+    env:
+      DX_ENVIRONMENT: ci
+      DX_PWA: false
+      NODE_OPTIONS: --max-old-space-size=12288
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Bundle Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=bundle --parallel=1
+
+      - name: Bundle All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        run: pnpm exec nx run-many --targets=bundle --parallel=1
+
+      - name: Test Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=e2e --browser=all --parallel=1
+
+      - name: Test All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        run: pnpm exec nx run-many --targets=e2e --browser=all --parallel=1
+
+      - name: Upload Traces
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: dist/.playwright
+          retention-days: 7
+
+      - name: Send test report
+        if: ${{ (success() || failure()) && github.event_name == 'schedule' }}
+        uses: ./.github/actions/test-report
+        with:
+          name: ${{ github.job }}
+          result: ${{ job.status }}
