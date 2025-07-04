@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { Button, ButtonGroup, type ButtonProps } from './Button';
