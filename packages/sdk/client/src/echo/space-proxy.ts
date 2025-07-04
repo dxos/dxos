@@ -181,13 +181,6 @@ export class SpaceProxy implements Space, CustomInspectable {
     return this._queues;
   }
 
-  /**
-   * @deprecated
-   */
-  get crud(): CoreDatabase {
-    return this._db.coreDatabase;
-  }
-
   @trace.info()
   get isOpen() {
     return this._data.state === SpaceState.SPACE_READY && this._initialized;

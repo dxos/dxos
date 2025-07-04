@@ -9,10 +9,10 @@
 export default async ({ data: { bodyText }, context: { space } }: any) => {
   const { email, targetDocumentId: documentId } = JSON.parse(bodyText) as RequestPayload;
 
-  const document = await space.db.query({ id: documentId }, { format: 'plain' }).first();
+  const document = await space.db.query({ id: documentId }).first();
 
   const contentId = document.content['/'].split(':')[3];
-  const documentContent = await space.db.query({ id: contentId }, { format: 'plain' }).first();
+  const documentContent = await space.db.query({ id: contentId }).first();
   const modifiedContent = [
     documentContent.content,
     '',

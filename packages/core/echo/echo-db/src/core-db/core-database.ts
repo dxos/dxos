@@ -13,23 +13,23 @@ import {
   TimeoutError,
   Trigger,
   UpdateScheduler,
-  type ReadOnlyEvent,
   type CleanupFn,
+  type ReadOnlyEvent,
 } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Filter } from '@dxos/echo';
 import {
+  DATA_NAMESPACE,
   encodeReference,
   isEncodedReference,
   Reference,
-  type ObjectStructure,
   type DatabaseDirectory,
+  type ObjectStructure,
   type SpaceState,
-  DATA_NAMESPACE,
 } from '@dxos/echo-protocol';
-import { type ObjectId, Ref, type AnyObjectData } from '@dxos/echo-schema';
+import { Ref, type AnyObjectData, type ObjectId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -40,19 +40,18 @@ import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/ech
 import { trace } from '@dxos/tracing';
 import { chunkArray, deepMapValues, defaultMap, setDeep } from '@dxos/util';
 
+import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../automerge';
+import { type Hypergraph } from '../hypergraph';
+import { normalizeQuery, QueryResult, type QueryFn } from '../query';
 import {
   AutomergeDocumentLoaderImpl,
   type AutomergeDocumentLoader,
   type DocumentChanges,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
-import { CoreDatabaseQueryContext } from './core-database-query-context';
 import { type InsertBatch, type InsertData, type UpdateOperation } from './crud-api';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
-import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../automerge';
-import { type Hypergraph } from '../hypergraph';
-import { normalizeQuery, QueryResult, type QueryFn } from '../query';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -423,26 +422,6 @@ export class CoreDatabase {
         log.info('loading objects', { objectIds, elapsed: performance.now() - startTime, diagnostics });
       }
     }
-  }
-
-  // Odd way to define methods types from a typedef.
-  declare query: QueryFn;
-  static {
-    this.prototype.query = this.prototype._query;
-  }
-
-  private _query(filter?: unknown, options?: QueryOptions) {
-    return new QueryResult(
-      this._createQueryContext(),
-      normalizeQuery(filter, options, { defaultSpaceId: this.spaceId }),
-    );
-  }
-
-  /**
-   * @internal
-   */
-  _createQueryContext(): CoreDatabaseQueryContext {
-    return new CoreDatabaseQueryContext(this, this._queryService);
   }
 
   /**

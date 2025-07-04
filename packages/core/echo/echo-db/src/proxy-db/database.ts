@@ -7,13 +7,7 @@ import { inspect } from 'node:util';
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import {
-  assertObjectModelShape,
-  type AnyEchoObject,
-  type AnyObjectData,
-  type BaseObject,
-  type HasId,
-} from '@dxos/echo-schema';
+import { assertObjectModelShape, type AnyEchoObject, type BaseObject, type HasId } from '@dxos/echo-schema';
 import { getSchema, getType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -270,16 +264,17 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   /**
    * Update objects.
+   * @deprecated Mutate the object directly
    */
-  async update(filter: Filter.Any, operation: UpdateOperation): Promise<void> {
-    await this._coreDatabase.update(filter, operation);
+  async update(filter: Filter.Any, operation: unknown): Promise<void> {
+    throw new Error('Not implemented');
   }
 
-  // TODO(dmaretskyi): Support meta.
-  async insert(data: InsertData): Promise<AnyObjectData>;
-  async insert(data: InsertBatch): Promise<AnyObjectData[]>;
-  async insert(data: InsertData | InsertBatch): Promise<AnyObjectData | AnyObjectData[]> {
-    return this._coreDatabase.insert(data);
+  /**
+   * @deprecated Use `db.add`.
+   */
+  async insert(data: unknown): Promise<never> {
+    throw new Error('Not implemented');
   }
 
   /**

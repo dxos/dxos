@@ -4,18 +4,20 @@
 
 import { next as am, type Doc, type Heads, type State } from '@automerge/automerge';
 
-import { ATTR_META, ATTR_TYPE, type BaseObject } from '@dxos/echo-schema';
+import { ATTR_META, ATTR_TYPE } from '@dxos/echo-schema';
 import { assertArgument } from '@dxos/invariant';
 
-import { isEchoObject, type AnyLiveObject } from './echo-handler';
-import { getObjectCore } from './echo-handler';
+import type { Obj } from '@dxos/echo';
+import { ObjectStructure } from '@dxos/echo-protocol';
+import { getDeep } from '@dxos/util';
 import { ObjectCore } from '../core-db';
+import { getObjectCore, isEchoObject } from './echo-handler';
 
 /**
  * Returns the edit history of an ECHO object.
  * NOTE: This is the history of the automerge document containing the echo object.
  */
-export const getEditHistory = (object: AnyLiveObject<any>): State<any>[] => {
+export const getEditHistory = (object: Obj.Any): State<any>[] => {
   assertArgument(isEchoObject(object), 'expected ECHO object stored in the database');
 
   const objectCore = getObjectCore(object);
@@ -25,10 +27,10 @@ export const getEditHistory = (object: AnyLiveObject<any>): State<any>[] => {
 };
 
 /**
- * @returns Snapshot of the object at the given version in the JSON format.
+ * @returns Raw object data at the given version.
  */
-// TODO(dmaretskyi): Returning T is actually wrong since the object is actually in JSON format -- we should unify data formats.
-export const checkoutVersion = <T extends BaseObject>(object: AnyLiveObject<T>, version: Heads): T => {
+// TODO(dmaretskyi): Hyderate the object
+export const checkoutVersion = (object: Obj.Any, version: Heads): unknown => {
   assertArgument(isEchoObject(object), 'expected ECHO object stored in the database');
   assertArgument(Array.isArray(version), 'expected automerge heads array');
 
@@ -42,12 +44,13 @@ export const checkoutVersion = <T extends BaseObject>(object: AnyLiveObject<T>, 
   versionCore.doc = snapshot;
   versionCore.mountPath = objectCore.mountPath;
 
+  const structure: ObjectStructure | undefined = getDeep(snapshot, [...objectCore.mountPath]);
+
   // TODO(dmaretskyi): Fix this nonsense.
-  const { id, __typename, __meta, ...data } = versionCore.toPlainObject();
   return {
-    id,
-    [ATTR_TYPE]: __typename,
-    [ATTR_META]: __meta,
-    ...data,
+    id: objectCore.id,
+    [ATTR_TYPE]: structure && ObjectStructure.getTypeReference(structure)?.['/'],
+    [ATTR_META]: structure?.meta,
+    ...(structure && structure.data),
   } as any;
 };

@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { assertArgument } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey } from '@dxos/keys';
 import { type ObjectId } from '@dxos/protocols';
 import { type Reference as ReferenceProto } from '@dxos/protocols/proto/dxos/echo/model/document';
@@ -9,6 +10,7 @@ import { type Reference as ReferenceProto } from '@dxos/protocols/proto/dxos/ech
 /**
  * Runtime representation of an reference in ECHO.
  * Implemented as a DXN, but we might extend it to other URIs in the future.
+ * @deprecated Use `EncodedReference` instead.
  */
 export class Reference {
   /**
@@ -122,6 +124,7 @@ export class Reference {
   }
 }
 
+// TODO(dmaretskyi): Is this used anywhere?
 export const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
 
 /**
@@ -131,10 +134,16 @@ export type EncodedReference = {
   '/': string;
 };
 
+/**
+ * @deprecated Use `EncodedReference.fromDXN` instead.
+ */
 export const encodeReference = (reference: Reference): EncodedReference => ({
   '/': reference.toDXN().toString(),
 });
 
+/**
+ * @deprecated Use `EncodedReference.toDXN` instead.
+ */
 export const decodeReference = (value: any) => {
   if (typeof value !== 'object' || value === null || typeof value['/'] !== 'string') {
     throw new Error('Invalid reference');
@@ -152,5 +161,22 @@ export const decodeReference = (value: any) => {
   return Reference.fromDXN(DXN.parse(dxnString));
 };
 
+/**
+ * @deprecated Use `EncodedReference.isEncodedReference` instead.
+ */
 export const isEncodedReference = (value: any): value is EncodedReference =>
   typeof value === 'object' && value !== null && Object.keys(value).length === 1 && typeof value['/'] === 'string';
+
+export const EncodedReference = Object.freeze({
+  isEncodedReference: isEncodedReference,
+  getReferenceString: (value: EncodedReference): string => {
+    assertArgument(isEncodedReference(value), 'invalid reference');
+    return value['/'];
+  },
+  toDXN: (value: EncodedReference): DXN => {
+    return DXN.parse(EncodedReference.getReferenceString(value));
+  },
+  fromDXN: (dxn: DXN): EncodedReference => {
+    return encodeReference(Reference.fromDXN(dxn));
+  },
+});

@@ -74,11 +74,9 @@ export interface QueuesAPI {
  */
 export interface SpaceAPI {
   get id(): SpaceId;
-  /**
-   * @deprecated
-   */
-  get crud(): CoreDatabase;
+
   get db(): EchoDatabase;
+
   // TODO(dmaretskyi): Align with echo api --- queues.get(id).append(items);
   get queues(): QueuesAPI;
 }
