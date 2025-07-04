@@ -123,11 +123,22 @@ export interface ExecutableTool extends Tool {
   execute: (params: unknown, context: ToolExecutionContext) => Promise<ToolResult>;
 }
 
+export const ToolId = Schema.String.annotations({
+  identifier: 'ToolId',
+  name: 'ToolId',
+  description: 'Unique identifier for a tool.',
+});
+export type ToolId = Schema.Schema.Type<typeof ToolId>;
+
+export interface ToolResolver {
+  resolve: (id: ToolId) => Promise<ExecutableTool>;
+}
+
 /**
  * Registry of executable tools.
  */
 // TODO(burdon): Tool resolution is duplicated in the session and ollama-client.
-export class ToolRegistry {
+export class ToolRegistry implements ToolResolver {
   private readonly _tools = new Map<string, ExecutableTool>();
 
   constructor(tools: ExecutableTool[]) {
@@ -151,7 +162,11 @@ export class ToolRegistry {
     return this;
   }
 
-  get(id: string) {
-    return this._tools.get(id);
+  async resolve(id: ToolId): Promise<ExecutableTool> {
+    const executable = this._tools.get(id);
+    if (!executable) {
+      throw new Error(`Tool not found: ${id}`);
+    }
+    return executable;
   }
 }

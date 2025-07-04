@@ -16,7 +16,7 @@ const ENABLE_LOGGING = false;
 
 describe('Streaming pipelines', () => {
   test('synchronous stream sum pipeline', async ({ expect }) => {
-    const runtime = new TestRuntime(createTestServices({ enableLogging: ENABLE_LOGGING }));
+    const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }));
     runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
     runtime.registerGraph('dxn:compute:stream-sum', streamSum());
 
@@ -30,7 +30,7 @@ describe('Streaming pipelines', () => {
   });
 
   test('asynchronous stream sum pipeline', async ({ expect }) => {
-    const runtime = new TestRuntime(createTestServices({ enableLogging: ENABLE_LOGGING }));
+    const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }));
     runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
     runtime.registerGraph('dxn:compute:stream-sum', streamSum());
 

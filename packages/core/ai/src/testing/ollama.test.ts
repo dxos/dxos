@@ -8,12 +8,12 @@ import { describe, test } from 'vitest';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 
-import { createTestOllamaClient } from './ollama';
+import { createTestAiServiceClient } from './ollama';
 import { createTool, Message } from '../tools';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Ollama', () => {
   test('basic', async () => {
-    const client = createTestOllamaClient();
+    const client = createTestAiServiceClient();
 
     const result = await client.execStream({
       prompt: Obj.make(Message, {
@@ -28,7 +28,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Ollama', () => {
   });
 
   test.only('tool calls', async () => {
-    const client = createTestOllamaClient();
+    const client = createTestAiServiceClient();
 
     const tool = createTool('test', {
       name: 'paint_walls',

@@ -4,6 +4,7 @@
 
 import { type Schema, SchemaAST } from 'effect';
 
+import { isArrayType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -23,14 +24,39 @@ export type Topology = {
   diagnostics: GraphDiagnostic[];
 };
 
-type TopologyNodeInput = {
+export enum InputKind {
+  /**
+   * This input must be bound to 0-1 outputs.
+   * The value is passed as is.
+   */
+  Scalar = 'scalar',
+
+  /**
+   * This can be bound to 0-n outputs which are collected into an array.
+   */
+  Array = 'array',
+}
+
+export type TopologyNodeInput = {
   name: string;
   schema: Schema.Schema.AnyNoContext;
-  sourceNodeId?: string;
-  sourceNodeOutput?: string;
+
+  /**
+   * Defines the kind of input.
+   */
+  kind: InputKind;
+
+  /**
+   * Nodes that this input is bound to.
+   * Should be 0-1 if this node is input is not a multiple input  .
+   */
+  sources: TopologyNodeConnector[];
 };
 
-type TopologyNodeOutputBinding = {
+/**
+ * Specific connector on the topology graph: nodeId + property.
+ */
+export type TopologyNodeConnector = {
   nodeId: string;
   property: string;
 };
@@ -41,7 +67,7 @@ type TopologyNodeOutput = {
   /**
    * Nodes that this output is bound to.
    */
-  boundTo: TopologyNodeOutputBinding[];
+  boundTo: TopologyNodeConnector[];
 };
 
 export type TopologyNode = {
@@ -57,6 +83,7 @@ export type GraphDiagnostic = {
   message: string;
   nodeId?: string;
   edgeId?: string;
+  property?: string;
 };
 
 export type CreateTopologyParams = {
@@ -104,27 +131,38 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
 
     if (sourceNode.outputs.find((output) => output.name === edge.output) == null) {
       const schema = pickProperty(sourceNode.meta.output, edge.output);
-      sourceNode.outputs.push({
-        name: edge.output,
-        schema,
-        boundTo: [],
-      });
       if (SchemaAST.isNeverKeyword(schema.ast)) {
-        log.info('setting never output on node:', {
+        // TODO(dmaretskyi): This should be a hard error.
+        log.warn('output does not exist on node', {
           sourceNode: sourceNode.graphNode.type,
           output: edge.output,
           type: schema.ast,
           nodeOutputType: sourceNode.meta.output.ast,
         });
       }
+      sourceNode.outputs.push({
+        name: edge.output,
+        schema,
+        boundTo: [],
+      });
     }
 
     if (targetNode.inputs.find((input) => input.name === edge.input) == null) {
+      const schema = pickProperty(targetNode.meta.input, edge.input);
+      if (SchemaAST.isNeverKeyword(schema.ast)) {
+        // TODO(dmaretskyi): This should be a hard error.
+        log.warn('input does not exist on node', {
+          sourceNode: sourceNode.graphNode.type,
+          output: edge.output,
+          type: schema.ast,
+          nodeOutputType: sourceNode.meta.output.ast,
+        });
+      }
       targetNode.inputs.push({
         name: edge.input,
-        schema: pickProperty(targetNode.meta.input, edge.input),
-        sourceNodeId: sourceNode.id,
-        sourceNodeOutput: edge.output,
+        schema,
+        kind: isArrayType(schema.ast) ? InputKind.Array : InputKind.Scalar,
+        sources: [],
       });
     }
 
@@ -139,6 +177,16 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
       nodeId: targetNode.id,
       property: input.name,
     });
+    if (input.sources.length >= 1 && input.kind === InputKind.Scalar) {
+      topology.diagnostics.push({
+        severity: 'error',
+        edgeId: edge.id,
+        nodeId: targetNode.id,
+        property: input.name,
+        message: 'input is scalar but has multiple sources',
+      });
+    }
+    input.sources.push({ nodeId: sourceNode.id, property: edge.output });
 
     if (SchemaAST.isNeverKeyword(output.schema.ast)) {
       log.warn('output does not exist on node:', { source: targetNode.graphNode.type, target: output.name });
