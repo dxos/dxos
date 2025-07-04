@@ -300,8 +300,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public getRowCount = (): number => this._rows.value.length;
 
+  /**
+   * @reactive
+   */
   public getDraftRowCount = (): number => this._draftRows.value.length;
 
+  // TODO(ZaymonFC): Return .value instead of exposing the signal.
   public get draftRows(): ReadonlySignal<DraftRow<T>[]> {
     return this._draftRows;
   }
