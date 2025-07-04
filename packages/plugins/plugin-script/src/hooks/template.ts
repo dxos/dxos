@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Obj } from '@dxos/echo';
 import { FUNCTIONS_PRESET_META_KEY, type ScriptType } from '@dxos/functions';
-import { getMeta } from '@dxos/live-object';
 import { createMenuItemGroup, createMenuAction } from '@dxos/react-ui-menu';
 
 import { SCRIPT_PLUGIN } from '../meta';
@@ -25,7 +25,7 @@ const createTemplateSelectActions = (script: ScriptType) => {
       () => {
         script.name = template.name;
         script.source!.target!.content = template.source;
-        const metaKeys = getMeta(script).keys;
+        const metaKeys = Obj.getMeta(script).keys;
         const oldPresetIndex = metaKeys.findIndex((key) => key.source === FUNCTIONS_PRESET_META_KEY);
         if (oldPresetIndex >= 0) {
           metaKeys.splice(oldPresetIndex, 1);

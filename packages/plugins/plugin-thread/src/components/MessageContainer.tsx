@@ -7,8 +7,7 @@ import { Check, PencilSimple, X } from '@phosphor-icons/react';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { type Obj, type Type } from '@dxos/echo';
-import { RefArray } from '@dxos/live-object';
+import { type Obj, Ref, type Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
@@ -90,7 +89,7 @@ export const MessageContainer = ({ message, members, editable = false, onDelete 
         </ButtonGroup>
       </MessageHeading>
       {textBlock && <TextboxBlock block={textBlock} isAuthor={userIsAuthor} editing={editing} />}
-      {RefArray.targets(references).map((reference, index) => (
+      {Ref.Array.targets(references).map((reference, index) => (
         <MessagePart key={index} part={reference} />
       ))}
     </MessageRoot>

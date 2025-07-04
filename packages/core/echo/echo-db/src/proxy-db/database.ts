@@ -14,10 +14,10 @@ import {
   type BaseObject,
   type HasId,
 } from '@dxos/echo-schema';
-import { getSchema } from '@dxos/echo-schema';
+import { getSchema, getType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
-import { type Live, getProxyTarget, getType, isLiveObject } from '@dxos/live-object';
+import { type Live, getProxyTarget, isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';

@@ -6,9 +6,9 @@ import { it } from '@effect/vitest';
 import { Effect, Either, Schema } from 'effect';
 import { describe, test } from 'vitest';
 
+import { Ref } from '@dxos/echo';
 import { createTestServices } from '@dxos/functions/testing';
 import { DXN } from '@dxos/keys';
-import { refFromDXN } from '@dxos/live-object';
 import { mapValues } from '@dxos/util';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
@@ -154,8 +154,8 @@ const g2a = (g1: DXN) => {
   const model = ComputeGraphModel.create({ id: 'dxn:test:g2' });
   model.builder
     .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: g1.toString(), subgraph: refFromDXN(g1) })
-    .createNode({ id: 'Y', type: g1.toString(), subgraph: refFromDXN(g1) })
+    .createNode({ id: 'X', type: g1.toString(), subgraph: Ref.fromDXN(g1) })
+    .createNode({ id: 'Y', type: g1.toString(), subgraph: Ref.fromDXN(g1) })
     .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'number1' })
     .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'number2' })
