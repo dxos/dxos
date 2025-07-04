@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, it } from '@effect/vitest';
 import { Effect } from 'effect';
 
-import { createTool, defineTool, Message, OllamaAiServiceClient, ToolRegistry, ToolTypes } from '@dxos/ai';
+import { defineTool, Message, OllamaAiServiceClient, ToolRegistry, ToolTypes } from '@dxos/ai';
 import { Obj, Ref } from '@dxos/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -15,8 +15,6 @@ import { log } from '@dxos/log';
 
 import { type GptInput, gptNode } from './node';
 import { ValueBag } from '../../types';
-import { todo } from 'node:test';
-import { failedInvariant } from '@dxos/invariant';
 
 const ENABLE_LOGGING = true;
 
