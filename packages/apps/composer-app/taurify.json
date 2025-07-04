@@ -43,6 +43,7 @@
         "bundle": "dmg"
       }
     ],
-    "arch": "arm64"
+    "arch": "arm64",
+    "infoPlist": "./Info.plist"
   }
 }
