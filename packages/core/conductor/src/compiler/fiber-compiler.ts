@@ -148,7 +148,11 @@ export const compile = async ({
 const formatDiagnostics = (diagnostic: GraphDiagnostic[]): string => {
   return diagnostic
     .map((d) => {
-      const objects = [d.nodeId && `Node(${d.nodeId})`, d.edgeId && `Edge(${d.edgeId})`]
+      const objects = [
+        d.nodeId && `Node(${d.nodeId})`,
+        d.edgeId && `Edge(${d.edgeId})`,
+        d.property && `Prop(${d.property})`,
+      ]
         .filter(isNonNullable)
         .join(' ,');
       return `${d.severity}: ${d.message}${objects ? `. ${objects}.` : ''} `;

@@ -22,6 +22,11 @@ const createNodeConfig = (cwd: string) =>
     esbuild: {
       target: 'es2020',
     },
+    server: {
+      fs: {
+        allow: [new URL('./vitest', import.meta.url).pathname],
+      },
+    },
     test: {
       ...resolveReporterConfig({ browserMode: false, cwd }),
       environment: 'node',

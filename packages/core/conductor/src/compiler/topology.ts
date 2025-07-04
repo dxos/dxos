@@ -177,7 +177,7 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
       nodeId: targetNode.id,
       property: input.name,
     });
-    if (input.sources.length >= 0 && input.kind === InputKind.Scalar) {
+    if (input.sources.length >= 1 && input.kind === InputKind.Scalar) {
       topology.diagnostics.push({
         severity: 'error',
         edgeId: edge.id,
