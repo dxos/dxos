@@ -6,7 +6,7 @@ import { Schema, type Context, type Effect } from 'effect';
 
 import { type AiServiceClient } from '@dxos/ai';
 // import { type Space } from '@dxos/client/echo';
-import type { CoreDatabase, EchoDatabase } from '@dxos/echo-db';
+import type { EchoDatabase } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
 import { type SpaceId, type DXN } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
@@ -74,11 +74,9 @@ export interface QueuesAPI {
  */
 export interface SpaceAPI {
   get id(): SpaceId;
-  /**
-   * @deprecated
-   */
-  get crud(): CoreDatabase;
+
   get db(): EchoDatabase;
+
   // TODO(dmaretskyi): Align with echo api --- queues.get(id).append(items);
   get queues(): QueuesAPI;
 }

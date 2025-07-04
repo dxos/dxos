@@ -9,21 +9,21 @@ import { VoidInput } from '@dxos/conductor';
 import { ObjectId, Ref } from '@dxos/echo-schema';
 import {
   type EmailTrigger,
+  EmailTriggerOutput,
   FunctionTrigger,
   type QueueTrigger,
+  QueueTriggerOutput,
   type SubscriptionTrigger,
   type TimerTrigger,
   TriggerKind,
   type TriggerType,
-  type WebhookTrigger,
-  EmailTriggerOutput,
-  QueueTriggerOutput,
   SubscriptionTriggerOutput,
   TimerTriggerOutput,
+  type WebhookTrigger,
   WebhookTriggerOutput,
 } from '@dxos/functions';
 import { DXN, SpaceId } from '@dxos/keys';
-import { live, makeRef, useSpace } from '@dxos/react-client/echo';
+import { live, useSpace } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
@@ -51,7 +51,7 @@ export const createTrigger = (props: CreateTriggerProps): TriggerShape => {
   });
   return createShape<TriggerShape>({
     type: 'trigger',
-    functionTrigger: makeRef(functionTrigger),
+    functionTrigger: Ref.make(functionTrigger),
     size: { width: 192, height: getHeight(EmailTriggerOutput) },
     ...props,
   });

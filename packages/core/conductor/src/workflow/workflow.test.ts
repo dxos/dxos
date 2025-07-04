@@ -7,12 +7,10 @@ import { describe, test, expect } from 'vitest';
 
 import { MockAiServiceClient } from '@dxos/ai/testing';
 import { todo } from '@dxos/debug';
-import { Obj } from '@dxos/echo';
-import { ObjectId, type Ref, type RefResolver, setRefResolver } from '@dxos/echo-schema';
+import { DXN, Obj, Ref } from '@dxos/echo';
+import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo-schema';
 import { AiService, FunctionType, ServiceContainer, setUserFunctionUrlInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
-import { getMeta, refFromDXN } from '@dxos/live-object';
 import { LogLevel } from '@dxos/log';
 
 import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
@@ -103,7 +101,7 @@ describe('workflow', () => {
     test('function resolved before execution', async () => {
       const functionUrl = 'https://test.com/foo';
       const { fnObject, functionRef, resolveCount } = createFunction();
-      setUserFunctionUrlInMetadata(getMeta(fnObject), functionUrl);
+      setUserFunctionUrlInMetadata(Obj.getMeta(fnObject), functionUrl);
       const graph = createFunctionTransform(functionRef);
       const workflowLoader = new WorkflowLoader(createResolver(graph));
       const workflow = await workflowLoader.load(graph.graphDxn);
@@ -138,7 +136,7 @@ describe('workflow', () => {
 
     const createFunction = () => {
       const functionDxn = DXN.fromLocalObjectId(ObjectId.random());
-      const functionRef = refFromDXN(functionDxn);
+      const functionRef = Ref.fromDXN(functionDxn);
       const fnObject = Obj.make(FunctionType, { name: 'foo', version: '0.0.1' });
       let resolveCounter = 0;
       const refResolver: RefResolver = {
@@ -196,12 +194,12 @@ describe('workflow', () => {
     const graphDxn = DXN.fromLocalObjectId(ObjectId.random());
     const model = ComputeGraphModel.create({ id: graphDxn.toString() });
     const transformId = ObjectId.random();
-    addTransform(model, { id: transformId, type: subgraphDxn.toString(), subgraph: refFromDXN(subgraphDxn) });
+    addTransform(model, { id: transformId, type: subgraphDxn.toString(), subgraph: Ref.fromDXN(subgraphDxn) });
     const graph = Obj.make(ComputeGraph, { graph: model.graph });
     return { graphDxn, graph, compute: [] };
   };
 
-  const createFunctionTransform = (functionRef: Ref<any> | null): TestWorkflowGraph => {
+  const createFunctionTransform = (functionRef: Ref.Ref<any> | null): TestWorkflowGraph => {
     const graphDxn = DXN.fromLocalObjectId(ObjectId.random());
     const model = ComputeGraphModel.create({ id: graphDxn.toString() });
     const transformId = ObjectId.random();

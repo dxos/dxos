@@ -21,7 +21,6 @@ import {
   Filter,
   type QueueFactory,
   type AnyLiveObject,
-  type CoreDatabase,
   type EchoClient,
   type EchoDatabase,
   type EchoDatabaseImpl,
@@ -179,13 +178,6 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   get queues(): QueueFactory {
     return this._queues;
-  }
-
-  /**
-   * @deprecated
-   */
-  get crud(): CoreDatabase {
-    return this._db.coreDatabase;
   }
 
   @trace.info()
