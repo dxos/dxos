@@ -4,6 +4,7 @@ yarn-debug.log*
 yarn-error.log*
 debug-storybook.log
 .log*
+debug-storybook.log
 
 # Runtime data
 *.pid

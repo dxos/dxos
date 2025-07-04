@@ -9,15 +9,15 @@ import {
   defineHiddenProperty,
   getTypeAnnotation,
   type BaseObject,
+  type CreationProps,
+  EntityKindId,
   Expando,
   type ObjectMeta,
   ObjectMetaSchema,
-  EntityKindId,
-  type CreationProps,
 } from '@dxos/echo-schema';
 import { MetaId } from '@dxos/echo-schema';
 
-import type { Live } from './live';
+import { type Live } from './live';
 import { createProxy, isValidProxyTarget } from './proxy';
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
