@@ -19,6 +19,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
 // https://vitejs.dev/config
 export default defineConfig({
+  root: __dirname,
   esbuild: {
     keepNames: true,
   },
@@ -39,7 +40,7 @@ export default defineConfig({
   },
   plugins: [
     SourceMapsPlugin(),
-    ConfigPlugin(),
+    ConfigPlugin({ root: __dirname }),
     ThemePlugin({
       root: __dirname,
       content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
