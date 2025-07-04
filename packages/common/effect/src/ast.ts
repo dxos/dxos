@@ -8,6 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
 import { type JsonPath, type JsonProp } from './jsonPath';
+import { isUndefinedKeyword } from 'effect/SchemaAST';
 
 //
 // Refs
@@ -453,4 +454,17 @@ export const mapAst = (
       return ast;
     }
   }
+};
+
+/**
+ * @returns true if AST is for Array(T) or optional(Array(T)).
+ */
+export const isArrayType = (node: SchemaAST.AST): boolean => {
+  return (
+    SchemaAST.isTupleType(node) ||
+    (SchemaAST.isUnion(node) &&
+      node.types.some(isArrayType) &&
+      node.types.some(isUndefinedKeyword) &&
+      node.types.length === 2)
+  );
 };

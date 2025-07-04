@@ -9,6 +9,7 @@ import { log } from '@dxos/log';
 
 import { type ComputeGraphModel, type ComputeNode, type ComputeMeta } from '../types';
 import { pickProperty } from '../util';
+import { isArrayType } from '@dxos/effect';
 
 /**
  * Structure derived from the compute graph.
@@ -36,7 +37,7 @@ export enum InputKind {
   Array = 'array',
 }
 
-type TopologyNodeInput = {
+export type TopologyNodeInput = {
   name: string;
   schema: Schema.Schema.AnyNoContext;
 
@@ -55,7 +56,7 @@ type TopologyNodeInput = {
 /**
  * Specific connector on the topology graph: nodeId + property.
  */
-type TopologyNodeConnector = {
+export type TopologyNodeConnector = {
   nodeId: string;
   property: string;
 };
@@ -82,6 +83,7 @@ export type GraphDiagnostic = {
   message: string;
   nodeId?: string;
   edgeId?: string;
+  property?: string;
 };
 
 export type CreateTopologyParams = {
@@ -129,27 +131,38 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
 
     if (sourceNode.outputs.find((output) => output.name === edge.output) == null) {
       const schema = pickProperty(sourceNode.meta.output, edge.output);
-      sourceNode.outputs.push({
-        name: edge.output,
-        schema,
-        boundTo: [],
-      });
       if (SchemaAST.isNeverKeyword(schema.ast)) {
-        log.info('setting never output on node:', {
+        // TODO(dmaretskyi): This should be a hard error.
+        log.warn('output does not exist on node', {
           sourceNode: sourceNode.graphNode.type,
           output: edge.output,
           type: schema.ast,
           nodeOutputType: sourceNode.meta.output.ast,
         });
       }
+      sourceNode.outputs.push({
+        name: edge.output,
+        schema,
+        boundTo: [],
+      });
     }
 
     if (targetNode.inputs.find((input) => input.name === edge.input) == null) {
+      const schema = pickProperty(targetNode.meta.input, edge.input);
+      if (SchemaAST.isNeverKeyword(schema.ast)) {
+        // TODO(dmaretskyi): This should be a hard error.
+        log.warn('input does not exist on node', {
+          sourceNode: sourceNode.graphNode.type,
+          output: edge.output,
+          type: schema.ast,
+          nodeOutputType: sourceNode.meta.output.ast,
+        });
+      }
       targetNode.inputs.push({
         name: edge.input,
-        schema: pickProperty(targetNode.meta.input, edge.input),
-        kind: InputKind.Scalar,
-        sources: [{ nodeId: sourceNode.id, property: edge.output }],
+        schema,
+        kind: isArrayType(schema.ast) ? InputKind.Array : InputKind.Scalar,
+        sources: [],
       });
     }
 
@@ -164,6 +177,16 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
       nodeId: targetNode.id,
       property: input.name,
     });
+    if (input.sources.length >= 0 && input.kind === InputKind.Scalar) {
+      topology.diagnostics.push({
+        severity: 'error',
+        edgeId: edge.id,
+        nodeId: targetNode.id,
+        property: input.name,
+        message: `input is scalar but has multiple sources`,
+      });
+    }
+    input.sources.push({ nodeId: sourceNode.id, property: edge.output });
 
     if (SchemaAST.isNeverKeyword(output.schema.ast)) {
       log.warn('output does not exist on node:', { source: targetNode.graphNode.type, target: output.name });

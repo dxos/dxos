@@ -154,9 +154,9 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     const runtime = new TestRuntime(serviceContainer);
     runtime.registerGraph('dxn:compute:test', new ComputeGraphModel(graph));
 
-    const org = Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' });
+    // const org = Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' });
     const { text } = await pipe(
-      { [DEFAULT_INPUT]: org },
+      { [DEFAULT_INPUT]: '2 + 2 * 2' },
       ValueBag.make,
       (input) => runtime.runGraph<GptOutput>('dxn:compute:test', input),
       Effect.flatMap(ValueBag.unwrap),
@@ -236,7 +236,7 @@ const CALCULATOR_BLUEPRINT = BlueprintParser.create().parse({
       tools: ['test/calculator'],
     },
     {
-      instructions: 'Use the printer tool to print the result.',
+      instructions: 'Use the printer tool to print the result of the computation.',
       tools: ['test/printer'],
     },
   ],
@@ -268,12 +268,12 @@ const calculatorTool = createTool('test', {
 
 const printerTool = createTool('test', {
   name: 'printer',
-  description: 'Can print the result of an expression.',
+  description: 'Can print a message.',
   schema: Schema.Struct({
-    data: Schema.String.annotations({ description: 'The data to print.' }),
+    message: Schema.String.annotations({ description: 'The message to print.' }),
   }),
   execute: async (params) => {
-    console.log(params.data);
+    console.log(`## MESSAGE: ${params.message}`);
     return ToolResult.Success('Data printed.');
   },
 });

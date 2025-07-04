@@ -16,7 +16,14 @@ import {
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
-import { createTopology, InputKind, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
+import {
+  type TopologyNodeConnector,
+  createTopology,
+  InputKind,
+  type GraphDiagnostic,
+  type Topology,
+  type TopologyNode,
+} from './topology';
 import { createDefectLogger, EventLogger } from '../services';
 import {
   type ComputeEffect,
@@ -259,12 +266,70 @@ export class GraphExecutor {
     this._computeCache.set(nodeId, inputs);
   }
 
+  computeInput(nodeId: string, prop: string): Effect.Effect<unknown, Error | NotExecuted, ComputeRequirements> {
+    return Effect.gen(this, function* () {
+      invariant(this._topology, 'Graph not loaded');
+      const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
+      const input = node.inputs.find((input) => input.name === prop) ?? failedInvariant();
+
+      let value: unknown;
+      switch (input.kind) {
+        case InputKind.Scalar:
+          invariant(input.sources.length === 1, 'Scalar input must be bound to a single output');
+          const sourceNode =
+            this._topology!.nodes.find((node) => node.id === input.sources[0].nodeId) ?? failedInvariant();
+          value = yield* this.computeOutput(sourceNode.id, input.sources[0].property);
+          invariant(!Effect.isEffect(value));
+          break;
+        case InputKind.Array:
+          const values: unknown[] = yield* Effect.forEach(
+            input.sources,
+            Effect.fnUntraced(
+              function* (this: GraphExecutor, source: TopologyNodeConnector) {
+                const sourceNode = this._topology!.nodes.find((node) => node.id === source.nodeId) ?? failedInvariant();
+                const value = yield* this.computeOutput(sourceNode.id, source.property);
+                invariant(!Effect.isEffect(value));
+                return Array.isArray(value) ? value : [value];
+              }.bind(this),
+            ),
+          );
+          value = values.flat();
+          break;
+      }
+
+      // Assert that the value matches the schema.
+      yield* Schema.decode(input.schema)(value).pipe(
+        Effect.mapError(
+          (error) =>
+            new ValueValidationError('Invalid input value', {
+              context: {
+                nodeId,
+                property: input.name,
+                value,
+              },
+              cause: error,
+            }),
+        ),
+      );
+
+      const logger = yield* EventLogger;
+      logger.log({
+        type: 'compute-input',
+        nodeId,
+        property: input.name,
+        value,
+      });
+
+      return value;
+    }).pipe(Effect.withSpan('compute-input', { attributes: { nodeId, inputName: prop } }));
+  }
+
   /**
    * Compute inputs for a node using a pull-based computation.
    */
   computeInputs(nodeId: string): ComputeEffect<ValueBag<any>> {
-    invariant(this._topology, 'Graph not loaded');
     return Effect.gen(this, function* () {
+      invariant(this._topology, 'Graph not loaded');
       const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
 
       // TODO(dmaretskyi): There's a generic way to copy all requirements in Effect but I don't remember how to do it.
@@ -280,47 +345,7 @@ export class GraphExecutor {
       );
 
       const entries = node.inputs.map(
-        (input) =>
-          [
-            input.name,
-            Effect.gen(this, function* () {
-              invariant(input.kind === InputKind.Scalar, 'Scalar input must be bound to a single output');
-              invariant(input.sources.length === 1, 'Scalar input must be bound to a single output');
-
-              const sourceNode =
-                this._topology!.nodes.find((node) => node.id === input.sources[0].nodeId) ?? failedInvariant();
-              const output = yield* this.computeOutput(sourceNode.id, input.sources[0].property);
-              invariant(!Effect.isEffect(output));
-
-              // Assert that the value matches the schema.
-              yield* Schema.decode(input.schema)(output).pipe(
-                Effect.mapError(
-                  (error) =>
-                    new ValueValidationError('Invalid input value', {
-                      context: {
-                        nodeId,
-                        property: input.name,
-                        value: output,
-                      },
-                      cause: error,
-                    }),
-                ),
-              );
-
-              const logger = yield* EventLogger;
-              logger.log({
-                type: 'compute-input',
-                nodeId,
-                property: input.name,
-                value: output,
-              });
-
-              return output;
-            }).pipe(
-              Effect.withSpan('compute-input', { attributes: { nodeId, inputName: input.name } }),
-              Effect.provide(layer),
-            ),
-          ] as const,
+        (input) => [input.name, this.computeInput(nodeId, input.name).pipe(Effect.provide(layer))] as const,
       );
       return ValueBag.make(Object.fromEntries(entries));
     }).pipe(Effect.withSpan('compute-inputs', { attributes: { nodeId } }));
