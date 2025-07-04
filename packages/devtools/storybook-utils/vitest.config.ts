@@ -11,7 +11,7 @@ export default mergeConfig(
   defineConfig({
     test: {
       globals: true,
-      environment: 'jsdom',
+      // environment: 'jsdom',
       setupFiles: [
         // './src/stories/test/vitest.setup.ts',
       ],
