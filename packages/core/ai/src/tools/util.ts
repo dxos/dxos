@@ -12,8 +12,7 @@ import { type AgentStatus } from '../status-report';
 
 export const isToolUse = (message: Message, { onlyToolNames }: { onlyToolNames?: string[] } = {}) => {
   const block = message.content.at(-1);
-  invariant(block);
-  return block.type === 'tool_use' && (!onlyToolNames || onlyToolNames.includes(block.name));
+  return block && block.type === 'tool_use' && (!onlyToolNames || onlyToolNames.includes(block.name));
 };
 
 export type RunToolsOptions = {

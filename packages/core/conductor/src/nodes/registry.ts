@@ -2,64 +2,49 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Schema, Stream } from 'effect';
+import { Effect, Schema } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
-import {
-  type AiServiceClient,
-  DEFAULT_EDGE_MODEL,
-  defineTool,
-  type GenerateRequest,
-  type GenerationStreamEvent,
-  Message,
-  MixedStreamParser,
-  type Tool,
-  ToolTypes,
-} from '@dxos/ai';
-import { makePushIterable } from '@dxos/async';
-import { Obj, Type, Filter } from '@dxos/echo';
-import { ATTR_TYPE, getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
-import { AiService, DatabaseService, QueueService } from '@dxos/functions';
+import { defineTool, Message, type Tool, ToolTypes } from '@dxos/ai';
+import { Filter, Ref, Type } from '@dxos/echo';
+import { Queue } from '@dxos/echo-db';
+import { getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
+import { DatabaseService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
-import { log } from '@dxos/log';
 import { KanbanType } from '@dxos/react-ui-kanban/types';
 import { TableType } from '@dxos/react-ui-table/types';
 import { safeParseJson } from '@dxos/util';
 
 import { executeFunction, resolveFunctionPath } from './function';
-import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system';
-import { computeTemplate } from './template';
+import { gptNode } from './gpt';
+import { inputNode, NODE_INPUT, NODE_OUTPUT, outputNode } from './system';
+import { templateNode } from './template/node';
 import {
   AppendInput,
   ConstantOutput,
   DatabaseOutput,
-  GptInput,
-  GptOutput,
   JsonTransformInput,
   QueueInput,
   QueueOutput,
   ReducerInput,
   ReducerOutput,
-  TemplateInput,
-  TemplateOutput,
   TextToImageOutput,
 } from './types';
-import { EventLogger } from '../services';
 import {
-  DEFAULT_INPUT,
-  DEFAULT_OUTPUT,
   AnyInput,
   AnyOutput,
+  DEFAULT_INPUT,
+  DEFAULT_OUTPUT,
   DefaultInput,
+  defineComputeNode,
   type Executable,
   NotExecuted,
-  VoidInput,
-  VoidOutput,
-  defineComputeNode,
   synchronizedComputeFunction,
   ValueBag,
+  VoidInput,
+  VoidOutput,
 } from '../types';
 
 /**
@@ -88,6 +73,7 @@ export type NodeType =
   | 'or'
   | 'queue'
   | 'rng'
+  | 'make-queue'
   | 'reducer'
   | 'scope'
   | 'surface'
@@ -108,6 +94,29 @@ export const isFalsy = (value: any) =>
 export const isTruthy = (value: any) => !isFalsy(value);
 
 // TODO(dmaretskyi): Separate into definition and implementation.
+/*
+
+const gpt = Executable.define({
+  name: 'gpt',
+  input: Schema.Struct({
+    prompt: Schema.String,
+  }),
+  output: Schema.Struct({
+    text: Schema.String,
+  }),
+})
+
+// All inputs & outputs are computed at the same time.
+const gptImpl1 = Executable.implementSynchronized(gpt, Effect.fnUntraced(function* ({ prompt }) {
+  ...
+}));
+
+// Inputs and outputs are computed independently.
+cosnt gptImpl2 = Executable.implementIndependent(gpt, Effect.fnUntraced(function* (valueBag) {
+  ...
+})
+*/
+
 export const registry: Record<NodeType, Executable> = {
   //
   // System
@@ -141,20 +150,27 @@ export const registry: Record<NodeType, Executable> = {
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
   }),
 
-  ['template' as const]: defineComputeNode({
-    input: TemplateInput,
-    output: TemplateOutput,
-    exec: synchronizedComputeFunction((props = {}, node) => {
-      invariant(node != null);
-      const result = computeTemplate(node, props);
-      return Effect.succeed({ [DEFAULT_OUTPUT]: result });
-    }),
-  }),
+  ['template' as const]: templateNode,
 
   ['rng' as const]: defineComputeNode({
     input: VoidInput,
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Number }),
     exec: () => Effect.succeed(ValueBag.make({ [DEFAULT_OUTPUT]: Math.random() })),
+  }),
+
+  // Creates a new queue.
+  ['make-queue' as const]: defineComputeNode({
+    input: Schema.Struct({}),
+    output: Schema.Struct({ [DEFAULT_OUTPUT]: Type.Ref(Queue) }),
+    exec: synchronizedComputeFunction(
+      Effect.fnUntraced(function* () {
+        const { queues } = yield* QueueService;
+        const queue = queues.create();
+        return {
+          [DEFAULT_OUTPUT]: Ref.fromDXN(queue.dxn),
+        };
+      }),
+    ),
   }),
 
   //
@@ -381,105 +397,7 @@ export const registry: Record<NodeType, Executable> = {
     ),
   }),
 
-  ['gpt' as const]: defineComputeNode({
-    input: GptInput,
-    output: GptOutput,
-    exec: (input) =>
-      Effect.gen(function* () {
-        const { systemPrompt, prompt, history = [], tools = [] } = yield* ValueBag.unwrap(input);
-        const { client: aiClient } = yield* AiService;
-
-        const messages: Message[] = [
-          ...history,
-          Obj.make(Message, {
-            role: 'user',
-            content: [{ type: 'text', text: prompt }],
-          }),
-        ];
-
-        log.info('generating', { systemPrompt, prompt, history, tools: tools.map((tool) => tool.name) });
-        const generationStream = yield* Effect.promise(() =>
-          generate(aiClient, {
-            model: DEFAULT_EDGE_MODEL,
-            history: messages,
-            systemPrompt,
-            tools: tools as Tool[],
-          }),
-        );
-        const logger = yield* EventLogger;
-
-        const stream = Stream.fromAsyncIterable(generationStream, (e) => new Error(String(e))).pipe(
-          Stream.tap((event) => {
-            logger.log({
-              type: 'custom',
-              nodeId: logger.nodeId!,
-              event,
-            });
-            return Effect.void;
-          }),
-        );
-
-        // Separate tokens into a separate stream.
-        const [resultStream, tokenStream] = yield* Stream.broadcast(stream, 2, { capacity: 'unbounded' });
-
-        const outputMessages = yield* resultStream.pipe(
-          Stream.runDrain,
-          Effect.map(() => generationStream.result),
-          Effect.cached, // Cache the result to avoid re-draining the stream.
-        );
-
-        const outputWithAPrompt = outputMessages.pipe(
-          Effect.map((messages) =>
-            // TODO(dmaretskyi): Why do we need to prepend the last message
-            [messages.at(-1)!, ...messages].map((msg) => ({
-              [ATTR_TYPE]: Type.getDXN(Message),
-              ...msg,
-            })),
-          ),
-        );
-
-        const text = outputWithAPrompt.pipe(
-          Effect.map((messages) =>
-            messages
-              .map((message) => message.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])))
-              .join(''),
-          ),
-        );
-
-        const cot = outputWithAPrompt.pipe(
-          Effect.map(
-            (messages) =>
-              messages
-                .at(-1)!
-                .content.filter((block) => block.type === 'text')
-                .find((block) => block.disposition === 'cot')?.text,
-          ),
-        );
-
-        const artifact = Effect.gen(function* () {
-          const textContent = yield* text;
-          const begin = textContent.lastIndexOf('<artifact>');
-          const end = textContent.indexOf('</artifact>');
-          if (begin === -1 || end === -1) {
-            return undefined;
-          }
-
-          const artifactData = textContent.slice(begin + '<artifact>'.length, end).trim();
-
-          return artifactData;
-        });
-
-        // TODO(burdon): Parse COT on the server (message ontology).
-        return ValueBag.make<GptOutput>({
-          messages: outputWithAPrompt,
-          tokenCount: 0,
-          text,
-          tokenStream,
-          cot,
-          artifact,
-        });
-      }),
-  }),
+  ['gpt' as const]: gptNode,
 
   ['gpt-realtime' as const]: defineComputeNode({
     input: Schema.Struct({
@@ -519,47 +437,3 @@ const textToImageTool: Tool = defineTool('testing', {
     // model: '@testing/kitten-in-bubble',
   },
 });
-
-const generate = async (
-  ai: AiServiceClient,
-  generationRequest: GenerateRequest,
-  { abort }: { abort?: AbortSignal } = {},
-): Promise<GenerateResult> => {
-  const stream = await ai.execStream(generationRequest);
-  const parser = new MixedStreamParser();
-  const resultIterable = makePushIterable<GenerationStreamEvent>();
-
-  let completed = false;
-  parser.streamEvent.on((event) => {
-    log.info('stream event', { event });
-    resultIterable.next(event);
-  });
-  const messages = await parser.parse(stream);
-  completed = true;
-
-  resultIterable.return(messages);
-
-  abort?.addEventListener('abort', () => {
-    if (!completed) {
-      resultIterable.throw(new Error('Aborted'));
-    }
-  });
-
-  return {
-    [Symbol.asyncIterator]: resultIterable[Symbol.asyncIterator],
-    get result() {
-      if (!completed) {
-        throw new Error('Iterable not completed');
-      }
-
-      return messages;
-    },
-  };
-};
-
-interface GenerateResult extends AsyncIterable<GenerationStreamEvent> {
-  /**
-   * @throws If the iterable is not completed.
-   */
-  get result(): Message[];
-}

@@ -5,7 +5,8 @@
 import { Schema } from 'effect';
 import React, { useEffect, useRef } from 'react';
 
-import { createInputSchema, createOutputSchema, GptMessage } from '@dxos/conductor';
+import { Message } from '@dxos/ai';
+import { createInputSchema, createOutputSchema } from '@dxos/conductor';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -13,8 +14,8 @@ import { mx } from '@dxos/react-ui-theme';
 import { createFunctionAnchors, Box } from './common';
 import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 
-const InputSchema = createInputSchema(GptMessage);
-const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(GptMessage)));
+const InputSchema = createInputSchema(Message);
+const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(Message)));
 
 export const ThreadShape = Schema.extend(
   ComputeShape,

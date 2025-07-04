@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { raise } from '@dxos/debug';
-import { isEncodedReference, type EncodedReference } from '@dxos/echo-protocol';
+import { isEncodedReference, type EncodedReference, type ObjectMeta } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
@@ -192,7 +192,7 @@ const typedJsonSerializer = function (this: any) {
   }
 
   if (meta) {
-    result[ATTR_META] = serializeData(meta);
+    result[ATTR_META] = serializeMeta(meta);
   }
 
   Object.assign(result, serializeData(rest));
@@ -207,4 +207,8 @@ const serializeData = (data: unknown) => {
     }
     return recurse(value);
   });
+};
+
+const serializeMeta = (meta: ObjectMeta) => {
+  return deepMapValues(meta, (value, recurse) => recurse(value));
 };
