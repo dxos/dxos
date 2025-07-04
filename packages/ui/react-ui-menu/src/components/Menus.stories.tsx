@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
-import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { DropdownMenu as NaturalDropdownMenu, ToolbarMenu, MenuProvider } from '../components';
 import { useMenuActions } from '../hooks';
@@ -20,8 +20,10 @@ faker.seed(1234);
 export default {
   title: 'ui/react-ui-menu/Menus',
   component: ToolbarMenu,
-  decorators: [withTheme, withLayout(), withSignals],
-  parameters: { translations },
+  decorators: [withTheme],
+  parameters: {
+    translations,
+  },
 };
 
 export const DropdownMenu = {

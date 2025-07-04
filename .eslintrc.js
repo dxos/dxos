@@ -8,6 +8,7 @@ require('@rushstack/eslint-patch/modern-module-resolution');
 
 module.exports = {
   root: true,
+
   ignorePatterns: [
     // Build Artifacts
     'dist',
@@ -24,7 +25,7 @@ module.exports = {
     'webpack.config.js',
     'vite.config.ts',
     'vitest.config.ts',
-    'vitest.shared.ts',
+    'vitest.base.config.ts',
     'playwright.config.ts',
 
     // Dependencies
@@ -38,6 +39,12 @@ module.exports = {
     'docs/content/**/*',
     '**/typedoc/assets/**/*',
   ],
+
+  rules: {
+    // Suspected bug mistakes all `play` functions for storybook.play.
+    'storybook/context-in-play-function': 'off',
+  },
+
   overrides: [
     {
       extends: ['plugin:@dxos/recommended'],
@@ -65,4 +72,6 @@ module.exports = {
       },
     },
   ],
+
+  extends: ['plugin:storybook/recommended'],
 };

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/conductor",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Compute graph implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -42,6 +42,8 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",

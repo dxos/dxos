@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { effect } from '@preact/signals-core';
-import { type StoryObj } from '@storybook/react';
+import { type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 

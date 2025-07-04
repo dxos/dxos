@@ -248,7 +248,6 @@ const Controls = ({ children }: PropsWithChildren) => {
 export default {
   title: 'sdk/app-graph/EchoGraph',
   decorators: [
-    withTheme,
     withClientProvider({
       createIdentity: true,
       onIdentityCreated: async ({ client }) => {
@@ -256,6 +255,7 @@ export default {
         await client.spaces.create();
       },
     }),
+    withTheme,
   ],
 };
 

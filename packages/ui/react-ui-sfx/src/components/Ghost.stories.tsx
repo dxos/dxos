@@ -4,10 +4,11 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { DXOS } from '@dxos/brand';
+import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Ghost, type GhostProps } from './Ghost';
@@ -33,6 +34,9 @@ export default meta;
 type Story = StoryObj<GhostProps>;
 
 export const Default: Story = {
+  play: async () => {
+    log.info('started');
+  },
   args: {},
 };
 

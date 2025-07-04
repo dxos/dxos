@@ -1,6 +1,6 @@
 {
   "name": "@dxos/env-tests",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "private": true,
   "description": "Testing that our code compiles in different environments.",
   "homepage": "https://dxos.org",

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Plugin } from 'esbuild';
+import { type Plugin } from 'esbuild';
 
 // Keep in sync with packages/common/node-std/src/inject-globals.js
 const GLOBALS = ['global', 'Buffer', 'process'];

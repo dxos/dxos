@@ -49,6 +49,7 @@ const nodeFactory: Record<NodeType | 'trigger', (shape: ComputeShape) => Compute
     createNode('constant', {
       value: (shape as ConstantShape).value,
     }),
+  ['make-queue' as const]: () => createNode('make-queue'),
   ['database' as const]: () => createNode('database'),
   ['gpt' as const]: () => createNode('gpt'),
   ['gpt-realtime' as const]: () => createNode('gpt-realtime'),
