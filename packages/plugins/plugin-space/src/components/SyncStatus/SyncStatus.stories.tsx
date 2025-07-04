@@ -15,8 +15,8 @@ const meta: Meta = {
   title: 'plugins/plugin-space/SyncStatusIndicator',
   component: SyncStatusIndicator,
   decorators: [withTheme],
-  parameters: { 
-    translations, 
+  parameters: {
+    translations,
     layout: 'centered',
   },
 };

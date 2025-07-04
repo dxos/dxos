@@ -4,17 +4,17 @@
 
 import '@dxos-theme';
 
-import type { StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Meta, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SignalMessageTable } from './SignalMessageTable';
 
 const meta: Meta<typeof SignalMessageTable> = {
   title: 'devtools/devtools/SignalMessageTable',
   component: SignalMessageTable,
-  decorators: [withClientProvider(),withTheme],
+  decorators: [withClientProvider(), withTheme],
   parameters: {
     layout: 'fullscreen',
   },

@@ -7,8 +7,9 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { PageNumber, Pager, type PagerProps, StartButton } from './Pager';
 import { withTheme } from '@dxos/storybook-utils';
+
+import { PageNumber, Pager, type PagerProps, StartButton } from './Pager';
 
 const DefaultStory = ({ count = 20 }: PagerProps) => {
   const [index, setIndex] = useState(0);

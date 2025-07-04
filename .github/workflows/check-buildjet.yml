@@ -1,4 +1,4 @@
-name: Check
+name: Check BuildJet
 
 on:
   push:
