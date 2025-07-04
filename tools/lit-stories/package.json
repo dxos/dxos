@@ -9,8 +9,10 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "devDependencies": {
+    "@dxos/log": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
+    "@storybook/addon-docs": "~9.0.14",
     "@storybook/addon-links": "~9.0.14",
     "@storybook/addon-themes": "~9.0.14",
     "@storybook/addon-vitest": "~9.0.14",
@@ -18,7 +20,7 @@
     "@storybook/web-components": "~9.0.14",
     "@storybook/web-components-vite": "~9.0.14",
     "lit": "^3.2.0",
-    "storybook": "^9.0.14",
+    "storybook": "^9.0.15",
     "vite": "5.4.7"
   }
 }

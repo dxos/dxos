@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
 

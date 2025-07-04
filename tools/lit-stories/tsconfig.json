@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../packages/common/log"
+    },
+    {
       "path": "../../packages/ui/react-ui-theme"
     },
     {

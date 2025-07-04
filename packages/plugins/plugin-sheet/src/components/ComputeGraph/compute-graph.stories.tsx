@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { testFunctionPlugins } from '@dxos/compute/testing';

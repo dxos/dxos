@@ -32,7 +32,7 @@
     "watch-build": "./node_modules/.bin/nx watch --all -- pnpm -w nx build \"\\$NX_PROJECT_NAME\""
   },
   "dependencies": {
-    "storybook": "9.0.9",
+    "storybook": "9.0.15",
     "tslib": "^2.3.0"
   },
   "devDependencies": {

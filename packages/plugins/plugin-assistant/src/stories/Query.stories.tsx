@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Match, Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react';
 

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Toolbar } from '@dxos/react-ui';

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';

@@ -158,7 +158,7 @@
       "inputs": [
         "default",
         "^production",
-        "{workspaceRoot}/vitest.shared.ts",
+        "{workspaceRoot}/vitest.base.config.ts",
         {
           "env": "VITEST_ENV"
         },

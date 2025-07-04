@@ -3,20 +3,24 @@
 //
 
 import { type Schema } from 'effect';
-import type { Simplify } from 'effect/Schema';
+import { type Simplify } from 'effect/Schema';
 
-import type { EncodedReference } from '@dxos/echo-protocol';
+import { type EncodedReference } from '@dxos/echo-protocol';
 import * as EchoSchema from '@dxos/echo-schema';
-import type { ToMutable } from '@dxos/echo-schema';
+import { type ToMutable } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import type * as Keys from '@dxos/keys';
 
 import type * as RelationModule from './Relation';
 
+//
+// Kind
+//
+
 export const KindId: unique symbol = EchoSchema.EntityKindId as any;
 export type KindId = typeof KindId;
 
-export { EntityKind as Kind } from '@dxos/echo-schema';
+export const Kind = EchoSchema.EntityKind;
 
 /**
  * Assigns a kind to an Object or Relation instance.
@@ -27,25 +31,23 @@ export interface OfKind<Kind extends EchoSchema.EntityKind> {
   readonly [KindId]: Kind;
 }
 
-interface ObjJsonProps {
-  id: string;
-}
-
-interface RelationJsonProps {
-  id: string;
-  [EchoSchema.ATTR_RELATION_SOURCE]: string;
-  [EchoSchema.ATTR_RELATION_TARGET]: string;
-}
+/**
+ * Base ECHO schema type.
+ */
+export type Schema = EchoSchema.EchoSchema;
 
 /**
  * Returns all properties of an object or relation except for the id and kind.
  */
 export type Properties<T> = Omit<T, 'id' | KindId | RelationModule.Source | RelationModule.Target>;
 
-/**
- * Base ECHO schema type.
- */
-export type Schema = EchoSchema.EchoSchema;
+//
+// Obj
+//
+
+interface ObjJsonProps {
+  id: string;
+}
 
 /**
  * Return type of the `Obj` schema constructor.
@@ -54,13 +56,13 @@ export type Schema = EchoSchema.EchoSchema;
  * See Effect's note on interface types.
  */
 export interface obj<Self extends Schema.Schema.Any>
-  extends Schema.AnnotableClass<
+  extends EchoSchema.TypeMeta,
+    Schema.AnnotableClass<
       obj<Self>,
       OfKind<EchoSchema.EntityKind.Object> & ToMutable<Schema.Schema.Type<Self>>,
       Simplify<ObjJsonProps & ToMutable<Schema.Schema.Encoded<Self>>>,
       Schema.Schema.Context<Self>
-    >,
-    EchoSchema.TypeMeta {}
+    > {}
 
 /**
  * Object schema.
@@ -81,6 +83,28 @@ export namespace Obj {
   export type Any = Schema.Schema.AnyNoContext;
 }
 
+//
+// Expando
+//
+
+export interface Expando extends OfKind<EchoSchema.EntityKind.Object> {
+  [key: string]: any;
+}
+
+type ExpandoEncoded = Simplify<ObjJsonProps & { [key: string]: any }>;
+
+export const Expando: Schema.Schema<Expando, ExpandoEncoded, never> = EchoSchema.Expando as any;
+
+//
+// Relation
+//
+
+interface RelationJsonProps {
+  id: string;
+  [EchoSchema.ATTR_RELATION_SOURCE]: string;
+  [EchoSchema.ATTR_RELATION_TARGET]: string;
+}
+
 /**
  * Return type of the `Relation` schema constructor.
  *
@@ -91,15 +115,15 @@ export interface relation<
   Self extends Schema.Schema.Any,
   SourceSchema extends Schema.Schema.Any,
   TargetSchema extends Schema.Schema.Any,
-> extends Schema.AnnotableClass<
+> extends EchoSchema.TypeMeta,
+    Schema.AnnotableClass<
       relation<Self, SourceSchema, TargetSchema>,
       OfKind<EchoSchema.EntityKind.Relation> &
         Relation.Endpoints<Schema.Schema.Type<SourceSchema>, Schema.Schema.Type<TargetSchema>> &
         ToMutable<Schema.Schema.Type<Self>>,
       Simplify<RelationJsonProps & ToMutable<Schema.Schema.Encoded<Self>>>,
       Schema.Schema.Context<Self>
-    >,
-    EchoSchema.TypeMeta {}
+    > {}
 
 /**
  * Relation schema.
@@ -123,20 +147,24 @@ export namespace Relation {
   export type Any = Schema.Schema.AnyNoContext;
 
   /**
-   * Get relation target type.
-   */
-  export type Target<A> = A extends Relation.Endpoints<infer _S, infer T> ? T : never;
-
-  /**
    * Get relation source type.
    */
   export type Source<A> = A extends Relation.Endpoints<infer S, infer _T> ? S : never;
+
+  /**
+   * Get relation target type.
+   */
+  export type Target<A> = A extends Relation.Endpoints<infer _S, infer T> ? T : never;
 
   export type Endpoints<Source, Target> = {
     [RelationModule.Source]: Source;
     [RelationModule.Target]: Target;
   };
 }
+
+//
+// Ref
+//
 
 /**
  * Return type of the `Ref` schema constructor.
@@ -194,6 +222,11 @@ export const getVersion = (schema: Obj.Any | Relation.Any): string => {
 };
 
 /**
+ * @returns True if the schema is mutable.
+ */
+export const isMutable = EchoSchema.isMutable;
+
+/**
  * ECHO type metadata.
  */
 export type Meta = EchoSchema.TypeAnnotation;
@@ -205,27 +238,6 @@ export const getMeta = (schema: Obj.Any | Relation.Any): Meta | undefined => {
   return EchoSchema.getTypeAnnotation(schema);
 };
 
-/**
- * @returns True if the schema is mutable.
- */
-export const isMutable = EchoSchema.isMutable;
-
 export { SpaceId, ObjectId, DXN } from '@dxos/keys';
 
-export interface Expando extends OfKind<EchoSchema.EntityKind.Object> {
-  [key: string]: any;
-}
-
-export const Expando: Schema.Schema<
-  Expando,
-  Simplify<ObjJsonProps & { [key: string]: any }>,
-  never
-> = EchoSchema.Expando as any;
-
-export {
-  // TODO(burdon): Standardize.
-  Format,
-  JsonSchemaType as JsonSchema,
-  toEffectSchema,
-  toJsonSchema,
-} from '@dxos/echo-schema';
+export { Format, JsonSchemaType as JsonSchema, toEffectSchema, toJsonSchema } from '@dxos/echo-schema';

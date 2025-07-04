@@ -281,8 +281,9 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
     this._params.monitor?.recordPeerDisconnected(connection.peerId);
 
-    void entry.reader.cancel().catch((err) => log.catch(err));
     void entry.writer.abort().catch((err) => log.catch(err));
+    void entry.reader.cancel().catch((err) => log.catch(err));
+
     this._connections.delete(connection.peerId as PeerId);
   }
 

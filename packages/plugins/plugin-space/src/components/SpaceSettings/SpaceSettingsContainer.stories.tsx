@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';

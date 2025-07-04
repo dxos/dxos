@@ -5,17 +5,43 @@
 import { join, relative } from 'node:path';
 import pkgUp from 'pkg-up';
 import { type Plugin, UserConfig as ViteConfig } from 'vite';
-import { defineConfig, type UserConfig as VitestConfig } from 'vitest/config';
+import { defineConfig, ViteUserConfig, type UserConfig as VitestConfig } from 'vitest/config';
 import WasmPlugin from 'vite-plugin-wasm';
 import Inspect from 'vite-plugin-inspect';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
-import { GLOBALS, MODULES } from '@dxos/node-std/_/config';
+import { MODULES } from '@dxos/node-std/_/config';
 
 const targetProject = String(process.env.NX_TASK_TARGET_PROJECT);
+
 const isDebug = !!process.env.VITEST_DEBUG;
 const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
-const shouldCreateXmlReport = Boolean(process.env.VITEST_XML_REPORT);
+const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
+
+type BrowserOptions = {
+  cwd: string;
+  browserName: string;
+  nodeExternal?: boolean;
+  injectGlobals?: boolean;
+};
+
+export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
+
+export const baseConfig = (options: ConfigOptions): ViteConfig => {
+  switch (environment) {
+    case 'chromium': {
+      return createBrowserConfig({ browserName: environment, ...options });
+    }
+    case 'node':
+    default: {
+      if (environment.length > 0 && environment !== 'node') {
+        console.log("Unrecognized VITEST_ENV value, falling back to 'node': " + environment);
+      }
+
+      return createNodeConfig(options.cwd);
+    }
+  }
+};
 
 const createNodeConfig = (cwd: string) =>
   defineConfig({
@@ -37,13 +63,6 @@ const createNodeConfig = (cwd: string) =>
     // http://localhost:51204/__inspect/#/
     plugins: [process.env.VITE_INSPECT ? Inspect() : undefined],
   });
-
-type BrowserOptions = {
-  browserName: string;
-  cwd: string;
-  nodeExternal?: boolean;
-  injectGlobals?: boolean;
-};
 
 const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
   defineConfig({
@@ -101,14 +120,14 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
     },
   });
 
-const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd: string }): VitestConfig['test'] => {
+const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd: string }): ViteUserConfig['test'] => {
   const packageJson = pkgUp.sync({ cwd });
   const packageDir = packageJson!.split('/').slice(0, -1).join('/');
   const packageDirRelative = relative(__dirname, packageDir);
-  const coverageDir = join(__dirname, 'coverage', packageDirRelative);
+  const reportsDirectory = join(__dirname, 'coverage', packageDirRelative);
   const coverageEnabled = Boolean(process.env.VITEST_COVERAGE);
 
-  if (shouldCreateXmlReport) {
+  if (xmlReport) {
     return {
       passWithNoTests: true,
       reporters: ['junit', 'verbose'],
@@ -117,7 +136,7 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
       outputFile: join(__dirname, 'test-results', packageDirRelative, 'results.xml'),
       coverage: {
         enabled: coverageEnabled,
-        reportsDirectory: coverageDir,
+        reportsDirectory,
       },
     };
   }
@@ -127,24 +146,9 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
     reporters: ['verbose'],
     coverage: {
       enabled: coverageEnabled,
-      reportsDirectory: coverageDir,
+      reportsDirectory,
     },
   };
-};
-
-export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
-
-export const baseConfig = (options: ConfigOptions): ViteConfig => {
-  switch (environment) {
-    case 'chromium':
-      return createBrowserConfig({ browserName: environment, ...options });
-    case 'node':
-    default:
-      if (environment.length > 0 && environment !== 'node') {
-        console.log("Unrecognized VITEST_ENV value, falling back to 'node': " + environment);
-      }
-      return createNodeConfig(options.cwd);
-  }
 };
 
 /**

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, IntentPlugin, SettingsPlugin, Surface } from '@dxos/app-framework';
