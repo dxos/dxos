@@ -148,9 +148,6 @@ jobs:
       DX_ENVIRONMENT: ci
       DX_PWA: false
       NODE_OPTIONS: --max-old-space-size=12288
-      # Firefox is unable to launch if the $HOME folder isn't owned by the current user.
-      # Workaround: Set the HOME=/root environment variable when running Playwright.
-      HOME: /root
     steps:
       - name: Checkout
         uses: actions/checkout@v4
