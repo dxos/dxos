@@ -19,6 +19,7 @@ import { UserConfig } from 'vitest/config';
 export default defineConfig(
   (env) =>
     ({
+      root: __dirname,
       server: {
         host: true,
         cors: true,
