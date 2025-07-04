@@ -9,7 +9,6 @@ on:
     branches:
       - main
       - gh-docker
-      - burdon/gh-actions
     paths:
       - .github/Dockerfile
       - .github/workflows/docker-image.yml
@@ -58,4 +57,4 @@ jobs:
             NODE_VERSION=${{ matrix.node_version }}
           # TODO(wittjosiah): Tag latest for the default node version.
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ matrix.node_version }}
+            ${{ env.IMAGE_NAME }}:${{ matrix.node_version }}${{ env.IMAGE_TAG_SUFFIX }}
