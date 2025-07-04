@@ -9,18 +9,13 @@
           "quiet": true
         }
       },
-      "dependsOn": [
-        "^compile",
-        "mkdist"
-      ],
+      "dependsOn": ["^compile", "mkdist"],
       "executor": "@nx/storybook:build",
       "options": {
         "configDir": "{projectRoot}/.storybook",
         "outputDir": "{projectRoot}/out/stories"
       },
-      "outputs": [
-        "{options.outputDir}"
-      ]
+      "outputs": ["{options.outputDir}"]
     },
     "lint": {
       "options": {
@@ -34,9 +29,7 @@
     "mkdist": {
       "cache": true,
       "command": "mkdir -p tools/stories/static",
-      "outputs": [
-        "{workspaceRoot}/tools/stories/static"
-      ]
+      "outputs": ["{workspaceRoot}/tools/stories/static"]
     },
     "storybook": {
       "configurations": {
@@ -44,10 +37,7 @@
           "quiet": true
         }
       },
-      "dependsOn": [
-        "^compile",
-        "mkdist"
-      ],
+      "dependsOn": ["^compile", "mkdist"],
       "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "{projectRoot}/.storybook"
@@ -72,10 +62,7 @@
           "quiet": true
         }
       },
-      "dependsOn": [
-        "^compile",
-        "mkdist"
-      ],
+      "dependsOn": ["^compile", "mkdist"],
       "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "{projectRoot}/config/e2e",
@@ -88,9 +75,7 @@
           "quiet": true
         }
       },
-      "dependsOn": [
-        "^compile"
-      ],
+      "dependsOn": ["^compile"],
       "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "{projectRoot}/config/examples",
@@ -110,7 +95,7 @@
           }
         }
       },
-      "executor": "@nx/vitest:run",
+      "executor": "@nx/vite:run",
       "options": {
         "config": "vitest.config.ts"
       }
