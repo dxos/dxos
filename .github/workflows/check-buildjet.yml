@@ -55,11 +55,11 @@ jobs:
         id: extract_branch
         uses: ./.github/actions/branch
 
-      - name: Setup
-        uses: ./.github/actions/setup
-
       - name: Mark workspace as safe
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Setup
+        uses: ./.github/actions/setup
 
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
