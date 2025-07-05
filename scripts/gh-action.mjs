@@ -59,7 +59,7 @@ switch (command) {
     if (argv.watch) {
       while (true) {
         const data = await listWorkflowRunsForRepo(true);
-        if (data[0].status === 'in_progress') {
+        if (data[0].status !== 'completed') {
           await new Promise((r) => setTimeout(r, argv.interval));
           continue;
         } else {
