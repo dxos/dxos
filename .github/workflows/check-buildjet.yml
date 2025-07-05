@@ -117,6 +117,7 @@ jobs:
         run: pnpm exec nx run-many --targets=test
 
       - name: Upload Test Results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: vitest-report
@@ -133,7 +134,7 @@ jobs:
           verbose: true
 
       - name: Send test report
-        if: ${{ (success() || failure()) && github.event_name == 'schedule' }}
+        if: ${{ always() && github.event_name == 'schedule' }}
         uses: ./.github/actions/test-report
         with:
           name: '${{ github.job }}-${{ matrix.node-version }}'
