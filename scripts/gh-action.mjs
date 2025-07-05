@@ -91,21 +91,31 @@ async function listWorkflowRunsForRepo(watch = false) {
 
     // Output as cli-table3
     const table = new Table({
-      head: ['Number', 'Name', 'Status', 'Conclusion', 'URL'],
+      head: ['Number', 'Name', 'Created', 'Duration', 'Status', 'Conclusion', 'URL'],
       style: { head: ['gray'], compact: true },
     });
 
     const tableRows = workflow_runs
       .filter((run) => !argv.filter || run.name === argv.filter)
-      .map((run) => [
-        chalk.cyan(run.id),
-        run.name,
-        run.status === 'completed' ? chalk.yellow(run.status) : run.status,
-        run.conclusion === 'failure' || run.conclusion === 'failed'
-          ? chalk.red(run.conclusion)
-          : chalk.green(run.conclusion),
-        chalk.blue(run.html_url),
-      ]);
+      .map((run) => {
+        const created = new Date(run.created_at);
+        const updated = new Date(run.updated_at);
+        const diff = updated - created;
+        const mm = Math.floor((diff / 1000 / 60) % 60);
+        const ss = Math.floor((diff / 1000) % 60);
+        const humanReadable = `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+        return [
+          chalk.cyan(run.id),
+          run.name,
+          run.created_at,
+          { hAlign: 'right', content: humanReadable },
+          run.status === 'completed' ? chalk.yellow(run.status) : run.status,
+          run.conclusion === 'failure' || run.conclusion === 'failed'
+            ? chalk.red(run.conclusion)
+            : chalk.green(run.conclusion),
+          chalk.blue(run.html_url),
+        ];
+      });
 
     table.push(...tableRows);
     if (watch) {

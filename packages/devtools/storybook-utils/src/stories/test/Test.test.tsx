@@ -13,7 +13,7 @@ import { Test } from './Test';
  * https://storybook.js.org/docs/writing-tests/integrations/vitest-addon
  */
 // TODO(burdon): Not working.
-describe.skip('Test', () => {
+describe('Test', () => {
   it('should render', () => {
     const { container } = render(<Test id='test' icon='ph--x--regular' label='Test' />);
 
