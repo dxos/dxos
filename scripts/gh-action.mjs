@@ -113,6 +113,7 @@ async function listWorkflowRunsForRepo(watch = false) {
 
     const rows = workflow_runs.filter((run) => !argv.filter || run.name.match(argv.filter));
     rows.forEach((run) => {
+      console.log(run);
       const now = new Date(new Date().toISOString());
       const created = new Date(run.created_at);
       const updated = new Date(run.updated_at);
