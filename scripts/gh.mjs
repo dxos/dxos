@@ -13,7 +13,7 @@ import yargs from 'yargs';
 const OP_GITHUB_ITEM = 'GitHub';
 const OP_GITHUB_FIELD = 'credential';
 
-const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY ?? 'dxos/dxos';
+const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY || 'dxos/dxos';
 
 const REPO_ROOT = process.cwd();
 
