@@ -84,6 +84,27 @@ async function check() {
 }
 
 /**
+ * Get PRs.
+ */
+async function getPullRequests() {
+  try {
+    const { octokit, owner, repo } = getOctokit();
+
+    // Get pull requests.
+    const { data } = await octokit.pulls.list({
+      owner,
+      repo,
+      state: 'open',
+    });
+
+    return data;
+  } catch (err) {
+    console.error('Failed to fetch pull requests:', err);
+    process.exit(1);
+  }
+}
+
+/**
  * List GH actions.
  */
 async function listWorkflowRunsForRepo(watch = false) {
@@ -107,11 +128,13 @@ async function listWorkflowRunsForRepo(watch = false) {
 
     // Output as cli-table3
     const table = new Table({
-      head: ['Number', 'Name', 'Created', 'Duration', 'Status', 'Conclusion', 'URL'],
+      head: ['Name', 'Branch', 'Created', 'Duration', 'Status', 'URL'],
       style: { head: ['gray'], compact: true },
     });
 
-    const rows = workflow_runs.filter((run) => !argv.filter || run.name.match(argv.filter));
+    const rows = workflow_runs
+      .filter((run) => !argv.filter || run.name.match(argv.filter))
+      .sort(({ created_at: a }, { created_at: b }) => new Date(b) - new Date(a));
     rows.forEach((run) => {
       const now = new Date(new Date().toISOString());
       const created = new Date(run.created_at);
@@ -123,18 +146,17 @@ async function listWorkflowRunsForRepo(watch = false) {
       const humanReadable = `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
 
       table.push([
-        chalk.cyan(run.id),
         run.name,
+        chalk.magenta(run.head_branch),
         run.created_at,
         { hAlign: 'right', content: humanReadable },
-        run.status,
         run.status === 'completed'
           ? run.conclusion === 'failure'
             ? chalk.red(run.conclusion)
             : run.conclusion === 'success'
               ? chalk.green(run.conclusion)
               : chalk.yellow(run.conclusion)
-          : '',
+          : chalk.yellow(run.status),
         chalk.blueBright(run.html_url),
       ]);
     });
