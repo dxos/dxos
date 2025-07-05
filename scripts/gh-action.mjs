@@ -10,6 +10,8 @@ import os from 'os';
 import path from 'path';
 import yargs from 'yargs';
 
+const REPO_ROOT = process.cwd();
+
 const OP_GITHUB_ITEM = 'GitHub';
 const OP_GITHUB_FIELD = 'credential';
 
@@ -33,6 +35,11 @@ const argv = yargs(process.argv.slice(2))
     default: false,
     description: 'List all jobs (not only failures)',
   })
+  .option('truncate', {
+    type: 'boolean',
+    default: false,
+    description: 'Truncate trace (skip non package files)',
+  })
   .option('watch', {
     type: 'boolean',
     default: false,
@@ -52,15 +59,16 @@ switch (command) {
     if (argv.watch) {
       while (true) {
         const data = await listWorkflowRunsForRepo(true);
-        const failure = data.find((run) => run.conclusion === 'failure' || run.conclusion === 'failed');
-        // if (failure) {
-        // await printReport(failure.run_number);
-        // await printLog(fail.run_number);
-        await showWorkflowRunReport(16083842073);
-        process.exit(1);
-        // }
-
-        await new Promise((r) => setTimeout(r, argv.interval));
+        if (data[0].status === 'in_progress') {
+          await new Promise((r) => setTimeout(r, argv.interval));
+          continue;
+        } else {
+          const check = data.find((run) => run.status === 'completed');
+          if (check) {
+            await showWorkflowRunReport(check.id);
+            break;
+          }
+        }
       }
     } else {
       await listWorkflowRunsForRepo();
@@ -75,6 +83,8 @@ switch (command) {
 async function listWorkflowRunsForRepo(watch = false) {
   try {
     const { octokit, owner, repo } = getOctokit();
+
+    // Get workflow runs.
     const {
       data: { workflow_runs },
     } = await octokit.actions.listWorkflowRunsForRepo({
@@ -95,34 +105,30 @@ async function listWorkflowRunsForRepo(watch = false) {
       style: { head: ['gray'], compact: true },
     });
 
-    const tableRows = workflow_runs
-      .filter((run) => !argv.filter || run.name === argv.filter)
-      .map((run) => {
-        const created = new Date(run.created_at);
-        const updated = new Date(run.updated_at);
-        const diff = updated - created;
-        const mm = Math.floor((diff / 1000 / 60) % 60);
-        const ss = Math.floor((diff / 1000) % 60);
-        const humanReadable = `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
-        return [
-          chalk.cyan(run.id),
-          run.name,
-          run.created_at,
-          { hAlign: 'right', content: humanReadable },
-          run.status === 'completed' ? chalk.yellow(run.status) : run.status,
-          run.conclusion === 'failure' || run.conclusion === 'failed'
-            ? chalk.red(run.conclusion)
-            : chalk.green(run.conclusion),
-          chalk.blue(run.html_url),
-        ];
-      });
+    const rows = workflow_runs.filter((run) => !argv.filter || run.name === argv.filter);
+    rows.forEach((run) => {
+      const created = new Date(run.created_at);
+      const updated = new Date(run.updated_at);
+      const diff = updated - created;
+      const mm = Math.floor((diff / 1000 / 60) % 60);
+      const ss = Math.floor((diff / 1000) % 60);
+      const humanReadable = `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+      table.push([
+        chalk.cyan(run.id),
+        run.name,
+        run.created_at,
+        { hAlign: 'right', content: humanReadable },
+        run.status === 'completed' ? chalk.yellow(run.status) : run.status,
+        run.conclusion === 'failure' ? chalk.red(run.conclusion) : chalk.green(run.conclusion),
+        chalk.blue(run.html_url),
+      ]);
+    });
 
-    table.push(...tableRows);
     if (watch) {
       console.clear();
     }
     console.log(table.toString());
-    return workflow_runs;
+    return rows;
   } catch (err) {
     console.error('Failed to fetch workflow runs:', err);
     process.exit(1);
@@ -133,7 +139,7 @@ async function showWorkflowRunReport(id) {
   try {
     const { octokit, owner, repo } = getOctokit();
 
-    // List artifacts for the workflow run.
+    // Get artifacts for the workflow run.
     const {
       data: { artifacts },
     } = await octokit.actions.listWorkflowRunArtifacts({ owner, repo, run_id: id });
@@ -167,7 +173,6 @@ async function showWorkflowRunReport(id) {
       const { testResults } = JSON.parse(zip.readAsText(entry));
       entries.push({ packageName, directory, testResults });
     }
-
     entries.sort((a, b) => a.directory.localeCompare(b.directory));
 
     // Output as cli-table3
@@ -177,6 +182,7 @@ async function showWorkflowRunReport(id) {
     });
 
     // TODO(burdon): Show errors.
+    const errors = [];
     for (const { packageName, directory, testResults } of entries) {
       let i = 0;
       const rows = testResults.filter((data) => argv.all || data.status === 'failed');
@@ -185,6 +191,10 @@ async function showWorkflowRunReport(id) {
         const idx = result.name.indexOf(directory);
         const name = result.name.slice(idx + directory.length);
         const row = [result.status === 'passed' ? chalk.green(result.status) : chalk.red(result.status), name];
+        if (result.status === 'failed') {
+          errors.push([packageName, directory, name, result]);
+        }
+
         if (i++ === 0) {
           table.push([
             { content: chalk.gray(directory.split('/').slice(0, -1).join('/')), rowSpan },
@@ -199,6 +209,56 @@ async function showWorkflowRunReport(id) {
 
     if (table.length > 0) {
       console.log(table.toString());
+    }
+
+    if (errors.length > 0) {
+      let i = 0;
+      for (const [packageName, directory, name, result] of errors) {
+        console.log();
+        console.log(`[${chalk.magenta(packageName)}] ${chalk.blueBright(path.join(REPO_ROOT, directory, name))}`);
+        // console.log(result);
+
+        for (const { duration, title, failureMessages, ancestorTitles } of result.assertionResults) {
+          console.log();
+          console.log(
+            `[${++i}]`,
+            ancestorTitles.join(' > '),
+            `"${chalk.green(title)}"`,
+            chalk.gray(`(${Math.round(duration)}ms)`),
+          );
+
+          for (const message of failureMessages) {
+            const [first, ...lines] = message.split('\n');
+            console.log();
+            console.log(chalk.yellow(first));
+
+            const prefix = `/__w/${owner}/${repo}`;
+            for (const line of lines) {
+              const str = line.replace(prefix, REPO_ROOT);
+              const match = str.match(/(\s+at) (?:([^.]+)\s+)?(.*)/);
+              if (match) {
+                const [_, prefix, method, where] = match;
+                const highlight = where?.indexOf(GITHUB_REPOSITORY) !== -1 && where?.indexOf('node_modules') === -1;
+                if (!highlight && argv.truncate) {
+                  break;
+                }
+
+                console.log(
+                  [
+                    chalk.gray(prefix),
+                    highlight ? chalk.white(method ?? '') : chalk.gray(method ?? ''),
+                    chalk.gray(where),
+                  ]
+                    .filter(Boolean)
+                    .join(' '),
+                );
+              } else {
+                console.log(line);
+              }
+            }
+          }
+        }
+      }
     }
   } catch (err) {
     console.error('Failed to fetch artifact', err);

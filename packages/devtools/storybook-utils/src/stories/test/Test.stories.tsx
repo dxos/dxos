@@ -5,12 +5,14 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Test, type TestProps } from './Test';
+import { TEST_ID } from './Test.test';
 
 /**
  * Storybook sanity test.
@@ -18,10 +20,8 @@ import { Test, type TestProps } from './Test';
 const meta: Meta<TestProps> = {
   title: 'devtools/storybook-utils/Test',
   component: Test,
+  render: (args) => <Test {...{ 'data-testid': TEST_ID }} {...args} />,
   decorators: [withTheme],
-  // parameters: {
-  //   layout: 'centered',
-  // },
 };
 
 export default meta;
