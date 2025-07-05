@@ -4,9 +4,6 @@ description: Setup the environment for the other workflows
 runs:
   using: 'composite'
   steps:
-    - name: Mark workspace as safe
-      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
     - name: Log out debug info
       run: |
         node --version
