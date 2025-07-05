@@ -6,7 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { Filter, Type, Obj } from '@dxos/echo';
+import { Filter, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
