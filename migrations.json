@@ -108,5 +108,13 @@
       "package": "@nx/storybook",
       "name": "update-21-2-0-remove-addon-dependencies"
     }
-  ]
+  ],
+  "nx-console": {
+    "initialGitRef": {
+      "ref": "29a1e229a334d33355f69259b544af85161c00c9",
+      "subject": "chore: script update (#9464)"
+    },
+    "targetVersion": "latest",
+    "confirmedPackageUpdates": true
+  }
 }
