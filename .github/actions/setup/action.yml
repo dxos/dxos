@@ -4,14 +4,15 @@ description: Setup the environment for the other workflows
 runs:
   using: 'composite'
   steps:
+    - name: Mark workspace as safe
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      shell: bash
+
     - name: Log out debug info
       run: |
         node --version
         pnpm --version
       shell: bash
-
-    - name: Mark workspace as safe
-      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
     - name: Cache pnpm store
       uses: actions/cache@v4
