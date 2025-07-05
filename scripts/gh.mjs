@@ -10,12 +10,12 @@ import os from 'os';
 import path from 'path';
 import yargs from 'yargs';
 
-const REPO_ROOT = process.cwd();
-
 const OP_GITHUB_ITEM = 'GitHub';
 const OP_GITHUB_FIELD = 'credential';
 
 const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY ?? 'dxos/dxos';
+
+const REPO_ROOT = process.cwd();
 
 const argv = yargs(process.argv.slice(2))
   .option('period', {
@@ -52,7 +52,7 @@ const argv = yargs(process.argv.slice(2))
 const command = argv._[0];
 
 switch (command) {
-  case 'list':
+  case 'action':
   default: {
     if (argv.watch) {
       while (true) {
@@ -61,7 +61,7 @@ switch (command) {
           break;
         }
 
-        await new Promise((r) => setTimeout(r, argv.interval));
+        await new Promise((resolve) => setTimeout(resolve, argv.interval));
       }
     } else {
       await check();
