@@ -119,7 +119,11 @@ async function listWorkflowRunsForRepo(watch = false) {
         run.created_at,
         { hAlign: 'right', content: humanReadable },
         run.status === 'completed' ? chalk.yellow(run.status) : run.status,
-        run.conclusion === 'failure' ? chalk.red(run.conclusion) : chalk.green(run.conclusion),
+        run.status === 'completed'
+          ? run.conclusion === 'failure'
+            ? chalk.red(run.conclusion)
+            : chalk.green(run.conclusion)
+          : '',
         chalk.blue(run.html_url),
       ]);
     });
