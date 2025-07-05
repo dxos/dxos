@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { composeStories } from '@storybook/react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -9,25 +10,21 @@ import { describe, expect, it, vi } from 'vitest';
 import { ThemeProvider } from '@dxos/react-ui';
 
 import { Test } from './Test';
+import * as stories from './Test.stories';
 
-// TODO(burdon): Error on rendering the story.
-// TypeError: No existing state found for follower with id: 'storybook/test'
-// TODO(burdon): Error on running the test.
-// TypeError: Cannot send event before store is ready. You can get the current status with store.status
+export const TEST_ID = 'test';
+
+const { Default } = composeStories(stories);
 
 /**
  * Vitest sanity test (should be visible in the storybook).
  * https://storybook.js.org/docs/writing-tests/integrations/vitest-addon
  */
+// TODO(burdon): Not working.
 describe('Test', () => {
-  it('should render', () => {
-    const { container } = render(
-      <ThemeProvider>
-        <Test id='test' icon='ph--x--regular' label='Test' />
-      </ThemeProvider>,
-    );
-
-    expect(container.querySelector('#test')).to.exist;
+  it('should render', async () => {
+    await Default.run();
+    expect(screen.getByTestId(TEST_ID)).to.exist;
   });
 
   it('calls onClick when clicked', () => {
