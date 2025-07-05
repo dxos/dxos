@@ -113,7 +113,7 @@ async function listWorkflowRunsForRepo(watch = false) {
 
     const rows = workflow_runs.filter((run) => !argv.filter || run.name.match(argv.filter));
     rows.forEach((run) => {
-      const now = new Date(Date.now() - new Date().getTimezoneOffset() * 60 * 1000);
+      const now = new Date(new Date().toISOString());
       const created = new Date(run.created_at);
       const updated = new Date(run.updated_at);
 
@@ -140,7 +140,7 @@ async function listWorkflowRunsForRepo(watch = false) {
     });
 
     if (watch) {
-      // console.clear();
+      console.clear();
     }
     console.log(table.toString());
     return rows;
