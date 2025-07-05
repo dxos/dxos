@@ -17,13 +17,11 @@ const OP_GITHUB_FIELD = 'credential';
 
 const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY ?? 'dxos/dxos';
 
-// TODO(burdon): Yargs.
-
 const argv = yargs(process.argv.slice(2))
   .option('period', {
     type: 'number',
-    default: 12 * 60 * 60 * 1000,
-    description: 'Period in milliseconds',
+    default: 12 * 60,
+    description: 'Period in minutes',
   })
   .option('filter', {
     type: 'string',
@@ -91,7 +89,7 @@ async function listWorkflowRunsForRepo(watch = false) {
       owner,
       repo,
       actor: process.env.GITHUB_ACTOR,
-      created: `>${new Date(Date.now() - argv.period).toISOString()}`,
+      created: `>${new Date(Date.now() - argv.period * 60 * 1000).toISOString()}`,
       name: argv.filter,
     });
     if (workflow_runs.length === 0) {
