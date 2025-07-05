@@ -51,8 +51,6 @@ const argv = yargs(process.argv.slice(2))
 
 const command = argv._[0];
 
-const prs = await getPullRequests();
-
 switch (command) {
   case 'list':
   default: {
@@ -73,7 +71,7 @@ switch (command) {
 }
 
 async function check() {
-  const data = await listWorkflowRunsForRepo(prs, true);
+  const data = await listWorkflowRunsForRepo(true);
   if (data[0].status === 'completed') {
     const check = data.find((run) => run.status === 'completed');
     if (check) {
@@ -109,7 +107,7 @@ async function getPullRequests() {
 /**
  * List GH actions.
  */
-async function listWorkflowRunsForRepo(prs, watch = false) {
+async function listWorkflowRunsForRepo(watch = false) {
   try {
     const { octokit, owner, repo } = getOctokit();
 
@@ -136,7 +134,7 @@ async function listWorkflowRunsForRepo(prs, watch = false) {
 
     const rows = workflow_runs
       .filter((run) => !argv.filter || run.name.match(argv.filter))
-      .sort(({ created_at: a }, { created_at: b }) => new Date(a) - new Date(b));
+      .sort(({ created_at: a }, { created_at: b }) => new Date(b) - new Date(a));
     rows.forEach((run) => {
       const now = new Date(new Date().toISOString());
       const created = new Date(run.created_at);
