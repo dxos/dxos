@@ -41,6 +41,7 @@ export class EdgeAiServiceClient implements AiServiceClient {
       typeof request.model === 'string' || typeof this._defaultGenerationOptions?.model === 'string',
       'model is required',
     );
+
     log('requesting', { endpoint: this._endpoint });
     const controller = new AbortController();
     const response = await fetch(`${this._endpoint}/generate`, {

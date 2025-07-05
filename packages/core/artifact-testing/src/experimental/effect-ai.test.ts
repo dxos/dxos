@@ -107,21 +107,25 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     expect(result).toBeDefined();
   });
 
+  // TODO(burdon): Is this the effect way to do this?
   const createChat = (prompt: string) =>
     Effect.gen(function* () {
       const chat = yield* AiChat.empty;
       const toolkit = yield* Toolkit;
 
       // Initial request.
-      let response = yield* chat.generateText({ toolkit, prompt });
+      // NOTE: Providing `toolkit` returns `AiRespose.WithToolCallResults`.
+      let output = yield* chat.generateText({ toolkit, prompt });
 
       // Agentic loop.
-      while (response.results.size > 0) {
-        response = yield* chat.generateText({ toolkit, prompt: AiInput.empty });
+      // TODO(burdon): Explain how this works?
+      while (output.results.size > 0) {
+        log.info('results', { results: output.results.size });
+        output = yield* chat.generateText({ toolkit, prompt: AiInput.empty });
       }
 
       // Done.
-      return response.text;
+      return output.text;
     });
 
   it.runIf(process.env.OPENAI_API_KEY)('should process an agentic loop using OpenAI', async ({ expect }) => {
@@ -137,8 +141,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     expect(result).toContain('42');
   });
 
-  // TODO(burdon): Fix Anthropic.
-  it.runIf(process.env.ANTHROPIC_API_KEY).skip('should process an agentic loop using Anthropic', async ({ expect }) => {
+  it.runIf(process.env.ANTHROPIC_API_KEY).skip('should process an agentic loop using Claude', async ({ expect }) => {
     const chat = createChat('What is six times seven?');
     const result = await chat.pipe(
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
