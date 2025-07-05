@@ -47,7 +47,7 @@ const argv = yargs(process.argv.slice(2))
   })
   .option('interval', {
     type: 'number',
-    default: 3_000,
+    default: 10_000,
     description: 'Polling interval in milliseconds',
   }).argv;
 
