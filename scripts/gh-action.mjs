@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Octokit } from '@octokit/rest';
 import { item } from '@1password/op-js';
 import AdmZip from 'adm-zip';
