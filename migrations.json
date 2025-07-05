@@ -115,6 +115,30 @@
       "subject": "chore: script update (#9464)"
     },
     "targetVersion": "latest",
-    "confirmedPackageUpdates": true
+    "confirmedPackageUpdates": true,
+    "completedMigrations": {
+      "move-use-daemon-process": {
+        "type": "successful",
+        "name": "move-use-daemon-process",
+        "changedFiles": [],
+        "ref": "14f2eb7d2300ed3b7857fa923b6c71b11007d5dc",
+        "nextSteps": []
+      },
+      "use-legacy-cache": {
+        "type": "successful",
+        "name": "use-legacy-cache",
+        "changedFiles": [
+          {
+            "path": "nx.json",
+            "type": "UPDATE"
+          }
+        ],
+        "ref": "847889db08bd76e6a5c08cc9a1ae4dc3bb48da70",
+        "nextSteps": []
+      }
+    },
+    "runningMigrations": [
+      "use-legacy-cache"
+    ]
   }
 }
