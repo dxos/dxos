@@ -25,7 +25,7 @@ const argv = yargs(process.argv.slice(2))
   })
   .option('filter', {
     type: 'string',
-    default: 'Check BuildJet',
+    default: 'Check',
     description: 'Job name',
   })
   .option('all', {
@@ -56,23 +56,31 @@ switch (command) {
   default: {
     if (argv.watch) {
       while (true) {
-        const data = await listWorkflowRunsForRepo(true);
-        if (data[0].status !== 'completed') {
-          await new Promise((r) => setTimeout(r, argv.interval));
-          continue;
-        } else {
-          const check = data.find((run) => run.status === 'completed');
-          if (check) {
-            await showWorkflowRunReport(check.id);
-            break;
-          }
+        const done = await check();
+        if (done) {
+          break;
         }
+
+        await new Promise((r) => setTimeout(r, argv.interval));
       }
     } else {
-      await listWorkflowRunsForRepo();
+      await check();
     }
     break;
   }
+}
+
+async function check() {
+  const data = await listWorkflowRunsForRepo(true);
+  if (data[0].status === 'completed') {
+    const check = data.find((run) => run.status === 'completed');
+    if (check) {
+      await showWorkflowRunReport(check.id);
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -103,7 +111,7 @@ async function listWorkflowRunsForRepo(watch = false) {
       style: { head: ['gray'], compact: true },
     });
 
-    const rows = workflow_runs.filter((run) => !argv.filter || run.name === argv.filter);
+    const rows = workflow_runs.filter((run) => !argv.filter || run.name.match(argv.filter));
     rows.forEach((run) => {
       const created = new Date(run.created_at);
       const updated = new Date(run.updated_at);
@@ -116,13 +124,15 @@ async function listWorkflowRunsForRepo(watch = false) {
         run.name,
         run.created_at,
         { hAlign: 'right', content: humanReadable },
-        run.status === 'completed' ? chalk.yellow(run.status) : run.status,
+        run.status,
         run.status === 'completed'
           ? run.conclusion === 'failure'
             ? chalk.red(run.conclusion)
-            : chalk.green(run.conclusion)
+            : run.conclusion === 'success'
+              ? chalk.green(run.conclusion)
+              : chalk.yellow(run.conclusion)
           : '',
-        chalk.blue(run.html_url),
+        chalk.blueBright(run.html_url),
       ]);
     });
 
@@ -183,10 +193,16 @@ async function showWorkflowRunReport(id) {
       style: { head: ['gray'] },
     });
 
+    const stats = {
+      failed: 0,
+      total: 0,
+    };
+
     // TODO(burdon): Show errors.
     const errors = [];
     for (const { packageName, directory, testResults } of entries) {
       let i = 0;
+      stats.total += testResults.length;
       const rows = testResults.filter((data) => argv.all || data.status === 'failed');
       const rowSpan = rows.length;
       for (const result of rows) {
@@ -195,6 +211,7 @@ async function showWorkflowRunReport(id) {
         const row = [result.status === 'passed' ? chalk.green(result.status) : chalk.red(result.status), name];
         if (result.status === 'failed') {
           errors.push([packageName, directory, name, result]);
+          stats.failed++;
         }
 
         if (i++ === 0) {
@@ -218,7 +235,6 @@ async function showWorkflowRunReport(id) {
       for (const [packageName, directory, name, result] of errors) {
         console.log();
         console.log(`[${chalk.magenta(packageName)}] ${chalk.blueBright(path.join(REPO_ROOT, directory, name))}`);
-        // console.log(result);
 
         for (const { duration, title, failureMessages, ancestorTitles } of result.assertionResults) {
           console.log();
@@ -262,6 +278,10 @@ async function showWorkflowRunReport(id) {
         }
       }
     }
+
+    console.log(chalkJson(stats));
+
+    return stats;
   } catch (err) {
     console.error('Failed to fetch artifact', err);
     process.exit(1);
@@ -295,4 +315,12 @@ function getGithubToken() {
     console.error('Failed to fetch GITHUB_TOKEN from 1Password:', err.message);
     process.exit(1);
   }
+}
+
+function chalkJson(obj) {
+  return JSON.stringify(obj, null, 2)
+    .replace(/"([^"]+)":/g, (_, key) => chalk.green(`"${key}":`)) // keys
+    .replace(/: "(.*?)"/g, (_, val) => `: ${chalk.yellow(`"${val}"`)}`) // strings
+    .replace(/: (\d+)/g, (_, val) => `: ${chalk.cyan(val)}`) // numbers
+    .replace(/: (true|false)/g, (_, val) => `: ${chalk.magenta(val)}`); // booleans
 }
