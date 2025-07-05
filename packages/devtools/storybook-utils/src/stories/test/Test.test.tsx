@@ -17,7 +17,7 @@ describe.skip('Test', () => {
   it('should render', () => {
     const { container } = render(<Test id='test' icon='ph--x--regular' label='Test' />);
 
-    expect(container.querySelector('#test')).to.exist;
+    expect(container.querySelector('#test')).not.to.exist;
   });
 
   it('calls onClick when clicked', () => {

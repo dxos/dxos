@@ -36,7 +36,9 @@
   "dependencies": {
     "@1password/op-js": "^0.1.13",
     "@octokit/rest": "^19.0.5",
+    "adm-zip": "^0.5.16",
     "chalk-table": "^1.0.2",
+    "cli-table3": "^0.6.5",
     "storybook": "9.0.15",
     "tslib": "^2.3.0"
   },
