@@ -25,7 +25,7 @@ export const SyncStatus = ({ classNames, state, summary, debug }: SyncStatusProp
   return (
     <div className={mx('flex flex-col w-full gap-2 text-xs', classNames)}>
       {debug && <SyntaxHighlighter language='json'>{JSON.stringify(summary, null, 2)}</SyntaxHighlighter>}
-      <div className='flex flex-col mbe-2'>
+      <div>
         {entries.map(([spaceId, state]) => (
           <SpaceRowContainer key={spaceId} spaceId={spaceId as SpaceId} state={state} />
         ))}

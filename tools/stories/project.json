@@ -97,7 +97,25 @@
         "outputDir": "{projectRoot}/out/examples"
       }
     },
-    "test": {}
+    "vitest": {
+      "configurations": {
+        "browser": {
+          "options": {
+            "command": "vitest --project browser"
+          }
+        },
+        "unit": {
+          "options": {
+            "command": "vitest --project unit"
+          }
+        }
+      },
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest",
+        "cwd": "tools/stories"
+      }
+    }
   },
   "implicitDependencies": [
     "app-graph",
