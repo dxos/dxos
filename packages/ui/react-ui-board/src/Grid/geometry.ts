@@ -24,3 +24,10 @@ export const getGridRect = (grid: GridGeometry, { x, y, width = 1, height = 1 }:
     height: height * grid.size.height + Math.max(0, height - 1) * grid.gap,
   };
 };
+
+export const getCenter = (rect: Rect): { x: number; y: number } => {
+  return {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height / 2,
+  };
+};

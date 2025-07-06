@@ -18,7 +18,7 @@ import { IconButton, Toolbar, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Tile, type TileProps } from './Tile';
-import { type GridGeometry, type Rect, getGridBounds, getGridRect } from './geometry';
+import { type GridGeometry, type Rect, getCenter, getGridBounds, getGridRect } from './geometry';
 import { type HasId, type GridLayout, type Size } from './types';
 
 // TODO(burdon): Goal > Action > Result.
@@ -34,7 +34,8 @@ import { type HasId, type GridLayout, type Size } from './types';
 // TODO(burdon): Key nav.
 
 interface GridController {
-  center: () => void;
+  center: (id?: string) => void;
+  toggleZoom: () => void;
 }
 
 type GridContextValue = {
@@ -42,6 +43,7 @@ type GridContextValue = {
   dimension: Size;
   size: Size;
   margin: number;
+  zoom: boolean;
   grid: GridGeometry;
   controller: GridController;
 };
@@ -64,6 +66,52 @@ const RootInner = forwardRef<GridController, RootProps>(
   ({ children, classNames, readonly, items, layout }, forwardedRef) => {
     const { ref: containerRef, width, height } = useResizeDetector();
 
+    const margin = useMemo(() => 0, []);
+    const grid = useMemo<GridContextValue['grid']>(() => ({ size: { width: 300, height: 300 }, gap: 16 }), []);
+    const dimension = useMemo<Size>(() => ({ width: 7, height: 5 }), []);
+    const size = useMemo<Size>(() => getGridBounds(dimension, grid), [dimension, grid]);
+
+    const [visible, setVisible] = useState(false);
+    const [zoom, setZoom] = useState(false);
+    const [center, setCenter] = React.useState({ x: size.width / 2, y: size.height / 2 });
+    const controller = useMemo<GridController>(
+      () => ({
+        center: (id) => {
+          if (id) {
+            const tile = layout.tiles[id];
+            if (tile) {
+              // TODO(burdon): Need to adjust based on scale.
+              const rect = getGridRect(grid, tile);
+              const center = getCenter(rect);
+              setCenter({ x: size.width / 2 + center.x, y: size.height / 2 + center.y });
+              setZoom(false);
+            }
+          } else {
+            setCenter({ x: size.width / 2, y: size.height / 2 });
+          }
+        },
+        toggleZoom: () => {
+          setZoom((prev) => !prev);
+        },
+      }),
+      [layout, grid, size],
+    );
+    useImperativeHandle(forwardedRef, () => controller, [controller]);
+
+    useEffect(() => {
+      const container = containerRef.current;
+      if (container && width && height) {
+        container.scrollTo({
+          left: center.x - width / 2,
+          top: center.y - height / 2,
+          behavior: visible ? 'smooth' : 'auto',
+        });
+
+        setVisible(true);
+      }
+    }, [center, size, width, height]);
+
+    // Child components.
     const [inner, outer] = useMemo(() => {
       if (Array.isArray(children)) {
         const inner: ReactNode[] = [];
@@ -86,38 +134,13 @@ const RootInner = forwardRef<GridController, RootProps>(
       return [];
     }, [children]);
 
-    const margin = useMemo(() => 0, []);
-    const grid = useMemo<GridContextValue['grid']>(() => ({ size: { width: 300, height: 300 }, gap: 16 }), []);
-    const dimension = useMemo<Size>(() => ({ width: 7, height: 5 }), []);
-    const size = useMemo<Size>(() => getGridBounds(dimension, grid), [dimension, grid]);
-
-    const [center, setCenter] = React.useState({ x: size.width / 2, y: size.height / 2 });
-    const [visible, setVisible] = useState(false);
-    const controller = useMemo<GridController>(
-      () => ({ center: () => setCenter({ x: size.width / 2, y: size.height / 2 }) }),
-      [size],
-    );
-    useImperativeHandle(forwardedRef, () => controller, [controller]);
-
-    useEffect(() => {
-      const container = containerRef.current;
-      if (container && width && height) {
-        container.scrollTo({
-          left: center.x - width / 2,
-          top: center.y - height / 2,
-          behavior: visible ? 'smooth' : 'auto',
-        });
-
-        setVisible(true);
-      }
-    }, [center, size, width, height]);
-
     return (
       <GridContextProvider
         readonly={readonly}
         dimension={dimension}
         size={size}
         margin={margin}
+        zoom={zoom}
         grid={grid}
         controller={controller}
       >
@@ -133,6 +156,7 @@ const RootInner = forwardRef<GridController, RootProps>(
           }}
         >
           {outer}
+          {/* Board container. */}
           <div
             className='relative border border-separator'
             style={{
@@ -140,10 +164,21 @@ const RootInner = forwardRef<GridController, RootProps>(
               height: size.height,
             }}
           >
-            <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+            {/* Scrollable container. */}
+            <div
+              className={mx(
+                'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform duration-300',
+                zoom && 'scale-50',
+              )}
+            >
               {inner}
               {items.map((item, index) => (
-                <Tile item={item} key={index} layout={layout.tiles[item.id] ?? { x: 0, y: 0 }} />
+                <Tile
+                  item={item}
+                  key={index}
+                  layout={layout.tiles[item.id] ?? { x: 0, y: 0 }}
+                  onClick={() => controller.center(item.id)}
+                />
               ))}
             </div>
           </div>
@@ -164,7 +199,7 @@ Root.displayName = 'Grid.Root';
 type ControlsProps = ThemedClassName;
 
 const Controls = ({ classNames }: ControlsProps) => {
-  const { readonly, controller } = useGridContext('Controls');
+  const { readonly, zoom, controller } = useGridContext('Controls');
 
   return (
     <div className={mx('fixed top-2 left-2 z-10', classNames)}>
@@ -175,6 +210,13 @@ const Controls = ({ classNames }: ControlsProps) => {
           iconOnly
           label='Center'
           onClick={() => controller.center()}
+        />
+        <IconButton
+          icon={zoom ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
+          size={5}
+          iconOnly
+          label='Zoom'
+          onClick={() => controller.toggleZoom()}
         />
         {!readonly && <IconButton icon='ph--plus--regular' size={5} iconOnly label='Add' />}
       </Toolbar.Root>

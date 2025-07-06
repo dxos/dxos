@@ -18,6 +18,13 @@ import React, { type PropsWithChildren } from 'react';
 
 import { CustomNode } from './CustomNode';
 
+// NOTE: Experimental (possible replacement for react-ui-canvas; additional possible use for entity relationships.)
+// TODO(burdon): Demo storybook using @dxos/schema/testing.
+// TODO(burdon): Create relation editor.
+// TODO(burdon): Selection model.
+// TODO(burdon): Stack of selected cards (form editor).
+// TODO(burdon): Inline form editor (inside node?)
+
 // Examples:
 // https://reactflow.dev/showcase
 // https://reactflow.dev/examples/edges/edge-label-renderer
@@ -28,11 +35,6 @@ import { CustomNode } from './CustomNode';
 // https://app.chartdb.io/diagrams/ecw8wwk9wklg328u1z5269dey
 // https://www.simple-ai.dev/docs/react-flow/components/generate-text-node
 // https://www.jsonsea.com
-
-// TODO(burdon): Create relation editor.
-// TODO(burdon): Selection model.
-// TODO(burdon): Stack of selected cards (form editor).
-// TODO(burdon): Inline form editor (inside node?)
 
 const defaultViewport = { x: 0, y: 0, zoom: 1.5 };
 
