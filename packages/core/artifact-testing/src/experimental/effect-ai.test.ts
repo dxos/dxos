@@ -6,10 +6,11 @@ import { AiChat, AiInput, AiLanguageModel, AiTool, AiToolkit } from '@effect/ai'
 import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
 import { NodeHttpClient } from '@effect/platform-node';
-import { Config, Console, Effect, Layer, pipe, Schedule, Schema } from 'effect';
-import { describe, it } from 'vitest';
+import { Config, Console, Effect, Layer, pipe, Schedule, Schema, Stream } from 'effect';
+import { describe, it, test } from 'vitest';
 
 import { log } from '@dxos/log';
+import { runAndForwardErrors } from '@dxos/effect';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
 // https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md
@@ -46,6 +47,23 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
 
     const result = await program.pipe(Effect.provide(OpenAiLayer), Effect.runPromise);
     expect(result).to.contain('API is working');
+  });
+
+  test('streaming', async () => {
+    await Effect.gen(function* () {
+      const stream = AiLanguageModel.streamText({ prompt: 'write a 45 page poem' });
+
+      yield* Stream.runForEach(
+        stream,
+        Effect.fnUntraced(function* (item) {
+          yield* Console.log('API Response received:', item.text);
+        }),
+      );
+    }).pipe(
+      Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+      Effect.provide(AnthropicLayer),
+      runAndForwardErrors,
+    );
   });
 
   // Tool definitions.
