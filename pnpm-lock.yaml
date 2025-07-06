@@ -12089,6 +12089,12 @@ importers:
 
   packages/ui/react-ui-board:
     dependencies:
+      '@atlaskit/pragmatic-drag-and-drop':
+        specifier: ^1.4.0
+        version: 1.4.0
+      '@atlaskit/pragmatic-drag-and-drop-hitbox':
+        specifier: ^1.0.3
+        version: 1.0.3
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -35510,7 +35516,7 @@ snapshots:
 
   '@atlaskit/pragmatic-drag-and-drop@1.4.0':
     dependencies:
-      '@babel/runtime': 7.25.9
+      '@babel/runtime': 7.27.1
       bind-event-listener: 3.0.0
       raf-schd: 4.0.3
 
@@ -57735,7 +57741,7 @@ snapshots:
 
   react-base16-styling@0.9.1:
     dependencies:
-      '@babel/runtime': 7.25.9
+      '@babel/runtime': 7.27.1
       '@types/base16': 1.0.2
       '@types/lodash': 4.17.12
       base16: 1.0.0
