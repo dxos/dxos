@@ -67,7 +67,7 @@ switch (command) {
   default: {
     if (argv.watch) {
       while (true) {
-        const done = await check();
+        const done = await checkResults();
         if (done) {
           break;
         }
@@ -75,21 +75,27 @@ switch (command) {
         await new Promise((resolve) => setTimeout(resolve, argv.interval));
       }
     } else {
-      await check();
+      await checkResults();
     }
     break;
   }
 }
 
-async function check() {
+/**
+ * Check for first available results.
+ */
+async function checkResults() {
   const runs = await listWorkflowRunsForRepo(true);
   // Find first run that completed with success or failure.
-  const run = runs.find(
-    (run) => run.status === 'completed' && (run.conclusion === 'success' || run.conclusion === 'failure'),
-  );
-  if (run) {
-    await showWorkflowRunReport(run);
-    return true;
+  for (const run of runs) {
+    if (run.status === 'queued' || run.status === 'in_progress') {
+      return false;
+    }
+
+    if (run.status === 'completed' && (run.conclusion === 'success' || run.conclusion === 'failure')) {
+      await showWorkflowRunReport(run);
+      return true;
+    }
   }
 
   return false;
