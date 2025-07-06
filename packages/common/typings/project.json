@@ -17,7 +17,7 @@
     "pack": {}
   },
   "lint": {
-    "executor": "@nx/linter:eslint",
+    "executor": "@nx/eslint:lint",
     "options": {
       "format": "unix",
       "lintFilePatterns": [

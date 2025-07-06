@@ -126,7 +126,7 @@
     },
     "lint": {
       "cache": true,
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "inputs": ["default"],
       "options": {
         "format": "unix",
@@ -172,10 +172,7 @@
           "env": "EDGE_ENDPOINT"
         }
       ],
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}", 
-        "{workspaceRoot}/test-results/{projectRoot}"
-      ]
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}", "{workspaceRoot}/test-results/{projectRoot}"]
     },
     "compile-lib": {
       "cache": true

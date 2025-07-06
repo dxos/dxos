@@ -4,8 +4,8 @@
 
 import { join, relative } from 'node:path';
 import pkgUp from 'pkg-up';
-import { type Plugin, UserConfig as ViteConfig } from 'vite';
-import { defineConfig, ViteUserConfig, type UserConfig as VitestConfig } from 'vitest/config';
+import { type Plugin } from 'vite';
+import { defineConfig, type ViteUserConfig } from 'vitest/config';
 import WasmPlugin from 'vite-plugin-wasm';
 import Inspect from 'vite-plugin-inspect';
 
@@ -28,7 +28,7 @@ type BrowserOptions = {
 
 export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
 
-export const baseConfig = (options: ConfigOptions): ViteConfig => {
+export const baseConfig = (options: ConfigOptions): ViteUserConfig => {
   switch (environment) {
     case 'chromium': {
       return createBrowserConfig({ browserName: environment, ...options });
