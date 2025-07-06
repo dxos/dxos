@@ -1,0 +1,238 @@
+{
+  "migrations": [
+    {
+      "version": "20.0.0-beta.7",
+      "description": "Migration for v20.0.0-beta.7",
+      "implementation": "./src/migrations/update-20-0-0/move-use-daemon-process",
+      "package": "nx",
+      "name": "move-use-daemon-process"
+    },
+    {
+      "version": "20.0.1",
+      "description": "Set `useLegacyCache` to true for migrating workspaces",
+      "implementation": "./src/migrations/update-20-0-1/use-legacy-cache",
+      "x-repair-skip": true,
+      "package": "nx",
+      "name": "use-legacy-cache"
+    },
+    {
+      "version": "21.0.0-beta.8",
+      "description": "Removes the legacy cache configuration from nx.json",
+      "implementation": "./src/migrations/update-21-0-0/remove-legacy-cache",
+      "package": "nx",
+      "name": "remove-legacy-cache"
+    },
+    {
+      "version": "21.0.0-beta.8",
+      "description": "Removes the legacy cache configuration from nx.json",
+      "implementation": "./src/migrations/update-21-0-0/remove-custom-tasks-runner",
+      "package": "nx",
+      "name": "remove-custom-tasks-runner"
+    },
+    {
+      "version": "21.0.0-beta.11",
+      "description": "Updates release version config based on the breaking changes in Nx v21",
+      "implementation": "./src/migrations/update-21-0-0/release-version-config-changes",
+      "package": "nx",
+      "name": "release-version-config-changes"
+    },
+    {
+      "version": "21.0.0-beta.11",
+      "description": "Updates release changelog config based on the breaking changes in Nx v21",
+      "implementation": "./src/migrations/update-21-0-0/release-changelog-config-changes",
+      "package": "nx",
+      "name": "release-changelog-config-changes"
+    },
+    {
+      "version": "21.1.0-beta.2",
+      "description": "Adds **/nx-rules.mdc and **/nx.instructions.md to .gitignore if not present",
+      "implementation": "./src/migrations/update-21-1-0/add-gitignore-entry",
+      "package": "nx",
+      "name": "21-1-0-add-ignore-entries-for-nx-rule-files"
+    },
+    {
+      "version": "20.0.4-beta.0",
+      "description": "Add gitignore entry for temporary vite config files.",
+      "implementation": "./src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore",
+      "package": "@nx/vite",
+      "name": "update-20-0-4"
+    },
+    {
+      "version": "20.0.6-beta.0",
+      "description": "Add gitignore entry for temporary vite config files and remove previous incorrect glob.",
+      "implementation": "./src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore",
+      "package": "@nx/vite",
+      "name": "update-20-0-6"
+    },
+    {
+      "version": "20.3.0-beta.2",
+      "description": "Add gitignore entry for temporary vitest config files.",
+      "implementation": "./src/migrations/update-20-3-0/add-vitest-temp-files-to-git-ignore",
+      "package": "@nx/vite",
+      "name": "update-20-3-0"
+    },
+    {
+      "version": "20.5.0-beta.2",
+      "description": "Install jiti as a devDependency to allow vite to parse TS postcss files.",
+      "implementation": "./src/migrations/update-20-5-0/install-jiti",
+      "package": "@nx/vite",
+      "name": "update-20-5-0-install-jiti"
+    },
+    {
+      "version": "20.5.0-beta.3",
+      "description": "Update resolve.conditions to include defaults that are no longer provided by Vite.",
+      "implementation": "./src/migrations/update-20-5-0/update-resolve-conditions",
+      "package": "@nx/vite",
+      "name": "update-20-5-0-update-resolve-conditions"
+    },
+    {
+      "version": "20.5.0-beta.3",
+      "description": "Add vite config temporary files to the ESLint configuration ignore patterns if ESLint is used.",
+      "implementation": "./src/migrations/update-20-5-0/eslint-ignore-vite-temp-files",
+      "package": "@nx/vite",
+      "name": "eslint-ignore-vite-temp-files"
+    },
+    {
+      "cli": "nx",
+      "version": "21.2.0-beta.3",
+      "description": "Update workspace to use Storybook v9",
+      "implementation": "./src/migrations/update-21-1-0/update-sb-9",
+      "package": "@nx/storybook",
+      "name": "update-21-2-0-migrate-storybook-v9"
+    },
+    {
+      "cli": "nx",
+      "version": "21.2.0-beta.3",
+      "description": "Remove deprecated Storybook addon dependencies",
+      "implementation": "./src/migrations/update-21-2-0/remove-addon-dependencies",
+      "package": "@nx/storybook",
+      "name": "update-21-2-0-remove-addon-dependencies"
+    }
+  ],
+  "nx-console": {
+    "initialGitRef": {
+      "ref": "29a1e229a334d33355f69259b544af85161c00c9",
+      "subject": "chore: script update (#9464)"
+    },
+    "targetVersion": "latest",
+    "confirmedPackageUpdates": true,
+    "completedMigrations": {
+      "move-use-daemon-process": {
+        "type": "successful",
+        "name": "move-use-daemon-process",
+        "changedFiles": [],
+        "ref": "14f2eb7d2300ed3b7857fa923b6c71b11007d5dc",
+        "nextSteps": []
+      },
+      "use-legacy-cache": {
+        "type": "successful",
+        "name": "use-legacy-cache",
+        "changedFiles": [
+          {
+            "path": "nx.json",
+            "type": "UPDATE"
+          }
+        ],
+        "ref": "6be197a8bee81c68fc38387152d8636fc7b8c494",
+        "nextSteps": []
+      },
+      "remove-legacy-cache": {
+        "type": "successful",
+        "name": "remove-legacy-cache",
+        "changedFiles": [
+          {
+            "path": "nx.json",
+            "type": "UPDATE"
+          }
+        ],
+        "ref": "9e5a89fd5e646e54bfd802fedba6c3870cdafd29",
+        "nextSteps": []
+      },
+      "remove-custom-tasks-runner": {
+        "type": "successful",
+        "name": "remove-custom-tasks-runner",
+        "changedFiles": [],
+        "ref": "9e5a89fd5e646e54bfd802fedba6c3870cdafd29",
+        "nextSteps": []
+      },
+      "release-version-config-changes": {
+        "type": "successful",
+        "name": "release-version-config-changes",
+        "changedFiles": [],
+        "ref": "9e5a89fd5e646e54bfd802fedba6c3870cdafd29",
+        "nextSteps": []
+      },
+      "release-changelog-config-changes": {
+        "type": "successful",
+        "name": "release-changelog-config-changes",
+        "changedFiles": [],
+        "ref": "9e5a89fd5e646e54bfd802fedba6c3870cdafd29",
+        "nextSteps": []
+      },
+      "21-1-0-add-ignore-entries-for-nx-rule-files": {
+        "type": "successful",
+        "name": "21-1-0-add-ignore-entries-for-nx-rule-files",
+        "changedFiles": [],
+        "ref": "9e5a89fd5e646e54bfd802fedba6c3870cdafd29",
+        "nextSteps": []
+      },
+      "update-20-0-4": {
+        "type": "successful",
+        "name": "update-20-0-4",
+        "changedFiles": [],
+        "ref": "9e5a89fd5e646e54bfd802fedba6c3870cdafd29",
+        "nextSteps": []
+      },
+      "update-20-0-6": {
+        "type": "successful",
+        "name": "update-20-0-6",
+        "changedFiles": [],
+        "ref": "9e5a89fd5e646e54bfd802fedba6c3870cdafd29",
+        "nextSteps": []
+      },
+      "update-20-3-0": {
+        "type": "successful",
+        "name": "update-20-3-0",
+        "changedFiles": [],
+        "ref": "9e5a89fd5e646e54bfd802fedba6c3870cdafd29",
+        "nextSteps": []
+      },
+      "update-20-5-0-install-jiti": {
+        "type": "successful",
+        "name": "update-20-5-0-install-jiti",
+        "changedFiles": [],
+        "ref": "9e5a89fd5e646e54bfd802fedba6c3870cdafd29",
+        "nextSteps": []
+      },
+      "update-20-5-0-update-resolve-conditions": {
+        "type": "successful",
+        "name": "update-20-5-0-update-resolve-conditions",
+        "changedFiles": [],
+        "ref": "9e5a89fd5e646e54bfd802fedba6c3870cdafd29",
+        "nextSteps": []
+      },
+      "eslint-ignore-vite-temp-files": {
+        "type": "successful",
+        "name": "eslint-ignore-vite-temp-files",
+        "changedFiles": [],
+        "ref": "9e5a89fd5e646e54bfd802fedba6c3870cdafd29",
+        "nextSteps": []
+      },
+      "update-21-2-0-migrate-storybook-v9": {
+        "type": "successful",
+        "name": "update-21-2-0-migrate-storybook-v9",
+        "changedFiles": [
+          {
+            "path": "storybook-migration-summary.md",
+            "type": "CREATE"
+          }
+        ],
+        "ref": "71c305a987e3ef89f75f30bc6ba13a45093946d3",
+        "nextSteps": []
+      }
+    },
+    "runningMigrations": [
+      "update-21-2-0-migrate-storybook-v9"
+    ]
+  }
+}
