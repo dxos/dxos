@@ -152,7 +152,7 @@
     },
     "lint": {
       "cache": true,
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "inputs": [
         "default"
       ],
