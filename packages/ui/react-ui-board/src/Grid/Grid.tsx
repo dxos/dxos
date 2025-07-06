@@ -10,8 +10,8 @@ import { IconButton, Toolbar, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Tile, type TileProps } from './Tile';
-import { type GridGeometry, type Size, getGridBounds, getGridPosition } from './geometry';
-import { type HasId, type GridLayout } from './types';
+import { type GridGeometry, getGridBounds } from './geometry';
+import { type HasId, type GridLayout, type Size } from './types';
 
 // TODO(burdon): Goal > Action > Result.
 // TODO(burdon): Dashboard.
@@ -22,6 +22,8 @@ import { type HasId, type GridLayout } from './types';
 // TODO(burdon): Connect cards to program agent. E.g., goals.
 // TODO(burdon): Does scrollbar thin work?
 // TODO(burdon): Prevent browser nav when scrolling to edge.
+// TODO(burdon): Drag to select.
+// TODO(burdon): Key nav.
 
 interface GridController {
   center: () => void;
@@ -100,7 +102,7 @@ const RootInner = forwardRef<GridController, RootProps>(
           >
             <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
               {items.map((item, index) => (
-                <Tile item={item} key={index} position={getGridPosition(layout, item.id, grid)} />
+                <Tile item={item} key={index} layout={layout.tiles[item.id] ?? { x: 0, y: 0 }} />
               ))}
             </div>
           </div>

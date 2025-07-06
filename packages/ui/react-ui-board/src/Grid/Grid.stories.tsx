@@ -28,14 +28,15 @@ type Story = StoryObj<typeof Grid.Root>;
 
 export const Default: Story = {
   args: {
-    items: [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }, { id: '5' }],
+    items: [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }, { id: '5' }, { id: '6' }],
     layout: {
       tiles: {
         '1': { x: -3, y: -2 },
         '2': { x: 3, y: -1 },
-        '3': { x: 0, y: 0 },
-        '4': { x: -1, y: 0 },
+        '3': { x: -1, y: 0, width: 1, height: 2 },
+        '4': { x: -1, y: -1, width: 3 },
         '5': { x: 1, y: 0 },
+        '6': { x: 0, y: 1, width: 2 },
       },
     },
   },
