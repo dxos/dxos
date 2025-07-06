@@ -4139,9 +4139,6 @@ importers:
       '@oclif/test':
         specifier: ^4.1.0
         version: 4.1.0(@oclif/core@4.0.30)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/cli-progress':
         specifier: ^3.11.0
         version: 3.11.5
@@ -4341,9 +4338,6 @@ importers:
       '@oclif/test':
         specifier: ^4.1.0
         version: 4.1.0(@oclif/core@4.0.30)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/cli-progress':
         specifier: ^3.11.0
         version: 3.11.5
@@ -6405,9 +6399,6 @@ importers:
       '@effect/platform':
         specifier: 0.80.12
         version: 0.80.12(effect@3.14.21)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -6517,9 +6508,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../devtools/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -6644,9 +6632,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../devtools/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
@@ -7065,9 +7050,6 @@ importers:
       '@effect/platform':
         specifier: 0.80.12
         version: 0.80.12(effect@3.14.21)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -7434,9 +7416,6 @@ importers:
       '@effect/platform':
         specifier: 0.80.12
         version: 0.80.12(effect@3.14.21)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -7674,9 +7653,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../devtools/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -7950,9 +7926,6 @@ importers:
       '@effect/platform':
         specifier: 0.80.12
         version: 0.80.12(effect@3.14.21)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -8059,9 +8032,6 @@ importers:
       '@effect/platform':
         specifier: 0.80.12
         version: 0.80.12(effect@3.14.21)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -8317,9 +8287,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../devtools/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -8628,9 +8595,6 @@ importers:
       '@effect/platform':
         specifier: 0.80.12
         version: 0.80.12(effect@3.14.21)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -9114,9 +9078,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../devtools/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -9483,9 +9444,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../devtools/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -9629,9 +9587,6 @@ importers:
       '@effect/platform':
         specifier: 0.80.12
         version: 0.80.12(effect@3.14.21)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -9696,9 +9651,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../devtools/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -10393,9 +10345,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../devtools/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -10526,9 +10475,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../devtools/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -12125,9 +12071,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../devtools/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -12161,9 +12104,15 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-text-tooltip':
         specifier: workspace:*
         version: link:../react-ui-text-tooltip
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
@@ -12183,12 +12132,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../devtools/storybook-utils
@@ -12834,9 +12777,6 @@ importers:
       '@effect/platform':
         specifier: 0.80.12
         version: 0.80.12(effect@3.14.21)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/chai':
         specifier: ^4.2.15
         version: 4.3.5
@@ -12994,9 +12934,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../devtools/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/jsonpath':
         specifier: ^0.2.4
         version: 0.2.4
@@ -13486,9 +13423,15 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-text-tooltip':
         specifier: workspace:*
         version: link:../react-ui-text-tooltip
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
@@ -13511,18 +13454,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../devtools/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -13879,9 +13813,6 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -14079,9 +14010,6 @@ importers:
       '@effect/platform':
         specifier: 0.80.12
         version: 0.80.12(effect@3.14.21)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/lodash.orderby':
         specifier: ^4.6.9
         version: 4.6.9
@@ -14247,9 +14175,6 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
