@@ -235,20 +235,24 @@ async function showWorkflowRunReport(run) {
     };
 
     // Get sorted entries.
-    const entries = [];
-    for (const entry of zip.getEntries()) {
-      const packageName = '@' + repo + '/' + entry.entryName.split('/').at(-2);
-      const directory = entry.entryName.split('/').slice(0, -1).join('/');
-      const { testResults } = JSON.parse(zip.readAsText(entry));
-      entries.push({ packageName, directory, testResults });
+    let entries = [];
+    {
+      for (const entry of zip.getEntries()) {
+        const packageName = '@' + repo + '/' + entry.entryName.split('/').at(-2);
+        const directory = entry.entryName.split('/').slice(0, -1).join('/');
+        const parent = directory.split('/').slice(0, -1).join('/');
+        const { testResults } = JSON.parse(zip.readAsText(entry));
+        entries.push({ parent, directory, packageName, testResults });
+      }
+
+      entries.sort((a, b) => {
+        const s = comparePathStrings(a.parent, b.parent);
+        return s === 0 ? a.packageName.localeCompare(b.packageName) : s;
+      });
     }
-    entries.sort((a, b) => {
-      const s = a.directory.localeCompare(b.directory);
-      return s === 0 ? a.packageName.localeCompare(b.packageName) : s;
-    });
 
     const errors = [];
-    for (const { packageName, directory, testResults } of entries) {
+    for (const { parent, directory, packageName, testResults } of entries) {
       let i = 0;
       stats.total += testResults.length;
       const rows = testResults.filter((data) => argv.all || data.status === 'failed');
@@ -258,14 +262,14 @@ async function showWorkflowRunReport(run) {
         const filename = result.name.slice(idx + directory.length + 1);
         const row = [result.status === 'passed' ? chalk.green(result.status) : chalk.red(result.status), filename];
         if (result.status === 'failed') {
-          errors.push([packageName, directory, filename, result]);
+          errors.push([directory, packageName, filename, result]);
           stats.failed++;
         }
 
         if (argv.summary) {
           const failed = rows.find((r) => r.status !== 'passed');
           table.push([
-            { content: chalk.gray(directory.split('/').slice(0, -1).join('/')) },
+            { content: chalk.gray(parent) },
             { content: chalk.magenta(packageName) },
             failed ? chalk.red(failed.status) : chalk.green('passed'),
           ]);
@@ -274,7 +278,7 @@ async function showWorkflowRunReport(run) {
 
         if (i++ === 0) {
           table.push([
-            { content: chalk.gray(directory.split('/').slice(0, -1).join('/')), rowSpan },
+            { content: chalk.gray(parent), rowSpan },
             { content: chalk.magenta(packageName), rowSpan },
             ...row,
           ]);
@@ -290,7 +294,7 @@ async function showWorkflowRunReport(run) {
 
     if (errors.length > 0) {
       let i = 0;
-      for (const [packageName, directory, name, result] of errors) {
+      for (const [directory, packageName, name, result] of errors) {
         console.log();
         console.log(`[${chalk.magenta(packageName)}] ${chalk.blueBright(path.join(REPO_ROOT, directory, name))}`);
 
@@ -394,4 +398,18 @@ function chalkJson(obj) {
     .replace(/: "(.*?)"/g, (_, val) => `: ${chalk.yellow(`"${val}"`)}`) // strings
     .replace(/: (\d+)/g, (_, val) => `: ${chalk.cyan(val)}`) // numbers
     .replace(/: (true|false)/g, (_, val) => `: ${chalk.magenta(val)}`); // booleans
+}
+
+function comparePathStrings(a, b) {
+  const segA = a.split('/');
+  const segB = b.split('/');
+
+  for (let i = 0; i < Math.max(segA.length, segB.length); i++) {
+    const partA = segA[i] ?? '';
+    const partB = segB[i] ?? '';
+    const cmp = partA.localeCompare(partB, undefined, { numeric: true, sensitivity: 'base' });
+    if (cmp !== 0) return cmp;
+  }
+
+  return segA.length - segB.length;
 }

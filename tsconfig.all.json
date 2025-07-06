@@ -460,6 +460,9 @@
       "path": "packages/ui/react-ui-attention/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-board/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-canvas/tsconfig.json"
     },
     {

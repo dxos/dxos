@@ -74,6 +74,7 @@ export const ToolResult = Object.freeze({
  * https://platform.openai.com/docs/guides/function-calling
  * https://docs.anthropic.com/en/docs/build-with-claude/tool-use
  */
+// TODO(burdon): Transform to @effect/ai AiTool.
 export const Tool = Schema.Struct({
   // TODO(burdon): DXN?
   id: Schema.String,
@@ -83,7 +84,9 @@ export const Tool = Schema.Struct({
    * ^[a-zA-Z0-9_-]{1,64}$
    */
   name: Schema.String,
+
   namespace: Schema.optional(Schema.String),
+
   function: Schema.optional(Schema.String),
 
   /**
@@ -108,7 +111,6 @@ export const Tool = Schema.Struct({
    * Input schema for the tool in the JSON Schema format.
    * Required for user-implemented tools.
    */
-  // TODO(burdon): Rename inputSchema.
   parameters: Schema.optional(JsonSchemaType),
 
   /**
@@ -167,6 +169,7 @@ export class ToolRegistry implements ToolResolver {
     if (!executable) {
       throw new Error(`Tool not found: ${id}`);
     }
+
     return executable;
   }
 }

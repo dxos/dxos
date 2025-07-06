@@ -89,6 +89,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
       tracing: {
         service: TracingService.console,
       },
+      // TODO(burdon): Provide Toolkit.
       toolResolver: ToolResolverService.make(new ToolRegistry([printerTool, calculatorTool])),
     });
   });
@@ -120,7 +121,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
 
   test('blueprint', { timeout: 120_000 }, async () => {
     const researchQueue = queues.create();
-    const tools = new ToolRegistry(
+    const toolkit = new ToolRegistry(
       [
         createExaTool({ apiKey: EXA_API_KEY }),
         createLocalSearchTool(db, researchQueue),
@@ -139,7 +140,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     const org = db.add(Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }));
     await db.flush({ indexes: true });
 
-    const machine = new BlueprintMachine(tools, RESEARCH_BLUEPRINT);
+    const machine = new BlueprintMachine(toolkit, RESEARCH_BLUEPRINT);
     const { client } = serviceContainer.getService(AiService);
     setConsolePrinter(machine, true);
     console.log(client);
