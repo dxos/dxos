@@ -10,15 +10,15 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Board } from './Board';
 
-const meta: Meta<typeof Board> = {
+const meta: Meta<typeof Board.Root> = {
   title: 'ui/react-ui-board/Board',
-  component: Board,
+  component: Board.Root,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export default meta;
 
-type Story = StoryObj<typeof Board>;
+type Story = StoryObj<typeof Board.Root>;
 
 export const Default: Story = {
   args: {

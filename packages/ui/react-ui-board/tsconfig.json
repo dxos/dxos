@@ -39,6 +39,9 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-stack"
+    },
+    {
       "path": "../react-ui-text-tooltip"
     },
     {

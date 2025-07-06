@@ -7,24 +7,37 @@ import React, { forwardRef } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Tile } from './Tile';
+import { Tile, type TileProps } from './Tile';
+import { type HasId, type GridLayout } from './types';
 
+// TODO(burdon): Goal > Action > Result.
+// TODO(burdon): Dashboard.
 // TODO(burdon): Drag cards.
 // TODO(burdon): Infinite canvas.
+// TOOD(burdon): Transform center of grid.
 // TODO(burdon): Editors with concurrent AI tiles.
+// TODO(burdon): Connect cards to program agent. E.g., goals.
 
-type GridRootProps<T = any> = ThemedClassName<{ items: T[] }>;
+type GridRootProps<T extends HasId = any> = ThemedClassName<{
+  items: T[];
+  layout: GridLayout;
+}>;
 
-const GridRoot = forwardRef<HTMLDivElement, GridRootProps>(({ classNames, items }, ref) => {
+const GridRootInner = forwardRef<HTMLDivElement, GridRootProps>(({ classNames, items, layout }, ref) => {
   return (
-    <div className={mx('relative grid grow border-2 border-blue-500', classNames)} ref={ref}>
-      <Tile />
+    <div className={mx('relative grid grow', classNames)} ref={ref}>
+      {items.map((item, index) => (
+        <Tile item={item} key={index} />
+      ))}
     </div>
   );
 });
 
+const GridRoot = <T extends HasId = any>(props: GridRootProps<T>) => <GridRootInner {...props} />;
+
 export const Grid = {
   Root: GridRoot,
+  Tile,
 };
 
-export type { GridRootProps };
+export type { GridRootProps, TileProps };

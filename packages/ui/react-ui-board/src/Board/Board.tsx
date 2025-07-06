@@ -44,9 +44,9 @@ const nodeTypes = {
 export type NodeType = Node<{ label: string }>;
 export type EdgeType = Edge;
 
-export type BoardProps = Pick<ReactFlowProps<NodeType, EdgeType>, 'nodes' | 'edges'>;
+type BoardRootProps = Pick<ReactFlowProps<NodeType, EdgeType>, 'nodes' | 'edges'>;
 
-export const Board = (data: BoardProps) => {
+const BoardRoot = (data: BoardRootProps) => {
   const [nodes, _setNodes, handleNodesChange] = useNodesState<NodeType>(data.nodes ?? []);
   const [edges, _setEdges, handleEdgesChange] = useEdgesState<EdgeType>(data.edges ?? []);
 
@@ -65,3 +65,9 @@ export const Board = (data: BoardProps) => {
     </ReactFlow>
   );
 };
+
+export const Board = {
+  Root: BoardRoot,
+};
+
+export type { BoardRootProps };

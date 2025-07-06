@@ -12113,6 +12113,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../react-ui-stack
       '@dxos/react-ui-text-tooltip':
         specifier: workspace:*
         version: link:../react-ui-text-tooltip
