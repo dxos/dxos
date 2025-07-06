@@ -32,7 +32,7 @@ export const Default: Story = {
     layout: {
       tiles: {
         '1': { x: -3, y: -2 },
-        '2': { x: 3, y: -1 },
+        '2': { x: 3, y: 2 },
         '3': { x: -1, y: 0, width: 1, height: 2 },
         '4': { x: -1, y: -1, width: 3 },
         '5': { x: 1, y: 0 },
