@@ -1,9 +1,7 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "typings",
-  "tags": [
-    "scope:common"
-  ],
+  "tags": ["scope:common"],
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
@@ -17,15 +15,11 @@
     "pack": {}
   },
   "lint": {
-    "executor": "@nx/linter:eslint",
+    "executor": "@nx/eslint:lint",
     "options": {
       "format": "unix",
-      "lintFilePatterns": [
-        "packages/common/typings/**/*.{ts,js}?(x)"
-      ]
+      "lintFilePatterns": ["packages/common/typings/**/*.{ts,js}?(x)"]
     },
-    "outputs": [
-      "{options.outputFile}"
-    ]
+    "outputs": ["{options.outputFile}"]
   }
 }
