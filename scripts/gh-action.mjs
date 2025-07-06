@@ -339,7 +339,7 @@ async function showWorkflowRunReport(run) {
 
     {
       const table = new Table({
-        head: ['Job', 'Passed', 'Failed', 'Total', 'URL'],
+        head: ['Workflow', 'Passed', 'Failed', 'Total', 'URL'],
         style: { head: ['gray'], compact: true },
       });
       table.push([
