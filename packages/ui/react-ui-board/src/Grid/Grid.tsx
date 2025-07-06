@@ -22,16 +22,17 @@ import { type GridGeometry, type Rect, getCenter, getGridBounds, getGridRect } f
 import { type HasId, type GridLayout, type Size } from './types';
 
 // TODO(burdon): Goal > Action > Result.
-// TODO(burdon): Dashboard.
+// TODO(burdon): Infinite canvas: hierarchical zoom.
+
+// TODO(burdon): Data model.
 // TODO(burdon): Drag cards.
-// TODO(burdon): Infinite canvas.
-// TOOD(burdon): Transform center of grid.
+// TODO(burdon): Plugin.
 // TODO(burdon): Editors with concurrent AI tiles.
-// TODO(burdon): Connect cards to program agent. E.g., goals.
 // TODO(burdon): Does scrollbar thin work?
-// TODO(burdon): Prevent browser nav when scrolling to edge.
 // TODO(burdon): Drag to select.
 // TODO(burdon): Key nav.
+// TODO(burdon): Synthetic scrollbars.
+// TODO(burdon): Prevent browser nav when scrolling to edge.
 
 interface GridController {
   center: (id?: string) => void;
@@ -43,58 +44,60 @@ type GridContextValue = {
   dimension: Size;
   size: Size;
   margin: number;
-  zoom: boolean;
   grid: GridGeometry;
+  zoom: boolean;
   controller: GridController;
 };
 
 const [GridContextProvider, useGridContext] = createContext<GridContextValue>('GridContext');
+
+const defaultDimension = { width: 7, height: 5 };
+const defaultGrid = { size: { width: 300, height: 300 }, gap: 16 };
 
 //
 // Root
 //
 
 type RootProps<T extends HasId = any> = PropsWithChildren<
-  ThemedClassName<{
-    readonly: boolean;
-    items: T[];
-    layout: GridLayout;
-  }>
+  ThemedClassName<
+    {
+      items: T[];
+      layout: GridLayout;
+    } & Partial<Pick<GridContextValue, 'readonly' | 'dimension' | 'margin' | 'grid'>>
+  >
 >;
 
 const RootInner = forwardRef<GridController, RootProps>(
-  ({ children, classNames, readonly, items, layout }, forwardedRef) => {
+  (
+    { children, classNames, readonly, items, layout, dimension = defaultDimension, margin, grid = defaultGrid },
+    forwardedRef,
+  ) => {
     const { ref: containerRef, width, height } = useResizeDetector();
-
-    const margin = useMemo(() => 0, []);
-    const grid = useMemo<GridContextValue['grid']>(() => ({ size: { width: 300, height: 300 }, gap: 16 }), []);
-    const dimension = useMemo<Size>(() => ({ width: 7, height: 5 }), []);
-    const size = useMemo<Size>(() => getGridBounds(dimension, grid), [dimension, grid]);
+    const boardSize = useMemo<Size>(() => getGridBounds(dimension, grid), [dimension, grid]);
 
     const [visible, setVisible] = useState(false);
     const [zoom, setZoom] = useState(false);
-    const [center, setCenter] = React.useState({ x: size.width / 2, y: size.height / 2 });
+    const [center, setCenter] = React.useState({ x: boardSize.width / 2, y: boardSize.height / 2 });
     const controller = useMemo<GridController>(
       () => ({
         center: (id) => {
           if (id) {
             const tile = layout.tiles[id];
             if (tile) {
-              // TODO(burdon): Need to adjust based on scale.
               const rect = getGridRect(grid, tile);
               const center = getCenter(rect);
-              setCenter({ x: size.width / 2 + center.x, y: size.height / 2 + center.y });
+              setCenter({ x: boardSize.width / 2 + center.x, y: boardSize.height / 2 + center.y });
               setZoom(false);
             }
           } else {
-            setCenter({ x: size.width / 2, y: size.height / 2 });
+            setCenter({ x: boardSize.width / 2, y: boardSize.height / 2 });
           }
         },
         toggleZoom: () => {
           setZoom((prev) => !prev);
         },
       }),
-      [layout, grid, size],
+      [layout, grid, boardSize],
     );
     useImperativeHandle(forwardedRef, () => controller, [controller]);
 
@@ -109,7 +112,7 @@ const RootInner = forwardRef<GridController, RootProps>(
 
         setVisible(true);
       }
-    }, [center, size, width, height]);
+    }, [center, boardSize, width, height]);
 
     // Child components.
     const [inner, outer] = useMemo(() => {
@@ -136,10 +139,10 @@ const RootInner = forwardRef<GridController, RootProps>(
 
     return (
       <GridContextProvider
-        readonly={readonly}
+        readonly={readonly ?? false}
         dimension={dimension}
-        size={size}
-        margin={margin}
+        size={boardSize}
+        margin={margin ?? 0}
         zoom={zoom}
         grid={grid}
         controller={controller}
@@ -158,19 +161,14 @@ const RootInner = forwardRef<GridController, RootProps>(
           {outer}
           {/* Board container. */}
           <div
-            className='relative border border-separator'
+            className={mx('relative transition-transform duration-300 border border-separator', zoom && 'scale-50')}
             style={{
-              width: size.width,
-              height: size.height,
+              width: boardSize.width,
+              height: boardSize.height,
             }}
           >
             {/* Scrollable container. */}
-            <div
-              className={mx(
-                'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform duration-300',
-                zoom && 'scale-50',
-              )}
-            >
+            <div className={mx('absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2')}>
               {inner}
               {items.map((item, index) => (
                 <Tile
