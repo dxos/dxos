@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Octokit } from '@octokit/rest';
 import { item } from '@1password/op-js';
 import AdmZip from 'adm-zip';
@@ -10,10 +14,12 @@ import os from 'os';
 import path from 'path';
 import yargs from 'yargs';
 
+// TODO(burdon): Reconcile with tools/x.
+
 const OP_GITHUB_ITEM = 'GitHub';
 const OP_GITHUB_FIELD = 'credential';
 
-const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY ?? 'dxos/dxos';
+const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY || 'dxos/dxos';
 
 const REPO_ROOT = process.cwd();
 
@@ -43,6 +49,11 @@ const argv = yargs(process.argv.slice(2))
     default: false,
     description: 'Watch and poll for updates',
   })
+  .option('summary', {
+    type: 'boolean',
+    default: false,
+    description: 'Summary mode',
+  })
   .option('interval', {
     type: 'number',
     default: 10_000,
@@ -56,7 +67,7 @@ switch (command) {
   default: {
     if (argv.watch) {
       while (true) {
-        const done = await check();
+        const done = await checkResults();
         if (done) {
           break;
         }
@@ -64,18 +75,25 @@ switch (command) {
         await new Promise((resolve) => setTimeout(resolve, argv.interval));
       }
     } else {
-      await check();
+      await checkResults();
     }
     break;
   }
 }
 
-async function check() {
-  const data = await listWorkflowRunsForRepo(true);
-  if (data[0].status === 'completed') {
-    const check = data.find((run) => run.status === 'completed');
-    if (check) {
-      await showWorkflowRunReport(check.id);
+/**
+ * Check for first available results.
+ */
+async function checkResults() {
+  const runs = await listWorkflowRunsForRepo(true);
+  // Find first run that completed with success or failure.
+  for (const run of runs) {
+    if (run.status === 'queued' || run.status === 'in_progress') {
+      return false;
+    }
+
+    if (run.status === 'completed' && (run.conclusion === 'success' || run.conclusion === 'failure')) {
+      await showWorkflowRunReport(run);
       return true;
     }
   }
@@ -128,7 +146,7 @@ async function listWorkflowRunsForRepo(watch = false) {
 
     // Output as cli-table3
     const table = new Table({
-      head: ['Name', 'Branch', 'Created', 'Duration', 'Status', 'URL'],
+      head: ['Workflow', 'Branch', 'Created', 'Duration', 'Status', 'URL'],
       style: { head: ['gray'], compact: true },
     });
 
@@ -172,14 +190,17 @@ async function listWorkflowRunsForRepo(watch = false) {
   }
 }
 
-async function showWorkflowRunReport(id) {
+/**
+ * Show vite report for workflow run.
+ */
+async function showWorkflowRunReport(run) {
   try {
     const { octokit, owner, repo } = getOctokit();
 
     // Get artifacts for the workflow run.
     const {
       data: { artifacts },
-    } = await octokit.actions.listWorkflowRunArtifacts({ owner, repo, run_id: id });
+    } = await octokit.actions.listWorkflowRunArtifacts({ owner, repo, run_id: run.id });
     const artifact = artifacts[0];
     if (!artifact) {
       console.error(chalk.red('No results artifact found.'));
@@ -202,6 +223,17 @@ async function showWorkflowRunReport(id) {
     fs.writeFileSync(zipPath, buffer);
     const zip = new AdmZip(zipPath);
 
+    // Output as cli-table3
+    const table = new Table({
+      head: argv.summary ? ['Dir', 'Package', 'Status'] : ['Dir', 'Package', 'Status', 'Name'],
+      style: { head: ['gray'], compact: argv.summary },
+    });
+
+    const stats = {
+      failed: 0,
+      total: 0,
+    };
+
     // Get sorted entries.
     const entries = [];
     for (const entry of zip.getEntries()) {
@@ -210,20 +242,11 @@ async function showWorkflowRunReport(id) {
       const { testResults } = JSON.parse(zip.readAsText(entry));
       entries.push({ packageName, directory, testResults });
     }
-    entries.sort((a, b) => a.directory.localeCompare(b.directory));
-
-    // Output as cli-table3
-    const table = new Table({
-      head: ['Dir', 'Package', 'Status', 'Name'],
-      style: { head: ['gray'] },
+    entries.sort((a, b) => {
+      const s = a.directory.localeCompare(b.directory);
+      return s === 0 ? a.packageName.localeCompare(b.packageName) : s;
     });
 
-    const stats = {
-      failed: 0,
-      total: 0,
-    };
-
-    // TODO(burdon): Show errors.
     const errors = [];
     for (const { packageName, directory, testResults } of entries) {
       let i = 0;
@@ -232,11 +255,21 @@ async function showWorkflowRunReport(id) {
       const rowSpan = rows.length;
       for (const result of rows) {
         const idx = result.name.indexOf(directory);
-        const name = result.name.slice(idx + directory.length);
-        const row = [result.status === 'passed' ? chalk.green(result.status) : chalk.red(result.status), name];
+        const filename = result.name.slice(idx + directory.length + 1);
+        const row = [result.status === 'passed' ? chalk.green(result.status) : chalk.red(result.status), filename];
         if (result.status === 'failed') {
-          errors.push([packageName, directory, name, result]);
+          errors.push([packageName, directory, filename, result]);
           stats.failed++;
+        }
+
+        if (argv.summary) {
+          const failed = rows.find((r) => r.status !== 'passed');
+          table.push([
+            { content: chalk.gray(directory.split('/').slice(0, -1).join('/')) },
+            { content: chalk.magenta(packageName) },
+            failed ? chalk.red(failed.status) : chalk.green('passed'),
+          ]);
+          break;
         }
 
         if (i++ === 0) {
@@ -304,7 +337,20 @@ async function showWorkflowRunReport(id) {
       }
     }
 
-    console.log(chalkJson(stats));
+    {
+      const table = new Table({
+        head: ['Workflow', 'Passed', 'Failed', 'Total', 'URL'],
+        style: { head: ['gray'], compact: true },
+      });
+      table.push([
+        run.name,
+        chalk.green(stats.total - stats.failed),
+        chalk.red(stats.failed),
+        stats.total,
+        chalk.blueBright(run.html_url),
+      ]);
+      console.log(table.toString());
+    }
 
     return stats;
   } catch (err) {

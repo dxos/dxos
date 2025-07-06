@@ -1,4 +1,5 @@
 // Base tsconfig for all projects.
+// TODO(burdon): Rename tsconfig.json
 {
   "compilerOptions": {
     "allowJs": false,
