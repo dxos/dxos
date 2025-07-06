@@ -5,6 +5,7 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -13,6 +14,11 @@ import { Board } from './Board';
 const meta: Meta<typeof Board.Root> = {
   title: 'ui/react-ui-board/Board',
   component: Board.Root,
+  render: (args) => (
+    <Board.Root {...args}>
+      <Board.Background />
+    </Board.Root>
+  ),
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 

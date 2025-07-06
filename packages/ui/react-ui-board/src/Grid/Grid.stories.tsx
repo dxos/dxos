@@ -17,6 +17,7 @@ const meta: Meta<typeof Grid.Root> = {
   render: (args) => (
     <Grid.Root {...args}>
       <Grid.Controls />
+      <Grid.Background />
     </Grid.Root>
   ),
   decorators: [withTheme, withLayout({ fullscreen: true })],

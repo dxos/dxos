@@ -5,16 +5,16 @@
 import './styles.css';
 
 import {
+  Background as NativeBackground,
+  BackgroundVariant,
   ReactFlow,
   type ReactFlowProps,
   type Node,
   type Edge,
   useNodesState,
   useEdgesState,
-  Background,
-  BackgroundVariant,
 } from '@xyflow/react';
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { CustomNode } from './CustomNode';
 
@@ -44,11 +44,15 @@ const nodeTypes = {
 export type NodeType = Node<{ label: string }>;
 export type EdgeType = Edge;
 
-type BoardRootProps = Pick<ReactFlowProps<NodeType, EdgeType>, 'nodes' | 'edges'>;
+//
+// Root
+//
 
-const BoardRoot = (data: BoardRootProps) => {
-  const [nodes, _setNodes, handleNodesChange] = useNodesState<NodeType>(data.nodes ?? []);
-  const [edges, _setEdges, handleEdgesChange] = useEdgesState<EdgeType>(data.edges ?? []);
+type RootProps = PropsWithChildren<Pick<ReactFlowProps<NodeType, EdgeType>, 'nodes' | 'edges'>>;
+
+const Root = ({ children, nodes: initialNodes, edges: initialEdges }: RootProps) => {
+  const [nodes, _setNodes, handleNodesChange] = useNodesState<NodeType>(initialNodes ?? []);
+  const [edges, _setEdges, handleEdgesChange] = useEdgesState<EdgeType>(initialEdges ?? []);
 
   return (
     <ReactFlow<NodeType, EdgeType>
@@ -61,13 +65,24 @@ const BoardRoot = (data: BoardRootProps) => {
       onNodesChange={handleNodesChange}
       onEdgesChange={handleEdgesChange}
     >
-      <Background variant={BackgroundVariant.Dots} gap={16} size={0.5} />
+      {children}
     </ReactFlow>
   );
 };
 
+//
+// Background
+//
+
+const Background = () => <NativeBackground variant={BackgroundVariant.Dots} gap={16} size={0.5} />;
+
+//
+// Board
+//
+
 export const Board = {
-  Root: BoardRoot,
+  Root,
+  Background,
 };
 
-export type { BoardRootProps };
+export type { RootProps as BoardRootProps };
