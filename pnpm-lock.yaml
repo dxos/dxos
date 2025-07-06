@@ -7023,8 +7023,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       react-resize-detector:
-        specifier: ^12.0.2
-        version: 12.0.2(react@18.2.0)
+        specifier: ^11.0.1
+        version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
     devDependencies:
       '@dxos/plugin-storybook-layout':
         specifier: workspace:*
@@ -10205,8 +10205,8 @@ importers:
         specifier: ^14.1.1
         version: 14.2.0
       react-resize-detector:
-        specifier: ^12.0.2
-        version: 12.0.2(react@18.2.0)
+        specifier: ^11.0.1
+        version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react-router-dom:
         specifier: ^6.4.0
         version: 6.4.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -12134,9 +12134,15 @@ importers:
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.10.0
+      '@radix-ui/react-context':
+        specifier: 1.1.1
+        version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
       '@xyflow/react':
         specifier: ^12.8.1
         version: 12.8.1(@types/react@18.2.79)(immer@10.1.1)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      react-resize-detector:
+        specifier: ^11.0.1
+        version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
