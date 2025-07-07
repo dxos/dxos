@@ -1,30 +1,47 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "react-ui-theme",
-  "tags": ["scope:ui"],
+  "tags": [
+    "scope:ui"
+  ],
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
-      "dependsOn": ["compile-lib", "compile-node"],
+      "dependsOn": [
+        "compile-lib",
+        "compile-node"
+      ],
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["true"]
+        "commands": [
+          "true"
+        ]
       }
     },
     "compile-lib": {
-      "dependsOn": ["^compile"],
+      "dependsOn": [
+        "^compile"
+      ],
       "executor": "@dxos/esbuild:build",
       "options": {
-        "entryPoints": ["{projectRoot}/src/index.ts"],
+        "entryPoints": [
+          "{projectRoot}/src/index.ts"
+        ],
         "outputPath": "{projectRoot}/dist/lib",
-        "platforms": ["browser"]
+        "platforms": [
+          "browser"
+        ]
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "compile-node": {
-      "dependsOn": ["^compile"],
+      "dependsOn": [
+        "^compile"
+      ],
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
@@ -33,19 +50,31 @@
           "{projectRoot}/src/plugins/plugin.ts",
           "{projectRoot}/src/theme.css"
         ],
+        "moduleFormat": [
+          "cjs",
+          "esm"
+        ],
         "outputPath": "{projectRoot}/dist/plugin",
-        "platforms": ["node"],
-        "moduleFormat": ["cjs", "esm"],
+        "platforms": [
+          "node"
+        ],
         "preactSignalTracking": true
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "options": {
-        "lintFilePatterns": ["{projectRoot}/src/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": [
+          "{projectRoot}/src/**/*.{ts,tsx,js,jsx}"
+        ]
       }
     },
     "pack": {}
   },
-  "implicitDependencies": ["esbuild", "node-std"]
+  "implicitDependencies": [
+    "esbuild",
+    "node-std"
+  ]
 }
