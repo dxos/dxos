@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,
@@ -10,10 +11,12 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { invariant } from '@dxos/invariant';
 import { IconButton, Toolbar, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -273,28 +276,59 @@ const Background = () => {
   return (
     <div className='absolute inset-0'>
       {cells.map(({ position, rect }, index) => (
-        <div
-          key={index}
-          style={rect}
-          className='absolute group flex items-center justify-center border border-dashed border-separator rounded opacity-50'
-        >
-          {onAdd && (
-            <IconButton
-              icon='ph--plus--regular'
-              size={5}
-              iconOnly
-              label='Add'
-              classNames='aspect-square opacity-0 transition-opacity duration-300 group-hover:opacity-100'
-              onClick={() => onAdd(position)}
-            />
-          )}
-        </div>
+        <DropTarget key={index} position={position} rect={rect} onClick={onAdd ? () => onAdd(position) : undefined} />
       ))}
     </div>
   );
 };
 
 Background.displayName = 'Grid.Background';
+
+type DropTargetProps = {
+  position: Position;
+  rect: Rect;
+  onClick?: () => void;
+};
+
+const DropTarget = ({ position, rect, onClick }: DropTargetProps) => {
+  const [dragging, setDragging] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const element = ref.current;
+    invariant(element);
+    return dropTargetForElements({
+      element,
+      onDragEnter: () => {
+        setDragging(true);
+      },
+      onDragLeave: () => {
+        setDragging(false);
+      },
+    });
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      style={rect}
+      className={mx(
+        'absolute group flex items-center justify-center border border-separator rounded opacity-50',
+        !dragging && 'border-dashed',
+      )}
+    >
+      {onClick && (
+        <IconButton
+          icon='ph--plus--regular'
+          size={5}
+          iconOnly
+          label='Add'
+          classNames='aspect-square opacity-0 transition-opacity duration-300 group-hover:opacity-100'
+          onClick={onClick}
+        />
+      )}
+    </div>
+  );
+};
 
 //
 // Grid
