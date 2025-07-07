@@ -48,6 +48,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-kanban": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
@@ -60,7 +61,6 @@
   "devDependencies": {
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
