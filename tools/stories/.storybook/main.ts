@@ -56,9 +56,6 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
     '@storybook/addon-docs',
     '@storybook/addon-links',
     '@storybook/addon-themes',
-    // TODO(burdon): Throws errors.
-    // TypeError: No existing state found for follower with id: 'storybook/test'
-    // TypeError: Cannot send event before store is ready. You can get the current status with store.status
     '@storybook/addon-vitest',
   ],
   staticDirs: [staticDir],
@@ -68,6 +65,7 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
     // skipCompiler: true,
   },
   ...baseConfig,
+  logLevel: 'verbose',
 
   /**
    * https://storybook.js.org/docs/api/main-config/main-config-vite-final

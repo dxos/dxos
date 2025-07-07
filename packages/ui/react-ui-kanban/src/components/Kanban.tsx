@@ -9,13 +9,13 @@ import { getTypename } from '@dxos/echo-schema';
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { useSelectionActions, useSelected, AttentionGlyph } from '@dxos/react-ui-attention';
 import {
+  Card,
+  CardDragPreview,
+  CardStack,
+  CardStackDragPreview,
   Stack,
   StackItem,
   autoScrollRootAttributes,
-  CardStack,
-  CardStackDragPreview,
-  Card,
-  CardDragPreview,
   cardStackHeading,
 } from '@dxos/react-ui-stack';
 
@@ -26,10 +26,6 @@ export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   model: KanbanModel;
   onAddCard?: (columnValue: string | undefined) => string | undefined;
   onRemoveCard?: (card: T) => void;
-};
-
-const getColumnDropElement = (stackElement: HTMLDivElement) => {
-  return stackElement.closest('.kanban-drop') as HTMLDivElement;
 };
 
 export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
@@ -203,4 +199,8 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       })}
     </Stack>
   );
+};
+
+const getColumnDropElement = (stackElement: HTMLDivElement) => {
+  return stackElement.closest('.kanban-drop') as HTMLDivElement;
 };

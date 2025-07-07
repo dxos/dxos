@@ -799,6 +799,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-board/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-canvas/package.json",
           "jsonpath": "$.version"
         },

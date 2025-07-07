@@ -295,6 +295,9 @@
       "@dxos/react-ui-attention/testing": [
         "packages/ui/react-ui-attention/src/testing/index.ts"
       ],
+      "@dxos/react-ui-board": [
+        "packages/ui/react-ui-board/src/index.ts"
+      ],
       "@dxos/react-ui-canvas": [
         "packages/ui/react-ui-canvas/src/index.ts"
       ],

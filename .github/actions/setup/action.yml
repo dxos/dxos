@@ -1,34 +1,39 @@
 name: Setup
 description: Setup the environment for the other workflows
 
-inputs:
-  node-version:
-    description: 'The Node.js version to use'
-    required: true
-  stop-agents-after:
-    description: 'Distribute the run on multiple agents'
-    required: false
-
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
-    - name: Install system dependencies
-      run: sudo apt-get install libxtst-dev libpng++-dev
+    - name: Mark workspace as safe
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       shell: bash
 
-    - uses: pnpm/action-setup@v4
-
-    - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-extra-large-js" --stop-agents-after="${{ inputs.stop-agents-after }}"
+    - name: Log out debug info
+      run: |
+        node --version
+        pnpm --version
       shell: bash
-      if: ${{ inputs.stop-agents-after }}
 
-    - uses: actions/setup-node@v4
+    - name: Cache pnpm store
+      uses: actions/cache@v4
       with:
-        node-version: ${{ inputs.node-version }}
-        cache: 'pnpm'
+        path: ~/.pnpm-store
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
 
     - name: Install dependencies
-      run: pnpm install --frozen-lockfile
+      run: |
+        pnpm set verify-store-integrity false
+        pnpm install --prefer-offline
       shell: bash
 
     - uses: nrwl/nx-set-shas@v4
+      if: ${{ !env.ACT }}
+
+    - name: Configure nx for Act
+      if: ${{ env.ACT }}
+      run: |
+        echo "NX_BASE=main" >> $GITHUB_ENV
+        echo "NX_HEAD=HEAD" >> $GITHUB_ENV
+      shell: bash

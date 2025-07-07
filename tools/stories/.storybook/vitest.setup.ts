@@ -8,7 +8,7 @@ import { beforeAll } from 'vitest';
 import * as preview from './preview';
 
 /**
- * https://storybook.js.org/docs/writing-tests/integrations/vitest-addon#example-configuration-files
+ * https://storybook.js.org/docs/api/portable-stories/portable-stories-vitest#setprojectannotations
  */
 const annotations = setProjectAnnotations([preview]);
 

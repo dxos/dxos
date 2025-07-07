@@ -6,6 +6,9 @@ debug-storybook.log
 .log*
 debug-storybook.log
 
+# Vitest
+vitest-results.json
+
 # Runtime data
 *.pid
 *.seed

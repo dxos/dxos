@@ -5,8 +5,7 @@
 import { CheckCircle, X } from '@phosphor-icons/react';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Relation } from '@dxos/echo';
-import { RefArray } from '@dxos/live-object';
+import { Ref, Relation } from '@dxos/echo';
 import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -174,7 +173,7 @@ export const CommentContainer = ({
         </div>
       </div>
       {/** TODO(dmaretskyi): How's `thread.messages` undefined? */}
-      {RefArray.targets(thread.messages?.filter(isNonNullable) ?? []).map((message) => (
+      {Ref.Array.targets(thread.messages?.filter(isNonNullable) ?? []).map((message) => (
         <MessageContainer
           key={message.id}
           editable

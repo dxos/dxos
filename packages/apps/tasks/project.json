@@ -24,7 +24,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "options": {
         "format": "unix",
         "lintFilePatterns": ["packages/apps/tasks/**/*.{ts,js}?(x)"]

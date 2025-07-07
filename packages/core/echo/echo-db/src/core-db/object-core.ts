@@ -2,31 +2,30 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ChangeFn, type ChangeOptions, type Doc, type Heads, next as A } from '@automerge/automerge';
+import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@automerge/automerge';
 import { type DocHandleChangePayload } from '@automerge/automerge-repo';
 import type { InspectOptionsStylized, inspect } from 'util';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import {
+  Reference,
   decodeReference,
   encodeReference,
   isEncodedReference,
-  type ObjectStructure,
-  Reference,
   type DatabaseDirectory,
-  DATA_NAMESPACE,
+  type ObjectStructure,
 } from '@dxos/echo-protocol';
-import { ObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
+import { EntityKind, ObjectId, type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { setDeep, defer, getDeep, throwUnhandledError, deepMapValues } from '@dxos/util';
+import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
 import { type CoreDatabase } from './core-database';
 import { docChangeSemaphore } from './doc-semaphore';
-import { isValidKeyPath, type DocAccessor, type DecodedAutomergePrimaryValue, type KeyPath } from './types';
+import { isValidKeyPath, type DecodedAutomergePrimaryValue, type DocAccessor, type KeyPath } from './types';
 import { type DocHandleProxy } from '../automerge';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
@@ -427,31 +426,6 @@ export class ObjectCore {
 
   setDeleted(value: boolean): void {
     this._setRaw([SYSTEM_NAMESPACE, 'deleted'], value);
-  }
-
-  /**
-   * @deprecated
-   */
-  toPlainObject(): CommonObjectData & Record<string, any> {
-    let data = this.getDecoded([DATA_NAMESPACE]);
-    if (typeof data !== 'object') {
-      log.error('Corrupted object data property', { type: typeof data });
-      data = {};
-    }
-
-    const dataMapped = deepMapValues(data, (value, recurse) => {
-      if (value instanceof Reference) {
-        return { '/': value.toDXN().toString() };
-      }
-      return recurse(value);
-    });
-
-    return {
-      id: this.id,
-      __typename: this.getType()?.toDXN().toString() ?? null,
-      __meta: this.getDecoded([META_NAMESPACE]) as ObjectMeta,
-      ...dataMapped,
-    };
   }
 
   /**

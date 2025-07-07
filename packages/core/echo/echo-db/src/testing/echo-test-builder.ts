@@ -65,9 +65,6 @@ export class EchoTestBuilder extends Resource {
       graph: db.graph,
       db,
       queues: peer.client.constructQueueFactory(db.spaceId),
-
-      // TODO(dmaretskyi): Remove
-      crud: db.coreDatabase,
     };
   }
 }

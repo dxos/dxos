@@ -1,14 +1,18 @@
 {
   "extends": "nx/presets/npm.json",
   "affected": {
-    "defaultBase": "main"
+    "defaultBase": "main",
+    "defaultHead": "HEAD"
   },
   "parallel": 6,
   "tui": {
     "enabled": false
   },
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
     "sharedGlobals": [
       "{workspaceRoot}/tsconfig.json",
       "{workspaceRoot}/.eslintrc*.js",
@@ -29,19 +33,31 @@
   "targetDefaults": {
     "build": {
       "cache": true,
-      "dependsOn": ["^build", "prebuild", "compile"],
+      "dependsOn": [
+        "^build",
+        "prebuild",
+        "compile"
+      ],
       "executor": "@nx/js:tsc",
-      "inputs": ["production", "^production"],
+      "inputs": [
+        "production",
+        "^production"
+      ],
       "options": {
         "main": "{projectRoot}/src/index.ts",
         "outputPath": "{projectRoot}/dist/types",
         "tsConfig": "{projectRoot}/tsconfig.json"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "bundle": {
       "cache": true,
-      "dependsOn": ["^build", "prebuild"],
+      "dependsOn": [
+        "^build",
+        "prebuild"
+      ],
       "inputs": [
         "production",
         "^production",
@@ -94,17 +110,28 @@
     },
     "compile": {
       "cache": true,
-      "dependsOn": ["^compile", "prebuild"],
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ],
       "executor": "@dxos/esbuild:build",
-      "inputs": ["production", "^production"],
+      "inputs": [
+        "production",
+        "^production"
+      ],
       "options": {
         "outputPath": "{projectRoot}/dist/lib"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "e2e": {
       "cache": true,
-      "dependsOn": ["prebuild", "^compile"],
+      "dependsOn": [
+        "prebuild",
+        "^compile"
+      ],
       "executor": "@nx/playwright:playwright",
       "inputs": [
         "default",
@@ -125,34 +152,60 @@
     },
     "lint": {
       "cache": true,
-      "executor": "@nx/linter:eslint",
-      "inputs": ["default"],
+      "executor": "@nx/eslint:lint",
+      "inputs": [
+        "default"
+      ],
       "options": {
         "format": "unix",
-        "lintFilePatterns": ["{projectRoot}/**/*.{ts,tsx,js,jsx}"],
+        "lintFilePatterns": [
+          "{projectRoot}/**/*.{ts,tsx,js,jsx}"
+        ],
         "quiet": true
       }
     },
     "prebuild": {
       "cache": true,
-      "dependsOn": ["^compile"],
-      "inputs": ["production", "^production"]
+      "dependsOn": [
+        "^compile"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
     },
     "prerelease": {
       "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["default", "^production"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "default",
+        "^production"
+      ]
     },
     "preview": {
-      "inputs": ["production", "^production"]
+      "inputs": [
+        "production",
+        "^production"
+      ]
     },
     "serve": {
-      "dependsOn": ["^compile", "prebuild"],
-      "inputs": ["production", "^production"]
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
     },
     "test": {
       "cache": true,
-      "dependsOn": ["prebuild", "^compile"],
+      "dependsOn": [
+        "prebuild",
+        "^compile"
+      ],
       "executor": "@nx/vite:test",
       "inputs": [
         "default",
@@ -172,8 +225,8 @@
         }
       ],
       "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}", 
-        "{workspaceRoot}/test-results/{projectRoot}",
+        "{workspaceRoot}/coverage/{projectRoot}",
+        "{workspaceRoot}/test-results/{projectRoot}"
       ]
     },
     "compile-lib": {
@@ -187,10 +240,16 @@
     },
     "pack": {
       "executor": "nx:run-commands",
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "cache": true,
-      "inputs": ["production"],
-      "outputs": ["{workspaceRoot}/dist/tarballs/{projectName}"],
+      "inputs": [
+        "production"
+      ],
+      "outputs": [
+        "{workspaceRoot}/dist/tarballs/{projectName}"
+      ],
       "options": {
         "command": "bash -c 'pnpm pack --pack-destination \"$(git rev-parse --show-toplevel)/dist/tarballs/{projectName}\"'",
         "cwd": "{projectRoot}"
@@ -198,13 +257,19 @@
     },
     "typedoc": {
       "cache": true,
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:run-script",
-      "inputs": ["production"],
+      "inputs": [
+        "production"
+      ],
       "options": {
         "script": "typedoc"
       },
-      "outputs": ["{projectRoot}/typedoc"]
+      "outputs": [
+        "{projectRoot}/typedoc"
+      ]
     }
   },
   "nxCloudId": "62ed1bb8236992263d3c673b"

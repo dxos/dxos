@@ -17,6 +17,71 @@ import { log } from '@dxos/log';
 
 // TODO(burdon): Implement MCP server for ECHO on CF.
 
+// Providers.
+const OpenAiLayer = OpenAiClient.layerConfig({
+  apiKey: Config.redacted('OPENAI_API_KEY'),
+}).pipe(Layer.provide(NodeHttpClient.layerUndici));
+
+const AnthropicLayer = AnthropicClient.layerConfig({
+  apiKey: Config.redacted('ANTHROPIC_API_KEY'),
+}).pipe(Layer.provide(NodeHttpClient.layerUndici));
+
+// TODO(burdon): Is this the effect way to do this?
+const createChat = (prompt: string) =>
+  Effect.gen(function* () {
+    const chat = yield* AiChat.empty;
+    const toolkit = yield* TestToolkit;
+
+    // Initial request.
+    // NOTE: Providing `toolkit` returns `AiRespose.WithToolCallResults`.
+    let output = yield* chat.generateText({ toolkit, prompt });
+
+    // Agentic loop.
+    // TODO(burdon): Explain how this works?
+    while (output.results.size > 0) {
+      log.info('results', { results: output.results.size });
+      output = yield* chat.generateText({ toolkit, prompt: AiInput.empty });
+    }
+
+    // Done.
+    return output.text;
+  });
+
+// Tool definitions.
+class TestToolkit extends AiToolkit.make(
+  AiTool.make('Calculator', {
+    description: 'Basic calculator tool',
+    parameters: {
+      input: Schema.String.annotations({
+        description: 'The calculation to perform.',
+      }),
+    },
+    success: Schema.Struct({
+      result: Schema.Number,
+    }),
+    failure: Schema.Never,
+  }),
+) {}
+
+// Tool handlers.
+const toolkitLayer = TestToolkit.toLayer({
+  Calculator: ({ input }) =>
+    Effect.gen(function* () {
+      const result = (() => {
+        // Restrict to basic arithmetic operations for safety.
+        const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
+        log.info('calculate', { sanitizedInput });
+
+        // eslint-disable-next-line no-new-func
+        return Function(`"use strict"; return (${sanitizedInput})`)();
+      })();
+
+      // TODO(burdon): How to return an error.
+      yield* Console.log(`Executing calculation: ${input} = ${result}`);
+      return { result };
+    }),
+});
+
 /**
  * Rationale:
  * - Separation of concerns: config, execution pipline, error handling/retry, tool dispatch, async.
@@ -40,60 +105,14 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
       Effect.retry({ times: 1 }),
     );
 
-    const OpenAiLayer = OpenAiClient.layerConfig({
-      apiKey: Config.redacted('OPENAI_API_KEY'),
-    }).pipe(Layer.provide(NodeHttpClient.layerUndici));
-
     const result = await program.pipe(Effect.provide(OpenAiLayer), Effect.runPromise);
     expect(result).to.contain('API is working');
   });
 
-  // Tool definitions.
-  class Toolkit extends AiToolkit.make(
-    AiTool.make('Calculator', {
-      description: 'Test tool',
-      parameters: {
-        input: Schema.String.annotations({
-          description: 'The calculation to perform.',
-        }),
-      },
-      success: Schema.Struct({
-        result: Schema.Number,
-      }),
-      failure: Schema.Never,
-    }),
-  ) {}
-
-  // Tool handlers.
-  const toolkitLayer = Toolkit.toLayer({
-    Calculator: ({ input }) =>
-      Effect.gen(function* () {
-        const result = (() => {
-          // Restrict to basic arithmetic operations for safety.
-          const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
-          log.info('calculate', { sanitizedInput });
-          // eslint-disable-next-line no-new-func
-          return Function(`"use strict"; return (${sanitizedInput})`)();
-        })();
-
-        yield* Console.log(`Executing calculation: ${input} = ${result}`);
-        return { result };
-      }),
-  });
-
-  // Providers.
-  const OpenAiLayer = OpenAiClient.layerConfig({
-    apiKey: Config.redacted('OPENAI_API_KEY'),
-  }).pipe(Layer.provide(NodeHttpClient.layerUndici));
-
-  const AnthropicLayer = AnthropicClient.layerConfig({
-    apiKey: Config.redacted('ANTHROPIC_API_KEY'),
-  }).pipe(Layer.provide(NodeHttpClient.layerUndici));
-
   it.runIf(process.env.OPENAI_API_KEY)('should make a tool call', async ({ expect }) => {
     const createProgram = (prompt: string) =>
       AiLanguageModel.generateText({
-        toolkit: Toolkit,
+        toolkit: TestToolkit,
         prompt,
       }).pipe(
         // Effect.tap((response) => Console.log(response)),
@@ -106,23 +125,6 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     const result = await program.pipe(Effect.provide([toolkitLayer, OpenAiLayer]), Effect.runPromise);
     expect(result).toBeDefined();
   });
-
-  const createChat = (prompt: string) =>
-    Effect.gen(function* () {
-      const chat = yield* AiChat.empty;
-      const toolkit = yield* Toolkit;
-
-      // Initial request.
-      let response = yield* chat.generateText({ toolkit, prompt });
-
-      // Agentic loop.
-      while (response.results.size > 0) {
-        response = yield* chat.generateText({ toolkit, prompt: AiInput.empty });
-      }
-
-      // Done.
-      return response.text;
-    });
 
   it.runIf(process.env.OPENAI_API_KEY)('should process an agentic loop using OpenAI', async ({ expect }) => {
     const chat = createChat('What is six times seven?');
@@ -137,8 +139,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     expect(result).toContain('42');
   });
 
-  // TODO(burdon): Fix Anthropic.
-  it.runIf(process.env.ANTHROPIC_API_KEY).skip('should process an agentic loop using Anthropic', async ({ expect }) => {
+  it.runIf(process.env.ANTHROPIC_API_KEY).skip('should process an agentic loop using Claude', async ({ expect }) => {
     const chat = createChat('What is six times seven?');
     const result = await chat.pipe(
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),

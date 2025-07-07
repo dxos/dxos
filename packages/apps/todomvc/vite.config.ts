@@ -14,6 +14,7 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // https://vitejs.dev/config
 export default defineConfig({
+  root: __dirname,
   server: {
     host: true,
     https:
