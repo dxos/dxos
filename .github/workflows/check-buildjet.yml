@@ -114,7 +114,7 @@ jobs:
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many --targets=test
+        run: pnpm exec nx run-many --targets=test --verbose
 
       - name: Upload Test Results
         if: always()

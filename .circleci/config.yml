@@ -86,7 +86,7 @@ commands:
 
     steps:
       - run:
-          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
+          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --verbose
           environment:
             VITEST_XML_REPORT: 'true'
             VITEST_ENV: << parameters.mode >>
@@ -148,7 +148,7 @@ jobs:
           steps:
             - run: pnpm nx run-many --target=lint
             - run: pnpm nx run-many --target=build
-            - run: VITEST_XML_REPORT=true pnpm nx run-many --target=test --skip-nx-cache
+            - run: VITEST_XML_REPORT=true pnpm nx run-many --target=test --skip-nx-cache --verbose
             # TODO(wittjosiah): Coverage is causing CI failures here.
             # - run: VITEST_XML_REPORT=true pnpm nx run-many --target=test --coverage --skip-nx-cache
       - *send_test_report
