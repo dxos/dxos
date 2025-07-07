@@ -59,8 +59,7 @@ export const Tile = ({ classNames, item, layout }: TileProps) => {
       style={getGridRect(grid, layout)}
       onClick={() => onSelect?.(item.id)}
     >
-      {/* TODO(burdon): Should the header (toolbar) be inside Content? If so, why is Content separate from Root? (e.g., rather than a Body). */}
-      <Card.Content classNames='h-full'>
+      <Card.Content classNames='bs-full'>
         <Card.Toolbar>
           {/* TODO(burdon): How to set disabled? */}
           <Card.DragHandle toolbarItem />

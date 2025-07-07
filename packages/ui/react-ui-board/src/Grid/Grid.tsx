@@ -55,6 +55,7 @@ type GridContextValue = {
   readonly: boolean;
   dimension: Size;
   bounds: Size;
+  // TODO(burdon): Overscroll?
   margin: number;
   grid: GridGeometry;
   zoom: boolean;
@@ -208,6 +209,7 @@ const Content = <T extends HasId = any>({ classNames, children, items }: Content
       }}
     >
       {/* Scrollable container. */}
+      {/* TODO(burdon): Separate Viewport. */}
       <div className={mx('absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2')}>
         {children}
         {items?.map((item, index) => (
@@ -293,7 +295,7 @@ type DropTargetProps = {
 };
 
 const DropTarget = ({ position, rect, onClick }: DropTargetProps) => {
-  const [dragging, setDragging] = useState(false);
+  const [active, setActive] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const element = ref.current;
@@ -302,10 +304,13 @@ const DropTarget = ({ position, rect, onClick }: DropTargetProps) => {
       element,
       getData: () => ({ position }),
       onDragEnter: () => {
-        setDragging(true);
+        setActive(true);
       },
       onDragLeave: () => {
-        setDragging(false);
+        setActive(false);
+      },
+      onDrop: () => {
+        setActive(false);
       },
     });
   }, []);
@@ -315,8 +320,8 @@ const DropTarget = ({ position, rect, onClick }: DropTargetProps) => {
       ref={ref}
       style={rect}
       className={mx(
-        'absolute group flex items-center justify-center border border-separator rounded opacity-50',
-        !dragging && 'border-dashed',
+        'absolute group flex items-center justify-center border rounded opacity-50',
+        active ? 'border-transparent ring ring-accentSurface' : 'border-separator border-dashed',
       )}
     >
       {onClick && (
