@@ -8,6 +8,7 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": true,
+  "type": "module",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "bin": {
