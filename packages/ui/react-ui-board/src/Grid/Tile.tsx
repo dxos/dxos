@@ -13,7 +13,7 @@ import { getGridRect } from './geometry';
 import { type HasId, type TileLayout } from './types';
 
 // TODO(burdon): Contains surface like Kanban.
-// TODO(burdon): Drag handles only visible on long hover.
+// TODO(burdon): Drag handles only visible on hover.
 
 export type TileProps<T extends HasId = any> = ThemedClassName<{
   item: T;
