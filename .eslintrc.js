@@ -22,7 +22,7 @@ module.exports = {
     '.eslintrc.js',
     '.mocharc.js',
     'esbuild-server.config.js',
-    'playwright.config.cts',
+    'playwright.config.ts',
     'vite.config.ts',
     'vitest.config.ts',
     'vitest.*.config.ts',

@@ -9,11 +9,6 @@
   "sideEffects": true,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
-    },
     "./bundler": {
       "types": "./dist/types/src/bundler/index.d.ts",
       "browser": "./dist/lib/browser/bundler/index.mjs",
@@ -23,6 +18,11 @@
       "types": "./dist/types/src/edge/index.d.ts",
       "browser": "./dist/lib/browser/edge/index.mjs",
       "node": "./dist/lib/node-esm/edge/index.mjs"
+    },
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
