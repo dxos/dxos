@@ -35,6 +35,6 @@ export const translations: Resource[] = [
     },
   },
   ...stackTranslations,
-] as const;
+] as const satisfies Resource[];
 
 export default translations;

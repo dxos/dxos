@@ -12,6 +12,6 @@ export const translations: Resource[] = [
       [translationKey]: {},
     },
   },
-] as const;
+] as const satisfies Resource[];
 
 export default translations;

@@ -9,7 +9,7 @@ import { DataType } from '@dxos/schema';
 
 import { SPACE_PLUGIN } from './meta';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(DataType.Collection)]: {
@@ -169,6 +169,6 @@ export const translations: Resource[] = [
       },
     },
   },
-] as const;
+] as const satisfies Resource[];
 
 export default translations;

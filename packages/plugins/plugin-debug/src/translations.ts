@@ -69,6 +69,6 @@ export const translations: Resource[] = [
       },
     },
   },
-] as const;
+] as const satisfies Resource[];
 
 export default translations;

@@ -33,7 +33,8 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0"
+    "@preact-signals/safe-react": "^0.9.0",
+    "i18next": "^21.10.0"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

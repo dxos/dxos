@@ -8064,6 +8064,9 @@ importers:
       effect:
         specifier: ^3.13.3
         version: 3.14.21
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -8504,6 +8507,9 @@ importers:
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@18.2.0)
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -9385,6 +9391,9 @@ importers:
       effect:
         specifier: 3.14.21
         version: 3.14.21
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       jszip:
         specifier: ^3.10.1
         version: 3.10.1

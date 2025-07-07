@@ -10,6 +10,6 @@ export const translations: Resource[] = [
       testbench: {},
     },
   },
-] as const;
+] as const satisfies Resource[];
 
 export default translations;

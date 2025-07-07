@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type ResourceKey } from 'i18next';
+
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
@@ -14,6 +16,8 @@ import { SPACES } from '../util';
 
 const COLLECTION_TYPE = Type.getTypename(DataType.Collection);
 
+const getTranslation = (key: string) => translations[0]['en-US'][key] as Extract<ResourceKey, { [key: string]: any }>;
+
 // https://stackoverflow.com/a/19016910
 const DIRECTORY_TYPE = 'text/directory';
 
@@ -23,8 +27,8 @@ export default (context: PluginContext) =>
       inputType: SPACES,
       outputType: DIRECTORY_TYPE,
       serialize: (node) => ({
-        name: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'],
-        data: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'],
+        name: getTranslation(SPACE_PLUGIN)['spaces label'],
+        data: getTranslation(SPACE_PLUGIN)['spaces label'],
         type: DIRECTORY_TYPE,
       }),
       deserialize: () => {
@@ -35,8 +39,8 @@ export default (context: PluginContext) =>
       inputType: SPACE_TYPE,
       outputType: DIRECTORY_TYPE,
       serialize: (node) => ({
-        name: node.data.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
-        data: node.data.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
+        name: node.data.properties.name ?? getTranslation(SPACE_PLUGIN)['unnamed space label'],
+        data: node.data.properties.name ?? getTranslation(SPACE_PLUGIN)['unnamed space label'],
         type: DIRECTORY_TYPE,
       }),
       deserialize: async (data) => {
@@ -49,8 +53,8 @@ export default (context: PluginContext) =>
       inputType: COLLECTION_TYPE,
       outputType: DIRECTORY_TYPE,
       serialize: (node) => ({
-        name: node.data.name ?? translations[0]['en-US'][COLLECTION_TYPE]['object name placeholder'],
-        data: node.data.name ?? translations[0]['en-US'][COLLECTION_TYPE]['object name placeholder'],
+        name: node.data.name ?? getTranslation(COLLECTION_TYPE)['object name placeholder'],
+        data: node.data.name ?? getTranslation(COLLECTION_TYPE)['object name placeholder'],
         type: DIRECTORY_TYPE,
       }),
       deserialize: async (data, ancestors) => {
