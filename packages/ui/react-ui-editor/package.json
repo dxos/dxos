@@ -72,7 +72,6 @@
     "@replit/codemirror-vscode-keymap": "^6.0.2",
     "ajv": "^8.17.1",
     "codemirror": "^6.0.1",
-    "i18next": "^21.10.0",
     "lib0": "^0.2.65",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.merge": "^4.6.2",

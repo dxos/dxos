@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from 'i18next';
-
 import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
 import { ScriptType } from './schema';
 

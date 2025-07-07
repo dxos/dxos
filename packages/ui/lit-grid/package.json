@@ -36,7 +36,6 @@
   ],
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.4.0",
-    "i18next": "^21.10.0",
     "lit": "^3.2.0"
   },
   "devDependencies": {

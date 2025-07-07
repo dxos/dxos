@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Resource } from 'i18next';
+import { type Resource } from '@dxos/react-ui';
 
 import { TOKEN_MANAGER_PLUGIN } from './meta';
 

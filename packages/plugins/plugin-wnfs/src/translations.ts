@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from 'i18next';
+import { type Resource } from '@dxos/react-ui';
 
 import { WNFS_PLUGIN } from './meta';
 import { FileType } from './types';

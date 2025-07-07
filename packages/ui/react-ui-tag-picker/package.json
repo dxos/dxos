@@ -34,7 +34,6 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
     "@radix-ui/react-compose-refs": "1.1.1",
-    "i18next": "^21.10.0",
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {

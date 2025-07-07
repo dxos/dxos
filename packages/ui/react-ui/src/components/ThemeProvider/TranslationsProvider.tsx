@@ -7,6 +7,8 @@ import i18Next, { type TFunction, type Resource } from 'i18next';
 import React, { type ReactNode, useEffect, createContext, useState, Suspense, useContext } from 'react';
 import { initReactI18next, useTranslation as useI18NextTranslation } from 'react-i18next';
 
+export { type Resource };
+
 const initialLng = 'en-US';
 const initialNs = 'dxos-common';
 const initialDtLocale = dtLocaleEnUs;
@@ -32,7 +34,7 @@ export const resources = {
       'loading translations': 'Loading translations…',
     },
   },
-} as const;
+} as const satisfies Resource;
 
 void i18Next.use(initReactI18next).init({
   resources,

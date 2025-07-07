@@ -8851,6 +8851,9 @@ importers:
       exa-js:
         specifier: ^1.5.12
         version: 1.7.0(encoding@0.1.13)
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       main-thread-scheduling:
         specifier: ^14.1.1
         version: 14.2.0
@@ -10504,6 +10507,9 @@ importers:
       effect:
         specifier: ^3.13.3
         version: 3.14.21
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -14238,6 +14244,9 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       lodash.orderby:
         specifier: ^4.6.0
         version: 4.6.0

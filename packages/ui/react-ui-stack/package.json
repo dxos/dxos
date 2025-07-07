@@ -54,7 +54,6 @@
     "@radix-ui/react-primitive": "2.0.2",
     "@radix-ui/react-slot": "1.1.2",
     "@radix-ui/react-use-controllable-state": "1.1.0",
-    "i18next": "^21.10.0",
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {

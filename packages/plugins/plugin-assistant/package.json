@@ -99,7 +99,6 @@
     "@preact/signals-core": "^1.9.0",
     "@xiechao/codemirror-lang-handlebars": "1.0.4",
     "exa-js": "^1.5.12",
-    "i18next": "^21.10.0",
     "json5": "^2.2.3",
     "jsonpointer": "^5.0.1",
     "lodash.defaultsdeep": "^4.6.1",

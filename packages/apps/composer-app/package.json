@@ -85,7 +85,6 @@
     "@dxos/util": "workspace:*",
     "@fontsource/poiret-one": "^5.0.20",
     "effect": "3.14.21",
-    "i18next": "^21.10.0",
     "isomorphic-fetch": "^3.0.0",
     "micromark": "^4.0.1",
     "micromark-extension-directive": "^3.0.0",
