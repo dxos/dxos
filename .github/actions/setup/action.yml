@@ -12,7 +12,6 @@ runs:
 
     - name: Log out debug info
       run: |
-        echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
         node --version
         pnpm --version
       shell: bash
@@ -20,7 +19,7 @@ runs:
     - name: Cache pnpm store
       uses: actions/cache@v4
       with:
-        path: ~/.pnpm-store
+        path: ${{ env.PNPM_HOME }}/store
         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
           ${{ runner.os }}-pnpm-store-
