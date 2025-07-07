@@ -56,7 +56,7 @@
         "packages/plugins/plugin-board/src/index.ts"
       ],
       "@dxos/plugin-board/types": [
-        "packages/plugins/plugin-board/src/types.ts"
+        "packages/plugins/plugin-board/src/types/index.ts"
       ],
       "@dxos/plugin-chess": [
         "packages/plugins/plugin-chess/src/index.ts"
@@ -122,7 +122,7 @@
         "packages/plugins/plugin-kanban/src/index.ts"
       ],
       "@dxos/plugin-kanban/types": [
-        "packages/plugins/plugin-kanban/src/types.ts"
+        "packages/plugins/plugin-kanban/src/types/index.ts"
       ],
       "@dxos/plugin-map": [
         "packages/plugins/plugin-map/src/index.ts"
@@ -349,11 +349,11 @@
       "@dxos/react-ui-grid": [
         "packages/ui/react-ui-grid/src/index.ts"
       ],
-      "@dxos/react-ui-kanban/defs/kanban": [
-        "packages/ui/react-ui-kanban/src/defs/kanban.ts"
-      ],
       "@dxos/react-ui-kanban": [
         "packages/ui/react-ui-kanban/src/index.ts"
+      ],
+      "@dxos/react-ui-kanban/types": [
+        "packages/ui/react-ui-kanban/src/types/index.ts"
       ],
       "@dxos/react-ui-list": [
         "packages/ui/react-ui-list/src/index.ts"

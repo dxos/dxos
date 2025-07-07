@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Resource } from 'i18next';
+
 import { Type } from '@dxos/echo';
 
 import { SKETCH_PLUGIN } from './meta';
 import { DiagramType } from './types';
 
-export const translations = [
+export const translations: Resource[] = [
   {
     'en-US': {
       [Type.getTypename(DiagramType)]: {

@@ -26,7 +26,7 @@ import { DataType, ViewProjection } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { initializeKanban } from '../testing';
-import translations from '../translations';
+import { translations } from '../translations';
 
 faker.seed(0);
 

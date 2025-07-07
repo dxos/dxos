@@ -10,7 +10,7 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import translations from '../translations';
+import { translations } from '../translations';
 import { MarkdownAction, DocumentType } from '../types';
 
 export default (context: PluginContext) =>

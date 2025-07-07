@@ -660,6 +660,9 @@ importers:
       effect:
         specifier: 3.14.21
         version: 3.14.21
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0(encoding@0.1.13)
@@ -808,6 +811,9 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -1047,6 +1053,9 @@ importers:
       '@trpc/server':
         specifier: ^10.45.2
         version: 10.45.2
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       partysocket:
         specifier: ^1.0.1
         version: 1.0.1
@@ -3197,6 +3206,9 @@ importers:
       get-port-please:
         specifier: ^3.1.1
         version: 3.1.1
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       iso-did:
         specifier: ^1.6.0
         version: 1.6.0
@@ -5599,6 +5611,9 @@ importers:
       exa-js:
         specifier: ^1.5.12
         version: 1.7.0(encoding@0.1.13)
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       json5:
         specifier: ^2.2.3
         version: 2.2.3
@@ -5699,6 +5714,9 @@ importers:
       effect:
         specifier: 3.14.21
         version: 3.14.21
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     devDependencies:
       '@types/react':
         specifier: ~18.2.0
@@ -5775,6 +5793,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.10.0
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -5884,6 +5905,9 @@ importers:
       effect:
         specifier: 3.14.21
         version: 3.14.21
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     devDependencies:
       '@dxos/plugin-preview':
         specifier: workspace:*
@@ -5984,6 +6008,9 @@ importers:
       effect:
         specifier: 3.14.21
         version: 3.14.21
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -6075,6 +6102,9 @@ importers:
       effect:
         specifier: 3.14.21
         version: 3.14.21
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       react-qr-rounded:
         specifier: ^1.0.0
         version: 1.0.0(react@18.2.0)
@@ -6172,6 +6202,9 @@ importers:
       effect:
         specifier: 3.14.21
         version: 3.14.21
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -6353,6 +6386,9 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       react-json-tree:
         specifier: ^0.18.0
         version: 0.18.0(@types/react@18.2.79)(react@18.2.0)
@@ -6489,6 +6525,9 @@ importers:
       effect:
         specifier: 3.14.21
         version: 3.14.21
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       immer:
         specifier: ^10.1.1
         version: 10.1.1
@@ -7675,6 +7714,9 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     optionalDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -8392,6 +8434,9 @@ importers:
       effect:
         specifier: ^3.13.3
         version: 3.14.21
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -9866,6 +9911,9 @@ importers:
       '@types/lodash.debounce':
         specifier: ^4.0.9
         version: 4.0.9
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       lodash.debounce:
         specifier: ^4.0.8
         version: 4.0.8
@@ -10659,6 +10707,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.10.0
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     devDependencies:
       '@dxos/echo-signals':
         specifier: workspace:*
@@ -11742,6 +11793,9 @@ importers:
       d3:
         specifier: ^7.9.0
         version: 7.9.0
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -11776,6 +11830,9 @@ importers:
       '@atlaskit/pragmatic-drag-and-drop':
         specifier: ^1.4.0
         version: 1.4.0
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       lit:
         specifier: ^3.2.0
         version: 3.2.0
@@ -11804,6 +11861,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       lit:
         specifier: ^3.2.0
         version: 3.2.0
@@ -11823,6 +11883,9 @@ importers:
       '@lit/react':
         specifier: ^1.0.5
         version: 1.0.5(@types/react@18.2.79)
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       lit:
         specifier: ^3.2.0
         version: 3.2.0
@@ -11845,6 +11908,9 @@ importers:
       alea:
         specifier: ^1.0.1
         version: 1.0.1
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     devDependencies:
       '@types/react':
         specifier: ~18.2.0
@@ -11882,6 +11948,9 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: 1.1.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       lodash.omit:
         specifier: ^4.5.0
         version: 4.5.0
@@ -11925,6 +11994,9 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: 1.1.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       lodash.omit:
         specifier: ^4.5.0
         version: 4.5.0
@@ -12173,6 +12245,9 @@ importers:
       effect:
         specifier: 3.14.21
         version: 3.14.21
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -12264,6 +12339,9 @@ importers:
       effect:
         specifier: 3.14.21
         version: 3.14.21
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -12334,6 +12412,9 @@ importers:
       d3:
         specifier: ^7.9.0
         version: 7.9.0
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -12864,6 +12945,9 @@ importers:
       codemirror:
         specifier: ^6.0.1
         version: 6.0.1
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       lib0:
         specifier: ^0.2.65
         version: 0.2.78
@@ -13063,6 +13147,12 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       jsonpath:
         specifier: ^1.1.1
         version: 1.1.1
@@ -13094,9 +13184,6 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       fast-check:
         specifier: ^3.19.0
         version: 3.23.1
@@ -13653,6 +13740,9 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: 1.1.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     devDependencies:
       '@dxos/live-object':
         specifier: workspace:*
@@ -13760,6 +13850,9 @@ importers:
       cmdk:
         specifier: ^0.2.0
         version: 0.2.0(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -13939,6 +14032,9 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: 1.1.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -14282,6 +14378,9 @@ importers:
       '@radix-ui/react-compose-refs':
         specifier: 1.1.1
         version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -14441,6 +14540,9 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
+      i18next:
+        specifier: ^21.10.0
+        version: 21.10.0
     devDependencies:
       '@dxos/echo-db':
         specifier: workspace:*
@@ -52607,7 +52709,7 @@ snapshots:
 
   i18next@21.10.0:
     dependencies:
-      '@babel/runtime': 7.24.5
+      '@babel/runtime': 7.27.1
 
   i18next@23.16.8:
     dependencies:

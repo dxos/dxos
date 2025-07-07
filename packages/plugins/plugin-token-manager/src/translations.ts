@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Resource } from 'i18next';
+
 import { TOKEN_MANAGER_PLUGIN } from './meta';
 
-export const translations = [
+export const translations: Resource[] = [
   {
     'en-US': {
       [TOKEN_MANAGER_PLUGIN]: {

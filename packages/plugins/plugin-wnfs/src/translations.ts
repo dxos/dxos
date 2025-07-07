@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Resource } from 'i18next';
+
 import { WNFS_PLUGIN } from './meta';
 import { FileType } from './types';
 
-export const translations = [
+export const translations: Resource[] = [
   {
     'en-US': {
       [FileType.typename]: {

@@ -19,7 +19,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { CommentsContainer } from './CommentsContainer';
 import { createCommentThread } from './testing';
-import translations from '../translations';
+import { translations } from '../translations';
 import { ThreadType } from '../types';
 
 faker.seed(1);

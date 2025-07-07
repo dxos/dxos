@@ -33,7 +33,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { Thread, ThreadFooter, ThreadHeading } from './Thread';
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';
-import translations from '../translations';
+import { translations } from '../translations';
 
 faker.seed(101);
 

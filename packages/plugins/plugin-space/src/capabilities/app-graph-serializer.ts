@@ -8,7 +8,7 @@ import { Obj, Type } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 import { SPACE_PLUGIN } from '../meta';
-import translations from '../translations';
+import { translations } from '../translations';
 import { SPACE_TYPE, SpaceAction } from '../types';
 import { SPACES } from '../util';
 

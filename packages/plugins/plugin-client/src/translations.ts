@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Resource } from 'i18next';
+
 import { CLIENT_PLUGIN } from './meta';
 
-export const translations = [
+export const translations: Resource[] = [
   {
     'en-US': {
       [CLIENT_PLUGIN]: {

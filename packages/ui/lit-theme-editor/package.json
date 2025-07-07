@@ -29,6 +29,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "i18next": "^21.10.0",
     "lit": "^3.2.0"
   },
   "devDependencies": {

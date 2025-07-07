@@ -75,6 +75,7 @@
     "esbuild-wasm": "^0.16.14",
     "express": "^4.19.2",
     "get-port-please": "^3.1.1",
+    "i18next": "^21.10.0",
     "iso-did": "^1.6.0",
     "ws": "^8.14.2"
   },

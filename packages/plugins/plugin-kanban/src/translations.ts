@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Resource } from 'i18next';
+
 import { Type } from '@dxos/echo';
 import { KanbanType } from '@dxos/react-ui-kanban';
 
 import { KANBAN_PLUGIN } from './meta';
 
-export const translations = [
+export const translations: Resource[] = [
   {
     'en-US': {
       [Type.getTypename(KanbanType)]: {

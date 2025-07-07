@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Resource } from 'i18next';
+
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import { STACK_PLUGIN } from './meta';
 
-export const translations = [
+export const translations: Resource[] = [
   {
     'en-US': {
       [STACK_PLUGIN]: {

@@ -38,6 +38,7 @@
     "@phosphor-icons/react": "^2.1.5",
     "@sentry/react": "^7.100.1",
     "@trpc/server": "^10.45.2",
+    "i18next": "^21.10.0",
     "partysocket": "^1.0.1",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",

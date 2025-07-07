@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Resource } from 'i18next';
+
 import { Type } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 import { SPACE_PLUGIN } from './meta';
 
-export const translations = [
+export const translations: Resource[] = [
   {
     'en-US': {
       [Type.getTypename(DataType.Collection)]: {

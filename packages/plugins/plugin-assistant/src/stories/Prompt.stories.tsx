@@ -13,7 +13,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { PromptBar, type PromptBarProps } from '../components';
 import { type Expression, QueryParser } from '../parser';
-import translations from '../translations';
+import { translations } from '../translations';
 
 const DefaultStory = (props: PromptBarProps) => {
   const [ast, setAst] = useState<Expression>();
