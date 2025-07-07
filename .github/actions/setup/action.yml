@@ -6,6 +6,7 @@ runs:
   steps:
     # TODO(wittjosiah): This shouldn't be necessary, but it is when running in BuildJet.
     #   It's not clear why, the Docker image is setup for the user to own the workspace.
+    #   The checkout action also already runs this internally as a step as well.
     - name: Mark workspace as safe
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       shell: bash
@@ -16,10 +17,15 @@ runs:
         pnpm --version
       shell: bash
 
+    - name: PNPM Store Path
+      id: pnpm-store
+      run: echo "pnpm-store=$(pnpm store path)" >> $GITHUB_OUTPUT
+      shell: bash
+
     - name: Cache pnpm store
       uses: actions/cache@v4
       with:
-        path: ${{ env.PNPM_HOME }}/store
+        path: ${{ steps.pnpm-store.outputs.pnpm-store }}
         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
           ${{ runner.os }}-pnpm-store-
