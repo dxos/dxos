@@ -4,8 +4,6 @@
 
 import { expect, test } from '@playwright/test';
 
-import { sleep } from '@dxos/async';
-
 import { AppManager } from './app-manager';
 import { Markdown, Stack } from './plugins';
 
@@ -19,7 +17,7 @@ test.describe('Stack tests', () => {
     host = new AppManager(browser, false);
     await host.init();
     // Sleep to allow first run to finish before reloading.
-    await sleep(500);
+    await host.page.waitForTimeout(500);
     await host.openPluginRegistry();
     await host.openRegistryCategory('recommended');
     await host.enablePlugin('dxos.org/plugin/stack');

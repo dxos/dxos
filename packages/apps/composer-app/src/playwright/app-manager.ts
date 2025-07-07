@@ -194,8 +194,7 @@ export class AppManager {
     const object = this.page.getByTestId('spacePlugin.createObject');
     await object.nth(nth).click();
 
-    await this.page.getByTestId('create-object-form.schema-input').fill(type);
-    await this.page.keyboard.press('Enter');
+    await this.page.getByRole('listbox').getByText(type).first().click();
 
     const objectForm = this.page.getByTestId('create-object-form');
     if (!(await objectForm.isVisible())) {
