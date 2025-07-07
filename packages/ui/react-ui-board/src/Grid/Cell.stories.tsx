@@ -17,11 +17,11 @@ const meta: Meta<typeof Grid.Cell> = {
   component: Grid.Cell,
   render: (args) => (
     <Grid.Root dimension={{ width: 1, height: 1 }} grid={{ size: { width: 300, height: 300 }, gap: 10 }}>
-      <Grid.Content>
-        <Grid.Cell {...args}>
+      <Grid.Viewport>
+        <Grid.Cell {...args} draggable={false}>
           <Card.Text>This is a card with some long text that should wrap.</Card.Text>
         </Grid.Cell>
-      </Grid.Content>
+      </Grid.Viewport>
     </Grid.Root>
   ),
   decorators: [withTheme],

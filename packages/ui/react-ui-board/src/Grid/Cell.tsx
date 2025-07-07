@@ -8,6 +8,7 @@ import React, { type PropsWithChildren, useEffect, useRef, useState } from 'reac
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
+import { mx } from '@dxos/react-ui-theme';
 
 import { useGridContext } from './Grid';
 import { getGridRect } from './geometry';
@@ -19,10 +20,11 @@ export type CellProps<T extends HasId = any> = ThemedClassName<
   PropsWithChildren<{
     item: T;
     layout: CellLayout;
+    draggable?: boolean;
   }>
 >;
 
-export const Cell = ({ classNames, children, item, layout }: CellProps) => {
+export const Cell = ({ classNames, children, item, layout, draggable: isDraggable }: CellProps) => {
   const { grid, zoom, onSelect, onDelete, onMove } = useGridContext(Cell.displayName);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -34,8 +36,9 @@ export const Cell = ({ classNames, children, item, layout }: CellProps) => {
     return draggable({
       element: rootRef.current,
       dragHandle: dragHandleRef.current,
-      canDrag: () => !zoom,
+      canDrag: () => isDraggable !== false && !zoom,
       onDragStart: () => {
+        // TODO(burdon): Change border of preview to outline while dragging.
         setDragState('dragging');
       },
       onDrop: ({
@@ -50,7 +53,7 @@ export const Cell = ({ classNames, children, item, layout }: CellProps) => {
         }
       },
     });
-  }, [zoom]);
+  }, [isDraggable, zoom]);
 
   // TODO(burdon): Title accessor?
   const title = item.id;
@@ -59,7 +62,8 @@ export const Cell = ({ classNames, children, item, layout }: CellProps) => {
     <Card.Root
       ref={rootRef}
       // TODO(burdon): Root should have no padding by default (leave that to Content?)
-      classNames='absolute p-0'
+      // TODO(burdon): Common fragment for placeholder opacity?
+      classNames={mx('absolute p-0', dragState === 'dragging' && 'opacity-50')}
       style={getGridRect(grid, layout)}
       onClick={() => onSelect?.(item.id)}
     >

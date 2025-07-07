@@ -57,8 +57,7 @@ type GridContextValue = {
   readonly: boolean;
   dimension: Size;
   bounds: Size;
-  // TODO(burdon): Overscroll?
-  margin: number;
+  overScroll: number;
   grid: GridGeometry;
   zoom: boolean;
   controller: GridController;
@@ -79,7 +78,7 @@ type RootProps = PropsWithChildren<
     Partial<
       Pick<
         GridContextValue,
-        'layout' | 'readonly' | 'dimension' | 'margin' | 'grid' | 'onSelect' | 'onDelete' | 'onMove' | 'onAdd'
+        'layout' | 'readonly' | 'dimension' | 'overScroll' | 'grid' | 'onSelect' | 'onDelete' | 'onMove' | 'onAdd'
       >
     >
   >
@@ -93,7 +92,7 @@ const Root = forwardRef<GridController, RootProps>(
       layout,
       readonly,
       dimension = defaultDimension,
-      margin,
+      overScroll,
       grid = defaultGrid,
       onSelect,
       onDelete,
@@ -102,12 +101,15 @@ const Root = forwardRef<GridController, RootProps>(
     },
     forwardedRef,
   ) => {
-    const { ref: containerRef, width, height } = useResizeDetector();
+    const containerRef = useRef<HTMLDivElement>(null);
+    const { width, height } = useResizeDetector({ targetRef: containerRef });
     const bounds = useMemo<Size>(() => getGridBounds(dimension, grid), [dimension, grid]);
 
-    const [visible, setVisible] = useState(false);
+    const [mounted, setMounted] = useState(false);
     const [zoom, setZoom] = useState(false);
     const [center, setCenter] = useState({ x: bounds.width / 2, y: bounds.height / 2 });
+
+    // External controller.
     const controller = useMemo<GridController>(
       () => ({
         center: (cell) => {
@@ -130,18 +132,27 @@ const Root = forwardRef<GridController, RootProps>(
     );
     useImperativeHandle(forwardedRef, () => controller, [controller]);
 
+    // Auto-center (on mount).
     useEffect(() => {
       const container = containerRef.current;
       if (container && width && height) {
         container.scrollTo({
           left: center.x - width / 2,
           top: center.y - height / 2,
-          behavior: visible ? 'smooth' : 'auto',
+          behavior: mounted ? 'smooth' : 'auto',
         });
 
-        setVisible(true);
+        setMounted(true);
       }
     }, [center, bounds, width, height]);
+
+    // Auto-scroll.
+    useEffect(() => {
+      invariant(containerRef.current);
+      return autoScrollForElements({
+        element: containerRef.current,
+      });
+    }, []);
 
     const handleSelect = useCallback<NonNullable<GridContextValue['onSelect']>>(
       (id) => {
@@ -156,7 +167,7 @@ const Root = forwardRef<GridController, RootProps>(
         readonly={readonly ?? false}
         dimension={dimension}
         bounds={bounds}
-        margin={margin ?? 0}
+        overScroll={overScroll ?? 0}
         zoom={zoom}
         grid={grid}
         controller={controller}
@@ -169,11 +180,11 @@ const Root = forwardRef<GridController, RootProps>(
           ref={containerRef}
           className={mx(
             'relative grid grow overflow-auto scrollbar-none opacity-0 transition-opacity duration-1000',
-            visible && 'opacity-100',
+            mounted && 'opacity-100',
             classNames,
           )}
           style={{
-            padding: margin,
+            padding: overScroll,
           }}
         >
           {children}
@@ -236,21 +247,14 @@ const Controls = ({ classNames }: ControlsProps) => {
   return (
     <div className={mx('fixed top-4 left-4 z-10', classNames)}>
       <Toolbar.Root>
-        <IconButton
-          icon='ph--crosshair--regular'
-          size={5}
-          iconOnly
-          label='Center'
-          onClick={() => controller.center()}
-        />
+        <IconButton icon='ph--crosshair--regular' iconOnly label='Center' onClick={() => controller.center()} />
         <IconButton
           icon={zoom ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
-          size={5}
           iconOnly
           label='Zoom'
           onClick={() => controller.toggleZoom()}
         />
-        {!readonly && <IconButton icon='ph--plus--regular' size={5} iconOnly label='Add' />}
+        {!readonly && <IconButton icon='ph--plus--regular' iconOnly label='Add' />}
       </Toolbar.Root>
     </div>
   );
@@ -281,7 +285,13 @@ const Background = () => {
   return (
     <div className='absolute inset-0'>
       {cells.map(({ position, rect }, index) => (
-        <DropTarget key={index} position={position} rect={rect} onClick={onAdd ? () => onAdd(position) : undefined} />
+        <CellDropTarget
+          key={index}
+          position={position}
+          rect={rect}
+          // TODO(burdon): Menu.
+          onClick={onAdd ? () => onAdd(position) : undefined}
+        />
       ))}
     </div>
   );
@@ -289,13 +299,13 @@ const Background = () => {
 
 Background.displayName = 'Grid.Background';
 
-type DropTargetProps = {
+type CellDropTargetProps = {
   position: Position;
   rect: Rect;
   onClick?: () => void;
 };
 
-const DropTarget = ({ position, rect, onClick }: DropTargetProps) => {
+const CellDropTarget = ({ position, rect, onClick }: CellDropTargetProps) => {
   const [active, setActive] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -313,10 +323,6 @@ const DropTarget = ({ position, rect, onClick }: DropTargetProps) => {
         onDrop: () => {
           setActive(false);
         },
-      }),
-      autoScrollForElements({
-        element: ref.current,
-        getAllowedAxis: () => 'vertical',
       }),
     );
   }, []);
@@ -359,9 +365,9 @@ export const Grid = {
 export type {
   RootProps as GridRootProps,
   ViewportProps as GridViewportProps,
-  CellProps as GridCellProps,
   ControlsProps as GridControlsProps,
   BackgroundProps as GridBackgroundProps,
+  CellProps as GridCellProps,
   GridController,
 };
 

@@ -78,7 +78,7 @@ type Story = StoryObj<StoryProps>;
 export const Default: Story = {
   args: {
     items: [{ id: '0' }, { id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }, { id: '5' }, { id: '6' }],
-    margin: 300,
+    overScroll: 300,
     grid: {
       size: { width: 300, height: 300 },
       gap: 16,
