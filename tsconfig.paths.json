@@ -52,6 +52,12 @@
       "@dxos/plugin-automation/types": [
         "packages/plugins/plugin-automation/src/types.ts"
       ],
+      "@dxos/plugin-board": [
+        "packages/plugins/plugin-board/src/index.ts"
+      ],
+      "@dxos/plugin-board/types": [
+        "packages/plugins/plugin-board/src/types.ts"
+      ],
       "@dxos/plugin-chess": [
         "packages/plugins/plugin-chess/src/index.ts"
       ],

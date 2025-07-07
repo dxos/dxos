@@ -5810,6 +5810,115 @@ importers:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
 
+  packages/plugins/plugin-board:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/ai
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../../core/artifact
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/assistant
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@dxos/plugin-search':
+        specifier: workspace:*
+        version: link:../plugin-search
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-board':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-board
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@preact-signals/safe-react':
+        specifier: ^0.9.0
+        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@18.2.0)
+      '@preact/signals-core':
+        specifier: ^1.9.0
+        version: 1.10.0
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
+    devDependencies:
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../devtools/storybook-utils
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../common/test-utils
+      '@types/react':
+        specifier: ~18.2.0
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ~18.2.0
+        version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: 5.4.7
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+
   packages/plugins/plugin-chess:
     dependencies:
       '@dxos/ai':
@@ -7098,6 +7207,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
