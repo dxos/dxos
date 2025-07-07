@@ -5,11 +5,11 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Grid, type GridContentProps, type GridRootProps } from './Grid';
+import { Grid, type GridController, type GridContentProps, type GridRootProps } from './Grid';
 import { type GridLayout } from './types';
 
 type StoryProps = GridRootProps & GridContentProps;
@@ -20,6 +20,8 @@ const meta: Meta<StoryProps> = {
   render: ({ layout: _layout, items: _items, ...props }) => {
     const [items, setItems] = useState(_items ?? []);
     const [layout, setLayout] = useState<GridLayout>(_layout ?? { tiles: {} });
+
+    const controller = useRef<GridController>(null);
 
     const handleAdd = useCallback<NonNullable<GridRootProps['onAdd']>>(
       (position) => {
@@ -41,8 +43,23 @@ const meta: Meta<StoryProps> = {
       [items, layout],
     );
 
+    const handleMove = useCallback<NonNullable<GridRootProps['onMove']>>(
+      (id, position) => {
+        setLayout((layout) => ({ ...layout, tiles: { ...layout.tiles, [id]: position } }));
+        controller.current?.center(position);
+      },
+      [layout, controller],
+    );
+
     return (
-      <Grid.Root {...props} layout={layout} onAdd={handleAdd} onDelete={handleDelete}>
+      <Grid.Root
+        {...props}
+        layout={layout}
+        onAdd={handleAdd}
+        onDelete={handleDelete}
+        onMove={handleMove}
+        ref={controller}
+      >
         <Grid.Controls />
         <Grid.Content items={items}>
           <Grid.Background />

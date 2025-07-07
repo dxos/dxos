@@ -42,7 +42,7 @@ const defaultDimension = { width: 7, height: 5 };
 const defaultGrid = { size: { width: 300, height: 300 }, gap: 16 };
 
 interface GridController {
-  center: (id?: string) => void;
+  center: (tile?: string | Position) => void;
   toggleZoom: () => void;
 }
 
@@ -61,6 +61,7 @@ type GridContextValue = {
   controller: GridController;
   onSelect?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onMove?: (id: string, position: Position) => void;
   onAdd?: (position: Position) => void;
 };
 
@@ -75,7 +76,7 @@ type RootProps = PropsWithChildren<
     Partial<
       Pick<
         GridContextValue,
-        'layout' | 'readonly' | 'dimension' | 'margin' | 'grid' | 'onSelect' | 'onDelete' | 'onAdd'
+        'layout' | 'readonly' | 'dimension' | 'margin' | 'grid' | 'onSelect' | 'onDelete' | 'onMove' | 'onAdd'
       >
     >
   >
@@ -93,6 +94,7 @@ const Root = forwardRef<GridController, RootProps>(
       grid = defaultGrid,
       onSelect,
       onDelete,
+      onMove,
       onAdd,
     },
     forwardedRef,
@@ -105,12 +107,11 @@ const Root = forwardRef<GridController, RootProps>(
     const [center, setCenter] = useState({ x: bounds.width / 2, y: bounds.height / 2 });
     const controller = useMemo<GridController>(
       () => ({
-        center: (id) => {
-          if (id) {
-            const tile = layout?.tiles[id];
-            if (tile) {
-              const rect = getGridRect(grid, tile);
-              const center = getCenter(rect);
+        center: (tile) => {
+          if (tile) {
+            const position = typeof tile === 'string' ? layout?.tiles[tile] : tile;
+            if (position) {
+              const center = getCenter(getGridRect(grid, position));
               setCenter({ x: bounds.width / 2 + center.x, y: bounds.height / 2 + center.y });
               setZoom(false);
             }
@@ -158,6 +159,7 @@ const Root = forwardRef<GridController, RootProps>(
         controller={controller}
         onSelect={onSelect ?? handleSelect}
         onDelete={onDelete}
+        onMove={onMove}
         onAdd={readonly ? undefined : onAdd}
       >
         <div
@@ -298,6 +300,7 @@ const DropTarget = ({ position, rect, onClick }: DropTargetProps) => {
     invariant(element);
     return dropTargetForElements({
       element,
+      getData: () => ({ position }),
       onDragEnter: () => {
         setDragging(true);
       },
@@ -348,6 +351,7 @@ export type {
   TileProps as GridTileProps,
   ControlsProps as GridControlsProps,
   BackgroundProps as GridBackgroundProps,
+  GridController,
 };
 
 export { useGridContext };

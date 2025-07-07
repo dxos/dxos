@@ -13,7 +13,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { useGridContext } from './Grid';
 import { getGridRect } from './geometry';
-import { type HasId, type TileLayout } from './types';
+import { type Position, type HasId, type TileLayout } from './types';
 
 // TODO(burdon): Contains surface like Kanban.
 // TODO(burdon): Drag handles only visible on hover.
@@ -26,7 +26,7 @@ export type TileProps<T extends HasId = any> = ThemedClassName<{
 }>;
 
 export const Tile = ({ classNames, item, layout }: TileProps) => {
-  const { grid, onSelect, onDelete } = useGridContext('Tile');
+  const { grid, onSelect, onDelete, onMove } = useGridContext('Tile');
 
   // TODO(burdon): Title accessor.
   const title = item.id;
@@ -42,8 +42,16 @@ export const Tile = ({ classNames, item, layout }: TileProps) => {
         onDragStart: () => {
           setDragState('dragging');
         },
-        onDrop: () => {
+        onDrop: ({
+          location: {
+            current: { dropTargets },
+          },
+        }) => {
           setDragState('idle');
+          const position = dropTargets[0]?.data.position as Position;
+          if (position) {
+            onMove?.(item.id, position);
+          }
         },
       }),
     );
