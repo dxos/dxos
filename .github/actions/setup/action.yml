@@ -4,6 +4,8 @@ description: Setup the environment for the other workflows
 runs:
   using: 'composite'
   steps:
+    # TODO(wittjosiah): This shouldn't be necessary, but it is when running in BuildJet.
+    #   It's not clear why, the Docker image is setup for the user to own the workspace.
     - name: Mark workspace as safe
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       shell: bash
@@ -17,7 +19,7 @@ runs:
     - name: Cache pnpm store
       uses: actions/cache@v4
       with:
-        path: ~/.pnpm-store
+        path: ${{ env.PNPM_HOME }}/store
         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
           ${{ runner.os }}-pnpm-store-
