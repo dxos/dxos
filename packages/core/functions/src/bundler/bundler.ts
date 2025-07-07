@@ -8,6 +8,9 @@ import { build, initialize, type BuildResult, type Plugin } from 'esbuild-wasm';
 import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { exponentialBackoffInterval } from '@dxos/util';
+import { cancelWithContext, Context } from '@dxos/context';
+import { runInContext, runInContextAsync, sleep } from '@dxos/async';
 
 export type Import = {
   moduleUrl: string;
@@ -263,8 +266,39 @@ const httpPlugin: Plugin = {
     // When a URL is loaded, we want to actually download the content from the internet.
     // This has just enough logic to be able to handle the example import from unpkg.com but in reality this would probably need to be more complex.
     build.onLoad({ filter: /.*/, namespace: 'http-url' }, async (args) => {
-      const response = await fetch(args.path);
-      return { contents: await response.text(), loader: 'jsx' };
+      return retryExponentially(new Context(), async () => {
+        const response = await fetch(args.path);
+        if (response.ok) {
+          return { contents: await response.text(), loader: 'jsx' };
+        } else {
+          throw new Error('failed to fetch');
+        }
+      });
     });
   },
+};
+
+const retryExponentially = async (
+  ctx: Context,
+  cb: () => Promise<any>,
+  options: { maxRetries: number; initialDelay: number; maxDelay: number } = {
+    maxRetries: 10,
+    initialDelay: 1000,
+    maxDelay: 10000,
+  },
+) => {
+  let retries = 0;
+  let delay = options.initialDelay;
+  while (retries < options.maxRetries) {
+    try {
+      return await cb();
+    } catch (error: any) {
+      await cancelWithContext(ctx, sleep(delay));
+      delay = Math.min(delay * 2, options.maxDelay);
+      retries++;
+      log('Retrying...', { retries, delay, error });
+    }
+  }
+
+  ctx.raise(new Error('Exceeded max retries'));
 };
