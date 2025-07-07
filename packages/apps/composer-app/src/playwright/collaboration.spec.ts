@@ -5,8 +5,6 @@
 import { test, expect } from '@playwright/test';
 import { platform } from 'node:os';
 
-import { sleep } from '@dxos/async';
-
 import { AppManager } from './app-manager';
 import { Markdown } from './plugins';
 
@@ -68,7 +66,7 @@ test.describe('Collaboration tests', () => {
     await guest.toggleSpaceCollapsed(1, true);
     await expect(guest.getObjectLinks()).toHaveCount(3);
     // TODO(wittjosiah): Sometimes navigation fails without a delay.
-    await sleep(1_000);
+    await guest.page.waitForTimeout(1_000);
     await guest.navigateToObject(2);
 
     {
@@ -99,7 +97,7 @@ test.describe('Collaboration tests', () => {
     await guest.toggleSpaceCollapsed(1, true);
     await expect(guest.getObjectLinks()).toHaveCount(3);
     // TODO(wittjosiah): Sometimes navigation fails without a delay.
-    await sleep(1_000);
+    await guest.page.waitForTimeout(1_000);
     await guest.navigateToObject(2);
 
     // Find the plank in the guest.
@@ -113,7 +111,7 @@ test.describe('Collaboration tests', () => {
     ]);
 
     // TODO(wittjosiah): Focusing too quickly causes the cursors not to show up.
-    await sleep(1_000);
+    await Promise.all([host.page.waitForTimeout(1_000), guest.page.waitForTimeout(1_000)]);
 
     await Promise.all([
       Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus(),
@@ -152,7 +150,7 @@ test.describe('Collaboration tests', () => {
     await guest.toggleSpaceCollapsed(1, true);
     await expect(guest.getObjectLinks()).toHaveCount(3);
     // TODO(wittjosiah): Sometimes navigation fails without a delay.
-    await sleep(1_000);
+    await guest.page.waitForTimeout(1_000);
     await guest.navigateToObject(2);
 
     // Get guest's markdown planks and find the locator for the shared document
@@ -212,7 +210,7 @@ test.describe('Collaboration tests', () => {
     await guest.toggleSpaceCollapsed(1, true);
     await expect(guest.getObjectLinks()).toHaveCount(3);
     // TODO(wittjosiah): Sometimes navigation fails without a delay.
-    await sleep(1_000);
+    await guest.page.waitForTimeout(1_000);
     await guest.navigateToObject(2);
 
     const guestPlank = guest.deck.plank();

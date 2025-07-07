@@ -7159,6 +7159,9 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../devtools/storybook-utils
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../common/test-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -14744,8 +14747,8 @@ importers:
   tools/vite-plugin-icons:
     dependencies:
       '@ch-ui/icons':
-        specifier: ^0.5.0
-        version: 0.5.0
+        specifier: ^1.0.1
+        version: 1.0.1
       glob:
         specifier: ^7.2.3
         version: 7.2.3
@@ -16658,8 +16661,8 @@ packages:
     resolution: {integrity: sha512-+kXVvIDVWq/X65sO+daSpz8nFiVwqPrOv944fpcHCx/6gzuptV4oKkthsElyGGd0NQrwW8noFUB86x6C1HBR6g==}
     engines: {node: '>=20.0.0'}
 
-  '@ch-ui/icons@0.5.0':
-    resolution: {integrity: sha512-vevNSzPHnVDgyw6ZotbnE0y4FZFtIQQVKKjwVHGcfST7C5bqRyt69K1Nooo0r6s7laeJhS7YwXYmgLyPouc12w==}
+  '@ch-ui/icons@1.0.1':
+    resolution: {integrity: sha512-RKFKEC6jeNcERFAsdJ2AuK25ZevYLUI8I8PoH2CCIjD2xkP3oSVCDbnS7a2BjOOc/HTzK93Bt5cYbuvGyMR0PA==}
     engines: {node: '>=20.0.0'}
 
   '@ch-ui/tailwind-tokens@2.7.0':
@@ -38828,7 +38831,7 @@ snapshots:
     dependencies:
       colorjs: colorjs.io@0.5.2
 
-  '@ch-ui/icons@0.5.0':
+  '@ch-ui/icons@1.0.1':
     dependencies:
       svg-sprite: 2.0.4
 

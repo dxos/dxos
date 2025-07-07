@@ -1,7 +1,13 @@
 name: Check
 
 on:
+  pull_request:
+  merge_group:
+
   push:
+    branches:
+      - main
+      - ci/*
 
   schedule:
     - cron: '0 4 * * 1-5'
@@ -112,11 +118,11 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=test
+        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=test --verbose
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many --targets=test
+        run: pnpm exec nx run-many --targets=test --verbose
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
@@ -125,7 +131,7 @@ jobs:
           path: test-results
           retention-days: 7
 
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         if: ${{ matrix.node-version == '20.12.1' }}
         with:
           directory: ./coverage
