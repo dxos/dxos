@@ -22,10 +22,6 @@
       "type": "array",
       "description": "List of entrypoints for esbuild to build from"
     },
-    "formats": {
-      "type": "string",
-      "description": "Format to output the build files in"
-    },
     "injectGlobals": {
       "type": "boolean",
       "description": "Inject import for node stdlib globals",
@@ -49,6 +45,11 @@
       "type": "array",
       "description": "List of platforms to create individual bundles for",
       "default": ["browser", "node"]
+    },
+    "moduleFormat": {
+      "type": "array",
+      "description": "List of module formats to emit",
+      "default": ["esm"]
     },
     "sourcemap": {
       "type": "boolean",

@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { glob as globCb } from 'glob';
+import Glob from 'glob';
 import { promisify } from 'node:util';
 
-const glob = promisify(globCb);
+const glob = promisify(Glob.glob);
 
 /**
  *
