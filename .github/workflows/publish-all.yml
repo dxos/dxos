@@ -52,7 +52,7 @@ jobs:
         run: sudo apt-get install libxtst-dev libpng++-dev
 
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
