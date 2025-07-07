@@ -1,7 +1,13 @@
 name: Check BuildJet
 
 on:
+  pull_request:
+  merge_group:
+
   push:
+    branches:
+      - main
+      - ci/*
 
   schedule:
     - cron: '0 4 * * 1-5'
