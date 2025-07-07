@@ -112,11 +112,11 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=test
+        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=test --verbose
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many --targets=test
+        run: pnpm exec nx run-many --targets=test --verbose
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
