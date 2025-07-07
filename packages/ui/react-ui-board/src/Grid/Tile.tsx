@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { IconButton } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useGridContext } from './Grid';
@@ -20,19 +20,33 @@ export type TileProps<T extends HasId = any> = ThemedClassName<{
   layout: TileLayout;
 }>;
 
-export const Tile = ({ classNames, item, layout: { x, y, width = 1, height = 1 } }: TileProps) => {
+export const Tile = ({ classNames, item, layout }: TileProps) => {
   const { grid, onSelect, onDelete } = useGridContext('Tile');
 
   return (
     <div
-      className={mx('absolute flex flex-col bg-inputSurface border border-separator rounded-sm shadow', classNames)}
-      style={getGridRect(grid, { x, y, width, height })}
+      className={mx('absolute flex flex-col', classNames)}
+      style={getGridRect(grid, layout)}
       onClick={() => onSelect?.(item.id)}
     >
-      <div className='flex p-2 is-full items-center overflow-hidden'>
-        <h1 className='pis-2 is-full truncate'>{item.id}</h1>
-        <IconButton icon='ph--x--regular' size={5} iconOnly label='Delete' onClick={() => onDelete?.(item.id)} />
-      </div>
+      {/* TODO(burdon): Remove need for custom padding; option to expand. */}
+      <Card.Root classNames='h-full p-0'>
+        {/* TODO(burdon): Should header by part of Content? If so, why is Content separate from Root? */}
+        <Card.Content classNames='h-full'>
+          <Card.Toolbar>
+            <Card.DragHandle toolbarItem />
+            {/* TODO(burdon): Card.Title? */}
+            <h1 className='is-full truncate'>{item.id}</h1>
+            <Card.ToolbarIconButton
+              icon='ph--x--regular'
+              size={5}
+              iconOnly
+              label='Delete'
+              onClick={() => onDelete?.(item.id)}
+            />
+          </Card.Toolbar>
+        </Card.Content>
+      </Card.Root>
     </div>
   );
 };

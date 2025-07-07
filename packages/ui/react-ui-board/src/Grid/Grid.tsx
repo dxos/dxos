@@ -5,7 +5,6 @@
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,
-  type ReactNode,
   forwardRef,
   useCallback,
   useEffect,
@@ -25,25 +24,34 @@ import { type HasId, type GridLayout, type Size, type Position } from './types';
 // TODO(burdon): Goal > Action > Result.
 // TODO(burdon): Infinite canvas: hierarchical zoom.
 
-// TODO(burdon): Data model.
+// TODO(burdon): Story with live objects.
 // TODO(burdon): Drag cards.
-// TODO(burdon): Plugin.
+// TODO(burdon): Center when has focus; key nav.
 // TODO(burdon): Editors with concurrent AI tiles.
 // TODO(burdon): Does scrollbar thin work?
-// TODO(burdon): Drag to select.
-// TODO(burdon): Key nav.
+// TODO(burdon): Drag to select/create.
+// TODO(burdon): Drag handles to resize.
 // TODO(burdon): Synthetic scrollbars.
 // TODO(burdon): Prevent browser nav when scrolling to edge.
+// TODO(burdon): Plugin.
+
+const defaultDimension = { width: 7, height: 5 };
+const defaultGrid = { size: { width: 300, height: 300 }, gap: 16 };
 
 interface GridController {
   center: (id?: string) => void;
   toggleZoom: () => void;
 }
 
+//
+// Context
+//
+
 type GridContextValue = {
+  layout?: GridLayout;
   readonly: boolean;
   dimension: Size;
-  size: Size;
+  bounds: Size;
   margin: number;
   grid: GridGeometry;
   zoom: boolean;
@@ -55,32 +63,28 @@ type GridContextValue = {
 
 const [GridContextProvider, useGridContext] = createContext<GridContextValue>('GridContext');
 
-const defaultDimension = { width: 7, height: 5 };
-const defaultGrid = { size: { width: 300, height: 300 }, gap: 16 };
-
 //
 // Root
 //
 
-type RootProps<T extends HasId = any> = PropsWithChildren<
+type RootProps = PropsWithChildren<
   ThemedClassName<
-    {
-      items: T[];
-      layout: GridLayout;
-    } & Partial<
-      Pick<GridContextValue, 'readonly' | 'dimension' | 'margin' | 'grid' | 'onSelect' | 'onDelete' | 'onAdd'>
+    Partial<
+      Pick<
+        GridContextValue,
+        'layout' | 'readonly' | 'dimension' | 'margin' | 'grid' | 'onSelect' | 'onDelete' | 'onAdd'
+      >
     >
   >
 >;
 
-const RootInner = forwardRef<GridController, RootProps>(
+const Root = forwardRef<GridController, RootProps>(
   (
     {
       children,
       classNames,
-      readonly,
-      items,
       layout,
+      readonly,
       dimension = defaultDimension,
       margin,
       grid = defaultGrid,
@@ -91,31 +95,31 @@ const RootInner = forwardRef<GridController, RootProps>(
     forwardedRef,
   ) => {
     const { ref: containerRef, width, height } = useResizeDetector();
-    const boardSize = useMemo<Size>(() => getGridBounds(dimension, grid), [dimension, grid]);
+    const bounds = useMemo<Size>(() => getGridBounds(dimension, grid), [dimension, grid]);
 
     const [visible, setVisible] = useState(false);
     const [zoom, setZoom] = useState(false);
-    const [center, setCenter] = React.useState({ x: boardSize.width / 2, y: boardSize.height / 2 });
+    const [center, setCenter] = useState({ x: bounds.width / 2, y: bounds.height / 2 });
     const controller = useMemo<GridController>(
       () => ({
         center: (id) => {
           if (id) {
-            const tile = layout.tiles[id];
+            const tile = layout?.tiles[id];
             if (tile) {
               const rect = getGridRect(grid, tile);
               const center = getCenter(rect);
-              setCenter({ x: boardSize.width / 2 + center.x, y: boardSize.height / 2 + center.y });
+              setCenter({ x: bounds.width / 2 + center.x, y: bounds.height / 2 + center.y });
               setZoom(false);
             }
           } else {
-            setCenter({ x: boardSize.width / 2, y: boardSize.height / 2 });
+            setCenter({ x: bounds.width / 2, y: bounds.height / 2 });
           }
         },
         toggleZoom: () => {
           setZoom((prev) => !prev);
         },
       }),
-      [layout, grid, boardSize],
+      [layout, grid, bounds],
     );
     useImperativeHandle(forwardedRef, () => controller, [controller]);
 
@@ -130,30 +134,7 @@ const RootInner = forwardRef<GridController, RootProps>(
 
         setVisible(true);
       }
-    }, [center, boardSize, width, height]);
-
-    // Child components.
-    const [inner, outer] = useMemo(() => {
-      if (Array.isArray(children)) {
-        const inner: ReactNode[] = [];
-        const outer: ReactNode[] = [];
-        children.forEach((child) => {
-          switch (child.type) {
-            case Controls:
-              outer.push(child);
-              break;
-            case Background:
-            default:
-              inner.push(child);
-              break;
-          }
-        });
-
-        return [inner, outer];
-      }
-
-      return [];
-    }, [children]);
+    }, [center, bounds, width, height]);
 
     const handleSelect = useCallback<NonNullable<GridContextValue['onSelect']>>(
       (id) => {
@@ -164,9 +145,10 @@ const RootInner = forwardRef<GridController, RootProps>(
 
     return (
       <GridContextProvider
+        layout={layout}
         readonly={readonly ?? false}
         dimension={dimension}
-        size={boardSize}
+        bounds={bounds}
         margin={margin ?? 0}
         zoom={zoom}
         grid={grid}
@@ -186,35 +168,52 @@ const RootInner = forwardRef<GridController, RootProps>(
             padding: margin,
           }}
         >
-          {outer}
-          {/* Board container. */}
-          <div
-            className={mx(
-              'relative transition-transform duration-300 border border-separator rounded-lg',
-              zoom && 'scale-50',
-            )}
-            style={{
-              width: boardSize.width,
-              height: boardSize.height,
-            }}
-          >
-            {/* Scrollable container. */}
-            <div className={mx('absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2')}>
-              {inner}
-              {items.map((item, index) => (
-                <Tile item={item} key={index} layout={layout.tiles[item.id] ?? { x: 0, y: 0 }} />
-              ))}
-            </div>
-          </div>
+          {children}
         </div>
       </GridContextProvider>
     );
   },
 );
 
-const Root = <T extends HasId = any>(props: RootProps<T>) => <RootInner {...props} />;
-
 Root.displayName = 'Grid.Root';
+
+//
+// Content
+//
+
+type ContentProps<T extends HasId = any> = ThemedClassName<
+  PropsWithChildren<{
+    items?: T[];
+  }>
+>;
+
+const Content = <T extends HasId = any>({ classNames, children, items }: ContentProps<T>) => {
+  const { layout, bounds, zoom } = useGridContext(Content.displayName);
+
+  return (
+    <div
+      className={mx(
+        'relative transition-transform duration-300 border border-separator rounded-lg',
+        zoom && 'scale-50',
+        classNames,
+      )}
+      style={{
+        width: bounds.width,
+        height: bounds.height,
+      }}
+    >
+      {/* Scrollable container. */}
+      <div className={mx('absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2')}>
+        {children}
+        {items?.map((item, index) => (
+          <Tile item={item} key={index} layout={layout?.tiles[item.id] ?? { x: 0, y: 0 }} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+Content.displayName = 'Grid.Content';
 
 //
 // Controls
@@ -223,7 +222,7 @@ Root.displayName = 'Grid.Root';
 type ControlsProps = ThemedClassName;
 
 const Controls = ({ classNames }: ControlsProps) => {
-  const { readonly, zoom, controller } = useGridContext('Controls');
+  const { readonly, zoom, controller } = useGridContext(Controls.displayName);
 
   return (
     <div className={mx('fixed top-2 left-2 z-10', classNames)}>
@@ -255,7 +254,7 @@ Controls.displayName = 'Grid.Controls';
 //
 
 const Background = () => {
-  const { grid, dimension, onAdd } = useGridContext('Background');
+  const { grid, dimension, onAdd } = useGridContext(Background.displayName);
 
   const cells = useMemo(() => {
     const cells: { position: Position; rect: Rect }[] = [];
@@ -300,11 +299,12 @@ Background.displayName = 'Grid.Background';
 
 export const Grid = {
   Root,
+  Content,
   Controls,
   Background,
   Tile,
 };
 
-export type { RootProps as GridRootProps, TileProps as GridTileProps };
+export type { RootProps as GridRootProps, ContentProps as GridContentProps, TileProps as GridTileProps };
 
 export { useGridContext };

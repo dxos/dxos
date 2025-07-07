@@ -9,14 +9,17 @@ import React, { useCallback, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Grid, type GridRootProps } from './Grid';
+import { Grid, type GridContentProps, type GridRootProps } from './Grid';
+import { type GridLayout } from './types';
 
-const meta: Meta<typeof Grid.Root> = {
+type StoryProps = GridRootProps & GridContentProps;
+
+const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-board/Grid',
   component: Grid.Root,
   render: (args) => {
-    const [items, setItems] = useState(args.items);
-    const [layout, setLayout] = useState(args.layout);
+    const [items, setItems] = useState(args.items ?? []);
+    const [layout, setLayout] = useState<GridLayout>(args.layout ?? { tiles: {} });
 
     const handleAdd = useCallback<NonNullable<GridRootProps['onAdd']>>(
       (position) => {
@@ -39,9 +42,11 @@ const meta: Meta<typeof Grid.Root> = {
     );
 
     return (
-      <Grid.Root items={items} layout={layout} onAdd={handleAdd} onDelete={handleDelete}>
+      <Grid.Root layout={layout} onAdd={handleAdd} onDelete={handleDelete}>
         <Grid.Controls />
-        <Grid.Background />
+        <Grid.Content items={items}>
+          <Grid.Background />
+        </Grid.Content>
       </Grid.Root>
     );
   },
@@ -50,7 +55,7 @@ const meta: Meta<typeof Grid.Root> = {
 
 export default meta;
 
-type Story = StoryObj<typeof Grid.Root>;
+type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {

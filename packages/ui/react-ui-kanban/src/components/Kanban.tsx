@@ -78,6 +78,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   itemsCount={cards.length}
                   getDropElement={getColumnDropElement}
                 >
+                  {/* TODO(burdon): Factor out Card to separate file. */}
                   {cards.map((card, cardIndex, cardsArray) => (
                     <Card.Root asChild key={card.id}>
                       <StackItem.Root
