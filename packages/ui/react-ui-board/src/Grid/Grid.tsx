@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,
@@ -20,7 +22,7 @@ import { invariant } from '@dxos/invariant';
 import { IconButton, Toolbar, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Tile, type TileProps } from './Tile';
+import { Cell, type CellProps } from './Cell';
 import { type GridGeometry, type Rect, getCenter, getGridBounds, getGridRect } from './geometry';
 import { type HasId, type GridLayout, type Size, type Position } from './types';
 
@@ -30,7 +32,7 @@ import { type HasId, type GridLayout, type Size, type Position } from './types';
 // TODO(burdon): Story with live objects.
 // TODO(burdon): Drag cards.
 // TODO(burdon): Center when has focus; key nav.
-// TODO(burdon): Editors with concurrent AI tiles.
+// TODO(burdon): Editors with concurrent AI cells.
 // TODO(burdon): Does scrollbar thin work?
 // TODO(burdon): Drag to select/create.
 // TODO(burdon): Drag handles to resize.
@@ -42,7 +44,7 @@ const defaultDimension = { width: 7, height: 5 };
 const defaultGrid = { size: { width: 300, height: 300 }, gap: 16 };
 
 interface GridController {
-  center: (tile?: string | Position) => void;
+  center: (cell?: string | Position) => void;
   toggleZoom: () => void;
 }
 
@@ -108,9 +110,9 @@ const Root = forwardRef<GridController, RootProps>(
     const [center, setCenter] = useState({ x: bounds.width / 2, y: bounds.height / 2 });
     const controller = useMemo<GridController>(
       () => ({
-        center: (tile) => {
-          if (tile) {
-            const position = typeof tile === 'string' ? layout?.tiles[tile] : tile;
+        center: (cell) => {
+          if (cell) {
+            const position = typeof cell === 'string' ? layout?.cells[cell] : cell;
             if (position) {
               const center = getCenter(getGridRect(grid, position));
               setCenter({ x: bounds.width / 2 + center.x, y: bounds.height / 2 + center.y });
@@ -187,14 +189,14 @@ Root.displayName = 'Grid.Root';
 // Content
 //
 
-type ContentProps<T extends HasId = any> = ThemedClassName<
+type ViewportProps<T extends HasId = any> = ThemedClassName<
   PropsWithChildren<{
     items?: T[];
   }>
 >;
 
-const Content = <T extends HasId = any>({ classNames, children, items }: ContentProps<T>) => {
-  const { layout, bounds, zoom } = useGridContext(Content.displayName);
+const Viewport = <T extends HasId = any>({ classNames, children, items }: ViewportProps<T>) => {
+  const { layout, bounds, zoom } = useGridContext(Viewport.displayName);
 
   return (
     <div
@@ -209,18 +211,17 @@ const Content = <T extends HasId = any>({ classNames, children, items }: Content
       }}
     >
       {/* Scrollable container. */}
-      {/* TODO(burdon): Separate Viewport. */}
       <div className={mx('absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2')}>
         {children}
         {items?.map((item, index) => (
-          <Tile item={item} key={index} layout={layout?.tiles[item.id] ?? { x: 0, y: 0 }} />
+          <Cell item={item} key={index} layout={layout?.cells[item.id] ?? { x: 0, y: 0 }} />
         ))}
       </div>
     </div>
   );
 };
 
-Content.displayName = 'Grid.Content';
+Viewport.displayName = 'Grid.Viewport';
 
 //
 // Controls
@@ -298,21 +299,26 @@ const DropTarget = ({ position, rect, onClick }: DropTargetProps) => {
   const [active, setActive] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    const element = ref.current;
-    invariant(element);
-    return dropTargetForElements({
-      element,
-      getData: () => ({ position }),
-      onDragEnter: () => {
-        setActive(true);
-      },
-      onDragLeave: () => {
-        setActive(false);
-      },
-      onDrop: () => {
-        setActive(false);
-      },
-    });
+    invariant(ref.current);
+    return combine(
+      dropTargetForElements({
+        element: ref.current,
+        getData: () => ({ position }),
+        onDragEnter: () => {
+          setActive(true);
+        },
+        onDragLeave: () => {
+          setActive(false);
+        },
+        onDrop: () => {
+          setActive(false);
+        },
+      }),
+      autoScrollForElements({
+        element: ref.current,
+        getAllowedAxis: () => 'vertical',
+      }),
+    );
   }, []);
 
   return (
@@ -344,16 +350,16 @@ const DropTarget = ({ position, rect, onClick }: DropTargetProps) => {
 
 export const Grid = {
   Root,
-  Content,
+  Viewport,
   Controls,
   Background,
-  Tile,
+  Cell,
 };
 
 export type {
   RootProps as GridRootProps,
-  ContentProps as GridContentProps,
-  TileProps as GridTileProps,
+  ViewportProps as GridViewportProps,
+  CellProps as GridCellProps,
   ControlsProps as GridControlsProps,
   BackgroundProps as GridBackgroundProps,
   GridController,

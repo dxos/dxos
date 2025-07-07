@@ -9,17 +9,17 @@ import React, { useCallback, useState, useRef } from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Grid, type GridController, type GridContentProps, type GridRootProps } from './Grid';
+import { Grid, type GridController, type GridRootProps, type GridViewportProps } from './Grid';
 import { type GridLayout } from './types';
 
-type StoryProps = GridRootProps & GridContentProps;
+type StoryProps = GridRootProps & GridViewportProps;
 
 const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-board/Grid',
   component: Grid.Root,
   render: ({ layout: _layout, items: _items, ...props }) => {
     const [items, setItems] = useState(_items ?? []);
-    const [layout, setLayout] = useState<GridLayout>(_layout ?? { tiles: {} });
+    const [layout, setLayout] = useState<GridLayout>(_layout ?? { cells: {} });
 
     const controller = useRef<GridController>(null);
 
@@ -27,7 +27,7 @@ const meta: Meta<StoryProps> = {
       (position) => {
         const id = items.length.toString();
         setItems([...items, { id }]);
-        setLayout((layout) => ({ ...layout, tiles: { ...layout.tiles, [id]: position } }));
+        setLayout((layout) => ({ ...layout, cells: { ...layout.cells, [id]: position } }));
       },
       [items, layout],
     );
@@ -37,7 +37,7 @@ const meta: Meta<StoryProps> = {
         setItems(items.filter((item) => item.id !== id));
         setLayout((layout) => ({
           ...layout,
-          tiles: Object.fromEntries(Object.entries(layout.tiles).filter(([tileId]) => tileId !== id)),
+          cells: Object.fromEntries(Object.entries(layout.cells).filter(([cellId]) => cellId !== id)),
         }));
       },
       [items, layout],
@@ -46,7 +46,7 @@ const meta: Meta<StoryProps> = {
     const handleMove = useCallback<NonNullable<GridRootProps['onMove']>>(
       (id, position) => {
         // TODO(burdon): Preserve size (if space available, otherwise shrink to fit -- or prevent drop).
-        setLayout((layout) => ({ ...layout, tiles: { ...layout.tiles, [id]: position } }));
+        setLayout((layout) => ({ ...layout, cells: { ...layout.cells, [id]: position } }));
         controller.current?.center(position);
       },
       [layout, controller],
@@ -62,9 +62,9 @@ const meta: Meta<StoryProps> = {
         ref={controller}
       >
         <Grid.Controls />
-        <Grid.Content items={items}>
+        <Grid.Viewport items={items}>
           <Grid.Background />
-        </Grid.Content>
+        </Grid.Viewport>
       </Grid.Root>
     );
   },
@@ -84,7 +84,7 @@ export const Default: Story = {
       gap: 16,
     },
     layout: {
-      tiles: {
+      cells: {
         '0': { x: 0, y: 0 },
         '1': { x: -3, y: -2 },
         '2': { x: 3, y: 2 },

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Position, type Size, type TileLayout } from './types';
+import { type Position, type Size, type CellLayout } from './types';
 
 export type Rect = Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
 
@@ -23,7 +23,7 @@ export const getGridBounds = (size: Size, grid: GridGeometry): Size => ({
   height: size.height * (grid.size.height + grid.gap) + grid.gap,
 });
 
-export const getGridRect = (grid: GridGeometry, { x, y, width = 1, height = 1 }: TileLayout): Rect => {
+export const getGridRect = (grid: GridGeometry, { x, y, width = 1, height = 1 }: CellLayout): Rect => {
   return {
     left: x * (grid.size.width + grid.gap) - grid.size.width / 2,
     top: y * (grid.size.height + grid.gap) - grid.size.height / 2,

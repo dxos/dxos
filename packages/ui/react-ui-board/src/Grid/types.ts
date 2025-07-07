@@ -19,11 +19,11 @@ export const Position = Schema.Struct({
 });
 export type Position = Schema.Schema.Type<typeof Position>;
 
-export const TileLayout = Schema.extend(Position, Schema.partial(Size));
-export type TileLayout = Schema.Schema.Type<typeof TileLayout>;
+export const CellLayout = Schema.extend(Position, Schema.partial(Size));
+export type CellLayout = Schema.Schema.Type<typeof CellLayout>;
 
 export const GridLayout = Schema.Struct({
-  tiles: Schema.Record({ key: Schema.String, value: TileLayout }),
+  cells: Schema.Record({ key: Schema.String, value: CellLayout }),
 });
 
 export type GridLayout = Schema.Schema.Type<typeof GridLayout>;
