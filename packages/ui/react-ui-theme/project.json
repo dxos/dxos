@@ -50,6 +50,10 @@
           "{projectRoot}/src/plugins/plugin.ts",
           "{projectRoot}/src/theme.css"
         ],
+        "moduleFormat": [
+          "cjs",
+          "esm"
+        ],
         "outputPath": "{projectRoot}/dist/plugin",
         "platforms": [
           "node"

@@ -14,13 +14,13 @@ const MAIN_BRANCH = 'origin/main';
 
   const rePkg = /(packages\/([\w\-_]+))\/?/;
   const { stdout: diff } = await execa('git', ['diff', `${MAIN_BRANCH}...HEAD`, '--name-only']);
-  const changedFiles = diff
-  .split('\n')
-  .filter((line) => rePkg.test(line) && existsSync(join(__dirname, '..', line)))
+  const changedFiles = diff.split('\n').filter((line) => rePkg.test(line) && existsSync(join(__dirname, '..', line)));
 
   const repoRoot = execSync('git rev-parse --show-toplevel').toString().trim();
 
-  const changedProjects = projects.filter(({ name, path }) => changedFiles.some(file => file.includes(relative(repoRoot, path)))).map(({ path }) => basename(path))
+  const changedProjects = projects
+    .filter(({ name, path }) => changedFiles.some((file) => file.includes(relative(repoRoot, path))))
+    .map(({ path }) => basename(path));
 
-  console.log(changedProjects.join(','))
+  console.log(changedProjects.join(','));
 })();

@@ -354,7 +354,7 @@ export class OllamaAiServiceClient implements AiServiceClient {
             }
 
             if (++toolInvocations > this._maxToolInvocations) {
-              throw new Error('Maximum number of tool invocations reached');
+              throw new Error(`Maximum number of tool invocations reached: ${this._maxToolInvocations}`);
             }
 
             const result = await runTools({

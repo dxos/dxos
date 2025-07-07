@@ -62,6 +62,10 @@ export const preview: Preview = {
       // https://storybook.js.org/docs/writing-stories/naming-components-and-hierarchy#sorting-stories
       // @ts-ignore
       storySort: (a, b) => {
+        if (a.title === b.title && a.type === 'docs' && b.type !== 'docs') {
+          return -1;
+        }
+
         return a.title === b.title ? 0 : a.id.localeCompare(b.id, undefined, { numeric: true });
       },
     },

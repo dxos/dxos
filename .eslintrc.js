@@ -22,11 +22,11 @@ module.exports = {
     '.eslintrc.js',
     '.mocharc.js',
     'esbuild-server.config.js',
-    'webpack.config.js',
+    'playwright.config.ts',
     'vite.config.ts',
     'vitest.config.ts',
-    'vitest.base.config.ts',
-    'playwright.config.cts',
+    'vitest.*.config.ts',
+    'webpack.config.js',
 
     // Dependencies
     'node_modules',

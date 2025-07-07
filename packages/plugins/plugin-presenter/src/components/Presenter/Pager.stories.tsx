@@ -7,6 +7,8 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { withTheme } from '@dxos/storybook-utils';
+
 import { PageNumber, Pager, type PagerProps, StartButton } from './Pager';
 
 const DefaultStory = ({ count = 20 }: PagerProps) => {
@@ -27,6 +29,7 @@ export const Default = {};
 const meta: Meta<PagerProps> = {
   title: 'plugins/plugin-presenter/Pager',
   render: DefaultStory,
+  decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },
