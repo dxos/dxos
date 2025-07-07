@@ -4,7 +4,7 @@
 
 export const translationKey = 'kanban';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [translationKey]: {
@@ -19,3 +19,5 @@ export default [
     },
   },
 ];
+
+export default translations;
