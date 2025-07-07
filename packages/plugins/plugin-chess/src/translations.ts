@@ -7,7 +7,7 @@ import { Type } from '@dxos/echo';
 import { CHESS_PLUGIN } from './meta';
 import { ChessType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(ChessType)]: {
@@ -23,4 +23,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

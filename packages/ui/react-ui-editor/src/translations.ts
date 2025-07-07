@@ -4,7 +4,7 @@
 
 export const translationKey = 'react-ui-editor';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [translationKey]: {
@@ -35,4 +35,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

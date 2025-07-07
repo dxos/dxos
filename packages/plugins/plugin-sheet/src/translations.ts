@@ -7,7 +7,7 @@ import { Type } from '@dxos/echo';
 import { SHEET_PLUGIN } from './meta';
 import { SheetType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(SheetType)]: {
@@ -48,3 +48,5 @@ export default [
     },
   },
 ] as const;
+
+export default translations;

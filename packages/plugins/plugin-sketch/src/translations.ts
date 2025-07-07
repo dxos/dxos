@@ -7,7 +7,7 @@ import { Type } from '@dxos/echo';
 import { SKETCH_PLUGIN } from './meta';
 import { DiagramType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(DiagramType)]: {
@@ -25,4 +25,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

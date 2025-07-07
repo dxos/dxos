@@ -7,7 +7,7 @@ import { Type } from '@dxos/echo';
 import { THREAD_PLUGIN } from './meta';
 import { ChannelType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(ChannelType)]: {
@@ -90,4 +90,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export const translationKey = 'table';
+export const translationKey = 'react-ui-table';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [translationKey]: {
@@ -33,3 +33,5 @@ export default [
     },
   },
 ] as const;
+
+export default translations;

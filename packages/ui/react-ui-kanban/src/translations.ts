@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export const translationKey = 'kanban';
+export const translationKey = 'react-ui-kanban';
 
 export const translations = [
   {
@@ -18,6 +18,6 @@ export const translations = [
       },
     },
   },
-];
+] as const;
 
 export default translations;

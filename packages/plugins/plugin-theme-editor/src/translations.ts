@@ -4,7 +4,7 @@
 
 import { THEME_EDITOR_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [THEME_EDITOR_PLUGIN]: {
@@ -12,4 +12,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

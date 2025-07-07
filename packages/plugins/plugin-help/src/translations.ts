@@ -4,7 +4,7 @@
 
 import { HELP_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [HELP_PLUGIN]: {
@@ -15,4 +15,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

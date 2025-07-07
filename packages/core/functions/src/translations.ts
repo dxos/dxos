@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 
 import { ScriptType } from './schema';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(ScriptType)]: {
@@ -17,4 +17,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

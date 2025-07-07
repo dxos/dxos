@@ -7,7 +7,7 @@ import { TableType } from '@dxos/react-ui-table';
 
 import { TABLE_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(TableType)]: {
@@ -41,4 +41,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

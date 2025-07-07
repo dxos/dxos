@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export default [
+export const translations = [
   {
     'en-US': {
       composer: {
@@ -13,4 +13,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

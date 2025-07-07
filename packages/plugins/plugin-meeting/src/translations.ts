@@ -7,7 +7,7 @@ import { Type } from '@dxos/echo';
 import { MEETING_PLUGIN } from './meta';
 import { MeetingType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(MeetingType)]: {
@@ -40,4 +40,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

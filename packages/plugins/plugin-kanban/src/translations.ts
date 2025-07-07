@@ -7,7 +7,7 @@ import { KanbanType } from '@dxos/react-ui-kanban';
 
 import { KANBAN_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(KanbanType)]: {
@@ -33,4 +33,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

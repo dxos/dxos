@@ -4,7 +4,7 @@
 
 import { TOKEN_MANAGER_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [TOKEN_MANAGER_PLUGIN]: {
@@ -19,4 +19,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

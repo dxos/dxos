@@ -7,7 +7,7 @@ import { Type } from '@dxos/echo';
 import { TEMPLATE_PLUGIN } from './meta';
 import { TemplateType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(TemplateType)]: {
@@ -22,4 +22,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

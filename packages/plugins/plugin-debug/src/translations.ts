@@ -4,7 +4,7 @@
 
 import { DEBUG_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [DEBUG_PLUGIN]: {
@@ -67,4 +67,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

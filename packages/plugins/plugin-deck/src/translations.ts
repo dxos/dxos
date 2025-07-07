@@ -4,7 +4,7 @@
 
 import { DECK_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [DECK_PLUGIN]: {
@@ -63,4 +63,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

@@ -4,7 +4,7 @@
 
 import { OBSERVABILITY_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [OBSERVABILITY_PLUGIN]: {
@@ -29,4 +29,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

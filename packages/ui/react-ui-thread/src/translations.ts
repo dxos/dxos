@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export const translationKey = 'thread';
+export const translationKey = 'react-ui-thread';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [translationKey]: {
@@ -21,4 +21,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

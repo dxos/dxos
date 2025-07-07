@@ -7,7 +7,7 @@ import { Type } from '@dxos/echo';
 import { MAP_PLUGIN } from './meta';
 import { MapType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(MapType)]: {
@@ -24,4 +24,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

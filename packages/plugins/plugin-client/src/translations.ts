@@ -4,7 +4,7 @@
 
 import { CLIENT_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [CLIENT_PLUGIN]: {
@@ -65,4 +65,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

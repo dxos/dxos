@@ -7,7 +7,7 @@ import { Type } from '@dxos/echo';
 import { INBOX_PLUGIN } from './meta';
 import { CalendarType, MailboxType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(MailboxType)]: {
@@ -58,4 +58,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

@@ -7,7 +7,7 @@ import { Type } from '@dxos/echo';
 import { MARKDOWN_PLUGIN } from './meta';
 import { DocumentType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(DocumentType)]: {
@@ -43,4 +43,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

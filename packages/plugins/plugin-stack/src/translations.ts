@@ -6,7 +6,7 @@ import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import { STACK_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [STACK_PLUGIN]: {
@@ -33,4 +33,6 @@ export default [
     },
   },
   ...stackTranslations,
-];
+] as const;
+
+export default translations;

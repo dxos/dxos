@@ -7,7 +7,7 @@ import { ScriptType } from '@dxos/functions';
 
 import { SCRIPT_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(ScriptType)]: {
@@ -76,4 +76,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

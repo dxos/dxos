@@ -7,7 +7,7 @@ import { Type } from '@dxos/echo';
 import { EXPLORER_PLUGIN } from './meta';
 import { ViewType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(ViewType)]: {
@@ -23,4 +23,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

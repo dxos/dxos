@@ -4,7 +4,7 @@
 
 import { AUTOMATION_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [AUTOMATION_PLUGIN]: {
@@ -39,4 +39,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

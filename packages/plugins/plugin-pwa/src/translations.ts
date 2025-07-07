@@ -4,7 +4,7 @@
 
 import { PWA_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [PWA_PLUGIN]: {
@@ -19,4 +19,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

@@ -4,7 +4,7 @@
 
 import { SETTINGS_PLUGIN } from './actions';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [SETTINGS_PLUGIN]: {
@@ -14,4 +14,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

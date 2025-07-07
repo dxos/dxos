@@ -4,7 +4,7 @@
 
 import { NAVTREE_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [NAVTREE_PLUGIN]: {
@@ -19,4 +19,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

@@ -4,7 +4,7 @@
 
 import { WELCOME_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [WELCOME_PLUGIN]: {
@@ -46,4 +46,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

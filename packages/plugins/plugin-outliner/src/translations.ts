@@ -7,7 +7,7 @@ import { Type } from '@dxos/echo';
 import { OUTLINER_PLUGIN } from './meta';
 import { JournalType, OutlineType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(JournalType)]: {
@@ -40,4 +40,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

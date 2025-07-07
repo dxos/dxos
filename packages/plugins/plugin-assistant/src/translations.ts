@@ -8,7 +8,7 @@ import { Type } from '@dxos/echo';
 import { ASSISTANT_PLUGIN } from './meta';
 import { AIChatType, TemplateType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(AIChatType)]: {
@@ -74,4 +74,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;

@@ -5,7 +5,7 @@
 import { WNFS_PLUGIN } from './meta';
 import { FileType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [FileType.typename]: {
@@ -19,4 +19,6 @@ export default [
       },
     },
   },
-];
+] as const;
+
+export default translations;
