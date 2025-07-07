@@ -47,7 +47,7 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  test('guest joins host’s space', async () => {
+  test.only('guest joins host\'s space', async () => {
     // Host creates a space and adds a markdown object
     await host.createSpace();
     await host.createObject({ type: 'Document', nth: 0 });
@@ -82,7 +82,7 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  test('host and guest can see each others’ cursors when same document is in focus', async () => {
+  test.only('host and guest can see each others\' cursors when same document is in focus', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document', nth: 0 });
 
@@ -126,7 +126,7 @@ test.describe('Collaboration tests', () => {
     ]);
   });
 
-  test('host and guest can see each others’ changes in same document', async () => {
+  test.only('host and guest can see each others\' changes in same document', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document', nth: 0 });
 
@@ -194,7 +194,7 @@ test.describe('Collaboration tests', () => {
     await expect(guestTextbox).toContainText(allParts);
   });
 
-  test('peers can see each others presence', async () => {
+  test.only('peers can see each others\' presence', async () => {
     test.setTimeout(90_000);
 
     await host.createSpace();

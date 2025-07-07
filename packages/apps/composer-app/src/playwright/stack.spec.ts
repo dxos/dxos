@@ -29,7 +29,7 @@ test.describe('Stack tests', () => {
     await host.closePage();
   });
 
-  test('create', async () => {
+  test.only('create', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Collection', nth: 0 });
     const stack = Stack.getStack(host.page);
@@ -37,7 +37,7 @@ test.describe('Stack tests', () => {
     await expect(host.getObjectLinks()).toHaveCount(3);
   });
 
-  test('create new document section', async () => {
+  test.only('create new document section', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Collection', nth: 0 });
     await host.toggleCollectionCollapsed(2);

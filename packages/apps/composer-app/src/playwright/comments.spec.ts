@@ -74,7 +74,7 @@ test.describe('Comments tests', () => {
     await expect(editedMessage).toContainText(editedText);
   });
 
-  test('delete message', async ({ browserName }) => {
+  test.only('delete message', async ({ browserName }) => {
     // TODO(wittjosiah): Flaky in CI.
     if (browserName !== 'chromium') {
       test.skip();

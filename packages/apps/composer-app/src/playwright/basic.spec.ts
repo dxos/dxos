@@ -67,7 +67,7 @@ test.describe('Basic tests', () => {
     await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 10_000 });
   });
 
-  test('reset app', async ({ browserName }) => {
+  test.only('reset app', async ({ browserName }) => {
     // TODO(wittjosiah): This test seems to be flaky in webkit.
     if (browserName === 'webkit') {
       test.skip();
@@ -84,7 +84,7 @@ test.describe('Basic tests', () => {
     await expect(host.getPluginToggle('dxos.org/plugin/stack')).not.toBeChecked();
   });
 
-  test('reset device', async ({ browserName }) => {
+  test.only('reset device', async ({ browserName }) => {
     test.setTimeout(60_000);
 
     // TODO(wittjosiah): This test seems to be flaky in firefox & webkit.

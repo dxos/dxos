@@ -87,11 +87,15 @@ export class AppManager {
     const platform = os.platform();
     const shortcut = platform === 'darwin' ? 'Meta+Shift+.' : platform === 'win32' ? 'Alt+Shift+.' : 'Alt+Shift+>';
     await this.page.keyboard.press(shortcut);
+    // Wait for the user account menu to open
+    await this.page.getByTestId('clientPlugin.devices').waitFor({ timeout: 5_000 });
   }
 
   async openUserDevices(): Promise<void> {
     await this.openUserAccount();
     await this.page.getByTestId('clientPlugin.devices').click();
+    // Wait for the devices page to load
+    await this.page.getByTestId('devicesContainer.createInvitation').waitFor({ timeout: 5_000 });
   }
 
   async createDeviceInvitation(): Promise<string> {
@@ -120,6 +124,8 @@ export class AppManager {
   async shareSpace(): Promise<void> {
     const shortcut = isMac ? 'Meta+.' : 'Alt+.';
     await this.page.keyboard.press(shortcut);
+    // Wait for the share space modal to open
+    await this.page.getByTestId('membersContainer.createInvitation.more').waitFor({ timeout: 5_000 });
   }
 
   async createSpaceInvitation(): Promise<string> {
@@ -180,9 +186,13 @@ export class AppManager {
       const state = await toggle.getAttribute('aria-selected');
       if (state !== nextState.toString()) {
         await toggle.click();
+        // Wait for the state to change
+        await this.page.waitForTimeout(500);
       }
     } else {
       await toggle.click();
+      // Wait for the state to change
+      await this.page.waitForTimeout(500);
     }
   }
 
@@ -199,6 +209,8 @@ export class AppManager {
 
     const objectForm = this.page.getByTestId('create-object-form');
     if (!(await objectForm.isVisible())) {
+      // Wait for the object to be created
+      await this.page.waitForTimeout(1000);
       return;
     }
 
@@ -206,10 +218,14 @@ export class AppManager {
       await objectForm.getByLabel('Name').fill(name);
     }
     await objectForm.getByTestId('save-button').click();
+    // Wait for the object to be created
+    await this.page.waitForTimeout(1000);
   }
 
   async navigateToObject(nth = 0): Promise<void> {
     await this.page.getByTestId('spacePlugin.object').nth(nth).click();
+    // Wait for navigation to complete
+    await this.page.waitForTimeout(1000);
   }
 
   async renameObject(newName: string, nth = 0): Promise<void> {
@@ -226,6 +242,8 @@ export class AppManager {
     await this.page.getByTestId('spacePlugin.renameObject.input').fill(newName);
     await this.page.getByTestId('spacePlugin.renameObject.input').press('Enter');
     await this.page.mouse.move(0, 0, { steps: 4 });
+    // Wait for the rename to complete
+    await this.page.waitForTimeout(1000);
   }
 
   async deleteObject(nth = 0): Promise<void> {
@@ -239,6 +257,8 @@ export class AppManager {
     await this.page.keyboard.press('ArrowDown');
     await this.page.getByTestId('spacePlugin.deleteObject').last().focus();
     await this.page.keyboard.press('Enter');
+    // Wait for the delete to complete
+    await this.page.waitForTimeout(1000);
   }
 
   getObject(nth = 0): Locator {
@@ -267,6 +287,8 @@ export class AppManager {
       await this.page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
       await this.page.waitForTimeout(100);
       await this.page.mouse.up();
+      // Wait for the drag to complete
+      await this.page.waitForTimeout(1000);
     }
   }
 
@@ -276,14 +298,20 @@ export class AppManager {
 
   async openSettings(): Promise<void> {
     await this.page.getByTestId('treeView.appSettings').click();
+    // Wait for settings to load
+    await this.page.waitForTimeout(500);
   }
 
   async openPluginRegistry(): Promise<void> {
     await this.page.getByTestId('treeView.pluginRegistry').click();
+    // Wait for registry to load
+    await this.page.waitForTimeout(500);
   }
 
   async openRegistryCategory(category: string): Promise<void> {
     await this.page.getByTestId(`pluginRegistry.${category}`).click();
+    // Wait for category to load
+    await this.page.waitForTimeout(500);
   }
 
   getPluginToggle(plugin: string): Locator {

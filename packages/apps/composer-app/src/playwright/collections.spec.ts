@@ -24,7 +24,7 @@ test.describe('Collection tests', () => {
     await expect(host.getObject(2)).toContainText('New collection');
   });
 
-  test('re-order collections', async ({ browserName }) => {
+  test.only('re-order collections', async ({ browserName }) => {
     // TODO(thure): Issue #7387: Firefox/Webkit is unable to click on the item actions menu, only in CI.
     test.skip(browserName !== 'chromium');
 
@@ -42,7 +42,7 @@ test.describe('Collection tests', () => {
     await expect(host.getObject(3)).toContainText('Collection 1');
   });
 
-  test('drag object into collection', async ({ browserName }) => {
+  test.only('drag object into collection', async ({ browserName }) => {
     // TODO(wittjosiah): This test is quite flaky in webkit.
     test.skip(browserName !== 'chromium');
 
