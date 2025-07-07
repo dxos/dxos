@@ -153,7 +153,7 @@ const CardStackStory = () => {
           <IconButton icon='ph--plus--regular' label='Add card' onClick={handleAddCard} classNames='is-full' />
         </CardStack.Footer>
 
-        <CardStack.Heading>CardStack</CardStack.Heading>
+        <CardStack.Heading>{faker.company.name()}</CardStack.Heading>
       </CardStack.Content>
     </CardStack.Root>
   );

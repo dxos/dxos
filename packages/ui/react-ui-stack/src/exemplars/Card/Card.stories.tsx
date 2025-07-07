@@ -11,7 +11,6 @@ import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Card } from './Card';
-import { StackItem } from '../../components';
 
 // Set a seed for reproducible random values
 faker.seed(0);
@@ -62,13 +61,11 @@ export default meta;
 
 export const Default: StoryObj<CardStoryProps> = {
   render: ({ title, description, image, showImage, showIcon }: CardStoryProps) => (
-    <div className='max-w-md'>
+    <div className='max-is-md'>
       <Card.Root>
         <Card.Content>
           <Card.Toolbar>
-            <StackItem.DragHandle asChild>
-              <Card.DragHandle toolbarItem />
-            </StackItem.DragHandle>
+            <Card.DragHandle toolbarItem />
             <Card.ToolbarSeparator variant='gap' />
             <Card.ToolbarIconButton iconOnly variant='ghost' icon='ph--x--regular' label={'remove card label'} />
           </Card.Toolbar>
