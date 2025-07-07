@@ -4,12 +4,15 @@ description: Setup the environment for the other workflows
 runs:
   using: 'composite'
   steps:
-    # - name: Mark workspace as safe
-    #   run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-    #   shell: bash
+    # TODO(wittjosiah): This shouldn't be necessary, but it is when running in BuildJet.
+    #   It's not clear why, the Docker image is setup for the user to own the workspace.
+    - name: Mark workspace as safe
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      shell: bash
 
     - name: Log out debug info
       run: |
+        echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
         node --version
         pnpm --version
       shell: bash
