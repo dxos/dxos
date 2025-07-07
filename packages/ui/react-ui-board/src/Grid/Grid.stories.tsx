@@ -9,10 +9,10 @@ import React, { useCallback, useState, useRef } from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Grid, type GridController, type GridRootProps, type GridViewportProps } from './Grid';
+import { Grid, type GridController, type GridContentProps, type GridRootProps } from './Grid';
 import { type GridLayout } from './types';
 
-type StoryProps = GridRootProps & GridViewportProps;
+type StoryProps = GridRootProps & GridContentProps;
 
 const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-board/Grid',
@@ -62,8 +62,9 @@ const meta: Meta<StoryProps> = {
         ref={controller}
       >
         <Grid.Controls />
-        <Grid.Viewport items={items}>
+        <Grid.Viewport>
           <Grid.Background />
+          <Grid.Content items={items} />
         </Grid.Viewport>
       </Grid.Root>
     );

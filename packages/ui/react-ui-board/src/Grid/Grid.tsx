@@ -200,15 +200,10 @@ Root.displayName = 'Grid.Root';
 // Content
 //
 
-type ViewportProps<T extends HasId = any> = ThemedClassName<
-  PropsWithChildren<{
-    items?: T[];
-  }>
->;
+type ViewportProps = ThemedClassName<PropsWithChildren>;
 
-const Viewport = <T extends HasId = any>({ classNames, children, items }: ViewportProps<T>) => {
-  const { layout, bounds, zoom } = useGridContext(Viewport.displayName);
-
+const Viewport = ({ classNames, children }: ViewportProps) => {
+  const { bounds, zoom } = useGridContext(Viewport.displayName);
   return (
     <div
       className={mx(
@@ -222,12 +217,7 @@ const Viewport = <T extends HasId = any>({ classNames, children, items }: Viewpo
       }}
     >
       {/* Scrollable container. */}
-      <div className={mx('absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2')}>
-        {children}
-        {items?.map((item, index) => (
-          <Cell item={item} key={index} layout={layout?.cells[item.id] ?? { x: 0, y: 0 }} />
-        ))}
-      </div>
+      <div className={mx('absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2')}>{children}</div>
     </div>
   );
 };
@@ -235,11 +225,32 @@ const Viewport = <T extends HasId = any>({ classNames, children, items }: Viewpo
 Viewport.displayName = 'Grid.Viewport';
 
 //
+// Content
+//
+
+type ContentProps<T extends HasId = any> = {
+  items?: T[];
+};
+
+const Content = <T extends HasId = any>({ items }: ContentProps<T>) => {
+  const { layout } = useGridContext(Viewport.displayName);
+
+  return (
+    <div role='none'>
+      {items?.map((item, index) => <Cell item={item} key={index} layout={layout?.cells[item.id] ?? { x: 0, y: 0 }} />)}
+    </div>
+  );
+};
+
+Content.displayName = 'Grid.Content';
+
+//
 // Controls
 //
 
 type ControlsProps = ThemedClassName;
 
+// TODO(burdon): Translations.
 // TODO(burdon): Create variant that can be housed outside of provider?
 const Controls = ({ classNames }: ControlsProps) => {
   const { readonly, zoom, controller } = useGridContext(Controls.displayName);
@@ -357,6 +368,7 @@ const CellDropTarget = ({ position, rect, onClick }: CellDropTargetProps) => {
 export const Grid = {
   Root,
   Viewport,
+  Content,
   Controls,
   Background,
   Cell,
@@ -365,6 +377,7 @@ export const Grid = {
 export type {
   RootProps as GridRootProps,
   ViewportProps as GridViewportProps,
+  ContentProps as GridContentProps,
   ControlsProps as GridControlsProps,
   BackgroundProps as GridBackgroundProps,
   CellProps as GridCellProps,
