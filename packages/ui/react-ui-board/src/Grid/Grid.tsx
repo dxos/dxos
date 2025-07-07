@@ -7,6 +7,7 @@ import React, {
   type PropsWithChildren,
   type ReactNode,
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -19,7 +20,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { Tile, type TileProps } from './Tile';
 import { type GridGeometry, type Rect, getCenter, getGridBounds, getGridRect } from './geometry';
-import { type HasId, type GridLayout, type Size } from './types';
+import { type HasId, type GridLayout, type Size, type Position } from './types';
 
 // TODO(burdon): Goal > Action > Result.
 // TODO(burdon): Infinite canvas: hierarchical zoom.
@@ -47,6 +48,9 @@ type GridContextValue = {
   grid: GridGeometry;
   zoom: boolean;
   controller: GridController;
+  onSelect?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onAdd?: (position: Position) => void;
 };
 
 const [GridContextProvider, useGridContext] = createContext<GridContextValue>('GridContext');
@@ -63,13 +67,27 @@ type RootProps<T extends HasId = any> = PropsWithChildren<
     {
       items: T[];
       layout: GridLayout;
-    } & Partial<Pick<GridContextValue, 'readonly' | 'dimension' | 'margin' | 'grid'>>
+    } & Partial<
+      Pick<GridContextValue, 'readonly' | 'dimension' | 'margin' | 'grid' | 'onSelect' | 'onDelete' | 'onAdd'>
+    >
   >
 >;
 
 const RootInner = forwardRef<GridController, RootProps>(
   (
-    { children, classNames, readonly, items, layout, dimension = defaultDimension, margin, grid = defaultGrid },
+    {
+      children,
+      classNames,
+      readonly,
+      items,
+      layout,
+      dimension = defaultDimension,
+      margin,
+      grid = defaultGrid,
+      onSelect,
+      onDelete,
+      onAdd,
+    },
     forwardedRef,
   ) => {
     const { ref: containerRef, width, height } = useResizeDetector();
@@ -137,6 +155,13 @@ const RootInner = forwardRef<GridController, RootProps>(
       return [];
     }, [children]);
 
+    const handleSelect = useCallback<NonNullable<GridContextValue['onSelect']>>(
+      (id) => {
+        controller.center(id);
+      },
+      [controller],
+    );
+
     return (
       <GridContextProvider
         readonly={readonly ?? false}
@@ -146,6 +171,9 @@ const RootInner = forwardRef<GridController, RootProps>(
         zoom={zoom}
         grid={grid}
         controller={controller}
+        onSelect={onSelect ?? handleSelect}
+        onDelete={onDelete}
+        onAdd={readonly ? undefined : onAdd}
       >
         <div
           ref={containerRef}
@@ -161,7 +189,10 @@ const RootInner = forwardRef<GridController, RootProps>(
           {outer}
           {/* Board container. */}
           <div
-            className={mx('relative transition-transform duration-300 border border-separator', zoom && 'scale-50')}
+            className={mx(
+              'relative transition-transform duration-300 border border-separator rounded-lg',
+              zoom && 'scale-50',
+            )}
             style={{
               width: boardSize.width,
               height: boardSize.height,
@@ -171,12 +202,7 @@ const RootInner = forwardRef<GridController, RootProps>(
             <div className={mx('absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2')}>
               {inner}
               {items.map((item, index) => (
-                <Tile
-                  item={item}
-                  key={index}
-                  layout={layout.tiles[item.id] ?? { x: 0, y: 0 }}
-                  onClick={() => controller.center(item.id)}
-                />
+                <Tile item={item} key={index} layout={layout.tiles[item.id] ?? { x: 0, y: 0 }} />
               ))}
             </div>
           </div>
@@ -229,13 +255,13 @@ Controls.displayName = 'Grid.Controls';
 //
 
 const Background = () => {
-  const { grid, dimension } = useGridContext('Background');
+  const { grid, dimension, onAdd } = useGridContext('Background');
 
   const cells = useMemo(() => {
-    const cells: Rect[] = [];
+    const cells: { position: Position; rect: Rect }[] = [];
     for (let x = -Math.floor(dimension.width / 2); x <= Math.floor(dimension.width / 2); x++) {
       for (let y = -Math.floor(dimension.height / 2); y <= Math.floor(dimension.height / 2); y++) {
-        cells.push(getGridRect(grid, { x, y }));
+        cells.push({ position: { x, y }, rect: getGridRect(grid, { x, y }) });
       }
     }
 
@@ -243,9 +269,24 @@ const Background = () => {
   }, [dimension, grid]);
 
   return (
-    <div className='absolute inset-0 pointer-events-none'>
-      {cells.map((rect, index) => (
-        <div key={index} style={rect} className='absolute border border-dashed border-separator rounded opacity-50' />
+    <div className='absolute inset-0'>
+      {cells.map(({ position, rect }, index) => (
+        <div
+          key={index}
+          style={rect}
+          className='absolute group flex items-center justify-center border border-dashed border-separator rounded opacity-50'
+        >
+          {onAdd && (
+            <IconButton
+              icon='ph--plus--regular'
+              size={5}
+              iconOnly
+              label='Add'
+              classNames='aspect-square opacity-0 transition-opacity duration-300 group-hover:opacity-100'
+              onClick={() => onAdd(position)}
+            />
+          )}
+        </div>
       ))}
     </div>
   );

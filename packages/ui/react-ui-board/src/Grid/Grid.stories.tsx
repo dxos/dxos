@@ -5,21 +5,46 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Grid } from './Grid';
+import { Grid, type GridRootProps } from './Grid';
 
 const meta: Meta<typeof Grid.Root> = {
   title: 'ui/react-ui-board/Grid',
   component: Grid.Root,
-  render: (args) => (
-    <Grid.Root {...args}>
-      <Grid.Controls />
-      <Grid.Background />
-    </Grid.Root>
-  ),
+  render: (args) => {
+    const [items, setItems] = useState(args.items);
+    const [layout, setLayout] = useState(args.layout);
+
+    const handleAdd = useCallback<NonNullable<GridRootProps['onAdd']>>(
+      (position) => {
+        const id = items.length.toString();
+        setItems([...items, { id }]);
+        setLayout((layout) => ({ ...layout, tiles: { ...layout.tiles, [id]: position } }));
+      },
+      [items, layout],
+    );
+
+    const handleDelete = useCallback<NonNullable<GridRootProps['onDelete']>>(
+      (id) => {
+        setItems(items.filter((item) => item.id !== id));
+        setLayout((layout) => ({
+          ...layout,
+          tiles: Object.fromEntries(Object.entries(layout.tiles).filter(([tileId]) => tileId !== id)),
+        }));
+      },
+      [items, layout],
+    );
+
+    return (
+      <Grid.Root items={items} layout={layout} onAdd={handleAdd} onDelete={handleDelete}>
+        <Grid.Controls />
+        <Grid.Background />
+      </Grid.Root>
+    );
+  },
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
