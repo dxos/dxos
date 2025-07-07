@@ -11,6 +11,7 @@ export default defineConfig({
   ...nxE2EPreset(import.meta.filename, { testDir: import.meta.dirname }),
   ...e2ePreset(import.meta.dirname),
   timeout: 30_000,
+  repeatEach: 10,
   webServer: {
     command: 'pnpm -w nx preview composer-app',
     port: 4200,
