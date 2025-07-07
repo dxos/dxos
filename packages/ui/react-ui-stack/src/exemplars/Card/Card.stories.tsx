@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { faker } from '@dxos/random';
@@ -60,10 +60,8 @@ const meta: Meta<CardStoryProps> = {
 
 export default meta;
 
-type Story = StoryObj<CardStoryProps>;
-
-export const Default: Story = {
-  render: ({ title, description, image, showImage, showIcon }) => (
+export const Default: StoryObj<CardStoryProps> = {
+  render: ({ title, description, image, showImage, showIcon }: CardStoryProps) => (
     <div className='max-w-md'>
       <Card.Root>
         <Card.Content>
