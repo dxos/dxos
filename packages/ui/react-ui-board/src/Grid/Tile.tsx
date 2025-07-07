@@ -9,7 +9,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
 
 import { useGridContext } from './Grid';
 import { getGridRect } from './geometry';
@@ -26,7 +25,7 @@ export type TileProps<T extends HasId = any> = ThemedClassName<{
 }>;
 
 export const Tile = ({ classNames, item, layout }: TileProps) => {
-  const { grid, onSelect, onDelete, onMove } = useGridContext('Tile');
+  const { grid, zoom, onSelect, onDelete, onMove } = useGridContext('Tile');
 
   // TODO(burdon): Title accessor.
   const title = item.id;
@@ -39,6 +38,7 @@ export const Tile = ({ classNames, item, layout }: TileProps) => {
     return combine(
       draggable({
         element,
+        canDrag: () => !zoom,
         onDragStart: () => {
           setDragState('dragging');
         },
@@ -55,35 +55,36 @@ export const Tile = ({ classNames, item, layout }: TileProps) => {
         },
       }),
     );
-  }, []);
+  }, [zoom]);
 
   return (
-    <div
+    <Card.Root
       ref={ref}
-      className={mx('absolute flex flex-col', classNames)}
+      // TODO(burdon): Root should have no padding by default (leave that to Content?)
+      classNames='absolute p-0'
       style={getGridRect(grid, layout)}
       onClick={() => onSelect?.(item.id)}
     >
-      {/* TODO(burdon): Remove need for custom padding; option to expand. */}
-      <Card.Root classNames='h-full p-0'>
-        {/* TODO(burdon): Should header by part of Content? If so, why is Content separate from Root? */}
-        <Card.Content classNames='h-full'>
-          <Card.Toolbar>
-            <Card.DragHandle toolbarItem />
-            {/* TODO(burdon): Card.Title? */}
-            <h1 className='is-full pis-1 truncate'>{title}</h1>
-            {dragState !== 'dragging' && (
-              <Card.ToolbarIconButton
-                icon='ph--x--regular'
-                size={5}
-                iconOnly
-                label='Delete'
-                onClick={() => onDelete?.(item.id)}
-              />
-            )}
-          </Card.Toolbar>
-        </Card.Content>
-      </Card.Root>
-    </div>
+      {/* TODO(burdon): Should the header (toolbar) be inside Content? If so, why is Content separate from Root? (e.g., rather than a Body). */}
+      <Card.Content classNames='h-full'>
+        <Card.Toolbar>
+          {/* TODO(burdon): How to set disabled? */}
+          <Card.DragHandle toolbarItem />
+          {/* TODO(burdon): Heading has strange padding (makes the Toolbar too tall). */}
+          {/* <Card.Heading classNames='grow truncate'>{title}</Card.Heading> */}
+          <h1 className='grow truncate pli-1'>{title}</h1>
+          {dragState !== 'dragging' && (
+            <Card.ToolbarIconButton
+              // TODO(burdon): Should be the same size/padding as the DragHandle (and square).
+              classNames='px-2'
+              icon='ph--x--regular'
+              iconOnly
+              label='Delete'
+              onClick={() => onDelete?.(item.id)}
+            />
+          )}
+        </Card.Toolbar>
+      </Card.Content>
+    </Card.Root>
   );
 };

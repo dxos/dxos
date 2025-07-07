@@ -45,6 +45,7 @@ const meta: Meta<StoryProps> = {
 
     const handleMove = useCallback<NonNullable<GridRootProps['onMove']>>(
       (id, position) => {
+        // TODO(burdon): Preserve size (if space available, otherwise shrink to fit -- or prevent drop).
         setLayout((layout) => ({ ...layout, tiles: { ...layout.tiles, [id]: position } }));
         controller.current?.center(position);
       },
