@@ -17,9 +17,9 @@ type StoryProps = GridRootProps & GridContentProps;
 const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-board/Grid',
   component: Grid.Root,
-  render: (args) => {
-    const [items, setItems] = useState(args.items ?? []);
-    const [layout, setLayout] = useState<GridLayout>(args.layout ?? { tiles: {} });
+  render: ({ layout: _layout, items: _items, ...props }) => {
+    const [items, setItems] = useState(_items ?? []);
+    const [layout, setLayout] = useState<GridLayout>(_layout ?? { tiles: {} });
 
     const handleAdd = useCallback<NonNullable<GridRootProps['onAdd']>>(
       (position) => {
@@ -42,7 +42,7 @@ const meta: Meta<StoryProps> = {
     );
 
     return (
-      <Grid.Root layout={layout} onAdd={handleAdd} onDelete={handleDelete}>
+      <Grid.Root {...props} layout={layout} onAdd={handleAdd} onDelete={handleDelete}>
         <Grid.Controls />
         <Grid.Content items={items}>
           <Grid.Background />

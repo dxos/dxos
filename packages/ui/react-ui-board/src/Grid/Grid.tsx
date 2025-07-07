@@ -221,11 +221,12 @@ Content.displayName = 'Grid.Content';
 
 type ControlsProps = ThemedClassName;
 
+// TODO(burdon): Create variant that can be housed outside of provider?
 const Controls = ({ classNames }: ControlsProps) => {
   const { readonly, zoom, controller } = useGridContext(Controls.displayName);
 
   return (
-    <div className={mx('fixed top-2 left-2 z-10', classNames)}>
+    <div className={mx('fixed top-4 left-4 z-10', classNames)}>
       <Toolbar.Root>
         <IconButton
           icon='ph--crosshair--regular'
@@ -252,6 +253,8 @@ Controls.displayName = 'Grid.Controls';
 //
 // Background
 //
+
+type BackgroundProps = {};
 
 const Background = () => {
   const { grid, dimension, onAdd } = useGridContext(Background.displayName);
@@ -305,6 +308,12 @@ export const Grid = {
   Tile,
 };
 
-export type { RootProps as GridRootProps, ContentProps as GridContentProps, TileProps as GridTileProps };
+export type {
+  RootProps as GridRootProps,
+  ContentProps as GridContentProps,
+  TileProps as GridTileProps,
+  ControlsProps as GridControlsProps,
+  BackgroundProps as GridBackgroundProps,
+};
 
 export { useGridContext };
