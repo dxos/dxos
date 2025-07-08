@@ -4,4 +4,5 @@
 
 import * as enUS from './locales/en-US';
 
-export const osTranslations = { 'en-US': enUS }; // TODO(burdon): Rename translations.
+// TODO(burdon): Rename translations (and normalize filename).
+export const osTranslations = { 'en-US': enUS };

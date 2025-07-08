@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 
 // TODO(burdon): Goal > Action > Result.
 
@@ -88,9 +88,9 @@ export namespace OKR {
  */
 export namespace SWOT {
   const Properties = Schema.Struct({
-    subject: Schema.optional(Ref.Any).annotations({
-      description: 'Subject of the analysis, which could be a document or a structured object.',
-    }),
+    // subject: Schema.optional(Ref.Any).annotations({
+    //   description: 'Subject of the analysis, which could be a document or a structured object.',
+    // }),
     strengths: Schema.mutable(Schema.Array(Proposition.Any)).annotations({
       description: 'An attribute of the organization that is helpful in achieving its objectives.',
     }),
@@ -155,7 +155,7 @@ export namespace HealthPlan {}
 describe('analysis', () => {
   test('SWOT', ({ expect }) => {
     const analysis = SWOT.make();
-    analysis.strengths.push({ text: 'Unique decentralized object graph.' });
+    analysis.strengths.push(Proposition.make({ text: 'Unique decentralized object graph.' }));
     expect(analysis.strengths).toHaveLength(1);
   });
 });
