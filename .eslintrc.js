@@ -67,7 +67,18 @@ module.exports = {
     },
     {
       extends: ['plugin:i18next/recommended'],
-      files: '**/*.test.{ts,tsx,js,jsx}',
+      files: '**/*.{ts,tsx,js,jsx}',
+      overrides: [
+        {
+          "files": [
+            '*.stories.@(js|jsx|ts|tsx)',
+            '*.test.@(js|jsx|ts|tsx)',
+          ],
+          "rules": {
+            "i18next/no-literal-string": "off"
+          }
+        }
+      ]
     },
     {
       files: '**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}',
