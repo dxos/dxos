@@ -28,7 +28,7 @@ export type CellProps<T extends HasId = any> = ThemedClassName<
 
 export const Cell = ({ classNames, children, item, layout, draggable: isDraggable, getTitle }: CellProps) => {
   const { t } = useTranslation(translationKey);
-  const { board, zoom, onSelect, onDelete, onMove } = useBoardContext(Cell.displayName);
+  const { grid: board, zoom, onSelect, onDelete, onMove } = useBoardContext(Cell.displayName);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const dragHandleRef = useRef<HTMLButtonElement | null>(null);

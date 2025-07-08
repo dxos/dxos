@@ -52,12 +52,12 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-board": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
     "@preact/signals-core": "^1.9.0",
-    "effect": "3.14.21",
-    "i18next": "^21.10.0"
+    "effect": "3.14.21"
   },
   "devDependencies": {
     "@dxos/plugin-preview": "workspace:*",

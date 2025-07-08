@@ -26,7 +26,7 @@ const meta: Meta<StoryProps> = {
   component: Board.Root,
   render: ({ layout: _layout, items: _items, ...props }) => {
     const [items, setItems] = useState(_items ?? []);
-    const [layout, setLayout] = useState<BoardLayout>(_layout ?? { cells: {} });
+    const [layout, setLayout] = useState<BoardLayout>(_layout ?? { size: { width: 4, height: 4 }, cells: {} });
 
     const controller = useRef<BoardController>(null);
 
@@ -98,12 +98,13 @@ export const Default: Story = {
       { id: '5', title: 'Item 5' },
       { id: '6', title: 'Item 6' },
     ],
-    overScroll: 300,
-    board: {
+    grid: {
+      overScroll: 300,
       size: { width: 300, height: 300 },
       gap: 16,
     },
     layout: {
+      size: { width: 7, height: 5 },
       cells: {
         '0': { x: 0, y: 0 },
         '1': { x: -3, y: -2 },

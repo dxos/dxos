@@ -23,27 +23,28 @@ import { IconButton, Toolbar, type ThemedClassName, useTranslation } from '@dxos
 import { mx } from '@dxos/react-ui-theme';
 
 import { Cell, type CellProps } from './Cell';
-import { type BoardGeometry, type Rect, getCenter, getBoardBounds, getBoardRect } from './geometry';
+import { type BoardGeometry as BoardGrid, type Rect, getCenter, getBoardBounds, getBoardRect } from './geometry';
 import { type HasId, type BoardLayout, type Size, type Position } from './types';
 import { translationKey } from '../../translations';
 
 // TODO(burdon): Infinite canvas: hierarchical zoom.
-// TODO(burdon): Story with live objects.
 // TODO(burdon): Drag cards.
 // TODO(burdon): Center when has focus; key nav.
 // TODO(burdon): Editors with concurrent AI cells.
-// TODO(burdon): Does scrollbar thin work?
 // TODO(burdon): Drag to select/create.
 // TODO(burdon): Drag handles to resize.
 // TODO(burdon): Synthetic scrollbars.
 // TODO(burdon): Prevent browser nav when scrolling to edge.
-// TODO(burdon): Plugin.
+// TODO(burdon): Does scrollbar thin work?
+// TODO(burdon): Increase width/height.
 
-const defaultDimension = { width: 7, height: 5 };
-const defaultBoard = { size: { width: 300, height: 300 }, gap: 16 };
+const defaultLayout: BoardLayout = { size: { width: 7, height: 5 }, cells: {} };
+const defaultGrid: BoardGrid = { size: { width: 300, height: 300 }, gap: 16, overScroll: 40 };
 
 interface BoardController {
+  /** Center the board on the given cell or position. */
   center: (cell?: string | Position) => void;
+  /** Toggle zoom mode. */
   toggleZoom: () => void;
 }
 
@@ -52,12 +53,10 @@ interface BoardController {
 //
 
 type BoardContextValue = {
-  layout?: BoardLayout;
   readonly: boolean;
-  dimension: Size;
+  layout: BoardLayout;
+  grid: BoardGrid;
   bounds: Size;
-  overScroll: number;
-  board: BoardGeometry;
   zoom: boolean;
   controller: BoardController;
   onSelect?: (id: string) => void;
@@ -74,35 +73,18 @@ const [BoardContextProvider, useBoardContext] = createContext<BoardContextValue>
 
 type RootProps = PropsWithChildren<
   ThemedClassName<
-    Partial<
-      Pick<
-        BoardContextValue,
-        'layout' | 'readonly' | 'dimension' | 'overScroll' | 'board' | 'onSelect' | 'onDelete' | 'onMove' | 'onAdd'
-      >
-    >
+    Partial<Pick<BoardContextValue, 'readonly' | 'layout' | 'grid' | 'onSelect' | 'onDelete' | 'onMove' | 'onAdd'>>
   >
 >;
 
 const Root = forwardRef<BoardController, RootProps>(
   (
-    {
-      children,
-      classNames,
-      layout,
-      readonly,
-      dimension = defaultDimension,
-      overScroll,
-      board = defaultBoard,
-      onSelect,
-      onDelete,
-      onMove,
-      onAdd,
-    },
+    { children, classNames, readonly, layout = defaultLayout, grid = defaultGrid, onSelect, onDelete, onMove, onAdd },
     forwardedRef,
   ) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const { width, height } = useResizeDetector({ targetRef: containerRef });
-    const bounds = useMemo<Size>(() => getBoardBounds(dimension, board), [dimension, board]);
+    const bounds = useMemo<Size>(() => getBoardBounds(layout.size, grid), [layout, grid]);
 
     const [mounted, setMounted] = useState(false);
     const [zoom, setZoom] = useState(false);
@@ -115,7 +97,7 @@ const Root = forwardRef<BoardController, RootProps>(
           if (cell) {
             const position = typeof cell === 'string' ? layout?.cells[cell] : cell;
             if (position) {
-              const center = getCenter(getBoardRect(board, position));
+              const center = getCenter(getBoardRect(grid, position));
               setCenter({ x: bounds.width / 2 + center.x, y: bounds.height / 2 + center.y });
               setZoom(false);
             }
@@ -127,7 +109,7 @@ const Root = forwardRef<BoardController, RootProps>(
           setZoom((prev) => !prev);
         },
       }),
-      [layout, board, bounds],
+      [layout, grid, bounds],
     );
     useImperativeHandle(forwardedRef, () => controller, [controller]);
 
@@ -162,13 +144,11 @@ const Root = forwardRef<BoardController, RootProps>(
 
     return (
       <BoardContextProvider
-        layout={layout}
         readonly={readonly ?? false}
-        dimension={dimension}
+        layout={layout}
+        grid={grid}
         bounds={bounds}
-        overScroll={overScroll ?? 0}
         zoom={zoom}
-        board={board}
         controller={controller}
         onSelect={onSelect ?? handleSelect}
         onDelete={onDelete}
@@ -183,7 +163,7 @@ const Root = forwardRef<BoardController, RootProps>(
             classNames,
           )}
           style={{
-            padding: overScroll,
+            padding: grid.overScroll ?? 0,
           }}
         >
           {children}
@@ -252,18 +232,18 @@ Content.displayName = 'Board.Content';
 type BackgroundProps = {};
 
 const Background = () => {
-  const { board, dimension, onAdd } = useBoardContext(Background.displayName);
+  const { grid: board, layout, onAdd } = useBoardContext(Background.displayName);
 
   const cells = useMemo(() => {
     const cells: { position: Position; rect: Rect }[] = [];
-    for (let x = -Math.floor(dimension.width / 2); x <= Math.floor(dimension.width / 2); x++) {
-      for (let y = -Math.floor(dimension.height / 2); y <= Math.floor(dimension.height / 2); y++) {
+    for (let x = -Math.floor(layout.size.width / 2); x <= Math.floor(layout.size.width / 2); x++) {
+      for (let y = -Math.floor(layout.size.height / 2); y <= Math.floor(layout.size.height / 2); y++) {
         cells.push({ position: { x, y }, rect: getBoardRect(board, { x, y }) });
       }
     }
 
     return cells;
-  }, [dimension, board]);
+  }, [layout, board]);
 
   return (
     <div className='absolute inset-0'>

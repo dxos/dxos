@@ -17,7 +17,7 @@ const meta: Meta<typeof Board.Cell> = {
   title: 'ui/react-ui-board/Cell',
   component: Board.Cell,
   render: (args) => (
-    <Board.Root dimension={{ width: 1, height: 1 }} board={{ size: { width: 300, height: 300 }, gap: 10 }}>
+    <Board.Root dimension={{ width: 1, height: 1 }} grid={{ size: { width: 300, height: 300 }, gap: 10 }}>
       <Board.Viewport>
         <Board.Cell {...args} draggable={false}>
           <Card.Text>This is a card with some long text that should wrap.</Card.Text>

@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export default {};
+export * from './schema';

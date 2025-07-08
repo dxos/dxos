@@ -7,25 +7,29 @@ import { describe, test } from 'vitest';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 
-// Product
-// - Modules (models?): sets of propostitional statements about somethings (a company, person, project, "our challenge", "our toolchain", "problem X", etc.)
-//  - Discuss with colleagues and AI and click to accept/reject premises which are then added to the module.
-//  - Modules are used in reasoning.
-//  - Out of the box: team is assigned a "game" to come up with shared models for everyone else in the team.
-//  - Ultra transparancy.
+// TODO(burdon): Goal > Action > Result.
+
+// Product Ideas
+// Build self-building knowledge base.
+// - Modules/Blueprints: sets of propostitional statements about somethings (a company, person, project, "our challenge", "our toolchain", "problem X", etc.)
+//   - Discuss with colleagues and AI and click to accept/reject premises which are then added to the module.
+//   - Modules are used in reasoning.
+//   - Out of the box: team is assigned a "game" to come up with shared models for everyone else in the team.
 // - New modules can be created on the fly inside the AI and we can collaboratively chat with the model.
 // - Models can referernce each other canonically.
 // - Models include open questions/issues to solve.
-// - Could be product ideas, technical issues. they have a goal. can be associated with tools (blueprints) that can join (temporarily) and do work.
+// - Could be product ideas, technical issues; they have a goal; can be associated with tools (blueprints) that can join (temporarily) and do work.
+// - Local LLM (offline).
 
-// TODO(burdon): Goal > Action > Result.
-// Mode
-// - Goals
-// - Issues
+// UX
+// - Edit Blueprint (schema, prompts, scripts, tool selection).
+// - Drag Blueprint into Chat's context window.
+// - Output Chat responses into Blueprint (in a structured way).
+// - Schema editor, Outline editor, Document editor, Sheet model.
 
-// Build self-building knowledge base.
-
-// TODO(burdon): Create namespace for each type.
+/**
+ * Hierarchical data structure.
+ */
 namespace Proposition {
   const Fields = Schema.Struct({
     text: Schema.String,
@@ -38,7 +42,7 @@ namespace Proposition {
 
   export const Any = Fields.pipe(
     Type.Obj({
-      typename: 'dxos.org/teyp/Proposition',
+      typename: 'dxos.org/type/Proposition',
       version: '0.1.0',
     }),
   );
@@ -48,39 +52,28 @@ namespace Proposition {
 
 //
 // Templates
-// Others:
-//  - Employee (for collaboration or peer review)
-//  - Project
-//  - OKRs
-//  - Technical issue
-//  - Event
-//  - Organization
-//  - Compeitior
-//  - Go-to-market strategy
-//  - Triage
-//  - Project plannin
-//
+// - Templates Registry service.
 // - Extensible library of modules that can be selected out of the box.
-// - Modules can be associated with tools and MoE
+// - Modules can be associated with tools and MoE.
 //
 
-export namespace OKRS {
+export namespace OKR {
   const Properties = Schema.Struct({
     objectives: Schema.mutable(Schema.Array(Proposition.Any)).annotations({
       name: 'Objectives',
-      description: 'Qualitative, ambitious aspirations',
+      description: 'Qualitative, ambitious aspirations.',
     }),
     keyResults: Schema.mutable(Schema.Array(Proposition.Any)).annotations({
       name: 'Key Results',
-      description: 'Quantitative metrics tracking progress towards those objectives',
+      description: 'Quantitative metrics tracking progress towards those objectives.',
     }),
   }).annotations({
-    description: 'A goal-setting framework defining Objectives and Key Results',
+    description: 'A goal-setting framework defining Objectives and Key Results.',
   });
 
   const Any = Properties.pipe(
     Type.Obj({
-      typename: 'dxos.org/type/OKRS',
+      typename: 'dxos.org/type/OKR',
       version: '0.1.0',
     }),
   );
@@ -147,23 +140,22 @@ export namespace Plan {
 // TODO(burdon): Types or variants of a type?
 export namespace Project {}
 export namespace ProblemStatement {}
-export namespace ComptetitiveAnalysis {}
+export namespace ValueProposition {}
+export namespace CompetitiveAnalysis {}
 export namespace GoToMarket {}
-
 export namespace Itinerary {}
-
 export namespace Tutorial {}
 export namespace Manual {}
-
-export namespace Employee {}
-
+export namespace EmployeeReview {}
 export namespace Review {}
-
 export namespace CityGuide {}
+export namespace TrainingPlan {}
+export namespace HealthPlan {}
 
 describe('analysis', () => {
-  test('sanity', ({ expect }) => {
+  test('SWOT', ({ expect }) => {
     const analysis = SWOT.make();
-    expect(analysis.strengths).toHaveLength(0);
+    analysis.strengths.push({ text: 'Unique decentralized object graph.' });
+    expect(analysis.strengths).toHaveLength(1);
   });
 });

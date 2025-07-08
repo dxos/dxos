@@ -9,6 +9,7 @@ export type Rect = Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
 export type BoardGeometry = {
   size: Size;
   gap: number;
+  overScroll?: number;
 };
 
 export const getCenter = (rect: Rect): Position => {
