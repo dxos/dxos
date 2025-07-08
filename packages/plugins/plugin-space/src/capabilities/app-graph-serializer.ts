@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
 import { DataType } from '@dxos/schema';

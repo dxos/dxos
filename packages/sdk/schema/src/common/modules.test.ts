@@ -5,14 +5,25 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 
+// Product
+// - Modules (models?): sets of propostitional statements about somethings (a company, person, project, "our challenge", "our toolchain", "problem X", etc.)
+//  - Discuss with colleagues and AI and click to accept/reject premises which are then added to the module.
+//  - Modules are used in reasoning.
+//  - Out of the box: team is assigned a "game" to come up with shared models for everyone else in the team.
+//  - Ultra transparancy.
+// - New modules can be created on the fly inside the AI and we can collaboratively chat with the model.
+// - Models can referernce each other canonically.
+// - Models include open questions/issues to solve.
+// - Could be product ideas, technical issues. they have a goal. can be associated with tools (blueprints) that can join (temporarily) and do work.
+
+// TODO(burdon): Goal > Action > Result.
 // Mode
 // - Goals
 // - Issues
-// - Analysis
-// - Objectives
-// - KeyResult
+
+// Build self-building knowledge base.
 
 // TODO(burdon): Create namespace for each type.
 namespace Proposition {
@@ -27,12 +38,12 @@ namespace Proposition {
 
   export const Any = Fields.pipe(
     Type.Obj({
-      typename: 'dxos.org/teyp/Definition',
+      typename: 'dxos.org/teyp/Proposition',
       version: '0.1.0',
     }),
   );
 
-  export const make = (text: string) => Obj.make(Any, Fields.make({ text }));
+  export const make = (props: Pick<Any, 'text'>) => Obj.make(Any, Fields.make(props));
 }
 
 //
@@ -53,8 +64,40 @@ namespace Proposition {
 // - Modules can be associated with tools and MoE
 //
 
-export namespace Analysis {
+export namespace OKRS {
   const Properties = Schema.Struct({
+    objectives: Schema.mutable(Schema.Array(Proposition.Any)).annotations({
+      name: 'Objectives',
+      description: 'Qualitative, ambitious aspirations',
+    }),
+    keyResults: Schema.mutable(Schema.Array(Proposition.Any)).annotations({
+      name: 'Key Results',
+      description: 'Quantitative metrics tracking progress towards those objectives',
+    }),
+  }).annotations({
+    description: 'A goal-setting framework defining Objectives and Key Results',
+  });
+
+  const Any = Properties.pipe(
+    Type.Obj({
+      typename: 'dxos.org/type/OKRS',
+      version: '0.1.0',
+    }),
+  );
+
+  export interface Any extends Schema.Schema.Type<Schema.mutable<typeof Any>> {}
+
+  export const make = () => Obj.make(Any, { objectives: [], keyResults: [] });
+}
+
+/**
+ * Create document (or outline or product description) then create an SWOT analysis object, then the AI will chat with you to create this outcome.
+ */
+export namespace SWOT {
+  const Properties = Schema.Struct({
+    subject: Schema.optional(Ref.Any).annotations({
+      description: 'Subject of the analysis, which could be a document or a structured object.',
+    }),
     strengths: Schema.mutable(Schema.Array(Proposition.Any)).annotations({
       description: 'An attribute of the organization that is helpful in achieving its objectives.',
     }),
@@ -84,36 +127,24 @@ export namespace Analysis {
   export const make = () => Obj.make(Any, { strengths: [], weaknesses: [], opportunities: [], threats: [] });
 }
 
-export namespace OKRS {
+export namespace Plan {
   const Properties = Schema.Struct({
-    objectives: Schema.mutable(Schema.Array(Proposition.Any)).annotations({
-      name: 'Objectives',
-      description: 'Qualitative, ambitious aspirations',
-    }),
-    keyResults: Schema.mutable(Schema.Array(Proposition.Any)).annotations({
-      name: 'Key Results',
-      description: 'Quantitative metrics tracking progress towards those objectives',
-    }),
-  }).annotations({
-    description: 'A goal-setting framework defining Objectives and Key Results',
+    name: Schema.String,
   });
 
   const Any = Properties.pipe(
     Type.Obj({
-      typename: 'dxos.org/type/SWOT',
+      typename: 'dxos.org/type/Plan',
       version: '0.1.0',
     }),
   );
 
   export interface Any extends Schema.Schema.Type<Schema.mutable<typeof Any>> {}
 
-  export const make = () => Obj.make(Any, { objectives: [], keyResults: [] });
+  export const make = ({ name }: Any) => Obj.make(Any, { name });
 }
 
-// Build self-building knowledge base.
-
 // TODO(burdon): Types or variants of a type?
-export namespace Plan {}
 export namespace Project {}
 export namespace ProblemStatement {}
 export namespace ComptetitiveAnalysis {}
@@ -132,7 +163,7 @@ export namespace CityGuide {}
 
 describe('analysis', () => {
   test('sanity', ({ expect }) => {
-    const analysis = Analysis.make();
+    const analysis = SWOT.make();
     expect(analysis.strengths).toHaveLength(0);
   });
 });

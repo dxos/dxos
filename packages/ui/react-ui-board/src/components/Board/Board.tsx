@@ -27,9 +27,7 @@ import { type BoardGeometry, type Rect, getCenter, getBoardBounds, getBoardRect 
 import { type HasId, type BoardLayout, type Size, type Position } from './types';
 import { translationKey } from '../../translations';
 
-// TODO(burdon): Goal > Action > Result.
 // TODO(burdon): Infinite canvas: hierarchical zoom.
-
 // TODO(burdon): Story with live objects.
 // TODO(burdon): Drag cards.
 // TODO(burdon): Center when has focus; key nav.
@@ -40,17 +38,6 @@ import { translationKey } from '../../translations';
 // TODO(burdon): Synthetic scrollbars.
 // TODO(burdon): Prevent browser nav when scrolling to edge.
 // TODO(burdon): Plugin.
-
-// Product
-// - Modules (models?): sets of propostitional statements about somethings (a company, person, project, "our challenge", "our toolchain", "problem X", etc.)
-//  - Discuss with colleagues and AI and click to accept/reject premises which are then added to the module.
-//  - Modules are used in reasoning.
-//  - Out of the box: team is assigned a "game" to come up with shared models for everyone else in the team.
-//  - Ultra transparancy.
-// - New modules can be created on the fly inside the AI and we can collaboratively chat with the model.
-// - Models can referernce each other canonically.
-// - Models include open questions/issues to solve.
-// - Could be product ideas, technical issues. they have a goal. can be associated with tools (blueprints) that can join (temporarily) and do work.
 
 const defaultDimension = { width: 7, height: 5 };
 const defaultBoard = { size: { width: 300, height: 300 }, gap: 16 };

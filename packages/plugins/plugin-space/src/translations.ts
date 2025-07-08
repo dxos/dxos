@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 
@@ -12,14 +11,14 @@ import { SPACE_PLUGIN } from './meta';
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(DataType.Collection)]: {
+      [DataType.Collection.typename]: {
         'typename label': 'Collection',
         'typename label_zero': 'Collections',
         'typename label_one': 'Collection',
         'typename label_other': 'Collections',
         'object name placeholder': 'New collection',
       },
-      [Type.getTypename(DataType.QueryCollection)]: {
+      [DataType.QueryCollection.typename]: {
         'typename label': 'Smart Collection',
         'typename label_zero': 'Smart Collections',
         'typename label_one': 'Smart Collection',
