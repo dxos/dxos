@@ -62,6 +62,9 @@ export class TablePresentation<T extends TableRow = TableRow> {
       case 'frozenRowsEnd':
         cells = this.getDraftRowCells(range);
         break;
+      case 'fixedEndEnd':
+        cells = this.getDraftActionCells(range);
+        break;
       default:
         cells = {};
     }
@@ -374,6 +377,24 @@ export class TablePresentation<T extends TableRow = TableRow> {
         value: '',
       },
     };
+  }
+
+  private getDraftActionCells(range: DxGridPlaneRange): DxGridPlaneCells {
+    const cells: DxGridPlaneCells = {};
+    const draftRows = this.model.draftRows.value;
+
+    for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
+      const draftRow = draftRows[row];
+      const disabled = !draftRow.valid;
+
+      cells[toPlaneCellIndex({ col: 0, row })] = {
+        value: '',
+        readonly: true,
+        accessoryHtml: tableButtons.saveDraftRow.render({ rowIndex: row, disabled }),
+      };
+    }
+
+    return cells;
   }
 }
 

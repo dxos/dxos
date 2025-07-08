@@ -343,12 +343,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return;
     }
 
-    const draftRowIndex = this._draftRows.value.length;
-    const draftData = {
-      id: ObjectId.random(),
-      description: `debug ${draftRowIndex + 1}`, // TODO(ZaymonFC): Remove this when implementation is finished.
-    } as any as T;
-
+    // NOTE(ZaymonFC): This is initialized with id because it's required in all schemata?
+    const draftData = { id: ObjectId.random() } as any as T;
     const validationErrors = this.validateDraftRowData(draftData);
 
     const draftRow: DraftRow<T> = {

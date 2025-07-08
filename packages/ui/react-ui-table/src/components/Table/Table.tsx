@@ -191,6 +191,17 @@ const TableMain = forwardRef<TableController, TableMainProps>(
               model?.sorting?.toggleSort(data.fieldId);
               break;
             }
+            case 'saveDraftRow': {
+              if (model) {
+                const didCommitSuccessfully = model.commitDraftRow(data.rowIndex);
+                if (dxGrid && didCommitSuccessfully) {
+                  requestAnimationFrame(() => {
+                    dxGrid.scrollToEndRow();
+                  });
+                }
+              }
+              break;
+            }
           }
           return;
         }
@@ -225,7 +236,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           }
         }
       },
-      [model, modals],
+      [model, modals, dxGrid],
     );
 
     const handleFocus = useCallback<NonNullable<TableCellEditorProps['onFocus']>>(
