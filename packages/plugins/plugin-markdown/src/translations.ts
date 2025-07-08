@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
 import { MARKDOWN_PLUGIN } from './meta';
 import { DocumentType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(DocumentType)]: {
+      [DocumentType.typename]: {
         'typename label': 'Document',
         'typename label_zero': 'Documents',
         'typename label_one': 'Document',
@@ -43,4 +43,6 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];
+
+export default translations;

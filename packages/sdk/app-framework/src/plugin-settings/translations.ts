@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Resource } from '@dxos/react-ui';
+
 import { SETTINGS_PLUGIN } from './actions';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [SETTINGS_PLUGIN]: {
@@ -14,4 +16,6 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];
+
+export default translations;

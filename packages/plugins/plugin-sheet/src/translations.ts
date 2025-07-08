@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
 import { SHEET_PLUGIN } from './meta';
 import { SheetType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(SheetType)]: {
+      [SheetType.typename]: {
         'typename label': 'Sheet',
         'typename label_zero': 'Sheets',
         'typename label_one': 'Sheet',
@@ -47,4 +47,6 @@ export default [
       },
     },
   },
-] as const;
+] as const satisfies Resource[];
+
+export default translations;

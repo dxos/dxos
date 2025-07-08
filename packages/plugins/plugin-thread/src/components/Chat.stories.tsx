@@ -20,7 +20,7 @@ import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ChatContainer } from './ChatContainer';
-import translations from '../translations';
+import { translations } from '../translations';
 import { ChannelType, ThreadType } from '../types';
 
 faker.seed(1);

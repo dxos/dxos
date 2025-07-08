@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Resource } from '@dxos/react-ui';
+
 import { REGISTRY_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [REGISTRY_PLUGIN]: {
@@ -25,4 +27,6 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];
+
+export default translations;

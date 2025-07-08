@@ -11,8 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/defs/kanban.ts",
-          "{projectRoot}/src/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/types/index.ts"
         ],
         "preactSignalTracking": true
       }

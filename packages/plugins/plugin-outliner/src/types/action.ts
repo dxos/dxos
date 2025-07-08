@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { DataType } from '@dxos/schema';
 
-import { JournalType, OutlineType } from './types';
+import { JournalType, OutlineType } from './schema';
 import { OUTLINER_PLUGIN } from '../meta';
 
 export namespace OutlinerAction {

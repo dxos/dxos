@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Resource } from '@dxos/react-ui';
+
 import { CLIENT_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [CLIENT_PLUGIN]: {
@@ -65,4 +67,6 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];
+
+export default translations;
