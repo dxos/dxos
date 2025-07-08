@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Resource } from '@dxos/react-ui';
+
 import { TOKEN_MANAGER_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [TOKEN_MANAGER_PLUGIN]: {
@@ -19,4 +21,6 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];
+
+export default translations;

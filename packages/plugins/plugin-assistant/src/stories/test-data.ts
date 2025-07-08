@@ -3,7 +3,7 @@
 //
 
 import { type Live, type Space } from '@dxos/client/echo';
-import { Obj, Type, Relation } from '@dxos/echo';
+import { Obj, type Type, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
@@ -41,8 +41,8 @@ const people: (Type.Properties<DataType.Person> & { id: string })[] = [
 ];
 
 const testObjects: Record<string, any[]> = {
-  [Type.getTypename(DataType.Organization)!]: organizations,
-  [Type.getTypename(DataType.Person)!]: people,
+  [DataType.Organization.typename]: organizations,
+  [DataType.Person.typename]: people,
 };
 
 const testRelationships: Record<
@@ -52,7 +52,7 @@ const testRelationships: Record<
     target: string;
   } & Record<string, any>)[]
 > = {
-  [Type.getTypename(DataType.Employer)!]: [
+  [DataType.Employer.typename]: [
     // @eslint-disable-next-line
     { source: 'rich_burdon', target: 'dxos' },
     { source: 'rich_burdon', target: 'google', active: false }, // TODO(burdon): Should not contribute to force.
@@ -75,7 +75,7 @@ const testRelationships: Record<
   ],
 
   // TODO(burdon): Limit graph view to selected relationship types.
-  [Type.getTypename(DataType.HasConnection)!]: [
+  [DataType.HasConnection.typename]: [
     //
     { kind: 'partner', source: 'dxos', target: 'ink_and_switch' },
     { kind: 'partner', source: 'dxos', target: 'effectful' },

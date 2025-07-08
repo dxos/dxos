@@ -87,7 +87,7 @@ const CardDragHandle = forwardRef<HTMLButtonElement, { toolbarItem?: boolean }>(
       iconOnly
       icon='ph--dots-six-vertical--regular'
       variant='ghost'
-      label={t('card drag handle label')}
+      label={t('drag handle label')}
       classNames='pli-2'
       ref={forwardedRef}
     />

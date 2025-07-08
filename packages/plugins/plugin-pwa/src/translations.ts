@@ -2,9 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type Resource } from '@dxos/react-ui';
+
 import { PWA_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [PWA_PLUGIN]: {
@@ -19,4 +21,6 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];
+
+export default translations;

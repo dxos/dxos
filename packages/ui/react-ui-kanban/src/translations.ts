@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-export const translationKey = 'kanban';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+export const translationKey = 'react-ui-kanban';
+
+export const translations = [
   {
     'en-US': {
       [translationKey]: {
@@ -13,9 +15,10 @@ export default [
         'new column name label': 'New column name',
         'remove card label': 'Remove card',
         'remove empty column label': 'Remove empty column',
-        'card drag handle label': 'Drag to rearrange',
         'column drag handle label': 'Drag to rearrange',
       },
     },
   },
-];
+] as const satisfies Resource[];
+
+export default translations;

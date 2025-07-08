@@ -484,6 +484,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-board/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-chess/package.json",
           "jsonpath": "$.version"
         },

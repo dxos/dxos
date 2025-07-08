@@ -37,8 +37,7 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
-    "effect": "^3.13.3",
-    "i18next": "^21.10.0"
+    "effect": "^3.13.3"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

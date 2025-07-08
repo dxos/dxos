@@ -26,7 +26,7 @@ import {
   useFormattingState,
 } from '../extensions';
 import { useTextEditor, type UseTextEditorProps } from '../hooks';
-import translations from '../translations';
+import { translations } from '../translations';
 
 type StoryProps = { placeholder?: string } & UseTextEditorProps;
 

@@ -2,12 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-export const translationKey = 'searchlist';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+export const translationKey = 'react-ui-searchlist';
+
+export const translations = [
   {
     'en-US': {
       [translationKey]: {},
     },
   },
-];
+] as const satisfies Resource[];
+
+export default translations;

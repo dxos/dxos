@@ -2,12 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-export const translationKey = 'menus';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+export const translationKey = 'react-ui-menu';
+
+export const translations = [
   {
     'en-US': {
       [translationKey]: {},
     },
   },
-] as const;
+] as const satisfies Resource[];
+
+export default translations;

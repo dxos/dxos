@@ -7,7 +7,6 @@ import React, { type Dispatch, type SetStateAction, useCallback, useMemo, useSta
 import { QR } from 'react-qr-rounded';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { fullyQualifiedId, useSpaceInvitations, type Space } from '@dxos/react-client/echo';
@@ -67,7 +66,7 @@ export const MembersContainer = ({
   };
 
   // TODO(wittjosiah): Track which was the most recently viewed object.
-  const target = space.properties[Type.getTypename(DataType.Collection)]?.target?.objects[0]?.target;
+  const target = space.properties[DataType.Collection.typename]?.target?.objects[0]?.target;
 
   const locked = space.properties[COMPOSER_SPACE_LOCK];
   const handleChangeLocked = useCallback(() => {

@@ -79,12 +79,12 @@ const Root = ({ children, nodes: initialNodes, edges: initialEdges }: RootProps)
 const Background = () => <NativeBackground variant={BackgroundVariant.Dots} gap={16} size={0.5} />;
 
 //
-// Board
+// Chain
 //
 
-export const Board = {
+export const Chain = {
   Root,
   Background,
 };
 
-export type { RootProps as BoardRootProps };
+export type { RootProps as ChainRootProps };

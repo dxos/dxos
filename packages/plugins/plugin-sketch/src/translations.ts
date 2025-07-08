@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
 import { SKETCH_PLUGIN } from './meta';
 import { DiagramType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(DiagramType)]: {
+      [DiagramType.typename]: {
         'typename label': 'Sketch',
         'typename label_zero': 'Sketches',
         'typename label_one': 'Sketch',
@@ -25,4 +25,6 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];
+
+export default translations;

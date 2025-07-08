@@ -10,7 +10,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ProfileContainer } from './ProfileContainer';
-import translations from '../translations';
+import { translations } from '../translations';
 
 const meta: Meta = {
   title: 'plugins/plugin-client/ProfileContainer',

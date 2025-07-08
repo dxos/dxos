@@ -9,22 +9,22 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Board } from './Board';
+import { Chain } from './Chain';
 
-const meta: Meta<typeof Board.Root> = {
-  title: 'ui/react-ui-board/Board',
-  component: Board.Root,
+const meta: Meta<typeof Chain.Root> = {
+  title: 'ui/react-ui-board/Chain',
+  component: Chain.Root,
   render: (args) => (
-    <Board.Root {...args}>
-      <Board.Background />
-    </Board.Root>
+    <Chain.Root {...args}>
+      <Chain.Background />
+    </Chain.Root>
   ),
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export default meta;
 
-type Story = StoryObj<typeof Board.Root>;
+type Story = StoryObj<typeof Chain.Root>;
 
 export const Default: Story = {
   args: {
