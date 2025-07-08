@@ -8,7 +8,8 @@ import { FetchHttpClient, HttpClient } from '@effect/platform';
 import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Context, Duration, Effect, Layer, pipe, Schedule } from 'effect';
+import { runAndForwardErrors } from '@dxos/effect';
+import { Duration, Effect, pipe, Schedule } from 'effect';
 
 export type Import = {
   moduleUrl: string;
@@ -267,24 +268,24 @@ const httpPlugin: Plugin = {
       const maxRetries = 5;
       const initialDelay = 1_000;
 
-      return await Effect.runPromise(
-        pipe(
-          Effect.gen(function* () {
-            const response = yield* HttpClient.get(args.path);
-            if (response.status === 200) {
-              return { contents: yield* response.text, loader: 'jsx' as Loader };
-            }
-            throw new Error('failed to fetch');
-          }),
-          Effect.retry(
-            pipe(
-              Schedule.exponential(Duration.millis(initialDelay)),
-              Schedule.jittered,
-              Schedule.intersect(Schedule.recurs(maxRetries - 1)),
-            ),
+      return Effect.gen(function* () {
+        const response = yield* HttpClient.get(args.path);
+        if (response.status !== 200) {
+          throw new Error(`failed to fetch: ${response.status}`);
+        }
+
+        const text = yield* response.text;
+        return { contents: text, loader: 'jsx' as Loader };
+      }).pipe(
+        Effect.retry(
+          pipe(
+            Schedule.exponential(Duration.millis(initialDelay)),
+            Schedule.jittered,
+            Schedule.intersect(Schedule.recurs(maxRetries - 1)),
           ),
-          Effect.provide(FetchHttpClient.layer),
         ),
+        Effect.provide(FetchHttpClient.layer),
+        runAndForwardErrors,
       );
     });
   },

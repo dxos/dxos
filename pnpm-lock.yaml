@@ -3152,6 +3152,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../mesh/edge-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
