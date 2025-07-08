@@ -19,7 +19,7 @@ export const ContactCard = ({
 }: PreviewProps<DataType.Person> & { onOrgClick?: (org: DataType.Organization) => void }) => {
   const organizationName = organization && typeof organization === 'object' ? organization.target?.name : organization;
   return (
-    <Card.Container role={role}>
+    <Card.SurfaceRoot role={role}>
       <Avatar.Root>
         <Card.Text role='group' classNames='grid gap-3 grid-cols-[min-content_1fr]'>
           <Avatar.Content imgSrc={image} icon='ph--user--regular' size={16} hue='neutral' />
@@ -65,6 +65,6 @@ export const ContactCard = ({
           ))}
       </dl>
       {children}
-    </Card.Container>
+    </Card.SurfaceRoot>
   );
 };
