@@ -12,7 +12,7 @@ import { Format, type EchoSchema, toJsonSchema, TypedObject } from '@dxos/echo-s
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { ViewProjection, ViewType, createView } from '@dxos/schema';
+import { DataType, ProjectionManager, createProjection } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
@@ -22,8 +22,8 @@ import { TestLayout, TestPanel, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
 // Type definition for debug objects exposed to tests.
 export type ViewEditorDebugObjects = {
   schema: EchoSchema;
-  view: ViewType;
-  projection: ViewProjection;
+  projection: DataType.Projection;
+  manager: ProjectionManager;
 };
 
 type StoryProps = Pick<ViewEditorProps, 'readonly'>;
@@ -31,8 +31,8 @@ type StoryProps = Pick<ViewEditorProps, 'readonly'>;
 const DefaultStory = (props: StoryProps) => {
   const space = useSpace();
   const [schema, setSchema] = useState<EchoSchema>();
-  const [view, setView] = useState<ViewType>();
-  const [projection, setProjection] = useState<ViewProjection>();
+  const [projection, setProjection] = useState<DataType.Projection>();
+  const [manager, setManager] = useState<ProjectionManager>();
   useAsyncEffect(async () => {
     if (space) {
       class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
@@ -42,47 +42,51 @@ const DefaultStory = (props: StoryProps) => {
       }) {}
 
       const [schema] = await space.db.schemaRegistry.register([TestSchema]);
-      const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: toJsonSchema(TestSchema) });
-      const projection = new ViewProjection(schema.jsonSchema, view);
+      const projection = createProjection({
+        name: 'Test',
+        typename: schema.typename,
+        jsonSchema: toJsonSchema(TestSchema),
+      });
+      const manager = new ProjectionManager(schema.jsonSchema, projection);
 
       setSchema(schema);
-      setView(view);
       setProjection(projection);
+      setManager(manager);
     }
   }, [space]);
 
-  const views = useQuery(space, Filter.type(ViewType));
-  const currentTypename = useMemo(() => view?.query?.typename, [view]);
+  const projections = useQuery(space, Filter.type(DataType.Projection));
+  const currentTypename = useMemo(() => projection?.query?.typename, [projection]);
   const updateViewTypename = useCallback(
     (newTypename: string) => {
       if (!schema) {
         return;
       }
-      const matchingViews = views.filter((view) => view.query.typename === currentTypename);
-      for (const view of matchingViews) {
-        view.query.typename = newTypename;
+      const matchingProjections = projections.filter((projection) => projection.query.typename === currentTypename);
+      for (const projection of matchingProjections) {
+        projection.query.typename = newTypename;
       }
       schema.updateTypename(newTypename);
     },
-    [views, schema],
+    [projections, schema],
   );
 
-  const handleDelete = useCallback((property: string) => projection?.deleteFieldProjection(property), [projection]);
+  const handleDelete = useCallback((property: string) => manager?.deleteFieldProjection(property), [manager]);
 
   // Expose objects on window for test access.
   useEffect(() => {
-    if (typeof window !== 'undefined' && schema && view && projection) {
-      (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] = { schema, view, projection } satisfies ViewEditorDebugObjects;
+    if (typeof window !== 'undefined' && schema && manager && projection) {
+      (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] = { schema, manager, projection } satisfies ViewEditorDebugObjects;
     }
-  }, [schema, view, projection]);
+  }, [schema, manager, projection]);
 
   // NOTE(ZaymonFC): This looks awkward but it resolves an infinite parsing issue with sb.
   const json = useMemo(
-    () => JSON.parse(JSON.stringify({ schema, view, projection })),
-    [JSON.stringify(schema), JSON.stringify(view), JSON.stringify(projection)],
+    () => JSON.parse(JSON.stringify({ schema, manager, projection })),
+    [JSON.stringify(schema), JSON.stringify(manager), JSON.stringify(projection)],
   );
 
-  if (!schema || !view || !projection) {
+  if (!schema || !manager || !projection) {
     return <div />;
   }
 
@@ -91,7 +95,7 @@ const DefaultStory = (props: StoryProps) => {
       <TestPanel>
         <ViewEditor
           schema={schema}
-          view={view}
+          projection={projection}
           registry={space?.db.schemaRegistry}
           readonly={props.readonly}
           onTypenameChanged={updateViewTypename}

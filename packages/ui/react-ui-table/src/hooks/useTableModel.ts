@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 
 import { fullyQualifiedId, getSpace, type Live } from '@dxos/react-client/echo';
 import { useSelectionActions } from '@dxos/react-ui-attention';
-import { type ViewProjection } from '@dxos/schema';
+import { type ProjectionManager } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { type TableRow, TableModel, type TableModelProps, type TableRowAction } from '../model';
@@ -16,7 +16,7 @@ import { type TableType } from '../types';
 
 export type UseTableModelParams<T extends TableRow = TableRow> = {
   table?: TableType;
-  projection?: ViewProjection;
+  projection?: ProjectionManager;
   rows?: Live<T>[];
   rowActions?: TableRowAction[];
   onSelectionChanged?: (selection: string[]) => void;
@@ -47,7 +47,6 @@ export const useTableModel = <T extends TableRow = TableRow>({
       model = new TableModel<T>({
         id: fullyQualifiedId(table),
         space: getSpace(table),
-        view: table.view?.target,
         projection,
         features,
         rowActions,

@@ -11,7 +11,7 @@ import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { type TableType } from '@dxos/react-ui-table';
-import { ViewType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { TableAction } from '../types';
 
@@ -23,7 +23,7 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
   const space = getSpace(table);
   const schema = useSchema(client, space, table.view?.target?.query.typename);
 
-  const views = useQuery(space, Filter.type(ViewType));
+  const projections = useQuery(space, Filter.type(DataType.Projection));
   const currentTypename = useMemo(() => table?.view?.target?.query?.typename, [table?.view?.target?.query?.typename]);
 
   const handleUpdateTypename = useCallback(
@@ -31,14 +31,14 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
 
-      const matchingViews = views.filter((view) => view.query.typename === currentTypename);
-      for (const view of matchingViews) {
-        view.query.typename = typename;
+      const matchingProjections = projections.filter((projection) => projection.query.typename === currentTypename);
+      for (const projection of matchingProjections) {
+        projection.query.typename = typename;
       }
 
       schema.updateTypename(typename);
     },
-    [views, schema],
+    [projections, schema],
   );
 
   const handleDelete = useCallback(
@@ -56,7 +56,7 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
     <ViewEditor
       registry={space.db.schemaRegistry}
       schema={schema}
-      view={table.view.target!}
+      projection={table.view.target!}
       onTypenameChanged={Type.isMutable(schema) ? undefined : handleUpdateTypename}
       onDelete={Type.isMutable(schema) ? handleDelete : undefined}
     />

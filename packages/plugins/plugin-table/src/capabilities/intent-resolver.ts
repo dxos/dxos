@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { initializeTable, TableType } from '@dxos/react-ui-table';
-import { ViewProjection } from '@dxos/schema';
+import { ProjectionManager } from '@dxos/schema';
 
 import { TABLE_PLUGIN } from '../meta';
 import { TableAction } from '../types';
@@ -41,7 +41,7 @@ export default (context: PluginContext) =>
         invariant(table.view);
         const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.target!.query.typename!);
         invariant(schema);
-        const projection = new ViewProjection(schema.jsonSchema, table.view.target!);
+        const projection = new ProjectionManager(schema.jsonSchema, table.view.target!);
         if (!undo) {
           const { deleted, index } = projection.deleteFieldProjection(fieldId);
           return {

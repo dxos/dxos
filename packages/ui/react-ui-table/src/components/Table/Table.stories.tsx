@@ -18,7 +18,7 @@ import { Filter, useQuery, useSchema, live } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getSchemaFromPropertyDefinitions, ViewProjection, ViewType } from '@dxos/schema';
+import { getSchemaFromPropertyDefinitions, DataType, ProjectionManager } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -47,7 +47,7 @@ const useTestTableModel = () => {
 
   const projection = useMemo(() => {
     if (schema && table?.view?.target) {
-      return new ViewProjection(toJsonSchema(schema), table.view.target);
+      return new ProjectionManager(toJsonSchema(schema), table.view.target);
     }
   }, [schema, table?.view?.target]);
 
@@ -155,7 +155,7 @@ const StoryViewEditor = () => {
     <ViewEditor
       registry={space?.db.schemaRegistry}
       schema={schema}
-      view={table.view.target!}
+      projection={table.view.target!}
       onTypenameChanged={handleTypenameChanged}
       onDelete={handleDeleteColumn}
     />
@@ -220,7 +220,7 @@ const meta: Meta<StoryProps> = {
     withTheme,
     withLayout({ fullscreen: true }),
     withClientProvider({
-      types: [TableType, ViewType],
+      types: [TableType, DataType.Projection],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
@@ -247,7 +247,7 @@ export const StaticSchema: StoryObj = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Testing.Contact, Testing.Organization],
+      types: [TableType, DataType.Projection, Testing.Contact, Testing.Organization],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
@@ -289,7 +289,7 @@ export const ArrayOfObjects: StoryObj = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
+      types: [TableType, DataType.Projection, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
@@ -315,7 +315,7 @@ export const Tags: Meta<StoryProps> = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType],
+      types: [TableType, DataType.Projection],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {

@@ -12,7 +12,7 @@ import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor, Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
 import { type KanbanType, KanbanSettingsSchema } from '@dxos/react-ui-kanban';
-import { ViewType, ViewProjection } from '@dxos/schema';
+import { DataType, ProjectionManager } from '@dxos/schema';
 
 import { KanbanAction } from '../types';
 
@@ -27,7 +27,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     [kanban?.cardView?.target?.query?.typename],
   );
   const schema = useSchema(client, space, currentTypename);
-  const views = useQuery(space, Filter.type(ViewType));
+  const views = useQuery(space, Filter.type(DataType.Projection));
 
   const handleUpdateTypename = useCallback(
     (newTypename: string) => {
@@ -54,7 +54,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   const projection = useMemo(() => {
     if (kanban?.cardView?.target && schema) {
       const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
-      return new ViewProjection(jsonSchema, kanban.cardView.target);
+      return new ProjectionManager(jsonSchema, kanban.cardView.target);
     }
   }, [kanban?.cardView?.target, JSON.stringify(schema)]);
 
@@ -94,7 +94,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
       <ViewEditor
         registry={space.db.schemaRegistry}
         schema={schema}
-        view={kanban.cardView.target}
+        projection={kanban.cardView.target}
         onTypenameChanged={Type.isMutable(schema) ? handleUpdateTypename : undefined}
         onDelete={Type.isMutable(schema) ? handleDelete : undefined}
         outerSpacing={false}

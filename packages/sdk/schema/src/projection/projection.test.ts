@@ -10,11 +10,12 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { StoredSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { getSchemaProperties } from './properties';
-import { Testing } from './testing';
-import { createView, HasView } from './view';
+import { createProjection } from './projection';
+import { HasView } from '../common';
+import { getSchemaProperties } from '../properties';
+import { Testing } from '../testing';
 
-describe('View', () => {
+describe('Projection', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -27,7 +28,7 @@ describe('View', () => {
 
   test('create view from TypedObject', async ({ expect }) => {
     const schema = Testing.Contact;
-    const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: Type.toJsonSchema(schema) });
+    const view = createProjection({ name: 'Test', typename: schema.typename, jsonSchema: Type.toJsonSchema(schema) });
     expect(view.query.typename).to.eq(schema.typename);
     expect(view.fields.map((f) => f.path)).to.deep.eq([
       'name',
@@ -77,7 +78,7 @@ describe('View', () => {
       ),
     });
 
-    const view = createView({
+    const view = createProjection({
       name: 'Test',
       typename: schema.typename,
       jsonSchema: schema.jsonSchema,
@@ -103,16 +104,19 @@ describe('View', () => {
       ),
     });
 
-    const view = createView({
+    const projection = createProjection({
       name: 'Test',
       typename: schema.typename,
       jsonSchema: schema.jsonSchema,
       fields: ['name', 'email', 'salary'],
     });
 
+    const view = Obj.make(Type.Expando, {});
+
     const relation = Relation.make(HasView, {
       [Relation.Source]: schema,
       [Relation.Target]: view,
+      projection: Ref.make(projection),
     });
 
     // TODO(burdon): Query for StoredObjects and Relations.

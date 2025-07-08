@@ -6,7 +6,7 @@ import { Obj, Ref, type Type } from '@dxos/echo';
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
-import { createView } from '@dxos/schema';
+import { createProjection } from '@dxos/schema';
 
 import { MapType } from '../types';
 import { setLocationProperty } from '../util';
@@ -31,16 +31,16 @@ export const initializeMap = async ({
     map.coordinates = coordinates;
   }
 
-  const view = createView({ name: "Map's item view", fields: [] });
+  const projection = createProjection({ name: "Map's item view", fields: [] });
 
   if (initialSchema) {
     const schema = await space.db.schemaRegistry.query({ typename: initialSchema }).firstOrUndefined();
     invariant(schema, `Schema not found: ${initialSchema}`);
 
-    view.query.typename = initialSchema;
+    projection.query.typename = initialSchema;
 
     if (locationProperty) {
-      setLocationProperty(view, locationProperty);
+      setLocationProperty(projection, locationProperty);
     } else {
       // Find a property with LatLng format.
       const locationProperties: string[] = [];
@@ -57,13 +57,13 @@ export const initializeMap = async ({
       }
       const locationProp = locationProperties.at(0);
       if (locationProp) {
-        setLocationProperty(view, locationProp);
+        setLocationProperty(projection, locationProp);
       }
     }
   }
 
-  space.db.add(view);
-  map.view = Ref.make(view);
+  space.db.add(projection);
+  map.view = Ref.make(projection);
   space.db.add(map);
 
   return { map };

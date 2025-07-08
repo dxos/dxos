@@ -1,54 +1,32 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { Schema, SchemaAST } from 'effect';
 
-import { Type } from '@dxos/echo';
-import { defineObjectMigration } from '@dxos/echo-db';
+import { Obj, Type } from '@dxos/echo';
 import {
-  FieldSortType,
   FormatEnum,
-  JsonPath,
   JsonSchemaType,
+  QueryType,
+  toEffectSchema,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
-  QueryType,
-  StoredSchema,
-  TypedObject,
-  toEffectSchema,
 } from '@dxos/echo-schema';
-import { findAnnotation } from '@dxos/effect';
-import { live, type Live } from '@dxos/live-object';
+import { findAnnotation, type JsonPath } from '@dxos/effect';
+import { PublicKey } from '@dxos/keys';
+import { type Live } from '@dxos/live-object';
 import { stripUndefined } from '@dxos/util';
 
-import { createFieldId } from './projection';
-import { getSchemaProperties } from './properties';
+import { FieldSchema, type FieldType, KeyValueProps } from './field';
+import { getSchemaProperties } from '../properties';
 
 /**
- * Stored field metadata (e.g., for UX).
- */
-export const FieldSchema = Schema.Struct({
-  id: Schema.String,
-  path: JsonPath,
-  visible: Schema.optional(Schema.Boolean),
-  size: Schema.optional(Schema.Number),
-  referencePath: Schema.optional(JsonPath),
-}).pipe(Schema.mutable);
-
-export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
-
-const KeyValueProps = Schema.Record({ key: Schema.String, value: Schema.Any });
-
-/**
- * Views are generated or user-defined projections of a schema's properties.
+ * Projections are generated or user-defined projections of a schema's properties.
  * They are used to configure the visual representation of the data.
- * The query is separate from the view (queries configure the projection of data objects).
+ * The query is separate from the projection (queries configure the projection of data objects).
  */
-export class ViewType extends TypedObject({
-  typename: 'dxos.org/type/View',
-  version: '0.2.0',
-})({
+export const Projection = Schema.Struct({
   /**
    * Human readable name.
    */
@@ -87,39 +65,10 @@ export class ViewType extends TypedObject({
 
   // TODO(burdon): Readonly flag?
   // TODO(burdon): Add array of sort orders (which might be tuples).
-}) {}
+}).pipe(Type.Obj({ typename: 'dxos.org/type/Projection', version: '0.1.0' }));
+export type Projection = Schema.Schema.Type<typeof Projection>;
 
-// TODO(wittjosiah): Refactor to organize better previous versions + migrations.
-export class ViewTypeV1 extends TypedObject({
-  typename: 'dxos.org/type/View',
-  version: '0.1.0',
-})({
-  name: Schema.String.annotations({
-    title: 'Name',
-    [SchemaAST.ExamplesAnnotationId]: ['Contact'],
-  }),
-  query: Schema.Struct({
-    type: Schema.optional(Schema.String),
-    sort: Schema.optional(Schema.Array(FieldSortType)),
-  }).pipe(Schema.mutable),
-  schema: Schema.optional(JsonSchemaType),
-  fields: Schema.mutable(Schema.Array(FieldSchema)),
-  metadata: Schema.optional(KeyValueProps.pipe(Schema.mutable)),
-}) {}
-
-export const ViewTypeV1ToV2 = defineObjectMigration({
-  from: ViewTypeV1,
-  to: ViewType,
-  transform: async (from) => {
-    return {
-      ...from,
-      query: {
-        typename: from.query.type,
-      },
-    };
-  },
-  onMigration: async () => {},
-});
+export const createFieldId = () => PublicKey.random().truncate();
 
 type CreateViewProps = {
   name: string;
@@ -131,7 +80,12 @@ type CreateViewProps = {
 /**
  * Create view from existing schema.
  */
-export const createView = ({ name, typename, jsonSchema, fields: include }: CreateViewProps): Live<ViewType> => {
+export const createProjection = ({
+  name,
+  typename,
+  jsonSchema,
+  fields: include,
+}: CreateViewProps): Live<Projection> => {
   const fields: FieldType[] = [];
   if (jsonSchema) {
     const schema = toEffectSchema(jsonSchema);
@@ -167,7 +121,7 @@ export const createView = ({ name, typename, jsonSchema, fields: include }: Crea
     });
   }
 
-  return live(ViewType, {
+  return Obj.make(Projection, {
     name,
     query: {
       typename,
@@ -175,16 +129,3 @@ export const createView = ({ name, typename, jsonSchema, fields: include }: Crea
     fields,
   });
 };
-
-export const HasViewSchema = Schema.Struct({});
-
-export const HasView = HasViewSchema.pipe(
-  Type.Relation({
-    typename: 'dxos.org/type/HasView',
-    version: '0.1.0',
-    source: StoredSchema,
-    target: ViewType,
-  }),
-);
-
-export interface HasView extends Schema.Schema.Type<typeof HasView> {}

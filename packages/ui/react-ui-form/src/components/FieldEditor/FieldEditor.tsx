@@ -14,8 +14,7 @@ import {
   sortProperties,
   type FieldType,
   type PropertyType,
-  type ViewType,
-  type ViewProjection,
+  type ProjectionManager,
   type SchemaProperty,
 } from '@dxos/schema';
 
@@ -23,8 +22,7 @@ import { translationKey } from '../../translations';
 import { Form, type FormProps, type InputComponent, SelectInput, SelectOptionInput } from '../Form';
 
 export type FieldEditorProps = {
-  view: ViewType;
-  projection: ViewProjection;
+  projection: ProjectionManager;
   field: FieldType;
   registry?: SchemaRegistry;
   onSave: () => void;
@@ -35,8 +33,7 @@ export type FieldEditorProps = {
  * Displays a Form representing the metadata for a given `Field` and `View`.
  */
 export const FieldEditor = ({
-  view,
-  projection,
+  projection: manager,
   field,
   registry,
   onSave,
@@ -44,8 +41,8 @@ export const FieldEditor = ({
   outerSpacing,
 }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
-  const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
-  useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
+  const [props, setProps] = useState<PropertyType>(manager.getFieldProjection(field.id).props);
+  useEffect(() => setProps(manager.getFieldProjection(field.id).props), [field, manager]);
 
   const [schemas, setSchemas] = useState<EchoSchema[]>([]);
   useEffect(() => {
@@ -112,7 +109,7 @@ export const FieldEditor = ({
 
   const handleValidate = useCallback<NonNullable<FormProps<PropertyType>['onValidate']>>(
     ({ property }) => {
-      if (property && view.fields.find((f) => f.path === property && f.path !== field.path)) {
+      if (property && manager.projection.fields.find((f) => f.path === property && f.path !== field.path)) {
         return [
           {
             path: 'property',
@@ -121,15 +118,15 @@ export const FieldEditor = ({
         ];
       }
     },
-    [view.fields, field],
+    [manager.projection.fields, field],
   );
 
   const handleSave = useCallback<NonNullable<FormProps<PropertyType>['onSave']>>(
     (props) => {
-      projection.setFieldProjection({ field, props });
+      manager.setFieldProjection({ field, props });
       onSave();
     },
-    [projection, field, onSave],
+    [manager, field, onSave],
   );
 
   const handleCancel = useCallback<NonNullable<FormProps<PropertyType>['onCancel']>>(() => {

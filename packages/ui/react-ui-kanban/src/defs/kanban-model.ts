@@ -9,7 +9,7 @@ import { Resource } from '@dxos/context';
 import { type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
-import { type ViewProjection } from '@dxos/schema';
+import { type ProjectionManager } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
 import { type KanbanType } from './kanban';
@@ -29,13 +29,13 @@ export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = { columnV
 export type KanbanModelProps = {
   kanban: KanbanType;
   schema: Schema.Schema.AnyNoContext;
-  projection: ViewProjection;
+  projection: ProjectionManager;
 };
 
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
   private readonly _kanban: KanbanType;
   private readonly _schema: Schema.Schema.AnyNoContext;
-  private readonly _projection: ViewProjection;
+  private readonly _projection: ProjectionManager;
   private _items = signal<T[]>([]);
   private _cards = signal<ArrangedCards<T>>([]);
 

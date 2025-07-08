@@ -9,7 +9,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { FormatEnum, ObjectId, setValue, toJsonSchema, TypedObject, TypeEnum } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { live } from '@dxos/react-client/echo';
-import { createView, type ViewProjection } from '@dxos/schema';
+import { createProjection, type ProjectionManager } from '@dxos/schema';
 
 import { TableType } from '../types';
 
@@ -24,7 +24,7 @@ export const TestSchema = TypedObject({ typename: 'example.com/type/Test', versi
 export const createTable = (schema = TestSchema) => {
   return Obj.make(TableType, {
     view: Ref.make(
-      createView({
+      createProjection({
         name: 'Test',
         typename: schema.typename,
         jsonSchema: toJsonSchema(schema),
@@ -77,7 +77,7 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
       const fields = table.view?.target?.fields ?? [];
       const columnIdx = Math.floor(Math.random() * fields.length);
       // TODO(ZaymonFC): ... This is borked.
-      const projection: ViewProjection = (table as any)._projection;
+      const projection: ProjectionManager = (table as any)._projectionManager;
       const field = fields[columnIdx];
       const item = items[rowIdx];
 

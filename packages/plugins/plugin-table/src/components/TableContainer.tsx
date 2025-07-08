@@ -22,7 +22,7 @@ import {
   type TableType,
   useTableModel,
 } from '@dxos/react-ui-table';
-import { ViewProjection } from '@dxos/schema';
+import { ProjectionManager } from '@dxos/schema';
 
 import { TableAction } from '../types';
 
@@ -71,7 +71,7 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
     }
 
     const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
-    return new ViewProjection(jsonSchema, table.view.target);
+    return new ProjectionManager(jsonSchema, table.view.target);
   }, [table.view?.target, JSON.stringify(schema)]);
 
   const features: Partial<TableFeatures> = useMemo(

@@ -16,7 +16,7 @@ import {
 } from '@dxos/echo-schema';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { live, type Space } from '@dxos/react-client/echo';
-import { createFieldId, createView, getSchemaProperties, ViewProjection, type ViewType } from '@dxos/schema';
+import { createFieldId, createProjection, getSchemaProperties, ProjectionManager, type Projection } from '@dxos/schema';
 
 import { type TableType } from '../types';
 
@@ -45,7 +45,7 @@ export const initializeTable = async ({
     const fields = getSchemaProperties(schema.ast).map((prop) => prop.name);
 
     table.view = Ref.make(
-      createView({
+      createProjection({
         // TODO(ZaymonFC): Don't hardcode name?
         name: 'View',
         typename: schema.typename,
@@ -60,7 +60,7 @@ export const initializeTable = async ({
     const fields = ContactFields;
 
     table.view = Ref.make(
-      createView({
+      createProjection({
         name: 'View',
         typename: schema.typename,
         jsonSchema: schema.jsonSchema,
@@ -68,7 +68,7 @@ export const initializeTable = async ({
       }),
     );
 
-    createProjection(schema, table.view.target!);
+    createProjectionManager(schema, table.view.target!);
 
     if (initialRow) {
       // TODO(burdon): Last (first) row should not be in db and should be managed by the model.
@@ -92,23 +92,23 @@ const createContactSchema = () =>
 
 const ContactFields = ['name', 'email', 'salary', 'active'];
 
-const createProjection = (schema: EchoSchema, view: ViewType): ViewProjection => {
-  const projection = new ViewProjection(schema.jsonSchema, view);
-  projection.setFieldProjection({
+const createProjectionManager = (schema: EchoSchema, projection: Projection): ProjectionManager => {
+  const manager = new ProjectionManager(schema.jsonSchema, projection);
+  manager.setFieldProjection({
     field: {
-      id: view.fields.find((f) => f.path === 'salary')!.id,
+      id: projection.fields.find((f) => f.path === 'salary')!.id,
       path: 'salary' as JsonPath,
       size: 150,
     },
   });
-  projection.setFieldProjection({
+  manager.setFieldProjection({
     field: {
-      id: view.fields.find((f) => f.path === 'active')!.id,
+      id: projection.fields.find((f) => f.path === 'active')!.id,
       path: 'active' as JsonPath,
       size: 100,
     },
   });
-  projection.setFieldProjection({
+  manager.setFieldProjection({
     field: {
       id: createFieldId(),
       path: 'manager' as JsonPath,
@@ -123,5 +123,5 @@ const createProjection = (schema: EchoSchema, view: ViewType): ViewProjection =>
     },
   });
 
-  return projection;
+  return manager;
 };

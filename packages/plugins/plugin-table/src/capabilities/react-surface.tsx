@@ -8,7 +8,7 @@ import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj, type Ref } from '@dxos/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TableType } from '@dxos/react-ui-table';
-import { ViewType } from '@dxos/schema';
+import { Projection } from '@dxos/schema';
 
 import { ObjectDetailsPanel, TableContainer, TableViewEditor } from '../components';
 import { meta } from '../meta';
@@ -40,7 +40,7 @@ export default () =>
       filter: (
         data,
       ): data is {
-        companionTo: Obj.Obj<{ view: Ref.Ref<ViewType> } | { cardView: Ref.Ref<ViewType> }>;
+        companionTo: Obj.Obj<{ view: Ref.Ref<Projection> } | { cardView: Ref.Ref<Projection> }>;
       } => {
         if (data.subject !== 'selected-objects' || !data.companionTo || !Obj.isObject(data.companionTo)) {
           return false;
@@ -48,8 +48,8 @@ export default () =>
 
         const companionTo = data.companionTo as any;
         // TODO(ZaymonFC): Unify the path of view between table and kanban.
-        const hasValidView = companionTo.view?.target instanceof ViewType;
-        const hasValidCardView = companionTo.cardView?.target instanceof ViewType;
+        const hasValidView = companionTo.view?.target instanceof Projection;
+        const hasValidCardView = companionTo.cardView?.target instanceof Projection;
         return hasValidView || hasValidCardView;
       },
       component: ({ data }) => {
@@ -59,7 +59,7 @@ export default () =>
           return null;
         }
 
-        return <ObjectDetailsPanel objectId={data.companionTo.id} view={viewTarget} />;
+        return <ObjectDetailsPanel objectId={data.companionTo.id} projection={viewTarget} />;
       },
     }),
   ]);

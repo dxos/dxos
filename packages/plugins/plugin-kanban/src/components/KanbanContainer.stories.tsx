@@ -23,7 +23,7 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban, KanbanType, useKanbanModel } from '@dxos/react-ui-kanban';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType, ViewProjection } from '@dxos/schema';
+import { DataType, ProjectionManager } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { initializeKanban } from '../testing';
@@ -49,7 +49,7 @@ const StorybookKanban = () => {
   const space = spaces[spaces.length - 1];
   const kanbans = useQuery(space, Filter.type(KanbanType));
   const [kanban, setKanban] = useState<KanbanType>();
-  const [projection, setProjection] = useState<ViewProjection>();
+  const [projection, setProjection] = useState<ProjectionManager>();
   const schema = useSchema(client, space, kanban?.cardView?.target?.query.typename);
 
   useEffect(() => {
@@ -62,7 +62,7 @@ const StorybookKanban = () => {
   useEffect(() => {
     if (kanban?.cardView?.target && schema) {
       const jsonSchema = Type.toJsonSchema(schema);
-      setProjection(new ViewProjection(jsonSchema, kanban.cardView.target));
+      setProjection(new ProjectionManager(jsonSchema, kanban.cardView.target));
     }
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
     //  @dmaretskyi? Once resolved, update in multiple places (e.g., storybooks).
@@ -120,7 +120,7 @@ const StorybookKanban = () => {
           <ViewEditor
             registry={space?.db.schemaRegistry}
             schema={schema}
-            view={kanban.cardView.target!}
+            projection={kanban.cardView.target!}
             onTypenameChanged={handleTypenameChanged}
             onDelete={(fieldId: string) => {
               console.log('[ViewEditor]', 'onDelete', fieldId);

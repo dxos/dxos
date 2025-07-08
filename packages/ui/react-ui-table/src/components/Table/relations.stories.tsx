@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { DataType, createView, ViewProjection, ViewType } from '@dxos/schema';
+import { DataType, createProjection, ProjectionManager } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -43,8 +43,8 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
     const typename = getSchemaTypename(schema);
     invariant(typename);
     const name = getAnnotation<string>(SchemaAST.TitleAnnotationId)(schema.ast) ?? typename;
-    const view = createView({ name, typename, jsonSchema });
-    return space.db.add(Obj.make(TableType, { view: Ref.make(view) }));
+    const projection = createProjection({ name, typename, jsonSchema });
+    return space.db.add(Obj.make(TableType, { view: Ref.make(projection) }));
   }, [schema, space, jsonSchema]);
 
   const projection = useMemo(() => {
@@ -53,7 +53,7 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
     }
 
     // TODO(burdon): Just pass in view? Reuse same jsonSchema instance? View determines if mutable, etc.
-    return new ViewProjection(jsonSchema, table.view.target);
+    return new ProjectionManager(jsonSchema, table.view.target);
   }, [jsonSchema, table]);
 
   const features = useMemo<TableFeatures>(
@@ -107,7 +107,7 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: { translations, controls: { disable: true } },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, DataType.Organization, DataType.Person],
+      types: [TableType, DataType.Projection, DataType.Organization, DataType.Person],
       createIdentity: true,
       createSpace: true,
     }),

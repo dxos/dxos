@@ -13,7 +13,7 @@ import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
-import { createView, DataType } from '@dxos/schema';
+import { createProjection, DataType } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
@@ -37,8 +37,8 @@ export const createGenerator = <T extends Obj.Any>(type: TypedObject<T>): Object
     const table = tables.find((table) => table.view?.target?.query?.typename === type.typename);
     if (!table) {
       const name = type.typename.split('/').pop() ?? type.typename;
-      const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
-      space.db.add(Obj.make(TableType, { name, view: Ref.make(view) }));
+      const projection = createProjection({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
+      space.db.add(Obj.make(TableType, { name, view: Ref.make(projection) }));
     }
 
     return objects;

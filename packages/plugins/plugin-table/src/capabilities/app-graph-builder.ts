@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { TableType } from '@dxos/react-ui-table';
-import { ViewType } from '@dxos/schema';
+import { Projection } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -57,8 +57,8 @@ export default (context: PluginContext) =>
               const hasValidView = get(
                 rxFromSignal(() => {
                   // TODO(dmaretskyi): There should be a type instanceof check
-                  const hasValidView = (subject as any).view?.target instanceof ViewType;
-                  const hasValidCardView = (subject as any).cardView?.target instanceof ViewType;
+                  const hasValidView = (subject as any).view?.target instanceof Projection;
+                  const hasValidCardView = (subject as any).cardView?.target instanceof Projection;
                   return hasValidView || hasValidCardView;
                 }),
               );

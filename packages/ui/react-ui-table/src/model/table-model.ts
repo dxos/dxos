@@ -25,7 +25,7 @@ import {
   type DxGridPlanePosition,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import { type ViewType, type ViewProjection, type PropertyType, validateSchema } from '@dxos/schema';
+import { type DataType, type ProjectionManager, type PropertyType, validateSchema } from '@dxos/schema';
 
 import { type SelectionMode, SelectionModel } from './selection-model';
 import { TableSorting } from './table-sorting';
@@ -58,8 +58,7 @@ const defaultFeatures: TableFeatures = {
 export type TableModelProps<T extends TableRow = TableRow> = {
   id?: string;
   space?: Space;
-  view?: ViewType;
-  projection: ViewProjection;
+  projection: ProjectionManager;
   features?: Partial<TableFeatures>;
   sorting?: FieldSortType[];
   pinnedRows?: { top: number[]; bottom: number[] };
@@ -75,8 +74,8 @@ export type TableModelProps<T extends TableRow = TableRow> = {
 export class TableModel<T extends TableRow = TableRow> extends Resource {
   private readonly _id: string | undefined;
   private readonly _space: Space | undefined;
-  private readonly _view: ViewType | undefined;
-  private readonly _projection: ViewProjection;
+  private readonly _projection: DataType.Projection;
+  private readonly _projectionManager: ProjectionManager;
 
   private readonly _visibleRange = signal<DxGridPlaneRange>({
     start: { row: 0, col: 0 },
@@ -102,8 +101,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   constructor({
     id,
     space,
-    view,
-    projection,
+    projection: manager,
     features = {},
     sorting = [],
     pinnedRows = { top: [], bottom: [] },
@@ -118,8 +116,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     super();
     this._id = id;
     this._space = space;
-    this._view = view;
-    this._projection = projection;
+    this._projection = manager.projection;
+    this._projectionManager = manager;
 
     // TODO(ZaymonFC): Use our more robust config merging module?
     this._features = { ...defaultFeatures, ...features };
@@ -129,7 +127,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       'Single selection is not compatible with editable tables.',
     );
 
-    this._sorting = new TableSorting(this._rows, this._view, projection);
+    this._sorting = new TableSorting(this._rows, manager);
 
     if (sorting.length > 0) {
       const [sort] = sorting;
@@ -154,12 +152,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     return this._space;
   }
 
-  public get view() {
-    return this._view;
-  }
-
   public get projection() {
     return this._projection;
+  }
+
+  public get projectionManager() {
+    return this._projectionManager;
   }
 
   public get rows(): ReadonlySignal<T[]> {
@@ -225,7 +223,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   private initializeColumnMeta(): void {
     this._columnMeta = computed(() => {
-      const fields = this._view?.fields ?? [];
+      const fields = this._projection?.fields ?? [];
       const meta = Object.fromEntries(
         fields.map((field, index: number) => [index, { size: field?.size ?? 256, resizeable: true }]),
       );
@@ -257,7 +255,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
         rowEffects.push(
           effect(() => {
             const obj = this._sorting.sortedRows.value[row];
-            this._view?.fields.forEach((field) => touch(getValue(obj, field.path)));
+            this._projection?.fields.forEach((field) => touch(getValue(obj, field.path)));
             this._onCellUpdate?.({ row, col: start.col, plane: 'grid' });
           }),
         );
@@ -278,7 +276,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public getRowCount = (): number => this._rows.value.length;
 
-  public getColumnCount = (): number => this._view?.fields.length ?? 0;
+  public getColumnCount = (): number => this._projection?.fields.length ?? 0;
 
   public insertRow = (rowIndex?: number): void => {
     const row = rowIndex !== undefined ? this._sorting.getDataIndex(rowIndex) : this._rows.value.length;
@@ -314,7 +312,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   };
 
   public getCellData = ({ col, row }: DxGridPlanePosition): any => {
-    const fields = this._view?.fields ?? [];
+    const fields = this._projection?.fields ?? [];
     if (col < 0 || col >= fields.length) {
       return undefined;
     }
@@ -326,7 +324,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return '';
     }
 
-    const { props } = this._projection.getFieldProjection(field.id);
+    const { props } = this._projectionManager.getFieldProjection(field.id);
     switch (props.format) {
       case FormatEnum.Ref: {
         if (!field.referencePath) {
@@ -344,13 +342,13 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public validateCellData = async ({ col, row }: DxGridPlanePosition, value: any): Promise<ValidationResult> => {
     const rowIdx = this._sorting.getDataIndex(row);
-    const fields = this._view?.fields ?? [];
+    const fields = this._projection?.fields ?? [];
     if (col < 0 || col >= fields.length) {
       return { valid: false, error: 'Invalid column index' };
     }
 
     const field = fields[col];
-    const { props } = this._projection.getFieldProjection(field.id);
+    const { props } = this._projectionManager.getFieldProjection(field.id);
 
     const currentRow = this._rows.value[rowIdx];
     invariant(currentRow, 'Invalid row index');
@@ -377,13 +375,13 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public setCellData = ({ col, row }: DxGridPlanePosition, value: any): void => {
     const rowIdx = this._sorting.getDataIndex(row);
-    const fields = this._view?.fields ?? [];
+    const fields = this._projection?.fields ?? [];
     if (col < 0 || col >= fields.length) {
       return;
     }
 
     const field = fields[col];
-    const { props } = this._projection.getFieldProjection(field.id);
+    const { props } = this._projectionManager.getFieldProjection(field.id);
     const transformedValue = editorTextToCellValue(props, value);
 
     // Special handling for Ref format to preserve existing behavior
@@ -403,7 +401,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
    */
   public updateCellData({ col, row }: DxGridPlanePosition, update: (value: any) => any): void {
     const dataRow = this._sorting.getDataIndex(row);
-    const fields = this._view?.fields ?? [];
+    const fields = this._projection?.fields ?? [];
     const field = fields[col];
 
     const value = getValue(this._rows.value[dataRow], field.path);
@@ -416,11 +414,11 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   //
 
   public deleteColumn(fieldId: string): void {
-    if (!this._view) {
+    if (!this._projection) {
       return;
     }
 
-    const field = this._view?.fields.find((field) => field.id === fieldId);
+    const field = this._projection?.fields.find((field) => field.id === fieldId);
     if (field && this._onDeleteColumn) {
       this._onDeleteColumn(field.id);
     }
@@ -431,7 +429,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   //
 
   public setColumnWidth(columnIndex: number, width: number): void {
-    const fields = this._view?.fields ?? [];
+    const fields = this._projection?.fields ?? [];
     if (columnIndex < fields.length) {
       const newWidth = Math.max(0, width);
       const field = fields[columnIndex];
