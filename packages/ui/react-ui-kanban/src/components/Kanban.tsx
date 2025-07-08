@@ -88,7 +88,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                         nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
                       >
                         <Card.StaticRoot>
-                          <Card.Toolbar classNames='density-fine'>
+                          <Card.Toolbar>
                             <StackItem.DragHandle asChild>
                               <Card.DragHandle toolbarItem />
                             </StackItem.DragHandle>
