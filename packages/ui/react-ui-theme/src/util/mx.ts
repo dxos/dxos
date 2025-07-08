@@ -6,7 +6,7 @@ import { extendTailwindMerge, validators } from 'tailwind-merge';
 
 import { withLogical, type WithLogicalClassGroups } from './withLogical';
 
-type AdditionalClassGroups = 'foreground' | 'surface' | 'separator' | WithLogicalClassGroups;
+type AdditionalClassGroups = 'density' | WithLogicalClassGroups;
 
 export const mx = extendTailwindMerge<AdditionalClassGroups>(
   {
@@ -27,6 +27,7 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>(
           // Arbitrary numbers
           validators.isArbitraryNumber,
         ],
+        density: ['density-fine', 'density-coarse'],
       },
     },
   },
