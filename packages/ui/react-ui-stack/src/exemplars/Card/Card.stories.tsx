@@ -62,19 +62,17 @@ export default meta;
 export const Default: StoryObj<CardStoryProps> = {
   render: ({ title, description, image, showImage, showIcon }: CardStoryProps) => (
     <div className='max-is-md'>
-      <Card.Root>
-        <Card.Content>
-          <Card.Toolbar>
-            <Card.DragHandle toolbarItem />
-            <Card.ToolbarSeparator variant='gap' />
-            <Card.ToolbarIconButton iconOnly variant='ghost' icon='ph--x--regular' label={'remove card label'} />
-          </Card.Toolbar>
-          {showImage && <Card.Poster alt={title} image={image} />}
-          {!showImage && showIcon && <Card.Poster alt={title} icon='ph--building-office--regular' />}
-          <Card.Heading>{title}</Card.Heading>
-          {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
-        </Card.Content>
-      </Card.Root>
+      <Card.StaticRoot>
+        <Card.Toolbar>
+          <Card.DragHandle toolbarItem />
+          <Card.ToolbarSeparator variant='gap' />
+          <Card.ToolbarIconButton iconOnly variant='ghost' icon='ph--x--regular' label={'remove card label'} />
+        </Card.Toolbar>
+        {showImage && <Card.Poster alt={title} image={image} />}
+        {!showImage && showIcon && <Card.Poster alt={title} icon='ph--building-office--regular' />}
+        <Card.Heading>{title}</Card.Heading>
+        {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
+      </Card.StaticRoot>
     </div>
   ),
 };
