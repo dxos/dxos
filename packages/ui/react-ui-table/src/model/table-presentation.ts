@@ -8,10 +8,10 @@ import { isNotNullable } from 'effect/Predicate';
 import { FormatEnum, getObjectDXN, getValue, TypeEnum } from '@dxos/echo-schema';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
+  type DxGridCellValue,
   type DxGridPlane,
   type DxGridPlaneCells,
   type DxGridPlaneRange,
-  type DxGridCellValue,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
@@ -255,13 +255,24 @@ export class TablePresentation<T extends TableRow = TableRow> {
     const draftRows = this.model.draftRows.value;
 
     for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
+      const draftRow = draftRows[row];
       for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
         const field = fields[col];
         if (!field) {
           continue;
         }
 
-        this.createDataCell(cells, draftRows[row].data, field, col, row);
+        this.createDataCell(cells, draftRow.data, field, col, row);
+
+        if (this.model.hasDraftRowValidationError(row, field.path)) {
+          const cellIndex = toPlaneCellIndex({ col, row });
+          const cellValue = cells[cellIndex];
+          if (cellValue) {
+            const existingClasses = cellValue.className || '';
+            const draftClasses = 'dx-grid__cell--flagged';
+            cellValue.className = existingClasses ? `${existingClasses} ${draftClasses}` : draftClasses;
+          }
+        }
       }
     }
 

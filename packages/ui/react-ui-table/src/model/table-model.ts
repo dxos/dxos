@@ -310,6 +310,22 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     return this._draftRows;
   }
 
+  /**
+   * Checks if a specific field path has validation errors for a given draft row.
+   * @param draftRowIndex - The index of the draft row to check
+   * @param fieldPath - The path of the field to check for validation errors
+   * @returns true if the field has validation errors, false otherwise
+   */
+  public hasDraftRowValidationError(draftRowIndex: number, fieldPath: string): boolean {
+    if (draftRowIndex < 0 || draftRowIndex >= this._draftRows.value.length) {
+      return false;
+    }
+
+    const draftRow = this._draftRows.value[draftRowIndex];
+    const validationErrors = draftRow.validationErrors || [];
+    return validationErrors.some((error) => error.path === fieldPath);
+  }
+
   public getColumnCount = (): number => this._view?.fields.length ?? 0;
 
   public insertRow = (): void => {
