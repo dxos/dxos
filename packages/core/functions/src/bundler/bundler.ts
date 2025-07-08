@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { BuildOptions, Loader, build, initialize, type BuildResult, type Plugin } from 'esbuild-wasm';
 import { FetchHttpClient, HttpClient } from '@effect/platform';
+import { Duration, Effect, pipe, Schedule } from 'effect';
+import { type BuildOptions, type Loader, build, initialize, type BuildResult, type Plugin } from 'esbuild-wasm';
 
 import { subtleCrypto } from '@dxos/crypto';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { runAndForwardErrors } from '@dxos/effect';
-import { Duration, Effect, pipe, Schedule } from 'effect';
 
 export type Import = {
   moduleUrl: string;
