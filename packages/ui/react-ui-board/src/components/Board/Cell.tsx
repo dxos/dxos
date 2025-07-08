@@ -22,10 +22,11 @@ export type CellProps<T extends HasId = any> = ThemedClassName<
     item: T;
     layout: CellLayout;
     draggable?: boolean;
+    getTitle?: (item: T) => string;
   }>
 >;
 
-export const Cell = ({ classNames, children, item, layout, draggable: isDraggable }: CellProps) => {
+export const Cell = ({ classNames, children, item, layout, draggable: isDraggable, getTitle }: CellProps) => {
   const { t } = useTranslation(translationKey);
   const { board, zoom, onSelect, onDelete, onMove } = useBoardContext(Cell.displayName);
 
@@ -57,40 +58,34 @@ export const Cell = ({ classNames, children, item, layout, draggable: isDraggabl
     });
   }, [isDraggable, zoom]);
 
-  // TODO(burdon): Title accessor?
-  const title = item.id;
-
   return (
-    <Card.Root
+    <Card.StaticRoot
       ref={rootRef}
-      // TODO(burdon): Root should have no padding by default (leave that to Content?)
       // TODO(burdon): Common fragment for placeholder opacity?
-      classNames={mx('absolute p-0', dragState === 'dragging' && 'opacity-50')}
+      classNames={mx('absolute p-0', dragState === 'dragging' && 'opacity-50', classNames)}
       style={getBoardRect(board, layout)}
       onClick={() => onSelect?.(item.id)}
     >
-      <Card.Content classNames='bs-full'>
-        <Card.Toolbar>
-          {/* TODO(burdon): How to set disabled? */}
-          <Card.DragHandle toolbarItem ref={dragHandleRef} />
-          {/* TODO(burdon): Heading has strange padding (makes the Toolbar too tall). */}
-          {/* <Card.Heading classNames='grow truncate'>{title}</Card.Heading> */}
-          <h1 className='grow truncate pli-1'>{title}</h1>
-          {dragState !== 'dragging' && (
-            <Card.ToolbarIconButton
-              // TODO(burdon): Should be the same size/padding as the DragHandle (and square by default).
-              classNames='px-2'
-              variant='ghost'
-              icon='ph--x--regular'
-              iconOnly
-              label={t('button delete')}
-              onClick={() => onDelete?.(item.id)}
-            />
-          )}
-        </Card.Toolbar>
-        {children}
-      </Card.Content>
-    </Card.Root>
+      <Card.Toolbar>
+        {/* TODO(burdon): How to set disabled? */}
+        <Card.DragHandle toolbarItem ref={dragHandleRef} />
+        {/* TODO(burdon): Heading has strange padding (makes the Toolbar too tall). */}
+        {/* <Card.Heading classNames='grow truncate'>{title}</Card.Heading> */}
+        <h1 className='grow truncate pli-1'>{getTitle?.(item) ?? item.id}</h1>
+        {dragState !== 'dragging' && (
+          <Card.ToolbarIconButton
+            // TODO(burdon): Should be the same size/padding as the DragHandle (and square by default).
+            classNames='px-2'
+            variant='ghost'
+            icon='ph--x--regular'
+            iconOnly
+            label={t('button delete')}
+            onClick={() => onDelete?.(item.id)}
+          />
+        )}
+      </Card.Toolbar>
+      {children}
+    </Card.StaticRoot>
   );
 };
 

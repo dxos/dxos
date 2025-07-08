@@ -242,14 +242,16 @@ Viewport.displayName = 'Board.Viewport';
 
 type ContentProps<T extends HasId = any> = {
   items?: T[];
-};
+} & Pick<CellProps, 'getTitle'>;
 
-const Content = <T extends HasId = any>({ items }: ContentProps<T>) => {
+const Content = <T extends HasId = any>({ items, ...props }: ContentProps<T>) => {
   const { layout } = useBoardContext(Viewport.displayName);
 
   return (
     <div role='none'>
-      {items?.map((item, index) => <Cell item={item} key={index} layout={layout?.cells[item.id] ?? { x: 0, y: 0 }} />)}
+      {items?.map((item, index) => (
+        <Cell item={item} key={index} layout={layout?.cells[item.id] ?? { x: 0, y: 0 }} {...props} />
+      ))}
     </div>
   );
 };

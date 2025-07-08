@@ -18,14 +18,14 @@ import { Obj, Type } from '@dxos/echo';
 namespace Proposition {
   const Fields = Schema.Struct({
     text: Schema.String,
-    children: Schema.optional(Schema.mutable(Schema.Array(Schema.suspend(() => Any)))).pipe(
-      Schema.withConstructorDefault(() => []),
-    ),
+    // children: Schema.optional(Schema.mutable(Schema.Array(Schema.suspend(() => Any)))).pipe(
+    //   Schema.withConstructorDefault(() => []),
+    // ),
   });
 
   export interface Any extends Schema.Schema.Type<Schema.mutable<typeof Fields>> {}
 
-  export const Any: Schema.Schema<Any> = Fields.pipe(
+  export const Any = Fields.pipe(
     Type.Obj({
       typename: 'dxos.org/teyp/Definition',
       version: '0.1.0',
@@ -69,7 +69,7 @@ export namespace Analysis {
     }),
   }).annotations({
     description:
-      'A strategic planning technique used to evaluate the Strengths, Weaknesses, Opportunities, and Threats involved in a project or business venture.',
+      'SWOT is a strategic planning technique used to evaluate the Strengths, Weaknesses, Opportunities, and Threats involved in a project or business venture.',
   });
 
   const Any = Properties.pipe(

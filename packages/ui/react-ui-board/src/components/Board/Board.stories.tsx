@@ -14,6 +14,11 @@ import { Board, type BoardController, type BoardContentProps, type BoardRootProp
 import { type BoardLayout } from './types';
 import translations from '../../translations';
 
+type TestItem = {
+  id: string;
+  title: string;
+};
+
 type StoryProps = BoardRootProps & BoardContentProps;
 
 const meta: Meta<StoryProps> = {
@@ -67,7 +72,7 @@ const meta: Meta<StoryProps> = {
         <Board.Controls />
         <Board.Viewport>
           <Board.Background />
-          <Board.Content items={items} />
+          <Board.Content<TestItem> items={items} getTitle={(item) => item.title} />
         </Board.Viewport>
       </Board.Root>
     );
@@ -84,7 +89,15 @@ type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
-    items: [{ id: '0' }, { id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }, { id: '5' }, { id: '6' }],
+    items: [
+      { id: '0', title: 'Item 0' },
+      { id: '1', title: 'Item 1' },
+      { id: '2', title: 'Item 2' },
+      { id: '3', title: 'Item 3' },
+      { id: '4', title: 'Item 4' },
+      { id: '5', title: 'Item 5' },
+      { id: '6', title: 'Item 6' },
+    ],
     overScroll: 300,
     board: {
       size: { width: 300, height: 300 },
