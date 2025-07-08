@@ -264,7 +264,7 @@ const httpPlugin: Plugin = {
     // When a URL is loaded, we want to actually download the content from the internet.
     // This has just enough logic to be able to handle the example import from unpkg.com but in reality this would probably need to be more complex.
     build.onLoad({ filter: /.*/, namespace: 'http-url' }, async (args) => {
-      const a = await Effect.runPromise(
+      return await Effect.runPromise(
         pipe(
           Effect.gen(function* () {
             const response = yield* HttpClient.get(args.path);
@@ -278,8 +278,6 @@ const httpPlugin: Plugin = {
           Effect.provide(RetryConfig.default),
         ),
       );
-      log.info('fetch complete', { response: a });
-      return a;
     });
   },
 };
