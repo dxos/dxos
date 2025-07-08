@@ -40,6 +40,9 @@ import { TableSorting } from './table-sorting';
 import { touch } from '../util';
 import { extractTagIds } from '../util/tag';
 
+// Domain types for cell classification
+export type TableCellType = 'standard' | 'draft' | 'header';
+
 // TODO(ZaymonFC): Use a common type?
 export type ValidationResult = { valid: true } | { valid: false; error: string };
 
@@ -567,6 +570,33 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     const value = getValue(this._rows.value[dataRow], field.path);
     const updatedValue = update(value);
     setValue(this._rows.value[dataRow], field.path, updatedValue);
+  }
+
+  /**
+   * Gets the domain-appropriate cell type for a given cell position.
+   * This abstracts away the low-level grid plane concepts and provides domain-specific types.
+   * @param cell - The cell position to classify
+   * @returns The domain-appropriate cell type
+   */
+  public getCellType(cell: DxGridPosition): TableCellType {
+    switch (cell.plane) {
+      case 'frozenRowsEnd':
+        return 'draft';
+      case 'frozenRowsStart':
+        return 'header';
+      case 'grid':
+      default:
+        return 'standard';
+    }
+  }
+
+  /**
+   * Convenience method to check if a cell is a draft cell.
+   * @param cell - The cell position to check
+   * @returns true if the cell is a draft cell, false otherwise
+   */
+  public isDraftCell(cell: DxGridPosition): boolean {
+    return this.getCellType(cell) === 'draft';
   }
 
   //

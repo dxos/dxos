@@ -118,23 +118,21 @@ export const TableCellEditor = ({
     return fieldProjection;
   }, [model, editing]);
 
-  // Check for existing validation errors when editing starts (for draft rows)
   useEffect(() => {
+    // Check for existing validation errors when editing starts (for draft rows).
     if (!model || !editing || !fieldProjection) {
       setValidationError(null);
       return;
     }
 
     const cell = parseCellIndex(editing.index);
-    const { plane, row, col } = cell;
-    
-    // Only check for warnings in draft rows (frozenRowsEnd plane)
-    if (plane === 'frozenRowsEnd') {
+    const { row, col } = cell;
+
+    if (model.isDraftCell(cell)) {
       const field = model.projection.view.fields[col];
       const hasValidationError = model.hasDraftRowValidationError(row, field.path);
-      
+
       if (hasValidationError) {
-        // Get the actual validation error message
         const draftRows = model.draftRows.value;
         if (row >= 0 && row < draftRows.length) {
           const draftRow = draftRows[row];
@@ -159,20 +157,17 @@ export const TableCellEditor = ({
       }
 
       const cell = parseCellIndex(editing.index);
+      const validationResult = await model.validateCellData(cell, value);
 
-      // Validate the value
-      const result = await model.validateCellData(cell, value);
-
-      if (result.valid) {
+      if (validationResult.valid) {
         setValidationError(null);
         model.setCellData(cell, value);
         onEnter?.(cell);
         onFocus?.();
         setEditing(null);
       } else {
-        setValidationError(result.error);
+        setValidationError(validationResult.error);
         setValidationVariant('error');
-        // Editor stays open on validation failure
       }
     },
     [model, editing, onEnter, onFocus, setEditing],
@@ -378,7 +373,11 @@ export const TableCellEditor = ({
 
   return (
     <>
-      <CellValidationMessage validationError={_validationError} variant={_validationVariant} __gridScope={__gridScope} />
+      <CellValidationMessage
+        validationError={_validationError}
+        variant={_validationVariant}
+        __gridScope={__gridScope}
+      />
       <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} />
     </>
   );

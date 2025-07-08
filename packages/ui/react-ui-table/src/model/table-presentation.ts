@@ -5,7 +5,8 @@
 import { signal } from '@preact/signals-core';
 import { isNotNullable } from 'effect/Predicate';
 
-import { FormatEnum, getObjectDXN, getValue, TypeEnum } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
+import { FormatEnum, getValue, TypeEnum } from '@dxos/echo-schema';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
   type DxGridCellValue,
@@ -66,7 +67,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     }
 
     if (plane === 'grid' && this.model.features.dataEditable === false) {
-      Object.values(cells).forEach((cell) => {
+      Object.values<DxGridCellValue>(cells).forEach((cell) => {
         cell.readonly = 'text-select';
       });
     }
@@ -177,7 +178,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     if (props.format === FormatEnum.Ref && props.referenceSchema) {
       const targetObj = getValue(obj, field.path)?.target;
       if (targetObj) {
-        const dxn = getObjectDXN(targetObj)?.toString();
+        const dxn = Obj.getDXN(targetObj)?.toString();
         cell.accessoryHtml = `<dx-ref-tag refId=${dxn} class="dx-button is-6 pli-[3px] pbe-[2px] min-bs-0 absolute inline-end-1"><dx-icon icon="ph--link-simple--regular"/></dx-ref-tag>`;
       }
     }
