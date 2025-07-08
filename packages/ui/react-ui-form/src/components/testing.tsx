@@ -17,7 +17,7 @@ export const TestLayout = ({ classNames, json, children }: ThemedClassName<Props
 );
 
 export const TestPanel = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <Card.Content classNames={[textBlockWidth, classNames]}>{children}</Card.Content>
+  <Card.StaticRoot classNames={[textBlockWidth, classNames]}>{children}</Card.StaticRoot>
 );
 
 // Symbol for accessing debug objects in tests.

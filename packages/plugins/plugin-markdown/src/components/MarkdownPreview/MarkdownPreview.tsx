@@ -57,7 +57,7 @@ export const MarkdownPreview = ({ subject, role }: PreviewProps<DocumentType | D
   );
 
   return (
-    <Card.Container role={role}>
+    <Card.SurfaceRoot role={role}>
       <Card.Heading>{getTitle(subject, t('fallback title'))}</Card.Heading>
       {snippet && <Card.Text classNames='line-clamp-3 break-words col-span-2'>{snippet}</Card.Text>}
       <Card.Chrome>
@@ -66,6 +66,6 @@ export const MarkdownPreview = ({ subject, role }: PreviewProps<DocumentType | D
           <Icon icon='ph--arrow-right--regular' />
         </Button>
       </Card.Chrome>
-    </Card.Container>
+    </Card.SurfaceRoot>
   );
 };

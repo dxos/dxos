@@ -50,7 +50,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       orientation='horizontal'
       size='contain'
       rail={false}
-      classNames='pli-1'
+      classNames='pli-1 density-fine'
       onRearrange={model.handleRearrange}
       itemsCount={model.arrangedCards.length}
       {...autoScrollRootAttributes}
@@ -80,7 +80,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 >
                   {/* TODO(burdon): Factor out Card to separate file. */}
                   {cards.map((card, cardIndex, cardsArray) => (
-                    <Card.Root asChild key={card.id}>
+                    <CardStack.Item asChild key={card.id}>
                       <StackItem.Root
                         item={card}
                         focusIndicatorVariant='group'
@@ -88,7 +88,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                         prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
                         nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
                       >
-                        <Card.Content>
+                        <Card.StaticRoot>
                           <Card.Toolbar>
                             <StackItem.DragHandle asChild>
                               <Card.DragHandle toolbarItem />
@@ -108,7 +108,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                             )}
                           </Card.Toolbar>
                           <Surface role='card--kanban' limit={1} data={{ subject: card }} />
-                        </Card.Content>
+                        </Card.StaticRoot>
                         <StackItem.DragPreview>
                           {({ item }) => (
                             <CardDragPreview.Root>
@@ -122,7 +122,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           )}
                         </StackItem.DragPreview>
                       </StackItem.Root>
-                    </Card.Root>
+                    </CardStack.Item>
                   ))}
                 </CardStack.Stack>
 
@@ -178,9 +178,9 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                       {/* Cards Container */}
                       <CardStackDragPreview.Content itemsCount={cards.length}>
                         {cards.map((card) => (
-                          <Card.Content key={card.id}>
+                          <Card.StaticRoot key={card.id}>
                             <Surface role='card--kanban' limit={1} data={{ subject: card }} />
-                          </Card.Content>
+                          </Card.StaticRoot>
                         ))}
                       </CardStackDragPreview.Content>
 

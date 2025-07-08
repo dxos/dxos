@@ -38,7 +38,7 @@ const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   ({ icon, size, iconOnly, label, classNames, iconClassNames, caretDown, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <Button {...props} classNames={tx('iconButton.root', 'iconButton', {}, classNames)} ref={forwardedRef}>
+      <Button {...props} classNames={tx('iconButton.root', 'iconButton', { iconOnly }, classNames)} ref={forwardedRef}>
         <Icon icon={icon} size={size} classNames={iconClassNames} />
         <span className={iconOnly ? 'sr-only' : undefined}>{label}</span>
         {caretDown && <Icon size={3} icon='ph--caret-down--bold' />}

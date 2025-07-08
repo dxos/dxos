@@ -48,10 +48,10 @@ const PreviewCard = () => {
     <Popover.Portal>
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
-          <Card.Container role='popover'>
+          <Card.SurfaceRoot role='popover'>
             <Card.Heading>{target?.label}</Card.Heading>
             {target && <Card.Text classNames='line-clamp-3'>{target.text}</Card.Text>}
-          </Card.Container>
+          </Card.SurfaceRoot>
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
@@ -126,7 +126,7 @@ const PreviewBlock = ({ link, el, view }: { link: PreviewLinkRef; el: HTMLElemen
   }, [handleAction, link, target]);
 
   return createPortal(
-    <Card.Content classNames={hoverableControls}>
+    <Card.StaticRoot classNames={hoverableControls}>
       <div className='flex items-start'>
         {!view?.state.readOnly && (
           <Card.Toolbar classNames='is-min p-[--dx-cardSpacingInline]'>
@@ -159,7 +159,7 @@ const PreviewBlock = ({ link, el, view }: { link: PreviewLinkRef; el: HTMLElemen
         </Card.Heading>
       </div>
       {target && <Card.Text classNames='line-clamp-3 mbs-0'>{target.text}</Card.Text>}
-    </Card.Content>,
+    </Card.StaticRoot>,
     el,
   );
 };
