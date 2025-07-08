@@ -108,6 +108,9 @@
       "path": "../../ui/react-ui-theme"
     },
     {
+      "path": "../plugin-assistant"
+    },
+    {
       "path": "../plugin-automation"
     },
     {

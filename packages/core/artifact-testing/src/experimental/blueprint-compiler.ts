@@ -6,7 +6,7 @@ import type { Blueprint } from '@dxos/assistant';
 import { ComputeGraphModel, NODE_INPUT, NODE_OUTPUT, type ComputeGraph, type ComputeNode } from '@dxos/conductor';
 
 /**
- *
+ * Compile a blueprint into a compute graph.
  */
 export const compileBlueprint = async (blueprint: Blueprint): Promise<ComputeGraph> => {
   const model = ComputeGraphModel.create();

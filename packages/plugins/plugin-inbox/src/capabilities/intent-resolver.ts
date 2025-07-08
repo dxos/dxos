@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import { pipe, Schema } from 'effect';
 
 import {
   contributes,
@@ -11,6 +11,7 @@ import {
   type PluginContext,
   createIntent,
   chain,
+  useCapability,
 } from '@dxos/app-framework';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo-schema';
@@ -22,6 +23,14 @@ import { DataType } from '@dxos/schema';
 
 import { InboxCapabilities } from './capabilities';
 import { CalendarType, InboxAction, MailboxType } from '../types';
+import { getSpace } from '@dxos/client/echo';
+import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
+import { AssistantCapabilities } from '@dxos/plugin-assistant';
+import { failedInvariant } from '@dxos/invariant';
+import { consoleLogger } from '@dxos/functions/testing';
+import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
+import { BlueprintBuilder } from '@dxos/assistant';
+import { ArtifactId } from '@dxos/artifact';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -156,6 +165,44 @@ export default (context: PluginContext) =>
       intent: InboxAction.RunAssistant,
       resolve: ({ mailbox }) => {
         log.info('Run assistant', { mailbox });
+
+        const space = getSpace(mailbox) ?? failedInvariant();
+        const aiClient = useCapability(AssistantCapabilities.AiClient);
+
+        const serviceContainer = new ServiceContainer().setServices({
+          ai: AiService.make(aiClient.value),
+          database: DatabaseService.make(space.db),
+          queues: QueueService.make(space.queues, undefined),
+          eventLogger: consoleLogger,
+          toolResolver: ToolResolverService.make(
+            new ToolRegistry([
+              createTool('inbox', {
+                name: 'label',
+                description: 'Label a message',
+                schema: Schema.Struct({
+                  message: ArtifactId.annotations({ description: 'The message to label' }),
+                  labels: Schema.Array(Label).annotations({ description: 'The labels to apply to the message' }),
+                }),
+                execute: async ({ message, labels }) => {
+                  log.info('Labeling message', { message, labels });
+                  return ToolResult.Success({
+                    message: 'Message labeled',
+                  });
+                },
+              }),
+              // tools go here
+            ]),
+          ),
+        });
+
+        // TODO(dmaretskyi): Move both blueprints and the compiler to the conductor package.
+        // const workflow = compileBlueprint(BLUEPRINT);
       },
     }),
   ]);
+
+const Label = Schema.Literal('important', 'personal', 'work', 'social', 'promotions', 'updates', 'forums', 'spam');
+
+const BLUEPRINT = BlueprintBuilder.create().step('Analyze the email and assign labels to it', {
+  tools: ['inbox/label'],
+}).build();
