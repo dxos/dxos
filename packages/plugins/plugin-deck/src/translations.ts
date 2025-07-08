@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { DECK_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [DECK_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Deck',
         'main header label': 'Main header',
         'open navigation sidebar label': 'Open sidebar',

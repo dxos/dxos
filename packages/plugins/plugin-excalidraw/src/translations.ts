@@ -5,7 +5,7 @@
 import { DiagramType } from '@dxos/plugin-sketch/types';
 import { type Resource } from '@dxos/react-ui';
 
-import { EXCALIDRAW_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
@@ -17,7 +17,7 @@ export const translations = [
         'typename label_other': 'Excalidraws',
         'object name placeholder': 'New excalidraw',
       },
-      [EXCALIDRAW_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Sketch',
         'settings hover tools label': 'Auto hide controls',
         'settings grid type label': 'Dotted grid',

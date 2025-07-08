@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { STATUS_BAR_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [STATUS_BAR_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Status Bar',
         'warning title': 'WARNING',
         'technology preview message': 'Composer is currently in beta.',

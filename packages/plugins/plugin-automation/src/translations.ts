@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { AUTOMATION_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [AUTOMATION_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Automation',
         'automation panel label': 'Automations',
         'script automation label': 'Automation',

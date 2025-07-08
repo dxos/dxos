@@ -5,7 +5,7 @@
 import { Blueprint } from '@dxos/assistant';
 import { type Resource } from '@dxos/react-ui';
 
-import { ASSISTANT_PLUGIN } from './meta';
+import { meta } from './meta';
 import { AIChatType, TemplateType } from './types';
 
 export const translations = [
@@ -32,7 +32,7 @@ export const translations = [
         'typename label_other': 'Templates',
         'object name placeholder': 'New template',
       },
-      [ASSISTANT_PLUGIN]: {
+      [meta.id]: {
         'templates label': 'Templates',
         'open ambient chat label': 'Open Assistant',
         'assistant chat label': 'Assistant',

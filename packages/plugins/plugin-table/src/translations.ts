@@ -5,7 +5,7 @@
 import { type Resource } from '@dxos/react-ui';
 import { TableType } from '@dxos/react-ui-table';
 
-import { TABLE_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
@@ -17,7 +17,7 @@ export const translations = [
         'typename label_other': 'Tables',
         'object name placeholder': 'New table',
       },
-      [TABLE_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Tables',
         'table name placeholder': 'Table name',
         'settings title': 'Table settings',

@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { FILES_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [FILES_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Local Files',
         'missing file permissions': 'Permission required to view the currently selected file',
         'open file label': 'Open file',

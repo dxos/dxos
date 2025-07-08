@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { INBOX_PLUGIN } from './meta';
+import { meta } from './meta';
 import { CalendarType, MailboxType } from './types';
 
 export const translations = [
@@ -24,7 +24,7 @@ export const translations = [
         'typename label_other': 'Calendars',
         'object name placeholder': 'New calendar',
       },
-      [INBOX_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Inbox',
         'empty mailbox message': 'Mailbox empty',
         'no message message': 'Select a message to view it',

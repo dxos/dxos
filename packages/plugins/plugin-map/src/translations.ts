@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { MAP_PLUGIN } from './meta';
+import { meta } from './meta';
 import { MapType } from './types';
 
 export const translations = [
@@ -17,7 +17,7 @@ export const translations = [
         'typename label_other': 'Maps',
         'object name placeholder': 'New map',
       },
-      [MAP_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Maps',
         'delete object label': 'Delete',
         'toggle type label': 'Toggle view',

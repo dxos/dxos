@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { SHEET_PLUGIN } from './meta';
+import { meta } from './meta';
 import { SheetType } from './types';
 
 export const translations = [
@@ -17,7 +17,7 @@ export const translations = [
         'typename label_other': 'Sheets',
         'object name placeholder': 'New sheet',
       },
-      [SHEET_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Sheets',
         'cell placeholder': 'Cell value...',
         'range key alignment label': 'Align',

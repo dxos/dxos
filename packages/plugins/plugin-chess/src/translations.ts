@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { CHESS_PLUGIN } from './meta';
+import { meta } from './meta';
 import { ChessType } from './types';
 
 export const translations = [
@@ -17,7 +17,7 @@ export const translations = [
         'typename label_other': 'Games',
         'object name placeholder': 'New game',
       },
-      [CHESS_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Chess',
         'delete game label': 'Delete',
       },

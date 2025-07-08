@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { SEARCH_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [SEARCH_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Search',
         'search action label': 'Search spaces',
         'search placeholder': 'Search…',

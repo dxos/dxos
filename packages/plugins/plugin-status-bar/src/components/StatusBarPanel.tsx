@@ -10,10 +10,10 @@ import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 
 import { StatusBar } from './StatusBar';
 import { VersionNumber } from './VersionNumber';
-import { STATUS_BAR_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export const StatusBarActions = () => {
-  const { t } = useTranslation(STATUS_BAR_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const [open, setOpen] = useState(false);
 
   return (

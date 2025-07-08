@@ -5,7 +5,7 @@
 import { type Resource } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 
-import { SPACE_PLUGIN } from './meta';
+import { meta } from './meta';
 
 // TODO(burdon): Change to single Resource?
 export const translations = [
@@ -25,7 +25,7 @@ export const translations = [
         'typename label_other': 'Smart Collections',
         'object name placeholder': 'New smart collection',
       },
-      [SPACE_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Spaces',
         'first run message': 'Nothing selected.',
         'create space label': 'Create space',

@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { MARKDOWN_PLUGIN } from './meta';
+import { meta } from './meta';
 import { DocumentType } from './types';
 
 export const translations = [
@@ -17,7 +17,7 @@ export const translations = [
         'typename label_other': 'Documents',
         'object name placeholder': 'New document',
       },
-      [MARKDOWN_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Editor',
         'choose markdown from space dialog title': 'Choose one or more documents to add',
         // TODO(burdon): Style-guide for user-facing text (e.g., hints, questions, capitalization, etc.)

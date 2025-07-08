@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { BOARD_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [BOARD_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Board',
       },
     },

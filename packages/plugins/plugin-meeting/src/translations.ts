@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { MEETING_PLUGIN } from './meta';
+import { meta } from './meta';
 import { MeetingType } from './types';
 
 export const translations = [
@@ -17,7 +17,7 @@ export const translations = [
         'typename label_other': 'Meetings',
         'object name placeholder': 'New meeting',
       },
-      [MEETING_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Meeting',
         'meetings label': 'All Meetings',
         'meeting label': 'Meeting',

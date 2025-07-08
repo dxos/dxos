@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { OUTLINER_PLUGIN } from './meta';
+import { meta } from './meta';
 import { JournalType, OutlineType } from './types';
 
 export const translations = [
@@ -24,7 +24,7 @@ export const translations = [
         'typename label_other': 'Outlines',
         'object name placeholder': 'New outline',
       },
-      [OUTLINER_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Outliner',
         'delete object label': 'Delete item',
         'create entry label': 'Create entry',

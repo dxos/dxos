@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { CLIENT_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [CLIENT_PLUGIN]: {
+      [meta.id]: {
         'account label': 'User Account',
         'profile label': 'Profile',
         'profile description': 'You can adjust how your user settings here.',

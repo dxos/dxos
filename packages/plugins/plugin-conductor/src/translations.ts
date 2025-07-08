@@ -5,7 +5,7 @@
 import { type Resource } from '@dxos/react-ui';
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
-import { CONDUCTOR_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
@@ -17,7 +17,7 @@ export const translations = [
         'typename label_other': 'Circuits',
         'object name placeholder': 'New circuit',
       },
-      [CONDUCTOR_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Conductor',
         'content placeholder': 'Enter text...',
       },

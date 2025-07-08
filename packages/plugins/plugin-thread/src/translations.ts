@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { THREAD_PLUGIN } from './meta';
+import { meta } from './meta';
 import { ChannelType } from './types';
 
 export const translations = [
@@ -17,7 +17,7 @@ export const translations = [
         'typename label_other': 'Channels',
         'object name placeholder': 'New channel',
       },
-      [THREAD_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Chat',
         'channel title label': 'Title',
         'message placeholder': 'Reply…',

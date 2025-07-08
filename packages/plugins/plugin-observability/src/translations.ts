@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { OBSERVABILITY_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [OBSERVABILITY_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Telemetry',
         'observability toast label': 'Privacy Notice',
         'observability toast description':

@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { PREVIEW_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [PREVIEW_PLUGIN]: {
+      [meta.id]: {
         'unable to create preview message': 'No preview',
       },
     },

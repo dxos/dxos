@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { TEMPLATE_PLUGIN } from './meta';
+import { meta } from './meta';
 import { TemplateType } from './types';
 
 export const translations = [
@@ -17,7 +17,7 @@ export const translations = [
         'typename label_other': 'Templates',
         'object name placeholder': 'New template',
       },
-      [TEMPLATE_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Template',
       },
     },

@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { REGISTRY_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [REGISTRY_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Registry',
         'details label': 'Details',
         'home page label': 'Website',
