@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Resource } from '@dxos/react-ui';
+
 import { WNFS_PLUGIN } from './meta';
 import { FileType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [FileType.typename]: {
@@ -19,4 +21,6 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];
+
+export default translations;

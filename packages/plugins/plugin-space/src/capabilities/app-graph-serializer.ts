@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 import { SPACE_PLUGIN } from '../meta';
-import translations from '../translations';
+import { translations } from '../translations';
 import { SPACE_TYPE, SpaceAction } from '../types';
 import { SPACES } from '../util';
 
@@ -49,8 +49,8 @@ export default (context: PluginContext) =>
       inputType: COLLECTION_TYPE,
       outputType: DIRECTORY_TYPE,
       serialize: (node) => ({
-        name: node.data.name ?? translations[0]['en-US'][COLLECTION_TYPE]['object name placeholder'],
-        data: node.data.name ?? translations[0]['en-US'][COLLECTION_TYPE]['object name placeholder'],
+        name: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['object name placeholder'],
+        data: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['object name placeholder'],
         type: DIRECTORY_TYPE,
       }),
       deserialize: async (data, ancestors) => {

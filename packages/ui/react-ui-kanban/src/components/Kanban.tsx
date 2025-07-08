@@ -19,8 +19,8 @@ import {
   cardStackHeading,
 } from '@dxos/react-ui-stack';
 
-import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanModel } from '../defs';
 import { translationKey } from '../translations';
+import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanModel } from '../types';
 
 export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   model: KanbanModel;
@@ -78,6 +78,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   itemsCount={cards.length}
                   getDropElement={getColumnDropElement}
                 >
+                  {/* TODO(burdon): Factor out Card to separate file. */}
                   {cards.map((card, cardIndex, cardsArray) => (
                     <CardStack.Item asChild key={card.id}>
                       <StackItem.Root

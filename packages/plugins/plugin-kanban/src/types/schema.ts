@@ -8,7 +8,7 @@ import { SpaceSchema } from '@dxos/react-client/echo';
 import { KanbanType } from '@dxos/react-ui-kanban';
 import { FieldSchema, TypenameAnnotationId } from '@dxos/schema';
 
-import { KANBAN_PLUGIN } from './meta';
+import { KANBAN_PLUGIN } from '../meta';
 
 /**
  * Kanban data model.
@@ -37,8 +37,6 @@ export const CreateKanbanSchema = Schema.Struct({
     }),
   ),
 });
-
-export type CreateKanbanType = Schema.Schema.Type<typeof CreateKanbanSchema>;
 
 export namespace KanbanAction {
   const KANBAN_ACTION = `${KANBAN_PLUGIN}/action`;
@@ -75,21 +73,3 @@ export namespace KanbanAction {
     output: Schema.Void,
   }) {}
 }
-
-// TODO(burdon): Undo?
-// TODO(burdon): Typescript types (replace proto with annotations?)
-// TODO(burdon): Should pure components depend on ECHO? Relationship between ECHO object/array and Observable.
-// TODO(burdon): Can the plugin configure the object based on the data? E.g., how are the models constructed?
-// TODO(burdon): Create models. Simple first based on actual data.
-//  Model is always a projection since the dragging state is tentative.
-
-// TODO(burdon): Extend model for moving items (in and across columns).
-export interface KanbanModel {
-  root: KanbanType;
-}
-
-export type Location = {
-  idx?: number;
-};
-
-export const isKanban = (object: unknown): object is KanbanType => object != null && object instanceof KanbanType;

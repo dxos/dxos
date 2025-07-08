@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-export const translationKey = 'multiselect';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+export const translationKey = 'react-ui-tag-picker';
+
+export const translations = [
   {
     'en-US': {
       [translationKey]: {
@@ -12,4 +14,6 @@ export default [
       },
     },
   },
-] as const;
+] as const satisfies Resource[];
+
+export default translations;

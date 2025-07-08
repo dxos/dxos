@@ -67,6 +67,7 @@ export namespace Capabilities {
   }>;
   export const Layout = defineCapability<Layout>('dxos.org/app-framework/capability/layout');
 
+  // TODO(burdon): Why array?
   export const Translations = defineCapability<Readonly<Resource[]>>('dxos.org/app-framework/capability/translations');
 
   export const AppGraph = defineCapability<Readonly<Pick<GraphBuilder, 'graph' | 'explore'>>>(

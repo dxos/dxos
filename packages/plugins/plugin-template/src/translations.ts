@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
 import { TEMPLATE_PLUGIN } from './meta';
 import { TemplateType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(TemplateType)]: {
+      [TemplateType.typename]: {
         'typename label': 'Template',
         'typename label_zero': 'Templates',
         'typename label_one': 'Template',
@@ -22,4 +22,6 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];
+
+export default translations;

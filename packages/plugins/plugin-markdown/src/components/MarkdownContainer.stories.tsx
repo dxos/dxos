@@ -26,7 +26,7 @@ import { createObjectFactory, Testing, type ValueGenerator } from '@dxos/schema/
 import { withLayout } from '@dxos/storybook-utils';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
-import translations from '../translations';
+import { translations } from '../translations';
 import { DocumentType } from '../types';
 
 faker.seed(1);

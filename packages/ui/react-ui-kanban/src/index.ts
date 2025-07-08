@@ -3,5 +3,6 @@
 //
 
 export * from './components';
-export * from './defs';
-export { default as translations } from './translations';
+export * from './hooks';
+export * from './types';
+export * from './translations';
