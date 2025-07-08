@@ -11,7 +11,7 @@ import { DocumentType } from './types';
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(DocumentType)]: {
+      [DocumentType.typename]: {
         'typename label': 'Document',
         'typename label_zero': 'Documents',
         'typename label_one': 'Document',

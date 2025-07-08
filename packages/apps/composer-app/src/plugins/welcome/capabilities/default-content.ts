@@ -29,7 +29,7 @@ export default async (context: PluginContext) => {
     ),
   });
 
-  const defaultSpaceCollection = defaultSpace.properties[Type.getTypename(DataType.Collection)].target;
+  const defaultSpaceCollection = defaultSpace.properties[DataType.Collection.typename].target;
   defaultSpaceCollection?.objects.push(Ref.make(readme));
 
   // Ensure the default content is in the graph and connected.

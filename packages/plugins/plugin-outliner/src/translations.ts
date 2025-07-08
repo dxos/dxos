@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { OUTLINER_PLUGIN } from './meta';
@@ -11,14 +10,14 @@ import { JournalType, OutlineType } from './types';
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(JournalType)]: {
+      [JournalType.typename]: {
         'typename label': 'Journal',
         'typename label_zero': 'Journals',
         'typename label_one': 'Journal',
         'typename label_other': 'Journals',
         'object name placeholder': 'New journal',
       },
-      [Type.getTypename(OutlineType)]: {
+      [OutlineType.typename]: {
         'typename label': 'Outline',
         'typename label_zero': 'Outlines',
         'typename label_one': 'Outline',

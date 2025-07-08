@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { MEETING_PLUGIN } from './meta';
@@ -11,7 +10,7 @@ import { MeetingType } from './types';
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(MeetingType)]: {
+      [MeetingType.typename]: {
         'typename label': 'Meetings',
         'typename label_zero': 'Meetings',
         'typename label_one': 'Meeting',

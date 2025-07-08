@@ -59,7 +59,7 @@ type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
 };
 
-const OMIT = [Type.getTypename(DataType.Collection), Type.getTypename(DataType.QueryCollection)];
+const OMIT = [DataType.Collection.typename, DataType.QueryCollection.typename];
 
 export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
   contributes(Capabilities.ReactSurface, [
@@ -73,7 +73,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         <Surface
           data={{
             id: data.subject.id,
-            subject: data.subject.properties[Type.getTypename(DataType.Collection)]?.target,
+            subject: data.subject.properties[DataType.Collection.typename]?.target,
           }}
           role={role}
           {...rest}
@@ -328,7 +328,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
         const object = isSpace(data.subject)
           ? data.subject.state.get() === SpaceState.SPACE_READY
-            ? (space?.properties[Type.getTypename(DataType.Collection)]?.target as DataType.Collection)
+            ? (space?.properties[DataType.Collection.typename]?.target as DataType.Collection)
             : undefined
           : data.subject;
 

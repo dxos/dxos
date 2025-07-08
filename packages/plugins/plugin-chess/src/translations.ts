@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { CHESS_PLUGIN } from './meta';
@@ -11,7 +10,7 @@ import { ChessType } from './types';
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(ChessType)]: {
+      [ChessType.typename]: {
         'typename label': 'Game',
         'typename label_zero': 'Games',
         'typename label_one': 'Game',

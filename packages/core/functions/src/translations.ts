@@ -4,14 +4,12 @@
 
 import { type Resource } from 'i18next';
 
-import { Type } from '@dxos/echo';
-
 import { ScriptType } from './schema';
 
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(ScriptType)]: {
+      [ScriptType.typename]: {
         'typename label': 'Script',
         'typename label_zero': 'Scripts',
         'typename label_one': 'Script',

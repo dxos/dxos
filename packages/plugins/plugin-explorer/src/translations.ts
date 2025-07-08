@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { EXPLORER_PLUGIN } from './meta';
@@ -11,7 +10,7 @@ import { ViewType } from './types';
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(ViewType)]: {
+      [ViewType.typename]: {
         'typename label': 'Explorer',
         'typename label_zero': 'Explorers',
         'typename label_one': 'Explorer',

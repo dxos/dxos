@@ -3,7 +3,6 @@
 //
 
 import { Blueprint } from '@dxos/assistant';
-import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { ASSISTANT_PLUGIN } from './meta';
@@ -12,21 +11,21 @@ import { AIChatType, TemplateType } from './types';
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(AIChatType)]: {
+      [AIChatType.typename]: {
         'typename label': 'Assistant',
         'typename label_zero': 'Assistants',
         'typename label_one': 'Assistant',
         'typename label_other': 'Assistants',
         'object name placeholder': 'New assistant',
       },
-      [Type.getTypename(Blueprint)]: {
+      [Blueprint.typename]: {
         'typename label': 'Blueprint',
         'typename label_zero': 'Blueprints',
         'typename label_one': 'Blueprint',
         'typename label_other': 'Blueprints',
         'object name placeholder': 'New blueprint',
       },
-      [Type.getTypename(TemplateType)]: {
+      [TemplateType.typename]: {
         'typename label': 'Template',
         'typename label_zero': 'Templates',
         'typename label_one': 'Template',
