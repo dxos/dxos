@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export const cardContent =
+export const cardRoot =
   'rounded overflow-hidden bg-cardSurface border border-separator dark:border-subduedSeparator dx-focus-ring-group-y-indicator relative min-bs-[--rail-item] group/card';
 
 export const cardSpacing = 'pli-cardSpacingInline mlb-cardSpacingBlock';

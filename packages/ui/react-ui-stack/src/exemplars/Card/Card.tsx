@@ -15,18 +15,16 @@ import React, {
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { hoverableControls, mx } from '@dxos/react-ui-theme';
 
-import { cardChrome, cardContent, cardHeading, cardText, cardSpacing } from './fragments';
+import { cardChrome, cardRoot, cardHeading, cardText, cardSpacing } from './fragments';
 import { StackItem } from '../../components';
 import { translationKey } from '../../translations';
 
 type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 
-const CardContent = forwardRef<HTMLDivElement, SharedCardProps>(
+const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps>(
   ({ children, classNames, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
-    const rootProps = asChild
-      ? { classNames: [cardContent, classNames] }
-      : { className: mx(cardContent, classNames), role };
+    const rootProps = asChild ? { classNames: [cardRoot, classNames] } : { className: mx(cardRoot, classNames), role };
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>
         {children}
@@ -40,8 +38,8 @@ const CardContent = forwardRef<HTMLDivElement, SharedCardProps>(
  * in a Popover) and knows this based on the `role` it receives. This will render a `Card.Content` by default, otherwise
  * it will render a `div` primitive with the appropriate styling for specific handled situations.
  */
-const CardConditionalContent = ({ role, children }: PropsWithChildren<{ role?: string }>) => {
-  if (['popover', 'card--kanban'].includes(role ?? 'never')) {
+const CardSurfaceRoot = ({ role, children }: PropsWithChildren<{ role: string }>) => {
+  if (['popover', 'card--kanban'].includes(role)) {
     return (
       <div className={role === 'popover' ? 'popover-card-width' : role === 'card--kanban' ? 'contents' : ''}>
         {children}
@@ -49,9 +47,9 @@ const CardConditionalContent = ({ role, children }: PropsWithChildren<{ role?: s
     );
   } else {
     return (
-      <CardContent {...(role === 'card--document' && { classNames: ['mlb-[1em]', hoverableControls] })}>
+      <CardStaticRoot {...(role === 'card--document' && { classNames: ['mlb-[1em]', hoverableControls] })}>
         {children}
-      </CardContent>
+      </CardStaticRoot>
     );
   }
 };
@@ -152,8 +150,8 @@ const CardText = forwardRef<HTMLParagraphElement, SharedCardProps>(
 );
 
 export const Card = {
-  Content: CardContent,
-  Container: CardConditionalContent,
+  StaticRoot: CardStaticRoot,
+  SurfaceRoot: CardSurfaceRoot,
   Heading: CardHeading,
   Toolbar: CardToolbar,
   ToolbarIconButton: CardToolbarIconButton,
@@ -166,4 +164,4 @@ export const Card = {
   Text: CardText,
 };
 
-export { cardContent, cardHeading, cardText, cardChrome, cardSpacing };
+export { cardRoot, cardHeading, cardText, cardChrome, cardSpacing };
