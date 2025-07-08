@@ -34,7 +34,7 @@ const meta: Meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations: [...translations, shellTranslations],
+    translations: [...translations, ...shellTranslations],
   },
 };
 

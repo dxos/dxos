@@ -85,7 +85,7 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, [...translations, shellTranslations]),
+      activate: () => contributes(Capabilities.Translations, [...translations, ...shellTranslations]),
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,

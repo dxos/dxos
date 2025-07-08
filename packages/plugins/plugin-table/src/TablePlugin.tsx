@@ -13,7 +13,7 @@ import { ViewType, ViewTypeV1, ViewTypeV1ToV2 } from '@dxos/schema';
 import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { serializer } from './serializer';
-import translations from './translations';
+import { translations } from './translations';
 import { CreateTableSchema, TableAction } from './types';
 
 export const TablePlugin = () =>

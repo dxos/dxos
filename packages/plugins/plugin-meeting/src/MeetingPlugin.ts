@@ -15,7 +15,7 @@ import {
   ReactSurface,
 } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { MeetingType } from './types';
 
 export const MeetingPlugin = () =>

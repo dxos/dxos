@@ -39,7 +39,7 @@ const meta: Meta<typeof CreateObjectDialog> = {
     withLayout(),
   ],
   parameters: {
-    translations: [translations, shellTranslations],
+    translations: [...translations, ...shellTranslations],
   },
   args: {},
 };

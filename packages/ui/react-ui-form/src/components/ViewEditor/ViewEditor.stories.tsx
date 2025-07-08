@@ -16,7 +16,7 @@ import { ViewProjection, ViewType, createView } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { TestLayout, TestPanel, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
 
 // Type definition for debug objects exposed to tests.

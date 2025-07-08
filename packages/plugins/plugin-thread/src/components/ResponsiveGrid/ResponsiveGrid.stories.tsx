@@ -12,7 +12,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ResponsiveGrid, type ResponsiveGridProps } from './ResponsiveGrid';
 import { ResponsiveGridItem, type ResponsiveGridItemProps } from './ResponsiveGridItem';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 type TestItem = {
   id: string;

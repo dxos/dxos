@@ -25,7 +25,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Table, type TableController } from './Table';
 import { useTableModel } from '../../hooks';
 import { TablePresentation } from '../../model';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
 import { TableToolbar } from '../TableToolbar';

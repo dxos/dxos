@@ -21,7 +21,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { IdentityListItem, SpaceListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
-import { shellTranslations } from '../translations';
+import { translations } from '../translations';
 
 export default {
   title: 'sdk/shell/Invitations',
@@ -230,7 +230,9 @@ export const Default = {
   },
   decorators: [withMultiClientProvider({ numClients: 3 }), withLayout({ classNames: 'grid grid-cols-3' }), withTheme],
   parameters: {
-    chromatic: { disableSnapshot: true },
-    translations: [shellTranslations],
+    translations,
+    chromatic: {
+      disableSnapshot: true,
+    },
   },
 };

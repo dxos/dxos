@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Board, type BoardController, type BoardContentProps, type BoardRootProps } from './Board';
 import { type BoardLayout } from './types';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 type TestItem = {
   id: string;

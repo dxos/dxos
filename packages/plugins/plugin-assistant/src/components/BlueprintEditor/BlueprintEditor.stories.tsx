@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { BlueprintEditor } from './BlueprintEditor';
 import { RESEARCH_BLUEPRINT_DEFINITION } from '../../testing';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 const meta: Meta<typeof BlueprintEditor> = {
   title: 'plugins/plugin-assistant/BlueprintEditor',

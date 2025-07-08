@@ -3,7 +3,7 @@
 //
 
 import { SETTINGS_PLUGIN } from './actions';
-import translations from './translations';
+import { translations } from './translations';
 import { Capabilities, Events } from '../common';
 import { contributes, defineModule, definePlugin, lazy } from '../core';
 

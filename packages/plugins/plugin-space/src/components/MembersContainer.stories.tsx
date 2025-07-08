@@ -19,7 +19,7 @@ const meta: Meta = {
   decorators: [withClientProvider({ createIdentity: true, createSpace: true }), withTheme, withLayout()],
   parameters: {
     layout: 'fullscreen',
-    translations: [translations, shellTranslations],
+    translations: [...translations, ...shellTranslations],
   },
 };
 
