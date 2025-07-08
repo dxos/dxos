@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       testbench: {},

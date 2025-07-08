@@ -9,7 +9,7 @@ import { Type } from '@dxos/echo';
 import { TEMPLATE_PLUGIN } from './meta';
 import { TemplateType } from './types';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(TemplateType)]: {

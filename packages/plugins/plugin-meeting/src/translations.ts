@@ -9,7 +9,7 @@ import { Type } from '@dxos/echo';
 import { MEETING_PLUGIN } from './meta';
 import { MeetingType } from './types';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(MeetingType)]: {

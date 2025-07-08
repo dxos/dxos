@@ -6,7 +6,7 @@ import { type Resource } from '@dxos/react-ui';
 
 import { SETTINGS_PLUGIN } from './actions';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [SETTINGS_PLUGIN]: {

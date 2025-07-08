@@ -9,7 +9,7 @@ import { Type } from '@dxos/echo';
 import { THREAD_PLUGIN } from './meta';
 import { ChannelType } from './types';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(ChannelType)]: {

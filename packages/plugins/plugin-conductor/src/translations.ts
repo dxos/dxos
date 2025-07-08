@@ -9,7 +9,7 @@ import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
 import { CONDUCTOR_PLUGIN } from './meta';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(CanvasBoardType)]: {

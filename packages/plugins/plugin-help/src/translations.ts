@@ -6,7 +6,7 @@ import { type Resource } from '@dxos/react-ui';
 
 import { HELP_PLUGIN } from './meta';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [HELP_PLUGIN]: {

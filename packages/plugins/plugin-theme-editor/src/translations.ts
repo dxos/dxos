@@ -6,7 +6,7 @@ import { type Resource } from '@dxos/react-ui';
 
 import { THEME_EDITOR_PLUGIN } from './meta';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [THEME_EDITOR_PLUGIN]: {

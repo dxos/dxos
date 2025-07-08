@@ -7,7 +7,7 @@ import { type Resource } from '@dxos/react-ui';
 import { WNFS_PLUGIN } from './meta';
 import { FileType } from './types';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [FileType.typename]: {

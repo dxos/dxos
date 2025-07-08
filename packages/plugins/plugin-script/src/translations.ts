@@ -9,7 +9,7 @@ import { ScriptType } from '@dxos/functions';
 
 import { SCRIPT_PLUGIN } from './meta';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(ScriptType)]: {

@@ -16,7 +16,7 @@ import { osTranslations } from '@dxos/shell/react';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { CreateObjectDialog, type CreateObjectDialogProps } from './CreateObjectDialog';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 const Story = (args: CreateObjectDialogProps) => {
   return (
@@ -39,7 +39,7 @@ const meta: Meta<typeof CreateObjectDialog> = {
     withLayout(),
   ],
   parameters: {
-    translations: [...translations, osTranslations],
+    translations: [translations, osTranslations],
   },
   args: {},
 };

@@ -10,7 +10,7 @@ import { RefArray } from '@dxos/react-client/echo';
 
 import { AppGraphSerializer, IntentResolver, ReactSurface, SketchSettings } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { CanvasType, DiagramType, SketchAction } from './types';
 import { serializer } from './util';
 
@@ -24,7 +24,7 @@ export const SketchPlugin = () =>
     defineModule({
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
+      activate: () => contributes(Capabilities.Translations, [translations]),
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,

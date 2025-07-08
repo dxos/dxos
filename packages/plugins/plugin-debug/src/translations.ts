@@ -6,7 +6,7 @@ import { type Resource } from '@dxos/react-ui';
 
 import { DEBUG_PLUGIN } from './meta';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [DEBUG_PLUGIN]: {

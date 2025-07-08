@@ -9,7 +9,7 @@ import { Type } from '@dxos/echo';
 import { SHEET_PLUGIN } from './meta';
 import { SheetType } from './types';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(SheetType)]: {

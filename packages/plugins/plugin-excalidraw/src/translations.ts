@@ -9,7 +9,7 @@ import { DiagramType } from '@dxos/plugin-sketch/types';
 
 import { EXCALIDRAW_PLUGIN } from './meta';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(DiagramType)]: {

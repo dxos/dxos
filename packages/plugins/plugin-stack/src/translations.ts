@@ -8,7 +8,7 @@ import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import { STACK_PLUGIN } from './meta';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [STACK_PLUGIN]: {

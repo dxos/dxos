@@ -9,7 +9,7 @@ import { Type } from '@dxos/echo';
 import { CHESS_PLUGIN } from './meta';
 import { ChessType } from './types';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(ChessType)]: {

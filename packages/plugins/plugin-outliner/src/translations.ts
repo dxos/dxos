@@ -9,7 +9,7 @@ import { Type } from '@dxos/echo';
 import { OUTLINER_PLUGIN } from './meta';
 import { JournalType, OutlineType } from './types';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(JournalType)]: {

@@ -6,7 +6,7 @@ import { type Resource } from '@dxos/react-ui';
 
 export const translationKey = 'react-ui-stack';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [translationKey]: {

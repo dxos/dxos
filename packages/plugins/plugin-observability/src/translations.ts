@@ -6,7 +6,7 @@ import { type Resource } from '@dxos/react-ui';
 
 import { OBSERVABILITY_PLUGIN } from './meta';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [OBSERVABILITY_PLUGIN]: {

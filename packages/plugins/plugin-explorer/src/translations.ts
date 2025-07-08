@@ -9,7 +9,7 @@ import { Type } from '@dxos/echo';
 import { EXPLORER_PLUGIN } from './meta';
 import { ViewType } from './types';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(ViewType)]: {

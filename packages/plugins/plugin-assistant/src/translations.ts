@@ -10,7 +10,7 @@ import { Type } from '@dxos/echo';
 import { ASSISTANT_PLUGIN } from './meta';
 import { AIChatType, TemplateType } from './types';
 
-export const translations: Resource[] = [
+export const translations = [
   {
     'en-US': {
       [Type.getTypename(AIChatType)]: {
