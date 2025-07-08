@@ -264,6 +264,9 @@ const httpPlugin: Plugin = {
     // When a URL is loaded, we want to actually download the content from the internet.
     // This has just enough logic to be able to handle the example import from unpkg.com but in reality this would probably need to be more complex.
     build.onLoad({ filter: /.*/, namespace: 'http-url' }, async (args) => {
+      const maxRetries = 5;
+      const initialDelay = 1_000;
+
       return await Effect.runPromise(
         pipe(
           Effect.gen(function* () {
@@ -273,39 +276,16 @@ const httpPlugin: Plugin = {
             }
             throw new Error('failed to fetch');
           }),
-          retryExponentially,
+          Effect.retry(
+            pipe(
+              Schedule.exponential(Duration.millis(initialDelay)),
+              Schedule.jittered,
+              Schedule.intersect(Schedule.recurs(maxRetries - 1)),
+            ),
+          ),
           Effect.provide(FetchHttpClient.layer),
-          Effect.provide(RetryConfig.default),
         ),
       );
     });
   },
 };
-
-// Retry config definition
-type RetryOptions = {
-  maxRetries: number;
-  initialDelay: number;
-};
-
-class RetryConfig extends Context.Tag('RetryConfig')<RetryConfig, RetryOptions>() {
-  static default = Layer.succeed(RetryConfig, {
-    maxRetries: 5,
-    initialDelay: 1_000,
-  });
-}
-
-// Retry logic
-const retryExponentially = <R, E, A>(effect: Effect.Effect<R, E, A>) =>
-  Effect.gen(function* () {
-    const config = yield* RetryConfig;
-    return yield* effect.pipe(
-      Effect.retry(
-        pipe(
-          Schedule.exponential(Duration.millis(config.initialDelay)),
-          Schedule.jittered,
-          Schedule.intersect(Schedule.recurs(config.maxRetries - 1)),
-        ),
-      ),
-    );
-  });
