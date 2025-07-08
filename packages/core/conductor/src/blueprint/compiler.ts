@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Blueprint } from '@dxos/assistant';
-import { ComputeGraphModel, NODE_INPUT, NODE_OUTPUT, type ComputeGraph, type ComputeNode } from '@dxos/conductor';
+import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
+import { ComputeGraphModel, type ComputeGraph, type ComputeNode } from '../types';
+import type { Blueprint } from './blueprint';
 
 /**
  * Compile a blueprint into a compute graph.

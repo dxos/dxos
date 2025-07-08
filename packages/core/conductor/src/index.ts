@@ -7,3 +7,4 @@ export * from './nodes';
 export * from './services';
 export * from './types';
 export * from './workflow';
+export * from './blueprint';

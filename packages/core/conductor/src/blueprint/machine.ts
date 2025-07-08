@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
 import type { Blueprint, BlueprintStep } from './blueprint';
-import { AISession } from '../session';
+import { AISession } from '@dxos/assistant';
 
 const SYSTEM_PROMPT = `
 You are a smart Rule-Following Agent.

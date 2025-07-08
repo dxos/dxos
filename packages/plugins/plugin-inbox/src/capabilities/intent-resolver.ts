@@ -161,13 +161,14 @@ export default (context: PluginContext) =>
         }
       },
     }),
+    // TODO(dmaretskyi): There should be a generic execute{function/blueprint/workflow} intent that runs the invocable.
     createResolver({
       intent: InboxAction.RunAssistant,
       resolve: ({ mailbox }) => {
         log.info('Run assistant', { mailbox });
 
         const space = getSpace(mailbox) ?? failedInvariant();
-        const aiClient = useCapability(AssistantCapabilities.AiClient);
+        const aiClient = context.getCapability(AssistantCapabilities.AiClient);
 
         const serviceContainer = new ServiceContainer().setServices({
           ai: AiService.make(aiClient.value),
@@ -175,6 +176,7 @@ export default (context: PluginContext) =>
           queues: QueueService.make(space.queues, undefined),
           eventLogger: consoleLogger,
           toolResolver: ToolResolverService.make(
+            // TODO(dmaretskyi): Provided by a plugin.
             new ToolRegistry([
               createTool('inbox', {
                 name: 'label',
@@ -197,12 +199,16 @@ export default (context: PluginContext) =>
 
         // TODO(dmaretskyi): Move both blueprints and the compiler to the conductor package.
         // const workflow = compileBlueprint(BLUEPRINT);
+
+        
       },
     }),
   ]);
 
 const Label = Schema.Literal('important', 'personal', 'work', 'social', 'promotions', 'updates', 'forums', 'spam');
 
-const BLUEPRINT = BlueprintBuilder.create().step('Analyze the email and assign labels to it', {
-  tools: ['inbox/label'],
-}).build();
+const BLUEPRINT = BlueprintBuilder.create()
+  .step('Analyze the email and assign labels to it', {
+    tools: ['inbox/label'],
+  })
+  .build();

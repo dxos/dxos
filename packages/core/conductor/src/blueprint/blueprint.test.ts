@@ -16,8 +16,8 @@ import { BlueprintBuilder } from './blueprint';
 import { setConsolePrinter } from './logger';
 import { BlueprintMachine } from './machine';
 import { TEST_EMAILS } from './test-data';
-import { createGraphWriterTool, createLocalSearchTool } from '../research';
-import { createExaTool } from '../research/exa';
+import { createGraphWriterTool, createLocalSearchTool } from '@dxos/assistant';
+import { createExaTool } from '@dxos/assistant';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
 
