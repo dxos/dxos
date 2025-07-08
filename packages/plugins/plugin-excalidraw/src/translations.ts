@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
-
 import { Type } from '@dxos/echo';
 import { DiagramType } from '@dxos/plugin-sketch/types';
+import { type Resource } from '@dxos/react-ui';
 
 import { EXCALIDRAW_PLUGIN } from './meta';
 

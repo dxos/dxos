@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
-
 import { Blueprint } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
 import { ASSISTANT_PLUGIN } from './meta';
 import { AIChatType, TemplateType } from './types';

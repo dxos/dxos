@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
-
 import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
 import { INBOX_PLUGIN } from './meta';
 import { CalendarType, MailboxType } from './types';

@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
-
 import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 import { TableType } from '@dxos/react-ui-table';
 
 import { TABLE_PLUGIN } from './meta';

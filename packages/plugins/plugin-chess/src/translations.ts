@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
-
 import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
 import { CHESS_PLUGIN } from './meta';
 import { ChessType } from './types';

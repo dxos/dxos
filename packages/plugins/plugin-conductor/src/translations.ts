@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
-
 import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
 import { CONDUCTOR_PLUGIN } from './meta';
