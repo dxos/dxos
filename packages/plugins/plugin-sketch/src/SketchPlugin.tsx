@@ -24,7 +24,7 @@ export const SketchPlugin = () =>
     defineModule({
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, [translations]),
+      activate: () => contributes(Capabilities.Translations, translations),
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,

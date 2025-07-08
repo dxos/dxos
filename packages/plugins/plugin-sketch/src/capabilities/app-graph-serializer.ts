@@ -23,7 +23,7 @@ export default (context: PluginContext) =>
         const diagram = node.data;
         const canvas = await diagram.canvas.load();
         return {
-          name: diagram.name || translations['en-US'][DiagramType.typename]['object name placeholder'],
+          name: diagram.name || translations[0]['en-US'][DiagramType.typename]['object name placeholder'],
           data: JSON.stringify({ schema: canvas.Schema, content: canvas.content }),
           type: 'application/tldraw',
         };

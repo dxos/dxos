@@ -23,8 +23,8 @@ export default (context: PluginContext) =>
       inputType: SPACES,
       outputType: DIRECTORY_TYPE,
       serialize: (node) => ({
-        name: translations['en-US'][SPACE_PLUGIN]['spaces label'],
-        data: translations['en-US'][SPACE_PLUGIN]['spaces label'],
+        name: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'],
+        data: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'],
         type: DIRECTORY_TYPE,
       }),
       deserialize: () => {
@@ -35,8 +35,8 @@ export default (context: PluginContext) =>
       inputType: SPACE_TYPE,
       outputType: DIRECTORY_TYPE,
       serialize: (node) => ({
-        name: node.data.properties.name ?? translations['en-US'][SPACE_PLUGIN]['unnamed space label'],
-        data: node.data.properties.name ?? translations['en-US'][SPACE_PLUGIN]['unnamed space label'],
+        name: node.data.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
+        data: node.data.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
         type: DIRECTORY_TYPE,
       }),
       deserialize: async (data) => {
@@ -49,8 +49,8 @@ export default (context: PluginContext) =>
       inputType: COLLECTION_TYPE,
       outputType: DIRECTORY_TYPE,
       serialize: (node) => ({
-        name: node.data.name ?? translations['en-US'][SPACE_PLUGIN]['object placeholder'],
-        data: node.data.name ?? translations['en-US'][SPACE_PLUGIN]['object placeholder'],
+        name: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['object name placeholder'],
+        data: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['object name placeholder'],
         type: DIRECTORY_TYPE,
       }),
       deserialize: async (data, ancestors) => {

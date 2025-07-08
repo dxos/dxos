@@ -36,7 +36,7 @@ import {
 } from './capabilities';
 import { SpaceEvents } from './events';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { CollectionAction, defineObjectForm } from './types';
 
 export type SpacePluginOptions = {
@@ -85,7 +85,7 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, [translations, osTranslations]),
+      activate: () => contributes(Capabilities.Translations, [...translations, osTranslations]),
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
