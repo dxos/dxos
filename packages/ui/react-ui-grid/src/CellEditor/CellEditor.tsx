@@ -143,8 +143,7 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
               className: '[&>.cm-scroller]:scrollbar-none tabular-nums',
             },
             content: {
-              className:
-                '!border !border-transparent !pli-[var(--dx-grid-cell-padding-inline)] !plb-[var(--dx-grid-cell-padding-block)]',
+              className: '!pli-[var(--dx-grid-cell-padding-inline)] !plb-[var(--dx-grid-cell-padding-block)]',
             },
           },
         }),

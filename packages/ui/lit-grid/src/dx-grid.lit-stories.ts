@@ -83,7 +83,7 @@ Basic.args = {
   columns: JSON.stringify({
     grid: {
       0: { size: 64 },
-      1: { size: 512 },
+      1: { size: 128 },
       2: { size: 64 },
       3: { size: 512 },
       4: { size: 64 },

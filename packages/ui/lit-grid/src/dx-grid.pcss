@@ -66,16 +66,9 @@
     [role='gridcell'],
     [role='columnheader'],
     [role='rowheader'] {
-      position: relative;
       background: var(--dx-grid-base, var(--dx-baseSurface));
-      /** This must match CellEditor styling in `CellEditor.tsx`. */
-      padding: var(--dx-grid-cell-padding-block) var(--dx-grid-cell-padding-inline);
-      box-sizing: border-box;
-      border: 1px solid transparent;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
       cursor: pointer;
+      position: relative;
 
       &[aria-readonly='true'] {
         cursor: default;
@@ -86,11 +79,32 @@
         user-select: text;
       }
 
+      &:focus {
+        outline: none;
+      }
+
+      & > .dx-grid__cell__content {
+        /** This must match CellEditor styling in `CellEditor.tsx`. */
+        padding: var(--dx-grid-cell-padding-block) var(--dx-grid-cell-padding-inline);
+        box-sizing: border-box;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        block-size: 100%;
+        position: relative;
+      }
+
       &:focus:not([aria-readonly='true']),
       &:focus-visible {
-        z-index: 2;
-        border-color: var(--dx-accentSurface);
-        outline: none;
+        & > .dx-grid__cell__content::after {
+          content: '';
+          display: block;
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          border: 1px solid var(--dx-accentSurface);
+          border-radius: 2px;
+        }
       }
 
       &.dx-grid__cell--commented {
