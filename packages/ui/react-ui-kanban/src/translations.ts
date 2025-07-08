@@ -15,7 +15,6 @@ export const translations = [
         'new column name label': 'New column name',
         'remove card label': 'Remove card',
         'remove empty column label': 'Remove empty column',
-        'card drag handle label': 'Drag to rearrange',
         'column drag handle label': 'Drag to rearrange',
       },
     },

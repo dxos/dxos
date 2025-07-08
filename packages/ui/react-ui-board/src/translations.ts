@@ -9,7 +9,12 @@ export const translationKey = 'react-ui-board';
 export const translations = [
   {
     'en-US': {
-      [translationKey]: {},
+      [translationKey]: {
+        'button center': 'Center board',
+        'button zoom': 'Toggle zoom',
+        'button add': 'Add item',
+        'button delete': 'Remove item',
+      },
     },
   },
 ] as const satisfies Resource[];

@@ -3,5 +3,5 @@
 //
 
 export * from './action';
-export * from './types';
+export * from './schema';
 export * from './util';
