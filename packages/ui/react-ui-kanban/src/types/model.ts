@@ -12,7 +12,7 @@ import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { type ViewProjection } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
-import { type KanbanType } from './kanban';
+import { type KanbanType } from './schema';
 import { computeArrangement } from '../util';
 
 export const UNCATEGORIZED_VALUE = '__uncategorized__' as const;

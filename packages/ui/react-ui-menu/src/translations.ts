@@ -4,12 +4,14 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translationKey = 'menus';
+export const translationKey = 'react-ui-menu';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [translationKey]: {},
     },
   },
 ] as const satisfies Resource[];
+
+export default translations;

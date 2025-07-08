@@ -14,7 +14,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { PluginList } from './PluginList';
-import translations from '../translations';
+import { translations } from '../translations';
 
 faker.seed(1);
 

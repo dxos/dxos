@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 import { TableType } from '@dxos/react-ui-table';
 
 import { TABLE_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(TableType)]: {
+      [TableType.typename]: {
         'typename label': 'Table',
         'typename label_zero': 'Tables',
         'typename label_one': 'Table',
@@ -41,4 +41,6 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];
+
+export default translations;

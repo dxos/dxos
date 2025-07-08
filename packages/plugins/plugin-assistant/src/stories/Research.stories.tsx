@@ -44,7 +44,7 @@ import { testPlugins } from './testing';
 import { Thread, type ThreadProps } from '../components';
 import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
-import translations from '../translations';
+import { translations } from '../translations';
 
 const LOCAL = false;
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;

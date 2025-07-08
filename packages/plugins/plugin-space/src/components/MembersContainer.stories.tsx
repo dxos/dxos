@@ -11,7 +11,7 @@ import { translations as shellTranslations } from '@dxos/shell/react';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { MembersContainer } from './MembersContainer';
-import translations from '../translations';
+import { translations } from '../translations';
 
 const meta: Meta = {
   title: 'plugins/plugin-space/MembersContainer',
@@ -19,7 +19,7 @@ const meta: Meta = {
   decorators: [withClientProvider({ createIdentity: true, createSpace: true }), withTheme, withLayout()],
   parameters: {
     layout: 'fullscreen',
-    translations: [...translations, shellTranslations],
+    translations: [translations, shellTranslations],
   },
 };
 

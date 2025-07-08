@@ -10,9 +10,9 @@
   "type": "module",
   "exports": {
     "./types": {
-      "types": "./dist/types/src/defs/kanban.d.ts",
-      "browser": "./dist/lib/browser/defs/kanban.mjs",
-      "node": "./dist/lib/node-esm/defs/kanban.mjs"
+      "types": "./dist/types/src/types/index.d.ts",
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": "./dist/lib/node-esm/types/index.mjs"
     },
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -29,7 +29,7 @@
   "typesVersions": {
     "*": {
       "types": [
-        "dist/types/src/defs/kanban.d.ts"
+        "dist/types/src/types/kanban.d.ts"
       ],
       "testing": [
         "dist/types/src/testing/index.d.ts"

@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Resource } from '@dxos/react-ui';
+
 import { THEME_EDITOR_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [THEME_EDITOR_PLUGIN]: {
@@ -12,4 +14,6 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];
+
+export default translations;

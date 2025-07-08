@@ -22,7 +22,7 @@ import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { MeetingContainer, type MeetingContainerProps } from './MeetingContainer';
-import translations from '../translations';
+import { translations } from '../translations';
 import { MeetingAction, MeetingType } from '../types';
 
 const Story = () => {

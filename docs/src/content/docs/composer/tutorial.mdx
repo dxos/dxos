@@ -31,6 +31,7 @@ These translations are collected by the core [theme plugin](https://github.com/d
 
 ```ts
 // translations.ts
+<<<<<<< HEAD
 export default {
   'en-US': {
     // Most translations provided by plugins use the plugin id as the namespace.
@@ -42,9 +43,46 @@ export default {
     [MapType.typename]: {
       'typename label': 'Map',
       'object title placeholder': 'New map',
+||||||| a6b86556ad
+export default [
+  {
+    'en-US': {
+      // Most translations provided by plugins use the plugin id as the namespace.
+      [MAP_PLUGIN]: {
+        'plugin name': 'Maps',
+        'toggle type label': 'Toggle view',
+      },
+      // Translations that are provided for other plugins to lookup are often keyed by the schema typename.
+      [MapType.typename]: {
+        'typename label': 'Map',
+        'object title placeholder': 'New map',
+      },
+=======
+export const translations = [
+  {
+    'en-US': {
+      // Most translations provided by plugins use the plugin id as the namespace.
+      [MAP_PLUGIN]: {
+        'plugin name': 'Maps',
+        'toggle type label': 'Toggle view',
+      },
+      // Translations that are provided for other plugins to lookup are often keyed by the schema typename.
+      [MapType.typename]: {
+        'typename label': 'Map',
+        'object title placeholder': 'New map',
+      },
+>>>>>>> origin/main
     },
   },
+<<<<<<< HEAD
 };
+||||||| a6b86556ad
+];
+=======
+] as const;
+
+export default translations;
+>>>>>>> origin/main
 ```
 
 ## Metadata

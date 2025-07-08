@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Resource } from '@dxos/react-ui';
+
 import { SEARCH_PLUGIN } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [SEARCH_PLUGIN]: {
@@ -19,4 +21,6 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];
+
+export default translations;
