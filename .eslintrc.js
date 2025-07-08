@@ -66,6 +66,10 @@ module.exports = {
       files: '**/*.test.{ts,tsx,js,jsx}',
     },
     {
+      extends: ['plugin:i18next/recommended'],
+      files: '**/*.test.{ts,tsx,js,jsx}',
+    },
+    {
       files: '**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}',
       rules: {
         'no-console': 'off',
