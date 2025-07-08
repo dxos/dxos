@@ -244,6 +244,9 @@ const analyzeSourceFileImports = (code: string): ParsedImport[] => {
   });
 };
 
+const MAX_RETRIES = 5;
+const INITIAL_DELAY = 1_000;
+
 const httpPlugin: Plugin = {
   name: 'http',
   setup: (build) => {
@@ -265,9 +268,6 @@ const httpPlugin: Plugin = {
     // When a URL is loaded, we want to actually download the content from the internet.
     // This has just enough logic to be able to handle the example import from unpkg.com but in reality this would probably need to be more complex.
     build.onLoad({ filter: /.*/, namespace: 'http-url' }, async (args) => {
-      const maxRetries = 5;
-      const initialDelay = 1_000;
-
       return Effect.gen(function* () {
         const response = yield* HttpClient.get(args.path);
         if (response.status !== 200) {
@@ -279,9 +279,9 @@ const httpPlugin: Plugin = {
       }).pipe(
         Effect.retry(
           pipe(
-            Schedule.exponential(Duration.millis(initialDelay)),
+            Schedule.exponential(Duration.millis(INITIAL_DELAY)),
             Schedule.jittered,
-            Schedule.intersect(Schedule.recurs(maxRetries - 1)),
+            Schedule.intersect(Schedule.recurs(MAX_RETRIES - 1)),
           ),
         ),
         Effect.provide(FetchHttpClient.layer),
