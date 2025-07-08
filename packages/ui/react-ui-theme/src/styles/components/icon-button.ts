@@ -7,11 +7,13 @@ import type { ComponentFunction, Theme } from '@dxos/react-ui-types';
 import { type ButtonStyleProps } from './button';
 import { mx } from '../../util';
 
+export type IconButtonStyleProps = ButtonStyleProps & { iconOnly?: boolean };
+
 // TODO(burdon): Gap/font size should depend on density.
-export const iconButtonRoot: ComponentFunction<ButtonStyleProps> = (_props, ...etc) => {
-  return mx('ch-icon-button dx-focus-ring gap-2', ...etc);
+export const iconButtonRoot: ComponentFunction<IconButtonStyleProps> = ({ iconOnly }, ...etc) => {
+  return mx('gap-2', iconOnly && 'p-iconButtonPadding min-bs-0', ...etc);
 };
 
-export const iconButtonTheme: Theme<ButtonStyleProps> = {
+export const iconButtonTheme: Theme<IconButtonStyleProps> = {
   root: iconButtonRoot,
 };
