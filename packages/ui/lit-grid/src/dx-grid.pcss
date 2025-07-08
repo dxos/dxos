@@ -63,10 +63,12 @@
   }
 
   .dx-grid {
+    --dx-grid-cell-surface: var(--dx-grid-base, var(--dx-baseSurface));
+
     [role='gridcell'],
     [role='columnheader'],
     [role='rowheader'] {
-      background: var(--dx-grid-base, var(--dx-baseSurface));
+      background: var(--dx-grid-cell-surface);
       cursor: pointer;
       position: relative;
 
@@ -92,20 +94,38 @@
         white-space: nowrap;
         block-size: 100%;
         position: relative;
-      }
 
-      &:focus:not([aria-readonly='true']),
-      &:focus-visible {
-        & > .dx-grid__cell__content::after {
+        &::after {
           content: '';
           display: block;
           position: absolute;
           inset: 0;
           pointer-events: none;
-          border: 1px solid var(--dx-accentSurface);
+          border: 1px solid transparent;
           border-radius: 2px;
         }
       }
+
+      &:focus:not([aria-readonly='true']),
+      &:focus-visible, &:focus-within {
+        & > .dx-grid__cell__content {
+          block-size: min-content;
+          min-block-size: 100%;
+          inline-size: min-content;
+          min-inline-size: 100%;
+          white-space: normal;
+          hyphens: auto;
+          overflow-wrap: break-word;
+          text-wrap: balance;
+          z-index: 1;
+          background: var(--dx-grid-cell-surface);
+
+          &::after {
+            border-color: var(--dx-accentSurface);
+          }
+        }
+      }
+
 
       &.dx-grid__cell--commented {
         background: var(--dx-grid-commented, var(--dx-gridCommented));
@@ -117,7 +137,13 @@
       [role='columnheader'],
       [role='rowheader'] {
         &[aria-selected] {
-          background: var(--dx-gridSelectionOverlay);
+          --dx-grid-cell-surface: var(--dx-gridSelectionOverlay);
+          &:focus:not([aria-readonly='true']),
+          &:focus-visible, &:focus-within {
+            & > .dx-grid__cell__content {
+              background: transparent;
+            }
+          }
         }
       }
     }
@@ -127,7 +153,7 @@
     [role='gridcell'],
     [role='columnheader'],
     [role='rowheader'] {
-      &[data-dx-active]:not([aria-readonly='true']) {
+      &[data-dx-active]:not([aria-readonly='true']) > .dx-grid__cell__content::after {
         border-color: var(--dx-accentSurface);
       }
     }
