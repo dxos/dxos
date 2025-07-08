@@ -62,7 +62,7 @@ export default meta;
 export const Default: StoryObj<CardStoryProps> = {
   render: ({ title, description, image, showImage, showIcon }: CardStoryProps) => (
     <div className='max-is-md'>
-      <Card.Content>
+      <Card.StaticRoot>
         <Card.Toolbar>
           <Card.DragHandle toolbarItem />
           <Card.ToolbarSeparator variant='gap' />
@@ -72,7 +72,7 @@ export const Default: StoryObj<CardStoryProps> = {
         {!showImage && showIcon && <Card.Poster alt={title} icon='ph--building-office--regular' />}
         <Card.Heading>{title}</Card.Heading>
         {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
-      </Card.Content>
+      </Card.StaticRoot>
     </div>
   ),
 };

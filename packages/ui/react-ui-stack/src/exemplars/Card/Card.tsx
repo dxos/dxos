@@ -35,10 +35,10 @@ const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps>(
 
 /**
  * This should be used by Surface fulfillments in cases where the content may or may not already be encapsulated (e.g.
- * in a Popover) and knows this based on the `role` it receives. This will render a `Card.Content` by default, otherwise
+ * in a Popover) and knows this based on the `role` it receives. This will render a `Card.StaticRoot` by default, otherwise
  * it will render a `div` primitive with the appropriate styling for specific handled situations.
  */
-const CardSurfaceRoot = ({ role, children }: PropsWithChildren<{ role: string }>) => {
+const CardSurfaceRoot = ({ role = 'never', children }: PropsWithChildren<{ role?: string }>) => {
   if (['popover', 'card--kanban'].includes(role)) {
     return (
       <div className={role === 'popover' ? 'popover-card-width' : role === 'card--kanban' ? 'contents' : ''}>
@@ -70,7 +70,7 @@ const CardHeading = forwardRef<HTMLDivElement, SharedCardProps>(
 
 const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, classNames, ...props }, forwardedRef) => {
   return (
-    <Toolbar.Root {...props} classNames={['bg-transparent', classNames]} ref={forwardedRef}>
+    <Toolbar.Root {...props} classNames={['bg-transparent density-coarse', classNames]} ref={forwardedRef}>
       {children}
     </Toolbar.Root>
   );

@@ -111,7 +111,7 @@ const CardStackStory = () => {
                   prevSiblingId={prevCardId}
                   nextSiblingId={nextCardId}
                 >
-                  <Card.Content>
+                  <Card.StaticRoot>
                     <Card.Toolbar>
                       <StackItem.DragHandle asChild>
                         <Card.DragHandle toolbarItem />
@@ -128,7 +128,7 @@ const CardStackStory = () => {
                     <Card.Poster alt={card.title} image={card.image} />
                     <Card.Heading>{card.title}</Card.Heading>
                     <Card.Text classNames='line-clamp-2'>{card.description}</Card.Text>
-                  </Card.Content>
+                  </Card.StaticRoot>
                   <StackItem.DragPreview>
                     {({ item }) => (
                       <CardDragPreview.Root>

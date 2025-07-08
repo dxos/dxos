@@ -43,7 +43,7 @@ export const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>((item, for
   const { id, objectType, label, snippet, match, selected, onSelect } = item;
 
   return (
-    <Card.Content
+    <Card.StaticRoot
       ref={forwardRef}
       classNames={['mx-2 mt-2 cursor-pointer', selected && '!bg-activeSurface', ghostHover]}
       onClick={() => onSelect?.(id)}
@@ -55,7 +55,7 @@ export const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>((item, for
       )}
       <Card.Heading>{label ?? 'Untitled'}</Card.Heading>
       {snippet && <Snippet text={snippet} match={match} />}
-    </Card.Content>
+    </Card.StaticRoot>
   );
 });
 
