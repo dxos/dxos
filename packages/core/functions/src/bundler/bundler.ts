@@ -292,7 +292,7 @@ type RetryOptions = {
 
 class RetryConfig extends Context.Tag('RetryConfig')<RetryConfig, RetryOptions>() {
   static default = Layer.succeed(RetryConfig, {
-    maxRetries: 10,
+    maxRetries: 5,
     initialDelay: 1_000,
   });
 }
