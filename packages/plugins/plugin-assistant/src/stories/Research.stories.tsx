@@ -76,8 +76,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const space = client.spaces.default;
   const model = useGraphModel(space);
 
-  const actionCreator = useMemo(() => createToolbar(aiClient), [aiClient]);
-  const menuProps = useMenuActions(actionCreator);
+  const menuProps = useMenuActions(useMemo(() => createToolbar(aiClient), [aiClient]));
 
   // Queue.
   const [queueDxn, setQueueDxn] = useState<string>(() => space.queues.create().dxn.toString());

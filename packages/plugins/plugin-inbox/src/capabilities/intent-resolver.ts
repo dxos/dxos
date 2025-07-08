@@ -152,4 +152,10 @@ export default (context: PluginContext) =>
         }
       },
     }),
+    createResolver({
+      intent: InboxAction.RunAssistant,
+      resolve: ({ mailbox }) => {
+        log.info('Run assistant', { mailbox });
+      },
+    }),
   ]);
