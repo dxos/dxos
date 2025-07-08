@@ -5,4 +5,4 @@
 export { default as translations } from './translations';
 
 export * from './Board';
-export * from './Grid';
+export * from './Board';

@@ -8,6 +8,7 @@ import { DataType } from '@dxos/schema';
 
 import { SPACE_PLUGIN } from './meta';
 
+// TODO(burdon): Change to single Resource?
 export const translations = [
   {
     'en-US': {
