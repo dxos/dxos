@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react-vite';
 
 import { withClientProvider } from '@dxos/react-client/testing';
-import { osTranslations } from '@dxos/shell/react';
+import { translations as shellTranslations } from '@dxos/shell/react';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { MembersContainer } from './MembersContainer';
@@ -19,7 +19,7 @@ const meta: Meta = {
   decorators: [withClientProvider({ createIdentity: true, createSpace: true }), withTheme, withLayout()],
   parameters: {
     layout: 'fullscreen',
-    translations: [...translations, osTranslations],
+    translations: [...translations, shellTranslations],
   },
 };
 

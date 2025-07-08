@@ -13,7 +13,7 @@ import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { Shell } from './Shell';
 import { ShellRuntimeImpl } from './shell-runtime';
-import { osTranslations } from '../../translations';
+import { shellTranslations } from '../../translations';
 
 export const runShell = async (config: Config = new Config()) => {
   // If runtime fails to open then the shell will not be openable.
@@ -25,7 +25,7 @@ export const runShell = async (config: Config = new Config()) => {
 
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
-        <ThemeProvider tx={defaultTx} resourceExtensions={[osTranslations]}>
+        <ThemeProvider tx={defaultTx} resourceExtensions={[shellTranslations]}>
           <ClientProvider config={config} services={services} noBanner>
             <Clipboard.Provider>
               <Tooltip.Provider>
@@ -42,7 +42,7 @@ export const runShell = async (config: Config = new Config()) => {
     // If shell's client fails to initialize, ensure that the shell is still closeable.
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
-        <ThemeProvider tx={defaultTx} resourceExtensions={[osTranslations]}>
+        <ThemeProvider tx={defaultTx} resourceExtensions={[shellTranslations]}>
           <Fallback onClose={() => runtime.setAppContext({ display: ShellDisplay.NONE })} />
         </ThemeProvider>
       </StrictMode>,

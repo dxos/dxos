@@ -18,7 +18,7 @@ import type { IdentityPanelImplProps } from './IdentityPanelProps';
 import { IdentityActionChooserImpl } from './steps';
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { InvitationManager, type InvitationManagerProps } from '../../steps';
-import { osTranslations } from '../../translations';
+import { shellTranslations } from '../../translations';
 
 faker.seed(1234);
 
@@ -43,7 +43,7 @@ export default {
   title: 'sdk/shell/IdentityPanel',
   decorators: [withTheme],
   parameters: {
-    translations: [osTranslations],
+    translations: [shellTranslations],
     chromatic: {
       disableSnapshot: false,
     },

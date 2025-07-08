@@ -13,7 +13,7 @@ import { type JoinPanelImplProps } from './JoinPanelProps';
 import { IdentityInputImpl } from './steps';
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { ConfirmResetImpl } from '../../steps';
-import { osTranslations as translations } from '../../translations';
+import { shellTranslations as translations } from '../../translations';
 
 const noOpProps: JoinPanelImplProps = {
   titleId: 'storybookJoinPanel__title',
