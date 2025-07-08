@@ -13499,6 +13499,9 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
