@@ -43,6 +43,7 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/conductor": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",

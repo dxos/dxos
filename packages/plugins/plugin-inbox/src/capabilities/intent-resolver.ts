@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe, Schema } from 'effect';
+import { Effect, Effect, pipe, Schema } from 'effect';
 
 import {
   contributes,
@@ -29,8 +29,10 @@ import { AssistantCapabilities } from '@dxos/plugin-assistant';
 import { failedInvariant } from '@dxos/invariant';
 import { consoleLogger } from '@dxos/functions/testing';
 import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
-import { BlueprintBuilder } from '@dxos/assistant';
+import { BlueprintBuilder, compileBlueprint, DEFAULT_INPUT, GraphExecutor, ValueBag,, type GptOutput Workflow, WorkflowLoader, ComputeGraphModel } from '@dxos/conductor';
 import { ArtifactId } from '@dxos/artifact';
+import { TestRuntime } from '@dxos/conductor/testing';
+import { runAndForwardErrors } from '@dxos/effect';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -164,7 +166,7 @@ export default (context: PluginContext) =>
     // TODO(dmaretskyi): There should be a generic execute{function/blueprint/workflow} intent that runs the invocable.
     createResolver({
       intent: InboxAction.RunAssistant,
-      resolve: ({ mailbox }) => {
+      resolve: async ({ mailbox }) => {
         log.info('Run assistant', { mailbox });
 
         const space = getSpace(mailbox) ?? failedInvariant();
@@ -192,15 +194,30 @@ export default (context: PluginContext) =>
                   });
                 },
               }),
-              // tools go here
             ]),
           ),
         });
 
-        // TODO(dmaretskyi): Move both blueprints and the compiler to the conductor package.
-        // const workflow = compileBlueprint(BLUEPRINT);
+        const circuit = await compileBlueprint(BLUEPRINT);
 
-        
+        // TODO(dmaretskyi): We shouldn't really use test-runtime here but thats the most convinient api.
+        // Lets imporve the workflow-loader api.
+        const runtime = new TestRuntime(serviceContainer);
+        runtime.registerGraph('dxn:compute:test', new ComputeGraphModel(circuit));
+
+        // TODO(dmaretskyi): This should iterate over every message.
+
+        const input = 'TODO';
+        const { text } = await pipe(
+          { [DEFAULT_INPUT]: input },
+          ValueBag.make,
+          (input) => runtime.runGraph('dxn:compute:test', input),
+          Effect.flatMap(ValueBag.unwrap),
+          Effect.scoped,
+          runAndForwardErrors,
+        );
+
+        log.info('Workflow result', { text });
       },
     }),
   ]);

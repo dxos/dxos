@@ -8,16 +8,7 @@ import { beforeAll, describe, test } from 'vitest';
 
 import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import {
-  AISession,
-  BlueprintMachine,
-  BlueprintParser,
-  createExaTool,
-  createGraphWriterTool,
-  createLocalSearchTool,
-  researchFn,
-  setConsolePrinter,
-} from '@dxos/assistant';
+import { AISession, createExaTool, createGraphWriterTool, createLocalSearchTool, researchFn } from '@dxos/assistant';
 import {
   NODE_INPUT,
   NODE_OUTPUT,
@@ -44,7 +35,7 @@ import { log } from '@dxos/log';
 import { DataType, DataTypes } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { compileBlueprint } from './blueprint-compiler';
+import { compileBlueprint, BlueprintMachine, BlueprintParser, setConsolePrinter } from '@dxos/conductor';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;

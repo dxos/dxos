@@ -6935,6 +6935,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/conductor':
+        specifier: workspace:*
+        version: link:../../core/conductor
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
