@@ -83,7 +83,7 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
     >
       {item.id === currentItemId && (
         <>
-          <h2 className='flex items-center border-be border-subduedSeparator app-drag pli-1'>
+          <h2 className='flex items-center border-be border-subduedSeparator app-drag pli-1 density-coarse'>
             {backCapable ? (
               <TitleButton title={title} onClick={handleBack} />
             ) : (
@@ -95,7 +95,6 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
                 classNames={mx('shrink-0', hoverableControlItem, hoverableOpenControlItem, 'pli-2 pointer-fine:pli-1')}
                 iconOnly
                 size={5}
-                density='coarse'
                 icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
                 label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
                 data-testid='treeView.alternateTreeButton'

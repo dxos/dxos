@@ -163,7 +163,7 @@ export const ToolbarMenu = ({
   const { attendableId } = useMenu('ToolbarMenu', __menuScope);
   const { hasAttention } = useAttention(attendableId);
   const InnerRoot = wrapContents ? 'div' : Fragment;
-  const innerRootProps = wrapContents ? { role: 'none', className: mx(textBlockWidth, toolbarLayout) } : {};
+  const innerRootProps = wrapContents ? { role: 'none', className: mx(textBlockWidth, toolbarLayout, 'bs-full') } : {};
   return (
     <NaturalToolbar.Root
       {...props}
