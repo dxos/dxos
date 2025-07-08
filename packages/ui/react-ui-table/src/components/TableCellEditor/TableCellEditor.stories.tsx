@@ -14,7 +14,7 @@ import { faker } from '@dxos/random';
 import { Filter, useQuery, live } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { defaultRowSize, Grid, type GridEditing } from '@dxos/react-ui-grid';
-import { ViewProjection, ViewType } from '@dxos/schema';
+import { DataType, ProjectionManager } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { TableCellEditor, type TableCellEditorProps } from './TableCellEditor';
@@ -46,7 +46,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
 
   const projection = useMemo(() => {
     if (schema && table?.view) {
-      return new ViewProjection(schema.jsonSchema, table.view.target!);
+      return new ProjectionManager(schema.jsonSchema, table.view.target!);
     }
   }, [schema, table?.view]);
 
@@ -93,7 +93,7 @@ const meta: Meta<StoryProps> = {
   parameters: { translations, layout: 'centered' },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType],
+      types: [TableType, DataType.Projection],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {

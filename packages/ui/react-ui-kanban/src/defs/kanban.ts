@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { Ref, ObjectId, TypedObject, Expando } from '@dxos/echo-schema';
 // import { ThreadType } from '@dxos/plugin-space/types';
-import { ViewType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 export const KanbanSchema = Schema.Struct({
   id: ObjectId, // TODO(burdon): Where should this be?
@@ -14,7 +14,7 @@ export const KanbanSchema = Schema.Struct({
   /**
    * The view to use to query for cards and render them.
    */
-  cardView: Schema.optional(Ref(ViewType)),
+  cardView: Schema.optional(Ref(DataType.Projection)),
   /**
    * The field the values by which to pivot into columns of the kanban. This should be an enum field on the referred
    * objects, can that be enforced?

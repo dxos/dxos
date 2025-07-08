@@ -6,7 +6,7 @@ import { contributes, Capabilities, createResolver, type PluginContext } from '@
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
-import { ViewProjection } from '@dxos/schema';
+import { ProjectionManager } from '@dxos/schema';
 
 import { KANBAN_PLUGIN } from '../meta';
 import { initializeKanban } from '../testing';
@@ -33,7 +33,7 @@ export default (context: PluginContext) =>
           getSpace(kanban)?.db.schemaRegistry.getSchema(kanban.cardView.target.query.typename);
         invariant(schema);
         invariant(kanban.cardView.target);
-        const projection = new ViewProjection(schema.jsonSchema, kanban.cardView.target);
+        const projection = new ProjectionManager(schema.jsonSchema, kanban.cardView.target);
 
         if (!undo) {
           const { deleted, index } = projection.deleteFieldProjection(fieldId);

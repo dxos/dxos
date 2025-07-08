@@ -6,8 +6,8 @@ import { composeStories } from '@storybook/react';
 import { screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { EchoSchema } from '@dxos/echo-schema';
-import { ViewProjection, ViewType } from '@dxos/schema';
+import { EchoSchema, isInstanceOf } from '@dxos/echo-schema';
+import { DataType, ProjectionManager } from '@dxos/schema';
 
 import * as stories from './ViewEditor.stories';
 import { type ViewEditorDebugObjects } from './ViewEditor.stories';
@@ -19,8 +19,8 @@ const getViewEditorDebugObjects = (): ViewEditorDebugObjects => {
   const debugObjects = (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] as ViewEditorDebugObjects;
   expect(debugObjects).toBeDefined();
   expect(debugObjects.schema).toBeInstanceOf(EchoSchema);
-  expect(debugObjects.view).toBeInstanceOf(ViewType);
-  expect(debugObjects.projection).toBeInstanceOf(ViewProjection);
+  expect(debugObjects.manager).toBeInstanceOf(ProjectionManager);
+  expect(isInstanceOf(DataType.Projection, debugObjects.projection)).toBeTruthy();
   return debugObjects;
 };
 
@@ -73,12 +73,12 @@ describe('ViewEditor', () => {
     expect(schemaProperties!.name).toBeUndefined();
 
     // Check view contains new_property field.
-    const newPropertyField = debugObjects.view.fields.find((field: any) => field.path === 'new_property');
+    const newPropertyField = debugObjects.projection.fields.find((field: any) => field.path === 'new_property');
     expect(newPropertyField).toBeDefined();
     expect(newPropertyField!.path).toBe('new_property');
 
     // Check projection contains new_property.
-    const fieldProjections = debugObjects.projection.getFieldProjections();
+    const fieldProjections = debugObjects.manager.getFieldProjections();
     const newPropertyProjection = fieldProjections.find((proj: any) => proj.field.path === 'new_property');
     expect(newPropertyProjection).toBeDefined();
     expect(newPropertyProjection!.props.property).toBe('new_property');
@@ -120,12 +120,12 @@ describe('ViewEditor', () => {
     expect(schemaProperties!.added_property).toBeDefined();
 
     // Check view contains added_property field.
-    const addedPropertyField = debugObjects.view.fields.find((field: any) => field.path === 'added_property');
+    const addedPropertyField = debugObjects.projection.fields.find((field: any) => field.path === 'added_property');
     expect(addedPropertyField).toBeDefined();
     expect(addedPropertyField!.path).toBe('added_property');
 
     // Check projection contains added_property.
-    const fieldProjections = debugObjects.projection.getFieldProjections();
+    const fieldProjections = debugObjects.manager.getFieldProjections();
     const addedPropertyProjection = fieldProjections.find((proj: any) => proj.field.path === 'added_property');
     expect(addedPropertyProjection).toBeDefined();
     expect(addedPropertyProjection!.props.property).toBe('added_property');
@@ -161,11 +161,11 @@ describe('ViewEditor', () => {
     expect(schemaProperties!.name).toBeUndefined();
 
     // Check view no longer contains the name field.
-    const nameField = debugObjects.view.fields.find((field: any) => field.path === 'name');
+    const nameField = debugObjects.projection.fields.find((field: any) => field.path === 'name');
     expect(nameField).toBeUndefined();
 
     // Check projection no longer contains the name property.
-    const fieldProjections = debugObjects.projection.getFieldProjections();
+    const fieldProjections = debugObjects.manager.getFieldProjections();
     const nameProjection = fieldProjections.find((proj: any) => proj.field.path === 'name');
     expect(nameProjection).toBeUndefined();
   });
@@ -187,18 +187,18 @@ describe('ViewEditor', () => {
     const debugObjects = getViewEditorDebugObjects();
 
     // Check that hiddenFields is non-empty.
-    expect(debugObjects.view.hiddenFields).toBeDefined();
-    expect(debugObjects.view.hiddenFields!.length).toBeGreaterThan(0);
+    expect(debugObjects.projection.hiddenFields).toBeDefined();
+    expect(debugObjects.projection.hiddenFields!.length).toBeGreaterThan(0);
 
     // Click the show button
     fireEvent.click(screen.getByTestId('show-field-button'));
 
     // Wait for the data to update and check that hiddenFields is empty.
     await waitFor(() => {
-      expect(debugObjects.view.hiddenFields!.length).toBe(0);
+      expect(debugObjects.projection.hiddenFields!.length).toBe(0);
     });
 
     // Also verify that the field is back in the visible fields list.
-    expect(debugObjects.view.fields.length).toBeGreaterThan(0);
+    expect(debugObjects.projection.fields.length).toBeGreaterThan(0);
   });
 });

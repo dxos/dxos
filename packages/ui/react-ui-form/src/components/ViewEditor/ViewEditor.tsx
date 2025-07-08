@@ -12,7 +12,7 @@ import { Callout, IconButton, type ThemedClassName, useTranslation } from '@dxos
 import { List } from '@dxos/react-ui-list';
 import { cardSpacing } from '@dxos/react-ui-stack';
 import { ghostHover, inputTextLabel, mx } from '@dxos/react-ui-theme';
-import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
+import { FieldSchema, type FieldType, VIEW_FIELD_LIMIT, type DataType, ProjectionManager } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
@@ -34,7 +34,7 @@ type ViewMetaType = Schema.Schema.Type<typeof ViewMetaSchema>;
 export type ViewEditorProps = ThemedClassName<
   {
     schema: Schema.Schema.AnyNoContext;
-    view: ViewType;
+    projection: DataType.Projection;
     registry?: SchemaRegistry;
     readonly?: boolean;
     showHeading?: boolean;
@@ -49,7 +49,7 @@ export type ViewEditorProps = ThemedClassName<
 export const ViewEditor = ({
   classNames,
   schema,
-  view,
+  projection,
   registry,
   readonly: _readonly,
   showHeading = false,
@@ -58,23 +58,23 @@ export const ViewEditor = ({
   outerSpacing = true,
 }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
-  const projection = useMemo(() => {
+  const manager = useMemo(() => {
     // Use reactive and mutable version of json schema when schema is mutable.
     const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
-    return new ViewProjection(jsonSchema, view);
-  }, [schema, view]);
+    return new ProjectionManager(jsonSchema, projection);
+  }, [schema, projection]);
   const [field, setField] = useState<FieldType>();
   const readonly = _readonly || !isMutable(schema);
 
   // TODO(burdon): Should be reactive.
   const viewValues = useMemo(() => {
     return {
-      name: view.name,
+      name: projection.name,
       // TODO(burdon): Need to warn user of possible consequences of editing.
       // TODO(burdon): Settings should have domain name owned by user.
-      typename: view.query.typename,
+      typename: projection.query.typename,
     };
-  }, [view]);
+  }, [projection]);
 
   const handleSelect = useCallback(
     (field: FieldType) => {
@@ -90,24 +90,24 @@ export const ViewEditor = ({
 
   const handleAdd = useCallback(() => {
     invariant(!readonly);
-    const field = projection.createFieldProjection();
+    const field = manager.createFieldProjection();
     setField(field);
-  }, [schema, view, readonly]);
+  }, [schema, manager, readonly]);
 
   const handleUpdate = useCallback(
     ({ name, typename }: ViewMetaType) => {
       invariant(!readonly);
       requestAnimationFrame(() => {
-        if (view.name !== name) {
-          view.name = name;
+        if (projection.name !== name) {
+          projection.name = name;
         }
 
-        if (view.query.typename !== typename && !readonly) {
+        if (projection.query.typename !== typename && !readonly) {
           onTypenameChanged?.(typename);
         }
       });
     },
-    [schema, view, onTypenameChanged, readonly],
+    [schema, projection, onTypenameChanged, readonly],
   );
 
   const handleDelete = useCallback(
@@ -126,32 +126,32 @@ export const ViewEditor = ({
     (fromIndex: number, toIndex: number) => {
       invariant(!readonly);
       // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
-      const fields = [...view.fields];
+      const fields = [...projection.fields];
       const [moved] = fields.splice(fromIndex, 1);
       fields.splice(toIndex, 0, moved);
-      view.fields = fields;
+      projection.fields = fields;
     },
-    [schema, view.fields, readonly],
+    [schema, projection.fields, readonly],
   );
 
   const handleClose = useCallback(() => setField(undefined), []);
 
-  const hiddenProperties = projection.getHiddenProperties();
+  const hiddenProperties = manager.getHiddenProperties();
 
   const handleHide = useCallback(
     (fieldId: string) => {
       setField(undefined);
-      projection.hideFieldProjection(fieldId);
+      manager.hideFieldProjection(fieldId);
     },
-    [projection],
+    [manager],
   );
 
   const handleShow = useCallback(
     (property: string) => {
       setField(undefined);
-      projection.showFieldProjection(property as JsonProp);
+      manager.showFieldProjection(property as JsonProp);
     },
-    [projection],
+    [manager],
   );
 
   return (
@@ -179,7 +179,7 @@ export const ViewEditor = ({
         <label className={mx(inputTextLabel)}>{t('fields label')}</label>
 
         <List.Root<FieldType>
-          items={view.fields}
+          items={projection.fields}
           isItem={Schema.is(FieldSchema)}
           getId={(field) => field.id}
           readonly={readonly}
@@ -207,13 +207,13 @@ export const ViewEditor = ({
                       data-testid='hide-field-button'
                       icon='ph--eye-slash--regular'
                       // TDOO(burdon): Is this the correct test?
-                      disabled={view.fields.length <= 1}
+                      disabled={projection.fields.length <= 1}
                       onClick={() => handleHide(field.id)}
                     />
                     {/* TODO(burdon): Remove unless implement undo. */}
                     {!readonly && (
                       <List.ItemDeleteButton
-                        disabled={view.fields.length <= 1}
+                        disabled={projection.fields.length <= 1}
                         onClick={() => handleDelete(field.id)}
                       />
                     )}
@@ -258,14 +258,7 @@ export const ViewEditor = ({
       </div>
 
       {field && (
-        <FieldEditor
-          key={field.id}
-          view={view}
-          projection={projection}
-          field={field}
-          registry={registry}
-          onSave={handleClose}
-        />
+        <FieldEditor key={field.id} projection={manager} field={field} registry={registry} onSave={handleClose} />
       )}
 
       {!readonly && !field && (
@@ -275,7 +268,7 @@ export const ViewEditor = ({
             label={t('button add property')}
             onClick={readonly ? undefined : handleAdd}
             // TODO(burdon): Show field limit in ux (not tooltip).
-            disabled={view.fields.length >= VIEW_FIELD_LIMIT}
+            disabled={projection.fields.length >= VIEW_FIELD_LIMIT}
             classNames='flex is-full'
           />
         </div>

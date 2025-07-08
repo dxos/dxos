@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
-import { ViewType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 export class MapType extends TypedObject({
   typename: 'dxos.org/type/Map',
@@ -15,5 +15,5 @@ export class MapType extends TypedObject({
   name: Schema.optional(Schema.String),
   coordinates: Schema.optional(Type.Format.GeoPoint),
   // Reference to view used to query for map items
-  view: Schema.optional(Type.Ref(ViewType)),
+  view: Schema.optional(Type.Ref(DataType.Projection)),
 }) {}

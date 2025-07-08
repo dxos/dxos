@@ -6,7 +6,7 @@ import { composeStories } from '@storybook/react';
 import { screen, cleanup, fireEvent, act } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { ViewProjection } from '@dxos/schema';
+import { ProjectionManager } from '@dxos/schema';
 
 import * as stories from './FieldEditor.stories';
 import { type FieldEditorDebugObjects } from './FieldEditor.stories';
@@ -18,7 +18,7 @@ const getFieldEditorDebugObjects = (): FieldEditorDebugObjects => {
   const debugObjects = (window as any)[FIELD_EDITOR_DEBUG_SYMBOL] as FieldEditorDebugObjects;
   expect(debugObjects).toBeDefined();
   expect(debugObjects.props).toBeInstanceOf(Object); // Props object
-  expect(debugObjects.projection).toBeInstanceOf(ViewProjection);
+  expect(debugObjects.projection).toBeInstanceOf(ProjectionManager);
   return debugObjects;
 };
 

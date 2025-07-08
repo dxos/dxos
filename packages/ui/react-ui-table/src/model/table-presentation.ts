@@ -73,10 +73,10 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getMainGridCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.view?.fields ?? [];
+    const fields = this.model.projection?.fields ?? [];
 
     const addCell = (obj: T, field: FieldType, colIndex: number, displayIndex: number): void => {
-      const { props } = this.model.projection.getFieldProjection(field.id);
+      const { props } = this.model.projectionManager.getFieldProjection(field.id);
 
       const cell: DxGridCellValue = {
         get value() {
@@ -187,7 +187,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
       if (props.format === FormatEnum.SingleSelect) {
         const value = getValue(obj, field.path);
-        const options = this.model.projection.getFieldProjection(field.id).props.options;
+        const options = this.model.projectionManager.getFieldProjection(field.id).props.options;
         if (options) {
           const option = options.find((o) => o.id === value);
           if (option) {
@@ -198,7 +198,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
       if (props.format === FormatEnum.MultiSelect) {
         const values = getValue(obj, field.path) as string[] | undefined;
-        const options = this.model.projection.getFieldProjection(field.id).props.options;
+        const options = this.model.projectionManager.getFieldProjection(field.id).props.options;
         if (options && values && values.length > 0) {
           const tags = values
             .map((value) => {
@@ -237,9 +237,9 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getHeaderCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.view?.fields ?? [];
+    const fields = this.model.projection?.fields ?? [];
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
-      const { field, props } = this.model.projection.getFieldProjection(fields[col].id);
+      const { field, props } = this.model.projectionManager.getFieldProjection(fields[col].id);
       const sorting = this.model.sorting?.sorting;
       const direction = sorting?.fieldId === field.id ? sorting.direction : undefined;
 
@@ -321,7 +321,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
         accessoryHtml: this.model.features.schemaEditable
           ? tableButtons.addColumn.render({
-              disabled: (this.model.view?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
+              disabled: (this.model.projection?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
             })
           : undefined,
         className: '!bg-toolbarSurface',

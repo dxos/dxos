@@ -12,14 +12,14 @@ import { useClient } from '@dxos/react-client';
 import { useQuery, getSpace } from '@dxos/react-client/echo';
 import { type KanbanType, useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
 import { StackItem } from '@dxos/react-ui-stack';
-import { ViewProjection } from '@dxos/schema';
+import { ProjectionManager } from '@dxos/schema';
 
 import { KanbanAction } from '../types';
 
 export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }) => {
   const client = useClient();
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
-  const [projection, setProjection] = useState<ViewProjection>();
+  const [projection, setProjection] = useState<ProjectionManager>();
   const space = getSpace(kanban);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
@@ -53,7 +53,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
 
   useEffect(() => {
     if (kanban.cardView?.target && jsonSchema) {
-      setProjection(new ViewProjection(jsonSchema, kanban.cardView.target));
+      setProjection(new ProjectionManager(jsonSchema, kanban.cardView.target));
     }
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
   }, [kanban.cardView?.target, JSON.stringify(jsonSchema)]);

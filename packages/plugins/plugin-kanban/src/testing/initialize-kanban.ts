@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { KanbanType } from '@dxos/react-ui-kanban';
-import { createView, ViewProjection, createFieldId, getSchemaProperties } from '@dxos/schema';
+import { createProjection, createFieldId, getSchemaProperties, ProjectionManager } from '@dxos/schema';
 import { capitalize } from '@dxos/util';
 
 // TODO(wittjosiah): UI package shouldn't depend on client.
@@ -62,17 +62,17 @@ export const initializeKanban = async ({
       .filter((prop) => prop.type !== 'object' || prop.format === FormatEnum.Ref)
       .map((prop) => prop.name);
 
-    const view = createView({
+    const projection = createProjection({
       name: "Kanban's card view",
       typename,
       jsonSchema,
       fields,
     });
 
-    const kanban = Obj.make(KanbanType, { cardView: Ref.make(view), columnFieldId: undefined, name });
+    const kanban = Obj.make(KanbanType, { cardView: Ref.make(projection), columnFieldId: undefined, name });
     if (initialPivotColumn) {
-      const viewProjection = new ViewProjection(jsonSchema, view);
-      const fieldId = viewProjection.getFieldId(initialPivotColumn);
+      const projectionManager = new ProjectionManager(jsonSchema, projection);
+      const fieldId = projectionManager.getFieldId(initialPivotColumn);
       if (fieldId) {
         kanban.columnFieldId = fieldId;
       }
@@ -82,21 +82,21 @@ export const initializeKanban = async ({
     const { schema: taskSchema, stateOptions } = createDefaultTaskSchema();
     const [schema] = await space.db.schemaRegistry.register([taskSchema]);
 
-    const view = createView({
+    const projection = createProjection({
       name: "Kanban's card view",
       typename: schema.typename,
       jsonSchema: schema.jsonSchema,
       fields: ['title', 'description'],
     });
 
-    const viewProjection = new ViewProjection(schema.jsonSchema, view);
+    const projectionManager = new ProjectionManager(schema.jsonSchema, projection);
 
     // Set description field to Markdown format.
-    const descriptionFieldId = viewProjection.getFieldId('description');
+    const descriptionFieldId = projectionManager.getFieldId('description');
     if (descriptionFieldId) {
-      const fieldProjection = viewProjection.getFieldProjection(descriptionFieldId);
+      const fieldProjection = projectionManager.getFieldProjection(descriptionFieldId);
       if (fieldProjection) {
-        viewProjection.setFieldProjection({
+        projectionManager.setFieldProjection({
           ...fieldProjection,
           props: { ...fieldProjection.props, format: FormatEnum.Markdown },
         });
@@ -104,7 +104,7 @@ export const initializeKanban = async ({
     }
 
     const initialPivotField = 'state';
-    viewProjection.setFieldProjection({
+    projectionManager.setFieldProjection({
       field: {
         id: createFieldId(),
         path: initialPivotField as JsonProp,
@@ -119,10 +119,10 @@ export const initializeKanban = async ({
       },
     });
 
-    const fieldId = viewProjection.getFieldId(initialPivotField);
+    const fieldId = projectionManager.getFieldId(initialPivotField);
     invariant(fieldId);
 
-    const kanban = Obj.make(KanbanType, { cardView: Ref.make(view), columnFieldId: fieldId });
+    const kanban = Obj.make(KanbanType, { cardView: Ref.make(projection), columnFieldId: fieldId });
     return { kanban, schema };
   }
 };

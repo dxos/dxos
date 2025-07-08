@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as EchoSchema$ from '@dxos/echo-schema';
+
 import * as AccessToken$ from './access-token';
 import * as Actor$ from './actor';
 import * as Collection$ from './collection';
@@ -14,6 +16,7 @@ import * as Project$ from './project';
 import * as Relations$ from './relations';
 import * as Task$ from './task';
 import * as Text$ from './text';
+import * as Projection$ from '../projection';
 
 // TODO(burdon): Remove (fix The inferred type of 'DeleteMessage' cannot be named without a reference.)
 export * from './message';
@@ -115,6 +118,20 @@ export namespace DataType {
   export type Project = Project$.Project;
 
   //
+  // Projection
+  //
+
+  export const Projection = Projection$.Projection;
+  export type Projection = Projection$.Projection;
+
+  //
+  // StoredSchema
+  //
+
+  export const StoredSchema = EchoSchema$.StoredSchema;
+  export type StoredSchema = EchoSchema$.StoredSchema;
+
+  //
   // Task
   //
 
@@ -141,6 +158,9 @@ export namespace DataType {
   export const HasRelationship = Relations$.HasRelationship;
   export type HasRelationship = Relations$.HasRelationship;
 
+  export const HasView = Relations$.HasView;
+  export type HasView = Relations$.HasView;
+
   // TOOD(burdon): Move Thread from plugin-space?
 }
 
@@ -153,6 +173,8 @@ export const DataTypes = [
   DataType.Organization,
   DataType.Person,
   DataType.Project,
+  DataType.Projection,
+  DataType.StoredSchema,
   DataType.Task,
   DataType.Text,
 
@@ -160,4 +182,5 @@ export const DataTypes = [
   DataType.Employer,
   DataType.HasRelationship,
   DataType.HasConnection,
+  DataType.HasView,
 ];

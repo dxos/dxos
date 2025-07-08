@@ -8,7 +8,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { TableType, translations as tableTranslations } from '@dxos/react-ui-table';
-import { ViewType, ViewTypeV1, ViewTypeV1ToV2 } from '@dxos/schema';
+import { DataType, ViewTypeV1, ViewTypeV2, ViewTypeV1ToV2, ViewTypeToProjection } from '@dxos/schema';
 
 import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -61,12 +61,12 @@ export const TablePlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ViewType, ViewTypeV1]),
+      activate: () => contributes(ClientCapabilities.Schema, [DataType.Projection, ViewTypeV1, ViewTypeV2]),
     }),
     defineModule({
       id: `${meta.id}/module/migration`,
       activatesOn: ClientEvents.SetupMigration,
-      activate: () => contributes(ClientCapabilities.Migration, [ViewTypeV1ToV2]),
+      activate: () => contributes(ClientCapabilities.Migration, [ViewTypeV1ToV2, ViewTypeToProjection]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

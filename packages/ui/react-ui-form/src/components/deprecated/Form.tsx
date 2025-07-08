@@ -8,10 +8,10 @@ import React, { useState } from 'react';
 import { findProperty } from '@dxos/effect';
 import { Input, type ThemedClassName, type TextInputProps as NativeTextInputProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type ViewType, getFieldValue, setFieldValue } from '@dxos/schema';
+import { type DataType, getFieldValue, setFieldValue } from '@dxos/schema';
 
 export type DeprecatedFormProps<T extends {} = {}> = ThemedClassName<{
-  view: ViewType;
+  projection: DataType.Projection;
   object: T;
   schema?: Schema.Schema<T>;
   readonly?: boolean;
@@ -22,14 +22,14 @@ export type DeprecatedFormProps<T extends {} = {}> = ThemedClassName<{
  */
 export const DeprecatedForm = <T extends {} = {}>({
   classNames,
-  view,
+  projection,
   object,
   schema,
   readonly,
 }: DeprecatedFormProps<T>) => {
   return (
     <div role='none' className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
-      {view.fields.map((field) => {
+      {projection.fields.map((field) => {
         const prop = schema && findProperty(schema, field.path);
         const title = (prop && pipe(SchemaAST.getTitleAnnotation(prop), Option.getOrUndefined)) ?? '';
         const description = (prop && pipe(SchemaAST.getDescriptionAnnotation(prop), Option.getOrUndefined)) ?? title;

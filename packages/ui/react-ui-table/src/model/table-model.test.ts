@@ -12,7 +12,7 @@ import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { live } from '@dxos/react-client/echo';
-import { createView, ViewProjection } from '@dxos/schema';
+import { createProjection, ProjectionManager } from '@dxos/schema';
 
 import { TableModel, type TableModelProps } from './table-model';
 import { TableType } from '../types';
@@ -107,8 +107,8 @@ class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.
 
 const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
-  const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
-  const projection = new ViewProjection(schema.jsonSchema, view);
-  const table = Obj.make(TableType, { view: Ref.make(view) });
-  return new TableModel({ id: table.id, space: undefined, view, projection, ...props });
+  const projection = createProjection({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
+  const manager = new ProjectionManager(schema.jsonSchema, projection);
+  const table = Obj.make(TableType, { view: Ref.make(projection) });
+  return new TableModel({ id: table.id, space: undefined, projection: manager, ...props });
 };
