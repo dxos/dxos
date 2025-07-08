@@ -104,7 +104,7 @@ const CardStackStory = () => {
             const nextCardId = cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined;
 
             return (
-              <Card.Root asChild key={card.id}>
+              <CardStack.Item asChild key={card.id}>
                 <StackItem.Root
                   item={cardItem}
                   focusIndicatorVariant='group'
@@ -144,7 +144,7 @@ const CardStackStory = () => {
                     )}
                   </StackItem.DragPreview>
                 </StackItem.Root>
-              </Card.Root>
+              </CardStack.Item>
             );
           })}
         </CardStack.Stack>

@@ -79,7 +79,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   getDropElement={getColumnDropElement}
                 >
                   {cards.map((card, cardIndex, cardsArray) => (
-                    <Card.Root asChild key={card.id}>
+                    <CardStack.Item asChild key={card.id}>
                       <StackItem.Root
                         item={card}
                         focusIndicatorVariant='group'
@@ -121,7 +121,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           )}
                         </StackItem.DragPreview>
                       </StackItem.Root>
-                    </Card.Root>
+                    </CardStack.Item>
                   ))}
                 </CardStack.Stack>
 

@@ -15,23 +15,11 @@ import React, {
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { hoverableControls, mx } from '@dxos/react-ui-theme';
 
-import { cardChrome, cardContent, cardHeading, cardRoot, cardText, cardSpacing } from './fragments';
+import { cardChrome, cardContent, cardHeading, cardText, cardSpacing } from './fragments';
 import { StackItem } from '../../components';
 import { translationKey } from '../../translations';
 
 type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
-
-const CardRoot = forwardRef<HTMLDivElement, SharedCardProps>(
-  ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
-    const rootProps = asChild ? { classNames: [cardRoot, classNames] } : { className: mx(cardRoot, classNames), role };
-    return (
-      <Root {...props} {...rootProps} ref={forwardedRef}>
-        {children}
-      </Root>
-    );
-  },
-);
 
 const CardContent = forwardRef<HTMLDivElement, SharedCardProps>(
   ({ children, classNames, asChild, role = 'group', ...props }, forwardedRef) => {
@@ -164,7 +152,6 @@ const CardText = forwardRef<HTMLParagraphElement, SharedCardProps>(
 );
 
 export const Card = {
-  Root: CardRoot,
   Content: CardContent,
   Container: CardConditionalContent,
   Heading: CardHeading,
@@ -179,4 +166,4 @@ export const Card = {
   Text: CardText,
 };
 
-export { cardRoot, cardContent, cardHeading, cardText, cardChrome, cardSpacing };
+export { cardContent, cardHeading, cardText, cardChrome, cardSpacing };
