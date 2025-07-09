@@ -30,6 +30,7 @@ const PANEL_KEYS = [
   'ts',
   'performance',
   'spans',
+  'edge',
   'queries',
   'rawQueries',
   'database',
@@ -112,7 +113,7 @@ export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<Que
       />
       <MemoryPanel id='memory' memory={stats?.memory} />
       <NetworkPanel id='network' network={stats?.network} />
-      <EdgePanel id='edge' edge={stats?.edge} />
+      <EdgePanel id='edge' open={panelState.edge} edge={stats?.edge} onToggle={handleToggle} />
       <PerformancePanel
         id='performance'
         open={panelState.performance}

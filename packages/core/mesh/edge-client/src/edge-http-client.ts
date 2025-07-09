@@ -32,18 +32,13 @@ import {
   type QueryResult,
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
+  type EdgeStatus,
 } from '@dxos/protocols';
 import { createUrl } from '@dxos/util';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { encodeAuthHeader, HttpConfig, withLogging, withRetryConfig } from './http-client';
 import { getEdgeUrlWithProtocol } from './utils';
-
-// TODO(burdon): Move to protocols.
-type GetStatusResponseBody = {
-  status: 'ok' | 'error';
-  error?: string;
-};
 
 const DEFAULT_RETRY_TIMEOUT = 1500;
 const DEFAULT_RETRY_JITTER = 500;
@@ -104,8 +99,7 @@ export class EdgeHttpClient {
   // Status
   //
 
-  // TODO(burdon): Implement status endpoint.
-  public async getStatus(args?: EdgeHttpGetArgs): Promise<GetStatusResponseBody> {
+  public async getStatus(args?: EdgeHttpGetArgs): Promise<EdgeStatus> {
     return this._call(new URL('/status', this.baseUrl), { ...args, method: 'GET' });
   }
 
