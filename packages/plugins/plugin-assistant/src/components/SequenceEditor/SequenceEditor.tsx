@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useImperativeHandle } from 'react';
 
-import { BlueprintDefinition } from '@dxos/conductor';
+import { SequenceDefinition } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
@@ -16,16 +16,16 @@ import {
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-export type BlueprintEditorProps = ThemedClassName<{
-  blueprint: BlueprintDefinition;
+export type SequenceEditorProps = ThemedClassName<{
+  sequence: SequenceDefinition;
 }>;
 
 // TODO(burdon): Factor out JsonEditor.
-export const BlueprintEditor = forwardRef<EditorView | undefined, BlueprintEditorProps>(
-  ({ classNames, blueprint }, forwardedRef) => {
+export const SequenceEditor = forwardRef<EditorView | undefined, SequenceEditorProps>(
+  ({ classNames, sequence }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const { parentRef, view } = useTextEditor({
-      initialValue: JSON.stringify(blueprint, null, 2),
+      initialValue: JSON.stringify(sequence, null, 2),
       extensions: [
         createBasicExtensions({
           lineNumbers: true,
@@ -38,7 +38,7 @@ export const BlueprintEditor = forwardRef<EditorView | undefined, BlueprintEdito
           syntaxHighlighting: true,
         }),
         createJsonExtensions({
-          schema: Type.toJsonSchema(BlueprintDefinition, { strict: true }),
+          schema: Type.toJsonSchema(SequenceDefinition, { strict: true }),
         }),
       ],
     });

@@ -13,7 +13,7 @@ import {
   type PromiseIntentDispatcher,
   type PluginContext,
 } from '@dxos/app-framework';
-import { Blueprint } from '@dxos/conductor';
+import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -130,19 +130,19 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${ASSISTANT_PLUGIN}/blueprint-logs`,
+      id: `${ASSISTANT_PLUGIN}/sequence-logs`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(Blueprint, node.data) ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (Obj.instanceOf(Sequence, node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => [
               {
                 id: [node.id, 'logs'].join(ATTENDABLE_PATH_SEPARATOR),
                 type: PLANK_COMPANION_TYPE,
                 data: 'logs',
                 properties: {
-                  label: ['blueprint logs label', { ns: ASSISTANT_PLUGIN }],
+                  label: ['sequence logs label', { ns: ASSISTANT_PLUGIN }],
                   icon: 'ph--clock-countdown--regular',
                   disposition: 'hidden',
                 },

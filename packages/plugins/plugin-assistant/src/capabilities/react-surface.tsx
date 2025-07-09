@@ -6,7 +6,7 @@ import { Effect } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
-import { Blueprint } from '@dxos/conductor';
+import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Filter, type Key, Obj, Query } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
@@ -17,7 +17,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import {
   AssistantDialog,
   AssistantSettings,
-  BlueprintContainer,
+  SequenceContainer,
   ChatContainer,
   PromptSettings,
   TemplateContainer,
@@ -97,16 +97,16 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/blueprint`,
+      id: `${ASSISTANT_PLUGIN}/sequence`,
       role: 'article',
-      filter: (data): data is { subject: Blueprint } => Obj.instanceOf(Blueprint, data.subject),
-      component: ({ data, role }) => <BlueprintContainer role={role} blueprint={data.subject} />,
+      filter: (data): data is { subject: Sequence } => Obj.instanceOf(Sequence, data.subject),
+      component: ({ data, role }) => <SequenceContainer role={role} sequence={data.subject} />,
     }),
     createSurface({
       id: `${ASSISTANT_PLUGIN}/companion/logs`,
       role: 'article',
-      filter: (data): data is { companionTo: Blueprint } =>
-        Obj.instanceOf(Blueprint, data.companionTo) && data.subject === 'logs',
+      filter: (data): data is { companionTo: Sequence } =>
+        Obj.instanceOf(Sequence, data.companionTo) && data.subject === 'logs',
       component: ({ data, role }) => {
         const space = getSpace(data.companionTo);
         return (

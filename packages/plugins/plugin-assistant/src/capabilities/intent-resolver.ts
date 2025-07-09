@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { Blueprint } from '@dxos/conductor';
+import { Sequence } from '@dxos/conductor';
 import { Key, Obj, Ref } from '@dxos/echo';
 
 import { AssistantAction, AIChatType } from '../types';
@@ -26,10 +26,10 @@ export default () => [
   contributes(
     Capabilities.IntentResolver,
     createResolver({
-      intent: AssistantAction.CreateBlueprint,
+      intent: AssistantAction.CreateSequence,
       resolve: ({ name }) => ({
         data: {
-          object: Obj.make(Blueprint, {
+          object: Obj.make(Sequence, {
             name,
             steps: [
               {

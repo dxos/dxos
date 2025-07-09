@@ -5,7 +5,7 @@ import { Type } from '@dxos/echo';
 
 import { ASSISTANT_PLUGIN } from './meta';
 import { AIChatType, TemplateType } from './types';
-import { Blueprint } from "@dxos/conductor";
+import { Sequence } from '@dxos/conductor';
 
 export default [
   {
@@ -17,12 +17,12 @@ export default [
         'typename label_other': 'Assistants',
         'object name placeholder': 'New assistant',
       },
-      [Type.getTypename(Blueprint)]: {
-        'typename label': 'Blueprint',
-        'typename label_zero': 'Blueprints',
-        'typename label_one': 'Blueprint',
-        'typename label_other': 'Blueprints',
-        'object name placeholder': 'New blueprint',
+      [Type.getTypename(Sequence)]: {
+        'typename label': 'Sequence',
+        'typename label_zero': 'Sequences',
+        'typename label_one': 'Sequence',
+        'typename label_other': 'Sequences',
+        'object name placeholder': 'New sequence',
       },
       [Type.getTypename(TemplateType)]: {
         'typename label': 'Template',
@@ -49,7 +49,7 @@ export default [
         'select preset template placeholder': 'Select preset',
         'service registry label': 'Service Registry',
 
-        'blueprint logs label': 'Logs',
+        'sequence logs label': 'Logs',
 
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',

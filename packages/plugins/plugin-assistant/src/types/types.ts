@@ -7,7 +7,7 @@ import { SpaceSchema } from '@dxos/react-client/echo';
 
 import { AIChatType } from './chat';
 import { ASSISTANT_PLUGIN } from '../meta';
-import { Blueprint } from "@dxos/conductor";
+import { Sequence } from '@dxos/conductor';
 
 export namespace AssistantAction {
   const ASSISTANT_ACTION = `${ASSISTANT_PLUGIN}/action`;
@@ -22,12 +22,12 @@ export namespace AssistantAction {
     }),
   }) {}
 
-  export class CreateBlueprint extends Schema.TaggedClass<CreateBlueprint>()(`${ASSISTANT_ACTION}/create-blueprint`, {
+  export class CreateSequence extends Schema.TaggedClass<CreateSequence>()(`${ASSISTANT_ACTION}/create-sequence`, {
     input: Schema.Struct({
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: Blueprint,
+      object: Sequence,
     }),
   }) {}
 }

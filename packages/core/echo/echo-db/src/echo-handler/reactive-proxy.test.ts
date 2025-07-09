@@ -8,12 +8,12 @@ import { EchoObject, getTypeAnnotation } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { live } from '@dxos/live-object';
 
-import { reactiveProxyTests } from './reactive-proxy.blueprint-test';
+import { reactiveProxyTests } from './reactive-proxy.sequence-test';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
 
 // NOTE: These are tests for @dxos/echo-schema but they live here currently because the tests are shared.
-//  echo-schema cannot export the test blueprint because @dxos/test is not published.
+//  echo-schema cannot export the test sequence because @dxos/test is not published.
 describe('Reactive proxy', () => {
   reactiveProxyTests((schema) => {
     if (schema != null && getTypeAnnotation(schema) != null) {

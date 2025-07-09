@@ -28,8 +28,8 @@ import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolve
 import { failedInvariant } from '@dxos/invariant';
 import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
 import {
-  BlueprintBuilder,
-  compileBlueprint,
+  SequenceBuilder,
+  compileSequence,
   DEFAULT_INPUT,
   GraphExecutor,
   ValueBag,
@@ -174,7 +174,7 @@ export default (context: PluginContext) =>
         }
       },
     }),
-    // TODO(dmaretskyi): There should be a generic execute{function/blueprint/workflow} intent that runs the executable locally or remotelly.
+    // TODO(dmaretskyi): There should be a generic execute{function/sequence/workflow} intent that runs the executable locally or remotelly.
     createResolver({
       intent: InboxAction.RunAssistant,
       resolve: async ({ mailbox }) => {
@@ -211,7 +211,7 @@ export default (context: PluginContext) =>
           ),
         });
 
-        const circuit = await compileBlueprint(BLUEPRINT);
+        const circuit = await compileSequence(SEQUENCE);
 
         // TODO(dmaretskyi): We shouldn't really use test-runtime here but thats the most convinient api.
         // Lets imporve the workflow-loader api.
@@ -237,7 +237,7 @@ export default (context: PluginContext) =>
 
 const Label = Schema.Literal('important', 'personal', 'work', 'social', 'promotions', 'updates', 'forums', 'spam');
 
-const BLUEPRINT = BlueprintBuilder.create()
+const SEQUENCE = SequenceBuilder.create()
   .step('Analyze the email and assign labels to it', {
     tools: ['inbox/label'],
   })

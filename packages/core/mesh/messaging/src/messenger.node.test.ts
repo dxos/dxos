@@ -7,7 +7,7 @@ import { afterAll, onTestFinished, beforeAll, test, describe } from 'vitest';
 import { asyncTimeout } from '@dxos/async';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
 
-import { messengerTests } from './messenger.blueprint-test';
+import { messengerTests } from './messenger.sequence-test';
 import { WebsocketSignalManager } from './signal-manager';
 import { type Message } from './signal-methods';
 import { PAYLOAD_1, TestBuilder } from './testing';
