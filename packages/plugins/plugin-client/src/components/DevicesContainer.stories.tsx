@@ -8,7 +8,7 @@ import { type StoryObj, type Meta } from '@storybook/react-vite';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { osTranslations } from '@dxos/shell/react';
+import { translations as shellTranslations } from '@dxos/shell/react';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { DevicesContainer } from './DevicesContainer';
@@ -34,7 +34,7 @@ const meta: Meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations: [...translations, osTranslations],
+    translations: [...translations, ...shellTranslations],
   },
 };
 

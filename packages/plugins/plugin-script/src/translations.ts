@@ -5,7 +5,7 @@
 import { ScriptType } from '@dxos/functions';
 import { type Resource } from '@dxos/react-ui';
 
-import { SCRIPT_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
@@ -17,7 +17,7 @@ export const translations = [
         'typename label_other': 'Scripts',
         'object name placeholder': 'New script',
       },
-      [SCRIPT_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Scripts',
         'description label': 'Description',
         'description placeholder': 'Enter description',
@@ -77,5 +77,3 @@ export const translations = [
     },
   },
 ] as const satisfies Resource[];
-
-export default translations;

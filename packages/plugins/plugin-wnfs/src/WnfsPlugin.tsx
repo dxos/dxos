@@ -20,7 +20,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { Blockstore, FileUploader, IntentResolver, Markdown, ReactSurface, WnfsCapabilities } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { FileType, WnfsAction } from './types';
 
 export const WnfsPlugin = () =>

@@ -16,7 +16,7 @@ import { Dialog, Toolbar, Button } from '@dxos/react-ui';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { AmbientDialog } from './AmbientDialog';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 const meta: Meta<typeof AmbientDialog> = {
   title: 'plugins/plugin-assistant/AmbientDialog',

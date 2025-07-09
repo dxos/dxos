@@ -14,7 +14,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { OVERLAY_STYLE, OVERLAY_CLASSES, Welcome } from './Welcome';
 import { type WelcomeScreenProps, WelcomeState } from './types';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 const Container = ({ state: initialState = WelcomeState.INIT, ...props }: Partial<WelcomeScreenProps>) => {
   const identity = useIdentity();
@@ -66,9 +66,9 @@ export default {
   render: Container,
   decorators: [withTheme],
   parameters: {
+    translations,
     chromatic: {
       disableSnapshot: false,
     },
-    translations,
   },
 };

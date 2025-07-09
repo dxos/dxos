@@ -9,14 +9,14 @@ import { useConfig } from '@dxos/react-client';
 import { Link, Message, Popover, Trans, useTranslation, Icon } from '@dxos/react-ui';
 
 import { StatusBar } from './StatusBar';
-import { STATUS_BAR_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 const repo = 'https://github.com/dxos/dxos';
 
 const VERSION_REGEX = /([\d.]+)/;
 
 export const VersionNumber = () => {
-  const { t } = useTranslation(STATUS_BAR_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
   const [_, v] = version?.match(VERSION_REGEX) ?? [];

@@ -1530,6 +1530,13 @@ export class DxGrid extends LitElement {
       this.updateVisInline();
     }
 
+    if (changedProperties.has('frozen')) {
+      this.updateIntrinsicBlockSize();
+      this.updateIntrinsicInlineSize();
+      this.updateVisBlock();
+      this.updateVisInline();
+    }
+
     if (
       this.getCells &&
       (changedProperties.has('initialCells') ||
@@ -1540,7 +1547,8 @@ export class DxGrid extends LitElement {
         changedProperties.has('columns') ||
         changedProperties.has('rows') ||
         changedProperties.has('limitColumns') ||
-        changedProperties.has('limitRows'))
+        changedProperties.has('limitRows') ||
+        changedProperties.has('frozen'))
     ) {
       this.updateCells(true);
     }

@@ -172,6 +172,19 @@
       background: rgba(0, 255, 0, 0.1);
     }
   }
+
+  .dx-grid__cell--flagged {
+    &::after {
+      content: '';
+      position: absolute;
+      inset-block-start: 0;
+      inset-inline-end: 0;
+      inline-size: 0;
+      block-size: 0;
+      border-inline-start: 0.5em solid transparent;
+      border-block-start: 0.5em solid var(--dx-warningText);
+    }
+  }
 }
 
 /* TODO(thure): Move this somewhere better. */

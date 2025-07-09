@@ -11,7 +11,7 @@ import { DataType } from '@dxos/schema';
 import { IntentResolver, ReactSurface, Transcriber } from './capabilities';
 import { renderMarkdown } from './components';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { TranscriptType } from './types';
 
 export const TranscriptionPlugin = () =>

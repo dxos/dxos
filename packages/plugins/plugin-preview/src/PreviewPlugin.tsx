@@ -8,7 +8,7 @@ import { DataType } from '@dxos/schema';
 
 import { PreviewPopover, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 
 export const PreviewPlugin = () =>
   definePlugin(meta, [

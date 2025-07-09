@@ -23,8 +23,8 @@ export default (context: PluginContext) =>
       inputType: SPACES,
       outputType: DIRECTORY_TYPE,
       serialize: (node) => ({
-        name: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'],
-        data: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'],
+        name: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'] ?? 'Spaces',
+        data: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'] ?? 'Spaces',
         type: DIRECTORY_TYPE,
       }),
       deserialize: () => {

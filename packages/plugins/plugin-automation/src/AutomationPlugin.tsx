@@ -8,7 +8,7 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 
 export const AutomationPlugin = () =>
   definePlugin(meta, [

@@ -4,7 +4,7 @@
 
 import { type Completion } from '@codemirror/autocomplete';
 import { type Schema } from 'effect/Schema';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -104,6 +104,7 @@ export const TableCellEditor = ({
   const suppressNextBlur = useRef(false);
   const { themeMode } = useThemeContext();
   const [_validationError, setValidationError] = useState<string | null>(null);
+  const [_validationVariant, setValidationVariant] = useState<'error' | 'warning'>('error');
 
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
@@ -117,6 +118,38 @@ export const TableCellEditor = ({
     return fieldProjection;
   }, [model, editing]);
 
+  useEffect(() => {
+    // Check for existing validation errors when editing starts (for draft rows).
+    if (!model || !editing || !fieldProjection) {
+      setValidationError(null);
+      return;
+    }
+
+    const cell = parseCellIndex(editing.index);
+    const { row, col } = cell;
+
+    if (model.isDraftCell(cell)) {
+      const field = model.projection.view.fields[col];
+      const hasValidationError = model.hasDraftRowValidationError(row, field.path);
+
+      if (hasValidationError) {
+        const draftRows = model.draftRows.value;
+        if (row >= 0 && row < draftRows.length) {
+          const draftRow = draftRows[row];
+          const validationError = draftRow.validationErrors?.find((error) => error.path === field.path);
+          if (validationError) {
+            setValidationError(validationError.message);
+            setValidationVariant('warning');
+          }
+        }
+      } else {
+        setValidationError(null);
+      }
+    } else {
+      setValidationError(null);
+    }
+  }, [model, editing, fieldProjection]);
+
   const handleEnter = useCallback(
     async (value: any) => {
       if (!model || !editing) {
@@ -124,19 +157,17 @@ export const TableCellEditor = ({
       }
 
       const cell = parseCellIndex(editing.index);
+      const validationResult = await model.validateCellData(cell, value);
 
-      // Validate the value
-      const result = await model.validateCellData(cell, value);
-
-      if (result.valid) {
+      if (validationResult.valid) {
         setValidationError(null);
         model.setCellData(cell, value);
         onEnter?.(cell);
         onFocus?.();
         setEditing(null);
       } else {
-        setValidationError(result.error);
-        // Editor stays open on validation failure
+        setValidationError(validationResult.error);
+        setValidationVariant('error');
       }
     },
     [model, editing, onEnter, onFocus, setEditing],
@@ -178,6 +209,7 @@ export const TableCellEditor = ({
           }
         } else {
           setValidationError(result.error);
+          setValidationVariant('error');
         }
       } else {
         setValidationError(null);
@@ -341,7 +373,11 @@ export const TableCellEditor = ({
 
   return (
     <>
-      <CellValidationMessage validationError={_validationError} __gridScope={__gridScope} />
+      <CellValidationMessage
+        validationError={_validationError}
+        variant={_validationVariant}
+        __gridScope={__gridScope}
+      />
       <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} />
     </>
   );

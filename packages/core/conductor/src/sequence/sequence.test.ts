@@ -8,21 +8,20 @@ import { describe, test } from 'vitest';
 import { EdgeAiServiceClient, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { ArtifactId } from '@dxos/artifact';
+import { createGraphWriterTool, createLocalSearchTool, createExaTool } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { DataType, DataTypes } from '@dxos/schema';
 
-import { BlueprintBuilder } from './blueprint';
 import { setConsolePrinter } from './logger';
-import { BlueprintMachine } from './machine';
+import { SequenceMachine } from './machine';
+import { SequenceBuilder } from './sequence';
 import { TEST_EMAILS } from './test-data';
-import { createGraphWriterTool, createLocalSearchTool } from '../research';
-import { createExaTool } from '../research/exa';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
 
 // TODO(burdon): Don't run on CI.
-describe.skip('Blueprint', () => {
+describe.skip('Sequence', () => {
   const aiClient = new EdgeAiServiceClient({
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
     defaultGenerationOptions: {
@@ -31,8 +30,8 @@ describe.skip('Blueprint', () => {
     },
   });
 
-  test('follows a simple blueprint', { timeout: 60_000 }, async () => {
-    const blueprint = BlueprintBuilder.create()
+  test('follows a simple sequence', { timeout: 60_000 }, async () => {
+    const sequence = SequenceBuilder.create()
       .step('Generate an idea for a new product. Do not use any external tools for this.')
       .step('Write a short description of the product.')
       .step('Run a market research to see if the product is viable. Do not use any external tools for this.')
@@ -40,7 +39,7 @@ describe.skip('Blueprint', () => {
       .build();
 
     const tools = new ToolRegistry([]);
-    const machine = new BlueprintMachine(tools, blueprint);
+    const machine = new SequenceMachine(tools, sequence);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiClient });
   });
@@ -78,7 +77,7 @@ describe.skip('Blueprint', () => {
       },
     });
 
-    const blueprint = BlueprintBuilder.create()
+    const sequence = SequenceBuilder.create()
       .step(
         'Determine if the email is introduction, question, or spam. Bail if email does not fit into one of these categories.',
       )
@@ -97,7 +96,7 @@ describe.skip('Blueprint', () => {
       .build();
 
     const tools = new ToolRegistry([replyTool, labelTool]);
-    const machine = new BlueprintMachine(tools, blueprint);
+    const machine = new SequenceMachine(tools, sequence);
     setConsolePrinter(machine);
     await machine.runToCompletion({ aiClient, input: TEST_EMAILS[0] });
   });
@@ -131,7 +130,7 @@ describe.skip('Blueprint', () => {
       createGraphWriterTool({ db, schema: DataTypes }),
     ];
 
-    const blueprint = BlueprintBuilder.create()
+    const sequence = SequenceBuilder.create()
       .step('Research founders of the organization. Do deep research.', {
         tools: [exa.id],
       })
@@ -144,7 +143,7 @@ describe.skip('Blueprint', () => {
       .build();
 
     const tools = new ToolRegistry([exa, localSearch, graphWriter]);
-    const machine = new BlueprintMachine(tools, blueprint);
+    const machine = new SequenceMachine(tools, sequence);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiClient, input: org1 });
   });

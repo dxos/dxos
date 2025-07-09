@@ -1,11 +1,10 @@
 //
 // Copyright 2023 DXOS.org
 //
-
-import { Blueprint } from '@dxos/assistant';
+import { Sequence } from '@dxos/conductor';
 import { type Resource } from '@dxos/react-ui';
 
-import { ASSISTANT_PLUGIN } from './meta';
+import { meta } from './meta';
 import { AIChatType, TemplateType } from './types';
 
 export const translations = [
@@ -18,12 +17,12 @@ export const translations = [
         'typename label_other': 'Assistants',
         'object name placeholder': 'New assistant',
       },
-      [Blueprint.typename]: {
-        'typename label': 'Blueprint',
-        'typename label_zero': 'Blueprints',
-        'typename label_one': 'Blueprint',
-        'typename label_other': 'Blueprints',
-        'object name placeholder': 'New blueprint',
+      [Sequence.typename]: {
+        'typename label': 'Sequence',
+        'typename label_zero': 'Sequences',
+        'typename label_one': 'Sequence',
+        'typename label_other': 'Sequences',
+        'object name placeholder': 'New sequence',
       },
       [TemplateType.typename]: {
         'typename label': 'Template',
@@ -32,7 +31,7 @@ export const translations = [
         'typename label_other': 'Templates',
         'object name placeholder': 'New template',
       },
-      [ASSISTANT_PLUGIN]: {
+      [meta.id]: {
         'templates label': 'Templates',
         'open ambient chat label': 'Open Assistant',
         'assistant chat label': 'Assistant',
@@ -50,7 +49,7 @@ export const translations = [
         'select preset template placeholder': 'Select preset',
         'service registry label': 'Service Registry',
 
-        'blueprint logs label': 'Logs',
+        'sequence logs label': 'Logs',
 
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
@@ -75,5 +74,3 @@ export const translations = [
     },
   },
 ] as const satisfies Resource[];
-
-export default translations;

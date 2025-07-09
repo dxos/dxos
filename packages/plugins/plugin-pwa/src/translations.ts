@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { PWA_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [PWA_PLUGIN]: {
+      [meta.id]: {
         'need refresh label': 'Refresh now to get app updates',
         'need refresh description': 'You’ll need these updates to continue without interruption.',
         'refresh label': 'Refresh',
@@ -22,5 +22,3 @@ export const translations = [
     },
   },
 ] as const satisfies Resource[];
-
-export default translations;

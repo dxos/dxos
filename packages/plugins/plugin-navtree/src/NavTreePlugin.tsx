@@ -18,7 +18,7 @@ import { AppGraphBuilder, IntentResolver, Keyboard, ReactSurface, State } from '
 import { NODE_TYPE } from './components';
 import { NavTreeEvents } from './events';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 
 export const NavTreePlugin = () =>
   definePlugin(meta, [

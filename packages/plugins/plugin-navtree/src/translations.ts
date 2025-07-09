@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { NAVTREE_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [NAVTREE_PLUGIN]: {
+      [meta.id]: {
         'app menu label': 'App menu',
         'open settings label': 'Settings',
         'open commands label': 'Search commands',
@@ -22,5 +22,3 @@ export const translations = [
     },
   },
 ] as const satisfies Resource[];
-
-export default translations;
