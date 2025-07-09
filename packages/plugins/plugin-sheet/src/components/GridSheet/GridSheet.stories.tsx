@@ -15,7 +15,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { GridSheet } from './GridSheet';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { SheetType } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
 import { SheetProvider } from '../SheetContext';

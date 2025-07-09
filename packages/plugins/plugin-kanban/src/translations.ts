@@ -5,7 +5,7 @@
 import { type Resource } from '@dxos/react-ui';
 import { KanbanType } from '@dxos/react-ui-kanban';
 
-import { KANBAN_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
@@ -17,7 +17,7 @@ export const translations = [
         'typename label_other': 'Kanbans',
         'object name placeholder': 'New kanban',
       },
-      [KANBAN_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Kanban',
         'kanban title label': 'Title',
         'column title label': 'Column title',
@@ -34,5 +34,3 @@ export const translations = [
     },
   },
 ] as const satisfies Resource[];
-
-export default translations;

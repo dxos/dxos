@@ -5,12 +5,12 @@
 import { type Resource } from '@dxos/react-ui';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
-import { STACK_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [STACK_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Stacks',
         'settings separation label': 'Separate sections',
         'add section beforeAll dialog title': 'Add a section to the start',
@@ -35,5 +35,3 @@ export const translations = [
   },
   ...stackTranslations,
 ] as const satisfies Resource[];
-
-export default translations;

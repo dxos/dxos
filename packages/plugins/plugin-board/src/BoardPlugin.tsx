@@ -7,7 +7,7 @@ import { translations as boardTranslations } from '@dxos/react-ui-board';
 
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { BoardType } from './types';
 
 export const BoardPlugin = () =>

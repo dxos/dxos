@@ -19,7 +19,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorSlots } from '../../defaults';
 import { useTextEditor } from '../../hooks';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '../factories';
 
 const initialContent = 'Hello world!';
@@ -93,7 +93,9 @@ export default {
   component: Editor,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: () => <Story />,
-  parameters: { translations },
+  parameters: {
+    translations,
+  },
 };
 
 const EchoStory = ({ spaceKey }: ClientRepeatedComponentProps) => {

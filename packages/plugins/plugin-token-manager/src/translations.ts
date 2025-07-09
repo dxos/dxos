@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { TOKEN_MANAGER_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [TOKEN_MANAGER_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Tokens',
         'space panel name': 'Integrations',
         'integrations verbose label': 'Manage integrations',
@@ -22,5 +22,3 @@ export const translations = [
     },
   },
 ] as const satisfies Resource[];
-
-export default translations;

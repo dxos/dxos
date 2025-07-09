@@ -7,7 +7,7 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 // import { IntentResolver } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 
 export const TransformerPlugin = () =>
   definePlugin(meta, [

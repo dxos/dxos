@@ -12,7 +12,7 @@ import { SelectOptionSchema, type SelectOption } from '@dxos/echo-schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SelectOptionInput } from './SelectOptionsInput';
-import translations from '../../../translations';
+import { translations } from '../../../translations';
 import { TestLayout, TestPanel } from '../../testing';
 import { Form } from '../Form';
 

@@ -14,7 +14,7 @@ import { DataType } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ContactCard, OrganizationCard, ProjectCard } from './components';
-import translations from './translations';
+import { translations } from './translations';
 import { type PreviewProps } from './types';
 
 faker.seed(1234);

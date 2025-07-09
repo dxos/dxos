@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { DEBUG_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [DEBUG_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Debug',
         'mutation count': 'Number of mutations',
         'mutation period': 'Mutation period',
@@ -70,5 +70,3 @@ export const translations = [
     },
   },
 ] as const satisfies Resource[];
-
-export default translations;

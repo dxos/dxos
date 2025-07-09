@@ -19,7 +19,7 @@ import { Placeholder, ResetDialog } from './components';
 import { setupConfig } from './config';
 import { APP_KEY } from './constants';
 import { getCore, getDefaults, getPlugins, type PluginConfig } from './plugin-defs';
-import translations from './translations';
+import { translations } from './translations';
 import { defaultStorageIsEmpty, isTrue, isFalse } from './util';
 
 const PARAM_SAFE_MODE = 'safe';

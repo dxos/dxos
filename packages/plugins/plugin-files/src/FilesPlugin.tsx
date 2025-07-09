@@ -8,7 +8,7 @@ import { ROOT_TYPE } from '@dxos/plugin-graph';
 
 import { AppGraphBuilder, FileSettings, FileState, IntentResolver, Markdown, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 
 // TODO(burdon): Rename package plugin-file (singular).
 

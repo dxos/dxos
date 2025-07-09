@@ -16,7 +16,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from './Thread';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 faker.seed(1);
 
