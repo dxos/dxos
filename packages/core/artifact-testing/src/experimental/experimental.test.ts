@@ -8,16 +8,7 @@ import { beforeAll, describe, test } from 'vitest';
 
 import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import {
-  AISession,
-  BlueprintMachine,
-  BlueprintParser,
-  createExaTool,
-  createGraphWriterTool,
-  createLocalSearchTool,
-  researchFn,
-  setConsolePrinter,
-} from '@dxos/assistant';
+import { AISession, createExaTool, createGraphWriterTool, createLocalSearchTool, researchFn } from '@dxos/assistant';
 import {
   NODE_INPUT,
   NODE_OUTPUT,
@@ -27,6 +18,7 @@ import {
   computeGraphToGraphViz,
   DEFAULT_INPUT,
 } from '@dxos/conductor';
+import { compileSequence, SequenceMachine, SequenceParser, setConsolePrinter } from '@dxos/conductor';
 import { TestRuntime } from '@dxos/conductor/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
@@ -44,14 +36,12 @@ import { log } from '@dxos/log';
 import { DataType, DataTypes } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { compileBlueprint } from './blueprint-compiler';
-
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
 
 // Priority: Unify all compute functionality using ComputeGraph (which is the most powerful tool).
-// - Demonstrate simple Blueprint-like functionality via ComputeGraph (i.e., research demo).
-// - Retire Blueprint StateMachine and create Simple Blueprint sugar for StateMachine.
+// - Demonstrate simple Sequence-like functionality via ComputeGraph (i.e., research demo).
+// - Retire Sequence StateMachine and create Simple Sequence sugar for StateMachine.
 // - Implement conversation via ComputeGraph.
 // Cleanup:
 // - Unify observability (consider effect tracing).
@@ -119,7 +109,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     log.info('text', { text });
   });
 
-  test('blueprint', { timeout: 120_000 }, async () => {
+  test('sequence', { timeout: 120_000 }, async () => {
     const researchQueue = queues.create();
     const toolkit = new ToolRegistry(
       [
@@ -140,7 +130,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     const org = db.add(Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }));
     await db.flush({ indexes: true });
 
-    const machine = new BlueprintMachine(toolkit, RESEARCH_BLUEPRINT);
+    const machine = new SequenceMachine(toolkit, RESEARCH_SEQUENCE);
     const { client } = serviceContainer.getService(AiService);
     setConsolePrinter(machine, true);
     console.log(client);
@@ -149,8 +139,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     log.info('researched', { objects: await researchQueue.queryObjects() });
   });
 
-  test('blueprint (compiled)', { timeout: 120_000 }, async () => {
-    const graph = await compileBlueprint(CALCULATOR_BLUEPRINT);
+  test('sequence (compiled)', { timeout: 120_000 }, async () => {
+    const graph = await compileSequence(CALCULATOR_SEQUENCE);
     console.log(computeGraphToGraphViz(graph));
     const runtime = new TestRuntime(serviceContainer);
     runtime.registerGraph('dxn:compute:test', new ComputeGraphModel(graph));
@@ -212,7 +202,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
   });
 });
 
-const RESEARCH_BLUEPRINT = BlueprintParser.create().parse({
+const RESEARCH_SEQUENCE = SequenceParser.create().parse({
   steps: [
     {
       instructions: 'Research information and entities related to the selected objects.',
@@ -230,7 +220,7 @@ const RESEARCH_BLUEPRINT = BlueprintParser.create().parse({
   ],
 });
 
-const CALCULATOR_BLUEPRINT = BlueprintParser.create().parse({
+const CALCULATOR_SEQUENCE = SequenceParser.create().parse({
   steps: [
     {
       instructions: 'Use the calculator tool to calculate the expression provided.',

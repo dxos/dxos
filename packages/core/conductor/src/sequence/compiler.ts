@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Blueprint } from '@dxos/assistant';
-import { ComputeGraphModel, NODE_INPUT, NODE_OUTPUT, type ComputeGraph, type ComputeNode } from '@dxos/conductor';
+import type { Sequence } from './sequence';
+import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
+import { ComputeGraphModel, type ComputeGraph, type ComputeNode } from '../types';
 
 /**
- *
+ * Compile a sequence into a compute graph.
  */
-export const compileBlueprint = async (blueprint: Blueprint): Promise<ComputeGraph> => {
+export const compileSequence = async (sequence: Sequence): Promise<ComputeGraph> => {
   const model = ComputeGraphModel.create();
 
   const inputNode = model.createNode({
@@ -28,7 +29,7 @@ export const compileBlueprint = async (blueprint: Blueprint): Promise<ComputeGra
   });
 
   const nodes: ComputeNode[] = [];
-  for (let i = 0; i < blueprint.steps.length; i++) {
+  for (let i = 0; i < sequence.steps.length; i++) {
     const node = model.createNode({ id: stepNodeId(i), type: 'gpt' });
     nodes.push(node);
     model.builder.createEdge({ node: systemPrompt }, { node, property: 'systemPrompt' });
@@ -36,11 +37,11 @@ export const compileBlueprint = async (blueprint: Blueprint): Promise<ComputeGra
     const instructions = model.createNode({
       id: `step-instructions-${i}`,
       type: 'constant',
-      value: blueprint.steps[i].instructions,
+      value: sequence.steps[i].instructions,
     });
     model.builder.createEdge({ node: instructions }, { node, property: 'prompt' });
 
-    for (const tool of blueprint.steps[i]?.tools ?? []) {
+    for (const tool of sequence.steps[i]?.tools ?? []) {
       const toolNode = model.createNode({ id: `tool-${i}-${tool}`, type: 'constant', value: tool });
       model.builder.createEdge({ node: toolNode }, { node, property: 'tools' });
     }
