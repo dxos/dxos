@@ -9,13 +9,8 @@ import { ConsolePrinter } from '@dxos/ai';
 import { type CleanupFn, combine } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { type Blueprint } from './blueprint';
-import {
-  type BlueprintEvent,
-  type BlueprintLogger,
-  type BlueprintMachine,
-  type BlueprintMachineState,
-} from './machine';
+import { type SequenceEvent, type SequenceLogger, type SequenceMachine, type SequenceMachineState } from './machine';
+import { type Sequence } from './sequence';
 
 /* eslint-disable no-console */
 
@@ -51,10 +46,10 @@ export class BufferedLogger implements Logger {
 }
 
 // TODO(burdon): Reconcile with ConsolePrinter.
-export class BlueprintLoggerAdapter implements BlueprintLogger {
+export class SequenceLoggerAdapter implements SequenceLogger {
   constructor(private readonly logger: Logger = DEFAULT_LOGGER) {}
 
-  log(event: BlueprintEvent) {
+  log(event: SequenceEvent) {
     switch (event.type) {
       case 'begin':
         this.logger.log('begin', { invocationId: event.invocationId });
@@ -78,14 +73,14 @@ export class BlueprintLoggerAdapter implements BlueprintLogger {
   }
 }
 
-export const setLogger = (machine: BlueprintMachine, logger: BufferedLogger): CleanupFn => {
+export const setLogger = (machine: SequenceMachine, logger: BufferedLogger): CleanupFn => {
   return combine(
     machine.begin.on(() => {
       logger.log('Starting...');
     }),
     machine.stepStart.on((step) => {
-      const index = machine.blueprint.steps.indexOf(step);
-      logger.log(`Step ${index + 1} of ${machine.blueprint.steps.length}`);
+      const index = machine.sequence.steps.indexOf(step);
+      logger.log(`Step ${index + 1} of ${machine.sequence.steps.length}`);
       logger.log(`Instructions: ${step.instructions}`);
     }),
     machine.stepComplete.on((step) => {
@@ -98,16 +93,16 @@ export const setLogger = (machine: BlueprintMachine, logger: BufferedLogger): Cl
   );
 };
 
-export const setConsolePrinter = (machine: BlueprintMachine, verbose = false): CleanupFn => {
+export const setConsolePrinter = (machine: SequenceMachine, verbose = false): CleanupFn => {
   const printer = new ConsolePrinter();
   return combine(
-    machine.begin.on(() => printTrace(machine.blueprint, machine.state)),
+    machine.begin.on(() => printTrace(machine.sequence, machine.state)),
     machine.stepStart.on((step) =>
       console.log(
-        `\n${chalk.magenta(`${chalk.bold(`STEP ${machine.blueprint.steps.indexOf(step) + 1} of ${machine.blueprint.steps.length}:`)} ${step.instructions}`)}\n`,
+        `\n${chalk.magenta(`${chalk.bold(`STEP ${machine.sequence.steps.indexOf(step) + 1} of ${machine.sequence.steps.length}:`)} ${step.instructions}`)}\n`,
       ),
     ),
-    machine.stepComplete.on(() => printTrace(machine.blueprint, machine.state)),
+    machine.stepComplete.on(() => printTrace(machine.sequence, machine.state)),
     machine.end.on(() => console.log('DONE')),
     verbose
       ? [
@@ -120,9 +115,9 @@ export const setConsolePrinter = (machine: BlueprintMachine, verbose = false): C
 
 const BREAK_LINE = `\n${'_'.repeat(80)}\n`;
 
-const printTrace = (blueprint: Blueprint, state: BlueprintMachineState) => {
-  console.group(chalk.bold('\nBlueprint'));
-  blueprint.steps.forEach((step) => {
+const printTrace = (sequence: Sequence, state: SequenceMachineState) => {
+  console.group(chalk.bold('\nSequence'));
+  sequence.steps.forEach((step) => {
     const traceStep = state.trace.find((t) => t.stepId === step.id);
 
     let color = chalk.gray; // Not executed.

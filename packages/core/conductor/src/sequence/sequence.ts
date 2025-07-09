@@ -9,37 +9,37 @@ import { Key, Obj, Type } from '@dxos/echo';
 
 // TODO(burdon): Rename (Sequence) and create NS.
 
-export const BlueprintStep = Schema.Struct({
+export const SequenceStep = Schema.Struct({
   id: Key.ObjectId,
   instructions: Schema.String,
   tools: Schema.optional(Schema.Array(ToolId)),
 });
-export interface BlueprintStep extends Schema.Schema.Type<typeof BlueprintStep> {}
+export interface SequenceStep extends Schema.Schema.Type<typeof SequenceStep> {}
 
-export const BlueprintDefinition = Schema.Struct({
-  steps: Schema.Array(BlueprintStep.pipe(Schema.omit('id'))),
+export const SequenceDefinition = Schema.Struct({
+  steps: Schema.Array(SequenceStep.pipe(Schema.omit('id'))),
 });
-export interface BlueprintDefinition extends Schema.Schema.Type<typeof BlueprintDefinition> {}
+export interface SequenceDefinition extends Schema.Schema.Type<typeof SequenceDefinition> {}
 
-export const Blueprint = Schema.Struct({
+export const Sequence = Schema.Struct({
   name: Schema.optional(Schema.String),
-  steps: Schema.Array(BlueprintStep),
+  steps: Schema.Array(SequenceStep),
 }).pipe(
   Type.Obj({
-    typename: 'dxos.org/type/Blueprint',
+    typename: 'dxos.org/type/Sequence',
     version: '0.1.0',
   }),
 );
-export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
+export interface Sequence extends Schema.Schema.Type<typeof Sequence> {}
 
 /**
- * Blueprint builder API.
+ * Sequence builder API.
  */
-export namespace BlueprintBuilder {
+export namespace SequenceBuilder {
   export const create = () => new Builder();
 
   class Builder {
-    private readonly _steps: BlueprintStep[] = [];
+    private readonly _steps: SequenceStep[] = [];
 
     step(instructions: string, options?: { tools?: string[] }): Builder {
       this._steps.push({
@@ -51,21 +51,21 @@ export namespace BlueprintBuilder {
       return this;
     }
 
-    build(): Blueprint {
-      return Obj.make(Blueprint, { steps: this._steps });
+    build(): Sequence {
+      return Obj.make(Sequence, { steps: this._steps });
     }
   }
 }
 
 /**
- * Blueprint parser API.
+ * Sequence parser API.
  */
-export namespace BlueprintParser {
+export namespace SequenceParser {
   export const create = () => new Parser();
 
   class Parser {
-    parse({ steps }: BlueprintDefinition): Blueprint {
-      const builder = BlueprintBuilder.create();
+    parse({ steps }: SequenceDefinition): Sequence {
+      const builder = SequenceBuilder.create();
       for (const step of steps) {
         builder.step(step.instructions, {
           tools: (step.tools ?? []) as string[],

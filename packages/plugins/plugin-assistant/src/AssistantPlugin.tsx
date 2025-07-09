@@ -13,7 +13,7 @@ import {
   defineModule,
   definePlugin,
 } from '@dxos/app-framework';
-import { Blueprint } from '@dxos/assistant';
+import { Sequence } from '@dxos/conductor';
 import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
@@ -42,9 +42,9 @@ export const AssistantPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: Type.getTypename(Blueprint),
+          id: Type.getTypename(Sequence),
           metadata: {
-            icon: 'ph--blueprint--regular',
+            icon: 'ph--sequence--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
@@ -69,8 +69,8 @@ export const AssistantPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: Blueprint,
-            getIntent: () => createIntent(AssistantAction.CreateBlueprint),
+            objectSchema: Sequence,
+            getIntent: () => createIntent(AssistantAction.CreateSequence),
           }),
         ),
       ],

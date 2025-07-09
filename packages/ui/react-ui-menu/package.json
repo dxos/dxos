@@ -25,6 +25,7 @@
   ],
   "dependencies": {
     "@dxos/app-graph": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/util": "workspace:*",

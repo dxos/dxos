@@ -16,7 +16,7 @@ const locationRegex = /\((.*)\)/g;
 const prettyErrorStack = (error: any, appendStacks: string[] = []): void => {
   const span = error[spanSymbol];
 
-  const lines = error.stack.split('\n');
+  const lines = typeof error.stack === 'string' ? error.stack.split('\n') : [];
   const out = [];
 
   let atStack = false;
