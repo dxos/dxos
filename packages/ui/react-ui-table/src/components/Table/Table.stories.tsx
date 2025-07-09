@@ -23,9 +23,9 @@ import { Testing, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table, type TableController } from './Table';
-import { useTableModel } from '../../hooks';
+import { useTableModel, useAddRow } from '../../hooks';
 import { TablePresentation } from '../../model';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
 import { TableToolbar } from '../TableToolbar';
@@ -72,11 +72,7 @@ const useTestTableModel = () => {
     tableRef.current?.update?.();
   }, []);
 
-  const handleInsertRow = useCallback(() => {
-    if (space && schema) {
-      space.db.add(live(schema, {}));
-    }
-  }, [space, schema]);
+  const addRow = useAddRow({ space, schema });
 
   const handleDeleteRows = useCallback(
     (_: number, objects: any[]) => {
@@ -101,12 +97,16 @@ const useTestTableModel = () => {
     projection,
     features,
     rows: filteredObjects,
-    onInsertRow: handleInsertRow,
+    onInsertRow: addRow,
     onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: handleCellUpdate,
     onRowOrderChange: handleRowOrderChange,
   });
+
+  const handleInsertRow = useCallback(() => {
+    model?.insertRow();
+  }, [model]);
 
   const handleSaveView = useCallback(() => {
     model?.saveView();

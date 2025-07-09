@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AUTOMATION_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [AUTOMATION_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Automation',
         'automation panel label': 'Automations',
         'script automation label': 'Automation',
@@ -39,4 +41,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

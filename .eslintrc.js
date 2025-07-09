@@ -65,6 +65,22 @@ module.exports = {
       extends: ['plugin:@dxos/test'],
       files: '**/*.test.{ts,tsx,js,jsx}',
     },
+    // TODO(burdon): Build step to generate translations.json.
+    // {
+    //   extends: ['plugin:i18next/recommended'],
+    //   files: '**/*.{ts,tsx,js,jsx}',
+    //   overrides: [
+    //     {
+    //       "files": [
+    //         '*.stories.@(js|jsx|ts|tsx)',
+    //         '*.test.@(js|jsx|ts|tsx)',
+    //       ],
+    //       "rules": {
+    //         "i18next/no-literal-string": "off"
+    //       }
+    //     }
+    //   ]
+    // },
     {
       files: '**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}',
       rules: {

@@ -2,25 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
-import { CHESS_PLUGIN } from './meta';
+import { meta } from './meta';
 import { ChessType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(ChessType)]: {
+      [ChessType.typename]: {
         'typename label': 'Game',
         'typename label_zero': 'Games',
         'typename label_one': 'Game',
         'typename label_other': 'Games',
         'object name placeholder': 'New game',
       },
-      [CHESS_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Chess',
         'delete game label': 'Delete',
       },
     },
   },
-];
+] as const satisfies Resource[];

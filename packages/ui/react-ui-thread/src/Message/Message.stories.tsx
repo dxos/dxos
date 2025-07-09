@@ -13,7 +13,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { MessageRoot } from './Message';
 import { threadLayout } from '../Thread';
 import { ThreadStoryContainer, MessageStoryText, type MessageEntity } from '../testing';
-import translations from '../translations';
+import { translations } from '../translations';
 
 const DefaultStory = () => {
   const [identityKey] = useState(PublicKey.random());

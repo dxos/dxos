@@ -2,22 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
-import { SHEET_PLUGIN } from './meta';
+import { meta } from './meta';
 import { SheetType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(SheetType)]: {
+      [SheetType.typename]: {
         'typename label': 'Sheet',
         'typename label_zero': 'Sheets',
         'typename label_one': 'Sheet',
         'typename label_other': 'Sheets',
         'object name placeholder': 'New sheet',
       },
-      [SHEET_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Sheets',
         'cell placeholder': 'Cell value...',
         'range key alignment label': 'Align',
@@ -47,4 +47,4 @@ export default [
       },
     },
   },
-] as const;
+] as const satisfies Resource[];

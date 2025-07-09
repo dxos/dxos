@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TRANSCRIPTION_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [TRANSCRIPTION_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Transcription',
         'transcript companion label': 'Transcript',
 
@@ -19,4 +21,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

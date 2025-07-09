@@ -2,29 +2,29 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
-import { INBOX_PLUGIN } from './meta';
+import { meta } from './meta';
 import { CalendarType, MailboxType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(MailboxType)]: {
+      [MailboxType.typename]: {
         'typename label': 'Mailbox',
         'typename label_zero': 'Mailboxes',
         'typename label_one': 'Mailbox',
         'typename label_other': 'Mailboxes',
         'object name placeholder': 'New mailbox',
       },
-      [Type.getTypename(CalendarType)]: {
+      [CalendarType.typename]: {
         'typename label': 'Calendar',
         'typename label_zero': 'Calendars',
         'typename label_one': 'Calendar',
         'typename label_other': 'Calendars',
         'object name placeholder': 'New calendar',
       },
-      [INBOX_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Inbox',
         'empty mailbox message': 'Mailbox empty',
         'no message message': 'Select a message to view it',
@@ -58,4 +58,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

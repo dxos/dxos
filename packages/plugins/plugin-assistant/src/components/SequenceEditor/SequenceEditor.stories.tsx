@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SequenceEditor } from './SequenceEditor';
 import { RESEARCH_SEQUENCE_DEFINITION } from '../../testing';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 const meta: Meta<typeof SequenceEditor> = {
   title: 'plugins/plugin-assistant/SequenceEditor',

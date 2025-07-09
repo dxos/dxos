@@ -22,7 +22,7 @@ import { CollectionAction, defineObjectForm } from '@dxos/plugin-space/types';
 import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
 import { AssistantEvents } from './events';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { AssistantAction, AIChatType, ServiceType, TemplateType, CompanionTo } from './types';
 
 export const AssistantPlugin = () =>

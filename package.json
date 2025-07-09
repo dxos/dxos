@@ -115,6 +115,7 @@
     "esbuild-plugin-raw": "^0.1.8",
     "esbuild-plugin-yaml": "^0.0.1",
     "eslint": "^8.56.0",
+    "eslint-plugin-i18next": "^6.1.2",
     "execa": "^5.1.1",
     "extensionless": "^1.9.9",
     "fast-check": "^3.19.0",

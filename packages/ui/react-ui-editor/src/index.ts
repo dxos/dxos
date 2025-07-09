@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import translations from './translations';
+import { translations } from './translations';
 
 export { type Extension, EditorState } from '@codemirror/state';
 export { EditorView, keymap } from '@codemirror/view';

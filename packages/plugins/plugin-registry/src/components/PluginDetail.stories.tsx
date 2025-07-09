@@ -10,7 +10,7 @@ import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { PluginDetail, type PluginDetailProps } from './PluginDetail';
-import translations from '../translations';
+import { translations } from '../translations';
 
 const meta: Meta<PluginDetailProps> = {
   title: 'plugins/plugin-registry/PluginDetail',

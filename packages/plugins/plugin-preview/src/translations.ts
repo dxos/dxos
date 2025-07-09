@@ -2,14 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PREVIEW_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [PREVIEW_PLUGIN]: {
+      [meta.id]: {
         'unable to create preview message': 'No preview',
       },
     },
   },
-];
+] as const satisfies Resource[];

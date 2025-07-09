@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DECK_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [DECK_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Deck',
         'main header label': 'Main header',
         'open navigation sidebar label': 'Open sidebar',
@@ -63,4 +65,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

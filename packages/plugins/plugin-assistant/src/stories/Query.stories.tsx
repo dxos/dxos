@@ -44,7 +44,7 @@ import { AmbientDialog, PromptBar, type PromptBarProps, type PromptController } 
 import { ASSISTANT_PLUGIN } from '../meta';
 import { QueryParser, createFilter, type Expression } from '../parser';
 import { createToolRegistry, RESEARCH_SEQUENCE } from '../testing';
-import translations from '../translations';
+import { translations } from '../translations';
 
 faker.seed(1);
 

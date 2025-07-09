@@ -2,22 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
-import { THREAD_PLUGIN } from './meta';
+import { meta } from './meta';
 import { ChannelType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(ChannelType)]: {
+      [ChannelType.typename]: {
         'typename label': 'Channel',
         'typename label_zero': 'Channels',
         'typename label_one': 'Channel',
         'typename label_other': 'Channels',
         'object name placeholder': 'New channel',
       },
-      [THREAD_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Chat',
         'channel title label': 'Title',
         'message placeholder': 'Reply…',
@@ -90,4 +90,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

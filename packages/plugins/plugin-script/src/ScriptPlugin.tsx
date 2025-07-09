@@ -21,7 +21,7 @@ import {
 } from './capabilities';
 import { ScriptEvents } from './events';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { ScriptAction } from './types';
 
 export const ScriptPlugin = () =>

@@ -13,7 +13,7 @@ import { AlertDialog, useAsyncEffect } from '@dxos/react-ui';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { RecoveryCodeDialog, type RecoveryCodeDialogProps } from './RecoveryCodeDialog';
-import translations from '../translations';
+import { translations } from '../translations';
 
 const DefaultStory = () => {
   const client = useClient();

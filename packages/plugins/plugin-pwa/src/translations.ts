@@ -2,12 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PWA_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [PWA_PLUGIN]: {
+      [meta.id]: {
         'need refresh label': 'Refresh now to get app updates',
         'need refresh description': 'You’ll need these updates to continue without interruption.',
         'refresh label': 'Refresh',
@@ -19,4 +21,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

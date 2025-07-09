@@ -9,7 +9,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { ReactSurface, IntentResolver } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { TemplateAction, TemplateType } from './types';
 
 export const TemplatePlugin = () =>
