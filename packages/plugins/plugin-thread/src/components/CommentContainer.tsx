@@ -17,21 +17,14 @@ import {
   hoverableFocusedWithinControls,
   mx,
 } from '@dxos/react-ui-theme';
-import {
-  MessageTextbox,
-  type MessageTextboxProps,
-  Thread,
-  ThreadFooter,
-  ThreadHeading,
-  type ThreadProps,
-} from '@dxos/react-ui-thread';
+import { MessageTextbox, type MessageTextboxProps, Thread, type ThreadProps } from '@dxos/react-ui-thread';
 import { type AnchoredTo } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
 import { useStatus } from '../hooks';
-import { THREAD_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
 
@@ -47,7 +40,7 @@ const ToggleResolvedButton = ({
   isResolved: boolean | undefined;
   onResolve: () => void;
 }) => {
-  const { t } = useTranslation(THREAD_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const label = t(isResolved ? 'mark as unresolved label' : 'mark as resolved label');
   return (
     <Tooltip.Trigger asChild content={label}>
@@ -65,7 +58,7 @@ const ToggleResolvedButton = ({
 };
 
 const DeleteThreadButton = ({ onDelete }: { onDelete: () => void }) => {
-  const { t } = useTranslation(THREAD_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const label = t('delete thread label');
   return (
     <Tooltip.Trigger asChild content={label}>
@@ -100,13 +93,13 @@ export const CommentContainer = ({
   onMessageDelete,
   onThreadDelete,
 }: CommentContainerProps) => {
+  const { t } = useTranslation(meta.id);
   const identity = useIdentity()!;
   const space = getSpace(anchor);
   const members = useMembers(space?.key);
   const detached = !anchor.anchor;
   const thread = Relation.getSource(anchor) as ThreadType;
   const activity = useStatus(space, fullyQualifiedId(thread));
-  const { t } = useTranslation(THREAD_PLUGIN);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
   const { themeMode } = useThemeContext();
 
@@ -148,7 +141,12 @@ export const CommentContainer = ({
   }, [anchor, identity]);
 
   return (
-    <Thread onClickCapture={handleAttend} onFocusCapture={handleAttend} current={current} id={fullyQualifiedId(thread)}>
+    <Thread.Root
+      onClickCapture={handleAttend}
+      onFocusCapture={handleAttend}
+      current={current}
+      id={fullyQualifiedId(thread)}
+    >
       <div
         role='none'
         className={mx(
@@ -159,10 +157,10 @@ export const CommentContainer = ({
       >
         {detached ? (
           <Tooltip.Trigger asChild content={t('detached thread label')} side='top'>
-            <ThreadHeading detached>{thread.name}</ThreadHeading>
+            <Thread.Header detached>{thread.name}</Thread.Header>
           </Tooltip.Trigger>
         ) : (
-          <ThreadHeading>{thread.name}</ThreadHeading>
+          <Thread.Header>{thread.name}</Thread.Header>
         )}
         <div className='flex flex-row items-center pli-1'>
           {thread.status === 'staged' && <Tag palette='neutral'>{t('draft button')}</Tag>}
@@ -189,9 +187,11 @@ export const CommentContainer = ({
           Need to find a way to autofocus in one scenario only: when a new thread is created.
       */}
       <MessageTextbox extensions={extensions} onSend={handleComment} {...textboxMetadata} />
-      <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
+
+      <Thread.Status activity={activity}>{t('activity message')}</Thread.Status>
+
       {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
       <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
-    </Thread>
+    </Thread.Root>
   );
 };

@@ -15,7 +15,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Thread } from '@dxos/react-ui-thread';
+import { ThreadRoot } from '@dxos/react-ui-thread';
 import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -62,7 +62,7 @@ export const Default = {};
 
 const meta: Meta = {
   title: 'plugins/plugin-thread/Chat',
-  component: Thread,
+  component: ThreadRoot,
   render: () => <Story />,
   decorators: [
     withPluginManager({
