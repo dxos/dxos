@@ -12,7 +12,7 @@ import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Dialog } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
-import { osTranslations } from '@dxos/shell/react';
+import { translations as shellTranslations } from '@dxos/shell/react';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { CreateObjectDialog, type CreateObjectDialogProps } from './CreateObjectDialog';
@@ -39,7 +39,7 @@ const meta: Meta<typeof CreateObjectDialog> = {
     withLayout(),
   ],
   parameters: {
-    translations: [translations, osTranslations],
+    translations: [...translations, ...shellTranslations],
   },
   args: {},
 };

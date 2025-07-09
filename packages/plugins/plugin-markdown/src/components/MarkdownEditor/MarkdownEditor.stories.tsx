@@ -15,7 +15,7 @@ import { automerge, translations as editorTranslations } from '@dxos/react-ui-ed
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 const content = Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n');
 

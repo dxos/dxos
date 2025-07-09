@@ -6,7 +6,7 @@ import { Capabilities, contributes, defineModule, definePlugin, Events } from '@
 
 import { ReactSurface } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 
 export const StatusBarPlugin = () =>
   definePlugin(meta, [

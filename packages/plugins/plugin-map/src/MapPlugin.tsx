@@ -9,7 +9,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface, MapState } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { MapType, MapAction, CreateMapSchema } from './types';
 
 export const MapPlugin = () =>

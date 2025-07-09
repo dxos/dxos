@@ -14,7 +14,7 @@ import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Journal } from './Journal';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { createJournal, createJournalEntry, JournalEntryType, JournalType, OutlineType } from '../../types';
 
 const meta: Meta<typeof Journal> = {

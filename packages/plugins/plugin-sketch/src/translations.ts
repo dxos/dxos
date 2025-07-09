@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { SKETCH_PLUGIN } from './meta';
+import { meta } from './meta';
 import { DiagramType } from './types';
 
 export const translations = [
@@ -17,7 +17,7 @@ export const translations = [
         'typename label_other': 'Sketches',
         'object name placeholder': 'New sketch',
       },
-      [SKETCH_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Sketch',
         'settings hover tools label': 'Auto hide controls',
         'settings grid': 'Show grid',
@@ -26,5 +26,3 @@ export const translations = [
     },
   },
 ] as const satisfies Resource[];
-
-export default translations;

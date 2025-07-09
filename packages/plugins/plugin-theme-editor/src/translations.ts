@@ -4,16 +4,14 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { THEME_EDITOR_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [THEME_EDITOR_PLUGIN]: {
+      [meta.id]: {
         'theme editor label': 'Theme editor',
       },
     },
   },
 ] as const satisfies Resource[];
-
-export default translations;

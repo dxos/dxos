@@ -10,10 +10,10 @@ import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 
 import { StatusBar } from './StatusBar';
 import { VersionNumber } from './VersionNumber';
-import { STATUS_BAR_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export const StatusBarActions = () => {
-  const { t } = useTranslation(STATUS_BAR_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const [open, setOpen] = useState(false);
 
   return (
@@ -23,7 +23,7 @@ export const StatusBarActions = () => {
       <StatusBar.Button asChild>
         <a href='https://dxos.org/discord' target='_blank' rel='noopener noreferrer'>
           <Icon icon='ph--discord-logo--regular' size={4} />
-          <StatusBar.Text classNames='hidden sm:block'>{t('discord label')}</StatusBar.Text>
+          <StatusBar.Text classNames='hidden sm:block'>{t('discord label2')}</StatusBar.Text>
         </a>
       </StatusBar.Button>
       <StatusBar.Button asChild>

@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { WELCOME_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [WELCOME_PLUGIN]: {
+      [meta.id]: {
         'login title': 'Request access or login',
         'existing identity title': 'Sign up to access your account',
         'beta description': 'Drop your email below to request early access to Composer.',
@@ -49,5 +49,3 @@ export const translations = [
     },
   },
 ] as const satisfies Resource[];
-
-export default translations;

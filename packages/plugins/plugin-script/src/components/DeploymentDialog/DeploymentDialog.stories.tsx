@@ -10,7 +10,7 @@ import React from 'react';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { DeploymentDialog } from '../DeploymentDialog/DeploymentDialog';
 
 export const Default = {

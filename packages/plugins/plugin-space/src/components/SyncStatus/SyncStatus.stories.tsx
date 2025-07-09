@@ -9,7 +9,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { SyncStatusIndicator } from './SyncStatus';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 const meta: Meta = {
   title: 'plugins/plugin-space/SyncStatusIndicator',

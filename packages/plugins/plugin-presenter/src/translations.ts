@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { PRESENTER_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [PRESENTER_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Presenter',
         'toggle presentation label': 'Present',
         'present collections label': 'Present collections (experimental)',
@@ -17,5 +17,3 @@ export const translations = [
     },
   },
 ] as const satisfies Resource[];
-
-export default translations;

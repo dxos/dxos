@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { EXPLORER_PLUGIN } from './meta';
+import { meta } from './meta';
 import { ViewType } from './types';
 
 export const translations = [
@@ -17,12 +17,10 @@ export const translations = [
         'typename label_other': 'Explorers',
         'object name placeholder': 'New explorer',
       },
-      [EXPLORER_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Explorer',
         'object title label': 'Title',
       },
     },
   },
 ] as const satisfies Resource[];
-
-export default translations;
