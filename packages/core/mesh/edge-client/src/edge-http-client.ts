@@ -32,6 +32,7 @@ import {
   type QueryResult,
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
+  type EdgeStatus,
 } from '@dxos/protocols';
 import { createUrl } from '@dxos/util';
 
@@ -104,8 +105,7 @@ export class EdgeHttpClient {
   // Status
   //
 
-  // TODO(burdon): Implement status endpoint.
-  public async getStatus(args?: EdgeHttpGetArgs): Promise<GetStatusResponseBody> {
+  public async getStatus(args?: EdgeHttpGetArgs): Promise<EdgeStatus> {
     return this._call(new URL('/status', this.baseUrl), { ...args, method: 'GET' });
   }
 
