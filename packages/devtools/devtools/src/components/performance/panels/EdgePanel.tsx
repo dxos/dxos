@@ -57,7 +57,7 @@ export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdg
         </div>
         <Table rows={rows} />
         <div className='flex flex-col'>
-          <span>Problems:</span>
+          <span>Problems ⚠️:</span>
           {edgeStatus?.problems.map((problem) => <span key={problem}>{problem}</span>)}
         </div>
       </div>
