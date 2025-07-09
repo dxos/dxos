@@ -648,8 +648,9 @@ export class DxGrid extends LitElement {
 
   private handleWheel = (event: DxGridAnnotatedPanEvent) => {
     if (this.mode === 'browse') {
-      const nextPosInline = this.posInline + event.deltaX;
-      const nextPosBlock = this.posBlock + event.deltaY;
+      const { deltaX, deltaY } = this.getOverflowingCellModifiedDeltas(event);
+      const nextPosInline = this.posInline + deltaX;
+      const nextPosBlock = this.posBlock + deltaY;
       const maxPosInline = this.maxPosInline();
       const maxPosBlock = this.maxPosBlock();
       this.updatePos(nextPosInline, nextPosBlock, maxPosInline, maxPosBlock);
@@ -1260,6 +1261,44 @@ export class DxGrid extends LitElement {
     const colReadonly = this.columns?.[colPlane]?.[col]?.readonly ?? this.columnDefault?.[colPlane]?.readonly;
     const rowReadonly = this.rows?.[rowPlane]?.[row]?.readonly ?? this.rowDefault?.[rowPlane]?.readonly;
     return colReadonly === 'text-select' || rowReadonly === 'text-select';
+  }
+
+  private getOverflowingCellModifiedDeltas(
+    event: DxGridAnnotatedPanEvent,
+  ): Pick<DxGridAnnotatedPanEvent, 'deltaX' | 'deltaY'> {
+    if (!event.target) {
+      return event;
+    }
+    const element = event.target as HTMLElement;
+    const activeCell = element.closest('[data-dx-active]');
+    const contentEl = element.closest('.dx-grid__cell__content');
+
+    if (!activeCell || !contentEl || !document.activeElement?.contains(element)) {
+      return event;
+    }
+
+    // Commented-out code will let the event delta through unmodified if the cell can scroll but is scrolled to the end
+    // in the same direction as the wheel event, a.k.a. “overscroll”; this is probably undesirable, though.
+
+    const { scrollWidth, clientWidth, scrollHeight, clientHeight /*, scrollLeft, scrollTop */ } = contentEl;
+
+    if (scrollWidth <= clientWidth && scrollHeight <= clientHeight) {
+      return event;
+    }
+
+    const deltaX =
+      scrollWidth > clientWidth /* &&
+      ((event.deltaX < 0 && scrollLeft > 0) || (event.deltaX > 0 && scrollLeft < scrollWidth - clientWidth)) */
+        ? 0
+        : event.deltaX;
+
+    const deltaY =
+      scrollHeight > clientHeight /* &&
+      ((event.deltaY < 0 && scrollTop > 0) || (event.deltaY > 0 && scrollTop < scrollHeight - clientHeight)) */
+        ? 0
+        : event.deltaY;
+
+    return { deltaX, deltaY };
   }
 
   private renderCell(col: number, row: number, plane: DxGridPlane, selected?: boolean, visCol = col, visRow = row) {
