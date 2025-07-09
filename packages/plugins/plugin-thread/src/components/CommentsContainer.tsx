@@ -20,7 +20,7 @@ export type CommentsContainerProps = Omit<CommentsThreadContainerProps, 'anchor'
 };
 
 /**
- * Comment threads.
+ * Root container for collection of comment threads.
  */
 export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...props }: CommentsContainerProps) => {
   const { t } = useTranslation(meta.id);
@@ -59,9 +59,13 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
     );
   }
 
-  return filteredAnchors.map((anchor) => {
-    const thread = Relation.getSource(anchor) as ThreadType;
-    const threadId = fullyQualifiedId(thread);
-    return <CommentsThreadContainer key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
-  });
+  return (
+    <div className='divide-y divide-subduedSeparator'>
+      {filteredAnchors.map((anchor) => {
+        const thread = Relation.getSource(anchor) as ThreadType;
+        const threadId = fullyQualifiedId(thread);
+        return <CommentsThreadContainer key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
+      })}
+    </div>
+  );
 };

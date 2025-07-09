@@ -26,6 +26,7 @@ export const translations = [
         'delete message block label': 'Delete message block',
         'detached thread label': 'Referenced content was removed',
         'delete thread label': 'Delete thread',
+        'resolve thread label': 'Resolve thread',
         'thread deleted label': 'You deleted a thread.',
         'message deleted label': 'You deleted a message.',
         'comments heading': 'Comments',

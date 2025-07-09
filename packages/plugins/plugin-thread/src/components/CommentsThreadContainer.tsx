@@ -9,7 +9,7 @@ import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo'
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
-import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
+import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, type ThreadRootProps } from '@dxos/react-ui-thread';
 import { type AnchoredTo } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -20,6 +20,9 @@ import { useStatus } from '../hooks';
 import { meta } from '../meta';
 import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
+
+// TODO(burdon): Remove need for p-1.
+export const commentControlClassNames = '!p-1 transition-opacity';
 
 export type CommentsThreadContainerProps = {
   anchor: AnchoredTo;
@@ -111,14 +114,14 @@ export const CommentsThreadContainer = ({
         )}
         <div className='flex flex-row items-center pli-1'>
           {thread.status === 'staged' && <Tag palette='neutral'>{t('draft button')}</Tag>}
-          {onResolve && thread?.status !== 'staged' && (
+          {onResolve && !(thread?.status === 'staged') && (
             <IconButton
               data-testid='thread.resolve'
               variant='ghost'
               icon={thread?.status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
               iconOnly
               label={t('resolve thread label')}
-              classNames='!p-1'
+              classNames={[commentControlClassNames, thread?.status !== 'resolved' && hoverableControlItem]}
               onClick={handleResolve}
             />
           )}
@@ -129,7 +132,7 @@ export const CommentsThreadContainer = ({
               icon='ph--x--regular'
               iconOnly
               label={t('delete thread label')}
-              classNames='!p-1'
+              classNames={[commentControlClassNames, hoverableControlItem]}
               onClick={handleThreadDelete}
             />
           )}
@@ -146,6 +149,7 @@ export const CommentsThreadContainer = ({
           onDelete={handleMessageDelete}
         />
       ))}
+
       {/*
         TODO(wittjosiah): Can't autofocus this generally.
           There can be multiple threads with inputs and they can't all be focused.

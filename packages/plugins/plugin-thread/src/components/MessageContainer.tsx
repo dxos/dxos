@@ -12,13 +12,14 @@ import { type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { ButtonGroup, IconButton, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
-import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
+import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
 import { type DataType } from '@dxos/schema';
 
+import { commentControlClassNames } from './CommentsThreadContainer';
 import { command } from './command-extension';
 import { useOnEditAnalytics } from '../hooks';
-import { THREAD_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { getMessageMetadata } from '../util';
 
 export type MessageContainerProps = {
@@ -29,6 +30,7 @@ export type MessageContainerProps = {
 };
 
 export const MessageContainer = ({ message, members, editable = false, onDelete }: MessageContainerProps) => {
+  const { t } = useTranslation(meta.id);
   const senderIdentity = members.find(
     (member) =>
       (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
@@ -38,9 +40,6 @@ export const MessageContainer = ({ message, members, editable = false, onDelete 
   const userIsAuthor = useIdentity()?.did === messageMetadata.authorId;
   const [editing, setEditing] = useState(false);
   const handleDelete = useCallback(() => onDelete?.(message.id), [message, onDelete]);
-  const { t } = useTranslation(THREAD_PLUGIN);
-  const editLabel = t(editing ? 'save message label' : 'edit message label');
-  const deleteLabel = t('delete message label');
   const textBlock = message.blocks.find((block) => block.type === 'text');
   const references = message.blocks.filter((block) => block.type === 'reference').map((block) => block.reference);
 
@@ -56,8 +55,8 @@ export const MessageContainer = ({ message, members, editable = false, onDelete 
               variant='ghost'
               icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
               iconOnly
-              label={editLabel}
-              classNames='!p-1'
+              label={t(editing ? 'save message label' : 'edit message label')}
+              classNames={[commentControlClassNames, hoverableControlItem]}
               onClick={() => setEditing((editing) => !editing)}
             />
           )}
@@ -67,8 +66,8 @@ export const MessageContainer = ({ message, members, editable = false, onDelete 
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
-              label={deleteLabel}
-              classNames='!p-1'
+              label={t('delete message label')}
+              classNames={[commentControlClassNames, hoverableControlItem]}
               onClick={() => handleDelete()}
             />
           )}
