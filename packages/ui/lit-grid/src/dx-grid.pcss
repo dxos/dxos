@@ -87,46 +87,42 @@
 
       & > .dx-grid__cell__content {
         /** This must match CellEditor styling in `CellEditor.tsx`. */
-        padding: var(--dx-grid-cell-padding-block) var(--dx-grid-cell-padding-inline);
+        padding: calc(var(--dx-grid-cell-padding-block) - 1px) calc(var(--dx-grid-cell-padding-inline) - 1px);
         box-sizing: border-box;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         block-size: 100%;
         position: relative;
-
-        &::after {
-          content: '';
-          display: block;
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          border: 1px solid transparent;
-          border-radius: 2px;
-        }
+        border: 1px solid transparent;
+        border-radius: 2px;
       }
 
       &:focus:not([aria-readonly='true']),
       &:focus-visible, &:focus-within {
+
         & > .dx-grid__cell__content {
-          block-size: min-content;
           min-block-size: 100%;
-          inline-size: min-content;
+          block-size: min-content;
+          max-block-size: min(12em, 50vh);
+
           min-inline-size: 100%;
+          inline-size: min-content;
+          max-inline-size: min(60ch, 90vw);
+
+          overflow: auto;
+          scrollbar-width: thin;
+          overscroll-behavior: contain;
+
           white-space: normal;
           hyphens: auto;
           overflow-wrap: break-word;
           text-wrap: balance;
+
           z-index: 1;
           background: var(--dx-grid-cell-surface);
-
-          .dx-tag {
-            vertical-align: top;
-          }
-
-          &::after {
-            border-color: var(--dx-accentSurface);
-          }
+          /* TODO: the appearance of cell content and the ring should be idle if the cell is in edit mode */
+          border-color: var(--dx-accentSurface);
         }
       }
 
@@ -157,7 +153,7 @@
     [role='gridcell'],
     [role='columnheader'],
     [role='rowheader'] {
-      &[data-dx-active]:not([aria-readonly='true']) > .dx-grid__cell__content::after {
+      &[data-dx-active]:not([aria-readonly='true']) > .dx-grid__cell__content {
         border-color: var(--dx-accentSurface);
       }
     }
