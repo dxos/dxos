@@ -8,14 +8,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { ToolRegistry } from '@dxos/ai';
 import { useCapability } from '@dxos/app-framework';
-import {
-  type Blueprint,
-  type BlueprintDefinition,
-  BlueprintMachine,
-  createLocalSearchTool,
-  createExaTool,
-  createGraphWriterTool,
-} from '@dxos/assistant';
+import { type Blueprint, type BlueprintDefinition, BlueprintMachine } from '@dxos/conductor';
+import { createLocalSearchTool, createExaTool, createGraphWriterTool } from '@dxos/assistant';
 import { getSpace } from '@dxos/client/echo';
 import { DXN, Key } from '@dxos/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';

@@ -13,7 +13,7 @@ import {
   defineModule,
   definePlugin,
 } from '@dxos/app-framework';
-import { Blueprint } from '@dxos/assistant';
+import { Blueprint } from '@dxos/conductor';
 import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';

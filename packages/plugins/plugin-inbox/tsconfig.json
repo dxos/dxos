@@ -27,6 +27,9 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -109,9 +112,6 @@
     },
     {
       "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../plugin-assistant"
     },
     {
       "path": "../plugin-automation"

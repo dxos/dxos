@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useImperativeHandle } from 'react';
 
-import { BlueprintDefinition } from '@dxos/assistant';
+import { BlueprintDefinition } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {

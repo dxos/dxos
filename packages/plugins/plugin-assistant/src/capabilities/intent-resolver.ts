@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { Blueprint } from '@dxos/assistant';
+import { Blueprint } from '@dxos/conductor';
 import { Key, Obj, Ref } from '@dxos/echo';
 
 import { AssistantAction, AIChatType } from '../types';

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Effect, pipe, Schema } from 'effect';
+import { Effect, pipe, Schema } from 'effect';
 
 import {
   contributes,
@@ -25,14 +25,25 @@ import { InboxCapabilities } from './capabilities';
 import { CalendarType, InboxAction, MailboxType } from '../types';
 import { getSpace } from '@dxos/client/echo';
 import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
-import { AssistantCapabilities } from '@dxos/plugin-assistant';
 import { failedInvariant } from '@dxos/invariant';
-import { consoleLogger } from '@dxos/functions/testing';
 import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
-import { BlueprintBuilder, compileBlueprint, DEFAULT_INPUT, GraphExecutor, ValueBag,, type GptOutput Workflow, WorkflowLoader, ComputeGraphModel } from '@dxos/conductor';
+import {
+  BlueprintBuilder,
+  compileBlueprint,
+  DEFAULT_INPUT,
+  GraphExecutor,
+  ValueBag,
+  type GptOutput,
+  Workflow,
+  WorkflowLoader,
+  ComputeGraphModel,
+} from '@dxos/conductor';
 import { ArtifactId } from '@dxos/artifact';
 import { TestRuntime } from '@dxos/conductor/testing';
 import { runAndForwardErrors } from '@dxos/effect';
+
+// TODO(dmaretskyi): Circular dep due to the assistant stories
+// import { AssistantCapabilities } from '@dxos/plugin-assistant';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -163,20 +174,22 @@ export default (context: PluginContext) =>
         }
       },
     }),
-    // TODO(dmaretskyi): There should be a generic execute{function/blueprint/workflow} intent that runs the invocable.
+    // TODO(dmaretskyi): There should be a generic execute{function/blueprint/workflow} intent that runs the executable locally or remotelly.
     createResolver({
       intent: InboxAction.RunAssistant,
       resolve: async ({ mailbox }) => {
+        throw new Error('Not implemented');
+
         log.info('Run assistant', { mailbox });
 
         const space = getSpace(mailbox) ?? failedInvariant();
-        const aiClient = context.getCapability(AssistantCapabilities.AiClient);
+        const aiClient = null as any; // context.getCapability(AssistantCapabilities.AiClient);
 
         const serviceContainer = new ServiceContainer().setServices({
           ai: AiService.make(aiClient.value),
           database: DatabaseService.make(space.db),
           queues: QueueService.make(space.queues, undefined),
-          eventLogger: consoleLogger,
+          // eventLogger: consoleLogger,
           toolResolver: ToolResolverService.make(
             // TODO(dmaretskyi): Provided by a plugin.
             new ToolRegistry([

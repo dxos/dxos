@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Blueprint, type BlueprintEvent, type BlueprintLogger } from '@dxos/assistant';
+import { type Blueprint, type BlueprintEvent, type BlueprintLogger } from '@dxos/conductor';
 import { getSpace, Ref, type Queue, type Space } from '@dxos/client/echo';
 import { DXN, Key, Obj } from '@dxos/echo';
 import {

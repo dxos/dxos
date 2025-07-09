@@ -74,6 +74,7 @@ export interface BlueprintLogger {
 
 /**
  * Blueprint state machine.
+ * @deprecated Use blueprint compiler and run a circuit instead.
  */
 export class BlueprintMachine {
   public readonly begin = new Event<void>();
