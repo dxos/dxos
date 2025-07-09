@@ -8,21 +8,15 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { ToolRegistry } from '@dxos/ai';
 import { useCapability } from '@dxos/app-framework';
-import {
-  type Blueprint,
-  type BlueprintDefinition,
-  BlueprintMachine,
-  createLocalSearchTool,
-  createExaTool,
-  createGraphWriterTool,
-} from '@dxos/assistant';
+import { createLocalSearchTool, createExaTool, createGraphWriterTool } from '@dxos/assistant';
 import { getSpace } from '@dxos/client/echo';
+import { type Sequence, type SequenceDefinition, SequenceMachine } from '@dxos/conductor';
 import { DXN, Key } from '@dxos/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { getSelectionSet, useSelectionManager } from '@dxos/react-ui-attention';
 import { StackItem, type StackItemContentProps } from '@dxos/react-ui-stack';
 
-import { BlueprintEditor } from './BlueprintEditor';
+import { SequenceEditor } from './SequenceEditor';
 import { AssistantCapabilities } from '../capabilities';
 import { meta } from '../meta';
 import { QueueLogger } from '../queue-logger';
@@ -31,7 +25,7 @@ import { QueueLogger } from '../queue-logger';
 export const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 
 // TODO(burdon): Validate.
-const parseBlueprint = (text: string): BlueprintDefinition | undefined => {
+const parseSequence = (text: string): SequenceDefinition | undefined => {
   try {
     const json = JSON5.parse(text);
     const { steps } = json;
@@ -41,25 +35,22 @@ const parseBlueprint = (text: string): BlueprintDefinition | undefined => {
   }
 };
 
-export const BlueprintContainer = ({
-  role,
-  blueprint,
-}: Pick<StackItemContentProps, 'role'> & { blueprint: Blueprint }) => {
+export const SequenceContainer = ({ role, sequence }: Pick<StackItemContentProps, 'role'> & { sequence: Sequence }) => {
   const { t } = useTranslation(meta.id);
   const aiClient = useCapability(AssistantCapabilities.AiClient);
   const selectionManager = useSelectionManager();
-  const [definition, setDefinition] = useState<BlueprintDefinition>();
+  const [definition, setDefinition] = useState<SequenceDefinition>();
   useEffect(() => {
     setDefinition({
-      steps: blueprint.steps.map(({ instructions, tools }) => ({ instructions, tools })),
+      steps: sequence.steps.map(({ instructions, tools }) => ({ instructions, tools })),
     });
-  }, [blueprint]);
+  }, [sequence]);
 
   const editorRef = useRef<EditorView | undefined>(undefined);
 
   // TODO(burdon): Factor out.
   const toolRegistry = useMemo(() => {
-    const space = getSpace(blueprint);
+    const space = getSpace(sequence);
     if (!space) {
       return;
     }
@@ -73,16 +64,16 @@ export const BlueprintContainer = ({
       createGraphWriterTool({
         db: space.db,
         queue,
-        schema: [], // TODO(burdon): Get schema from client/blueprint?
+        schema: [], // TODO(burdon): Get schema from client/sequence?
         onDone: async (objects) => {
           await queue.append(objects);
         },
       }),
     ]);
-  }, [blueprint]);
+  }, [sequence]);
 
-  const formatAndSave = useCallback((): BlueprintDefinition | undefined => {
-    if (!blueprint) {
+  const formatAndSave = useCallback((): SequenceDefinition | undefined => {
+    if (!sequence) {
       return;
     }
 
@@ -91,7 +82,7 @@ export const BlueprintContainer = ({
       return;
     }
 
-    const definition = parseBlueprint(text);
+    const definition = parseSequence(text);
     if (!definition) {
       return;
     }
@@ -102,19 +93,19 @@ export const BlueprintContainer = ({
       changes: { from: 0, to: text.length, insert: formatted },
     });
 
-    blueprint.steps.length = 0;
+    sequence.steps.length = 0;
     for (const step of definition.steps) {
-      blueprint.steps.push({
+      sequence.steps.push({
         id: Key.ObjectId.random(),
         instructions: step.instructions,
         tools: step.tools,
       });
     }
 
-    return blueprint;
-  }, [blueprint]);
+    return sequence;
+  }, [sequence]);
 
-  // TODO(burdon): Save raw blueprint separately from parsed blueprint? (like Script).
+  // TODO(burdon): Save raw sequence separately from parsed sequence? (like Script).
   const handleSave = useCallback(() => formatAndSave(), [formatAndSave]);
 
   const handleRun = useCallback(async () => {
@@ -130,9 +121,9 @@ export const BlueprintContainer = ({
       return;
     }
 
-    const machine = new BlueprintMachine(toolRegistry, blueprint).setLogger(new QueueLogger(blueprint));
+    const machine = new SequenceMachine(toolRegistry, sequence).setLogger(new QueueLogger(sequence));
     await machine.runToCompletion({ aiClient: aiClient.value, input });
-  }, [aiClient.value, blueprint, formatAndSave, selectionManager, toolRegistry]);
+  }, [aiClient.value, sequence, formatAndSave, selectionManager, toolRegistry]);
 
   return (
     <StackItem.Content role={role} toolbar>
@@ -140,9 +131,9 @@ export const BlueprintContainer = ({
         <Toolbar.Button onClick={handleSave}>{t('button save')}</Toolbar.Button>
         <Toolbar.Button onClick={handleRun}>{t('button run')}</Toolbar.Button>
       </Toolbar.Root>
-      {definition && <BlueprintEditor ref={editorRef} blueprint={definition} />}
+      {definition && <SequenceEditor ref={editorRef} sequence={definition} />}
     </StackItem.Content>
   );
 };
 
-export default BlueprintContainer;
+export default SequenceContainer;
