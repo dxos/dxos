@@ -3,4 +3,18 @@ language: typescript
 tasks:
   compile:
     args:
-      - '--commands=true'
+      - '--entryPoint=src/index.ts'
+    deps:
+      - compile-node
+  compile-node:
+    command: dx-compile
+    args:
+      - '--entryPoint=src/testing/index.ts'
+      - '--outputPath=dist/testing'
+      - '--platform=node'
+    deps:
+      - ^:compile
+    inputs:
+      - '@group(sources)'
+    outputs:
+      - dist/testing

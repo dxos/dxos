@@ -1,6 +1,28 @@
 type: library
 language: typescript
+workspace:
+  inheritedTasks:
+    exclude:
+      - test
 tasks:
   compile:
     args:
-      - '--commands=true'
+      - '--entryPoint=src/index.ts'
+    deps:
+      - compile-node
+  compile-node:
+    command: dx-compile
+    args:
+      - '--entryPoint=src/config/tailwind.ts'
+      - '--entryPoint=src/plugins/esbuild-plugin.ts'
+      - '--entryPoint=src/plugins/plugin.ts'
+      - '--entryPoint=src/theme.css'
+      - '--outputPath=dist/plugin'
+      - '--moduleFormat=cjs'
+      - '--moduleFormat=esm'
+      - '--platform=node'
+      - '--preactSignalTracking'
+    options:
+      mergeArgs: 'replace'
+    outputs:
+      - dist/plugin/

@@ -3,4 +3,4 @@ language: typescript
 tasks:
   compile:
     args:
-      - '--commands=true'
+      - '--entryPoint=src/index.ts'

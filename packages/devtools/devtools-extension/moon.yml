@@ -1,2 +1,6 @@
 type: library
 language: typescript
+workspace:
+  inheritedTasks:
+    exclude:
+      - compile

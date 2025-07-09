@@ -1,5 +1,10 @@
 type: library
 language: typescript
+workspace:
+  inheritedTasks:
+    exclude:
+      # TODO(wittjosiah): Why is build excluded?
+      - build
 tasks:
   compile:
     args:

@@ -1,0 +1,10 @@
+# TODO(wittjosiah): Remove. Workaround for poor project globbing.
+
+id: __primitives
+workspace:
+  inheritedTasks:
+    exclude:
+      - build
+      - compile
+      - lint
+      - test

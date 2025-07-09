@@ -6,8 +6,11 @@ fileGroups:
     - scripts/**/*
   sources:
     - src/**/*
+    - '!src/test/**/*'
+    - '!src/testing/**/*'
   tests:
-    - tests/**/*
+    - src/test/**/*
+    - src/testing/**/*
 
 implicitInputs:
   - package.json
@@ -17,6 +20,7 @@ tasks:
     command: tsc
     deps:
       - ^:build
+      - ^:compile
       - compile
     inputs:
       - /tsconfig.base.json

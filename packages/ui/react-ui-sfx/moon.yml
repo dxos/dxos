@@ -5,3 +5,11 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--preactSignalTracking'
+    deps:
+      - glsl
+  glsl:
+    command: pnpm run glsl
+    inputs:
+      - src/shaders/glsl/*.*
+    outputs:
+      - src/shaders/glsl/gen

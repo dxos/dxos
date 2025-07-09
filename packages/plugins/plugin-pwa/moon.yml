@@ -5,5 +5,5 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--platform=browser'
-      - '--ignorePackages=virtual:pwa-register'
+      - '--ignorePackage=virtual:pwa-register'
       - '--preactSignalTracking'

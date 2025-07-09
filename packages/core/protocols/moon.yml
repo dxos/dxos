@@ -1,6 +1,32 @@
 type: library
 language: typescript
+workspace:
+  inheritedTasks:
+    exclude: ['build', 'compile']
+    rename:
+      build: compile
 tasks:
   compile:
+    deps:
+      - prebuild
+    options:
+      mergeOutputs: 'replace'
+    outputs:
+      - dist/
+  gen-buf:
+    command: pnpm run compile:buf
+    inputs:
+      - src/proto/dxos/**/*.proto
+    outputs:
+      - src/buf/proto/gen/dxos
+  prebuild:
+    command: build-protobuf
     args:
-      - '--commands=true'
+      - '--baseDir="./src/proto"'
+      - '--src="./src/proto/**/*.proto"'
+      - '--outDir="./src/proto/gen"'
+      - '--substitutions="./src/proto/substitutions.ts"'
+    deps:
+      - ^:compile
+      - protobuf-compiler:build
+      - gen-buf

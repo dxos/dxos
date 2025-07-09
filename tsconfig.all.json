@@ -235,9 +235,6 @@
       "path": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
     },
     {
-      "path": "packages/experimental/cf-labs/tsconfig.json"
-    },
-    {
       "path": "packages/experimental/discord-bot/tsconfig.json"
     },
     {
@@ -247,16 +244,10 @@
       "path": "packages/experimental/metagraph/tsconfig.json"
     },
     {
-      "path": "packages/experimental/plexus/tsconfig.json"
-    },
-    {
       "path": "packages/experimental/react-metagraph/tsconfig.json"
     },
     {
       "path": "packages/experimental/script-toolbox/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/spyglass/tsconfig.json"
     },
     {
       "path": "packages/gravity/proto-guard/tsconfig.json"

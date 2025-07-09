@@ -414,11 +414,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/cf-labs/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/discord-bot/package.json",
           "jsonpath": "$.version"
         },
@@ -434,11 +429,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/plexus/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/react-metagraph/package.json",
           "jsonpath": "$.version"
         },
@@ -449,17 +439,7 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/spyglass/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/gravity/blade-runner/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/gravity/kube-publishing/package.json",
           "jsonpath": "$.version"
         },
         {

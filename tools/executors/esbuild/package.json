@@ -8,7 +8,7 @@
   "author": "info@dxos.org",
   "sideEffects": true,
   "bin": {
-    "dx-compile": "dist/src/cli.js"
+    "dx-compile": "cli.js"
   },
   "dependencies": {
     "yargs": "~16.2.0"

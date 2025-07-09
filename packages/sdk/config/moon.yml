@@ -3,4 +3,20 @@ language: typescript
 tasks:
   compile:
     args:
-      - '--commands=true'
+      - '--entryPoint=src/index.ts'
+    deps:
+      - compile-plugin
+  compile-plugin:
+    command: dx-compile
+    args:
+      - '--entryPoint=src/plugin/esbuild-plugin.ts'
+      - '--entryPoint=src/plugin/rollup-plugin.ts'
+      - '--entryPoint=src/plugin/vite-plugin.ts'
+      - '--outputPath=dist/plugin'
+      - '--platform=node'
+    deps:
+      - ^:compile
+    inputs:
+      - '@group(sources)'
+    outputs:
+      - dist/plugin

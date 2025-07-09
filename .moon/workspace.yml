@@ -1,13 +1,20 @@
 # https://moonrepo.dev/docs/config/workspace
 $schema: ./cache/schemas/workspace.json
 
-# extends: './shared/workspace.yml'
-
 projects:
-  # - 'apps/*'
-  # - 'packages/**/*'
-  # - 'tools/*'
   - packages/common/*
+  - packages/core/*
+  - packages/core/echo/*
+  - packages/core/halo/*
+  - packages/core/mesh/*
+  - packages/devtools/*
+  - packages/e2e/*
+  - packages/experimental/*
+  - packages/gravity/*
+  - packages/plugins/*
+  - packages/sdk/*
+  - packages/ui/*
+  - packages/ui/primitives/*
   - tools/executors/esbuild
 
 vcs:

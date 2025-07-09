@@ -5,3 +5,11 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--preactSignalTracking'
+    deps:
+      - gen-pieces
+  gen-pieces:
+    command: pnpm run gen:pieces
+    inputs:
+      - assets/*.*
+    outputs:
+      - src/gen

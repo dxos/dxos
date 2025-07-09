@@ -23,7 +23,7 @@
     "src"
   ],
   "scripts": {
-    "glsl": "mkdir -p ./src/shaders/glsl/gen && pnpm run glsl:sim:frag && npm run glsl:sim:vert && npm run glsl:dof:frag && npm run glsl:dof:vert",
+    "glsl": "mkdir -p ./src/shaders/glsl/gen && pnpm run glsl:sim:frag && pnpm run glsl:sim:vert && pnpm run glsl:dof:frag && pnpm run glsl:dof:vert",
     "glsl:dof:frag": "pnpm glslify ./src/shaders/glsl/dof.frag > ./src/shaders/glsl/gen/dof.frag",
     "glsl:dof:vert": "pnpm glslify ./src/shaders/glsl/dof.vert > ./src/shaders/glsl/gen/dof.vert",
     "glsl:sim:frag": "pnpm glslify ./src/shaders/glsl/sim.frag > ./src/shaders/glsl/gen/sim.frag",
