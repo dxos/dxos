@@ -62,7 +62,7 @@ const argv = yargs(process.argv.slice(2))
 })
 .option('interval', {
   type: 'number',
-  default: 10_000,
+  default: 20_000,
   description: 'Polling interval in milliseconds',
 })
 .option('username', {
@@ -175,7 +175,7 @@ async function listWorkflowRunsForRepo(watch = false) {
 
     // Output as cli-table3
     const table = new Table({
-      head: ['Workflow', 'Actor', 'Branch', 'Created', 'Duration', 'Status', 'URL'],
+      head: ['Run', 'Workflow', 'Actor', 'Branch', 'Created', 'Duration', 'Status'],
       style: { head: ['gray'], compact: true },
     });
 
@@ -194,6 +194,7 @@ async function listWorkflowRunsForRepo(watch = false) {
       const humanReadable = `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
 
       table.push([
+        chalk.blueBright(link(run.html_url, run.id)),
         run.name,
         run.actor?.login,
         chalk.magenta(run.head_branch),
@@ -206,7 +207,6 @@ async function listWorkflowRunsForRepo(watch = false) {
               ? chalk.green(run.conclusion)
               : chalk.yellow(run.conclusion)
           : chalk.yellow(run.status),
-        chalk.blueBright(run.html_url),
       ]);
     });
 
@@ -442,6 +442,10 @@ function chalkJson(obj) {
     .replace(/: "(.*?)"/g, (_, val) => `: ${chalk.yellow(`"${val}"`)}`) // strings
     .replace(/: (\d+)/g, (_, val) => `: ${chalk.cyan(val)}`) // numbers
     .replace(/: (true|false)/g, (_, val) => `: ${chalk.magenta(val)}`); // booleans
+}
+
+function link(url, text) {
+  return `\x1b]8;;${url}\x07${text}\x1b]8;;\x07`;
 }
 
 function comparePathStrings(a, b) {
