@@ -40,12 +40,6 @@ import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { encodeAuthHeader, HttpConfig, withLogging, withRetryConfig } from './http-client';
 import { getEdgeUrlWithProtocol } from './utils';
 
-// TODO(burdon): Move to protocols.
-type GetStatusResponseBody = {
-  status: 'ok' | 'error';
-  error?: string;
-};
-
 const DEFAULT_RETRY_TIMEOUT = 1500;
 const DEFAULT_RETRY_JITTER = 500;
 const DEFAULT_MAX_RETRIES_COUNT = 3;
