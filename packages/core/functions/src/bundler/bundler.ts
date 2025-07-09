@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type BuildOptions } from 'esbuild';
-import { build, initialize, type BuildResult, type Plugin } from 'esbuild-wasm';
+import { FetchHttpClient, HttpClient } from '@effect/platform';
+import { Duration, Effect, pipe, Schedule } from 'effect';
+import { type BuildOptions, type Loader, build, initialize, type BuildResult, type Plugin } from 'esbuild-wasm';
 
 import { subtleCrypto } from '@dxos/crypto';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -242,6 +244,9 @@ const analyzeSourceFileImports = (code: string): ParsedImport[] => {
   });
 };
 
+const MAX_RETRIES = 5;
+const INITIAL_DELAY = 1_000;
+
 const httpPlugin: Plugin = {
   name: 'http',
   setup: (build) => {
@@ -263,8 +268,25 @@ const httpPlugin: Plugin = {
     // When a URL is loaded, we want to actually download the content from the internet.
     // This has just enough logic to be able to handle the example import from unpkg.com but in reality this would probably need to be more complex.
     build.onLoad({ filter: /.*/, namespace: 'http-url' }, async (args) => {
-      const response = await fetch(args.path);
-      return { contents: await response.text(), loader: 'jsx' };
+      return Effect.gen(function* () {
+        const response = yield* HttpClient.get(args.path);
+        if (response.status !== 200) {
+          throw new Error(`failed to fetch: ${response.status}`);
+        }
+
+        const text = yield* response.text;
+        return { contents: text, loader: 'jsx' as Loader };
+      }).pipe(
+        Effect.retry(
+          pipe(
+            Schedule.exponential(Duration.millis(INITIAL_DELAY)),
+            Schedule.jittered,
+            Schedule.intersect(Schedule.recurs(MAX_RETRIES - 1)),
+          ),
+        ),
+        Effect.provide(FetchHttpClient.layer),
+        runAndForwardErrors,
+      );
     });
   },
 };
