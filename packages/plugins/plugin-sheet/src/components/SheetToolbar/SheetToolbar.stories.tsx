@@ -10,7 +10,7 @@ import React from 'react';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SheetToolbar } from './SheetToolbar';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 const DefaultStory = () => {
   return <SheetToolbar id='test' />;

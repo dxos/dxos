@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { HELP_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [HELP_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Help',
         'open help tour': 'Show welcome tour',
         'open shortcuts label': 'Show shortcuts',
@@ -18,5 +18,3 @@ export const translations = [
     },
   },
 ] as const satisfies Resource[];
-
-export default translations;

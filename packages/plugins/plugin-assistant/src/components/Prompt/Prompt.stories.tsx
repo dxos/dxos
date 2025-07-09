@@ -16,7 +16,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { Prompt } from './Prompt';
 import { PromptBar, type PromptBarProps } from './PromptBar';
 import type { ReferenceData } from './references';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 const references: ReferenceData[] = [
   {

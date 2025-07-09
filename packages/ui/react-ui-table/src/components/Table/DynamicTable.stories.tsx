@@ -19,7 +19,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { DynamicTable } from './DynamicTable';
 import { type TableFeatures } from '../../model';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 faker.seed(0);
 

@@ -4,12 +4,12 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { TRANSCRIPTION_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [TRANSCRIPTION_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Transcription',
         'transcript companion label': 'Transcript',
 
@@ -22,5 +22,3 @@ export const translations = [
     },
   },
 ] as const satisfies Resource[];
-
-export default translations;

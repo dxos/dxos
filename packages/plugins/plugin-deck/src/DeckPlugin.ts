@@ -20,7 +20,7 @@ import {
 } from './capabilities';
 import { DeckEvents } from './events';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 
 // NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because
 //   our signal implementation needs to add some hidden properties to the produced values.

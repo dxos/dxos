@@ -6,7 +6,7 @@ import { contributes, Events, defineModule, definePlugin, Capabilities } from '@
 
 import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { meta, SEARCH_RESULT } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { type SearchResult } from './types';
 
 export const SearchPlugin = () =>

@@ -22,7 +22,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Table } from './Table';
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { TableType } from '../../types';
 
 faker.seed(1);

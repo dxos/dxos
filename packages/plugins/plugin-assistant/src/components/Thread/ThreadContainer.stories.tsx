@@ -38,7 +38,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Thread, type ThreadProps } from './Thread';
 import { ChatProcessor } from '../../hooks';
 import { createProcessorOptions } from '../../testing';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 // TODO(burdon): Configure for local with ollama/LM studio.
 // const endpoints = localServiceEndpoints;

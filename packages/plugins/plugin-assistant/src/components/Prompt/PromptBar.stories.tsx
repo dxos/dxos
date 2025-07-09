@@ -14,7 +14,7 @@ import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { PromptBar } from './PromptBar';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 const meta: Meta<typeof PromptBar> = {
   title: 'plugins/plugin-assistant/PromptBar',

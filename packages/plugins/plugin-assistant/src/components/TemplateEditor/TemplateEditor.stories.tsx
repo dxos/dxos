@@ -14,7 +14,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { TemplateEditor, type TemplateEditorProps } from './TemplateEditor';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { TemplateType } from '../../types';
 
 const TEMPLATE = [

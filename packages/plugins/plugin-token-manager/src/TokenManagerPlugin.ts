@@ -8,7 +8,7 @@ import { DataType } from '@dxos/schema';
 
 import { ReactSurface, AppGraphBuilder } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 
 export const TokenManagerPlugin = () =>
   definePlugin(meta, [

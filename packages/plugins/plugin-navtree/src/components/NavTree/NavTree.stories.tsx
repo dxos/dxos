@@ -35,7 +35,7 @@ import { withLayout } from '@dxos/storybook-utils';
 
 import { NavTreePlugin } from '../../NavTreePlugin';
 import { storybookGraphBuilders } from '../../testing';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { NavTreeContainer } from '../NavTreeContainer';
 
 faker.seed(1234);
