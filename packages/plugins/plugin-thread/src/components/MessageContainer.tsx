@@ -3,7 +3,6 @@
 //
 
 import { EditorView } from '@codemirror/view';
-import { Check, PencilSimple, X } from '@phosphor-icons/react';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
@@ -11,15 +10,9 @@ import { type Obj, Ref, type Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
-import { Button, ButtonGroup, Tooltip, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { ButtonGroup, IconButton, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
-import {
-  getSize,
-  hoverableControlItem,
-  hoverableControls,
-  hoverableFocusedWithinControls,
-  mx,
-} from '@dxos/react-ui-theme';
+import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
 import { type DataType } from '@dxos/schema';
 
@@ -27,9 +20,6 @@ import { command } from './command-extension';
 import { useOnEditAnalytics } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 import { getMessageMetadata } from '../util';
-
-// TODO(thure): #8149
-const messageControlClassNames = ['!p-1 !min-bs-0 transition-opacity', hoverableControlItem];
 
 export type MessageContainerProps = {
   message: DataType.Message;
@@ -61,30 +51,26 @@ export const MessageContainer = ({ message, members, editable = false, onDelete 
       <MessageHeading authorName={messageMetadata.authorName} timestamp={messageMetadata.timestamp}>
         <ButtonGroup classNames='mie-1'>
           {userIsAuthor && editable && (
-            <Tooltip.Trigger asChild content={editLabel}>
-              <Button
-                variant='ghost'
-                data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
-                classNames={messageControlClassNames}
-                onClick={() => setEditing((editing) => !editing)}
-              >
-                <span className='sr-only'>{editLabel}</span>
-                {editing ? <Check className={getSize(4)} /> : <PencilSimple className={getSize(4)} />}
-              </Button>
-            </Tooltip.Trigger>
+            <IconButton
+              data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
+              variant='ghost'
+              icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
+              iconOnly
+              label={editLabel}
+              classNames='!p-1'
+              onClick={() => setEditing((editing) => !editing)}
+            />
           )}
           {onDelete && (
-            <Tooltip.Trigger asChild content={deleteLabel}>
-              <Button
-                variant='ghost'
-                data-testid='thread.message.delete'
-                classNames={messageControlClassNames}
-                onClick={() => handleDelete()}
-              >
-                <span className='sr-only'>{deleteLabel}</span>
-                <X className={getSize(4)} />
-              </Button>
-            </Tooltip.Trigger>
+            <IconButton
+              data-testid='thread.message.delete'
+              variant='ghost'
+              icon='ph--x--regular'
+              iconOnly
+              label={deleteLabel}
+              classNames='!p-1'
+              onClick={() => handleDelete()}
+            />
           )}
         </ButtonGroup>
       </MessageHeading>

@@ -13,7 +13,7 @@ import { CommentsThreadContainer, type CommentsThreadContainerProps } from './Co
 import { meta } from '../meta';
 import { type ThreadType } from '../types';
 
-export type ThreadsContainerProps = Omit<CommentsThreadContainerProps, 'anchor' | 'current'> & {
+export type CommentsContainerProps = Omit<CommentsThreadContainerProps, 'anchor' | 'current'> & {
   anchors: AnchoredTo[];
   currentId?: string;
   showResolvedThreads?: boolean;
@@ -22,7 +22,7 @@ export type ThreadsContainerProps = Omit<CommentsThreadContainerProps, 'anchor' 
 /**
  * Comment threads.
  */
-export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...props }: ThreadsContainerProps) => {
+export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...props }: CommentsContainerProps) => {
   const { t } = useTranslation(meta.id);
 
   // TODO(wittjosiah): There seems to be a race between thread and anchor being deleted.
