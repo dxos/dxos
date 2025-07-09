@@ -1,0 +1,8 @@
+type: library
+language: typescript
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/react.ts'
+      - '--entryPoint=src/testing/index.ts'
+      - '--preactSignalTracking'

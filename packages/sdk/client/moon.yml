@@ -1,0 +1,14 @@
+type: library
+language: typescript
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/devtools/index.ts'
+      - '--entryPoint=src/echo/index.ts'
+      - '--entryPoint=src/edge/index.ts'
+      - '--entryPoint=src/halo/index.ts'
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/invitations/index.ts'
+      - '--entryPoint=src/mesh/index.ts'
+      - '--entryPoint=src/testing/index.ts'
+      - '--entryPoint=src/worker/index.ts'

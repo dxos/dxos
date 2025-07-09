@@ -179,3 +179,7 @@ typedoc
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+
+# moon
+.moon/cache
+.moon/docker

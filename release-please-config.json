@@ -939,11 +939,6 @@
         },
         {
           "type": "json",
-          "path": "tools/beast/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/codemods/package.json",
           "jsonpath": "$.version"
         },

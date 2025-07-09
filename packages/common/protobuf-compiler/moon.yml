@@ -1,0 +1,25 @@
+type: library
+language: typescript
+workspace:
+  inheritedTasks:
+    exclude:
+      - compile
+      - test
+tasks:
+  build:
+    deps:
+      - prebuild
+    options:
+      mergeOutputs: replace
+    outputs:
+      - dist/
+  prebuild:
+    command: pnpm run prebuild
+    inputs:
+      - test/proto/example/
+    outputs:
+      - test/proto/gen/
+  test:
+    command: pnpm run test
+    deps:
+      - prebuild

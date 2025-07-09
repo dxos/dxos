@@ -1,0 +1,10 @@
+type: library
+language: typescript
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/testing/index.ts'
+      - '--main={projectRoot}/src/index.ts'
+      - '--outputPath={projectRoot}/dist'
+      - '--tsConfig={projectRoot}/tsconfig.json'

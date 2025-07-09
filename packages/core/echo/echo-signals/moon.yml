@@ -1,0 +1,9 @@
+type: library
+language: typescript
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/core.ts'
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/react.ts'
+      - '--entryPoint=src/runtime/index.ts'

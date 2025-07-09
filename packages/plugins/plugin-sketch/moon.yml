@@ -1,0 +1,11 @@
+type: library
+language: typescript
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/sdk.ts'
+      - '--entryPoint=src/types/index.ts'
+      - '--platform=browser'
+      - '--platform=node'
+      - '--preactSignalTracking'

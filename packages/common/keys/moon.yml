@@ -1,0 +1,10 @@
+type: library
+language: typescript
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--bundlePackage=base32-decode'
+      - '--bundlePackage=base32-encode'
+      - '--bundlePackage=to-data-view'
+      - '--importGlobals'

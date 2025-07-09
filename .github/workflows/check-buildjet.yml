@@ -93,7 +93,6 @@ jobs:
     env:
       VITEST_ENV: 'node'
       VITEST_COVERAGE: 'true'
-      VITEST_JSON_REPORT: 'true'
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3

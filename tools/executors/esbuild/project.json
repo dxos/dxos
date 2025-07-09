@@ -9,6 +9,10 @@
       ],
       "executor": "@nx/js:tsc",
       "options": {
+        "include": [
+          "{projectRoot}/src/cli.ts",
+          "{projectRoot}/src/main.ts"
+        ],
         "main": "{projectRoot}/src/index.ts",
         "outputPath": "{projectRoot}/dist",
         "tsConfig": "{projectRoot}/tsconfig.json"

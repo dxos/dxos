@@ -1,0 +1,15 @@
+# https://moonrepo.dev/docs/config/workspace
+$schema: ./cache/schemas/workspace.json
+
+# extends: './shared/workspace.yml'
+
+projects:
+  # - 'apps/*'
+  # - 'packages/**/*'
+  # - 'tools/*'
+  - packages/common/*
+  - tools/executors/esbuild
+
+vcs:
+  manager: git
+  defaultBranch: main

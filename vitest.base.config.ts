@@ -17,7 +17,6 @@ const targetProject = String(process.env.NX_TASK_TARGET_PROJECT);
 const isDebug = !!process.env.VITEST_DEBUG;
 const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
-const jsonReport = Boolean(process.env.VITEST_JSON_REPORT);
 
 type BrowserOptions = {
   cwd: string;
@@ -130,8 +129,13 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
 const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd: string }): ViteUserConfig['test'] => {
   const packageJson = pkgUp.sync({ cwd });
   const packageDir = packageJson!.split('/').slice(0, -1).join('/');
-  const packageDirRelative = relative(__dirname, packageDir);
-  const reportsDirectory = join(__dirname, 'coverage', packageDirRelative);
+  const packageDirName = packageDir.split('/').pop();
+  if (!packageDirName) {
+    throw new Error('packageDirName not found');
+  }
+
+  const resultsDirectory = join(__dirname, 'test-results', packageDirName);
+  const reportsDirectory = join(__dirname, 'coverage', packageDirName);
   const coverageEnabled = Boolean(process.env.VITEST_COVERAGE);
 
   if (xmlReport) {
@@ -140,19 +144,7 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
       reporters: ['junit', 'verbose'],
       // TODO(wittjosiah): Browser mode will overwrite this, should be separate directories
       //    however nx outputs config also needs to be aware of this.
-      outputFile: join(__dirname, 'test-results', packageDirRelative, 'results.xml'),
-      coverage: {
-        enabled: coverageEnabled,
-        reportsDirectory,
-      },
-    };
-  }
-
-  if (jsonReport) {
-    return {
-      passWithNoTests: true,
-      reporters: ['json', 'verbose'],
-      outputFile: join(__dirname, 'test-results', packageDirRelative, 'results.json'),
+      outputFile: join(resultsDirectory, 'results.xml'),
       coverage: {
         enabled: coverageEnabled,
         reportsDirectory,
@@ -162,7 +154,8 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
 
   return {
     passWithNoTests: true,
-    reporters: ['verbose'],
+    reporters: ['json', 'verbose'],
+    outputFile: join(resultsDirectory, 'results.json'),
     coverage: {
       enabled: coverageEnabled,
       reportsDirectory,

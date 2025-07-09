@@ -1,0 +1,13 @@
+type: library
+language: typescript
+workspace:
+  inheritedTasks:
+    exclude: ['compile', 'test']
+    rename:
+      build: compile
+tasks:
+  compile:
+    options:
+      mergeOutputs: 'replace'
+    outputs:
+      - 'dist/'

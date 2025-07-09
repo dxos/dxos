@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { ExecutorContext } from '@nx/devkit';
 import type * as Swc from '@swc/core';
 import { build, type Format, type Platform, type Plugin } from 'esbuild';
 import glsl from 'esbuild-plugin-glsl';
 import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
-import { basename, dirname, join } from 'node:path';
+import { basename, dirname } from 'node:path';
+import pkgUp from 'pkg-up';
 
 import { NodeExternalPlugin } from '@dxos/esbuild-plugins';
 
@@ -33,10 +33,11 @@ export interface EsbuildExecutorOptions {
   sourcemap: boolean;
   watch: boolean;
   preactSignalTracking: boolean;
+  verbose: boolean;
 }
 
-export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
-  if (context.isVerbose) {
+export default async (options: EsbuildExecutorOptions): Promise<{ success: boolean }> => {
+  if (options.verbose) {
     console.info('Executing esbuild...');
     console.info(`Options: ${JSON.stringify(options, null, 2)}`);
   }
@@ -46,11 +47,14 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
     await rm(options.outputPath, { recursive: true });
   } catch {}
 
-  const packagePath = join(context.projectsConfigurations!.projects[context.projectName!].root, 'package.json');
+  const packagePath = pkgUp.sync({ cwd: process.cwd() });
+  if (!packagePath) {
+    throw new Error('Could not find package.json.');
+  }
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
   const swcTransformPlugin = new SwcTransformPlugin({
-    isVerbose: context.isVerbose,
+    isVerbose: options.verbose,
     getTranspilerOptions: ({ filePath }) => ({
       filename: basename(filePath),
       sourceMaps: 'inline',
@@ -195,7 +199,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
 
       await writeFile(`${outdir}/meta.json`, JSON.stringify(result.metafile), 'utf-8');
 
-      if (context.isVerbose) {
+      if (options.verbose) {
         console.log(`Build took ${Date.now() - start}ms.`);
       }
 

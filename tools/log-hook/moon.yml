@@ -1,0 +1,8 @@
+type: library
+language: typescript
+tasks:
+  compile:
+    args:
+      - '--main={projectRoot}/src/index.ts'
+      - '--outputPath={projectRoot}/dist'
+      - '--tsConfig={projectRoot}/tsconfig.json'

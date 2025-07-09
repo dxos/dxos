@@ -1,0 +1,6 @@
+type: library
+language: typescript
+tasks:
+  compile:
+    args:
+      - '--commands=true'

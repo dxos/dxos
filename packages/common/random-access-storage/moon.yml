@@ -1,0 +1,8 @@
+type: library
+language: typescript
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--injectGlobals'
+      - '--bundlePackage=random-access-idb'

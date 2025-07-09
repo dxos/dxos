@@ -1,0 +1,62 @@
+fileGroups:
+  assets:
+    - assets/**/*
+    - public/**/*
+  scripts:
+    - scripts/**/*
+  sources:
+    - src/**/*
+  tests:
+    - tests/**/*
+
+implicitInputs:
+  - package.json
+
+tasks:
+  build:
+    command: tsc
+    deps:
+      - ^:build
+      - compile
+    inputs:
+      - /tsconfig.base.json
+      - tsconfig.json
+      - '@group(sources)'
+      - '@group(tests)'
+    outputs:
+      - dist/types/
+
+  compile:
+    command: dx-compile
+    args:
+      - --outputPath=dist/lib
+    deps:
+      - esbuild:compile
+      - ^:compile
+    inputs:
+      - '@group(sources)'
+    outputs:
+      - dist/lib/
+
+  lint:
+    command: eslint .
+    inputs:
+      - .eslintrc.cjs
+      - '@group(sources)'
+      - '@group(tests)'
+
+  test:
+    command: vitest run --passWithNoTests
+    inputs:
+      - /vitest.base.config.ts
+      - vite.config.ts
+      - vitest.config.ts
+      - '@group(sources)'
+      - '@group(tests)'
+      - $VITEST_COVERAGE
+      - $VITEST_DEBUG
+      - $VITEST_ENV
+      - $VITEST_XML_REPORT
+    outputs:
+      - /coverage/$project/**
+      - /test-results/$project/**

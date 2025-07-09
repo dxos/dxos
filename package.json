@@ -41,7 +41,6 @@
     "@cloudflare/vitest-pool-workers": "^0.5.17",
     "@cloudflare/workers-types": "^4.20241018.0",
     "@dxos/async": "workspace:*",
-    "@dxos/beast": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/esbuild": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
@@ -125,6 +124,7 @@
     "globrex": "^0.1.2",
     "husky": "^8.0.0",
     "jiti": "2.4.2",
+    "js-yaml": "4.1.0",
     "jsdom": "^26.1.0",
     "jsdom-global": "^3.0.2",
     "json-stringify-safe": "^5.0.1",
@@ -163,11 +163,6 @@
     "wrangler": "^3.51.2",
     "yargs": "~16.2.0",
     "zx": "^8.4.1"
-  },
-  "packageManager": "pnpm@9.11.0",
-  "engines": {
-    "node": ">=18.0.0",
-    "pnpm": "^9.0.0"
   },
   "pnpm": {
     "overrides": {
