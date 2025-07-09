@@ -8,16 +8,15 @@ import { describe, test } from 'vitest';
 import { EdgeAiServiceClient, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { ArtifactId } from '@dxos/artifact';
+import { createGraphWriterTool, createLocalSearchTool, createExaTool } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { DataType, DataTypes } from '@dxos/schema';
 
-import { SequenceBuilder } from './sequence';
 import { setConsolePrinter } from './logger';
 import { SequenceMachine } from './machine';
+import { SequenceBuilder } from './sequence';
 import { TEST_EMAILS } from './test-data';
-import { createGraphWriterTool, createLocalSearchTool } from '@dxos/assistant';
-import { createExaTool } from '@dxos/assistant';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
 

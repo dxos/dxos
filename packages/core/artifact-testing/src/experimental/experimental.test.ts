@@ -18,6 +18,7 @@ import {
   computeGraphToGraphViz,
   DEFAULT_INPUT,
 } from '@dxos/conductor';
+import { compileSequence, SequenceMachine, SequenceParser, setConsolePrinter } from '@dxos/conductor';
 import { TestRuntime } from '@dxos/conductor/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
@@ -34,8 +35,6 @@ import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DataType, DataTypes } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
-
-import { compileSequence, SequenceMachine, SequenceParser, setConsolePrinter } from '@dxos/conductor';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;

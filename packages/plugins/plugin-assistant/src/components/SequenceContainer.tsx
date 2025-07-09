@@ -8,9 +8,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { ToolRegistry } from '@dxos/ai';
 import { useCapability } from '@dxos/app-framework';
-import { type Sequence, type SequenceDefinition, SequenceMachine } from '@dxos/conductor';
 import { createLocalSearchTool, createExaTool, createGraphWriterTool } from '@dxos/assistant';
 import { getSpace } from '@dxos/client/echo';
+import { type Sequence, type SequenceDefinition, SequenceMachine } from '@dxos/conductor';
 import { DXN, Key } from '@dxos/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { getSelectionSet, useSelectionManager } from '@dxos/react-ui-attention';

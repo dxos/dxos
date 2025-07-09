@@ -6,9 +6,9 @@ import { Rx } from '@effect-rx/rx-react';
 import { type Signal } from '@preact/signals-core';
 import { useMemo } from 'react';
 
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { MenuBuilder, rxFromSignal, useMenuActions } from '@dxos/react-ui-menu';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { INBOX_PLUGIN } from '../../../meta';
 import { InboxAction, type MailboxType } from '../../../types';
 import { type MailboxModel } from '../model/mailbox-model';

@@ -13,6 +13,7 @@ import {
   type ToolUseContentBlock,
   type ToolRegistry,
 } from '@dxos/ai';
+import { AISession } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { Key, Obj } from '@dxos/echo';
 import { type ObjectId } from '@dxos/keys';
@@ -20,7 +21,6 @@ import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
 import type { Sequence, SequenceStep } from './sequence';
-import { AISession } from '@dxos/assistant';
 
 const SYSTEM_PROMPT = `
 You are a smart Rule-Following Agent.

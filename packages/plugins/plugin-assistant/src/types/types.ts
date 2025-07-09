@@ -3,11 +3,12 @@
 //
 
 import { Schema } from 'effect';
+
+import { Sequence } from '@dxos/conductor';
 import { SpaceSchema } from '@dxos/react-client/echo';
 
 import { AIChatType } from './chat';
 import { ASSISTANT_PLUGIN } from '../meta';
-import { Sequence } from '@dxos/conductor';
 
 export namespace AssistantAction {
   const ASSISTANT_ACTION = `${ASSISTANT_PLUGIN}/action`;

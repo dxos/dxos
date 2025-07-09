@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
 import { getSpace, Ref, type Queue, type Space } from '@dxos/client/echo';
+import { type Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
 import { DXN, Key, Obj } from '@dxos/echo';
 import {
   InvocationOutcome,

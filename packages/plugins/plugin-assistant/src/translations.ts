@@ -1,11 +1,11 @@
 //
 // Copyright 2023 DXOS.org
 //
+import { Sequence } from '@dxos/conductor';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
 import { AIChatType, TemplateType } from './types';
-import { Sequence } from '@dxos/conductor';
 
 export const translations = [
   {

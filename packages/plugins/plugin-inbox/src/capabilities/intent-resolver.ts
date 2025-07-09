@@ -4,6 +4,7 @@
 
 import { Effect, pipe, Schema } from 'effect';
 
+import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
 import {
   contributes,
   Capabilities,
@@ -11,10 +12,16 @@ import {
   type PluginContext,
   createIntent,
   chain,
-  useCapability,
 } from '@dxos/app-framework';
+import { ArtifactId } from '@dxos/artifact';
+import { getSpace } from '@dxos/client/echo';
+import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
+import { TestRuntime } from '@dxos/conductor/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo-schema';
+import { runAndForwardErrors } from '@dxos/effect';
+import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
+import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { TableAction } from '@dxos/plugin-table';
@@ -23,24 +30,6 @@ import { DataType } from '@dxos/schema';
 
 import { InboxCapabilities } from './capabilities';
 import { CalendarType, InboxAction, MailboxType } from '../types';
-import { getSpace } from '@dxos/client/echo';
-import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
-import { failedInvariant } from '@dxos/invariant';
-import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
-import {
-  SequenceBuilder,
-  compileSequence,
-  DEFAULT_INPUT,
-  GraphExecutor,
-  ValueBag,
-  type GptOutput,
-  Workflow,
-  WorkflowLoader,
-  ComputeGraphModel,
-} from '@dxos/conductor';
-import { ArtifactId } from '@dxos/artifact';
-import { TestRuntime } from '@dxos/conductor/testing';
-import { runAndForwardErrors } from '@dxos/effect';
 
 // TODO(dmaretskyi): Circular dep due to the assistant stories
 // import { AssistantCapabilities } from '@dxos/plugin-assistant';

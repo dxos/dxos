@@ -9,8 +9,8 @@ import { ConsolePrinter } from '@dxos/ai';
 import { type CleanupFn, combine } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { type Sequence } from './sequence';
 import { type SequenceEvent, type SequenceLogger, type SequenceMachine, type SequenceMachineState } from './machine';
+import { type Sequence } from './sequence';
 
 /* eslint-disable no-console */
 

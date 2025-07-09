@@ -1,8 +1,12 @@
-import type { Edge } from '@dxos/app-graph';
-import type { ActionGraphProps } from './hooks';
-import type { MenuActionProperties, MenuItem, MenuItemGroupProperties } from './types';
-import { createMenuAction, createMenuItemGroup } from './util';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { invariant } from '@dxos/invariant';
+
+import type { ActionGraphProps } from './hooks';
+import type { MenuActionProperties, MenuItemGroupProperties } from './types';
+import { createMenuAction, createMenuItemGroup } from './util';
 
 export interface ActionGroupBuilder {
   action<P extends {} = {}>(id: string, invoke: () => void, properties: P & MenuActionProperties): this;

@@ -4,9 +4,9 @@
 
 import { ToolRegistry } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { Sequence, SequenceParser, type SequenceDefinition } from '@dxos/conductor';
 import { createExaTool, createGraphWriterTool, createLocalSearchTool } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
+import { SequenceParser, type SequenceDefinition } from '@dxos/conductor';
 import { type DXN } from '@dxos/keys';
 import { DataTypes } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
