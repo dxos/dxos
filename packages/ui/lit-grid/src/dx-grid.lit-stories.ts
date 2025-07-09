@@ -11,6 +11,8 @@ import './dx-grid-multiselect-cell.ts';
 
 import { html, nothing } from 'lit';
 
+import { faker } from '@dxos/random';
+
 import { defaultRowSize } from './defs.js';
 import { type DxGridFrozenPlane, type DxGridPlaneCells, type DxGridProps } from './types';
 import { colToA1Notation, rowToA1Notation } from './util';
@@ -51,8 +53,7 @@ Basic.args = {
     grid: {
       '1,1': {
         // end: '8,1',
-        value:
-          "Extraordinary claims require extraordinary evidence consciousness hydrogen atoms trillion colonies rings of Uranus? Sea of Tranquility of brilliant syntheses two ghostly white figures in coveralls and helmets are softly dancing a very small stage in a vast cosmic arena the only home we've ever known quasar. Vastness is bearable only through love network of wormholes made in the interiors of collapsing stars Sea of Tranquility vastness is bearable only through love a very small stage in a vast cosmic arena. Across the centuries invent the universe a still more glorious dawn awaits extraplanetary made in the interiors of collapsing stars the only home we've ever known. Circumnavigated with pretty stories for which there's little good evidence emerged into consciousness tesseract citizens of distant epochs network of wormholes. Venture the only home we've ever known with pretty stories for which there's little good evidence muse about not a sunrise but a galaxyrise a mote of dust suspended in a sunbeam. Worldlets hydrogen atoms Vangelis at the edge of forever invent the universe circumnavigated? Cosmic fugue realm of the galaxies dispassionate extraterrestrial observer emerged into consciousness decipherment made in the interiors of collapsing stars. Network of wormholes network of wormholes rich in heavy atoms muse about something incredible is waiting to be known hundreds of thousands? A very small stage in a vast cosmic arena are creatures of the cosmos two ghostly white figures in coveralls and helmets are softly dancing something incredible is waiting to be known a very small stage in a vast cosmic arena are creatures of the cosmos.",
+        value: faker.lorem.paragraphs(5),
       },
       '2,2': {
         value: '',
