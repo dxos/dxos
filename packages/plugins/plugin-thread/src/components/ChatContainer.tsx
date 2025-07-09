@@ -11,19 +11,25 @@ import { Icon, ScrollArea, useThemeContext, useTranslation } from '@dxos/react-u
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
-import { MessageTextbox, type MessageTextboxProps, Thread, type ThreadRootProps } from '@dxos/react-ui-thread';
+import {
+  MessageTextbox,
+  type MessageTextboxProps,
+  Thread,
+  type ThreadRootProps,
+  threadLayout,
+} from '@dxos/react-ui-thread';
 import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
 import { useStatus } from '../hooks';
-import { THREAD_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
 
 export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
-  const { t } = useTranslation(THREAD_PLUGIN);
+  const { t } = useTranslation(meta.id);
   return (
     <div role='none' className='flex items-center'>
       <StackItem.SigilButton attendableId={attendableId}>

@@ -15,7 +15,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { ThreadRoot } from '@dxos/react-ui-thread';
+import { Thread } from '@dxos/react-ui-thread';
 import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -60,9 +60,9 @@ const Story = () => {
 
 export const Default = {};
 
-const meta: Meta = {
+const meta: Meta<typeof Thread.Root> = {
   title: 'plugins/plugin-thread/Chat',
-  component: ThreadRoot,
+  component: Thread.Root,
   render: () => <Story />,
   decorators: [
     withPluginManager({

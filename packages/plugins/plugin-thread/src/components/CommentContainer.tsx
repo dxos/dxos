@@ -17,7 +17,7 @@ import {
   hoverableFocusedWithinControls,
   mx,
 } from '@dxos/react-ui-theme';
-import { MessageTextbox, type MessageTextboxProps, Thread, type ThreadProps } from '@dxos/react-ui-thread';
+import { MessageTextbox, type MessageTextboxProps, Thread, type ThreadRootProps } from '@dxos/react-ui-thread';
 import { type AnchoredTo } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -82,7 +82,7 @@ export type CommentContainerProps = {
   onResolve?: (anchor: AnchoredTo) => void;
   onMessageDelete?: (anchor: AnchoredTo, messageId: string) => void;
   onThreadDelete?: (anchor: AnchoredTo) => void;
-} & Pick<ThreadProps, 'current'>;
+} & Pick<ThreadRootProps, 'current'>;
 
 export const CommentContainer = ({
   anchor,
