@@ -13,7 +13,7 @@ import { SpyAiService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { BlueprintMachine, BlueprintParser, BufferedLogger, setConsolePrinter, setLogger } from '@dxos/assistant';
+import { BlueprintMachine, BlueprintParser, BufferedLogger, setConsolePrinter, setLogger } from '@dxos/conductor';
 import { combine } from '@dxos/async';
 import { Queue, type Space } from '@dxos/client/echo';
 import { DXN, Filter, Obj, Ref, Type } from '@dxos/echo';

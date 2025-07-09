@@ -3,12 +3,11 @@
 //
 
 import { Schema } from 'effect';
-
-import { Blueprint } from '@dxos/assistant';
 import { SpaceSchema } from '@dxos/react-client/echo';
 
 import { AIChatType } from './chat';
 import { ASSISTANT_PLUGIN } from '../meta';
+import { Blueprint } from "@dxos/conductor";
 
 export namespace AssistantAction {
   const ASSISTANT_ACTION = `${ASSISTANT_PLUGIN}/action`;

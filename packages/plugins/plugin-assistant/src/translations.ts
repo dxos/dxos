@@ -1,12 +1,11 @@
 //
 // Copyright 2023 DXOS.org
 //
-
-import { Blueprint } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
 
 import { ASSISTANT_PLUGIN } from './meta';
 import { AIChatType, TemplateType } from './types';
+import { Blueprint } from "@dxos/conductor";
 
 export default [
   {

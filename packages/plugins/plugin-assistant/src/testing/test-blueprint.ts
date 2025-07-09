@@ -4,13 +4,8 @@
 
 import { ToolRegistry } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import {
-  type BlueprintDefinition,
-  BlueprintParser,
-  createExaTool,
-  createGraphWriterTool,
-  createLocalSearchTool,
-} from '@dxos/assistant';
+import { Blueprint, BlueprintParser, type BlueprintDefinition } from '@dxos/conductor';
+import { createExaTool, createGraphWriterTool, createLocalSearchTool } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
 import { type DXN } from '@dxos/keys';
 import { DataTypes } from '@dxos/schema';
