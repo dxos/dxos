@@ -541,13 +541,7 @@
       "path": "tools/codemorph/tsconfig.json"
     },
     {
-      "path": "tools/executors/esbuild/tsconfig.json"
-    },
-    {
-      "path": "tools/executors/nx-protobuf-compiler/tsconfig.json"
-    },
-    {
-      "path": "tools/executors/toolbox/tsconfig.json"
+      "path": "tools/esbuild/tsconfig.json"
     },
     {
       "path": "tools/lit-stories/tsconfig.json"
@@ -562,10 +556,10 @@
       "path": "tools/protobuf-test/tsconfig.json"
     },
     {
-      "path": "tools/ridoculous/tsconfig.json"
+      "path": "tools/stories/tsconfig.json"
     },
     {
-      "path": "tools/stories/tsconfig.json"
+      "path": "tools/toolbox/tsconfig.json"
     },
     {
       "path": "tools/vite-plugin-icons/tsconfig.json"

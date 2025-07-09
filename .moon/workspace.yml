@@ -2,6 +2,7 @@
 $schema: ./cache/schemas/workspace.json
 
 projects:
+  - packages/apps/*
   - packages/common/*
   - packages/core/*
   - packages/core/echo/*
@@ -15,7 +16,7 @@ projects:
   - packages/sdk/*
   - packages/ui/*
   - packages/ui/primitives/*
-  - tools/executors/esbuild
+  - tools/*
 
 vcs:
   manager: git

@@ -929,17 +929,7 @@
         },
         {
           "type": "json",
-          "path": "tools/executors/esbuild/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/executors/nx-protobuf-compiler/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/executors/toolbox/package.json",
+          "path": "tools/esbuild/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -964,17 +954,17 @@
         },
         {
           "type": "json",
-          "path": "tools/ridoculous/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/stories/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "tools/swc-log-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/toolbox/package.json",
           "jsonpath": "$.version"
         },
         {

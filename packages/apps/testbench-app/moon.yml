@@ -1,2 +1,13 @@
 type: library
 language: typescript
+workspace:
+  inheritedTasks:
+    exclude:
+      - compile
+      - test
+tasks:
+  build:
+    options:
+      mergeOutputs: 'replace'
+    outputs:
+      - dist/

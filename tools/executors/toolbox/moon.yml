@@ -1,9 +1,0 @@
-type: library
-language: typescript
-tasks:
-  compile:
-    args:
-      - '--main={projectRoot}/src/main.ts'
-      - '--outputPath={projectRoot}/dist'
-      - '--transformers=@dxos/log-hook/transformer'
-      - '--tsConfig={projectRoot}/tsconfig.json'
