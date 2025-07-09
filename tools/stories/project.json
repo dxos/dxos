@@ -97,6 +97,7 @@
         "outputDir": "{projectRoot}/out/examples"
       }
     },
+    "test": {},
     "vitest": {
       "configurations": {
         "browser": {

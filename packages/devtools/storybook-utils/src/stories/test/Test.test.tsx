@@ -11,8 +11,7 @@ import { ThemeProvider } from '@dxos/react-ui';
 
 import { Test } from './Test';
 import * as stories from './Test.stories';
-
-export const TEST_ID = 'test';
+import { TEST_ID } from './defs';
 
 const { Default } = composeStories(stories);
 
