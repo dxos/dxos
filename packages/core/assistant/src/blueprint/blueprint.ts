@@ -7,6 +7,8 @@ import { Schema } from 'effect';
 import { ToolId } from '@dxos/ai';
 import { Key, Obj, Type } from '@dxos/echo';
 
+// TODO(burdon): Rename (Sequence) and create NS.
+
 export const BlueprintStep = Schema.Struct({
   id: Key.ObjectId,
   instructions: Schema.String,
