@@ -3155,6 +3155,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../mesh/edge-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -3179,6 +3182,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.10.0
