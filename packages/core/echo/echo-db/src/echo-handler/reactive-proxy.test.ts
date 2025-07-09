@@ -8,7 +8,7 @@ import { EchoObject, getTypeAnnotation } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { live } from '@dxos/live-object';
 
-import { reactiveProxyTests } from './reactive-proxy.sequence-test';
+import { reactiveProxyTests } from './reactive-proxy.blueprint-test';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
 
