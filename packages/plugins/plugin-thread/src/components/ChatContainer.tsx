@@ -48,11 +48,11 @@ export type ChatContainerProps = {
 } & Pick<ThreadRootProps, 'current'>;
 
 export const ChatContainer = ({ space, thread, context, current, autoFocusTextbox }: ChatContainerProps) => {
+  const { t } = useTranslation(meta.id);
   const id = fullyQualifiedId(thread);
   const identity = useIdentity()!;
   const members = useMembers(space?.key);
   const activity = useStatus(space, id);
-  const { t } = useTranslation(THREAD_PLUGIN);
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
   const [_count, _setCount] = useState(0);
   const rerenderEditor = () => _setCount((count) => count + 1);
