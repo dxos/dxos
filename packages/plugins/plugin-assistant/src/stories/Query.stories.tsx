@@ -13,9 +13,9 @@ import { SpyAiService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
-import { BlueprintMachine, BlueprintParser, BufferedLogger, setConsolePrinter, setLogger } from '@dxos/assistant';
 import { combine } from '@dxos/async';
 import { Queue, type Space } from '@dxos/client/echo';
+import { SequenceMachine, SequenceParser, BufferedLogger, setConsolePrinter, setLogger } from '@dxos/conductor';
 import { DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
 import { log } from '@dxos/log';
@@ -43,7 +43,7 @@ import { testPlugins } from './testing';
 import { AmbientDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { QueryParser, createFilter, type Expression } from '../parser';
-import { createToolRegistry, RESEARCH_BLUEPRINT } from '../testing';
+import { createToolRegistry, RESEARCH_SEQUENCE } from '../testing';
 import { translations } from '../translations';
 
 faker.seed(1);
@@ -176,7 +176,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
   const researchQueue = useQueue(researchGraph?.queue.dxn, { pollInterval: 1_000 });
 
-  const researchBlueprint = useMemo(() => BlueprintParser.create().parse(RESEARCH_BLUEPRINT), []);
+  const researchSequence = useMemo(() => SequenceParser.create().parse(RESEARCH_SEQUENCE), []);
 
   const logger = useMemo(() => new BufferedLogger(), []);
 
@@ -189,7 +189,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   }, [model]);
 
   const handleResearch = useCallback(async () => {
-    if (!space || !tools || !researchBlueprint) {
+    if (!space || !tools || !researchSequence) {
       return;
     }
 
@@ -202,14 +202,14 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
 
     const selected = selection.selected.value;
     const objects = await Promise.all(selected.map((id) => resolver.resolve(DXN.fromLocalObjectId(id))));
-    const machine = new BlueprintMachine(tools, researchBlueprint);
+    const machine = new SequenceMachine(tools, researchSequence);
     const cleanup = combine(setConsolePrinter(machine, true), setLogger(machine, logger));
 
     log.info('starting research...', { selected });
     await machine.runToCompletion({ aiClient, input: objects });
 
     cleanup();
-  }, [space, aiClient, tools, researchBlueprint, selection]);
+  }, [space, aiClient, tools, researchSequence, selection]);
 
   const handleGenerate = useCallback(async () => {
     if (!space) {
