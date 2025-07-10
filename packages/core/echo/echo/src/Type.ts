@@ -238,6 +238,7 @@ export const getMeta = (schema: Obj.Any | Relation.Any): Meta | undefined => {
   return EchoSchema.getTypeAnnotation(schema);
 };
 
+// TODO(dmaretskyi): Remove re-exports.
 export { SpaceId, ObjectId, DXN } from '@dxos/keys';
 
 export { Format, JsonSchemaType as JsonSchema, toEffectSchema, toJsonSchema } from '@dxos/echo-schema';
