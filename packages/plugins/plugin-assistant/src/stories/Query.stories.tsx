@@ -23,7 +23,7 @@ import { D3ForceGraph, type D3ForceGraphProps } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { useQueue } from '@dxos/react-client/echo';
-import { Dialog, IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
+import { IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
 import {
   matchCompletion,
   typeahead,
@@ -40,7 +40,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { addTestData } from './test-data';
 import { testPlugins } from './testing';
-import { AmbientDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
+import { ChatDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { QueryParser, createFilter, type Expression } from '../parser';
 import { createToolRegistry, RESEARCH_SEQUENCE } from '../testing';
@@ -332,17 +332,15 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
         )}
       </div>
 
-      <Dialog.Root modal={false} open>
-        <AmbientDialog resizeable={false} onEscape={handleCancel}>
-          <PromptBar
-            ref={promptRef}
-            placeholder={t('search input placeholder')}
-            extensions={extensions}
-            onSubmit={handleSubmit}
-            onCancel={handleCancel}
-          />
-        </AmbientDialog>
-      </Dialog.Root>
+      <ChatDialog.Root open resizeable={false} onEscape={handleCancel}>
+        <PromptBar
+          ref={promptRef}
+          placeholder={t('search input placeholder')}
+          extensions={extensions}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+        />
+      </ChatDialog.Root>
     </div>
   );
 };
