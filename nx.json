@@ -3,8 +3,16 @@
   "defaultBase": "main",
   "extends": "nx/presets/npm.json",
   "parallel": 4,
+  // "nxCloudId": "62ed1bb8236992263d3c673b",
   "tui": {
     "enabled": false
+  },
+  "s3": {
+    "region": "auto",
+    "bucket": "nx-cache",
+    "endpoint": "https://950816f3f59b079880a1ae33fb0ec320.r2.cloudflarestorage.com",
+    "forcePathStyle": true,
+    "localMode": "read-write"
   },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
@@ -202,6 +210,5 @@
       },
       "outputs": ["{projectRoot}/typedoc"]
     }
-  },
-  "nxCloudId": "62ed1bb8236992263d3c673b"
+  }
 }
