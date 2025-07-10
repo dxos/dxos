@@ -2,7 +2,8 @@ type: library
 language: typescript
 workspace:
   inheritedTasks:
-    exclude: ['compile']
+    exclude:
+      - compile
     rename:
       build: compile
 tasks:
