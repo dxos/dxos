@@ -23,6 +23,7 @@ module.exports = {
     '.mocharc.js',
     'esbuild-server.config.js',
     'playwright.config.ts',
+    'tailwind.ts',
     'vite.config.ts',
     'vitest.config.ts',
     'vitest.*.config.ts',
