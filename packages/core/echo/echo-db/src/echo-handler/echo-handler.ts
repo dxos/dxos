@@ -7,14 +7,7 @@ import { Schema } from 'effect';
 import { type InspectOptionsStylized } from 'node:util';
 
 import { devtoolsFormatter, type DevtoolsFormatter, inspectCustom } from '@dxos/debug';
-import {
-  DATA_NAMESPACE,
-  EncodedReference,
-  encodeReference,
-  type ObjectStructure,
-  PROPERTY_ID,
-  Reference,
-} from '@dxos/echo-protocol';
+import { DATA_NAMESPACE, encodeReference, type ObjectStructure, PROPERTY_ID, Reference } from '@dxos/echo-protocol';
 import {
   ATTR_META,
   ATTR_TYPE,
