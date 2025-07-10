@@ -16,7 +16,6 @@
     "eslint-config-semistandard": "^17.0.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-mocha": "^11.1.0",
     "eslint-plugin-n": "^17.21.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.5.1",
