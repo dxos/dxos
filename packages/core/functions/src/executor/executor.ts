@@ -5,10 +5,10 @@
 import { Effect, Schema } from 'effect';
 
 import type { SpaceId } from '@dxos/client/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 
 import type { FunctionContext, FunctionDefinition } from '../handler';
 import type { ServiceContainer, Services } from '../services';
-import { runAndForwardErrors } from '@dxos/effect';
 
 export class FunctionExecutor {
   constructor(private readonly _services: ServiceContainer) {}

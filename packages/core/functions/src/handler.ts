@@ -10,6 +10,7 @@ import type { EchoDatabase } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
 import { type SpaceId, type DXN } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
+
 import type { Services } from './services';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.

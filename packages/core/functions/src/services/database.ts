@@ -4,9 +4,9 @@
 
 import { Context, Effect, Layer } from 'effect';
 
+import type { Obj, Relation } from '@dxos/echo';
 import type { EchoDatabase } from '@dxos/echo-db';
 import type { DXN } from '@dxos/keys';
-import type { Obj, Relation } from '@dxos/echo';
 
 export class DatabaseService extends Context.Tag('DatabaseService')<
   DatabaseService,
