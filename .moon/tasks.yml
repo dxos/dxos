@@ -52,6 +52,8 @@ tasks:
       - '@group(tests)'
   test:
     command: vitest run --passWithNoTests
+    deps:
+      - ^:compile
     inputs:
       - /vitest.base.config.ts
       - vite.config.ts
