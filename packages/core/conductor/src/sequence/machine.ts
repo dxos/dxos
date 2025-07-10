@@ -18,7 +18,6 @@ import { Event } from '@dxos/async';
 import { Key, Obj } from '@dxos/echo';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { isNonNullable } from '@dxos/util';
 
 import type { Sequence, SequenceStep } from './sequence';
 

@@ -4,8 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { Type } from '@dxos/echo';
 import { ToolId } from '@dxos/ai';
+import { Type } from '@dxos/echo';
 
 /**
  * Blueprint schema defines the structure for AI assistant blueprints.

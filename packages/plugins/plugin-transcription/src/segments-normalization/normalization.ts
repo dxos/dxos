@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { DEFAULT_EDGE_MODEL, Message, ToolRegistry } from '@dxos/ai';
+import { DEFAULT_EDGE_MODEL, Message } from '@dxos/ai';
 import { AISession } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { AiService, defineFunction, ToolResolverService } from '@dxos/functions';
