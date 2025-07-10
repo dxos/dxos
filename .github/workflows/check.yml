@@ -1,4 +1,4 @@
-name: zzz
+name: Check
 
 on:
   pull_request:
@@ -8,6 +8,7 @@ on:
     branches:
       - main
       - ci/*
+      - jdw/moonrepo
 
   schedule:
     - cron: '0 4 * * 1-5'
