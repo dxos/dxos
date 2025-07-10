@@ -3,7 +3,7 @@
 //
 
 import { type Registry, Rx } from '@effect-rx/rx-react';
-import { Effect } from 'effect';
+import { Context, Effect } from 'effect';
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
@@ -17,16 +17,20 @@ const InterfaceDefTypeId: unique symbol = Symbol.for('InterfaceDefTypeId');
 /**
  * The interface definition of a capability.
  */
-export type InterfaceDef<T> = {
+// TODO(dmaretskyi): Not passing in the Id generic likely cause type issues with unrelated tags with the same value type being merged.
+export interface InterfaceDef<T> extends Context.Tag<T, T[]> {
   [InterfaceDefTypeId]: T;
   identifier: string;
-};
+}
 
 /**
  * Helper to define the interface of a capability.
  */
 export const defineCapability = <T>(identifier: string) => {
-  return { identifier } as InterfaceDef<T>;
+  return class extends Context.Tag(identifier)<any, T[]>() {
+    static [InterfaceDefTypeId]: T = null as any;
+    static identifier: string = identifier;
+  } as unknown as InterfaceDef<T>;
 };
 
 /**
