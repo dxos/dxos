@@ -52,6 +52,9 @@ export const withLayout = ({
   };
 };
 
+// TODO(burdon): Use consistently.
+export const layoutCentered = 'bg-deckSurface justify-center overflow-y-auto';
+
 export const DefaultContainer: FC<ContainerProps> = ({ children, classNames }) => {
   return (
     <div role='none' className={mx(classNames)}>

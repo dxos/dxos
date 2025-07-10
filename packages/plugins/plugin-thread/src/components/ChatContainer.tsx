@@ -15,9 +15,8 @@ import {
   MessageTextbox,
   type MessageTextboxProps,
   Thread,
-  ThreadFooter,
+  type ThreadRootProps,
   threadLayout,
-  type ThreadProps,
 } from '@dxos/react-ui-thread';
 import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -25,12 +24,12 @@ import { isNonNullable } from '@dxos/util';
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
 import { useStatus } from '../hooks';
-import { THREAD_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
 
 export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
-  const { t } = useTranslation(THREAD_PLUGIN);
+  const { t } = useTranslation(meta.id);
   return (
     <div role='none' className='flex items-center'>
       <StackItem.SigilButton attendableId={attendableId}>
@@ -46,14 +45,14 @@ export type ChatContainerProps = {
   thread: ThreadType;
   context?: Obj.Any;
   autoFocusTextbox?: boolean;
-} & Pick<ThreadProps, 'current'>;
+} & Pick<ThreadRootProps, 'current'>;
 
 export const ChatContainer = ({ space, thread, context, current, autoFocusTextbox }: ChatContainerProps) => {
+  const { t } = useTranslation(meta.id);
   const id = fullyQualifiedId(thread);
   const identity = useIdentity()!;
   const members = useMembers(space?.key);
   const activity = useStatus(space, id);
-  const { t } = useTranslation(THREAD_PLUGIN);
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
   const [_count, _setCount] = useState(0);
   const rerenderEditor = () => _setCount((count) => count + 1);
@@ -109,7 +108,7 @@ export const ChatContainer = ({ space, thread, context, current, autoFocusTextbo
   };
 
   return (
-    <Thread
+    <Thread.Root
       current={current}
       id={id}
       classNames='bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden transition-[padding-block-end] [[data-sidebar-inline-start-state=open]_&]:lg:pbe-0'
@@ -131,9 +130,11 @@ export const ChatContainer = ({ space, thread, context, current, autoFocusTextbo
           </ScrollArea.Scrollbar>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
+
       <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
-      <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
-    </Thread>
+
+      <Thread.Status activity={activity}>{t('activity message')}</Thread.Status>
+    </Thread.Root>
   );
 };
 
