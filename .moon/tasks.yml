@@ -7,10 +7,16 @@ fileGroups:
   sources:
     - src/**/*
     - '!src/test/**/*'
-    - '!src/testing/**/*'
+    - '!src/**/*.test.tsx?'
+    - '!src/playwright/**/*'
+    - '!src/**/*.spec.ts'
+    - '!src/stories/**/*'
+    - '!src/**/*.stories.tsx'
   tests:
     - src/test/**/*
-    - src/testing/**/*
+    - src/**/*.test.tsx?
+    - src/playwright/**/*
+    - src/**/*.spec.ts
 implicitInputs:
   - package.json
 tasks:
