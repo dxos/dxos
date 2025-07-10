@@ -23,13 +23,22 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/autocomplete": "^6.18.1",
+    "@codemirror/language": "^6.10.3",
+    "@codemirror/search": "^6.5.6",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/view": "^6.34.1",
+    "@dxos/ai": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-text-tooltip": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
@@ -40,6 +49,7 @@
     "@radix-ui/react-context": "1.1.1"
   },
   "devDependencies": {
+    "@dxos/echo": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "~18.2.0",

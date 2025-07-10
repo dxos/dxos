@@ -27,6 +27,12 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -39,7 +45,16 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-components"
+    },
+    {
       "path": "../react-ui-dnd"
+    },
+    {
+      "path": "../react-ui-editor"
+    },
+    {
+      "path": "../react-ui-syntax-highlighter"
     },
     {
       "path": "../react-ui-text-tooltip"

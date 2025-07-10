@@ -5,7 +5,7 @@
 import { lazy } from 'react';
 
 export * from './AssistantSettings';
-export * from './AmbientDialog';
+export * from './ChatDialog';
 export * from './Prompt';
 export * from './PromptSettings';
 export * from './TemplateEditor';
