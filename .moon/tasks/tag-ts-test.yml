@@ -4,6 +4,7 @@ tasks:
     command: vitest run --passWithNoTests
     deps:
       - esbuild-plugins:compile
+      - node-std:compile
       - ^:compile
     inputs:
       - /vitest.base.config.ts
