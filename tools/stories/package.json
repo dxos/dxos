@@ -34,7 +34,7 @@
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.1",
     "chromatic": "^13.0.1",
-    "eslint-plugin-storybook": "9.0.15",
+    "eslint-plugin-storybook": "9.0.16",
     "lodash.flatten": "^4.4.0",
     "playwright": "^1.53.2",
     "react": "^18.2.0",

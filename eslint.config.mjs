@@ -1,0 +1,155 @@
+// @ts-check
+
+import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import reactPlugin from 'eslint-plugin-react';
+
+export default tseslint.config(
+  //
+  // Global ignores
+  //
+  {
+    ignores: [
+      'eslint.config.mjs',
+      // Build Artifacts
+      'dist',
+      'out',
+      '**/proto/gen/*',
+      'packages/core/protocols/proto/**/*',
+      'packages/sdk/client/src/version.ts',
+      'packages/sdk/client-services/src/version.ts',
+
+      // Config
+      '.eslintrc.js',
+      '.mocharc.js',
+      'esbuild-server.config.js',
+      'playwright.config.ts',
+      'vite.config.ts',
+      'vitest.config.ts',
+      'vitest.*.config.ts',
+      'webpack.config.js',
+
+      // Dependencies
+      'node_modules',
+
+      // Templates
+      // TODO(wittjosiah): Fix lint config to lint these files.
+      '*.t.ts',
+
+      // Docs snippets
+      'docs/content/**/*',
+      '**/typedoc/assets/**/*',
+    ],
+    // WARNING: Do not add extra keys to this config object
+    // See: https://eslint.org/docs/latest/use/configure/configuration-files#globally-ignoring-files-with-ignores
+  },
+
+  //
+  // Global options
+  //
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+
+  //
+  // Plugins and rulesets
+  //
+  eslint.configs.recommended,
+  tseslint.configs.recommendedTypeChecked,
+  reactPlugin.configs.flat.recommended,
+
+  //
+  // Global overrides
+  //
+  {
+    rules: {
+      '@typescript-eslint/ban-types': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-extra-parens': 'off',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-namespace': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-use-before-define': 'off',
+      '@typescript-eslint/no-useless-constructor': ['error'],
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        {
+          prefer: 'type-imports',
+          fixStyle: 'inline-type-imports',
+        },
+      ],
+      '@typescript-eslint/consistent-type-exports': [
+        'error',
+        {
+          fixMixedExportsWithInlineTypeSpecifier: true,
+        },
+      ],
+      '@typescript-eslint/no-this-alias': 'off',
+
+      // TODO(dmaretskyi): New overrieds. Need to review later.
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+      '@typescript-eslint/no-redundant-type-constituents': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/await-thenable': 'off',
+      '@typescript-eslint/no-unsafe-enum-comparison': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/no-unsafe-function-type': 'off',
+      'no-dupe-else-if': 'off',
+      '@typescript-eslint/no-duplicate-type-constituents': 'off',
+      '@typescript-eslint/no-base-to-string': 'off',
+      '@typescript-eslint/no-for-in-array': 'off',
+
+      'storybook/context-in-play-function': 'off',
+      camelcase: 'off',
+      'jsx-quotes': ['error', 'prefer-single'],
+      'react/display-name': 'off',
+      'react/function-component-definition': [
+        'error',
+        {
+          namedComponents: 'arrow-function',
+          unnamedComponents: 'arrow-function',
+        },
+      ],
+      'react/jsx-first-prop-new-line': ['error', 'multiline-multiprop'],
+      'react/jsx-tag-spacing': [
+        'error',
+        {
+          closingSlash: 'never',
+          beforeSelfClosing: 'always',
+          afterOpening: 'never',
+          beforeClosing: 'never',
+        },
+      ],
+      'react/jsx-wrap-multilines': 'off',
+      'react/prop-types': 'off',
+    },
+  },
+
+  //
+  // File-specific overrides
+  //
+  {
+    files: ['**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+);
