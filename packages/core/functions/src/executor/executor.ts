@@ -7,7 +7,8 @@ import { Effect, Schema } from 'effect';
 import type { SpaceId } from '@dxos/client/echo';
 
 import type { FunctionContext, FunctionDefinition } from '../handler';
-import type { ServiceContainer } from '../services';
+import type { ServiceContainer, Services } from '../services';
+import { runAndForwardErrors } from '@dxos/effect';
 
 export class FunctionExecutor {
   constructor(private readonly _services: ServiceContainer) {}
@@ -32,15 +33,22 @@ export class FunctionExecutor {
       },
     };
 
-    const result = await fnDef.handler({ context, data: input });
+    const result = fnDef.handler({ context, data: input });
+
+    let data: unknown;
+    if (Effect.isEffect(result)) {
+      data = await (result as Effect.Effect<unknown, unknown, Services>).pipe(
+        Effect.provide(this._services.createLayer()),
+        runAndForwardErrors,
+      );
+    } else {
+      data = await result;
+    }
 
     // Assert output matches schema
     const assertOutput = fnDef.outputSchema?.pipe(Schema.asserts);
-    (assertOutput as any)(result);
-    if (Effect.isEffect(result)) {
-      return Effect.runPromise(result as any);
-    }
+    (assertOutput as any)(data);
 
-    return result as any;
+    return data as any;
   }
 }

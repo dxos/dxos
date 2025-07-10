@@ -10,6 +10,7 @@ import type { EchoDatabase } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
 import { type SpaceId, type DXN } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
+import type { Services } from './services';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -31,7 +32,7 @@ export type FunctionHandler<TData = {}, TOutput = any> = (params: {
    * This will be the payload from the trigger or other data passed into the function in a workflow.
    */
   data: TData;
-}) => TOutput | Promise<TOutput> | Effect.Effect<TOutput, any>;
+}) => TOutput | Promise<TOutput> | Effect.Effect<TOutput, any, Services>;
 
 /**
  * Function context.

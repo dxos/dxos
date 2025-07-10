@@ -2,16 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Effect, Schema } from 'effect';
 import { beforeAll, describe, test } from 'vitest';
 
-import { ConsolePrinter, createTool, Message, ToolRegistry, ToolResult } from '@dxos/ai';
+import { ConsolePrinter, createTool, Message, ToolRegistry, ToolResult, type ExecutableTool } from '@dxos/ai';
 import { ArtifactId } from '@dxos/artifact';
 import { AISession, Blueprint, BlueprintBinding } from '@dxos/assistant';
 import { Obj, Ref, Type } from '@dxos/echo';
 import type { EchoDatabase, Queue, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { AiService, DatabaseService, ToolResolverService, type ServiceContainer } from '@dxos/functions';
+import {
+  AiService,
+  DatabaseService,
+  defineFunction,
+  FunctionExecutor,
+  ToolResolverService,
+  type FunctionDefinition,
+  type ServiceContainer,
+} from '@dxos/functions';
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { ComplexSet } from '@dxos/util';
@@ -21,6 +29,29 @@ declare global {
     serviceContainer?: ServiceContainer;
   }
 }
+
+// TODO(dmaretskyi): Find a good home for this.
+const toolFromFunction = <I, O>(namespace: string, name: string, func: FunctionDefinition<I, O>): ExecutableTool => {
+  return createTool(namespace, {
+    name,
+    description: func.description,
+    schema: func.inputSchema,
+    execute: async (input, { extensions }) => {
+      const serviceContainer = extensions?.serviceContainer;
+      if (!serviceContainer) {
+        throw new Error('Service container not provided.');
+      }
+
+      const invoker = new FunctionExecutor(serviceContainer);
+      try {
+        const result = await invoker.invoke(func, input);
+        return ToolResult.Success(result);
+      } catch (error) {
+        return ToolResult.Error(error instanceof Error ? error.message : 'Unknown error.');
+      }
+    },
+  });
+};
 
 const TextDocument = Schema.Struct({
   content: Schema.String.annotations({ description: 'The content of the document.' }),
@@ -32,43 +63,57 @@ const TextDocument = Schema.Struct({
 );
 interface TextDocument extends Schema.Schema.Type<typeof TextDocument> {}
 
-const readDocument = createTool('test', {
-  name: 'readDocument',
-  description: 'Read the design spec document.',
-  schema: Schema.Struct({
-    // TODO(dmaretskyi): Imagine if this could be an ECHO ref. (*_*)
-    id: ArtifactId.annotations({ description: 'The ID of the document to read.' }),
+const readDocument = toolFromFunction(
+  'test',
+  'readDocument',
+  defineFunction({
+    description: 'Read the design spec document.',
+    inputSchema: Schema.Struct({
+      // TODO(dmaretskyi): Imagine if this could be an ECHO ref. (*_*)
+      id: ArtifactId.annotations({ description: 'The ID of the document to read.' }),
+    }),
+    outputSchema: Schema.Struct({
+      content: Schema.String,
+    }),
+    handler: Effect.fn(function* ({ data: { id } }) {
+      const { db } = yield* DatabaseService;
+      const doc = yield* Effect.promise(() =>
+        db.graph.createRefResolver({ context: { space: db.spaceId } }).resolve(ArtifactId.toDXN(id)),
+      );
+      if (!doc) {
+        throw new Error('Document not found.');
+      }
+
+      return { content: doc.content };
+    }),
   }),
-  execute: async ({ id }, { extensions }) => {
-    const { db } = extensions!.serviceContainer!.getService(DatabaseService);
-    const doc = await db.graph.createRefResolver({ context: { space: db.spaceId } }).resolve(ArtifactId.toDXN(id));
-    if (!doc) {
-      return ToolResult.Error('Document not found.');
-    }
+);
 
-    return ToolResult.Success({ content: doc.content });
-  },
-});
+const writeDocument = toolFromFunction(
+  'test',
+  'writeDocument',
+  defineFunction({
+    description: 'Write the design spec document.',
+    inputSchema: Schema.Struct({
+      id: ArtifactId.annotations({ description: 'The ID of the document to write.' }),
+      content: Schema.String.annotations({ description: 'New content to write to the document.' }),
+    }),
+    outputSchema: Schema.String,
+    handler: Effect.fn(function* ({ data: { id, content } }) {
+      const { db } = yield* DatabaseService;
+      const doc = yield* Effect.promise(() =>
+        db.graph.createRefResolver({ context: { space: db.spaceId } }).resolve(ArtifactId.toDXN(id)),
+      );
+      if (!doc) {
+        throw new Error('Document not found.');
+      }
 
-const writeDocument = createTool('test', {
-  name: 'writeDocument',
-  description: 'Write the design spec document.',
-  schema: Schema.Struct({
-    id: ArtifactId.annotations({ description: 'The ID of the document to write.' }),
-    content: Schema.String.annotations({ description: 'New content to write to the document.' }),
+      doc.content = content;
+      console.log('writeDocument', content);
+      return 'Document updated.';
+    }),
   }),
-  execute: async ({ id, content }, { extensions }) => {
-    const { db } = extensions!.serviceContainer!.getService(DatabaseService);
-    const doc = await db.graph.createRefResolver({ context: { space: db.spaceId } }).resolve(ArtifactId.toDXN(id));
-    if (!doc) {
-      return ToolResult.Error('Document not found.');
-    }
-
-    doc.content = content;
-    console.log('writeDocument', content);
-    return ToolResult.Success('Document updated.');
-  },
-});
+);
 
 const DESIGN_SPEC_BLUEPRINT = Obj.make(Blueprint, {
   name: 'Design Spec',
