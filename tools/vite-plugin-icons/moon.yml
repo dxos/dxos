@@ -5,6 +5,7 @@ workspace:
     exclude:
       - compile
       - lint
+      - test
     rename:
       build: compile
 tasks:

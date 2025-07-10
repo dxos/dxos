@@ -10,13 +10,13 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/src/index.d.ts",
       "browser": "./dist/src/index.js",
       "node": "./dist/src/index.js"
     },
     "./dx-grid.pcss": "./src/dx-grid.pcss",
     "./testing": {
-      "types": "./dist/types/src/testing/index.d.ts",
+      "types": "./dist/src/testing/index.d.ts",
       "browser": "./dist/src/testing/index.js",
       "node": "./dist/src/testing/index.js"
     }
@@ -26,7 +26,7 @@
   "typesVersions": {
     "*": {
       "testing": [
-        "dist/types/src/testing/index.d.ts"
+        "dist/src/testing/index.d.ts"
       ]
     }
   },

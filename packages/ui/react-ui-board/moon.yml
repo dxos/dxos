@@ -1,5 +1,9 @@
 type: library
 language: typescript
+workspace:
+  inheritedTasks:
+    exclude:
+      - test
 tasks:
   compile:
     args:

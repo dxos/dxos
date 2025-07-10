@@ -3,6 +3,7 @@ language: typescript
 workspace:
   inheritedTasks:
     exclude:
+      - test
       - compile
 tasks:
   build:
