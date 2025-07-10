@@ -9,7 +9,7 @@ import { type AssociatedArtifact } from '@dxos/artifact';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { ThreadContainer } from './Thread';
+import { ThreadRoot } from './Thread';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { type AssistantSettingsProps, type AIChatType } from '../types';
 
@@ -26,7 +26,7 @@ export const ChatContainer: FC<ChatContainerProps> = ({ role, chat, associatedAr
 
   return (
     <StackItem.Content role={role} classNames='container-max-width'>
-      <ThreadContainer
+      <ThreadRoot
         chat={chat}
         settings={settings}
         transcription={transcription}

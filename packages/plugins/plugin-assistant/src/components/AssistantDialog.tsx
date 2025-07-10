@@ -9,7 +9,7 @@ import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { useTranslation } from '@dxos/react-ui';
 
 import { AmbientDialog } from './AmbientDialog';
-import { ThreadContainer } from './Thread';
+import { ThreadRoot } from './Thread';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { type AssistantSettingsProps, type AIChatType } from '../types';
 
@@ -23,7 +23,7 @@ export const AssistantDialog: FC<{ chat?: AIChatType }> = ({ chat }) => {
 
   return (
     <AmbientDialog.Root open={open} onOpenChange={setOpen} title={t('assistant dialog title')}>
-      <ThreadContainer
+      <ThreadRoot
         part={'dialog'}
         chat={chat}
         onOpenChange={setOpen}

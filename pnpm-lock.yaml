@@ -12680,6 +12680,79 @@ importers:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
 
+  packages/ui/react-ui-chat:
+    dependencies:
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../react-ui-dnd
+      '@dxos/react-ui-text-tooltip':
+        specifier: workspace:*
+        version: link:../react-ui-text-tooltip
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      '@dxos/react-ui-types':
+        specifier: workspace:*
+        version: link:../react-ui-types
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@preact-signals/safe-react':
+        specifier: ^0.9.0
+        version: 0.9.0(@babel/core@7.25.9)(@swc/helpers@0.5.17)(react@18.2.0)
+      '@preact/signals-core':
+        specifier: ^1.9.0
+        version: 1.10.0
+      '@radix-ui/react-accordion':
+        specifier: 1.2.3
+        version: 1.2.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@radix-ui/react-context':
+        specifier: 1.1.1
+        version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
+    devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../devtools/storybook-utils
+      '@types/react':
+        specifier: ~18.2.0
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ~18.2.0
+        version: 18.2.25
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: 5.4.7
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+
   packages/ui/react-ui-components:
     dependencies:
       '@dxos/invariant':

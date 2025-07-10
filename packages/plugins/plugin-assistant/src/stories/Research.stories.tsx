@@ -41,7 +41,7 @@ import { DataTypes } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { testPlugins } from './testing';
-import { Thread, type ThreadProps } from '../components';
+import { Thread, type ThreadListProps } from '../components';
 import { ChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import { translations } from '../translations';
@@ -52,7 +52,7 @@ const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
 type RenderProps = {
   items?: Obj.Any[];
   prompts?: string[];
-} & Pick<ThreadProps, 'debug'>;
+} & Pick<ThreadListProps, 'debug'>;
 
 // TODO(burdon): Use ChatContainer.
 const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) => {
