@@ -138,6 +138,10 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
         createBasicExtensions({ lineWrapping: true }),
         createThemeExtensions({
           themeMode,
+          slots: {
+            editor: { className: '!min-is-full !is-min !max-is-[--dx-grid-cell-editor-max-inline-size]' },
+            content: { className: '!break-normal' },
+          },
         }),
       ],
     };
@@ -149,7 +153,8 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
       ref={parentRef}
       className='absolute z-[1] dx-grid__cell-editor'
       style={{
-        ...box,
+        insetInlineStart: box?.insetInlineStart ?? '0px',
+        insetBlockStart: box?.insetBlockStart ?? '0px',
         minInlineSize: box?.inlineSize ?? '180px',
         minBlockSize: box?.blockSize ?? '30px',
         ...{ '--dx-gridCellWidth': `${box?.inlineSize ?? 200}px` },

@@ -143,7 +143,6 @@
           white-space: normal;
           hyphens: auto;
           overflow-wrap: break-word;
-          text-wrap: balance;
 
           z-index: 1;
         }
@@ -161,24 +160,29 @@
     white-space: normal;
     hyphens: auto;
     overflow-wrap: break-word;
-    text-wrap: balance;
 
     background: var(--dx-grid-base, var(--dx-baseSurface));
     border: 1px solid var(--dx-accentSurface);
     border-radius: 2px;
 
-    block-size: min-content;
-    max-block-size: min(12em, 50vh);
-    inline-size: min-content;
-    max-inline-size: min(60ch, 90vw);
+    --dx-grid-cell-editor-max-block-size: min(12em, 50vh);
+    --dx-grid-cell-editor-max-inline-size: min(60ch, 90vw);
 
+    block-size: min-content;
+    max-block-size: var(--dx-grid-cell-editor-max-block-size);
+    inline-size: min-content;
+    max-inline-size: var(--dx-grid-cell-editor-max-inline-size);
+
+    /* TODO(thure): Setting `slots.scroll` in `createThemeExtensions` does not apply styles to `.cm-scroller`, why? */
     & .cm-scroller {
-      /* TODO(thure): Why is the block axis an extra pixel? */
-      padding: calc(var(--dx-grid-cell-padding-block) - 2px) calc(var(--dx-grid-cell-padding-inline) - 1px);
+      overflow-x: hidden !important;
+      padding: calc(var(--dx-grid-cell-padding-block) - 1px) calc(var(--dx-grid-cell-padding-inline) - 1px);
     }
+
   }
 
   /* /// */
+
   .dx-grid-host:focus-within .dx-grid:not(:focus-within) {
     [role='gridcell'],
     [role='columnheader'],
