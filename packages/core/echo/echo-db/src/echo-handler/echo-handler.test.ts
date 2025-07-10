@@ -330,16 +330,16 @@ describe('Reactive Object with ECHO database', () => {
     });
   });
 
-  test('data symbol', async () => {
+  test('calling toJSON on an object', async () => {
     const { db, graph } = await builder.createDatabase();
     graph.schemaRegistry.addSchema([Testing.TestType]);
     const objects = [db.add(live(Testing.TestType, TEST_OBJECT)), db.add(live(Testing.TestSchemaType, TEST_OBJECT))];
     for (const obj of objects) {
       const objData: any = (obj as any).toJSON();
       expect(objData).to.deep.contain({
-        '@id': obj.id,
+        id: obj.id,
+        '@type': 'dxn:type:example.com/type/Test:0.1.0',
         '@meta': { keys: [] },
-        '@type': { '/': 'dxn:type:example.com/type/Test:0.1.0' },
         ...TEST_OBJECT,
       });
     }
@@ -647,7 +647,7 @@ describe('Reactive Object with ECHO database', () => {
 
       const employeeJson = JSON.parse(JSON.stringify(employee));
       expect(employeeJson).to.deep.eq({
-        '@id': employee.id,
+        id: employee.id,
         '@meta': { keys: [] },
         name: 'John',
         worksAt: encodeReference(Reference.localObjectReference(org.id)),

@@ -384,9 +384,7 @@ describe('Database', () => {
     );
 
     expect(getTypename(task.subTasks![0].target!)).to.eq('example.com/type/Task');
-    expect(JSON.parse(JSON.stringify(task.subTasks![0].target))['@type']['/']).to.eq(
-      'dxn:type:example.com/type/Task:0.1.0',
-    );
+    expect(JSON.parse(JSON.stringify(task.subTasks![0].target))['@type']).to.eq('dxn:type:example.com/type/Task:0.1.0');
   });
 
   describe('object collections', () => {
