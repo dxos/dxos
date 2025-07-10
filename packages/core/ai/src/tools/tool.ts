@@ -40,6 +40,7 @@ export type ToolExecutionContext = {
    * Report what tool is doing currently.
    */
   reportStatus?: (status: AgentStatus) => void;
+
 };
 
 export type ToolResult =
