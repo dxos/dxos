@@ -1,12 +1,13 @@
-import { ConsolePrinter, createTool, ToolRegistry, ToolResult } from '@dxos/ai';
+import { ConsolePrinter, createTool, Message, ToolRegistry, ToolResult } from '@dxos/ai';
 import { ArtifactId } from '@dxos/artifact';
-import { AISession, Blueprint } from '@dxos/assistant';
-import { Obj, Type } from '@dxos/echo';
-import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
+import { AISession, Blueprint, BlueprintBinding } from '@dxos/assistant';
+import { Obj, Ref, Type, type DXN } from '@dxos/echo';
+import type { EchoDatabase, Queue, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { AiService, DatabaseService, ToolResolverService, type ServiceContainer } from '@dxos/functions';
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
+import { ComplexSet } from '@dxos/util';
 import { Schema } from 'effect';
 import { beforeAll, describe, test } from 'vitest';
 
@@ -77,9 +78,112 @@ const DESIGN_SPEC_BLUEPRINT = Obj.make(Blueprint, {
     When replying to the user, be terse with your comments about design doc handling.
     You do not announce when you read or write the design spec document.
   `,
+  // TODO(dmaretskyi): Create tool.
   tools: [readDocument.id, writeDocument.id],
   artifacts: [],
 });
+
+interface ConversationRunOptions {
+  prompt: string;
+}
+
+type ConversationOptions = {
+  serviceContainer: ServiceContainer;
+  queue: Queue<Message | BlueprintBinding>;
+  onBegin?: (session: AISession) => void;
+  onEnd?: (session: AISession) => void;
+};
+
+/**
+ * Persistent conversation state.
+ * Context + history + artifacts.
+ * Backed by a Queue.
+ */
+export class Conversation {
+  private readonly _serviceContainer: ServiceContainer;
+  private readonly _queue: Queue<Message | BlueprintBinding>;
+  private readonly _onBegin?: (session: AISession) => void = undefined;
+  private readonly _onEnd?: (session: AISession) => void = undefined;
+
+  constructor(options: ConversationOptions) {
+    this._serviceContainer = options.serviceContainer;
+    this._queue = options.queue;
+    this._onBegin = options.onBegin;
+    this._onEnd = options.onEnd;
+  }
+
+  readonly blueprints = {
+    bind: async (blueprint: Ref.Ref<Blueprint>): Promise<void> => {
+      await this._queue.append([
+        Obj.make(BlueprintBinding, {
+          added: [blueprint],
+          removed: [],
+        }),
+      ]);
+    },
+
+    unbind: async (blueprint: Ref.Ref<Blueprint>): Promise<void> => {
+      await this._queue.append([
+        Obj.make(BlueprintBinding, {
+          added: [],
+          removed: [blueprint],
+        }),
+      ]);
+    },
+
+    query: async (): Promise<Ref.Ref<Blueprint>[]> => {
+      const queueItems = await this._queue.queryObjects();
+
+      const bindings = new ComplexSet<Ref.Ref<Blueprint>>((ref) => ref.dxn.toString());
+      for (const item of queueItems) {
+        if (Obj.instanceOf(BlueprintBinding, item)) {
+          for (const bp of item.removed) {
+            bindings.delete(bp);
+          }
+          for (const bp of item.added) {
+            bindings.add(bp);
+          }
+        }
+      }
+      return Array.from(bindings);
+    },
+  };
+
+  async run(options: ConversationRunOptions) {
+    const session = new AISession({
+      operationModel: 'configured',
+    });
+    this._onBegin?.(session);
+
+    const history = await this.getHistory();
+    const blueprints = await Ref.Array.loadAll(await this.blueprints.query());
+    if (blueprints.length > 1) {
+      throw new Error('Multiple blueprints are not yet supported.');
+    }
+
+    const messages = await session.run({
+      history,
+      prompt: options.prompt,
+      systemPrompt: blueprints.at(0)?.instructions,
+      artifacts: [],
+      tools: blueprints.at(0)?.tools ?? [],
+      client: this._serviceContainer.getService(AiService).client,
+      toolResolver: this._serviceContainer.getService(ToolResolverService).toolResolver,
+      extensions: {
+        serviceContainer: this._serviceContainer,
+      },
+    });
+
+    await this._queue.append(messages);
+
+    this._onEnd?.(session);
+  }
+
+  async getHistory(): Promise<Message[]> {
+    const queueItems = await this._queue.queryObjects();
+    return queueItems.filter(Obj.instanceOf(Message));
+  }
+}
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 120_000 }, () => {
   let builder: EchoTestBuilder;
@@ -89,7 +193,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
 
   beforeAll(async () => {
     builder = await new EchoTestBuilder().open();
-    ({ db, queues } = await builder.createDatabase({ types: [TextDocument] }));
+    ({ db, queues } = await builder.createDatabase({ types: [TextDocument, Blueprint] }));
 
     // TODO(dmaretskyi): Helper to scaffold this from a config.
     serviceContainer = createTestServices({
@@ -106,19 +210,22 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
   });
 
   test('spec blueprint', async () => {
-    const doc = db.add(Obj.make(TextDocument, { content: 'Hello, world!' }));
-
-    const session = new AISession({
-      operationModel: 'configured',
-    });
     const printer = new ConsolePrinter();
-    session.message.on((message) => printer.printMessage(message));
-    session.userMessage.on((message) => printer.printMessage(message));
-    session.block.on((block) => printer.printContentBlock(block));
+    const conversation = new Conversation({
+      serviceContainer,
+      queue: queues.create(),
+      onBegin: (session) => {
+        session.message.on((message) => printer.printMessage(message));
+        session.userMessage.on((message) => printer.printMessage(message));
+        session.block.on((block) => printer.printContentBlock(block));
+      },
+    });
 
-    await session.run({
-      client: serviceContainer.getService(AiService).client,
-      history: [],
+    await db.add(DESIGN_SPEC_BLUEPRINT);
+    await conversation.blueprints.bind(Ref.make(DESIGN_SPEC_BLUEPRINT));
+
+    const artifact = db.add(Obj.make(TextDocument, { content: 'Hello, world!' }));
+    await conversation.run({
       prompt: `
         Let's design a new feature for our product. We need to add a user profile system with the following requirements:
 
@@ -130,17 +237,16 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
 
         What do you think about this approach? Let's capture the key design decisions in our spec.
 
-        Store spec in ${Obj.getDXN(doc)}
+        Store spec in ${Obj.getDXN(artifact)}
       `,
-      systemPrompt: DESIGN_SPEC_BLUEPRINT.instructions,
-      tools: [...DESIGN_SPEC_BLUEPRINT.tools],
-      toolResolver: serviceContainer.getService(ToolResolverService).toolResolver,
-      artifacts: [],
-      extensions: {
-        serviceContainer,
-      },
     });
+    log.info('spec 1', { doc: artifact });
 
-    log.info('spec', { doc });
+    await conversation.run({
+      prompt: `
+        I want this to be built on top of Durable Objects and SQLite database. Let's adjust the spec to reflect this.
+      `,
+    });
+    log.info('spec 2', { doc: artifact });
   });
 });

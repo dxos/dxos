@@ -15,15 +15,16 @@ export const BlueprintBinding = Schema.Struct({
   /**
    * Blueprints added to a conversation.
    */
-  added: Type.Ref(Blueprint),
+  added: Schema.Array(Type.Ref(Blueprint)),
 
   /**
    * Blueprints removed from a conversation.
    */
-  removed: Type.Ref(Blueprint),
+  removed: Schema.Array(Type.Ref(Blueprint)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/BlueprintBinding',
     version: '0.1.0',
   }),
 );
+export interface BlueprintBinding extends Schema.Schema.Type<typeof BlueprintBinding> {}
