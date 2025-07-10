@@ -8,7 +8,7 @@ import { Icon, IconButton, useTranslation, type ThemedClassName } from '@dxos/re
 import { Waveform } from '@dxos/react-ui-sfx';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/react-ui-theme';
 
-import { THREAD_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 export type ResponsiveGridItemProps<T extends object = any> = PropsWithChildren<
   ThemedClassName<{
@@ -45,7 +45,7 @@ export const ResponsiveGridItem = <T extends object = any>({
   speaking,
   onClick,
 }: ResponsiveGridItemProps<T>) => {
-  const { t } = useTranslation(THREAD_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const iconProps: Record<string, { icon: string; label: string; classNames?: string }> = {
     wave: {
       icon: 'ph--hand-waving--duotone',

@@ -20,7 +20,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { Call } from './Call';
 import ChatContainer from './ChatContainer';
 import { ThreadCapabilities } from '../capabilities';
-import { THREAD_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type ChannelType } from '../types';
 
 export type ChannelContainerProps = {
@@ -133,7 +133,7 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
 export default ChannelContainer;
 
 const DisplayNameMissing = () => {
-  const { t } = useTranslation(THREAD_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const client = useClient();
   const [displayName, setDisplayName] = useState('');
   const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => setDisplayName(event.target.value), []);
@@ -163,10 +163,10 @@ const useChannelToolbarActions = (onJoinCall?: () => void) => {
         return {
           nodes: [
             createMenuItemGroup('root', {
-              label: ['channel toolbar title', { ns: THREAD_PLUGIN }],
+              label: ['channel toolbar title', { ns: meta.id }],
             }),
             createMenuAction('video-call', () => onJoinCall?.(), {
-              label: ['start video call label', { ns: THREAD_PLUGIN }],
+              label: ['start video call label', { ns: meta.id }],
               icon: 'ph--video-camera--regular',
               type: 'video-call',
             }),

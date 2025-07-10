@@ -11,11 +11,16 @@ import { hoverableControlItem, hoverableFocusedWithinControls, mx } from '@dxos/
 import { translationKey } from '../translations';
 import type { ThreadEntity } from '../types';
 
-export type ThreadProps = ThemedClassName<ComponentPropsWithRef<'div'>> & ThreadEntity & { current?: boolean };
-
+// TODO(burdon): Why is this exported?
 export const threadLayout = 'is-full place-self-start grid grid-cols-[var(--rail-size)_1fr]';
 
-export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
+//
+// Root
+//
+
+type ThreadRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & ThreadEntity & { current?: boolean };
+
+const ThreadRoot = forwardRef<HTMLDivElement, ThreadRootProps>(
   ({ current, children, classNames, ...props }, forwardedRef) => {
     return (
       <div
@@ -26,8 +31,7 @@ export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
         className={mx(
           threadLayout,
           hoverableFocusedWithinControls,
-          'pbs-2 pbe-4 bg-[var(--surface-bg)] border-separator first:border-bs-0 border-be',
-          'current-related attention-surface [--controls-opacity:0]',
+          'bg-[var(--surface-bg)] current-related attention-surface [--controls-opacity:0]',
           classNames,
         )}
         ref={forwardedRef}
@@ -38,9 +42,13 @@ export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
   },
 );
 
-export type ThreadHeadingProps = ThemedClassName<ComponentPropsWithRef<'div'>> & { detached?: boolean };
+//
+// Heading
+//
 
-export const ThreadHeading = forwardRef<HTMLParagraphElement, ThreadHeadingProps>(
+type ThreadHeaderProps = ThemedClassName<ComponentPropsWithRef<'div'>> & { detached?: boolean };
+
+const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
   ({ classNames, children, detached, ...props }, forwardedRef) => {
     return (
       <>
@@ -66,11 +74,15 @@ export const ThreadHeading = forwardRef<HTMLParagraphElement, ThreadHeadingProps
   },
 );
 
-export type ThreadFooterProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
+//
+// Status
+//
+
+type ThreadStatusProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   activity?: boolean;
 };
 
-export const ThreadFooter = forwardRef<HTMLDivElement, ThreadFooterProps>(
+const ThreadStatus = forwardRef<HTMLDivElement, ThreadStatusProps>(
   ({ activity, classNames, children, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     return (
@@ -95,3 +107,11 @@ export const ThreadFooter = forwardRef<HTMLDivElement, ThreadFooterProps>(
     );
   },
 );
+
+export const Thread = {
+  Root: ThreadRoot,
+  Header: ThreadHeader,
+  Status: ThreadStatus,
+};
+
+export type { ThreadRootProps, ThreadHeaderProps as ThreadHeadingProps, ThreadStatusProps };
