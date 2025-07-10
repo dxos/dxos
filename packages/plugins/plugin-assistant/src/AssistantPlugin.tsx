@@ -44,7 +44,7 @@ export const AssistantPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: Type.getTypename(Sequence),
           metadata: {
-            icon: 'ph--rows-plus-bottom--regular',
+            icon: 'ph--circuitry--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
