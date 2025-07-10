@@ -1,3 +1,5 @@
+# TODO(wittjosiah): This is in tools because we aren't publishing it.
+#   It should be removed and we should use @chui/vite-plugin-icons again.
 type: library
 language: typescript
 workspace:

@@ -1,4 +1,4 @@
-type: library
+type: automation
 language: typescript
 tasks:
   compile:

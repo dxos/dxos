@@ -62,7 +62,7 @@ const createNodeConfig = (cwd: string) =>
         '!**/src/**/*.browser.test.{ts,tsx}',
         '!**/test/**/*.browser.test.{ts,tsx}',
       ],
-      setupFiles: [new URL('./vitest/setup.ts', import.meta.url).pathname],
+      setupFiles: [new URL('./tools/vitest/setup.ts', import.meta.url).pathname],
     },
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui

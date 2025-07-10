@@ -1,4 +1,4 @@
-type: library
+type: tool
 language: typescript
 workspace:
   inheritedTasks:

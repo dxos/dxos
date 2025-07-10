@@ -1,4 +1,4 @@
-type: library
+type: scaffolding
 language: typescript
 workspace:
   inheritedTasks:

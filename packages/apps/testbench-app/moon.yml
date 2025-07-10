@@ -1,4 +1,4 @@
-type: library
+type: application
 language: typescript
 tags:
   - e2e
