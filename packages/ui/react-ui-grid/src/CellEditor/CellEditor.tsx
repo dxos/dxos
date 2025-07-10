@@ -135,16 +135,17 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
           }
           return null;
         }),
-        createBasicExtensions({ lineWrapping: false }),
+        createBasicExtensions({ lineWrapping: true }),
         createThemeExtensions({
           themeMode,
           slots: {
-            editor: {
-              className: '[&>.cm-scroller]:scrollbar-none tabular-nums',
-            },
-            content: {
-              className: '!pli-[var(--dx-grid-cell-padding-inline)] !plb-[var(--dx-grid-cell-padding-block)]',
-            },
+            // TODO(thure): How can this adopt the same dimensions as the focused grid cell?
+            // editor: {
+            //   className: '[&>.cm-scroller]:scrollbar-none tabular-nums',
+            // },
+            // content: {
+            //   className: '!pli-0 !plb-0 !border-width-0',
+            // },
           },
         }),
       ],
@@ -155,9 +156,11 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
     <div
       data-testid='grid.cell-editor'
       ref={parentRef}
-      className='absolute z-[1]'
+      className='absolute z-[1] dx-grid__cell-editor'
       style={{
         ...box,
+        minInlineSize: box?.inlineSize ?? '180px',
+        minBlockSize: box?.blockSize ?? '30px',
         ...{ '--dx-gridCellWidth': `${box?.inlineSize ?? 200}px` },
       }}
       {...(gridId && { 'data-grid': gridId })}

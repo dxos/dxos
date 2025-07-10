@@ -86,7 +86,6 @@
       }
 
       & > .dx-grid__cell__content {
-        /** This must match CellEditor styling in `CellEditor.tsx`. */
         padding: calc(var(--dx-grid-cell-padding-block) - 1px) calc(var(--dx-grid-cell-padding-inline) - 1px);
         box-sizing: border-box;
         overflow: hidden;
@@ -98,9 +97,36 @@
         border-radius: 2px;
       }
 
-      &:focus:not([aria-readonly='true']),
-      &:focus-visible, &:focus-within {
+      &.dx-grid__cell--commented {
+        background: var(--dx-grid-commented, var(--dx-gridCommented));
+      }
+    }
 
+    &[data-grid-select] {
+      [role='gridcell'],
+      [role='columnheader'],
+      [role='rowheader'] {
+        &[aria-selected] {
+          --dx-grid-cell-surface: var(--dx-gridSelectionOverlay);
+
+          &:focus:not([aria-readonly='true']),
+          &:focus-visible, &:focus-within {
+            & > .dx-grid__cell__content {
+              background: transparent;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* Editor and focused cell styles; be sure to keep these two blocks in-sync. */
+  .dx-grid {
+    [role='gridcell'],
+    [role='columnheader'],
+    [role='rowheader'] {
+      &:focus,
+      &:focus-within {
         & > .dx-grid__cell__content {
           min-block-size: 100%;
           block-size: min-content;
@@ -120,35 +146,39 @@
           text-wrap: balance;
 
           z-index: 1;
-          background: var(--dx-grid-cell-surface);
-          /* TODO: the appearance of cell content and the ring should be idle if the cell is in edit mode */
-          border-color: var(--dx-accentSurface);
         }
-      }
 
-
-      &.dx-grid__cell--commented {
-        background: var(--dx-grid-commented, var(--dx-gridCommented));
-      }
-    }
-
-    &[data-grid-select] {
-      [role='gridcell'],
-      [role='columnheader'],
-      [role='rowheader'] {
-        &[aria-selected] {
-          --dx-grid-cell-surface: var(--dx-gridSelectionOverlay);
-          &:focus:not([aria-readonly='true']),
-          &:focus-visible, &:focus-within {
-            & > .dx-grid__cell__content {
-              background: transparent;
-            }
-          }
+        &:not([aria-readonly='true']) > .dx-grid__cell__content {
+          background: var(--dx-grid-cell-surface);
+          border-color: var(--dx-accentSurface);
         }
       }
     }
   }
 
+  .dx-grid__cell-editor {
+    font-variant-numeric: tabular-nums;
+    white-space: normal;
+    hyphens: auto;
+    overflow-wrap: break-word;
+    text-wrap: balance;
+
+    background: var(--dx-grid-base, var(--dx-baseSurface));
+    border: 1px solid var(--dx-accentSurface);
+    border-radius: 2px;
+
+    block-size: min-content;
+    max-block-size: min(12em, 50vh);
+    inline-size: min-content;
+    max-inline-size: min(60ch, 90vw);
+
+    & .cm-scroller {
+      /* TODO(thure): Why is the block axis an extra pixel? */
+      padding: calc(var(--dx-grid-cell-padding-block) - 2px) calc(var(--dx-grid-cell-padding-inline) - 1px);
+    }
+  }
+
+  /* /// */
   .dx-grid-host:focus-within .dx-grid:not(:focus-within) {
     [role='gridcell'],
     [role='columnheader'],
