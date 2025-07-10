@@ -6,3 +6,48 @@ workspace:
       - build
       - compile
       - test
+tasks:
+  bundle:
+    command: storybook build
+    args:
+      - --output-dir=out/stories
+    deps:
+      - ^:compile
+      - mkdist
+    inputs:
+      - .storybook/*
+      - static/*
+      - $NODE_OPTIONS
+    outputs:
+      - out/stories/
+  mkdist:
+    command: mkdir -p static
+    outputs:
+      - static
+  serve:
+    command: storybook dev
+    args:
+      - --port=9009
+      - --no-open
+    deps:
+      - ^:compile
+      - mkdist
+    inputs:
+      - .storybook/*
+      - static/*
+    preset: server
+  serve-e2e:
+    command: storybook dev
+    args:
+      - --port=9009
+      - --ci
+      - --quiet
+      - --config-dir=config/e2e
+    deps:
+      - ^:compile
+      - mkdist
+    inputs:
+      - .storybook/*
+      - config/e2e/*
+      - static/*
+    preset: server
