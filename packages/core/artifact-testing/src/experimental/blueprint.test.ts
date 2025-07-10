@@ -1,15 +1,20 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Schema } from 'effect';
+import { beforeAll, describe, test } from 'vitest';
+
 import { ConsolePrinter, createTool, Message, ToolRegistry, ToolResult } from '@dxos/ai';
 import { ArtifactId } from '@dxos/artifact';
 import { AISession, Blueprint, BlueprintBinding } from '@dxos/assistant';
-import { Obj, Ref, Type, type DXN } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import type { EchoDatabase, Queue, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { AiService, DatabaseService, ToolResolverService, type ServiceContainer } from '@dxos/functions';
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { ComplexSet } from '@dxos/util';
-import { Schema } from 'effect';
-import { beforeAll, describe, test } from 'vitest';
 
 declare global {
   interface ToolContextExtensions {
