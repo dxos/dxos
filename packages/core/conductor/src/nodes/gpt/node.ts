@@ -119,8 +119,6 @@ export const gptNode = defineComputeNode({
       const { toolResolver } = yield* ToolResolverService;
       assertArgument(history === undefined || conversation === undefined, 'Cannot use both history and conversation');
 
-      const resolvedTools = yield* Effect.all(tools.map((tool) => Effect.promise(() => toolResolver.resolve(tool))));
-
       const historyMessages = conversation
         ? yield* Effect.tryPromise({
             try: () => queues.get<Message>(conversation.dxn).queryObjects(),
@@ -128,7 +126,7 @@ export const gptNode = defineComputeNode({
           })
         : history ?? [];
 
-      log.info('generating', { systemPrompt, prompt, historyMessages, tools: resolvedTools.map((tool) => tool.name) });
+      log.info('generating', { systemPrompt, prompt, historyMessages, tools });
 
       const session = new AISession({
         operationModel: 'configured',
@@ -168,13 +166,14 @@ export const gptNode = defineComputeNode({
 
             history: [...historyMessages],
 
-            tools: resolvedTools,
+            tools: [...tools],
             artifacts: [],
 
-            client: aiClient,
             generationOptions: {
               model: DEFAULT_EDGE_MODEL,
             },
+            client: aiClient,
+            toolResolver,
           }),
         );
         log.info('messages', { messages });
