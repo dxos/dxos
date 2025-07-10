@@ -76,11 +76,8 @@ const readDocument = toolFromFunction(
       content: Schema.String,
     }),
     handler: Effect.fn(function* ({ data: { id } }) {
-      const { db } = yield* DatabaseService;
-      const doc = yield* Effect.promise(() =>
-        db.graph.createRefResolver({ context: { space: db.spaceId } }).resolve(ArtifactId.toDXN(id)),
-      );
-      if (!doc) {
+      const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
+      if (!doc || !Obj.instanceOf(TextDocument, doc)) {
         throw new Error('Document not found.');
       }
 
@@ -100,11 +97,8 @@ const writeDocument = toolFromFunction(
     }),
     outputSchema: Schema.String,
     handler: Effect.fn(function* ({ data: { id, content } }) {
-      const { db } = yield* DatabaseService;
-      const doc = yield* Effect.promise(() =>
-        db.graph.createRefResolver({ context: { space: db.spaceId } }).resolve(ArtifactId.toDXN(id)),
-      );
-      if (!doc) {
+      const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
+      if (!doc || !Obj.instanceOf(TextDocument, doc)) {
         throw new Error('Document not found.');
       }
 
