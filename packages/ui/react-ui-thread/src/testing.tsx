@@ -3,7 +3,7 @@
 //
 
 import { X } from '@phosphor-icons/react';
-import React, { type PropsWithChildren } from 'react';
+import React from 'react';
 
 import { Button } from '@dxos/react-ui';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
@@ -55,8 +55,4 @@ export const MessageStoryBlock = <PartValue,>({ part }: MessagePartProps<PartVal
       </pre>
     </div>
   );
-};
-
-export const ThreadStoryContainer = ({ children }: PropsWithChildren) => {
-  return <div className={mx('bg-white dark:bg-black mli-auto is-96 overflow-y-auto')}>{children}</div>;
 };

@@ -10093,9 +10093,6 @@ importers:
       '@effect/platform':
         specifier: 0.80.12
         version: 0.80.12(effect@3.14.21)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79

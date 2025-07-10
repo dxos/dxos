@@ -30,7 +30,7 @@ import {
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Thread, ThreadFooter, ThreadHeading } from './Thread';
+import { Thread } from './Thread';
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';
 import { translations } from '../translations';
@@ -157,7 +157,7 @@ const StoryThread: FC<{
   };
 
   return (
-    <Thread current={selected} onClickCapture={onSelect}>
+    <Thread.Root current={selected} onClickCapture={onSelect}>
       <div className='col-start-2 flex gap-1 text-xs text-description'>
         <span>id:{thread.id.slice(0, 4)}</span>
         <span>y:{thread.yPos}</span>
@@ -165,9 +165,9 @@ const StoryThread: FC<{
         {!thread.cursor && <Trash />}
       </div>
 
-      <ThreadHeading>
+      <Thread.Header>
         {thread.range?.from} &ndash; {thread.range?.to}
-      </ThreadHeading>
+      </Thread.Header>
 
       {thread.messages.map((message) => (
         <MessageRoot key={message.id} classNames={[hoverableControls, hoverableFocusedWithinControls]} {...message}>
@@ -185,12 +185,12 @@ const StoryThread: FC<{
           onEditorFocus={onSelect}
           onSend={handleCreateMessage}
         />
-        <ThreadFooter />
+        <Thread.Status />
         <Button variant='ghost' classNames='px-1' title='Resolve' onClick={onResolve}>
           <Check />
         </Button>
       </div>
-    </Thread>
+    </Thread.Root>
   );
 };
 
@@ -359,15 +359,13 @@ export default {
 
 const str = (...lines: string[]) => lines.join('\n');
 
-const document = str(
-  '# Comments',
-  '',
-  str(...faker.helpers.multiple(() => [faker.lorem.paragraph({ min: 5, max: 10 }), ''], { count: 20 }).flat()),
-  '',
-);
-
 export const Default = {
   args: {
-    text: document,
+    text: str(
+      '# Comments',
+      '',
+      str(...faker.helpers.multiple(() => [faker.lorem.paragraph({ min: 5, max: 10 }), ''], { count: 20 }).flat()),
+      '',
+    ),
   },
 };

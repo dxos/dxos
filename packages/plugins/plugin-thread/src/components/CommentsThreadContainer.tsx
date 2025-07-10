@@ -2,96 +2,38 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CheckCircle, X } from '@phosphor-icons/react';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Ref, Relation } from '@dxos/echo';
 import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { IconButton, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
-import {
-  getSize,
-  hoverableControlItem,
-  hoverableControls,
-  hoverableFocusedWithinControls,
-  mx,
-} from '@dxos/react-ui-theme';
-import {
-  MessageTextbox,
-  type MessageTextboxProps,
-  Thread,
-  ThreadFooter,
-  ThreadHeading,
-  type ThreadProps,
-} from '@dxos/react-ui-thread';
+import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
+import { MessageTextbox, type MessageTextboxProps, Thread, type ThreadRootProps } from '@dxos/react-ui-thread';
 import { type AnchoredTo } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
 import { useStatus } from '../hooks';
-import { THREAD_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
 
-const sizeClass = getSize(4);
+// TODO(burdon): Remove need for p-1.
+export const commentControlClassNames = '!p-1 transition-opacity';
 
-// TODO(thure): #8149
-const commentControlClassNames = '!p-1 !min-bs-0 transition-opacity';
-
-const ToggleResolvedButton = ({
-  isResolved,
-  onResolve,
-}: {
-  isResolved: boolean | undefined;
-  onResolve: () => void;
-}) => {
-  const { t } = useTranslation(THREAD_PLUGIN);
-  const label = t(isResolved ? 'mark as unresolved label' : 'mark as resolved label');
-  return (
-    <Tooltip.Trigger asChild content={label}>
-      <Button
-        variant='ghost'
-        data-testid='thread.toggle-resolved'
-        onClick={onResolve}
-        classNames={[commentControlClassNames, !isResolved && hoverableControlItem]}
-      >
-        <span className='sr-only'>{label}</span>
-        {isResolved ? <CheckCircle className={sizeClass} weight='fill' /> : <CheckCircle className={sizeClass} />}
-      </Button>
-    </Tooltip.Trigger>
-  );
-};
-
-const DeleteThreadButton = ({ onDelete }: { onDelete: () => void }) => {
-  const { t } = useTranslation(THREAD_PLUGIN);
-  const label = t('delete thread label');
-  return (
-    <Tooltip.Trigger asChild content={label}>
-      <Button
-        variant='ghost'
-        data-testid='thread.delete'
-        onClick={onDelete}
-        classNames={[commentControlClassNames, hoverableControlItem]}
-      >
-        <span className='sr-only'>{label}</span>
-        <X className={sizeClass} />
-      </Button>
-    </Tooltip.Trigger>
-  );
-};
-
-export type CommentContainerProps = {
+export type CommentsThreadContainerProps = {
   anchor: AnchoredTo;
   onAttend?: (anchor: AnchoredTo) => void;
   onComment?: (anchor: AnchoredTo, message: string) => void;
   onResolve?: (anchor: AnchoredTo) => void;
   onMessageDelete?: (anchor: AnchoredTo, messageId: string) => void;
   onThreadDelete?: (anchor: AnchoredTo) => void;
-} & Pick<ThreadProps, 'current'>;
+} & Pick<ThreadRootProps, 'current'>;
 
-export const CommentContainer = ({
+export const CommentsThreadContainer = ({
   anchor,
   current,
   onAttend,
@@ -99,14 +41,14 @@ export const CommentContainer = ({
   onResolve,
   onMessageDelete,
   onThreadDelete,
-}: CommentContainerProps) => {
+}: CommentsThreadContainerProps) => {
+  const { t } = useTranslation(meta.id);
   const identity = useIdentity()!;
   const space = getSpace(anchor);
   const members = useMembers(space?.key);
   const detached = !anchor.anchor;
   const thread = Relation.getSource(anchor) as ThreadType;
   const activity = useStatus(space, fullyQualifiedId(thread));
-  const { t } = useTranslation(THREAD_PLUGIN);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
   const { themeMode } = useThemeContext();
 
@@ -148,7 +90,13 @@ export const CommentContainer = ({
   }, [anchor, identity]);
 
   return (
-    <Thread onClickCapture={handleAttend} onFocusCapture={handleAttend} current={current} id={fullyQualifiedId(thread)}>
+    <Thread.Root
+      id={fullyQualifiedId(thread)}
+      classNames='pbs-2 border-be border-subduedSeparator last:border-none'
+      current={current}
+      onClickCapture={handleAttend}
+      onFocusCapture={handleAttend}
+    >
       <div
         role='none'
         className={mx(
@@ -159,19 +107,38 @@ export const CommentContainer = ({
       >
         {detached ? (
           <Tooltip.Trigger asChild content={t('detached thread label')} side='top'>
-            <ThreadHeading detached>{thread.name}</ThreadHeading>
+            <Thread.Header detached>{thread.name}</Thread.Header>
           </Tooltip.Trigger>
         ) : (
-          <ThreadHeading>{thread.name}</ThreadHeading>
+          <Thread.Header>{thread.name}</Thread.Header>
         )}
-        <div className='flex flex-row items-center pli-1'>
+        <div className='flex flex-row items-center gap-0.5'>
           {thread.status === 'staged' && <Tag palette='neutral'>{t('draft button')}</Tag>}
           {onResolve && !(thread?.status === 'staged') && (
-            <ToggleResolvedButton isResolved={thread?.status === 'resolved'} onResolve={handleResolve} />
+            <IconButton
+              data-testid='thread.resolve'
+              variant='ghost'
+              icon={thread?.status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
+              iconOnly
+              label={t('resolve thread label')}
+              classNames={[commentControlClassNames, thread?.status !== 'resolved' && hoverableControlItem]}
+              onClick={handleResolve}
+            />
           )}
-          {onThreadDelete && <DeleteThreadButton onDelete={handleThreadDelete} />}
+          {onThreadDelete && (
+            <IconButton
+              data-testid='thread.delete'
+              variant='ghost'
+              icon='ph--x--regular'
+              iconOnly
+              label={t('delete thread label')}
+              classNames={[commentControlClassNames, hoverableControlItem]}
+              onClick={handleThreadDelete}
+            />
+          )}
         </div>
       </div>
+
       {/** TODO(dmaretskyi): How's `thread.messages` undefined? */}
       {Ref.Array.targets(thread.messages?.filter(isNonNullable) ?? []).map((message) => (
         <MessageContainer
@@ -182,6 +149,7 @@ export const CommentContainer = ({
           onDelete={handleMessageDelete}
         />
       ))}
+
       {/*
         TODO(wittjosiah): Can't autofocus this generally.
           There can be multiple threads with inputs and they can't all be focused.
@@ -189,9 +157,11 @@ export const CommentContainer = ({
           Need to find a way to autofocus in one scenario only: when a new thread is created.
       */}
       <MessageTextbox extensions={extensions} onSend={handleComment} {...textboxMetadata} />
-      <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
+
+      <Thread.Status activity={activity}>{t('activity message')}</Thread.Status>
+
       {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
       <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
-    </Thread>
+    </Thread.Root>
   );
 };

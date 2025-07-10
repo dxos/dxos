@@ -60,9 +60,9 @@ const Story = () => {
 
 export const Default = {};
 
-const meta: Meta = {
+const meta: Meta<typeof Thread.Root> = {
   title: 'plugins/plugin-thread/Chat',
-  component: Thread,
+  component: Thread.Root,
   render: () => <Story />,
   decorators: [
     withPluginManager({
