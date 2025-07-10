@@ -4,7 +4,7 @@
 
 import { type Context } from 'effect';
 
-import { type AiServiceEdgeClientOptions, EdgeAiServiceClient, type AiServiceClient } from '@dxos/ai';
+import { type AiServiceEdgeClientOptions, EdgeAiServiceClient, type AiServiceClient, ToolRegistry } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, createTestAiServiceClient } from '@dxos/ai/testing';
 import type { Space } from '@dxos/client/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
@@ -20,8 +20,8 @@ import {
   QueueService,
   ServiceContainer,
   type ServiceCredential,
+  ToolResolverService,
   type TracingService,
-  type ToolResolverService,
 } from '../services';
 
 // TODO(burdon): Factor out.
@@ -118,7 +118,7 @@ export const createTestServices = ({
     eventLogger: logging?.logger ?? logging?.enabled ? consoleLogger : noopLogger,
     queues: space || queues ? QueueService.make(space?.queues || queues!, undefined) : undefined,
     tracing: tracing?.service,
-    toolResolver,
+    toolResolver: toolResolver ?? ToolResolverService.make(new ToolRegistry([])),
   });
 };
 

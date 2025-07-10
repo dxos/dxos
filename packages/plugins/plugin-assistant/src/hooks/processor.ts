@@ -12,6 +12,7 @@ import {
   type Message,
   type MessageContentBlock,
   type ToolUseContentBlock,
+  ToolRegistry,
 } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
@@ -162,7 +163,9 @@ export class ChatProcessor {
         history: options.history ?? [],
         artifacts: this._artifacts ?? [],
         requiredArtifactIds: this._artifacts?.map((artifact) => artifact.id) ?? [],
-        tools: this._tools ?? [],
+        tools: [],
+        // TODO(dmaretskyi): Migrate to ToolRegistry.
+        executableTools: this._tools ?? [],
         prompt: message,
         systemPrompt: this._options.systemPrompt,
         extensions: this._extensions,
@@ -170,6 +173,7 @@ export class ChatProcessor {
         generationOptions: {
           model: this._options.model,
         },
+        toolResolver: new ToolRegistry([]),
       });
 
       log('completed', { messages });

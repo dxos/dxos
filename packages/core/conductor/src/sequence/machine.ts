@@ -18,7 +18,6 @@ import { Event } from '@dxos/async';
 import { Key, Obj } from '@dxos/echo';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { isNonNullable } from '@dxos/util';
 
 import type { Sequence, SequenceStep } from './sequence';
 
@@ -184,18 +183,15 @@ export class SequenceMachine {
       this.logger?.log({ type: 'message', invocationId, message });
     });
 
-    // TODO(wittjosiah): Warn if tool is not found.
-    const tools = (await Promise.all((nextStep.tools ?? []).map((tool) => this.registry.resolve(tool)))).filter(
-      isNonNullable,
-    );
-
     const messages = await session.run({
       systemPrompt: SYSTEM_PROMPT,
       history: [...state.history, ...inputMessages],
-      tools: [...tools, report],
+      tools: [...(nextStep.tools ?? [])],
       artifacts: [],
+      executableTools: [report],
       client: options.aiClient,
       prompt: nextStep.instructions,
+      toolResolver: this.registry,
     });
 
     const { messages: trimmedHistory, call: lastBlock } = popLastToolCall(messages);

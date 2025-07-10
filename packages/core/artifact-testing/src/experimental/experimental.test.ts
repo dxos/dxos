@@ -164,7 +164,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
       operationModel: 'configured',
     });
 
-    // TODO(dmaretskyi): Use tool registry.
     const sage = createTool('test', {
       name: 'sage',
       description: 'Can say what the meaning of life is.',
@@ -180,8 +179,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
       client,
       history: [],
       prompt: 'What is the meaning of life?',
-      tools: [sage],
+      tools: [],
       artifacts: [],
+      executableTools: [sage],
+      toolResolver: serviceContainer.getService(ToolResolverService).toolResolver,
     });
 
     log.info('result', { result });
