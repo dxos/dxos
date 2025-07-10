@@ -13,3 +13,6 @@ tasks:
       mergeOutputs: 'replace'
     outputs:
       - dist/
+  bundle:
+    options:
+      priority: critical

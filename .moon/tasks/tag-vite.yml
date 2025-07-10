@@ -1,5 +1,4 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
-
 tasks:
   bundle:
     command: vite build
@@ -25,13 +24,11 @@ tasks:
       - $SENTRY_RELEASE_AUTH_TOKEN
     outputs:
       - out
-
   serve:
     command: vite dev
-    local: true
-
+    preset: server
   preview:
     command: vite preview
     deps:
       - bundle
-    local: true
+    preset: server

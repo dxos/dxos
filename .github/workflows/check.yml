@@ -26,13 +26,13 @@ on:
         required: false
         default: false
 
-# Needed for nx-set-shas when run on the main branch
+# Needed for nx-set-shas when run on the main branch.
 permissions:
   actions: read
   contents: read
 
 env:
-  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
   DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
 
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
@@ -40,11 +40,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# https://nx.dev/ci/intro/tutorials/github-actions
+# https://moonrepo.dev/docs/guides/ci
 jobs:
   check:
-    runs-on:
-      group: ubuntu-large
+    runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:20.12.1
       credentials:
@@ -58,6 +57,8 @@ jobs:
           fetch-depth: 0
           lfs: true
 
+      - uses: 'moonrepo/setup-toolchain@v0'
+
       - name: Extract branch
         id: extract_branch
         uses: ./.github/actions/branch
@@ -67,11 +68,16 @@ jobs:
 
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=lint,build
+        run: moon ci :lint :build
 
       - name: Check All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many --targets=lint,build
+        run: moon run :lint :build
+
+      - uses: 'moonrepo/run-report-action@v1'
+        if: (success() || failure()) && github.event_name == 'pull_request'
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for import cycles
         if: always()
@@ -84,8 +90,7 @@ jobs:
         #  Currently fails on 22 and 24.
         # node-version: ['20.12.1', '22', '24']
         node-version: ['20.12.1']
-    runs-on:
-      group: ubuntu-large
+    runs-on: buildjet-8vcpu-ubuntu-2204
     container:
       image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
       credentials:
@@ -108,6 +113,8 @@ jobs:
           fetch-depth: 0
           lfs: true
 
+      - uses: 'moonrepo/setup-toolchain@v0'
+
       - name: Extract branch
         id: extract_branch
         uses: ./.github/actions/branch
@@ -117,13 +124,19 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=test --verbose
+        run: moon ci :test
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many --targets=test --verbose
+        run: moon run :test
+
+      - uses: 'moonrepo/run-report-action@v1'
+        if: (success() || failure()) && github.event_name == 'pull_request'
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Test Results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: vitest-report
@@ -140,7 +153,7 @@ jobs:
           verbose: true
 
       - name: Send test report
-        if: ${{ (success() || failure()) && github.event_name == 'schedule' }}
+        if: ${{ always() && github.event_name == 'schedule' }}
         uses: ./.github/actions/test-report
         with:
           name: '${{ github.job }}-${{ matrix.node-version }}'
@@ -148,8 +161,7 @@ jobs:
 
   e2e:
     if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
-    runs-on:
-      group: ubuntu-large
+    runs-on: buildjet-8vcpu-ubuntu-2204
     container:
       image: ghcr.io/dxos/gh-actions:20.12.1
       credentials:

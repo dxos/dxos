@@ -18,6 +18,13 @@ projects:
   - packages/ui/primitives/*
   - tools/*
 
+unstable_remote:
+  host: 'grpcs://cache.depot.dev'
+  auth:
+    token: 'DEPOT_TOKEN'
+    headers:
+      'X-Depot-Org': 't8fblrl00n'
+
 vcs:
   manager: git
   defaultBranch: main
