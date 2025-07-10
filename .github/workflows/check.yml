@@ -58,8 +58,6 @@ jobs:
           fetch-depth: 0
           lfs: true
 
-      - uses: 'moonrepo/setup-toolchain@v0'
-
       - name: Extract branch
         id: extract_branch
         uses: ./.github/actions/branch
@@ -113,8 +111,6 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
-
-      - uses: 'moonrepo/setup-toolchain@v0'
 
       - name: Extract branch
         id: extract_branch
@@ -189,25 +185,30 @@ jobs:
 
       - name: Bundle Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=bundle --parallel=1
+        run: moon ci :bundle --concurrency=1
 
       - name: Bundle All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many --targets=bundle --parallel=1
+        run: moon run :bundle --concurrency=1
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=e2e --browser=all --parallel=1
+        run: moon ci :e2e --concurrency=1 -- --browser=all
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many --targets=e2e --browser=all --parallel=1
+        run: moon run :e2e --concurrency=1 -- --browser=all
+
+      - uses: 'moonrepo/run-report-action@v1'
+        if: (success() || failure()) && github.event_name == 'pull_request'
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Traces
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: dist/.playwright
+          path: test-results/playwright
           retention-days: 7
 
       - name: Send test report

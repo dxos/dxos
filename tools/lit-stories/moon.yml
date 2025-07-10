@@ -6,3 +6,31 @@ workspace:
       - build
       - compile
       - test
+tasks:
+  mkdist:
+    command: mkdir -p static
+    outputs:
+      - static
+  serve:
+    command: storybook dev
+    args:
+      - --port=9009
+      - --no-open
+    deps:
+      - ^:compile
+      - mkdist
+    inputs:
+      - .storybook/*
+    preset: server
+  serve-e2e:
+    command: storybook dev
+    args:
+      - --port=9009
+      - --ci
+      - --quiet
+    deps:
+      - ^:compile
+      - mkdist
+    inputs:
+      - .storybook/*
+    preset: server

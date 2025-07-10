@@ -4,21 +4,75 @@
 
 /* eslint-disable no-console */
 
-import { workspaceRoot } from '@nx/devkit';
 import { type Browser, type BrowserContext, type PlaywrightTestConfig, type Page } from '@playwright/test';
-import { join, relative } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import pkgUp from 'pkg-up';
 
 import { Lock } from './lock';
 
-export const e2ePreset = (cwd: string): PlaywrightTestConfig => {
-  const packageJson = pkgUp.sync({ cwd });
+const findWorkspaceRoot = (startDir: string): string => {
+  let dir = resolve(startDir);
+  while (dir !== '/') {
+    try {
+      // Check for pnpm-workspace.yaml first (modern pnpm approach)
+      const workspaceYamlPath = join(dir, 'pnpm-workspace.yaml');
+      if (existsSync(workspaceYamlPath)) {
+        return dir;
+      }
+
+      // Check for package.json with workspaces field (legacy approach)
+      const pkgPath = join(dir, 'package.json');
+      const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+      if (pkg.workspaces) {
+        return dir;
+      }
+    } catch {}
+    const parent = dirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+
+  throw new Error('Could not find pnpm workspace root');
+};
+
+export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
+  const packageJson = pkgUp.sync({ cwd: testDir });
   const packageDir = packageJson!.split('/').slice(0, -1).join('/');
-  const packageDirRelative = relative(workspaceRoot, packageDir);
-  const testResultsDir = join(workspaceRoot, 'test-results', packageDirRelative, 'results.xml');
+  const packageDirName = packageDir.split('/').pop();
+  if (!packageDirName) {
+    throw new Error('packageDirName not found');
+  }
+
+  const workspaceRoot = findWorkspaceRoot(packageDir);
+  const testResultOuputDir = join(workspaceRoot, 'test-results/playwright/output', packageDirName);
+  const reporterOutputFile = join(workspaceRoot, 'test-results/playwright/report', `${packageDirName}.json`);
 
   return {
-    reporter: process.env.CI ? [['list'], ['junit', { outputFile: testResultsDir }]] : [['list']],
+    testDir,
+    outputDir: testResultOuputDir,
+    // Run tests in files in parallel.
+    fullyParallel: true,
+    // Fail the build on CI if you accidentally left test.only in the source code.
+    forbidOnly: !!process.env.CI,
+    // Retry on CI only.
+    retries: process.env.CI ? 2 : 0,
+    // Opt out of parallel tests on CI.
+    workers: process.env.CI ? 1 : undefined,
+    // Reporter to use. See https://playwright.dev/docs/test-reporters.
+    reporter: process.env.CI
+      ? [
+          ['list'],
+          [
+            'json',
+            {
+              outputFile: reporterOutputFile,
+            },
+          ],
+        ]
+      : [['list']],
     use: {
       trace: 'retain-on-failure',
     },

@@ -1,5 +1,8 @@
 type: library
 language: typescript
+tags:
+  - e2e
+  - vite
 workspace:
   inheritedTasks:
     exclude:

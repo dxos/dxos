@@ -11,8 +11,11 @@ runs:
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       shell: bash
 
+    - uses: 'moonrepo/setup-toolchain@v0'
+
     - name: Log out debug info
       run: |
+        moon --version
         node --version
         pnpm --version
       shell: bash

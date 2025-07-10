@@ -1,5 +1,7 @@
 type: library
 language: typescript
+tags:
+  - e2e
 workspace:
   inheritedTasks:
     exclude:
