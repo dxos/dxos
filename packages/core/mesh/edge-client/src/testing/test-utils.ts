@@ -26,7 +26,7 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
   const wsServer = new WebSocket.Server({
     port,
     verifyClient: createConnectionDelayHandler(params),
-    handleProtocols: () => [EdgeWebsocketProtocol.V1],
+    handleProtocols: () => EdgeWebsocketProtocol.V1,
   });
 
   let connection: { ws: WebSocket; muxer: WebSocketMuxer } | undefined;
