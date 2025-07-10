@@ -138,19 +138,10 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
         createBasicExtensions({ lineWrapping: true }),
         createThemeExtensions({
           themeMode,
-          slots: {
-            // TODO(thure): How can this adopt the same dimensions as the focused grid cell?
-            // editor: {
-            //   className: '[&>.cm-scroller]:scrollbar-none tabular-nums',
-            // },
-            // content: {
-            //   className: '!pli-0 !plb-0 !border-width-0',
-            // },
-          },
         }),
       ],
     };
-  }, [extension, autoFocus, value, onBlur]);
+  }, [extension, autoFocus, value, onBlur, themeMode]);
 
   return (
     <div
