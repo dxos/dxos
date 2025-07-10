@@ -10,7 +10,7 @@ import { type Obj, Ref, type Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
-import { ButtonGroup, IconButton, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { IconButton, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
@@ -48,7 +48,7 @@ export const MessageContainer = ({ message, members, editable = false, onDelete 
   return (
     <MessageRoot {...messageMetadata} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
       <MessageHeading authorName={messageMetadata.authorName} timestamp={messageMetadata.timestamp}>
-        <ButtonGroup classNames='mie-1'>
+        <div className='flex flex-row items-center gap-0.5'>
           {userIsAuthor && editable && (
             <IconButton
               data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
@@ -71,7 +71,7 @@ export const MessageContainer = ({ message, members, editable = false, onDelete 
               onClick={() => handleDelete()}
             />
           )}
-        </ButtonGroup>
+        </div>
       </MessageHeading>
       {textBlock && <TextboxBlock block={textBlock} isAuthor={userIsAuthor} editing={editing} />}
       {Ref.Array.targets(references).map((reference, index) => (

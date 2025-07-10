@@ -60,7 +60,7 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
   }
 
   return (
-    <div className='divide-y divide-subduedSeparator'>
+    <div>
       {filteredAnchors.map((anchor) => {
         const thread = Relation.getSource(anchor) as ThreadType;
         const threadId = fullyQualifiedId(thread);

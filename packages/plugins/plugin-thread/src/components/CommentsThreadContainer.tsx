@@ -92,7 +92,7 @@ export const CommentsThreadContainer = ({
   return (
     <Thread.Root
       id={fullyQualifiedId(thread)}
-      classNames='pbs-2'
+      classNames='pbs-2 border-be border-subduedSeparator last:border-none'
       current={current}
       onClickCapture={handleAttend}
       onFocusCapture={handleAttend}
@@ -112,7 +112,7 @@ export const CommentsThreadContainer = ({
         ) : (
           <Thread.Header>{thread.name}</Thread.Header>
         )}
-        <div className='flex flex-row items-center pli-1'>
+        <div className='flex flex-row items-center gap-0.5'>
           {thread.status === 'staged' && <Tag palette='neutral'>{t('draft button')}</Tag>}
           {onResolve && !(thread?.status === 'staged') && (
             <IconButton
