@@ -90,7 +90,7 @@ jobs:
         #  Currently fails on 22 and 24.
         # node-version: ['20.12.1', '22', '24']
         node-version: ['20.12.1']
-    runs-on: buildjet-8vcpu-ubuntu-2204
+    runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
       credentials:
@@ -161,7 +161,7 @@ jobs:
 
   e2e:
     if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
-    runs-on: buildjet-8vcpu-ubuntu-2204
+    runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:20.12.1
       credentials:
