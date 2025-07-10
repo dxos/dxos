@@ -55,6 +55,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
         The design spec document follows a hierarchical structure, with nested markdown bulleted sections.
         You use appropriate tools to read and write the design spec document.
         Maintain the document so that it can convey all relevant points from the conversation.
+        When replying to the user, be terse with your comments about design doc handling.
+        You do not announce when you read or write the design spec document.
       `,
       tools: [readDocument.id, writeDocument.id],
       artifacts: [],
