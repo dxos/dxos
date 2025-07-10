@@ -1,10 +1,17 @@
 type: library
 language: typescript
+tags:
+  - vite
 workspace:
   inheritedTasks:
     exclude:
       - test
 tasks:
+  bundle:
+    options:
+      mergeOutputs: 'replace'
+    outputs:
+      - dist/bundle
   compile:
     args:
       - '--entryPoint=src/react.ts'

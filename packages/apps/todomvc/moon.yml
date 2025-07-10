@@ -1,5 +1,7 @@
 type: library
 language: typescript
+tags:
+  - vite
 workspace:
   inheritedTasks:
     exclude:
@@ -11,3 +13,6 @@ tasks:
       mergeOutputs: 'replace'
     outputs:
       - dist/
+  bundle:
+    deps:
+      - shell:bundle
