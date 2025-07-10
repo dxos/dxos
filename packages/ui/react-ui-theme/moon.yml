@@ -22,6 +22,9 @@ tasks:
       - '--moduleFormat=esm'
       - '--platform=node'
       - '--preactSignalTracking'
+    deps:
+      - ^:compile
+      - esbuild:compile
     options:
       mergeArgs: 'replace'
     outputs:

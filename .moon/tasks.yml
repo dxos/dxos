@@ -11,10 +11,8 @@ fileGroups:
   tests:
     - src/test/**/*
     - src/testing/**/*
-
 implicitInputs:
   - package.json
-
 tasks:
   build:
     command: tsc
@@ -29,7 +27,6 @@ tasks:
       - '@group(tests)'
     outputs:
       - dist/types/
-
   compile:
     command: dx-compile
     args:
@@ -41,14 +38,12 @@ tasks:
       - '@group(sources)'
     outputs:
       - dist/lib/
-
   lint:
     command: eslint .
     inputs:
       - .eslintrc.cjs
       - '@group(sources)'
       - '@group(tests)'
-
   test:
     command: vitest run --passWithNoTests
     inputs:

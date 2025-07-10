@@ -16,6 +16,7 @@ tasks:
       - '--platform=node'
     deps:
       - ^:compile
+      - esbuild:compile
     inputs:
       - '@group(sources)'
     outputs:

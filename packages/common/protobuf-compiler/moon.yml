@@ -9,6 +9,7 @@ tasks:
   build:
     deps:
       - prebuild
+      - ^:build
     inputs:
       - bin/main.js
     options:
@@ -17,6 +18,8 @@ tasks:
       - dist/
   prebuild:
     command: pnpm run prebuild
+    deps:
+      - ^:compile
     inputs:
       - test/proto/example/
     outputs:
