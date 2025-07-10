@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../core/echo/echo-signals"
     },
     {
@@ -28,6 +25,9 @@
     },
     {
       "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../log"
     }
   ]
 }

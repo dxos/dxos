@@ -1,7 +1,4 @@
 type: application
 language: typescript
-workspace:
-  inheritedTasks:
-    exclude:
-      - test
-      - compile
+tags:
+  - typecheck

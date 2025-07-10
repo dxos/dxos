@@ -1,5 +1,8 @@
 type: automation
 language: typescript
+tags:
+  - ts-build
+  - ts-test
 tasks:
   compile:
     args:

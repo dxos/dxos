@@ -184,6 +184,16 @@
         },
         {
           "type": "json",
+          "path": "packages/common/storybook-addon-logger/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/storybook-utils/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/test-utils/package.json",
           "jsonpath": "$.version"
         },
@@ -395,16 +405,6 @@
         {
           "type": "json",
           "path": "packages/devtools/devtools-extension/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/devtools/storybook-addon-logger/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/devtools/storybook-utils/package.json",
           "jsonpath": "$.version"
         },
         {

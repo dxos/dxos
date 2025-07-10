@@ -16,10 +16,10 @@
       "path": "../../packages/common/log"
     },
     {
-      "path": "../../packages/devtools/storybook-addon-logger"
+      "path": "../../packages/common/storybook-addon-logger"
     },
     {
-      "path": "../../packages/devtools/storybook-utils"
+      "path": "../../packages/common/storybook-utils"
     },
     {
       "path": "../../packages/ui/react-ui-theme"

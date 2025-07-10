@@ -13,7 +13,7 @@
   ],
   "references": [
     {
-      "path": "../../devtools/storybook-utils"
+      "path": "../../common/storybook-utils"
     },
     {
       "path": "../react-ui"

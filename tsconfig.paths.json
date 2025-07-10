@@ -4,6 +4,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@dxos/storybook-utils": [
+        "packages/common/storybook-utils/src/index.ts"
+      ],
       "@dxos/artifact-testing": [
         "packages/core/artifact-testing/src/index.ts"
       ],

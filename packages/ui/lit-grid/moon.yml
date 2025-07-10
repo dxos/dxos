@@ -1,18 +1,5 @@
 type: library
 language: typescript
-workspace:
-  inheritedTasks:
-    exclude:
-      - compile
-      - test
-    rename:
-      build: compile
-tasks:
+tags:
   # TODO(wittjosiah): Could this use the esbuild compiler?
-  compile:
-    deps:
-      - ^:build
-    options:
-      mergeOutputs: 'replace'
-    outputs:
-      - dist/
+  - ts-compile

@@ -1,9 +1,7 @@
 type: application
 language: typescript
-workspace:
-  inheritedTasks:
-    exclude:
-      - test
+tags:
+  - ts-build
 tasks:
   compile:
     args:

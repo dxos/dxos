@@ -1,0 +1,19 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  test:
+    command: vitest run --passWithNoTests
+    deps:
+      - esbuild-plugins:compile
+      - ^:compile
+    inputs:
+      - /vitest.base.config.ts
+      - vitest.config.ts
+      - '@group(sources)'
+      - '@group(tests)'
+      - $VITEST_COVERAGE
+      - $VITEST_DEBUG
+      - $VITEST_ENV
+      - $VITEST_XML_REPORT
+    outputs:
+      - /coverage/$project/**
+      - /test-results/$project/**

@@ -7,9 +7,6 @@
   ],
   "references": [
     {
-      "path": "../../devtools/storybook-utils"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
@@ -20,6 +17,9 @@
     },
     {
       "path": "../node-std"
+    },
+    {
+      "path": "../storybook-utils"
     },
     {
       "path": "../util"

@@ -2,10 +2,7 @@ type: library
 language: typescript
 tags:
   - e2e
-workspace:
-  inheritedTasks:
-    exclude:
-      - test
+  - ts-build
 tasks:
   compile:
     args:

@@ -1,5 +1,8 @@
 type: library
 language: typescript
+tags:
+  - ts-build
+  - ts-test
 tasks:
   compile:
     args:

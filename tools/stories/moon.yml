@@ -1,11 +1,5 @@
-type: configuration
+type: tool
 language: typescript
-workspace:
-  inheritedTasks:
-    exclude:
-      - build
-      - compile
-      - test
 tasks:
   bundle:
     command: storybook build

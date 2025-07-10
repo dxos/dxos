@@ -2,17 +2,5 @@
 #   It should be removed and we should use @chui/vite-plugin-icons again.
 type: library
 language: typescript
-workspace:
-  inheritedTasks:
-    exclude:
-      - compile
-      - lint
-      - test
-    rename:
-      build: compile
-tasks:
-  compile:
-    options:
-      mergeOutputs: 'replace'
-    outputs:
-      - dist/
+tags:
+  - ts-compile

@@ -1,11 +1,19 @@
 type: automation
 language: typescript
-workspace:
-  inheritedTasks:
-    exclude:
-      # TODO(wittjosiah): Why is build excluded?
-      - build
+tags:
+  - ts-build
+  - ts-test
 tasks:
+  # TODO(wittjosiah): Actually run build here.
+  build:
+    command: 'true'
+    options:
+      mergeArgs: replace
+      mergeInputs: replace
+      mergeOutputs: replace
+    args: []
+    inputs: []
+    outputs: []
   compile:
     args:
       - '--entryPoint=src/index.ts'

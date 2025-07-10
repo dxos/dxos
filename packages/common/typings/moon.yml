@@ -1,7 +1,8 @@
 type: library
 language: typescript
+tags:
+  - ts-build
 workspace:
   inheritedTasks:
     exclude:
       - compile
-      - test

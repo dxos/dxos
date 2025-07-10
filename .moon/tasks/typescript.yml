@@ -1,0 +1,8 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  lint:
+    command: eslint .
+    inputs:
+      - .eslintrc.cjs
+      - '@group(sources)'
+      - '@group(tests)'

@@ -1,19 +1,12 @@
 type: library
 language: typescript
-workspace:
-  inheritedTasks:
-    exclude:
-      - compile
-    rename:
-      build: compile
+tags:
+  - ts-compile
+  - ts-test
 tasks:
   compile:
     deps:
       - prebuild
-    options:
-      mergeOutputs: 'replace'
-    outputs:
-      - dist/
   gen-buf:
     command: pnpm run compile:buf
     inputs:
@@ -29,5 +22,8 @@ tasks:
       - '--substitutions="./src/proto/substitutions.ts"'
     deps:
       - ^:compile
-      - protobuf-compiler:build
+      - protobuf-compiler:compile
       - gen-buf
+  test:
+    deps:
+      - prebuild

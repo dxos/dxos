@@ -2,18 +2,9 @@ type: application
 language: typescript
 tags:
   - e2e
+  - typecheck
   - vite
-workspace:
-  inheritedTasks:
-    exclude:
-      - compile
-      - test
 tasks:
-  build:
-    options:
-      mergeOutputs: 'replace'
-    outputs:
-      - dist/
   e2e:
     deps:
       - bundle

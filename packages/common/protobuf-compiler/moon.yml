@@ -1,25 +1,17 @@
 type: library
 language: typescript
-workspace:
-  inheritedTasks:
-    exclude:
-      - compile
-      - test
+tags:
+  - ts-compile
 tasks:
-  build:
+  compile:
     deps:
       - prebuild
-      - ^:build
     inputs:
       - bin/main.js
-    options:
-      mergeOutputs: replace
-    outputs:
-      - dist/
   prebuild:
     command: pnpm run prebuild
     deps:
-      - ^:compile
+      - ^:build
     inputs:
       - test/proto/example/
     outputs:
@@ -28,3 +20,7 @@ tasks:
     command: pnpm run test
     deps:
       - prebuild
+      - ^:compile
+    inputs:
+      - '@group(sources)'
+      - '@group(tests)'

@@ -2,6 +2,8 @@ type: library
 language: typescript
 tags:
   - e2e
+  - ts-build
+  - ts-test
 tasks:
   compile:
     args:

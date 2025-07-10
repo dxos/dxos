@@ -4,6 +4,7 @@ tasks:
     command: vite build
     deps:
       - ^:build
+      - ^:compile
     inputs:
       - vite.config.ts
       - '@group(sources)'

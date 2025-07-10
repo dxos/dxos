@@ -714,7 +714,7 @@ importers:
         version: link:../../ui/react-ui-stack
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -838,7 +838,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@dxos/vite-plugin-icons':
         specifier: workspace:*
         version: link:../../../tools/vite-plugin-icons
@@ -933,9 +933,6 @@ importers:
         specifier: ^6.4.0
         version: 6.4.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
     devDependencies:
-      '@dxos/cli':
-        specifier: workspace:*
-        version: link:../../devtools/cli
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -1071,7 +1068,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -1644,7 +1641,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../storybook-utils
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -1979,6 +1976,74 @@ importers:
       randombytes:
         specifier: ^2.1.0
         version: 2.1.0
+
+  packages/common/storybook-addon-logger:
+    dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../log
+      storybook:
+        specifier: ^9.0.15
+        version: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
+    devDependencies:
+      '@types/react':
+        specifier: ~18.2.0
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ~18.2.0
+        version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
+
+  packages/common/storybook-utils:
+    dependencies:
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
+      '@dxos/lit-theme-editor':
+        specifier: workspace:*
+        version: link:../../ui/lit-theme-editor
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../../ui/lit-ui
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../log
+      '@storybook/blocks':
+        specifier: ^8.6.14
+        version: 8.6.14(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
+      storybook:
+        specifier: ^9.0.15
+        version: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
+      '@types/react':
+        specifier: ~18.2.0
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ~18.2.0
+        version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
 
   packages/common/test-utils:
     dependencies:
@@ -4599,7 +4664,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../storybook-utils
+        version: link:../../common/storybook-utils
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -4772,74 +4837,6 @@ importers:
       vite-plugin-wasm:
         specifier: ^3.3.0
         version: 3.3.0(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
-
-  packages/devtools/storybook-addon-logger:
-    dependencies:
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      storybook:
-        specifier: ^9.0.15
-        version: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
-    devDependencies:
-      '@types/react':
-        specifier: ~18.2.0
-        version: 18.2.79
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-
-  packages/devtools/storybook-utils:
-    dependencies:
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
-      '@dxos/lit-theme-editor':
-        specifier: workspace:*
-        version: link:../../ui/lit-theme-editor
-      '@dxos/lit-ui':
-        specifier: workspace:*
-        version: link:../../ui/lit-ui
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@storybook/blocks':
-        specifier: ^8.6.14
-        version: 8.6.14(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))
-      lodash.defaultsdeep:
-        specifier: ^4.6.1
-        version: 4.6.1
-      storybook:
-        specifier: ^9.0.15
-        version: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
-    devDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
-      '@types/lodash.defaultsdeep':
-        specifier: ^4.6.6
-        version: 4.6.7
-      '@types/react':
-        specifier: ~18.2.0
-        version: 18.2.79
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
 
   packages/e2e/rpc-tunnel-e2e:
     dependencies:
@@ -5496,7 +5493,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -5642,7 +5639,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -5760,7 +5757,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -5854,7 +5851,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -5951,7 +5948,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -6042,7 +6039,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -6232,7 +6229,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -6362,7 +6359,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -6477,7 +6474,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -6601,7 +6598,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
@@ -6704,7 +6701,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -6756,7 +6753,7 @@ importers:
         version: link:../../sdk/react-client
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -6841,7 +6838,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -7013,7 +7010,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -7131,7 +7128,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -7240,7 +7237,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -7385,7 +7382,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -7570,7 +7567,7 @@ importers:
         version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -7628,7 +7625,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -7798,7 +7795,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -7895,7 +7892,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -8001,7 +7998,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -8125,7 +8122,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -8225,7 +8222,7 @@ importers:
         version: link:../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8262,7 +8259,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -8332,7 +8329,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -8564,7 +8561,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -8676,7 +8673,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -8896,7 +8893,7 @@ importers:
         version: link:../../ui/react-ui-types
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -9053,7 +9050,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -9228,7 +9225,7 @@ importers:
         version: link:../../ui/react-ui
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -9343,7 +9340,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -9419,7 +9416,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -9626,7 +9623,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -9675,7 +9672,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -9736,7 +9733,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -9917,7 +9914,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -10011,7 +10008,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -10229,7 +10226,7 @@ importers:
         version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -10317,7 +10314,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -10447,7 +10444,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -10532,7 +10529,7 @@ importers:
         version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -10614,7 +10611,7 @@ importers:
         version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -11058,7 +11055,7 @@ importers:
         version: link:../schema
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -11319,7 +11316,7 @@ importers:
         version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -11453,7 +11450,7 @@ importers:
         version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/jsonpath':
         specifier: ^0.2.4
         version: 0.2.4
@@ -11572,7 +11569,7 @@ importers:
         version: link:../../ui/primitives/react-hooks
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -11609,7 +11606,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@fontsource/k2d':
         specifier: ^5.0.18
         version: 5.0.18
@@ -12043,7 +12040,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -12146,7 +12143,7 @@ importers:
         version: link:../../sdk/schema
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -12210,7 +12207,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
@@ -12355,7 +12352,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect/ai':
         specifier: 0.8.0
         version: 0.8.0(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)
@@ -12488,7 +12485,7 @@ importers:
         version: link:../../sdk/schema
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
@@ -12549,7 +12546,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -12779,7 +12776,7 @@ importers:
         version: link:../../sdk/schema
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -12945,7 +12942,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/jsonpath':
         specifier: ^0.2.4
         version: 0.2.4
@@ -13012,7 +13009,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@svgr/cli':
         specifier: ^8.1.0
         version: 8.1.0(typescript@5.8.3)
@@ -13100,7 +13097,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@react-three/drei':
         specifier: ^9.99.0
         version: 9.112.0(@react-three/fiber@8.17.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.165.0))(@types/react@18.2.79)(@types/three@0.165.0)(immer@10.1.1)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.165.0)
@@ -13225,7 +13222,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
@@ -13304,7 +13301,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -13389,7 +13386,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -13465,7 +13462,7 @@ importers:
         version: link:../../common/random
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -13526,7 +13523,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.34.1
         version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
@@ -13587,7 +13584,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -13630,7 +13627,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -13712,7 +13709,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
@@ -13818,7 +13815,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -13858,7 +13855,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/jsonpath':
         specifier: ^0.2.4
         version: 0.2.4
@@ -14009,7 +14006,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -14088,7 +14085,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -14152,7 +14149,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -14326,7 +14323,7 @@ importers:
         version: link:../react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../devtools/storybook-utils
+        version: link:../../common/storybook-utils
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -14467,10 +14464,10 @@ importers:
         version: link:../../packages/ui/react-ui-theme
       '@dxos/storybook-addon-logger':
         specifier: workspace:*
-        version: link:../../packages/devtools/storybook-addon-logger
+        version: link:../../packages/common/storybook-addon-logger
       '@dxos/storybook-utils':
         specifier: workspace:*
-        version: link:../../packages/devtools/storybook-utils
+        version: link:../../packages/common/storybook-utils
       '@dxos/vite-plugin-icons':
         specifier: workspace:*
         version: link:../vite-plugin-icons
