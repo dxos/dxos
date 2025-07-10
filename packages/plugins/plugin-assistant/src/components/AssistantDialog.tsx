@@ -8,7 +8,7 @@ import { useCapability, Capabilities, useCapabilities } from '@dxos/app-framewor
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { useTranslation } from '@dxos/react-ui';
 
-import { ChatDialog } from './ChatDialog';
+import { AmbientDialog } from './AmbientDialog';
 import { ThreadContainer } from './Thread';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { type AssistantSettingsProps, type AIChatType } from '../types';
@@ -22,7 +22,7 @@ export const AssistantDialog: FC<{ chat?: AIChatType }> = ({ chat }) => {
   const [open, setOpen] = useState(false);
 
   return (
-    <ChatDialog.Root open={open} onOpenChange={setOpen} title={t('assistant dialog title')}>
+    <AmbientDialog.Root open={open} onOpenChange={setOpen} title={t('assistant dialog title')}>
       <ThreadContainer
         part={'dialog'}
         chat={chat}
@@ -30,7 +30,7 @@ export const AssistantDialog: FC<{ chat?: AIChatType }> = ({ chat }) => {
         settings={settings}
         transcription={transcription}
       />
-    </ChatDialog.Root>
+    </AmbientDialog.Root>
   );
 };
 

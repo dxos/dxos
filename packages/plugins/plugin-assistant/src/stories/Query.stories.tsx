@@ -40,7 +40,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { addTestData } from './test-data';
 import { testPlugins } from './testing';
-import { ChatDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
+import { AmbientDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { QueryParser, createFilter, type Expression } from '../parser';
 import { createToolRegistry, RESEARCH_SEQUENCE } from '../testing';
@@ -332,7 +332,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
         )}
       </div>
 
-      <ChatDialog.Root open resizeable={false} onEscape={handleCancel}>
+      <AmbientDialog.Root open resizeable={false} onEscape={handleCancel}>
         <PromptBar
           ref={promptRef}
           placeholder={t('search input placeholder')}
@@ -340,7 +340,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
           onSubmit={handleSubmit}
           onCancel={handleCancel}
         />
-      </ChatDialog.Root>
+      </AmbientDialog.Root>
     </div>
   );
 };
