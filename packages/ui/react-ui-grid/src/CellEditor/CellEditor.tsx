@@ -139,7 +139,10 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
         createThemeExtensions({
           themeMode,
           slots: {
-            editor: { className: '!min-is-full !is-min !max-is-[--dx-grid-cell-editor-max-inline-size]' },
+            editor: {
+              className:
+                '!min-is-full !is-min !max-is-[--dx-grid-cell-editor-max-inline-size] !min-bs-full !max-bs-[--dx-grid-cell-editor-max-block-size]',
+            },
             content: { className: '!break-normal' },
           },
         }),

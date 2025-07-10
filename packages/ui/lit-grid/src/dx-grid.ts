@@ -640,8 +640,20 @@ export class DxGrid extends LitElement {
         (this.overscroll === 'inline' && event.overscrollInline === 0) ||
         (this.overscroll === 'block' && event.overscrollBlock === 0)
       ) {
-        event.preventDefault();
-        event.stopPropagation();
+        const element = event.target as HTMLElement;
+        const activeCell = element.closest('[data-dx-active]');
+        const contentEl = element.closest('.dx-grid__cell__content');
+        if (
+          !(
+            element &&
+            activeCell &&
+            contentEl &&
+            (contentEl.scrollWidth > contentEl.clientWidth || contentEl.scrollHeight > contentEl.clientHeight)
+          )
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
       }
     }
   };
