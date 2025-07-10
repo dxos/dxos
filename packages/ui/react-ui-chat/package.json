@@ -29,6 +29,7 @@
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.34.1",
     "@dxos/ai": "workspace:*",
+    "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -51,6 +52,7 @@
   "devDependencies": {
     "@dxos/echo": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
