@@ -3,7 +3,7 @@
 //
 
 import { Effect, Schema } from 'effect';
-import { beforeAll, describe, test } from 'vitest';
+import { beforeAll, describe, expect, test } from 'vitest';
 
 import { ConsolePrinter, createTool, Message, ToolRegistry, ToolResult, type ExecutableTool } from '@dxos/ai';
 import { ArtifactId } from '@dxos/artifact';
@@ -269,6 +269,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     await conversation.blueprints.bind(Ref.make(DESIGN_SPEC_BLUEPRINT));
 
     const artifact = db.add(Obj.make(TextDocument, { content: 'Hello, world!' }));
+    let prevContent = artifact.content;
     await conversation.run({
       prompt: `
         Let's design a new feature for our product. We need to add a user profile system with the following requirements:
@@ -285,6 +286,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
       `,
     });
     log.info('spec 1', { doc: artifact });
+    expect(artifact.content).not.toBe(prevContent);
+    prevContent = artifact.content;
 
     await conversation.run({
       prompt: `
@@ -292,5 +295,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
       `,
     });
     log.info('spec 2', { doc: artifact });
+    expect(artifact.content).not.toBe(prevContent);
   });
 });
