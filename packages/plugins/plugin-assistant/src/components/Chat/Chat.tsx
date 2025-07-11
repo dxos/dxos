@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useCallback, type FC, useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, useCallback, type FC, useEffect, useMemo, useState } from 'react';
 
 import { type ExecutableTool, type Message } from '@dxos/ai';
 import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
@@ -68,8 +68,10 @@ const ChatRoot: FC<ChatRootProps> = ({ children, part, chat, settings, artifact,
   const messageQueue = useMessageQueue(chat);
 
   // TODO(burdon): !!!
-  // TODO(thure): This will be referentially new on every render, is it causing overreactivity?
-  const messages = [...(messageQueue?.objects ?? []), ...processor.messages.value];
+  const [messages, setMessages] = useState<Message[]>([]);
+  useEffect(() => {
+    setMessages([...(messageQueue?.objects ?? []), ...processor.messages.value]);
+  }, [processor.messages.value]); // TODO(burdon): Update when queue updates.
 
   // Post last message to document.
   const { dispatchPromise: dispatch } = useIntentDispatcher();
