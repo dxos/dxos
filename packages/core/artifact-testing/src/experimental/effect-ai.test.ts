@@ -7,7 +7,7 @@ import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
 import { NodeHttpClient } from '@effect/platform-node';
 import { Config, Console, Effect, Layer, pipe, Schedule, Schema } from 'effect';
-import { describe, it } from 'vitest';
+import { describe, it } from '@effect/vitest';
 
 import { log } from '@dxos/log';
 
@@ -27,25 +27,24 @@ const AnthropicLayer = AnthropicClient.layerConfig({
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 // TODO(burdon): Is this the effect way to do this?
-const createChat = (prompt: string) =>
-  Effect.gen(function* () {
-    const chat = yield* AiChat.empty;
-    const toolkit = yield* TestToolkit;
+const createChat = Effect.fn(function* (prompt: string) {
+  const chat = yield* AiChat.empty;
+  const toolkit = yield* TestToolkit;
 
-    // Initial request.
-    // NOTE: Providing `toolkit` returns `AiRespose.WithToolCallResults`.
-    let output = yield* chat.generateText({ toolkit, prompt });
+  // Initial request.
+  // NOTE: Providing `toolkit` returns `AiRespose.WithToolCallResults`.
+  let output = yield* chat.generateText({ toolkit, prompt });
 
-    // Agentic loop.
-    // TODO(burdon): Explain how this works?
-    while (output.results.size > 0) {
-      log.info('results', { results: output.results.size });
-      output = yield* chat.generateText({ toolkit, prompt: AiInput.empty });
-    }
+  // Agentic loop.
+  // TODO(burdon): Explain how this works?
+  while (output.results.size > 0) {
+    log.info('results', { results: output.results.size });
+    output = yield* chat.generateText({ toolkit, prompt: AiInput.empty });
+  }
 
-    // Done.
-    return output.text;
-  });
+  // Done.
+  return output.text;
+});
 
 // Tool definitions.
 class TestToolkit extends AiToolkit.make(
@@ -93,62 +92,79 @@ const toolkitLayer = TestToolkit.toLayer({
  */
 describe.runIf(!process.env.CI)('AiLanguageModel', () => {
   // Sanity test.
-  it.runIf(process.env.OPENAI_API_KEY)('Debug: Verify API configuration', async ({ expect }) => {
-    const program = Effect.gen(function* () {
-      yield* Console.log('Testing API connectivity...');
-      const { text } = yield* AiLanguageModel.generateText({ prompt: 'Hello, respond with "API is working"' });
-      yield* Console.log('API Response received:', text);
-      return text;
-    }).pipe(
+  it.runIf(process.env.OPENAI_API_KEY)(
+    'Debug: Verify API configuration',
+    Effect.fn(
+      function* ({ expect }) {
+        yield* Console.log('Testing API connectivity...');
+        const { text } = yield* AiLanguageModel.generateText({ prompt: 'Hello, respond with "API is working"' });
+        yield* Console.log('API Response received:', text);
+
+        expect(text).to.contain('API is working');
+      },
       Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
       Effect.timeout('10 seconds'),
       Effect.retry({ times: 1 }),
-    );
+      Effect.provide(OpenAiLayer),
+    ),
+  );
 
-    const result = await program.pipe(Effect.provide(OpenAiLayer), Effect.runPromise);
-    expect(result).to.contain('API is working');
-  });
+  it.runIf(process.env.OPENAI_API_KEY)(
+    'should make a tool call',
+    Effect.fn(
+      function* ({ expect }) {
+        const createProgram = (prompt: string) =>
+          AiLanguageModel.generateText({
+            toolkit: TestToolkit,
+            prompt,
+          }).pipe(
+            // Effect.tap((response) => Console.log(response)),
+            Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
+            Effect.retry(pipe(Schedule.exponential('1 second'), Schedule.intersect(Schedule.recurs(2)))),
+            Effect.timeout('30 seconds'),
+          );
 
-  it.runIf(process.env.OPENAI_API_KEY)('should make a tool call', async ({ expect }) => {
-    const createProgram = (prompt: string) =>
-      AiLanguageModel.generateText({
-        toolkit: TestToolkit,
-        prompt,
-      }).pipe(
-        // Effect.tap((response) => Console.log(response)),
+        const result = yield* createProgram(
+          'What is six times seven? Use appropriate tools and just answer with the number.',
+        );
+        expect(result).toBeDefined();
+      },
+      Effect.provide([toolkitLayer, OpenAiLayer]),
+    ),
+  );
+
+  it.runIf(process.env.OPENAI_API_KEY)(
+    'should process an agentic loop using OpenAI',
+    Effect.fn(function* ({ expect }) {
+      const chat = createChat('What is six times seven?');
+      const result = yield* chat.pipe(
         Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
-        Effect.retry(pipe(Schedule.exponential('1 second'), Schedule.intersect(Schedule.recurs(2)))),
-        Effect.timeout('30 seconds'),
+        Effect.provide(OpenAiLayer),
+        Effect.provide(toolkitLayer),
       );
 
-    const program = createProgram('What is six times seven? Use appropriate tools and just answer with the number.');
-    const result = await program.pipe(Effect.provide([toolkitLayer, OpenAiLayer]), Effect.runPromise);
-    expect(result).toBeDefined();
-  });
+      log.info('result', { result });
+      expect(result).toContain('42');
+    }),
+  );
 
-  it.runIf(process.env.OPENAI_API_KEY)('should process an agentic loop using OpenAI', async ({ expect }) => {
-    const chat = createChat('What is six times seven?');
-    const result = await chat.pipe(
-      Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
-      Effect.provide(OpenAiLayer),
-      Effect.provide(toolkitLayer),
-      Effect.runPromise,
-    );
+  it.runIf(process.env.ANTHROPIC_API_KEY).only(
+    'should process an agentic loop using Claude',
+    Effect.fn(function* ({ expect }) {
+      const chat = createChat('What is six times seven?');
+      const result = yield* chat.pipe(
+        Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+        Effect.provide(AnthropicLayer),
+        Effect.provide(toolkitLayer),
+      );
 
-    log.info('result', { result });
-    expect(result).toContain('42');
-  });
+      log.info('result', { result });
+      expect(result).toContain('42');
+    }),
+  );
 
-  it.runIf(process.env.ANTHROPIC_API_KEY).skip('should process an agentic loop using Claude', async ({ expect }) => {
-    const chat = createChat('What is six times seven?');
-    const result = await chat.pipe(
-      Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-      Effect.provide(AnthropicLayer),
-      Effect.provide(toolkitLayer),
-      Effect.runPromise,
-    );
-
-    log.info('result', { result });
-    expect(result).toContain('42');
-  });
+  it.live(
+    'should process an agentic loop using Claude',
+    Effect.fn(function* ({ expect }) {}),
+  );
 });
