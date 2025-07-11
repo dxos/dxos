@@ -174,6 +174,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
 
         let prompt: AiInput.Raw = 'What is six times seven?';
         do {
+          // disableToolCallResolution
           const stream = chat.streamText({ toolkit, prompt });
           prompt = AiInput.empty;
 
