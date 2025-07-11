@@ -1,5 +1,5 @@
 // Base tsconfig for all projects.
-// TODO(burdon): Rename tsconfig.json
+// Don't rename it tsconfig.json. This is specifically non-standard name so TSC doesn't pick it up.
 {
   "compilerOptions": {
     "allowJs": false,
