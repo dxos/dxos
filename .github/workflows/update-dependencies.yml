@@ -1,0 +1,38 @@
+name: Update dependencies
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  effect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup
+
+        uses: ./.github/actions/setup
+
+      - name: Update manifests
+        run: npx npm-check-updates -u -deep effect
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.PAT }}
+          commit-message: Update report
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
+          signoff: false
+          branch: bot/update-effect
+          delete-branch: true
+          title: 'chore: Update effect dependencies'
+          labels: |
+            report
+            automated pr
+          draft: false
