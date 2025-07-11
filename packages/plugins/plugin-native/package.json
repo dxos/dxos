@@ -32,7 +32,7 @@
     "effect": "^3.13.3"
   },
   "devDependencies": {
-    "vite": "5.4.7"
+    "vite": "7.0.4"
   },
   "peerDependencies": {
     "effect": "^3.13.3"
