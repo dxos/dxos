@@ -24,7 +24,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Update manifests
-        run: npx npm-check-updates --deep --upgrade effect
+        run: npx npm-check-updates --deep --upgrade effect "@effect/*"
 
       - name: Install dependencies
         run: pnpm install
