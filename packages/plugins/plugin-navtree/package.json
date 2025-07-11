@@ -53,7 +53,7 @@
     "@radix-ui/react-dismissable-layer": "1.1.5",
     "@radix-ui/react-use-controllable-state": "1.1.0",
     "date-fns": "^3.3.1",
-    "effect": "^3.13.3"
+    "effect": "^3.16.12"
   },
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",
@@ -67,7 +67,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect-rx/rx-react": "^0.34.1",
-    "@effect/platform": "0.80.12",
+    "@effect/platform": "0.87.12",
     "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",

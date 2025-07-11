@@ -65,10 +65,10 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect-rx/rx-react": "^0.34.1",
-    "@effect/platform": "0.80.12",
+    "@effect/platform": "0.87.12",
     "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
-    "effect": "3.14.21",
+    "effect": "3.16.12",
     "react": "~18.2.0",
     "typedoc": "0.28.1"
   },
