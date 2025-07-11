@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Layer } from 'effect';
+import { Context, Effect, Layer } from 'effect';
 
+import type { Obj, Relation } from '@dxos/echo';
 import type { EchoDatabase } from '@dxos/echo-db';
+import type { DXN } from '@dxos/keys';
 
 export class DatabaseService extends Context.Tag('DatabaseService')<
   DatabaseService,
@@ -25,4 +27,17 @@ export class DatabaseService extends Context.Tag('DatabaseService')<
       },
     };
   };
+
+  static resolve: (dxn: DXN) => Effect.Effect<Obj.Any | Relation.Any, Error, DatabaseService> = Effect.fn(
+    function* (dxn) {
+      const { db } = yield* DatabaseService;
+      return yield* Effect.tryPromise({
+        try: () =>
+          db.graph.createRefResolver({ context: { space: db.spaceId } }).resolve(dxn) as Promise<
+            Obj.Any | Relation.Any
+          >,
+        catch: (error) => error as Error,
+      });
+    },
+  );
 }

@@ -72,10 +72,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
         ],
       },
       db,
+      queues,
       logging: {
         enabled: true,
       },
-      queues,
       tracing: {
         service: TracingService.console,
       },
