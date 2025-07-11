@@ -132,7 +132,7 @@ const ChatRoot: FC<ChatRootProps> = ({ children, part, chat, settings, artifact,
       handleSubmit={handleSubmit}
       handleCancel={handleCancel}
     >
-      <div className='flex flex-col grow'>{children}</div>
+      <div className='flex flex-col grow overflow-hidden'>{children}</div>
     </ChatContextProvider>
   );
 };
