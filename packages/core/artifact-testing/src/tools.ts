@@ -7,6 +7,7 @@ import { Effect, Schema } from 'effect';
 import { ArtifactId } from '@dxos/artifact';
 import { Obj } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
+
 import { TextDocument } from './types';
 import { toolFromFunction } from './util';
 

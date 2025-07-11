@@ -3,7 +3,7 @@
 //
 
 import { Message } from '@dxos/ai';
-import { AISession, Blueprint, BlueprintBinding } from '@dxos/assistant';
+import { AISession, type Blueprint, BlueprintBinding } from '@dxos/assistant';
 import { Obj, Ref } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
 import { AiService, ToolResolverService, type ServiceContainer } from '@dxos/functions';

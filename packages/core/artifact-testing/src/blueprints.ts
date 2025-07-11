@@ -4,6 +4,7 @@
 
 import { Blueprint } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
+
 import { readDocument, writeDocument } from './tools';
 
 export const DESIGN_SPEC_BLUEPRINT = Obj.make(Blueprint, {

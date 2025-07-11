@@ -2,13 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-
 import { createTool, ToolResult, type ExecutableTool } from '@dxos/ai';
-import {
-  FunctionExecutor,
-  type FunctionDefinition,
-  type ServiceContainer
-} from '@dxos/functions';
+import { FunctionExecutor, type FunctionDefinition, type ServiceContainer } from '@dxos/functions';
 
 declare global {
   interface ToolContextExtensions {
@@ -17,7 +12,11 @@ declare global {
 }
 
 // TODO(dmaretskyi): Find a good home for this.
-export const toolFromFunction = <I, O>(namespace: string, name: string, func: FunctionDefinition<I, O>): ExecutableTool => {
+export const toolFromFunction = <I, O>(
+  namespace: string,
+  name: string,
+  func: FunctionDefinition<I, O>,
+): ExecutableTool => {
   return createTool(namespace, {
     name,
     description: func.description,
