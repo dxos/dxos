@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Test, type TestProps } from './Test';
-import { TEST_ID } from './Test.test';
+import { TEST_ID } from './defs';
 
 /**
  * Storybook sanity test.
