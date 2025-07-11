@@ -46,8 +46,6 @@ export const ToolBlock: FC<ToolBlockProps> = ({ classNames, message, tools }) =>
             return null;
           }
 
-          log.info('tool_use', { tool: request?.tool, status: block.currentStatus });
-
           request = { tool: tools?.find((tool) => tool.name === block.name), block };
           return { title: getToolCaption(request.tool, block.currentStatus), block };
         }

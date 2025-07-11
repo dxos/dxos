@@ -135,7 +135,7 @@ const ChatRoot: FC<ChatRootProps> = ({ children, part, chat, settings, artifact,
       handleSubmit={handleSubmit}
       handleCancel={handleCancel}
     >
-      <div className='flex flex-col grow'>{children}</div>
+      <div className='flex flex-col grow overflow-hidden'>{children}</div>
     </ChatContextProvider>
   );
 };
@@ -146,10 +146,10 @@ ChatRoot.displayName = 'Chat.Root';
 // Thread
 //
 
-const ChatThread = (props: Omit<ChatThreadProps, 'space' | 'messages' | 'tools'>) => {
-  const { space, messages, tools } = useChatContext(ChatThread.displayName);
+const ChatThread = (props: Omit<ChatThreadProps, 'space' | 'messages' | 'tools' | 'onPrompt'>) => {
+  const { space, messages, tools, handleSubmit } = useChatContext(ChatThread.displayName);
 
-  return <NativeChatThread {...props} space={space} messages={messages} tools={tools} />;
+  return <NativeChatThread {...props} space={space} messages={messages} tools={tools} onPrompt={handleSubmit} />;
 };
 
 ChatThread.displayName = 'Chat.Thread';

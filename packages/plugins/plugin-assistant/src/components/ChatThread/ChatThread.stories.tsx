@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Message } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
@@ -13,60 +13,10 @@ import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ChatThread, type ChatThreadProps } from './ChatThread';
+import { ChatThread } from './ChatThread';
 import { translations } from '../../translations';
 
 faker.seed(1);
-
-const DefaultStory = ({ messages: _messages, ...props }: ChatThreadProps) => {
-  const [messages, setMessages] = useState<Message[]>(_messages ?? []);
-  useEffect(() => {
-    setMessages(_messages ?? []);
-  }, [_messages]);
-
-  const [processing, setProcessing] = useState(false);
-  const handleSubmit = useCallback(
-    (text: string) => {
-      const request: Message = Obj.make(Message, { role: 'user', content: [{ type: 'text', text }] });
-      const response: Message = Obj.make(Message, {
-        role: 'assistant',
-        content: [{ type: 'text', disposition: 'cot', pending: true, text: faker.lorem.paragraphs(1) }],
-      });
-      setMessages([...messages, request, response]);
-      setProcessing(true);
-      setTimeout(() => {
-        response.content[0].pending = false;
-        setMessages([
-          ...messages,
-          request,
-          response,
-          Obj.make(Message, {
-            role: 'assistant',
-            content: [{ type: 'text', text: faker.lorem.paragraphs(1) }],
-          }),
-        ]);
-        setProcessing(false);
-      }, 3_000);
-    },
-    [messages],
-  );
-
-  return <ChatThread {...props} messages={messages} />;
-};
-
-const meta: Meta<ChatThreadProps> = {
-  title: 'plugins/plugin-assistant/ChatThread',
-  render: DefaultStory,
-  component: ChatThread,
-  decorators: [withClientProvider({ createIdentity: true }), withTheme, withLayout({ Container: ColumnContainer })],
-  parameters: {
-    translations,
-  },
-};
-
-export default meta;
-
-type Story = StoryObj<ChatThreadProps>;
 
 const TEST_MESSAGES: Message[] = [
   Obj.make(Message, {
@@ -142,22 +92,43 @@ const TEST_MESSAGES: Message[] = [
       },
     ],
   }),
+  Obj.make(Message, {
+    role: 'assistant',
+    content: [
+      {
+        type: 'json',
+        disposition: 'suggest',
+        json: JSON.stringify({ text: 'Search...' }),
+      },
+      {
+        type: 'json',
+        disposition: 'suggest',
+        json: JSON.stringify({ text: faker.lorem.paragraphs(1) }),
+      },
+    ],
+  }),
 ];
 
-export const Default: Story = {
+const meta = {
+  title: 'plugins/plugin-assistant/ChatThread',
+  component: ChatThread,
+  decorators: [withClientProvider({ createIdentity: true }), withTheme, withLayout({ Container: ColumnContainer })],
+  parameters: {
+    translations,
+  },
+} satisfies Meta<typeof ChatThread>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default = {
   args: {
     messages: TEST_MESSAGES,
   },
-};
+} satisfies Story;
 
-export const Collapse: Story = {
-  args: {
-    collapse: true,
-    messages: TEST_MESSAGES,
-  },
-};
-
-export const Incremental: Story = {
+export const Incremental = {
   render: () => {
     const [messages, setMessages] = useState<Message[]>([]);
     useEffect(() => {
@@ -172,6 +143,6 @@ export const Incremental: Story = {
       return () => clearInterval(interval);
     }, []);
 
-    return <DefaultStory messages={messages} collapse />;
+    return <ChatThread messages={messages} collapse />;
   },
-};
+} satisfies Story;
