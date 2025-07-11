@@ -4,16 +4,18 @@
 
 import { createContext } from '@radix-ui/react-context';
 import { dedupeWith } from 'effect/Array';
-import React, { type PropsWithChildren, useCallback, type FC, useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { type ExecutableTool, type Message } from '@dxos/ai';
 import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type AssociatedArtifact } from '@dxos/artifact';
+import { Event } from '@dxos/async';
 import { DXN, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { getSpace, useQueue, type Space } from '@dxos/react-client/echo';
 import { type ReferencesOptions } from '@dxos/react-ui-chat';
+import { type ScrollController } from '@dxos/react-ui-components';
 
 import { useChatProcessor, useContextProvider, useServiceContainer } from '../../hooks';
 import { type AIChatType, type AssistantSettingsProps } from '../../types';
@@ -39,6 +41,7 @@ import { ChatThread as NativeChatThread, type ChatThreadProps } from '../ChatThr
 //
 
 type ChatContextValue = {
+  update: Event<string>;
   space: Space;
   messages: Message[];
   error?: Error;
@@ -63,7 +66,8 @@ type ChatRootProps = PropsWithChildren<{
   onOpenChange?: ChatPromptProps['onOpenChange'];
 }>;
 
-const ChatRoot: FC<ChatRootProps> = ({ children, part, chat, settings, artifact, onOpenChange, ...props }) => {
+const ChatRoot = ({ children, part, chat, settings, artifact, onOpenChange, ...props }: ChatRootProps) => {
+  const update = useMemo(() => new Event<string>(), []);
   const space = getSpace(chat);
   const serviceContainer = useServiceContainer({ space });
   const processor = useChatProcessor({ part, chat, space, serviceContainer, artifact, settings });
@@ -101,7 +105,9 @@ const ChatRoot: FC<ChatRootProps> = ({ children, part, chat, settings, artifact,
         return false;
       }
 
+      // TODO(burdon): Does this cause the dialog to open?
       onOpenChange?.(true);
+      update.emit('submit');
 
       invariant(messageQueue);
       void processor.request(text);
@@ -124,6 +130,7 @@ const ChatRoot: FC<ChatRootProps> = ({ children, part, chat, settings, artifact,
 
   return (
     <ChatContextProvider
+      update={update}
       space={space}
       messages={messages}
       error={processor?.error.value}
@@ -145,9 +152,24 @@ ChatRoot.displayName = 'Chat.Root';
 //
 
 const ChatThread = (props: Omit<ChatThreadProps, 'space' | 'messages' | 'tools' | 'onPrompt'>) => {
-  const { space, messages, tools, handleSubmit } = useChatContext(ChatThread.displayName);
+  const { update, space, messages, tools, handleSubmit } = useChatContext(ChatThread.displayName);
+  const scrollerRef = useRef<ScrollController>(null);
+  useEffect(() => {
+    return update.on(() => {
+      scrollerRef.current?.scrollToBottom('smooth');
+    });
+  }, [update]);
 
-  return <NativeChatThread {...props} space={space} messages={messages} tools={tools} onPrompt={handleSubmit} />;
+  return (
+    <NativeChatThread
+      {...props}
+      space={space}
+      messages={messages}
+      tools={tools}
+      onPrompt={handleSubmit}
+      ref={scrollerRef}
+    />
+  );
 };
 
 ChatThread.displayName = 'Chat.Thread';
