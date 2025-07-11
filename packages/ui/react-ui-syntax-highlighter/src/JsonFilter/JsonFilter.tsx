@@ -15,7 +15,7 @@ export type JsonProps = ThemedClassName<{ data?: any; testId?: string }>;
 
 export const Json = ({ data, classNames, testId }: JsonProps) => {
   return (
-    <SyntaxHighlighter language='json' classNames={classNames} data-testid={testId}>
+    <SyntaxHighlighter language='json' classNames={['w-full', classNames]} data-testid={testId}>
       {JSON.stringify(data, null, 2)}
     </SyntaxHighlighter>
   );

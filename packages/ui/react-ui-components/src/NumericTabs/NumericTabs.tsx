@@ -77,7 +77,7 @@ export const NumericTabs = forwardRef<HTMLDivElement, NumericTabsProps>(
               key={i}
               className={mx(
                 'relative flex w-[24px] h-[28px] justify-center cursor-pointer text-subdued',
-                selected === i && '!text-cyan-550 !dark:text-cyan-300',
+                selected !== i && 'text-subdued',
               )}
             >
               {i < length - 1 && <div className='absolute left-[11.5px] top-[21px] w-[1px] h-[10px] bg-neutral-400' />}
