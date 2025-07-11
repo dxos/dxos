@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { AgentStatusReport, ConsolePrinter } from '@dxos/ai';
+import { AgentStatusReport, ConsolePrinter, ToolRegistry } from '@dxos/ai';
 import { create } from '@dxos/echo-schema';
 import { AiService, CredentialsService, DatabaseService, defineFunction, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -68,9 +68,10 @@ export const researchFn = defineFunction({
       client: ai.client,
       systemPrompt: PROMPT,
       artifacts: [],
-      tools: [searchTool, graphWriteTool],
+      tools: [searchTool.id, graphWriteTool.id],
       history: [],
       prompt: query,
+      toolResolver: new ToolRegistry([searchTool, graphWriteTool]),
     });
 
     return {

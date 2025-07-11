@@ -135,30 +135,31 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
           }
           return null;
         }),
-        createBasicExtensions({ lineWrapping: false }),
+        createBasicExtensions({ lineWrapping: true }),
         createThemeExtensions({
           themeMode,
           slots: {
             editor: {
-              className: '[&>.cm-scroller]:scrollbar-none tabular-nums',
-            },
-            content: {
               className:
-                '!border !border-transparent !pli-[var(--dx-grid-cell-padding-inline)] !plb-[var(--dx-grid-cell-padding-block)]',
+                '!min-is-full !is-min !max-is-[--dx-grid-cell-editor-max-inline-size] !min-bs-full !max-bs-[--dx-grid-cell-editor-max-block-size]',
             },
+            content: { className: '!break-normal' },
           },
         }),
       ],
     };
-  }, [extension, autoFocus, value, onBlur]);
+  }, [extension, autoFocus, value, onBlur, themeMode]);
 
   return (
     <div
       data-testid='grid.cell-editor'
       ref={parentRef}
-      className='absolute z-[1]'
+      className='absolute z-[1] dx-grid__cell-editor'
       style={{
-        ...box,
+        insetInlineStart: box?.insetInlineStart ?? '0px',
+        insetBlockStart: box?.insetBlockStart ?? '0px',
+        minInlineSize: box?.inlineSize ?? '180px',
+        minBlockSize: box?.blockSize ?? '30px',
         ...{ '--dx-gridCellWidth': `${box?.inlineSize ?? 200}px` },
       }}
       {...(gridId && { 'data-grid': gridId })}

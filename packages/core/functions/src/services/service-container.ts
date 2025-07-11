@@ -77,14 +77,14 @@ export class ServiceContainer {
     return this;
   }
 
-  getService<T extends Context.Tag<any, any>>(tag: T): Context.Tag.Service<T> {
+  getService<Id, T>(tag: Context.Tag<Id, T>): T {
     const serviceKey = SERVICE_MAPPING[tag.key];
     const service = serviceKey != null ? this._services[serviceKey] : undefined;
     if (!service) {
       throw new Error(`Service not available: ${tag.key}`);
     }
 
-    return service as Context.Tag.Service<T>;
+    return service as T;
   }
 
   clone(): ServiceContainer {
