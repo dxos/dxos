@@ -23,7 +23,7 @@ export const ClientPlugin = ({
   invitationParam = 'deviceInvitationCode',
   onReset,
   ...options
-}: ClientPluginOptions) => {
+}: ClientPluginOptions = {}) => {
   const createInvitationUrl = (invitationCode: string) => {
     const baseUrl = new URL(invitationUrl);
     baseUrl.searchParams.set(invitationParam, invitationCode);
