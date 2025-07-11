@@ -1,9 +1,5 @@
 name: Build and Push Docker Image
 
-permissions:
-  contents: read
-  packages: write
-
 on:
   push:
     branches:
@@ -13,6 +9,10 @@ on:
       - .github/Dockerfile
       - .github/workflows/docker-image.yml
   workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
 
 env:
   IMAGE_NAME: ghcr.io/dxos/gh-actions

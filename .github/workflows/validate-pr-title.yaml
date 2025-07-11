@@ -1,9 +1,9 @@
+name: validate-pr-title
+
 on:
   pull_request_target:
     types: [edited, opened, synchronize, reopened]
   merge_group:
-
-name: validate-pr-title
 
 jobs:
   check-pr:
