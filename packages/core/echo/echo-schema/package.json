@@ -43,7 +43,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.9.0",
-    "effect": "3.14.21"
+    "effect": "3.16.12"
   },
   "publishConfig": {
     "access": "public"
