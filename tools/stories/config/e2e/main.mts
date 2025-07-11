@@ -4,9 +4,9 @@
 
 import { join } from 'path';
 
-import { config, packages } from '../../.storybook/main';
+import { createConfig, packages } from '../../.storybook/main';
 
-export default config({
+export default createConfig({
   stories: [
     join(packages, '/sdk/react-client/src/**/*.stories.tsx'),
     join(packages, '/sdk/shell/src/stories/Invitations.e2e-stories.tsx'),
