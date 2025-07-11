@@ -129,6 +129,9 @@
       "path": "../../ui/react-ui-canvas-editor"
     },
     {
+      "path": "../../ui/react-ui-chat"
+    },
+    {
       "path": "../../ui/react-ui-components"
     },
     {

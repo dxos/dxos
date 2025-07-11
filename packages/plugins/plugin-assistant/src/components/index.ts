@@ -5,11 +5,8 @@
 import { lazy } from 'react';
 
 export * from './AssistantSettings';
-export * from './ChatDialog';
-export * from './Prompt';
 export * from './PromptSettings';
 export * from './TemplateEditor';
-export * from './Thread';
 export * from './Toolbox';
 
 // TODO(burdon): Lazy loading causes issues with Tabster.

@@ -5572,6 +5572,9 @@ importers:
       '@dxos/react-ui-canvas-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas-editor
+      '@dxos/react-ui-chat':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-chat
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../ui/react-ui-components
@@ -12727,6 +12730,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
+      '@dxos/react-ui-sfx':
+        specifier: workspace:*
+        version: link:../react-ui-sfx
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
