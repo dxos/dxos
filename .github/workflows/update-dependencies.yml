@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup
 
+      - name: Setup
         uses: ./.github/actions/setup
 
       - name: Update manifests
@@ -24,15 +24,17 @@ jobs:
         id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.PAT }}
-          commit-message: Update report
-          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
-          signoff: false
           branch: bot/update-effect
           delete-branch: true
           title: 'chore: Update effect dependencies'
           labels: |
-            report
-            automated pr
+            automated
           draft: false
+
+
+# effect
+# vite
+# typescript
+# eslint
+# react
+# automerge
