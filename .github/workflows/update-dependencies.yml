@@ -36,8 +36,6 @@ jobs:
           branch: bot/update-effect
           delete-branch: true
           title: 'chore: Update effect dependencies'
-          labels: |
-            automated
           draft: false
 # effect
 # vite
