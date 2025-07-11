@@ -27,7 +27,6 @@ const AnthropicLayer = AnthropicClient.layerConfig({
   apiKey: Config.redacted('ANTHROPIC_API_KEY'),
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
-// TODO(burdon): Is this the effect way to do this?
 const createChat = Effect.fn(function* (prompt: string) {
   const chat = yield* AiChat.empty;
   const toolkit = yield* TestToolkit;
