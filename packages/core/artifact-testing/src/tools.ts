@@ -51,6 +51,7 @@ export const writeDocument = toolFromFunction(
       }
 
       doc.content = content;
+      // eslint-disable-next-line no-console
       console.log('writeDocument', content);
       return 'Document updated.';
     }),
