@@ -12,11 +12,11 @@ import os from 'node:os';
 import { dirname, join } from 'node:path';
 import readline from 'node:readline';
 import pkgUp from 'pkg-up';
-import { createEdgeIdentity } from '@dxos/client/edge';
 
 import { type Daemon, LaunchctlRunner, PhoenixDaemon, SystemctlRunner, SystemDaemon } from '@dxos/agent';
 import { Client, Config, fromAgent } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
+import { createEdgeIdentity } from '@dxos/client/edge';
 import {
   DX_CONFIG,
   DX_DATA,

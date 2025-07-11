@@ -6,7 +6,7 @@ import { next as A, type Heads } from '@automerge/automerge';
 import { type Repo, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 
 import { UpdateScheduler } from '@dxos/async';
-import { Resource } from '@dxos/context';
+import { LifecycleState, Resource } from '@dxos/context';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -158,6 +158,9 @@ export class DocumentsSynchronizer extends Resource {
   }
 
   private _writeMutation(documentId: DocumentId, mutation: Uint8Array): void {
+    if (this._lifecycleState === LifecycleState.CLOSED) {
+      return;
+    }
     const syncState = this._syncStates.get(documentId);
     invariant(syncState, 'Sync state for document not found');
     syncState.handle.update((doc) => {

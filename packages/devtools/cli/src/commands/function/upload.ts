@@ -20,7 +20,6 @@ import { DataType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
 import { bundleScript, findFunctionByDeploymentId } from '../../util';
-import { log } from '@dxos/log';
 
 // TODO: move to cli-composer
 
@@ -72,6 +71,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
         if (this.flags.composerScript) {
           await this._updateComposerScript(client, space, functionObject, basename(this.args.file), scriptFileContent);
         }
+        return uploadResult;
       },
       { spaceKeys: this.flags.spaceKey ? [this.flags.spaceKey] : undefined },
     );
