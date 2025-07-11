@@ -8,7 +8,7 @@ import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
 import { NodeHttpClient } from '@effect/platform-node';
 import { describe, it } from '@effect/vitest';
-import { Config, Console, Effect, Layer, pipe, Schedule, Schema } from 'effect';
+import { Config, Console, Effect, Layer, pipe, Schedule, Schema, Stream } from 'effect';
 
 import { log } from '@dxos/log';
 
@@ -166,16 +166,32 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     }, TestHelpers.runIf(process.env.ANTHROPIC_API_KEY)),
   );
 
-  it.effect(
+  it.effect.only(
     'streaming',
-    Effect.fn(function* ({ expect }) {
-      const chat = createChat('What is six times seven?');
-      const result = yield* chat.pipe(
-        Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-        Effect.provide(AnthropicLayer),
-        Effect.provide(toolkitLayer),
-      );
-      expect(result).toContain('42');
-    }, TestHelpers.runIf(process.env.ANTHROPIC_API_KEY)),
+    Effect.fn(
+      function* ({ expect }) {
+        const chat = yield* AiChat.empty;
+        const toolkit = yield* TestToolkit;
+
+        let prompt: AiInput.Raw = 'What is six times seven?';
+        do {
+          const stream = chat.streamText({ toolkit, prompt });
+          prompt = AiInput.empty;
+
+          yield* Stream.runForEach(
+            stream,
+            Effect.fnUntraced(function* (item) {
+              log.info('item', { item });
+            }),
+          );
+          log.break();
+        } while (true); // What's the stopping condition?
+      },
+      Effect.provide(toolkitLayer),
+      Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+      Effect.provide(AnthropicLayer),
+      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+    ),
+    { timeout: 120_000 },
   );
 });
