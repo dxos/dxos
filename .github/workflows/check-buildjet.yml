@@ -64,6 +64,13 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: ${{ runner.os }}-nx-${{ hashFiles('**/project.json', '**/tsconfig.base.json', '**/workspace.json', 'nx.json', 'package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nx-
+
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=lint,build
