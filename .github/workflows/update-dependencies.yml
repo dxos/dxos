@@ -27,7 +27,7 @@ jobs:
         run: npx npm-check-updates --deep --upgrade effect "@effect/*"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Create Pull Request
         id: cpr
