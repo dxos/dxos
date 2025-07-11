@@ -44,7 +44,7 @@ import { ChatDialog, PromptBar, type PromptBarProps, type PromptController } fro
 import { ASSISTANT_PLUGIN } from '../meta';
 import { QueryParser, createFilter, type Expression } from '../parser';
 import { createToolRegistry, RESEARCH_SEQUENCE } from '../testing';
-import { translations } from '../translations';
+import { meta } from '../translations';
 
 faker.seed(1);
 
@@ -80,7 +80,7 @@ type Mode = 'graph' | 'list';
 type StoryProps = { mode?: Mode; spec?: TypeSpec[] } & D3ForceGraphProps;
 
 const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
-  const { t } = useTranslation(ASSISTANT_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const showList = mode !== 'graph';
   const showGraph = mode !== 'list';
 

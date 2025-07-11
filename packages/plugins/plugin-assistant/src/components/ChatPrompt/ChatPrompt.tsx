@@ -32,7 +32,7 @@ export type ChatPromptProps = ThemedClassName<
 >;
 
 export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
-  ({ classNames, placeholder, error, processing, microphone, references, onCancel, ...props }, forwardedRef) => {
+  ({ classNames, error, processing, microphone, references, onCancel, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const promptRef = useForwardedRef<ChatEditorController>(forwardedRef);
     const [active, setActive] = useState(false);
@@ -49,7 +49,8 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
     return (
       <div
         className={mx(
-          'shrink-0 w-full grid grid-cols-[var(--rail-action)_1fr_var(--rail-action)] overflow-hidden',
+          'flex shrink-0 w-full items-center overflow-hidden',
+          'grid grid-cols-[var(--rail-action)_1fr_var(--rail-action)]',
           classNames,
         )}
       >

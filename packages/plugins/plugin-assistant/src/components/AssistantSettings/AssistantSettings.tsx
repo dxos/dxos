@@ -8,7 +8,7 @@ import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from '@dxos/ai';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
-import { ASSISTANT_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { LLM_PROVIDERS, type AssistantSettingsProps } from '../../types';
 
 // TODO(burdon): Factor out default Selector.
@@ -21,7 +21,7 @@ const LLM_PROVIDER_LABELS = {
 } as const;
 
 export const AssistantSettings = ({ settings }: { settings: AssistantSettingsProps }) => {
-  const { t } = useTranslation(ASSISTANT_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   return (
     <DeprecatedFormContainer>

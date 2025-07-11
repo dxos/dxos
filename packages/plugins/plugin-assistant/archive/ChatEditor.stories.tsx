@@ -53,7 +53,7 @@ const DefaultStory = (props: PromptBarProps) => {
 };
 
 const meta: Meta<typeof ChatEditor> = {
-  title: 'ui/react-ui-chat/Prompt',
+  title: 'plugins/plugin-assistant/ChatEditor',
   component: ChatEditor,
   render: DefaultStory,
   decorators: [withTheme, withLayout()],

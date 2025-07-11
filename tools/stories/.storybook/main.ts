@@ -28,7 +28,7 @@ export const modules = [
   // 'apps/*/src/**',
   // 'devtools/*/src/**',
   // 'experimental/*/src/**',
-  // 'plugins/*/src/**',
+  'plugins/*/src/**',
   // 'sdk/*/src/**',
   'ui/*/src/**',
 ];
