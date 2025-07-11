@@ -47,11 +47,11 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     const conversation = new Conversation({
       serviceContainer,
       queue: queues.create(),
-      onBegin: (session) => {
-        session.message.on((message) => printer.printMessage(message));
-        session.userMessage.on((message) => printer.printMessage(message));
-        session.block.on((block) => printer.printContentBlock(block));
-      },
+    });
+    conversation.onBegin.on((session) => {
+      session.message.on((message) => printer.printMessage(message));
+      session.userMessage.on((message) => printer.printMessage(message));
+      session.block.on((block) => printer.printContentBlock(block));
     });
 
     await db.add(DESIGN_SPEC_BLUEPRINT);
@@ -92,11 +92,11 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     const conversation = new Conversation({
       serviceContainer,
       queue: queues.create(),
-      onBegin: (session) => {
-        session.message.on((message) => printer.printMessage(message));
-        session.userMessage.on((message) => printer.printMessage(message));
-        session.block.on((block) => printer.printContentBlock(block));
-      },
+    });
+    conversation.onBegin.on((session) => {
+      session.message.on((message) => printer.printMessage(message));
+      session.userMessage.on((message) => printer.printMessage(message));
+      session.block.on((block) => printer.printContentBlock(block));
     });
 
     await db.add(TASK_LIST_BLUEPRINT);
