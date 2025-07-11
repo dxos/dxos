@@ -92,7 +92,7 @@ const toolkitLayer = TestToolkit.toLayer({
  */
 describe.runIf(!process.env.CI)('AiLanguageModel', () => {
   // Sanity test.
-  it.runIf(process.env.OPENAI_API_KEY)(
+  it.effect.runIf(process.env.OPENAI_API_KEY)(
     'Debug: Verify API configuration',
     Effect.fn(
       function* ({ expect }) {
@@ -109,7 +109,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     ),
   );
 
-  it.runIf(process.env.OPENAI_API_KEY)(
+  it.effect.runIf(process.env.OPENAI_API_KEY)(
     'should make a tool call',
     Effect.fn(
       function* ({ expect }) {
@@ -133,7 +133,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     ),
   );
 
-  it.runIf(process.env.OPENAI_API_KEY)(
+  it.effect.runIf(process.env.OPENAI_API_KEY)(
     'should process an agentic loop using OpenAI',
     Effect.fn(function* ({ expect }) {
       const chat = createChat('What is six times seven?');
@@ -148,7 +148,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     }),
   );
 
-  it.runIf(process.env.ANTHROPIC_API_KEY).only(
+  it.effect.runIf(process.env.ANTHROPIC_API_KEY)(
     'should process an agentic loop using Claude',
     Effect.fn(function* ({ expect }) {
       const chat = createChat('What is six times seven?');
@@ -161,10 +161,5 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
       log.info('result', { result });
       expect(result).toContain('42');
     }),
-  );
-
-  it.live(
-    'should process an agentic loop using Claude',
-    Effect.fn(function* ({ expect }) {}),
   );
 });
