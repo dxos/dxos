@@ -19,24 +19,17 @@ import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type AIChatType, type AssistantSettingsProps, ServiceType } from '../types';
 
 type UseChatProcessorProps = {
+  part?: 'deck' | 'dialog'; // TODO(burdon): Define?
   chat?: AIChatType;
   space?: Space;
   settings?: AssistantSettingsProps;
-  part?: 'deck' | 'dialog';
-  associatedArtifact?: AssociatedArtifact;
+  artifact?: AssociatedArtifact;
 };
 
 /**
  * Configure and create ChatProcessor.
  */
-export const useChatProcessor = ({
-  chat,
-  space,
-  settings,
-  // part = 'deck',
-  part,
-  associatedArtifact,
-}: UseChatProcessorProps): ChatProcessor => {
+export const useChatProcessor = ({ part, chat, space, settings, artifact }: UseChatProcessorProps): ChatProcessor => {
   const aiClient = useCapability(AssistantCapabilities.AiClient);
   const globalTools = useCapabilities(Capabilities.Tools);
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
@@ -66,7 +59,7 @@ export const useChatProcessor = ({
         .map((fn) => convertFunctionToTool(fn, config.values.runtime?.services?.edge?.url ?? '', space?.id))
         .filter(isNonNullable),
     ];
-    const extensions = { space, dispatch, pivotId: chatId, part };
+    const extensions = { part, space, dispatch, pivotId: chatId };
     return [tools, extensions];
   }, [dispatch, globalTools, space, chatId, serviceTools, functions]);
 
@@ -75,9 +68,9 @@ export const useChatProcessor = ({
     () =>
       createSystemPrompt({
         artifacts: artifactDefinitions.map((definition) => `${definition.name}\n${definition.instructions}`),
-        associatedArtifact,
+        artifact,
       }),
-    [artifactDefinitions, associatedArtifact],
+    [artifactDefinitions, artifact],
   );
 
   // TODO(burdon): Remove default (let backend decide if not specified).

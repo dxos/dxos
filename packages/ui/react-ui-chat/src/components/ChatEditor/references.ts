@@ -16,10 +16,10 @@ import {
 
 import { Mutex } from '@dxos/async';
 
+// TODO(dmaretskyi): Consider adding details renderer for when you hover over the reference.
 export type ReferenceData = {
   uri: string;
   label: string;
-  // TODO(dmaretskyi): Consider adding details renderer for when you hover over the reference.
 };
 
 export interface ReferencesProvider {
@@ -28,9 +28,8 @@ export interface ReferencesProvider {
 }
 
 export type ReferencesOptions = {
-  provider: ReferencesProvider;
   /**
-   * Will prevent the autocomplete from closing when the user blurs the editor.
+   * Prevent the autocomplete from closing when the user blurs the editor.
    * @default false
    */
   debug?: boolean;
@@ -38,6 +37,7 @@ export type ReferencesOptions = {
    * @default '@'
    */
   triggerCharacter?: string;
+  provider: ReferencesProvider;
 };
 
 /**

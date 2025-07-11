@@ -14,30 +14,21 @@ import { errorText, mx } from '@dxos/react-ui-theme';
 import { meta } from '../../meta';
 
 export type ChatPromptProps = ThemedClassName<
-  Pick<
-    ChatEditorProps,
-    | 'extensions'
-    | 'references'
-    | 'placeholder'
-    | 'lineWrapping'
-    | 'onSubmit'
-    | 'onSuggest'
-    | 'onCancel'
-    | 'onOpenChange'
-  > & {
+  Omit<ChatEditorProps, 'classNames'> & {
     error?: Error;
     processing?: boolean;
     microphone?: boolean;
   }
 >;
 
+// TODO(burdon): Split into Radix-style components.
 export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
-  ({ classNames, error, processing, microphone, references, onCancel, ...props }, forwardedRef) => {
+  ({ classNames, error, processing, microphone, onCancel, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
-    const promptRef = useForwardedRef<ChatEditorController>(forwardedRef);
     const [active, setActive] = useState(false);
 
     // TODO(burdon): Configure capability in TranscriptionPlugin.
+    const promptRef = useForwardedRef<ChatEditorController>(forwardedRef);
     const { recording } = useVoiceInput({
       active,
       onUpdate: (text) => {

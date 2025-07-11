@@ -30,9 +30,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {

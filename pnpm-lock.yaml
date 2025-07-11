@@ -5614,6 +5614,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.10.0
+      '@radix-ui/react-context':
+        specifier: 1.1.1
+        version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
       '@xiechao/codemirror-lang-handlebars':
         specifier: 1.0.4
         version: 1.0.4
@@ -12619,7 +12622,7 @@ importers:
         specifier: ^1.9.0
         version: 1.10.0
       '@radix-ui/react-context':
-        specifier: ^1.0.0
+        specifier: 1.1.1
         version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
       bind-event-listener:
         specifier: ^3.0.0
@@ -12697,9 +12700,6 @@ importers:
       '@codemirror/view':
         specifier: ^6.34.1
         version: 6.34.1
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../../core/ai
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
