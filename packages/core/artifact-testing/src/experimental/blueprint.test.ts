@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Schema } from 'effect';
+import { Effect, Schema, Struct } from 'effect';
 import { beforeAll, describe, expect, test } from 'vitest';
 
 import { ConsolePrinter, createTool, Message, ToolRegistry, ToolResult, type ExecutableTool } from '@dxos/ai';
@@ -121,6 +121,23 @@ const DESIGN_SPEC_BLUEPRINT = Obj.make(Blueprint, {
     Maintain the document so that it can convey all relevant points from the conversation.
     When replying to the user, be terse with your comments about design doc handling.
     You do not announce when you read or write the design spec document.
+  `,
+  // TODO(dmaretskyi): Create tool.
+  tools: [readDocument.id, writeDocument.id],
+  artifacts: [],
+});
+
+const TASK_LIST_BLUEPRINT = Obj.make(Blueprint, {
+  name: 'Task List',
+  description: 'Manages a list of tasks.',
+  instructions: `
+    You manage a list of tasks.
+    The task list is a document that captures list of tasks.
+    The task list document is a markdown file.
+    The task list document follows a hierarchical structure, with nested markdown bulleted sections, keyed by "-".
+    You use appropriate tools to read and write the task list document.
+    When replying to the user, be terse with your comments about task list handling.
+    You do not announce when you read or write the task list document.
   `,
   // TODO(dmaretskyi): Create tool.
   tools: [readDocument.id, writeDocument.id],
@@ -296,5 +313,63 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     });
     log.info('spec 2', { doc: artifact });
     expect(artifact.content).not.toBe(prevContent);
+  });
+
+  test.only('building a shelf', async () => {
+    const printer = new ConsolePrinter();
+    const conversation = new Conversation({
+      serviceContainer,
+      queue: queues.create(),
+      onBegin: (session) => {
+        session.message.on((message) => printer.printMessage(message));
+        session.userMessage.on((message) => printer.printMessage(message));
+        session.block.on((block) => printer.printContentBlock(block));
+      },
+    });
+
+    await db.add(TASK_LIST_BLUEPRINT);
+    await conversation.blueprints.bind(Ref.make(TASK_LIST_BLUEPRINT));
+
+    const artifact = db.add(Obj.make(TextDocument, { content: '' }));
+    let prevContent = artifact.content;
+    await conversation.run({
+      prompt: `
+        I'm building a shelf.
+        
+        I need a hammer, nails, and a saw.
+
+        Store the shopping list in ${Obj.getDXN(artifact)}
+      `,
+    });
+    log.info('spec 1', { doc: artifact });
+    expect(artifact.content).not.toBe(prevContent);
+    prevContent = artifact.content;
+
+    await conversation.run({
+      prompt: `
+        I will need a board too.
+      `,
+    });
+    log.info('spec 2', { doc: artifact });
+    expect(artifact.content).not.toBe(prevContent);
+
+    await conversation.run({
+      prompt: `
+        Actually lets use screws and a screwdriver.
+      `,
+    });
+    log.info('spec 3', { doc: artifact });
+    expect(artifact.content).not.toBe(prevContent);
+
+    Object.entries({
+      screwdriver: true,
+      screws: true,
+      board: true,
+      saw: true,
+      hammer: false,
+      nails: false,
+    }).forEach(([item, expected]) => {
+      expect(artifact.content.toLowerCase().includes(item)).toBe(expected);
+    });
   });
 });
