@@ -189,6 +189,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
             {...props}
           />
         </Chat.Root>
+
         {/* <Thread.Root
           messages={messages}
           processing={processor?.streaming.value}
