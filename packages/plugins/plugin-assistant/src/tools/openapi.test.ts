@@ -71,6 +71,7 @@ describe.skip('openapi', () => {
   });
 
   describe.skip('AI uses tools', () => {
+
     test('amadeus flight availabilities', { timeout: 60_000 }, async () => {
       const tools = await createToolsFromApi(FLIGHT_SEARCH_API, { authorization: AMADEUS_AUTH });
       const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL });

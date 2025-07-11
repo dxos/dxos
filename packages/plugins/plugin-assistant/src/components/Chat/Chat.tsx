@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useCallback, type FC, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, type FC, type PropsWithChildren } from 'react';
 
 import { type ExecutableTool, type Message } from '@dxos/ai';
 import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
@@ -11,13 +11,15 @@ import { type AssociatedArtifact } from '@dxos/artifact';
 import { DXN, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { getSpace, type Space } from '@dxos/react-client/echo';
+import { getSpace, useQueue, type Space } from '@dxos/react-client/echo';
 import { type ReferencesOptions } from '@dxos/react-ui-chat';
 
-import { useContextProvider, useChatProcessor, useMessageQueue } from '../../hooks';
+import { useChatProcessor, useContextProvider, useServiceContainer } from '../../hooks';
 import { type AIChatType, type AssistantSettingsProps } from '../../types';
 import { ChatPrompt as NativeChatPrompt, type ChatPromptProps } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps } from '../ChatThread';
+import { getDebugName } from '@dxos/util';
+import { dedupe, dedupeWith } from 'effect/Array';
 
 // interface ContextProvider {
 //   query({ query }: { query: string }): Promise<ReferenceData[]>;
@@ -64,17 +66,21 @@ type ChatRootProps = PropsWithChildren<{
 
 const ChatRoot: FC<ChatRootProps> = ({ children, part, chat, settings, artifact, onOpenChange, ...props }) => {
   const space = getSpace(chat);
-  const processor = useChatProcessor({ part, chat, space, artifact, settings });
-  const messageQueue = useMessageQueue(chat);
+  const serviceContainer = useServiceContainer({ space });
+  const processor = useChatProcessor({ part, chat, space, serviceContainer, artifact, settings });
+  const messageQueue = useQueue<Message>(chat?.queue.dxn);
 
   // TODO(burdon): !!!
   // TODO(thure): This will be referentially new on every render, is it causing overreactivity?
-  const messages = [...(messageQueue?.objects ?? []), ...processor.messages.value];
+  const messages = dedupeWith(
+    [...(messageQueue?.objects ?? []), ...(processor?.messages.value ?? [])],
+    (a, b) => a.id === b.id,
+  );
 
   // Post last message to document.
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   useEffect(() => {
-    if (!processor.streaming.value && messageQueue?.objects) {
+    if (!processor?.streaming.value && messageQueue?.objects) {
       const message = messageQueue.objects[messageQueue.objects.length - 1];
       if (space && chat && message && dispatch && artifact) {
         void dispatch(
@@ -86,10 +92,11 @@ const ChatRoot: FC<ChatRootProps> = ({ children, part, chat, settings, artifact,
         );
       }
     }
-  }, [messageQueue, artifact, processor.streaming.value]);
+  }, [messageQueue, artifact, processor?.streaming.value]);
 
   const handleSubmit = useCallback(
     (text: string) => {
+      invariant(processor);
       // Don't accept input if still processing.
       if (processor.streaming.value) {
         log.warn('ignoring submit; still processing.');
@@ -99,12 +106,7 @@ const ChatRoot: FC<ChatRootProps> = ({ children, part, chat, settings, artifact,
       onOpenChange?.(true);
 
       invariant(messageQueue);
-      void processor.request(text, {
-        history: messageQueue.objects,
-        onComplete: (messages) => {
-          void messageQueue.append(messages);
-        },
-      });
+      void processor.request(text);
 
       return true;
     },
@@ -112,6 +114,7 @@ const ChatRoot: FC<ChatRootProps> = ({ children, part, chat, settings, artifact,
   );
 
   const handleCancel = useCallback(() => {
+    invariant(processor);
     if (processor.streaming.value) {
       void processor.cancel();
     }
@@ -125,9 +128,9 @@ const ChatRoot: FC<ChatRootProps> = ({ children, part, chat, settings, artifact,
     <ChatContextProvider
       space={space}
       messages={messages}
-      error={processor.error.value}
-      processing={processor.streaming.value}
-      tools={processor.tools ?? []}
+      error={processor?.error.value}
+      processing={processor?.streaming.value ?? false}
+      tools={processor?.tools ?? []}
       handleOpenChange={onOpenChange}
       handleSubmit={handleSubmit}
       handleCancel={handleCancel}

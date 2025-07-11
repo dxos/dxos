@@ -14,7 +14,7 @@ import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 
 import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from '../blueprints';
-import { Conversation } from '../conversation';
+import { Conversation } from '@dxos/assistant';
 import { readDocument, writeDocument } from '../tools';
 import { TextDocument } from '../types';
 

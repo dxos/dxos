@@ -7,20 +7,23 @@ import { useEffect, useMemo, useState } from 'react';
 import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL, type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { type AssociatedArtifact, createSystemPrompt } from '@dxos/artifact';
-import { FunctionType } from '@dxos/functions';
+import { FunctionType, type ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import { Filter, fullyQualifiedId, type Space, useQuery } from '@dxos/react-client/echo';
-import { isNonNullable } from '@dxos/util';
+import { Filter, fullyQualifiedId, type Queue, type Space, useQuery } from '@dxos/react-client/echo';
+import { getDebugName, isNonNullable } from '@dxos/util';
 
 import { AssistantCapabilities } from '../capabilities';
 import { ChatProcessor, type ChatProcessorOptions } from '../hooks';
 import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type AIChatType, type AssistantSettingsProps, ServiceType } from '../types';
+import { Conversation } from '@dxos/assistant';
+import { useDebugReactDeps } from '@dxos/react-ui';
 
 type UseChatProcessorProps = {
   part?: 'deck' | 'dialog'; // TODO(burdon): Define?
   chat?: AIChatType;
+  serviceContainer: ServiceContainer;
   space?: Space;
   settings?: AssistantSettingsProps;
   artifact?: AssociatedArtifact;
@@ -29,7 +32,14 @@ type UseChatProcessorProps = {
 /**
  * Configure and create ChatProcessor.
  */
-export const useChatProcessor = ({ part, chat, space, settings, artifact }: UseChatProcessorProps): ChatProcessor => {
+export const useChatProcessor = ({
+  part,
+  chat,
+  space,
+  serviceContainer,
+  settings,
+  artifact,
+}: UseChatProcessorProps): ChatProcessor | undefined => {
   const aiClient = useCapability(AssistantCapabilities.AiClient);
   const globalTools = useCapabilities(Capabilities.Tools);
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
@@ -79,12 +89,24 @@ export const useChatProcessor = ({ part, chat, space, settings, artifact }: UseC
       ? ((settings?.ollamaModel ?? DEFAULT_OLLAMA_MODEL) as ChatProcessorOptions['model'])
       : ((settings?.edgeModel ?? DEFAULT_EDGE_MODEL) as ChatProcessorOptions['model']);
 
+  const conversation = useMemo(
+    () =>
+      chat?.queue.target &&
+      new Conversation({
+        serviceContainer,
+        queue: chat.queue.target as Queue<any>,
+      }),
+    [chat?.queue.target, serviceContainer],
+  );
+
   // Create processor.
   // TODO(burdon): Updated on each query update above; should just update current processor.
   const processor = useMemo(() => {
     log('creating processor...', { settings });
-    return new ChatProcessor(aiClient.value, tools, artifactDefinitions, extensions, { model, systemPrompt });
-  }, [aiClient.value, tools, artifactDefinitions, extensions, model, systemPrompt]);
+    return (
+      conversation && new ChatProcessor(conversation, tools, artifactDefinitions, extensions, { model, systemPrompt })
+    );
+  }, [conversation, tools, artifactDefinitions, extensions, model, systemPrompt]);
 
   return processor;
 };

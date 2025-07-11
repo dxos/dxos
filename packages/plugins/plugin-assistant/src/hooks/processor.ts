@@ -16,10 +16,11 @@ import {
 } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
-import { AISession, type ArtifactDiffResolver } from '@dxos/assistant';
+import { AISession, type ArtifactDiffResolver, type Conversation } from '@dxos/assistant';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Filter, getVersion, type Space } from '@dxos/react-client/echo';
+import { Context } from '@dxos/context';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -30,8 +31,7 @@ declare global {
 }
 
 type RequestOptions = {
-  history?: Message[];
-  onComplete?: (messages: Message[]) => void;
+  // Empty for now.
 };
 
 export type ChatProcessorOptions = Pick<GenerateRequest, 'model' | 'systemPrompt'>;
@@ -54,8 +54,8 @@ export class ChatProcessor {
   /** Current streaming block (from the AI service). */
   private readonly _block: Signal<MessageContentBlock | undefined> = signal(undefined);
 
-  /** Current streaming response. */
-  private _session: AISession | undefined;
+  /** Current session. */
+  private _session: AISession | undefined = undefined;
 
   /**
    * Streaming state.
@@ -87,7 +87,7 @@ export class ChatProcessor {
   });
 
   constructor(
-    private readonly _ai: AiServiceClient,
+    private readonly _conversation: Conversation,
     private _tools?: ExecutableTool[],
     private _artifacts?: ArtifactDefinition[],
     private readonly _extensions?: ToolContextExtensions,
@@ -109,61 +109,72 @@ export class ChatProcessor {
    * Make GPT request.
    */
   async request(message: string, options: RequestOptions = {}): Promise<Message[]> {
-    this._session = new AISession({ operationModel: 'configured' });
+    await using ctx = Context.default(); // Auto-disposed at the end of this block.
 
-    // Message complete.
-    this._session.message.on((message) => {
-      batch(() => {
-        this._pending.value = [...this._pending.value, message];
-        this._block.value = undefined;
+    this._conversation.onBegin.on(ctx, (session) => {
+      log.info('onBegin', { session, isDisposed: ctx.disposed });
+
+      this._session = session;
+      ctx.onDispose(() => {
+        log.info('onDispose', { session, isDisposed: ctx.disposed });
+        if (this._session === session) {
+          this._session = undefined;
+        }
       });
-    });
 
-    // Streaming update (happens before message complete).
-    this._session.update.on((block) => {
-      batch(() => {
-        this._block.value = block;
-      });
-    });
-
-    this._session.userMessage.on((message) => {
-      this._pending.value = [...this._pending.value, message];
-    });
-
-    this._session.toolStatusReport.on(({ message, status }) => {
-      const msg = this._pending.peek().find((m) => m.id === message.id);
-      const toolUse = msg?.content.find((block) => block.type === 'tool_use');
-      if (!toolUse) {
-        return;
-      }
-
-      const block = msg?.content.find(
-        (block): block is ToolUseContentBlock => block.type === 'tool_use' && block.id === toolUse.id,
-      );
-      if (block) {
-        this._pending.value = this._pending.value.map((m) => {
-          if (m.id === message.id) {
-            return {
-              ...m,
-              content: m.content.map((b) =>
-                b.type === 'tool_use' && b.id === toolUse.id ? { ...b, currentStatus: status } : b,
-              ),
-            };
-          }
-          return m;
+      // Message complete.
+      session.message.on((message) => {
+        batch(() => {
+          this._pending.value = [...this._pending.value, message];
+          this._block.value = undefined;
         });
-      } else {
-        log.warn('no block for status report');
-      }
+      });
+
+      // Streaming update (happens before message complete).
+      session.update.on((block) => {
+        batch(() => {
+          this._block.value = block;
+        });
+      });
+
+      session.userMessage.on((message) => {
+        log.info('userMessage', { message });
+        this._pending.value = [...this._pending.value, message];
+      });
+
+      session.toolStatusReport.on(({ message, status }) => {
+        const msg = this._pending.peek().find((m) => m.id === message.id);
+        const toolUse = msg?.content.find((block) => block.type === 'tool_use');
+        if (!toolUse) {
+          return;
+        }
+
+        const block = msg?.content.find(
+          (block): block is ToolUseContentBlock => block.type === 'tool_use' && block.id === toolUse.id,
+        );
+        if (block) {
+          this._pending.value = this._pending.value.map((m) => {
+            if (m.id === message.id) {
+              return {
+                ...m,
+                content: m.content.map((b) =>
+                  b.type === 'tool_use' && b.id === toolUse.id ? { ...b, currentStatus: status } : b,
+                ),
+              };
+            }
+            return m;
+          });
+        } else {
+          log.warn('no block for status report');
+        }
+      });
     });
 
     try {
-      const messages = await this._session.run({
-        client: this._ai,
-        history: options.history ?? [],
+      const messages = await this._conversation.run({
         artifacts: this._artifacts ?? [],
         requiredArtifactIds: this._artifacts?.map((artifact) => artifact.id) ?? [],
-        tools: [],
+
         // TODO(dmaretskyi): Migrate to ToolRegistry.
         executableTools: this._tools ?? [],
         prompt: message,
@@ -173,11 +184,9 @@ export class ChatProcessor {
         generationOptions: {
           model: this._options.model,
         },
-        toolResolver: new ToolRegistry([]),
       });
 
       log('completed', { messages });
-      options.onComplete?.(this._pending.value);
     } catch (err) {
       log.catch(err);
       if (err instanceof Error && err.message.includes('Overloaded')) {
@@ -185,10 +194,7 @@ export class ChatProcessor {
       } else {
         this.error.value = new Error('AI service error', { cause: err });
       }
-    } finally {
-      this._session = undefined;
     }
-
     return this._reset();
   }
 
@@ -198,6 +204,8 @@ export class ChatProcessor {
    */
   async cancel(): Promise<Message[]> {
     log.info('cancelling...');
+
+    // TODO(dmaretskyi): Conversation should handle aborting.
     this._session?.abort();
     return this._reset();
   }
