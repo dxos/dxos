@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { TestHelpers } from '@dxos/effect';
 import { AiChat, AiInput, AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
 import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
 import { NodeHttpClient } from '@effect/platform-node';
-import { Config, Console, Effect, Layer, pipe, Schedule, Schema } from 'effect';
 import { describe, it } from '@effect/vitest';
+import { Config, Console, Effect, Layer, pipe, Schedule, Schema } from 'effect';
 
 import { log } from '@dxos/log';
 
@@ -92,7 +93,7 @@ const toolkitLayer = TestToolkit.toLayer({
  */
 describe.runIf(!process.env.CI)('AiLanguageModel', () => {
   // Sanity test.
-  it.effect.runIf(process.env.OPENAI_API_KEY)(
+  it.effect(
     'Debug: Verify API configuration',
     Effect.fn(
       function* ({ expect }) {
@@ -106,10 +107,11 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
       Effect.timeout('10 seconds'),
       Effect.retry({ times: 1 }),
       Effect.provide(OpenAiLayer),
+      TestHelpers.runIf(process.env.OPENAI_API_KEY),
     ),
   );
 
-  it.effect.runIf(process.env.OPENAI_API_KEY)(
+  it.effect(
     'should make a tool call',
     Effect.fn(
       function* ({ expect }) {
@@ -130,10 +132,11 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
         expect(result).toBeDefined();
       },
       Effect.provide([toolkitLayer, OpenAiLayer]),
+      TestHelpers.runIf(process.env.OPENAI_API_KEY),
     ),
   );
 
-  it.effect.runIf(process.env.OPENAI_API_KEY)(
+  it.effect(
     'should process an agentic loop using OpenAI',
     Effect.fn(function* ({ expect }) {
       const chat = createChat('What is six times seven?');
@@ -145,10 +148,10 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
 
       log.info('result', { result });
       expect(result).toContain('42');
-    }),
+    }, TestHelpers.runIf(process.env.OPENAI_API_KEY)),
   );
 
-  it.effect.runIf(process.env.ANTHROPIC_API_KEY)(
+  it.effect(
     'should process an agentic loop using Claude',
     Effect.fn(function* ({ expect }) {
       const chat = createChat('What is six times seven?');
@@ -160,6 +163,19 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
 
       log.info('result', { result });
       expect(result).toContain('42');
-    }),
+    }, TestHelpers.runIf(process.env.ANTHROPIC_API_KEY)),
+  );
+
+  it.effect(
+    'streaming',
+    Effect.fn(function* ({ expect }) {
+      const chat = createChat('What is six times seven?');
+      const result = yield* chat.pipe(
+        Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+        Effect.provide(AnthropicLayer),
+        Effect.provide(toolkitLayer),
+      );
+      expect(result).toContain('42');
+    }, TestHelpers.runIf(process.env.ANTHROPIC_API_KEY)),
   );
 });
