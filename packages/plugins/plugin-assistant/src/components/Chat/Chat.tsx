@@ -6,11 +6,11 @@ import { createContext } from '@radix-ui/react-context';
 import { dedupeWith } from 'effect/Array';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { type ExecutableTool, type Message } from '@dxos/ai';
+import { type ExecutableTool, Message } from '@dxos/ai';
 import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type AssociatedArtifact } from '@dxos/artifact';
 import { Event } from '@dxos/async';
-import { DXN, Ref } from '@dxos/echo';
+import { DXN, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { getSpace, useQueue, type Space } from '@dxos/react-client/echo';
@@ -21,6 +21,7 @@ import { useChatProcessor, useContextProvider, useServiceContainer } from '../..
 import { type AIChatType, type AssistantSettingsProps } from '../../types';
 import { ChatPrompt as NativeChatPrompt, type ChatPromptProps } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps } from '../ChatThread';
+import type { Blueprint } from '@dxos/assistant';
 
 // interface ContextProvider {
 //   query({ query }: { query: string }): Promise<ReferenceData[]>;
@@ -47,6 +48,7 @@ type ChatContextValue = {
   error?: Error;
   processing: boolean;
   tools: ExecutableTool[];
+  activeBlueprints: readonly Ref.Ref<Blueprint>[];
   handleOpenChange: ChatPromptProps['onOpenChange'];
   handleSubmit: ChatPromptProps['onSubmit'];
   handleCancel: ChatPromptProps['onCancel'];
@@ -75,7 +77,11 @@ const ChatRoot = ({ children, part, chat, settings, artifact, onOpenChange, ...p
 
   // TODO(burdon): Does this update when the queue updates?
   const messages = useMemo(
-    () => dedupeWith([...(messageQueue?.objects ?? []), ...(processor?.messages.value ?? [])], (a, b) => a.id === b.id),
+    () =>
+      dedupeWith(
+        [...(messageQueue?.objects?.filter(Obj.instanceOf(Message)) ?? []), ...(processor?.messages.value ?? [])],
+        (a, b) => a.id === b.id,
+      ),
     [messageQueue?.objects, processor?.messages.value],
   );
 
@@ -139,6 +145,7 @@ const ChatRoot = ({ children, part, chat, settings, artifact, onOpenChange, ...p
       handleOpenChange={onOpenChange}
       handleSubmit={handleSubmit}
       handleCancel={handleCancel}
+      activeBlueprints={processor?.blueprints ?? []}
     >
       <div className='flex flex-col grow overflow-hidden'>{children}</div>
     </ChatContextProvider>

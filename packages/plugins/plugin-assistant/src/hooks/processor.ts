@@ -16,11 +16,12 @@ import {
 } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
-import { AISession, type ArtifactDiffResolver, type Conversation } from '@dxos/assistant';
+import { AISession, type ArtifactDiffResolver, type Blueprint, type Conversation } from '@dxos/assistant';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Filter, getVersion, type Space } from '@dxos/react-client/echo';
+import { Filter, getVersion, type Live, type Space } from '@dxos/react-client/echo';
 import { Context } from '@dxos/context';
+import type { Ref } from '@dxos/echo';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -96,6 +97,14 @@ export class ChatProcessor {
 
   get tools() {
     return this._tools;
+  }
+
+  /**
+   * @returns Active blueprints.
+   * @reactive
+   */
+  get blueprints(): Live<readonly Ref.Ref<Blueprint>[]> {
+    return this._conversation.blueprints.bindings.value;
   }
 
   /**

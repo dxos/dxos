@@ -19,7 +19,8 @@ import {
   type MenuActionProperties,
 } from '@dxos/react-ui-menu';
 
-import type { EditorAction, EditorViewMode, Formatting } from '../../extensions';
+import type { EditorAction, Formatting } from '../../extensions';
+import { EditorViewMode } from '../../types';
 import { translationKey } from '../../translations';
 
 export type EditorToolbarState = Formatting & Partial<{ viewMode: EditorViewMode }>;

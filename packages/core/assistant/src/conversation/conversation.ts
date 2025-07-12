@@ -5,13 +5,15 @@
 import { Message, type ExecutableTool } from '@dxos/ai';
 import type { ArtifactDefinition } from '@dxos/artifact';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, type Relation } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
 import { AiService, ToolResolverService, type ServiceContainer } from '@dxos/functions';
 import { ComplexSet } from '@dxos/util';
 import { AISession, SessionRunOptions } from '../session';
 import { Blueprint, BlueprintBinding } from '../blueprint';
 import { Event } from '@dxos/async';
+import { Array, pipe } from 'effect';
+import { computed } from '@preact/signals-core';
 
 export interface ConversationRunOptions {
   prompt: string;
@@ -51,47 +53,16 @@ export class Conversation {
    */
   public readonly onBegin = new Event<AISession>();
 
+  /**
+   * Blueprints that are bound to the conversation.
+   */
+  public readonly blueprints: BlueprintBinder;
+
   constructor(options: ConversationOptions) {
     this._serviceContainer = options.serviceContainer;
     this._queue = options.queue;
+    this.blueprints = new BlueprintBinder(this._queue);
   }
-
-  readonly blueprints = {
-    bind: async (blueprint: Ref.Ref<Blueprint>): Promise<void> => {
-      await this._queue.append([
-        Obj.make(BlueprintBinding, {
-          added: [blueprint],
-          removed: [],
-        }),
-      ]);
-    },
-
-    unbind: async (blueprint: Ref.Ref<Blueprint>): Promise<void> => {
-      await this._queue.append([
-        Obj.make(BlueprintBinding, {
-          added: [],
-          removed: [blueprint],
-        }),
-      ]);
-    },
-
-    query: async (): Promise<Ref.Ref<Blueprint>[]> => {
-      const queueItems = await this._queue.queryObjects();
-
-      const bindings = new ComplexSet<Ref.Ref<Blueprint>>((ref) => ref.dxn.toString());
-      for (const item of queueItems) {
-        if (Obj.instanceOf(BlueprintBinding, item)) {
-          for (const bp of item.removed) {
-            bindings.delete(bp);
-          }
-          for (const bp of item.added) {
-            bindings.add(bp);
-          }
-        }
-      }
-      return Array.from(bindings);
-    },
-  };
 
   async run(options: ConversationRunOptions): Promise<Message[]> {
     const session = new AISession({
@@ -132,5 +103,56 @@ export class Conversation {
   async getHistory(): Promise<Message[]> {
     const queueItems = await this._queue.queryObjects();
     return queueItems.filter(Obj.instanceOf(Message));
+  }
+}
+
+/**
+ * Manages a set of blueprints that are bound to the conversation queue.
+ */
+export class BlueprintBinder {
+  constructor(private readonly _queue: Queue) {}
+
+  bind = async (blueprint: Ref.Ref<Blueprint>): Promise<void> => {
+    await this._queue.append([
+      Obj.make(BlueprintBinding, {
+        added: [blueprint],
+        removed: [],
+      }),
+    ]);
+  };
+
+  unbind = async (blueprint: Ref.Ref<Blueprint>): Promise<void> => {
+    await this._queue.append([
+      Obj.make(BlueprintBinding, {
+        added: [],
+        removed: [blueprint],
+      }),
+    ]);
+  };
+
+  /**
+   * Asynchronous query of all bound blueprints.
+   */
+  query = async (): Promise<readonly Ref.Ref<Blueprint>[]> => {
+    const queueItems = await this._queue.queryObjects();
+    return this._reduce(queueItems);
+  };
+
+  /**
+   * Reactive query of all bound blueprints.
+   */
+  bindings = computed(() => this._reduce(this._queue.objects));
+
+  private _reduce(items: (Obj.Any | Relation.Any)[]): readonly Ref.Ref<Blueprint>[] {
+    return pipe(
+      items,
+      Array.filter(Obj.instanceOf(BlueprintBinding)),
+      Array.reduce(new ComplexSet<Ref.Ref<Blueprint>>((ref) => ref.dxn.toString()), (bindings, item) => {
+        item.removed.forEach((item) => bindings.delete(item));
+        item.added.forEach((item) => bindings.add(item));
+        return bindings;
+      }),
+      Array.fromIterable,
+    );
   }
 }
