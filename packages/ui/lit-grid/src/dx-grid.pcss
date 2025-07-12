@@ -172,13 +172,6 @@
     max-block-size: var(--dx-grid-cell-editor-max-block-size);
     inline-size: min-content;
     max-inline-size: var(--dx-grid-cell-editor-max-inline-size);
-
-    /* TODO(thure): Setting `slots.scroll` in `createThemeExtensions` does not apply styles to `.cm-scroller`, why? */
-    & .cm-scroller {
-      overflow-x: hidden !important;
-      padding: calc(var(--dx-grid-cell-padding-block) - 2px) 0 calc(var(--dx-grid-cell-padding-block) - 2px) calc(var(--dx-grid-cell-padding-inline) - 1px);
-    }
-
   }
 
   /* /// */

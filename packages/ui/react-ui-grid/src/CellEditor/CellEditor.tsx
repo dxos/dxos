@@ -14,7 +14,9 @@ import {
   createThemeExtensions,
   preventNewline,
   useTextEditor,
+  type ThemeExtensionsOptions,
 } from '@dxos/react-ui-editor';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type GridEditBox } from '../Grid';
 
@@ -117,9 +119,11 @@ export type CellEditorProps = {
   extension?: Extension;
   box?: GridEditBox;
   gridId?: string;
-} & Pick<UseTextEditorProps, 'autoFocus'> & { onBlur?: EditorBlurHandler };
+  onBlur?: EditorBlurHandler;
+} & Pick<UseTextEditorProps, 'autoFocus'> &
+  Pick<ThemeExtensionsOptions, 'slots'>;
 
-export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }: CellEditorProps) => {
+export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId, slots }: CellEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -140,15 +144,23 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
           themeMode,
           slots: {
             editor: {
-              className:
+              className: mx(
                 '!min-is-full !is-min !max-is-[--dx-grid-cell-editor-max-inline-size] !min-bs-full !max-bs-[--dx-grid-cell-editor-max-block-size]',
+                slots?.editor?.className,
+              ),
             },
-            content: { className: '!break-normal' },
+            scroller: {
+              className: mx(
+                '!overflow-x-hidden !plb-[calc(var(--dx-grid-cell-padding-block)-2px)] !pie-0 !pis-[calc(var(--dx-grid-cell-padding-inline)-1px)]',
+                slots?.scroller?.className,
+              ),
+            },
+            content: { className: mx('!break-normal', slots?.content?.className) },
           },
         }),
       ],
     };
-  }, [extension, autoFocus, value, onBlur, themeMode]);
+  }, [extension, autoFocus, value, onBlur, themeMode, slots]);
 
   return (
     <div

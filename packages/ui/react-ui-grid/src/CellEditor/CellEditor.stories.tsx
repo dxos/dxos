@@ -1,0 +1,91 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import '@dxos-theme';
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useState } from 'react';
+
+import { withTheme } from '@dxos/storybook-utils';
+
+import { CellEditor, type CellEditorProps, type EditorKeyEvent, editorKeys } from './CellEditor';
+
+const DefaultStory = (args: CellEditorProps) => {
+  const [value, setValue] = useState(args.value || 'Edit me');
+  const [lastAction, setLastAction] = useState<string>('');
+
+  const handleBlur = (newValue?: string) => {
+    if (newValue !== undefined) {
+      setValue(newValue);
+      setLastAction(`Blur: ${newValue}`);
+    }
+  };
+
+  const handleKeyEvent = (newValue: string | undefined, event: EditorKeyEvent) => {
+    if (newValue !== undefined) {
+      setValue(newValue);
+      setLastAction(`Key: ${event.key}${event.shift ? ' + Shift' : ''}, Value: ${newValue}`);
+    } else {
+      setLastAction(`Key: ${event.key}${event.shift ? ' + Shift' : ''}, Cancelled`);
+    }
+  };
+
+  // Create an extension with editor keys
+  const extension = args.extension || [
+    editorKeys({
+      onClose: handleKeyEvent,
+      onNav: (value, event) => {
+        setLastAction(`Navigation: ${event.key}, Value: ${value}`);
+      },
+    }),
+  ];
+
+  return (
+    <div className='flex flex-col gap-4 p-4'>
+      <div className='text-sm'>
+        Current value: <span className='font-mono'>{value}</span>
+      </div>
+      <div className='text-sm'>
+        Last action: <span className='font-mono'>{lastAction}</span>
+      </div>
+      <div className='relative border border-separator h-[100px] w-[300px]'>
+        <CellEditor
+          value={value}
+          extension={extension}
+          autoFocus={args.autoFocus}
+          onBlur={handleBlur}
+          box={{
+            insetInlineStart: '10px',
+            insetBlockStart: '10px',
+            inlineSize: 280,
+            blockSize: 30,
+          }}
+          gridId='demo-grid'
+          classNames={args.classNames}
+        />
+      </div>
+    </div>
+  );
+};
+
+const meta: Meta<CellEditorProps> = {
+  title: 'ui/react-ui-grid/CellEditor',
+  component: CellEditor,
+  render: DefaultStory,
+  decorators: [withTheme],
+  parameters: {
+    layout: 'centered',
+  },
+};
+
+export default meta;
+
+type Story = StoryObj<CellEditorProps>;
+
+export const Default: Story = {
+  args: {
+    value: 'Edit me',
+    autoFocus: true,
+  },
+};

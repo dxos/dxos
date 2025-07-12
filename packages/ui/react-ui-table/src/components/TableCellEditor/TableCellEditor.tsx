@@ -92,6 +92,8 @@ export const TableValueEditor = ({
   );
 };
 
+const editorSlots = { scroller: { className: '!plb-[calc(var(--dx-grid-cell-padding-block)-1px)]' } };
+
 export const TableCellEditor = ({
   model,
   modals,
@@ -378,7 +380,7 @@ export const TableCellEditor = ({
         variant={_validationVariant}
         __gridScope={__gridScope}
       />
-      <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} />
+      <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} slots={editorSlots} />
     </>
   );
 };
