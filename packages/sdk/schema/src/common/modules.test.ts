@@ -21,6 +21,11 @@ import { Obj, Type } from '@dxos/echo';
 // - Could be product ideas, technical issues; they have a goal; can be associated with tools (blueprints) that can join (temporarily) and do work.
 // - Local LLM (offline).
 
+// ## COMPUTE MODEL
+// - BP is unit of packaging.
+// - Add to prompt/agent (e.g., notice keeps making mistakes, add new rules).
+// - Branching conversations (like git).
+
 // UX
 // - Edit Blueprint (schema, prompts, scripts, tool selection).
 // - Drag Blueprint into Chat's context window.
