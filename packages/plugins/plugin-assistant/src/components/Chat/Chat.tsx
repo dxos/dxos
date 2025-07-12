@@ -162,8 +162,13 @@ const ChatThread = (props: Omit<ChatThreadProps, 'space' | 'messages' | 'tools' 
   const { update, space, messages, tools, handleSubmit } = useChatContext(ChatThread.displayName);
   const scrollerRef = useRef<ScrollController>(null);
   useEffect(() => {
-    return update.on(() => {
-      scrollerRef.current?.scrollToBottom('smooth');
+    return update.on((event) => {
+      switch (event) {
+        case 'submit':
+        case 'scroll':
+          scrollerRef.current?.scrollToBottom('smooth');
+          break;
+      }
     });
   }, [update]);
 
@@ -185,8 +190,8 @@ ChatThread.displayName = 'Chat.Thread';
 // Prompt
 //
 
-const ChatPrompt = (props: Pick<ChatPromptProps, 'classNames' | 'placeholder'>) => {
-  const { space, error, processing, handleOpenChange, handleSubmit, handleCancel } = useChatContext(
+const ChatPrompt = (props: Pick<ChatPromptProps, 'classNames' | 'placeholder' | 'compact'>) => {
+  const { update, space, error, processing, handleOpenChange, handleSubmit, handleCancel } = useChatContext(
     ChatPrompt.displayName,
   );
 
@@ -210,9 +215,10 @@ const ChatPrompt = (props: Pick<ChatPromptProps, 'classNames' | 'placeholder'>) 
       error={error}
       processing={processing}
       references={references}
-      onOpenChange={handleOpenChange}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
+      onScroll={() => update.emit('scroll')}
+      onOpenChange={handleOpenChange}
     />
   );
 };

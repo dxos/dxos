@@ -8,6 +8,7 @@ import { useVoiceInput } from '@dxos/plugin-transcription';
 import {
   Icon,
   IconButton,
+  Tag,
   type ThemedClassName,
   Toolbar,
   Tooltip,
@@ -27,11 +28,13 @@ export type ChatPromptProps = ThemedClassName<
     error?: Error;
     processing?: boolean;
     microphone?: boolean;
+  } & {
+    onScroll?: () => void;
   }
 >;
 
 export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
-  ({ classNames, compact = true, error, processing, microphone, onCancel, ...props }, forwardedRef) => {
+  ({ classNames, compact = true, error, processing, microphone, onCancel, onScroll, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const promptRef = useForwardedRef<ChatEditorController>(forwardedRef);
     const [active, setActive] = useState(false);
@@ -53,6 +56,7 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
             'grid grid-cols-[var(--rail-action)_1fr_var(--rail-action)]',
             classNames,
           )}
+          onClick={() => promptRef.current?.focus()}
         >
           <div className='flex w-[--rail-action] h-[--rail-action] items-center justify-center'>
             {(error && (
@@ -64,26 +68,28 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
 
           <ChatEditor {...props} ref={promptRef} />
           <div className='flex w-[--rail-action] h-[--rail-action] items-center justify-center'>
-            {microphone && (
-              <ActionButtons
-                processing={processing}
-                recording={recording}
-                onCancel={onCancel}
-                onRecordChange={setActive}
-              />
-            )}
+            <ActionButtons
+              microphone={microphone}
+              processing={processing}
+              recording={recording}
+              onCancel={onCancel}
+              onScroll={onScroll}
+              onRecordChange={setActive}
+            />
           </div>
         </div>
       );
     }
 
+    const blueprints = ['task-manager', 'travel-planner'];
+
     return (
-      <div className={mx('flex flex-col shrink-0 w-full', classNames)}>
+      <div className={mx('flex flex-col shrink-0 w-full', classNames)} onClick={() => promptRef.current?.focus()}>
         <div className='flex'>
           <div className='flex shrink-0 w-[--rail-action] h-[--rail-action] items-center justify-center pbe-[3px]'>
             <Spinner active={processing} />
           </div>
-          <ChatEditor classNames='p-2 w-full' lineWrapping {...props} ref={promptRef} />
+          <ChatEditor classNames='pbs-2 w-full' lineWrapping {...props} ref={promptRef} />
         </div>
         <Toolbar.Root classNames='bg-transparent'>
           <IconButton
@@ -95,55 +101,84 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
             label={t('button cancel')}
             onClick={onCancel}
           />
+          {blueprints.map((blueprint) => (
+            <Tag key={blueprint} onClick={() => {}}>
+              {blueprint}
+            </Tag>
+          ))}
           <div className='flex-1' />
-          {microphone && (
-            <ActionButtons
-              processing={processing}
-              recording={recording}
-              onCancel={onCancel}
-              onRecordChange={setActive}
-            />
-          )}
+          <ActionButtons
+            microphone={microphone}
+            processing={processing}
+            recording={recording}
+            onCancel={onCancel}
+            onScroll={onScroll}
+            onRecordChange={setActive}
+          />
         </Toolbar.Root>
       </div>
     );
   },
 );
 
+// TODO(burdon): Consider events over multiple callbacks.
 type ActionButtonsProps = ChatPromptProps & {
   recording: boolean;
-  onRecordChange: (recording: boolean) => void;
+  onScroll?: () => void;
+  onRecordChange?: (recording: boolean) => void;
 };
 
-const ActionButtons = ({ processing, recording, onCancel, onRecordChange }: ActionButtonsProps) => {
+const ActionButtons = ({
+  microphone,
+  processing,
+  recording,
+  onCancel,
+  onScroll,
+  onRecordChange,
+}: ActionButtonsProps) => {
   const { t } = useTranslation(meta.id);
-  if (processing) {
-    return (
-      <IconButton
-        classNames='px-1.5'
-        variant='ghost'
-        size={5}
-        icon='ph--x--regular'
-        iconOnly
-        label={t('button cancel processing')}
-        onClick={onCancel}
-      />
-    );
-  }
-
   return (
-    <IconButton
-      classNames={mx('px-1.5', recording && 'bg-primary-500')}
-      variant='ghost'
-      size={5}
-      icon='ph--microphone--regular'
-      iconOnly
-      noTooltip
-      label={t('button microphone')}
-      onMouseDown={() => onRecordChange(true)}
-      onMouseUp={() => onRecordChange(false)}
-      // onTouchStart={() => onRecordChange(true)}
-      // onTouchEnd={() => onRecordChange(false)}
-    />
+    <>
+      {processing && (
+        <IconButton
+          classNames='px-1.5'
+          variant='ghost'
+          size={5}
+          icon='ph--x--regular'
+          iconOnly
+          label={t('button cancel processing')}
+          onClick={onCancel}
+        />
+      )}
+
+      {/* TODO(burdon): Disable unless scrolled. */}
+      {onScroll && (
+        <IconButton
+          classNames='px-1.5'
+          variant='ghost'
+          size={5}
+          icon='ph--arrow-down--regular'
+          iconOnly
+          label={t('button scroll down')}
+          onClick={() => onScroll()}
+        />
+      )}
+
+      {microphone && onRecordChange && (
+        <IconButton
+          classNames={mx('px-1.5', recording && 'bg-primary-500')}
+          variant='ghost'
+          size={5}
+          icon='ph--microphone--regular'
+          iconOnly
+          noTooltip
+          label={t('button microphone')}
+          onMouseDown={() => onRecordChange(true)}
+          onMouseUp={() => onRecordChange(false)}
+          onTouchStart={() => onRecordChange(true)}
+          onTouchEnd={() => onRecordChange(false)}
+        />
+      )}
+    </>
   );
 };

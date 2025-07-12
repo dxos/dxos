@@ -73,7 +73,13 @@ const ChatContainer = () => {
   return (
     <Chat.Root part='deck' chat={chat}>
       <Chat.Thread />
-      <Chat.Prompt placeholder={t('prompt placeholder')} />
+      <div className='p-4'>
+        <Chat.Prompt
+          classNames='p-2 border border-subduedSeparator rounded focus-within:outline focus-within:border-transparent'
+          placeholder={t('prompt placeholder')}
+          compact={false}
+        />
+      </div>
     </Chat.Root>
   );
 };
@@ -113,6 +119,7 @@ const meta = {
   decorators: [],
   parameters: {
     translations,
+    controls: { disable: true },
   },
 } satisfies Meta<typeof DefaultStory>;
 
