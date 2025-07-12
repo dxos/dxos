@@ -152,6 +152,10 @@
           border-color: var(--dx-accentSurface);
         }
       }
+
+      &:focus-visible > .dx-grid__cell__content {
+        border-color: var(--dx-accentSurface);
+      }
     }
   }
 
@@ -175,7 +179,6 @@
   }
 
   /* /// */
-
   .dx-grid-host:focus-within .dx-grid:not(:focus-within) {
     [role='gridcell'],
     [role='columnheader'],
