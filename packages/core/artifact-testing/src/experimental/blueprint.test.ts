@@ -16,7 +16,8 @@ import { log } from '@dxos/log';
 import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from '../blueprints';
 import { Conversation } from '@dxos/assistant';
 import { readDocument, writeDocument } from '../tools';
-import { TextDocument } from '../types';
+import { DocumentType } from '@dxos/plugin-markdown/types';
+import { DataType } from '@dxos/schema';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 120_000 }, () => {
   let builder: EchoTestBuilder;
@@ -26,7 +27,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
 
   beforeAll(async () => {
     builder = await new EchoTestBuilder().open();
-    ({ db, queues } = await builder.createDatabase({ types: [TextDocument, Blueprint] }));
+    ({ db, queues } = await builder.createDatabase({ types: [DocumentType, Blueprint] }));
 
     // TODO(dmaretskyi): Helper to scaffold this from a config.
     serviceContainer = createTestServices({
@@ -57,7 +58,9 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     await db.add(DESIGN_SPEC_BLUEPRINT);
     await conversation.blueprints.bind(Ref.make(DESIGN_SPEC_BLUEPRINT));
 
-    const artifact = db.add(Obj.make(TextDocument, { content: 'Hello, world!' }));
+    const artifact = db.add(
+      Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: 'Hello, world!' })) }),
+    );
     let prevContent = artifact.content;
     await conversation.run({
       prompt: `
@@ -102,7 +105,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     await db.add(TASK_LIST_BLUEPRINT);
     await conversation.blueprints.bind(Ref.make(TASK_LIST_BLUEPRINT));
 
-    const artifact = db.add(Obj.make(TextDocument, { content: '' }));
+    const artifact = db.add(Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }));
     let prevContent = artifact.content;
     await conversation.run({
       prompt: `
@@ -133,6 +136,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     log.info('spec 3', { doc: artifact });
     expect(artifact.content).not.toBe(prevContent);
 
+    const { content } = await artifact.content.load();
+
     Object.entries({
       screwdriver: true,
       screws: true,
@@ -141,7 +146,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
       hammer: false,
       nails: false,
     }).forEach(([item, expected]) => {
-      expect(artifact.content.toLowerCase().includes(item)).toBe(expected);
+      expect(content.toLowerCase().includes(item)).toBe(expected);
     });
   });
 });

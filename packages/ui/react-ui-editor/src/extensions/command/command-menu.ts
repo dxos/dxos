@@ -6,7 +6,7 @@ import { RangeSetBuilder, StateField, StateEffect, Prec } from '@codemirror/stat
 import { EditorView, ViewPlugin, type ViewUpdate, Decoration, keymap, type DecorationSet } from '@codemirror/view';
 
 import { placeholder, type PlaceholderOptions } from './placeholder';
-import { type Range } from '../../types';
+import { type Range } from '../../types/types';
 
 export type CommandMenuOptions = {
   trigger: string | string[];

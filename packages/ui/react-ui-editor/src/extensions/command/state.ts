@@ -7,7 +7,7 @@ import { showTooltip, type EditorView, type Tooltip, type TooltipView } from '@c
 
 import { closeEffect, type Action, openEffect } from './action';
 import { type CommandOptions } from './command';
-import { type RenderCallback } from '../../types';
+import { type RenderCallback } from '../../types/types';
 import { singleValueFacet } from '../../util';
 
 export const commandConfig = singleValueFacet<CommandOptions>();

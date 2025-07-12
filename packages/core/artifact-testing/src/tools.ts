@@ -8,7 +8,7 @@ import { ArtifactId } from '@dxos/artifact';
 import { Obj } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 
-import { TextDocument } from './types';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 import { toolFromFunction } from './util';
 
 export const readDocument = toolFromFunction(
@@ -25,11 +25,11 @@ export const readDocument = toolFromFunction(
     }),
     handler: Effect.fn(function* ({ data: { id } }) {
       const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
-      if (!doc || !Obj.instanceOf(TextDocument, doc)) {
+      if (!doc || !Obj.instanceOf(DocumentType, doc)) {
         throw new Error('Document not found.');
       }
-
-      return { content: doc.content };
+      const { content } = yield* DatabaseService.loadRef(doc.content);
+      return { content };
     }),
   }),
 );
@@ -46,11 +46,13 @@ export const writeDocument = toolFromFunction(
     outputSchema: Schema.String,
     handler: Effect.fn(function* ({ data: { id, content } }) {
       const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
-      if (!doc || !Obj.instanceOf(TextDocument, doc)) {
+      if (!doc || !Obj.instanceOf(DocumentType, doc)) {
         throw new Error('Document not found.');
       }
 
-      doc.content = content;
+      const contentDoc = yield* DatabaseService.loadRef(doc.content);
+      contentDoc.content = content;
+
       // eslint-disable-next-line no-console
       console.log('writeDocument', content);
       return 'Document updated.';

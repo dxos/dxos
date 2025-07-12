@@ -15,8 +15,6 @@ import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 import { EditorToolbar, useEditorToolbarState } from '../components';
 import { editorWidth } from '../defaults';
 import {
-  type EditorInputMode,
-  type EditorViewMode,
   InputModeExtensions,
   createMarkdownExtensions,
   createBasicExtensions,
@@ -25,6 +23,7 @@ import {
   formattingKeymap,
   useFormattingState,
 } from '../extensions';
+import { type EditorInputMode, type EditorViewMode } from '../types';
 import { useTextEditor, type UseTextEditorProps } from '../hooks';
 import { translations } from '../translations';
 

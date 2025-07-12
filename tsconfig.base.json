@@ -18,6 +18,7 @@
     "moduleResolution": "Bundler",
     "noImplicitOverride": true,
     "outDir": "${configDir}/dist/types",
+    "types": ["node"],
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,

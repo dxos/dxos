@@ -1,9 +1,7 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "react-ui-editor",
-  "tags": [
-    "scope:ui"
-  ],
+  "tags": ["scope:ui"],
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
@@ -12,12 +10,10 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/types/index.ts",
           "{projectRoot}/src/testing/index.ts"
         ],
-        "platforms": [
-          "browser",
-          "node"
-        ],
+        "platforms": ["browser", "node"],
         "preactSignalTracking": true
       }
     },
@@ -25,8 +21,5 @@
     "pack": {},
     "test": {}
   },
-  "implicitDependencies": [
-    "esbuild",
-    "node-std"
-  ]
+  "implicitDependencies": ["esbuild", "node-std"]
 }
