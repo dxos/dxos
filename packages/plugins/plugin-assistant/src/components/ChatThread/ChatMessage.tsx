@@ -135,7 +135,7 @@ const components: Record<string, BlockComponent> = {
           <div className='flex flex-wrap gap-1'>
             {options.map((option, idx) => (
               <Button
-                classNames={'animate-[fadeIn_0.5s] rounded-2xl text-sm'}
+                classNames={'animate-[fadeIn_0.5s] rounded-sm text-sm'}
                 key={option}
                 onClick={() => onPrompt?.(option)}
               >
