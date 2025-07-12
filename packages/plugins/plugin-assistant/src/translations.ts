@@ -60,8 +60,11 @@ export const translations = [
 
         'search placeholder': 'Search...',
         'prompt placeholder': 'Ask or search for anything...',
+        'blueprints placeholder': 'Select blueprints...',
+        'button add blueprint': 'Add blueprint',
         'button microphone': 'Click to speak',
         'button cancel processing': 'Stop processing',
+        'button scroll down': 'Scroll down',
 
         'settings default label': 'Default',
         'settings custom prompts label': 'Use custom prompts',

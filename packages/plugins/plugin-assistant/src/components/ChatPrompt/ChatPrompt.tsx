@@ -8,14 +8,14 @@ import { useVoiceInput } from '@dxos/plugin-transcription';
 import {
   Icon,
   IconButton,
+  Select,
   type ThemedClassName,
   Toolbar,
   Tooltip,
   useForwardedRef,
   useTranslation,
 } from '@dxos/react-ui';
-import { ChatEditor } from '@dxos/react-ui-chat';
-import { type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
+import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { Spinner } from '@dxos/react-ui-sfx';
 import { TagPicker, type TagPickerOptions, type TagPickerItemData } from '@dxos/react-ui-tag-picker';
 import { errorText, mx } from '@dxos/react-ui-theme';
@@ -112,12 +112,18 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
             variant='ghost'
             size={5}
             iconOnly
-            label={t('button cancel')}
+            label={t('button add blueprint')}
             onClick={onCancel}
           />
 
           {(onSearchBlueprints && (
-            <TagPicker classNames='w-full' mode='multi-select' items={blueprints ?? []} onSearch={onSearchBlueprints} />
+            <TagPicker
+              classNames='w-full'
+              mode='multi-select'
+              items={blueprints ?? []}
+              // placeholder={t('blueprints placeholder')}
+              onSearch={onSearchBlueprints}
+            />
           )) || <div className='flex-1' />}
 
           <ActionButtons
@@ -152,8 +158,17 @@ const ActionButtons = ({
   const { t } = useTranslation(meta.id);
   return (
     <>
-      {processing && (
+      {/* TODO(burdon): Modes (presets for blueprints). */}
+      <Select.Root value={'research'} disabled>
+        <Select.TriggerButton classNames='mie-2' />
+        <Select.Content>
+          <Select.Option value={'research'}>Research</Select.Option>
+        </Select.Content>
+      </Select.Root>
+
+      {(processing && (
         <IconButton
+          disabled={!processing}
           classNames='px-1.5'
           variant='ghost'
           size={5}
@@ -162,10 +177,7 @@ const ActionButtons = ({
           label={t('button cancel processing')}
           onClick={onCancel}
         />
-      )}
-
-      {/* TODO(burdon): Disable unless scrolled. */}
-      {onScroll && (
+      )) || (
         <IconButton
           classNames='px-1.5'
           variant='ghost'
@@ -173,7 +185,7 @@ const ActionButtons = ({
           icon='ph--arrow-down--regular'
           iconOnly
           label={t('button scroll down')}
-          onClick={() => onScroll()}
+          onClick={() => onScroll?.()}
         />
       )}
 

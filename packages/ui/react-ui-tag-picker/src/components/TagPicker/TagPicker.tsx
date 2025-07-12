@@ -33,6 +33,7 @@ export type TagPickerProps = ThemedClassName<
     items?: TagPickerItemData[];
     readonly?: boolean;
     mode?: TagPickerMode;
+    placeholder?: string;
   } & Pick<TagPickerOptions, 'onBlur' | 'onSelect' | 'onSearch' | 'onUpdate'>
 >;
 
@@ -76,10 +77,10 @@ const ReadonlyTagPicker = ({ items, onSelect }: TagPickerProps) => {
 };
 
 const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
-  ({ classNames, items = [], mode, onBlur, onUpdate, onSearch, onSelect }, ref) => {
+  ({ classNames, items = [], mode, placeholder, onBlur, onUpdate, onSearch, onSelect }, ref) => {
+    const { t } = useTranslation(translationKey);
     const { themeMode } = useThemeContext();
     const { ref: resizeRef, width } = useResizeDetector();
-    const { t } = useTranslation(translationKey);
 
     const itemsRef = useDynamicRef(items);
     const handleUpdate = (ids: string[]) => {
@@ -93,7 +94,7 @@ const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
       () => ({
         initialValue: createLinks(items),
         extensions: [
-          createBasicExtensions({ lineWrapping: false }),
+          createBasicExtensions({ lineWrapping: false, placeholder }),
           createMarkdownExtensions({ themeMode }),
           createThemeExtensions({
             themeMode,
