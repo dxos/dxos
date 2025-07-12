@@ -38,12 +38,14 @@ import { getDebugName } from '@dxos/util';
 //   [onSubmit],
 // );
 
+type ChatEvents = 'submit' | 'scroll';
+
 //
 // Context
 //
 
 type ChatContextValue = {
-  update: Event<string>;
+  update: Event<ChatEvents>;
   space: Space;
   messages: Message[];
   error?: Error;
@@ -77,16 +79,15 @@ const ChatRoot = ({
   settings,
   artifact,
   onOpenChange,
-  noPluginArtifacts,
-  ...props
-}: ChatRootProps) => {
-  const update = useMemo(() => new Event<string>(), []);
+  noPluginArtifacts }: ChatRootProps) => {
   const space = getSpace(chat);
   const serviceContainer = useServiceContainer({ space });
   const processor = useChatProcessor({ part, chat, space, serviceContainer, artifact, settings, noPluginArtifacts });
   const messageQueue = useQueue<Message>(chat?.queue.dxn);
 
-  // TODO(burdon): Does this update when the queue updates?
+  // Event queue.
+  const update = useMemo(() => new Event<ChatEvents>(), []);
+
   const messages = useMemo(
     () =>
       dedupeWith(
@@ -122,7 +123,6 @@ const ChatRoot = ({
         return false;
       }
 
-      // TODO(burdon): Does this cause the dialog to open?
       onOpenChange?.(true);
       update.emit('submit');
 
