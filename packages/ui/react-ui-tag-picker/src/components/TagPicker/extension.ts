@@ -29,7 +29,11 @@ import { type ChromaticPalette } from '@dxos/react-ui';
 
 import { type TagPickerItemProps } from './TagPickerItem';
 
-export type TagPickerItemData = { id: string; label: string; hue?: ChromaticPalette };
+export type TagPickerItemData = {
+  id: string;
+  label: string;
+  hue?: ChromaticPalette;
+};
 
 export const createLinks = (items: TagPickerItemData[]) => {
   return items.map(({ id, label }) => `[${label}](${id})`).join('');

@@ -183,7 +183,9 @@ ChatThread.displayName = 'Chat.Thread';
 // Prompt
 //
 
-const ChatPrompt = (props: Pick<ChatPromptProps, 'classNames' | 'placeholder' | 'compact'>) => {
+const ChatPrompt = (
+  props: Pick<ChatPromptProps, 'classNames' | 'placeholder' | 'compact' | 'blueprints' | 'onSearchBlueprints'>,
+) => {
   const { update, space, error, processing, handleOpenChange, handleSubmit, handleCancel } = useChatContext(
     ChatPrompt.displayName,
   );

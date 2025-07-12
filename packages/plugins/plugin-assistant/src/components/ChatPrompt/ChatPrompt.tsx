@@ -8,7 +8,6 @@ import { useVoiceInput } from '@dxos/plugin-transcription';
 import {
   Icon,
   IconButton,
-  Tag,
   type ThemedClassName,
   Toolbar,
   Tooltip,
@@ -18,6 +17,7 @@ import {
 import { ChatEditor } from '@dxos/react-ui-chat';
 import { type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { Spinner } from '@dxos/react-ui-sfx';
+import { TagPicker, type TagPickerOptions, type TagPickerItemData } from '@dxos/react-ui-tag-picker';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
 import { meta } from '../../meta';
@@ -29,12 +29,28 @@ export type ChatPromptProps = ThemedClassName<
     processing?: boolean;
     microphone?: boolean;
   } & {
+    blueprints?: TagPickerItemData[];
+    onSearchBlueprints?: TagPickerOptions['onSearch'];
     onScroll?: () => void;
   }
 >;
 
 export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
-  ({ classNames, compact = true, error, processing, microphone, onCancel, onScroll, ...props }, forwardedRef) => {
+  (
+    {
+      classNames,
+      compact = true,
+      error,
+      processing,
+      microphone,
+      blueprints,
+      onSearchBlueprints,
+      onCancel,
+      onScroll,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const { t } = useTranslation(meta.id);
     const promptRef = useForwardedRef<ChatEditorController>(forwardedRef);
     const [active, setActive] = useState(false);
@@ -81,17 +97,15 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
       );
     }
 
-    const blueprints = ['task-manager', 'travel-planner'];
-
     return (
-      <div className={mx('flex flex-col shrink-0 w-full', classNames)} onClick={() => promptRef.current?.focus()}>
+      <div className={mx('flex flex-col shrink-0 w-full', classNames)}>
         <div className='flex'>
           <div className='flex shrink-0 w-[--rail-action] h-[--rail-action] items-center justify-center pbe-[3px]'>
             <Spinner active={processing} />
           </div>
           <ChatEditor classNames='pbs-2 w-full' lineWrapping {...props} ref={promptRef} />
         </div>
-        <Toolbar.Root classNames='bg-transparent'>
+        <Toolbar.Root classNames='bg-transparent overflow-visible'>
           <IconButton
             disabled
             icon='ph--plus--regular'
@@ -101,12 +115,11 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
             label={t('button cancel')}
             onClick={onCancel}
           />
-          {blueprints.map((blueprint) => (
-            <Tag key={blueprint} onClick={() => {}}>
-              {blueprint}
-            </Tag>
-          ))}
-          <div className='flex-1' />
+
+          {(onSearchBlueprints && (
+            <TagPicker classNames='w-full' mode='multi-select' items={blueprints ?? []} onSearch={onSearchBlueprints} />
+          )) || <div className='flex-1' />}
+
           <ActionButtons
             microphone={microphone}
             processing={processing}

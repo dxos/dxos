@@ -13,6 +13,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { ChatPrompt } from './ChatPrompt';
 import { meta as pluginMeta } from '../../meta';
+import { onSearchBlueprints } from '../../testing';
 import { translations } from '../../translations';
 
 const meta = {
@@ -54,13 +55,15 @@ type Story = StoryObj<typeof meta>;
 
 export const Default = {
   args: {
-    classNames: 'w-[25rem] p-1 overflow-hidden border border-gray-200 rounded',
+    classNames: 'w-[25rem] p-1 border border-gray-200 rounded',
   },
 } satisfies Story;
 
 export const Expanded = {
   args: {
-    classNames: 'w-[40rem] p-1 overflow-hidden border border-gray-200 rounded',
+    classNames: 'w-[40rem] p-1 border border-gray-200 rounded',
     compact: false,
+    blueprints: [],
+    onSearchBlueprints,
   },
 } satisfies Story;
