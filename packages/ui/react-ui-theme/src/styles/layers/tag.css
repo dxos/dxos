@@ -11,8 +11,9 @@
     user-select: none;
 
     .dx-grid__cell__content:has(&) {
+      @apply flex flex-wrap;
       .dx-tag {
-        vertical-align: top;
+        @apply shrink-0;
       }
     }
   }
