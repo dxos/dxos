@@ -25,6 +25,10 @@ import { Obj, Type } from '@dxos/echo';
 // - BP is unit of packaging.
 // - Add to prompt/agent (e.g., notice keeps making mistakes, add new rules).
 // - Branching conversations (like git).
+// - BP to compile questions for team members (e.g., AMA later); Agent for each team member.
+
+// ## LINEAR
+// - Follow-up with refactoring.
 
 // UX
 // - Edit Blueprint (schema, prompts, scripts, tool selection).

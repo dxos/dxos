@@ -10,6 +10,7 @@ import React, { type FunctionComponent } from 'react';
 import { Capabilities, contributes, Events, IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { remoteServiceEndpoints, TASK_LIST_BLUEPRINT, readDocument, writeDocument } from '@dxos/artifact-testing';
+import { BlueprintBinder, Blueprint } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -41,7 +42,6 @@ import { meta as pluginMeta } from '../meta';
 import { onSearchBlueprints } from '../testing';
 import { translations } from '../translations';
 import { AIChatType } from '../types';
-import { BlueprintBinder, Conversation, Blueprint } from '@dxos/assistant';
 
 //
 // Story container
@@ -79,7 +79,7 @@ const ChatContainer = () => {
       <Chat.Thread />
       <div className='p-4'>
         <Chat.Prompt
-          classNames='p-2 border border-subduedSeparator rounded focus-within:outline focus-within:border-transparent'
+          classNames='p-2 border border-subduedSeparator rounded focus-within:outline focus-within:border-transparent outline-primary-500'
           placeholder={t('prompt placeholder')}
           compact={false}
           blueprints={blueprints}

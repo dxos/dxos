@@ -37,12 +37,14 @@ import { ChatThread as NativeChatThread, type ChatThreadProps } from '../ChatThr
 //   [onSubmit],
 // );
 
+type ChatEvents = 'submit' | 'scroll';
+
 //
 // Context
 //
 
 type ChatContextValue = {
-  update: Event<string>;
+  update: Event<ChatEvents>;
   space: Space;
   messages: Message[];
   error?: Error;
@@ -68,14 +70,15 @@ type ChatRootProps = PropsWithChildren<{
   onOpenChange?: ChatPromptProps['onOpenChange'];
 }>;
 
-const ChatRoot = ({ children, part, chat, settings, artifact, onOpenChange, ...props }: ChatRootProps) => {
-  const update = useMemo(() => new Event<string>(), []);
+const ChatRoot = ({ children, part, chat, settings, artifact, onOpenChange }: ChatRootProps) => {
   const space = getSpace(chat);
   const serviceContainer = useServiceContainer({ space });
   const processor = useChatProcessor({ part, chat, space, serviceContainer, artifact, settings });
   const messageQueue = useQueue<Message>(chat?.queue.dxn);
 
-  // TODO(burdon): Does this update when the queue updates?
+  // Event queue.
+  const update = useMemo(() => new Event<ChatEvents>(), []);
+
   const messages = useMemo(
     () =>
       dedupeWith(
@@ -111,7 +114,6 @@ const ChatRoot = ({ children, part, chat, settings, artifact, onOpenChange, ...p
         return false;
       }
 
-      // TODO(burdon): Does this cause the dialog to open?
       onOpenChange?.(true);
       update.emit('submit');
 
