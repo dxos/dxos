@@ -9,6 +9,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef 
 import { type ExecutableTool, Message } from '@dxos/ai';
 import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type AssociatedArtifact } from '@dxos/artifact';
+import type { Blueprint } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -21,7 +22,6 @@ import { useChatProcessor, useContextProvider, useServiceContainer } from '../..
 import { type AIChatType, type AssistantSettingsProps } from '../../types';
 import { ChatPrompt as NativeChatPrompt, type ChatPromptProps } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps } from '../ChatThread';
-import type { Blueprint } from '@dxos/assistant';
 
 // interface ContextProvider {
 //   query({ query }: { query: string }): Promise<ReferenceData[]>;
