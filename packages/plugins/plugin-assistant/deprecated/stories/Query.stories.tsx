@@ -335,7 +335,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
       <ChatDialog.Root open resizeable={false} onEscape={handleCancel}>
         <PromptBar
           ref={promptRef}
-          placeholder={t('search input placeholder')}
+          placeholder={t('search placeholder')}
           extensions={extensions}
           onSubmit={handleSubmit}
           onCancel={handleCancel}

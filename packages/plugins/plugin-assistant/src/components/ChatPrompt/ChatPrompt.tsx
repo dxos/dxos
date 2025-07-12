@@ -32,6 +32,7 @@ export type ChatPromptProps = ThemedClassName<
 
 export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
   ({ classNames, compact = true, error, processing, microphone, onCancel, ...props }, forwardedRef) => {
+    const { t } = useTranslation(meta.id);
     const promptRef = useForwardedRef<ChatEditorController>(forwardedRef);
     const [active, setActive] = useState(false);
 
@@ -91,7 +92,7 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
             variant='ghost'
             size={5}
             iconOnly
-            label='Cancel'
+            label={t('button cancel')}
             onClick={onCancel}
           />
           <div className='flex-1' />
@@ -124,7 +125,7 @@ const ActionButtons = ({ processing, recording, onCancel, onRecordChange }: Acti
         size={5}
         icon='ph--x--regular'
         iconOnly
-        label={t('cancel processing button')}
+        label={t('button cancel processing')}
         onClick={onCancel}
       />
     );
@@ -138,7 +139,7 @@ const ActionButtons = ({ processing, recording, onCancel, onRecordChange }: Acti
       icon='ph--microphone--regular'
       iconOnly
       noTooltip
-      label={t('microphone button')}
+      label={t('button microphone')}
       onMouseDown={() => onRecordChange(true)}
       onMouseUp={() => onRecordChange(false)}
       // onTouchStart={() => onRecordChange(true)}

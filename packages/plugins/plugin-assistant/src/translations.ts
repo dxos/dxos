@@ -55,16 +55,13 @@ export const translations = [
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
 
-        'search input placeholder': 'Search...',
-        'chat input placeholder': 'Ask a question...',
-        'chat stop': 'Cancel request.',
-
         'button save': 'Save',
         'button run': 'Run',
 
-        'prompt placeholder': 'Ask a question...',
-        'microphone button': 'Click to speak',
-        'cancel processing button': 'Stop processing',
+        'search placeholder': 'Search...',
+        'prompt placeholder': 'Ask or search for anything...',
+        'button microphone': 'Click to speak',
+        'button cancel processing': 'Stop processing',
 
         'settings default label': 'Default',
         'settings custom prompts label': 'Use custom prompts',
