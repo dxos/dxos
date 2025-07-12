@@ -40,7 +40,6 @@ export const useChatProcessor = ({
   settings,
   artifact,
 }: UseChatProcessorProps): ChatProcessor | undefined => {
-  const aiClient = useCapability(AssistantCapabilities.AiClient);
   const globalTools = useCapabilities(Capabilities.Tools);
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const { dispatchPromise: dispatch } = useIntentDispatcher();

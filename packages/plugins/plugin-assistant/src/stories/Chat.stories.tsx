@@ -7,9 +7,9 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { type FunctionComponent } from 'react';
 
-import { Events, IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
+import { Capabilities, contributes, Events, IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { remoteServiceEndpoints } from '@dxos/artifact-testing';
+import { remoteServiceEndpoints, TASK_LIST_BLUEPRINT, readDocument, writeDocument } from '@dxos/artifact-testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -39,6 +39,7 @@ import { Chat } from '../components';
 import { meta as pluginMeta } from '../meta';
 import { translations } from '../translations';
 import { AIChatType } from '../types';
+import { BlueprintBinder, Conversation, Blueprint } from '@dxos/assistant';
 
 //
 // Story container
@@ -137,13 +138,21 @@ const remoteConfig = new Config({
   },
 });
 
-const getDecorators = ({ config, plugins = [] }: { config: Config; plugins?: Plugin[] }) => [
+const getDecorators = ({
+  config,
+  plugins = [],
+  blueprints = [],
+}: {
+  config: Config;
+  plugins?: Plugin[];
+  blueprints?: Blueprint[];
+}) => [
   withPluginManager({
     fireEvents: [Events.SetupArtifactDefinition],
     plugins: [
       ClientPlugin({
         config,
-        types: [AIChatType, DocumentType],
+        types: [AIChatType, DocumentType, Blueprint],
         onClientInitialized: async (_, client) => {
           await client.halo.createIdentity();
           await client.spaces.waitUntilReady();
@@ -153,8 +162,14 @@ const getDecorators = ({ config, plugins = [] }: { config: Config; plugins?: Plu
           await space.waitUntilReady();
 
           // TODO(burdon): Remove need for this boilerplate. Namespace for types?
-          space.db.add(Obj.make(AIChatType, { queue: Ref.fromDXN(space.queues.create().dxn) }));
+          const chat = space.db.add(Obj.make(AIChatType, { queue: Ref.fromDXN(space.queues.create().dxn) }));
           space.db.add(Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }));
+
+          const binder = new BlueprintBinder(await chat.queue.load());
+          for (const blueprint of blueprints) {
+            const ref = space.db.add(blueprint);
+            await binder.bind(Ref.make(ref));
+          }
         },
       }),
       IntentPlugin(),
@@ -166,6 +181,7 @@ const getDecorators = ({ config, plugins = [] }: { config: Config; plugins?: Plu
 
       ...plugins,
     ],
+    capabilities: [contributes(Capabilities.Tools, [readDocument, writeDocument])],
   }),
   withTheme,
   withLayout({
@@ -201,6 +217,17 @@ export const WithArtifacts = {
   decorators: getDecorators({
     config: remoteConfig,
     plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
+  }),
+  args: {
+    components: [ChatContainer],
+  },
+} satisfies Story;
+
+export const WithBlueprints = {
+  decorators: getDecorators({
+    config: remoteConfig,
+    plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
+    blueprints: [TASK_LIST_BLUEPRINT],
   }),
   args: {
     components: [ChatContainer],
