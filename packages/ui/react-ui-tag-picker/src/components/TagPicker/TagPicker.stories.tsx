@@ -27,7 +27,7 @@ const meta: Meta<typeof TagPicker> = {
   title: 'ui/react-ui-tag-picker/TagPicker',
   component: TagPicker,
   render: ({ items: initialItems, mode }) => {
-    const [items, setItems] = useState(initialItems);
+    const [items, setItems] = useState(initialItems ?? []);
     const [selected, setSelected] = useState<string>();
     // TODO(burdon): Line height.
     // TODO(burdon): Wrap option.
