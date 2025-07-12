@@ -13,7 +13,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { ChatPrompt } from './ChatPrompt';
 import { translations } from '../../translations';
 
-const meta: Meta<typeof ChatPrompt> = {
+const meta = {
   title: 'plugins/plugin-assistant/ChatPrompt',
   component: ChatPrompt,
   decorators: [withPluginManager({ plugins: [] }), withTheme],
@@ -42,15 +42,23 @@ const meta: Meta<typeof ChatPrompt> = {
     translations,
     controls: { disable: true },
   },
-};
+} satisfies Meta<typeof ChatPrompt>;
 
 export default meta;
 
-type Story = StoryObj<typeof ChatPrompt>;
+type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Default = {
   args: {
     classNames: 'w-[25rem] p-1 overflow-hidden border border-gray-200 rounded',
     placeholder: 'Ask anything...',
   },
-};
+} satisfies Story;
+
+export const Expanded = {
+  args: {
+    classNames: 'w-[40rem] p-1 overflow-hidden border border-gray-200 rounded',
+    placeholder: 'Ask anything...',
+    compact: false,
+  },
+} satisfies Story;
