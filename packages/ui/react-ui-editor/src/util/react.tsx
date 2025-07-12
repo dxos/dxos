@@ -8,7 +8,7 @@ import { createRoot } from 'react-dom/client';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
-import { type RenderCallback } from '../types/types';
+import { type RenderCallback } from '../types';
 
 /** @deprecated */
 // TODO(wittjosiah): Replace with portals which are lighter weight and inherit context from the main react tree.

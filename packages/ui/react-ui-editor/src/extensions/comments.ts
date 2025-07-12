@@ -22,7 +22,7 @@ import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
 import { documentId } from './selection';
-import { type RenderCallback, type Comment, type Range } from '../types/types';
+import { type RenderCallback, type Comment, type Range } from '../types';
 import { Cursor, singleValueFacet, callbackWrapper } from '../util';
 
 //

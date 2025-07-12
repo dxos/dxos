@@ -5,7 +5,7 @@
 import { type EditorState } from '@codemirror/state';
 
 import { singleValueFacet } from './facet';
-import { type Range } from '../types/types';
+import { type Range } from '../types';
 
 /**
  * Determines if two ranges overlap.

@@ -9,7 +9,7 @@ import { type SyntaxNode } from '@lezer/common';
 
 import { tooltipContent } from '@dxos/react-ui-theme';
 
-import { type RenderCallback } from '../../types/types';
+import { type RenderCallback } from '../../types';
 
 export const linkTooltip = (renderTooltip: RenderCallback<{ url: string }>) => {
   return hoverTooltip(

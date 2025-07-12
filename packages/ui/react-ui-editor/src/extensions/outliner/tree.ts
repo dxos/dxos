@@ -9,7 +9,7 @@ import { type SyntaxNode } from '@lezer/common';
 
 import { invariant } from '@dxos/invariant';
 
-import { type Range } from '../../types/types';
+import { type Range } from '../../types';
 
 /**
  * Represents a single item in the tree.
