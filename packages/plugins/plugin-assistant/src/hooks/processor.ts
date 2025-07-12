@@ -90,7 +90,7 @@ export class ChatProcessor {
   constructor(
     private readonly _conversation: Conversation,
     private _tools?: ExecutableTool[],
-    private _artifacts?: ArtifactDefinition[],
+    private _artifacts?: readonly ArtifactDefinition[],
     private readonly _extensions?: ToolContextExtensions,
     private readonly _options: ChatProcessorOptions = defaultOptions,
   ) {}
@@ -181,7 +181,7 @@ export class ChatProcessor {
 
     try {
       const messages = await this._conversation.run({
-        artifacts: this._artifacts ?? [],
+        artifacts: [...(this._artifacts ?? [])],
         requiredArtifactIds: this._artifacts?.map((artifact) => artifact.id) ?? [],
 
         // TODO(dmaretskyi): Migrate to ToolRegistry.

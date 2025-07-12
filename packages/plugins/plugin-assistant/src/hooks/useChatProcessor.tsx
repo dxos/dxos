@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL, type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
-import { type AssociatedArtifact, createSystemPrompt } from '@dxos/artifact';
+import { type ArtifactDefinition, type AssociatedArtifact, createSystemPrompt } from '@dxos/artifact';
 import { FunctionType, type ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
@@ -44,9 +44,9 @@ export const useChatProcessor = ({
 }: UseChatProcessorProps): ChatProcessor | undefined => {
   const globalTools = useCapabilities(Capabilities.Tools);
 
-  let artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
+  let artifactDefinitions: readonly ArtifactDefinition[] = useCapabilities(Capabilities.ArtifactDefinition);
   if (noPluginArtifacts) {
-    artifactDefinitions = [];
+    artifactDefinitions = Stable.array;
   }
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -116,3 +116,9 @@ export const useChatProcessor = ({
 
   return processor;
 };
+
+// TODO(dmaretskyi): Extract.
+export const Stable = Object.freeze({
+  array: [] as readonly never[],
+  object: {} as {},
+});

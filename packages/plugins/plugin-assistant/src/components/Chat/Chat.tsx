@@ -22,6 +22,7 @@ import { type AIChatType, type AssistantSettingsProps } from '../../types';
 import { ChatPrompt as NativeChatPrompt, type ChatPromptProps } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps } from '../ChatThread';
 import type { Blueprint } from '@dxos/assistant';
+import { getDebugName } from '@dxos/util';
 
 // interface ContextProvider {
 //   query({ query }: { query: string }): Promise<ReferenceData[]>;
@@ -69,7 +70,16 @@ type ChatRootProps = PropsWithChildren<{
   noPluginArtifacts?: boolean;
 }>;
 
-const ChatRoot = ({ children, part, chat, settings, artifact, onOpenChange, noPluginArtifacts, ...props }: ChatRootProps) => {
+const ChatRoot = ({
+  children,
+  part,
+  chat,
+  settings,
+  artifact,
+  onOpenChange,
+  noPluginArtifacts,
+  ...props
+}: ChatRootProps) => {
   const update = useMemo(() => new Event<string>(), []);
   const space = getSpace(chat);
   const serviceContainer = useServiceContainer({ space });
