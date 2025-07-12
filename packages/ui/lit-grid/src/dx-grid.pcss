@@ -4,7 +4,11 @@
 @layer dx-tokens {
   :root {
     --dx-grid-cell-padding-block: 0.2rem;
+    --dx-grid-cell-content-padding-block: calc(var(--dx-grid-cell-padding-block) - 1px);
+    --dx-grid-cell-editor-padding-block: var(--dx-grid-cell-content-padding-block);
     --dx-grid-cell-padding-inline: 0.25rem;
+    --dx-grid-cell-content-padding-inline: calc(var(--dx-grid-cell-padding-inline) - 1px);
+    --dx-grid-cell-editor-padding-inline: var(--dx-grid-cell-content-padding-inline);
   }
 }
 
@@ -86,7 +90,8 @@
       }
 
       & > .dx-grid__cell__content {
-        padding: calc(var(--dx-grid-cell-padding-block) - 1px) calc(var(--dx-grid-cell-padding-inline) - 1px);
+        padding-inline: var(--dx-grid-cell-content-padding-inline);
+        padding-block: var(--dx-grid-cell-content-padding-block);
         box-sizing: border-box;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -95,6 +100,15 @@
         position: relative;
         border: 1px solid transparent;
         border-radius: 2px;
+
+        &:has(.dx-tag), &:has(dx-tag-picker-item){
+          text-overflow: clip;
+          line-height: 0;
+          --dx-grid-cell-content-padding-inline: 1px;
+          --dx-grid-cell-content-padding-block: 1px;
+          --dx-grid-cell-editor-padding-inline: 0;
+          --dx-grid-cell-editor-padding-block: 0;
+        }
       }
 
       &.dx-grid__cell--commented {

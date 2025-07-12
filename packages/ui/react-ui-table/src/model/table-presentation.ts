@@ -240,10 +240,10 @@ export class TablePresentation<T extends TableRow = TableRow> {
             return null;
           })
           .filter(Boolean)
-          .join(' ');
+          .join('');
 
         if (tags) {
-          cell.accessoryHtml = `<div role='none' class="flex flex-row gap-1">${tags}</div>`;
+          cell.accessoryHtml = tags;
         }
       }
     }

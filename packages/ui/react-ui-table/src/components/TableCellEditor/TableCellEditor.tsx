@@ -92,7 +92,7 @@ export const TableValueEditor = ({
   );
 };
 
-const editorSlots = { scroller: { className: '!plb-[calc(var(--dx-grid-cell-padding-block)-1px)]' } };
+const editorSlots = { scroller: { className: '!plb-[--dx-grid-cell-editor-padding-block]' } };
 
 export const TableCellEditor = ({
   model,
@@ -334,8 +334,9 @@ export const TableCellEditor = ({
         if (value !== undefined) {
           const options = fieldProjection.props.options || [];
 
-          if (fieldProjection.props.format === FormatEnum.MultiSelect && Array.isArray(value)) {
+          if (fieldProjection.props.format === FormatEnum.MultiSelect) {
             const tagItems = value
+              .split(',')
               .map((id) => {
                 const option = options.find((o) => o.id === id);
                 if (option) {
