@@ -5602,6 +5602,9 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/react-ui-tag-picker':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-tag-picker
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -38191,7 +38194,7 @@ snapshots:
   '@codemirror/lang-markdown@6.3.0':
     dependencies:
       '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
-      '@codemirror/lang-html': 6.4.2
+      '@codemirror/lang-html': 6.4.9
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
       '@codemirror/view': 6.34.1

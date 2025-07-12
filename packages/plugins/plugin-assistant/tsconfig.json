@@ -157,6 +157,9 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
+      "path": "../../ui/react-ui-tag-picker"
+    },
+    {
       "path": "../../ui/react-ui-theme"
     },
     {

@@ -10,27 +10,27 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { type DxTagPickerItemClick } from '@dxos/lit-ui';
 import { type ThemedClassName, useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
+  EditorView,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
-  EditorView,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
 import { TagPickerItem } from './TagPickerItem';
 import {
-  createLinks,
-  tagPickerExtension,
   type TagPickerItemData,
   type TagPickerMode,
   type TagPickerOptions,
+  createLinks,
+  tagPickerExtension,
 } from './extension';
-import { translationKey } from '../translations';
+import { translationKey } from '../../translations';
 
 export type TagPickerProps = ThemedClassName<
   {
-    items: TagPickerItemData[];
+    items?: TagPickerItemData[];
     readonly?: boolean;
     mode?: TagPickerMode;
   } & Pick<TagPickerOptions, 'onBlur' | 'onSelect' | 'onSearch' | 'onUpdate'>
@@ -61,7 +61,7 @@ const ReadonlyTagPicker = ({ items, onSelect }: TagPickerProps) => {
   );
   return (
     <>
-      {items.map((item) => (
+      {items?.map((item) => (
         <TagPickerItem
           key={item.id}
           itemId={item.id}
@@ -76,7 +76,7 @@ const ReadonlyTagPicker = ({ items, onSelect }: TagPickerProps) => {
 };
 
 const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
-  ({ classNames, items, mode, onBlur, onUpdate, onSearch, onSelect }, ref) => {
+  ({ classNames, items = [], mode, onBlur, onUpdate, onSearch, onSelect }, ref) => {
     const { themeMode } = useThemeContext();
     const { ref: resizeRef, width } = useResizeDetector();
     const { t } = useTranslation(translationKey);

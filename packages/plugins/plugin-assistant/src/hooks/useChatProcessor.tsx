@@ -5,23 +5,21 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL, type ExecutableTool } from '@dxos/ai';
-import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition, type AssociatedArtifact, createSystemPrompt } from '@dxos/artifact';
+import { Conversation } from '@dxos/assistant';
 import { FunctionType, type ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, type Queue, type Space, useQuery } from '@dxos/react-client/echo';
-import { getDebugName, isNonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
-import { AssistantCapabilities } from '../capabilities';
 import { ChatProcessor, type ChatProcessorOptions } from '../hooks';
 import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type AIChatType, type AssistantSettingsProps, ServiceType } from '../types';
-import { Conversation } from '@dxos/assistant';
-import { useDebugReactDeps } from '@dxos/react-ui';
 
 type UseChatProcessorProps = {
-  part?: 'deck' | 'dialog'; // TODO(burdon): Define?
+  part?: 'deck' | 'dialog';
   chat?: AIChatType;
   serviceContainer: ServiceContainer;
   space?: Space;
@@ -42,14 +40,13 @@ export const useChatProcessor = ({
   artifact,
   noPluginArtifacts,
 }: UseChatProcessorProps): ChatProcessor | undefined => {
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const globalTools = useCapabilities(Capabilities.Tools);
 
   let artifactDefinitions: readonly ArtifactDefinition[] = useCapabilities(Capabilities.ArtifactDefinition);
   if (noPluginArtifacts) {
     artifactDefinitions = Stable.array;
   }
-
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // Services.
   const services = useQuery(space, Filter.type(ServiceType));

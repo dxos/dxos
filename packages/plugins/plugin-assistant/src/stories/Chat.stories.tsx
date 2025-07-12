@@ -30,6 +30,7 @@ import {
   Editor,
   outliner,
 } from '@dxos/react-ui-editor';
+import { type TagPickerItemData } from '@dxos/react-ui-tag-picker';
 import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
@@ -37,6 +38,7 @@ import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 import { AssistantPlugin } from '../AssistantPlugin';
 import { Chat } from '../components';
 import { meta as pluginMeta } from '../meta';
+import { onSearchBlueprints } from '../testing';
 import { translations } from '../translations';
 import { AIChatType } from '../types';
 import { BlueprintBinder, Conversation, Blueprint } from '@dxos/assistant';
@@ -66,6 +68,8 @@ const ChatContainer = () => {
   const { t } = useTranslation(pluginMeta.id);
   const space = useSpace();
   const [chat] = useQuery(space, Filter.type(AIChatType));
+  const blueprints: TagPickerItemData[] = [];
+
   if (!chat) {
     return null;
   }
@@ -78,6 +82,8 @@ const ChatContainer = () => {
           classNames='p-2 border border-subduedSeparator rounded focus-within:outline focus-within:border-transparent'
           placeholder={t('prompt placeholder')}
           compact={false}
+          blueprints={blueprints}
+          onSearchBlueprints={onSearchBlueprints}
         />
       </div>
     </Chat.Root>
