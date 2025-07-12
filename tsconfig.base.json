@@ -18,7 +18,7 @@
     "moduleResolution": "Bundler",
     "noImplicitOverride": true,
     "outDir": "${configDir}/dist/types",
-    "types": ["node"],
+    "types": ["node", "wicg-file-system-access"],
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,

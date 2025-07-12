@@ -71,7 +71,7 @@ const ChatContainer = () => {
   }
 
   return (
-    <Chat.Root part='deck' chat={chat}>
+    <Chat.Root part='deck' chat={chat} noPluginArtifacts>
       <Chat.Thread />
       <div className='p-4'>
         <Chat.Prompt
@@ -170,7 +170,10 @@ const getDecorators = ({
 
           // TODO(burdon): Remove need for this boilerplate. Namespace for types?
           const chat = space.db.add(Obj.make(AIChatType, { queue: Ref.fromDXN(space.queues.create().dxn) }));
-          space.db.add(Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }));
+          const doc = space.db.add(
+            Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }),
+          );
+          console.log(doc);
 
           const binder = new BlueprintBinder(await chat.queue.load());
           for (const blueprint of blueprints) {

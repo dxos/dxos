@@ -27,6 +27,7 @@ type UseChatProcessorProps = {
   space?: Space;
   settings?: AssistantSettingsProps;
   artifact?: AssociatedArtifact;
+  noPluginArtifacts?: boolean;
 };
 
 /**
@@ -39,9 +40,15 @@ export const useChatProcessor = ({
   serviceContainer,
   settings,
   artifact,
+  noPluginArtifacts,
 }: UseChatProcessorProps): ChatProcessor | undefined => {
   const globalTools = useCapabilities(Capabilities.Tools);
-  const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
+
+  let artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
+  if (noPluginArtifacts) {
+    artifactDefinitions = [];
+  }
+
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // Services.

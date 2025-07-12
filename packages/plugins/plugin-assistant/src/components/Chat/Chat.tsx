@@ -66,13 +66,14 @@ type ChatRootProps = PropsWithChildren<{
   settings?: AssistantSettingsProps;
   artifact?: AssociatedArtifact;
   onOpenChange?: ChatPromptProps['onOpenChange'];
+  noPluginArtifacts?: boolean;
 }>;
 
-const ChatRoot = ({ children, part, chat, settings, artifact, onOpenChange, ...props }: ChatRootProps) => {
+const ChatRoot = ({ children, part, chat, settings, artifact, onOpenChange, noPluginArtifacts, ...props }: ChatRootProps) => {
   const update = useMemo(() => new Event<string>(), []);
   const space = getSpace(chat);
   const serviceContainer = useServiceContainer({ space });
-  const processor = useChatProcessor({ part, chat, space, serviceContainer, artifact, settings });
+  const processor = useChatProcessor({ part, chat, space, serviceContainer, artifact, settings, noPluginArtifacts });
   const messageQueue = useQueue<Message>(chat?.queue.dxn);
 
   // TODO(burdon): Does this update when the queue updates?
