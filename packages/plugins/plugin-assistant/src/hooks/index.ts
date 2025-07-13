@@ -5,7 +5,6 @@
 export * from './processor';
 
 export * from './useChatProcessor';
-export * from './useServices';
-export * from './useTextInputEvents';
 export * from './useContextProvider';
 export * from './useServiceContainer';
+export * from './useTextInputEvents';

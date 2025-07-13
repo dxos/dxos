@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { TASK_LIST_BLUEPRINT, DESIGN_SPEC_BLUEPRINT } from '@dxos/artifact-testing';
+import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from '@dxos/artifact-testing';
 import { type TagPickerItemData, type TagPickerOptions } from '@dxos/react-ui-tag-picker';
 
 // TODO(burdon): Need dxn/id.
