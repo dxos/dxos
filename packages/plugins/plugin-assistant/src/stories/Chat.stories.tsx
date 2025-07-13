@@ -9,7 +9,7 @@ import React, { type FunctionComponent } from 'react';
 
 import { Capabilities, contributes, Events, IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { remoteServiceEndpoints, TASK_LIST_BLUEPRINT, readDocument, writeDocument } from '@dxos/artifact-testing';
+import { TASK_LIST_BLUEPRINT, remoteServiceEndpoints, readDocument, writeDocument } from '@dxos/artifact-testing';
 import { BlueprintBinder, Blueprint } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { ChessPlugin } from '@dxos/plugin-chess';
@@ -24,11 +24,11 @@ import { Config } from '@dxos/react-client';
 import { createDocAccessor, useQuery, useSpace } from '@dxos/react-client/echo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
+  Editor,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
-  Editor,
   outliner,
 } from '@dxos/react-ui-editor';
 import { type TagPickerItemData } from '@dxos/react-ui-tag-picker';

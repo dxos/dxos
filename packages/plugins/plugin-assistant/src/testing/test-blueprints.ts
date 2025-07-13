@@ -5,7 +5,7 @@
 import { TASK_LIST_BLUEPRINT, DESIGN_SPEC_BLUEPRINT } from '@dxos/artifact-testing';
 import { type TagPickerItemData, type TagPickerOptions } from '@dxos/react-ui-tag-picker';
 
-// TODO(burdon): Need id.
+// TODO(burdon): Need dxn/id.
 const blueprints = [DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT];
 
 const registry: TagPickerItemData[] = blueprints.map((blueprint, i) => ({

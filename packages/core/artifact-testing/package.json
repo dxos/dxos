@@ -40,8 +40,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "chess.js": "^1.0.0"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@effect/ai": "^0.21.16",
