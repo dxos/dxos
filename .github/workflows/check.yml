@@ -46,7 +46,7 @@ jobs:
   check:
     runs-on: depot-ubuntu-24.04-8
     container:
-      image: ghcr.io/dxos/gh-actions:20.12.1-gh-docker
+      image: ghcr.io/dxos/gh-actions:20.12.1
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -88,7 +88,7 @@ jobs:
         # TODO(wittjosiah): Test across all LTS versions of node.
         #  Currently fails on 22 and 24.
         # node-version: ['20.12.1', '22', '24']
-        node-version: ['20.12.1-gh-docker']
+        node-version: ['20.12.1']
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
@@ -141,7 +141,7 @@ jobs:
           retention-days: 7
 
       - uses: codecov/codecov-action@v5
-        if: ${{ matrix.node-version == '20.12.1-gh-docker' }}
+        if: ${{ matrix.node-version == '20.12.1' }}
         with:
           directory: ./coverage
           fail_ci_if_error: false
@@ -160,7 +160,7 @@ jobs:
     if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
     runs-on: depot-ubuntu-24.04-8
     container:
-      image: ghcr.io/dxos/gh-actions:20.12.1-gh-docker
+      image: ghcr.io/dxos/gh-actions:20.12.1
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -182,6 +182,9 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+
+      - name: Install Playwright
+        run: pnpm run install-playwright
 
       - name: Bundle Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
