@@ -80,12 +80,12 @@ export type ReplicantsSummary = { [replicantId: string]: ReplicantParams };
 // plan vs environment
 export interface TestPlan<S, R = void> {
   onError?: (err: Error) => void;
+  defaultSpec(): S;
   /**
    * Run the test.
    * @returns results of the run will be passed to the `analyze` method.
    */
   run(env: SchedulerEnv, params: TestParams<S>): Promise<R>;
   // TODO(mykola): Add analysesEnv which will contain collected preprocessed logs.
-  analyze(params: TestParams<S>, summary: ReplicantsSummary, result: R): Promise<any>;
-  defaultSpec(): S;
+  analyze?: (params: TestParams<S>, summary: ReplicantsSummary, result: R) => Promise<any>;
 }
