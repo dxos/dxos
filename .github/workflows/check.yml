@@ -186,6 +186,7 @@ jobs:
       - name: Install Playwright
         run: pnpm run install-playwright
 
+      # TODO(wittjosiah): Try to increase concurrency here.
       - name: Bundle Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: moon run :bundle --concurrency=1 --affected --remote
@@ -194,6 +195,9 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :bundle --concurrency=1
 
+      # TODO(wittjosiah): Try to increase concurrency here.
+      #  1. Run storybook in parallel with e2e storybook tests and allow the tests to run with concurrency.
+      #  2. Put each vite app e2e test on its own port to avoid port conflicts.
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: moon run :e2e --concurrency=1 --affected --remote -- --browser=all
