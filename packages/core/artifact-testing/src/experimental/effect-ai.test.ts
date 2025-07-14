@@ -181,11 +181,13 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
           yield* Stream.runForEach(
             stream,
             Effect.fnUntraced(function* (item) {
-              log.info('item', { item });
+              log.info('item', { item, time: new Date().toISOString() });
             }),
           );
           log.break();
-        } while (true); // What's the stopping condition?
+        } while (yield* hasToolCall(chat));
+
+        console.log(JSON.stringify(yield* chat.export, null, 2));
       },
       Effect.provide(toolkitLayer),
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
@@ -193,5 +195,15 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000 },
+  );
+});
+
+// What's the right stopping condition?
+const hasToolCall = Effect.fn(function* (chat: AiChat.AiChat.Service) {
+  const history = yield* chat.history;
+  console.log('history', { history: history.messages.map((m) => m.parts.map((p) => p._tag)) });
+  return (
+    history.messages.at(-1)?.parts.at(-1)?._tag === 'ToolCallPart' ||
+    history.messages.at(-1)?.parts.at(-1)?._tag === 'ToolCallResultPart'
   );
 });
