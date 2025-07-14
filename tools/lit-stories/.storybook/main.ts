@@ -11,28 +11,32 @@ import Inspect from 'vite-plugin-inspect';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
-export const packages = resolve(__dirname, '../../../packages');
-const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
-
-const contentFiles = '*.{ts,tsx,js,jsx,css}';
-
 const isTrue = (str?: string) => str === 'true' || str === '1';
 
-type ConfigProps = Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>;
+const baseDir = resolve(__dirname, '../');
+const rootDir = resolve(baseDir, '../../');
+const staticDir = resolve(baseDir, './static');
+const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
 
-/**
- * https://storybook.js.org/docs/configure
- */
-export const config = (baseConfig: ConfigProps): StorybookConfig => ({
+export const packages = resolve(rootDir, 'packages');
+export const storyFiles = '*.lit-stories.ts';
+export const contentFiles = '*.{ts,tsx,js,jsx,css}';
+export const modules = [
+  'ui/*/src/**',
+];
+
+export const stories = modules.map((dir) => join(packages, dir, storyFiles));
+export const content = modules.map((dir) => join(packages, dir, contentFiles));
+
+export const config = ({ stories: baseStories, ...baseConfig }: Partial<StorybookConfig> = {}): StorybookConfig => ({
   framework: {
     name: '@storybook/web-components-vite',
     options: {},
   },
+  stories: baseStories ?? stories,
   addons: ['@storybook/addon-docs', '@storybook/addon-links', '@storybook/addon-themes'],
-
-  staticDirs: [resolve(__dirname, '../static')],
+  staticDirs: [staticDir],
   ...baseConfig,
-
   /**
    * https://storybook.js.org/docs/api/main-config/main-config-vite-final
    */
@@ -44,7 +48,7 @@ export const config = (baseConfig: ConfigProps): StorybookConfig => ({
         IconsPlugin({
           symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           assetPath: (name, variant) =>
-            `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+            `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
           spriteFile: resolve(__dirname, '../static/icons.svg'),
           contentPaths: [join(packages, '/**/src/**/*.{ts,tsx}')],
         }),
@@ -64,3 +68,5 @@ export const config = (baseConfig: ConfigProps): StorybookConfig => ({
     });
   },
 });
+
+export default config();

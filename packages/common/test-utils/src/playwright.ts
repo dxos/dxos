@@ -131,4 +131,5 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
   return { context, page };
 };
 
-export const storybookUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;
+export const storybookUrl = (storyId: string, port = 9009) =>
+  `http://localhost:${port}/iframe.html?id=${storyId}&viewMode=story`;

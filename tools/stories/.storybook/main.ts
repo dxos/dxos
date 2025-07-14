@@ -49,7 +49,13 @@ if (isTrue(process.env.DX_DEBUG)) {
  * https://nx.dev/recipes/storybook/one-storybook-for-all
  */
 export const config = ({ stories: baseStories, ...baseConfig }: Partial<StorybookConfig> = {}): StorybookConfig => ({
-  framework: '@storybook/react-vite',
+  framework: {
+    name: '@storybook/react-vite',
+    options: {
+      // TODO(wittjosiah): Re-enable strict mode in stories.
+      // strictMode: true,
+    },
+  },
   stories: baseStories ?? stories,
   addons: [
     '@dxos/storybook-addon-logger',
