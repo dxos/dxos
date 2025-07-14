@@ -35,6 +35,7 @@ permissions:
 env:
   DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
   DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
+  MOON_DEBUG_REMOTE: true
 
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 concurrency:
