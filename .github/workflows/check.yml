@@ -102,7 +102,7 @@ jobs:
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && !inputs.e2e }}
         with:
           detached: true
 
@@ -170,6 +170,12 @@ jobs:
       DX_PWA: false
       NODE_OPTIONS: --max-old-space-size=12288
     steps:
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        with:
+          detached: true
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
