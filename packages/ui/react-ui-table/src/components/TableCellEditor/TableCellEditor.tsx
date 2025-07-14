@@ -92,6 +92,8 @@ export const TableValueEditor = ({
   );
 };
 
+const editorSlots = { scroller: { className: '!plb-[--dx-grid-cell-editor-padding-block]' } };
+
 export const TableCellEditor = ({
   model,
   modals,
@@ -332,9 +334,10 @@ export const TableCellEditor = ({
         if (value !== undefined) {
           const options = fieldProjection.props.options || [];
 
-          if (fieldProjection.props.format === FormatEnum.MultiSelect && Array.isArray(value)) {
+          if (fieldProjection.props.format === FormatEnum.MultiSelect) {
             const tagItems = value
-              .map((id) => {
+              .split(',')
+              .map((id: string) => {
                 const option = options.find((o) => o.id === id);
                 if (option) {
                   return {
@@ -345,7 +348,7 @@ export const TableCellEditor = ({
                 }
                 return undefined;
               })
-              .filter((item): item is { id: any; label: string; hue: any } => item !== undefined);
+              .filter((item: any): item is { id: any; label: string; hue: any } => item !== undefined);
 
             return createLinks(tagItems);
           } else {
@@ -378,7 +381,7 @@ export const TableCellEditor = ({
         variant={_validationVariant}
         __gridScope={__gridScope}
       />
-      <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} />
+      <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} slots={editorSlots} />
     </>
   );
 };
