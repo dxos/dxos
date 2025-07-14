@@ -19,7 +19,7 @@ tasks:
   serve-e2e:
     command: storybook dev
     args:
-      - --port=9009
+      - --port=8008
       - --ci
       - --quiet
     deps:

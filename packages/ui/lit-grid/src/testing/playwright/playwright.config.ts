@@ -10,7 +10,7 @@ export default defineConfig({
   ...e2ePreset(import.meta.dirname),
   webServer: {
     command: 'moon run lit-stories:serve-e2e',
-    port: 9009,
-    reuseExistingServer: !process.env.CI,
+    port: 8008,
+    reuseExistingServer: !!process.env.CI,
   },
 });

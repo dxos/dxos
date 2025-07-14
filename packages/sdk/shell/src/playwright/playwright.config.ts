@@ -11,6 +11,6 @@ export default defineConfig({
   webServer: {
     command: 'moon run stories:serve-e2e',
     port: 9009,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !!process.env.CI,
   },
 });

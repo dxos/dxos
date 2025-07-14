@@ -190,13 +190,17 @@ jobs:
         id: storybook
         run: |
           moon run stories:serve &
-          echo "pid=$!" >> $GITHUB_ENV
+          echo "react-pid=$!" >> $GITHUB_ENV
+          moon run lit-stories:serve &
+          echo "lit-pid=$!" >> $GITHUB_ENV
 
       - name: Run Storybook Playwright Tests
         run: moon run "#storybook-e2e:e2e" --affected --remote -- --browser=all
 
       - name: Stop Storybook
-        run: kill ${{ steps.storybook.outputs.pid }}
+        run: |
+          kill ${{ steps.storybook.outputs.react-pid }}
+          kill ${{ steps.storybook.outputs.lit-pid }}
 
       # TODO(wittjosiah): Try to increase concurrency here.
       - name: Bundle Affected
