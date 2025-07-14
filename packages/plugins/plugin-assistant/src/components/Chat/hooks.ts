@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Blueprint, type BlueprintRegistry } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type TagPickerOptions } from '@dxos/react-ui-tag-picker';
 
@@ -36,7 +36,7 @@ export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor, r
 
     const t = setTimeout(async () => {
       const blueprints: Blueprint[] = [];
-      for (const ref of processor?.blueprints ?? []) {
+      for (const ref of processor?.blueprints.bindings.value ?? []) {
         const obj = await resolver.resolve(ref.dxn);
         invariant(Obj.instanceOf(Blueprint, obj));
         if (obj) {
@@ -66,14 +66,24 @@ export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor, r
   );
 
   const handleUpdateBlueprints = useCallback<NonNullable<TagPickerOptions['onUpdate']>>(
-    (ids) => {
+    async (ids) => {
       // TODO(burdon): Add to space.
       invariant(space);
-      // const current = space.db.query(Filter.type(Blueprint));
-      // for (const id of ids) {
-      //   const blueprint = registry?.query().find((blueprint) => blueprint.blueprintId === id);
-      //   processor?.blueprints.bind();
-      // }
+      const { objects: current } = await space.db.query(Filter.type(Blueprint)).run();
+      for (const id of ids) {
+        const blueprint = registry?.query().find((blueprint) => blueprint.blueprintId === id);
+        if (!blueprint) {
+          continue;
+        }
+
+        let local = current?.find((blueprint) => blueprint.blueprintId === id);
+        if (!local) {
+          // TODO(dmaretskyi): We might need to `clone` the blueprint here, since the db.add returns the same object reference.
+          local = space.db.add(blueprint);
+        }
+
+        processor?.blueprints.bind(Ref.make(local));
+      }
     },
     [processor, registry, space],
   );

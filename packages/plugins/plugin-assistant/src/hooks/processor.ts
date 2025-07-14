@@ -16,7 +16,7 @@ import {
 } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
-import { AISession, type ArtifactDiffResolver, type Blueprint, type Conversation } from '@dxos/assistant';
+import { AISession, type ArtifactDiffResolver, type Blueprint, type BlueprintBinder, type Conversation } from '@dxos/assistant';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Filter, getVersion, type Live, type Space } from '@dxos/react-client/echo';
@@ -100,11 +100,10 @@ export class ChatProcessor {
   }
 
   /**
-   * @returns Active blueprints.
-   * @reactive
+   * Binder of active blueprints attached to this coversation.
    */
-  get blueprints(): Live<readonly Ref.Ref<Blueprint>[]> {
-    return this._conversation.blueprints.bindings.value;
+  get blueprints(): BlueprintBinder {
+    return this._conversation.blueprints;
   }
 
   /**
