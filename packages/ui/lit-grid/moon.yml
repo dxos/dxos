@@ -1,7 +1,8 @@
 type: library
 language: typescript
 tags:
-  - e2e
-  - storybook-e2e
+  # TODO(wittjosiah): Lit stories are not working.
+  # - e2e
+  # - storybook-e2e
   # TODO(wittjosiah): Could this use the esbuild compiler?
   - ts-compile

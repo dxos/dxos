@@ -4,7 +4,7 @@
 
 import { expect, type Locator, type Page } from '@playwright/test';
 
-import type { DxGridPlanePosition } from '../../types';
+import type { DxGridPlanePosition } from '../types';
 
 /**
  * Test helper for managing dx-grid interactions and assertions in Playwright tests.

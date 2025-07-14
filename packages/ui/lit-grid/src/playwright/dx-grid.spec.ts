@@ -6,9 +6,9 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
-import { DxGridManager } from './dx-grid-manager';
-import { type DxGridCellsSelect } from '../../types';
-import { toPlaneCellIndex } from '../../util';
+import { DxGridManager } from '../testing';
+import { type DxGridCellsSelect } from '../types';
+import { toPlaneCellIndex } from '../util';
 
 const gridPlaneCellSize = 31;
 const gap = 1;
