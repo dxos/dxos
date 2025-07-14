@@ -6,18 +6,8 @@ tasks:
     args:
       - --output-dir=out/stories
     deps:
-      - app-graph:compile
-      - devtools:compile
-      - react-client:compile
-      - react-ui:compile
-      - react-ui-editor:compile
-      - react-ui-geo:compile
-      - react-ui-grid:compile
-      - react-ui-searchlist:compile
-      - react-ui-stack:compile
-      - react-ui-table:compile
-      - shell:compile
-      - vite-plugin-icons:compile
+      - '#ts-build:build'
+      - '#ts-compile:compile'
       - mkdist
     inputs:
       - .storybook/*
