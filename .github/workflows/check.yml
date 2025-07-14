@@ -195,16 +195,6 @@ jobs:
       - name: Install Playwright
         run: pnpm run install-playwright
 
-      - name: Run Storybook Playwright Tests
-        run: |
-          npx concurrently \
-            --kill-others \
-            --names "React,Lit,Tests" \
-            --prefix-colors "blue,pink,green" \
-            "moon run stories:serve" \
-            "moon run lit-stories:serve" \
-            "npx wait-on http://localhost:9009 && npx wait-on http://localhost:8008 && moon run '#storybook-e2e:e2e' --affected --remote -- --browser=all"
-
       # TODO(wittjosiah): Try to increase concurrency here.
       - name: Bundle Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
@@ -219,11 +209,11 @@ jobs:
       #  2. Put each vite app e2e test on its own port to avoid port conflicts.
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run "#app-e2e:e2e" --affected --remote -- --browser=all
+        run: moon run :e2e --affected --remote -- --browser=all
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: moon run "#app-e2e:e2e" -- --browser=all
+        run: moon run :e2e -- --browser=all
 
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'

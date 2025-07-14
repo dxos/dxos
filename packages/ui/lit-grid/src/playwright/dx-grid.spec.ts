@@ -21,7 +21,7 @@ test.describe('dx-grid', () => {
 
   test.beforeEach(async ({ browser }) => {
     const setup = await setupPage(browser, {
-      url: storybookUrl('dx-grid--spec', 8008),
+      url: storybookUrl('dx-grid--spec', 9002),
       viewportSize: {
         width: (gridPlaneCellSize + gap) * (nCols + 1.5),
         height: (gridPlaneCellSize + gap) * (nRows + 1.5),

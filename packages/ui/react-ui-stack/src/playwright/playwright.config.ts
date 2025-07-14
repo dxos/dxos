@@ -8,9 +8,10 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
 
 export default defineConfig({
   ...e2ePreset(import.meta.dirname),
+  // TODO(wittjosiah): Avoid hard-coding ports.
   webServer: {
-    command: 'moon run stories:serve-e2e',
-    port: 9009,
-    reuseExistingServer: !!process.env.CI,
+    command: 'moon run stories:serve-e2e -- --port=9003',
+    port: 9003,
+    reuseExistingServer: !process.env.CI,
   },
 });
