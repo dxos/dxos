@@ -15,7 +15,9 @@ import { Format, LabelAnnotation } from '@dxos/echo-schema';
 export const Blueprint = Schema.Struct({
   // TODO(burdon): Move to main API.
   // TODO(burdon): It's cumbersome not to call this `id` but would clash with runtime property.
-  blueprintId: Format.DXN,
+  blueprintId: Schema.String.annotations({
+    description: 'Unique system name for the blueprint',
+  }),
 
   /**
    * Human-readable name of the blueprint.
