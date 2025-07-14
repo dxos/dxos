@@ -24,6 +24,8 @@ tasks:
       - ^:compile
       - protobuf-compiler:compile
       - gen-buf
+    outputs:
+      - src/proto/gen
   test:
     deps:
       - prebuild
