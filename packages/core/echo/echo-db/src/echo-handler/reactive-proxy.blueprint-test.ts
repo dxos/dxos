@@ -274,7 +274,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         if (!objectsHaveId) {
           expect(actual).to.deep.eq(expected);
         } else {
-          expect(actual).to.deep.contain({ '@id': (obj as any).id, ...expected });
+          expect(actual).to.deep.contain({ id: (obj as any).id, ...expected });
         }
       });
 

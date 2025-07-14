@@ -11,8 +11,8 @@ import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-u
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { MessageRoot } from './Message';
-import { threadLayout } from '../Thread';
-import { ThreadStoryContainer, MessageStoryText, type MessageEntity } from '../testing';
+import { Thread } from '../Thread';
+import { MessageStoryText, type MessageEntity } from '../testing';
 import { translations } from '../translations';
 
 const DefaultStory = () => {
@@ -25,13 +25,13 @@ const DefaultStory = () => {
   });
 
   return (
-    <ThreadStoryContainer>
-      <div className={threadLayout}>
+    <div className='mli-auto is-96 overflow-y-auto'>
+      <Thread.Root id='t1'>
         <MessageRoot {...message} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
           <MessageStoryText {...message} onDelete={() => console.log('delete')} />
         </MessageRoot>
-      </div>
-    </ThreadStoryContainer>
+      </Thread.Root>
+    </div>
   );
 };
 

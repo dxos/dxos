@@ -13,14 +13,13 @@ import {
   type ToolUseContentBlock,
   type ToolRegistry,
 } from '@dxos/ai';
+import { AISession } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { Key, Obj } from '@dxos/echo';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { isNonNullable } from '@dxos/util';
 
-import type { Blueprint, BlueprintStep } from './blueprint';
-import { AISession } from '../session';
+import type { Sequence, SequenceStep } from './sequence';
 
 const SYSTEM_PROMPT = `
 You are a smart Rule-Following Agent.
@@ -33,19 +32,19 @@ The Rule-Following Agent can express creativity and imagination in the way it pe
 The Rule-Following Agent precisely follows the instructions.
 `;
 
-export type BlueprintTraceStep = {
+export type SequenceTraceStep = {
   status: 'done' | 'bailed' | 'skipped';
   stepId: ObjectId;
   comment: string;
 };
 
-export type BlueprintMachineState = {
+export type SequenceMachineState = {
   history: Message[];
-  trace: BlueprintTraceStep[];
+  trace: SequenceTraceStep[];
   state: 'working' | 'bail' | 'done';
 };
 
-const INITIAL_STATE: BlueprintMachineState = {
+const INITIAL_STATE: SequenceMachineState = {
   state: 'working',
   history: [],
   trace: [],
@@ -55,49 +54,50 @@ type ExecutionOptions = {
   aiClient: AiServiceClient;
 
   /**
-   * Input to the blueprint.
+   * Input to the sequence.
    */
   input?: unknown;
 };
 
-export type BlueprintEvent =
+export type SequenceEvent =
   | { type: 'begin'; invocationId: string }
   | { type: 'end'; invocationId: string }
-  | { type: 'step-start'; invocationId: string; step: BlueprintStep }
-  | { type: 'step-complete'; invocationId: string; step: BlueprintStep }
+  | { type: 'step-start'; invocationId: string; step: SequenceStep }
+  | { type: 'step-complete'; invocationId: string; step: SequenceStep }
   | { type: 'message'; invocationId: string; message: Message }
   | { type: 'block'; invocationId: string; block: MessageContentBlock };
 
-export interface BlueprintLogger {
-  log(event: BlueprintEvent): void;
+export interface SequenceLogger {
+  log(event: SequenceEvent): void;
 }
 
 /**
- * Blueprint state machine.
+ * Sequence state machine.
+ * @deprecated Use sequence compiler and run a circuit instead.
  */
-export class BlueprintMachine {
+export class SequenceMachine {
   public readonly begin = new Event<void>();
   public readonly end = new Event<void>();
-  public readonly stepStart = new Event<BlueprintStep>();
-  public readonly stepComplete = new Event<BlueprintStep>();
+  public readonly stepStart = new Event<SequenceStep>();
+  public readonly stepComplete = new Event<SequenceStep>();
   public readonly message = new Event<Message>();
   public readonly block = new Event<MessageContentBlock>();
 
   // TODO(burdon): Replace events with logger?
-  private logger?: BlueprintLogger;
+  private logger?: SequenceLogger;
 
-  private _state: BlueprintMachineState = structuredClone(INITIAL_STATE);
+  private _state: SequenceMachineState = structuredClone(INITIAL_STATE);
 
   constructor(
     readonly registry: ToolRegistry,
-    readonly blueprint: Blueprint,
+    readonly sequence: Sequence,
   ) {}
 
-  get state(): BlueprintMachineState {
+  get state(): SequenceMachineState {
     return this._state;
   }
 
-  setLogger(logger: BlueprintLogger): this {
+  setLogger(logger: SequenceLogger): this {
     this.logger = logger;
     return this;
   }
@@ -116,12 +116,12 @@ export class BlueprintMachine {
 
       this._state = await this._execStep(invocationId, this._state, { input, aiClient: options.aiClient });
 
-      const step = this.blueprint.steps.find((step) => step.id === this._state.trace.at(-1)?.stepId)!;
+      const step = this.sequence.steps.find((step) => step.id === this._state.trace.at(-1)?.stepId)!;
       this.stepComplete.emit(step);
       this.logger?.log({ type: 'step-complete', invocationId, step });
 
       if (this._state.state === 'bail') {
-        throw new Error('Agent unable to follow the blueprint');
+        throw new Error('Agent unable to follow the sequence');
       }
     }
 
@@ -131,16 +131,16 @@ export class BlueprintMachine {
 
   private async _execStep(
     invocationId: string,
-    state: BlueprintMachineState,
+    state: SequenceMachineState,
     options: ExecutionOptions,
-  ): Promise<BlueprintMachineState> {
-    const prevStep = this.blueprint.steps.findIndex((step) => step.id === this._state.trace.at(-1)?.stepId);
-    if (prevStep === this.blueprint.steps.length - 1) {
-      throw new Error('Done execution blueprint');
+  ): Promise<SequenceMachineState> {
+    const prevStep = this.sequence.steps.findIndex((step) => step.id === this._state.trace.at(-1)?.stepId);
+    if (prevStep === this.sequence.steps.length - 1) {
+      throw new Error('Done execution sequence');
     }
 
-    const nextStep = this.blueprint.steps[prevStep + 1];
-    const onLastStep = prevStep === this.blueprint.steps.length - 2;
+    const nextStep = this.sequence.steps[prevStep + 1];
+    const onLastStep = prevStep === this.sequence.steps.length - 2;
 
     this.stepStart.emit(nextStep);
     this.logger?.log({ type: 'step-start', invocationId, step: nextStep });
@@ -183,18 +183,15 @@ export class BlueprintMachine {
       this.logger?.log({ type: 'message', invocationId, message });
     });
 
-    // TODO(wittjosiah): Warn if tool is not found.
-    const tools = (await Promise.all((nextStep.tools ?? []).map((tool) => this.registry.resolve(tool)))).filter(
-      isNonNullable,
-    );
-
     const messages = await session.run({
       systemPrompt: SYSTEM_PROMPT,
       history: [...state.history, ...inputMessages],
-      tools: [...tools, report],
+      tools: [...(nextStep.tools ?? [])],
       artifacts: [],
+      executableTools: [report],
       client: options.aiClient,
       prompt: nextStep.instructions,
+      toolResolver: this.registry,
     });
 
     const { messages: trimmedHistory, call: lastBlock } = popLastToolCall(messages);
@@ -216,7 +213,7 @@ export class BlueprintMachine {
         },
       ],
       state: Match.value(status).pipe(
-        Match.withReturnType<BlueprintMachineState['state']>(),
+        Match.withReturnType<SequenceMachineState['state']>(),
         Match.when('done', () => (onLastStep ? 'done' : 'working')),
         Match.when('skipped', () => (onLastStep ? 'done' : 'working')),
         Match.when('bailed', () => 'bail'),

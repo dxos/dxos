@@ -5,72 +5,56 @@
 import { Schema } from 'effect';
 
 import { ToolId } from '@dxos/ai';
-import { Key, Obj, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 
-export const BlueprintStep = Schema.Struct({
-  id: Key.ObjectId,
-  instructions: Schema.String,
-  tools: Schema.optional(Schema.Array(ToolId)),
-});
-export interface BlueprintStep extends Schema.Schema.Type<typeof BlueprintStep> {}
-
-export const BlueprintDefinition = Schema.Struct({
-  steps: Schema.Array(BlueprintStep.pipe(Schema.omit('id'))),
-});
-export interface BlueprintDefinition extends Schema.Schema.Type<typeof BlueprintDefinition> {}
-
+/**
+ * Blueprint schema defines the structure for AI assistant blueprints.
+ * Blueprints contain instructions, tools, and artifacts that guide the AI's behavior.
+ */
 export const Blueprint = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  steps: Schema.Array(BlueprintStep),
+  /**
+   * Human-readable name of the blueprint.
+   */
+  name: Schema.String.annotations({
+    description: 'Human-readable name of the blueprint',
+  }),
+
+  /**
+   * Description of the blueprint's purpose and functionality.
+   */
+  description: Schema.optional(Schema.String).annotations({
+    description: "Description of the blueprint's purpose and functionality",
+  }),
+
+  /**
+   * Instructions that guide the AI assistant's behavior and responses.
+   * These are system prompts or guidelines that the AI should follow.
+   */
+  instructions: Schema.String.annotations({
+    description: "Instructions that guide the AI assistant's behavior and responses",
+  }),
+
+  /**
+   * Array of tools that the AI assistant can use when this blueprint is active.
+   */
+  tools: Schema.Array(ToolId).annotations({
+    description: 'Array of tools that the AI assistant can use when this blueprint is active',
+  }),
+
+  /**
+   * Array of artifacts that the AI assistant can create or modify.
+   */
+  artifacts: Schema.Array(Schema.String).annotations({
+    description: 'Ids of artifact definitions that should be pulled into the blueprint',
+  }),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Blueprint',
     version: '0.1.0',
   }),
 );
+
+/**
+ * TypeScript type for Blueprint.
+ */
 export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
-
-/**
- * Blueprint builder API.
- */
-export namespace BlueprintBuilder {
-  export const create = () => new Builder();
-
-  class Builder {
-    private readonly _steps: BlueprintStep[] = [];
-
-    step(instructions: string, options?: { tools?: string[] }): Builder {
-      this._steps.push({
-        id: Key.ObjectId.random(),
-        instructions,
-        tools: options?.tools ?? [],
-      });
-
-      return this;
-    }
-
-    build(): Blueprint {
-      return Obj.make(Blueprint, { steps: this._steps });
-    }
-  }
-}
-
-/**
- * Blueprint parser API.
- */
-export namespace BlueprintParser {
-  export const create = () => new Parser();
-
-  class Parser {
-    parse({ steps }: BlueprintDefinition): Blueprint {
-      const builder = BlueprintBuilder.create();
-      for (const step of steps) {
-        builder.step(step.instructions, {
-          tools: (step.tools ?? []) as string[],
-        });
-      }
-
-      return builder.build();
-    }
-  }
-}

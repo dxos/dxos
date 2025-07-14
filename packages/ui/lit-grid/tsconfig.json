@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../common/test-utils"
     }
   ]

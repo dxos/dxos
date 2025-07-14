@@ -33,21 +33,24 @@ import { Obj, Type } from '@dxos/echo';
 namespace Proposition {
   const Fields = Schema.Struct({
     text: Schema.String,
-    // children: Schema.optional(Schema.mutable(Schema.Array(Schema.suspend(() => Any)))).pipe(
-    //   Schema.withConstructorDefault(() => []),
-    // ),
+    children: Schema.optional(Schema.mutable(Schema.Array(Schema.suspend((): Schema.Schema<Fields> => Fields)))).pipe(
+      Schema.withConstructorDefault(() => []),
+    ),
   });
 
-  export interface Any extends Schema.Schema.Type<Schema.mutable<typeof Fields>> {}
+  export interface Fields extends Schema.Schema.Type<typeof Fields> {}
 
-  export const Any = Fields.pipe(
+  export const Object = Fields.pipe(
     Type.Obj({
       typename: 'dxos.org/type/Proposition',
       version: '0.1.0',
     }),
   );
 
-  export const make = (props: Pick<Any, 'text'>) => Obj.make(Any, Fields.make(props));
+  export interface Object extends Schema.Schema.Type<typeof Object> {}
+
+  // TODO(burdon): Obfuscates Obj.make?
+  export const make = (props: Pick<Object, 'text'>) => Obj.make(Object, Fields.make(props));
 }
 
 //
@@ -57,13 +60,15 @@ namespace Proposition {
 // - Modules can be associated with tools and MoE.
 //
 
+export namespace Research {}
+
 export namespace OKR {
   const Properties = Schema.Struct({
-    objectives: Schema.mutable(Schema.Array(Proposition.Any)).annotations({
+    objectives: Schema.mutable(Schema.Array(Proposition.Object)).annotations({
       name: 'Objectives',
       description: 'Qualitative, ambitious aspirations.',
     }),
-    keyResults: Schema.mutable(Schema.Array(Proposition.Any)).annotations({
+    keyResults: Schema.mutable(Schema.Array(Proposition.Object)).annotations({
       name: 'Key Results',
       description: 'Quantitative metrics tracking progress towards those objectives.',
     }),
@@ -71,16 +76,16 @@ export namespace OKR {
     description: 'A goal-setting framework defining Objectives and Key Results.',
   });
 
-  const Any = Properties.pipe(
+  const Object = Properties.pipe(
     Type.Obj({
       typename: 'dxos.org/type/OKR',
       version: '0.1.0',
     }),
   );
 
-  export interface Any extends Schema.Schema.Type<Schema.mutable<typeof Any>> {}
+  export interface Object extends Schema.Schema.Type<Schema.mutable<typeof Object>> {}
 
-  export const make = () => Obj.make(Any, { objectives: [], keyResults: [] });
+  export const make = () => Obj.make(Object, { objectives: [], keyResults: [] });
 }
 
 /**
@@ -88,19 +93,19 @@ export namespace OKR {
  */
 export namespace SWOT {
   const Properties = Schema.Struct({
-    // subject: Schema.optional(Ref.Any).annotations({
-    //   description: 'Subject of the analysis, which could be a document or a structured object.',
-    // }),
-    strengths: Schema.mutable(Schema.Array(Proposition.Any)).annotations({
+    subject: Schema.optional(Type.Ref(Proposition.Object)).annotations({
+      description: 'Subject of the analysis, which could be a document or a structured object.',
+    }),
+    strengths: Schema.mutable(Schema.Array(Proposition.Object)).annotations({
       description: 'An attribute of the organization that is helpful in achieving its objectives.',
     }),
-    weaknesses: Schema.mutable(Schema.Array(Proposition.Any)).annotations({
+    weaknesses: Schema.mutable(Schema.Array(Proposition.Object)).annotations({
       description: 'A limitation or deficiency within the organization that could hinder its progress.',
     }),
-    opportunities: Schema.mutable(Schema.Array(Proposition.Any)).annotations({
+    opportunities: Schema.mutable(Schema.Array(Proposition.Object)).annotations({
       description: 'An external factor that the organization could exploit to its advantage.',
     }),
-    threats: Schema.mutable(Schema.Array(Proposition.Any)).annotations({
+    threats: Schema.mutable(Schema.Array(Proposition.Object)).annotations({
       description: 'An external factor that could potentially harm the organization.',
     }),
   }).annotations({
@@ -108,16 +113,16 @@ export namespace SWOT {
       'SWOT is a strategic planning technique used to evaluate the Strengths, Weaknesses, Opportunities, and Threats involved in a project or business venture.',
   });
 
-  const Any = Properties.pipe(
+  const Object = Properties.pipe(
     Type.Obj({
       typename: 'dxos.org/type/SWOT',
       version: '0.1.0',
     }),
   );
 
-  export interface Any extends Schema.Schema.Type<Schema.mutable<typeof Any>> {}
+  export interface Any extends Schema.Schema.Type<Schema.mutable<typeof Object>> {}
 
-  export const make = () => Obj.make(Any, { strengths: [], weaknesses: [], opportunities: [], threats: [] });
+  export const make = () => Obj.make(Object, { strengths: [], weaknesses: [], opportunities: [], threats: [] });
 }
 
 export namespace Plan {
@@ -125,16 +130,16 @@ export namespace Plan {
     name: Schema.String,
   });
 
-  const Any = Properties.pipe(
+  const Object = Properties.pipe(
     Type.Obj({
       typename: 'dxos.org/type/Plan',
       version: '0.1.0',
     }),
   );
 
-  export interface Any extends Schema.Schema.Type<Schema.mutable<typeof Any>> {}
+  export interface Object extends Schema.Schema.Type<Schema.mutable<typeof Object>> {}
 
-  export const make = ({ name }: Any) => Obj.make(Any, { name });
+  export const make = ({ name }: Object) => Obj.make(Object, { name });
 }
 
 // TODO(burdon): Types or variants of a type?

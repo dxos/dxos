@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Message } from '@dxos/ai';
+import { Message, ToolRegistry } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { create } from '@dxos/echo-schema';
 import { AiService, defineFunction, type FunctionDefinition } from '@dxos/functions';
@@ -45,6 +45,7 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
       artifacts: [],
       prompt: '',
       tools: [],
+      toolResolver: new ToolRegistry([]),
     });
 
     return {
