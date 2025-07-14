@@ -7,9 +7,8 @@ import { type TagPickerItemData, type TagPickerOptions } from '@dxos/react-ui-ta
 
 export const blueprints = [DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT];
 
-// TODO(burdon): Add to space?
 const registry: TagPickerItemData[] = blueprints.map((blueprint, i) => ({
-  id: `blueprint-${i}`,
+  id: `blueprint-${i}`, // TODO(burdon): Need static DXN for registry (before added to space).
   label: blueprint.name,
 }));
 
