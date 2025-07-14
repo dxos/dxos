@@ -9,7 +9,13 @@ import React, { type FunctionComponent } from 'react';
 
 import { Capabilities, contributes, Events, IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { TASK_LIST_BLUEPRINT, remoteServiceEndpoints, readDocument, writeDocument } from '@dxos/artifact-testing';
+import {
+  TASK_LIST_BLUEPRINT,
+  remoteServiceEndpoints,
+  readDocument,
+  writeDocument,
+  DESIGN_SPEC_BLUEPRINT,
+} from '@dxos/artifact-testing';
 import { BlueprintBinder, Blueprint } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { ChessPlugin } from '@dxos/plugin-chess';
@@ -176,15 +182,13 @@ const getDecorators = ({
 
           // TODO(burdon): Remove need for this boilerplate. Namespace for types?
           const chat = space.db.add(Obj.make(AIChatType, { queue: Ref.fromDXN(space.queues.create().dxn) }));
-          const doc = space.db.add(
-            Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }),
-          );
-          console.log(doc);
+          space.db.add(Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }));
 
+          // Blueprints.
           const binder = new BlueprintBinder(await chat.queue.load());
-          for (const blueprint of blueprints) {
-            const ref = space.db.add(blueprint);
-            await binder.bind(Ref.make(ref));
+          for (const blueprint of [TASK_LIST_BLUEPRINT]) {
+            const obj = space.db.add(blueprint);
+            await binder.bind(Ref.make(obj));
           }
         },
       }),
@@ -229,21 +233,21 @@ export const WithDocument = {
   },
 } satisfies Story;
 
-export const WithArtifacts = {
-  decorators: getDecorators({
-    config: remoteConfig,
-    plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
-  }),
-  args: {
-    components: [ChatContainer],
-  },
-} satisfies Story;
+// export const WithArtifacts = {
+//   decorators: getDecorators({
+//     config: remoteConfig,
+//     plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
+//   }),
+//   args: {
+//     components: [ChatContainer],
+//   },
+// } satisfies Story;
 
 export const WithBlueprints = {
   decorators: getDecorators({
     config: remoteConfig,
     plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
-    blueprints: [TASK_LIST_BLUEPRINT],
+    blueprints: [DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT],
   }),
   args: {
     components: [ChatContainer],

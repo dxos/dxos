@@ -6,8 +6,10 @@ import React, { forwardRef, useState } from 'react';
 
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import {
+  DropdownMenu,
   Icon,
   IconButton,
+  Input,
   Select,
   type ThemedClassName,
   Toolbar,
@@ -106,15 +108,7 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
           <ChatEditor classNames='pbs-2 w-full' lineWrapping {...props} ref={promptRef} />
         </div>
         <Toolbar.Root classNames='bg-transparent overflow-visible'>
-          <IconButton
-            disabled
-            icon='ph--plus--regular'
-            variant='ghost'
-            size={5}
-            iconOnly
-            label={t('button add blueprint')}
-            onClick={onCancel}
-          />
+          <OptionMenu />
 
           {(onSearchBlueprints && (
             <TagPicker
@@ -139,6 +133,37 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
     );
   },
 );
+
+const menuItems = [
+  { id: 'item-1', label: 'menu item 1' },
+  { id: 'item-2', label: 'menu item 2' },
+];
+
+const OptionMenu = () => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <IconButton icon='ph--plus--regular' variant='ghost' size={5} iconOnly label={t('button add blueprint')} />
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content side='left'>
+          <DropdownMenu.Viewport>
+            {menuItems.map((item) => (
+              <DropdownMenu.Item key={item.id}>
+                <Input.Root>
+                  <Input.Checkbox onCheckedChange={(checked) => console.log(checked)} />
+                  <span>{item.label}</span>
+                </Input.Root>
+              </DropdownMenu.Item>
+            ))}
+          </DropdownMenu.Viewport>
+          <DropdownMenu.Arrow />
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  );
+};
 
 // TODO(burdon): Consider events over multiple callbacks.
 type ActionButtonsProps = ChatPromptProps & {

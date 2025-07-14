@@ -2,23 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Message, type ExecutableTool } from '@dxos/ai';
-import type { ArtifactDefinition } from '@dxos/artifact';
+import { computed } from '@preact/signals-core';
+import { Array, pipe } from 'effect';
 
+import { Message, type ExecutableTool } from '@dxos/ai';
+import { type ArtifactDefinition } from '@dxos/artifact';
+import { Event } from '@dxos/async';
 import { Obj, Ref, type Relation } from '@dxos/echo';
-import type { Queue } from '@dxos/echo-db';
+import { type Queue } from '@dxos/echo-db';
 import { AiService, ToolResolverService, type ServiceContainer } from '@dxos/functions';
 import { ComplexSet } from '@dxos/util';
-import { AISession, SessionRunOptions } from '../session';
-import { Blueprint, BlueprintBinding } from '../blueprint';
-import { Event } from '@dxos/async';
-import { Array, pipe } from 'effect';
-import { computed } from '@preact/signals-core';
+
+import { type Blueprint, BlueprintBinding } from '../blueprint';
+import { AISession, type SessionRunOptions } from '../session';
 
 export interface ConversationRunOptions {
-  prompt: string;
-
   systemPrompt?: string;
+  prompt: string;
 
   /**
    * @depreacated
@@ -29,6 +29,7 @@ export interface ConversationRunOptions {
   artifacts?: ArtifactDefinition[];
   extensions?: ToolContextExtensions;
   generationOptions?: SessionRunOptions['generationOptions'];
+
   // TODO(dmaretskyi): Move into conversation.
   artifactDiffResolver?: SessionRunOptions['artifactDiffResolver'];
 }
@@ -112,6 +113,11 @@ export class Conversation {
 export class BlueprintBinder {
   constructor(private readonly _queue: Queue) {}
 
+  /**
+   * Reactive query of all bound blueprints.
+   */
+  readonly bindings = computed(() => this._reduce(this._queue.objects));
+
   bind = async (blueprint: Ref.Ref<Blueprint>): Promise<void> => {
     await this._queue.append([
       Obj.make(BlueprintBinding, {
@@ -137,11 +143,6 @@ export class BlueprintBinder {
     const queueItems = await this._queue.queryObjects();
     return this._reduce(queueItems);
   };
-
-  /**
-   * Reactive query of all bound blueprints.
-   */
-  bindings = computed(() => this._reduce(this._queue.objects));
 
   private _reduce(items: (Obj.Any | Relation.Any)[]): readonly Ref.Ref<Blueprint>[] {
     return pipe(

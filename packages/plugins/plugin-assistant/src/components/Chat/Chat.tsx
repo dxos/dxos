@@ -18,11 +18,10 @@ import { getSpace, useQueue, type Space } from '@dxos/react-client/echo';
 import { type ReferencesOptions } from '@dxos/react-ui-chat';
 import { type ScrollController } from '@dxos/react-ui-components';
 
-import { useChatProcessor, useContextProvider, useServiceContainer } from '../../hooks';
+import { type ChatProcessor, useChatProcessor, useContextProvider, useServiceContainer } from '../../hooks';
 import { type AIChatType, type AssistantSettingsProps } from '../../types';
 import { ChatPrompt as NativeChatPrompt, type ChatPromptProps } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps } from '../ChatThread';
-import { getDebugName } from '@dxos/util';
 
 // interface ContextProvider {
 //   query({ query }: { query: string }): Promise<ReferenceData[]>;
@@ -47,6 +46,7 @@ type ChatEvents = 'submit' | 'scroll';
 type ChatContextValue = {
   update: Event<ChatEvents>;
   space: Space;
+  processor: ChatProcessor;
   messages: Message[];
   error?: Error;
   processing: boolean;
@@ -72,18 +72,11 @@ type ChatRootProps = PropsWithChildren<{
   noPluginArtifacts?: boolean;
 }>;
 
-const ChatRoot = ({
-  children,
-  part,
-  chat,
-  settings,
-  artifact,
-  onOpenChange,
-  noPluginArtifacts }: ChatRootProps) => {
+const ChatRoot = ({ children, part, chat, settings, artifact, onOpenChange, noPluginArtifacts }: ChatRootProps) => {
   const space = getSpace(chat);
   const serviceContainer = useServiceContainer({ space });
-  const processor = useChatProcessor({ part, chat, space, serviceContainer, artifact, settings, noPluginArtifacts });
   const messageQueue = useQueue<Message>(chat?.queue.dxn);
+  const processor = useChatProcessor({ part, chat, space, serviceContainer, artifact, settings, noPluginArtifacts });
 
   // Event queue.
   const update = useMemo(() => new Event<ChatEvents>(), []);
@@ -141,7 +134,7 @@ const ChatRoot = ({
     }
   }, [processor]);
 
-  if (!space) {
+  if (!space || !processor) {
     return null;
   }
 
@@ -149,6 +142,7 @@ const ChatRoot = ({
     <ChatContextProvider
       update={update}
       space={space}
+      processor={processor}
       messages={messages}
       error={processor?.error.value}
       processing={processor?.streaming.value ?? false}
