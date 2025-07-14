@@ -9,10 +9,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider } from '@dxos/react-ui';
 
-import { Test } from './Test';
+import { TEST_ID, Test } from './Test';
 import * as stories from './Test.stories';
-
-export const TEST_ID = 'test';
 
 const { Default } = composeStories(stories);
 
