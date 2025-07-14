@@ -35,8 +35,6 @@ permissions:
 env:
   DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
   DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
-  MOON_DEBUG_REMOTE: true
-
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -68,7 +66,7 @@ jobs:
 
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :lint :build --affected --remote --log=trace
+        run: moon run :lint :build --affected --remote
 
       - name: Check All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
@@ -122,7 +120,7 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :test --affected --remote --log=trace
+        run: moon run :test --affected --remote
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
