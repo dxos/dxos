@@ -10,10 +10,15 @@ import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo-schema';
 
 import { Actor } from './actor';
 
+// TODO(dmaretskyi): Namespace (e.g. ContentBlock.Text).
+// TODO(dmaretskyi): Consider renaming it to Part.
+
 export const AbstractContentBlock = Schema.Struct({
+  /**
+   * In streaming mode, this is set to `true` when the block is not complete.
+   */
   pending: Schema.optional(Schema.Boolean),
 });
-
 export interface AbstractContentBlock extends Schema.Schema.Type<typeof AbstractContentBlock> {}
 
 /**
@@ -23,26 +28,92 @@ export const TextContentBlock = Schema.extend(
   AbstractContentBlock,
   Schema.Struct({
     type: Schema.Literal('text'),
-    disposition: Schema.optional(Schema.String), // (e.g., "cot").
+
+    mimeType: Schema.optional(Schema.String),
     text: Schema.String,
+
+    /**
+     * @deprecated
+     */
+    disposition: Schema.optional(Schema.String), // (e.g., "cot").
   }),
 ).pipe(Schema.mutable);
-
 export interface TextContentBlock extends Schema.Schema.Type<typeof TextContentBlock> {}
 
 /**
- * JSON
+ * Represents part of the reasoning carried out by the model to generate a
+ * response.
  */
-export const JsonContentBlock = Schema.extend(
+export const ReasoningContentBlock = Schema.extend(
   AbstractContentBlock,
   Schema.Struct({
-    type: Schema.Literal('json'),
-    disposition: Schema.optional(Schema.String), // (e.g., "tool_use").
-    data: Schema.String,
+    type: Schema.Literal('reasoning'),
+
+    /**
+     * The reasoning content that the model used to return the output.
+     */
+    reasoningText: Schema.optional(Schema.String),
+
+    /**
+     * The content in the reasoning that was encrypted by the model provider for
+     * safety reasons.
+     */
+    redactedText: Schema.optional(Schema.String),
+
+    /**
+     * An optional signature which verifies that the reasoning text was generated
+     * by the model.
+     */
+    signature: Schema.optional(Schema.String),
   }),
 ).pipe(Schema.mutable);
 
-export interface JsonContentBlock extends Schema.Schema.Type<typeof JsonContentBlock> {}
+/**
+ * Represents a tool call made by the model.
+ */
+export const ToolCallContentBlock = Schema.extend(
+  AbstractContentBlock,
+  Schema.Struct({
+    type: Schema.Literal('toolCall'),
+
+    /**
+     * Id unique to this tool call.
+     * Set by the model provider.
+     */
+    toolCallId: Schema.String,
+
+    /**
+     * The name of the tool that was called.
+     */
+    name: Schema.String,
+
+    // TODO(dmaretskyi): We might need to be able to reprsent partial json.
+    /**
+     * Parsed input of the tool call.
+     */
+    input: Schema.Unknown,
+  }),
+).pipe(Schema.mutable);
+export interface ToolCallContentBlock extends Schema.Schema.Type<typeof ToolCallContentBlock> {}
+
+export const ToolResultContentBlock = Schema.extend(
+  AbstractContentBlock,
+  Schema.Struct({
+    type: Schema.Literal('toolResult'),
+
+    /**
+     * Id of the tool call that this result is for.
+     * Must match the Id of the preceding {@link ToolCallContentBlock}.
+     */
+    toolCallId: Schema.String,
+
+    /**
+     * The result of the tool call.
+     */
+    result: Schema.Unknown,
+  }),
+).pipe(Schema.mutable);
+export interface ToolResultContentBlock extends Schema.Schema.Type<typeof ToolResultContentBlock> {}
 
 export const Base64ImageSource = Schema.Struct({
   type: Schema.Literal('base64'),
@@ -72,8 +143,31 @@ export const ImageContentBlock = Schema.extend(
     source: Schema.optional(ImageSource),
   }),
 ).pipe(Schema.mutable);
-
 export interface ImageContentBlock extends Schema.Schema.Type<typeof ImageContentBlock> {}
+
+export const FileContentBlock = Schema.extend(
+  AbstractContentBlock,
+  Schema.Struct({
+    type: Schema.Literal('file'),
+
+    /**
+     * The URL of the file.
+     * Data URLs allow for embedding small files directly in the message.
+     */
+    url: Schema.String,
+
+    /**
+     * The name of the file.
+     */
+    name: Schema.optional(Schema.String),
+
+    /**
+     * The MIME type of the file.
+     */
+    mediaType: Schema.optional(Schema.String),
+  }),
+).pipe(Schema.mutable);
+export interface FileContentBlock extends Schema.Schema.Type<typeof FileContentBlock> {}
 
 /**
  * Reference
@@ -87,7 +181,6 @@ export const ReferenceContentBlock = Schema.extend(
     reference: Type.Ref(Type.Expando),
   }),
 ).pipe(Schema.mutable);
-
 export interface ReferenceContentBlock extends Schema.Schema.Type<typeof ReferenceContentBlock> {}
 
 /**
@@ -101,15 +194,89 @@ export const TranscriptContentBlock = Schema.extend(
     text: Schema.String,
   }),
 ).pipe(Schema.mutable);
-
 export interface TranscriptContentBlock extends Schema.Schema.Type<typeof TranscriptContentBlock> {}
+
+/**
+ * Suggestion for a follow-up prompt for the user.
+ */
+export const SuggestContentBlock = Schema.extend(
+  AbstractContentBlock,
+  Schema.Struct({
+    type: Schema.Literal('suggestion'),
+    text: Schema.String,
+  }),
+).pipe(Schema.mutable);
+export interface SuggestContentBlock extends Schema.Schema.Type<typeof SuggestContentBlock> {}
+
+/**
+ * Proposed answer to the assistant's question.
+ */
+export const ProposalContentBlock = Schema.extend(
+  AbstractContentBlock,
+  Schema.Struct({
+    type: Schema.Literal('proposal'),
+    text: Schema.String,
+  }),
+).pipe(Schema.mutable);
+export interface ProposalContentBlock extends Schema.Schema.Type<typeof ProposalContentBlock> {}
+
+/**
+ * Associates artifact (of a specific version) with this conversation.
+ * Used to track associated artifacts as well their changes during the conversation.
+ */
+// TODO(dmaretskyi): What's the relation of this to the reference content block?
+export const ArtifactPinContentBlock = Schema.extend(
+  AbstractContentBlock,
+  Schema.Struct({
+    type: Schema.Literal('artifactPin'),
+
+    // TODO(dmaretskyi): Consider making this a DXN.
+    objectId: ObjectId,
+
+    // TODO(dmaretskyi): Better type.
+    version: Schema.Unknown,
+  }),
+).pipe(Schema.mutable);
+export interface ArtifactPinContentBlock extends Schema.Schema.Type<typeof ArtifactPinContentBlock> {}
+
+
+/**
+ * Model priniting info about the list of available tools.
+ */
+export const ToolListContentBlock = Schema.extend(
+  AbstractContentBlock,
+  Schema.Struct({
+    type: Schema.Literal('toolList'),
+  }),
+).pipe(Schema.mutable);
+export interface ToolListContentBlock extends Schema.Schema.Type<typeof ToolListContentBlock> {}
+
+/**
+ * JSON
+ * @deprecated Use {@link TextContentBlock} with mime type of `application/json`.
+ */
+export const JsonContentBlock = Schema.extend(
+  AbstractContentBlock,
+  Schema.Struct({
+    type: Schema.Literal('json'),
+    disposition: Schema.optional(Schema.String), // (e.g., "tool_use").
+    data: Schema.String,
+  }),
+).pipe(Schema.mutable);
+export interface JsonContentBlock extends Schema.Schema.Type<typeof JsonContentBlock> {}
 
 export const MessageContentBlock = Schema.Union(
   TextContentBlock,
-  JsonContentBlock,
+  ReasoningContentBlock,
   ImageContentBlock,
+  FileContentBlock,
   ReferenceContentBlock,
   TranscriptContentBlock,
+  SuggestContentBlock,
+  ProposalContentBlock,
+  ArtifactPinContentBlock,
+  ToolListContentBlock,
+  JsonContentBlock,
 );
 
 /**
