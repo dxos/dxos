@@ -228,6 +228,17 @@ export const WithDocument = {
   },
 } satisfies Story;
 
+export const WithBlueprints = {
+  decorators: getDecorators({
+    config: remoteConfig,
+    plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
+    blueprints: [TASK_LIST_BLUEPRINT],
+  }),
+  args: {
+    components: [ChatContainer, DocumentContainer],
+  },
+} satisfies Story;
+
 // export const WithArtifacts = {
 //   decorators: getDecorators({
 //     config: remoteConfig,
@@ -237,14 +248,3 @@ export const WithDocument = {
 //     components: [ChatContainer],
 //   },
 // } satisfies Story;
-
-export const WithBlueprints = {
-  decorators: getDecorators({
-    config: remoteConfig,
-    plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
-    blueprints: [TASK_LIST_BLUEPRINT],
-  }),
-  args: {
-    components: [ChatContainer],
-  },
-} satisfies Story;
