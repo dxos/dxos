@@ -76,6 +76,9 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../core/functions"
+    },
+    {
       "path": "../../core/halo/keyring"
     },
     {
@@ -101,6 +104,9 @@
     },
     {
       "path": "../../sdk/client-services"
+    },
+    {
+      "path": "../../sdk/config"
     }
   ],
   "ts-node": {
