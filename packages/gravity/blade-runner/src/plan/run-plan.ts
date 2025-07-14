@@ -86,7 +86,7 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
     spec,
   };
 
-  {
+  if (options.shouldBuildBrowser) {
     // TODO(mykola): Detect somehow if we need to build the browser bundle.
     const begin = Date.now();
     const pathToBundle = join(outDir, 'artifacts', 'browser.js');

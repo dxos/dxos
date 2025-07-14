@@ -29,6 +29,7 @@ export type GlobalOptions = {
   profile?: boolean;
   debug?: boolean;
   headless?: boolean;
+  shouldBuildBrowser?: boolean;
 };
 
 export type TestParams<S> = {
