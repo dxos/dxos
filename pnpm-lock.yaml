@@ -2339,9 +2339,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      chess.js:
-        specifier: ^1.0.0
-        version: 1.2.0
     devDependencies:
       '@effect/ai':
         specifier: ^0.21.16

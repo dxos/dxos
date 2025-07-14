@@ -105,7 +105,7 @@ const Section: FC<{
 };
 
 export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?: Space }>) => {
-  const { activeBlueprints } = useChatContext(ToolboxContainer.name);
+  const { processor } = useChatContext(ToolboxContainer.name);
 
   // Plugin artifacts.
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
@@ -133,7 +133,7 @@ export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?
       artifacts={artifactDefinitions}
       services={serviceTools}
       functions={functions}
-      activeBlueprints={activeBlueprints}
+      activeBlueprints={processor.blueprints}
     />
   );
 };
