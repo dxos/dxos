@@ -1,0 +1,82 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import { Blueprint, type BlueprintRegistry } from '@dxos/assistant';
+import { type Space } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import { type TagPickerOptions } from '@dxos/react-ui-tag-picker';
+
+import { type ChatProcessor } from '../../hooks';
+
+/**
+ * Adapter.
+ */
+export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor, registry?: BlueprintRegistry) => {
+  const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
+  const blueprintTags = useMemo(
+    () => blueprints.map((blueprint) => ({ id: blueprint.id, label: blueprint.name })),
+    [blueprints],
+  );
+
+  // TODO(burdon):
+  useEffect(() => {
+    if (!space) {
+      return;
+    }
+
+    const resolver = space.db.graph.createRefResolver({
+      context: {
+        space: space.db.spaceId,
+      },
+    });
+
+    const t = setTimeout(async () => {
+      const blueprints: Blueprint[] = [];
+      for (const ref of processor?.blueprints ?? []) {
+        const obj = await resolver.resolve(ref.dxn);
+        invariant(Obj.instanceOf(Blueprint, obj));
+        if (obj) {
+          blueprints.push(obj);
+        }
+      }
+
+      setBlueprints(blueprints);
+    });
+    return () => clearTimeout(t);
+  }, [space, processor, registry]);
+
+  // Blueprints.
+  const handleSearchBlueprints = useCallback<NonNullable<TagPickerOptions['onSearch']>>(
+    (text, ids) => {
+      return (
+        registry
+          ?.query()
+          .filter(
+            ({ blueprintId, name }) =>
+              ids.indexOf(blueprintId) === -1 && name.toLowerCase().includes(text.toLowerCase()),
+          )
+          .map((blueprint) => ({ id: blueprint.blueprintId, label: blueprint.name })) ?? []
+      );
+    },
+    [registry],
+  );
+
+  const handleUpdateBlueprints = useCallback<NonNullable<TagPickerOptions['onUpdate']>>(
+    (ids) => {
+      // TODO(burdon): Add to space.
+      invariant(space);
+      // const current = space.db.query(Filter.type(Blueprint));
+      // for (const id of ids) {
+      //   const blueprint = registry?.query().find((blueprint) => blueprint.blueprintId === id);
+      //   processor?.blueprints.bind();
+      // }
+    },
+    [processor, registry, space],
+  );
+
+  return [blueprintTags, handleSearchBlueprints, handleUpdateBlueprints] as const;
+};
