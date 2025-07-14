@@ -17,21 +17,17 @@ import { type ArtifactDefinition } from '@dxos/artifact';
 import {
   type AISession,
   type ArtifactDiffResolver,
-  type Blueprint,
   type BlueprintRegistry,
-type BlueprintBinder,
+  type BlueprintBinder,
   type Conversation,
 } from '@dxos/assistant';
 import { Context } from '@dxos/context';
-import { type Ref } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Filter, getVersion, type Live, type Space } from '@dxos/react-client/echo';
+import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
 
 // TODO(burdon): Factor out.
 declare global {
   interface ToolContextExtensions {
-    // TODO(burdon): Remove?
     space?: Space;
     dispatch?: PromiseIntentDispatcher;
   }
@@ -42,8 +38,8 @@ type RequestOptions = {
 };
 
 export type ChatProcessorOptions = {
-  // TODO(burdon): Toolkit.
-  tools?: ExecutableTool[];
+  // TODO(burdon): Change to AiToolkit.
+  tools?: readonly ExecutableTool[];
   artifacts?: readonly ArtifactDefinition[];
   extensions?: ToolContextExtensions;
   blueprintRegistry?: BlueprintRegistry;
@@ -60,15 +56,19 @@ const defaultOptions: ChatProcessorOptions = {
  * Executes tools based on AI responses.
  * Supports cancellation of in-progress requests.
  */
+// TODO(burdon): Rename ChatContext?
 export class ChatProcessor {
-  /** Pending messages (incl. the current user request). */
+  /**
+   * Pending messages (incl. the current user request).
+   * @reactive
+   */
   private readonly _pending: Signal<Message[]> = signal([]);
 
-  /** Current streaming block (from the AI service). */
+  /**
+   * Current streaming block (from the AI service).
+   * @reactive
+   */
   private readonly _block: Signal<MessageContentBlock | undefined> = signal(undefined);
-
-  /** Current session. */
-  private _session: AISession | undefined = undefined;
 
   /**
    * Streaming state.
@@ -88,10 +88,8 @@ export class ChatProcessor {
    */
   public readonly messages: Signal<Message[]> = computed(() => {
     const messages = [...this._pending.value];
-    if (this._block.value) {
-      const current = messages.pop();
-      invariant(current);
-      const { content, ...rest } = current;
+    if (this._block.value && messages.length) {
+      const { content, ...rest } = messages.pop()!;
       const message = { ...rest, content: [...content, this._block.value] };
       messages.push(message);
     }
@@ -99,7 +97,11 @@ export class ChatProcessor {
     return messages;
   });
 
+  // TODO(burdon): Replace with Toolkit.
   private _tools?: ExecutableTool[];
+
+  /** Current session. */
+  private _session: AISession | undefined = undefined;
 
   constructor(
     private readonly _conversation: Conversation,
@@ -112,10 +114,6 @@ export class ChatProcessor {
     return this._conversation;
   }
 
-  get blueprintRegistry() {
-    return this._options.blueprintRegistry;
-  }
-
   /**
    * Binder of active blueprints attached to this coversation.
    */
@@ -123,12 +121,16 @@ export class ChatProcessor {
     return this._conversation.blueprints;
   }
 
+  get blueprintRegistry() {
+    return this._options.blueprintRegistry;
+  }
+
   get tools() {
     return this._tools;
   }
 
   /**
-   * Update tools.
+   * @deprecated Replace with blueprints
    */
   setTools(tools: ExecutableTool[]): void {
     this._tools = tools;
@@ -186,11 +188,12 @@ export class ChatProcessor {
             if (m.id === message.id) {
               return {
                 ...m,
-                content: m.content.map((b) =>
-                  b.type === 'tool_use' && b.id === toolUse.id ? { ...b, currentStatus: status } : b,
+                content: m.content.map((block) =>
+                  block.type === 'tool_use' && block.id === toolUse.id ? { ...block, currentStatus: status } : block,
                 ),
               };
             }
+
             return m;
           });
         } else {
@@ -204,10 +207,10 @@ export class ChatProcessor {
         artifacts: [...(this._options.artifacts ?? [])],
         requiredArtifactIds: this._options.artifacts?.map((artifact) => artifact.id) ?? [],
 
-        // TODO(dmaretskyi): Migrate to ToolRegistry.
-        executableTools: this._tools ?? [],
-        prompt: message,
+        // TODO(dmaretskyi): Migrate to Effect's AiToolkit.
+        tools: this._tools ?? [],
         systemPrompt: this._options.systemPrompt,
+        prompt: message,
         extensions: this._options.extensions,
         artifactDiffResolver: this._artifactDiffResolver,
         generationOptions: {
@@ -224,6 +227,7 @@ export class ChatProcessor {
         this.error.value = new Error('AI service error', { cause: err });
       }
     }
+
     return this._reset();
   }
 
@@ -254,6 +258,7 @@ export class ChatProcessor {
     if (!space) {
       return new Map();
     }
+
     const versions = new Map();
     await Promise.all(
       artifacts.map(async (artifact) => {

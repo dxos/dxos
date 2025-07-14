@@ -16,15 +16,13 @@ export interface ConversationRunOptions {
   systemPrompt?: string;
   prompt: string;
 
-  /**
-   * @depreacated
-   */
-  requiredArtifactIds?: string[];
-
-  executableTools?: ExecutableTool[];
+  tools?: ExecutableTool[];
   artifacts?: ArtifactDefinition[];
   extensions?: ToolContextExtensions;
   generationOptions?: SessionRunOptions['generationOptions'];
+
+  /** @depreacated Should be managed by the conversation. */
+  requiredArtifactIds?: string[];
 
   // TODO(dmaretskyi): Move into conversation.
   artifactDiffResolver?: SessionRunOptions['artifactDiffResolver'];
@@ -51,7 +49,7 @@ export class Conversation {
   public readonly onBegin = new Event<AISession>();
 
   /**
-   * Blueprints that are bound to the conversation.
+   * Blueprints bound to the conversation.
    */
   public readonly blueprints: BlueprintBinder;
 
@@ -81,7 +79,7 @@ export class Conversation {
       // TODO(dmaretskyi): Artifacts come from the blueprint.
       artifacts: options.artifacts ?? [],
       tools: blueprints.at(0)?.tools ?? [],
-      executableTools: options.executableTools,
+      executableTools: options.tools,
       requiredArtifactIds: options.requiredArtifactIds,
       client: this._serviceContainer.getService(AiService).client,
       toolResolver: this._serviceContainer.getService(ToolResolverService).toolResolver,

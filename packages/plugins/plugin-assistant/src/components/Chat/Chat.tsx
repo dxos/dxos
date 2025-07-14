@@ -47,33 +47,34 @@ const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('C
 type ChatRootProps = PropsWithChildren<{
   chat?: AIChatType;
   processor?: ChatProcessor;
-  // TODO(burdon): Move into processor context?
+  // TODO(burdon): Move into processor context? Collection?
   artifact?: Expando;
   onOpenChange?: ChatPromptProps['onOpenChange'];
 }>;
 
-const ChatRoot = ({ children, chat, processor, artifact, onOpenChange, ...props }: ChatRootProps) => {
+const ChatRoot = ({ children, chat, processor, artifact, onOpenChange }: ChatRootProps) => {
   const space = getSpace(chat);
-  const messageQueue = useQueue<Message>(chat?.queue.dxn);
 
   // Event queue.
   const update = useMemo(() => new Event<ChatEvents>(), []);
 
   // Messages.
+  const queue = useQueue<Message>(chat?.queue.dxn);
   const messages = useMemo(
     () =>
       dedupeWith(
-        [...(messageQueue?.objects?.filter(Obj.instanceOf(Message)) ?? []), ...(processor?.messages.value ?? [])],
+        [...(queue?.objects?.filter(Obj.instanceOf(Message)) ?? []), ...(processor?.messages.value ?? [])],
         (a, b) => a.id === b.id,
       ),
-    [messageQueue?.objects, processor?.messages.value],
+    [queue?.objects, processor?.messages.value],
   );
 
   // Post last message to document.
+  // TODO(burdon): Replace with tool.
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   useEffect(() => {
-    if (!processor?.streaming.value && messageQueue?.objects && artifact) {
-      const message = messageQueue.objects[messageQueue.objects.length - 1];
+    if (!processor?.streaming.value && queue?.objects && artifact) {
+      const message = queue.objects[queue.objects.length - 1];
       if (dispatch && space && chat && message) {
         void dispatch(
           createIntent(CollaborationActions.InsertContent, {
@@ -84,7 +85,7 @@ const ChatRoot = ({ children, chat, processor, artifact, onOpenChange, ...props 
         );
       }
     }
-  }, [messageQueue, processor?.streaming.value]);
+  }, [queue, processor?.streaming.value]);
 
   const handleSubmit = useCallback(
     (text: string) => {
@@ -98,12 +99,12 @@ const ChatRoot = ({ children, chat, processor, artifact, onOpenChange, ...props 
       onOpenChange?.(true);
       update.emit('submit');
 
-      invariant(messageQueue);
+      invariant(queue);
       void processor.request(text);
 
       return true;
     },
-    [processor, messageQueue, onOpenChange],
+    [processor, queue, onOpenChange],
   );
 
   const handleCancel = useCallback(() => {
@@ -119,7 +120,6 @@ const ChatRoot = ({ children, chat, processor, artifact, onOpenChange, ...props 
 
   return (
     <ChatContextProvider
-      {...props}
       update={update}
       space={space}
       messages={messages}

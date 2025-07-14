@@ -13,7 +13,7 @@ import { type TagPickerOptions } from '@dxos/react-ui-tag-picker';
 import { type ChatProcessor } from '../../hooks';
 
 /**
- * Adapter.
+ * Adapter for selecting and updating blueprints for the current processor and conversation.
  */
 export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor) => {
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
@@ -49,7 +49,6 @@ export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor) =
     return () => clearTimeout(t);
   }, [space, processor]);
 
-  // Blueprints.
   const handleSearchBlueprints = useCallback<NonNullable<TagPickerOptions['onSearch']>>(
     (text, ids) => {
       return (
@@ -65,10 +64,10 @@ export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor) =
     [processor],
   );
 
-  // Update conversation and aspace.
   const handleUpdateBlueprints = useCallback<NonNullable<TagPickerOptions['onUpdate']>>(
     async (ids) => {
       invariant(space);
+      invariant(processor);
       const { objects: current } = await space.db.query(Filter.type(Blueprint)).run();
       for (const id of ids) {
         const blueprint = processor.blueprintRegistry?.query().find((blueprint) => blueprint.key === id);
@@ -82,7 +81,7 @@ export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor) =
           local = space.db.add(blueprint);
         }
 
-        processor?.blueprints.bind(Ref.make(local));
+        await processor.blueprints.bind(Ref.make(local));
       }
     },
     [processor, space],
