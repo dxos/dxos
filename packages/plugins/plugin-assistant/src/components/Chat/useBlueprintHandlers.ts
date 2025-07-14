@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Blueprint, type BlueprintRegistry } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type TagPickerOptions } from '@dxos/react-ui-tag-picker';
 
@@ -56,27 +56,27 @@ export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor, r
         registry
           ?.query()
           .filter(
-            ({ blueprintId, name }) =>
+            ({ key: blueprintId, name }) =>
               ids.indexOf(blueprintId) === -1 && name.toLowerCase().includes(text.toLowerCase()),
           )
-          .map((blueprint) => ({ id: blueprint.blueprintId, label: blueprint.name })) ?? []
+          .map((blueprint) => ({ id: blueprint.key, label: blueprint.name })) ?? []
       );
     },
     [registry],
   );
 
+  // Update conversation and aspace.
   const handleUpdateBlueprints = useCallback<NonNullable<TagPickerOptions['onUpdate']>>(
     async (ids) => {
-      // TODO(burdon): Add to space.
       invariant(space);
       const { objects: current } = await space.db.query(Filter.type(Blueprint)).run();
       for (const id of ids) {
-        const blueprint = registry?.query().find((blueprint) => blueprint.blueprintId === id);
+        const blueprint = registry?.query().find((blueprint) => blueprint.key === id);
         if (!blueprint) {
           continue;
         }
 
-        let local = current?.find((blueprint) => blueprint.blueprintId === id);
+        let local = current?.find((blueprint) => blueprint.key === id);
         if (!local) {
           // TODO(dmaretskyi): We might need to `clone` the blueprint here, since the db.add returns the same object reference.
           local = space.db.add(blueprint);

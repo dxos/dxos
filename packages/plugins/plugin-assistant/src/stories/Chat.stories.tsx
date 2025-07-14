@@ -177,12 +177,16 @@ const getDecorators = ({
 
           // TODO(burdon): Remove need for this boilerplate. Namespace for types?
           const chat = space.db.add(Obj.make(AIChatType, { queue: Ref.fromDXN(space.queues.create().dxn) }));
-          space.db.add(Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }));
 
-          // Blueprints.
+          // TODO(burdon): Add to conversation context.
+          const document = space.db.add(
+            Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }),
+          );
+
+          // Clone blueprints and bind to conversation.
           const binder = new BlueprintBinder(await chat.queue.load());
           for (const blueprint of blueprints) {
-            const obj = space.db.add(blueprint);
+            const obj = space.db.add(Obj.make(Blueprint, { ...blueprint }));
             await binder.bind(Ref.make(obj));
           }
         },
@@ -228,6 +232,17 @@ export const WithDocument = {
   },
 } satisfies Story;
 
+export const WithBlueprints = {
+  decorators: getDecorators({
+    config: remoteConfig,
+    plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
+    blueprints: [TASK_LIST_BLUEPRINT],
+  }),
+  args: {
+    components: [ChatContainer, DocumentContainer],
+  },
+} satisfies Story;
+
 // export const WithArtifacts = {
 //   decorators: getDecorators({
 //     config: remoteConfig,
@@ -237,14 +252,3 @@ export const WithDocument = {
 //     components: [ChatContainer],
 //   },
 // } satisfies Story;
-
-export const WithBlueprints = {
-  decorators: getDecorators({
-    config: remoteConfig,
-    plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
-    blueprints: [TASK_LIST_BLUEPRINT],
-  }),
-  args: {
-    components: [ChatContainer],
-  },
-} satisfies Story;

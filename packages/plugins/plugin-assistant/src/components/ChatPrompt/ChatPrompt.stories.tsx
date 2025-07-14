@@ -13,7 +13,6 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { ChatPrompt } from './ChatPrompt';
 import { meta as pluginMeta } from '../../meta';
-import { onSearchBlueprints } from '../../testing';
 import { translations } from '../../translations';
 
 const meta = {
@@ -64,6 +63,5 @@ export const Expanded = {
     classNames: 'w-[40rem] p-1 border border-gray-200 rounded',
     compact: false,
     blueprints: [],
-    onSearchBlueprints,
   },
 } satisfies Story;
