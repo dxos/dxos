@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { ToolId } from '@dxos/ai';
 import { Type } from '@dxos/echo';
-import { Format, LabelAnnotation } from '@dxos/echo-schema';
+import { LabelAnnotation } from '@dxos/echo-schema';
 
 /**
  * Blueprint schema defines the structure for AI assistant blueprints.
@@ -16,7 +16,8 @@ export const Blueprint = Schema.Struct({
   /**
    * Global registry ID.
    */
-  key: Format.DXN.annotations({
+  // TODO(burdon): Create Format type.
+  key: Schema.String.annotations({
     description: 'Unique system name for the blueprint',
   }),
 
