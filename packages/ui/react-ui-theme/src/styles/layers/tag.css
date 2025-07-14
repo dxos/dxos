@@ -6,15 +6,9 @@
 
 @layer dx-components {
   .dx-tag {
-    @apply inline-block text-xs font-semibold mli-0.5 pli-1 rounded-sm cursor-default truncate;
+    @apply inline-block text-xs font-semibold m-0.5 pli-1 rounded-sm cursor-default truncate;
     padding-block: var(--dx-tag-padding-block);
     user-select: none;
-
-    .dx-grid__cell__content:has(&) {
-      .dx-tag {
-        vertical-align: top;
-      }
-    }
   }
 
   .dx-tag[data-hue='neutral'],

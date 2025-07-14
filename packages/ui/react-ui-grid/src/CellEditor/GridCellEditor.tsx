@@ -8,11 +8,13 @@ import { CellEditor, type CellEditorProps } from './CellEditor';
 import { type GridScopedProps, useGridContext, type DxGridCellIndex } from '../Grid';
 
 export type GridCellEditorProps = GridScopedProps<
-  Pick<CellEditorProps, 'extension' | 'onBlur'> & { getCellContent: (index: DxGridCellIndex) => string | undefined }
+  Pick<CellEditorProps, 'extension' | 'onBlur' | 'slots'> & {
+    getCellContent: (index: DxGridCellIndex) => string | undefined;
+  }
 >;
 
-export const GridCellEditor = ({ extension, getCellContent, onBlur, __gridScope }: GridCellEditorProps) => {
-  const { id, editing, setEditing, editBox } = useGridContext('GridSheetCellEditor', __gridScope);
+export const GridCellEditor = ({ extension, getCellContent, onBlur, slots, __gridScope }: GridCellEditorProps) => {
+  const { id, editing, setEditing, editBox } = useGridContext('GridCellEditor', __gridScope);
 
   const handleBlur = useCallback(
     (value?: string) => {
@@ -30,6 +32,7 @@ export const GridCellEditor = ({ extension, getCellContent, onBlur, __gridScope 
       onBlur={handleBlur}
       extension={extension}
       gridId={id}
+      slots={slots}
     />
   ) : null;
 };
