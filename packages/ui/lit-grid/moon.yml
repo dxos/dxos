@@ -3,5 +3,5 @@ language: typescript
 tags:
   - e2e
   - storybook-e2e
-  # TODO(wittjosiah): Could this use the esbuild compiler?
   - ts-compile
+  - pack

@@ -14,4 +14,4 @@ tasks:
       - bundle
   preview:
     args:
-      - --port=3000
+      - '--port=3000'

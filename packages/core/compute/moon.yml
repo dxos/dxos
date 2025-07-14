@@ -3,6 +3,7 @@ language: typescript
 tags:
   - ts-build
   - ts-test
+  - pack
 tasks:
   compile:
     args:
@@ -13,6 +14,6 @@ tasks:
   prebuild:
     command: ./scripts/vendor.mjs
     inputs:
-      - './scripts/vendor.mjs'
+      - ./scripts/vendor.mjs
     outputs:
       - dist/vendor/*

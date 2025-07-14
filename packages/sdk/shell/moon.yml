@@ -5,10 +5,11 @@ tags:
   - storybook-e2e
   - ts-build
   - vite
+  - pack
 tasks:
   bundle:
     options:
-      mergeOutputs: 'replace'
+      mergeOutputs: replace
     outputs:
       - dist/bundle
   compile:

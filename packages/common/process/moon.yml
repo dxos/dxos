@@ -2,3 +2,4 @@ type: library
 language: typescript
 tags:
   - ts-compile
+  - pack

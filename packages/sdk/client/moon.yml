@@ -3,6 +3,8 @@ language: typescript
 tags:
   - ts-build
   - ts-test
+  - typedoc
+  - pack
 tasks:
   compile:
     args:

@@ -5,6 +5,8 @@ tags:
   - storybook-e2e
   - ts-build
   - ts-test
+  - typedoc
+  - pack
 tasks:
   compile:
     args:

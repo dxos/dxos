@@ -1,5 +1,5 @@
 type: library
 language: typescript
 tags:
-  # TODO(wittjosiah): Could this use the esbuild compiler?
   - ts-compile
+  - pack
