@@ -25,11 +25,11 @@ export const packages = resolve(rootDir, 'packages');
 export const storyFiles = '*.{mdx,stories.tsx}';
 export const contentFiles = '*.{ts,tsx,js,jsx,css}';
 export const modules = [
-  // 'apps/*/src/**',
-  // 'devtools/*/src/**',
-  // 'experimental/*/src/**',
+  'apps/*/src/**',
+  'devtools/*/src/**',
+  'experimental/*/src/**',
   'plugins/*/src/**',
-  // 'sdk/*/src/**',
+  'sdk/*/src/**',
   'ui/*/src/**',
 ];
 
