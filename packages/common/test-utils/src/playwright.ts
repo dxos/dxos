@@ -59,8 +59,8 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
     forbidOnly: !!process.env.CI,
     // Retry on CI only.
     retries: process.env.CI ? 2 : 0,
-    // Control the number of workers.
-    workers: process.env.CI ? 4 : undefined,
+    // Opt out of parallel tests on CI.
+    workers: process.env.CI ? 1 : undefined,
     // Reporter to use. See https://playwright.dev/docs/test-reporters.
     reporter: process.env.CI
       ? [
