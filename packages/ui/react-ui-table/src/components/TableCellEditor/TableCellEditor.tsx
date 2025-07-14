@@ -337,7 +337,7 @@ export const TableCellEditor = ({
           if (fieldProjection.props.format === FormatEnum.MultiSelect) {
             const tagItems = value
               .split(',')
-              .map((id) => {
+              .map((id: string) => {
                 const option = options.find((o) => o.id === id);
                 if (option) {
                   return {
@@ -348,7 +348,7 @@ export const TableCellEditor = ({
                 }
                 return undefined;
               })
-              .filter((item): item is { id: any; label: string; hue: any } => item !== undefined);
+              .filter((item: any): item is { id: any; label: string; hue: any } => item !== undefined);
 
             return createLinks(tagItems);
           } else {

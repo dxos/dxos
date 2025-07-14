@@ -56,13 +56,12 @@ const DefaultStory = (args: CellEditorProps) => {
           autoFocus={args.autoFocus}
           onBlur={handleBlur}
           box={{
-            insetInlineStart: '10px',
-            insetBlockStart: '10px',
+            insetInlineStart: 10,
+            insetBlockStart: 10,
             inlineSize: 280,
             blockSize: 30,
           }}
           gridId='demo-grid'
-          classNames={args.classNames}
         />
       </div>
     </div>
