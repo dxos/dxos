@@ -9,11 +9,10 @@ import yargs from 'yargs';
 // Run `node ./scripts/functions-benchmark.mjs` from the root of the project.
 //
 const {
-  _: [script = './packages/plugins/plugin-script/src/templates/data-generator.ts'],
-  trigger = '*/30 * * * * *',
-  build = true,
+  build = true, //
+  deploy = false,
   profile = 'functions-benchmark',
-  upload = true,
+  functionId,
 } = yargs(hideBin(process.argv)).argv;
 
 if (build) {
@@ -22,20 +21,18 @@ if (build) {
 
 // Start agent.
 // TODO(mykola): Use `dx` command from package.json 'bin' section.
-const cliBin = path.join(import.meta.dirname, '..', 'packages', 'devtools', 'cli', 'bin', 'dx.js');
-const dx = `${cliBin}`;
+const dx = path.join(import.meta.dirname, '..', 'packages', 'devtools', 'cli', 'bin', 'dx.js');
+const flags = `--profile=${profile} --no-agent --json`;
 
-await $({ stdio: 'inherit' })`export DX_PROFILE=${profile}`;
-await $({ stdio: 'inherit' })`${dx} agent start`;
+const exec = (cmd) => $({ stdio: 'inherit' })`${dx} ${cmd} ${flags}`.json();
 
 // Create halo identity.
-const existingIdentity = await $`${dx} halo identity`;
-if (!existingIdentity.stdout.trim().includes('Identity not initialized.')) {
-  await $({ stdio: 'inherit' })`${dx} halo identity TEST`;
+const existingIdentity = await exec(`halo identity`);
+if (!existingIdentity.identityKey) {
+  await exec(`halo create TEST`);
 }
 
-// Upload functions.
-if (upload) {
+if (deploy) {
   const scriptPath = path.join(
     import.meta.dirname,
     '..',
@@ -46,5 +43,6 @@ if (upload) {
     'templates',
     'data-generator.ts',
   );
-  await $({ stdio: 'inherit' })`${dx} function upload ${scriptPath}`;
+  const result = await exec(`function upload ${scriptPath}`);
+  functionId = result.functionId;
 }
