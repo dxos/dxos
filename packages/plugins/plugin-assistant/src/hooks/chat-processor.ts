@@ -19,6 +19,7 @@ import {
   type ArtifactDiffResolver,
   type Blueprint,
   type BlueprintRegistry,
+type BlueprintBinder,
   type Conversation,
 } from '@dxos/assistant';
 import { Context } from '@dxos/context';
@@ -116,11 +117,10 @@ export class ChatProcessor {
   }
 
   /**
-   * @returns Active blueprints.
-   * @reactive
+   * Binder of active blueprints attached to this coversation.
    */
-  get blueprints(): Live<readonly Ref.Ref<Blueprint>[]> {
-    return this._conversation.blueprints.bindings.value;
+  get blueprints(): BlueprintBinder {
+    return this._conversation.blueprints;
   }
 
   get tools() {

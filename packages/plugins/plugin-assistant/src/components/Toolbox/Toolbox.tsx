@@ -133,7 +133,7 @@ export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?
       artifacts={artifactDefinitions}
       services={serviceTools}
       functions={functions}
-      activeBlueprints={processor.blueprints}
+      activeBlueprints={processor.blueprints.bindings.value}
     />
   );
 };

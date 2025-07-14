@@ -36,7 +36,7 @@ export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor) =
 
     const t = setTimeout(async () => {
       const blueprints: Blueprint[] = [];
-      for (const ref of processor?.blueprints ?? []) {
+      for (const ref of processor?.blueprints.bindings.value ?? []) {
         const obj = await resolver.resolve(ref.dxn);
         invariant(Obj.instanceOf(Blueprint, obj));
         if (obj) {
@@ -69,18 +69,20 @@ export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor) =
   const handleUpdateBlueprints = useCallback<NonNullable<TagPickerOptions['onUpdate']>>(
     async (ids) => {
       invariant(space);
-      invariant(processor);
-      const stored = space.db.query(Filter.type(Blueprint));
+      const { objects: current } = await space.db.query(Filter.type(Blueprint)).run();
       for (const id of ids) {
         const blueprint = processor.blueprintRegistry?.query().find((blueprint) => blueprint.key === id);
         if (!blueprint) {
           continue;
         }
 
-        await processor.conversation.blueprints.bind(Ref.make(blueprint));
-        if (!stored.objects.some((obj) => obj.key === blueprint.key)) {
-          space.db.add(Obj.make(Blueprint, { ...blueprint }));
+        let local = current?.find((blueprint) => blueprint.key === id);
+        if (!local) {
+          // TODO(dmaretskyi): We might need to `clone` the blueprint here, since the db.add returns the same object reference.
+          local = space.db.add(blueprint);
         }
+
+        processor?.blueprints.bind(Ref.make(local));
       }
     },
     [processor, space],
