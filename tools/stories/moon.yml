@@ -6,7 +6,8 @@ tasks:
     args:
       - --output-dir=out/stories
     deps:
-      - ^:compile
+      - :build
+      - :compile
       - mkdist
     inputs:
       - .storybook/*
