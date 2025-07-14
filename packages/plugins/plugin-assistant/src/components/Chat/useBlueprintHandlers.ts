@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Blueprint, type BlueprintRegistry } from '@dxos/assistant';
+import { Blueprint } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -15,7 +15,7 @@ import { type ChatProcessor } from '../../hooks';
 /**
  * Adapter.
  */
-export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor, registry?: BlueprintRegistry) => {
+export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor) => {
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const blueprintTags = useMemo(
     () => blueprints.map((blueprint) => ({ id: blueprint.id, label: blueprint.name })),
@@ -47,13 +47,13 @@ export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor, r
       setBlueprints(blueprints);
     });
     return () => clearTimeout(t);
-  }, [space, processor, registry]);
+  }, [space, processor]);
 
   // Blueprints.
   const handleSearchBlueprints = useCallback<NonNullable<TagPickerOptions['onSearch']>>(
     (text, ids) => {
       return (
-        registry
+        processor?.blueprintRegistry
           ?.query()
           .filter(
             ({ key: blueprintId, name }) =>
@@ -62,7 +62,7 @@ export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor, r
           .map((blueprint) => ({ id: blueprint.key, label: blueprint.name })) ?? []
       );
     },
-    [registry],
+    [processor],
   );
 
   // Update conversation and aspace.
@@ -72,7 +72,7 @@ export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor, r
       invariant(processor);
       const stored = space.db.query(Filter.type(Blueprint));
       for (const id of ids) {
-        const blueprint = registry?.query().find((blueprint) => blueprint.key === id);
+        const blueprint = processor.blueprintRegistry?.query().find((blueprint) => blueprint.key === id);
         if (!blueprint) {
           continue;
         }
@@ -83,7 +83,7 @@ export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor, r
         }
       }
     },
-    [processor, registry, space],
+    [processor, space],
   );
 
   return [blueprintTags, handleSearchBlueprints, handleUpdateBlueprints] as const;

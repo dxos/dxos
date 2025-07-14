@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './processor';
+export * from './chat-processor';
 
 export * from './useChatProcessor';
 export * from './useContextProvider';

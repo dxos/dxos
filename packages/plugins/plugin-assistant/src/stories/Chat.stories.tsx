@@ -43,6 +43,7 @@ import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { AssistantPlugin } from '../AssistantPlugin';
 import { Chat } from '../components';
+import { useChatProcessor, useServiceContainer } from '../hooks';
 import { meta as pluginMeta } from '../meta';
 import { translations } from '../translations';
 import { AIChatType } from '../types';
@@ -70,15 +71,21 @@ const DefaultStory = ({ components }: { components: FunctionComponent[] }) => {
 
 const ChatContainer = () => {
   const { t } = useTranslation(pluginMeta.id);
+
   const space = useSpace();
-  const blueprintRegistry = useMemo(() => new BlueprintRegistry([DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT]), []);
   const [chat] = useQuery(space, Filter.type(AIChatType));
+
+  // TODO(burdon): Figure out how to use effect to inject serviceContainer, blueprintRegistry into the processor.
+  const serviceContainer = useServiceContainer({ space });
+  const blueprintRegistry = useMemo(() => new BlueprintRegistry([DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT]), []);
+  const processor = useChatProcessor({ chat, space, serviceContainer, blueprintRegistry, noPluginArtifacts: true });
+
   if (!chat) {
     return null;
   }
 
   return (
-    <Chat.Root part='deck' chat={chat} blueprintRegistry={blueprintRegistry} noPluginArtifacts>
+    <Chat.Root chat={chat} processor={processor}>
       <Chat.Thread />
       <div className='p-4'>
         <Chat.Prompt
@@ -179,9 +186,7 @@ const getDecorators = ({
           const chat = space.db.add(Obj.make(AIChatType, { queue: Ref.fromDXN(space.queues.create().dxn) }));
 
           // TODO(burdon): Add to conversation context.
-          const document = space.db.add(
-            Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }),
-          );
+          space.db.add(Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }));
 
           // Clone blueprints and bind to conversation.
           const binder = new BlueprintBinder(await chat.queue.load());

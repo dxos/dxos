@@ -5,11 +5,13 @@
 import React, { useState } from 'react';
 
 import { useCapability, Capabilities, useCapabilities } from '@dxos/app-framework';
+import { getSpace } from '@dxos/client/echo';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NativeChatDialog } from '@dxos/react-ui-chat';
 
 import { Chat } from './Chat';
+import { useChatProcessor, useServiceContainer } from '../hooks';
 import { meta } from '../meta';
 import { type AssistantSettingsProps, type AIChatType } from '../types';
 
@@ -19,14 +21,17 @@ export type ChatDialogProps = {
 
 export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const { t } = useTranslation(meta.id);
+  const space = getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<AssistantSettingsProps>(meta.id)?.value;
   const transcription = useCapabilities(TranscriptionCapabilities.Transcriber).length > 0;
+  const serviceContainer = useServiceContainer({ space });
+  const processor = useChatProcessor({ part: 'deck', serviceContainer, settings });
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(false);
 
   return (
-    <Chat.Root part='dialog' chat={chat} settings={settings} onOpenChange={setOpen}>
+    <Chat.Root chat={chat} processor={processor} onOpenChange={setOpen}>
       <NativeChatDialog.Root open={open} onOpenChange={setOpen}>
         <NativeChatDialog.Header title={t('assistant dialog title')} />
         <NativeChatDialog.Content>

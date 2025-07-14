@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL, type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition, type AssociatedArtifact, createSystemPrompt } from '@dxos/artifact';
-import { Conversation } from '@dxos/assistant';
+import { type BlueprintRegistry, Conversation } from '@dxos/assistant';
 import { FunctionType, type ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
@@ -20,11 +20,15 @@ import { type AIChatType, type AssistantSettingsProps, ServiceType } from '../ty
 
 type UseChatProcessorProps = {
   part?: 'deck' | 'dialog';
-  chat?: AIChatType;
-  serviceContainer: ServiceContainer;
   space?: Space;
+  chat?: AIChatType;
+  // TODO(burdon): Reconcile all of below (overlapping concepts).
+  serviceContainer: ServiceContainer;
+  blueprintRegistry?: BlueprintRegistry;
   settings?: AssistantSettingsProps;
+  /** @deprecated */
   artifact?: AssociatedArtifact;
+  /** @deprecated */
   noPluginArtifacts?: boolean;
 };
 
@@ -33,9 +37,10 @@ type UseChatProcessorProps = {
  */
 export const useChatProcessor = ({
   part,
-  chat,
   space,
+  chat,
   serviceContainer,
+  blueprintRegistry,
   settings,
   artifact,
   noPluginArtifacts,
@@ -43,6 +48,7 @@ export const useChatProcessor = ({
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const globalTools = useCapabilities(Capabilities.Tools);
 
+  // TODO(burdon): Spec artifacts.
   let artifactDefinitions: readonly ArtifactDefinition[] = useCapabilities(Capabilities.ArtifactDefinition);
   if (noPluginArtifacts) {
     artifactDefinitions = Stable.array;
@@ -107,9 +113,17 @@ export const useChatProcessor = ({
   const processor = useMemo(() => {
     log('creating processor...', { settings });
     return (
-      conversation && new ChatProcessor(conversation, tools, artifactDefinitions, extensions, { model, systemPrompt })
+      conversation &&
+      new ChatProcessor(conversation, {
+        tools,
+        extensions,
+        blueprintRegistry,
+        artifacts: artifactDefinitions,
+        systemPrompt,
+        model,
+      })
     );
-  }, [conversation, tools, artifactDefinitions, extensions, model, systemPrompt]);
+  }, [conversation, tools, blueprintRegistry, artifactDefinitions, extensions, systemPrompt, model]);
 
   return processor;
 };

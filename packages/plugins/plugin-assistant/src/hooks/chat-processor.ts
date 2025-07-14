@@ -14,7 +14,13 @@ import {
 } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
-import { type AISession, type ArtifactDiffResolver, type Blueprint, type Conversation } from '@dxos/assistant';
+import {
+  type AISession,
+  type ArtifactDiffResolver,
+  type Blueprint,
+  type BlueprintRegistry,
+  type Conversation,
+} from '@dxos/assistant';
 import { Context } from '@dxos/context';
 import { type Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -24,6 +30,7 @@ import { Filter, getVersion, type Live, type Space } from '@dxos/react-client/ec
 // TODO(burdon): Factor out.
 declare global {
   interface ToolContextExtensions {
+    // TODO(burdon): Remove?
     space?: Space;
     dispatch?: PromiseIntentDispatcher;
   }
@@ -33,7 +40,13 @@ type RequestOptions = {
   // Empty for now.
 };
 
-export type ChatProcessorOptions = Pick<GenerateRequest, 'model' | 'systemPrompt'>;
+export type ChatProcessorOptions = {
+  // TODO(burdon): Toolkit.
+  tools?: ExecutableTool[];
+  artifacts?: readonly ArtifactDefinition[];
+  extensions?: ToolContextExtensions;
+  blueprintRegistry?: BlueprintRegistry;
+} & Pick<GenerateRequest, 'model' | 'systemPrompt'>;
 
 const defaultOptions: ChatProcessorOptions = {
   model: DEFAULT_EDGE_MODEL,
@@ -85,21 +98,21 @@ export class ChatProcessor {
     return messages;
   });
 
+  private _tools?: ExecutableTool[];
+
   constructor(
     private readonly _conversation: Conversation,
-    // TODO(burdon): Toolkit.
-    private _tools?: ExecutableTool[],
-    private _artifacts?: readonly ArtifactDefinition[],
-    private readonly _extensions?: ToolContextExtensions,
     private readonly _options: ChatProcessorOptions = defaultOptions,
-  ) {}
+  ) {
+    this._tools = [...(_options.tools ?? [])];
+  }
 
   get conversation() {
     return this._conversation;
   }
 
-  get tools() {
-    return this._tools;
+  get blueprintRegistry() {
+    return this._options.blueprintRegistry;
   }
 
   /**
@@ -108,6 +121,10 @@ export class ChatProcessor {
    */
   get blueprints(): Live<readonly Ref.Ref<Blueprint>[]> {
     return this._conversation.blueprints.bindings.value;
+  }
+
+  get tools() {
+    return this._tools;
   }
 
   /**
@@ -184,14 +201,14 @@ export class ChatProcessor {
 
     try {
       const messages = await this._conversation.run({
-        artifacts: [...(this._artifacts ?? [])],
-        requiredArtifactIds: this._artifacts?.map((artifact) => artifact.id) ?? [],
+        artifacts: [...(this._options.artifacts ?? [])],
+        requiredArtifactIds: this._options.artifacts?.map((artifact) => artifact.id) ?? [],
 
         // TODO(dmaretskyi): Migrate to ToolRegistry.
         executableTools: this._tools ?? [],
         prompt: message,
         systemPrompt: this._options.systemPrompt,
-        extensions: this._extensions,
+        extensions: this._options.extensions,
         artifactDiffResolver: this._artifactDiffResolver,
         generationOptions: {
           model: this._options.model,
@@ -233,7 +250,7 @@ export class ChatProcessor {
   }
 
   private _artifactDiffResolver: ArtifactDiffResolver = async (artifacts) => {
-    const space = this._extensions?.space;
+    const space = this._options.extensions?.space;
     if (!space) {
       return new Map();
     }

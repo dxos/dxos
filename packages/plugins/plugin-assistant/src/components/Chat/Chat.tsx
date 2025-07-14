@@ -8,19 +8,17 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef 
 
 import { Message } from '@dxos/ai';
 import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { type AssociatedArtifact } from '@dxos/artifact';
-import { type BlueprintRegistry } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { getSpace, useQueue, type Space } from '@dxos/react-client/echo';
+import { type Expando, getSpace, useQueue, type Space } from '@dxos/react-client/echo';
 import { type ReferencesOptions } from '@dxos/react-ui-chat';
 import { type ScrollController } from '@dxos/react-ui-components';
 
 import { useBlueprintHandlers } from './useBlueprintHandlers';
-import { type ChatProcessor, useChatProcessor, useContextProvider, useServiceContainer } from '../../hooks';
-import { type AIChatType, type AssistantSettingsProps } from '../../types';
+import { type ChatProcessor, useContextProvider } from '../../hooks';
+import { type AIChatType } from '../../types';
 import { ChatPrompt as NativeChatPrompt, type ChatPromptProps } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps } from '../ChatThread';
 
@@ -35,8 +33,6 @@ type ChatContextValue = {
   space: Space;
   messages: Message[];
   processor: ChatProcessor;
-  // TODO(burdon): Inject into ChatProcessor (effect).
-  blueprintRegistry?: BlueprintRegistry;
   handleOpenChange: ChatPromptProps['onOpenChange'];
   handleSubmit: ChatPromptProps['onSubmit'];
   handleCancel: ChatPromptProps['onCancel'];
@@ -48,34 +44,17 @@ const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('C
 // Root
 //
 
-type ChatRootProps = PropsWithChildren<
-  {
-    part?: 'deck' | 'dialog';
-    chat?: AIChatType;
-    settings?: AssistantSettingsProps;
-    artifact?: AssociatedArtifact;
-    /** @deprecated */
-    noPluginArtifacts?: boolean;
-    onOpenChange?: ChatPromptProps['onOpenChange'];
-  } & Pick<ChatContextValue, 'blueprintRegistry'>
->;
+type ChatRootProps = PropsWithChildren<{
+  chat?: AIChatType;
+  processor?: ChatProcessor;
+  // TODO(burdon): Move into processor context?
+  artifact?: Expando;
+  onOpenChange?: ChatPromptProps['onOpenChange'];
+}>;
 
-// TODO(burdon): Move blueprintRegistry to ChatProcessor (via injection).
-
-const ChatRoot = ({
-  children,
-  part,
-  chat,
-  settings,
-  artifact,
-  onOpenChange,
-  noPluginArtifacts,
-  ...props
-}: ChatRootProps) => {
+const ChatRoot = ({ children, chat, processor, artifact, onOpenChange, ...props }: ChatRootProps) => {
   const space = getSpace(chat);
-  const serviceContainer = useServiceContainer({ space });
   const messageQueue = useQueue<Message>(chat?.queue.dxn);
-  const processor = useChatProcessor({ part, chat, space, serviceContainer, artifact, settings, noPluginArtifacts });
 
   // Event queue.
   const update = useMemo(() => new Event<ChatEvents>(), []);
@@ -93,9 +72,9 @@ const ChatRoot = ({
   // Post last message to document.
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   useEffect(() => {
-    if (!processor?.streaming.value && messageQueue?.objects) {
+    if (!processor?.streaming.value && messageQueue?.objects && artifact) {
       const message = messageQueue.objects[messageQueue.objects.length - 1];
-      if (space && chat && message && dispatch && artifact) {
+      if (dispatch && space && chat && message) {
         void dispatch(
           createIntent(CollaborationActions.InsertContent, {
             target: artifact,
@@ -105,7 +84,7 @@ const ChatRoot = ({
         );
       }
     }
-  }, [messageQueue, artifact, processor?.streaming.value]);
+  }, [messageQueue, processor?.streaming.value]);
 
   const handleSubmit = useCallback(
     (text: string) => {
@@ -196,7 +175,7 @@ ChatThread.displayName = 'Chat.Thread';
 //
 
 const ChatPrompt = (props: Pick<ChatPromptProps, 'classNames' | 'placeholder' | 'compact'>) => {
-  const { update, space, processor, blueprintRegistry, handleOpenChange, handleSubmit, handleCancel } = useChatContext(
+  const { update, space, processor, handleOpenChange, handleSubmit, handleCancel } = useChatContext(
     ChatPrompt.displayName,
   );
 
@@ -217,11 +196,7 @@ const ChatPrompt = (props: Pick<ChatPromptProps, 'classNames' | 'placeholder' | 
   }, [contextProvider]);
 
   // Blueprints.
-  const [blueprints, handleSearchBlueprints, handleUpdateBlueprints] = useBlueprintHandlers(
-    space,
-    processor,
-    blueprintRegistry,
-  );
+  const [blueprints, handleSearchBlueprints, handleUpdateBlueprints] = useBlueprintHandlers(space, processor);
 
   return (
     <NativeChatPrompt

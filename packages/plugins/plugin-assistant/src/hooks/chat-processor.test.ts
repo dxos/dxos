@@ -4,7 +4,7 @@
 
 import { describe, it } from 'vitest';
 
-import { ChatProcessor } from './processor';
+import { ChatProcessor } from './chat-processor';
 
 describe('ChatProcessor', () => {
   it('should be instantiable', ({ expect }) => {
