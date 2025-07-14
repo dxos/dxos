@@ -19,6 +19,6 @@ tasks:
       - ^:compile
       - esbuild:compile
     inputs:
-      - '@group(sources)'
+      - '@group(production)'
     outputs:
       - dist/testing

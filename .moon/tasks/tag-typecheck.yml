@@ -9,6 +9,5 @@ tasks:
       - /tsconfig.base.json
       - tsconfig.json
       - '@group(sources)'
-      - '@group(tests)'
     outputs:
       - dist/

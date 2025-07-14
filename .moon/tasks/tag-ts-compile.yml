@@ -8,6 +8,6 @@ tasks:
     inputs:
       - /tsconfig.base.json
       - tsconfig.json
-      - '@group(sources)'
+      - '@group(production)'
     outputs:
       - dist/

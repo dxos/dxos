@@ -6,6 +6,8 @@ fileGroups:
     - scripts/**/*
   sources:
     - src/**/*
+  production:
+    - src/**/*
     - '!src/test/**/*'
     - '!src/**/*.test.tsx?'
     - '!src/playwright/**/*'

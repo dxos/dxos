@@ -10,7 +10,7 @@ export default defineConfig({
   ...e2ePreset(import.meta.dirname),
   webServer: {
     command: 'moon run todomvc:preview',
-    port: 4173,
+    port: 3000,
     reuseExistingServer: !process.env.CI,
   },
 });

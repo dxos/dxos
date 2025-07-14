@@ -186,25 +186,37 @@ jobs:
       - name: Install Playwright
         run: pnpm run install-playwright
 
+      - name: Run Storybook
+        id: storybook
+        run: |
+          moon run stories:serve &
+          echo "pid=$!" >> $GITHUB_ENV
+
+      - name: Run Storybook Playwright Tests
+        run: moon run "#storybook-e2e:e2e" --affected --remote -- --browser=all
+
+      - name: Stop Storybook
+        run: kill ${{ steps.storybook.outputs.pid }}
+
       # TODO(wittjosiah): Try to increase concurrency here.
       - name: Bundle Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :bundle --concurrency=1 --affected --remote
+        run: moon run :bundle --affected --remote
 
       - name: Bundle All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: moon run :bundle --concurrency=1
+        run: moon run :bundle
 
       # TODO(wittjosiah): Try to increase concurrency here.
       #  1. Run storybook in parallel with e2e storybook tests and allow the tests to run with concurrency.
       #  2. Put each vite app e2e test on its own port to avoid port conflicts.
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :e2e --concurrency=1 --affected --remote -- --browser=all
+        run: moon run "#app-e2e:e2e" --affected --remote -- --browser=all
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: moon run :e2e --concurrency=1 -- --browser=all
+        run: moon run "#app-e2e:e2e" -- --browser=all
 
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'

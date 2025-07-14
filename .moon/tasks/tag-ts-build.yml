@@ -10,7 +10,6 @@ tasks:
       - /tsconfig.base.json
       - tsconfig.json
       - '@group(sources)'
-      - '@group(tests)'
     outputs:
       - dist/types/
   compile:
@@ -21,6 +20,6 @@ tasks:
       - esbuild:compile
       - ^:compile
     inputs:
-      - '@group(sources)'
+      - '@group(production)'
     outputs:
       - dist/lib/

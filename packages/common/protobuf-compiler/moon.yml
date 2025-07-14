@@ -23,4 +23,3 @@ tasks:
       - ^:compile
     inputs:
       - '@group(sources)'
-      - '@group(tests)'

@@ -10,7 +10,6 @@ tasks:
       - /vitest.base.config.ts
       - vitest.config.ts
       - '@group(sources)'
-      - '@group(tests)'
       - $VITEST_COVERAGE
       - $VITEST_DEBUG
       - $VITEST_ENV

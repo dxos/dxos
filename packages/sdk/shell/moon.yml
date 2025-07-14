@@ -2,6 +2,7 @@ type: library
 language: typescript
 tags:
   - e2e
+  - storybook-e2e
   - ts-build
   - vite
 tasks:

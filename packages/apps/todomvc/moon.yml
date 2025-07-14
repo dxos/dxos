@@ -1,6 +1,7 @@
 type: application
 language: typescript
 tags:
+  - app-e2e
   - e2e
   - typecheck
   - vite
@@ -11,3 +12,6 @@ tasks:
   e2e:
     deps:
       - bundle
+  preview:
+    args:
+      - --port=3000

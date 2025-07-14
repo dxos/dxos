@@ -7,7 +7,7 @@ tasks:
       - ^:compile
     inputs:
       - vite.config.ts
-      - '@group(sources)'
+      - '@group(production)'
       - $CONFIG_DYNAMIC
       - $DX_ENVIRONMENT
       - $DX_HOST
