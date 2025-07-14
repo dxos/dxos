@@ -35,7 +35,7 @@ type ChatContextValue = {
   space: Space;
   messages: Message[];
   processor: ChatProcessor;
-  // TODO(burdon): Move to different context?
+  // TODO(burdon): Inject into ChatProcessor (effect).
   blueprintRegistry?: BlueprintRegistry;
   handleOpenChange: ChatPromptProps['onOpenChange'];
   handleSubmit: ChatPromptProps['onSubmit'];
