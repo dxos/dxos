@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react-vite';
-import React, { type FunctionComponent } from 'react';
+import React, { useMemo, type FunctionComponent } from 'react';
 
 import { Capabilities, contributes, Events, IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -16,7 +16,7 @@ import {
   writeDocument,
   DESIGN_SPEC_BLUEPRINT,
 } from '@dxos/artifact-testing';
-import { BlueprintBinder, Blueprint } from '@dxos/assistant';
+import { BlueprintBinder, Blueprint, BlueprintRegistry } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -37,7 +37,6 @@ import {
   createThemeExtensions,
   outliner,
 } from '@dxos/react-ui-editor';
-import { type TagPickerItemData } from '@dxos/react-ui-tag-picker';
 import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
@@ -45,7 +44,6 @@ import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 import { AssistantPlugin } from '../AssistantPlugin';
 import { Chat } from '../components';
 import { meta as pluginMeta } from '../meta';
-import { onSearchBlueprints } from '../testing';
 import { translations } from '../translations';
 import { AIChatType } from '../types';
 
@@ -73,23 +71,20 @@ const DefaultStory = ({ components }: { components: FunctionComponent[] }) => {
 const ChatContainer = () => {
   const { t } = useTranslation(pluginMeta.id);
   const space = useSpace();
+  const blueprintRegistry = useMemo(() => new BlueprintRegistry([DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT]), []);
   const [chat] = useQuery(space, Filter.type(AIChatType));
-  const blueprints: TagPickerItemData[] = [];
-
   if (!chat) {
     return null;
   }
 
   return (
-    <Chat.Root part='deck' chat={chat} noPluginArtifacts>
+    <Chat.Root part='deck' chat={chat} blueprintRegistry={blueprintRegistry} noPluginArtifacts>
       <Chat.Thread />
       <div className='p-4'>
         <Chat.Prompt
           classNames='p-2 border border-subduedSeparator rounded focus-within:outline focus-within:border-transparent outline-primary-500'
           placeholder={t('prompt placeholder')}
           compact={false}
-          blueprints={blueprints}
-          onSearchBlueprints={onSearchBlueprints}
         />
       </div>
     </Chat.Root>
@@ -186,7 +181,7 @@ const getDecorators = ({
 
           // Blueprints.
           const binder = new BlueprintBinder(await chat.queue.load());
-          for (const blueprint of [TASK_LIST_BLUEPRINT]) {
+          for (const blueprint of blueprints) {
             const obj = space.db.add(blueprint);
             await binder.bind(Ref.make(obj));
           }
@@ -247,7 +242,7 @@ export const WithBlueprints = {
   decorators: getDecorators({
     config: remoteConfig,
     plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
-    blueprints: [DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT],
+    blueprints: [TASK_LIST_BLUEPRINT],
   }),
   args: {
     components: [ChatContainer],

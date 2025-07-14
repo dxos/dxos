@@ -27,12 +27,13 @@ import { meta } from '../../meta';
 export type ChatPromptProps = ThemedClassName<
   Omit<ChatEditorProps, 'classNames'> & {
     compact?: boolean;
+    microphone?: boolean;
     error?: Error;
     processing?: boolean;
-    microphone?: boolean;
   } & {
     blueprints?: TagPickerItemData[];
     onSearchBlueprints?: TagPickerOptions['onSearch'];
+    onUpdateBlueprints?: TagPickerOptions['onUpdate'];
     onScroll?: () => void;
   }
 >;
@@ -42,11 +43,12 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
     {
       classNames,
       compact = true,
+      microphone,
       error,
       processing,
-      microphone,
       blueprints,
       onSearchBlueprints,
+      onUpdateBlueprints,
       onCancel,
       onScroll,
       ...props
@@ -115,8 +117,9 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
               classNames='w-full'
               mode='multi-select'
               items={blueprints ?? []}
-              // placeholder={t('blueprints placeholder')}
+              placeholder={t('blueprints placeholder')}
               onSearch={onSearchBlueprints}
+              onUpdate={onUpdateBlueprints}
             />
           )) || <div className='flex-1' />}
 
@@ -144,7 +147,14 @@ const OptionMenu = () => {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <IconButton icon='ph--plus--regular' variant='ghost' size={5} iconOnly label={t('button add blueprint')} />
+        <IconButton
+          disabled
+          icon='ph--plus--regular'
+          variant='ghost'
+          size={5}
+          iconOnly
+          label={t('button add blueprint')}
+        />
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content side='left'>
@@ -152,7 +162,8 @@ const OptionMenu = () => {
             {menuItems.map((item) => (
               <DropdownMenu.Item key={item.id}>
                 <Input.Root>
-                  <Input.Checkbox onCheckedChange={(checked) => console.log(checked)} />
+                  <Input.Checkbox onCheckedChange={(checked) => {}} />
+                  {/* TODO(burdon): Input.Label? */}
                   <span>{item.label}</span>
                 </Input.Root>
               </DropdownMenu.Item>
@@ -183,7 +194,7 @@ const ActionButtons = ({
   const { t } = useTranslation(meta.id);
   return (
     <>
-      {/* TODO(burdon): Modes (presets for blueprints). */}
+      {/* TODO(burdon): Modes (models and/or presets for blueprints?). */}
       <Select.Root value={'research'} disabled>
         <Select.TriggerButton classNames='mie-2' />
         <Select.Content>

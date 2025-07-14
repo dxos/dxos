@@ -6,10 +6,10 @@ import { createContext } from '@radix-ui/react-context';
 import { dedupeWith } from 'effect/Array';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { type ExecutableTool, Message } from '@dxos/ai';
+import { Message } from '@dxos/ai';
 import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type AssociatedArtifact } from '@dxos/artifact';
-import type { Blueprint } from '@dxos/assistant';
+import { type BlueprintRegistry } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -18,24 +18,17 @@ import { getSpace, useQueue, type Space } from '@dxos/react-client/echo';
 import { type ReferencesOptions } from '@dxos/react-ui-chat';
 import { type ScrollController } from '@dxos/react-ui-components';
 
+import { useBlueprintHandlers } from './hooks';
 import { type ChatProcessor, useChatProcessor, useContextProvider, useServiceContainer } from '../../hooks';
 import { type AIChatType, type AssistantSettingsProps } from '../../types';
 import { ChatPrompt as NativeChatPrompt, type ChatPromptProps } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps } from '../ChatThread';
 
+// TODO(burdon): Remove?
 // interface ContextProvider {
 //   query({ query }: { query: string }): Promise<ReferenceData[]>;
 //   resolveMetadata({ uri }: { uri: string }): Promise<ReferenceData | null>;
 // }
-
-// const handleSubmit = useCallback<NonNullable<PromptBarProps['onSubmit']>>(
-//   (value: string) => {
-//     onSubmit?.(value);
-//     scroller.current?.scrollToBottom();
-//     return true;
-//   },
-//   [onSubmit],
-// );
 
 type ChatEvents = 'submit' | 'scroll';
 
@@ -46,12 +39,10 @@ type ChatEvents = 'submit' | 'scroll';
 type ChatContextValue = {
   update: Event<ChatEvents>;
   space: Space;
-  processor: ChatProcessor;
   messages: Message[];
-  error?: Error;
-  processing: boolean;
-  tools: ExecutableTool[];
-  activeBlueprints: readonly Ref.Ref<Blueprint>[];
+  processor: ChatProcessor;
+  // TODO(burdon): Move to different context?
+  blueprintRegistry?: BlueprintRegistry;
   handleOpenChange: ChatPromptProps['onOpenChange'];
   handleSubmit: ChatPromptProps['onSubmit'];
   handleCancel: ChatPromptProps['onCancel'];
@@ -63,16 +54,28 @@ const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('C
 // Root
 //
 
-type ChatRootProps = PropsWithChildren<{
-  part?: 'deck' | 'dialog';
-  chat?: AIChatType;
-  settings?: AssistantSettingsProps;
-  artifact?: AssociatedArtifact;
-  onOpenChange?: ChatPromptProps['onOpenChange'];
-  noPluginArtifacts?: boolean;
-}>;
+type ChatRootProps = PropsWithChildren<
+  {
+    part?: 'deck' | 'dialog';
+    chat?: AIChatType;
+    settings?: AssistantSettingsProps;
+    artifact?: AssociatedArtifact;
+    /** @deprecated */
+    noPluginArtifacts?: boolean;
+    onOpenChange?: ChatPromptProps['onOpenChange'];
+  } & Pick<ChatContextValue, 'blueprintRegistry'>
+>;
 
-const ChatRoot = ({ children, part, chat, settings, artifact, onOpenChange, noPluginArtifacts }: ChatRootProps) => {
+const ChatRoot = ({
+  children,
+  part,
+  chat,
+  settings,
+  artifact,
+  onOpenChange,
+  noPluginArtifacts,
+  ...props
+}: ChatRootProps) => {
   const space = getSpace(chat);
   const serviceContainer = useServiceContainer({ space });
   const messageQueue = useQueue<Message>(chat?.queue.dxn);
@@ -81,6 +84,7 @@ const ChatRoot = ({ children, part, chat, settings, artifact, onOpenChange, noPl
   // Event queue.
   const update = useMemo(() => new Event<ChatEvents>(), []);
 
+  // Messages.
   const messages = useMemo(
     () =>
       dedupeWith(
@@ -140,19 +144,18 @@ const ChatRoot = ({ children, part, chat, settings, artifact, onOpenChange, noPl
 
   return (
     <ChatContextProvider
+      {...props}
       update={update}
       space={space}
-      processor={processor}
       messages={messages}
-      error={processor?.error.value}
-      processing={processor?.streaming.value ?? false}
-      tools={processor?.tools ?? []}
+      processor={processor}
       handleOpenChange={onOpenChange}
       handleSubmit={handleSubmit}
       handleCancel={handleCancel}
-      activeBlueprints={processor?.blueprints ?? []}
     >
-      <div className='flex flex-col grow overflow-hidden'>{children}</div>
+      <div role='none' className='flex flex-col grow overflow-hidden'>
+        {children}
+      </div>
     </ChatContextProvider>
   );
 };
@@ -164,7 +167,7 @@ ChatRoot.displayName = 'Chat.Root';
 //
 
 const ChatThread = (props: Omit<ChatThreadProps, 'space' | 'messages' | 'tools' | 'onPrompt'>) => {
-  const { update, space, messages, tools, handleSubmit } = useChatContext(ChatThread.displayName);
+  const { update, space, messages, processor, handleSubmit } = useChatContext(ChatThread.displayName);
   const scrollerRef = useRef<ScrollController>(null);
   useEffect(() => {
     return update.on((event) => {
@@ -180,11 +183,11 @@ const ChatThread = (props: Omit<ChatThreadProps, 'space' | 'messages' | 'tools' 
   return (
     <NativeChatThread
       {...props}
+      ref={scrollerRef}
       space={space}
       messages={messages}
-      tools={tools}
+      tools={processor?.tools}
       onPrompt={handleSubmit}
-      ref={scrollerRef}
     />
   );
 };
@@ -195,14 +198,14 @@ ChatThread.displayName = 'Chat.Thread';
 // Prompt
 //
 
-const ChatPrompt = (
-  props: Pick<ChatPromptProps, 'classNames' | 'placeholder' | 'compact' | 'blueprints' | 'onSearchBlueprints'>,
-) => {
-  const { update, space, error, processing, handleOpenChange, handleSubmit, handleCancel } = useChatContext(
+const ChatPrompt = (props: Pick<ChatPromptProps, 'classNames' | 'placeholder' | 'compact'>) => {
+  const { update, space, processor, blueprintRegistry, handleOpenChange, handleSubmit, handleCancel } = useChatContext(
     ChatPrompt.displayName,
   );
 
   const contextProvider = useContextProvider(space);
+
+  // Referenced objects.
   const references = useMemo<ReferencesOptions | undefined>(() => {
     if (!contextProvider) {
       return;
@@ -216,11 +219,21 @@ const ChatPrompt = (
     };
   }, [contextProvider]);
 
+  // Blueprints.
+  const [blueprints, handleSearchBlueprints, handleUpdateBlueprints] = useBlueprintHandlers(
+    space,
+    processor,
+    blueprintRegistry,
+  );
+
   return (
     <NativeChatPrompt
       {...props}
-      error={error}
-      processing={processing}
+      error={processor?.error.value}
+      processing={processor?.streaming.value ?? false}
+      blueprints={blueprints}
+      onSearchBlueprints={handleSearchBlueprints}
+      onUpdateBlueprints={handleUpdateBlueprints}
       references={references}
       onSubmit={handleSubmit}
       onCancel={handleCancel}

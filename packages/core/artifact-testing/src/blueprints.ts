@@ -8,6 +8,7 @@ import { Obj } from '@dxos/echo';
 import { readDocument, writeDocument } from './tools';
 
 export const DESIGN_SPEC_BLUEPRINT = Obj.make(Blueprint, {
+  blueprintId: 'dxos.org/blueprint/design-spec',
   name: 'Design Spec',
   description: 'Preserve the conversation in the design spec.',
   instructions: `
@@ -26,6 +27,7 @@ export const DESIGN_SPEC_BLUEPRINT = Obj.make(Blueprint, {
 });
 
 export const TASK_LIST_BLUEPRINT = Obj.make(Blueprint, {
+  blueprintId: 'dxos.org/blueprint/task-list',
   name: 'Task List',
   description: 'Manages a list of tasks.',
   instructions: `
