@@ -232,6 +232,9 @@
       "path": "packages/devtools/devtools-extension/tsconfig.json"
     },
     {
+      "path": "packages/e2e/proto-guard/tsconfig.json"
+    },
+    {
       "path": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
     },
     {
@@ -248,9 +251,6 @@
     },
     {
       "path": "packages/experimental/script-toolbox/tsconfig.json"
-    },
-    {
-      "path": "packages/gravity/proto-guard/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
