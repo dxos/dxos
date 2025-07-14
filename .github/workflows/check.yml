@@ -159,7 +159,8 @@ jobs:
           result: ${{ job.status }}
 
   e2e:
-    if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
+    # TODO(wittjosiah): Re-enable this.
+    # if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:20.12.1
@@ -194,21 +195,15 @@ jobs:
       - name: Install Playwright
         run: pnpm run install-playwright
 
-      - name: Run Storybook
-        id: storybook
-        run: |
-          moon run stories:serve &
-          echo "react-pid=$!" >> $GITHUB_ENV
-          moon run lit-stories:serve &
-          echo "lit-pid=$!" >> $GITHUB_ENV
-
       - name: Run Storybook Playwright Tests
-        run: moon run "#storybook-e2e:e2e" --affected --remote -- --browser=all
-
-      - name: Stop Storybook
         run: |
-          kill ${{ steps.storybook.outputs.react-pid }}
-          kill ${{ steps.storybook.outputs.lit-pid }}
+          npx concurrently \
+            --kill-others \
+            --names "React,Lit,Tests" \
+            --prefix-colors "blue,pink,green" \
+            "moon run stories:serve" \
+            "moon run lit-stories:serve" \
+            "npx wait-on http://localhost:9009 && npx wait-on http://localhost:8008 && moon run '#storybook-e2e:e2e' --affected --remote -- --browser=all"
 
       # TODO(wittjosiah): Try to increase concurrency here.
       - name: Bundle Affected
