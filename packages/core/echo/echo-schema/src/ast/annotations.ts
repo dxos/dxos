@@ -28,6 +28,7 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
  */
 export const TypeAnnotationId = Symbol.for('@dxos/schema/annotation/Type');
 
+// TODO(burdon): Create Format type.
 export const Typename = Schema.String.pipe(Schema.pattern(/^[a-zA-Z]\w+\.[a-zA-Z]\w{1,}\/[\w/_-]+$/));
 export const Version = Schema.String.pipe(Schema.pattern(/^\d+.\d+.\d+$/));
 

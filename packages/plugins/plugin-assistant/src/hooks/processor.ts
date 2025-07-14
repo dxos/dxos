@@ -7,21 +7,19 @@ import { type Signal, batch, computed, signal } from '@preact/signals-core';
 import {
   DEFAULT_EDGE_MODEL,
   type ExecutableTool,
-  type AiServiceClient,
   type GenerateRequest,
   type Message,
   type MessageContentBlock,
   type ToolUseContentBlock,
-  ToolRegistry,
 } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
-import { AISession, type ArtifactDiffResolver, type Blueprint, type Conversation } from '@dxos/assistant';
+import { type AISession, type ArtifactDiffResolver, type Blueprint, type Conversation } from '@dxos/assistant';
+import { Context } from '@dxos/context';
+import { type Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Filter, getVersion, type Live, type Space } from '@dxos/react-client/echo';
-import { Context } from '@dxos/context';
-import type { Ref } from '@dxos/echo';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -89,11 +87,16 @@ export class ChatProcessor {
 
   constructor(
     private readonly _conversation: Conversation,
+    // TODO(burdon): Toolkit.
     private _tools?: ExecutableTool[],
     private _artifacts?: readonly ArtifactDefinition[],
     private readonly _extensions?: ToolContextExtensions,
     private readonly _options: ChatProcessorOptions = defaultOptions,
   ) {}
+
+  get conversation() {
+    return this._conversation;
+  }
 
   get tools() {
     return this._tools;

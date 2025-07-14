@@ -13,9 +13,10 @@ import { Format, LabelAnnotation } from '@dxos/echo-schema';
  * Blueprints contain instructions, tools, and artifacts that guide the AI's behavior.
  */
 export const Blueprint = Schema.Struct({
-  // TODO(burdon): Move to main API.
-  // TODO(burdon): It's cumbersome not to call this `id` but would clash with runtime property.
-  blueprintId: Schema.String.annotations({
+  /**
+   * Global registry ID.
+   */
+  key: Format.DXN.annotations({
     description: 'Unique system name for the blueprint',
   }),
 
@@ -56,6 +57,7 @@ export const Blueprint = Schema.Struct({
   }),
 }).pipe(
   Type.Obj({
+    // TODO(burdon): Is this a DXN? Need to create a Format type for these IDs.
     typename: 'dxos.org/type/Blueprint',
     version: '0.1.0',
   }),

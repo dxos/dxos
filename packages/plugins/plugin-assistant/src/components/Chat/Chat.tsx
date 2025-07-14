@@ -18,17 +18,11 @@ import { getSpace, useQueue, type Space } from '@dxos/react-client/echo';
 import { type ReferencesOptions } from '@dxos/react-ui-chat';
 import { type ScrollController } from '@dxos/react-ui-components';
 
-import { useBlueprintHandlers } from './hooks';
+import { useBlueprintHandlers } from './useBlueprintHandlers';
 import { type ChatProcessor, useChatProcessor, useContextProvider, useServiceContainer } from '../../hooks';
 import { type AIChatType, type AssistantSettingsProps } from '../../types';
 import { ChatPrompt as NativeChatPrompt, type ChatPromptProps } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps } from '../ChatThread';
-
-// TODO(burdon): Remove?
-// interface ContextProvider {
-//   query({ query }: { query: string }): Promise<ReferenceData[]>;
-//   resolveMetadata({ uri }: { uri: string }): Promise<ReferenceData | null>;
-// }
 
 type ChatEvents = 'submit' | 'scroll';
 
@@ -65,6 +59,8 @@ type ChatRootProps = PropsWithChildren<
     onOpenChange?: ChatPromptProps['onOpenChange'];
   } & Pick<ChatContextValue, 'blueprintRegistry'>
 >;
+
+// TODO(burdon): Move blueprintRegistry to ChatProcessor (via injection).
 
 const ChatRoot = ({
   children,
@@ -168,6 +164,7 @@ ChatRoot.displayName = 'Chat.Root';
 
 const ChatThread = (props: Omit<ChatThreadProps, 'space' | 'messages' | 'tools' | 'onPrompt'>) => {
   const { update, space, messages, processor, handleSubmit } = useChatContext(ChatThread.displayName);
+
   const scrollerRef = useRef<ScrollController>(null);
   useEffect(() => {
     return update.on((event) => {
