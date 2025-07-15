@@ -3,14 +3,14 @@
 //
 
 import { Type } from '@dxos/echo';
-import { TableType } from '@dxos/react-ui-table';
 
 import { TABLE_PLUGIN } from './meta';
+import { TableView } from './types';
 
 export default [
   {
     'en-US': {
-      [Type.getTypename(TableType)]: {
+      [Type.getTypename(TableView)]: {
         'typename label': 'Table',
         'typename label_zero': 'Tables',
         'typename label_one': 'Table',

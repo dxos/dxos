@@ -5,31 +5,37 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { Obj, type Ref } from '@dxos/echo';
+import { Obj, Relation, type Ref } from '@dxos/echo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { TableType } from '@dxos/react-ui-table';
-import { Projection } from '@dxos/schema';
+import { DataType, Projection } from '@dxos/schema';
 
 import { ObjectDetailsPanel, TableContainer, TableViewEditor } from '../components';
 import { meta } from '../meta';
+import { TableView } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/table`,
       role: ['article', 'section', 'slide'],
-      filter: (data): data is { subject: TableType } => Obj.instanceOf(TableType, data.subject) && !data.variant,
-      component: ({ data, role }) => <TableContainer table={data.subject} role={role} />,
+      filter: (data): data is { subject: DataType.HasView } =>
+        Obj.instanceOf(DataType.HasView, data.subject) &&
+        // TODO(wittjosiah): Remove cast.
+        Obj.instanceOf(TableView, Relation.getTarget(data.subject as any)),
+      component: ({ data, role }) => <TableContainer view={data.subject} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/companion/schema`,
       role: 'article',
-      filter: (data): data is { companionTo: TableType; subject: 'schema' } =>
-        Obj.instanceOf(TableType, data.companionTo) && data.subject === 'schema',
+      filter: (data): data is { companionTo: DataType.HasView; subject: 'schema' } =>
+        Obj.instanceOf(DataType.HasView, data.companionTo) &&
+        // TODO(wittjosiah): Remove cast.
+        Obj.instanceOf(TableView, Relation.getTarget(data.companionTo as any)) &&
+        data.subject === 'schema',
       component: ({ data, role }) => {
         return (
           <StackItem.Content role={role}>
-            <TableViewEditor table={data.companionTo} />
+            <TableViewEditor view={data.companionTo} />
           </StackItem.Content>
         );
       },

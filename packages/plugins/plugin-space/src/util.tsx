@@ -7,7 +7,7 @@ import { pipe } from 'effect';
 
 import { chain, createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
+import { type AnyEchoObject, EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import {
@@ -36,7 +36,7 @@ export const SHARED = 'shared-spaces';
 /**
  * Convert a query result to an Rx value of the objects.
  */
-export const rxFromQuery = <T extends Obj.Any>(query: QueryResult<T>): Rx.Rx<T[]> => {
+export const rxFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Rx.Rx<T[]> => {
   return Rx.make((get) => {
     const unsubscribe = query.subscribe((result) => {
       get.setSelf(result.objects);

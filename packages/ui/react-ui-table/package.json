@@ -54,8 +54,6 @@
     "@dxos/lit-grid": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-search": "workspace:*",
-    "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
@@ -81,6 +79,7 @@
   },
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/plugin-search": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

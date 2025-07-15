@@ -2,15 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
+import { Effect } from 'effect';
+
+import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/assistant';
-import { Key, Obj, Ref } from '@dxos/echo';
+import { Key, Obj, Ref, Type } from '@dxos/echo';
+import { CollectionAction } from '@dxos/plugin-space/types';
 
 import { AssistantAction, AIChatType } from '../types';
 
-export default () => [
-  contributes(
-    Capabilities.IntentResolver,
+export default (context: PluginContext) => [
+  contributes(Capabilities.IntentResolver, [
+    createResolver({
+      intent: AssistantAction.OnSpaceCreated,
+      resolve: ({ space, rootCollection }) =>
+        Effect.gen(function* () {
+          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { object: collection } = yield* dispatch(
+            createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(AIChatType) }),
+          );
+          rootCollection.objects.push(Ref.make(collection));
+
+          const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
+          space.db.add(chat);
+        }),
+    }),
     createResolver({
       intent: AssistantAction.CreateChat,
       resolve: ({ space, name }) => ({
@@ -22,9 +38,6 @@ export default () => [
         },
       }),
     }),
-  ),
-  contributes(
-    Capabilities.IntentResolver,
     createResolver({
       intent: AssistantAction.CreateBlueprint,
       resolve: ({ name }) => ({
@@ -41,5 +54,5 @@ export default () => [
         },
       }),
     }),
-  ),
+  ]),
 ];

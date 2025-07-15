@@ -43,7 +43,6 @@ const DefaultStory = (props: StoryProps) => {
 
       const [schema] = await space.db.schemaRegistry.register([TestSchema]);
       const projection = createProjection({
-        name: 'Test',
         typename: schema.typename,
         jsonSchema: toJsonSchema(TestSchema),
       });

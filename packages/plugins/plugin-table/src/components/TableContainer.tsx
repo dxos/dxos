@@ -19,27 +19,26 @@ import {
   type TableFeatures,
   TablePresentation,
   TableToolbar,
-  type TableType,
   useTableModel,
 } from '@dxos/react-ui-table';
-import { ProjectionManager } from '@dxos/schema';
+import { type DataType, ProjectionManager } from '@dxos/schema';
 
 import { TableAction } from '../types';
 
-const TableContainer = ({ role, table }: { role?: string; table: TableType }) => {
+const TableContainer = ({ role, view }: { role?: string; view: DataType.HasView }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const tableRef = useRef<TableController>(null);
 
   const client = useClient();
-  const space = getSpace(table);
-  const schema = useSchema(client, space, table.view?.target?.query.typename);
+  const space = getSpace(view);
+  const schema = useSchema(client, space, view.projection.target?.query.typename);
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
     return Rx.make((get) => {
-      const actions = get(graph.actions(fullyQualifiedId(table)));
+      const actions = get(graph.actions(fullyQualifiedId(view)));
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
       return { nodes, edges: nodes.map((node) => ({ source: 'root', target: node.id })) };
     });
@@ -60,19 +59,19 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
 
   const handleDeleteColumn = useCallback(
     (fieldId: string) => {
-      void dispatch(createIntent(TableAction.DeleteColumn, { table, fieldId }));
+      void dispatch(createIntent(TableAction.DeleteColumn, { view, fieldId }));
     },
     [dispatch],
   );
 
   const projection = useMemo(() => {
-    if (!schema || !table.view?.target) {
+    if (!schema || !view.projection.target) {
       return;
     }
 
     const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
-    return new ProjectionManager(jsonSchema, table.view.target);
-  }, [table.view?.target, JSON.stringify(schema)]);
+    return new ProjectionManager(jsonSchema, view.projection.target);
+  }, [view.projection.target, JSON.stringify(schema)]);
 
   const features: Partial<TableFeatures> = useMemo(
     () => ({
@@ -84,7 +83,6 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
   );
 
   const model = useTableModel({
-    table,
     projection,
     features,
     rows: filteredObjects,
@@ -104,13 +102,13 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
   return (
     <StackItem.Content role={role} toolbar>
       <TableToolbar
-        attendableId={fullyQualifiedId(table)}
+        attendableId={fullyQualifiedId(view)}
         customActions={customActions}
         onAdd={handleInsertRow}
         onSave={handleSave}
       />
       <Table.Root role={role}>
-        <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} schema={schema} />
+        <Table.Main key={view.id} ref={tableRef} model={model} presentation={presentation} schema={schema} />
       </Table.Root>
     </StackItem.Content>
   );

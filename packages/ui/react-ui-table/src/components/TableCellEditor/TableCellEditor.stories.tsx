@@ -7,7 +7,6 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { type EchoSchema, isMutable } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
@@ -21,8 +20,7 @@ import { TableCellEditor, type TableCellEditorProps } from './TableCellEditor';
 import { useTableModel } from '../../hooks';
 import { type TableFeatures } from '../../model';
 import translations from '../../translations';
-import { TableType } from '../../types';
-import { initializeTable } from '../../util';
+import { initializeProjection } from '../../util';
 
 type StoryProps = {
   editing: GridEditing;
@@ -32,23 +30,22 @@ const DefaultStory = ({ editing }: StoryProps) => {
   const { space } = useClientProvider();
   invariant(space);
 
-  const tables = useQuery(space, Filter.type(TableType));
-  const [table, setTable] = useState<TableType>();
+  const projections = useQuery(space, Filter.type(DataType.Projection));
+  const [projection, setProjection] = useState<DataType.Projection>();
   const [schema, setSchema] = useState<EchoSchema>();
   useEffect(() => {
-    if (space && tables.length && !table) {
-      const table = tables[0];
-      invariant(table.view);
-      setTable(table);
-      setSchema(space.db.schemaRegistry.getSchema(table.view.target!.query.typename!));
+    if (space && projections.length && !projection) {
+      const projection = projections[0];
+      setProjection(projection);
+      setSchema(space.db.schemaRegistry.getSchema(projection.query.typename!));
     }
-  }, [space, tables]);
+  }, [space, projections, projection]);
 
-  const projection = useMemo(() => {
-    if (schema && table?.view) {
-      return new ProjectionManager(schema.jsonSchema, table.view.target!);
+  const manager = useMemo(() => {
+    if (schema && projection) {
+      return new ProjectionManager(schema.jsonSchema, projection);
     }
-  }, [schema, table?.view]);
+  }, [schema, projection]);
 
   const features: Partial<TableFeatures> = useMemo(
     () => ({
@@ -59,7 +56,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
     [schema],
   );
 
-  const model = useTableModel({ table, projection, features });
+  const model = useTableModel({ projection: manager, features });
 
   const handleQuery: TableCellEditorProps['onQuery'] = async ({ field }) => {
     // TODO(dmaretskyi): If no schema query nothing
@@ -73,7 +70,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
     });
   };
 
-  if (!model || !schema || !table) {
+  if (!model || !schema || !projection) {
     return <div />;
   }
 
@@ -93,12 +90,12 @@ const meta: Meta<StoryProps> = {
   parameters: { translations, layout: 'centered' },
   decorators: [
     withClientProvider({
-      types: [TableType, DataType.Projection],
+      types: [DataType.Projection],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(Obj.make(TableType, {}));
-        const schema = await initializeTable({ client, space, table });
+      onSpaceCreated: async ({ space }) => {
+        const { schema, projection } = await initializeProjection({ space });
+        space.db.add(projection);
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
             live(schema, {

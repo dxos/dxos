@@ -11,8 +11,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/types/index.ts"
+          "{projectRoot}/src/index.ts"
         ],
         "preactSignalTracking": true
       }

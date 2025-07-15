@@ -4,26 +4,32 @@
 
 import { Schema } from 'effect';
 
-import { Obj } from '@dxos/echo';
+import { EchoSchema } from '@dxos/echo-schema';
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { TableType } from '@dxos/react-ui-table/types';
-import { FieldSchema, TypenameAnnotationId } from '@dxos/schema';
+import { DataType, FieldSchema, TypenameAnnotationId } from '@dxos/schema';
 
+import { TableView } from './table';
 import { TABLE_PLUGIN } from '../meta';
 
 export const CreateTableSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
-  typename: Schema.optional(
-    Schema.String.annotations({
-      [TypenameAnnotationId]: ['limited-static', 'dynamic'],
-    }),
-  ),
+  typename: Schema.String.annotations({
+    [TypenameAnnotationId]: ['limited-static', 'dynamic'],
+  }),
 });
 
 export type CreateTableType = Schema.Schema.Type<typeof CreateTableSchema>;
 
 export namespace TableAction {
   const TABLE_ACTION = `${TABLE_PLUGIN}/action`;
+
+  export class OnSchemaAdded extends Schema.TaggedClass<OnSchemaAdded>()(`${TABLE_ACTION}/on-schema-added`, {
+    input: Schema.Struct({
+      space: SpaceSchema,
+      schema: Schema.instanceOf(EchoSchema),
+    }),
+    output: Schema.Void,
+  }) {}
 
   export class Create extends Schema.TaggedClass<Create>()(`${TABLE_ACTION}/create`, {
     input: Schema.extend(
@@ -33,13 +39,14 @@ export namespace TableAction {
       CreateTableSchema,
     ),
     output: Schema.Struct({
-      object: TableType,
+      object: TableView,
+      relation: DataType.HasView,
     }),
   }) {}
 
   export class DeleteColumn extends Schema.TaggedClass<DeleteColumn>()(`${TABLE_ACTION}/delete-column`, {
     input: Schema.Struct({
-      table: TableType,
+      view: DataType.HasView, // TODO(wittjosiah): HasView<StoredSchema, TableView>?
       fieldId: Schema.String,
       // TODO(wittjosiah): Separate fields for undo data?
       deletionData: Schema.optional(
@@ -57,11 +64,9 @@ export namespace TableAction {
 
   export class AddRow extends Schema.TaggedClass<AddRow>()(`${TABLE_ACTION}/add-row`, {
     input: Schema.Struct({
-      table: TableType,
+      view: DataType.HasView, // TODO(wittjosiah): HasView<StoredSchema, TableView>?
       data: Schema.Any,
     }),
     output: Schema.Void,
   }) {}
 }
-
-export const isTable = (object: unknown): object is TableType => Obj.instanceOf(TableType, object);

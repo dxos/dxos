@@ -7,12 +7,12 @@ import { Array, Option, pipe } from 'effect';
 
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { getSpace, SpaceState, type Space, isSpace, type QueryResult } from '@dxos/client/echo';
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Relation, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromObservable, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
-import { DataType, HasView } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities } from './capabilities';
@@ -483,7 +483,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${SPACE_PLUGIN}/schema-views`,
       connector: (node) => {
-        let query: QueryResult<DataType.Projection> | undefined;
+        let query: QueryResult<DataType.HasView> | undefined;
         return Rx.make((get) =>
           pipe(
             get(node),
@@ -495,16 +495,16 @@ export default (context: PluginContext) => {
             }),
             Option.map(({ space, schema }) => {
               if (!query) {
-                query = space.db.query(Query.select(Filter.ids(schema.id)).sourceOf(HasView).target());
+                query = space.db.query(Query.select(Filter.ids(schema.id)).sourceOf(DataType.HasView));
               }
-              const objects = get(rxFromQuery(query));
-              console.log('objects', objects);
-              return objects
-                .map((object) =>
+              const relations = get(rxFromQuery(query));
+              return relations
+                .map((relation) =>
                   get(
                     rxFromSignal(() =>
                       createObjectNode({
-                        object,
+                        // TODO(wittjosiah): Remove this cast.
+                        object: Relation.getTarget(relation as any) as any,
                         space,
                         resolve,
                         droppable: false,

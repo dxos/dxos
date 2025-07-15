@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, pipe, Schema } from 'effect';
+import { Schema } from 'effect';
 
 import {
   Capabilities,
   Events,
   allOf,
-  chain,
   contributes,
   createIntent,
   defineModule,
@@ -38,7 +37,7 @@ import {
 import { SpaceEvents } from './events';
 import { meta } from './meta';
 import translations from './translations';
-import { CollectionAction, createDefaultSchema, defineObjectForm, SpaceAction } from './types';
+import { CollectionAction, defineObjectForm } from './types';
 
 export type SpacePluginOptions = {
   /**
@@ -144,18 +143,6 @@ export const SpacePlugin = ({
             getIntent: (props) => createIntent(CollectionAction.CreateQueryCollection, props),
           }),
         ),
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
-            objectSchema: DataType.StoredSchema,
-            formSchema: Schema.Struct({ name: Schema.String }),
-            getIntent: ({ name }, { space }) =>
-              pipe(
-                createIntent(SpaceAction.RegisterSchema, { space, name, schema: createDefaultSchema() }),
-                chain(SpaceAction.AddView, { space, name: 'Table' }),
-              ),
-          }),
-        ),
       ],
     }),
     defineModule({
@@ -173,24 +160,6 @@ export const SpacePlugin = ({
       id: `${meta.id}/module/migration`,
       activatesOn: ClientEvents.SetupMigration,
       activate: () => contributes(ClientCapabilities.Migration, [ViewTypeV1ToV2, ViewTypeToProjection]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/on-space-created`,
-      activatesOn: SpaceEvents.SpaceCreated,
-      activate: (context) => {
-        const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-        return contributes(SpaceCapabilities.OnSpaceCreated, async ({ space, rootCollection }) => {
-          const program = Effect.gen(function* () {
-            const { object: collection } = yield* dispatch(
-              createIntent(CollectionAction.CreateQueryCollection, {
-                typename: Type.getTypename(DataType.StoredSchema),
-              }),
-            );
-            rootCollection.objects.push(Ref.make(collection));
-          });
-          await Effect.runPromise(program);
-        });
-      },
     }),
     defineModule({
       id: `${meta.id}/module/react-root`,

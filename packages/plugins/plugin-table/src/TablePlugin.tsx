@@ -7,13 +7,12 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
-import { TableType, translations as tableTranslations } from '@dxos/react-ui-table';
+import { translations as tableTranslations } from '@dxos/react-ui-table';
 
 import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import { serializer } from './serializer';
 import translations from './translations';
-import { CreateTableSchema, TableAction } from './types';
+import { CreateTableSchema, TableAction, TableView } from './types';
 
 export const TablePlugin = () =>
   definePlugin(meta, [
@@ -28,13 +27,9 @@ export const TablePlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
-          id: TableType.typename,
+          id: TableView.typename,
           metadata: {
-            label: (object: TableType) => object.name,
             icon: 'ph--table--regular',
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (table: TableType) => [], // loadObjectReferences(table, (table) => [table.schema]),
-            serializer,
             comments: 'unanchored',
           },
         }),
@@ -51,7 +46,7 @@ export const TablePlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: TableType,
+            objectSchema: TableView,
             formSchema: CreateTableSchema,
             getIntent: (props, options) => createIntent(TableAction.Create, { ...props, space: options.space }),
           }),

@@ -33,10 +33,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../ui/react-ui-kanban"
-    },
-    {
-      "path": "../../ui/react-ui-table"
+      "path": "../../sdk/schema"
     },
     {
       "path": "../ai"

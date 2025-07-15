@@ -28,7 +28,7 @@ describe('Projection', () => {
 
   test('create view from TypedObject', async ({ expect }) => {
     const schema = Testing.Contact;
-    const view = createProjection({ name: 'Test', typename: schema.typename, jsonSchema: Type.toJsonSchema(schema) });
+    const view = createProjection({ typename: schema.typename, jsonSchema: Type.toJsonSchema(schema) });
     expect(view.query.typename).to.eq(schema.typename);
     expect(view.fields.map((f) => f.path)).to.deep.eq([
       'name',
@@ -79,7 +79,6 @@ describe('Projection', () => {
     });
 
     const view = createProjection({
-      name: 'Test',
       typename: schema.typename,
       jsonSchema: schema.jsonSchema,
       fields: ['name', 'email', 'salary'], // Explicitly define order.
@@ -105,7 +104,6 @@ describe('Projection', () => {
     });
 
     const projection = createProjection({
-      name: 'Test',
       typename: schema.typename,
       jsonSchema: schema.jsonSchema,
       fields: ['name', 'email', 'salary'],

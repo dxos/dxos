@@ -2,23 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
 import {
   FormatEnum,
   JsonSchemaType,
-  QueryType,
-  toEffectSchema,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
+  QueryType,
+  toEffectSchema,
 } from '@dxos/echo-schema';
 import { findAnnotation, type JsonPath } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 import { stripUndefined } from '@dxos/util';
 
-import { FieldSchema, type FieldType, KeyValueProps } from './field';
+import { FieldSchema, type FieldType } from './field';
 import { getSchemaProperties } from '../properties';
 
 /**
@@ -27,14 +27,6 @@ import { getSchemaProperties } from '../properties';
  * The query is separate from the projection (queries configure the projection of data objects).
  */
 export const Projection = Schema.Struct({
-  /**
-   * Human readable name.
-   */
-  name: Schema.String.annotations({
-    title: 'Name',
-    [SchemaAST.ExamplesAnnotationId]: ['Contact'],
-  }),
-
   /**
    * Query used to retrieve data.
    * This includes the base type that the view schema (above) references.
@@ -47,6 +39,8 @@ export const Projection = Schema.Struct({
    */
   schema: Schema.optional(JsonSchemaType),
 
+  // TODO(wittjosiah): Remove fields and hiddenFields. Instead require schema and mutate it instead.
+
   /**
    * UX metadata associated with displayed fields (in table, form, etc.)
    */
@@ -57,35 +51,21 @@ export const Projection = Schema.Struct({
    * These fields follow the FieldSchema structure but are marked for exclusion from visual rendering.
    */
   hiddenFields: Schema.optional(Schema.mutable(Schema.Array(FieldSchema))),
-
-  /**
-   * Additional metadata for the view.
-   */
-  metadata: Schema.optional(KeyValueProps.pipe(Schema.mutable)),
-
-  // TODO(burdon): Readonly flag?
-  // TODO(burdon): Add array of sort orders (which might be tuples).
 }).pipe(Type.Obj({ typename: 'dxos.org/type/Projection', version: '0.1.0' }));
 export type Projection = Schema.Schema.Type<typeof Projection>;
 
 export const createFieldId = () => PublicKey.random().truncate();
 
 type CreateViewProps = {
-  name: string;
   typename?: string;
   jsonSchema?: JsonSchemaType;
   fields?: string[];
 };
 
 /**
- * Create view from existing schema.
+ * Create projection from existing schema.
  */
-export const createProjection = ({
-  name,
-  typename,
-  jsonSchema,
-  fields: include,
-}: CreateViewProps): Live<Projection> => {
+export const createProjection = ({ typename, jsonSchema, fields: include }: CreateViewProps): Live<Projection> => {
   const fields: FieldType[] = [];
   if (jsonSchema) {
     const schema = toEffectSchema(jsonSchema);
@@ -122,7 +102,6 @@ export const createProjection = ({
   }
 
   return Obj.make(Projection, {
-    name,
     query: {
       typename,
     },

@@ -49,7 +49,6 @@ export const testSchema: Live<StoredSchema> = create(StoredSchema, {
 });
 
 export const testProjection: Live<Projection> = createProjection({
-  name: 'Test',
   typename: testSchema.typename,
   jsonSchema: Type.toJsonSchema(TestSchema),
 });

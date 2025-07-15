@@ -10,32 +10,24 @@ import {
   FormatEnum,
   type JsonPath,
   type JsonProp,
-  Ref,
   TypedObject,
   TypeEnum,
 } from '@dxos/echo-schema';
-import { type Client, PublicKey } from '@dxos/react-client';
+import { PublicKey } from '@dxos/react-client';
 import { live, type Space } from '@dxos/react-client/echo';
 import { createFieldId, createProjection, getSchemaProperties, ProjectionManager, type Projection } from '@dxos/schema';
 
-import { type TableType } from '../types';
-
-// TODO(ZaymonFC): We don't need the client anymore.
 type InitialiseTableProps = {
-  client: Client;
   space: Space;
-  table: TableType;
   typename?: string;
   initialRow?: boolean;
 };
 
-export const initializeTable = async ({
-  client,
+export const initializeProjection = async ({
   space,
-  table,
   typename,
   initialRow = true,
-}: InitialiseTableProps): Promise<Schema.Schema.AnyNoContext> => {
+}: InitialiseTableProps): Promise<{ schema: Schema.Schema.AnyNoContext; projection: Projection }> => {
   if (typename) {
     const schema = await space.db.graph.getSchemaByTypename(typename, space.db);
     if (!schema) {
@@ -44,38 +36,31 @@ export const initializeTable = async ({
 
     const fields = getSchemaProperties(schema.ast).map((prop) => prop.name);
 
-    table.view = Ref.make(
-      createProjection({
-        // TODO(ZaymonFC): Don't hardcode name?
-        name: 'View',
+    return {
+      schema,
+      projection: createProjection({
         typename: schema.typename,
         jsonSchema: schema.jsonSchema,
         fields,
       }),
-    );
-
-    return schema;
+    };
   } else {
     const [schema] = await space.db.schemaRegistry.register([createContactSchema()]);
     const fields = ContactFields;
+    const projection = createProjection({
+      typename: schema.typename,
+      jsonSchema: schema.jsonSchema,
+      fields,
+    });
 
-    table.view = Ref.make(
-      createProjection({
-        name: 'View',
-        typename: schema.typename,
-        jsonSchema: schema.jsonSchema,
-        fields,
-      }),
-    );
-
-    createProjectionManager(schema, table.view.target!);
+    createProjectionManager(schema, projection);
 
     if (initialRow) {
       // TODO(burdon): Last (first) row should not be in db and should be managed by the model.
       space.db.add(live(schema, {}));
     }
 
-    return schema;
+    return { schema, projection };
   }
 };
 

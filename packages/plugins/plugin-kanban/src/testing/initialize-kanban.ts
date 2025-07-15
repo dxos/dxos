@@ -63,7 +63,6 @@ export const initializeKanban = async ({
       .map((prop) => prop.name);
 
     const projection = createProjection({
-      name: "Kanban's card view",
       typename,
       jsonSchema,
       fields,
@@ -83,7 +82,6 @@ export const initializeKanban = async ({
     const [schema] = await space.db.schemaRegistry.register([taskSchema]);
 
     const projection = createProjection({
-      name: "Kanban's card view",
       typename: schema.typename,
       jsonSchema: schema.jsonSchema,
       fields: ['title', 'description'],

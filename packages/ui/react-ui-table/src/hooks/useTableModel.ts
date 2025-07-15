@@ -6,16 +6,15 @@ import { effect } from '@preact/signals-core';
 import orderBy from 'lodash.orderby';
 import { useEffect, useState } from 'react';
 
-import { fullyQualifiedId, getSpace, type Live } from '@dxos/react-client/echo';
+import { getSpace, type Live } from '@dxos/react-client/echo';
 import { useSelectionActions } from '@dxos/react-ui-attention';
 import { type ProjectionManager } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { type TableRow, TableModel, type TableModelProps, type TableRowAction } from '../model';
-import { type TableType } from '../types';
 
 export type UseTableModelParams<T extends TableRow = TableRow> = {
-  table?: TableType;
+  id?: string;
   projection?: ProjectionManager;
   rows?: Live<T>[];
   rowActions?: TableRowAction[];
@@ -27,8 +26,8 @@ export type UseTableModelParams<T extends TableRow = TableRow> = {
 >;
 
 export const useTableModel = <T extends TableRow = TableRow>({
-  table,
-  projection,
+  id,
+  projection: manager,
   rows,
   rowActions,
   features,
@@ -38,16 +37,16 @@ export const useTableModel = <T extends TableRow = TableRow>({
 }: UseTableModelParams<T>): TableModel<T> | undefined => {
   const [model, setModel] = useState<TableModel<T>>();
   useEffect(() => {
-    if (!table || !projection) {
+    if (!id || !manager) {
       return;
     }
 
     let model: TableModel<T> | undefined;
     const t = setTimeout(async () => {
       model = new TableModel<T>({
-        id: fullyQualifiedId(table),
-        space: getSpace(table),
-        projection,
+        id,
+        space: getSpace(manager.projection),
+        projection: manager,
         features,
         rowActions,
         onRowAction,
@@ -61,7 +60,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [table, projection, table?.view?.target, features, rowActions]); // TODO(burdon): Trigger if callbacks change?
+  }, [id, manager, features, rowActions]); // TODO(burdon): Trigger if callbacks change?
 
   // Update data.
   useEffect(() => {
@@ -76,9 +75,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
     }
   }, [model, rows]);
 
-  const { multiSelect, clear } = useSelectionActions(
-    [table?.id, table?.view?.target?.query.typename].filter(isNonNullable),
-  );
+  const { multiSelect, clear } = useSelectionActions([id, manager?.projection?.query.typename].filter(isNonNullable));
 
   useEffect(() => {
     if (!model) {

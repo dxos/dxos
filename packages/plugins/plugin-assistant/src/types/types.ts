@@ -6,12 +6,21 @@ import { Schema } from 'effect';
 
 import { Blueprint } from '@dxos/assistant';
 import { SpaceSchema } from '@dxos/react-client/echo';
+import { DataType } from '@dxos/schema';
 
 import { AIChatType } from './chat';
 import { ASSISTANT_PLUGIN } from '../meta';
 
 export namespace AssistantAction {
   const ASSISTANT_ACTION = `${ASSISTANT_PLUGIN}/action`;
+
+  export class OnSpaceCreated extends Schema.TaggedClass<OnSpaceCreated>()(`${ASSISTANT_ACTION}/on-space-created`, {
+    input: Schema.Struct({
+      space: SpaceSchema,
+      rootCollection: DataType.Collection,
+    }),
+    output: Schema.Void,
+  }) {}
 
   export class CreateChat extends Schema.TaggedClass<CreateChat>()(`${ASSISTANT_ACTION}/create-chat`, {
     input: Schema.Struct({

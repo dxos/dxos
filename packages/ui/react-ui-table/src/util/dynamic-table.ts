@@ -4,7 +4,6 @@
 
 import { type Schema } from 'effect';
 
-import { Obj, Ref } from '@dxos/echo';
 import { getTypename, toJsonSchema } from '@dxos/echo-schema';
 import type { JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
 import {
@@ -14,8 +13,6 @@ import {
   ProjectionManager,
   type SchemaPropertyDefinition,
 } from '@dxos/schema';
-
-import { TableType } from '../types';
 
 // TODO(ZaymonFC): Upstream these extra fields to SchemaPropertyDefinition to enhance schema-tools schema creation.
 type PropertyDisplayProps = {
@@ -61,24 +58,19 @@ export const makeDynamicTable = ({
   typename: string;
   jsonSchema: JsonSchemaType;
   properties?: TablePropertyDefinition[];
-}): { table: TableType; projection: ProjectionManager } => {
+}): ProjectionManager => {
   const projection = createProjection({
-    name: 'dynamic-table',
     typename,
     jsonSchema,
     ...(properties && { fields: properties.map((property) => property.name) }),
   });
 
-  const table = Obj.make(TableType, { name: 'dynamic-table', view: Ref.make(projection) });
   const manager = new ProjectionManager(jsonSchema, projection);
   if (properties && projection.fields) {
     setProperties(projection, manager, properties);
   }
 
-  return {
-    table,
-    projection: manager,
-  };
+  return manager;
 };
 
 const setProperties = (projection: Projection, manager: ProjectionManager, properties: TablePropertyDefinition[]) => {

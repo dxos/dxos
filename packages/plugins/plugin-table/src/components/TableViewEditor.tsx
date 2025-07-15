@@ -10,21 +10,23 @@ import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
-import { type TableType } from '@dxos/react-ui-table';
 import { DataType } from '@dxos/schema';
 
 import { TableAction } from '../types';
 
-type TableViewEditorProps = { table: TableType };
+type TableViewEditorProps = { view: DataType.HasView };
 
-const TableViewEditor = ({ table }: TableViewEditorProps) => {
+const TableViewEditor = ({ view }: TableViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
-  const space = getSpace(table);
-  const schema = useSchema(client, space, table.view?.target?.query.typename);
+  const space = getSpace(view);
+  const schema = useSchema(client, space, view.projection.target?.query.typename);
 
   const projections = useQuery(space, Filter.type(DataType.Projection));
-  const currentTypename = useMemo(() => table?.view?.target?.query?.typename, [table?.view?.target?.query?.typename]);
+  const currentTypename = useMemo(
+    () => view.projection.target?.query?.typename,
+    [view.projection.target?.query?.typename],
+  );
 
   const handleUpdateTypename = useCallback(
     (typename: string) => {
@@ -43,12 +45,12 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
 
   const handleDelete = useCallback(
     (fieldId: string) => {
-      void dispatch(createIntent(TableAction.DeleteColumn, { table, fieldId }));
+      void dispatch(createIntent(TableAction.DeleteColumn, { view, fieldId }));
     },
-    [dispatch, table],
+    [dispatch, view],
   );
 
-  if (!space || !schema || !table.view) {
+  if (!space || !schema || !view.projection.target) {
     return null;
   }
 
@@ -56,7 +58,7 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
     <ViewEditor
       registry={space.db.schemaRegistry}
       schema={schema}
-      projection={table.view.target!}
+      projection={view.projection.target}
       onTypenameChanged={Type.isMutable(schema) ? undefined : handleUpdateTypename}
       onDelete={Type.isMutable(schema) ? handleDelete : undefined}
     />

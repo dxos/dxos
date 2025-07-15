@@ -5,13 +5,13 @@
 import { Schema } from 'effect';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
-import { Type, type Obj } from '@dxos/echo';
+import { type Obj, Type } from '@dxos/echo';
 import { EchoSchema, StoredSchema, TypedObject, type BaseObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
-import { DataType, HasView, TypenameAnnotationId, ViewType } from '@dxos/schema';
+import { DataType, TypenameAnnotationId } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -217,7 +217,7 @@ export namespace SpaceAction {
     output: Schema.Boolean,
   }) {}
 
-  export class RegisterSchema extends Schema.TaggedClass<RegisterSchema>()(`${SPACE_ACTION}/register-schema`, {
+  export class AddSchema extends Schema.TaggedClass<AddSchema>()(`${SPACE_ACTION}/add-schema`, {
     input: Schema.Struct({
       space: SpaceSchema,
       name: Schema.optional(Schema.String),
@@ -229,20 +229,6 @@ export namespace SpaceAction {
       id: Schema.String,
       object: StoredSchema,
       schema: Schema.instanceOf(EchoSchema),
-    }),
-  }) {}
-
-  export class AddView extends Schema.TaggedClass<AddView>()(`${SPACE_ACTION}/add-view`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-      name: Schema.String,
-      schema: Schema.instanceOf(EchoSchema),
-    }),
-    output: Schema.Struct({
-      // TODO(wittjosiah): ObjectId.
-      id: Schema.String,
-      object: ViewType,
-      relation: HasView,
     }),
   }) {}
 

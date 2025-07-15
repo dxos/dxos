@@ -21,9 +21,6 @@ import { Form, type FormProps } from '../Form';
 const grid = 'grid grid-cols-[32px_1fr_32px_32px] min-bs-[2.5rem]';
 
 const ViewMetaSchema = Schema.Struct({
-  name: Schema.String.annotations({
-    title: 'View',
-  }),
   typename: Format.URL.annotations({
     title: 'Typename',
   }),
@@ -69,7 +66,6 @@ export const ViewEditor = ({
   // TODO(burdon): Should be reactive.
   const viewValues = useMemo(() => {
     return {
-      name: projection.name,
       // TODO(burdon): Need to warn user of possible consequences of editing.
       // TODO(burdon): Settings should have domain name owned by user.
       typename: projection.query.typename,
@@ -95,13 +91,9 @@ export const ViewEditor = ({
   }, [schema, manager, readonly]);
 
   const handleUpdate = useCallback(
-    ({ name, typename }: ViewMetaType) => {
+    ({ typename }: ViewMetaType) => {
       invariant(!readonly);
       requestAnimationFrame(() => {
-        if (projection.name !== name) {
-          projection.name = name;
-        }
-
         if (projection.query.typename !== typename && !readonly) {
           onTypenameChanged?.(typename);
         }

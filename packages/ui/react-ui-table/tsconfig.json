@@ -57,9 +57,6 @@
       "path": "../../plugins/plugin-search"
     },
     {
-      "path": "../../plugins/plugin-space"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {

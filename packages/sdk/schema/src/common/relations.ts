@@ -97,8 +97,8 @@ export const AnchoredTo = Schema.Struct({
   Type.Relation({
     typename: 'dxos.org/relation/AnchoredTo',
     version: '0.1.0',
-    source: Type.Expando, // TODO(burdon): Any???
-    target: Type.Expando,
+    source: Type.Expando, // TODO(burdon): Type.Obj.Any.
+    target: Type.Expando, // TODO(burdon): Type.Obj.Any.
   }),
 );
 
@@ -112,7 +112,7 @@ export const HasView = Schema.Struct({
   projection: Type.Ref(Projection),
 }).pipe(
   Type.Relation({
-    typename: 'dxos.org/type/HasView',
+    typename: 'dxos.org/relation/HasView',
     version: '0.1.0',
     source: StoredSchema,
     target: Type.Expando,

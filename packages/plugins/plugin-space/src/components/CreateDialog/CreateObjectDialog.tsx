@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe } from 'effect';
+import { Effect, pipe } from 'effect';
 import React, { useCallback, useRef, useState } from 'react';
 
 import {
@@ -45,7 +45,7 @@ export const CreateObjectDialog = ({
   const { t } = useTranslation(SPACE_PLUGIN);
   const client = useClient();
   const spaces = useSpaces();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatch } = useIntentDispatcher();
   const forms = useCapabilities(SpaceCapabilities.ObjectForm);
   const [target, setTarget] = useState<Space | DataType.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
@@ -60,31 +60,35 @@ export const CreateObjectDialog = ({
   );
 
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(
-    async ({ form, data = {} }) => {
-      if (!target) {
-        // TODO(wittjosiah): UI feedback.
-        return;
-      }
-
-      // NOTE: Must close before navigating or attention won't follow object.
-      closeRef.current?.click();
-
-      const space = isSpace(target) ? target : getSpace(target);
-      invariant(space, 'Missing space');
-      const result = await dispatch(form.getIntent(data, { space }));
-      const object = result.data?.object;
-      if (isLiveObject(object)) {
-        // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
-        const hidden = form.hidden || hiddenTypenames.includes(Type.getTypename(form.objectSchema));
-        const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object, hidden });
-        const shouldNavigate = _shouldNavigate ?? (() => true);
-        if (shouldNavigate(object)) {
-          await dispatch(pipe(addObjectIntent, chain(LayoutAction.Open, { part: 'main' })));
-        } else {
-          await dispatch(addObjectIntent);
+    ({ form, data = {} }) =>
+      Effect.gen(function* () {
+        if (!target) {
+          // TODO(wittjosiah): UI feedback.
+          return;
         }
-      }
-    },
+
+        // NOTE: Must close before navigating or attention won't follow object.
+        closeRef.current?.click();
+
+        const space = isSpace(target) ? target : getSpace(target);
+        invariant(space, 'Missing space');
+        const { object, relation } = yield* dispatch(form.getIntent(data, { space }));
+        if (isLiveObject(relation)) {
+          yield* dispatch(createIntent(SpaceAction.AddObject, { target: space, object: relation, hidden: true }));
+        }
+
+        if (isLiveObject(object)) {
+          // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
+          const hidden = form.hidden || hiddenTypenames.includes(Type.getTypename(form.objectSchema));
+          const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object, hidden });
+          const shouldNavigate = _shouldNavigate ?? (() => true);
+          if (shouldNavigate(object)) {
+            yield* dispatch(pipe(addObjectIntent, chain(LayoutAction.Open, { part: 'main' })));
+          } else {
+            yield* dispatch(addObjectIntent);
+          }
+        }
+      }).pipe(Effect.runPromise),
     [dispatch, target, resolve, hiddenTypenames, _shouldNavigate],
   );
 

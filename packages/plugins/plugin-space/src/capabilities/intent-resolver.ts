@@ -21,7 +21,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { isSpace, getSpace, SpaceState, fullyQualifiedId } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
-import { createView, DataType, HasView } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { SpaceCapabilities } from './capabilities';
 import {
@@ -75,17 +75,27 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
         }
         await space.waitUntilReady();
+
+        // Create root collection.
         const collection = Obj.make(DataType.Collection, { objects: [] });
         space.properties[Type.getTypename(DataType.Collection)] = Ref.make(collection);
 
+        // Set current migration version.
         if (Migrations.versionProperty) {
           space.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
 
+        // Create records smart collection.
+        const records = Obj.make(DataType.QueryCollection, {
+          query: { typename: Type.getTypename(DataType.StoredSchema) },
+        });
+        collection.objects.push(Ref.make(records));
+
+        // Allow other plugins to add default content.
         await context.activatePromise(SpaceEvents.SpaceCreated);
         const onSpaceCreatedCallbacks = context.getCapabilities(SpaceCapabilities.OnSpaceCreated);
-        await Promise.all(
-          onSpaceCreatedCallbacks.map((onSpaceCreated) => onSpaceCreated({ space, rootCollection: collection })),
+        const spaceCreatedIntents = onSpaceCreatedCallbacks.map((onSpaceCreated) =>
+          onSpaceCreated({ space, rootCollection: collection }),
         );
 
         return {
@@ -95,6 +105,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
             space,
           },
           intents: [
+            ...spaceCreatedIntents,
             ...(observability
               ? [
                   createIntent(ObservabilityAction.SendEvent, {
@@ -310,12 +321,16 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       },
     }),
     createResolver({
-      intent: SpaceAction.RegisterSchema,
+      intent: SpaceAction.AddSchema,
       resolve: async ({ space, name, schema: schemaInput }) => {
         const [schema] = await space.db.schemaRegistry.register([schemaInput]);
         if (name) {
           schema.storedSchema.name = name;
         }
+
+        await context.activatePromise(SpaceEvents.SchemaAdded);
+        const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
+        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ space, schema }));
 
         return {
           data: {
@@ -323,42 +338,65 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
             object: schema.storedSchema,
             schema,
           },
+          intents: [
+            ...schemaAddedIntents,
+            ...(observability
+              ? [
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.schema.add',
+                    properties: {
+                      spaceId: space.id,
+                      objectId: schema.id,
+                      typename: schema.typename,
+                    },
+                  }),
+                ]
+              : []),
+          ],
         };
       },
     }),
     // TODO(wittjosiah): What happens to the views when a schema is deleted?
-    createResolver({
-      intent: SpaceAction.AddView,
-      resolve: ({ space, name, schema }) =>
-        Effect.gen(function* () {
-          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+    //   Only allow a schema to be deleted if it has no views.
+    // createResolver({
+    //   intent: SpaceAction.AddView,
+    //   resolve: ({ space, name, schema, view }) =>
+    //     Effect.gen(function* () {
+    //       const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
 
-          const { object: view } = yield* dispatch(
-            createIntent(SpaceAction.AddObject, {
-              target: space,
-              object: createView({ name, typename: schema.typename, jsonSchema: schema.jsonSchema }),
-              hidden: true,
-            }),
-          );
+    //       yield* context.activate(SpaceEvents.AddView);
+    //       for (const onAddView of context.getCapabilities(SpaceCapabilities.OnAddView)) {
+    //         const projection = createProjection({ name, typename: schema.typename, jsonSchema: schema.jsonSchema });
+    //         yield* dispatch(
+    //           createIntent(SpaceAction.AddObject, {
+    //             target: space,
+    //             object: projection,
+    //             hidden: true,
+    //           }),
+    //         );
+    //         const view = yield* onAddView({ space, projection });
 
-          const { relation } = yield* dispatch(
-            createIntent(SpaceAction.AddRelation, {
-              space,
-              schema: HasView,
-              source: schema.storedSchema,
-              target: view,
-            }),
-          );
+    //         const { relation } = yield* dispatch(
+    //           createIntent(SpaceAction.AddRelation, {
+    //             space,
+    //             schema: HasView,
+    //             // TODO(wittjosiah): Remove this cast.
+    //             source: schema.storedSchema as any,
+    //             target: view,
+    //             fields: { projection },
+    //           }),
+    //         );
+    //       }
 
-          return {
-            data: {
-              id: view.id,
-              object: view,
-              relation,
-            },
-          };
-        }),
-    }),
+    //       return {
+    //         data: {
+    //           id: view.id,
+    //           object: view,
+    //           relation,
+    //         },
+    //       };
+    //     }),
+    // }),
     createResolver({
       intent: SpaceAction.OpenCreateObject,
       resolve: ({ target, typename, navigable = true }) => {

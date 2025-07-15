@@ -8,14 +8,14 @@ import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
+import { Obj, Query, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
-import { TableType } from '@dxos/react-ui-table';
+import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
-import { TableAction } from '../types';
+import { TableAction, TableView } from '../types';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -42,7 +42,7 @@ export default () => {
       - When adding rows you must not include the 'id' field -- it is automatically generated.
       - BEFORE adding rows, always make sure the table has been shown to the user.
     `,
-    schema: TableType,
+    schema: TableView,
     tools: [
       createTool(meta.id, {
         name: 'create',
@@ -99,23 +99,29 @@ export default () => {
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
+          // TODO(wittjosiah): This query needs to be able to filter to just the table view, post-filtering is awkward.
+          const { objects } = await space.db.query(Filter.type(DataType.HasView)).run();
           const tableInfo = await Promise.all(
-            tables.map(async (table) => {
-              const view = await table.view?.load();
-              return {
-                id: fullyQualifiedId(table),
-                name: table.name ?? 'Unnamed Table',
-                typename: view?.query.typename,
-              };
-            }),
+            objects
+              // TODO(wittjosiah): Remove this cast.
+              .filter((object) => Obj.instanceOf(TableView, Relation.getTarget(object as any)))
+              .map(async (hasView) => {
+                const projection = await hasView.projection.load();
+                // TODO(wittjosiah): Remove this cast.
+                const table = Relation.getTarget(hasView as any) as TableView;
+                return {
+                  id: fullyQualifiedId(table),
+                  name: table.name ?? 'Unnamed Table',
+                  typename: projection.query.typename,
+                };
+              }),
           );
 
           return ToolResult.Success(tableInfo);
         },
       }),
       createTool(meta.id, {
-        name: 'inpect',
+        name: 'inspect',
         // TODO(ZaymonFC): Tell the LLM how to present the tables to the user.
         description: 'Get the current schema of the table.',
         caption: 'Loading table...',
@@ -123,13 +129,10 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-          const table = tables.find((table) => fullyQualifiedId(table) === id);
-          invariant(Obj.instanceOf(TableType, table));
+          const hasView = await space.db.query(Query.select(Filter.ids(id)).targetOf(DataType.HasView)).first();
 
-          const view = await table.view?.load();
-          invariant(view);
-          const typename = view?.query.typename;
+          const projection = await hasView.projection.load();
+          const typename = projection.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
           return ToolResult.Success(schema);
@@ -149,14 +152,9 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-          const table = tables.find((table) => fullyQualifiedId(table) === id);
-          invariant(Obj.instanceOf(TableType, table));
-
-          const view = await table.view?.load();
-          invariant(view);
-
-          const typename = view.query.typename;
+          const hasView = await space.db.query(Query.select(Filter.ids(id)).targetOf(DataType.HasView)).first();
+          const projection = await hasView.projection.load();
+          const typename = projection.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
 
@@ -180,15 +178,10 @@ export default () => {
           invariant(extensions?.dispatch, 'No intent dispatcher');
 
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-          const table = tables.find((table) => fullyQualifiedId(table) === id);
-          invariant(Obj.instanceOf(TableType, table));
-
-          const view = await table.view?.load();
-          invariant(view);
-
+          const hasView = await space.db.query(Query.select(Filter.ids(id)).targetOf(DataType.HasView)).first();
+          const projection = await hasView.projection.load();
           // Get schema for validation.
-          const typename = view.query.typename;
+          const typename = projection.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
 
@@ -202,7 +195,7 @@ export default () => {
 
           // Add rows sequentially.
           for (const row of data) {
-            const intent = createIntent(TableAction.AddRow, { table, data: row });
+            const intent = createIntent(TableAction.AddRow, { view: hasView, data: row });
             const { error } = await extensions.dispatch(intent);
             if (error) {
               return ToolResult.Error(error?.message ?? 'Failed to add rows to table');

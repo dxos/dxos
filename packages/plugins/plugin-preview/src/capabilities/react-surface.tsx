@@ -4,22 +4,13 @@
 
 import React, { useCallback } from 'react';
 
-import {
-  Capabilities,
-  LayoutAction,
-  Surface,
-  contributes,
-  createIntent,
-  createSurface,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
-import { fullyQualifiedId, getSchema, getSpace } from '@dxos/client/echo';
-import { Obj, Filter } from '@dxos/echo';
+import { Capabilities, Surface, contributes, createSurface } from '@dxos/app-framework';
+import { getSchema } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
-import { TableType } from '@dxos/react-ui-table';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 
@@ -36,37 +27,38 @@ export default () =>
       role: ['popover', 'card--kanban', 'card--document', 'card'],
       filter: (data): data is { subject: DataType.Person } => Obj.instanceOf(DataType.Person, data.subject),
       component: ({ data, role }) => {
-        const { dispatchPromise: dispatch } = useIntentDispatcher();
-        const handleOrgClick = useCallback(
-          async (org: DataType.Organization) => {
-            const space = getSpace(org);
-            const tablesQuery = await space?.db.query(Filter.type(TableType)).run();
-            const currentSpaceOrgTable = tablesQuery?.objects.find((table) => {
-              return table.view?.target?.query?.typename === DataType.Organization.typename;
-            });
-            await dispatch(
-              createIntent(LayoutAction.UpdatePopover, {
-                part: 'popover',
-                options: {
-                  state: false,
-                  anchorId: '',
-                },
-              }),
-            );
-            if (currentSpaceOrgTable) {
-              return dispatch(
-                createIntent(LayoutAction.Open, {
-                  part: 'main',
-                  subject: [fullyQualifiedId(currentSpaceOrgTable)],
-                  options: { workspace: space?.id },
-                }),
-              );
-            }
-          },
-          [dispatch],
-        );
+        // TODO(wittjosiah): Handle org click.
+        // const { dispatchPromise: dispatch } = useIntentDispatcher();
+        // const handleOrgClick = useCallback(
+        //   async (org: DataType.Organization) => {
+        //     const space = getSpace(org);
+        //     const tablesQuery = await space?.db.query(Filter.type(TableType)).run();
+        //     const currentSpaceOrgTable = tablesQuery?.objects.find((table) => {
+        //       return table.view?.target?.query?.typename === DataType.Organization.typename;
+        //     });
+        //     await dispatch(
+        //       createIntent(LayoutAction.UpdatePopover, {
+        //         part: 'popover',
+        //         options: {
+        //           state: false,
+        //           anchorId: '',
+        //         },
+        //       }),
+        //     );
+        //     if (currentSpaceOrgTable) {
+        //       return dispatch(
+        //         createIntent(LayoutAction.Open, {
+        //           part: 'main',
+        //           subject: [fullyQualifiedId(currentSpaceOrgTable)],
+        //           options: { workspace: space?.id },
+        //         }),
+        //       );
+        //     }
+        //   },
+        //   [dispatch],
+        // );
         return (
-          <ContactCard role={role} subject={data.subject} onOrgClick={handleOrgClick}>
+          <ContactCard role={role} subject={data.subject}>
             {role === 'popover' && <Surface role='related' data={data} />}
           </ContactCard>
         );

@@ -65,7 +65,7 @@ describe('ProjectionManager', () => {
     });
     const [mutable] = await registry.register([schema]);
 
-    const projection = createProjection({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    const projection = createProjection({ typename: mutable.typename, jsonSchema: mutable.jsonSchema });
     const manager = new ProjectionManager(mutable.jsonSchema, projection);
     expect(projection.fields).to.have.length(3);
 
@@ -159,7 +159,7 @@ describe('ProjectionManager', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const projection = createProjection({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    const projection = createProjection({ typename: mutable.typename, jsonSchema: mutable.jsonSchema });
     const manager = new ProjectionManager(mutable.jsonSchema, projection);
 
     manager.setFieldProjection({
@@ -213,7 +213,7 @@ describe('ProjectionManager', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const projection = createProjection({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    const projection = createProjection({ typename: mutable.typename, jsonSchema: mutable.jsonSchema });
     const manager = new ProjectionManager(mutable.jsonSchema, projection);
 
     // Initial state.
@@ -245,7 +245,7 @@ describe('ProjectionManager', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const projection = createProjection({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    const projection = createProjection({ typename: mutable.typename, jsonSchema: mutable.jsonSchema });
     const manager = new ProjectionManager(mutable.jsonSchema, projection);
 
     // Capture initial states.
@@ -291,7 +291,7 @@ describe('ProjectionManager', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const projection = createProjection({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    const projection = createProjection({ typename: mutable.typename, jsonSchema: mutable.jsonSchema });
     const manager = new ProjectionManager(mutable.jsonSchema, projection);
 
     // Capture initial state.
@@ -339,7 +339,7 @@ describe('ProjectionManager', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const projection = createProjection({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    const projection = createProjection({ typename: mutable.typename, jsonSchema: mutable.jsonSchema });
     const manager = new ProjectionManager(mutable.jsonSchema, projection);
 
     // Capture initial state.
@@ -392,7 +392,7 @@ describe('ProjectionManager', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const projection = createProjection({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    const projection = createProjection({ typename: mutable.typename, jsonSchema: mutable.jsonSchema });
     const manager = new ProjectionManager(mutable.jsonSchema, projection);
     const fieldId = getFieldId(projection, 'status');
     invariant(fieldId);
@@ -499,7 +499,7 @@ describe('ProjectionManager', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const projection = createProjection({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    const projection = createProjection({ typename: mutable.typename, jsonSchema: mutable.jsonSchema });
     const manager = new ProjectionManager(mutable.jsonSchema, projection);
     const fieldId = getFieldId(projection, 'tags');
     invariant(fieldId);
@@ -634,7 +634,6 @@ describe('ProjectionManager', () => {
 
     // Create view with only name and email fields.
     const projection = createProjection({
-      name: 'Test',
       typename: mutable.typename,
       jsonSchema: mutable.jsonSchema,
       fields: [
@@ -738,7 +737,6 @@ describe('ProjectionManager', () => {
 
     // Create view with no explicit fields.
     const projection = createProjection({
-      name: 'Test',
       typename: mutable.typename,
       jsonSchema: mutable.jsonSchema,
       fields: [], // No fields specified.
@@ -774,7 +772,6 @@ describe('ProjectionManager', () => {
 
     // Create empty view (no fields).
     const projection = createProjection({
-      name: 'Test',
       typename: mutable.typename,
       jsonSchema: mutable.jsonSchema,
       fields: [],
@@ -816,7 +813,7 @@ describe('ProjectionManager', () => {
     });
 
     const [mutable] = await registry.register([schema]);
-    const projection = createProjection({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    const projection = createProjection({ typename: mutable.typename, jsonSchema: mutable.jsonSchema });
     let manager = new ProjectionManager(mutable.jsonSchema, projection);
 
     // Initial state
@@ -849,7 +846,7 @@ describe('ProjectionManager', () => {
     const schema = Organization;
     const jsonSchema = toJsonSchema(schema);
 
-    const projection = createProjection({ name: 'Test', typename: getSchemaTypename(schema), jsonSchema });
+    const projection = createProjection({ typename: getSchemaTypename(schema), jsonSchema });
     const manager = new ProjectionManager(jsonSchema, projection);
     const fieldId = getFieldId(projection, 'status');
     invariant(fieldId);
@@ -906,7 +903,7 @@ describe('ProjectionManager', () => {
 
     const jsonSchema = toJsonSchema(ContactWithArrayOfEmails);
 
-    const projection = createProjection({ name: 'view', typename: ContactWithArrayOfEmails.typename, jsonSchema });
+    const projection = createProjection({ typename: ContactWithArrayOfEmails.typename, jsonSchema });
     const manager = new ProjectionManager(jsonSchema, projection);
 
     const fieldId = getFieldId(projection, 'emails');
@@ -939,7 +936,7 @@ describe('ProjectionManager', () => {
       });
 
       const [mutable] = await registry.register([schema]);
-      const projection = createProjection({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+      const projection = createProjection({ typename: mutable.typename, jsonSchema: mutable.jsonSchema });
       const manager = new ProjectionManager(mutable.jsonSchema, projection);
       const fieldId = getFieldId(projection, fieldName);
       invariant(fieldId);
