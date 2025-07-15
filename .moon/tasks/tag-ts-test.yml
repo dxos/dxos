@@ -17,3 +17,5 @@ tasks:
     outputs:
       - /coverage/$project/**
       - /test-results/$project/**
+    options:
+      timeout: 600
