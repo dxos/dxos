@@ -5,7 +5,7 @@
     "legacy"
   ],
   "include": [
-    "**/*",
+    "src",
     ".astro/types.d.ts"
   ],
   "references": [

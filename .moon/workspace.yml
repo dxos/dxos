@@ -1,6 +1,7 @@
 # https://moonrepo.dev/docs/config/workspace
 $schema: ./cache/schemas/workspace.json
 projects:
+  - docs
   - packages/**/moon.yml
   - tools/*/moon.yml
 unstable_remote:

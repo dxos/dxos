@@ -1,2 +1,30 @@
-type: library
+type: application
 language: typescript
+tags:
+  - typecheck
+tasks:
+  build:
+    deps:
+      - prebuild
+    options:
+      mergeOutputs: replace
+    outputs: []
+  bundle:
+    command: astro build
+    deps:
+      - ^:build
+      - build
+    outputs:
+      - dist
+  prebuild:
+    command: astro sync && pnpm run prebuild
+    deps:
+      - ^:typedoc
+    outputs:
+      - public/typedoc
+  serve:
+    command: astro dev
+    deps:
+      - ^:build
+      - prebuild
+    preset: server

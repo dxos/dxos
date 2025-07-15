@@ -3,7 +3,7 @@
 //
 
 import { Client } from '@dxos/client';
-import { Expando, create } from '@dxos/client/echo';
+import { Obj, Type } from '@dxos/echo';
 
 const client = new Client();
 await client.initialize();
@@ -20,7 +20,7 @@ const spaces = client.spaces.get();
 const space = spaces[0];
 
 // Create an object.
-const object = create(Expando, { type: 'task', name: 'buy milk' });
+const object = Obj.make(Type.Expando, { type: 'task', name: 'buy milk' });
 
 // Add the object to the space.
 space.db.add(object);
