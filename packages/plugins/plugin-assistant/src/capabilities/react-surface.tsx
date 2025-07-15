@@ -15,12 +15,12 @@ import { fullyQualifiedId, getSpace, getTypename } from '@dxos/react-client/echo
 import { StackItem } from '@dxos/react-ui-stack';
 
 import {
-  AssistantDialog,
   AssistantSettings,
   SequenceContainer,
   ChatContainer,
   PromptSettings,
   TemplateContainer,
+  ChatDialog,
 } from '../components';
 import { ASSISTANT_PLUGIN, ASSISTANT_DIALOG } from '../meta';
 import { AIChatType, AssistantAction, type AssistantSettingsProps, CompanionTo, TemplateType } from '../types';
@@ -93,7 +93,7 @@ export default () =>
           return null;
         }
 
-        return <ChatContainer role={role} chat={data.subject} associatedArtifact={associatedArtifact} />;
+        return <ChatContainer role={role} chat={data.subject} artifact={associatedArtifact} />;
       },
     }),
     createSurface({
@@ -126,7 +126,7 @@ export default () =>
       id: ASSISTANT_DIALOG,
       role: 'dialog',
       filter: (data): data is { props: { chat: AIChatType } } => data.component === ASSISTANT_DIALOG,
-      component: ({ data }) => <AssistantDialog {...data.props} />,
+      component: ({ data }) => <ChatDialog {...data.props} />,
     }),
     createSurface({
       id: `${ASSISTANT_PLUGIN}/prompt-settings`,

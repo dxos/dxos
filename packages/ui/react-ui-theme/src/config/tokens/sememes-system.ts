@@ -185,6 +185,10 @@ export const systemSememes = {
     light: ['neutral', 700],
     dark: ['neutral', 300],
   },
+  placeholder: {
+    light: ['neutral', 500],
+    dark: ['neutral', 500],
+  },
   accentText: {
     light: ['primary', 550],
     dark: ['primary', 400],

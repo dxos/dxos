@@ -18,7 +18,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 export interface ScrollController {
-  scrollToBottom: () => void;
+  scrollToBottom: (behavior?: ScrollBehavior) => void;
 }
 
 export type ScrollContainerProps = ThemedClassName<
@@ -40,10 +40,10 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
     useImperativeHandle(
       forwardedRef,
       () => ({
-        scrollToBottom: () => {
+        // NOTE: Should be instant otherwise scrollHeight might be out of date.
+        scrollToBottom: (behavior: ScrollBehavior = 'instant') => {
           invariant(viewport);
-          // NOTE: Should be instant otherwise scrollHeight might be out of date.
-          viewport.scrollTo({ top: 0, behavior: 'instant' });
+          viewport.scrollTo({ top: 0, behavior });
         },
       }),
       [viewport],

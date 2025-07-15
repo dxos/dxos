@@ -14,20 +14,20 @@ import { type Transcriber } from '../transcriber';
  */
 export const useTranscriber = ({
   audioStreamTrack,
-  onSegments,
-  transcriberConfig,
   recorderConfig,
+  transcriberConfig,
+  onSegments,
 }: Partial<TranscriptionCapabilities.GetTranscriberProps>) => {
   const [getTranscriber] = useCapabilities(TranscriptionCapabilities.Transcriber);
 
   // Initialize audio transcription.
   const transcriber = useMemo<Transcriber | undefined>(() => {
-    if (!onSegments || !audioStreamTrack || !getTranscriber) {
+    if (!getTranscriber || !audioStreamTrack || !onSegments) {
       return undefined;
     }
 
-    return getTranscriber({ audioStreamTrack, onSegments, transcriberConfig, recorderConfig });
-  }, [audioStreamTrack, onSegments, getTranscriber, transcriberConfig, recorderConfig]);
+    return getTranscriber({ audioStreamTrack, recorderConfig, transcriberConfig, onSegments });
+  }, [getTranscriber, audioStreamTrack, recorderConfig, transcriberConfig, onSegments]);
 
   useEffect(() => {
     return () => {

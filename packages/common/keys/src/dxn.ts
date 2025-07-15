@@ -243,6 +243,10 @@ export class DXN {
     return `dxn:${this.#kind}:${this.#parts.join(':')}` as DXN.String;
   }
 
+  toJSON(): string {
+    return this.toString();
+  }
+
   /**
    * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
    */

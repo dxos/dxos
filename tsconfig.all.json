@@ -466,6 +466,9 @@
       "path": "packages/ui/react-ui-canvas-editor/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-chat/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-components/tsconfig.json"
     },
     {

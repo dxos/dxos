@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { Sequence } from '@dxos/conductor';
 import { type Resource } from '@dxos/react-ui';
 
@@ -54,16 +55,16 @@ export const translations = [
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
 
-        'search input placeholder': 'Search...',
-        'chat input placeholder': 'Ask a question...',
-        'chat stop': 'Cancel request.',
-
         'button save': 'Save',
         'button run': 'Run',
 
-        'prompt placeholder': 'Ask a question...',
-        'microphone button': 'Click to speak',
-        'cancel processing button': 'Stop processing',
+        'search placeholder': 'Search...',
+        'prompt placeholder': 'Ask or search for anything...',
+        'blueprints placeholder': 'Select blueprints...',
+        'button add blueprint': 'Add blueprint',
+        'button microphone': 'Click to speak',
+        'button cancel processing': 'Stop processing',
+        'button scroll down': 'Scroll down',
 
         'settings default label': 'Default',
         'settings custom prompts label': 'Use custom prompts',
