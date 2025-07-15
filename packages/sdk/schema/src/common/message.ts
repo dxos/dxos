@@ -239,7 +239,6 @@ export const ArtifactPinContentBlock = Schema.extend(
 ).pipe(Schema.mutable);
 export interface ArtifactPinContentBlock extends Schema.Schema.Type<typeof ArtifactPinContentBlock> {}
 
-
 /**
  * Model priniting info about the list of available tools.
  */
@@ -278,6 +277,7 @@ export const MessageContentBlock = Schema.Union(
   ToolListContentBlock,
   JsonContentBlock,
 );
+export type MessageContentBlock = Schema.Schema.Type<typeof MessageContentBlock>;
 
 /**
  * Message.

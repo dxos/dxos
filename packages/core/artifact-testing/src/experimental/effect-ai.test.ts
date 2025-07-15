@@ -11,6 +11,7 @@ import { describe, it } from '@effect/vitest';
 import { Config, Console, Effect, Layer, pipe, Schedule, Schema, Stream } from 'effect';
 
 import { log } from '@dxos/log';
+import { parseGptStream } from './parser';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
 // https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md
@@ -165,7 +166,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     }, TestHelpers.runIf(process.env.ANTHROPIC_API_KEY)),
   );
 
-  it.effect.only(
+  it.effect(
     'streaming',
     Effect.fn(
       function* ({ expect }) {
@@ -176,6 +177,38 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
         do {
           // disableToolCallResolution
           const stream = chat.streamText({ toolkit, prompt });
+          prompt = AiInput.empty;
+
+          yield* Stream.runForEach(
+            stream,
+            Effect.fnUntraced(function* (item) {
+              log.info('item', { item, time: new Date().toISOString() });
+            }),
+          );
+          log.break();
+        } while (yield* hasToolCall(chat));
+
+        console.log(JSON.stringify(yield* chat.export, null, 2));
+      },
+      Effect.provide(toolkitLayer),
+      Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+      Effect.provide(AnthropicLayer),
+      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+    ),
+    { timeout: 120_000 },
+  );
+
+  it.effect.only(
+    'with parser',
+    Effect.fn(
+      function* ({ expect }) {
+        const chat = yield* AiChat.empty;
+        const toolkit = yield* TestToolkit;
+
+        let prompt: AiInput.Raw = 'What is six times seven?';
+        do {
+          // disableToolCallResolution
+          const stream = chat.streamText({ toolkit, prompt }).pipe(parseGptStream());
           prompt = AiInput.empty;
 
           yield* Stream.runForEach(
