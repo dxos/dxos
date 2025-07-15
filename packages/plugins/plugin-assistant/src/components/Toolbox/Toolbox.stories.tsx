@@ -26,7 +26,7 @@ const DefaultStory = (props: ToolboxProps) => {
     <Toolbox
       {...props}
       artifacts={artifactDefinitions}
-      classNames='w-[30rem] h-[15rem] rounded-md border border-separator py-1'
+      classNames='w-[30rem] h-[15rem] rounded-sm border border-separator py-1'
     />
   );
 };

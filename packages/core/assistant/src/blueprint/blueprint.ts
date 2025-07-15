@@ -6,12 +6,21 @@ import { Schema } from 'effect';
 
 import { ToolId } from '@dxos/ai';
 import { Type } from '@dxos/echo';
+import { LabelAnnotation } from '@dxos/echo-schema';
 
 /**
  * Blueprint schema defines the structure for AI assistant blueprints.
  * Blueprints contain instructions, tools, and artifacts that guide the AI's behavior.
  */
 export const Blueprint = Schema.Struct({
+  /**
+   * Global registry ID.
+   */
+  // TODO(burdon): Create Format type.
+  key: Schema.String.annotations({
+    description: 'Unique system name for the blueprint',
+  }),
+
   /**
    * Human-readable name of the blueprint.
    */
@@ -49,9 +58,13 @@ export const Blueprint = Schema.Struct({
   }),
 }).pipe(
   Type.Obj({
+    // TODO(burdon): Is this a DXN? Need to create a Format type for these IDs.
     typename: 'dxos.org/type/Blueprint',
     version: '0.1.0',
   }),
+
+  // TODO(burdon): Move to main API.
+  LabelAnnotation.set(['name']),
 );
 
 /**

@@ -6,17 +6,8 @@ import { type Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { vim } from '@replit/codemirror-vim';
 import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
-import { Schema } from 'effect';
 
 import { singleValueFacet } from '../util';
-
-export const EditorViewModes = ['preview', 'readonly', 'source'] as const;
-export const EditorViewMode = Schema.Union(...EditorViewModes.map((mode) => Schema.Literal(mode)));
-export type EditorViewMode = Schema.Schema.Type<typeof EditorViewMode>;
-
-export const EditorInputModes = ['default', 'vim', 'vscode'] as const;
-export const EditorInputMode = Schema.Union(...EditorInputModes.map((mode) => Schema.Literal(mode)));
-export type EditorInputMode = Schema.Schema.Type<typeof EditorInputMode>;
 
 export type EditorInputConfig = {
   type?: string;

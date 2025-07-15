@@ -248,10 +248,10 @@ const App = ({ placeholder: Placeholder, state }: AppProps) => {
 // Default fallback does not use tailwind or theme.
 const DefaultFallback = ({ error }: { error: Error }) => {
   return (
-    <div style={{ padding: '1rem' }}>
+    <div style={{ margin: '0.5rem', padding: '1rem', overflow: 'hidden', border: '1px solid red' }}>
       {/* TODO(wittjosiah): Link to docs for replacing default. */}
-      <h1 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0.5rem 0' }}>{error.message}</h1>
-      <pre>{error.stack}</pre>
+      <h1 style={{ margin: '0.5rem 0', fontSize: '1.2rem' }}>[ERROR]: {error.message}</h1>
+      <pre style={{ overflow: 'auto', fontSize: '1rem' }}>{error.stack}</pre>
     </div>
   );
 };

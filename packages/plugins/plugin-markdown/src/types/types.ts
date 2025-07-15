@@ -5,8 +5,8 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-// TODO(wittjosiah): This pulls in UI code into the types entrypoint.
-import { type Extension, EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor';
+import { type Extension } from '@dxos/react-ui-editor';
+import { EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor/types';
 
 import { DocumentType } from './schema';
 import { MARKDOWN_PLUGIN } from '../meta';
