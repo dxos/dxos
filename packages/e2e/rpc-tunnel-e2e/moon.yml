@@ -1,7 +1,6 @@
 type: automation
 language: typescript
 tags:
-  - app-e2e
   - e2e
   - typecheck
   - vite

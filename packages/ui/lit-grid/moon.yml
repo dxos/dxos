@@ -2,6 +2,5 @@ type: library
 language: typescript
 tags:
   - e2e
-  - storybook-e2e
   - ts-compile
   - pack
