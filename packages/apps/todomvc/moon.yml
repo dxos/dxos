@@ -8,9 +8,6 @@ tasks:
   bundle:
     deps:
       - shell:bundle
-  e2e:
-    deps:
-      - bundle
   preview:
     args:
-      - '--port=3000'
+      - '--port=9006'

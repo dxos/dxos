@@ -6,6 +6,8 @@ tasks:
       - --config=src/playwright/playwright.config.ts
     deps:
       - test-utils:compile
+      - target: bundle
+        optional: true
     inputs:
       - src/playwright/playwright.config.ts
       - '@group(sources)'

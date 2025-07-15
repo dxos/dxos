@@ -4,7 +4,3 @@ tags:
   - e2e
   - typecheck
   - vite
-tasks:
-  e2e:
-    deps:
-      - bundle
