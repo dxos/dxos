@@ -53,6 +53,12 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    // TODO(wittjosiah): Remove when bumping @effect-rx/rx-react.
+    case '@effect-rx/rx': {
+      packageJson.peerDependencies['@effect/platform'] = '0.88.0';
+      break;
+    }
+
     // Package has an unnecessarily strict peer dep of 17.0.1
     case '@hot-loader/react-dom': {
       packageJson.peerDependencies['react'] = '^18.0.0';

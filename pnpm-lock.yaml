@@ -23,7 +23,7 @@ overrides:
   '@opentelemetry/sdk-node': ^0.52.1
   '@opentelemetry/sdk-trace-node': ^1.25.1
 
-pnpmfileChecksum: u5ljzy7lmweaatelqcjzwhxpca
+pnpmfileChecksum: 6dyk6jdzb2jilsayrhfilaihsa
 
 patchedDependencies:
   random-access-idb@1.2.2:
@@ -1320,8 +1320,8 @@ importers:
         specifier: ^4.22.0
         version: 4.22.0
       esbuild:
-        specifier: ^0.21.5
-        version: 0.21.5
+        specifier: 0.25.6
+        version: 0.25.6
       events:
         specifier: ^3.3.0
         version: 3.3.0
@@ -4931,8 +4931,8 @@ importers:
         specifier: 3.16.13
         version: 3.16.13
       esbuild:
-        specifier: ^0.21.5
-        version: 0.21.5
+        specifier: 0.25.6
+        version: 0.25.6
       esbuild-plugin-wasm:
         specifier: ^1.1.0
         version: 1.1.0
@@ -14265,8 +14265,8 @@ importers:
         specifier: ^14.0.3
         version: 14.0.3
       esbuild:
-        specifier: ^0.21.5
-        version: 0.21.5
+        specifier: 0.25.6
+        version: 0.25.6
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
@@ -16091,7 +16091,7 @@ packages:
   '@effect-rx/rx@0.43.2':
     resolution: {integrity: sha512-jv1G96rwHcjLRVzkuKvJGRTA7WLNgPfl6d1HjpNEYRKJN+7b2p+NIQ+mj5RM4N2rnqz2Zhufs8kDM/EZcYEF9w==}
     peerDependencies:
-      '@effect/platform': ^0.87.0
+      '@effect/platform': 0.88.0
       effect: ^3.16.9
 
   '@effect/ai-anthropic@0.12.1':
@@ -20550,6 +20550,7 @@ packages:
 
   '@socketsupply/socket@0.5.4':
     resolution: {integrity: sha512-8sDIEL5cyFI4jlpZYUL4JqSgkj1XjUlbi9kA16/5DfzAYefQx38QXQaI0Hj7G1T3WwPnKN8f9xLvESMHikysrA==}
+    cpu: [arm64, x64]
     os: [linux, darwin, win32]
     hasBin: true
 
@@ -45436,10 +45437,10 @@ snapshots:
       fs-extra: 9.1.0
       js-yaml: 4.1.0
 
-  esbuild-register@3.6.0(esbuild@0.21.5):
+  esbuild-register@3.6.0(esbuild@0.25.6):
     dependencies:
       debug: 4.4.1(supports-color@5.5.0)
-      esbuild: 0.21.5
+      esbuild: 0.25.6
     transitivePeerDependencies:
       - supports-color
 
@@ -53715,8 +53716,8 @@ snapshots:
       '@vitest/expect': 3.2.4
       '@vitest/spy': 3.2.4
       better-opn: 3.0.2
-      esbuild: 0.21.5
-      esbuild-register: 3.6.0(esbuild@0.21.5)
+      esbuild: 0.25.6
+      esbuild-register: 3.6.0(esbuild@0.25.6)
       recast: 0.23.9
       semver: 7.7.1
       ws: 8.18.2
