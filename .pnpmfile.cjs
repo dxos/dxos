@@ -59,18 +59,6 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    // https://github.com/nrwl/nx/issues/11456#issuecomment-1211214171
-    case '@nx/nx-cloud': {
-      packageJson.dependencies['dotenv'] = '*';
-      break;
-    }
-
-    case '@nx/eslint-plugin':
-    case '@nrwl/eslint-plugin-nx': {
-      packageJson.peerDependencies['@typescript-eslint/parser'] = '^6.5.0';
-      break;
-    }
-
     case 'eslint-config-semistandard': {
       packageJson.peerDependencies['eslint-plugin-n'] = '^16.1.0';
       break;

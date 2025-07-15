@@ -23,7 +23,7 @@
     "src"
   ],
   "scripts": {
-    "snapshot": "pnpm -w nx build proto-guard && ts-node ./src/generate-snapshot"
+    "snapshot": "moon run proto-guard:build && ts-node ./src/generate-snapshot"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

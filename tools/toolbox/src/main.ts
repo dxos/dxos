@@ -33,8 +33,9 @@ if (argModuleStats) {
 } else {
   await toolbox.updateReleasePlease();
   await toolbox.updateRootPackage();
-  await toolbox.updateTags();
-  await toolbox.updateProjects();
+  // TODO(wittjosiah): Update for moon.
+  // await toolbox.updateTags();
+  // await toolbox.updateProjects();
   await toolbox.updatePackages();
   await toolbox.updateTsConfig();
   await toolbox.updateTsConfigPaths();

@@ -11,11 +11,11 @@ runs:
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       shell: bash
 
+    # TODO(wittjosiah): Install moon in docker image?
     - uses: 'moonrepo/setup-toolchain@v0'
 
     - name: Log out debug info
       run: |
-        moon --version
         node --version
         pnpm --version
       shell: bash
@@ -37,14 +37,4 @@ runs:
       run: |
         pnpm set verify-store-integrity false
         pnpm install --prefer-offline
-      shell: bash
-
-    - uses: nrwl/nx-set-shas@v4
-      if: ${{ !env.ACT }}
-
-    - name: Configure nx for Act
-      if: ${{ env.ACT }}
-      run: |
-        echo "NX_BASE=main" >> $GITHUB_ENV
-        echo "NX_HEAD=HEAD" >> $GITHUB_ENV
       shell: bash

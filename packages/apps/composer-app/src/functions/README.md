@@ -7,7 +7,7 @@ NOTE: Separate `tsconfig.json` for server-side code.
 Build the bundle from root:
 
 ```bash
-pnpm nx bundle composer-app
+moon run composer-app:bundle
 ```
 
 Run pages from the app directory:

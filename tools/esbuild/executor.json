@@ -1,9 +1,0 @@
-{
-  "executors": {
-    "build": {
-      "implementation": "./dist/src/main",
-      "schema": "./schema.json",
-      "description": "Runs esbuild."
-    }
-  }
-}

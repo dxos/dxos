@@ -146,8 +146,6 @@ build
 .husky/pre-auto-gc
 .husky/reference-transaction
 
-.nx
-
 # IntelliJ Plugin
 tools/intellij-plugin/.idea/
 tools/intellij-plugin/.gradle/
@@ -173,9 +171,6 @@ typedoc
 
 # aider assistant temp files
 .aider*
-
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*

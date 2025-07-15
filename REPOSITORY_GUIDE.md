@@ -78,7 +78,7 @@ Examples of ways to run different test workloads:
 The following command generates storybooks across the individual packages:
 
 ```bash
-moon run stories:storybook
+moon run storybook:serve
 ```
 
 ### Playwright

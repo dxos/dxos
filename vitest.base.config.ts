@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 import pkgUp from 'pkg-up';
 import { type Plugin } from 'vite';
 import { defineConfig, type ViteUserConfig } from 'vitest/config';
@@ -11,8 +11,6 @@ import Inspect from 'vite-plugin-inspect';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { MODULES } from '@dxos/node-std/_/config';
-
-const targetProject = String(process.env.NX_TASK_TARGET_PROJECT);
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
@@ -93,8 +91,6 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
     test: {
       ...resolveReporterConfig({ browserMode: true, cwd }),
 
-      name: targetProject,
-
       env: {
         LOG_CONFIG: 'log-config.yaml',
       },
@@ -143,7 +139,7 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
       passWithNoTests: true,
       reporters: ['junit', 'verbose'],
       // TODO(wittjosiah): Browser mode will overwrite this, should be separate directories
-      //    however nx outputs config also needs to be aware of this.
+      //    however moon outputs config also needs to be aware of this.
       outputFile: join(resultsDirectory, 'results.xml'),
       coverage: {
         enabled: coverageEnabled,

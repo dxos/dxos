@@ -934,7 +934,7 @@
         },
         {
           "type": "json",
-          "path": "tools/lit-stories/package.json",
+          "path": "tools/lit-storybook/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -954,7 +954,7 @@
         },
         {
           "type": "json",
-          "path": "tools/stories/package.json",
+          "path": "tools/storybook/package.json",
           "jsonpath": "$.version"
         },
         {
