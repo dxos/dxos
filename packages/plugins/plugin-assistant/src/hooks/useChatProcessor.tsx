@@ -30,6 +30,11 @@ type UseChatProcessorProps = {
   artifact?: AssociatedArtifact;
   /** @deprecated */
   noPluginArtifacts?: boolean;
+
+  /**
+   * Additional instructions to included in the system prompt.
+   */
+  instructions?: string;
 };
 
 /**
@@ -44,6 +49,7 @@ export const useChatProcessor = ({
   settings,
   artifact,
   noPluginArtifacts,
+  instructions,
 }: UseChatProcessorProps): ChatProcessor | undefined => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const globalTools = useCapabilities(Capabilities.Tools);
@@ -88,8 +94,9 @@ export const useChatProcessor = ({
       createSystemPrompt({
         artifacts: artifactDefinitions.map((definition) => `${definition.name}\n${definition.instructions}`),
         artifact,
+        instructions,
       }),
-    [artifactDefinitions, artifact],
+    [artifactDefinitions, artifact, instructions],
   );
 
   // TODO(burdon): Remove default (let backend decide if not specified).

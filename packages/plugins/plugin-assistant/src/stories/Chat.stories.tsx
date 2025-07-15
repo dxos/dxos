@@ -74,11 +74,20 @@ const ChatContainer = () => {
 
   const space = useSpace();
   const [chat] = useQuery(space, Filter.type(AIChatType));
+  const documents = useQuery(space, Filter.type(DocumentType));
 
   // TODO(burdon): Figure out how to use effect to inject serviceContainer, blueprintRegistry into the processor.
   const serviceContainer = useServiceContainer({ space });
   const blueprintRegistry = useMemo(() => new BlueprintRegistry([DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT]), []);
-  const processor = useChatProcessor({ chat, space, serviceContainer, blueprintRegistry, noPluginArtifacts: true });
+  const processor = useChatProcessor({
+    chat,
+    space,
+    serviceContainer,
+    blueprintRegistry,
+    // TODO(dmaretskyi): This should be part of the context.
+    instructions: `Documents available: ${JSON.stringify(documents.map(Obj.getDXN))}`,
+    noPluginArtifacts: true,
+  });
 
   if (!chat) {
     return null;

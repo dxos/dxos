@@ -103,3 +103,5 @@ References:
 
 - Both user and you can reference external data in the markdown format: [label][URI].
 - If you get references back from a tool call, you can render them as is by preserving the ID literally.
+
+{{instructions}}
