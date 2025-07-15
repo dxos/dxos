@@ -3,7 +3,7 @@
 //
 
 import { type Schema } from 'effect';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getSnapshot } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -24,14 +24,19 @@ type FormCellEditorProps = {
 };
 
 export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: FormCellEditorProps) => {
-  const { editing, setEditing } = useGridContext('ArrayEditor', __gridScope);
+  const { editing: contextEditing, setEditing } = useGridContext('ArrayEditor', __gridScope);
+  const [editing, setLocalEditing] = useState(false);
   const cellRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
-    if (editing && editing.cellElement) {
-      cellRef.current = editing.cellElement as HTMLButtonElement;
+    if (contextEditing && contextEditing.cellElement) {
+      cellRef.current = contextEditing.cellElement as HTMLButtonElement;
+      setLocalEditing(true);
+    } else {
+      cellRef.current = null;
+      setLocalEditing(false);
     }
-  }, [editing?.cellElement]);
+  }, [contextEditing]);
 
   const narrowedSchema = useMemo(() => {
     if (!schema) {
@@ -41,8 +46,8 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
   }, [JSON.stringify(schema), fieldProjection.field.path]); // TODO(burdon): Avoid stringify.
 
   const originalRow = useMemo(() => {
-    if (model && editing) {
-      const cell = parseCellIndex(editing.index);
+    if (model && contextEditing) {
+      const cell = parseCellIndex(contextEditing.index);
       const row = model.getRowAt(cell.row);
       invariant(row);
 
@@ -50,7 +55,7 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
     }
 
     return undefined;
-  }, [model, editing]);
+  }, [model, contextEditing]);
 
   const formValues = useMemo(() => {
     if (originalRow) {
@@ -69,23 +74,21 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
     [fieldProjection.field.path, originalRow],
   );
 
-  const handleOpenChange = useCallback(
-    (nextOpen: boolean) => {
-      if (nextOpen === false) {
-        setEditing(null);
-      }
-    },
-    [setEditing],
-  );
+  const handleOpenChange = useCallback((nextOpen: boolean) => {
+    if (nextOpen === false) {
+      setEditing(null);
+    }
+    setLocalEditing(nextOpen);
+  }, []);
 
   if (!editing) {
     return null;
   }
 
   return (
-    <Popover.Root open={editing !== null} onOpenChange={handleOpenChange}>
+    <Popover.Root open={editing} onOpenChange={handleOpenChange}>
       <Popover.VirtualTrigger virtualRef={cellRef} />
-      <Popover.Content tabIndex={-1} classNames='popover-card-width'>
+      <Popover.Content tabIndex={-1} classNames='popover-card-width density-fine'>
         <Popover.Arrow />
         <Popover.Viewport>
           <Form values={formValues} schema={narrowedSchema as any} onSave={handleSave} />

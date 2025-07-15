@@ -113,7 +113,7 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
       </div>
       {!readonly && (
         <IconButton
-          classNames='is-full mlb-1 flex'
+          classNames='is-full mlb-cardSpacingBlock flex'
           icon='ph--plus--regular'
           label={t('add field')}
           onClick={handleAdd}
