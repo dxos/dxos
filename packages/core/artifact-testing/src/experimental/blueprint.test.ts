@@ -5,19 +5,18 @@
 import { beforeAll, describe, expect, test } from 'vitest';
 
 import { ConsolePrinter, ToolRegistry } from '@dxos/ai';
-import { Blueprint } from '@dxos/assistant';
+import { Blueprint, Conversation } from '@dxos/assistant';
 import { Obj, Ref } from '@dxos/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { ToolResolverService, type ServiceContainer } from '@dxos/functions';
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
-
-import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from '../blueprints';
-import { Conversation } from '@dxos/assistant';
-import { readDocument, writeDocument } from '../tools';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
+
+import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from '../blueprints';
+import { readDocument, writeDocument } from '../tools';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 120_000 }, () => {
   let builder: EchoTestBuilder;

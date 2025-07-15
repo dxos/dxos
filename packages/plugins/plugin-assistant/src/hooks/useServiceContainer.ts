@@ -1,9 +1,15 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { useEffect, useMemo, useState } from 'react';
+
 import { ToolRegistry } from '@dxos/ai';
 import { Capabilities, useCapabilities, useCapability } from '@dxos/app-framework';
 import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
 import { type Space } from '@dxos/react-client/echo';
+
 import { AssistantCapabilities } from '../capabilities';
-import { useEffect, useMemo, useState } from 'react';
 
 interface UseServiceContainerProps {
   space?: Space;

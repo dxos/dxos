@@ -7,6 +7,8 @@ import React, { useState, useEffect, Fragment, type FC } from 'react';
 import { parseToolName, type Tool } from '@dxos/ai';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
+import type { Blueprint } from '@dxos/assistant';
+import type { Ref } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
@@ -16,8 +18,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { createToolsFromService } from '../../tools';
 import { ServiceType } from '../../types';
 import { useChatContext } from '../Chat';
-import type { Blueprint } from '@dxos/assistant';
-import type { Ref } from '@dxos/echo';
 
 export type ToolboxProps = ThemedClassName<{
   artifacts?: ArtifactDefinition[];

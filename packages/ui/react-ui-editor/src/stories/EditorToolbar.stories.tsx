@@ -23,9 +23,9 @@ import {
   formattingKeymap,
   useFormattingState,
 } from '../extensions';
-import { type EditorInputMode, type EditorViewMode } from '../types';
 import { useTextEditor, type UseTextEditorProps } from '../hooks';
 import { translations } from '../translations';
+import { type EditorInputMode, type EditorViewMode } from '../types';
 
 type StoryProps = { placeholder?: string } & UseTextEditorProps;
 

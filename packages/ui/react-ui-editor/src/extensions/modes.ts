@@ -6,7 +6,6 @@ import { type Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { vim } from '@replit/codemirror-vim';
 import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
-import { EditorInputMode, EditorViewMode } from '../types';
 
 import { singleValueFacet } from '../util';
 
