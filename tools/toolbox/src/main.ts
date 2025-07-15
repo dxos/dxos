@@ -31,14 +31,14 @@ if (argModuleStats) {
   await toolbox.lintPackageExports();
   await toolbox.updatePackages();
 } else {
+  // TODO(wittjosiah): Update for moon.
   await toolbox.updateReleasePlease();
   await toolbox.updateRootPackage();
-  // TODO(wittjosiah): Update for moon.
   // await toolbox.updateTags();
   // await toolbox.updateProjects();
   await toolbox.updatePackages();
   await toolbox.updateTsConfig();
-  await toolbox.updateTsConfigPaths();
+  // await toolbox.updateTsConfigPaths();
   await toolbox.updateTsConfigAll();
 }
 

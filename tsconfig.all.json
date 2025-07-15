@@ -544,7 +544,7 @@
       "path": "tools/esbuild/tsconfig.json"
     },
     {
-      "path": "tools/lit-stories/tsconfig.json"
+      "path": "tools/lit-storybook/tsconfig.json"
     },
     {
       "path": "tools/lockfile-explorer/tsconfig.json"
@@ -556,7 +556,7 @@
       "path": "tools/protobuf-test/tsconfig.json"
     },
     {
-      "path": "tools/stories/tsconfig.json"
+      "path": "tools/storybook/tsconfig.json"
     },
     {
       "path": "tools/toolbox/tsconfig.json"

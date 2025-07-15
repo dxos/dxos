@@ -6,19 +6,15 @@ tasks:
     args:
       - --output-dir=out/stories
     deps:
+      # Ensure that all packages are built to run storybook.
       - '#ts-build:build'
       - '#ts-compile:compile'
-      - mkdist
     inputs:
       - .storybook/*
       - static/*
       - $NODE_OPTIONS
     outputs:
       - out/stories/
-  mkdist:
-    command: mkdir -p static
-    outputs:
-      - static
   serve:
     command: storybook dev
     args:
@@ -26,7 +22,6 @@ tasks:
       - --no-open
     deps:
       - ^:compile
-      - mkdist
     inputs:
       - .storybook/*
       - static/*
@@ -40,7 +35,6 @@ tasks:
       - --config-dir=config/e2e
     deps:
       - ^:compile
-      - mkdist
     inputs:
       - .storybook/*
       - config/e2e/*
