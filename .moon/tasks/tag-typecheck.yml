@@ -11,3 +11,5 @@ tasks:
       - '@group(sources)'
     outputs:
       - dist/
+    options:
+      timeout: 60

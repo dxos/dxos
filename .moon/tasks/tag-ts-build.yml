@@ -12,6 +12,8 @@ tasks:
       - '@group(sources)'
     outputs:
       - dist/types/
+    options:
+      timeout: 60
   compile:
     command: dx-compile
     args:
@@ -23,3 +25,5 @@ tasks:
       - '@group(production)'
     outputs:
       - dist/lib/
+    options:
+      timeout: 10

@@ -11,3 +11,5 @@ tasks:
       - '@group(production)'
     outputs:
       - dist/
+    options:
+      timeout: 60
