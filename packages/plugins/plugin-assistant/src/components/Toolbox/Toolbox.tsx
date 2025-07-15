@@ -7,6 +7,8 @@ import React, { useState, useEffect, Fragment, type FC } from 'react';
 import { parseToolName, type Tool } from '@dxos/ai';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
+import type { Blueprint } from '@dxos/assistant';
+import type { Ref } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
@@ -15,15 +17,17 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { createToolsFromService } from '../../tools';
 import { ServiceType } from '../../types';
+import { useChatContext } from '../Chat';
 
 export type ToolboxProps = ThemedClassName<{
   artifacts?: ArtifactDefinition[];
   services?: { service: ServiceType; tools: Tool[] }[];
   functions?: FunctionType[];
+  activeBlueprints?: readonly Ref.Ref<Blueprint>[];
   striped?: boolean;
 }>;
 
-export const Toolbox = ({ classNames, artifacts, functions, services, striped }: ToolboxProps) => {
+export const Toolbox = ({ classNames, artifacts, functions, services, activeBlueprints, striped }: ToolboxProps) => {
   return (
     <div className={mx('flex flex-col overflow-y-auto box-content', classNames)}>
       {artifacts && artifacts.length > 0 && (
@@ -50,6 +54,17 @@ export const Toolbox = ({ classNames, artifacts, functions, services, striped }:
 
       {functions && functions.length > 0 && (
         <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
+      )}
+
+      {activeBlueprints && activeBlueprints.length > 0 && (
+        <Section
+          title='Blueprints'
+          items={activeBlueprints.map(({ target }) => ({
+            name: target?.name ?? '',
+            description: target?.description ?? '',
+            subitems: target?.tools.map((toolId) => ({ name: `∙ ${parseToolName(toolId)}` })),
+          }))}
+        />
       )}
     </div>
   );
@@ -90,6 +105,8 @@ const Section: FC<{
 };
 
 export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?: Space }>) => {
+  const { processor } = useChatContext(ToolboxContainer.name);
+
   // Plugin artifacts.
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 
@@ -111,6 +128,12 @@ export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?
   const functions = useQuery(space, Filter.type(FunctionType));
 
   return (
-    <Toolbox classNames={classNames} artifacts={artifactDefinitions} services={serviceTools} functions={functions} />
+    <Toolbox
+      classNames={classNames}
+      artifacts={artifactDefinitions}
+      services={serviceTools}
+      functions={functions}
+      activeBlueprints={processor.blueprints.bindings.value}
+    />
   );
 };

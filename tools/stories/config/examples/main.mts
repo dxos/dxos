@@ -4,8 +4,8 @@
 
 import { join } from 'path';
 
-import { config, packages } from '../../.storybook/main';
+import { createConfig, packages } from '../../.storybook/main';
 
-export default config({
+export default createConfig({
   stories: [join(packages, '/sdk/examples/src/stories/examples.stories.tsx')],
 });

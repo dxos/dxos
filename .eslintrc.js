@@ -13,6 +13,7 @@ module.exports = {
     // Build Artifacts
     'dist',
     'out',
+    'deprecated',
     '**/proto/gen/*',
     'packages/core/protocols/proto/**/*',
     'packages/sdk/client/src/version.ts',

@@ -316,6 +316,9 @@
       "@dxos/react-ui-canvas-editor/testing": [
         "packages/ui/react-ui-canvas-editor/src/testing/index.ts"
       ],
+      "@dxos/react-ui-chat": [
+        "packages/ui/react-ui-chat/src/index.ts"
+      ],
       "@dxos/react-ui-components": [
         "packages/ui/react-ui-components/src/index.ts"
       ],
@@ -327,6 +330,9 @@
       ],
       "@dxos/react-ui-editor/testing": [
         "packages/ui/react-ui-editor/src/testing/index.ts"
+      ],
+      "@dxos/react-ui-editor/types": [
+        "packages/ui/react-ui-editor/src/types/index.ts"
       ],
       "@dxos/react-ui-form": [
         "packages/ui/react-ui-form/src/index.ts"

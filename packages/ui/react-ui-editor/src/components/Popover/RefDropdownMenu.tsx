@@ -11,17 +11,23 @@ import { DropdownMenu } from '@dxos/react-ui';
 
 import { type PreviewLinkRef, type PreviewLinkTarget, type PreviewLookup } from '../../extensions';
 
-// TODO(burdon): Reconcile with RefPopover?
+// TODO(burdon): Reconcile this file with RefPopover?
 
 const customEventOptions = { capture: true, passive: false };
 
 // Create a context for the dxn value.
-type RefDropdownMenuValue = Partial<{ link: PreviewLinkRef; target: PreviewLinkTarget; pending: boolean }>;
+type RefDropdownMenuValue = Partial<{
+  link: PreviewLinkRef;
+  target: PreviewLinkTarget;
+  pending: boolean;
+}>;
 
 const REF_DROPDOWN_MENU = 'RefDropdownMenu';
 const [RefDropdownMenuContextProvider, useRefDropdownMenu] = createContext<RefDropdownMenuValue>(REF_DROPDOWN_MENU, {});
 
-type RefDropdownMenuProviderProps = PropsWithChildren<{ onLookup?: PreviewLookup }>;
+type RefDropdownMenuProviderProps = PropsWithChildren<{
+  onLookup?: PreviewLookup;
+}>;
 
 const RefDropdownMenuProvider = ({ children, onLookup }: RefDropdownMenuProviderProps) => {
   const trigger = useRef<DxRefTag | null>(null);
