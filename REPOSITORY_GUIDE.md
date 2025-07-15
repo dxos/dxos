@@ -16,6 +16,12 @@ brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-se
 bash <(curl -fsSL https://moonrepo.dev/install/proto.sh)
 ```
 
+Setup proto for shell activation:
+
+```bash
+eval "$(proto activate zsh --config-mode all)"
+```
+
 ## Monorepo workspace
 
 This monorepo repository is built with [`pnpm`](https://pnpm.io) and [`moon`](https://moonrepo.dev), with [`release-please`](https://github.com/googleapis/release-please) for release automation.
