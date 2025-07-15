@@ -1580,8 +1580,9 @@ export class DxGrid extends LitElement {
     }
   }
 
-  public updateIfWithinBounds({ col, row }: { col: number; row: number }): boolean {
+  public updateIfWithinBounds({ col, row }: { col: number; row: number }, includeFixed?: boolean): boolean {
     if (col >= this.visColMin && col <= this.visColMax && row >= this.visRowMin && row <= this.visRowMax) {
+      this.updateCells(includeFixed);
       this.requestUpdate();
       return true;
     }
