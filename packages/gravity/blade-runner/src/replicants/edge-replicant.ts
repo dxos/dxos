@@ -3,12 +3,10 @@
 //
 
 import { Schema } from 'effect';
-import fs from 'node:fs';
-import path from 'node:path';
 
-import { asyncTimeout } from '@dxos/async';
+import { asyncTimeout, sleep, Trigger, waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
-import { type Device, type Identity } from '@dxos/client/halo';
+import { DeviceType, type Identity } from '@dxos/client/halo';
 import { type ConfigProto } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { TypedObject } from '@dxos/echo-schema';
@@ -18,6 +16,8 @@ import { uploadWorkerFunction } from '@dxos/functions/edge';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { dataGenerator } from '@dxos/plugin-script/templates';
+import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
@@ -26,67 +26,90 @@ export class Text extends TypedObject({ typename: 'dxos.org/blade-runner/Text', 
   content: Schema.String,
 }) {}
 
-const SCRIPT_PATH = path.join(
-  import.meta.dirname,
-  '..',
-  '..',
-  '..',
-  '..',
-  'packages',
-  'plugins',
-  'plugin-script',
-  'src',
-  'templates',
-  'data-generator.ts',
-);
-
 @trace.resource()
 export class EdgeReplicant {
-  private readonly _ctx = new Context();
   private _client?: Client = undefined;
   private _identity?: Identity = undefined;
 
   constructor(private readonly env: ReplicantEnv) {}
 
   @trace.span()
-  async open({ config }: { config: ConfigProto }): Promise<void> {
-    log.trace('dxos.edge-replicant.open');
+  async initClient({ config, indexing }: { config: ConfigProto; indexing?: IndexConfig }): Promise<void> {
+    log.trace('dxos.edge-replicant.initClient');
+
+    // Initialize client.
     this._client = new Client({ config: new Config(config) });
     await this._client.initialize();
+
+    // Set indexing config.
+    if (indexing) {
+      await this._client.services.services.QueryService!.setConfig(indexing, { timeout: 20_000 });
+    }
   }
 
   @trace.span()
-  async close(): Promise<void> {
-    log.trace('dxos.edge-replicant.close');
+  async destroyClient(): Promise<void> {
+    log.trace('dxos.edge-replicant.destroyClient');
     await this._client?.destroy();
-    void this._ctx.dispose();
   }
 
   async createIdentity(): Promise<Identity> {
-    const identity = await this._client!.halo.createIdentity();
+    invariant(this._client, 'no client');
+    const identity = await this._client.halo.createIdentity();
     this._identity = identity;
+    await this._client.spaces.waitUntilReady();
     return identity;
   }
 
+  async startAgent(): Promise<void> {
+    log.trace('dxos.edge-replicant.startAgent');
+    invariant(this._client, 'no client');
+    const agentKey = await this.getAgentKey();
+    if (agentKey) {
+      log.info('agent already created', { agentKey });
+      return;
+    }
+
+    await this._client.services.services.EdgeAgentService!.createAgent(null as any, { timeout: 10_000 });
+    log.info('agent created');
+  }
+
+  async getAgentKey(): Promise<string | undefined> {
+    invariant(this._client, 'no client');
+    const agentDevice = this._client.halo.devices
+      .get()
+      .find((device) => device.profile?.type === DeviceType.AGENT_MANAGED);
+    return agentDevice?.deviceKey.toHex();
+  }
+
   async createSpace(): Promise<SpaceId> {
-    const space = await this._client!.spaces.create();
+    await sleep(1000);
+    invariant(this._client, 'no client');
+    const agentDevice = this._client.halo.devices
+      .get()
+      .find((device) => device.profile?.type === DeviceType.AGENT_MANAGED);
+    const agentKey = agentDevice?.deviceKey.toHex();
+    invariant(agentKey, 'no agent key');
+
+    const response = await this._client!.edge.createSpace({ agentKey });
+    log.info('space created', { response });
+    const space = await waitForCondition({
+      condition: () => this._client!.spaces.get(response.spaceId as SpaceId),
+      timeout: 10000,
+      interval: 100,
+    });
+    invariant(space, 'space not found');
+
     return space.id;
   }
 
-  async listDevices(): Promise<Device[]> {
-    return this._client!.halo.devices.get();
-  }
-
-  async deployFunction({
-    path,
-  }: {
-    path: string;
-  }): Promise<{ functionId: string; version: string } | { error: string }> {
+  async deployFunction({ source }: { source?: string } = {}): Promise<{ functionId: string; version: string }> {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const buildResult = await bundler.bundle({ source: fs.readFileSync(path ?? SCRIPT_PATH, 'utf8') });
+    const buildResult = await bundler.bundle({ source: source ?? dataGenerator });
 
     if (buildResult.error || !buildResult.bundle) {
-      return { error: 'Bundle creation failed' };
+      log.error('Bundle creation failed', { buildResult });
+      throw new Error('Bundle creation failed');
     }
 
     const result = await asyncTimeout(
@@ -121,6 +144,23 @@ export class EdgeReplicant {
     });
 
     return response.text();
+  }
+
+  async waitForReplication({ spaceId }: { spaceId: SpaceId }) {
+    invariant(this._client, 'no client');
+    const space = this._client!.spaces.get(spaceId);
+    invariant(space, 'space not found');
+
+    const replicationIsDone = new Trigger();
+    const unsub = space.crud.subscribeToSyncState(Context.default(), (state) => {
+      log.info('sync state', { state });
+      if (state.peers?.every((peer) => peer.differentDocuments === 0)) {
+        replicationIsDone.wake();
+      }
+    });
+
+    await replicationIsDone.wait({ timeout: 30_000 });
+    unsub();
   }
 }
 

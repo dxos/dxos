@@ -5236,6 +5236,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/plugin-script':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-script
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols

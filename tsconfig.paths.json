@@ -175,6 +175,9 @@
       "@dxos/plugin-script": [
         "packages/plugins/plugin-script/src/index.ts"
       ],
+      "@dxos/plugin-script/templates": [
+        "packages/plugins/plugin-script/src/templates/index.ts"
+      ],
       "@dxos/plugin-script/types": [
         "packages/plugins/plugin-script/src/types.ts"
       ],
