@@ -21,6 +21,7 @@ module.exports = {
     // Config
     '.eslintrc.js',
     '.mocharc.js',
+    'astro.config.ts',
     'esbuild-server.config.js',
     'playwright.config.ts',
     'tailwind.ts',
@@ -36,8 +37,7 @@ module.exports = {
     // TODO(wittjosiah): Fix lint config to lint these files.
     '*.t.ts',
 
-    // Docs snippets
-    'docs/content/**/*',
+    // TypeDoc output
     '**/typedoc/assets/**/*',
   ],
 
