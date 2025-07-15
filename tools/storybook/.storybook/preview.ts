@@ -5,7 +5,7 @@
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react';
 
-import { DocsContainer } from '@dxos/storybook-utils';
+// import { DocsContainer } from '@dxos/storybook-utils';
 
 import { docsTheme } from './theme';
 
@@ -44,7 +44,7 @@ export const preview: Preview = {
     },
     docs: {
       inlineStories: true,
-      container: DocsContainer,
+      // container: DocsContainer,
       theme: docsTheme,
       source: {
         type: 'code',
