@@ -23,6 +23,7 @@ type ButtonGroupContextValue = { inGroup?: boolean };
 
 const BUTTON_GROUP_NAME = 'ButtonGroup';
 const BUTTON_NAME = 'Button';
+
 const [ButtonGroupProvider, useButtonGroupContext] = createContext<ButtonGroupContextValue>(BUTTON_GROUP_NAME, {
   inGroup: false,
 });

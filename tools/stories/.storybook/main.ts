@@ -48,7 +48,10 @@ if (isTrue(process.env.DX_DEBUG)) {
  * https://storybook.js.org/docs/api/main-config/main-config
  * https://nx.dev/recipes/storybook/one-storybook-for-all
  */
-export const config = ({ stories: baseStories, ...baseConfig }: Partial<StorybookConfig> = {}): StorybookConfig => ({
+export const createConfig = ({
+  stories: baseStories,
+  ...baseConfig
+}: Partial<StorybookConfig> = {}): StorybookConfig => ({
   framework: '@storybook/react-vite',
   stories: baseStories ?? stories,
   addons: [
@@ -150,4 +153,11 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
   },
 });
 
-export default config();
+const config = createConfig();
+
+if (isTrue(process.env.DX_DEBUG)) {
+  // eslint-disable-next-line no-console
+  console.log(JSON.stringify({ config }, null, 2));
+}
+
+export default config;

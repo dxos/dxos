@@ -110,7 +110,7 @@ export const defaultTheme: ThemeStyles = {
     borderLeft: '2px solid var(--dx-cmCursor)',
   },
   '.cm-placeholder': {
-    color: 'var(--dx-subdued)',
+    color: 'var(--dx-placeholder)',
   },
 
   /**

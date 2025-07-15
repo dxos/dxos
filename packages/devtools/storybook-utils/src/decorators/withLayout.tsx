@@ -36,7 +36,7 @@ export type WithLayoutProps = ThemedClassName<ProviderOptions & { Container?: FC
 export const withLayout = ({
   classNames,
   fullscreen,
-  Container = fullscreen ? FixedContainer : DefaultContainer,
+  Container = fullscreen ? FullscreenContainer : DefaultContainer,
   ...providedOptions
 }: WithLayoutProps = {}): Decorator => {
   // TODO(burdon): Inspect "fullscreen" parameter in context.
@@ -55,7 +55,7 @@ export const withLayout = ({
 // TODO(burdon): Use consistently.
 export const layoutCentered = 'bg-deckSurface justify-center overflow-y-auto';
 
-export const DefaultContainer: FC<ContainerProps> = ({ children, classNames }) => {
+export const DefaultContainer = ({ children, classNames }: ContainerProps) => {
   return (
     <div role='none' className={mx(classNames)}>
       {children}
@@ -63,7 +63,7 @@ export const DefaultContainer: FC<ContainerProps> = ({ children, classNames }) =
   );
 };
 
-export const FixedContainer: FC<ContainerProps> = ({ children, classNames }) => {
+export const FullscreenContainer = ({ children, classNames }: ContainerProps) => {
   return (
     <div role='none' className={mx('fixed inset-0 flex overflow-hidden', classNames)}>
       {children}
@@ -71,12 +71,12 @@ export const FixedContainer: FC<ContainerProps> = ({ children, classNames }) => 
   );
 };
 
-export const ColumnContainer: FC<ContainerProps> = ({ children, classNames = 'w-[30rem]', ...props }) => {
+export const ColumnContainer = ({ children, classNames = 'w-[30rem]', ...props }: ContainerProps) => {
   return (
-    <FixedContainer classNames='justify-center bg-modalSurface' {...props}>
+    <FullscreenContainer classNames='justify-center bg-modalSurface' {...props}>
       <div role='none' className={mx('flex flex-col h-full overflow-y-auto bg-baseSurface', classNames)}>
         {children}
       </div>
-    </FixedContainer>
+    </FullscreenContainer>
   );
 };
