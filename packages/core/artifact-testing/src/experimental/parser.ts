@@ -134,16 +134,24 @@ export const parseGptStream =
           }
         };
 
+        const flushText = () => {
+          if (streamBlock) {
+            emitStreamBlock(streamBlock);
+            streamBlock = undefined;
+          }
+        };
+
         yield* Stream.runForEach(
           input,
           Effect.fnUntraced(function* (response) {
             for (const part of response.parts) {
+              // log.info('part', { part });
               yield* onPart(part);
               switch (part._tag) {
                 case 'TextPart': {
                   const chunks = transformer.transform(part.text);
                   for (const chunk of chunks) {
-                    log('text_chunk', { chunk });
+                    log.info('text_chunk', { chunk });
                     switch (streamBlock?.type) {
                       //
                       // XML Fragment.
@@ -218,9 +226,8 @@ export const parseGptStream =
                   break;
                 }
 
-                // TODO(burdon): Flush stream block.
-
                 case 'ToolCallPart':
+                  flushText();
                   emit.single({
                     _tag: 'toolCall',
                     toolCallId: part.id,
@@ -229,6 +236,7 @@ export const parseGptStream =
                   } satisfies ContentBlock.ToolCall);
                   break;
                 case 'ReasoningPart':
+                  flushText();
                   emit.single({
                     _tag: 'reasoning',
                     reasoningText: part.reasoningText,
@@ -236,16 +244,19 @@ export const parseGptStream =
                   } satisfies ContentBlock.Reasoning);
                   break;
                 case 'RedactedReasoningPart':
+                  flushText();
                   emit.single({
                     _tag: 'reasoning',
                     redactedText: part.redactedText,
                   } satisfies ContentBlock.Reasoning);
                   break;
                 case 'MetadataPart':
+                  flushText();
                   // TODO(dmaretskyi): Handling these would involve changing the signature of this transformer to emit a whole message.
                   log.info('metadata', { metadata: part });
                   break;
                 case 'FinishPart':
+                  flushText();
                   // TODO(dmaretskyi): Handling these would involve changing the signature of this transformer to emit a whole message.
                   log.info('finish', { finish: part });
                   break;
@@ -254,7 +265,7 @@ export const parseGptStream =
           }),
         );
 
-        // TODO(burdon): Flush stream block.
+        flushText();
         emit.end();
       }),
     );
