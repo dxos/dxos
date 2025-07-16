@@ -2208,6 +2208,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -2235,6 +2238,12 @@ importers:
       '@effect/ai':
         specifier: 0.21.16
         version: 0.21.16(@effect/experimental@0.51.13(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12)(ioredis@5.3.2))(@effect/platform@0.87.12(effect@3.16.12))(@effect/rpc@0.64.13(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12))(effect@3.16.12)
+      '@effect/ai-anthropic':
+        specifier: ^0.11.18
+        version: 0.11.18(@effect/ai@0.21.16(@effect/experimental@0.51.13(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12)(ioredis@5.3.2))(@effect/platform@0.87.12(effect@3.16.12))(@effect/rpc@0.64.13(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12))(effect@3.16.12))(@effect/experimental@0.51.13(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12)(ioredis@5.3.2))(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12)
+      '@effect/platform-node':
+        specifier: ^0.89.5
+        version: 0.89.5(@effect/cluster@0.41.17(@effect/platform@0.87.12(effect@3.16.12))(@effect/rpc@0.64.13(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12))(@effect/sql@0.40.13(@effect/experimental@0.51.13(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12)(ioredis@5.3.2))(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12))(effect@3.16.12))(@effect/platform@0.87.12(effect@3.16.12))(@effect/rpc@0.64.13(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12))(@effect/sql@0.40.13(@effect/experimental@0.51.13(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12)(ioredis@5.3.2))(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12))(effect@3.16.12)
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.10.0
