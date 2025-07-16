@@ -38,42 +38,42 @@ jobs:
           git config user.name "dxos-bot"
           git config user.email "bot@dxos.org"
 
-      - name: Install system dependencies
-        if: ${{ steps.release.outputs.release_created }}
-        run: sudo apt-get install libxtst-dev libpng++-dev
+      # - name: Install system dependencies
+      #   if: ${{ steps.release.outputs.release_created }}
+      #   run: sudo apt-get install libxtst-dev libpng++-dev
 
-      - name: Install Node.js
-        if: ${{ steps.release.outputs.release_created }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      # - name: Install Node.js
+      #   if: ${{ steps.release.outputs.release_created }}
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: 20
 
-      - name: Install pnpm
-        if: ${{ steps.release.outputs.release_created }}
-        uses: pnpm/action-setup@v4
-        id: pnpm-install
-        with:
-          run_install: false
+      # - name: Install pnpm
+      #   if: ${{ steps.release.outputs.release_created }}
+      #   uses: pnpm/action-setup@v4
+      #   id: pnpm-install
+      #   with:
+      #     run_install: false
 
-      - name: Get pnpm store directory
-        if: ${{ steps.release.outputs.release_created }}
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+      # - name: Get pnpm store directory
+      #   if: ${{ steps.release.outputs.release_created }}
+      #   id: pnpm-cache
+      #   shell: bash
+      #   run: |
+      #     echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
-      - name: Setup pnpm cache
-        if: ${{ steps.release.outputs.release_created }}
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+      # - name: Setup pnpm cache
+      #   if: ${{ steps.release.outputs.release_created }}
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+      #     key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-pnpm-store-
 
-      - name: Install dependencies
-        if: ${{ steps.release.outputs.release_created }}
-        run: pnpm install
+      # - name: Install dependencies
+      #   if: ${{ steps.release.outputs.release_created }}
+      #   run: pnpm install
 
       # TODO(wittjosiah): Remove? Currently no prerelease targets.
       # TODO(wittjosiah): Is there a release please hook to have this happen before tagging the release?

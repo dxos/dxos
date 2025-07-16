@@ -21,7 +21,7 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../devtools/storybook-utils"
+      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../sdk/app-framework"

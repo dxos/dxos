@@ -8,7 +8,7 @@ import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 import { TableManager } from './TableManager';
 
-const storyUrl = storybookUrl('ui-react-ui-table-table--default');
+const storyUrl = storybookUrl('ui-react-ui-table-table--default', 9004);
 
 // NOTE(ZaymonFC): This test suite relies on the faker seed being set to 0 in the story.
 test.describe('Table', () => {

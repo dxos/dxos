@@ -27,6 +27,9 @@
       "path": "../../common/local-storage"
     },
     {
+      "path": "../../common/storybook-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -34,9 +37,6 @@
     },
     {
       "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../devtools/storybook-utils"
     },
     {
       "path": "../../sdk/app-framework"
