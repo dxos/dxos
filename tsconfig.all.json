@@ -538,6 +538,9 @@
       "path": "packages/ui/react-ui-types/tsconfig.json"
     },
     {
+      "path": "tools/beast/tsconfig.json"
+    },
+    {
       "path": "tools/codemods/tsconfig.json"
     },
     {

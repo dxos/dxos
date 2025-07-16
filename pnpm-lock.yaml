@@ -281,9 +281,6 @@ importers:
       jiti:
         specifier: 2.4.2
         version: 2.4.2
-      js-yaml:
-        specifier: 4.1.0
-        version: 4.1.0
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0
@@ -14452,6 +14449,61 @@ importers:
 
   packages/ui/react-ui-types: {}
 
+  tools/beast:
+    dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../packages/common/log
+      array-iterate:
+        specifier: ~2.0.1
+        version: 2.0.1
+      chalk:
+        specifier: ^4.1.0
+        version: 4.1.2
+      color-hash:
+        specifier: ^1.0.3
+        version: 1.1.1
+      cosmiconfig:
+        specifier: ^8.0.0
+        version: 8.3.6(typescript@5.8.3)
+      js-yaml:
+        specifier: ^4.1.0
+        version: 4.1.0
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
+      lodash.pick:
+        specifier: ^4.4.0
+        version: 4.4.0
+      minimatch:
+        specifier: ^5.1.0
+        version: 5.1.6
+      ts-morph:
+        specifier: ^16.0.0
+        version: 16.0.0
+      yargs:
+        specifier: ~16.2.0
+        version: 16.2.0
+    devDependencies:
+      '@babel/core':
+        specifier: ^7.18.13
+        version: 7.28.0
+      '@types/color-hash':
+        specifier: ^1.0.1
+        version: 1.0.2
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
+      '@types/lodash.pick':
+        specifier: ^4.4.7
+        version: 4.4.7
+      '@types/minimatch':
+        specifier: ^5.1.2
+        version: 5.1.2
+      '@types/yargs':
+        specifier: ~16.0.1
+        version: 16.0.4
+
   tools/codemods:
     dependencies:
       jscodeshift:
@@ -20569,7 +20621,6 @@ packages:
 
   '@socketsupply/socket@0.5.4':
     resolution: {integrity: sha512-8sDIEL5cyFI4jlpZYUL4JqSgkj1XjUlbi9kA16/5DfzAYefQx38QXQaI0Hj7G1T3WwPnKN8f9xLvESMHikysrA==}
-    cpu: [arm64, x64]
     os: [linux, darwin, win32]
     hasBin: true
 

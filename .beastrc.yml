@@ -1,0 +1,9 @@
+exclude:
+  - '@dxos/async'
+  - '@dxos/debug'
+  - '@dxos/feeds'
+  - '@dxos/keys'
+  - '@dxos/log'
+  - '@dxos/testutils'
+  - '@dxos/util'
+  - '@dxos/docs'
