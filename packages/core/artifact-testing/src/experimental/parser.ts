@@ -6,7 +6,26 @@ import type { AiError, AiResponse } from '@effect/ai';
 import { Effect, Function, Predicate, Stream } from 'effect';
 
 export interface ParseGptStreamOptions {
+  /**
+   * Called when the stream begins.
+   */
+  onBegin?: () => Effect.Effect<void>;
+
+  /**
+   * Called on every part received from the stream.
+   */
   onPart?: (part: AiResponse.Part) => Effect.Effect<void>;
+
+  /**
+   * Called on every partial or completed content block.
+   * Partial blocks will have `pending` set to `true`.
+   */
+  onBlock?: (block: ContentBlock.Any) => Effect.Effect<void>;
+
+  /**
+   * Called when the stream ends.
+   */
+  onEnd?: () => Effect.Effect<void>;
 }
 
 /**
@@ -16,7 +35,12 @@ export interface ParseGptStreamOptions {
  * Callbacks can be provided to watch for incomplete blocks.
  */
 export const parseGptStream =
-  ({ onPart = Function.constant(Effect.void) }: ParseGptStreamOptions = {}) =>
+  ({
+    onBegin = Function.constant(Effect.void),
+    onPart = Function.constant(Effect.void),
+    onBlock = Function.constant(Effect.void),
+    onEnd = Function.constant(Effect.void),
+  }: ParseGptStreamOptions = {}) =>
   <E>(input: Stream.Stream<AiResponse.AiResponse, E, never>): Stream.Stream<ContentBlock.Any, E, never> =>
     Stream.asyncPush(
       Effect.fnUntraced(function* (emit) {
@@ -28,118 +52,30 @@ export const parseGptStream =
         let streamBlock: StreamBlock | undefined;
         const stack: StreamBlock[] = [];
 
-        const emitStreamBlock = (block: StreamBlock) => {
-          switch (block.type) {
-            //
-            // Text
-            //
-            case 'text': {
-              emit.single({
-                _tag: 'text',
-                text: block.content,
-              } satisfies ContentBlock.Text);
-              break;
-            }
-
-            //
-            // XML
-            //
-            case 'tag': {
-              switch (block.tag) {
-                case 'cot': {
-                  const content = block.content
-                    .map((block) => {
-                      switch (block.type) {
-                        case 'text':
-                          return block.content;
-                        default:
-                          return null;
-                      }
-                    })
-                    .filter(Predicate.isTruthy)
-                    .join('\n');
-
-                  emit.single({
-                    _tag: 'reasoning',
-                    reasoningText: content,
-                  } satisfies ContentBlock.Reasoning);
-                  break;
-                }
-
-                case 'status': {
-                  const content = block.content
-                    .map((block) => {
-                      switch (block.type) {
-                        case 'text':
-                          return block.content;
-                        default:
-                          return null;
-                      }
-                    })
-                    .filter(Predicate.isTruthy)
-                    .join('\n');
-
-                  emit.single({
-                    _tag: 'status',
-                    statusText: content,
-                  } satisfies ContentBlock.Status);
-                  break;
-                }
-
-                case 'artifact': {
-                  log.warn('artifact tags not implemented', { block });
-                  break;
-                }
-
-                case 'suggest': {
-                  if (block.content.length === 1 && block.content[0].type === 'text') {
-                    emit.single({
-                      _tag: 'suggest',
-                      text: block.content[0].content,
-                    } satisfies ContentBlock.Suggest);
-                  }
-                  break;
-                }
-
-                case 'proposal': {
-                  if (block.content.length === 1 && block.content[0].type === 'text') {
-                    emit.single({
-                      _tag: 'proposal',
-                      text: block.content[0].content,
-                    } satisfies ContentBlock.Proposal);
-                  }
-                  break;
-                }
-
-                case 'select': {
-                  return emit.single({
-                    _tag: 'select',
-                    options: block.content.flatMap((content) =>
-                      content.type === 'tag' && content.content.length === 1 && content.content[0].type === 'text'
-                        ? [content.content[0].content]
-                        : [],
-                    ),
-                  });
-                }
-
-                case 'tool-list': {
-                  return emit.single({
-                    _tag: 'toolList',
-                  });
-                }
-              }
-
-              break;
-            }
+        const emitUpdate = Effect.fnUntraced(function* (block: StreamBlock) {
+          const contentBlock = makeContentBlock(block);
+          if (contentBlock) {
+            contentBlock.pending = true;
+            yield* onBlock(contentBlock);
           }
-        };
+        });
 
-        const flushText = () => {
+        const emitStreamBlock = Effect.fnUntraced(function* (block: StreamBlock) {
+          const contentBlock = makeContentBlock(block);
+          if (contentBlock) {
+            yield* onBlock(contentBlock);
+            emit.single(contentBlock);
+          }
+          streamBlock = undefined;
+        });
+
+        const flushText = Effect.fnUntraced(function* () {
           if (streamBlock) {
-            emitStreamBlock(streamBlock);
-            streamBlock = undefined;
+            yield* emitStreamBlock(streamBlock);
           }
-        };
+        });
+
+        yield* onBegin();
 
         yield* Stream.runForEach(
           input,
@@ -168,7 +104,7 @@ export const parseGptStream =
                               top.content.push(streamBlock);
                               streamBlock = top;
                             } else {
-                              emitStreamBlock(streamBlock);
+                              yield* emitStreamBlock(streamBlock);
                               streamBlock = undefined;
                             }
                           } else {
@@ -197,9 +133,9 @@ export const parseGptStream =
                       //
                       case 'text': {
                         if (chunk.type === 'tag') {
-                          emitStreamBlock(streamBlock);
+                          yield* emitStreamBlock(streamBlock);
                           if (chunk.selfClosing) {
-                            emitStreamBlock(chunk);
+                            yield* emitStreamBlock(chunk);
                             streamBlock = undefined;
                           } else {
                             streamBlock = chunk;
@@ -216,18 +152,22 @@ export const parseGptStream =
                       //
                       default: {
                         if (chunk.type === 'tag' && chunk.selfClosing) {
-                          emitStreamBlock(chunk);
+                          yield* emitStreamBlock(chunk);
                         } else {
                           streamBlock = chunk;
                         }
                       }
                     }
                   }
+
+                  if (streamBlock) {
+                    yield* emitUpdate(streamBlock);
+                  }
                   break;
                 }
 
                 case 'ToolCallPart':
-                  flushText();
+                  yield* flushText();
                   emit.single({
                     _tag: 'toolCall',
                     toolCallId: part.id,
@@ -236,7 +176,7 @@ export const parseGptStream =
                   } satisfies ContentBlock.ToolCall);
                   break;
                 case 'ReasoningPart':
-                  flushText();
+                  yield* flushText();
                   emit.single({
                     _tag: 'reasoning',
                     reasoningText: part.reasoningText,
@@ -244,19 +184,19 @@ export const parseGptStream =
                   } satisfies ContentBlock.Reasoning);
                   break;
                 case 'RedactedReasoningPart':
-                  flushText();
+                  yield* flushText();
                   emit.single({
                     _tag: 'reasoning',
                     redactedText: part.redactedText,
                   } satisfies ContentBlock.Reasoning);
                   break;
                 case 'MetadataPart':
-                  flushText();
+                  yield* flushText();
                   // TODO(dmaretskyi): Handling these would involve changing the signature of this transformer to emit a whole message.
                   log.info('metadata', { metadata: part });
                   break;
                 case 'FinishPart':
-                  flushText();
+                  yield* flushText();
                   // TODO(dmaretskyi): Handling these would involve changing the signature of this transformer to emit a whole message.
                   log.info('finish', { finish: part });
                   break;
@@ -265,7 +205,116 @@ export const parseGptStream =
           }),
         );
 
-        flushText();
+        yield* flushText();
+        yield* onEnd();
         emit.end();
       }),
     );
+
+/**
+ * @returns Content block made from stream block.
+ */
+const makeContentBlock = (block: StreamBlock): ContentBlock.Any | undefined => {
+  switch (block.type) {
+    //
+    // Text
+    //
+    case 'text': {
+      return {
+        _tag: 'text',
+        text: block.content,
+      } satisfies ContentBlock.Text;
+    }
+
+    //
+    // XML
+    //
+    case 'tag': {
+      switch (block.tag) {
+        case 'cot': {
+          const content = block.content
+            .map((block) => {
+              switch (block.type) {
+                case 'text':
+                  return block.content;
+                default:
+                  return null;
+              }
+            })
+            .filter(Predicate.isTruthy)
+            .join('\n');
+
+          return {
+            _tag: 'reasoning',
+            reasoningText: content,
+          } satisfies ContentBlock.Reasoning;
+        }
+
+        case 'status': {
+          const content = block.content
+            .map((block) => {
+              switch (block.type) {
+                case 'text':
+                  return block.content;
+                default:
+                  return null;
+              }
+            })
+            .filter(Predicate.isTruthy)
+            .join('\n');
+
+          return {
+            _tag: 'status',
+            statusText: content,
+          } satisfies ContentBlock.Status;
+        }
+
+        case 'artifact': {
+          log.warn('artifact tags not implemented', { block });
+          break;
+        }
+
+        case 'suggest': {
+          if (block.content.length === 1 && block.content[0].type === 'text') {
+            return {
+              _tag: 'suggest',
+              text: block.content[0].content,
+            } satisfies ContentBlock.Suggest;
+          }
+
+          return undefined;
+        }
+
+        case 'proposal': {
+          if (block.content.length === 1 && block.content[0].type === 'text') {
+            return {
+              _tag: 'proposal',
+              text: block.content[0].content,
+            } satisfies ContentBlock.Proposal;
+          }
+
+          return undefined;
+        }
+
+        case 'select': {
+          return {
+            _tag: 'select',
+            options: block.content.flatMap((content) =>
+              content.type === 'tag' && content.content.length === 1 && content.content[0].type === 'text'
+                ? [content.content[0].content]
+                : [],
+            ),
+          } satisfies ContentBlock.Select;
+        }
+
+        case 'tool-list': {
+          return {
+            _tag: 'toolList',
+          } satisfies ContentBlock.ToolList;
+        }
+      }
+
+      return undefined;
+    }
+  }
+};
