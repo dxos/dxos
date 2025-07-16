@@ -10,8 +10,8 @@
   "type": "module",
   "exports": {
     "./_/config": {
-      "import": "./dist/lib/browser/_/config.mjs",
-      "require": "./dist/lib/node-esm/_/config.mjs"
+      "import": "./dist/lib/node-esm/_/config.mjs",
+      "require": "./dist/lib/node-cjs/_/config.cjs"
     },
     "./assert": "./dist/lib/browser/assert.mjs",
     "./buffer": "./dist/lib/browser/buffer.mjs",
