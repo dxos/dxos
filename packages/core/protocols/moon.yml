@@ -1,0 +1,31 @@
+type: library
+language: typescript
+tags:
+  - ts-compile
+  - ts-test
+tasks:
+  compile:
+    deps:
+      - prebuild
+  gen-buf:
+    command: pnpm run compile:buf
+    inputs:
+      - src/proto/dxos/**/*.proto
+    outputs:
+      - src/buf/proto/gen/dxos
+  prebuild:
+    command: build-protobuf
+    args:
+      - '--baseDir="./src/proto"'
+      - '--src="./src/proto/**/*.proto"'
+      - '--outDir="./src/proto/gen"'
+      - '--substitutions="./src/proto/substitutions.ts"'
+    deps:
+      - ^:compile
+      - protobuf-compiler:compile
+      - gen-buf
+    outputs:
+      - src/proto/gen
+  test:
+    deps:
+      - prebuild

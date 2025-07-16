@@ -1,0 +1,9 @@
+type: application
+language: typescript
+tags:
+  - typecheck
+  - vite
+tasks:
+  bundle:
+    deps:
+      - shell:bundle

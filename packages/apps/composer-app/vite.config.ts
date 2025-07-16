@@ -56,6 +56,7 @@ export default defineConfig((env) => ({
     keepNames: true,
   },
   build: {
+    outDir: 'out/composer',
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
     target: ['chrome89', 'edge89', 'firefox89', 'safari15'],

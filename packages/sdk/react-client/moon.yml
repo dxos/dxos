@@ -1,0 +1,19 @@
+type: library
+language: typescript
+tags:
+  - e2e
+  - ts-build
+  - ts-test
+  - typedoc
+  - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/devtools/index.ts'
+      - '--entryPoint=src/echo/index.ts'
+      - '--entryPoint=src/halo/index.ts'
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/invitations/index.ts'
+      - '--entryPoint=src/mesh/index.ts'
+      - '--entryPoint=src/testing/index.ts'
+      - '--entryPoint=src/worker.ts'

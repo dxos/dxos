@@ -34,6 +34,7 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: 'out/todomvc',
     // TODO(wittjosiah): Minification is causing issues with the app.
     minify: false,
     rollupOptions: {

@@ -1,9 +1,0 @@
-FROM ubuntu:18.04
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get upgrade -y
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y curl
-WORKDIR /
-RUN bash -c "$(curl -fsSL https://dxos.nyc3.digitaloceanspaces.com/install.sh)"
-RUN mkdir -p /root/.kube/profiles
-COPY ./kube.default.yml /root/.kube/profiles/default
-EXPOSE 4317 10000 9003 3478 4001 5001 8888
-CMD ["/usr/local/bin/kube", "daemon"]

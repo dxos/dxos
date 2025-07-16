@@ -19,7 +19,12 @@ name: Publish
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:20.12.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 45
     steps:
       - name: Checkout
@@ -48,43 +53,15 @@ jobs:
           DX_LOKI_ENDPOINT: ${{ secrets.DX_LOKI_ENDPOINT }}
           DX_LOKI_AUTHORIZATION: ${{ secrets.DX_LOKI_AUTHORIZATION }}
 
-      - name: Install system dependencies
-        run: sudo apt-get install libxtst-dev libpng++-dev
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        id: pnpm-install
-        with:
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup
+        uses: ./.github/actions/setup
 
       - name: Bump Versions
         run: node .github/workflows/scripts/bump-version.js ${{ env.DX_ENVIRONMENT }}
         if: env.BRANCH != 'production'
 
       - name: Build
-        run: pnpm nx run-many --target=build
+        run: moon run :build
         env:
           # NOTE: @dxos/cli is the only thing consuming these at build time, the apps all consume them at bundle.
           DX_SENTRY_DESTINATION: ${{ env.CLI_SENTRY_DESTINATION }}
@@ -93,7 +70,7 @@ jobs:
 
       # NOTE: Shell must be bundled before npm publish.
       - name: Bundle Shell
-        run: pnpm nx bundle shell
+        run: moon run shell:bundle
         env:
           NODE_ENV: production
 
@@ -109,7 +86,7 @@ jobs:
           NODE_OPTIONS: '--max_old_space_size=12288'
 
       - name: Bundle Devtools
-        run: pnpm nx bundle devtools-extension
+        run: moon run devtools-extension:bundle
         env:
           NODE_ENV: production
 

@@ -1,0 +1,29 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  build:
+    command: tsc
+    deps:
+      - ^:build
+      - ^:compile
+      - compile
+    inputs:
+      - /tsconfig.base.json
+      - tsconfig.json
+      - '@group(sources)'
+    outputs:
+      - dist/types/
+    options:
+      timeout: 60
+  compile:
+    command: dx-compile
+    args:
+      - --outputPath=dist/lib
+    deps:
+      - esbuild:compile
+      - ^:compile
+    inputs:
+      - '@group(production)'
+    outputs:
+      - dist/lib/
+    options:
+      timeout: 10

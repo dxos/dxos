@@ -30,6 +30,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/storybook-utils"
+    },
+    {
       "path": "../../core/ai"
     },
     {
@@ -46,9 +49,6 @@
     },
     {
       "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../../devtools/storybook-utils"
     },
     {
       "path": "../../sdk/app-framework"

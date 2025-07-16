@@ -4,7 +4,7 @@ package:
     - name: testbench-app
       type: dxos:type/app
       build:
-        command: pnpm -w nx bundle testbench-app
+        command: moon run testbench-app:bundle
         outdir: out/testbench-app
 runtime:
   client:

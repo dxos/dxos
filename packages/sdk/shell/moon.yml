@@ -1,0 +1,18 @@
+type: library
+language: typescript
+tags:
+  - e2e
+  - ts-build
+  - vite
+  - pack
+tasks:
+  bundle:
+    options:
+      mergeOutputs: replace
+    outputs:
+      - dist/bundle
+  compile:
+    args:
+      - '--entryPoint=src/react.ts'
+      - '--entryPoint=src/testing/index.ts'
+      - '--preactSignalTracking'

@@ -5,16 +5,17 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { Filter, Obj } from '@dxos/echo';
 import { ClientProvider } from '@dxos/react-client';
-import { Filter, live, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { TaskType } from './schema';
+import { Task } from './schema';
 
 export const App = () => {
   useIdentity();
   const [space] = useSpaces();
-  const tasks = useQuery(space, Filter.type(TaskType));
+  const tasks = useQuery(space, Filter.type(Task));
   return (
     <>
       {tasks.map((task) => (
@@ -30,7 +31,7 @@ export const App = () => {
       <button
         name='add'
         onClick={() => {
-          const task = live(TaskType, { name: 'buy milk' });
+          const task = Obj.make(Task, { name: 'buy milk' });
           space?.db.add(task);
         }}
       >
@@ -42,7 +43,7 @@ export const App = () => {
 
 const root = createRoot(document.getElementById('root')!);
 root.render(
-  <ClientProvider types={[TaskType]}>
+  <ClientProvider types={[Task]}>
     <App />
   </ClientProvider>,
 );
