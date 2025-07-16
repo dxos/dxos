@@ -8,7 +8,7 @@ import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
 import { NodeHttpClient } from '@effect/platform-node';
 import { describe, it } from '@effect/vitest';
-import { Config, Console, Effect, Layer, pipe, Schedule, Schema, Stream } from 'effect';
+import { Chunk, Config, Console, Effect, Layer, pipe, Schedule, Schema, Stream } from 'effect';
 
 import { log } from '@dxos/log';
 import { parseGptStream } from './parser';
@@ -222,12 +222,8 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
           const stream = chat.streamText({ system, prompt, toolkit }).pipe(parseGptStream());
           prompt = AiInput.empty;
 
-          yield* Stream.runForEach(
-            stream,
-            Effect.fnUntraced(function* (item) {
-              log.info('item', { item });
-            }),
-          );
+          const result = yield* Stream.runCollect(stream).pipe(Effect.map(Chunk.toArray));
+          log.info('result', { result });
           log.break();
         } while (yield* hasToolCall(chat));
 

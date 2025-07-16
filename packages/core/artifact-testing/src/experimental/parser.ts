@@ -143,7 +143,7 @@ export const parseGptStream =
                 case 'TextPart': {
                   const chunks = transformer.transform(part.text);
                   for (const chunk of chunks) {
-                    log.info('text_chunk', { chunk });
+                    log('text_chunk', { chunk });
                     switch (streamBlock?.type) {
                       //
                       // XML Fragment.
@@ -215,13 +215,10 @@ export const parseGptStream =
                       }
                     }
                   }
-
-                  emit.single({
-                    _tag: 'text',
-                    text: part.text,
-                  } satisfies ContentBlock.Text);
                   break;
                 }
+
+                // TODO(burdon): Flush stream block.
 
                 case 'ToolCallPart':
                   emit.single({
@@ -257,6 +254,7 @@ export const parseGptStream =
           }),
         );
 
+        // TODO(burdon): Flush stream block.
         emit.end();
       }),
     );
