@@ -27,14 +27,16 @@ type FormCellEditorProps = {
 export const FormCellEditor = ({ fieldProjection, model, schema, onSave, __gridScope }: FormCellEditorProps) => {
   const { editing: contextEditing, setEditing } = useGridContext('ArrayEditor', __gridScope);
   const [editing, setLocalEditing] = useState(false);
-  const cellRef = useRef<HTMLButtonElement | null>(null);
+  const anchorRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     if (contextEditing && contextEditing.cellElement) {
-      cellRef.current = contextEditing.cellElement as HTMLButtonElement;
+      anchorRef.current = (contextEditing.cellElement as HTMLElement).querySelector(
+        '.dx-grid__cell__content',
+      ) as HTMLButtonElement;
       setLocalEditing(true);
     } else {
-      cellRef.current = null;
+      anchorRef.current = null;
       setLocalEditing(false);
     }
   }, [contextEditing]);
@@ -91,7 +93,7 @@ export const FormCellEditor = ({ fieldProjection, model, schema, onSave, __gridS
 
   return (
     <Popover.Root open={editing} onOpenChange={handleOpenChange}>
-      <Popover.VirtualTrigger virtualRef={cellRef} />
+      <Popover.VirtualTrigger virtualRef={anchorRef} />
       <Popover.Content tabIndex={-1} classNames='popover-card-width density-fine'>
         <Popover.Arrow />
         <Popover.Viewport>
