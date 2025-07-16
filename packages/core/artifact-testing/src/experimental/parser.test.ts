@@ -1,7 +1,8 @@
-import { describe, it } from '@effect/vitest';
-import { Chunk, Effect, Stream } from 'effect';
+import { describe, it, vi } from '@effect/vitest';
+import { Chunk, Effect, Function, Stream } from 'effect';
 import { parseGptStream } from './parser';
 import { AiResponse } from '@effect/ai';
+import type { ContentBlock } from '@dxos/schema';
 
 describe('parser', () => {
   describe('accumulation', () => {
@@ -157,12 +158,61 @@ describe('parser', () => {
   });
 
   describe('streaming', () => {
+    const PARTS = [
+      new AiResponse.ReasoningPart({ reasoningText: 'My thoughts are...' }),
+      text('Hello, '),
+      text('world!'),
+      new AiResponse.ToolCallPart({
+        id: AiResponse.ToolCallId.make('123'),
+        name: 'foo',
+        params: { bar: 'baz' },
+      }),
+    ];
+
     it.effect(
       'onPart is called with every part',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream([text('Hello, world!')])
-          .pipe(parseGptStream({ onPart: Effect.log }))
-          .pipe(Stream.runCollect);
+        const onPart = vi.fn(Function.constant(Effect.void));
+        yield* makeInputStream(PARTS).pipe(parseGptStream({ onPart })).pipe(Stream.runCollect);
+        expect(onPart.mock.calls).toEqual(PARTS.map((part) => [part]));
+      }),
+    );
+
+    it.effect(
+      'gets partial content blocks',
+      Effect.fn(function* ({ expect }) {
+        const onBlock = vi.fn(Function.constant(Effect.void));
+        yield* makeInputStream(PARTS).pipe(parseGptStream({ onBlock })).pipe(Stream.runCollect);
+        expect(onBlock.mock.calls).toEqual(
+          (
+            [
+              {
+                _tag: 'reasoning',
+                reasoningText: 'My thoughts are...',
+              },
+              {
+                _tag: 'text',
+                text: 'Hello, ',
+                pending: true,
+              },
+              {
+                _tag: 'text',
+                text: 'Hello, world!',
+                pending: true,
+              },
+              {
+                _tag: 'text',
+                text: 'Hello, world!',
+              },
+              {
+                _tag: 'toolCall',
+                toolCallId: '123',
+                name: 'foo',
+                input: { bar: 'baz' },
+              },
+            ] satisfies ContentBlock.Any[]
+          ).map((block) => [block]),
+        );
       }),
     );
   });

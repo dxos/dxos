@@ -52,19 +52,15 @@ export const parseGptStream =
         let streamBlock: StreamBlock | undefined;
         const stack: StreamBlock[] = [];
 
-        const emitUpdate = Effect.fnUntraced(function* (block: StreamBlock) {
-          const contentBlock = makeContentBlock(block);
-          if (contentBlock) {
-            contentBlock.pending = true;
-            yield* onBlock(contentBlock);
-          }
+        const emitFullBlock = Effect.fnUntraced(function* (block: ContentBlock.Any) {
+          yield* onBlock(block);
+          emit.single(block);
         });
 
         const emitStreamBlock = Effect.fnUntraced(function* (block: StreamBlock) {
           const contentBlock = makeContentBlock(block);
           if (contentBlock) {
-            yield* onBlock(contentBlock);
-            emit.single(contentBlock);
+            yield* emitFullBlock(contentBlock);
           }
           streamBlock = undefined;
         });
@@ -72,6 +68,14 @@ export const parseGptStream =
         const flushText = Effect.fnUntraced(function* () {
           if (streamBlock) {
             yield* emitStreamBlock(streamBlock);
+          }
+        });
+
+        const emitPartialBlock = Effect.fnUntraced(function* (block: StreamBlock) {
+          const contentBlock = makeContentBlock(block);
+          if (contentBlock) {
+            contentBlock.pending = true;
+            yield* onBlock(contentBlock);
           }
         });
 
@@ -87,7 +91,7 @@ export const parseGptStream =
                 case 'TextPart': {
                   const chunks = transformer.transform(part.text);
                   for (const chunk of chunks) {
-                    log.info('text_chunk', { chunk });
+                    log('text_chunk', { chunk });
                     switch (streamBlock?.type) {
                       //
                       // XML Fragment.
@@ -161,14 +165,14 @@ export const parseGptStream =
                   }
 
                   if (streamBlock) {
-                    yield* emitUpdate(streamBlock);
+                    yield* emitPartialBlock(streamBlock);
                   }
                   break;
                 }
 
                 case 'ToolCallPart':
                   yield* flushText();
-                  emit.single({
+                  yield* emitFullBlock({
                     _tag: 'toolCall',
                     toolCallId: part.id,
                     name: part.name,
@@ -177,15 +181,18 @@ export const parseGptStream =
                   break;
                 case 'ReasoningPart':
                   yield* flushText();
-                  emit.single({
+                  const block: ContentBlock.Reasoning = {
                     _tag: 'reasoning',
                     reasoningText: part.reasoningText,
-                    signature: part.signature,
-                  } satisfies ContentBlock.Reasoning);
+                  };
+                  if (part.signature) {
+                    block.signature = part.signature;
+                  }
+                  yield* emitFullBlock(block);
                   break;
                 case 'RedactedReasoningPart':
                   yield* flushText();
-                  emit.single({
+                  yield* emitFullBlock({
                     _tag: 'reasoning',
                     redactedText: part.redactedText,
                   } satisfies ContentBlock.Reasoning);
