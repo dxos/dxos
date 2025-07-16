@@ -203,10 +203,11 @@ const ChatPrompt = (props: Pick<ChatPromptProps, 'classNames' | 'placeholder' | 
       {...props}
       error={processor?.error.value}
       processing={processor?.streaming.value ?? false}
+      references={references}
       blueprints={blueprints}
+      blueprintRegistry={processor.blueprintRegistry}
       onSearchBlueprints={handleSearchBlueprints}
       onUpdateBlueprints={handleUpdateBlueprints}
-      references={references}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
       onScroll={() => update.emit('scroll')}

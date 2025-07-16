@@ -6,12 +6,12 @@ import { autocompletion, completionKeymap, type CompletionResult } from '@codemi
 import { type Extension, RangeSet } from '@codemirror/state';
 import {
   Decoration,
-  EditorView,
-  keymap,
-  ViewPlugin,
-  WidgetType,
   type DecorationSet,
+  EditorView,
+  ViewPlugin,
   type ViewUpdate,
+  WidgetType,
+  keymap,
 } from '@codemirror/view';
 
 import { Mutex } from '@dxos/async';
@@ -28,6 +28,7 @@ export interface ReferencesProvider {
 }
 
 export type ReferencesOptions = {
+  provider: ReferencesProvider;
   /**
    * Prevent the autocomplete from closing when the user blurs the editor.
    * @default false
@@ -37,7 +38,6 @@ export type ReferencesOptions = {
    * @default '@'
    */
   triggerCharacter?: string;
-  provider: ReferencesProvider;
 };
 
 /**
