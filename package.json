@@ -150,7 +150,6 @@
     "yargs": "~16.2.0",
     "zx": "^8.4.1"
   },
-  "packageManager": "pnpm@9.11.0",
   "engines": {
     "node": "20.12.1"
   },
