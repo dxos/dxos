@@ -287,7 +287,7 @@ export class EdgeHttpClient {
   private async _call<T>(url: URL, args: EdgeHttpRequestArgs): Promise<T> {
     const shouldRetry = createRetryHandler(args);
     const requestContext = args.context ?? new Context();
-    log.info('fetch', { url, request: args.body });
+    log('fetch', { url, request: args.body });
 
     let handledAuth = false;
     while (true) {
