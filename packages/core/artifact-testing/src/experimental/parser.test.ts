@@ -126,6 +126,33 @@ describe('parser', () => {
       ]);
     }),
   );
+
+  it.effect(
+    'reasoning gets passed through',
+    Effect.fn(function* ({ expect }) {
+      const result = yield* makeInputStream([
+        new AiResponse.ReasoningPart({
+          reasoningText: 'My thoughts are...',
+        }),
+        //
+        text('Hello, world!'),
+      ])
+        .pipe(parseGptStream())
+        .pipe(Stream.runCollect)
+        .pipe(Effect.map(Chunk.toArray));
+
+      expect(result).toEqual([
+        {
+          _tag: 'reasoning',
+          reasoningText: 'My thoughts are...',
+        },
+        {
+          _tag: 'text',
+          text: 'Hello, world!',
+        },
+      ]);
+    }),
+  );
 });
 
 const makeInputStream = (parts: readonly AiResponse.Part[]): Stream.Stream<AiResponse.AiResponse, never, never> =>
