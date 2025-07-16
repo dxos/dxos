@@ -43,7 +43,7 @@
     "chess.js": "^1.0.0"
   },
   "devDependencies": {
-    "@effect/ai": "^0.21.16",
+    "@effect/ai": "0.21.16",
     "@effect/ai-anthropic": "^0.11.18",
     "@effect/ai-openai": "^0.24.16",
     "@effect/cluster": "^0.41.17",

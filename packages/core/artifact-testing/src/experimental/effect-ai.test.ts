@@ -11,7 +11,7 @@ import { describe, it } from '@effect/vitest';
 import { Chunk, Config, Console, Effect, Layer, pipe, Schedule, Schema, Stream } from 'effect';
 
 import { log } from '@dxos/log';
-import { parseGptStream } from './parser';
+import { parseGptStream } from '@dxos/ai';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
 // https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md

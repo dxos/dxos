@@ -2232,6 +2232,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/ai':
+        specifier: 0.21.16
+        version: 0.21.16(@effect/experimental@0.51.13(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12)(ioredis@5.3.2))(@effect/platform@0.87.12(effect@3.16.12))(@effect/rpc@0.64.13(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12))(effect@3.16.12)
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.10.0
@@ -2341,7 +2344,7 @@ importers:
         version: 1.2.0
     devDependencies:
       '@effect/ai':
-        specifier: ^0.21.16
+        specifier: 0.21.16
         version: 0.21.16(@effect/experimental@0.51.13(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12)(ioredis@5.3.2))(@effect/platform@0.87.12(effect@3.16.12))(@effect/rpc@0.64.13(@effect/platform@0.87.12(effect@3.16.12))(effect@3.16.12))(effect@3.16.12)
       '@effect/ai-anthropic':
         specifier: ^0.11.18

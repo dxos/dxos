@@ -1,9 +1,9 @@
-import { StreamTransform, type StreamBlock } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { ContentBlock } from '@dxos/schema';
 import type { AiResponse } from '@effect/ai';
 import { Effect, Function, Predicate, Stream } from 'effect';
+import { StreamTransform, type StreamBlock } from '../service';
 
 /**
  * Tags that are used by the model to indicate the type of content.
