@@ -2,7 +2,7 @@ import { StreamTransform, type StreamBlock } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { ContentBlock } from '@dxos/schema';
-import type { AiError, AiResponse } from '@effect/ai';
+import type { AiResponse } from '@effect/ai';
 import { Effect, Function, Predicate, Stream } from 'effect';
 
 export interface ParseGptStreamOptions {
